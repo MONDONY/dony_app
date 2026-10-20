@@ -85,6 +85,9 @@ AnnouncementModel _$AnnouncementModelFromJson(
   acceptedPaymentMethods: json['acceptedPaymentMethods'] == null
       ? const {BidPaymentMethod.stripe}
       : acceptedPaymentMethodsFromJson(json['acceptedPaymentMethods']),
+  acceptedMobileMoneyNetworks: json['acceptedMobileMoneyNetworks'] == null
+      ? const []
+      : mobileMoneyNetworksFromJson(json['acceptedMobileMoneyNetworks']),
   capacityUnit: json['capacityUnit'] as String?,
   pricingMode: json['pricingMode'] as String? ?? 'KG',
   priceGridItems: json['priceGridItems'] == null
@@ -149,6 +152,9 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'acceptedPaymentMethods': instance.acceptedPaymentMethods
           .map((e) => _$BidPaymentMethodEnumMap[e]!)
           .toList(),
+      'acceptedMobileMoneyNetworks': mobileMoneyNetworksToJson(
+        instance.acceptedMobileMoneyNetworks,
+      ),
       'capacityUnit': instance.capacityUnit,
       'pricingMode': instance.pricingMode,
       'priceGridItems': _gridItemsToJson(instance.priceGridItems),

@@ -29,6 +29,7 @@ enum RecognitionStatus {
 
   /// Numéro reconnu sur un autre opérateur que celui que l'utilisateur a
   /// ensuite choisi lui-même : son choix est respecté, sans nouvel appel.
+  /// Il ne permet de continuer que si [PayerAccountState.overrideAccepted].
   overridden,
 
   /// Le numéro appartient à un opérateur du pays que ce paiement n'accepte
@@ -59,6 +60,8 @@ class PayerAccountState extends Equatable {
     this.allowedOperators,
     this.rejectedOperator,
     this.currency,
+    this.fixed = false,
+    this.overrideAccepted = true,
   });
 
   final PayerAccountStatus status;
@@ -93,14 +96,27 @@ class PayerAccountState extends Equatable {
   /// Devise imposée au catalogue (`configure`) ; `null` = aucune.
   final String? currency;
 
-  /// L'opérateur [o] est-il accepté pour ce paiement ?
-  bool isAllowed(MobileMoneyOperator o) =>
-      allowedOperators == null || allowedOperators!.contains(o.code);
+  /// Pays et opérateur imposés (changement de numéro d'un compte) : seul le
+  /// numéro se saisit.
+  final bool fixed;
+
+  /// Un choix manuel contre l'opérateur reconnu
+  /// ([RecognitionStatus.overridden]) permet-il de continuer ? Faux pour un
+  /// compte de versement : le back refuse tout opérateur autre que celui
+  /// prédit pour le numéro.
+  final bool overrideAccepted;
+
+  /// L'opérateur [o] est-il accepté ici ? En mode [fixed], seul l'opérateur
+  /// imposé l'est, quelle que soit la restriction.
+  bool isAllowed(MobileMoneyOperator o) {
+    if (fixed) return o.code == operator?.code;
+    return allowedOperators == null || allowedOperators!.contains(o.code);
+  }
 
   bool get canProceed =>
       recognition == RecognitionStatus.recognized ||
       recognition == RecognitionStatus.autoSwitched ||
-      recognition == RecognitionStatus.overridden;
+      (recognition == RecognitionStatus.overridden && overrideAccepted);
 
   PayerAccountState copyWith({
     PayerAccountStatus? status,
@@ -115,6 +131,7 @@ class PayerAccountState extends Equatable {
     Object? allowedOperators = _unset,
     Object? rejectedOperator = _unset,
     Object? currency = _unset,
+    bool? fixed,
   }) => PayerAccountState(
     status: status ?? this.status,
     countries: identical(countries, _unset)
@@ -146,6 +163,8 @@ class PayerAccountState extends Equatable {
               : this.rejectedOperator)
         : rejectedOperator as MobileMoneyOperator?,
     currency: identical(currency, _unset) ? this.currency : currency as String?,
+    fixed: fixed ?? this.fixed,
+    overrideAccepted: overrideAccepted,
   );
 
   @override
@@ -162,5 +181,7 @@ class PayerAccountState extends Equatable {
     allowedOperators,
     rejectedOperator,
     currency,
+    fixed,
+    overrideAccepted,
   ];
 }

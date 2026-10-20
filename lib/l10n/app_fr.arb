@@ -24,6 +24,12 @@
   "errorMobileMoneyAccountUnsupportedMessage": "Votre numéro n'est pas rattaché à un opérateur mobile money compatible, ou sa devise ne correspond pas à votre zone.",
   "errorMobileMoneyAccountRequiredTitle": "Compte de versement requis",
   "errorMobileMoneyAccountRequiredMessage": "Activez votre versement mobile money avant d'accepter cette offre.",
+  "errorMobileMoneyAccountWrongNetworkTitle": "Numéro d'un autre opérateur",
+  "errorMobileMoneyAccountWrongNetworkMessage": "Ce numéro appartient à un autre opérateur. Choisissez l'opérateur de ce numéro.",
+  "errorMobileMoneyAccountExistsTitle": "Compte déjà enregistré",
+  "errorMobileMoneyAccountExistsMessage": "Vous avez déjà un compte chez cet opérateur dans ce pays. Changez son numéro plutôt que d'en ajouter un autre.",
+  "errorMobileMoneyAccountNotFoundTitle": "Compte introuvable",
+  "errorMobileMoneyAccountNotFoundMessage": "Ce compte de versement n'existe plus. Revenez à la liste de vos comptes.",
   "errorMobileMoneyCurrencyMismatchTitle": "Devise différente",
   "errorMobileMoneyCurrencyMismatchMessage": "Votre compte de versement mobile money n'est pas dans la devise de ce trajet.",
   "errorMobileMoneyNotAvailableTitle": "Mobile money non proposé",
@@ -4595,6 +4601,24 @@
   "listingCashOnlyWarningBody": "Le paiement se fait en main propre au voyageur, Yadony ne séquestre pas votre argent et ne peut pas le rembourser automatiquement en cas de litige.",
   "@listingCashOnlyWarningBody": {
     "description": "Corps de l'avertissement paiement cash uniquement (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingHabitualOperatorNotAcceptedCard": "Vous payez d'habitude avec {operator}, que ce voyageur n'accepte pas. Vous pourrez payer par carte.",
+  "@listingHabitualOperatorNotAcceptedCard": {
+    "description": "Encart orange de la fiche d'un trajet : l'opérateur mobile money habituel de l'expéditeur n'est pas accepté, la carte l'est (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "operator": {
+        "type": "String"
+      }
+    }
+  },
+  "listingHabitualOperatorNotAcceptedCash": "Vous payez d'habitude avec {operator}, que ce voyageur n'accepte pas. Vous pourrez payer en espèces.",
+  "@listingHabitualOperatorNotAcceptedCash": {
+    "description": "Même encart quand seules les espèces sont acceptées en repli (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "operator": {
+        "type": "String"
+      }
+    }
   },
   "listingNewRatingLabel": "Nouveau",
   "@listingNewRatingLabel": {
@@ -9965,106 +9989,13 @@
   "@mobileMoneyAccountTitle": {
     "description": "Titre de l'AppBar et de la carte de résumé de l'écran de compte de versement mobile money (mobile_money_account_screen.dart)."
   },
-  "mobileMoneyAccountLoadError": "Impossible de charger votre compte",
+  "mobileMoneyAccountLoadError": "Impossible de charger vos comptes",
   "@mobileMoneyAccountLoadError": {
     "description": "Titre du DonyEmptyState quand le compte de versement mobile money ne peut pas être chargé (mobile_money_account_screen.dart)."
-  },
-  "mobileMoneyExplanationActivate": "Indiquez le numéro mobile money qui recevra vos versements. Il peut être différent de votre numéro Yadony.",
-  "@mobileMoneyExplanationActivate": {
-    "description": "Explication du formulaire de versement mobile money, première activation (mobile_money_account_screen.dart _PayoutNumberForm)."
-  },
-  "mobileMoneyExplanationReactivateNoPrevious": "Votre versement est désactivé. Indiquez le numéro mobile money pour le réactiver.",
-  "@mobileMoneyExplanationReactivateNoPrevious": {
-    "description": "Explication du formulaire de versement mobile money, réactivation sans numéro précédent connu (mobile_money_account_screen.dart _PayoutNumberForm)."
-  },
-  "mobileMoneyReactivateWithPrevious": "Votre versement est désactivé. Indiquez le numéro mobile money pour le réactiver (précédent : {masked}).",
-  "@mobileMoneyReactivateWithPrevious": {
-    "description": "Explication du formulaire de versement mobile money, réactivation avec un numéro précédent masqué connu (mobile_money_account_screen.dart _PayoutNumberForm).",
-    "placeholders": {
-      "masked": {
-        "type": "String"
-      }
-    }
-  },
-  "mobileMoneyExplanationChangeNumber": "Indiquez le nouveau numéro de versement. Les réseaux seront à cocher de nouveau pour ce numéro.",
-  "@mobileMoneyExplanationChangeNumber": {
-    "description": "Explication du formulaire de versement mobile money, changement de numéro (mobile_money_account_screen.dart _PayoutNumberForm)."
-  },
-  "mobileMoneyButtonActivate": "Activer le versement mobile money",
-  "@mobileMoneyButtonActivate": {
-    "description": "Bouton du formulaire de versement mobile money, première activation (mobile_money_account_screen.dart _PayoutNumberForm)."
-  },
-  "mobileMoneyButtonReactivate": "Réactiver",
-  "@mobileMoneyButtonReactivate": {
-    "description": "Bouton du formulaire de versement mobile money, réactivation (mobile_money_account_screen.dart _PayoutNumberForm)."
-  },
-  "mobileMoneyButtonChangeNumber": "Enregistrer le nouveau numéro",
-  "@mobileMoneyButtonChangeNumber": {
-    "description": "Bouton du formulaire de versement mobile money, changement de numéro (mobile_money_account_screen.dart _PayoutNumberForm)."
-  },
-  "mobileMoneyPayoutNumberLabel": "Numéro de versement",
-  "@mobileMoneyPayoutNumberLabel": {
-    "description": "Libellé du premier champ du formulaire de versement mobile money (mobile_money_account_screen.dart _PayoutNumberForm)."
-  },
-  "mobileMoneyConfirmNumberLabel": "Confirmez le numéro",
-  "@mobileMoneyConfirmNumberLabel": {
-    "description": "Libellé du champ de confirmation du formulaire de versement mobile money (mobile_money_account_screen.dart _PayoutNumberForm)."
-  },
-  "mobileMoneyNetworksSectionTitle": "Réseaux sur ce numéro",
-  "@mobileMoneyNetworksSectionTitle": {
-    "description": "Titre de la section réseaux du formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection)."
-  },
-  "mobileMoneyNetworksUnavailable": "Le choix des réseaux n'est pas encore disponible. Votre opérateur sera détecté automatiquement.",
-  "@mobileMoneyNetworksUnavailable": {
-    "description": "Bandeau info quand l'ancien contrat backend ne fournit pas de catalogue de réseaux (mobile_money_account_screen.dart _NetworksSection et _ProvidersSheetContent)."
-  },
-  "mobileMoneyNoNetworksAvailable": "Aucun réseau disponible sur ce numéro.",
-  "@mobileMoneyNoNetworksAvailable": {
-    "description": "Message quand le catalogue de réseaux mobile money est vide pour le numéro confirmé (mobile_money_account_screen.dart _NetworksSection et _ProvidersSheetContent)."
-  },
-  "mobileMoneyPayerChoosesNetwork": "L'expéditeur paie avec l'un des réseaux cochés. Vous recevez sur ce même réseau.",
-  "@mobileMoneyPayerChoosesNetwork": {
-    "description": "Rappel de la règle de couplage sous la checklist du formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection)."
-  },
-  "mobileMoneyConfirmToSeeNetworks": "Confirmez votre numéro pour voir les réseaux disponibles.",
-  "@mobileMoneyConfirmToSeeNetworks": {
-    "description": "Invite affichée tant qu'aucun numéro n'est confirmé dans le formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection)."
-  },
-  "mobileMoneyAcceptedNetworksTitle": "Réseaux acceptés",
-  "@mobileMoneyAcceptedNetworksTitle": {
-    "description": "Titre de la carte et de la feuille « Réseaux acceptés » de la vue active du compte de versement mobile money (mobile_money_account_screen.dart)."
-  },
-  "mobileMoneyActiveBadge": "ACTIF",
-  "@mobileMoneyActiveBadge": {
-    "description": "Badge de statut de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
-  },
-  "mobileMoneyNumberLabel": "Numéro",
-  "@mobileMoneyNumberLabel": {
-    "description": "Libellé de la ligne numéro de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
-  },
-  "mobileMoneyNotProvided": "Non renseigné",
-  "@mobileMoneyNotProvided": {
-    "description": "Valeur de repli des lignes numéro, pays et devise de la vue active du compte de versement mobile money, quand la donnée est absente (mobile_money_account_screen.dart _ActiveView)."
   },
   "mobileMoneyCountryLabel": "Pays",
   "@mobileMoneyCountryLabel": {
     "description": "Libellé « Pays » du mobile money : ligne pays de la vue active du compte de versement (mobile_money_account_screen.dart _ActiveView) et champ pays du compte qui paie (payer_account_section.dart)."
-  },
-  "mobileMoneyCurrencyLabel": "Devise",
-  "@mobileMoneyCurrencyLabel": {
-    "description": "Libellé de la ligne devise de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
-  },
-  "mobileMoneyPayerChoosesOneNetwork": "L'expéditeur choisit l'un de ces réseaux pour payer. Vous recevez sur le même.",
-  "@mobileMoneyPayerChoosesOneNetwork": {
-    "description": "Note sous les pastilles de réseaux acceptés de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
-  },
-  "mobileMoneyChangeNumberButton": "Changer de numéro",
-  "@mobileMoneyChangeNumberButton": {
-    "description": "Bouton de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
-  },
-  "mobileMoneyDisableButton": "Désactiver",
-  "@mobileMoneyDisableButton": {
-    "description": "Bouton de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
   },
 
   "mobileMoneyAllNetworks": "Tous les réseaux",
@@ -22088,6 +22019,12 @@
   "@mobileMoneyPaidToTravelerLabel": {"description": "Libellé de la ligne « quand le voyageur est payé » du récapitulatif d'attente du paiement d'un colis (mobile_money_awaiting_screen.dart)."},
   "mobileMoneyPaidToTravelerValue": "À la livraison",
   "@mobileMoneyPaidToTravelerValue": {"description": "Valeur de cette ligne : l'argent est séquestré et versé au voyageur à la livraison."},
+  "mobileMoneyOperatorAlreadyAdded": "Vous avez déjà un compte {operator}.",
+  "@mobileMoneyOperatorAlreadyAdded": {"description": "Message sous le compte à ajouter (comptes de versement) : le numéro saisi est d'un opérateur pour lequel l'utilisateur a déjà un compte. {operator} : nom de l'opérateur détecté.", "placeholders": {"operator": {"type": "String"}}},
+  "mobileMoneyPayoutNumberWrongOperator": "C'est un numéro {operator}. Saisissez un numéro {accountOperator}.",
+  "@mobileMoneyPayoutNumberWrongOperator": {"description": "Message sous le numéro à saisir (changement de numéro d'un compte de versement) : le numéro saisi appartient à un autre opérateur que celui du compte. {operator} : opérateur détecté sur le numéro ; {accountOperator} : opérateur du compte.", "placeholders": {"operator": {"type": "String"}, "accountOperator": {"type": "String"}}},
+  "mobileMoneyNumberNotOperator": "Ce numéro n'est pas un numéro {operator}.",
+  "@mobileMoneyNumberNotOperator": {"description": "Message sous le numéro à saisir (ajout d'un compte de versement) : le numéro a été reconnu sur un autre opérateur que celui choisi ensuite à la main ; le versement exige l'opérateur du numéro, « Continuer » reste grisé. {operator} : opérateur choisi.", "placeholders": {"operator": {"type": "String"}}},
   "walletTopupSwitchToCard": "Recharger par carte",
   "@walletTopupSwitchToCard": {"description": "Bouton du bas de l'écran Recharger quand le pays choisi n'a pas encore le mobile money : passe à la carte bancaire."},
   "walletTopupMmRingCaption": "pour valider",
@@ -22461,5 +22398,49 @@
   "errorFundingCurrencyInvalidTitle": "Devise non prise en charge",
   "@errorFundingCurrencyInvalidTitle": {"description": "ErrorCatalog funding-currency-invalid"},
   "errorFundingCurrencyInvalidMessage": "Ce portefeuille ne peut pas payer les frais de service. Choisissez-en un autre.",
-  "@errorFundingCurrencyInvalidMessage": {"description": "ErrorCatalog funding-currency-invalid"}
+  "@errorFundingCurrencyInvalidMessage": {"description": "ErrorCatalog funding-currency-invalid"},
+  "mobileMoneyPayoutAccountsSectionLabel": "VOS COMPTES",
+  "@mobileMoneyPayoutAccountsSectionLabel": {"description": "Titre de section au-dessus de la liste des comptes de versement (mobile_money_account_screen.dart)."},
+  "mobileMoneyPayoutAccountAdd": "Ajouter un compte",
+  "@mobileMoneyPayoutAccountAdd": {"description": "Ligne et bouton pour ajouter un compte de versement, et titre de l'écran d'ajout (mobile_money_account_screen.dart, mobile_money_payout_account_add_screen.dart)."},
+  "mobileMoneyPayoutAccountChangeNumber": "Changer de numéro",
+  "@mobileMoneyPayoutAccountChangeNumber": {"description": "Entrée du menu d'un compte de versement et titre de l'écran de changement de numéro (mobile_money_account_screen.dart, mobile_money_payout_account_add_screen.dart)."},
+  "mobileMoneyPayoutAccountRemove": "Retirer",
+  "@mobileMoneyPayoutAccountRemove": {"description": "Entrée du menu d'un compte de versement qui ouvre la feuille de retrait (mobile_money_account_screen.dart)."},
+  "mobileMoneyPayoutAccountActions": "Options du compte {operator}",
+  "@mobileMoneyPayoutAccountActions": {"description": "Info-bulle et libellé d'accessibilité du bouton ⋯ d'un compte de versement (mobile_money_account_screen.dart). {operator} : opérateur du compte.", "placeholders": {"operator": {"type": "String"}}},
+  "mobileMoneyPayoutAccountsRule": "Les expéditeurs vous paient avec {operators}. Vous recevez sur le compte du même réseau.",
+  "@mobileMoneyPayoutAccountsRule": {"description": "Encart sous la liste des comptes de versement (mobile_money_account_screen.dart). {operators} : opérateurs des comptes, joints par joinList.", "placeholders": {"operators": {"type": "String"}}},
+  "mobileMoneyPayoutAccountsSuggested": "Vous acceptiez aussi {operators} sur le même numéro. Ajoutez un compte pour chacun afin d'être payé sur le bon réseau.",
+  "@mobileMoneyPayoutAccountsSuggested": {"description": "Encart pour un voyageur repris de l'ancien contrat qui avait coché plusieurs réseaux (mobile_money_account_screen.dart). {operators} : réseaux suggérés, joints par joinList.", "placeholders": {"operators": {"type": "String"}}},
+  "mobileMoneyPayoutAccountsEmpty": "Ajoutez le compte mobile money qui recevra vos gains. Il peut être différent de votre numéro Yadony.",
+  "@mobileMoneyPayoutAccountsEmpty": {"description": "Explication quand le voyageur n'a encore aucun compte de versement (mobile_money_account_screen.dart)."},
+  "mobileMoneyPayoutAccountGone": "Ce compte a déjà été retiré.",
+  "@mobileMoneyPayoutAccountGone": {"description": "Message de l'écran de changement de numéro quand le compte n'existe plus (mobile_money_payout_account_add_screen.dart)."},
+  "mobileMoneyPayoutSectionLabel": "COMPTE QUI REÇOIT",
+  "@mobileMoneyPayoutSectionLabel": {"description": "Titre du bloc pays, opérateur, numéro sur l'écran d'ajout d'un compte de versement (mobile_money_payout_account_add_screen.dart)."},
+  "mobileMoneyOperatorAdded": "Ajouté",
+  "@mobileMoneyOperatorAdded": {"description": "Libellé sous un opérateur grisé pour lequel le voyageur a déjà un compte de versement (mobile_money_payout_account_add_screen.dart)."},
+  "mobileMoneyPayoutReviewTitle": "C'est bien votre numéro ?",
+  "@mobileMoneyPayoutReviewTitle": {"description": "Titre de la feuille de relecture du numéro de versement (payout_account_sheets.dart)."},
+  "mobileMoneyPayoutReviewBody": "Vos gains seront envoyés ici. Un chiffre faux et l'argent part chez quelqu'un d'autre.",
+  "@mobileMoneyPayoutReviewBody": {"description": "Texte de la feuille de relecture du numéro de versement (payout_account_sheets.dart)."},
+  "mobileMoneyPayoutReviewOperatorCountry": "{operator} · {country}",
+  "@mobileMoneyPayoutReviewOperatorCountry": {"description": "Opérateur et pays sous le numéro relu (payout_account_sheets.dart).", "placeholders": {"operator": {"type": "String"}, "country": {"type": "String"}}},
+  "mobileMoneyPayoutReviewConfirm": "Oui, c'est mon numéro",
+  "@mobileMoneyPayoutReviewConfirm": {"description": "Bouton principal de la feuille de relecture du numéro (payout_account_sheets.dart)."},
+  "mobileMoneyPayoutReviewEdit": "Corriger",
+  "@mobileMoneyPayoutReviewEdit": {"description": "Bouton secondaire de la feuille de relecture : ferme la feuille sans rien envoyer (payout_account_sheets.dart)."},
+  "mobileMoneyPayoutRemoveTitle": "Retirer {operator} ?",
+  "@mobileMoneyPayoutRemoveTitle": {"description": "Titre de la feuille de retrait d'un compte de versement (payout_account_sheets.dart).", "placeholders": {"operator": {"type": "String"}}},
+  "mobileMoneyPayoutRemoveBody": "Les expéditeurs ne pourront plus vous payer avec {operator}.",
+  "@mobileMoneyPayoutRemoveBody": {"description": "Texte de la feuille de retrait d'un compte de versement (payout_account_sheets.dart).", "placeholders": {"operator": {"type": "String"}}},
+  "mobileMoneyPayoutRemoveConfirm": "Retirer ce compte",
+  "@mobileMoneyPayoutRemoveConfirm": {"description": "Bouton rouge de la feuille de retrait d'un compte de versement (payout_account_sheets.dart)."},
+  "mobileMoneyPayoutLockedCount": "{count, plural, =1{1 colis attend encore son versement sur ce compte.} other{{count} colis attendent encore leur versement sur ce compte.}}",
+  "@mobileMoneyPayoutLockedCount": {"description": "Feuille « compte bloqué » (payout_account_sheets.dart) : colis payés sur ce compte qui attendent leur versement.", "placeholders": {"count": {"type": "int"}}},
+  "mobileMoneyPayoutLockedHint": "Vous pourrez le retirer ou changer de numéro une fois le versement reçu.",
+  "@mobileMoneyPayoutLockedHint": {"description": "Feuille « compte bloqué » (payout_account_sheets.dart), sous le nombre de colis."},
+  "mobileMoneyPayoutLockedConfirm": "Compris",
+  "@mobileMoneyPayoutLockedConfirm": {"description": "Bouton unique de la feuille « compte bloqué » (payout_account_sheets.dart)."}
 }

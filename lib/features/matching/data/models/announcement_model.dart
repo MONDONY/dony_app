@@ -1,6 +1,7 @@
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/mobile_money_network.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -182,6 +183,15 @@ class AnnouncementModel {
   final DateTime updatedAt;
   @JsonKey(fromJson: acceptedPaymentMethodsFromJson)
   final Set<BidPaymentMethod> acceptedPaymentMethods;
+
+  /// Réseaux mobile money des comptes actifs du voyageur, dans la devise du
+  /// trajet (un par compte, sans numéro). Vide quand le mobile money n'est
+  /// pas disponible, et sur un back antérieur qui ne sert pas la clé.
+  @JsonKey(
+    fromJson: mobileMoneyNetworksFromJson,
+    toJson: mobileMoneyNetworksToJson,
+  )
+  final List<MobileMoneyNetwork> acceptedMobileMoneyNetworks;
   final String? capacityUnit;
   final String pricingMode;
 
@@ -300,6 +310,7 @@ class AnnouncementModel {
     required this.createdAt,
     required this.updatedAt,
     this.acceptedPaymentMethods = const {BidPaymentMethod.stripe},
+    this.acceptedMobileMoneyNetworks = const [],
     this.capacityUnit,
     this.pricingMode = 'KG',
     this.priceGridItems = const [],

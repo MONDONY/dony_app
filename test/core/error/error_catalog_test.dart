@@ -750,6 +750,80 @@ void main() {
       expect(p.title, 'Compte de versement requis');
     });
   });
+  // Comptes de versement (lot C) : le back traduit un detail qui nomme
+  // l'operateur, relaye tel quel ; texte du catalogue en repli. Chaque code
+  // avec le type que l'intercepteur produit pour son statut HTTP.
+  group('ErrorCatalog — comptes de versement : detail serveur', () {
+    final cas = <String, AppException Function(String message)>{
+      'mobile-money-account-wrong-network': (m) =>
+          ValidationException(m, code: 'mobile-money-account-wrong-network'),
+      'mobile-money-account-exists': (m) =>
+          ConflictException(m, code: 'mobile-money-account-exists'),
+      'mobile-money-account-not-found': (m) => NotFoundException(
+        message: m,
+        apiCode: 'mobile-money-account-not-found',
+      ),
+    };
+    const repli = <String, List<String>>{
+      'mobile-money-account-wrong-network': [
+        "Numéro d'un autre opérateur",
+        "Ce numéro appartient à un autre opérateur. Choisissez l'opérateur "
+            'de ce numéro.',
+      ],
+      'mobile-money-account-exists': [
+        'Compte déjà enregistré',
+        'Vous avez déjà un compte chez cet opérateur dans ce pays. Changez '
+            "son numéro plutôt que d'en ajouter un autre.",
+      ],
+      'mobile-money-account-not-found': [
+        'Compte introuvable',
+        "Ce compte de versement n'existe plus. Revenez à la liste de vos "
+            'comptes.',
+      ],
+    };
+
+    for (final entry in cas.entries) {
+      test('${entry.key} : detail serveur exploitable → affiche tel quel', () {
+        final p = ErrorCatalog.lookup(
+          entry.value('Ce numéro est un numéro MTN.'),
+        );
+
+        expect(p.message, 'Ce numéro est un numéro MTN.');
+        expect(p.title, repli[entry.key]![0]);
+        expect(p.severity, ErrorSeverity.warning);
+      });
+
+      test('${entry.key} : detail vide → texte du catalogue', () {
+        final p = ErrorCatalog.lookup(entry.value(''));
+
+        expect(p.title, repli[entry.key]![0]);
+        expect(p.message, repli[entry.key]![1]);
+      });
+
+      test('${entry.key} : detail technique → texte du catalogue', () {
+        final p = ErrorCatalog.lookup(
+          entry.value('DioException [bad response]: status code 4xx'),
+        );
+
+        expect(p.message, repli[entry.key]![1]);
+      });
+    }
+
+    test('anglais : texte du catalogue traduit', () {
+      final p = ErrorCatalog.lookup(
+        const ConflictException('', code: 'mobile-money-account-exists'),
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+
+      expect(p.title, 'Account already added');
+      expect(
+        p.message,
+        'You already have an account with this operator in this country. '
+        'Change its number instead of adding another one.',
+      );
+    });
+  });
+
   // Tache 6 (tour 1) : recharge du portefeuille par mobile money
   // (WalletMobileMoneyTopupService). Principe retenu en relecture : le
   // detail serveur n'est affiche que lorsqu'il porte une information que

@@ -1,4 +1,3 @@
-import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:equatable/equatable.dart';
 
 /// État du compte de versement mobile money d'un voyageur.
@@ -17,7 +16,6 @@ class MobileMoneyAccount extends Equatable {
     this.providerLabel,
     this.country,
     this.currency,
-    this.providers = const [],
   });
 
   final MobileMoneyAccountStatus status;
@@ -29,11 +27,6 @@ class MobileMoneyAccount extends Equatable {
   final String? country;
   final String? currency;
 
-  /// Réseaux acceptés. La liste, si présente, fait foi même vide ; repli sur
-  /// [provider]/[providerLabel] uniquement si la clé est absente ou n'est
-  /// pas une liste (ancien contrat, ou JSON mal typé).
-  final List<MobileMoneyProviderOption> providers;
-
   factory MobileMoneyAccount.fromJson(Map<String, dynamic> json) =>
       MobileMoneyAccount(
         status: _statusFromJson(json['status'] as String?),
@@ -42,28 +35,7 @@ class MobileMoneyAccount extends Equatable {
         providerLabel: json['providerLabel'] as String?,
         country: json['country'] as String?,
         currency: json['currency'] as String?,
-        providers: _providersFromJson(json),
       );
-
-  static List<MobileMoneyProviderOption> _providersFromJson(
-    Map<String, dynamic> json,
-  ) {
-    final raw = json['providers'];
-    if (raw is List) {
-      return raw
-          .whereType<Map<String, dynamic>>()
-          .map(MobileMoneyProviderOption.fromJson)
-          .toList();
-    }
-    final code = json['provider'] as String?;
-    if (code == null) return const [];
-    return [
-      MobileMoneyProviderOption(
-        code: code,
-        label: json['providerLabel'] as String? ?? code,
-      ),
-    ];
-  }
 
   /// Compte actif : le voyageur peut recevoir des versements mobile money.
   bool get isActive => status == MobileMoneyAccountStatus.active;
@@ -88,6 +60,5 @@ class MobileMoneyAccount extends Equatable {
     providerLabel,
     country,
     currency,
-    providers,
   ];
 }

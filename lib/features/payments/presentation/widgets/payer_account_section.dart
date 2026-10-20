@@ -29,18 +29,26 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///   (défaut « Non accepté ») ;
 /// - [notAllowedMessage] : message quand le numéro est d'un opérateur non
 ///   permis, reçoit le nom de cet opérateur ;
-/// - [numberHelper] : aide affichée sous le champ numéro.
+/// - [numberHelper] : aide affichée sous le champ numéro ;
+/// - [sectionLabel] : titre du bloc (défaut « COMPTE QUI PAIE »), l'ajout
+///   d'un compte de versement y met le compte qui reçoit.
+///
+/// En mode imposé (`PayerAccountState.fixed`, changement de numéro), le pays
+/// n'a pas de bouton pour l'effacer et seule la pastille de l'opérateur
+/// imposé est montrée : seul le numéro se modifie.
 class PayerAccountSection extends StatelessWidget {
   const PayerAccountSection({
     super.key,
     this.disallowedOperatorLabel,
     this.notAllowedMessage,
     this.numberHelper,
+    this.sectionLabel,
   });
 
   final String? disallowedOperatorLabel;
   final String Function(String operatorLabel)? notAllowedMessage;
   final String? numberHelper;
+  final String? sectionLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +69,7 @@ class PayerAccountSection extends StatelessWidget {
                 bottom: DonySpacing.sm,
               ),
               child: Text(
-                l.mobileMoneyPayerSectionLabel,
+                sectionLabel ?? l.mobileMoneyPayerSectionLabel,
                 style: tt.labelMedium?.copyWith(
                   color: cs.onSurfaceVariant,
                   letterSpacing: 0.8,
@@ -136,7 +144,10 @@ class _AccountCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (country != null)
-            _CountryRow(code: country.country, onClear: cubit.clearCountry)
+            _CountryRow(
+              code: country.country,
+              onClear: state.fixed ? null : cubit.clearCountry,
+            )
           else if (countries != null)
             Padding(
               padding: const EdgeInsets.all(DonySpacing.md),
@@ -157,7 +168,9 @@ class _AccountCard extends StatelessWidget {
             _reveal(
               context,
               _OperatorRow(
-                operators: country.operators,
+                operators: state.fixed && operator != null
+                    ? [operator]
+                    : country.operators,
                 selected: operator?.code,
                 isAllowed: state.isAllowed,
                 disallowedLabel:
@@ -195,7 +208,9 @@ class _CountryRow extends StatelessWidget {
   const _CountryRow({required this.code, required this.onClear});
 
   final String code;
-  final VoidCallback onClear;
+
+  /// `null` : pays imposé, pas de bouton pour l'effacer.
+  final VoidCallback? onClear;
 
   @override
   Widget build(BuildContext context) {
@@ -231,11 +246,15 @@ class _CountryRow extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            tooltip: l.commonClear,
-            onPressed: onClear,
-            icon: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
-          ),
+          if (onClear != null)
+            IconButton(
+              tooltip: l.commonClear,
+              onPressed: onClear,
+              icon: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
+            )
+          else
+            // Même hauteur de ligne que celle qui porte le bouton.
+            const SizedBox(height: kMinInteractiveDimension),
         ],
       ),
     );
@@ -686,6 +705,15 @@ class _Feedback extends StatelessWidget {
                 context.read<PayerAccountCubit>().retryRecognition(),
             child: Text(l.commonRetry),
           ),
+        ),
+        // Choix manuel après reconnaissance, refusé ici (compte de
+        // versement : le back exige l'opérateur du numéro).
+        RecognitionStatus.overridden when !state.overrideAccepted => _Note(
+          key: const ValueKey('overriddenRefused'),
+          background: cs.warningLight,
+          foreground: cs.onSurface,
+          leading: DonyIcon('circle-alert', size: 18, color: cs.warning),
+          text: l.mobileMoneyNumberNotOperator(operator.label),
         ),
         // Choix manuel après reconnaissance : respecté sans commentaire.
         RecognitionStatus.overridden ||

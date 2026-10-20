@@ -548,9 +548,14 @@ class _PaymentMethodsField extends StatelessWidget {
         if (!rails.mobileMoneyAccountActive) {
           return l.tripLegPaymentMobileMoneyInactive;
         }
-        final account = rails.mobileMoneyAccountCurrency;
-        if (!rails.mobileMoneyAvailable(c) && account != null) {
-          return l.tripLegPaymentMobileMoneyOtherCurrency(account.symbol);
+        final accountCurrencies = rails.mobileMoneyAccountCurrencies;
+        if (!rails.mobileMoneyAvailable(c) && accountCurrencies.isNotEmpty) {
+          return l.tripLegPaymentMobileMoneyOtherCurrency(
+            accountCurrencies
+                .map((code) => SupportedCurrency.fromCode(code)?.symbol ?? code)
+                .toSet()
+                .join(' / '),
+          );
         }
         return 'Orange Money, MTN, Moov'; // i18n-ignore : noms de marques
       default:

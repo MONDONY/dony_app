@@ -55,8 +55,7 @@ import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
-import 'package:dony/features/payments/data/models/mobile_money_account.dart';
-import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
+import 'package:dony/features/payments/data/models/mobile_money_payout_account.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
@@ -457,7 +456,7 @@ void main() {
     // Sealed event fallbacks — use concrete subclass instances
     registerFallbackValue(const TripTemplateLoaded());
     registerFallbackValue(const StripeAccountStatusLoaded());
-    registerFallbackValue(const MobileMoneyAccountRequested());
+    registerFallbackValue(const MobileMoneyAccountsRequested());
     registerFallbackValue(const NegotiationFetchRequested('fallback-thread'));
     registerFallbackValue(
       NegotiationCreateDedicatedTripRequested(
@@ -583,7 +582,7 @@ void main() {
 
     // MobileMoneyAccountBloc factory — CreateTripScreen.build() (Tâche 9)
     // ajoute désormais `BlocProvider<MobileMoneyAccountBloc>(create: (_) =>
-    // getIt<MobileMoneyAccountBloc>()..add(const MobileMoneyAccountRequested()))`
+    // getIt<MobileMoneyAccountBloc>()..add(const MobileMoneyAccountsRequested()))`
     // au MultiBlocProvider, inconditionnellement (comme TripTemplateBloc) :
     // sans cet enregistrement, TOUT l'écran cesse de se construire.
     if (!getIt.isRegistered<MobileMoneyAccountBloc>()) {
@@ -622,6 +621,17 @@ void main() {
   // ── Group: mobileMoneyAccountActiveFrom (fonction pure, Tâche 9) ──────────────
 
   group('mobileMoneyAccountActiveFrom', () {
+    const row = MobileMoneyPayoutAccount(
+      id: 'a1',
+      provider: 'ORANGE_CIV',
+      providerLabel: 'Orange Money',
+      brand: 'ORANGE',
+      country: 'CI',
+      currency: 'XOF',
+      msisdnMasked: '+225 •• 36',
+    );
+    const withAccount = MobileMoneyPayoutAccounts(accounts: [row]);
+
     test('Initial → false', () {
       expect(
         mobileMoneyAccountActiveFrom(const MobileMoneyAccountInitial()),
@@ -636,136 +646,37 @@ void main() {
       );
     });
 
-    test('Error sans compte connu → false', () {
+    test('Error sans liste connue → false', () {
       expect(
         mobileMoneyAccountActiveFrom(MobileMoneyAccountError(Exception('x'))),
         isFalse,
       );
     });
 
-    test('Loaded avec compte actif → true', () {
+    test('Loaded avec un compte → true', () {
       expect(
         mobileMoneyAccountActiveFrom(
-          const MobileMoneyAccountLoaded(
-            MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
-          ),
+          const MobileMoneyAccountLoaded(withAccount),
         ),
         isTrue,
       );
     });
 
-    test('Loaded avec compte non configuré → false', () {
+    test('Loaded sans compte → false', () {
       expect(
         mobileMoneyAccountActiveFrom(
-          const MobileMoneyAccountLoaded(
-            MobileMoneyAccount(status: MobileMoneyAccountStatus.notConfigured),
-          ),
+          const MobileMoneyAccountLoaded(MobileMoneyPayoutAccounts()),
         ),
         isFalse,
       );
     });
 
-    test('Loaded avec compte désactivé → false', () {
+    test('ActionFailed garde la liste d\'avant → true', () {
       expect(
         mobileMoneyAccountActiveFrom(
-          const MobileMoneyAccountLoaded(
-            MobileMoneyAccount(status: MobileMoneyAccountStatus.disabled),
-          ),
-        ),
-        isFalse,
-      );
-    });
-
-    test('Updating avec compte actif conservé → true', () {
-      expect(
-        mobileMoneyAccountActiveFrom(
-          const MobileMoneyAccountUpdating(
-            MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
-          ),
+          MobileMoneyAccountActionFailed(withAccount, Exception('x')),
         ),
         isTrue,
-      );
-    });
-
-    test('Error avec compte actif conservé → true', () {
-      expect(
-        mobileMoneyAccountActiveFrom(
-          MobileMoneyAccountError(
-            Exception('x'),
-            account: const MobileMoneyAccount(
-              status: MobileMoneyAccountStatus.active,
-            ),
-          ),
-        ),
-        isTrue,
-      );
-    });
-
-    test('PhoneRequired avec compte actif conservé → true', () {
-      expect(
-        mobileMoneyAccountActiveFrom(
-          const MobileMoneyAccountPhoneRequired(
-            MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
-          ),
-        ),
-        isTrue,
-      );
-    });
-
-    test('ProvidersLoading avec compte non configuré → false', () {
-      expect(
-        mobileMoneyAccountActiveFrom(
-          const MobileMoneyAccountProvidersLoading(
-            MobileMoneyAccount(status: MobileMoneyAccountStatus.notConfigured),
-          ),
-        ),
-        isFalse,
-      );
-    });
-
-    test('ProvidersLoaded avec compte actif → true', () {
-      expect(
-        mobileMoneyAccountActiveFrom(
-          const MobileMoneyAccountProvidersLoaded(
-            MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
-            MobileMoneyProviderCatalog(country: 'CI', currency: 'XOF'),
-          ),
-        ),
-        isTrue,
-      );
-    });
-
-    test('ProvidersError avec compte actif conservé → true', () {
-      expect(
-        mobileMoneyAccountActiveFrom(
-          MobileMoneyAccountProvidersError(
-            const MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
-            Exception('x'),
-          ),
-        ),
-        isTrue,
-      );
-    });
-
-    test('ProvidersUnavailable avec compte actif → true', () {
-      expect(
-        mobileMoneyAccountActiveFrom(
-          const MobileMoneyAccountProvidersUnavailable(
-            MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
-          ),
-        ),
-        isTrue,
-      );
-    });
-
-    test('ProvidersUnavailable avec compte non configuré → false', () {
-      expect(
-        mobileMoneyAccountActiveFrom(
-          const MobileMoneyAccountProvidersUnavailable(
-            MobileMoneyAccount(status: MobileMoneyAccountStatus.notConfigured),
-          ),
-        ),
-        isFalse,
       );
     });
   });

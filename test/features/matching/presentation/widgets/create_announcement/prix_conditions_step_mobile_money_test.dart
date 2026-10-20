@@ -61,7 +61,7 @@ Widget _host({
   ValueNotifier<bool>? mobileMoneyEnabledNotifier,
   ValueNotifier<SupportedCurrency>? currencyNotifier,
   bool mobileMoneyAccountActive = false,
-  SupportedCurrency? mobileMoneyCurrency,
+  Set<String> mobileMoneyCurrencies = const {},
   VoidCallback? onMobileMoneySetupReturned,
   bool currencyLocked = false,
 }) {
@@ -110,7 +110,7 @@ Widget _host({
                     currencyNotifier ??
                     ValueNotifier<SupportedCurrency>(initialCurrency),
                 mobileMoneyAccountActive: mobileMoneyAccountActive,
-                mobileMoneyCurrency: mobileMoneyCurrency,
+                mobileMoneyCurrencies: mobileMoneyCurrencies,
                 onMobileMoneySetupReturned: onMobileMoneySetupReturned,
                 negotiableNotifier: ValueNotifier<bool>(false),
                 selectedContentNotifier: ValueNotifier<Set<String>>({}),
@@ -437,7 +437,7 @@ void main() {
         _host(
           currencyNotifier: currency,
           mobileMoneyAccountActive: true,
-          mobileMoneyCurrency: SupportedCurrency.xof,
+          mobileMoneyCurrencies: const {'XOF'},
         ),
       );
 
@@ -491,7 +491,7 @@ void main() {
         _host(
           currencyNotifier: currency,
           mobileMoneyAccountActive: true,
-          mobileMoneyCurrency: SupportedCurrency.xof,
+          mobileMoneyCurrencies: const {'XOF'},
           currencyLocked: true,
         ),
       );
@@ -520,7 +520,7 @@ void main() {
         _host(
           currencyNotifier: currency,
           mobileMoneyAccountActive: true,
-          mobileMoneyCurrency: SupportedCurrency.xof,
+          mobileMoneyCurrencies: const {'XOF'},
         ),
       );
       final cta = find.byKey(const Key('switch-to-mobile-money-currency-cta'));
@@ -558,7 +558,7 @@ void main() {
         _host(
           initialCurrency: SupportedCurrency.xof,
           mobileMoneyAccountActive: true,
-          mobileMoneyCurrency: SupportedCurrency.xof,
+          mobileMoneyCurrencies: const {'XOF'},
         ),
       );
 
@@ -567,5 +567,75 @@ void main() {
         findsNothing,
       );
     });
+
+    testWidgets(
+      'trajet en XAF, comptes en XOF seulement : option grisée, encart '
+      'avec bouton « Publier en XOF »',
+      (tester) async {
+        await _pump(
+          tester,
+          _host(
+            initialCurrency: SupportedCurrency.xaf,
+            mobileMoneyAccountActive: true,
+            mobileMoneyCurrencies: const {'XOF'},
+          ),
+        );
+
+        final tile = tester.widget<SwitchListTile>(
+          find.byKey(const Key('payment-method-mobile-money')),
+        );
+        expect(tile.onChanged, isNull);
+        expect(
+          find.byKey(const Key('switch-to-mobile-money-currency-cta')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'comptes en XOF et en XAF : le trajet en XAF les couvre, option active',
+      (tester) async {
+        await _pump(
+          tester,
+          _host(
+            initialCurrency: SupportedCurrency.xaf,
+            mobileMoneyAccountActive: true,
+            mobileMoneyCurrencies: const {'XOF', 'XAF'},
+          ),
+        );
+
+        final tile = tester.widget<SwitchListTile>(
+          find.byKey(const Key('payment-method-mobile-money')),
+        );
+        expect(tile.onChanged, isNotNull);
+        expect(
+          find.byKey(const Key('mobile-money-currency-notice')),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'comptes en XOF et en XAF, trajet en EUR : encart générique, sans '
+      'bouton (le voyageur choisit la devise)',
+      (tester) async {
+        await _pump(
+          tester,
+          _host(
+            mobileMoneyAccountActive: true,
+            mobileMoneyCurrencies: const {'XOF', 'XAF'},
+          ),
+        );
+
+        expect(
+          find.byKey(const Key('mobile-money-currency-notice')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('switch-to-mobile-money-currency-cta')),
+          findsNothing,
+        );
+      },
+    );
   });
 }

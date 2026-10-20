@@ -1,31 +1,139 @@
 import 'dart:async';
 
-import 'package:dony/core/currency/country_catalog.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/phone/normalize_payer_phone.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
-import 'package:dony/features/payments/data/models/mobile_money_account.dart';
-import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
-import 'package:dony/features/payments/presentation/widgets/mobile_money_networks_checklist.dart';
+import 'package:dony/features/payments/data/models/mobile_money_payout_account.dart';
+import 'package:dony/features/payments/presentation/widgets/payout_account_label.dart';
+import 'package:dony/features/payments/presentation/widgets/payout_account_sheets.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
-/// Compte de versement mobile money du voyageur : numéro de versement et
-/// réseaux acceptés sur ce numéro (Orange Money, Wave, MTN...). Accessible
-/// depuis « Moi » → section ARGENT → « Versement mobile money ».
+/// Chemin de l'écran d'ajout (et de changement de numéro) d'un compte.
+const mobileMoneyPayoutAccountAddPath = '/payments/mobile-money/account/add';
+
+/// Comptes de versement mobile money du voyageur, un par opérateur et par
+/// pays. Accessible depuis « Moi » › ARGENT › « Versement mobile money », la
+/// publication d'un trajet et celle d'une demande.
 ///
-/// Règle produit (spec du 2026-09-11) : l'expéditeur ne paie qu'avec l'un
-/// des réseaux cochés ici, et le voyageur est versé sur ce même réseau.
-class MobileMoneyAccountScreen extends StatelessWidget {
+/// Liste groupée « VOS COMPTES » (pastille, opérateur, numéro masqué, pays,
+/// menu ⋯ « Changer de numéro » / « Retirer »), ligne « Ajouter un compte »,
+/// encart de la règle de versement et, pour un compte repris de l'ancien
+/// contrat, encart des réseaux qu'il acceptait aussi.
+///
+/// Un compte sur lequel un colis payé attend son versement ne se retire ni
+/// ne change de numéro : le menu ouvre alors la feuille « compte bloqué ».
+/// Le back refuse aussi (409), ce qui ouvre la même feuille.
+///
+/// En repli sur l'ancien contrat (back sans `/accounts`), un seul compte :
+/// pas d'ajout tant qu'il existe.
+class MobileMoneyAccountScreen extends StatefulWidget {
   const MobileMoneyAccountScreen({super.key});
+
+  @override
+  State<MobileMoneyAccountScreen> createState() =>
+      _MobileMoneyAccountScreenState();
+}
+
+class _MobileMoneyAccountScreenState extends State<MobileMoneyAccountScreen> {
+  /// Compte du dernier retrait envoyé : un 409 « bloqué » affiche son nombre
+  /// de colis en attente. Simple mémoire, jamais affichée : pas de setState.
+  MobileMoneyPayoutAccount? _removing;
+
+  MobileMoneyAccountBloc get _bloc => context.read<MobileMoneyAccountBloc>();
+
+  Future<void> _add() async {
+    final changed = await context.push<bool>(mobileMoneyPayoutAccountAddPath);
+    _reloadIfChanged(changed);
+  }
+
+  Future<void> _changeNumber(MobileMoneyPayoutAccount account) async {
+    if (account.isLocked) {
+      await PayoutAccountLockedSheet.show(
+        context,
+        pendingPayouts: account.pendingPayouts,
+      );
+      return;
+    }
+    final uri = Uri(
+      path: mobileMoneyPayoutAccountAddPath,
+      queryParameters: {
+        'account': account.id,
+        'provider': account.provider,
+        if (account.country.isNotEmpty) 'country': account.country,
+      },
+    );
+    final changed = await context.push<bool>(uri.toString());
+    _reloadIfChanged(changed);
+  }
+
+  Future<void> _remove(MobileMoneyPayoutAccount account, String label) async {
+    if (account.isLocked) {
+      await PayoutAccountLockedSheet.show(
+        context,
+        pendingPayouts: account.pendingPayouts,
+      );
+      return;
+    }
+    final confirmed = await PayoutAccountRemoveSheet.show(
+      context,
+      account: account,
+      label: label,
+    );
+    if (confirmed != true || !mounted) return;
+    _removing = account;
+    _bloc.add(MobileMoneyAccountRemoveRequested(account));
+  }
+
+  /// Refus d'une écriture. Sur un 409 « bloqué », la liste lue paraissait à
+  /// jour alors qu'un colis attend : elle est relue (la ligne passe bloquée),
+  /// et la feuille s'ouvre une fois la relecture finie, avec le nombre de
+  /// colis qu'elle donne (celui d'avant si elle échoue).
+  Future<void> _onWriteFailed(
+    BuildContext context,
+    MobileMoneyAccountState state,
+  ) async {
+    final error = (state as MobileMoneyAccountActionFailed).error;
+    final removing = _removing;
+    var pendingPayouts = removing?.pendingPayouts ?? 0;
+    if (isPayoutAccountLocked(error)) {
+      // Abonné avant l'envoi : la réponse ne peut pas filer entre les deux.
+      final reloaded = _bloc.stream.firstWhere(
+        (s) => s is MobileMoneyAccountLoaded || s is MobileMoneyAccountError,
+      );
+      _bloc.add(const MobileMoneyAccountsRequested());
+      final MobileMoneyAccountState next;
+      try {
+        next = await reloaded;
+      } on StateError {
+        return; // BLoC fermé : l'écran est parti.
+      }
+      if (!context.mounted) return;
+      for (final account in next.data?.accounts ?? const []) {
+        if (account.id == removing?.id) pendingPayouts = account.pendingPayouts;
+      }
+    }
+    await presentPayoutAccountFailure(
+      context,
+      error,
+      pendingPayouts: pendingPayouts,
+    );
+  }
+
+  /// Relit la liste au retour d'un écran qui l'a changée, sauf pendant une
+  /// écriture : sa propre relecture suit.
+  void _reloadIfChanged(bool? changed) {
+    if (changed != true || !mounted) return;
+    final state = _bloc.state;
+    if (state is MobileMoneyAccountLoaded && state.submitting) return;
+    _bloc.add(const MobileMoneyAccountsRequested());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,78 +158,31 @@ class MobileMoneyAccountScreen extends StatelessWidget {
       body: SafeArea(
         top: false,
         child: BlocConsumer<MobileMoneyAccountBloc, MobileMoneyAccountState>(
-          listener: (context, state) {
-            // Seul MobileMoneyAccountError passe par une snackbar : les
-            // erreurs de catalogue s'affichent dans l'écran.
-            if (state is MobileMoneyAccountError) {
-              unawaited(ErrorPresenter.show(context, state.error));
+          listenWhen: (previous, current) =>
+              previous != current && current is MobileMoneyAccountActionFailed,
+          listener: (context, state) =>
+              unawaited(_onWriteFailed(context, state)),
+          builder: (context, state) {
+            final data = state.data;
+            if (data != null) {
+              return _AccountsBody(
+                data: data,
+                submitting:
+                    state is MobileMoneyAccountLoaded && state.submitting,
+                onAdd: _add,
+                onChangeNumber: _changeNumber,
+                onRemove: _remove,
+              );
             }
-          },
-          builder: (context, state) => switch (state) {
-            MobileMoneyAccountInitial() || MobileMoneyAccountLoading() =>
-              Center(child: CircularProgressIndicator(color: cs.primary)),
-            MobileMoneyAccountLoaded(:final account, :final editingNumber) =>
-              _AccountBody(account: account, editingNumber: editingNumber),
-            MobileMoneyAccountUpdating(:final account, :final editingNumber) =>
-              _AccountBody(
-                account: account,
-                editingNumber: editingNumber,
-                isLoading: true,
-              ),
-            MobileMoneyAccountPhoneRequired(
-              :final account,
-              :final editingNumber,
-            ) =>
-              _AccountBody(account: account, editingNumber: editingNumber),
-            MobileMoneyAccountProvidersLoading(
-              :final account,
-              :final editingNumber,
-            ) =>
-              _AccountBody(
-                account: account,
-                editingNumber: editingNumber,
-                catalogLoading: true,
-              ),
-            MobileMoneyAccountProvidersLoaded(
-              :final account,
-              :final catalog,
-              :final editingNumber,
-            ) =>
-              _AccountBody(
-                account: account,
-                editingNumber: editingNumber,
-                catalog: catalog,
-              ),
-            MobileMoneyAccountProvidersError(
-              :final account,
-              :final error,
-              :final editingNumber,
-            ) =>
-              _AccountBody(
-                account: account,
-                editingNumber: editingNumber,
-                catalogError: error,
-              ),
-            MobileMoneyAccountProvidersUnavailable(
-              :final account,
-              :final editingNumber,
-            ) =>
-              _AccountBody(
-                account: account,
-                editingNumber: editingNumber,
-                catalogUnavailable: true,
-              ),
-            MobileMoneyAccountError(:final account, :final editingNumber)
-                when account != null =>
-              _AccountBody(account: account, editingNumber: editingNumber),
-            MobileMoneyAccountError() => DonyEmptyState(
-              type: DonyEmptyStateType.error,
-              title: l.mobileMoneyAccountLoadError,
-              actionLabel: l.commonRetry,
-              onAction: () => context.read<MobileMoneyAccountBloc>().add(
-                const MobileMoneyAccountRequested(),
-              ),
-            ),
+            if (state is MobileMoneyAccountError) {
+              return DonyEmptyState(
+                type: DonyEmptyStateType.error,
+                title: l.mobileMoneyAccountLoadError,
+                actionLabel: l.commonRetry,
+                onAction: () => _bloc.add(const MobileMoneyAccountsRequested()),
+              );
+            }
+            return Center(child: CircularProgressIndicator(color: cs.primary));
           },
         ),
       ),
@@ -129,761 +190,337 @@ class MobileMoneyAccountScreen extends StatelessWidget {
   }
 }
 
-/// Nom lisible d'un pays alpha-2, traduit s'il est au catalogue
-/// ([CountryCatalog]), sinon repli sur le code brut (même repli qu'avant la
-/// traduction : un code hors catalogue, comme `CD`, n'a pas de nom traduit).
-String _countryName(AppLocalizations l, String? code) {
-  if (code == null) return '';
-  return CountryCatalog.byCode(code) != null ? countryName(l, code) : code;
-}
-
-/// Vue active ou formulaire, selon le statut et l'édition en cours.
-class _AccountBody extends StatelessWidget {
-  const _AccountBody({
-    required this.account,
-    this.editingNumber = false,
-    this.isLoading = false,
-    this.catalog,
-    this.catalogLoading = false,
-    this.catalogError,
-    this.catalogUnavailable = false,
-  });
-
-  final MobileMoneyAccount account;
-  final bool editingNumber;
-  final bool isLoading;
-  final MobileMoneyProviderCatalog? catalog;
-  final bool catalogLoading;
-  final Object? catalogError;
-
-  /// Ancien contrat backend, sans route catalogue (I2) : le formulaire
-  /// affiche un bandeau d'information à la place de la checklist, et
-  /// l'activation reste possible sans réseau choisi.
-  final bool catalogUnavailable;
-
-  @override
-  Widget build(BuildContext context) {
-    final showForm = !account.isActive || editingNumber;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        DonySpacing.xl,
-        DonySpacing.lg,
-        DonySpacing.xl,
-      ),
-      child: showForm
-          ? _PayoutNumberForm(
-              // Une clé par mode : changer de mode repart d'un formulaire vierge.
-              key: ValueKey(editingNumber ? 'change' : account.status),
-              mode: editingNumber
-                  ? _FormMode.changeNumber
-                  : account.status == MobileMoneyAccountStatus.disabled
-                  ? _FormMode.reactivate
-                  : _FormMode.activate,
-              previousMasked: account.msisdnMasked,
-              // Par marque (ORANGE, WAVE...), pas par code pawaPay
-              // (ORANGE_SEN vs ORANGE_CIV) : un changement de numéro vers
-              // un autre pays ne doit pas perdre la présélection (M4).
-              preselect: account.providers.map((p) => p.brand).toSet(),
-              isLoading: isLoading,
-              catalog: catalog,
-              catalogLoading: catalogLoading,
-              catalogError: catalogError,
-              catalogUnavailable: catalogUnavailable,
-            )
-          : _ActiveView(account: account, isLoading: isLoading),
-    );
-  }
-}
-
-enum _FormMode { activate, reactivate, changeNumber }
-
-/// Formulaire : numéro en double saisie, puis réseaux du numéro à cocher.
-///
-/// Le catalogue part 400 ms après que les deux saisies normalisées
-/// coïncident ([MobileMoneyAccountProvidersRequested]) et s'efface dès
-/// qu'elles divergent ([MobileMoneyAccountProvidersCleared]). La sélection
-/// vit dans un [ValueNotifier] ; à l'arrivée du catalogue elle est
-/// pré-remplie avec le réseau détecté et les réseaux déjà acceptés présents
-/// dans ce catalogue ([preselect]). Aucun `setState`.
-class _PayoutNumberForm extends StatefulWidget {
-  const _PayoutNumberForm({
-    super.key,
-    required this.mode,
-    required this.isLoading,
-    required this.preselect,
-    this.previousMasked,
-    this.catalog,
-    this.catalogLoading = false,
-    this.catalogError,
-    this.catalogUnavailable = false,
-  });
-
-  final _FormMode mode;
-  final bool isLoading;
-  final Set<String> preselect;
-  final String? previousMasked;
-  final MobileMoneyProviderCatalog? catalog;
-  final bool catalogLoading;
-  final Object? catalogError;
-  final bool catalogUnavailable;
-
-  @override
-  State<_PayoutNumberForm> createState() => _PayoutNumberFormState();
-}
-
-class _PayoutNumberFormState extends State<_PayoutNumberForm> {
-  static const _debounce = Duration(milliseconds: 400);
-
-  late final TextEditingController _phoneCtrl;
-  final _confirmCtrl = TextEditingController();
-  final ValueNotifier<String?> _normalizedPhone = ValueNotifier(null);
-  final ValueNotifier<Set<String>> _selection = ValueNotifier({});
-
-  /// Dernier catalogue non nul reçu via [widget.catalog].
-  ///
-  /// `Updating` et `Error` (round 1, Ruling A5) ne portent pas de catalogue
-  /// dans leurs props : sans cette rétention, la checklist disparaîtrait et
-  /// le bouton resterait mort après un échec d'activation, alors que le
-  /// numéro confirmé et la sélection restent valides. Remis à nul dès que le
-  /// numéro normalisé diverge ([MobileMoneyAccountProvidersCleared]) ou
-  /// change pour un numéro pas encore chargé : un catalogue affiché doit
-  /// toujours correspondre au numéro confirmé à l'écran.
-  final ValueNotifier<MobileMoneyProviderCatalog?> _retainedCatalog =
-      ValueNotifier(null);
-  Timer? _timer;
-
-  /// Numéro pour lequel le catalogue a été demandé, pour ne pas le redemander
-  /// à chaque frappe qui laisse les deux champs égaux.
-  String? _requestedPhone;
-
-  @override
-  void initState() {
-    super.initState();
-    _phoneCtrl = TextEditingController(text: _profilePhone());
-    _phoneCtrl.addListener(_syncNormalizedPhone);
-    _confirmCtrl.addListener(_syncNormalizedPhone);
-    // Présélectionne dès le premier build, pas seulement sur une transition
-    // ultérieure (didUpdateWidget) : un formulaire monté directement sur un
-    // catalogue déjà chargé (ex. la feuille « Modifier ») doit lui aussi
-    // partir avec le réseau détecté et les réseaux déjà acceptés cochés.
-    _applyCatalog(widget.catalog);
-  }
-
-  @override
-  void didUpdateWidget(covariant _PayoutNumberForm old) {
-    super.didUpdateWidget(old);
-    final catalog = widget.catalog;
-    if (catalog != null && catalog != old.catalog) {
-      _applyCatalog(catalog);
-    }
-  }
-
-  /// Retient [catalog] et pré-coche le réseau détecté ainsi que les réseaux
-  /// dont la marque est déjà acceptée ([_PayoutNumberForm.preselect]),
-  /// présents dans ce catalogue (M4 : comparaison par marque, pas par code
-  /// pawaPay, un changement de numéro vers un autre pays change les codes
-  /// mais pas les marques déjà acceptées par l'expéditeur).
-  void _applyCatalog(MobileMoneyProviderCatalog? catalog) {
-    if (catalog == null) return;
-    _retainedCatalog.value = catalog;
-    _selection.value = {
-      for (final p in catalog.providers)
-        if (widget.preselect.contains(p.brand)) p.code,
-      if (catalog.detected != null) catalog.detected!,
-    };
-  }
-
-  String _profilePhone() {
-    try {
-      return context.read<AuthBloc>().state.currentUser?.phoneNumber ?? '';
-    } on ProviderNotFoundException {
-      return '';
-    }
-  }
-
-  void _syncNormalizedPhone() {
-    final phone = normalizePayerPhone(_phoneCtrl.text);
-    final confirm = normalizePayerPhone(_confirmCtrl.text);
-    final matched = (phone != null && phone == confirm) ? phone : null;
-    _normalizedPhone.value = matched;
-    _timer?.cancel();
-    if (matched == null) {
-      if (_requestedPhone != null) {
-        _requestedPhone = null;
-        _selection.value = {};
-        _retainedCatalog.value = null;
-        context.read<MobileMoneyAccountBloc>().add(
-          const MobileMoneyAccountProvidersCleared(),
-        );
-      }
-      return;
-    }
-    if (matched == _requestedPhone) return;
-    // Un catalogue affiché doit toujours correspondre au numéro confirmé :
-    // celui déjà retenu pour un AUTRE numéro (_requestedPhone non nul) ne
-    // vaut plus, avant même que le débounce ci-dessous n'aboutisse. Si aucune
-    // demande n'a encore été faite par ce formulaire (_requestedPhone nul),
-    // le catalogue en props vient d'un montage direct sur un état déjà
-    // chargé : il reste valable tant qu'aucune autre demande ne l'a supplanté.
-    if (_requestedPhone != null) {
-      _retainedCatalog.value = null;
-    }
-    _timer = Timer(_debounce, () {
-      if (!mounted) return;
-      _requestedPhone = matched;
-      _selection.value = {};
-      context.read<MobileMoneyAccountBloc>().add(
-        MobileMoneyAccountProvidersRequested(phoneNumber: matched),
+/// Apparition d'une ligne : fondu et léger glissé, 250 ms, décalés de 60 ms
+/// par rang, coupés quand la réduction du mouvement est active. La clé de
+/// l'appelant garde l'entrée des lignes déjà affichées.
+Widget _enter(BuildContext context, Widget child, int index) {
+  if (MediaQuery.disableAnimationsOf(context)) return child;
+  return child
+      .animate(delay: (60 * index).ms)
+      .fadeIn(duration: 250.ms, curve: Curves.easeOutCubic)
+      .slideY(
+        begin: 0.04,
+        end: 0,
+        duration: 250.ms,
+        curve: Curves.easeOutCubic,
       );
-    });
-  }
+}
 
-  /// Réémet la demande de catalogue pour le numéro confirmé, depuis le
-  /// bandeau d'erreur (« Réessayer ») du formulaire.
-  void _retryCatalog() {
-    final phone = _normalizedPhone.value;
-    if (phone == null) return;
-    context.read<MobileMoneyAccountBloc>().add(
-      MobileMoneyAccountProvidersRequested(phoneNumber: phone),
-    );
-  }
+class _AccountsBody extends StatelessWidget {
+  const _AccountsBody({
+    required this.data,
+    required this.submitting,
+    required this.onAdd,
+    required this.onChangeNumber,
+    required this.onRemove,
+  });
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _phoneCtrl.dispose();
-    _confirmCtrl.dispose();
-    _normalizedPhone.dispose();
-    _selection.dispose();
-    _retainedCatalog.dispose();
-    super.dispose();
-  }
-
-  String _explanation(AppLocalizations l) => switch (widget.mode) {
-    _FormMode.activate => l.mobileMoneyExplanationActivate,
-    _FormMode.reactivate =>
-      widget.previousMasked == null
-          ? l.mobileMoneyExplanationReactivateNoPrevious
-          : l.mobileMoneyReactivateWithPrevious(widget.previousMasked!),
-    _FormMode.changeNumber => l.mobileMoneyExplanationChangeNumber,
-  };
-
-  String _buttonLabel(AppLocalizations l) => switch (widget.mode) {
-    _FormMode.activate => l.mobileMoneyButtonActivate,
-    _FormMode.reactivate => l.mobileMoneyButtonReactivate,
-    _FormMode.changeNumber => l.mobileMoneyButtonChangeNumber,
-  };
+  final MobileMoneyPayoutAccounts data;
+  final bool submitting;
+  final VoidCallback onAdd;
+  final ValueChanged<MobileMoneyPayoutAccount> onChangeNumber;
+  final void Function(MobileMoneyPayoutAccount account, String label) onRemove;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
-    final bloc = context.read<MobileMoneyAccountBloc>();
+    final accounts = data.accounts;
+    // Ancien contrat : un seul compte possible tant qu'il existe.
+    final canAdd = !(data.legacy && accounts.isNotEmpty);
+    final labels = [for (final a in accounts) payoutAccountLabel(a, accounts)];
+    final suggested = data.suggested.map((s) => s.label).toSet().toList();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Hauteur fixe : la barre qui apparaît pendant une écriture ne
+        // décale pas la liste.
+        SizedBox(
+          height: 2,
+          child: submitting
+              ? LinearProgressIndicator(minHeight: 2, color: cs.primary)
+              : null,
+        ),
         Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.xl,
+              DonySpacing.lg,
+              DonySpacing.xxl,
+            ),
+            children: [
+              if (accounts.isEmpty)
                 DonyCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DonyIcon('smartphone', color: cs.primary, size: 32),
-                      const SizedBox(height: DonySpacing.base),
-                      Text(
-                        _explanation(l),
-                        style: tt.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          height: 1.45,
-                        ),
-                      ),
-                      const SizedBox(height: DonySpacing.lg),
-                      DonyTextField(
-                        key: const Key('payout-phone-field'),
-                        controller: _phoneCtrl,
-                        label: l.mobileMoneyPayoutNumberLabel,
-                        keyboardType: TextInputType.phone,
-                      ),
-                      const SizedBox(height: DonySpacing.base),
-                      ValueListenableBuilder<String?>(
-                        valueListenable: _normalizedPhone,
-                        builder: (context, phone, _) => DonyTextField(
-                          key: const Key('payout-phone-confirm-field'),
-                          controller: _confirmCtrl,
-                          label: l.mobileMoneyConfirmNumberLabel,
-                          keyboardType: TextInputType.phone,
-                          suffixIcon: phone == null
-                              ? null
-                              : Padding(
-                                  padding: const EdgeInsets.all(DonySpacing.md),
-                                  child: DonyIcon(
-                                    'check',
-                                    size: 20,
-                                    color: cs.success,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
+                  padding: const EdgeInsets.all(DonySpacing.base),
+                  child: Text(
+                    l.mobileMoneyPayoutAccountsEmpty,
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                  ),
+                )
+              else ...[
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: DonySpacing.xs,
+                    bottom: DonySpacing.sm,
+                  ),
+                  child: Text(
+                    l.mobileMoneyPayoutAccountsSectionLabel,
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ),
+                DonyCard(
+                  padding: EdgeInsets.zero,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(DonyRadius.card),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var i = 0; i < accounts.length; i++) ...[
+                          if (i > 0) const _RowDivider(),
+                          KeyedSubtree(
+                            key: ValueKey('payout-account-${accounts[i].id}'),
+                            child: _enter(
+                              context,
+                              _AccountRow(
+                                account: accounts[i],
+                                label: labels[i],
+                                enabled: !submitting,
+                                onChangeNumber: () =>
+                                    onChangeNumber(accounts[i]),
+                                onRemove: () =>
+                                    onRemove(accounts[i], labels[i]),
+                              ),
+                              i,
+                            ),
+                          ),
+                        ],
+                        if (canAdd) ...[
+                          const _RowDivider(),
+                          _AddRow(enabled: !submitting, onTap: onAdd),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: DonySpacing.base),
-                ValueListenableBuilder<MobileMoneyProviderCatalog?>(
-                  valueListenable: _retainedCatalog,
-                  builder: (context, catalog, _) => _NetworksSection(
-                    catalog: catalog,
-                    loading: widget.catalogLoading,
-                    error: widget.catalogError,
-                    unavailable: widget.catalogUnavailable,
-                    selection: _selection,
-                    onChanged: (s) => _selection.value = s,
-                    onRetry: _retryCatalog,
+                DonyStatusBanner(
+                  type: DonyStatusBannerType.info,
+                  message: l.mobileMoneyPayoutAccountsRule(
+                    joinList(l, labels.toSet().toList()),
                   ),
                 ),
               ],
-            ),
+              if (suggested.isNotEmpty) ...[
+                const SizedBox(height: DonySpacing.md),
+                DonyStatusBanner(
+                  type: DonyStatusBannerType.warning,
+                  message: l.mobileMoneyPayoutAccountsSuggested(
+                    joinList(l, suggested),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
-        const SizedBox(height: DonySpacing.lg),
-        ListenableBuilder(
-          listenable: Listenable.merge([
-            _normalizedPhone,
-            _selection,
-            _retainedCatalog,
-          ]),
-          builder: (context, _) {
-            final phone = _normalizedPhone.value;
-            final catalog = _retainedCatalog.value;
-            final hasCatalogSelection =
-                catalog != null &&
-                !catalog.isEmpty &&
-                _selection.value.isNotEmpty;
-            // Ancien contrat backend (I2) : aucun catalogue à choisir,
-            // l'activation reste possible dès le numéro confirmé, le back
-            // détecte l'opérateur automatiquement.
-            final ready =
-                phone != null &&
-                (hasCatalogSelection || widget.catalogUnavailable);
-            return DonyButton(
-              label: _buttonLabel(l),
-              isLoading: widget.isLoading,
-              onPressed: !ready
-                  ? null
-                  : () => bloc.add(
-                      MobileMoneyAccountActivateRequested(
-                        phoneNumber: phone,
-                        providers: hasCatalogSelection
-                            ? catalog.ordered(_selection.value)
-                            : const [],
+        if (accounts.isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.sm,
+              DonySpacing.lg,
+              DonySpacing.lg,
+            ),
+            child: DonyButton(
+              key: const Key('payout-account-add-button'),
+              label: l.mobileMoneyPayoutAccountAdd,
+              onPressed: submitting ? null : onAdd,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Séparateur aligné sur le texte des lignes (après la pastille).
+class _RowDivider extends StatelessWidget {
+  const _RowDivider();
+
+  @override
+  Widget build(BuildContext context) => const Divider(
+    height: 1,
+    indent: DonySpacing.base + _kMarkSize + DonySpacing.md,
+  );
+}
+
+const double _kMarkSize = 40;
+
+enum _AccountAction { changeNumber, remove }
+
+class _AccountRow extends StatelessWidget {
+  const _AccountRow({
+    required this.account,
+    required this.label,
+    required this.enabled,
+    required this.onChangeNumber,
+    required this.onRemove,
+  });
+
+  final MobileMoneyPayoutAccount account;
+  final String label;
+  final bool enabled;
+  final VoidCallback onChangeNumber;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final country = account.country.isEmpty
+        ? null
+        : countryName(l, account.country.toUpperCase());
+    final details = country == null
+        ? account.msisdnMasked
+        : '${account.msisdnMasked} · $country';
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: DonySpacing.base,
+        top: DonySpacing.md,
+        bottom: DonySpacing.md,
+        right: DonySpacing.xs,
+      ),
+      child: Row(
+        children: [
+          // La pastille répète l'opérateur : le libellé texte suffit au
+          // lecteur d'écran.
+          ExcludeSemantics(child: DonyBrandMark(brand: account.brand)),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: MergeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: tt.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.xxs),
+                  Text(
+                    details,
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          PopupMenuButton<_AccountAction>(
+            key: Key('payout-account-menu-${account.id}'),
+            enabled: enabled,
+            tooltip: l.mobileMoneyPayoutAccountActions(label),
+            icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant, size: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            onSelected: (action) => switch (action) {
+              _AccountAction.changeNumber => onChangeNumber(),
+              _AccountAction.remove => onRemove(),
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: _AccountAction.changeNumber,
+                child: Row(
+                  children: [
+                    const DonyIcon('square-pen', size: 18),
+                    const SizedBox(width: DonySpacing.sm),
+                    Flexible(
+                      child: Text(l.mobileMoneyPayoutAccountChangeNumber),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: _AccountAction.remove,
+                child: Row(
+                  children: [
+                    DonyIcon('trash-2', size: 18, color: cs.error),
+                    const SizedBox(width: DonySpacing.sm),
+                    Flexible(
+                      child: Text(
+                        l.mobileMoneyPayoutAccountRemove,
+                        style: TextStyle(color: cs.error),
                       ),
                     ),
-            );
-          },
-        ),
-        if (widget.mode == _FormMode.changeNumber) ...[
-          const SizedBox(height: DonySpacing.sm),
-          DonyButton(
-            label: l.commonCancel,
-            variant: DonyButtonVariant.ghost,
-            onPressed: widget.isLoading
-                ? null
-                : () =>
-                      bloc.add(const MobileMoneyAccountChangeNumberCancelled()),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
-      ],
+      ),
     );
   }
 }
 
-/// Section « Réseaux sur ce numéro » : invite, squelette, bandeau d'erreur
-/// ou liste à cocher suivie du rappel de la règle de couplage.
-class _NetworksSection extends StatelessWidget {
-  const _NetworksSection({
-    required this.catalog,
-    required this.loading,
-    required this.error,
-    required this.unavailable,
-    required this.selection,
-    required this.onChanged,
-    required this.onRetry,
-  });
+class _AddRow extends StatelessWidget {
+  const _AddRow({required this.enabled, required this.onTap});
 
-  final MobileMoneyProviderCatalog? catalog;
-  final bool loading;
-  final Object? error;
-
-  /// Ancien contrat backend (I2) : remplace la checklist par un bandeau
-  /// d'information, quels que soient [loading]/[error]/[catalog].
-  final bool unavailable;
-  final ValueNotifier<Set<String>> selection;
-  final ValueChanged<Set<String>> onChanged;
-
-  /// Réémet la demande de catalogue pour le numéro confirmé (bandeau
-  /// d'erreur, bouton « Réessayer »).
-  final VoidCallback onRetry;
+  final bool enabled;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
-    final catalog = this.catalog;
-    final trailing = catalog == null
-        ? null
-        : [
-            _countryName(l, catalog.country),
-            catalog.currency,
-          ].whereType<String>().where((s) => s.isNotEmpty).join(', ');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Text(
-                l.mobileMoneyNetworksSectionTitle,
-                style: tt.titleLarge,
+    return Semantics(
+      button: true,
+      child: InkWell(
+        key: const Key('payout-account-add-row'),
+        onTap: enabled ? onTap : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.md,
+          ),
+          child: Row(
+            children: [
+              ExcludeSemantics(
+                child: Container(
+                  width: _kMarkSize,
+                  height: _kMarkSize,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(_kMarkSize / 4),
+                  ),
+                  child: DonyIcon('plus', size: 20, color: cs.primary),
+                ),
               ),
-            ),
-            if (trailing != null && trailing.isNotEmpty)
-              Text(
-                trailing,
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-          ],
-        ),
-        const SizedBox(height: DonySpacing.md),
-        if (unavailable)
-          DonyStatusBanner(
-            type: DonyStatusBannerType.info,
-            message: l.mobileMoneyNetworksUnavailable,
-          )
-        else if (loading)
-          const MobileMoneyNetworksSkeleton()
-        else if (error != null)
-          DonyStatusBanner(
-            type: DonyStatusBannerType.error,
-            message: ErrorPresenter.resolve(error, l10n: context.l10n).message,
-            action: TextButton(onPressed: onRetry, child: Text(l.commonRetry)),
-          )
-        else if (catalog != null && catalog.isEmpty)
-          Text(
-            l.mobileMoneyNoNetworksAvailable,
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          )
-        else if (catalog != null) ...[
-          MobileMoneyNetworksChecklist(
-            catalog: catalog,
-            selection: selection,
-            onChanged: onChanged,
-          ),
-          const SizedBox(height: DonySpacing.base),
-          DonyStatusBanner(
-            type: DonyStatusBannerType.info,
-            message: l.mobileMoneyPayerChoosesNetwork,
-          ),
-        ] else
-          Text(
-            l.mobileMoneyConfirmToSeeNetworks,
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-      ],
-    );
-  }
-}
-
-/// Versement actif : compte, réseaux acceptés (avec la feuille « Modifier »),
-/// changement de numéro, désactivation.
-class _ActiveView extends StatelessWidget {
-  const _ActiveView({required this.account, required this.isLoading});
-
-  final MobileMoneyAccount account;
-  final bool isLoading;
-
-  Future<void> _showProvidersSheet(BuildContext context) {
-    final l = context.l10n;
-    final bloc = context.read<MobileMoneyAccountBloc>();
-    final selection = ValueNotifier<Set<String>>(
-      account.providers.map((p) => p.code).toSet(),
-    );
-    bloc.add(const MobileMoneyAccountProvidersRequested());
-    return DonyBottomSheet.show<void>(
-      context,
-      title: l.mobileMoneyAcceptedNetworksTitle,
-      subtitle: [
-        account.msisdnMasked,
-        _countryName(l, account.country),
-      ].whereType<String>().where((s) => s.isNotEmpty).join(', '),
-      wrapper: (child) => BlocProvider.value(value: bloc, child: child),
-      stickyBottom: ValueListenableBuilder<Set<String>>(
-        valueListenable: selection,
-        builder: (context, selected, _) =>
-            BlocBuilder<MobileMoneyAccountBloc, MobileMoneyAccountState>(
-              builder: (context, state) {
-                final catalog = state is MobileMoneyAccountProvidersLoaded
-                    ? state.catalog
-                    : null;
-                return DonyButton(
-                  label: l.commonSave,
-                  isLoading: state is MobileMoneyAccountUpdating,
-                  onPressed:
-                      catalog == null || catalog.isEmpty || selected.isEmpty
-                      ? null
-                      : () {
-                          bloc.add(
-                            MobileMoneyAccountProvidersUpdateRequested(
-                              catalog.ordered(selected),
-                            ),
-                          );
-                          Navigator.of(context, rootNavigator: true).pop();
-                        },
-                );
-              },
-            ),
-      ),
-      child: _ProvidersSheetContent(
-        selection: selection,
-        onChanged: (s) => selection.value = s,
-      ),
-    ).whenComplete(selection.dispose);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
-    final countryLabel = _countryName(l, account.country);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                DonyCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              l.mobileMoneyAccountTitle,
-                              style: tt.titleLarge,
-                            ),
-                          ),
-                          const SizedBox(width: DonySpacing.sm),
-                          DonyBadge(
-                            label: l.mobileMoneyActiveBadge,
-                            type: DonyBadgeType.success,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: DonySpacing.base),
-                      DonyInfoRow(
-                        label: l.mobileMoneyNumberLabel,
-                        value: account.msisdnMasked ?? l.mobileMoneyNotProvided,
-                      ),
-                      const DonyInfoRow.divider(),
-                      DonyInfoRow(
-                        label: l.mobileMoneyCountryLabel,
-                        value: countryLabel.isEmpty
-                            ? l.mobileMoneyNotProvided
-                            : countryLabel,
-                      ),
-                      const DonyInfoRow.divider(),
-                      DonyInfoRow(
-                        label: l.mobileMoneyCurrencyLabel,
-                        value: account.currency ?? l.mobileMoneyNotProvided,
-                      ),
-                    ],
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Text(
+                  l.mobileMoneyPayoutAccountAdd,
+                  style: tt.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: cs.primary,
                   ),
                 ),
-                const SizedBox(height: DonySpacing.base),
-                DonyCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              l.mobileMoneyAcceptedNetworksTitle,
-                              style: tt.titleLarge,
-                            ),
-                          ),
-                          TextButton.icon(
-                            key: const Key('edit-networks'),
-                            onPressed: isLoading
-                                ? null
-                                : () => _showProvidersSheet(context),
-                            icon: DonyIcon(
-                              'square-pen',
-                              size: 16,
-                              color: cs.primary,
-                            ),
-                            label: Text(l.commonEdit),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: DonySpacing.sm),
-                      Wrap(
-                        spacing: DonySpacing.sm,
-                        runSpacing: DonySpacing.sm,
-                        children: [
-                          for (final p in account.providers)
-                            Container(
-                              padding: const EdgeInsets.fromLTRB(6, 6, 12, 6),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: cs.outline),
-                                borderRadius: BorderRadius.circular(
-                                  DonyRadius.full,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Le libellé texte voisin suffit (M9a) :
-                                  // sans ça, un lecteur d'écran annonce le
-                                  // nom de marque de la pastille puis le
-                                  // libellé, doublant l'annonce (« ORANGE,
-                                  // Orange Money »).
-                                  ExcludeSemantics(
-                                    child: DonyBrandMark(
-                                      brand: p.brand,
-                                      size: 24,
-                                    ),
-                                  ),
-                                  const SizedBox(width: DonySpacing.sm),
-                                  Text(
-                                    p.label,
-                                    style: tt.titleSmall?.copyWith(
-                                      color: cs.onSurface,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: DonySpacing.md),
-                      Text(
-                        l.mobileMoneyPayerChoosesOneNetwork,
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: DonySpacing.lg),
-        DonyButton(
-          label: l.mobileMoneyChangeNumberButton,
-          variant: DonyButtonVariant.secondary,
-          onPressed: isLoading
-              ? null
-              : () => context.read<MobileMoneyAccountBloc>().add(
-                  const MobileMoneyAccountChangeNumberRequested(),
-                ),
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        DonyButton(
-          label: l.mobileMoneyDisableButton,
-          variant: DonyButtonVariant.ghost,
-          isLoading: isLoading,
-          onPressed: () => context.read<MobileMoneyAccountBloc>().add(
-            const MobileMoneyAccountDisableRequested(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Contenu de la feuille « Réseaux acceptés » : squelette, bandeau ou liste
-/// à cocher selon l'état du catalogue. Aucun bouton ici (règle bottom
-/// sheet : le bouton vit dans `stickyBottom`).
-class _ProvidersSheetContent extends StatelessWidget {
-  const _ProvidersSheetContent({
-    required this.selection,
-    required this.onChanged,
-  });
-
-  final ValueNotifier<Set<String>> selection;
-  final ValueChanged<Set<String>> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        DonySpacing.sm,
-        DonySpacing.lg,
-        DonySpacing.base,
-      ),
-      child: BlocConsumer<MobileMoneyAccountBloc, MobileMoneyAccountState>(
-        // M6 : à l'arrivée du catalogue, la sélection initiale (réseaux déjà
-        // acceptés par le compte, reprise telle quelle à l'ouverture de la
-        // feuille) est intersectée avec les codes réellement présents dedans
-        // (même principe que _applyCatalog du formulaire) : un code disparu
-        // (pawaPay muet dessus pour ce numéro) ne doit jamais rester coché
-        // sans ligne pour le représenter, au risque d'un 422 à l'enregistrement.
-        listener: (context, state) {
-          if (state is MobileMoneyAccountProvidersLoaded) {
-            final codes = state.catalog.providers.map((p) => p.code).toSet();
-            final filtered = selection.value.where(codes.contains).toSet();
-            if (filtered.length != selection.value.length) {
-              selection.value = filtered;
-            }
-          }
-        },
-        builder: (context, state) => switch (state) {
-          MobileMoneyAccountProvidersLoaded(:final catalog) =>
-            catalog.isEmpty
-                ? Text(
-                    l.mobileMoneyNoNetworksAvailable,
-                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                  )
-                : MobileMoneyNetworksChecklist(
-                    catalog: catalog,
-                    selection: selection,
-                    onChanged: onChanged,
-                  ),
-          MobileMoneyAccountProvidersError(:final error) => DonyStatusBanner(
-            type: DonyStatusBannerType.error,
-            message: ErrorPresenter.resolve(error, l10n: context.l10n).message,
-            action: TextButton(
-              onPressed: () => context.read<MobileMoneyAccountBloc>().add(
-                const MobileMoneyAccountProvidersRequested(),
               ),
-              child: Text(l.commonRetry),
-            ),
+            ],
           ),
-          MobileMoneyAccountProvidersUnavailable() => DonyStatusBanner(
-            type: DonyStatusBannerType.info,
-            message: l.mobileMoneyNetworksUnavailable,
-          ),
-          _ => const MobileMoneyNetworksSkeleton(),
-        },
+        ),
       ),
     );
   }
