@@ -2147,4 +2147,334 @@ void main() {
       },
     );
   });
+
+  group(
+    'refus immédiat de l\'opérateur à l\'initiation (422 deposit-rejected)',
+    () {
+      const rejected = ValidationException(
+        'Paiement refusé par l\'opérateur',
+        code: 'mobile-money-deposit-rejected',
+      );
+
+      void stubRejected({String? phone, String? provider}) => when(
+        () => repository.initiate(
+          scope,
+          phoneNumber: phone ?? '+2250707070707',
+          provider: provider ?? 'ORANGE_CIV',
+        ),
+      ).thenThrow(rejected);
+
+      blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+        'le statut relu montre le dépôt refusé : DepositFailed (motif traduit '
+        'porté par le dépôt), renvoi possible, mobile_money_failed stage '
+        'initiate une seule fois',
+        build: () {
+          stubRejected();
+          when(
+            () => repository.getStatus(scope),
+          ).thenAnswer((_) async => failedStatus);
+          return bloc();
+        },
+        seed: () => const MobileMoneyPaymentChoosePayer(
+          status: noDepositStatus,
+          accepted: accepted,
+        ),
+        act: (b) => b.add(
+          const MobileMoneyPaymentInitiateRequested(
+            scope: scope,
+            phoneNumber: '+2250707070707',
+            provider: 'ORANGE_CIV',
+          ),
+        ),
+        expect: () => [
+          const MobileMoneyPaymentChoosePayer(
+            status: noDepositStatus,
+            accepted: accepted,
+            isSubmitting: true,
+          ),
+          const MobileMoneyPaymentDepositFailed(failedStatus),
+        ],
+        verify: (b) {
+          expect(b.canResend, isTrue);
+          verify(
+            () => analytics.logEvent(
+              AnalyticsEvents.mobileMoneyFailed,
+              properties: {
+                'failure_code': 'mobile-money-deposit-rejected',
+                'stage': 'initiate',
+                'scope': 'bid',
+              },
+            ),
+          ).called(1);
+          // Pas de second event d'échec (celui du sondage) ni de succès.
+          verifyNever(
+            () => analytics.logEvent(
+              AnalyticsEvents.mobileMoneyFailed,
+              properties: {
+                'failure_code': 'INSUFFICIENT_FUNDS',
+                'scope': 'bid',
+              },
+            ),
+          );
+          verifyNever(
+            () => analytics.logEvent(
+              AnalyticsEvents.mobileMoneyInitiated,
+              properties: any(named: 'properties'),
+            ),
+          );
+        },
+      );
+
+      blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+        '« Renvoyer une demande » après ce refus : même numéro et même '
+        'opérateur, nouveau dépôt vivant',
+        build: () {
+          var calls = 0;
+          when(
+            () => repository.initiate(
+              scope,
+              phoneNumber: '+2250707070707',
+              provider: 'ORANGE_CIV',
+            ),
+          ).thenAnswer((_) async {
+            if (calls++ == 0) throw rejected;
+            return liveStatus;
+          });
+          when(
+            () => repository.getStatus(scope),
+          ).thenAnswer((_) async => failedStatus);
+          return bloc();
+        },
+        seed: () => const MobileMoneyPaymentChoosePayer(
+          status: noDepositStatus,
+          accepted: accepted,
+        ),
+        act: (b) async {
+          b.add(
+            const MobileMoneyPaymentInitiateRequested(
+              scope: scope,
+              phoneNumber: '+2250707070707',
+              provider: 'ORANGE_CIV',
+            ),
+          );
+          await pumpEventQueue();
+          b.add(const MobileMoneyPaymentResendRequested(scope: scope));
+        },
+        expect: () => [
+          isA<MobileMoneyPaymentChoosePayer>().having(
+            (s) => s.isSubmitting,
+            'isSubmitting',
+            isTrue,
+          ),
+          const MobileMoneyPaymentDepositFailed(failedStatus),
+          isA<MobileMoneyPaymentLoading>(),
+          const MobileMoneyPaymentAwaitingConfirmation(liveStatus),
+        ],
+        verify: (_) {
+          verify(
+            () => repository.initiate(
+              scope,
+              phoneNumber: '+2250707070707',
+              provider: 'ORANGE_CIV',
+            ),
+          ).called(2);
+        },
+      );
+
+      blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+        'relecture en échec : repli sur le choix du payeur avec le bandeau '
+        'd\'erreur, pas de renvoi, mobile_money_failed une seule fois',
+        build: () {
+          stubRejected();
+          when(
+            () => repository.getStatus(scope),
+          ).thenThrow(Exception('réseau'));
+          return bloc();
+        },
+        seed: () => const MobileMoneyPaymentChoosePayer(
+          status: noDepositStatus,
+          accepted: accepted,
+        ),
+        act: (b) => b.add(
+          const MobileMoneyPaymentInitiateRequested(
+            scope: scope,
+            phoneNumber: '+2250707070707',
+            provider: 'ORANGE_CIV',
+          ),
+        ),
+        expect: () => [
+          const MobileMoneyPaymentChoosePayer(
+            status: noDepositStatus,
+            accepted: accepted,
+            isSubmitting: true,
+          ),
+          isA<MobileMoneyPaymentChoosePayer>()
+              .having((s) => s.isSubmitting, 'isSubmitting', isFalse)
+              .having(
+                (s) => s.error,
+                'error',
+                isA<ValidationException>().having(
+                  (e) => e.code,
+                  'code',
+                  'mobile-money-deposit-rejected',
+                ),
+              ),
+        ],
+        verify: (b) {
+          expect(b.canResend, isFalse);
+          verify(
+            () => analytics.logEvent(
+              AnalyticsEvents.mobileMoneyFailed,
+              properties: {
+                'failure_code': 'mobile-money-deposit-rejected',
+                'stage': 'initiate',
+                'scope': 'bid',
+              },
+            ),
+          ).called(1);
+        },
+      );
+
+      blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+        'relecture sans dépôt refusé : même repli sur le choix du payeur',
+        build: () {
+          stubRejected();
+          when(
+            () => repository.getStatus(scope),
+          ).thenAnswer((_) async => noDepositStatus);
+          return bloc();
+        },
+        seed: () =>
+            const MobileMoneyPaymentChoosePayer(status: noDepositStatus),
+        act: (b) => b.add(
+          const MobileMoneyPaymentInitiateRequested(
+            scope: scope,
+            phoneNumber: '+2250707070707',
+            provider: 'ORANGE_CIV',
+          ),
+        ),
+        expect: () => [
+          const MobileMoneyPaymentChoosePayer(
+            status: noDepositStatus,
+            isSubmitting: true,
+          ),
+          isA<MobileMoneyPaymentChoosePayer>().having(
+            (s) => s.error,
+            'error',
+            isA<ValidationException>(),
+          ),
+        ],
+        verify: (b) => expect(b.canResend, isFalse),
+      );
+
+      blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+        'un autre 422 ne relit pas le statut',
+        build: () {
+          when(
+            () => repository.initiate(
+              scope,
+              phoneNumber: '+2250707070707',
+              provider: 'ORANGE_CIV',
+            ),
+          ).thenThrow(
+            const ValidationException('x', code: 'mobile-money-invalid-phone'),
+          );
+          return bloc();
+        },
+        seed: () =>
+            const MobileMoneyPaymentChoosePayer(status: noDepositStatus),
+        act: (b) => b.add(
+          const MobileMoneyPaymentInitiateRequested(
+            scope: scope,
+            phoneNumber: '+2250707070707',
+            provider: 'ORANGE_CIV',
+          ),
+        ),
+        expect: () => [
+          isA<MobileMoneyPaymentChoosePayer>(),
+          isA<MobileMoneyPaymentChoosePayer>().having(
+            (s) => s.error,
+            'error',
+            isNotNull,
+          ),
+        ],
+        verify: (_) => verifyNever(() => repository.getStatus(any())),
+      );
+    },
+  );
+
+  group('sondage pendant la lecture d\'ouverture', () {
+    const residual = MobileMoneyPaymentStatus(
+      subjectId: threadId,
+      paymentStatus: 'CANCELLED',
+      amount: 50.0,
+    );
+
+    for (final entry in <String, MobileMoneyPaymentState>{
+      'Initial': const MobileMoneyPaymentInitial(),
+      'Loading': const MobileMoneyPaymentLoading(),
+    }.entries) {
+      blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+        'ligne CANCELLED résiduelle d\'un fil en ${entry.key} : le sondage '
+        'est ignoré (ni Expired, ni analytics d\'expiration)',
+        build: () {
+          when(
+            () => repository.getStatus(negotiationScope),
+          ).thenAnswer((_) async => residual);
+          return bloc();
+        },
+        seed: () => entry.value,
+        act: (b) =>
+            b.add(const MobileMoneyStatusPolled(scope: negotiationScope)),
+        expect: () => [],
+        verify: (_) {
+          verifyNever(
+            () => analytics.logEvent(
+              AnalyticsEvents.mobileMoneyExpired,
+              properties: any(named: 'properties'),
+            ),
+          );
+          verifyNever(
+            () => analytics.logEvent(
+              AnalyticsEvents.paymentFailed,
+              properties: any(named: 'properties'),
+            ),
+          );
+        },
+      );
+    }
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'ouverture lente : sondage résiduel pendant les opérateurs acceptés, '
+      'seul Loading est émis (jamais Expired)',
+      build: () {
+        final slow = Completer<MobileMoneyAcceptedOperators?>();
+        addTearDown(() {
+          if (!slow.isCompleted) slow.complete(accepted);
+        });
+        when(
+          () => repository.getStatus(negotiationScope),
+        ).thenAnswer((_) async => residual);
+        when(
+          () => repository.acceptedOperators(negotiationScope),
+        ).thenAnswer((_) => slow.future.then((_) => accepted));
+        return bloc();
+      },
+      act: (b) async {
+        b.add(const MobileMoneyPaymentOpened(scope: negotiationScope));
+        await pumpEventQueue();
+        b.add(const MobileMoneyStatusPolled(scope: negotiationScope));
+        await pumpEventQueue();
+      },
+      expect: () => [isA<MobileMoneyPaymentLoading>()],
+      verify: (_) {
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyExpired,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+  });
 }

@@ -600,8 +600,8 @@ void main() {
     setUp(() {
       authService = _MockLocalAuthService();
       userPrefsBox = _MockBox();
-      // Biométrie activée + réussie : requirePaymentAuth répond vrai sans
-      // passer par l'écran PIN.
+      // Biométrie activée : les stubs ne servent qu'à prouver, par
+      // `verifyNever`, que la branche mobile money ne la demande pas.
       when(
         () => userPrefsBox.get(
           HiveService.kBiometricEnabled,
@@ -706,18 +706,6 @@ void main() {
             path: '/negotiations/:id/paid',
             builder: (_, state) => NegotiationPaidSuccessScreen(
               threadId: state.pathParameters['id']!,
-            ),
-          ),
-          // Repli PIN de requirePaymentAuth quand la biométrie échoue : le
-          // stub refuse (pop false).
-          GoRoute(
-            path: '/auth/local',
-            builder: (ctx, _) => Scaffold(
-              body: ElevatedButton(
-                key: const Key('pin-refuse'),
-                onPressed: () => ctx.pop(false),
-                child: const Text('refuser'),
-              ),
             ),
           ),
           GoRoute(
@@ -842,13 +830,10 @@ void main() {
     );
 
     testWidgets(
-      'authentification refusée (biométrie puis PIN) → la feuille reste '
-      'ouverte, avertissement, aucune route d\'attente poussée',
+      'aucune vérification locale sur la branche mobile money : ni biométrie '
+      'ni PIN avant la navigation (l\'écran d\'attente la demande avant le '
+      'dépôt), la route d\'attente est poussée directement',
       (tester) async {
-        when(
-          () => authService.authenticateWithBiometric(),
-        ).thenAnswer((_) async => false);
-        when(() => authService.isPinSet()).thenAnswer((_) async => true);
         final extras = <Object?>[];
         await tester.pumpWidget(buildRoutedApp(capturedExtras: extras));
         await tester.tap(find.byKey(const Key('open')));
@@ -862,18 +847,18 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Biométrie refusée → repli sur l'écran PIN, que l'on refuse aussi.
-        await tester.tap(find.byKey(const Key('pin-refuse')));
-        await tester.pumpAndSettle();
-
-        expect(extras, isEmpty);
-        expect(find.text('Paiement non confirmé, réessayez'), findsOneWidget);
-        expect(find.text('Payer par mobile money'), findsOneWidget);
-        verifyNever(() => bloc.add(any()));
-
-        // Laisse le snackbar se retirer (timer) avant la fin du test.
-        await tester.pump(const Duration(seconds: 6));
-        await tester.pumpAndSettle();
+        expect(extras, [null]);
+        expect(find.text('ATTENTE thread-recap-1'), findsOneWidget);
+        verifyNever(() => authService.isBiometricAvailable());
+        verifyNever(() => authService.authenticateWithBiometric());
+        verifyNever(() => authService.isPinSet());
+        verifyNever(
+          () => userPrefsBox.get(
+            HiveService.kBiometricEnabled,
+            defaultValue: any(named: 'defaultValue'),
+          ),
+        );
+        expect(find.text('Paiement non confirmé, réessayez'), findsNothing);
       },
     );
   });

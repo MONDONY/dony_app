@@ -948,12 +948,16 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('COMPTE QUI PAIE'), findsNothing);
-      expect(tester.widget<DonyButton>(payButton()).onPressed, isNotNull);
+      // Champ vide : « Payer » grisé, le back ne doit jamais payer avec le
+      // numéro du compte.
+      expect(tester.widget<DonyButton>(payButton()).onPressed, isNull);
 
       await tester.enterText(
         find.byKey(const Key('mobile-money-legacy-phone-field')),
         '07 48 84 08 56',
       );
+      await tester.pump();
+      expect(tester.widget<DonyButton>(payButton()).onPressed, isNotNull);
       await tester.tap(payButton());
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
@@ -970,18 +974,37 @@ void main() {
       ).called(1);
     });
 
-    testWidgets('choosePayer_legacy_emptyField_sendsNoNumber', (tester) async {
+    testWidgets('choosePayer_legacy_noValidNumber_payDisabled_noInitiate', (
+      tester,
+    ) async {
       payerOn(const PayerAccountState(status: PayerAccountStatus.legacy));
       stub(const MobileMoneyPaymentChoosePayer(status: noDepositStatus));
 
       await pumpScreen(tester);
-      await tester.tap(payButton());
+      expect(tester.widget<DonyButton>(payButton()).onPressed, isNull);
+
+      // Du texte sans chiffre reste refusé (`normalizePayerPhone` rend null),
+      // puis un numéro active le bouton, et l'effacer le grise de nouveau.
+      final field = find.byKey(const Key('mobile-money-legacy-phone-field'));
+      await tester.enterText(field, 'abc');
+      await tester.pump();
+      expect(tester.widget<DonyButton>(payButton()).onPressed, isNull);
+
+      await tester.enterText(field, '07 48 84 08 56');
+      await tester.pump();
+      expect(tester.widget<DonyButton>(payButton()).onPressed, isNotNull);
+
+      await tester.enterText(field, '');
+      await tester.pump();
+      expect(tester.widget<DonyButton>(payButton()).onPressed, isNull);
+
+      await tester.tap(payButton(), warnIfMissed: false);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
-      verify(
-        () => bloc.add(const MobileMoneyPaymentInitiateRequested(scope: scope)),
-      ).called(1);
+      verifyNever(
+        () => bloc.add(any(that: isA<MobileMoneyPaymentInitiateRequested>())),
+      );
     });
 
     testWidgets('choosePayer_doubleTap_runsOnlyOneAuthentication', (
@@ -1311,6 +1334,49 @@ void main() {
       expect(find.text('Renvoyer une demande'), findsOneWidget);
       expect(find.text('Payer avec un autre numéro'), findsOneWidget);
     });
+
+    testWidgets(
+      'failed_afterImmediateRejection_showsTranslatedReason_noErrorBanner',
+      (tester) async {
+        // Refus immédiat à l'initiation (422 deposit-rejected) : le bloc relit
+        // le statut et passe de « Qui paie ? » (envoi) au refus.
+        final controller =
+            StreamController<MobileMoneyPaymentState>.broadcast();
+        addTearDown(controller.close);
+        final emit = drive(const MobileMoneyPaymentLoading(), controller);
+
+        await pumpScreen(tester);
+        emit(const MobileMoneyPaymentChoosePayer(status: noDepositStatus));
+        await tester.pump();
+        emit(
+          const MobileMoneyPaymentChoosePayer(
+            status: noDepositStatus,
+            isSubmitting: true,
+          ),
+        );
+        await tester.pump();
+        emit(
+          MobileMoneyPaymentDepositFailed(
+            failedStatus(
+              code: 'insufficient-balance',
+              message: 'Paiement refusé : solde insuffisant (back)',
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.text('Paiement non abouti'), findsOneWidget);
+        expect(
+          find.text('Solde insuffisant sur votre compte mobile money.'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('(back)'), findsNothing);
+        expect(find.text('Renvoyer une demande'), findsOneWidget);
+        expect(find.text('Payer avec un autre numéro'), findsOneWidget);
+        await settleMotion(tester);
+      },
+    );
 
     testWidgets('failed_unknownCode_usesBackendMessage', (tester) async {
       stub(

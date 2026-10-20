@@ -152,6 +152,15 @@ class MobileMoneyPaymentBloc
         emit,
       );
     } catch (e) {
+      if (await _showRejectedDeposit(
+        e,
+        event.scope,
+        event.phoneNumber,
+        event.provider,
+        emit,
+      )) {
+        return;
+      }
       if (choosing is! MobileMoneyPaymentChoosePayer) {
         _emitError(emit, e, event.scope, 'initiate');
         return;
@@ -201,8 +210,53 @@ class MobileMoneyPaymentBloc
         emit,
       );
     } catch (e) {
+      if (await _showRejectedDeposit(
+        e,
+        event.scope,
+        payer.phoneNumber,
+        payer.provider,
+        emit,
+      )) {
+        return;
+      }
       _emitError(emit, e, event.scope, 'initiate');
     }
+  }
+
+  /// Refus immédiat de l'opérateur à l'initiation (422
+  /// `mobile-money-deposit-rejected`) : le dépôt refusé existe côté back avec
+  /// son motif traduit (`failureReasonCode`, `failureMessage`). On relit le
+  /// statut et on montre le même écran qu'un refus constaté au sondage
+  /// ([MobileMoneyPaymentDepositFailed] : motif, « Renvoyer une demande »,
+  /// « Payer avec un autre numéro »), au lieu du seul message générique du
+  /// 422. Le couple numéro et opérateur est retenu pour la relance. Rend
+  /// `false` (l'appelant garde son comportement d'erreur) quand ce n'est pas
+  /// ce refus, quand la relecture échoue ou ne montre aucun dépôt refusé.
+  ///
+  /// L'état est émis directement, sans `_emitKnown` : le refus est tracé ici,
+  /// une seule fois, en `mobile_money_failed` `stage: initiate`.
+  Future<bool> _showRejectedDeposit(
+    Object error,
+    MobileMoneyScope scope,
+    String? phoneNumber,
+    String? provider,
+    Emitter<MobileMoneyPaymentState> emit,
+  ) async {
+    final appError = unwrapDioError(error);
+    if (appError.code != 'mobile-money-deposit-rejected') return false;
+    final MobileMoneyPaymentState? next;
+    try {
+      next = _stateFor(await _repository.getStatus(scope), scope);
+    } catch (_) {
+      return false;
+    }
+    if (next is! MobileMoneyPaymentDepositFailed) return false;
+    _lastPayer = phoneNumber == null
+        ? null
+        : (phoneNumber: phoneNumber, provider: provider);
+    emit(next);
+    _logCallFailure(appError, scope, 'initiate');
+    return true;
   }
 
   /// Retour à l'étape « Qui paie ? » depuis un dépôt refusé. Les opérateurs
@@ -243,6 +297,15 @@ class MobileMoneyPaymentBloc
       if (state is MobileMoneyPaymentChoosePayer &&
           (known is MobileMoneyPaymentDepositFailed ||
               _isResidualCancelled(known, status, event.scope))) {
+        return;
+      }
+      // Même ligne résiduelle pendant la lecture d'ouverture (Initial ou
+      // Loading, opérateurs acceptés lents) : `Opened` va conclure par
+      // l'étape « Qui paie ? », un sondage ne doit pas la précéder d'un
+      // Expired ni de ses events analytics.
+      if ((state is MobileMoneyPaymentInitial ||
+              state is MobileMoneyPaymentLoading) &&
+          _isResidualCancelled(known, status, event.scope)) {
         return;
       }
       _emitKnown(known, emit, event.scope);

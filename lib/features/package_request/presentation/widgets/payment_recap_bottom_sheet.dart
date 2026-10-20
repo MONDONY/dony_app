@@ -108,7 +108,6 @@ class PaymentRecapBottomSheet {
                           callerContext: context,
                           bloc: bloc,
                           thread: thread,
-                          processing: processing,
                         );
                       } else if (!isCash) {
                         // Stripe: require biometric/PIN before payment
@@ -253,40 +252,25 @@ class PaymentRecapBottomSheet {
     ).whenComplete(processing.dispose);
   }
 
-  /// Branche mobile money du bouton : authentification locale, puis la feuille
-  /// se ferme et l'écran d'attente du dépôt (`/negotiations/:id/mobile-money/
-  /// awaiting`) est poussé, sans `extra` : le numéro qui paiera se choisit sur
-  /// cet écran (« Payer le colis »), jamais ici. Il fait lui-même l'unique
-  /// appel `initiate` et se referme sur `true` quand le dépôt est séquestré,
-  /// `false` à l'échéance. Au retour, le fil est
+  /// Branche mobile money du bouton : la feuille se ferme et l'écran d'attente
+  /// du dépôt (`/negotiations/:id/mobile-money/awaiting`) est poussé, sans
+  /// `extra` : le numéro qui paiera se choisit sur cet écran (« Payer le
+  /// colis »), jamais ici. Aucune vérification locale à ce stade (rien ne
+  /// bouge) : l'écran d'attente la demande avant chaque dépôt. Il fait
+  /// lui-même l'unique appel `initiate` et se referme sur `true` quand le
+  /// dépôt est séquestré, `false` à l'échéance. Au retour, le fil est
   /// rechargé dans tous les cas ; l'écran de succès n'est poussé que sur
   /// `true`. Si l'expéditeur quitte l'attente sans payer, le fil reste en
   /// « dépôt en cours » jusqu'à l'échéance côté serveur : rien à faire ici.
   ///
-  /// [processing] n'est plus touché après la fermeture de la feuille : il est
-  /// disposé par le `whenComplete` de [show] dès que la route est retirée.
+  /// Le notifier `processing` n'est plus touché ici : il est disposé par le
+  /// `whenComplete` de [show] dès que la route de la feuille est retirée.
   static Future<void> _payByMobileMoney({
     required BuildContext sheetContext,
     required BuildContext callerContext,
     required NegotiationBloc bloc,
     required NegotiationThread thread,
-    required ValueNotifier<bool> processing,
   }) async {
-    final authenticated = await requirePaymentAuth(
-      sheetContext,
-      authService: getIt<LocalAuthService>(),
-      userPrefs: getIt<HiveService>().userPrefs,
-    );
-    if (!sheetContext.mounted) return;
-    if (!authenticated) {
-      processing.value = false;
-      DonySnackbar.show(
-        sheetContext,
-        message: sheetContext.l10n.bidCreatePaymentNotConfirmedError,
-        type: DonySnackbarType.warning,
-      );
-      return;
-    }
     Navigator.of(sheetContext, rootNavigator: true).pop();
     if (!callerContext.mounted) return;
     final paid = await callerContext.push<bool>(

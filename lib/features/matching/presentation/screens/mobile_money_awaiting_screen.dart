@@ -239,7 +239,12 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     final String? phoneNumber;
     final String? provider;
     if (payer.status == PayerAccountStatus.legacy) {
+      // Jamais de dépôt sans numéro saisi : le back paierait avec le numéro
+      // du compte, ce que la refonte interdit (« Payer » est grisé tant que
+      // le champ n'est pas un numéro valide, ce garde-fou couvre le délai de
+      // la vérification locale).
       phoneNumber = normalizePayerPhone(_legacyPhoneController.text);
+      if (phoneNumber == null) return;
       provider = null;
     } else {
       // Le numéro a pu changer pendant la vérification : jamais un dépôt sur
@@ -456,6 +461,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
         final MobileMoneyPaymentChoosePayer s => _PayBar(
           state: s,
           verifying: _verifying,
+          legacyPhoneController: _legacyPhoneController,
           onPay: _pay,
         ),
         MobileMoneyPaymentDepositFailed() => _FailedBar(
@@ -691,17 +697,19 @@ class _AcceptsLine extends StatelessWidget {
 }
 
 /// Bouton « Payer {montant} » fixé en bas de l'étape « Qui paie ? » : actif
-/// quand le numéro est reconnu (ou, sans catalogue, toujours), grisé pendant
-/// l'envoi.
+/// quand le numéro est reconnu (ou, sans catalogue, quand le champ numéro
+/// contient un numéro valide), grisé pendant l'envoi.
 class _PayBar extends StatelessWidget {
   const _PayBar({
     required this.state,
     required this.verifying,
+    required this.legacyPhoneController,
     required this.onPay,
   });
 
   final MobileMoneyPaymentChoosePayer state;
   final ValueListenable<bool> verifying;
+  final TextEditingController legacyPhoneController;
   final VoidCallback onPay;
 
   @override
@@ -716,21 +724,28 @@ class _PayBar extends StatelessWidget {
         DonySpacing.lg,
       ),
       child: BlocBuilder<PayerAccountCubit, PayerAccountState>(
-        builder: (context, payer) {
-          final ready =
-              payer.status == PayerAccountStatus.legacy || payer.canProceed;
-          return ValueListenableBuilder<bool>(
-            valueListenable: verifying,
-            builder: (context, busy, _) => DonyButton(
-              label: l.mobileMoneyPay(
-                formatPriceIn(status.amount ?? 0, status.currency),
-              ),
-              iconAsset: 'smartphone',
-              isLoading: state.isSubmitting,
-              onPressed: state.isSubmitting || busy || !ready ? null : onPay,
-            ),
-          );
-        },
+        builder: (context, payer) => ValueListenableBuilder<bool>(
+          valueListenable: verifying,
+          builder: (context, busy, _) => ValueListenableBuilder(
+            valueListenable: legacyPhoneController,
+            builder: (context, phone, _) {
+              // Sans catalogue (état `legacy`), seul un numéro valide dans le
+              // champ rend « Payer » actif : un champ vide laisserait le back
+              // payer avec le numéro du compte.
+              final ready = payer.status == PayerAccountStatus.legacy
+                  ? normalizePayerPhone(phone.text) != null
+                  : payer.canProceed;
+              return DonyButton(
+                label: l.mobileMoneyPay(
+                  formatPriceIn(status.amount ?? 0, status.currency),
+                ),
+                iconAsset: 'smartphone',
+                isLoading: state.isSubmitting,
+                onPressed: state.isSubmitting || busy || !ready ? null : onPay,
+              );
+            },
+          ),
+        ),
       ),
     );
   }

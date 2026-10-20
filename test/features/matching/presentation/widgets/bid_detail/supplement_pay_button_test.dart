@@ -645,7 +645,7 @@ void main() {
       expect(button.iconAsset, 'smartphone');
     });
 
-    testWidgets('requirePaymentAuth, puis accept, puis l\'écran d\'attente '
+    testWidgets('aucune vérification locale : accept, puis l\'écran d\'attente '
         'du supplément ; payé : colis relu, pas de second message', (
       tester,
     ) async {
@@ -673,7 +673,9 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(order, ['auth', 'accept', 'open']);
+      // `auth` absent : l\'écran d\'attente demande la vérification avant le
+      // dépôt, une seule fois.
+      expect(order, ['accept', 'open']);
       expect(opened, route);
       verify(() => bidBloc.add(any(that: _reloadOf('bid-1')))).called(1);
       // L'écran d'attente a déjà annoncé « Supplément payé » en se fermant.
@@ -715,14 +717,22 @@ void main() {
       expect(button.onPressed, isNotNull);
     });
 
-    testWidgets('vérification refusée : ni accept ni écran d\'attente', (
+    testWidgets('vérification locale jamais demandée sur ce rail, même si '
+        'elle serait refusée : accept et écran d\'attente partent', (
       tester,
     ) async {
+      when(
+        () => repository.accept(any(), any()),
+      ).thenAnswer((_) async => mmCheckout());
+      var authorizations = 0;
       var opened = false;
       await pump(
         tester,
         mmBid,
-        authorize: (_) async => false,
+        authorize: (_) async {
+          authorizations++;
+          return false;
+        },
         openMobileMoney: (_, _) async {
           opened = true;
           return true;
@@ -731,9 +741,12 @@ void main() {
 
       await tester.tap(find.byKey(const Key('supplement-pay-btn')));
       await tester.pump();
+      await tester.pump();
 
-      verifyNever(() => repository.accept(any(), any()));
-      expect(opened, isFalse);
+      expect(authorizations, 0);
+      verify(() => repository.accept('bid-1', 'sup-1')).called(1);
+      expect(opened, isTrue);
+      expect(find.text('Paiement non confirmé, réessayez'), findsNothing);
     });
 
     testWidgets('déjà payé à l\'acceptation : relecture, pas d\'écran '
