@@ -62,7 +62,9 @@ class MobileMoneyAccountActionFailed extends MobileMoneyAccountState {
   List<Object?> get props => [data, error];
 }
 
-/// Lecture de la liste en échec : l'écran propose de réessayer.
+/// Lecture de la liste en échec sans liste connue (première lecture, ou
+/// écriture partie sans liste lue) : l'écran propose de réessayer. Avec une
+/// liste déjà connue, l'échec passe par [MobileMoneyAccountActionFailed].
 class MobileMoneyAccountError extends MobileMoneyAccountState {
   const MobileMoneyAccountError(this.error);
 

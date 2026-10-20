@@ -546,6 +546,7 @@ void main() {
         find.text('1 colis attend encore son versement sur ce compte.'),
         findsOneWidget,
       );
+      expect(find.byType(SnackBar), findsNothing);
     });
 
     testWidgets('409 verrouillé, relecture en échec sur la liste connue '
@@ -564,6 +565,8 @@ void main() {
         find.text('1 colis attend encore son versement sur ce compte.'),
         findsOneWidget,
       );
+      // La feuille suffit : pas de second message pour la même relecture.
+      expect(find.byType(SnackBar), findsNothing);
     });
 
     testWidgets('autre refus ou relecture en échec : message non bloquant, '
