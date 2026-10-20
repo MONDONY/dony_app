@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:dony/core/services/app_log.dart';
+import 'package:dony/core/services/camera_handoff.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart' show decodeImageFromList;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -111,13 +112,19 @@ class DonyMediaService {
     })?
     bytesCompressor,
     Future<Directory> Function()? tempDirectory,
-  }) : _imagePicker = imagePicker ?? ImagePicker(),
+    CameraHandoff? cameraHandoff,
+  }) : _cameraHandoff = cameraHandoff,
+       _imagePicker = imagePicker ?? ImagePicker(),
        _compressorOverride = compressor,
        _dimensionReader = dimensionReader ?? _readDimensions,
        _bytesCompressor = bytesCompressor ?? _pluginCompress,
        _tempDirectory = tempDirectory ?? getTemporaryDirectory;
 
   final ImagePicker _imagePicker;
+
+  /// Arrête les lecteurs QR avant d'ouvrir l'appareil photo (gel iOS,
+  /// YADONY-FLUTTER-PROD-V). `null` dans les tests qui n'en ont pas besoin.
+  final CameraHandoff? _cameraHandoff;
   final Future<XFile> Function(XFile)? _compressorOverride;
   final Future<({int width, int height})> Function(Uint8List) _dimensionReader;
 
@@ -160,7 +167,12 @@ class DonyMediaService {
   /// Throws [MediaFileTooLargeException] only if the raw file is > 50 MB
   /// (out-of-memory safety net); any smaller image is resized, never rejected.
   Future<XFile?> pick({required ImageSource source}) async {
-    final raw = await _imagePicker.pickImage(source: source, imageQuality: 100);
+    final handoff = _cameraHandoff;
+    Future<XFile?> open() =>
+        _imagePicker.pickImage(source: source, imageQuality: 100);
+    final raw = source == ImageSource.camera && handoff != null
+        ? await handoff.runWithSystemCamera(open)
+        : await open();
     if (raw == null) {
       return null;
     }

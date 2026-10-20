@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dony/core/services/camera_handoff.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
@@ -272,6 +273,46 @@ void main() {
         service.pick(source: ImageSource.gallery),
         throwsA(isA<UnsupportedMediaTypeException>()),
       );
+    });
+  });
+
+  group('pick — relais avec les lecteurs QR (YADONY-FLUTTER-PROD-V)', () {
+    late CameraHandoff handoff;
+    late List<String> calls;
+
+    setUp(() {
+      handoff = CameraHandoff(settleDelay: Duration.zero);
+      calls = <String>[];
+      handoff.register(() async {
+        calls.add('release');
+        return true;
+      });
+      when(
+        () => mockPicker.pickImage(
+          source: any(named: 'source'),
+          imageQuality: any(named: 'imageQuality'),
+        ),
+      ).thenAnswer((_) async {
+        calls.add('pick:${handoff.systemCameraActive.value}');
+        return null;
+      });
+    });
+
+    DonyMediaService serviceWithHandoff() => DonyMediaService(
+      imagePicker: mockPicker,
+      compressor: (f) async => passthrough(f),
+      cameraHandoff: handoff,
+    );
+
+    test('appareil photo : lecteurs arrêtés avant l\'ouverture', () async {
+      await serviceWithHandoff().pick(source: ImageSource.camera);
+      expect(calls, ['release', 'pick:true']);
+      expect(handoff.systemCameraActive.value, isFalse);
+    });
+
+    test('galerie : les lecteurs ne sont pas touchés', () async {
+      await serviceWithHandoff().pick(source: ImageSource.gallery);
+      expect(calls, ['pick:false']);
     });
   });
 }
