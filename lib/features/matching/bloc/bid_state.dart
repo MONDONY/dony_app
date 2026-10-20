@@ -132,7 +132,27 @@ class BidNotFound extends BidState {}
 /// Devis calculé avec succès — affichage total + promo.
 class BidQuoteLoaded extends BidState {
   final BidQuoteResponse quote;
-  BidQuoteLoaded(this.quote);
+
+  /// Clé du devis d'arrière-plan qui a produit cet état, `null` pour un devis
+  /// demandé par l'utilisateur (code promo).
+  final String? backgroundKey;
+  BidQuoteLoaded(this.quote, {this.backgroundKey});
+}
+
+/// Devis d'arrière-plan refusé parce que son code promo n'est plus valide. Le
+/// BLoC enchaîne aussitôt un devis sans code, rendu en [BidQuoteLoaded] avec
+/// la même clé ; l'écran retire le code appliqué et affiche le message promo.
+class BidQuoteBackgroundPromoRejected extends BidState {
+  final AppException error;
+  final String? backgroundKey;
+  BidQuoteBackgroundPromoRejected(this.error, this.backgroundKey);
+}
+
+/// Devis d'arrière-plan en échec : l'écran garde son calcul local, sans
+/// message (ce devis n'a pas été demandé par l'utilisateur).
+class BidQuoteBackgroundFailed extends BidState {
+  final String? backgroundKey;
+  BidQuoteBackgroundFailed(this.backgroundKey);
 }
 
 /// Calcul du devis en cours (spinner dans le champ promo).

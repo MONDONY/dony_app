@@ -1,6 +1,11 @@
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
@@ -569,11 +574,25 @@ class _Echo extends StatelessWidget {
       case _EchoKind.valid:
         background = cs.primaryContainer;
         ink = cs.primary;
-        final paid = netToSenderPrice(price!);
-        message = l.priceGridSenderWillPayMessage(
-          formatPriceActive(paid),
-          formatPriceActive(paid - price),
-        );
+        final code = ActiveCurrency.current?.code;
+        final p = senderPriceForNet(price!, code);
+        message = commissionMinimumFor(code) == null
+            ? l.priceGridSenderWillPayMessage(
+                formatPriceActive(p.gross),
+                formatPriceActive(p.commission),
+              )
+            : l.priceGridSenderWillPayMessageGrid(
+                CurrencyFormatter.format(
+                  p.gross,
+                  SupportedCurrency.fromCodeOrDefault(code),
+                ),
+                serviceFeeAmountLabel(
+                  l,
+                  p.commission,
+                  code,
+                  minimum: p.minimumApplied,
+                ),
+              );
     }
 
     return AnimatedSwitcher(

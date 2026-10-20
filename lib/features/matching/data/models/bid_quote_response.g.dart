@@ -17,6 +17,10 @@ BidQuoteResponse _$BidQuoteResponseFromJson(Map<String, dynamic> json) =>
       gridNetEur: (json['gridNetEur'] as num?)?.toDouble() ?? 0,
       kgNetEur: (json['kgNetEur'] as num?)?.toDouble() ?? 0,
       currency: json['currency'] as String?,
+      minimumApplied: json['minimumApplied'] as bool? ?? false,
+      minimumAmount: (json['minimumAmount'] as num?)?.toDouble(),
+      commissionGridId: json['commissionGridId'] as String?,
+      promoIneffectiveReason: json['promoIneffectiveReason'] as String?,
     );
 
 Map<String, dynamic> _$BidQuoteResponseToJson(BidQuoteResponse instance) =>
@@ -30,4 +34,8 @@ Map<String, dynamic> _$BidQuoteResponseToJson(BidQuoteResponse instance) =>
       'promoApplied': instance.promoApplied,
       'promoLabel': instance.promoLabel,
       'currency': instance.currency,
+      'minimumApplied': instance.minimumApplied,
+      'minimumAmount': instance.minimumAmount,
+      'commissionGridId': instance.commissionGridId,
+      'promoIneffectiveReason': instance.promoIneffectiveReason,
     };

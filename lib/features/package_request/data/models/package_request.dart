@@ -52,6 +52,7 @@ class PackageRequest extends Equatable {
     this.convertedCurrency,
     this.grossPriceEur,
     this.senderIncidentCount,
+    this.commissionGridId,
   });
 
   final String id;
@@ -138,6 +139,11 @@ class PackageRequest extends Equatable {
   /// de remise confirmées. `null` pour le propriétaire ou un back antérieur.
   final int? senderIncidentCount;
 
+  /// Grille de commission figée à la création de la demande : le back calcule
+  /// le net d'un nouveau budget sur elle, jamais sur la grille en vigueur.
+  /// `null` pour une demande antérieure aux paliers ou un back antérieur.
+  final String? commissionGridId;
+
   /// Parse le tableau `photos` du wire en deux listes alignées (URLs
   /// présignées + clés S3) en un seul passage.
   static (List<String>, List<String>) _photosFromJson(List<dynamic>? raw) {
@@ -195,6 +201,7 @@ class PackageRequest extends Equatable {
       convertedCurrency: json['convertedCurrency'] as String?,
       grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
       senderIncidentCount: (json['senderIncidentCount'] as num?)?.toInt(),
+      commissionGridId: json['commissionGridId'] as String?,
     );
   }
 
@@ -229,5 +236,6 @@ class PackageRequest extends Equatable {
     convertedCurrency,
     grossPriceEur,
     senderIncidentCount,
+    commissionGridId,
   ];
 }

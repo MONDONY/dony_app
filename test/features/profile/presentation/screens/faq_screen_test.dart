@@ -11,6 +11,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../helpers/commission_grid_test_doubles.dart';
+import '../../../../helpers/currency_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
@@ -232,12 +234,56 @@ void main() {
 
     await tester.enterText(
       find.byKey(const Key('faq-search-field')),
-      'commission',
+      'frais de service',
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Pourquoi une commission ?'), findsOneWidget);
+    expect(find.text('Pourquoi des frais de service ?'), findsOneWidget);
     expect(find.textContaining('% ?'), findsNothing);
+  });
+
+  group('réponse sur les frais de service', () {
+    Future<void> openCommissionAnswer(WidgetTester tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(milliseconds: 600));
+      final question = find.text('Pourquoi des frais de service ?');
+      await tester.ensureVisible(question);
+      await tester.tap(question);
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    testWidgets('sous grille, la réponse cite le minimum dans la devise active', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      registerCurrencyPreference('XOF');
+      await openCommissionAnswer(tester);
+
+      expect(
+        find.text(
+          'Les frais de service couvrent les frais de paiement, le support, '
+          'la prévention de la fraude et le développement de la plateforme. '
+          'Ils dépendent du prix du transport, avec un minimum de '
+          '${formatPriceIn(650, 'XOF')}. Le montant exact est affiché avant de '
+          'confirmer.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('%'), findsNothing);
+    });
+
+    testWidgets('sans grille, réponse actuelle', (tester) async {
+      await openCommissionAnswer(tester);
+
+      expect(
+        find.text(
+          'Les frais de service couvrent les frais de paiement, le support, la '
+          'prévention de la fraude et le développement de la plateforme.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('minimum de'), findsNothing);
+    });
   });
 
   testWidgets('shows an empty state for a search without result', (

@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../../helpers/l10n_test_helpers.dart';
 
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
@@ -31,6 +32,10 @@ NegotiationThread _thread({
   String? materializedBidId,
   bool canNudge = false,
   DateTime? depositExpiresAt,
+  double price = 38,
+  double? grossPriceEur,
+  String? commissionGridId,
+  double? travelerCashCommissionEur,
 }) {
   final messages = <NegotiationMessage>[
     NegotiationMessage(
@@ -49,7 +54,10 @@ NegotiationThread _thread({
     travelerTravelDate: DateTime(2026, 6, 15),
     travelerAvailableKg: 10,
     status: status,
-    currentPriceEur: 38,
+    currentPriceEur: price,
+    grossPriceEur: grossPriceEur,
+    commissionGridId: commissionGridId,
+    travelerCashCommissionEur: travelerCashCommissionEur,
     roundsCount: 1,
     canAccept: canAccept,
     canCounter: canCounter,
@@ -783,6 +791,143 @@ void main() {
       );
       expect(find.text('End the negotiation'), findsOneWidget);
     });
+  });
+
+  group('commission par paliers', () {
+    testWidgets(
+      'commission espèces du voyageur sous grille, net 5 € : 1,00 € (minimum)',
+      (tester) async {
+        useTestCommissionGrid();
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.awaitingCommission,
+              viewer: _viewerTraveler,
+              price: 5,
+              commissionGridId: kTestGridId,
+            ),
+            _viewerTraveler,
+          ),
+        );
+        expect(
+          find.textContaining('1,00\u00a0€\u00a0(minimum)'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('commission espèces servie par le back (taux spécial, bon) : '
+        'affichée telle quelle', (tester) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingCommission,
+            viewer: _viewerTraveler,
+            price: 20,
+            commissionGridId: kTestGridId,
+            travelerCashCommissionEur: 0.70,
+          ),
+          _viewerTraveler,
+        ),
+      );
+      expect(find.textContaining('0,70\u00a0€'), findsOneWidget);
+      expect(find.textContaining('1,40'), findsNothing);
+      expect(find.textContaining('(minimum)'), findsNothing);
+    });
+
+    testWidgets('commission espèces servie au minimum : « (minimum) » gardé', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingCommission,
+            viewer: _viewerTraveler,
+            price: 5,
+            commissionGridId: kTestGridId,
+            travelerCashCommissionEur: 1.00,
+          ),
+          _viewerTraveler,
+        ),
+      );
+      expect(find.textContaining('1,00\u00a0€\u00a0(minimum)'), findsOneWidget);
+    });
+
+    testWidgets('commission espèces d\'un fil sans grille figée : taux unique, '
+        'sans minimum', (tester) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingCommission,
+            viewer: _viewerTraveler,
+            price: 5,
+          ),
+          _viewerTraveler,
+        ),
+      );
+      // 5 € × 12 % (taux épinglé du fichier).
+      expect(find.textContaining('0,60\u00a0€'), findsOneWidget);
+      expect(find.textContaining('(minimum)'), findsNothing);
+    });
+
+    testWidgets(
+      'OPEN · expéditeur, fil à grille sans brut servi : « Accepter » '
+      'au prix de la grille',
+      (tester) async {
+        useTestCommissionGrid();
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.open,
+              price: 20,
+              commissionGridId: kTestGridId,
+            ),
+            _viewerSender,
+          ),
+        );
+        expect(find.textContaining('21,40\u00a0€'), findsOneWidget);
+      },
+    );
+
+    testWidgets('AWAITING_PAYMENT · expéditeur : le brut du serveur prime', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingPayment,
+            price: 20,
+            grossPriceEur: 21.10,
+            commissionGridId: kTestGridId,
+          ),
+          _viewerSender,
+        ),
+      );
+      expect(find.textContaining('21,10\u00a0€'), findsOneWidget);
+      expect(find.textContaining('21,40'), findsNothing);
+    });
+
+    testWidgets(
+      'AWAITING_PAYMENT · expéditeur sans brut servi : grille figée',
+      (tester) async {
+        useTestCommissionGrid();
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.awaitingPayment,
+              price: 20,
+              commissionGridId: kTestGridId,
+            ),
+            _viewerSender,
+          ),
+        );
+        expect(find.textContaining('21,40\u00a0€'), findsOneWidget);
+      },
+    );
   });
 
   group('Bouton Relancer (nudge)', () {

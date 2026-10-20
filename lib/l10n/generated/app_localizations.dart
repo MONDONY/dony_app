@@ -311,7 +311,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorRequestAlreadyAcceptedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Un autre voyageur a réglé la commission avant vous, ce colis ne peut plus vous revenir.'**
+  /// **'Un autre voyageur a réglé les frais de service avant vous, ce colis ne peut plus vous revenir.'**
   String get errorRequestAlreadyAcceptedMessage;
 
   /// No description provided for @errorTripNoParcelDepartedTitle.
@@ -673,6 +673,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Passez en PRO pour créer davantage de brouillons.'**
   String get errorDraftLimitReachedMessage;
+
+  /// Titre : budget sous le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum)
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget trop faible'**
+  String get errorBudgetBelowCommissionMinimumTitle;
+
+  /// Message : le budget saisi ne couvre pas le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum). Sans montant ni taux.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce montant ne couvre pas les frais de service minimum de Yadony.'**
+  String get errorBudgetBelowCommissionMinimumMessage;
 
   /// No description provided for @errorNotADraftTitle.
   ///
@@ -1187,7 +1199,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorNegotiationCommissionChargeFailedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'La commission n\'a pas pu être prélevée au voyageur. L\'accord n\'est pas validé. Il vient d\'être invité à recharger son portefeuille, réessayez ensuite.'**
+  /// **'Les frais de service n\'ont pas pu être prélevés au voyageur. L\'accord n\'est pas validé. Il vient d\'être invité à recharger son portefeuille, réessayez ensuite.'**
   String get errorNegotiationCommissionChargeFailedMessage;
 
   /// No description provided for @errorNegotiationNotAwaitingDepositTitle.
@@ -1295,7 +1307,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPaymentMethodTravelerInsufficientFundsCashMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Votre portefeuille n\'a pas assez de fonds pour payer la commission Yadony en espèces. Rechargez-le ou ajoutez une carte.'**
+  /// **'Votre portefeuille n\'a pas assez de fonds pour payer les frais de service Yadony en espèces. Rechargez-le ou ajoutez une carte.'**
   String get errorPaymentMethodTravelerInsufficientFundsCashMessage;
 
   /// No description provided for @errorPaymentMethodNoCommissionCardTitle.
@@ -1307,7 +1319,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPaymentMethodNoCommissionCardMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ajoutez d\'abord une carte de commission pour payer en espèces sans solde suffisant.'**
+  /// **'Ajoutez d\'abord une carte pour les frais de service afin de payer en espèces sans solde suffisant.'**
   String get errorPaymentMethodNoCommissionCardMessage;
 
   /// No description provided for @errorPaymentMethodNotInAvailableSetTitle.
@@ -5033,7 +5045,7 @@ abstract class AppLocalizations {
   /// Note sous l'aperçu de grille en mode mixte, sans taux (FLUTTER-R6)
   ///
   /// In fr, this message translates to:
-  /// **'Yadony ajoute sa commission sur chaque article et sur le prix au kilo'**
+  /// **'Yadony ajoute ses frais de service sur chaque article et sur le prix au kilo'**
   String get tripPublishGridCommissionNotice;
 
   /// Titre du toggle d'ouverture aux propositions de prix des expéditeurs
@@ -5075,7 +5087,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M).
   ///
   /// In fr, this message translates to:
-  /// **'Toujours accepté sur ce trajet. Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis'**
+  /// **'Toujours accepté sur ce trajet. Frais de service prélevés sur votre portefeuille Yadony quand vous acceptez le colis'**
   String get tripPublishCashLockedSubtitle;
 
   /// Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M).
@@ -5099,7 +5111,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la ligne paiement en espèces. La commission est prélevée sur le portefeuille du voyageur à l'acceptation du colis, pas à la remise (Sentry FLUTTER-MR).
   ///
   /// In fr, this message translates to:
-  /// **'Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis'**
+  /// **'Frais de service prélevés sur votre portefeuille Yadony quand vous acceptez le colis'**
   String get tripPublishCashSubtitle;
 
   /// Libellé de la section des contenus acceptés
@@ -5282,7 +5294,7 @@ abstract class AppLocalizations {
   /// Note sous la liste d'articles de la feuille de grille complète, sans taux (FLUTTER-R6)
   ///
   /// In fr, this message translates to:
-  /// **'Prix payés par l\'expéditeur, commission Yadony comprise.'**
+  /// **'Prix payés par l\'expéditeur, frais de service Yadony compris.'**
   String get tripPublishGridSheetCommissionNote;
 
   /// Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette
@@ -6824,7 +6836,7 @@ abstract class AppLocalizations {
   /// Libellé de la ligne commission d'une décomposition de prix, le montant s'affiche à côté (step_3_recap_budget.dart, accept_offer_bottom_sheet.dart, counter_offer_bottom_sheet.dart). Sans taux (FLUTTER-R6)
   ///
   /// In fr, this message translates to:
-  /// **'Commission Yadony'**
+  /// **'Frais de service Yadony'**
   String get requestCreateCommissionLabel;
 
   /// Libellé de la ligne de bonus promo dans la décomposition du budget (step_3_recap_budget.dart)
@@ -6838,6 +6850,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le voyageur touchera'**
   String get requestCreateTravelerReceivesLabel;
+
+  /// Sous grille de commission : ligne de la réduction qu'un code promo fait sur ce que paie l'expéditeur, montant négatif à côté (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réduction du code promo'**
+  String get requestCreatePromoDiscountLabel;
+
+  /// Sous grille de commission : total payé par l'expéditeur quand un code promo le baisse sous le budget public (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous paierez'**
+  String get requestCreateYouPayLabel;
+
+  /// Erreur de validation du budget d'une demande : il ne couvre pas les frais de service minimum de la grille, formaté dans la devise de la demande (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le budget doit dépasser les frais de service minimum ({minimum}).'**
+  String requestBudgetBelowCommissionMinimum(String minimum);
 
   /// Libellé d'accessibilité du sélecteur de devise (step_3_recap_budget.dart)
   ///
@@ -7340,7 +7370,7 @@ abstract class AppLocalizations {
   /// Titre du bandeau accord en espèces, commission en attente (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'{name} règle sa commission Yadony'**
+  /// **'{name} règle ses frais de service Yadony'**
   String requestDetailCashCommissionTitle(String name);
 
   /// Message du bandeau accord en espèces, commission en attente (request_detail_view.dart)
@@ -7496,7 +7526,7 @@ abstract class AppLocalizations {
   /// Étiquette d'offre : accord espèces, commission voyageur en attente (request_offer_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Accord en espèces, commission en attente'**
+  /// **'Accord en espèces, frais de service en attente'**
   String get requestOfferCashDealCommissionPending;
 
   /// Étiquette d'offre sur un prix ferme (request_offer_card.dart)
@@ -9660,7 +9690,7 @@ abstract class AppLocalizations {
   /// Mention sous le total du récapitulatif de prix (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Commission Yadony incluse'**
+  /// **'Frais de service Yadony inclus'**
   String get bidCreateServiceFeeIncludedLabel;
 
   /// Explication de l'utilité des photos du colis (create_bid/photo_section.dart)
@@ -9820,7 +9850,7 @@ abstract class AppLocalizations {
   /// Premier segment de l'avertissement commission espèces à la publication (cash_commission_notice.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Vous ne pourrez accepter un colis en espèces que si la commission Yadony peut être prélevée '**
+  /// **'Vous ne pourrez accepter un colis en espèces que si les frais de service Yadony peuvent être prélevés '**
   String get tripPublishCashCommissionIntro;
 
   /// Segment en gras de l'avertissement commission espèces (cash_commission_notice.dart)
@@ -10000,7 +10030,7 @@ abstract class AppLocalizations {
   /// Accord en espèces, vue voyageur (bid_negotiation_thread_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Prix accepté. Paiement en espèces, il vous reste à régler la commission Yadony.'**
+  /// **'Prix accepté. Paiement en espèces, il vous reste à régler les frais de service Yadony.'**
   String get negotiationThreadCashTravelerHint;
 
   /// Accord en espèces, vue expéditeur (bid_negotiation_thread_screen.dart)
@@ -10012,7 +10042,7 @@ abstract class AppLocalizations {
   /// Montant de la commission à régler, accord en espèces vue voyageur (bid_negotiation_thread_screen.dart, FLUTTER-H7)
   ///
   /// In fr, this message translates to:
-  /// **'Commission Yadony : {amount}'**
+  /// **'Frais de service Yadony : {amount}'**
   String negotiationThreadCashCommissionAmount(String amount);
 
   /// Lien secondaire pour refuser le colis d'un accord en espèces, vue voyageur (bid_negotiation_thread_screen.dart, FLUTTER-H7)
@@ -10324,7 +10354,7 @@ abstract class AppLocalizations {
   /// Pastille de statut AWAITING_COMMISSION (thread_hero_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'COMMISSION'**
+  /// **'FRAIS'**
   String get negotiationStatusBadgeAwaitingCommission;
 
   /// Pastille de statut AWAITING_DEPOSIT (thread_hero_card.dart)
@@ -10366,7 +10396,7 @@ abstract class AppLocalizations {
   /// Libellé au-dessus du prix pour AWAITING_COMMISSION (thread_hero_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'COMMISSION DUE'**
+  /// **'FRAIS DE SERVICE DUS'**
   String get negotiationStatusPriceLabelAwaitingCommission;
 
   /// Libellé au-dessus du prix pour AWAITING_DEPOSIT (thread_hero_card.dart)
@@ -10564,13 +10594,13 @@ abstract class AppLocalizations {
   /// Sous-titre du bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur a retenu votre offre. Réglez la commission Yadony ({amount}) avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut vous doubler.'**
+  /// **'L\'expéditeur a retenu votre offre. Réglez les frais de service Yadony, {amount}, avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut vous doubler.'**
   String negotiationCommissionTravelerBannerSubtitle(String amount);
 
   /// Bouton de règlement de la commission (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Régler la commission'**
+  /// **'Régler les frais de service'**
   String get negotiationPayCommissionButton;
 
   /// Titre du dialog de renoncement à la commission (thread_state_cta_bar.dart)
@@ -10894,7 +10924,7 @@ abstract class AppLocalizations {
   /// Libellé compact sous le prix, statut AWAITING_COMMISSION (my_negotiations_screen.dart, _NegoCard)
   ///
   /// In fr, this message translates to:
-  /// **'commission due'**
+  /// **'frais de service dus'**
   String get negotiationStageCommissionDue;
 
   /// Libellé compact sous le prix, statut ACCEPTED (my_negotiations_screen.dart, _NegoCard)
@@ -10996,13 +11026,13 @@ abstract class AppLocalizations {
   /// Repli quand le detail machine (r.error) n'est reconnu ni comme un des trois codes connus ni comme card-status-* — Ruling R35 : jamais le code brut
   ///
   /// In fr, this message translates to:
-  /// **'Règlement de la commission refusé'**
+  /// **'Règlement des frais de service refusé'**
   String get errorCommissionFailedMessage;
 
   /// Traduction du code machine backend no-commission-card (settleNegotiationCommission) — Ruling R35
   ///
   /// In fr, this message translates to:
-  /// **'Aucune carte enregistrée pour régler la commission.'**
+  /// **'Aucune carte enregistrée pour régler les frais de service.'**
   String get errorCommissionFailedNoCardMessage;
 
   /// Traduction du code machine backend card-declined (settleNegotiationCommission) — Ruling R35
@@ -11457,7 +11487,7 @@ abstract class AppLocalizations {
   /// Texte d'aide de la feuille de règlement de commission (commission_settlement_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Rechargez votre portefeuille ou payez la commission directement par carte.'**
+  /// **'Rechargez votre portefeuille ou payez les frais de service directement par carte.'**
   String get negotiationCommissionSettlementHint;
 
   /// Bouton de recharge du portefeuille (commission_settlement_sheet.dart)
@@ -12081,13 +12111,13 @@ abstract class AppLocalizations {
   /// Note, paiement en especes (traveler_gain_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Commission Yadony prélevée séparément.'**
+  /// **'Frais de service Yadony prélevés séparément.'**
   String get bidDetailGainCashNote;
 
   /// Detail sous le brut encaisse en especes : commission prelevee a part et net garde par le voyageur (traveler_gain_card.dart, FLUTTER-R8)
   ///
   /// In fr, this message translates to:
-  /// **'Dont {commission} de commission Yadony, prélevée sur votre solde ou votre carte. Vous gardez {net}.'**
+  /// **'Dont {commission} de frais de service Yadony, prélevés sur votre solde ou votre carte. Vous gardez {net}.'**
   String bidDetailGainCashGrossDetail(String commission, String net);
 
   /// Pastille, paiement en especes (traveler_gain_card.dart)
@@ -12171,13 +12201,13 @@ abstract class AppLocalizations {
   /// Indication sous le message d'erreur du sheet carte refusée (bid_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Changez votre carte de commission pour accepter cette demande.'**
+  /// **'Changez votre carte des frais de service pour accepter cette demande.'**
   String get bidDetailCardDeclinedHint;
 
   /// Bouton du sheet carte refusée (bid_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Changer ma carte de commission'**
+  /// **'Changer ma carte des frais de service'**
   String get bidDetailChangeCommissionCard;
 
   /// Titre du sheet solde insuffisant (bid_detail_screen.dart)
@@ -12189,7 +12219,7 @@ abstract class AppLocalizations {
   /// Indication du sheet solde insuffisant (bid_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Rechargez votre portefeuille ou payez la commission directement par carte.'**
+  /// **'Rechargez votre portefeuille ou payez les frais de service directement par carte.'**
   String get bidDetailInsufficientBalanceHint;
 
   /// Bouton du sheet solde insuffisant (bid_detail_screen.dart)
@@ -12789,7 +12819,7 @@ abstract class AppLocalizations {
   /// Encart espèces de la feuille de refus (parcel_refusal_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. La commission Yadony déjà réglée vous est rendue.'**
+  /// **'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. Les frais de service Yadony déjà réglés vous sont rendus.'**
   String get parcelRefusalCashNotice;
 
   /// Encart colis déjà remis (parcel_refusal_sheet.dart)
@@ -14073,13 +14103,13 @@ abstract class AppLocalizations {
   /// Indication sous le message d'erreur de la sheet paiement refusé (pending_bids_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Changez votre carte de commission pour accepter cette demande.'**
+  /// **'Changez votre carte des frais de service pour accepter cette demande.'**
   String get bidListCardDeclinedHint;
 
   /// Bouton de la sheet « paiement carte refusé » (pending_bids_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Changer ma carte de commission'**
+  /// **'Changer ma carte des frais de service'**
   String get bidListChangeCommissionCardButton;
 
   /// Titre de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart).
@@ -14091,7 +14121,7 @@ abstract class AppLocalizations {
   /// Indication de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Rechargez votre portefeuille ou payez la commission directement par carte.'**
+  /// **'Rechargez votre portefeuille ou payez les frais de service directement par carte.'**
   String get bidListWalletInsufficientHint;
 
   /// Bouton de recharge de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart).
@@ -14697,7 +14727,7 @@ abstract class AppLocalizations {
   /// Note de remboursement du cas colis déjà remis (cancellation_dialog.dart).
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l\'expéditeur n\'a rien à payer et la commission Yadony est recréditée au voyageur.'**
+  /// **'L\'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l\'expéditeur n\'a rien à payer et les frais de service Yadony sont recrédités au voyageur.'**
   String get bidCancelWarningRefundNote;
 
   /// Hint du champ motif quand il est obligatoire (cancellation_dialog.dart).
@@ -15534,22 +15564,22 @@ abstract class AppLocalizations {
   /// **'Envoi de votre colis'**
   String get paymentContextDefault;
 
-  /// Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros. Sans taux (FLUTTER-R6).
+  /// Notice de débit de la carte commission avec le plancher (commission_method_screen.dart) : sous grille de commission, minimum de la grille dans la devise active ; sans grille, plancher historique de 1 € en EUR seulement. {min} est déjà formaté dans sa devise (formatPriceIn). Sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'Cette carte sera débitée de la commission (min. {min}) à chaque colis en espèces accepté.'**
+  /// **'Cette carte sera débitée des frais de service (min. {min}) à chaque colis en espèces accepté.'**
   String commissionCardDebitNoticeMin(String min);
 
-  /// Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros. Sans taux (FLUTTER-R6).
+  /// Notice de débit de la carte commission sans plancher connu (commission_method_screen.dart) : sans grille de commission et devise active autre que l'EUR, ou grille sans minimum pour la devise. Sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'Cette carte sera débitée de la commission à chaque colis en espèces accepté.'**
+  /// **'Cette carte sera débitée des frais de service à chaque colis en espèces accepté.'**
   String get commissionCardDebitNotice;
 
   /// Titre de l'AppBar de l'écran Carte commission (commission_method_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Carte commission'**
+  /// **'Carte des frais de service'**
   String get commissionCardScreenTitle;
 
   /// Message de l'état d'erreur de chargement de la carte commission (commission_method_screen.dart).
@@ -15597,7 +15627,7 @@ abstract class AppLocalizations {
   /// Corps de l'état vide de la carte commission (commission_card_empty_state.dart). Sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission à chaque colis accepté.'**
+  /// **'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons nos frais de service à chaque colis accepté.'**
   String get commissionCardEmptyBody;
 
   /// Bouton d'ajout de la carte commission (commission_card_empty_state.dart).
@@ -16005,7 +16035,7 @@ abstract class AppLocalizations {
   /// Sheet « Solde insuffisant », sans breakdown : première ligne (commission_shortfall_text.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Commission requise : {amount}'**
+  /// **'Frais de service requis : {amount}'**
   String walletShortfallRequired(String amount);
 
   /// Sheet « Solde insuffisant », sans breakdown : deuxième ligne, devise du solde toujours explicite (commission_shortfall_text.dart).
@@ -16017,7 +16047,7 @@ abstract class AppLocalizations {
   /// Sheet « Solde insuffisant », avec breakdown : montant de la commission dans la devise du colis (commission_shortfall_text.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Commission : {amount}'**
+  /// **'Frais de service : {amount}'**
   String walletShortfallCommission(String amount);
 
   /// Sheet « Solde insuffisant », part couverte par le portefeuille de la devise du colis (commission_shortfall_text.dart).
@@ -16040,7 +16070,7 @@ abstract class AppLocalizations {
   /// Sheet « Solde insuffisant », rien couvert par le portefeuille du colis : commission convertie dans la devise active (commission_shortfall_text.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Commission : {amount}, soit {converted}'**
+  /// **'Frais de service : {amount}, soit {converted}'**
   String walletShortfallCommissionConverted(String amount, String converted);
 
   /// Sheet « Solde insuffisant », invite à recharger (commission_shortfall_text.dart).
@@ -16080,7 +16110,7 @@ abstract class AppLocalizations {
   /// Bandeau affiché quand le net remboursable est nul (wallet_screen.dart _LoadedView).
   ///
   /// In fr, this message translates to:
-  /// **'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour régler la commission Yadony de vos demandes payées en espèces.'**
+  /// **'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour régler les frais de service Yadony de vos demandes payées en espèces.'**
   String get walletRefundAbsorbedByFees;
 
   /// État vide de la liste des transactions (wallet_screen.dart _LoadedView).
@@ -16164,7 +16194,7 @@ abstract class AppLocalizations {
   /// Libellé d'une transaction COMMISSION_DEDUCTED (wallet_screen.dart _TxTile).
   ///
   /// In fr, this message translates to:
-  /// **'Commission'**
+  /// **'Frais de service'**
   String get walletTxTypeCommission;
 
   /// Libellé d'une transaction REFUND ou SELF_REFUND_OUT (wallet_screen.dart _TxTile).
@@ -16248,7 +16278,7 @@ abstract class AppLocalizations {
   /// Ligne fixe de l'écran Portefeuille : à quoi sert le solde (commission des demandes en espèces) et ce qu'il ne paie pas (l'envoi d'un colis).
   ///
   /// In fr, this message translates to:
-  /// **'Votre solde sert à régler la commission Yadony des demandes payées en espèces. Il ne paie pas l\'envoi d\'un colis, qui se règle par carte, PayPal ou mobile money.'**
+  /// **'Votre solde sert à régler les frais de service Yadony des demandes payées en espèces. Il ne paie pas l\'envoi d\'un colis, qui se règle par carte, PayPal ou mobile money.'**
   String get walletPurposeNote;
 
   /// Description de la ligne « Solde disponible » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
@@ -16422,7 +16452,7 @@ abstract class AppLocalizations {
   /// Mention sous le champ de la sheet code de recharge (wallet_topup_code_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ce crédit sert uniquement à payer les commissions Yadony. Il n\'est ni remboursable ni retirable.'**
+  /// **'Ce crédit sert uniquement à payer les frais de service Yadony. Il n\'est ni remboursable ni retirable.'**
   String get walletTopupCodeNotice;
 
   /// Bouton sticky de la sheet code de recharge (wallet_topup_code_sheet.dart).
@@ -16560,7 +16590,7 @@ abstract class AppLocalizations {
   /// Bandeau d'avertissement quand des frais sont retenus sur une recharge jamais utilisée (wallet_refund_confirm_sheet.dart _ConfirmContent).
   ///
   /// In fr, this message translates to:
-  /// **'Cette recharge n\'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu\'une recharge a servi à régler une commission.'**
+  /// **'Cette recharge n\'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu\'une recharge a servi à régler des frais de service.'**
   String get walletRefundFeeRetainedNotice;
 
   /// Titre de la sheet de choix de la devise à rembourser (wallet_refund_currency_sheet.dart).
@@ -18960,7 +18990,7 @@ abstract class AppLocalizations {
   /// Tuile de la section ARGENT (profile_sections.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Carte commission espèces'**
+  /// **'Carte des frais de service en espèces'**
   String get profileMoneyCashCommissionCard;
 
   /// Tuile de la section ARGENT, raccourci vers Paramètres › Préférences (profile_sections.dart, FLUTTER-R5).
@@ -20274,13 +20304,13 @@ abstract class AppLocalizations {
   /// Question FAQ payments/commission (faq_screen.dart), sans taux (FLUTTER-R6)
   ///
   /// In fr, this message translates to:
-  /// **'Pourquoi une commission ?'**
+  /// **'Pourquoi des frais de service ?'**
   String get faqPaymentsCommissionQ;
 
   /// Réponse FAQ payments/commission (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'La commission contribue aux frais de paiement, au support, à la prévention de la fraude et au développement de la plateforme.'**
+  /// **'Les frais de service couvrent les frais de paiement, le support, la prévention de la fraude et le développement de la plateforme.'**
   String get faqPaymentsCommissionA;
 
   /// Question FAQ payments/payment_security (faq_screen.dart)
@@ -21900,7 +21930,7 @@ abstract class AppLocalizations {
   /// Explication de la feuille de devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet).
   ///
   /// In fr, this message translates to:
-  /// **'Votre portefeuille contient encore de l\'argent en {currency} : tant qu\'il n\'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour régler des commissions, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.'**
+  /// **'Votre portefeuille contient encore de l\'argent en {currency} : tant qu\'il n\'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour régler des frais de service, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.'**
   String prefsCurrencyLockedSheetBody(String currency);
 
   /// Bouton de la feuille de devise verrouillée vers le portefeuille (business_prefs_screen.dart _showCurrencyLockedSheet).
@@ -24660,7 +24690,7 @@ abstract class AppLocalizations {
   /// Note de commission en pied de liste (price_grid_screen.dart), sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'Yadony ajoute sa commission au prix que vous saisissez. Vous encaissez exactement votre montant.'**
+  /// **'Yadony ajoute ses frais de service au prix que vous saisissez. Vous encaissez exactement votre montant.'**
   String get priceGridCommissionNotice;
 
   /// Bouton de bascule en mode réorganisation (price_grid_screen.dart).
@@ -24798,7 +24828,7 @@ abstract class AppLocalizations {
   /// Message d'écho annonçant le montant payé par l'expéditeur et la commission comprise, montants déjà formatés dans la devise active (price_grid_item_form_sheet.dart). Sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur paiera {paid}, dont {fee} de commission Yadony.'**
+  /// **'L\'expéditeur paiera {paid}, dont {fee} de frais de service Yadony.'**
   String priceGridSenderWillPayMessage(String paid, String fee);
 
   /// Titre de l'AppBar (referral_screen.dart).
@@ -24816,13 +24846,13 @@ abstract class AppLocalizations {
   /// Bandeau de bons actifs, affiché seulement si activeVoucherCount >= 1 : la branche =1 peut donc écrire « un » en toutes lettres (referral_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{🎁 Vous avez un bon de -{percent}% sur votre prochaine commission} other{🎁 Vous avez {count} bons de -{percent}% sur vos prochaines commissions}}'**
+  /// **'{count, plural, =1{🎁 Vous avez un bon de -{percent}% sur vos prochains frais de service} other{🎁 Vous avez {count} bons de -{percent}% sur vos prochains frais de service}}'**
   String referralVouchers(int count, int percent);
 
   /// Même bandeau que referralVouchers, sans pourcentage : repli défensif quand le serveur ne renseigne pas voucherFactor (backend antérieur au lot 3). Affiché seulement si activeVoucherCount >= 1 (referral_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{🎁 Vous avez un bon de réduction sur votre prochaine commission} other{🎁 Vous avez {count} bons de réduction sur vos prochaines commissions}}'**
+  /// **'{count, plural, =1{🎁 Vous avez un bon de réduction sur vos prochains frais de service} other{🎁 Vous avez {count} bons de réduction sur vos prochains frais de service}}'**
   String referralVouchersUnknownPercent(int count);
 
   /// Date d'expiration du bon le plus proche, date déjà formatée (referral_screen.dart).
@@ -24984,7 +25014,7 @@ abstract class AppLocalizations {
   /// Sous-texte d'un filleul récompensé par l'ancien bon de commission, attribué avant le choix de récompense (referral_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Bon de commission obtenu'**
+  /// **'Bon sur les frais de service obtenu'**
   String get referralRefereeVoucherObtained;
 
   /// Libellé d'accessibilité du bouton de copie d'un code de réduction (referral_screen.dart, referral_reward_sheets.dart).
@@ -25104,7 +25134,7 @@ abstract class AppLocalizations {
   /// Description de l'option « crédit sur le solde » (referral_reward_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ajoutés tout de suite. Utilisables pour régler la commission Yadony de vos demandes payées en espèces.'**
+  /// **'Ajoutés tout de suite. Utilisables pour régler les frais de service Yadony de vos demandes payées en espèces.'**
   String get referralChoiceWalletBody;
 
   /// Option « code de réduction » de la feuille de choix (referral_reward_sheets.dart).
@@ -25128,7 +25158,7 @@ abstract class AppLocalizations {
   /// Mention sous les options de la feuille de choix (referral_reward_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le solde Yadony sert à régler la commission Yadony des demandes payées en espèces. Il n\'est pas retirable en espèces.'**
+  /// **'Le solde Yadony sert à régler les frais de service Yadony des demandes payées en espèces. Il n\'est pas retirable en espèces.'**
   String get referralChoiceWalletNote;
 
   /// Bouton de la feuille de choix quand le crédit sur le solde est sélectionné (referral_reward_sheets.dart).
@@ -25164,7 +25194,7 @@ abstract class AppLocalizations {
   /// Texte de la confirmation après le choix du crédit sur le solde (referral_reward_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le montant apparaît dans votre Portefeuille. Il sert à régler la commission Yadony de vos demandes payées en espèces.'**
+  /// **'Le montant apparaît dans votre Portefeuille. Il sert à régler les frais de service Yadony de vos demandes payées en espèces.'**
   String get referralWalletCreditedBody;
 
   /// Titre du refus 422 `reason-not-applicable` (ReportService.java, error_catalog.dart) : le motif choisi ne s'applique pas au type de cible signalée.
@@ -26272,7 +26302,7 @@ abstract class AppLocalizations {
   /// Voyageur, commission à régler alors que le jour du voyage est passé (thread_state_cta_bar.dart, FLUTTER-44)
   ///
   /// In fr, this message translates to:
-  /// **'La date du voyage est passée : la commission ne peut plus être réglée.'**
+  /// **'La date du voyage est passée : les frais de service ne peuvent plus être réglés.'**
   String get negotiationCommissionTravelDatePassed;
 
   /// Titre de l'erreur handover-deadline-passed (409) : trajet parti ou date limite de remise atteinte
@@ -26362,7 +26392,7 @@ abstract class AppLocalizations {
   /// Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur accepte plusieurs modes de paiement, mais aucun n\'est prêt sur votre compte : configurez votre compte de paiement par carte, ou rechargez votre portefeuille pour couvrir la commission en espèces.'**
+  /// **'L\'expéditeur accepte plusieurs modes de paiement, mais aucun n\'est prêt sur votre compte : configurez votre compte de paiement par carte, ou rechargez votre portefeuille pour couvrir les frais de service en espèces.'**
   String get errorPaymentMethodNoneAvailableMessage;
 
   /// Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces
@@ -26374,7 +26404,7 @@ abstract class AppLocalizations {
   /// Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces
   ///
   /// In fr, this message translates to:
-  /// **'Pour accepter un paiement en espèces, votre portefeuille doit couvrir la commission. Rechargez-le, puis réessayez.'**
+  /// **'Pour accepter un paiement en espèces, votre portefeuille doit couvrir les frais de service. Rechargez-le, puis réessayez.'**
   String get errorCashFundsRequiredMessage;
 
   /// Sous le cadre caméra de l'onglet Suivi, juste après la lecture d'un QR de colis (suivi_screen.dart, FLUTTER-20)
@@ -27760,7 +27790,7 @@ abstract class AppLocalizations {
   /// Sous-titre de l'écran de succès après règlement de la commission d'un accord en espèces (negotiation_commission_settled_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'La commission Yadony est réglée et l\'accord est scellé. Retrouvez l\'envoi et les prochaines étapes dans la négociation.'**
+  /// **'Les frais de service Yadony sont réglés et l\'accord est scellé. Retrouvez l\'envoi et les prochaines étapes dans la négociation.'**
   String get negotiationCommissionSettledSubtitle;
 
   /// Titre de l'écran de succès affiché au voyageur quand il accepte une demande depuis « À traiter » (bid_accepted_success_screen.dart).
@@ -30262,19 +30292,19 @@ abstract class AppLocalizations {
   /// Suffixe d'un colis en espèces dont la commission Yadony est réglée (money_labels.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
-  /// **'commission réglée'**
+  /// **'frais de service réglés'**
   String get moneyCashCommissionSettled;
 
   /// Suffixe d'un colis en espèces dont la commission Yadony n'est pas encore réglée (money_labels.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
-  /// **'commission en attente'**
+  /// **'frais de service en attente'**
   String get moneyCashCommissionPending;
 
   /// Suffixe d'un colis en espèces dont la commission Yadony a été rendue (money_labels.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
-  /// **'commission remboursée'**
+  /// **'frais de service remboursés'**
   String get moneyCashCommissionRefunded;
 
   /// Aide sous le numéro de suivi du talon : le numéro est public, ce n'est pas le code de retrait (talon_tracking_strip.dart, FLUTTER-J2).
@@ -32523,7 +32553,7 @@ abstract class AppLocalizations {
   /// Détail de l'accord en espèces conclu, montant formaté dans la devise du trajet (FLUTTER-NG)
   ///
   /// In fr, this message translates to:
-  /// **'Vous paierez {amount} en espèces au voyageur, à la remise du colis. Il règle de son côté la commission Yadony pour confirmer l\'envoi.'**
+  /// **'Vous paierez {amount} en espèces au voyageur, à la remise du colis. Il règle de son côté les frais de service Yadony pour confirmer l\'envoi.'**
   String negotiationCashDealConfirmedMessage(String amount);
 
   /// Fil de négociation d'un trajet, accord conclu : ouvre le colis (FLUTTER-P4, FLUTTER-MM)
@@ -34794,6 +34824,84 @@ abstract class AppLocalizations {
   /// **'Au plus {max}'**
   String walletTopupAmountAtMost(String max);
 
+  /// Mention sous le prix au kilo d'une annonce, d'une affiche ou d'une carte de trajet quand une grille de commission est en vigueur (pricing_labels.dart). {minimum} : frais de service minimum formatés dans la devise du prix.
+  ///
+  /// In fr, this message translates to:
+  /// **'+ frais de service Yadony (min. {minimum})'**
+  String listPriceServiceFeeSuffix(String minimum);
+
+  /// Mention courte sous le prix au kilo sur la carte des trajets, sans le minimum, faute de place (pricing_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'+ frais de service'**
+  String get listPriceServiceFeeShortSuffix;
+
+  /// Précision accolée à un montant de frais de service relevé au minimum de la grille (pricing_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'(minimum)'**
+  String get serviceFeeMinimumTag;
+
+  /// Sous l'aperçu de la grille à l'étape Prix & conditions quand une grille de commission est en vigueur : les prix saisis sont ceux du voyageur, les frais s'ajoutent au total. {minimum} : frais de service minimum formatés dans la devise du trajet. Variante de tripPublishGridCommissionNotice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les frais de service Yadony s\'ajoutent au total payé par l\'expéditeur (min. {minimum})'**
+  String tripPublishGridCommissionNoticeGrid(String minimum);
+
+  /// Pied de la feuille complète de l'aperçu de grille quand une grille de commission est en vigueur. {minimum} : frais de service minimum dans la devise affichée. Variante de tripPublishGridSheetCommissionNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix touchés par le voyageur. Les frais de service Yadony s\'ajoutent au total (min. {minimum}).'**
+  String tripPublishGridSheetCommissionNoteGrid(String minimum);
+
+  /// Pied de l'écran de la grille de prix du voyageur quand une grille de commission est en vigueur. {minimum} : frais de service minimum formatés dans la devise active. Variante de priceGridCommissionNotice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les frais de service Yadony s\'ajoutent au total payé par l\'expéditeur, avec un minimum de {minimum}. Vous encaissez exactement votre montant.'**
+  String priceGridCommissionNoticeGrid(String minimum);
+
+  /// Écho de la feuille de saisie d'un article de la grille de prix quand une grille de commission est en vigueur. {paid} : total payé par l'expéditeur, {fee} : frais de service avec la mention (minimum) si le plancher s'applique (serviceFeeAmountLabel). Variante de priceGridSenderWillPayMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur paiera {paid}, dont {fee} de frais de service Yadony.'**
+  String priceGridSenderWillPayMessageGrid(String paid, String fee);
+
+  /// Indice affiché sous le code promo quand le code est valide mais sans effet, le minimum de frais de service annulant tout le gain (promoIneffectiveReason COMMISSION_MINIMUM).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code ne change rien sur ce montant (frais minimum)'**
+  String get promoIneffectiveCommissionMinimum;
+
+  /// Ligne des frais de service du récapitulatif de prix d'une offre sur un trajet, sous grille de commission : les lignes au-dessus sont au net, celle-ci s'y ajoute (create_bid_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais de service Yadony'**
+  String get bidCreateServiceFeeLineLabel;
+
+  /// Mention à côté du total de la feuille de choix des articles de grille, sous grille de commission : le total affiché comprend les frais de service, alors que les prix des articles sont au net (grid_item_selection_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais de service inclus'**
+  String get bidCreateGridSheetServiceFeeIncluded;
+
+  /// Réponse FAQ payments/commission quand une grille de commission est en vigueur (faq_screen.dart). {minimum} : frais de service minimum de la grille, formatés dans la devise active. Sans taux. Variante de faqPaymentsCommissionA.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les frais de service couvrent les frais de paiement, le support, la prévention de la fraude et le développement de la plateforme. Ils dépendent du prix du transport, avec un minimum de {minimum}. Le montant exact est affiché avant de confirmer.'**
+  String faqPaymentsCommissionAGrid(String minimum);
+
+  /// Ligne d'un article de grille dans le récapitulatif d'un fil de négociation sur un trajet, vue expéditeur, quand le fil porte une grille de commission : {line} est « quantité × prix voyageur », les frais de service s'ajoutent au total (bid_negotiation_thread_screen.dart, bid_negotiation_parcel_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{line} + frais de service'**
+  String bidNegotiationGridLineServiceFee(String line);
+
+  /// Légende sous « Vous paieriez » de la carte en tête d'un fil de négociation sur un trajet, vue expéditeur, quand le fil porte une grille de commission : le montant affiché comprend les frais de service (bid_negotiation_thread_screen.dart, _TripNegoHero).
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais de service compris'**
+  String get bidNegotiationHeroServiceFeeIncluded;
+
   /// Tuile d'options voyageur : demander un supplément de prix à la remise (traveler_options_sheet.dart)
   ///
   /// In fr, this message translates to:
@@ -34929,7 +35037,7 @@ abstract class AppLocalizations {
   /// Récapitulatif : commission Yadony du supplément
   ///
   /// In fr, this message translates to:
-  /// **'Commission Yadony'**
+  /// **'Frais de service Yadony'**
   String get supplementRecapCommission;
 
   /// Récapitulatif : total payé par l'expéditeur
@@ -35391,7 +35499,7 @@ abstract class AppLocalizations {
   /// Feuille de demande, colis payé en espèces : titre du choix de la source de la commission
   ///
   /// In fr, this message translates to:
-  /// **'Commission du supplément'**
+  /// **'Frais de service du supplément'**
   String get supplementCommissionSourceTitle;
 
   /// Feuille de demande, espèces : explication de la commission du supplément prélevée au voyageur
@@ -35421,7 +35529,7 @@ abstract class AppLocalizations {
   /// Feuille de demande, espèces : option carte commission
   ///
   /// In fr, this message translates to:
-  /// **'Ma carte commission'**
+  /// **'Ma carte des frais de service'**
   String get supplementCommissionSourceCard;
 
   /// Feuille de demande, espèces : sous-titre de l'option carte
@@ -35439,13 +35547,13 @@ abstract class AppLocalizations {
   /// Feuille de demande, espèces : carte commission manquante
   ///
   /// In fr, this message translates to:
-  /// **'Aucune carte commission enregistrée. Ajoutez-en une, ou payez avec votre solde.'**
+  /// **'Aucune carte des frais de service enregistrée. Ajoutez-en une, ou payez avec votre solde.'**
   String get supplementCommissionCardMissing;
 
   /// Feuille de demande, espèces : commission en attente après une validation bancaire interrompue ou un débit sans réponse
   ///
   /// In fr, this message translates to:
-  /// **'Votre demande est enregistrée, mais la commission n\'a pas encore été prélevée. Réessayez pour l\'envoyer à l\'expéditeur.'**
+  /// **'Votre demande est enregistrée, mais les frais de service n\'ont pas encore été prélevés. Réessayez pour l\'envoyer à l\'expéditeur.'**
   String get supplementCommissionRetryNotice;
 
   /// Bouton de la feuille de demande : relancer la commission du supplément
@@ -35463,7 +35571,7 @@ abstract class AppLocalizations {
   /// Snackbar : commission du supplément encore en traitement chez la banque
   ///
   /// In fr, this message translates to:
-  /// **'Demande enregistrée : paiement de la commission en cours de validation'**
+  /// **'Demande enregistrée : paiement des frais de service en cours de validation'**
   String get supplementCommissionProcessing;
 
   /// Récapitulatif voyageur, espèces : total remis par l'expéditeur
@@ -35475,13 +35583,13 @@ abstract class AppLocalizations {
   /// Encart voyageur : demande en attente du paiement de sa commission (espèces)
   ///
   /// In fr, this message translates to:
-  /// **'Commission à valider'**
+  /// **'Frais de service à valider'**
   String get supplementTravelerCommissionPending;
 
   /// Encart voyageur : aide de la commission à valider
   ///
   /// In fr, this message translates to:
-  /// **'Validez le paiement de la commission pour envoyer la demande à l\'expéditeur. Sans validation sous 30 minutes, elle est annulée sans frais.'**
+  /// **'Validez le paiement des frais de service pour envoyer la demande à l\'expéditeur. Sans validation sous 30 minutes, elle est annulée sans frais.'**
   String get supplementTravelerCommissionPendingHelp;
 
   /// Bouton de l'encart voyageur : valider la commission du supplément
@@ -35493,13 +35601,13 @@ abstract class AppLocalizations {
   /// Snackbar : commission du supplément prélevée après reprise
   ///
   /// In fr, this message translates to:
-  /// **'Commission payée : demande envoyée à l\'expéditeur'**
+  /// **'Frais de service payés : demande envoyée à l\'expéditeur'**
   String get supplementCommissionConfirmedSnackbar;
 
   /// Encart voyageur, espèces : commission prélevée, demande en attente
   ///
   /// In fr, this message translates to:
-  /// **'Commission prélevée. Elle vous est rendue si la demande n\'aboutit pas.'**
+  /// **'Frais de service prélevés. Ils vous sont rendus si la demande n\'aboutit pas.'**
   String get supplementTravelerCashCommissionHelp;
 
   /// Encart voyageur, espèces : supplément accepté. {amount} : brut formaté
@@ -35517,13 +35625,13 @@ abstract class AppLocalizations {
   /// Encart voyageur, espèces : commission rendue
   ///
   /// In fr, this message translates to:
-  /// **'La commission du supplément vous a été rendue.'**
+  /// **'Les frais de service du supplément vous ont été rendus.'**
   String get supplementTravelerCommissionRefunded;
 
   /// Encart voyageur, espèces : commission en cours de remboursement
   ///
   /// In fr, this message translates to:
-  /// **'La commission du supplément vous sera rendue sous peu.'**
+  /// **'Les frais de service du supplément vous seront rendus sous peu.'**
   String get supplementTravelerCommissionRefundPending;
 
   /// Encart voyageur : demande annulée (commission non validée, colis terminé)
@@ -35601,13 +35709,13 @@ abstract class AppLocalizations {
   /// Historique du solde : commission d'un supplément prélevée (SUPPLEMENT_COMMISSION_DEDUCTED)
   ///
   /// In fr, this message translates to:
-  /// **'Commission de supplément'**
+  /// **'Frais de service de supplément'**
   String get walletTxTypeSupplementCommission;
 
   /// Historique du solde : commission d'un supplément rendue (REFUND, payment_ref supplement-refund-)
   ///
   /// In fr, this message translates to:
-  /// **'Commission de supplément rendue'**
+  /// **'Frais de service de supplément rendus'**
   String get walletTxTypeSupplementCommissionRefund;
 
   /// Historique du solde : type de ligne inconnu de cette version de l'app
@@ -35625,7 +35733,7 @@ abstract class AppLocalizations {
   /// ErrorCatalog supplement-commission-unfunded
   ///
   /// In fr, this message translates to:
-  /// **'Votre solde ne couvre pas la commission du supplément. Rechargez-le ou payez par carte.'**
+  /// **'Votre solde ne couvre pas les frais de service du supplément. Rechargez-le ou payez par carte.'**
   String get errorSupplementCommissionUnfundedMessage;
 
   /// ErrorCatalog supplement-commission-card-declined
@@ -35637,31 +35745,31 @@ abstract class AppLocalizations {
   /// ErrorCatalog supplement-commission-card-declined
   ///
   /// In fr, this message translates to:
-  /// **'Votre carte commission a été refusée : rien n\'a été prélevé et la demande est annulée.'**
+  /// **'Votre carte des frais de service a été refusée : rien n\'a été prélevé et la demande est annulée.'**
   String get errorSupplementCommissionCardDeclinedMessage;
 
   /// ErrorCatalog supplement-commission-charge-failed
   ///
   /// In fr, this message translates to:
-  /// **'Commission non prélevée'**
+  /// **'Frais de service non prélevés'**
   String get errorSupplementCommissionChargeFailedTitle;
 
   /// ErrorCatalog supplement-commission-charge-failed
   ///
   /// In fr, this message translates to:
-  /// **'Le débit de la commission n\'a pas abouti. Réessayez.'**
+  /// **'Le débit des frais de service n\'a pas abouti. Réessayez.'**
   String get errorSupplementCommissionChargeFailedMessage;
 
   /// ErrorCatalog commission-method-missing
   ///
   /// In fr, this message translates to:
-  /// **'Carte commission manquante'**
+  /// **'Carte des frais de service manquante'**
   String get errorCommissionMethodMissingTitle;
 
   /// ErrorCatalog commission-method-missing
   ///
   /// In fr, this message translates to:
-  /// **'Enregistrez une carte commission, ou payez avec votre solde.'**
+  /// **'Enregistrez une carte pour les frais de service, ou payez avec votre solde.'**
   String get errorCommissionMethodMissingMessage;
 
   /// ErrorCatalog funding-currency-invalid
@@ -35673,7 +35781,7 @@ abstract class AppLocalizations {
   /// ErrorCatalog funding-currency-invalid
   ///
   /// In fr, this message translates to:
-  /// **'Ce portefeuille ne peut pas payer la commission. Choisissez-en un autre.'**
+  /// **'Ce portefeuille ne peut pas payer les frais de service. Choisissez-en un autre.'**
   String get errorFundingCurrencyInvalidMessage;
 }
 

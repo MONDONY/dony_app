@@ -14,6 +14,7 @@ import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/currency/active_rates.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_bloc_observer.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -192,6 +193,12 @@ Future<void> _bootstrap() async {
   // surfaces sans champ *Display) suivent automatiquement. Non bloquant.
   unawaited(_loadDonyCommissionRate());
 
+  // Grilles de commission par paliers (GET /config/commission-grid) : la grille
+  // en vigueur et la suivante pilotent les aperçus de prix. Sans grille (back
+  // non déployé, hors ligne), le taux unique ci-dessus reste appliqué. Non
+  // bloquant.
+  unawaited(_loadCommissionGrid());
+
   // Seuil d'urgence Yadony (SOURCE UNIQUE : dony.urgency.threshold-days côté backend) :
   // chargé une fois pour que le badge « urgent » suive automatiquement. Non bloquant.
   unawaited(_loadUrgencyThreshold());
@@ -261,6 +268,16 @@ Future<void> _loadDonyCommissionRate() async {
     setDonyCommissionRate(await getIt<IConfigRepository>().getCommissionRate());
   } catch (_) {
     // Repli sur kDonyCommissionRateDefault conservé — non bloquant.
+  }
+}
+
+Future<void> _loadCommissionGrid() async {
+  try {
+    applyCommissionGridConfig(
+      await getIt<IConfigRepository>().getCommissionGrid(),
+    );
+  } catch (_) {
+    // Aucune grille : repli sur le taux unique — non bloquant.
   }
 }
 

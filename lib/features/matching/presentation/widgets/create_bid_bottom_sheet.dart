@@ -5,7 +5,10 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
@@ -254,6 +257,24 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _promoCtrl = TextEditingController();
   final _quoteNotifier = ValueNotifier<Object?>(null);
 
+  /// Message d'un code promo refusé, affiché sous le champ. Séparé du devis :
+  /// après un refus, le devis de fond (sous grille) peut s'afficher sans
+  /// effacer le message.
+  final _promoErrorNotifier = ValueNotifier<String?>(null);
+
+  /// Attente avant le devis automatique sous grille : un devis par geste
+  /// posé, pas un par cran du curseur de poids.
+  static const _autoQuoteDebounce = Duration(milliseconds: 400);
+  Timer? _autoQuoteTimer;
+
+  /// Code envoyé par le dernier « Appliquer », en attente du devis.
+  String? _requestedPromoCode;
+
+  /// Code accepté par le serveur (devis utilisateur reçu) : le devis de fond
+  /// le reprend, pour que le total affiché reste celui qui sera prélevé.
+  /// Retiré par un refus du code ou un champ vidé.
+  String? _appliedPromoCode;
+
   // ── Picker step fields ──────────────────────────────────────────────────────
   // Initialisé dans initState : le défaut dépend de widget.announcement
   // (cash si le trajet n'accepte pas Stripe).
@@ -441,6 +462,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
     _weightNotifier.addListener(_invalidateQuote);
     _gridQuantitiesNotifier.addListener(_invalidateQuote);
+    _weightNotifier.addListener(_scheduleAutoQuote);
+    _gridQuantitiesNotifier.addListener(_scheduleAutoQuote);
 
     _stepNotifier.addListener(_onStepChanged);
     _methodNotifier.addListener(_syncPickerButtonState);
@@ -568,9 +591,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _descCtrl.removeListener(_syncFormButtonState);
     _weightNotifier.removeListener(_invalidateQuote);
     _gridQuantitiesNotifier.removeListener(_invalidateQuote);
+    _weightNotifier.removeListener(_scheduleAutoQuote);
+    _gridQuantitiesNotifier.removeListener(_scheduleAutoQuote);
+    _autoQuoteTimer?.cancel();
     _stepNotifier.removeListener(_onStepChanged);
     _methodNotifier.removeListener(_syncPickerButtonState);
     _quoteNotifier.dispose();
+    _promoErrorNotifier.dispose();
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
     _catalogNotifier.dispose();
@@ -766,12 +793,41 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   /// Total expéditeur calculé localement, sans attendre le devis serveur.
   double _localSenderTotal() {
+    if (commissionGridActive) return _localGridPrice().gross;
     final price = _pricePerKg;
+    // Sans grille : taux unique historique sur le net au kilo.
     final kg = (price != null && price > 0)
-        ? netToSenderPrice(_weightNotifier.value * price)
+        ? flatRateGross(_weightNotifier.value * price)
         : 0.0;
     return kg + _gridDisplayTotal();
   }
+
+  /// Net du voyageur pour la saisie courante : poids × prix au kilo plus les
+  /// articles de grille. Valable sous grille de commission seulement, où le
+  /// serveur sert `pricePerKgDisplay` et `unitPriceDisplay` au net ; sans
+  /// grille ces prix portent déjà la commission.
+  double _netTotal() => _kgNet(_weightNotifier.value) + _gridDisplayTotal();
+
+  /// Net au kilo du voyageur pour [weightKg], calculé comme le back :
+  /// `pricePerKg × weightKg` en décimal exact, arrondi HALF_UP à l'unité
+  /// mineure de la devise (le produit en `double` peut s'en écarter d'un
+  /// centime). Seul calcul du net au kilo de l'écran sous grille.
+  double _kgNet(double weightKg) {
+    final price = _pricePerKg;
+    if (price == null || price <= 0 || weightKg <= 0) return 0;
+    return exactProductHalfUp(
+      weightKg,
+      price,
+      SupportedCurrency.fromCodeOrDefault(
+        widget.announcement.currency,
+      ).minorUnit,
+    );
+  }
+
+  /// Prix expéditeur local sous grille : les frais de service se calculent
+  /// une fois sur le net total (palier, minimum), jamais ligne par ligne.
+  SenderPrice _localGridPrice() =>
+      senderPriceForNet(_netTotal(), widget.announcement.currency);
 
   /// Prix suggéré : ce que coûterait le colis au tarif du voyageur, plus ce que
   /// l'expéditeur a lui-même chiffré hors grille. Le devis serveur prime dès
@@ -824,6 +880,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     // Tant que RecipientSection est montée : l'étape paiement la démonte (même
     // raison que _goToPicker).
     _recipientSection.maybeSaveManualEntry();
+    // Plus de devis de fond une fois le formulaire quitté : il recouvrirait
+    // l'envoi en cours dans le BLoC.
+    _autoQuoteTimer?.cancel();
 
     if (!_hasAlternativePaymentMethods) {
       _submitNegotiation();
@@ -835,6 +894,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// Première proposition, étape 2 : l'envoie avec le mode choisi. Les champs
   /// du formulaire vivent dans ce State et survivent au changement d'étape.
   void _submitNegotiation() {
+    _autoQuoteTimer?.cancel();
     final proposed = _readProposal();
     if (proposed == null) return;
     final method = _methodNotifier.value;
@@ -880,9 +940,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     if (quote is BidQuoteResponse) return quote.totalEur;
     final data = _formData;
     if (data == null) return 0.0;
+    if (commissionGridActive) return _localGridPrice().gross;
     final price = _pricePerKg;
     final kg = price == null ? 0.0 : data.weightKg * price;
-    return netToSenderPrice(kg) + _gridDisplayTotal();
+    return flatRateGross(kg) + _gridDisplayTotal();
   }
 
   // ── Content helpers ─────────────────────────────────────────────────────────
@@ -938,9 +999,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   void _applyPromoCode() {
     final code = _promoCtrl.text.trim();
     if (code.isEmpty) {
+      _requestedPromoCode = null;
+      _appliedPromoCode = null;
+      _promoErrorNotifier.value = null;
       _quoteNotifier.value = null;
+      _scheduleAutoQuote();
       return;
     }
+    _requestedPromoCode = code;
     final weight = _weightNotifier.value;
     _bidBloc.add(
       BidQuoteRequested(
@@ -954,6 +1020,56 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   void _invalidateQuote() {
     if (_quoteNotifier.value != null) _quoteNotifier.value = null;
+    if (_promoErrorNotifier.value != null) _promoErrorNotifier.value = null;
+  }
+
+  /// Clé de la saisie qui détermine un devis (poids, articles) : une réponse
+  /// d'arrière-plan pour une autre clé est périmée.
+  String get _quoteInputsKey {
+    final grid =
+        _gridQuantitiesNotifier.value.entries
+            .where((e) => e.value > 0)
+            .map((e) => '${e.key}:${e.value}')
+            .toList()
+          ..sort();
+    return '${_weightNotifier.value}|${grid.join(',')}';
+  }
+
+  /// Sous grille de commission seulement : le back applique au total le taux
+  /// spécial et le bon de parrainage de l'expéditeur, que l'app ne connaît
+  /// pas. Un devis est donc demandé après chaque changement de poids ou
+  /// d'articles, avec le code promo accepté s'il y en a un, sans code sinon ;
+  /// le calcul local s'affiche en attendant. Sans grille, aucun appel (le
+  /// devis ne sert qu'au code promo).
+  void _scheduleAutoQuote() {
+    _autoQuoteTimer?.cancel();
+    if (!commissionGridActive ||
+        _stepNotifier.value != _FormStep.form ||
+        _netTotal() <= 0) {
+      return;
+    }
+    _autoQuoteTimer = Timer(_autoQuoteDebounce, _requestAutoQuote);
+  }
+
+  void _requestAutoQuote() {
+    if (!mounted) return;
+    final weight = _weightNotifier.value;
+    _bidBloc.add(
+      BidQuoteRequested(
+        announcementId: widget.announcement.id,
+        weightKg: weight > 0 ? weight : null,
+        // Seulement si le champ porte encore le code accepté, normalisé comme
+        // à l'envoi : un code effacé ou changé sans « Appliquer » ne part pas
+        // avec l'offre, il ne doit pas baisser le total affiché.
+        promoCode:
+            _appliedPromoCode != null &&
+                _promoCtrl.text.trim() == _appliedPromoCode
+            ? _appliedPromoCode
+            : null,
+        gridItems: _selectedGridItems(),
+        backgroundKey: _quoteInputsKey,
+      ),
+    );
   }
 
   // ── Step navigation ─────────────────────────────────────────────────────────
@@ -980,6 +1096,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     // which disposes RecipientSection (and clears its save hook) before
     // BidCreated/BidCheckoutReady ever arrive.
     _recipientSection.maybeSaveManualEntry();
+    // Plus de devis de fond une fois le formulaire validé : il recouvrirait
+    // l'envoi de l'offre dans le BLoC.
+    _autoQuoteTimer?.cancel();
 
     final promoCode = _promoCtrl.text.trim().isNotEmpty
         ? _promoCtrl.text.trim()
@@ -1004,6 +1123,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   }
 
   void _confirmPayment() {
+    _autoQuoteTimer?.cancel();
     final data = _formData;
     if (data == null) return;
     final method = _methodNotifier.value;
@@ -1064,13 +1184,40 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         ),
       );
     } else if (state is BidQuoteLoaded) {
+      final key = state.backgroundKey;
+      // Devis d'arrière-plan : écarté s'il répond pour une saisie qui a
+      // changé, ou si un devis demandé par l'utilisateur (code promo) est
+      // déjà affiché pour la saisie courante.
+      // Écarté aussi hors de l'étape formulaire (offre en cours d'envoi).
+      if (key != null &&
+          (key != _quoteInputsKey ||
+              _quoteNotifier.value != null ||
+              _stepNotifier.value != _FormStep.form)) {
+        return;
+      }
+      if (key == null) {
+        _appliedPromoCode = _requestedPromoCode;
+        _promoErrorNotifier.value = null;
+      }
       _quoteNotifier.value = state.quote;
+    } else if (state is BidQuoteBackgroundPromoRejected) {
+      // Le code accepté plus tôt ne l'est plus : le devis de fond repart sans
+      // code (BLoC) et le message promo habituel prévient, sans bloquer.
+      _appliedPromoCode = null;
+      if (state.backgroundKey == _quoteInputsKey) {
+        ErrorPresenter.show(context, state.error);
+      }
     } else if (state is BidPromoError) {
-      _quoteNotifier.value = ErrorPresenter.resolve(
+      _appliedPromoCode = null;
+      _quoteNotifier.value = null;
+      _promoErrorNotifier.value = ErrorPresenter.resolve(
         state.error,
         l10n: context.l10n,
       ).message;
       ErrorPresenter.show(context, state.error);
+      // Sous grille, le total redevient celui du serveur sans code (taux
+      // spécial, bon), pas le calcul local.
+      _scheduleAutoQuote();
     } else if (state is BidError) {
       ErrorPresenter.show(context, state.error);
       // Trajet parti, complet ou fermé entre-temps : la demande ne pourra plus
@@ -1546,13 +1693,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               bloc: _bidBloc,
               builder: (context, bidState) {
                 final isQuoteLoading = bidState is BidQuoteLoading;
-                return ValueListenableBuilder<Object?>(
-                  valueListenable: _quoteNotifier,
-                  builder: (_, quoteVal, _) {
+                return ListenableBuilder(
+                  listenable: Listenable.merge([
+                    _quoteNotifier,
+                    _promoErrorNotifier,
+                  ]),
+                  builder: (_, _) {
+                    final quoteVal = _quoteNotifier.value;
                     final quote = quoteVal is BidQuoteResponse
                         ? quoteVal
                         : null;
-                    final promoError = quoteVal is String ? quoteVal : null;
+                    final promoError = _promoErrorNotifier.value;
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1634,6 +1785,39 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                             ],
                           ),
                         ],
+                        // Code valide mais sans effet : le minimum de frais
+                        // annule le gain. Simple information (le code reste
+                        // saisi et part avec l'offre), jamais une erreur.
+                        if (quote != null &&
+                            quote.promoIneffectiveBecauseMinimum) ...[
+                          const SizedBox(height: DonySpacing.xs),
+                          Row(
+                            key: const Key('bid-promo-ineffective'),
+                            children: [
+                              DonyIcon(
+                                'info',
+                                size: 16,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  context
+                                      .l10n
+                                      .promoIneffectiveCommissionMinimum,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                         if (promoError != null) ...[
                           const SizedBox(height: DonySpacing.xs),
                           Row(
@@ -1669,8 +1853,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               valueListenable: _quoteNotifier,
               builder: (_, quoteVal, _) {
                 final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
+                if (commissionGridActive) {
+                  return _buildGridPriceBreakdown(weightKg, quote);
+                }
+                // Sans grille : taux unique historique, comme avant.
                 final kgDisplayLocal = hasKgPricing
-                    ? netToSenderPrice(weightKg * kgPrice)
+                    ? flatRateGross(weightKg * kgPrice)
                     : 0.0;
                 final localTotal = kgDisplayLocal + gridTotal;
 
@@ -1683,7 +1871,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 // qu'au voyageur.
                 double kgNet = hasKgPricing ? weightKg * kgPrice : 0.0;
                 double gridNet = hasGridPricing
-                    ? gridTotal / donyCommissionMultiplier
+                    ? netForSenderGross(
+                        gridTotal,
+                        widget.announcement.currency,
+                        legacy: true,
+                      )
                     : 0.0;
                 double total = localTotal;
                 double? original;
@@ -1743,6 +1935,37 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           ],
         );
       },
+    );
+  }
+
+  /// Récapitulatif sous grille de commission : lignes au net du voyageur
+  /// (poids, articles), puis une ligne « Frais de service Yadony » calculée
+  /// une seule fois sur le total. Le devis serveur prime dès qu'il existe :
+  /// c'est lui qui applique le code promo, l'app ne recalcule aucune remise.
+  /// Sans devis, le total montré est celui sans code.
+  Widget _buildGridPriceBreakdown(double weightKg, BidQuoteResponse? quote) {
+    final local = _localGridPrice();
+    final kgNet = quote?.kgNetEur ?? _kgNet(weightKg);
+    final gridNet = quote?.gridNetEur ?? _gridDisplayTotal();
+    final total = quote?.totalEur ?? local.gross;
+    if (total <= 0) return const SizedBox.shrink();
+    final promoApplied = quote?.promoApplied ?? false;
+    return _PriceBreakdown(
+      weightKg: weightKg,
+      pricePerKg: weightKg > 0 ? kgNet / weightKg : 0,
+      kgDisplay: kgNet,
+      gridDisplay: gridNet,
+      totalPrice: total,
+      // Prix avant code : net + frais au barème, tels que le devis les sert.
+      originalTotal: (quote != null && promoApplied)
+          ? quote.netEur + quote.commissionEur
+          : null,
+      promoApplied: promoApplied,
+      serviceFee: quote != null
+          ? quote.totalEur - quote.netEur
+          : local.commission,
+      serviceFeeMinimum: quote?.minimumApplied ?? local.minimumApplied,
+      currency: quote?.currency ?? widget.announcement.currency,
     );
   }
 
@@ -2985,24 +3208,36 @@ class _PriceBreakdown extends StatelessWidget {
     required this.currency,
     this.originalTotal,
     this.promoApplied = false,
+    this.serviceFee,
+    this.serviceFeeMinimum = false,
   });
 
   final double weightKg;
 
-  /// Tarif au kilo **payé par l'expéditeur**, commission comprise. Jamais le
-  /// net du voyageur, qui n'appartient qu'à lui.
+  /// Tarif au kilo de la ligne poids. Sans grille : payé par l'expéditeur,
+  /// commission comprise. Sous grille ([serviceFee] non nul) : net du
+  /// voyageur, les frais de service s'ajoutant sur leur propre ligne.
   final double pricePerKg;
 
-  /// Ligne poids, du point de vue de l'expéditeur (= [weightKg] × [pricePerKg]).
+  /// Ligne poids (= [weightKg] × [pricePerKg]), commission comprise sans
+  /// grille, au net sous grille.
   final double kgDisplay;
 
-  /// Ligne articles, du point de vue de l'expéditeur.
+  /// Ligne articles, commission comprise sans grille, au net sous grille.
   final double gridDisplay;
 
   final double totalPrice;
   final double? originalTotal;
   final bool promoApplied;
   final String currency;
+
+  /// Frais de service Yadony, sous grille de commission seulement : les
+  /// lignes ci-dessus sont alors au net et cette ligne s'y ajoute. `null`
+  /// sans grille, où les lignes portent déjà la commission (aucune ligne).
+  final double? serviceFee;
+
+  /// Les frais ont été relevés au minimum de la grille.
+  final bool serviceFeeMinimum;
 
   @override
   Widget build(BuildContext context) {
@@ -3037,10 +3272,30 @@ class _PriceBreakdown extends StatelessWidget {
         _line(tt, context.l10n.bidCreateArticlesLineLabel, fmt(gridDisplay)),
       );
     }
-    // Pas de ligne « Commission » en addition : elle est déjà comprise dans les
-    // lignes ci-dessus, l'ajouter la compterait deux fois. Sa présence reste
-    // annoncée sous le total (« Commission Yadony incluse »).
-    if (hasRealSavings) {
+    // Sans grille, pas de ligne de frais en addition : ils sont déjà compris
+    // dans les lignes ci-dessus, l'ajouter les compterait deux fois. Leur
+    // présence reste annoncée sous le total (« Frais de service Yadony
+    // inclus »). Sous grille, les lignes sont au net et les frais s'ajoutent.
+    final fee = serviceFee;
+    if (fee != null) {
+      lines.add(
+        _line(
+          tt,
+          context.l10n.bidCreateServiceFeeLineLabel,
+          serviceFeeAmountLabel(
+            context.l10n,
+            fee,
+            currency,
+            minimum: serviceFeeMinimum,
+          ),
+          valueKey: const Key('bid-service-fee-amount'),
+        ),
+      );
+    }
+    // Sous grille, la ligne de frais est déjà après code : une ligne de
+    // réduction en plus ferait sommer les lignes sous le total. La remise se
+    // lit alors au prix barré.
+    if (hasRealSavings && fee == null) {
       lines.add(
         _line(
           tt,
@@ -3139,11 +3394,13 @@ class _PriceBreakdown extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: DonySpacing.xs),
-          Text(
-            context.l10n.bidCreateServiceFeeIncludedLabel,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
+          if (fee == null) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              context.l10n.bidCreateServiceFeeIncludedLabel,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
         ],
       ),
     );
@@ -3152,14 +3409,23 @@ class _PriceBreakdown extends StatelessWidget {
   // Expanded sur le libellé (variable, ex: "5.0 kg × 8.00€") plutôt qu'un
   // Row spaceBetween non contraint : à 200 % il passe à la ligne au lieu de
   // pousser le montant hors de la carte.
-  Widget _line(TextTheme tt, String label, String value, {Color? valueColor}) =>
-      Row(
-        children: [
-          Expanded(child: Text(label, style: tt.bodyMedium)),
-          const SizedBox(width: DonySpacing.sm),
-          Text(value, style: tt.titleMedium?.copyWith(color: valueColor)),
-        ],
-      );
+  Widget _line(
+    TextTheme tt,
+    String label,
+    String value, {
+    Color? valueColor,
+    Key? valueKey,
+  }) => Row(
+    children: [
+      Expanded(child: Text(label, style: tt.bodyMedium)),
+      const SizedBox(width: DonySpacing.sm),
+      Text(
+        value,
+        key: valueKey,
+        style: tt.titleMedium?.copyWith(color: valueColor),
+      ),
+    ],
+  );
 
   /// Libellé pourcentage : entier si rond, sinon 1 décimale virgule FR
   /// (ex. 0.05 → « 5 », 0.065 → « 6,5 »).

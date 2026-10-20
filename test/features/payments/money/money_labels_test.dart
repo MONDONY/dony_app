@@ -70,9 +70,9 @@ void main() {
       item(state: MoneyState.cash, cashCommissionStatus: status, role: role),
     ).text;
     expect(cash(null), 'en espèces');
-    expect(cash('CHARGED'), 'en espèces · commission réglée');
-    expect(cash('REFUNDED'), 'en espèces · commission remboursée');
-    expect(cash('PENDING'), 'en espèces · commission en attente');
+    expect(cash('CHARGED'), 'en espèces · frais de service réglés');
+    expect(cash('REFUNDED'), 'en espèces · frais de service remboursés');
+    expect(cash('PENDING'), 'en espèces · frais de service en attente');
     expect(cash('CHARGED', role: MoneyRole.sender), 'en espèces');
   });
 

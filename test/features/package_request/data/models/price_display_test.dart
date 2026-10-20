@@ -1,39 +1,30 @@
-import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  tearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
-
-  test('previewRate suit la source unique donyCommissionRate', () {
-    expect(PriceDisplay.previewRate, donyCommissionRate);
-    setDonyCommissionRate(0.12);
-    expect(PriceDisplay.previewRate, 0.12);
-  });
-  test(
-    'grossFromNet applique le taux courant pour l\'aperçu du formulaire',
-    () {
-      // Taux par défaut (5 %)
-      expect(PriceDisplay.grossFromNet(35), closeTo(36.75, 0.001));
-      // Suit un changement de taux chargé du backend
-      setDonyCommissionRate(0.12);
-      expect(PriceDisplay.grossFromNet(35), closeTo(39.20, 0.001));
-    },
-  );
-  test(
-    'grossFromNet arrondit la commission au centime comme le back (FLUTTER-Q4)',
-    () {
-      setDonyCommissionRate(0.0499);
-      // 70 × 4,99 % = 3,493 → 3,49 ; brut 73,49, comme PriceBreakdown.fromNet.
-      expect(PriceDisplay.feeFromNet(70), 3.49);
-      expect(PriceDisplay.grossFromNet(70), closeTo(73.49, 1e-9));
-      // 69,99 × 5 % = 3,4995 → 3,50 : arrondi au plus proche, demi vers le haut.
-      setDonyCommissionRate(0.05);
-      expect(PriceDisplay.grossFromNet(69.99), closeTo(73.49, 1e-9));
-    },
-  );
-  test('format euros fr', () {
+  test('format euros fr, décimales toujours affichées', () {
     expect(PriceDisplay.money(39.20), '39,20 €');
     expect(PriceDisplay.money(35), '35,00 €');
+  });
+
+  test('devise passée : même rendu que CurrencyFormatter, non compact', () {
+    expect(
+      PriceDisplay.money(35000, 'XOF'),
+      CurrencyFormatter.format(35000, SupportedCurrency.xof),
+    );
+    expect(
+      PriceDisplay.money(12.5, 'USD'),
+      CurrencyFormatter.format(12.5, SupportedCurrency.usd),
+    );
+    expect(PriceDisplay.money(35000, 'XOF'), isNot(contains('€')));
+    // Franc CFA sans unité mineure : aucune décimale.
+    expect(PriceDisplay.money(35000, 'XOF'), isNot(contains(',')));
+  });
+
+  test('devise inconnue ou absente : repli EUR', () {
+    expect(PriceDisplay.money(10, 'ZZZ'), PriceDisplay.money(10));
+    expect(PriceDisplay.money(10), '10,00 €');
   });
 }

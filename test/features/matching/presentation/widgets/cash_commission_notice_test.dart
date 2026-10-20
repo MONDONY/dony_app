@@ -15,8 +15,8 @@ void main() {
 
     expect(
       find.textContaining(
-        'Vous ne pourrez accepter un colis en espèces que si la commission '
-        'Yadony peut être prélevée ',
+        'Vous ne pourrez accepter un colis en espèces que si les frais de '
+        'service Yadony peuvent être prélevés ',
         findRichText: true,
       ),
       findsOneWidget,

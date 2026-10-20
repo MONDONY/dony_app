@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
@@ -34,6 +35,7 @@ import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/commission_grid_test_doubles.dart';
 import '../../../helpers/error_reporting_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 
@@ -93,6 +95,9 @@ BidNegotiation _thread({
   bool counterpartyGpPro = false,
   DateTime? commissionDueBy,
   double? commissionRate,
+  String? commissionGridId,
+  double? commissionOverrideRate,
+  double? commissionVoucherFactor,
   List<BidNegotiationMessage> messages = const [
     BidNegotiationMessage(
       id: 'm1',
@@ -138,6 +143,9 @@ BidNegotiation _thread({
   paymentMethod: paymentMethod,
   commissionDueBy: commissionDueBy,
   commissionRate: commissionRate,
+  commissionGridId: commissionGridId,
+  commissionOverrideRate: commissionOverrideRate,
+  commissionVoucherFactor: commissionVoucherFactor,
 );
 
 void main() {
@@ -706,6 +714,71 @@ void main() {
     expect(find.byKey(const Key('nego-total-amount')), findsOneWidget);
   });
 
+  group('lignes de grille au prix du voyageur (fil à grille)', () {
+    final line = '1 × ${formatPriceIn(12, 'EUR')}';
+
+    testWidgets('expéditeur : « + frais de service » sur la ligne et '
+        'légende sous « Vous paieriez »', (tester) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(_thread(commissionGridId: kTestGridId)),
+      );
+
+      expect(find.text('$line + frais de service'), findsOneWidget);
+      expect(find.byKey(const Key('nego-hero-amount-note')), findsOneWidget);
+      expect(find.text('Frais de service compris'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('nego-view-parcel')));
+      await tester.pump(_kSettle);
+      final sheet = find.byKey(const Key('nego-parcel-sheet'));
+      expect(
+        find.descendant(
+          of: sheet,
+          matching: find.text('$line + frais de service'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('expéditeur sans grille : ligne et carte inchangées', (
+      tester,
+    ) async {
+      await pumpScreen(tester, BidNegotiationLoaded(_thread()));
+
+      expect(find.text(line), findsOneWidget);
+      expect(find.textContaining('+ frais de service'), findsNothing);
+      expect(find.byKey(const Key('nego-hero-amount-note')), findsNothing);
+    });
+
+    testWidgets('voyageur sur un fil à grille : ligne nue, sans légende', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(netEur: 37, commissionGridId: kTestGridId),
+        ),
+      );
+
+      expect(find.text(line), findsOneWidget);
+      expect(find.textContaining('+ frais de service'), findsNothing);
+      expect(find.byKey(const Key('nego-hero-amount-note')), findsNothing);
+    });
+
+    testWidgets('en anglais : « + service fee » et « Service fee included »', (
+      tester,
+    ) async {
+      useEnglish();
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(_thread(commissionGridId: kTestGridId)),
+      );
+
+      expect(find.text('$line + service fee'), findsOneWidget);
+      expect(find.text('Service fee included'), findsOneWidget);
+    });
+  });
+
   testWidgets('l ouverture marque le fil comme lu', (tester) async {
     await pumpScreen(tester, BidNegotiationLoaded(_thread()));
 
@@ -883,6 +956,76 @@ void main() {
       final sent = counters().single;
       expect(sent.proposedNetEur, 35);
       expect(sent.proposedTotalEur, isNull);
+    });
+
+    testWidgets('contre-offre du voyageur sous grille, net 50 € avec '
+        'réductions figées : aperçu 51 €', (tester) async {
+      // Grille figée 7 % du fil, taux spécial 4 % et bon ×0,5 figés : le back
+      // facture 50 + min(3,50 ; 2,00) × 0,5 = 51,00 €.
+      useTestCommissionGrid();
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(
+            netEur: 37.5,
+            commissionRate: 0.12,
+            commissionGridId: kTestGridId,
+            commissionOverrideRate: 0.04,
+            commissionVoucherFactor: 0.5,
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('nego-counter-btn')));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      await tester.enterText(
+        find.byKey(const Key('nego-counter-amount')),
+        '50',
+      );
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      final preview = tester.widget<Text>(
+        find.byKey(const Key('nego-counter-gross-preview')),
+      );
+      // Montant rond : formatPriceIn écrit « 51 € ». Sans les réductions, ce
+      // serait 53,50 € ; au taux figé de 12 %, 56 €.
+      expect(preview.data, matches(RegExp(r'paiera 51\s€')));
+
+      await tester.tap(find.byKey(const Key('nego-counter-submit')));
+      await tester.pump(_kSettle);
+
+      final sent = counters().single;
+      expect(sent.proposedNetEur, 50);
+      expect(sent.proposedTotalEur, isNull);
+    });
+
+    testWidgets('fil à grille sans taux servi : saisie en net quand même', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(netEur: 37.5, commissionGridId: kTestGridId),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('nego-counter-btn')));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      await tester.enterText(
+        find.byKey(const Key('nego-counter-amount')),
+        '20',
+      );
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      final preview = tester.widget<Text>(
+        find.byKey(const Key('nego-counter-gross-preview')),
+      );
+      expect(preview.data, contains('21,40'));
     });
 
     testWidgets('sans taux (ancien back) : saisie brute comme avant', (
@@ -1218,14 +1361,14 @@ void main() {
         find.byKey(const Key('nego-settle-commission-btn')),
         findsOneWidget,
       );
-      expect(find.text('Régler la commission'), findsOneWidget);
+      expect(find.text('Régler les frais de service'), findsOneWidget);
       expect(find.byKey(const Key('nego-decline-parcel-btn')), findsOneWidget);
       expect(find.text('Refuser le colis'), findsOneWidget);
       // Brut 42 − net 37 : la commission que le serveur prélèvera.
       final amount = tester.widget<Text>(
         find.byKey(const Key('nego-cash-commission-amount')),
       );
-      expect(amount.data, startsWith('Commission Yadony : 5'));
+      expect(amount.data, startsWith('Frais de service Yadony : 5'));
       expect(
         find.byKey(const Key('nego-cash-commission-countdown')),
         findsOneWidget,
@@ -1233,8 +1376,8 @@ void main() {
       // Le bandeau garde son texte, cohérent avec le bouton.
       expect(
         find.text(
-          'Prix accepté. Paiement en espèces, il vous reste à régler la '
-          'commission Yadony.',
+          'Prix accepté. Paiement en espèces, il vous reste à régler les '
+          'frais de service Yadony.',
         ),
         findsOneWidget,
       );

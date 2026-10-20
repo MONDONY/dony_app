@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/pricing/commission_grid_preload.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -63,9 +64,17 @@ class PackageRequestSearchPage {
 }
 
 class PackageRequestRepository {
-  const PackageRequestRepository(this._apiClient);
+  const PackageRequestRepository(
+    this._apiClient, {
+    CommissionGridLoader? gridLoader,
+  }) : _gridLoader = gridLoader;
 
   final ApiClient _apiClient;
+
+  /// Lit les grilles figées des fils d'une demande inconnues de l'app avant
+  /// de les rendre (voir `NegotiationRepository`). `null` (tests) : aucune
+  /// lecture.
+  final CommissionGridLoader? _gridLoader;
 
   Future<String> uploadPhoto(File photo) async {
     final bytes = await photo.readAsBytes();
@@ -229,9 +238,14 @@ class PackageRequestRepository {
     final response = await _apiClient.dio.get<List<dynamic>>(
       '/package-requests/$requestId/threads',
     );
-    return (response.data ?? <dynamic>[])
+    final threads = (response.data ?? <dynamic>[])
         .map((e) => NegotiationThread.fromJson(e as Map<String, dynamic>))
         .toList();
+    await preloadCommissionGrids(
+      threads.map((t) => t.commissionGridId),
+      _gridLoader,
+    );
+    return threads;
   }
 
   Future<void> cancel(String id) async {
@@ -241,12 +255,22 @@ class PackageRequestRepository {
   /// Devis transparent pendant que l'expéditeur fixe son budget (étape 3) :
   /// net voyageur, commission Yadony (taux + montant), et prévisualisation
   /// d'un code promo optionnel — avant même qu'un voyageur/thread existe.
-  Future<NegotiationQuote> quote(double budgetEur, {String? promoCode}) async {
+  ///
+  /// [currency] (code ISO) est facultatif : sans lui le back chiffre dans la
+  /// devise par défaut du budget. Sous grille, `commissionEur` inclut le code
+  /// promo et `totalEur` vaut net + commission (l'expéditeur paie moins que son
+  /// budget).
+  Future<NegotiationQuote> quote(
+    double budgetEur, {
+    String? promoCode,
+    String? currency,
+  }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/package-requests/quote',
       queryParameters: {
         'budgetEur': budgetEur,
         if (promoCode != null && promoCode.isNotEmpty) 'promoCode': promoCode,
+        'currency': ?currency,
       },
     );
     return NegotiationQuote.fromJson(response.data!);

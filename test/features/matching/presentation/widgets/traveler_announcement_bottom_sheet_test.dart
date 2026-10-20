@@ -45,6 +45,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
@@ -173,6 +174,7 @@ Widget _harness({
   AuthState? authState,
   BidState? bidState,
   FavoriteIdsCubit? favorites,
+  bool fromMap = false,
 }) {
   final authBloc = _MockAuthBloc();
   when(
@@ -200,6 +202,7 @@ Widget _harness({
               onPressed: () => showTravelerAnnouncementSheet(
                 ctx,
                 announcement: announcement,
+                fromMap: fromMap,
               ),
               child: const Text('Ouvrir'),
             ),
@@ -435,6 +438,51 @@ void main() {
 
     expect(find.textContaining('CA\$'), findsOneWidget);
     expect(find.textContaining('€/kg'), findsNothing);
+  });
+
+  group('frais de service sous grille de commission', () {
+    testWidgets('fiche d\'une liste : « + frais de service Yadony (min. X) »', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        _harness(announcement: _buildAnnouncement(kycVerified: true)),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('+ frais de service Yadony (min. 1\u00A0€)'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('fiche ouverte depuis la carte : « + frais de service » seul', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        _harness(
+          announcement: _buildAnnouncement(kycVerified: true),
+          fromMap: true,
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('+ frais de service'), findsOneWidget);
+      expect(find.textContaining('min.'), findsNothing);
+    });
+
+    testWidgets('sans grille : aucune mention', (tester) async {
+      await tester.pumpWidget(
+        _harness(announcement: _buildAnnouncement(kycVerified: true)),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('stat-card-fee-note')), findsNothing);
+    });
   });
 
   testWidgets('affiche le titre, le voyageur et le bouton Faire une demande', (

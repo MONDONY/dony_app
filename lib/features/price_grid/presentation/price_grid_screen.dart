@@ -1,7 +1,11 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
@@ -171,6 +175,7 @@ class _LoadedViewState extends State<_LoadedView> {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
     final items = widget.items;
+    final footerMinimum = commissionMinimumFor(ActiveCurrency.current?.code);
 
     if (items.isEmpty) {
       return _EmptyGrid(onAdd: () => _openAddSheet(context));
@@ -256,7 +261,11 @@ class _LoadedViewState extends State<_LoadedView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    l.priceGridCommissionNotice,
+                    footerMinimum == null
+                        ? l.priceGridCommissionNotice
+                        : l.priceGridCommissionNoticeGrid(
+                            formatPriceActive(footerMinimum),
+                          ),
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     textAlign: TextAlign.center,
                   ),
@@ -488,7 +497,16 @@ class _PriceGridItemTile extends StatelessWidget {
     final l = context.l10n;
     // Deux valeurs, cinq usages : le formatage passe par NumberFormat et n'a
     // aucune raison d'être refait à chaque lecture.
-    final paid = formatPriceActive(item.unitPriceDisplay);
+    // Sous grille de commission, le prix payé se recalcule depuis le net
+    // (frais de service et minimum compris) plutôt que de se fier au prix
+    // majoré servi par le serveur ; sans grille, le prix servi reste utilisé.
+    final code = ActiveCurrency.current?.code;
+    final paid = commissionMinimumFor(code) == null
+        ? formatPriceActive(item.unitPriceDisplay)
+        : CurrencyFormatter.format(
+            senderPriceForNet(item.unitPriceNet, code).gross,
+            SupportedCurrency.fromCodeOrDefault(code),
+          );
     final net = formatPriceActive(item.unitPriceNet);
     // Valeur brute inchangée (envoyée/comparée) ; seul l'affichage traduit.
     final displayLabel = contentCategoryDisplayName(l, item.label);

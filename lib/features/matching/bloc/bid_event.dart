@@ -80,11 +80,19 @@ class BidQuoteRequested extends BidEvent {
   /// Articles de la grille : `[{'announcementGridItemId': String, 'quantity': int}]`.
   final List<Map<String, dynamic>>? gridItems;
 
+  /// Non nul pour un devis d'arrière-plan (sous grille de commission, sans
+  /// code, pour connaître le taux spécial ou le bon de l'expéditeur) : pas de
+  /// [BidQuoteLoading], et un échec rend [BidQuoteBackgroundFailed] au lieu
+  /// d'une erreur affichée. La clé revient dans l'état, pour écarter une
+  /// réponse périmée (saisie changée entre-temps).
+  final String? backgroundKey;
+
   BidQuoteRequested({
     required this.announcementId,
     this.weightKg,
     this.promoCode,
     this.gridItems,
+    this.backgroundKey,
   });
 }
 

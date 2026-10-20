@@ -167,7 +167,7 @@ void main() {
   });
 
   // FLUTTER-DS : l'écran dit à quoi sert le solde, et ce qu'il ne paie pas.
-  testWidgets('explique que le solde paie la commission des demandes en '
+  testWidgets('explique que le solde paie les frais de service des demandes en '
       "espèces, pas l'envoi d'un colis", (tester) async {
     const wallet = WalletModel(balance: 0, currency: 'EUR', transactions: []);
     whenListen(
@@ -182,7 +182,10 @@ void main() {
     final note = find.byKey(const Key('wallet-purpose-note'));
     expect(note, findsOneWidget);
     final text = tester.widget<Text>(note).data!;
-    expect(text, contains('commission Yadony des demandes payées en espèces'));
+    expect(
+      text,
+      contains('frais de service Yadony des demandes payées en espèces'),
+    );
     expect(text, contains("Il ne paie pas l'envoi d'un colis"));
     expect(text, contains('carte, PayPal ou mobile money'));
   });
@@ -1492,7 +1495,7 @@ void main() {
     expect(find.text('Requests'), findsOneWidget);
     expect(
       find.text(
-        'Your balance pays the Yadony commission on requests paid in cash. '
+        'Your balance pays the Yadony service fee on requests paid in cash. '
         'It does not pay for sending a parcel, which is paid by card, PayPal '
         'or mobile money.',
       ),

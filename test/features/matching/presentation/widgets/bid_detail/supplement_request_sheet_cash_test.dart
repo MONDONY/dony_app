@@ -251,9 +251,9 @@ void main() {
     await open(tester);
     await fill(tester);
 
-    expect(find.text('Commission du supplément'), findsOneWidget);
+    expect(find.text('Frais de service du supplément'), findsOneWidget);
     expect(find.text('Mon solde Yadony'), findsOneWidget);
-    expect(find.text('Ma carte commission'), findsOneWidget);
+    expect(find.text('Ma carte des frais de service'), findsOneWidget);
     expect(find.text('Remis en espèces par l\'expéditeur'), findsOneWidget);
     expect(
       find.descendant(
@@ -309,7 +309,7 @@ void main() {
     await open(tester);
     await fill(tester);
 
-    await tester.tap(find.text('Ma carte commission'));
+    await tester.tap(find.text('Ma carte des frais de service'));
     await tester.pumpAndSettle();
     await tester.tap(_btn('Demander 10 €'));
     await tester.pumpAndSettle();
@@ -384,14 +384,15 @@ void main() {
     );
     await open(tester);
     await fill(tester);
-    await tester.tap(find.text('Ma carte commission'));
+    await tester.tap(find.text('Ma carte des frais de service'));
     await tester.pumpAndSettle();
     await tester.tap(_btn('Demander 10 €'));
     await tester.pumpAndSettle();
 
     expect(
       find.text(
-        'Aucune carte commission enregistrée. Ajoutez-en une, ou payez avec '
+        'Aucune carte des frais de service enregistrée. Ajoutez-en une, ou payez '
+        'avec '
         'votre solde.',
       ),
       findsOneWidget,
@@ -420,7 +421,7 @@ void main() {
       );
       await open(tester);
       await fill(tester);
-      await tester.tap(find.text('Ma carte commission'));
+      await tester.tap(find.text('Ma carte des frais de service'));
       await tester.pumpAndSettle();
       await tester.tap(_btn('Demander 10 €'));
       await tester.pumpAndSettle();
@@ -438,7 +439,7 @@ void main() {
       final retry = find.byKey(const Key('supplement-commission-retry-btn'));
       expect(retry, findsOneWidget);
       expect(inScroll(retry), findsNothing);
-      expect(find.text('Ma carte commission'), findsNothing);
+      expect(find.text('Ma carte des frais de service'), findsNothing);
 
       failAuth = false;
       when(
@@ -464,12 +465,12 @@ void main() {
     );
     await open(tester);
     await fill(tester);
-    await tester.tap(find.text('Ma carte commission'));
+    await tester.tap(find.text('Ma carte des frais de service'));
     await tester.pumpAndSettle();
     await tester.tap(_btn('Demander 10 €'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Commission non prélevée'), findsWidgets);
+    expect(find.text('Frais de service non prélevés'), findsWidgets);
     expect(
       find.byKey(const Key('supplement-commission-retry-btn')),
       findsOneWidget,
@@ -494,7 +495,7 @@ void main() {
 
     expect(
       find.text(
-        'Demande enregistrée : paiement de la commission en cours de '
+        'Demande enregistrée : paiement des frais de service en cours de '
         'validation',
       ),
       findsOneWidget,
@@ -524,9 +525,9 @@ void main() {
     useEnglish();
     await open(tester);
 
-    expect(find.text('Supplement commission'), findsOneWidget);
+    expect(find.text('Supplement service fee'), findsOneWidget);
     expect(find.text('My Yadony balance'), findsOneWidget);
-    expect(find.text('My commission card'), findsOneWidget);
+    expect(find.text('My service fee card'), findsOneWidget);
   });
 
   testWidgets('envoi en cours : la croix, la barrière et le retour ne '
@@ -585,22 +586,22 @@ void main() {
     );
     await open(tester);
     await fill(tester);
-    await tester.tap(find.text('Ma carte commission'));
+    await tester.tap(find.text('Ma carte des frais de service'));
     await tester.pumpAndSettle();
     await tester.tap(_btn('Demander 10 €'));
     await tester.pumpAndSettle();
-    expect(find.text('Commission non prélevée'), findsWidgets);
+    expect(find.text('Frais de service non prélevés'), findsWidgets);
     // Laisse la snackbar disparaître.
     await tester.pump(const Duration(seconds: 10));
     await tester.pumpAndSettle();
-    expect(find.text('Commission non prélevée'), findsNothing);
+    expect(find.text('Frais de service non prélevés'), findsNothing);
 
     authorizeResult = false;
     await tester.tap(find.byKey(const Key('supplement-commission-retry-btn')));
     await tester.pumpAndSettle();
 
     expect(find.text('Paiement non confirmé, réessayez'), findsOneWidget);
-    expect(find.text('Commission non prélevée'), findsNothing);
+    expect(find.text('Frais de service non prélevés'), findsNothing);
     expect(
       find.text(
         'Validation bancaire interrompue : rien n\'a été prélevé. Réessayez.',

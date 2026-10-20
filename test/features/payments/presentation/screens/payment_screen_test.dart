@@ -7,7 +7,6 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
-import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
@@ -21,14 +20,13 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
-
-class MockConfigBloc extends MockBloc<ConfigEvent, ConfigState>
-    implements ConfigBloc {}
 
 class MockLocalAuthService extends Mock implements LocalAuthService {}
 
@@ -92,7 +90,6 @@ final _testBid = BidModel(
 Widget _wrap(
   Widget child,
   PaymentBloc bloc, {
-  ConfigBloc? configBloc,
   // When [pinResult] is non-null, /auth/local will pop with that value.
   bool? pinResult,
   String helpConfigJson = _emptyHelpConfigJson,
@@ -105,8 +102,6 @@ Widget _wrap(
           builder: (_, _) => MultiBlocProvider(
             providers: [
               BlocProvider<PaymentBloc>.value(value: bloc),
-              if (configBloc != null)
-                BlocProvider<ConfigBloc>.value(value: configBloc),
               BlocProvider<HelpCenterBloc>(
                 create: (_) => HelpCenterBloc(
                   HelpCenterRepository(
@@ -165,11 +160,9 @@ void main() {
 
   late MockPaymentBloc mockBloc;
   late MockLocalAuthService mockLocalAuth;
-  late MockConfigBloc mockConfigBloc;
 
   setUpAll(() {
     registerFallbackValue(const PaymentInitiated('fallback'));
-    registerFallbackValue(const ConfigCommissionRateRequested());
     if (!getIt.isRegistered<AnalyticsService>()) {
       final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
       getIt.registerSingleton<AnalyticsService>(analytics);
@@ -186,17 +179,11 @@ void main() {
     // vérifie son propre snackbar.
     DonySnackbar.clearDedup();
     mockBloc = MockPaymentBloc();
-    mockConfigBloc = MockConfigBloc();
     mockLocalAuth = MockLocalAuthService();
     whenListen<PaymentState>(
       mockBloc,
       Stream.value(const PaymentInitial()),
       initialState: const PaymentInitial(),
-    );
-    whenListen<ConfigState>(
-      mockConfigBloc,
-      Stream.value(const ConfigLoaded(0.12)),
-      initialState: const ConfigLoaded(0.12),
     );
     when(
       () => mockLocalAuth.isBiometricAvailable(),
@@ -223,7 +210,6 @@ void main() {
               userPrefs: _mockUserPrefs(biometricEnabled: true),
             ),
             mockBloc,
-            configBloc: mockConfigBloc,
             pinResult: false, // PIN screen returns false (user cancelled)
           ),
         );
@@ -249,7 +235,6 @@ void main() {
               userPrefs: _mockUserPrefs(biometricEnabled: true),
             ),
             mockBloc,
-            configBloc: mockConfigBloc,
           ),
         );
         await tester.pumpAndSettle();
@@ -265,7 +250,7 @@ void main() {
         // Il ne voit JAMAIS le net voyageur (30 €) ni la commission isolée.
         expect(find.textContaining('30,00'), findsNothing);
         expect(find.textContaining('6,00'), findsNothing);
-        expect(find.textContaining('Commission'), findsNothing);
+        expect(find.textContaining('Frais de service'), findsNothing);
         expect(find.textContaining('+ 3,60'), findsNothing);
         expect(find.textContaining('+3,60'), findsNothing);
       },
@@ -297,7 +282,6 @@ void main() {
               userPrefs: _mockUserPrefs(biometricEnabled: true),
             ),
             mockBloc,
-            configBloc: mockConfigBloc,
           ),
         );
         await tester.pumpAndSettle();
@@ -334,7 +318,6 @@ void main() {
             userPrefs: _mockUserPrefs(biometricEnabled: true),
           ),
           mockBloc,
-          configBloc: mockConfigBloc,
         ),
       );
       await tester.pumpAndSettle();
@@ -358,7 +341,6 @@ void main() {
             userPrefs: _mockUserPrefs(biometricEnabled: true),
           ),
           mockBloc,
-          configBloc: mockConfigBloc,
         ),
       );
       await tester.pump();
@@ -385,7 +367,6 @@ void main() {
               userPrefs: _mockUserPrefs(biometricEnabled: true),
             ),
             mockBloc,
-            configBloc: mockConfigBloc,
             pinResult: true, // PIN screen returns true (success)
           ),
         );
@@ -414,7 +395,6 @@ void main() {
               userPrefs: _mockUserPrefs(biometricEnabled: true),
             ),
             mockBloc,
-            configBloc: mockConfigBloc,
             pinResult: false,
           ),
         );
@@ -439,7 +419,6 @@ void main() {
             userPrefs: _mockUserPrefs(biometricEnabled: false),
           ),
           mockBloc,
-          configBloc: mockConfigBloc,
           pinResult: false,
         ),
       );
@@ -466,7 +445,6 @@ void main() {
               userPrefs: _mockUserPrefs(biometricEnabled: false),
             ),
             mockBloc,
-            configBloc: mockConfigBloc,
             pinResult: true,
           ),
         );
@@ -482,6 +460,78 @@ void main() {
     );
   });
 
+  group('PaymentScreen montant payé', () {
+    BidModel bidWith({double? totalSenderAmountEur, double pricePerKg = 6.0}) =>
+        BidModel(
+          id: 'bid-total-1',
+          announcementId: 'ann-1',
+          senderId: 'sender-1',
+          weightKg: 1.0,
+          pricePerKg: pricePerKg,
+          totalSenderAmountEur: totalSenderAmountEur,
+          description: 'Vêtements',
+          status: 'ACCEPTED',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2025, 6),
+          createdAt: DateTime(2025, 5),
+          updatedAt: DateTime(2025, 5),
+        );
+
+    Future<String> payLabel(WidgetTester tester, BidModel bid) async {
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: bid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(biometricEnabled: true),
+          ),
+          mockBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+      return tester.widget<DonyButton>(find.byType(DonyButton)).label;
+    }
+
+    testWidgets('total = totalSenderAmountEur du serveur', (tester) async {
+      final label = await payLabel(
+        tester,
+        bidWith(totalSenderAmountEur: 40.25),
+      );
+      expect(label, 'Payer ${formatPriceIn(40.25, 'EUR')}');
+    });
+
+    testWidgets('sous grille, le total du serveur reste prioritaire', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      final label = await payLabel(
+        tester,
+        bidWith(totalSenderAmountEur: 40.25),
+      );
+      expect(label, 'Payer ${formatPriceIn(40.25, 'EUR')}');
+    });
+
+    testWidgets(
+      'sans total serveur, sous grille, net 5 € : bouton « Payer 6,00 € »',
+      (tester) async {
+        // 1 kg × 5 € net : 7 % = 0,35 €, relevé au minimum de 1,00 €.
+        useTestCommissionGrid();
+        final label = await payLabel(tester, bidWith(pricePerKg: 5));
+        expect(label, 'Payer ${formatPriceIn(6.00, 'EUR')}');
+        // Jamais l'ancien calcul au taux unique (5 × 1,12 = 5,60).
+        expect(label, isNot(contains('5,60')));
+      },
+    );
+
+    testWidgets('sans total serveur ni grille : taux unique au centime', (
+      tester,
+    ) async {
+      final label = await payLabel(tester, bidWith(pricePerKg: 5));
+      expect(label, 'Payer ${formatPriceIn(5.60, 'EUR')}');
+    });
+  });
+
   group('PaymentScreen contextual tutorial card', () {
     testWidgets(
       'affiche la carte tutoriel paiement au-dessus du récapitulatif et navigue au tap',
@@ -494,7 +544,6 @@ void main() {
               userPrefs: _mockUserPrefs(biometricEnabled: true),
             ),
             mockBloc,
-            configBloc: mockConfigBloc,
             helpConfigJson: _paymentHelpConfigJson,
           ),
         );
@@ -537,7 +586,6 @@ void main() {
               userPrefs: _mockUserPrefs(biometricEnabled: true),
             ),
             mockBloc,
-            configBloc: mockConfigBloc,
           ),
         );
         await tester.pumpAndSettle();
@@ -559,7 +607,6 @@ void main() {
             userPrefs: _mockUserPrefs(biometricEnabled: true),
           ),
           mockBloc,
-          configBloc: mockConfigBloc,
         ),
       );
       await tester.pumpAndSettle();
@@ -583,7 +630,6 @@ void main() {
             userPrefs: _mockUserPrefs(biometricEnabled: true),
           ),
           mockBloc,
-          configBloc: mockConfigBloc,
         ),
       );
       await tester.pumpAndSettle();
@@ -621,7 +667,6 @@ void main() {
               userPrefs: _mockUserPrefs(biometricEnabled: true),
             ),
             mockBloc,
-            configBloc: mockConfigBloc,
           ),
         );
         await tester.pumpAndSettle();
@@ -647,7 +692,6 @@ void main() {
             userPrefs: _mockUserPrefs(biometricEnabled: true),
           ),
           mockBloc,
-          configBloc: mockConfigBloc,
         ),
       );
       await tester.pumpAndSettle();

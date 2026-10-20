@@ -508,7 +508,7 @@ void main() {
         for (final label in [
           'Recevoir mes paiements',
           'Versement mobile money',
-          'Carte commission espèces',
+          'Carte des frais de service en espèces',
           'Préférences',
         ]) {
           await _scrollTo(tester, find.text(label));
@@ -538,8 +538,14 @@ void main() {
 
           expect(find.text('Recevoir mes paiements'), findsNothing);
           // Le reste de la section ARGENT n'est pas concerné.
-          await _scrollTo(tester, find.text('Carte commission espèces'));
-          expect(find.text('Carte commission espèces'), findsOneWidget);
+          await _scrollTo(
+            tester,
+            find.text('Carte des frais de service en espèces'),
+          );
+          expect(
+            find.text('Carte des frais de service en espèces'),
+            findsOneWidget,
+          );
         },
       );
 
@@ -554,7 +560,10 @@ void main() {
           // ProfileListSection est un Column : dès que « Carte commission
           // espèces » est à l'écran, toutes les tuiles de la section ARGENT
           // sont construites. L'absence se lit donc ici, sans balayer la page.
-          await _scrollTo(tester, find.text('Carte commission espèces'));
+          await _scrollTo(
+            tester,
+            find.text('Carte des frais de service en espèces'),
+          );
 
           expect(find.text('Mes prix par article'), findsNothing);
         },

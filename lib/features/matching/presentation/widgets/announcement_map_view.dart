@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -426,6 +428,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
       ..write(_brightness.index)
       ..write('|l=')
       ..write(_localeName)
+      ..write('|fee=')
+      ..write(commissionGridActive)
       ..write('|c=')
       ..write(cellDegForZoom(_currentZoom));
     return buf.toString();
@@ -505,6 +509,13 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
           prefix: '✈️',
           currencyCode: cheapestItem.announcement.currency,
           gridLabel: context.l10n.listingPriceGridShort,
+          feeSuffix:
+              listPriceFeeSuffix(
+                context.l10n,
+                cheapestItem.announcement.currency,
+                withMinimum: false,
+              ) ??
+              '',
         );
         return Marker(
           markerId: MarkerId(
@@ -545,6 +556,13 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
       prefix: '✈️',
       currencyCode: item.announcement.currency,
       gridLabel: context.l10n.listingPriceGridShort,
+      feeSuffix:
+          listPriceFeeSuffix(
+            context.l10n,
+            item.announcement.currency,
+            withMinimum: false,
+          ) ??
+          '',
     );
     return Marker(
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),
@@ -569,7 +587,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
     final currentUserId = authState.currentUserId;
     final isOwn = currentUserId != null && a.travelerId == currentUserId;
     if (isOwn) return;
-    showTravelerAnnouncementSheet(context, announcement: a);
+    showTravelerAnnouncementSheet(context, announcement: a, fromMap: true);
   }
 
   void _onClusterTapped(MarkerCluster<_AnnouncementPoint> cluster) {
@@ -591,7 +609,11 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
           currentUserId: currentUserId,
           onSelected: (a) {
             if (!mounted) return;
-            showTravelerAnnouncementSheet(context, announcement: a);
+            showTravelerAnnouncementSheet(
+              context,
+              announcement: a,
+              fromMap: true,
+            );
           },
         ),
       );

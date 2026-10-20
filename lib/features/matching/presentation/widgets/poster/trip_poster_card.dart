@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -411,10 +412,14 @@ class TripPosterCard extends StatelessWidget {
           : l.tripPosterPriceUnavailable;
       detail = l.tripPosterUnitPerKg;
     }
+    // Sous grille de commission, ce prix est le net du voyageur : les frais de
+    // service s'y ajoutent. Rien à dire quand aucun prix n'est affiché.
+    final hasPrice = grid != null || hasKg;
     return PosterTile(
       label: l.tripPosterTilePrice,
       value: value,
       detail: detail,
+      note: hasPrice ? listPriceFeeSuffix(l, currency) : null,
       background: PosterPalette.blue,
       valueColor: PosterPalette.paper,
       labelColor: PosterPalette.blueOnDark,

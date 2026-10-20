@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/pricing/commission_grid_preload.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -15,13 +17,26 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Style identique à [BidBloc] : le repository ne fait que passer, c'est ici
 /// que les erreurs sont déballées (`unwrapDioError`) et que les events
 /// analytics sont tirés, toujours en `unawaited`.
+///
+/// Avant d'émettre un fil encore en négociation vu par le voyageur, sa grille
+/// de commission figée (`commissionGridId`) est chargée dans le magasin des
+/// grilles : l'aperçu de sa contre-offre en net se calcule sur la grille du
+/// bid, pas sur celle du jour. L'expéditeur, lui, ne calcule rien localement
+/// (il saisit un brut et lit les frais servis) : son fil n'attend pas.
 class BidNegotiationBloc
     extends Bloc<BidNegotiationEvent, BidNegotiationState> {
   final BidNegotiationRepository _repository;
   final AnalyticsService _analytics;
+  final IConfigRepository _config;
+  final Duration _gridTimeout;
 
-  BidNegotiationBloc(this._repository, this._analytics)
-    : super(const BidNegotiationInitial()) {
+  BidNegotiationBloc(
+    this._repository,
+    this._analytics,
+    this._config, {
+    Duration gridTimeout = kCommissionGridPreloadTimeout,
+  }) : _gridTimeout = gridTimeout,
+       super(const BidNegotiationInitial()) {
     on<BidNegotiationFetchRequested>(_onFetch);
     on<BidNegotiationOpenRequested>(_onOpen);
     on<BidNegotiationProposeRequested>(_onPropose);
@@ -49,6 +64,22 @@ class BidNegotiationBloc
     emit(BidNegotiationLoaded(thread, action: action));
   }
 
+  /// Charge la grille figée de [thread] si l'app ne la connaît pas encore,
+  /// seulement quand elle sert : fil vu par le voyageur et encore ouvert à la
+  /// contre-offre. Ne lève jamais et rend la main au plus tard après
+  /// [_gridTimeout] : un échec ou une lenteur laisse la grille en vigueur
+  /// servir de repli.
+  Future<BidNegotiation> _withGrid(BidNegotiation thread) async {
+    if (thread.isTravelerView && !thread.isClosed) {
+      await preloadCommissionGrids(
+        [thread.commissionGridId],
+        _config.getCommissionGridById,
+        timeout: _gridTimeout,
+      );
+    }
+    return thread;
+  }
+
   void _emitError(Object e, Emitter<BidNegotiationState> emit) {
     emit(BidNegotiationError(unwrapDioError(e), negotiation: _cachedThread));
   }
@@ -59,7 +90,7 @@ class BidNegotiationBloc
   ) async {
     emit(const BidNegotiationLoading());
     try {
-      final thread = await _repository.thread(event.bidId);
+      final thread = await _withGrid(await _repository.thread(event.bidId));
       _emitLoaded(thread, BidNegotiationAction.fetched, emit);
     } catch (e) {
       _emitError(e, emit);
@@ -86,6 +117,8 @@ class BidNegotiationBloc
   ) async {
     emit(const BidNegotiationLoading());
     try {
+      // La réponse d'une proposition est toujours en vue expéditeur : aucune
+      // grille figée à précharger (voir `_withGrid`).
       final thread = await _repository.propose(
         announcementId: event.announcementId,
         weightKg: event.weightKg,
@@ -126,11 +159,13 @@ class BidNegotiationBloc
   ) async {
     emit(const BidNegotiationLoading());
     try {
-      final thread = await _repository.counter(
-        event.bidId,
-        proposedTotalEur: event.proposedTotalEur,
-        proposedNetEur: event.proposedNetEur,
-        body: event.body,
+      final thread = await _withGrid(
+        await _repository.counter(
+          event.bidId,
+          proposedTotalEur: event.proposedTotalEur,
+          proposedNetEur: event.proposedNetEur,
+          body: event.body,
+        ),
       );
       _emitLoaded(thread, BidNegotiationAction.countered, emit);
       unawaited(
@@ -154,7 +189,7 @@ class BidNegotiationBloc
   ) async {
     emit(const BidNegotiationLoading());
     try {
-      final thread = await _repository.accept(event.bidId);
+      final thread = await _withGrid(await _repository.accept(event.bidId));
       _emitLoaded(thread, BidNegotiationAction.accepted, emit);
       unawaited(
         _analytics.logEvent(
@@ -177,7 +212,7 @@ class BidNegotiationBloc
   ) async {
     emit(const BidNegotiationLoading());
     try {
-      final thread = await _repository.reject(event.bidId);
+      final thread = await _withGrid(await _repository.reject(event.bidId));
       _emitLoaded(thread, BidNegotiationAction.rejected, emit);
       unawaited(
         _analytics.logEvent(
@@ -200,7 +235,7 @@ class BidNegotiationBloc
   ) async {
     emit(const BidNegotiationLoading());
     try {
-      final thread = await _repository.cancel(event.bidId);
+      final thread = await _withGrid(await _repository.cancel(event.bidId));
       _emitLoaded(thread, BidNegotiationAction.cancelled, emit);
       // Le retrait de l'offre côté trajet n'était pas tracé, contrairement au
       // refus : la fin du fil restait invisible.

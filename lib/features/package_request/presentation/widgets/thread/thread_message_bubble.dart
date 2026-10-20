@@ -1,6 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
-import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +22,7 @@ class ThreadMessageBubble extends StatelessWidget {
     required this.mine,
     this.highlight = false,
     required this.isTraveler,
-    this.currency = 'EUR',
+    required this.pricer,
   });
 
   final NegotiationMessage message;
@@ -37,13 +37,14 @@ class ThreadMessageBubble extends StatelessWidget {
   /// - Sender sees "Tu paies X €" (gross)
   ///
   /// Le brut se dérive toujours du prix DU MESSAGE
-  /// ([NegotiationMessage.proposedPriceEur]) via [PriceDisplay.grossFromNet],
-  /// même calcul que le serveur (net × taux global). La bulle recevait
-  /// auparavant le brut du prix courant du fil : côté expéditeur, toutes les
-  /// bulles affichaient alors le montant de la dernière offre.
+  /// ([NegotiationMessage.proposedPriceEur]) via [pricer], même calcul que le
+  /// serveur sur la grille figée du fil. La bulle recevait auparavant le brut
+  /// du prix courant du fil : côté expéditeur, toutes les bulles affichaient
+  /// alors le montant de la dernière offre.
   final bool isTraveler;
 
-  final String currency;
+  /// Prix du fil (grille figée, devise), construit par l'écran du fil.
+  final ThreadPricer pricer;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +60,8 @@ class ThreadMessageBubble extends StatelessWidget {
               message.proposedPriceEur!,
               null,
               isTraveler,
-              currency,
+              pricer.currency,
+              pricer,
             ),
       body: message.body,
       sentAt: message.createdAt,

@@ -183,7 +183,7 @@ void main() {
       expect(find.text('Réponse attendue avant 14:30'), findsOneWidget);
       // Jamais le net du voyageur ni la commission.
       expect(find.text('Pour vous'), findsNothing);
-      expect(find.text('Commission Yadony'), findsNothing);
+      expect(find.text('Frais de service Yadony'), findsNothing);
       expect(_txt('15 €'), findsNothing);
       expect(find.byKey(const Key('supplement-decline-btn')), findsOneWidget);
       verify(

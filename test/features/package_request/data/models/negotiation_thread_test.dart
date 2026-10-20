@@ -36,6 +36,67 @@ Map<String, dynamic> _baseJson({Map<String, dynamic>? overrides}) {
 }
 
 void main() {
+  group('commissionRate et travelerCashCommissionEur', () {
+    test('lus quand le back les sert', () {
+      final t = NegotiationThread.fromJson(
+        _baseJson(
+          overrides: {'commissionRate': 0.1, 'travelerCashCommissionEur': 0.8},
+        ),
+      );
+      expect(t.commissionRate, 0.1);
+      expect(t.travelerCashCommissionEur, 0.8);
+    });
+
+    test('absents : null', () {
+      final t = NegotiationThread.fromJson(_baseJson());
+      expect(t.commissionRate, isNull);
+      expect(t.travelerCashCommissionEur, isNull);
+    });
+
+    test('comptent dans l\'égalité', () {
+      expect(
+        NegotiationThread.fromJson(_baseJson()),
+        isNot(
+          NegotiationThread.fromJson(
+            _baseJson(overrides: {'travelerCashCommissionEur': 0.8}),
+          ),
+        ),
+      );
+      expect(
+        NegotiationThread.fromJson(_baseJson()),
+        isNot(
+          NegotiationThread.fromJson(
+            _baseJson(overrides: {'commissionRate': 0.1}),
+          ),
+        ),
+      );
+    });
+  });
+
+  group('commissionGridId (yadony-back #594)', () {
+    test('lu quand le back le sert', () {
+      final t = NegotiationThread.fromJson(
+        _baseJson(overrides: {'commissionGridId': 'grid-757'}),
+      );
+      expect(t.commissionGridId, 'grid-757');
+    });
+
+    test('absent (fil d\'avant les grilles, back antérieur) : null', () {
+      expect(NegotiationThread.fromJson(_baseJson()).commissionGridId, isNull);
+    });
+
+    test('compte dans l\'égalité', () {
+      expect(
+        NegotiationThread.fromJson(_baseJson()),
+        isNot(
+          NegotiationThread.fromJson(
+            _baseJson(overrides: {'commissionGridId': 'grid-757'}),
+          ),
+        ),
+      );
+    });
+  });
+
   test('NegotiationThread.fromJson parses with messages', () {
     final t = NegotiationThread.fromJson(_baseJson());
 

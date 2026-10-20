@@ -10,6 +10,7 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/widgets/commission_settlement_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/nego_archive_actions.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/linked_trip_card.dart';
@@ -584,7 +585,7 @@ class _LoadedViewState extends State<_LoadedView> {
                       mine: mine,
                       highlight: shouldHighlight,
                       isTraveler: viewerUserId == thread.travelerId,
-                      currency: thread.currency,
+                      pricer: ThreadPricer.of(thread),
                     )
                     .animate()
                     .fadeIn(duration: 200.ms, delay: (40 * i).ms)

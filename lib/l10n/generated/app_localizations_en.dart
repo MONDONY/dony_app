@@ -346,6 +346,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Upgrade to Pro to create more drafts.';
 
   @override
+  String get errorBudgetBelowCommissionMinimumTitle => 'Budget too low';
+
+  @override
+  String get errorBudgetBelowCommissionMinimumMessage =>
+      'This amount does not cover the minimum Yadony service fee.';
+
+  @override
   String get errorNotADraftTitle => 'Already posted';
 
   @override
@@ -4052,6 +4059,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestCreateTravelerReceivesLabel => 'The traveler will receive';
 
   @override
+  String get requestCreatePromoDiscountLabel => 'Promo code discount';
+
+  @override
+  String get requestCreateYouPayLabel => 'You will pay';
+
+  @override
+  String requestBudgetBelowCommissionMinimum(String minimum) {
+    return 'The budget must be above the minimum service fee ($minimum).';
+  }
+
+  @override
   String requestCreateCurrencySemanticLabel(String name, String code) {
     return 'Request currency: $name, $code. Button, change the currency.';
   }
@@ -6355,7 +6373,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String negotiationCommissionTravelerBannerSubtitle(String amount) {
-    return 'The sender picked your offer. Pay the Yadony service fee ($amount) before the deadline to get this parcel, or another traveler could beat you to it.';
+    return 'The sender picked your offer. Pay the Yadony service fee, $amount, before the deadline to get this parcel, or another traveler could beat you to it.';
   }
 
   @override
@@ -7683,7 +7701,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parcelRefusalCashNotice =>
-      'Cash payment: give back any money the sender already handed you. The Yadony commission already paid is given back to you.';
+      'Cash payment: give back any money the sender already handed you. The Yadony service fee already paid is given back to you.';
 
   @override
   String get parcelRefusalHandedOverNotice =>
@@ -8805,7 +8823,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidCancelWarningRefundNote =>
-      'The sender will be fully refunded. If the payment was in cash, the sender owes nothing and the Yadony commission is credited back to the traveler.';
+      'The sender will be fully refunded. If the payment was in cash, the sender owes nothing and the Yadony service fee is credited back to the traveler.';
 
   @override
   String get bidCancelReasonRequiredHint => 'Reason for cancellation *';
@@ -9685,7 +9703,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletRefundAbsorbedByFees =>
-      'This balance can\'t be refunded: the payment provider\'s fees absorb it entirely. It stays usable to pay the Yadony commission on your cash-paid requests.';
+      'This balance can\'t be refunded: the payment provider\'s fees absorb it entirely. It stays usable to pay the Yadony service fee on your cash-paid requests.';
 
   @override
   String get walletEmptyTransactions => 'No transactions yet';
@@ -9777,7 +9795,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletPurposeNote =>
-      'Your balance pays the Yadony commission on requests paid in cash. It does not pay for sending a parcel, which is paid by card, PayPal or mobile money.';
+      'Your balance pays the Yadony service fee on requests paid in cash. It does not pay for sending a parcel, which is paid by card, PayPal or mobile money.';
 
   @override
   String get walletInfoBalanceDesc =>
@@ -9974,7 +9992,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletRefundFeeRetainedNotice =>
-      'This top-up was never used: the payment provider\'s fees are withheld. They\'re canceled as soon as a top-up has paid a commission.';
+      'This top-up was never used: the payment provider\'s fees are withheld. They\'re canceled as soon as a top-up has paid a service fee.';
 
   @override
   String get walletRefundCurrencyTitle => 'Which currency to refund?';
@@ -13164,7 +13182,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String prefsCurrencyLockedSheetBody(String currency) {
-    return 'Your wallet still holds money in $currency: until it is back to zero, the currency can\'t change, so your balance is never converted without you. To unlock it, use this balance to pay commissions, or request a refund from the wallet. Currency choice reopens as soon as the balance is zero.';
+    return 'Your wallet still holds money in $currency: until it is back to zero, the currency can\'t change, so your balance is never converted without you. To unlock it, use this balance to pay service fees, or request a refund from the wallet. Currency choice reopens as soon as the balance is zero.';
   }
 
   @override
@@ -15126,7 +15144,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referralChoiceWalletBody =>
-      'Added right away. Usable to pay the Yadony commission on your cash-paid requests.';
+      'Added right away. Usable to pay the Yadony service fee on your cash-paid requests.';
 
   @override
   String referralChoiceCodeTitle(int percent) {
@@ -15144,7 +15162,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referralChoiceWalletNote =>
-      'Your Yadony balance pays the Yadony commission on cash-paid requests. It can\'t be withdrawn as cash.';
+      'Your Yadony balance pays the Yadony service fee on cash-paid requests. It can\'t be withdrawn as cash.';
 
   @override
   String referralChoiceWalletCta(String amount) {
@@ -15170,7 +15188,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referralWalletCreditedBody =>
-      'The amount shows in your Wallet. Use it to pay the Yadony commission on your cash-paid requests.';
+      'The amount shows in your Wallet. Use it to pay the Yadony service fee on your cash-paid requests.';
 
   @override
   String get errorReportReasonNotApplicableTitle => 'Invalid reason';
@@ -15920,7 +15938,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get negotiationCommissionTravelDatePassed =>
-      'The travel date has passed: the commission can no longer be paid.';
+      'The travel date has passed: the service fee can no longer be paid.';
 
   @override
   String get errorHandoverDeadlinePassedTitle => 'Parcel drop-off closed';
@@ -15978,14 +15996,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPaymentMethodNoneAvailableMessage =>
-      'The sender accepts several payment methods, but none is ready on your account: set up card payouts, or top up your wallet to cover the cash commission.';
+      'The sender accepts several payment methods, but none is ready on your account: set up card payouts, or top up your wallet to cover the cash service fee.';
 
   @override
   String get errorCashFundsRequiredTitle => 'Wallet too low for cash';
 
   @override
   String get errorCashFundsRequiredMessage =>
-      'To accept a cash payment, your wallet must cover the commission. Top it up, then try again.';
+      'To accept a cash payment, your wallet must cover the service fee. Top it up, then try again.';
 
   @override
   String suiviQrRecognized(String parcel) {
@@ -18448,13 +18466,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moneyOpenParcelHint => 'Open the parcel';
 
   @override
-  String get moneyCashCommissionSettled => 'commission settled';
+  String get moneyCashCommissionSettled => 'service fee settled';
 
   @override
-  String get moneyCashCommissionPending => 'commission pending';
+  String get moneyCashCommissionPending => 'service fee pending';
 
   @override
-  String get moneyCashCommissionRefunded => 'commission refunded';
+  String get moneyCashCommissionRefunded => 'service fee refunded';
 
   @override
   String get ticketTrackingNumberHelp =>
@@ -21416,6 +21434,60 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String listPriceServiceFeeSuffix(String minimum) {
+    return '+ Yadony service fee (min. $minimum)';
+  }
+
+  @override
+  String get listPriceServiceFeeShortSuffix => '+ service fee';
+
+  @override
+  String get serviceFeeMinimumTag => '(minimum)';
+
+  @override
+  String tripPublishGridCommissionNoticeGrid(String minimum) {
+    return 'The Yadony service fee is added to the total paid by the sender (min. $minimum)';
+  }
+
+  @override
+  String tripPublishGridSheetCommissionNoteGrid(String minimum) {
+    return 'Prices received by the traveler. The Yadony service fee is added to the total (min. $minimum).';
+  }
+
+  @override
+  String priceGridCommissionNoticeGrid(String minimum) {
+    return 'The Yadony service fee is added to the total paid by the sender, with a minimum of $minimum. You receive exactly your amount.';
+  }
+
+  @override
+  String priceGridSenderWillPayMessageGrid(String paid, String fee) {
+    return 'The sender will pay $paid, including $fee Yadony service fee.';
+  }
+
+  @override
+  String get promoIneffectiveCommissionMinimum =>
+      'This code does not change this amount (minimum fee)';
+
+  @override
+  String get bidCreateServiceFeeLineLabel => 'Yadony service fee';
+
+  @override
+  String get bidCreateGridSheetServiceFeeIncluded => 'Service fee included';
+
+  @override
+  String faqPaymentsCommissionAGrid(String minimum) {
+    return 'The service fee covers payment costs, support, fraud prevention and the development of the platform. It depends on the transport price, with a minimum of $minimum. The exact amount is shown before you confirm.';
+  }
+
+  @override
+  String bidNegotiationGridLineServiceFee(String line) {
+    return '$line + service fee';
+  }
+
+  @override
+  String get bidNegotiationHeroServiceFeeIncluded => 'Service fee included';
+
+  @override
   String get bidDetailRequestSupplementLabel => 'Request an extra charge';
 
   @override
@@ -21498,7 +21570,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supplementRecapNet => 'For you';
 
   @override
-  String get supplementRecapCommission => 'Yadony fee';
+  String get supplementRecapCommission => 'Yadony service fee';
 
   @override
   String get supplementRecapGross => 'Paid by the sender';
@@ -21778,7 +21850,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Mobile money payment for the supplement pending';
 
   @override
-  String get supplementCommissionSourceTitle => 'Supplement commission';
+  String get supplementCommissionSourceTitle => 'Supplement service fee';
 
   @override
   String get supplementCommissionSourceHelp =>
@@ -21797,7 +21869,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get supplementCommissionSourceCard => 'My commission card';
+  String get supplementCommissionSourceCard => 'My service fee card';
 
   @override
   String get supplementCommissionSourceCardHint =>
@@ -21809,11 +21881,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supplementCommissionCardMissing =>
-      'No commission card saved. Add one, or pay with your balance.';
+      'No service fee card saved. Add one, or pay with your balance.';
 
   @override
   String get supplementCommissionRetryNotice =>
-      'Your request is saved, but the commission has not been taken yet. Try again to send it to the sender.';
+      'Your request is saved, but the service fee has not been taken yet. Try again to send it to the sender.';
 
   @override
   String get supplementCommissionRetry => 'Try the payment again';
@@ -21824,28 +21896,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supplementCommissionProcessing =>
-      'Request saved: commission payment being confirmed';
+      'Request saved: service fee payment being confirmed';
 
   @override
   String get supplementRecapGrossCash => 'Handed over in cash by the sender';
 
   @override
-  String get supplementTravelerCommissionPending => 'Commission to confirm';
+  String get supplementTravelerCommissionPending => 'Service fee to confirm';
 
   @override
   String get supplementTravelerCommissionPendingHelp =>
-      'Confirm the commission payment to send the request to the sender. Without confirmation within 30 minutes, it is cancelled at no cost.';
+      'Confirm the service fee payment to send the request to the sender. Without confirmation within 30 minutes, it is cancelled at no cost.';
 
   @override
   String get supplementCommissionConfirm => 'Confirm the payment';
 
   @override
   String get supplementCommissionConfirmedSnackbar =>
-      'Commission paid: request sent to the sender';
+      'Service fee paid: request sent to the sender';
 
   @override
   String get supplementTravelerCashCommissionHelp =>
-      'Commission taken. It is given back to you if the request does not go through.';
+      'Service fee taken. It is given back to you if the request does not go through.';
 
   @override
   String supplementTravelerCashPaid(String amount) {
@@ -21858,11 +21930,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supplementTravelerCommissionRefunded =>
-      'The supplement commission has been given back to you.';
+      'The supplement service fee has been given back to you.';
 
   @override
   String get supplementTravelerCommissionRefundPending =>
-      'The supplement commission will be given back to you shortly.';
+      'The supplement service fee will be given back to you shortly.';
 
   @override
   String get supplementTravelerCancelled => 'Supplement request cancelled';
@@ -21916,11 +21988,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Parcel not delivered: the traveler gives the extra cash back to you';
 
   @override
-  String get walletTxTypeSupplementCommission => 'Supplement commission';
+  String get walletTxTypeSupplementCommission => 'Supplement service fee';
 
   @override
   String get walletTxTypeSupplementCommissionRefund =>
-      'Supplement commission refunded';
+      'Supplement service fee refunded';
 
   @override
   String get walletTxTypeOther => 'Balance movement';
@@ -21930,34 +22002,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorSupplementCommissionUnfundedMessage =>
-      'Your balance does not cover the supplement commission. Top it up or pay by card.';
+      'Your balance does not cover the supplement service fee. Top it up or pay by card.';
 
   @override
   String get errorSupplementCommissionCardDeclinedTitle => 'Card declined';
 
   @override
   String get errorSupplementCommissionCardDeclinedMessage =>
-      'Your commission card was declined: nothing was taken and the request is cancelled.';
+      'Your service fee card was declined: nothing was taken and the request is cancelled.';
 
   @override
   String get errorSupplementCommissionChargeFailedTitle =>
-      'Commission not taken';
+      'Service fee not taken';
 
   @override
   String get errorSupplementCommissionChargeFailedMessage =>
-      'The commission charge did not go through. Please try again.';
+      'The service fee charge did not go through. Please try again.';
 
   @override
-  String get errorCommissionMethodMissingTitle => 'No commission card';
+  String get errorCommissionMethodMissingTitle => 'No service fee card';
 
   @override
   String get errorCommissionMethodMissingMessage =>
-      'Save a commission card, or pay with your balance.';
+      'Save a service fee card, or pay with your balance.';
 
   @override
   String get errorFundingCurrencyInvalidTitle => 'Currency not supported';
 
   @override
   String get errorFundingCurrencyInvalidMessage =>
-      'This wallet cannot pay the commission. Choose another one.';
+      'This wallet cannot pay the service fee. Choose another one.';
 }

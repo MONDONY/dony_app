@@ -143,6 +143,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorProLimitReachedMessage': (l) => l.errorProLimitReachedMessage,
   'errorDraftLimitReachedTitle': (l) => l.errorDraftLimitReachedTitle,
   'errorDraftLimitReachedMessage': (l) => l.errorDraftLimitReachedMessage,
+  'errorBudgetBelowCommissionMinimumTitle': (l) =>
+      l.errorBudgetBelowCommissionMinimumTitle,
+  'errorBudgetBelowCommissionMinimumMessage': (l) =>
+      l.errorBudgetBelowCommissionMinimumMessage,
   'errorNotADraftTitle': (l) => l.errorNotADraftTitle,
   'errorNotADraftMessage': (l) => l.errorNotADraftMessage,
   'errorPublishingSuspendedTitle': (l) => l.errorPublishingSuspendedTitle,
@@ -1437,6 +1441,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'requestCreatePromoBoostLabel': (l) => l.requestCreatePromoBoostLabel,
   'requestCreateTravelerReceivesLabel': (l) =>
       l.requestCreateTravelerReceivesLabel,
+  'requestCreatePromoDiscountLabel': (l) => l.requestCreatePromoDiscountLabel,
+  'requestCreateYouPayLabel': (l) => l.requestCreateYouPayLabel,
+  'requestBudgetBelowCommissionMinimum': (l) =>
+      l.requestBudgetBelowCommissionMinimum(placeholderMarker('minimum')),
   'requestCreateCurrencySemanticLabel': (l) =>
       l.requestCreateCurrencySemanticLabel(
         placeholderMarker('name'),
@@ -7404,6 +7412,32 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.walletTopupAmountAtLeast(placeholderMarker('min')),
   'walletTopupAmountAtMost': (l) =>
       l.walletTopupAmountAtMost(placeholderMarker('max')),
+  'listPriceServiceFeeSuffix': (l) =>
+      l.listPriceServiceFeeSuffix(placeholderMarker('minimum')),
+  'listPriceServiceFeeShortSuffix': (l) => l.listPriceServiceFeeShortSuffix,
+  'serviceFeeMinimumTag': (l) => l.serviceFeeMinimumTag,
+  'tripPublishGridCommissionNoticeGrid': (l) =>
+      l.tripPublishGridCommissionNoticeGrid(placeholderMarker('minimum')),
+  'tripPublishGridSheetCommissionNoteGrid': (l) =>
+      l.tripPublishGridSheetCommissionNoteGrid(placeholderMarker('minimum')),
+  'priceGridCommissionNoticeGrid': (l) =>
+      l.priceGridCommissionNoticeGrid(placeholderMarker('minimum')),
+  'priceGridSenderWillPayMessageGrid': (l) =>
+      l.priceGridSenderWillPayMessageGrid(
+        placeholderMarker('paid'),
+        placeholderMarker('fee'),
+      ),
+  'promoIneffectiveCommissionMinimum': (l) =>
+      l.promoIneffectiveCommissionMinimum,
+  'bidCreateServiceFeeLineLabel': (l) => l.bidCreateServiceFeeLineLabel,
+  'bidCreateGridSheetServiceFeeIncluded': (l) =>
+      l.bidCreateGridSheetServiceFeeIncluded,
+  'faqPaymentsCommissionAGrid': (l) =>
+      l.faqPaymentsCommissionAGrid(placeholderMarker('minimum')),
+  'bidNegotiationGridLineServiceFee': (l) =>
+      l.bidNegotiationGridLineServiceFee(placeholderMarker('line')),
+  'bidNegotiationHeroServiceFeeIncluded': (l) =>
+      l.bidNegotiationHeroServiceFeeIncluded,
   'bidDetailRequestSupplementLabel': (l) => l.bidDetailRequestSupplementLabel,
   'bidDetailRequestSupplementSubtitle': (l) =>
       l.bidDetailRequestSupplementSubtitle,
@@ -7686,6 +7720,7 @@ const textParameters = <String, List<String>>{
   'requestTimeOn': ['verb', 'date'],
   'requestCreateToleranceRangeHint': ['from', 'to'],
   'requestCreateBudgetRange': ['min', 'max'],
+  'requestBudgetBelowCommissionMinimum': ['minimum'],
   'requestCreateCurrencySemanticLabel': ['name', 'code'],
   'requestDetailCashCommissionTitle': ['name'],
   'requestTravelerAddingTrip': ['name'],
@@ -8197,6 +8232,13 @@ const textParameters = <String, List<String>>{
   'walletTopupCreditedLineUnchanged': ['currency', 'active'],
   'walletTopupAmountAtLeast': ['min'],
   'walletTopupAmountAtMost': ['max'],
+  'listPriceServiceFeeSuffix': ['minimum'],
+  'tripPublishGridCommissionNoticeGrid': ['minimum'],
+  'tripPublishGridSheetCommissionNoteGrid': ['minimum'],
+  'priceGridCommissionNoticeGrid': ['minimum'],
+  'priceGridSenderWillPayMessageGrid': ['paid', 'fee'],
+  'faqPaymentsCommissionAGrid': ['minimum'],
+  'bidNegotiationGridLineServiceFee': ['line'],
   'supplementRequestSuggestionKg': ['amount'],
   'supplementRequestSuggestionItem': ['label', 'amount'],
   'supplementRequestAmountLabel': ['currency'],

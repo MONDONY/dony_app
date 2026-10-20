@@ -1,5 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -43,6 +46,98 @@ void main() {
     mockDio = MockDio();
     when(() => mockClient.dio).thenReturn(mockDio);
     repo = NegotiationRepository(mockClient);
+  });
+
+  group('grille figée du fil (commission par paliers)', () {
+    CommissionGrid frozen(String id) => CommissionGrid(
+      id: id,
+      effectiveFrom: DateTime.utc(2026, 9),
+      tiers: const [CommissionTier(fromEur: 0, rate: 0.10)],
+      minimums: const {'EUR': 2.00},
+    );
+
+    setUp(CommissionGridStore.reset);
+    tearDown(CommissionGridStore.reset);
+
+    test(
+      'getById lit la grille figée inconnue avant de rendre le fil',
+      () async {
+        final loaded = <String>[];
+        final withGrid = NegotiationRepository(
+          mockClient,
+          gridLoader: (id) async {
+            loaded.add(id);
+            return frozen(id);
+          },
+        );
+        when(
+          () => mockDio.get<Map<String, dynamic>>('/negotiations/th-1'),
+        ).thenAnswer(
+          (_) async => _ok({
+            ..._threadJson,
+            'commissionGridId': 'g-thread',
+          }, '/negotiations/th-1'),
+        );
+
+        final thread = await withGrid.getById('th-1');
+
+        expect(thread.commissionGridId, 'g-thread');
+        expect(loaded, ['g-thread']);
+        expect(CommissionGridStore.byId('g-thread'), isNotNull);
+      },
+    );
+
+    test('findMine : une lecture par grille distincte, rien pour un fil sans '
+        'grille', () async {
+      final loaded = <String>[];
+      final withGrid = NegotiationRepository(
+        mockClient,
+        gridLoader: (id) async {
+          loaded.add(id);
+          return frozen(id);
+        },
+      );
+      when(
+        () => mockDio.get<List<dynamic>>(
+          '/negotiations/me',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok(<dynamic>[
+          {..._threadJson, 'id': 'a', 'commissionGridId': 'g-1'},
+          {..._threadJson, 'id': 'b', 'commissionGridId': 'g-1'},
+          {..._threadJson, 'id': 'c'},
+        ], '/negotiations/me'),
+      );
+
+      final threads = await withGrid.findMine();
+
+      expect(threads, hasLength(3));
+      expect(loaded, ['g-1']);
+    });
+
+    test(
+      'échec de lecture de la grille : le fil est rendu quand même',
+      () async {
+        final withGrid = NegotiationRepository(
+          mockClient,
+          gridLoader: (id) async => throw Exception('réseau'),
+        );
+        when(
+          () => mockDio.get<Map<String, dynamic>>('/negotiations/th-1'),
+        ).thenAnswer(
+          (_) async => _ok({
+            ..._threadJson,
+            'commissionGridId': 'g-thread',
+          }, '/negotiations/th-1'),
+        );
+
+        final thread = await withGrid.getById('th-1');
+
+        expect(thread.id, 'th-1');
+        expect(CommissionGridStore.byId('g-thread'), isNull);
+      },
+    );
   });
 
   group('start', () {
@@ -446,7 +541,7 @@ void main() {
         }, '/negotiations/th-1/quote'),
       );
 
-      final quote = await repo.quote('th-1');
+      final quote = (await repo.quote('th-1'))!;
       expect(quote.netEur, 40.0);
       expect(quote.rate, 0.05);
       expect(quote.commissionEur, 2.0);
@@ -474,12 +569,44 @@ void main() {
           }, '/negotiations/th-1/quote'),
         );
 
-        final quote = await repo.quote('th-1', promoCode: 'WELCOME6');
+        final quote = (await repo.quote('th-1', promoCode: 'WELCOME6'))!;
         expect(quote.promoApplied, true);
         expect(quote.promoLabel, 'Code WELCOME6 : 6 % de réduction');
         expect(quote.totalEur, 42.40);
       },
     );
+  });
+
+  group('quote, fil scellé', () {
+    DioException conflict(String code) => DioException(
+      requestOptions: RequestOptions(path: '/negotiations/th-1/quote'),
+      error: ConflictException('conflit', code: code),
+    );
+
+    test('quote renvoie null sur 409 negotiation/thread-sealed', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/negotiations/th-1/quote'),
+      ).thenThrow(conflict('negotiation/thread-sealed'));
+
+      expect(await repo.quote('th-1'), isNull);
+    });
+
+    test('quote relance un autre 409', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/negotiations/th-1/quote'),
+      ).thenThrow(conflict('negotiation/duplicate-thread'));
+
+      expect(
+        () => repo.quote('th-1'),
+        throwsA(
+          isA<DioException>().having(
+            (e) => (e.error as ConflictException).code,
+            'code',
+            'negotiation/duplicate-thread',
+          ),
+        ),
+      );
+    });
   });
 
   group('checkout', () {

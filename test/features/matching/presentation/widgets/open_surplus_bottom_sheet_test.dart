@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 
 class MockAnnouncementBloc
@@ -118,6 +119,32 @@ void main() {
     expect(find.text(formatPriceIn(1000, 'XOF')), findsOneWidget);
     expect(find.text(formatPriceIn(3000, 'XOF')), findsOneWidget);
     expect(find.text(formatPriceIn(5, 'XOF')), findsNothing);
+  });
+
+  testWidgets('aperçu public sans grille : prix majoré, pas de suffixe', (
+    tester,
+  ) async {
+    await open(tester);
+
+    // Chip 0 = 7 € net, majoré du taux unique.
+    expect(
+      find.text('${formatPriceIn(7 * (1 + donyCommissionRate), 'EUR')}/kg'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('frais de service'), findsNothing);
+  });
+
+  testWidgets('aperçu public sous grille : prix au kilo net et suffixe', (
+    tester,
+  ) async {
+    useTestCommissionGrid();
+    await open(tester);
+
+    expect(find.text('${formatPriceIn(7, 'EUR')}/kg'), findsOneWidget);
+    expect(
+      find.text('+ frais de service Yadony (min. ${formatPriceIn(1, 'EUR')})'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('le bouton Publier est désactivé tant que les kg sont absents', (

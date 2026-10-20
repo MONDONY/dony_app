@@ -9,6 +9,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/models/payment_method.dart'
     as dony;
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_conflict.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/return_to_thread.dart';
@@ -45,7 +46,8 @@ class PaymentRecapBottomSheet {
     dony.PaymentMethod? paymentMethod,
   }) async {
     final double net = thread.currentPriceEur;
-    final double gross = thread.grossPriceEur ?? PriceDisplay.grossFromNet(net);
+    final double gross =
+        thread.grossPriceEur ?? ThreadPricer.of(thread).priceFor(net).gross;
     final double fee = gross - net;
     // Mode finalisé par l'expéditeur (s'il a choisi à l'étape complétion),
     // sinon celui déjà porté par le thread, sinon Stripe par défaut.

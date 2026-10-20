@@ -319,11 +319,11 @@ void main() {
       expect(find.text('Au tour de Awa Diop'), findsNothing);
     });
 
-    testWidgets('espèces : pastille COMMISSION', (tester) async {
+    testWidgets('espèces : pastille FRAIS', (tester) async {
       loadBoth(summaries: [_summary(status: 'PENDING')]);
       await pumpBody(tester);
 
-      expect(find.text('COMMISSION'), findsOneWidget);
+      expect(find.text('FRAIS'), findsOneWidget);
     });
 
     testWidgets('accepté : pastille ACCEPTÉE', (tester) async {

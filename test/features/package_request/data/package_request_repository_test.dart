@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_insights.dart';
@@ -946,6 +948,55 @@ void main() {
     );
   });
 
+  group('quote, devise', () {
+    test('quote envoie currency=XOF', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests/quote',
+          queryParameters: {'budgetEur': 25000.0, 'currency': 'XOF'},
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'netEur': 24000.0,
+          'rate': 0.04,
+          'commissionEur': 1000.0,
+          'totalEur': 25000.0,
+          'promoApplied': false,
+          'minimumApplied': true,
+          'minimumAmount': 650,
+          'commissionGridId': 'grid-1',
+        }, '/package-requests/quote'),
+      );
+
+      final quote = await repo.quote(25000.0, currency: 'XOF');
+      expect(quote.minimumApplied, isTrue);
+      expect(quote.commissionGridId, 'grid-1');
+    });
+
+    test('quote sans currency n\'envoie pas la clé', () async {
+      Map<String, dynamic>? sent;
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests/quote',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((inv) async {
+        sent = inv.namedArguments[#queryParameters] as Map<String, dynamic>?;
+        return _ok({
+          'netEur': 38.10,
+          'rate': 0.05,
+          'commissionEur': 1.90,
+          'totalEur': 40.0,
+          'promoApplied': false,
+        }, '/package-requests/quote');
+      });
+
+      await repo.quote(40.0);
+      expect(sent, {'budgetEur': 40.0});
+      expect(sent!.containsKey('currency'), isFalse);
+    });
+  });
+
   group('photos parsing', () {
     test('PackageRequest.fromJson maps photos to photoUrls + photoKeys', () {
       final json = <String, dynamic>{
@@ -1165,5 +1216,57 @@ void main() {
         throwsA(isA<DioException>()),
       );
     });
+  });
+
+  group('listThreadsForRequest : grille figée des fils', () {
+    setUp(CommissionGridStore.reset);
+    tearDown(CommissionGridStore.reset);
+
+    test(
+      'lit une fois chaque grille figée inconnue avant de rendre les fils',
+      () async {
+        final loaded = <String>[];
+        final withGrid = PackageRequestRepository(
+          mockClient,
+          gridLoader: (id) async {
+            loaded.add(id);
+            return CommissionGrid(
+              id: id,
+              effectiveFrom: DateTime.utc(2026, 9),
+              tiers: const [CommissionTier(fromEur: 0, rate: 0.10)],
+              minimums: const {'EUR': 2.00},
+            );
+          },
+        );
+        final thread = <String, dynamic>{
+          'id': 'th-1',
+          'packageRequestId': 'pr-1',
+          'travelerId': 'tr-1',
+          'travelerTravelDate': '2026-06-15',
+          'travelerAvailableKg': 10.0,
+          'status': 'OPEN',
+          'currentPriceEur': 30.0,
+          'roundsCount': 1,
+          'lastActivityAt': '2026-05-10T10:00:00Z',
+          'createdAt': '2026-05-10T10:00:00Z',
+          'messages': <dynamic>[],
+        };
+        when(
+          () => mockDio.get<List<dynamic>>('/package-requests/pr-1/threads'),
+        ).thenAnswer(
+          (_) async => _ok(<dynamic>[
+            {...thread, 'commissionGridId': 'g-1'},
+            {...thread, 'id': 'th-2', 'commissionGridId': 'g-1'},
+            {...thread, 'id': 'th-3'},
+          ], '/package-requests/pr-1/threads'),
+        );
+
+        final threads = await withGrid.listThreadsForRequest('pr-1');
+
+        expect(threads, hasLength(3));
+        expect(loaded, ['g-1']);
+        expect(CommissionGridStore.byId('g-1'), isNotNull);
+      },
+    );
   });
 }

@@ -16,7 +16,7 @@ void main() {
     );
 
     expect(lines, hasLength(2));
-    expect(lines[0], startsWith('Commission requise : '));
+    expect(lines[0], startsWith('Frais de service requis : '));
     expect(lines[0], contains('1,60'));
     expect(lines[1], startsWith('Solde du portefeuille EUR : '));
     expect(lines[1], contains('1,33'));
@@ -40,7 +40,7 @@ void main() {
     );
 
     expect(lines, hasLength(3));
-    expect(lines[0], startsWith('Commission : '));
+    expect(lines[0], startsWith('Frais de service : '));
     expect(lines[0], contains('1'));
     expect(lines[1], contains('Votre portefeuille Franc CFA Ouest en couvre'));
     expect(lines[1], contains('600'));
@@ -69,7 +69,7 @@ void main() {
     );
 
     expect(lines, hasLength(2));
-    expect(lines[0], startsWith('Commission : '));
+    expect(lines[0], startsWith('Frais de service : '));
     expect(lines[0], contains('soit'));
     expect(lines[0], contains('1,60'));
     expect(lines[1], contains('Votre portefeuille Euro n\'a que'));

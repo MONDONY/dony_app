@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
-import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
@@ -50,20 +50,11 @@ class PaymentScreen extends StatelessWidget {
             currency: bid.currency,
           );
         }
-        return BlocBuilder<ConfigBloc, ConfigState>(
-          builder: (context, configState) {
-            final commissionRate = configState is ConfigLoaded
-                ? configState.commissionRate
-                // Repli sur le taux par défaut pendant le chargement / en erreur.
-                : donyCommissionRate;
-            return _PaymentSummaryView(
-              bid: bid,
-              state: state,
-              commissionRate: commissionRate,
-              localAuthService: localAuthService ?? getIt<LocalAuthService>(),
-              userPrefs: userPrefs ?? getIt<HiveService>().userPrefs,
-            );
-          },
+        return _PaymentSummaryView(
+          bid: bid,
+          state: state,
+          localAuthService: localAuthService ?? getIt<LocalAuthService>(),
+          userPrefs: userPrefs ?? getIt<HiveService>().userPrefs,
         );
       },
     );
@@ -108,26 +99,26 @@ class _PaymentSummaryView extends StatelessWidget {
   final BidModel bid;
   final PaymentState state;
   final LocalAuthService localAuthService;
-  final double commissionRate;
   final Box userPrefs;
 
   const _PaymentSummaryView({
     required this.bid,
     required this.state,
     required this.localAuthService,
-    required this.commissionRate,
     required this.userPrefs,
   });
 
   // _amount = NET du voyageur (totalNetAmountEur côté backend). L'expéditeur paie
-  // ce net + la commission Yadony : _total = net × (1 + taux), aligné sur le montant
-  // réellement facturé par le backend (PaymentService : amount = net × (1 + taux)).
+  // ce net + les frais de service Yadony.
   double get _amount =>
       bid.totalAmountEur ?? (bid.weightKg ?? 0) * (bid.pricePerKg ?? 0);
-  double get _commission => _amount * commissionRate;
   // Total payé par l'expéditeur = BRUT fourni par le backend (qui ne renvoie
-  // jamais le net au sender) ; repli sur la dérivation net × (1 + taux).
-  double get _total => bid.totalSenderAmountEur ?? (_amount + _commission);
+  // jamais le net au sender) ; repli sur la façade de prix, qui calcule ce que
+  // le serveur prélèvera (grille de commission, minimum compris, ou taux
+  // unique sans grille). Les frais ne sont pas affichés à part.
+  double get _total =>
+      bid.totalSenderAmountEur ??
+      senderPriceForNet(_amount, bid.currency).gross;
 
   Future<void> _pay(BuildContext context) async {
     final authenticated = await requirePaymentAuth(
@@ -182,13 +173,7 @@ class _PaymentSummaryView extends StatelessWidget {
                         context: TutorialContext.payment,
                       ),
                       const SizedBox(height: DonySpacing.lg),
-                      _SummaryCard(
-                        bid: bid,
-                        amount: _amount,
-                        commission: _commission,
-                        total: _total,
-                        commissionRate: commissionRate,
-                      ),
+                      _SummaryCard(bid: bid, total: _total),
                       const SizedBox(height: DonySpacing.lg),
                       DonyStatusBanner(
                         type: DonyStatusBannerType.info,
@@ -226,18 +211,9 @@ class _PaymentSummaryView extends StatelessWidget {
 
 class _SummaryCard extends StatelessWidget {
   final BidModel bid;
-  final double amount;
-  final double commission;
   final double total;
-  final double commissionRate;
 
-  const _SummaryCard({
-    required this.bid,
-    required this.amount,
-    required this.commission,
-    required this.total,
-    required this.commissionRate,
-  });
+  const _SummaryCard({required this.bid, required this.total});
 
   @override
   Widget build(BuildContext context) {
@@ -281,8 +257,9 @@ class _SummaryCard extends StatelessWidget {
                   const DonyInfoRow.divider(),
                   DonyInfoRow(
                     label: l.paymentSummaryPricePerKgLabel,
-                    // Tarif BRUT (net + commission). Le backend ne renvoie
-                    // jamais le tarif net à l'expéditeur.
+                    // Tarif expéditeur servi par le backend : net majoré du
+                    // taux unique sans grille, net sous grille de commission
+                    // (les frais de service sont dans le total).
                     value: bid.senderPricePerKg != null
                         ? '${formatPriceIn(bid.senderPricePerKg!, bid.currency)}/kg'
                         : '-',

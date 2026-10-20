@@ -16,6 +16,10 @@ class BidQuoteResponse {
     this.gridNetEur = 0,
     this.kgNetEur = 0,
     this.currency,
+    this.minimumApplied = false,
+    this.minimumAmount,
+    this.commissionGridId,
+    this.promoIneffectiveReason,
   });
 
   /// Montant net voyageur total (= gridNetEur + kgNetEur).
@@ -49,6 +53,25 @@ class BidQuoteResponse {
   /// est en XOF. Absent d'un backend antérieur au 2026-09-10 : l'appelant se
   /// rabat alors sur la devise de l'annonce.
   final String? currency;
+
+  /// Sous grille : le minimum de la devise a relevé la commission finale.
+  /// Absent (donc faux) d'un back sans grille.
+  @JsonKey(defaultValue: false)
+  final bool minimumApplied;
+
+  /// Sous grille : commission minimum de la devise du devis ; null sans grille.
+  final double? minimumAmount;
+
+  /// Grille que le bid figera à sa création ; null sans grille.
+  final String? commissionGridId;
+
+  /// `COMMISSION_MINIMUM` quand un code promo valide ne change rien parce que
+  /// le minimum annule tout le gain (il n'est alors ni appliqué ni consommé).
+  final String? promoIneffectiveReason;
+
+  /// Le code promo saisi est valide mais sans effet à cause du minimum.
+  bool get promoIneffectiveBecauseMinimum =>
+      promoIneffectiveReason == 'COMMISSION_MINIMUM';
 
   factory BidQuoteResponse.fromJson(Map<String, dynamic> json) =>
       _$BidQuoteResponseFromJson(json);

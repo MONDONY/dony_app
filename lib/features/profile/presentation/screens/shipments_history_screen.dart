@@ -1,5 +1,8 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -112,14 +115,25 @@ class _DeliveryCard extends StatelessWidget {
     ].where((c) => c != null).join(' → ');
     final weight = (bid.weightKg ?? 0) > 0 ? '${bid.weightKg} kg' : null;
     final description = bid.description;
-    // Prix affiché à l'expéditeur = brut (net voyageur + commission Yadony).
-    // La devise est celle figée sur l'offre, pas celle réglée aujourd'hui :
-    // un envoi passé garde le libellé sous lequel il a été payé.
+    // Prix affiché à l'expéditeur = brut (net voyageur + frais de service
+    // Yadony), servi par le serveur ; à défaut, recalculé par la façade de
+    // prix (grille de commission ou taux unique). La devise est celle figée
+    // sur l'offre, pas celle réglée aujourd'hui : un envoi passé garde le
+    // libellé sous lequel il a été payé.
     final price = bid.totalSenderAmountEur != null
         ? formatPriceIn(bid.totalSenderAmountEur!, bid.currency)
         : bid.pricePerKg != null
         ? formatPriceIn(
-            netToSenderPrice(bid.pricePerKg! * (bid.weightKg ?? 0)),
+            senderPriceForNet(
+              // Net au kilo en décimal exact, HALF_UP comme le back : le
+              // produit en double peut s'en écarter d'un centime.
+              exactProductHalfUp(
+                bid.pricePerKg!,
+                bid.weightKg ?? 0,
+                SupportedCurrency.fromCodeOrDefault(bid.currency).minorUnit,
+              ),
+              bid.currency,
+            ).gross,
             bid.currency,
           )
         : null;
