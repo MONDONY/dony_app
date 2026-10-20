@@ -232,10 +232,7 @@ void main() {
       setDonyCommissionRate(0.12);
       expect(flatRateGross(10), closeTo(11.2, 1e-12));
       // Inverse exact du repli de netForSenderGross au taux unique.
-      expect(
-        netForSenderGross(11.2, 'EUR', legacy: true),
-        11.2 / (1 + 0.12),
-      );
+      expect(netForSenderGross(11.2, 'EUR', legacy: true), 11.2 / (1 + 0.12));
     });
   });
 }
