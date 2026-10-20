@@ -45,6 +45,11 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
 
   Timer? _debounceTimer;
 
+  /// Devise imposée au catalogue et opérateurs permis, retenus par
+  /// [configure] / [restrictOperators] et rejoués à chaque [load].
+  String? _currency;
+  Set<String>? _allowed;
+
   /// Incrémenté à chaque changement de saisie ou de choix : une réponse de
   /// reconnaissance qui résout avec un jeton périmé est ignorée.
   int _generation = 0;
@@ -54,24 +59,88 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
   String? _detectedCode;
   String? _recognizedE164;
 
+  /// Impose la devise du paiement et/ou limite les opérateurs acceptés, puis
+  /// charge le catalogue (voir [load]). Sans argument, équivaut à [load].
+  Future<void> configure({String? currency, Set<String>? allowedOperators}) {
+    _currency = currency;
+    _allowed = allowedOperators;
+    return load();
+  }
+
+  /// Limite les opérateurs acceptés (`null` = tous). L'opérateur déjà choisi
+  /// qui ne l'est plus est retiré, le numéro reste saisi. Si un numéro refusé
+  /// pour son opérateur devient acceptable, il est reconnu de nouveau.
+  void restrictOperators(Set<String>? allowed) {
+    _allowed = allowed;
+    final operator = state.operator;
+    if (operator != null && !_isAllowedBy(allowed, operator)) {
+      _reset();
+      _forgetDetection();
+      emit(
+        state.copyWith(
+          allowedOperators: allowed,
+          operator: null,
+          recognition: RecognitionStatus.idle,
+          switchedFrom: null,
+        ),
+      );
+      return;
+    }
+    final rejected = state.rejectedOperator;
+    final nowAccepted =
+        state.recognition == RecognitionStatus.notAllowed &&
+        rejected != null &&
+        _isAllowedBy(allowed, rejected);
+    emit(state.copyWith(allowedOperators: allowed));
+    final country = state.country;
+    final e164 = state.e164;
+    if (nowAccepted &&
+        operator != null &&
+        country != null &&
+        e164 != null &&
+        _isComplete(country.country, e164)) {
+      _reset();
+      unawaited(_recognize());
+    }
+  }
+
   /// Charge le catalogue, puis préremplit pays, opérateur et numéro depuis la
-  /// mémoire quand le pays est encore ouvert et l'opérateur encore proposé.
+  /// mémoire quand le pays est encore ouvert (et de la devise imposée) et
+  /// l'opérateur encore proposé et permis.
+  ///
+  /// Restriction et devise sont relues dans [_allowed] / [_currency] à chaque
+  /// `emit` : un [restrictOperators] reçu pendant l'attente du catalogue ou de
+  /// la mémoire ne doit pas être écrasé par la valeur du début du chargement.
   Future<void> load() async {
     final generation = _newSession();
-    emit(const PayerAccountState());
-    final MobileMoneyCountries? countries;
+    emit(PayerAccountState(allowedOperators: _allowed, currency: _currency));
+    final MobileMoneyCountries? loaded;
     try {
-      countries = await _repository.mobileMoneyCountries();
+      loaded = await _repository.mobileMoneyCountries();
     } on Object {
       if (isClosed || generation != _generation) return;
-      emit(const PayerAccountState(status: PayerAccountStatus.error));
+      emit(
+        PayerAccountState(
+          status: PayerAccountStatus.error,
+          allowedOperators: _allowed,
+          currency: _currency,
+        ),
+      );
       return;
     }
     if (isClosed || generation != _generation) return;
-    if (countries == null) {
-      emit(const PayerAccountState(status: PayerAccountStatus.legacy));
+    if (loaded == null) {
+      emit(
+        PayerAccountState(
+          status: PayerAccountStatus.legacy,
+          allowedOperators: _allowed,
+          currency: _currency,
+        ),
+      );
       return;
     }
+    final currency = _currency;
+    final countries = currency == null ? loaded : loaded.restrictedTo(currency);
 
     // La mémoire est lue avant d'émettre `ready` : sinon l'utilisateur
     // pourrait choisir un pays pendant la lecture, et le préremplissage
@@ -89,6 +158,22 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
         PayerAccountState(
           status: PayerAccountStatus.ready,
           countries: countries,
+          allowedOperators: _allowed,
+          currency: _currency,
+        ),
+      );
+      return;
+    }
+    if (!_isAllowedBy(_allowed, operator)) {
+      // Pays gardé, mais l'opérateur mémorisé n'est pas accepté ici : on
+      // laisse choisir, sans reprendre un numéro qui ne servirait pas.
+      emit(
+        PayerAccountState(
+          status: PayerAccountStatus.ready,
+          countries: countries,
+          country: country,
+          allowedOperators: _allowed,
+          currency: _currency,
         ),
       );
       return;
@@ -102,6 +187,8 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
         operator: operator,
         localNumber: _localPart(remembered.country, remembered.e164),
         e164: remembered.e164,
+        allowedOperators: _allowed,
+        currency: _currency,
       ),
     );
     if (_isComplete(remembered.country, remembered.e164)) {
@@ -170,16 +257,19 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     final country = state.country;
     if (country == null || state.operator?.code == code) return;
     final operator = _operatorOf(country, code);
-    if (operator == null) return;
+    if (operator == null || !state.isAllowed(operator)) return;
 
     _reset();
     final e164 = state.e164;
     final detected = _detectedCode;
+    // Un numéro dont l'opérateur est refusé (`notAllowed`) a bien été
+    // reconnu : choisir ensuite un opérateur permis est un choix manuel
+    // respecté, sans nouvel appel.
     final recognizedBefore =
         detected != null &&
         e164 != null &&
         e164 == _recognizedE164 &&
-        state.canProceed;
+        (state.canProceed || state.recognition == RecognitionStatus.notAllowed);
     if (recognizedBefore) {
       emit(
         state.copyWith(
@@ -380,6 +470,21 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
       }
       _detectedCode = detected;
       _recognizedE164 = e164;
+      if (!state.isAllowed(target)) {
+        // L'opérateur du numéro existe ici mais ce paiement ne l'accepte pas :
+        // pas de bascule, le choix de l'utilisateur reste en place.
+        emit(
+          state.copyWith(
+            recognition: RecognitionStatus.notAllowed,
+            rejectedOperator: target,
+            switchedFrom: null,
+          ),
+        );
+        _log(AnalyticsEvents.mobileMoneyOperatorNotAllowed, {
+          'operator': target.code,
+        });
+        return;
+      }
       if (detected == operator.code) {
         emit(state.copyWith(recognition: RecognitionStatus.recognized));
         return;
@@ -417,6 +522,9 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
       _analytics.logEvent(name, properties: {...properties, 'flow': flow}),
     );
   }
+
+  static bool _isAllowedBy(Set<String>? allowed, MobileMoneyOperator o) =>
+      allowed == null || allowed.contains(o.code);
 
   static MobileMoneyOperator? _operatorOf(
     MobileMoneyCountry country,

@@ -1,7 +1,7 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/mobile_money_accepted_operators.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
-import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 
 class MobileMoneyRemoteDatasource {
   const MobileMoneyRemoteDatasource(this._client);
@@ -14,28 +14,16 @@ class MobileMoneyRemoteDatasource {
     return MobileMoneyPaymentStatus.fromJson(response.data!);
   }
 
-  /// Réseaux avec lesquels l'expéditeur peut payer ce colis (ou son
-  /// supplément) : ceux de son numéro ([phoneNumber], sinon celui du bid),
-  /// restreints par le back aux marques acceptées par le voyageur. Liste
-  /// vide = aucun réseau commun. Réservé aux portées qui exposent un
-  /// catalogue ([MobileMoneyScope.providersPath] non nul).
-  Future<MobileMoneyProviderCatalog> providers(
-    MobileMoneyScope scope, {
-    String? phoneNumber,
-  }) async {
-    final path = scope.providersPath;
-    if (path == null) {
-      throw ArgumentError.value(scope, 'scope', 'aucun catalogue');
-    }
-    final trimmed = phoneNumber?.trim();
-    final body = (trimmed != null && trimmed.isNotEmpty)
-        ? {'phoneNumber': trimmed}
-        : null;
-    final response = await _client.dio.post<Map<String, dynamic>>(
-      path,
-      data: body,
+  /// Opérateurs que le voyageur accepte pour ce colis, ce fil ou ce
+  /// supplément. Un ancien back répond 404 (route absente) : le dépôt
+  /// ([MobileMoneyRepository.acceptedOperators]) le traduit en `null`.
+  Future<MobileMoneyAcceptedOperators> acceptedOperators(
+    MobileMoneyScope scope,
+  ) async {
+    final response = await _client.dio.get<Map<String, dynamic>>(
+      scope.acceptedOperatorsPath,
     );
-    return MobileMoneyProviderCatalog.fromJson(response.data!);
+    return MobileMoneyAcceptedOperators.fromJson(response.data!);
   }
 
   /// Initie (ou relance) une tentative de paiement mobile money. Le numéro

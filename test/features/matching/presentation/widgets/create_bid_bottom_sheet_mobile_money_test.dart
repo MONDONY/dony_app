@@ -31,12 +31,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
-// Tests dédiés à la task 10 : choix du mode « Mobile money » (pawaPay) et
-// numéro payeur facultatif dans l'offre de l'expéditeur. Harnais copié de
+// Tests du choix du mode « Mobile money » (pawaPay) dans l'offre de
+// l'expéditeur. Le numéro qui paiera ne se saisit plus ici : il se choisit sur
+// l'écran « Payer le colis » une fois l'offre acceptée. Harnais copié de
 // create_bid_bottom_sheet_cash_test.dart (helpers privés, non partageables
-// entre fichiers de test) et étendu avec un AuthBloc pour le pré-remplissage,
-// et un BidNegotiationBloc pour couvrir le second site d'appel du sélecteur
-// (mode négociation).
+// entre fichiers de test), avec un AuthBloc optionnel pour prouver que le
+// numéro du compte n'est plus repris, et un BidNegotiationBloc pour couvrir le
+// second site d'appel du sélecteur (mode négociation).
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
 
@@ -144,9 +145,8 @@ Widget _buildHarness(AnnouncementModel announcement, {AuthBloc? authBloc}) {
     ],
     supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
   );
-  // AuthBloc optionnel : la plupart des tests vérifient justement que la
-  // sheet survit à son absence (ProviderNotFoundException rattrapée, champ
-  // vide). Seul le groupe « pré-remplissage » le fournit.
+  // AuthBloc optionnel : la feuille n'en dépend plus ; un seul test le fournit
+  // pour prouver que le numéro du compte n'est plus repris.
   if (authBloc == null) return app;
   return BlocProvider<AuthBloc>.value(value: authBloc, child: app);
 }
@@ -464,7 +464,7 @@ void main() {
 
     testWidgets(
       'annonce mobile-money-only → picker affiché, mobile money sélectionné '
-      'par défaut, champ numéro visible sans tap',
+      'par défaut, aucun champ numéro payeur',
       (tester) async {
         await _openSheet(
           tester,
@@ -478,8 +478,9 @@ void main() {
           find.byKey(const Key('payment-method-mobile-money')),
           findsOneWidget,
         );
-        // Sélectionné par défaut (seule alternative) → champ déjà visible.
-        expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
+        // Sélectionné par défaut (seule alternative) : le payeur se choisit
+        // plus tard, sur l'écran « Payer le colis ».
+        expect(find.byKey(const Key('payer-phone-field')), findsNothing);
         expect(find.textContaining(mobileMoneyCtaLabel), findsOneWidget);
       },
     );
@@ -546,9 +547,9 @@ void main() {
     );
   });
 
-  // ── 2. Affichage du champ numéro ─────────────────────────────────────────
+  // ── 2. Pas de champ numéro payeur ────────────────────────────────────────
 
-  group('Champ numéro payeur — affichage', () {
+  group('Mode mobile money — pas de champ numéro payeur', () {
     testWidgets('tuile espèces sélectionnée par défaut → champ numéro absent', (
       tester,
     ) async {
@@ -564,12 +565,8 @@ void main() {
     });
 
     testWidgets(
-      // Ce harnais ne fournit pas d'AuthBloc : _initialPayerPhone() est donc
-      // vide (ProviderNotFoundException rattrapée), exactement comme un
-      // compte Yadony sans numéro de téléphone (vérification SMS pas encore
-      // configurée) — l'aide doit refléter l'absence de pré-remplissage.
-      'tap sur la tuile mobile money, sans numéro disponible → champ '
-      'numéro apparaît avec l\'aide "aucun numéro"',
+      'mobileMoneyMode_noPayerPhoneField : tuile mobile money ouverte → ni '
+      'champ, ni libellé, ni aide du numéro payeur',
       (tester) async {
         await _openSheet(
           tester,
@@ -585,114 +582,24 @@ void main() {
         await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
         await tester.pump();
 
-        expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
-        expect(find.text('Numéro qui paiera (facultatif)'), findsOneWidget);
-        expect(
-          find.textContaining(
-            "Votre compte n'a pas de numéro : indiquez celui qui paiera. Vous "
-            'recevrez la demande de paiement dessus.',
-          ),
-          findsOneWidget,
-        );
+        expect(find.byKey(const Key('payer-phone-field')), findsNothing);
+        expect(find.text('Numéro qui paiera (facultatif)'), findsNothing);
         expect(
           find.textContaining('Par défaut, votre numéro Yadony'),
           findsNothing,
         );
-      },
-    );
-
-    testWidgets('tap sur la tuile mobile money, AuthBloc avec un numéro → aide '
-        '"Par défaut, votre numéro Yadony"', (tester) async {
-      final authBloc = _MockAuthBloc();
-      whenListen(
-        authBloc,
-        const Stream<AuthState>.empty(),
-        initialState: const AuthAuthenticated(
-          UserModel(
-            id: 'u1',
-            roles: [],
-            kycStatus: 'VERIFIED',
-            status: 'ACTIVE',
-            phoneNumber: '+221771234567',
-          ),
-        ),
-      );
-
-      await _openSheet(
-        tester,
-        _announcement(
-          methods: const {BidPaymentMethod.cash, BidPaymentMethod.mobileMoney},
-        ),
-        authBloc: authBloc,
-      );
-      await _goToPaymentPicker(tester);
-
-      await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
-      await tester.pump();
-
-      expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
-      expect(
-        find.textContaining(
-          'Par défaut, votre numéro Yadony. Vous recevrez la demande de '
-          'paiement sur ce numéro.',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.textContaining("Votre compte n'a pas de numéro"),
-        findsNothing,
-      );
-    });
-
-    testWidgets(
-      'retour aux espèces après mobile money → champ numéro disparaît',
-      (tester) async {
-        await _openSheet(
-          tester,
-          _announcement(
-            methods: const {
-              BidPaymentMethod.cash,
-              BidPaymentMethod.mobileMoney,
-            },
-          ),
+        expect(
+          find.textContaining("Votre compte n'a pas de numéro"),
+          findsNothing,
         );
-        await _goToPaymentPicker(tester);
-
-        await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
-        await tester.pump();
-        expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
-
-        await tester.tap(find.byKey(const Key('payment-method-cash')));
-        await tester.pump();
-        expect(find.byKey(const Key('payer-phone-field')), findsNothing);
-      },
-    );
-  });
-
-  // ── 3. Pré-remplissage depuis l'utilisateur connecté ────────────────────
-
-  group('Champ numéro payeur — pré-remplissage', () {
-    testWidgets(
-      'AuthBloc absent du contexte → champ démarre vide (pas de plantage)',
-      (tester) async {
-        await _openSheet(
-          tester,
-          _announcement(methods: const {BidPaymentMethod.mobileMoney}),
-        );
-        await _goToPaymentPicker(tester);
-
-        final field = tester.widget<TextField>(
-          find.descendant(
-            of: find.byKey(const Key('payer-phone-field')),
-            matching: find.byType(TextField),
-          ),
-        );
-        expect(field.controller!.text, isEmpty);
+        // Le mode reste décrit : corps, opérateurs et CTA sont toujours là.
+        expect(find.textContaining(mobileMoneyCtaLabel), findsOneWidget);
       },
     );
 
     testWidgets(
-      'AuthBloc avec utilisateur ayant un numéro → champ pré-rempli',
+      'compte avec un numéro → le numéro Yadony n\'est pas repris dans la '
+      'feuille',
       (tester) async {
         final authBloc = _MockAuthBloc();
         whenListen(
@@ -716,48 +623,11 @@ void main() {
         );
         await _goToPaymentPicker(tester);
 
-        final field = tester.widget<TextField>(
-          find.descendant(
-            of: find.byKey(const Key('payer-phone-field')),
-            matching: find.byType(TextField),
-          ),
-        );
-        expect(field.controller!.text, '+221771234567');
+        expect(find.byKey(const Key('payer-phone-field')), findsNothing);
+        expect(find.text('+221771234567'), findsNothing);
+        expect(find.textContaining('221771234567'), findsNothing);
       },
     );
-
-    testWidgets('AuthBloc avec utilisateur sans numéro → champ démarre vide', (
-      tester,
-    ) async {
-      final authBloc = _MockAuthBloc();
-      whenListen(
-        authBloc,
-        const Stream<AuthState>.empty(),
-        initialState: const AuthAuthenticated(
-          UserModel(
-            id: 'u1',
-            roles: [],
-            kycStatus: 'VERIFIED',
-            status: 'ACTIVE',
-          ),
-        ),
-      );
-
-      await _openSheet(
-        tester,
-        _announcement(methods: const {BidPaymentMethod.mobileMoney}),
-        authBloc: authBloc,
-      );
-      await _goToPaymentPicker(tester);
-
-      final field = tester.widget<TextField>(
-        find.descendant(
-          of: find.byKey(const Key('payer-phone-field')),
-          matching: find.byType(TextField),
-        ),
-      );
-      expect(field.controller!.text, isEmpty);
-    });
   });
 
   // ── 4. Libellé du bouton sticky ──────────────────────────────────────────
@@ -802,82 +672,15 @@ void main() {
   // ── 5. Soumission ─────────────────────────────────────────────────────────
 
   group('Soumission — BidCreateRequested (site direct)', () {
-    testWidgets('mode mobile money + numéro saisi → paymentMethod=mobileMoney, '
-        'phoneNumber normalisé', (tester) async {
-      await _openSheet(
-        tester,
-        _announcement(methods: const {BidPaymentMethod.mobileMoney}),
-      );
-      await _goToPaymentPicker(tester);
-
-      await tester.enterText(
-        find.byKey(const Key('payer-phone-field')),
-        '+221 77 345 67 89',
-      );
-      await tester.pump();
-
-      await tester.tap(find.textContaining(mobileMoneyCtaLabel));
-      await tester.pump();
-
-      final captured = verify(
-        () => _currentBidBloc.add(captureAny(that: isA<BidCreateRequested>())),
-      ).captured;
-      expect(captured, hasLength(1));
-      final event = captured.single as BidCreateRequested;
-      expect(event.paymentMethod, BidPaymentMethod.mobileMoney);
-      expect(event.phoneNumber, '+221773456789');
-      verifyNever(
-        () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
-      );
-    });
-
-    testWidgets('mode mobile money + champ laissé vide → phoneNumber null', (
-      tester,
-    ) async {
-      await _openSheet(
-        tester,
-        _announcement(methods: const {BidPaymentMethod.mobileMoney}),
-      );
-      await _goToPaymentPicker(tester);
-
-      await tester.tap(find.textContaining(mobileMoneyCtaLabel));
-      await tester.pump();
-
-      final captured = verify(
-        () => _currentBidBloc.add(captureAny(that: isA<BidCreateRequested>())),
-      ).captured;
-      final event = captured.single as BidCreateRequested;
-      expect(event.paymentMethod, BidPaymentMethod.mobileMoney);
-      expect(event.phoneNumber, isNull);
-    });
-
     testWidgets(
-      'numéro pré-rempli puis effacé par l\'expéditeur → phoneNumber null',
+      'createBid_mobileMoney_sendsNoPhoneNumber : paymentMethod=mobileMoney '
+      'sans champ numéro payeur (il se choisit au moment de payer)',
       (tester) async {
-        final authBloc = _MockAuthBloc();
-        whenListen(
-          authBloc,
-          const Stream<AuthState>.empty(),
-          initialState: const AuthAuthenticated(
-            UserModel(
-              id: 'u1',
-              roles: [],
-              kycStatus: 'VERIFIED',
-              status: 'ACTIVE',
-              phoneNumber: '+221771234567',
-            ),
-          ),
-        );
-
         await _openSheet(
           tester,
           _announcement(methods: const {BidPaymentMethod.mobileMoney}),
-          authBloc: authBloc,
         );
         await _goToPaymentPicker(tester);
-
-        await tester.enterText(find.byKey(const Key('payer-phone-field')), '');
-        await tester.pump();
 
         await tester.tap(find.textContaining(mobileMoneyCtaLabel));
         await tester.pump();
@@ -886,51 +689,41 @@ void main() {
           () =>
               _currentBidBloc.add(captureAny(that: isA<BidCreateRequested>())),
         ).captured;
+        expect(captured, hasLength(1));
         final event = captured.single as BidCreateRequested;
-        expect(event.phoneNumber, isNull);
+        expect(event.paymentMethod, BidPaymentMethod.mobileMoney);
+        verifyNever(
+          () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
+        );
       },
     );
 
-    testWidgets(
-      'sélection mobile money puis retour cash → phoneNumber jamais envoyé '
-      'en cash',
-      (tester) async {
-        await _openSheet(
-          tester,
-          _announcement(
-            methods: const {
-              BidPaymentMethod.cash,
-              BidPaymentMethod.mobileMoney,
-            },
-          ),
-        );
-        await _goToPaymentPicker(tester);
+    testWidgets('sélection mobile money puis retour cash → paiement espèces, '
+        'aucun numéro envoyé', (tester) async {
+      await _openSheet(
+        tester,
+        _announcement(
+          methods: const {BidPaymentMethod.cash, BidPaymentMethod.mobileMoney},
+        ),
+      );
+      await _goToPaymentPicker(tester);
 
-        await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
-        await tester.pump();
-        await tester.enterText(
-          find.byKey(const Key('payer-phone-field')),
-          '+221773456789',
-        );
-        await tester.pump();
+      await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('payment-method-cash')));
+      await tester.pump();
 
-        await tester.tap(find.byKey(const Key('payment-method-cash')));
-        await tester.pump();
+      await tester.tap(
+        find.textContaining(RegExp(r'^Confirmer .* en espèces$')),
+      );
+      await tester.pump();
 
-        await tester.tap(
-          find.textContaining(RegExp(r'^Confirmer .* en espèces$')),
-        );
-        await tester.pump();
-
-        final captured = verify(
-          () =>
-              _currentBidBloc.add(captureAny(that: isA<BidCreateRequested>())),
-        ).captured;
-        final event = captured.single as BidCreateRequested;
-        expect(event.paymentMethod, BidPaymentMethod.cash);
-        expect(event.phoneNumber, isNull);
-      },
-    );
+      final captured = verify(
+        () => _currentBidBloc.add(captureAny(that: isA<BidCreateRequested>())),
+      ).captured;
+      final event = captured.single as BidCreateRequested;
+      expect(event.paymentMethod, BidPaymentMethod.cash);
+    });
   });
 
   // ── 6. Sous-titre de succès ───────────────────────────────────────────────
@@ -957,8 +750,7 @@ void main() {
       testWidgets(
         // En zone euro le mobile money n'existe pas (isAllowedIn) : sans
         // alternative à la carte, la proposition part sans étape paiement.
-        'annonce EUR STRIPE+MOBILE_MONEY → pas d étape paiement, carte, '
-        'phoneNumber null',
+        'annonce EUR STRIPE+MOBILE_MONEY → pas d étape paiement, carte',
         (tester) async {
           await _openNegotiation(
             tester,
@@ -980,13 +772,12 @@ void main() {
           final captured = await _submitProposal(tester);
           expect(captured, hasLength(1));
           expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
-          expect(captured.single.phoneNumber, isNull);
         },
       );
 
       testWidgets(
         'annonce XOF MOBILE_MONEY seul → étape paiement, mobile money par '
-        'défaut, numéro payeur normalisé',
+        'défaut, aucun numéro payeur saisi ni envoyé',
         (tester) async {
           await _openNegotiation(
             tester,
@@ -1006,16 +797,11 @@ void main() {
             find.byKey(const Key('payment-method-mobile-money')),
             findsOneWidget,
           );
-          await tester.enterText(
-            find.byKey(const Key('payer-phone-field')),
-            '+221 77 345 67 89',
-          );
-          await tester.pump();
+          expect(find.byKey(const Key('payer-phone-field')), findsNothing);
 
           final captured = await _submitProposal(tester);
           expect(captured, hasLength(1));
           expect(captured.single.paymentMethod, BidPaymentMethod.mobileMoney);
-          expect(captured.single.phoneNumber, '+221773456789');
         },
       );
 
@@ -1047,7 +833,6 @@ void main() {
           // Espèces avant mobile money quand la carte manque (défaut
           // inchangé depuis l'offre directe).
           expect(captured.single.paymentMethod, BidPaymentMethod.cash);
-          expect(captured.single.phoneNumber, isNull);
         },
       );
     },

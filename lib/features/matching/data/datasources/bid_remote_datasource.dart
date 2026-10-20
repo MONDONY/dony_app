@@ -81,7 +81,6 @@ class BidRemoteDatasource {
     required String recipientName,
     required String recipientPhone,
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
-    String? phoneNumber,
     String? countryCode,
     String? promoCode,
     List<String>? photoKeys,
@@ -97,7 +96,6 @@ class BidRemoteDatasource {
     };
     // Poids omis en mode GRID pur (le backend exige ≥ 0.1 kg s'il est présent).
     if (weightKg > 0) body['weightKg'] = weightKg;
-    if (phoneNumber != null) body['phoneNumber'] = phoneNumber;
     if (countryCode != null) body['countryCode'] = countryCode;
     if (promoCode != null && promoCode.isNotEmpty) {
       body['promoCode'] = promoCode.trim().toUpperCase();

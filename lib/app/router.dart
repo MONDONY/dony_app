@@ -688,23 +688,12 @@ final appRouter = GoRouter(
           BidAcceptedSuccessScreen(bidId: state.pathParameters['bidId']!),
     ),
 
-    // ── Supplément de prix payé en mobile money : écran d'attente (hors
-    //    shell). Déclarée avant `/bids/:bidId`, même raison que
-    //    `/negotiation`. Ouverte par le bouton « Payer » de l'expéditeur ou
-    //    par le retour Wave (`yadony://bids/{id}/supplements/{id}/…`).
-    GoRoute(
-      path: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
-      name: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<MobileMoneyPaymentBloc>(),
-        child: MobileMoneyAwaitingScreen(
-          scope: MobileMoneyScope.supplement(
-            bidId: state.pathParameters['bidId']!,
-            supplementId: state.pathParameters['supplementId']!,
-          ),
-        ),
-      ),
-    ),
+    // ── Paiement mobile money d'un colis : écran d'attente (hors shell), pour
+    //    un bid, un fil de négociation et le supplément de prix. Déclarées
+    //    avant `/bids/:bidId`, même raison que `/negotiation`. Ouvertes par le
+    //    bouton « Payer » de l'expéditeur ou par le retour Wave
+    //    (`yadony://bids/{id}/supplements/{id}/…`).
+    ...buildMobileMoneyAwaitingRoutes(),
 
     // ── Bid detail (hors shell) ──────────────────────────────────────────
     GoRoute(
@@ -728,33 +717,6 @@ final appRouter = GoRouter(
       },
     ),
 
-    // ── Mobile Money — écran d'attente de paiement (hors shell) ────────
-    GoRoute(
-      path: '/bids/:bidId/mobile-money/awaiting',
-      builder: (context, state) {
-        final bidId = state.pathParameters['bidId']!;
-        return BlocProvider(
-          create: (_) => getIt<MobileMoneyPaymentBloc>(),
-          child: MobileMoneyAwaitingScreen(scope: MobileMoneyScope.bid(bidId)),
-        );
-      },
-    ),
-    // Même écran pour le dépôt d'un fil de négociation (colis). `extra` : numéro
-    // payeur saisi dans la feuille de récapitulatif, absent depuis un lien profond.
-    GoRoute(
-      path: '/negotiations/:id/mobile-money/awaiting',
-      builder: (context, state) {
-        final threadId = state.pathParameters['id']!;
-        final phone = state.extra is String ? state.extra! as String : null;
-        return BlocProvider(
-          create: (_) => getIt<MobileMoneyPaymentBloc>(),
-          child: MobileMoneyAwaitingScreen(
-            scope: MobileMoneyScope.negotiation(threadId),
-            initialPhone: phone,
-          ),
-        );
-      },
-    ),
     // Écran de succès « Offre acceptée et payée ! » d'un fil séquestré (hors
     // shell) : poussé par la feuille de récapitulatif au retour de l'écran
     // d'attente mobile money. Le CTA ramène sur le fil via `go`.
@@ -2282,6 +2244,53 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+/// Routes de l'écran « Payer le colis » en mobile money (bid, fil de
+/// négociation, supplément de prix), isolées du routeur pour être montées dans
+/// un test. Chacune fournit le bloc de paiement et le composant « compte qui
+/// paie » (`PayerAccountCubit`, [flow] = nom analytics de la portée) à
+/// l'écran. Le composant naît sans devise (elle n'est connue qu'avec le
+/// statut) et reste inerte tant que l'écran ne l'a pas configuré : un dépôt
+/// repris n'appelle jamais le catalogue des pays.
+List<GoRoute> buildMobileMoneyAwaitingRoutes() => [
+  GoRoute(
+    path: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
+    name: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
+    builder: (context, state) => _mobileMoneyAwaitingPage(
+      MobileMoneyScope.supplement(
+        bidId: state.pathParameters['bidId']!,
+        supplementId: state.pathParameters['supplementId']!,
+      ),
+    ),
+  ),
+  GoRoute(
+    path: '/bids/:bidId/mobile-money/awaiting',
+    builder: (context, state) => _mobileMoneyAwaitingPage(
+      MobileMoneyScope.bid(state.pathParameters['bidId']!),
+    ),
+  ),
+  // Aucun `extra` : le numéro qui paiera se choisit sur l'écran lui-même.
+  GoRoute(
+    path: '/negotiations/:id/mobile-money/awaiting',
+    builder: (context, state) => _mobileMoneyAwaitingPage(
+      MobileMoneyScope.negotiation(state.pathParameters['id']!),
+    ),
+  ),
+];
+
+Widget _mobileMoneyAwaitingPage(MobileMoneyScope scope) {
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<MobileMoneyPaymentBloc>(
+        create: (_) => getIt<MobileMoneyPaymentBloc>(),
+      ),
+      BlocProvider<PayerAccountCubit>(
+        create: (_) => getIt<PayerAccountCubit>(param1: scope.analyticsName),
+      ),
+    ],
+    child: MobileMoneyAwaitingScreen(scope: scope),
+  );
+}
 
 GoRoute buildHelpTutorialRoute({
   HelpTutorialPlayerSessionFactory playerSessionFactory =

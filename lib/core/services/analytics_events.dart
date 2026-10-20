@@ -193,6 +193,11 @@ abstract final class AnalyticsEvents {
   static const mobileMoneyOperatorAutoSwitched =
       'mobile_money_operator_auto_switched';
 
+  /// Numéro reconnu sur un opérateur que ce paiement n'accepte pas.
+  /// Propriété `operator` (code de l'opérateur détecté).
+  static const mobileMoneyOperatorNotAllowed =
+      'mobile_money_operator_not_allowed';
+
   /// Numéro refusé ou inconnu des opérateurs du pays.
   static const mobileMoneyNumberUnrecognized =
       'mobile_money_number_unrecognized';

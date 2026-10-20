@@ -1,6 +1,6 @@
 // Messages composés (jamais assemblés à la main) du paiement mobile money :
-// bandeau « aucun réseau commun » (joinList à 1, 2 et 3 réseaux), variantes
-// du texte PIN opérateur, et les deux délais dépassés (bid / négociation).
+// liste des réseaux acceptés (joinList à 1, 2 et 3 réseaux), libellés de
+// l'écran « Payer le colis », et les délais dépassés (bid / négociation).
 // Ces messages sont partagés par mobile_money_account_screen.dart et
 // mobile_money_awaiting_screen.dart (voir leurs tests de widget respectifs
 // pour le rendu à l'écran).
@@ -60,70 +60,6 @@ void main() {
     },
   );
 
-  group('mobileMoneyNoCommonNetwork (joinList)', () {
-    test('un seul réseau : fr et en', () {
-      expect(
-        fr.mobileMoneyNoCommonNetwork('Aminata', 'Wave', 'Sénégal'),
-        "Aminata accepte Wave, qui n'existent pas pour votre numéro "
-        '(Sénégal). Changez de numéro payeur ou écrivez-lui depuis la '
-        'conversation.',
-      );
-      expect(
-        en.mobileMoneyNoCommonNetwork('Aminata', 'Wave', 'Senegal'),
-        "Aminata accepts Wave, which aren't available for your number "
-        '(Senegal). Change the paying number or message them from the '
-        'conversation.',
-      );
-    });
-
-    test('deux réseaux : fr « et », en « and », comme l\'ancien texte', () {
-      expect(
-        fr.mobileMoneyNoCommonNetwork(
-          'Aminata',
-          'Wave et Orange Money',
-          'Bénin',
-        ),
-        "Aminata accepte Wave et Orange Money, qui n'existent pas pour "
-        'votre numéro (Bénin). Changez de numéro payeur ou écrivez-lui depuis '
-        'la conversation.',
-      );
-      expect(
-        en.mobileMoneyNoCommonNetwork(
-          'Aminata',
-          'Wave and Orange Money',
-          'Benin',
-        ),
-        "Aminata accepts Wave and Orange Money, which aren't available "
-        'for your number (Benin). Change the paying number or message '
-        'them from the conversation.',
-      );
-    });
-
-    test('trois réseaux : fr « Wave, Orange Money et MTN » (égal à l\'ancien '
-        'texte concaténé), en « Wave, Orange Money, and MTN »', () {
-      expect(
-        fr.mobileMoneyNoCommonNetwork(
-          'Aminata',
-          'Wave, Orange Money et MTN',
-          'Côte d\'Ivoire',
-        ),
-        "Aminata accepte Wave, Orange Money et MTN, qui n'existent pas "
-        "pour votre numéro (Côte d'Ivoire). Changez de numéro payeur ou "
-        'écrivez-lui depuis la conversation.',
-      );
-      expect(
-        en.mobileMoneyNoCommonNetwork(
-          'Aminata',
-          'Wave, Orange Money, and MTN',
-          "Cote d'Ivoire",
-        ),
-        "Aminata accepts Wave, Orange Money, and MTN, which aren't "
-        "available for your number (Cote d'Ivoire). Change the paying "
-        'number or message them from the conversation.',
-      );
-    });
-  });
-
   group('joinList (composition du paramètre {networks})', () {
     test('un réseau : inchangé', () {
       expect(joinList(fr, ['Wave']), 'Wave');
@@ -166,31 +102,40 @@ void main() {
     });
   });
 
-  group('code PIN opérateur (deux variantes)', () {
-    test('opérateur connu : le nom est inséré, fr et en', () {
-      expect(
-        fr.mobileMoneyPinSent('Orange Money'),
-        'Validez le paiement sur votre téléphone : une demande de code PIN '
-        'vient de vous être envoyée par Orange Money.',
-      );
-      expect(
-        en.mobileMoneyPinSent('Orange Money'),
-        'Approve the payment on your phone: Orange Money just sent you a '
-        'PIN request.',
-      );
+  group('écran Payer le colis (libellés)', () {
+    test('titres : colis et supplément, fr et en', () {
+      expect(fr.mobileMoneyPayParcelTitle, 'Payer le colis');
+      expect(en.mobileMoneyPayParcelTitle, 'Pay for the parcel');
+      expect(fr.mobileMoneyPaySupplementTitle, 'Payer le supplément');
+      expect(en.mobileMoneyPaySupplementTitle, 'Pay the extra charge');
     });
 
-    test('opérateur inconnu : repli générique, fr et en', () {
+    test('récapitulatif : versement au voyageur à la livraison', () {
+      expect(fr.mobileMoneyPaidToTravelerLabel, 'Versé au voyageur');
+      expect(fr.mobileMoneyPaidToTravelerValue, 'À la livraison');
+      expect(en.mobileMoneyPaidToTravelerLabel, 'Paid to the traveler');
+      expect(en.mobileMoneyPaidToTravelerValue, 'On delivery');
+    });
+
+    test('échec : titre dédié, fr et en', () {
+      expect(fr.mobileMoneyPaymentFailedTitle, 'Paiement non abouti');
+      expect(en.mobileMoneyPaymentFailedTitle, 'Payment not completed');
+    });
+
+    test('pas encore validé : le paiement peut encore aboutir, jamais '
+        '« délai dépassé »', () {
       expect(
-        fr.mobileMoneyPinSentUnknownProvider,
-        'Validez le paiement sur votre téléphone : une demande de code PIN '
-        'vient de vous être envoyée par votre opérateur.',
+        fr.mobileMoneyOverdueBody,
+        'Si vous validez quand même dans les prochaines minutes, votre '
+        'paiement sera pris en compte.',
       );
       expect(
-        en.mobileMoneyPinSentUnknownProvider,
-        'Approve the payment on your phone: your mobile operator just '
-        'sent you a PIN request.',
+        en.mobileMoneyOverdueBody,
+        'If you still approve within the next few minutes, your payment '
+        'will go through.',
       );
+      expect(fr.mobileMoneyOverdueBody, isNot(contains('dépassé')));
+      expect(en.mobileMoneyOverdueBody, isNot(contains("Time's up")));
     });
   });
 

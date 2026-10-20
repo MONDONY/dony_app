@@ -23,7 +23,6 @@ class BidNegotiationRemoteDatasource {
     required String recipientPhone,
     required double proposedTotalEur,
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
-    String? phoneNumber,
     String? countryCode,
     List<String>? photoKeys,
     List<Map<String, dynamic>>? customItems,
@@ -40,7 +39,6 @@ class BidNegotiationRemoteDatasource {
     };
     // Poids omis en mode grille pur (le backend exige ≥ 0.1 kg s'il est présent).
     if (weightKg != null && weightKg > 0) body['weightKg'] = weightKg;
-    if (phoneNumber != null) body['phoneNumber'] = phoneNumber;
     if (countryCode != null) body['countryCode'] = countryCode;
     if (photoKeys != null && photoKeys.isNotEmpty) {
       body['photoKeys'] = photoKeys;

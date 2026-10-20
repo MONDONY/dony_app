@@ -1,10 +1,14 @@
+import 'dart:ui' show Tristate;
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/payments/bloc/payer_account_cubit.dart';
 import 'package:dony/features/payments/bloc/payer_account_state.dart';
+import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:dony/features/payments/presentation/widgets/mobile_money_country_field.dart';
 import 'package:dony/features/payments/presentation/widgets/payer_account_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show SemanticsNode;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,6 +30,7 @@ void main() {
     ThemeData? theme,
     bool disableAnimations = false,
     Locale locale = AppL10n.fr,
+    Widget section = const PayerAccountSection(),
   }) {
     return MaterialApp(
       theme: theme ?? AppTheme.light(),
@@ -42,7 +47,7 @@ void main() {
               value: cubit,
               child: ListView(
                 padding: const EdgeInsets.all(DonySpacing.lg),
-                children: const [PayerAccountSection()],
+                children: [section],
               ),
             ),
           ),
@@ -51,10 +56,14 @@ void main() {
     );
   }
 
-  Future<void> pumpWith(WidgetTester tester, PayerAccountState state) async {
+  Future<void> pumpWith(
+    WidgetTester tester,
+    PayerAccountState state, {
+    Widget section = const PayerAccountSection(),
+  }) async {
     final controller = stubPayerAccount(cubit, state);
     addTearDown(controller.close);
-    await tester.pumpWidget(harness());
+    await tester.pumpWidget(harness(section: section));
     await tester.pumpAndSettle();
   }
 
@@ -403,6 +412,301 @@ void main() {
         find.descendant(
           of: find.byKey(const Key('mm-number-field')),
           matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
+  group('devise imposée et opérateurs permis', () {
+    /// Côte d'Ivoire ouverte, seul MTN accepté.
+    final onlyMtn = kPayerReady.copyWith(
+      country: kCoteDIvoire,
+      allowedOperators: const {'MTN_MOMO_CIV'},
+    );
+
+    testWidgets('section_disallowedPill_greyedWithLabel_notTappable', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await pumpWith(tester, onlyMtn);
+
+      final orange = find.byKey(const Key('mm-operator-ORANGE_CIV'));
+      final mtn = find.byKey(const Key('mm-operator-MTN_MOMO_CIV'));
+      expect(
+        tester
+            .widget<Opacity>(
+              find.descendant(of: orange, matching: find.byType(Opacity)),
+            )
+            .opacity,
+        0.4,
+      );
+      expect(
+        find.descendant(of: mtn, matching: find.byType(Opacity)),
+        findsNothing,
+      );
+      // Libellé sous le nom, sur la seule pastille grisée.
+      expect(find.text('Non accepté'), findsOneWidget);
+      expect(
+        find.descendant(of: orange, matching: find.text('Non accepté')),
+        findsOneWidget,
+      );
+
+      SemanticsNode semanticsOf(Finder pill) => tester.getSemantics(
+        find
+            .descendant(
+              of: pill,
+              matching: find.byWidgetPredicate(
+                (w) => w is Semantics && w.properties.label != null,
+              ),
+            )
+            .first,
+      );
+
+      final node = semanticsOf(orange);
+      expect(node.flagsCollection.isEnabled, Tristate.isFalse);
+      final enabled = semanticsOf(mtn);
+      expect(enabled.flagsCollection.isEnabled, Tristate.isTrue);
+
+      await tester.tap(orange);
+      await tester.pump();
+      verifyNever(() => cubit.selectOperator(any()));
+
+      await tester.tap(mtn);
+      await tester.pump();
+      verify(() => cubit.selectOperator('MTN_MOMO_CIV')).called(1);
+      semantics.dispose();
+    });
+
+    testWidgets('section_noRestriction_noPillGreyed', (tester) async {
+      await pumpWith(tester, kPayerReady.copyWith(country: kCoteDIvoire));
+
+      expect(find.text('Non accepté'), findsNothing);
+      expect(find.byType(Opacity), findsNothing);
+    });
+
+    testWidgets('section_customDisallowedLabel', (tester) async {
+      await pumpWith(
+        tester,
+        onlyMtn,
+        section: const PayerAccountSection(disallowedOperatorLabel: 'Ajouté'),
+      );
+
+      expect(find.text('Ajouté'), findsOneWidget);
+      expect(find.text('Non accepté'), findsNothing);
+    });
+
+    testWidgets('section_notAllowed_showsMessage', (tester) async {
+      await pumpWith(
+        tester,
+        kPayerRecognized.copyWith(
+          allowedOperators: const {'ORANGE_CIV'},
+          recognition: RecognitionStatus.notAllowed,
+          rejectedOperator: kMtnCiv,
+        ),
+      );
+
+      expect(
+        find.text("C'est un numéro MTN MoMo, que ce voyageur n'accepte pas."),
+        findsOneWidget,
+      );
+      // L'opérateur choisi reste Orange : aucune bascule affichée.
+      expect(find.text('Numéro Orange Money'), findsOneWidget);
+    });
+
+    testWidgets('section_notAllowed_customMessage', (tester) async {
+      await pumpWith(
+        tester,
+        kPayerRecognized.copyWith(
+          allowedOperators: const {'ORANGE_CIV'},
+          recognition: RecognitionStatus.notAllowed,
+          rejectedOperator: kMtnCiv,
+        ),
+        section: PayerAccountSection(
+          notAllowedMessage: (operator) => '$operator déjà ajouté',
+        ),
+      );
+
+      expect(find.text('MTN MoMo déjà ajouté'), findsOneWidget);
+    });
+
+    testWidgets('section_notAllowed_withoutRejectedOperator_noMessage', (
+      tester,
+    ) async {
+      await pumpWith(
+        tester,
+        kPayerRecognized.copyWith(recognition: RecognitionStatus.notAllowed),
+      );
+
+      expect(find.textContaining('n\'accepte pas'), findsNothing);
+    });
+
+    testWidgets('section_numberHelper_shown', (tester) async {
+      await pumpWith(
+        tester,
+        kPayerRecognized,
+        section: const PayerAccountSection(
+          numberHelper: "Le vôtre ou celui d'un proche.",
+        ),
+      );
+
+      expect(find.text("Le vôtre ou celui d'un proche."), findsOneWidget);
+    });
+
+    testWidgets('section_withoutNumberHelper_noHelper', (tester) async {
+      await pumpWith(tester, kPayerRecognized);
+
+      expect(find.text("Le vôtre ou celui d'un proche."), findsNothing);
+    });
+
+    testWidgets('countryField_otherCurrency_greyedWithSubtitle', (
+      tester,
+    ) async {
+      const cameroon = MobileMoneyCountry(
+        country: 'CM',
+        currency: 'XAF',
+        operators: [
+          MobileMoneyOperator(
+            code: 'MTN_MOMO_CMR',
+            label: 'MTN MoMo',
+            brand: 'MTN',
+          ),
+        ],
+      );
+      await pumpWith(
+        tester,
+        const PayerAccountState(
+          status: PayerAccountStatus.ready,
+          currency: 'XOF',
+          countries: MobileMoneyCountries(
+            available: [kCoteDIvoire],
+            otherCurrency: [cameroon],
+            upcoming: ['ML'],
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byKey(const Key('mm-country-field')), 'Cam');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cameroun'), findsOneWidget);
+      expect(find.text('Ce paiement se fait en XOF'), findsOneWidget);
+      // Grisé, pas de pastille « Bientôt » ni de liste d'opérateurs.
+      expect(find.text('Bientôt'), findsNothing);
+      expect(find.text('MTN MoMo'), findsNothing);
+
+      await tester.tap(find.text('Cameroun'));
+      await tester.pumpAndSettle();
+      verifyNever(() => cubit.selectCountry(any()));
+
+      // Un pays de la devise reste choisissable dans la même liste.
+      await tester.enterText(find.byKey(const Key('mm-country-field')), 'cote');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Côte d'Ivoire"));
+      await tester.pumpAndSettle();
+      verify(() => cubit.selectCountry('CI')).called(1);
+    });
+
+    testWidgets('countryField_otherCurrency_submitNeverSelects', (
+      tester,
+    ) async {
+      const cameroon = MobileMoneyCountry(country: 'CM', currency: 'XAF');
+      await pumpWith(
+        tester,
+        const PayerAccountState(
+          status: PayerAccountStatus.ready,
+          currency: 'XOF',
+          countries: MobileMoneyCountries(otherCurrency: [cameroon]),
+        ),
+      );
+
+      await tester.enterText(find.byKey(const Key('mm-country-field')), 'Cam');
+      await tester.pumpAndSettle();
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+
+      verifyNever(() => cubit.selectCountry(any()));
+    });
+
+    testWidgets('countryField_otherCurrency_withoutCurrency_noSubtitle', (
+      tester,
+    ) async {
+      const cameroon = MobileMoneyCountry(country: 'CM', currency: 'XAF');
+      await pumpWith(
+        tester,
+        const PayerAccountState(
+          status: PayerAccountStatus.ready,
+          countries: MobileMoneyCountries(otherCurrency: [cameroon]),
+        ),
+      );
+
+      await tester.enterText(find.byKey(const Key('mm-country-field')), 'Cam');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cameroun'), findsOneWidget);
+      expect(find.textContaining('Ce paiement se fait en'), findsNothing);
+    });
+
+    testWidgets(
+      'réduction du mouvement : le retour du numéro change de taille sans '
+      'AnimatedSize ni exception',
+      (tester) async {
+        final controller = stubPayerAccount(cubit, kPayerRecognized);
+        addTearDown(controller.close);
+        await tester.pumpWidget(harness(disableAnimations: true));
+        await tester.pump();
+
+        expect(
+          find.descendant(
+            of: find.byType(PayerAccountSection),
+            matching: find.byType(AnimatedSize),
+          ),
+          findsNothing,
+        );
+
+        // Message présent, puis absent, puis plus long : la taille de la zone
+        // de retour change à chaque étape.
+        controller.add(
+          kPayerRecognized.copyWith(recognition: RecognitionStatus.idle),
+        );
+        await tester.pump();
+        controller.add(
+          kPayerRecognized.copyWith(
+            recognition: RecognitionStatus.unrecognized,
+          ),
+        );
+        await tester.pump();
+        controller.add(
+          kPayerRecognized.copyWith(recognition: RecognitionStatus.failed),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+        expect(
+          find.text('Vérification impossible pour le moment.'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('anglais : libellés traduits', (tester) async {
+      final controller = stubPayerAccount(
+        cubit,
+        kPayerRecognized.copyWith(
+          allowedOperators: const {'ORANGE_CIV'},
+          recognition: RecognitionStatus.notAllowed,
+          rejectedOperator: kMtnCiv,
+        ),
+      );
+      addTearDown(controller.close);
+      await tester.pumpWidget(harness(locale: AppL10n.en));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Not accepted'), findsOneWidget);
+      expect(
+        find.text(
+          'This is a MTN MoMo number, which this traveler does not accept.',
         ),
         findsOneWidget,
       );

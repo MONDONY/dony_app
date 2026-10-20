@@ -46,6 +46,85 @@ void main() {
     );
   });
 
+  testWidgets('ring_overOneHour_showsHours : h:mm:ss dès une heure restante', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 10, 19, 10);
+    await tester.pumpWidget(
+      host(
+        MobileMoneyAwaitingRing(
+          expiresAt: now.add(
+            const Duration(hours: 1, minutes: 59, seconds: 58),
+          ),
+          now: () => now,
+        ),
+      ),
+    );
+
+    expect(find.text('1:59:58'), findsOneWidget);
+  });
+
+  testWidgets('ring_exactlyOneHour_showsHours', (tester) async {
+    final now = DateTime.utc(2026, 10, 19, 10);
+    await tester.pumpWidget(
+      host(
+        MobileMoneyAwaitingRing(
+          expiresAt: now.add(const Duration(hours: 1)),
+          now: () => now,
+        ),
+      ),
+    );
+
+    expect(find.text('1:00:00'), findsOneWidget);
+  });
+
+  testWidgets('ring_grandeEchelle_h_mm_ss_tientDansLArc', (tester) async {
+    final now = DateTime.utc(2026, 10, 19, 10);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
+          child: Scaffold(
+            body: Center(
+              child: MobileMoneyAwaitingRing(
+                expiresAt: now.add(
+                  const Duration(hours: 1, minutes: 59, seconds: 58),
+                ),
+                now: () => now,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Largeur réellement dessinée (après réduction du FittedBox), pas la
+    // largeur de mise en page du texte.
+    final box = tester.renderObject<RenderBox>(find.text('1:59:58'));
+    final drawn =
+        box.localToGlobal(Offset(box.size.width, 0)).dx -
+        box.localToGlobal(Offset.zero).dx;
+    const inner =
+        MobileMoneyAwaitingRing.size - 2 * MobileMoneyAwaitingRing.strokeWidth;
+    expect(drawn, lessThanOrEqualTo(inner));
+    expect(drawn, greaterThan(0));
+  });
+
+  testWidgets('ring_underOneHour_mmss : 59:59 reste en mm:ss', (tester) async {
+    final now = DateTime.utc(2026, 10, 19, 10);
+    await tester.pumpWidget(
+      host(
+        MobileMoneyAwaitingRing(
+          expiresAt: now.add(const Duration(minutes: 59, seconds: 59)),
+          now: () => now,
+        ),
+      ),
+    );
+
+    expect(find.text('59:59'), findsOneWidget);
+  });
+
   testWidgets('échéance passée : 00:00, jamais négatif', (tester) async {
     await tester.pumpWidget(
       host(

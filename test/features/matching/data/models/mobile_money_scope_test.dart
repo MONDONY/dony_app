@@ -8,7 +8,6 @@ void main() {
     const s = MobileMoneyScope.bid(id);
     expect(s.statusPath, '/bids/$id/mobile-money/status');
     expect(s.initiatePath, '/bids/$id/mobile-money/initiate');
-    expect(s.providersPath, '/bids/$id/mobile-money/providers');
     expect(s.awaitingRoute, '/bids/$id/mobile-money/awaiting');
     expect(s.fallbackRoute, '/bids/$id');
     expect(s.cancelledIsFinal, isFalse);
@@ -18,7 +17,6 @@ void main() {
     const s = MobileMoneyScope.negotiation(id);
     expect(s.statusPath, '/negotiations/$id/mobile-money/status');
     expect(s.initiatePath, '/negotiations/$id/mobile-money/initiate');
-    expect(s.providersPath, isNull, reason: 'pas de catalogue pour un fil');
     expect(s.awaitingRoute, '/negotiations/$id/mobile-money/awaiting');
     expect(s.fallbackRoute, '/negotiations/$id');
     expect(s.cancelledIsFinal, isFalse);
@@ -35,13 +33,29 @@ void main() {
     expect(s.supplementId, supplementId);
     expect(s.statusPath, '$base/mobile-money/status');
     expect(s.initiatePath, '$base/mobile-money/initiate');
-    // Le catalogue du colis répond 409 une fois le colis payé : celui du
-    // supplément est dédié.
-    expect(s.providersPath, '$base/mobile-money/providers');
     expect(s.awaitingRoute, '$base/mobile-money/awaiting');
     expect(s.fallbackRoute, '/bids/$id');
     expect(s.cancelledIsFinal, isTrue);
     expect(s.analyticsName, 'bid_supplement');
+  });
+  test('scope_acceptedOperatorsPath_perScope', () {
+    expect(
+      const MobileMoneyScope.bid(id).acceptedOperatorsPath,
+      '/bids/$id/mobile-money/accepted-operators',
+    );
+    expect(
+      const MobileMoneyScope.negotiation(id).acceptedOperatorsPath,
+      '/negotiations/$id/mobile-money/accepted-operators',
+    );
+    // Le supplément se paie sur le colis : mêmes opérateurs acceptés que
+    // le colis (route du bid), pas de route propre au supplément.
+    expect(
+      const MobileMoneyScope.supplement(
+        bidId: id,
+        supplementId: supplementId,
+      ).acceptedOperatorsPath,
+      '/bids/$id/mobile-money/accepted-operators',
+    );
   });
   test('égalité par type et id', () {
     expect(const MobileMoneyScope.bid(id), const MobileMoneyScope.bid(id));

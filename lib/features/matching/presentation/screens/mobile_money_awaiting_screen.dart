@@ -1,58 +1,65 @@
 import 'dart:async';
 
-import 'package:dony/core/currency/country_catalog.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/phone/normalize_payer_phone.dart';
+import 'package:dony/core/phone/phone_last_digits.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/services/external_url_launcher.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
-import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
-import 'package:dony/features/payments/presentation/widgets/mobile_money_networks_checklist.dart';
-import 'package:dony/l10n/country_names.dart';
+import 'package:dony/features/payments/bloc/payer_account_cubit.dart';
+import 'package:dony/features/payments/bloc/payer_account_state.dart';
+import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
+import 'package:dony/features/payments/presentation/mobile_money_failure_message.dart';
+import 'package:dony/features/payments/presentation/payment_auth.dart';
+import 'package:dony/features/payments/presentation/widgets/mobile_money_awaiting_panel.dart';
+import 'package:dony/features/payments/presentation/widgets/mobile_money_outcome_body.dart';
+import 'package:dony/features/payments/presentation/widgets/payer_account_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Écran d'attente du paiement mobile money (Wave / Orange Money via
-/// pawaPay) d'un bid, d'un fil de négociation ou du supplément de prix d'un
-/// colis, ouvert depuis le détail de l'envoi ou le fil
+/// Écran « Payer le colis » (ou « Payer le supplément ») en mobile money
+/// (Wave / Orange Money via pawaPay) d'un bid, d'un fil de négociation ou du
+/// supplément de prix d'un colis, ouvert depuis le détail de l'envoi ou le fil
 /// (`context.push<bool>(scope.awaitingRoute)`), une notification
 /// `MM_PAYMENT_PENDING` ou le lien profond
 /// `yadony://bids/{uuid}/mobile-money/awaiting` (ou
 /// `yadony://negotiations/{uuid}/mobile-money/awaiting`, ou
 /// `yadony://bids/{uuid}/supplements/{uuid}/mobile-money/awaiting`).
 ///
-/// L'ouverture déclenche le dépôt (push PIN chez l'opérateur, ou redirection
-/// Wave via `authorizationUrl`) : le bloc s'en charge lui-même dès
-/// `MobileMoneyPaymentOpened`. [initialPhone] porte le numéro payeur déjà
-/// saisi (feuille de récapitulatif), absent depuis un lien profond ou une
-/// notification. L'écran sonde ensuite le statut jusqu'au séquestre, puis se
-/// referme sur `context.pop(true)` — l'appelant se recharge au retour.
+/// L'ouverture (`MobileMoneyPaymentOpened`) reprend un dépôt déjà en cours, ou
+/// affiche l'étape « Qui paie ? » sur le composant partagé « compte qui paie »
+/// (`PayerAccountSection` : pays, opérateur, numéro reconnu par pawaPay) ; le
+/// dépôt part au bouton « Payer », après `requirePaymentAuth`. L'écran sonde
+/// ensuite le statut jusqu'au séquestre, puis se referme sur
+/// `context.pop(true)` : l'appelant se recharge au retour.
+///
+/// Le `PayerAccountCubit` est fourni par le routeur, sans devise : elle n'est
+/// connue qu'avec le statut. L'écran le configure à la **première** étape
+/// « Qui paie ? » ; les suivantes (« Payer avec un autre numéro ») ne le
+/// rechargent pas, le compte saisi reste affiché.
+///
+/// Échéance passée avec un dépôt encore ouvert : l'écran dit « Pas encore
+/// validé » et continue de sonder, il n'annonce jamais un délai dépassé tant
+/// que l'opérateur n'a pas tranché.
 class MobileMoneyAwaitingScreen extends StatefulWidget {
-  const MobileMoneyAwaitingScreen({
-    super.key,
-    required this.scope,
-    this.initialPhone,
-  });
+  const MobileMoneyAwaitingScreen({super.key, required this.scope});
 
   /// Bid ou fil de négociation dont ce dépôt paie l'escrow.
   final MobileMoneyScope scope;
-
-  /// Numéro payeur déjà connu, envoyé avec `MobileMoneyPaymentOpened` à
-  /// l'ouverture.
-  final String? initialPhone;
 
   @override
   State<MobileMoneyAwaitingScreen> createState() =>
@@ -63,6 +70,10 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   static const _pollInterval = Duration(seconds: 5);
   static const _countdownInterval = Duration(seconds: 1);
 
+  /// Fenêtre de paiement d'un dépôt dont le back n'a pas rendu l'échéance
+  /// (cas qui ne devrait pas se produire) : sert d'échéance à l'anneau.
+  static const _fallbackWindow = Duration(minutes: 30);
+
   Timer? _pollingTimer;
   Timer? _countdownTimer;
 
@@ -70,11 +81,23 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   /// `ValueListenableBuilder`) se redessine à chaque tick, pas tout l'écran.
   final ValueNotifier<Duration> _remaining = ValueNotifier(Duration.zero);
 
-  /// Numéro payeur, partagé par `_FailedBody`, `_PhoneRequiredBody` et
-  /// `_ChooseOperatorBody` (I1) : un seul contrôleur pour que le numéro
-  /// saisi lors d'une relance reste affiché, cohérent avec le catalogue
-  /// affiché, quel que soit le corps qui l'a saisi.
-  final TextEditingController _payerPhoneController = TextEditingController();
+  /// Numéro payeur de l'état `legacy` du composant (back sans catalogue des
+  /// pays) : le seul cas où l'écran porte lui-même un champ numéro.
+  final TextEditingController _legacyPhoneController = TextEditingController();
+
+  /// Le composant « compte qui paie » a déjà reçu sa devise et ses opérateurs
+  /// permis : les « Qui paie ? » suivants ne le rechargent pas.
+  bool _payerConfigured = false;
+
+  /// Échéance de repli d'un dépôt sans échéance serveur, figée au premier
+  /// besoin pour que l'anneau ne reparte pas à chaque reconstruction, et
+  /// rattachée à l'identifiant du dépôt : un nouveau dépôt a sa propre fenêtre.
+  ({String depositId, DateTime at})? _fallbackDeadline;
+
+  /// Une vérification de paiement (biométrie, PIN) est en cours : « Payer » et
+  /// « Renvoyer une demande » sont grisés, un double appui ne lance pas deux
+  /// vérifications. Écouté par `ValueListenableBuilder`, jamais par `setState`.
+  final ValueNotifier<bool> _verifying = ValueNotifier(false);
 
   @override
   void initState() {
@@ -91,12 +114,11 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
         ),
       );
     });
-    context.read<MobileMoneyPaymentBloc>().add(
-      MobileMoneyPaymentOpened(
-        scope: widget.scope,
-        phoneNumber: widget.initialPhone,
-      ),
-    );
+    final bloc = context.read<MobileMoneyPaymentBloc>();
+    if (bloc.state case final MobileMoneyPaymentChoosePayer s) {
+      _syncPayerAccount(s);
+    }
+    bloc.add(MobileMoneyPaymentOpened(scope: widget.scope));
     _startPolling();
     _countdownTimer = Timer.periodic(_countdownInterval, (_) {
       if (!mounted) return;
@@ -125,8 +147,9 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   /// ne l'ont jamais eu).
   static DateTime? _deadlineAtFor(MobileMoneyPaymentState state) =>
       switch (state) {
-        final MobileMoneyPaymentChooseOperator s => s.status.deadlineAt,
+        final MobileMoneyPaymentChoosePayer s => s.status.deadlineAt,
         final MobileMoneyPaymentAwaitingConfirmation s => s.status.deadlineAt,
+        final MobileMoneyPaymentOverdue s => s.status.deadlineAt,
         final MobileMoneyPaymentDepositFailed s => s.status.deadlineAt,
         _ => null,
       };
@@ -142,19 +165,29 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     _remaining.value = diff.isNegative ? Duration.zero : diff;
   }
 
-  /// Vrai quand [error] signale l'absence de numéro côté expéditeur (compte
-  /// Firebase sans téléphone) : ce cas bascule sur [_PhoneRequiredBody] au
-  /// lieu du `DonyEmptyState` générique.
-  static bool _isPhoneRequired(Object error) =>
-      error is AppException && error.code == 'mobile-money-phone-required';
-
-  /// Le catalogue des opérateurs n'a pas pu être chargé faute d'un numéro
-  /// payeur exploitable : aucun numéro, ou un numéro que pawaPay refuse
-  /// (souvent le téléphone du compte, étranger, par exemple +33).
-  static bool _needsPayerPhone(Object? error) =>
-      error is AppException &&
-      (error.code == 'mobile-money-phone-required' ||
-          error.code == 'mobile-money-payer-unsupported');
+  /// Donne au composant « compte qui paie » la devise du paiement et les
+  /// opérateurs que le voyageur accepte. Première étape « Qui paie ? » :
+  /// `configure` (charge le catalogue). Suivantes : seule la restriction est
+  /// remise à jour, le compte déjà saisi n'est pas rechargé. Une liste vide
+  /// restreint à rien (tous les opérateurs grisés « Non accepté », le back
+  /// refuserait de toute façon) ; `null` seulement quand les opérateurs
+  /// acceptés sont inconnus (back ancien, lecture en échec) : aucune
+  /// restriction.
+  void _syncPayerAccount(MobileMoneyPaymentChoosePayer state) {
+    final cubit = context.read<PayerAccountCubit>();
+    final allowed = state.accepted?.providers;
+    if (_payerConfigured) {
+      cubit.restrictOperators(allowed);
+      return;
+    }
+    _payerConfigured = true;
+    unawaited(
+      cubit.configure(
+        currency: state.status.currency,
+        allowedOperators: allowed,
+      ),
+    );
+  }
 
   /// Ouvert depuis le détail (`push<bool>`), l'écran rend son résultat au
   /// parent. Ouvert depuis la push « paiement en attente » (lien profond,
@@ -170,39 +203,81 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     }
   }
 
-  void _retry(String rawPhone) {
+  /// Un dépôt est un paiement : même confirmation (accessibilité, biométrie,
+  /// PIN) que tout autre. Refusé, ou écran quitté pendant la vérification,
+  /// rien n'est lancé. Pendant une vérification déjà en cours, un second appui
+  /// est ignoré.
+  Future<bool> _confirmPayment() async {
+    if (_verifying.value) return false;
+    _verifying.value = true;
+    final bool authenticated;
+    try {
+      authenticated = await requirePaymentAuth(
+        context,
+        authService: getIt<LocalAuthService>(),
+        userPrefs: getIt<HiveService>().userPrefs,
+      );
+    } finally {
+      if (mounted) _verifying.value = false;
+    }
+    if (!mounted) return false;
+    if (!authenticated) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.paymentNotConfirmedSnackbar,
+        type: DonySnackbarType.error,
+      );
+    }
+    return authenticated;
+  }
+
+  /// « Payer » : numéro complet et opérateur du composant (ou, sans
+  /// catalogue, le numéro saisi et l'opérateur du back).
+  Future<void> _pay() async {
+    if (!await _confirmPayment() || !mounted) return;
+    final payer = context.read<PayerAccountCubit>().state;
+    final String? phoneNumber;
+    final String? provider;
+    if (payer.status == PayerAccountStatus.legacy) {
+      // Jamais de dépôt sans numéro saisi : le back paierait avec le numéro
+      // du compte, ce que la refonte interdit (« Payer » est grisé tant que
+      // le champ n'est pas un numéro valide, ce garde-fou couvre le délai de
+      // la vérification locale).
+      phoneNumber = normalizePayerPhone(_legacyPhoneController.text);
+      if (phoneNumber == null) return;
+      provider = null;
+    } else {
+      // Le numéro a pu changer pendant la vérification : jamais un dépôt sur
+      // un numéro qui n'est plus reconnu.
+      final operator = payer.operator;
+      final e164 = payer.e164;
+      if (!payer.canProceed || operator == null || e164 == null) return;
+      phoneNumber = e164;
+      provider = operator.code;
+    }
     context.read<MobileMoneyPaymentBloc>().add(
       MobileMoneyPaymentInitiateRequested(
         scope: widget.scope,
-        phoneNumber: normalizePayerPhone(rawPhone),
+        phoneNumber: phoneNumber,
+        provider: provider,
       ),
     );
-    // DepositFailed a arrêté le sondage : la relance le redémarre aussitôt,
-    // sans attendre un futur changement d'état.
-    _startPolling();
   }
 
-  /// Depuis un dépôt refusé (`_FailedBody`) : retour à l'étape de choix de
-  /// l'opérateur (numéro éventuellement changé), jamais une relance aveugle
-  /// avec l'opérateur prédit. Distinct de [_retry], que garde
-  /// [_PhoneRequiredBody] : sans aucun numéro connu, il n'y a encore rien à
-  /// choisir, seulement un numéro à fournir avant la toute première
-  /// initiation.
-  ///
-  /// Ne redémarre PAS le sondage (contrairement à [_retry]) : aucun dépôt
-  /// n'est encore relancé ici, seul le catalogue est rechargé. Le back
-  /// continue de rapporter le dernier dépôt refusé tant qu'un nouveau n'a
-  /// pas été initié (`onPay`) — sonder ici ferait rebondir l'écran sur
-  /// `_FailedBody` avant même que l'utilisateur ait choisi un opérateur. Le
-  /// `listener` du `BlocConsumer` se charge d'arrêter/reprendre le sondage
-  /// selon l'état (`ChooseOperator` l'arrête, `AwaitingConfirmation` le
-  /// reprend).
-  void _retryToChooseOperator(String rawPhone) {
+  /// « Renvoyer une demande » : nouveau dépôt avec le même couple numéro et
+  /// opérateur. Le sondage reprend sur `AwaitingConfirmation`.
+  Future<void> _resend() async {
+    if (!await _confirmPayment() || !mounted) return;
     context.read<MobileMoneyPaymentBloc>().add(
-      MobileMoneyPaymentProvidersRequested(
-        scope: widget.scope,
-        phoneNumber: normalizePayerPhone(rawPhone),
-      ),
+      MobileMoneyPaymentResendRequested(scope: widget.scope),
+    );
+  }
+
+  /// Depuis un dépôt refusé : retour à l'étape « Qui paie ? » (numéro
+  /// éventuellement changé), jamais une relance aveugle.
+  void _changePayer() {
+    context.read<MobileMoneyPaymentBloc>().add(
+      MobileMoneyPaymentChangePayerRequested(scope: widget.scope),
     );
   }
 
@@ -211,7 +286,8 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     _pollingTimer?.cancel();
     _countdownTimer?.cancel();
     _remaining.dispose();
-    _payerPhoneController.dispose();
+    _verifying.dispose();
+    _legacyPhoneController.dispose();
     super.dispose();
   }
 
@@ -219,13 +295,21 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return Scaffold(
       backgroundColor: cs.surfaceContainerLowest,
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
-        leading: const DonyAppBarBackButton(),
-        title: Text(l.mobileMoneyAwaitingTitle),
+        leading: DonyAppBarBackButton(
+          leadingIcon: Icons.close_rounded,
+          onBack: () => _close(context, paid: false),
+        ),
+        title: Text(
+          widget.scope is SupplementMobileMoneyScope
+              ? l.mobileMoneyPaySupplementTitle
+              : l.mobileMoneyPayParcelTitle,
+        ),
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -234,7 +318,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
           child: Divider(height: 1, color: cs.outline),
         ),
       ),
-      // Le bouton collant ne doit pas passer sous la barre de navigation
+      // Les boutons du bas ne doivent pas passer sous la barre de navigation
       // Android (constaté sur un Redmi à trois boutons) : le haut est déjà
       // couvert par l'AppBar.
       body: SafeArea(
@@ -247,6 +331,9 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
             switch (state) {
               case MobileMoneyPaymentEscrowed():
                 _cancelAllTimers();
+                // Retient pays, opérateur et numéro pour préremplir le
+                // prochain paiement.
+                unawaited(context.read<PayerAccountCubit>().rememberSuccess());
                 DonySnackbar.show(
                   context,
                   message: widget.scope is SupplementMobileMoneyScope
@@ -257,125 +344,154 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
                 _close(context, paid: true);
               case MobileMoneyPaymentExpired():
                 _cancelAllTimers();
-              case MobileMoneyPaymentChooseOperator():
-                // Aucun dépôt encore initié : sonder reviendrait sur le
-                // dernier dépôt connu (refusé, ou expiré) et éjecterait
-                // l'utilisateur de cette étape avant qu'il ait pu choisir.
+              case final MobileMoneyPaymentChoosePayer s:
+                // Aucun dépôt encore initié : rien à sonder tant que
+                // l'expéditeur n'a pas choisi qui paie.
                 _pollingTimer?.cancel();
-              case MobileMoneyPaymentAwaitingConfirmation():
+                _syncPayerAccount(s);
+              case MobileMoneyPaymentAwaitingConfirmation() ||
+                  MobileMoneyPaymentOverdue():
                 // Un dépôt redevient vivant (première ouverture avec un
-                // dépôt déjà en cours, ou après « Payer » depuis le choix de
-                // l'opérateur) : le sondage reprend.
+                // dépôt déjà en cours, ou après « Payer »), ou reste ouvert
+                // après l'échéance : le sondage reprend ou continue.
                 _startPolling();
               case MobileMoneyPaymentDepositFailed():
                 _pollingTimer?.cancel();
               case final MobileMoneyPaymentError e:
-                // Numéro refusé : aucun dépôt n'existe, sonder ne fait que
-                // tourner à vide jusqu'à la saisie d'un autre numéro (le
-                // bouton de [_PhoneRequiredBody] relance le sondage).
-                if (_needsPayerPhone(e.error)) _pollingTimer?.cancel();
                 unawaited(ErrorPresenter.show(context, e.error));
               case _:
             }
           },
-          builder: (context, state) => switch (state) {
-            MobileMoneyPaymentInitial() || MobileMoneyPaymentLoading() =>
-              Center(child: CircularProgressIndicator(color: cs.primary)),
-            // Aucun opérateur affichable faute de numéro payeur exploitable.
-            // Le choix d'opérateur montrait alors un bandeau rouge, un bouton
-            // « Payer » grisé et, pour seule issue, un champ « facultatif » :
-            // l'expéditrice a laissé expirer son paiement (Sentry FLUTTER-DE).
-            final MobileMoneyPaymentChooseOperator s
-                when s.catalog == null &&
-                    !s.isLoadingCatalog &&
-                    _needsPayerPhone(s.error) =>
-              _PhoneRequiredBody(
-                key: const Key('mobile-money-payer-phone-needed'),
-                message: _isPhoneRequired(s.error!)
-                    ? l.mobileMoneyPhoneRequiredExplanation
-                    : l.mobileMoneyPayerUnsupportedExplanation,
-                phoneController: _payerPhoneController,
-                onRetry: () => context.read<MobileMoneyPaymentBloc>().add(
-                  MobileMoneyPaymentProvidersRequested(
-                    scope: widget.scope,
-                    phoneNumber: normalizePayerPhone(
-                      _payerPhoneController.text,
-                    ),
+          builder: (context, state) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: reduceMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 250),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  child: KeyedSubtree(
+                    key: ValueKey(_bodyKey(state)),
+                    child: _bodyFor(context, state),
                   ),
                 ),
               ),
-            final MobileMoneyPaymentChooseOperator s => _ChooseOperatorBody(
-              state: s,
-              remaining: _remaining,
-              phoneController: _payerPhoneController,
-              onPhoneConfirmed: (phone) =>
-                  context.read<MobileMoneyPaymentBloc>().add(
-                    MobileMoneyPaymentProvidersRequested(
-                      scope: widget.scope,
-                      phoneNumber: phone,
-                    ),
-                  ),
-              onPay: (provider) => context.read<MobileMoneyPaymentBloc>().add(
-                MobileMoneyPaymentInitiateRequested(
-                  scope: widget.scope,
-                  // Le numéro qui a réellement bâti le catalogue affiché
-                  // (`s`, déjà en portée), jamais le contenu brut du
-                  // contrôleur : une frappe pas encore débouncée ne doit
-                  // jamais faire payer un numéro et un opérateur qui ne se
-                  // correspondent pas (I1).
-                  phoneNumber: s.payerPhone,
-                  provider: provider,
-                ),
-              ),
-            ),
-            final MobileMoneyPaymentAwaitingConfirmation s => _AwaitingBody(
-              status: s.status,
-              remaining: _remaining,
-            ),
-            final MobileMoneyPaymentDepositFailed s => _FailedBody(
-              status: s.status,
-              remaining: _remaining,
-              phoneController: _payerPhoneController,
-              onRetry: () => _retryToChooseOperator(_payerPhoneController.text),
-            ),
-            final MobileMoneyPaymentExpired s => _ExpiredBody(
-              scope: widget.scope,
-              status: s.status,
-              onBack: () => _close(context, paid: false),
-            ),
-            MobileMoneyPaymentEscrowed() => const _EscrowedBody(),
-            // Aucun numéro disponible pour payer (compte Firebase de
-            // l'expéditeur sans téléphone), ou numéro que l'opérateur refuse
-            // (téléphone du compte étranger, +33) : corps dédié avec saisie
-            // obligatoire. Le DonyEmptyState générique montrait une icône
-            // wifi barrée et « Réessayer » rejouait le même numéro, donc le
-            // même refus (FLUTTER-MQ).
-            final MobileMoneyPaymentError e when _needsPayerPhone(e.error) =>
-              _PhoneRequiredBody(
-                message: _isPhoneRequired(e.error)
-                    ? l.mobileMoneyPhoneRequiredExplanation
-                    : l.mobileMoneyPayerUnsupportedExplanation,
-                phoneController: _payerPhoneController,
-                onRetry: () => _retry(_payerPhoneController.text),
-              ),
-            MobileMoneyPaymentError() => DonyEmptyState(
-              type: DonyEmptyStateType.error,
-              title: l.commonSomethingWentWrong,
-              actionLabel: l.commonRetry,
-              onAction: () => context.read<MobileMoneyPaymentBloc>().add(
-                MobileMoneyPaymentOpened(scope: widget.scope),
-              ),
-            ),
-          },
+              _bottomFor(context, state),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  /// Clé de fondu : `Initial` et `Loading` montrent le même indicateur, les
+  /// enchaîner ne doit rien faire clignoter.
+  static Object _bodyKey(MobileMoneyPaymentState state) => switch (state) {
+    MobileMoneyPaymentInitial() || MobileMoneyPaymentLoading() => 'loading',
+    _ => state.runtimeType,
+  };
+
+  Widget _bodyFor(BuildContext context, MobileMoneyPaymentState state) {
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return switch (state) {
+      MobileMoneyPaymentInitial() || MobileMoneyPaymentLoading() => Center(
+        child: CircularProgressIndicator(color: cs.primary),
+      ),
+      final MobileMoneyPaymentChoosePayer s => _ChoosePayerBody(
+        state: s,
+        remaining: _remaining,
+        legacyPhoneController: _legacyPhoneController,
+      ),
+      final MobileMoneyPaymentAwaitingConfirmation s => _AwaitingBody(
+        status: s.status,
+        fallbackDeadline: _fallbackDeadlineFor(s.status),
+      ),
+      MobileMoneyPaymentOverdue() => MobileMoneyOutcomeBody(
+        iconAsset: 'clock',
+        warning: true,
+        title: l.walletTopupMmOverdueTitle,
+        message: l.mobileMoneyOverdueBody,
+      ),
+      final MobileMoneyPaymentDepositFailed s => MobileMoneyOutcomeBody(
+        iconAsset: 'circle-alert',
+        title: l.mobileMoneyPaymentFailedTitle,
+        message: mobileMoneyFailureMessage(
+          l,
+          code: s.status.deposit?.failureReasonCode,
+          fallback: s.status.deposit?.failureMessage,
+        ),
+      ),
+      final MobileMoneyPaymentExpired s => _ExpiredBody(
+        scope: widget.scope,
+        status: s.status,
+        onBack: () => _close(context, paid: false),
+      ),
+      MobileMoneyPaymentEscrowed() => const _EscrowedBody(),
+      MobileMoneyPaymentError() => DonyEmptyState(
+        type: DonyEmptyStateType.error,
+        title: l.commonSomethingWentWrong,
+        actionLabel: l.commonRetry,
+        onAction: () => context.read<MobileMoneyPaymentBloc>().add(
+          MobileMoneyPaymentOpened(scope: widget.scope),
+        ),
+      ),
+    };
+  }
+
+  /// Échéance du dépôt de [status] quand le serveur n'en a pas rendu : une
+  /// fenêtre de [_fallbackWindow] à partir de la première fois qu'on le voit.
+  DateTime _fallbackDeadlineFor(MobileMoneyPaymentStatus status) {
+    final depositId = status.deposit?.id ?? '';
+    final known = _fallbackDeadline;
+    if (known != null && known.depositId == depositId) return known.at;
+    final at = DateTime.now().add(_fallbackWindow);
+    _fallbackDeadline = (depositId: depositId, at: at);
+    return at;
+  }
+
+  /// Boutons du bas : « Payer » à l'étape « Qui paie ? », « Renvoyer une
+  /// demande » (seulement avec un numéro complet connu) et « Payer avec un
+  /// autre numéro » après un refus. Aucun pendant l'attente : seul le ✕ fait
+  /// sortir.
+  Widget _bottomFor(BuildContext context, MobileMoneyPaymentState state) =>
+      switch (state) {
+        final MobileMoneyPaymentChoosePayer s => _PayBar(
+          state: s,
+          verifying: _verifying,
+          legacyPhoneController: _legacyPhoneController,
+          onPay: _pay,
+        ),
+        MobileMoneyPaymentDepositFailed() => _FailedBar(
+          canResend: context.read<MobileMoneyPaymentBloc>().canResend,
+          verifying: _verifying,
+          onResend: _resend,
+          onChangePayer: _changePayer,
+        ),
+        _ => const SizedBox.shrink(),
+      };
 }
 
-/// Compte à rebours partagé par [_AwaitingBody] et [_FailedBody] : « Temps
-/// restant mm:ss », rouge sous 5 minutes. Isolé dans son propre
-/// `ValueListenableBuilder` pour ne redessiner que ce texte à chaque tick.
+/// Texte du bandeau d'un refus d'initiation. Un numéro absent ou refusé par
+/// l'opérateur a ses explications dédiées ; le reste passe par le catalogue
+/// d'erreurs.
+String _initiationErrorMessage(Object error, AppLocalizations l) {
+  if (error is AppException) {
+    switch (error.code) {
+      case 'mobile-money-phone-required':
+        return l.mobileMoneyPhoneRequiredExplanation;
+      case 'mobile-money-payer-unsupported':
+        return l.mobileMoneyPayerUnsupportedExplanation;
+    }
+  }
+  return ErrorPresenter.resolve(error, l10n: l).message;
+}
+
+/// Compte à rebours de l'étape « Qui paie ? » : « Temps restant mm:ss »,
+/// rouge sous 5 minutes. Isolé dans son propre `ValueListenableBuilder` pour
+/// ne redessiner que ce texte à chaque tick.
 class _CountdownLabel extends StatelessWidget {
   const _CountdownLabel({required this.remaining});
   final ValueListenable<Duration> remaining;
@@ -412,13 +528,17 @@ class _CountdownLabel extends StatelessWidget {
               color: isUrgent ? cs.error : cs.onSurfaceVariant,
             ),
             const SizedBox(width: DonySpacing.xs),
-            Text(
-              l.mobileMoneyTimeLeft(_format(value)),
-              style: tt.bodyMedium?.copyWith(
-                color: isUrgent ? cs.error : cs.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-                // Chasse fixe : le texte ne doit pas sauter à chaque tick.
-                fontFeatures: const [FontFeature.tabularFigures()],
+            // Flexible : un grand texte système (accessibilité) passe à la
+            // ligne au lieu de déborder de la carte.
+            Flexible(
+              child: Text(
+                l.mobileMoneyTimeLeft(_format(value)),
+                style: tt.bodyMedium?.copyWith(
+                  color: isUrgent ? cs.error : cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                  // Chasse fixe : le texte ne doit pas sauter à chaque tick.
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
             ),
           ],
@@ -428,511 +548,308 @@ class _CountdownLabel extends StatelessWidget {
   }
 }
 
-/// En-tête commun (montant, opérateur, numéro masqué) affiché en haut de
-/// [_AwaitingBody] et [_FailedBody].
+/// Montant à payer et temps restant, en tête de l'étape « Qui paie ? ».
 class _AmountCard extends StatelessWidget {
-  const _AmountCard({required this.status});
+  const _AmountCard({required this.status, required this.remaining});
+
   final MobileMoneyPaymentStatus status;
+  final ValueListenable<Duration> remaining;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final deposit = status.deposit;
 
     return DonyCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              DonyIcon('smartphone', color: cs.primary, size: 28),
-              const SizedBox(width: DonySpacing.sm),
-              Text(
-                formatPriceIn(status.amount ?? 0, status.currency),
-                style: tt.headlineLarge,
-              ),
-            ],
-          ),
-          if (deposit?.providerLabel != null) ...[
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              deposit!.providerLabel!,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-          if (deposit?.msisdnMasked != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              deposit!.msisdnMasked!,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Étape « Avec quel opérateur ? » : montant et compte à rebours, numéro
-/// payeur (masqué, modifiable), réseaux acceptés par le voyageur pour ce
-/// numéro, bouton collant « Payer `montant` ». Sélection dans un
-/// [ValueNotifier] (détecté pré-sélectionné), saisie d'un autre numéro
-/// suivie d'un rechargement du catalogue après 400 ms. Aucun `setState`.
-class _ChooseOperatorBody extends StatefulWidget {
-  const _ChooseOperatorBody({
-    required this.state,
-    required this.remaining,
-    required this.phoneController,
-    required this.onPhoneConfirmed,
-    required this.onPay,
-  });
-
-  final MobileMoneyPaymentChooseOperator state;
-  final ValueListenable<Duration> remaining;
-  final TextEditingController phoneController;
-
-  /// Recharge le catalogue pour [phone] (`null` = numéro du bid). Appelé
-  /// après le délai de 400 ms sur une saisie, et immédiatement par le
-  /// bouton « Réessayer » du bandeau d'erreur (même numéro que la tentative
-  /// qui a échoué).
-  final ValueChanged<String?> onPhoneConfirmed;
-  final ValueChanged<String> onPay;
-
-  @override
-  State<_ChooseOperatorBody> createState() => _ChooseOperatorBodyState();
-}
-
-class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
-  static const _debounce = Duration(milliseconds: 400);
-  final ValueNotifier<String?> _selected = ValueNotifier(null);
-
-  /// Vrai entre une frappe dans le champ et sa confirmation 400 ms plus
-  /// tard (ou son annulation par une frappe suivante) : « Payer » reste
-  /// inactif pendant cette fenêtre pour qu'une frappe pas encore
-  /// débouncée ne soit jamais ignorée silencieusement (I1).
-  final ValueNotifier<bool> _debouncePending = ValueNotifier(false);
-  Timer? _timer;
-  String? _requestedPhone;
-
-  @override
-  void initState() {
-    super.initState();
-    _selected.value =
-        widget.state.catalog?.detectedOption?.code ?? _firstCode();
-    _requestedPhone = widget.state.payerPhone;
-    widget.phoneController.addListener(_onPhoneChanged);
-  }
-
-  @override
-  void didUpdateWidget(covariant _ChooseOperatorBody old) {
-    super.didUpdateWidget(old);
-    final catalog = widget.state.catalog;
-    if (catalog != old.state.catalog) {
-      final codes = catalog?.providers.map((p) => p.code).toSet() ?? {};
-      final keep = _selected.value != null && codes.contains(_selected.value);
-      _selected.value = keep
-          ? _selected.value
-          : (catalog?.detectedOption?.code ?? _firstCode());
-    }
-  }
-
-  String? _firstCode() {
-    final providers = widget.state.catalog?.providers;
-    return providers == null || providers.isEmpty ? null : providers.first.code;
-  }
-
-  void _onPhoneChanged() {
-    _timer?.cancel();
-    final phone = normalizePayerPhone(widget.phoneController.text);
-    if (phone == _requestedPhone) {
-      _debouncePending.value = false;
-      return;
-    }
-    _debouncePending.value = true;
-    _timer = Timer(_debounce, () {
-      if (!mounted) return;
-      _requestedPhone = phone;
-      _debouncePending.value = false;
-      // Sans condition : `null` signifie déjà « le numéro du bid » pour
-      // `ProvidersRequested`. Ignorer ce cas laissait le catalogue affiché
-      // sur le dernier numéro alternatif tapé après que le champ ait été
-      // vidé, alors que « Payer » était déjà revenu à `phoneNumber: null`.
-      widget.onPhoneConfirmed(phone);
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    widget.phoneController.removeListener(_onPhoneChanged);
-    _selected.dispose();
-    _debouncePending.dispose();
-    super.dispose();
-  }
-
-  /// Nom lisible d'un pays alpha-2, traduit s'il est au catalogue
-  /// ([CountryCatalog]), sinon repli sur le code brut (même repli qu'avant la
-  /// traduction).
-  String _country(AppLocalizations l, String? code) {
-    if (code == null) return '';
-    return CountryCatalog.byCode(code) != null ? countryName(l, code) : code;
-  }
-
-  /// Message du bandeau « aucun réseau commun ». Garde défensive : le bloc
-  /// actuel ne renvoie jamais `travelerAccepts` vide (le voyageur accepte
-  /// toujours au moins un réseau), mais sans cette garde un futur catalogue
-  /// dégénéré produirait un message avec un nom de réseaux vide.
-  String _noCommonNetworkMessage(
-    AppLocalizations l,
-    String firstName,
-    MobileMoneyProviderCatalog? catalog,
-  ) {
-    final accepts = catalog?.travelerAccepts ?? const <String>[];
-    if (accepts.isEmpty) {
-      return l.mobileMoneyNoNetworkForPayment;
-    }
-    return l.mobileMoneyNoCommonNetwork(
-      firstName,
-      joinList(l, accepts),
-      _country(l, catalog?.country),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
-    final status = widget.state.status;
-    final catalog = widget.state.catalog;
-    final firstName =
-        catalog?.travelerFirstName ?? l.mobileMoneyTravelerFallback;
-    final amount = formatPriceIn(status.amount ?? 0, status.currency);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
-              0,
-            ),
+          DonyIcon('smartphone', color: cs.primary, size: 28),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _AmountCard(status: status),
+                Text(
+                  formatPriceIn(status.amount ?? 0, status.currency),
+                  style: tt.headlineLarge,
+                ),
                 if (status.deadlineAt != null) ...[
-                  const SizedBox(height: DonySpacing.md),
-                  _CountdownLabel(remaining: widget.remaining),
+                  const SizedBox(height: DonySpacing.xs),
+                  _CountdownLabel(remaining: remaining),
                 ],
-                const SizedBox(height: DonySpacing.base),
-                DonyCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DonyInfoRow(
-                        label: l.mobileMoneyPayingNumberLabel,
-                        value: catalog?.msisdnMasked ?? '…',
-                      ),
-                      const SizedBox(height: DonySpacing.sm),
-                      DonyTextField(
-                        key: const Key('mobile-money-payer-phone-field'),
-                        controller: widget.phoneController,
-                        label: l.mobileMoneyPayWithAnotherNumberOptional,
-                        keyboardType: TextInputType.phone,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.base),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l.mobileMoneyChooseOperatorTitle,
-                        style: tt.titleLarge,
-                      ),
-                    ),
-                    if (catalog?.country != null)
-                      Text(
-                        _country(l, catalog!.country),
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: DonySpacing.md),
-                if (widget.state.isLoadingCatalog && catalog == null)
-                  const MobileMoneyNetworksSkeleton()
-                else if (widget.state.error != null)
-                  DonyStatusBanner(
-                    type: DonyStatusBannerType.error,
-                    message: ErrorPresenter.resolve(
-                      widget.state.error,
-                      l10n: context.l10n,
-                    ).message,
-                    action: TextButton(
-                      onPressed: () =>
-                          widget.onPhoneConfirmed(widget.state.payerPhone),
-                      child: Text(l.commonRetry),
-                    ),
-                  )
-                else if (catalog == null || catalog.isEmpty)
-                  DonyStatusBanner(
-                    type: DonyStatusBannerType.warning,
-                    message: _noCommonNetworkMessage(l, firstName, catalog),
-                  )
-                else ...[
-                  ValueListenableBuilder<String?>(
-                    valueListenable: _selected,
-                    builder: (context, selected, _) => DonyCard(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.base,
-                      ),
-                      child: Column(
-                        children: [
-                          for (var i = 0; i < catalog.providers.length; i++)
-                            DonyOperatorTile(
-                              key: Key('operator-${catalog.providers[i].code}'),
-                              brand: catalog.providers[i].brand,
-                              title: catalog.providers[i].label,
-                              subtitle: catalog.providers[i].detected
-                                  ? l.mobileMoneyDetectedForNumber
-                                  : catalog.providers[i].brand ==
-                                        'WAVE' // i18n-ignore
-                                  ? l.mobileMoneyConfirmInWaveApp
-                                  : null,
-                              control: DonyOperatorControl.radio,
-                              selected: selected == catalog.providers[i].code,
-                              showDivider: i < catalog.providers.length - 1,
-                              onChanged: (_) =>
-                                  _selected.value = catalog.providers[i].code,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DonyIcon('info', size: 16, color: cs.onSurfaceVariant),
-                      const SizedBox(width: DonySpacing.sm),
-                      Expanded(
-                        child: Text(
-                          l.mobileMoneyAcceptsAndReceives(
-                            firstName,
-                            joinList(l, catalog.travelerAccepts),
-                          ),
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: DonySpacing.xl),
               ],
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            DonySpacing.lg,
-            DonySpacing.lg,
-            DonySpacing.lg,
-            DonySpacing.xl,
+        ],
+      ),
+    );
+  }
+}
+
+/// Étape « Qui paie ? » : montant, bandeau d'un refus éventuel, puis le
+/// composant partagé « compte qui paie ». Sans catalogue des pays (back
+/// ancien, état `legacy` du composant), un simple champ numéro. Le bouton
+/// « Payer » est dans [_PayBar], hors de la zone qui défile.
+class _ChoosePayerBody extends StatelessWidget {
+  const _ChoosePayerBody({
+    required this.state,
+    required this.remaining,
+    required this.legacyPhoneController,
+  });
+
+  final MobileMoneyPaymentChoosePayer state;
+  final ValueListenable<Duration> remaining;
+  final TextEditingController legacyPhoneController;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final error = state.error;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.xl,
+        DonySpacing.lg,
+        DonySpacing.xl,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _AmountCard(status: state.status, remaining: remaining),
+          if (error != null) ...[
+            const SizedBox(height: DonySpacing.base),
+            DonyStatusBanner(
+              type: DonyStatusBannerType.error,
+              message: _initiationErrorMessage(error, l),
+            ),
+          ],
+          const SizedBox(height: DonySpacing.base),
+          BlocBuilder<PayerAccountCubit, PayerAccountState>(
+            builder: (context, payer) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                PayerAccountSection(numberHelper: l.mobileMoneyPayerHelper),
+                if (payer.status == PayerAccountStatus.legacy)
+                  DonyTextField(
+                    key: const Key('mobile-money-legacy-phone-field'),
+                    controller: legacyPhoneController,
+                    label: l.mobileMoneyPhoneThatWillPayLabel,
+                    keyboardType: TextInputType.phone,
+                  ),
+                _AcceptsLine(state: state, payer: payer),
+              ],
+            ),
           ),
-          child: ValueListenableBuilder<bool>(
-            valueListenable: _debouncePending,
-            builder: (context, pending, _) => ValueListenableBuilder<String?>(
-              valueListenable: _selected,
-              builder: (context, selected, _) => DonyButton(
-                label: l.mobileMoneyPay(amount),
+        ],
+      ),
+    );
+  }
+}
+
+/// « {Voyageur} accepte {réseaux}, et reçoit sur le réseau que vous
+/// choisissez. » Les noms viennent du catalogue du composant (un code
+/// pawaPay seul ne se lit pas) ; sans catalogue encore chargé ou sans
+/// opérateur connu, la ligne n'est pas montrée.
+class _AcceptsLine extends StatelessWidget {
+  const _AcceptsLine({required this.state, required this.payer});
+
+  final MobileMoneyPaymentChoosePayer state;
+  final PayerAccountState payer;
+
+  @override
+  Widget build(BuildContext context) {
+    final acceptedOperators = state.accepted;
+    if (acceptedOperators == null) return const SizedBox.shrink();
+    final labels = <String>[];
+    for (final country in payer.countries?.available ?? const []) {
+      for (final operator in country.operators) {
+        if (acceptedOperators.providers.contains(operator.code) &&
+            !labels.contains(operator.label)) {
+          labels.add(operator.label);
+        }
+      }
+    }
+    if (labels.isEmpty) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final firstName =
+        acceptedOperators.travelerFirstName ?? l.mobileMoneyTravelerFallback;
+    return Padding(
+      padding: const EdgeInsets.only(top: DonySpacing.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DonyIcon('info', size: 16, color: cs.onSurfaceVariant),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text(
+              l.mobileMoneyAcceptsAndReceives(firstName, joinList(l, labels)),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bouton « Payer {montant} » fixé en bas de l'étape « Qui paie ? » : actif
+/// quand le numéro est reconnu (ou, sans catalogue, quand le champ numéro
+/// contient un numéro valide), grisé pendant l'envoi.
+class _PayBar extends StatelessWidget {
+  const _PayBar({
+    required this.state,
+    required this.verifying,
+    required this.legacyPhoneController,
+    required this.onPay,
+  });
+
+  final MobileMoneyPaymentChoosePayer state;
+  final ValueListenable<bool> verifying;
+  final TextEditingController legacyPhoneController;
+  final VoidCallback onPay;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final status = state.status;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.lg,
+        DonySpacing.lg,
+      ),
+      child: BlocBuilder<PayerAccountCubit, PayerAccountState>(
+        builder: (context, payer) => ValueListenableBuilder<bool>(
+          valueListenable: verifying,
+          builder: (context, busy, _) => ValueListenableBuilder(
+            valueListenable: legacyPhoneController,
+            builder: (context, phone, _) {
+              // Sans catalogue (état `legacy`), seul un numéro valide dans le
+              // champ rend « Payer » actif : un champ vide laisserait le back
+              // payer avec le numéro du compte.
+              final ready = payer.status == PayerAccountStatus.legacy
+                  ? normalizePayerPhone(phone.text) != null
+                  : payer.canProceed;
+              return DonyButton(
+                label: l.mobileMoneyPay(
+                  formatPriceIn(status.amount ?? 0, status.currency),
+                ),
                 iconAsset: 'smartphone',
-                isLoading: widget.state.isLoadingCatalog && catalog != null,
-                onPressed:
-                    pending ||
-                        selected == null ||
-                        catalog == null ||
-                        catalog.isEmpty ||
-                        widget.state.error != null
-                    ? null
-                    : () => widget.onPay(selected),
+                isLoading: state.isSubmitting,
+                onPressed: state.isSubmitting || busy || !ready ? null : onPay,
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Boutons d'un dépôt refusé : « Renvoyer une demande » (avec le même numéro
+/// et le même opérateur, seulement s'ils sont connus) et « Payer avec un
+/// autre numéro ».
+class _FailedBar extends StatelessWidget {
+  const _FailedBar({
+    required this.canResend,
+    required this.verifying,
+    required this.onResend,
+    required this.onChangePayer,
+  });
+
+  final bool canResend;
+  final ValueListenable<bool> verifying;
+  final VoidCallback onResend;
+  final VoidCallback onChangePayer;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        0,
+        DonySpacing.lg,
+        DonySpacing.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (canResend) ...[
+            ValueListenableBuilder<bool>(
+              valueListenable: verifying,
+              builder: (context, busy, _) => DonyButton(
+                key: const Key('mobile-money-awaiting-resend'),
+                label: l.walletTopupMmResend,
+                onPressed: busy ? null : onResend,
               ),
             ),
+            const SizedBox(height: DonySpacing.sm),
+          ],
+          DonyButton(
+            key: const Key('mobile-money-awaiting-other-number'),
+            label: l.walletTopupMmPayWithAnotherNumber,
+            variant: canResend
+                ? DonyButtonVariant.ghost
+                : DonyButtonVariant.primary,
+            onPressed: onChangePayer,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Dépôt en cours : anneau calé sur l'échéance du serveur, consigne selon la
+/// façon dont l'opérateur fait valider, puis récapitulatif (montant, compte
+/// qui paie, versement au voyageur) dans le panneau d'attente partagé.
+class _AwaitingBody extends StatelessWidget {
+  const _AwaitingBody({required this.status, required this.fallbackDeadline});
+
+  final MobileMoneyPaymentStatus status;
+  final DateTime fallbackDeadline;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final deposit = status.deposit;
+    final providerLabel = deposit?.providerLabel;
+    final msisdnMasked = deposit?.msisdnMasked ?? '';
+    final lastDigits = phoneLastDigits(msisdnMasked);
+    final authorizationUrl = deposit?.authorizationUrl;
+
+    return MobileMoneyAwaitingPanel(
+      expiresAt: status.deadlineAt ?? fallbackDeadline,
+      hint: deposit?.validationHint ?? MobileMoneyValidationHint.generic,
+      msisdnMasked: msisdnMasked,
+      authorizationUrl: authorizationUrl,
+      // Le lien d'autorisation n'est propre qu'à Wave : un back ancien qui le
+      // rend sans nom d'opérateur garde son bouton.
+      providerLabel:
+          providerLabel ?? (authorizationUrl == null ? null : 'Wave'),
+      recap: [
+        (
+          label: l.walletTopupMmAmountLabel,
+          value: formatPriceIn(status.amount ?? 0, status.currency),
+        ),
+        if (providerLabel != null)
+          (
+            label: l.walletTopupMmFromLabel,
+            value: lastDigits.isEmpty
+                ? providerLabel
+                : l.walletTopupMmFromValue(providerLabel, lastDigits),
+          ),
+        (
+          label: l.mobileMoneyPaidToTravelerLabel,
+          value: l.mobileMoneyPaidToTravelerValue,
         ),
       ],
-    );
-  }
-}
-
-/// Dépôt en cours : PIN opérateur à valider, ou redirection Wave à ouvrir.
-class _AwaitingBody extends StatelessWidget {
-  const _AwaitingBody({required this.status, required this.remaining});
-
-  final MobileMoneyPaymentStatus status;
-  final ValueListenable<Duration> remaining;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-    final waveUrl = status.deposit?.authorizationUrl;
-    final providerLabel = status.deposit?.providerLabel;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(DonySpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _AmountCard(status: status),
-          if (status.deadlineAt != null) ...[
-            const SizedBox(height: DonySpacing.lg),
-            _CountdownLabel(remaining: remaining),
-          ],
-          const SizedBox(height: DonySpacing.xl),
-          if (status.isWaveRedirect) ...[
-            Text(l.mobileMoneyFinishInWaveApp, style: tt.bodyMedium),
-            const SizedBox(height: DonySpacing.base),
-            DonyButton(
-              label: l.mobileMoneyOpenWave,
-              iconAsset: 'external-link',
-              onPressed: waveUrl != null
-                  ? () => getIt<ExternalUrlLauncher>().open(Uri.parse(waveUrl))
-                  : null,
-            ),
-          ] else
-            Text(
-              providerLabel != null
-                  ? l.mobileMoneyPinSent(providerLabel)
-                  : l.mobileMoneyPinSentUnknownProvider,
-              style: tt.bodyMedium,
-            ),
-          const SizedBox(height: DonySpacing.xl),
-          Text(
-            l.mobileMoneyConfirmationAutomatic,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Dernier dépôt refusé par l'opérateur : possibilité de relancer, avec un
-/// numéro payeur différent en option.
-class _FailedBody extends StatelessWidget {
-  const _FailedBody({
-    required this.status,
-    required this.remaining,
-    required this.phoneController,
-    required this.onRetry,
-  });
-
-  final MobileMoneyPaymentStatus status;
-  final ValueListenable<Duration> remaining;
-  final TextEditingController phoneController;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(DonySpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(child: DonyIcon('circle-alert', color: cs.error, size: 48)),
-          const SizedBox(height: DonySpacing.base),
-          Text(
-            status.deposit?.failureMessage ??
-                l.mobileMoneyDepositRefusedFallback,
-            textAlign: TextAlign.center,
-            style: tt.bodyMedium,
-          ),
-          if (status.deadlineAt != null) ...[
-            const SizedBox(height: DonySpacing.lg),
-            Center(child: _CountdownLabel(remaining: remaining)),
-          ],
-          const SizedBox(height: DonySpacing.xl),
-          DonyTextField(
-            key: const Key('mobile-money-retry-phone-field'),
-            controller: phoneController,
-            label: l.mobileMoneyPayWithAnotherNumberOptional,
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: DonySpacing.base),
-          DonyButton(label: l.commonRetry, onPressed: onRetry),
-        ],
-      ),
-    );
-  }
-}
-
-/// Aucun numéro disponible pour payer (compte Firebase de l'expéditeur sans
-/// téléphone, vérification SMS Twilio pas encore configurée) : contrairement
-/// à [_FailedBody], le numéro est ici obligatoire (rien à quoi se replier
-/// côté backend), donc la relance reste désactivée tant qu'aucun numéro
-/// valide n'est saisi. Pas de `setState` : `ListenableBuilder` s'abonne
-/// directement au [TextEditingController], déjà un `Listenable`.
-class _PhoneRequiredBody extends StatelessWidget {
-  const _PhoneRequiredBody({
-    super.key,
-    required this.message,
-    required this.phoneController,
-    required this.onRetry,
-  });
-
-  final String message;
-  final TextEditingController phoneController;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(DonySpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(child: DonyIcon('smartphone', color: cs.primary, size: 48)),
-          const SizedBox(height: DonySpacing.base),
-          Text(message, textAlign: TextAlign.center, style: tt.bodyMedium),
-          const SizedBox(height: DonySpacing.xl),
-          DonyTextField(
-            key: const Key('mobile-money-phone-required-field'),
-            controller: phoneController,
-            label: l.mobileMoneyPhoneThatWillPayLabel,
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: DonySpacing.base),
-          ListenableBuilder(
-            listenable: phoneController,
-            builder: (context, _) => DonyButton(
-              label: l.commonRetry,
-              onPressed: normalizePayerPhone(phoneController.text) == null
-                  ? null
-                  : onRetry,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

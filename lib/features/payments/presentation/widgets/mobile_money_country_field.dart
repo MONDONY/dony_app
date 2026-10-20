@@ -16,6 +16,10 @@ import 'package:flutter/material.dart';
 /// ne choisit rien. Champ vidé : [onCleared]. Aucune correspondance : texte
 /// « pas disponible pour ce pays ».
 ///
+/// Les pays de [MobileMoneyCountries.otherCurrency] (autre devise que le
+/// paiement) sont listés après les pays servis, grisés et non sélectionnables,
+/// avec la devise du paiement en sous-titre.
+///
 /// Valeurs manipulées : codes ISO alpha-2 en majuscules.
 class MobileMoneyCountryField extends StatefulWidget {
   const MobileMoneyCountryField({
@@ -24,6 +28,7 @@ class MobileMoneyCountryField extends StatefulWidget {
     required this.onSelected,
     required this.onCleared,
     this.initialUpcoming,
+    this.currency,
   });
 
   final MobileMoneyCountries countries;
@@ -37,6 +42,10 @@ class MobileMoneyCountryField extends StatefulWidget {
   /// Pays « Bientôt » déjà retenu (retour sur l'écran) : la recherche
   /// reprend son nom pour que la note et le bouton gardent leur sens.
   final String? initialUpcoming;
+
+  /// Devise imposée au paiement, citée sous les pays d'une autre devise. À
+  /// défaut, celle des pays servis.
+  final String? currency;
 
   @override
   State<MobileMoneyCountryField> createState() =>
@@ -82,8 +91,26 @@ class _MobileMoneyCountryFieldState extends State<MobileMoneyCountryField> {
   Set<String> get _availableCodes =>
       widget.countries.available.map((c) => c.country.toUpperCase()).toSet();
 
+  Set<String> get _otherCurrencyCodes => widget.countries.otherCurrency
+      .map((c) => c.country.toUpperCase())
+      .where((c) => !_availableCodes.contains(c))
+      .toSet();
+
+  String? get _paymentCurrency =>
+      widget.currency ??
+      widget.countries.available.firstOrNull?.currency.toUpperCase();
+
+  void _select(String code) {
+    // Un pays d'une autre devise ne se choisit pas, même par la touche
+    // d'envoi du clavier qui valide l'option en surbrillance.
+    if (_otherCurrencyCodes.contains(code.toUpperCase())) return;
+    widget.onSelected(code);
+  }
+
   bool _isUpcoming(String code) =>
-      !_availableCodes.contains(code) && widget.countries.isUpcoming(code);
+      !_availableCodes.contains(code) &&
+      !_otherCurrencyCodes.contains(code) &&
+      widget.countries.isUpcoming(code);
 
   void _onQueryChanged() {
     final query = _controller.text;
@@ -98,9 +125,10 @@ class _MobileMoneyCountryFieldState extends State<MobileMoneyCountryField> {
   List<String> _optionsFor(String query) {
     final l = context.l10n;
     final available = _availableCodes;
+    final otherCurrency = _otherCurrencyCodes;
     final upcoming = widget.countries.upcoming
         .map((c) => c.toUpperCase())
-        .where((c) => !available.contains(c))
+        .where((c) => !available.contains(c) && !otherCurrency.contains(c))
         .toSet();
     final needle = query.trim();
     final matched = needle.isEmpty
@@ -124,6 +152,7 @@ class _MobileMoneyCountryFieldState extends State<MobileMoneyCountryField> {
 
     return [
       ...available.where(keep).toList()..sort(byName),
+      ...otherCurrency.where(keep).toList()..sort(byName),
       ...upcoming.where(keep).toList()..sort(byName),
     ];
   }
@@ -152,7 +181,7 @@ class _MobileMoneyCountryFieldState extends State<MobileMoneyCountryField> {
           focusNode: _focusNode,
           displayStringForOption: (code) => countryName(l, code),
           optionsBuilder: (value) => _optionsFor(value.text),
-          onSelected: widget.onSelected,
+          onSelected: _select,
           fieldViewBuilder: (context, controller, focusNode, onSubmitted) =>
               DonyTextField(
                 key: const Key('mm-country-field'),
@@ -171,9 +200,19 @@ class _MobileMoneyCountryFieldState extends State<MobileMoneyCountryField> {
           optionsViewBuilder: (context, onSelected, options) => _OptionsList(
             options: options.toList(),
             isUpcoming: _isUpcoming,
-            subtitleOf: (code) => _isUpcoming(code)
-                ? l.mobileMoneyCountryUpcomingSubtitle
-                : _operatorsOf(code),
+            isDisabled: _otherCurrencyCodes.contains,
+            subtitleOf: (code) {
+              if (_isUpcoming(code)) {
+                return l.mobileMoneyCountryUpcomingSubtitle;
+              }
+              if (_otherCurrencyCodes.contains(code)) {
+                final currency = _paymentCurrency;
+                return currency == null
+                    ? ''
+                    : l.mobileMoneyCountryOtherCurrency(currency);
+              }
+              return _operatorsOf(code);
+            },
             onSelected: onSelected,
           ),
         ),
@@ -202,12 +241,14 @@ class _OptionsList extends StatelessWidget {
   const _OptionsList({
     required this.options,
     required this.isUpcoming,
+    required this.isDisabled,
     required this.subtitleOf,
     required this.onSelected,
   });
 
   final List<String> options;
   final bool Function(String code) isUpcoming;
+  final bool Function(String code) isDisabled;
   final String Function(String code) subtitleOf;
   final ValueChanged<String> onSelected;
 
@@ -246,6 +287,7 @@ class _OptionsList extends StatelessWidget {
                   return _OptionRow(
                     code: code,
                     upcoming: isUpcoming(code),
+                    disabled: isDisabled(code),
                     subtitle: subtitleOf(code),
                     onTap: () => onSelected(code),
                   );
@@ -263,12 +305,16 @@ class _OptionRow extends StatelessWidget {
   const _OptionRow({
     required this.code,
     required this.upcoming,
+    required this.disabled,
     required this.subtitle,
     required this.onTap,
   });
 
   final String code;
   final bool upcoming;
+
+  /// Pays d'une autre devise : grisé, non sélectionnable.
+  final bool disabled;
   final String subtitle;
   final VoidCallback onTap;
 
@@ -278,12 +324,15 @@ class _OptionRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final name = countryName(l, code);
+    final muted = upcoming || disabled;
     return Semantics(
       button: true,
+      enabled: !disabled,
       child: InkWell(
         // Un pays « Bientôt » se choisit aussi : l'écran propose alors la
-        // carte bancaire ou le code de recharge.
-        onTap: onTap,
+        // carte bancaire ou le code de recharge. Un pays d'une autre devise,
+        // non.
+        onTap: disabled ? null : onTap,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: kDonyMinTapTarget + 8),
           child: Padding(
@@ -294,7 +343,7 @@ class _OptionRow extends StatelessWidget {
             child: Row(
               children: [
                 Opacity(
-                  opacity: upcoming ? 0.45 : 1,
+                  opacity: muted ? 0.45 : 1,
                   child: MobileMoneyCountryFlag(code: code),
                 ),
                 const SizedBox(width: DonySpacing.md),
@@ -309,7 +358,7 @@ class _OptionRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: tt.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: upcoming ? cs.onSurfaceVariant : cs.onSurface,
+                          color: muted ? cs.onSurfaceVariant : cs.onSurface,
                         ),
                       ),
                       if (subtitle.isNotEmpty)

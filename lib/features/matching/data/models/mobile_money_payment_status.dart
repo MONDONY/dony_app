@@ -1,3 +1,4 @@
+import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:equatable/equatable.dart';
 
 /// État d'un dépôt mobile money tenté côté pawaPay.
@@ -17,15 +18,23 @@ class MobileMoneyDeposit extends Equatable {
   const MobileMoneyDeposit({
     required this.id,
     required this.status,
+    this.provider,
     this.providerLabel,
     this.msisdnMasked,
     this.authorizationUrl,
     this.failureCode,
     this.failureMessage,
+    this.failureReasonCode,
+    this.failureReason,
+    this.validationHint = MobileMoneyValidationHint.generic,
   });
 
   final String id;
   final MobileMoneyDepositStatus status;
+
+  /// Code pawaPay de l'opérateur du dépôt (`ORANGE_CIV`...), nul avec un
+  /// back ancien.
+  final String? provider;
   final String? providerLabel;
   final String? msisdnMasked;
 
@@ -35,15 +44,34 @@ class MobileMoneyDeposit extends Equatable {
   final String? failureCode;
   final String? failureMessage;
 
+  /// Motif d'échec normalisé par le back (`insufficient-balance`,
+  /// `not-approved`, `payer-limit-reached`, `invalid-number`,
+  /// `provider-unavailable`, `expired`, `other`), nul avec un back ancien ou
+  /// sans échec.
+  final String? failureReasonCode;
+
+  /// Motif d'échec déjà traduit par le back dans la langue de l'utilisateur.
+  final String? failureReason;
+
+  /// Façon dont l'opérateur demande de valider le paiement ; `generic` si le
+  /// back ne la précise pas (ancien contrat ou valeur inconnue).
+  final MobileMoneyValidationHint validationHint;
+
   factory MobileMoneyDeposit.fromJson(Map<String, dynamic> json) =>
       MobileMoneyDeposit(
         id: json['id'] as String,
         status: _statusFromJson(json['status'] as String?),
+        provider: json['provider'] as String?,
         providerLabel: json['providerLabel'] as String?,
         msisdnMasked: json['msisdnMasked'] as String?,
         authorizationUrl: json['authorizationUrl'] as String?,
         failureCode: json['failureCode'] as String?,
         failureMessage: json['failureMessage'] as String?,
+        failureReasonCode: json['failureReasonCode'] as String?,
+        failureReason: json['failureReason'] as String?,
+        validationHint: MobileMoneyValidationHint.fromWire(
+          json['validationHint'] as String?,
+        ),
       );
 
   /// Dépôt en cours côté opérateur (PIN pas encore validé, ou en attente
@@ -81,11 +109,15 @@ class MobileMoneyDeposit extends Equatable {
   List<Object?> get props => [
     id,
     status,
+    provider,
     providerLabel,
     msisdnMasked,
     authorizationUrl,
     failureCode,
     failureMessage,
+    failureReasonCode,
+    failureReason,
+    validationHint,
   ];
 }
 

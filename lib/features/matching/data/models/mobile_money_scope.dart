@@ -25,10 +25,11 @@ sealed class MobileMoneyScope extends Equatable {
   String get statusPath => '$_basePath/mobile-money/status';
   String get initiatePath => '$_basePath/mobile-money/initiate';
 
-  /// Catalogue des opérateurs du payeur (`POST …/mobile-money/providers`),
-  /// ou `null` quand le back n'en expose pas pour cette portée (fil de
-  /// négociation) : l'initiation est alors directe.
-  String? get providersPath => '$_basePath/mobile-money/providers';
+  /// Opérateurs acceptés par le voyageur
+  /// (`GET …/mobile-money/accepted-operators`). Le supplément se paie sur le
+  /// colis : il lit la route du colis (`/bids/{bidId}`).
+  String get acceptedOperatorsPath =>
+      '$_basePath/mobile-money/accepted-operators';
 
   /// Route GoRouter de l'écran d'attente pour cette portée.
   String get awaitingRoute => '$_basePath/mobile-money/awaiting';
@@ -62,17 +63,12 @@ final class NegotiationMobileMoneyScope extends MobileMoneyScope {
   const NegotiationMobileMoneyScope(super.id);
   @override
   String get _basePath => '/negotiations/$id';
-
-  /// Pas de catalogue côté back pour un fil (lot 2) : initiation directe.
-  @override
-  String? get providersPath => null;
   @override
   String get analyticsName => 'negotiation';
 }
 
 /// Supplément de prix d'un colis payé en mobile money. [id] est celui du
-/// supplément. Son catalogue est dédié : celui du colis répond 409 une fois
-/// le colis payé.
+/// supplément. Ses opérateurs acceptés sont ceux du colis.
 final class SupplementMobileMoneyScope extends MobileMoneyScope {
   const SupplementMobileMoneyScope({
     required this.bidId,
@@ -85,6 +81,10 @@ final class SupplementMobileMoneyScope extends MobileMoneyScope {
 
   @override
   String get _basePath => '/bids/$bidId/supplements/$id';
+
+  @override
+  String get acceptedOperatorsPath =>
+      '/bids/$bidId/mobile-money/accepted-operators';
 
   /// Pas d'écran propre au supplément : le détail du colis.
   @override

@@ -74,7 +74,6 @@ void main() {
     List<Map<String, dynamic>>? customItems,
     List<Map<String, dynamic>>? gridItems,
     List<String>? photoKeys,
-    String? phoneNumber,
     String? countryCode,
   }) {
     when(
@@ -100,7 +99,6 @@ void main() {
       customItems: customItems,
       gridItems: gridItems,
       photoKeys: photoKeys,
-      phoneNumber: phoneNumber,
       countryCode: countryCode,
     );
   }
@@ -170,30 +168,28 @@ void main() {
       expect(body['gridItems'], hasLength(1));
     });
 
-    test('photoKeys, phoneNumber et countryCode sont optionnels', () async {
+    test('photoKeys et countryCode sont optionnels', () async {
       await propose();
       final body = capturedBody();
 
       expect(body.containsKey('photoKeys'), isFalse);
-      expect(body.containsKey('phoneNumber'), isFalse);
       expect(body.containsKey('countryCode'), isFalse);
     });
 
-    test(
-      'photoKeys, phoneNumber et countryCode passent quand fournis',
-      () async {
-        await propose(
-          photoKeys: const ['k1'],
-          phoneNumber: '+33600000000',
-          countryCode: 'FR',
-        );
-        final body = capturedBody();
+    test('photoKeys et countryCode passent quand fournis', () async {
+      await propose(photoKeys: const ['k1'], countryCode: 'FR');
+      final body = capturedBody();
 
-        expect(body['photoKeys'], ['k1']);
-        expect(body['phoneNumber'], '+33600000000');
-        expect(body['countryCode'], 'FR');
-      },
-    );
+      expect(body['photoKeys'], ['k1']);
+      expect(body['countryCode'], 'FR');
+    });
+
+    test('le corps ne contient jamais de phoneNumber : le payeur se choisit au '
+        'paiement', () async {
+      await propose(photoKeys: const ['k1'], countryCode: 'FR');
+
+      expect(capturedBody().containsKey('phoneNumber'), isFalse);
+    });
 
     test('un mode de paiement explicite est transmis', () async {
       when(

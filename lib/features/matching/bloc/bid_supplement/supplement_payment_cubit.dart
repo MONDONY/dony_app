@@ -80,8 +80,10 @@ class SupplementPaymentState extends Equatable {
 /// supplément `PAID` aussitôt ([SupplementPaymentStatus.paid]), tracée par
 /// `bid_supplement_cash_accepted`.
 ///
-/// L'écran pose [beginAuthorization], passe `requirePaymentAuth`, puis
-/// appelle [pay] (ou [authorizationDenied] sur un refus).
+/// Carte : l'écran pose [beginAuthorization], passe `requirePaymentAuth`,
+/// puis appelle [pay] (ou [authorizationDenied] sur un refus). Mobile money :
+/// il appelle [pay] directement, sans vérification locale (l'acceptation ne
+/// débite rien) ; l'écran d'attente la demande avant chaque dépôt.
 /// - Carte : il ouvre la feuille de paiement sur
 ///   [SupplementPaymentStatus.readyToPay] et attend [confirmPayment] dans son
 ///   `onSuccess`. Le paiement (`payment_*`) est tracé par la feuille

@@ -166,10 +166,9 @@ class MobileMoneyAccountBloc
       );
     } catch (e) {
       final error = unwrapDioError(e);
-      // Même détection que _loadCatalogAndEmit du bloc paiement : un 404
-      // signale un backend sans la route catalogue (ancien contrat, prod
-      // gelée sans dony-back #296), pas un aléa réseau à signaler par un
-      // bandeau d'erreur.
+      // Un 404 signale un backend sans la route catalogue (ancien contrat,
+      // prod gelée sans dony-back #296), pas un aléa réseau à signaler par
+      // un bandeau d'erreur.
       if (error is NotFoundException) {
         emit(
           MobileMoneyAccountProvidersUnavailable(base, editingNumber: editing),

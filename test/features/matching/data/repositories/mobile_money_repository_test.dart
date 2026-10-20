@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/datasources/mobile_money_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/mobile_money_accepted_operators.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
-import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -54,58 +56,52 @@ void main() {
       });
     });
 
-    group('providers', () {
-      const catalog = MobileMoneyProviderCatalog(country: 'CI');
+    group('acceptedOperators', () {
+      const operators = MobileMoneyAcceptedOperators(
+        currency: 'XOF',
+        travelerFirstName: 'Awa',
+        providers: {'ORANGE_CIV', 'MTN_MOMO_CIV'},
+      );
 
-      test('délègue à datasource.providers et renvoie le catalogue', () async {
+      test('repository_acceptedOperators_200', () async {
         when(
-          () => datasource.providers(
-            scope,
-            // ignore: avoid_redundant_argument_values
-            phoneNumber: null,
-          ),
-        ).thenAnswer((_) async => catalog);
+          () => datasource.acceptedOperators(scope),
+        ).thenAnswer((_) async => operators);
 
-        final result = await repository.providers(scope);
+        final result = await repository.acceptedOperators(scope);
 
-        verify(
-          () => datasource.providers(
-            scope,
-            // ignore: avoid_redundant_argument_values
-            phoneNumber: null,
-          ),
-        ).called(1);
-        expect(result, equals(catalog));
+        verify(() => datasource.acceptedOperators(scope)).called(1);
+        expect(result, equals(operators));
       });
 
-      test('transmet phoneNumber au datasource', () async {
-        when(
-          () => datasource.providers(scope, phoneNumber: '+221771234567'),
-        ).thenAnswer((_) async => catalog);
-
-        final result = await repository.providers(
-          scope,
-          phoneNumber: '+221771234567',
+      test('repository_acceptedOperators_404_returnsNull', () async {
+        // Ancien back : la route n'existe pas encore.
+        when(() => datasource.acceptedOperators(scope)).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/x'),
+            error: const NotFoundException(),
+          ),
         );
 
-        verify(
-          () => datasource.providers(scope, phoneNumber: '+221771234567'),
-        ).called(1);
-        expect(result, equals(catalog));
+        expect(await repository.acceptedOperators(scope), isNull);
       });
 
-      test('propage l\'exception du datasource', () async {
+      test('404 déjà converti en NotFoundException : null aussi', () async {
         when(
-          () => datasource.providers(
-            scope,
-            // ignore: avoid_redundant_argument_values
-            phoneNumber: null,
-          ),
-        ).thenAnswer((_) => Future.error(Exception('Network error')));
+          () => datasource.acceptedOperators(scope),
+        ).thenAnswer((_) => Future.error(const NotFoundException()));
+
+        expect(await repository.acceptedOperators(scope), isNull);
+      });
+
+      test('autre erreur : propagée', () async {
+        when(
+          () => datasource.acceptedOperators(scope),
+        ).thenAnswer((_) => Future.error(const ForbiddenException()));
 
         await expectLater(
-          repository.providers(scope),
-          throwsA(isA<Exception>()),
+          repository.acceptedOperators(scope),
+          throwsA(isA<ForbiddenException>()),
         );
       });
     });

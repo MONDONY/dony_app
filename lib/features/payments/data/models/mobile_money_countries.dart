@@ -119,10 +119,15 @@ class MobileMoneyCountries extends Equatable {
   const MobileMoneyCountries({
     this.available = const [],
     this.upcoming = const [],
+    this.otherCurrency = const [],
   });
 
   final List<MobileMoneyCountry> available;
   final List<String> upcoming;
+
+  /// Pays servis écartés par [restrictedTo] parce qu'ils paient dans une autre
+  /// devise : la recherche les montre grisés, sans les laisser choisir.
+  final List<MobileMoneyCountry> otherCurrency;
 
   factory MobileMoneyCountries.fromJson(Map<String, dynamic> json) =>
       MobileMoneyCountries(
@@ -134,6 +139,19 @@ class MobileMoneyCountries extends Equatable {
             .whereType<String>()
             .toList(),
       );
+
+  /// Catalogue limité aux pays qui paient en [currency] : un colis facturé en
+  /// XOF ne se règle pas depuis un compte XAF. Les pays écartés passent dans
+  /// [otherCurrency] ; les pays « Bientôt » restent tels quels.
+  MobileMoneyCountries restrictedTo(String currency) {
+    final wanted = currency.toUpperCase();
+    bool matches(MobileMoneyCountry c) => c.currency.toUpperCase() == wanted;
+    return MobileMoneyCountries(
+      available: available.where(matches).toList(),
+      upcoming: upcoming,
+      otherCurrency: [...otherCurrency, ...available.where((c) => !matches(c))],
+    );
+  }
 
   /// Pays servi pour [code] (insensible à la casse), sinon `null`.
   MobileMoneyCountry? byCode(String code) {
@@ -151,5 +169,5 @@ class MobileMoneyCountries extends Equatable {
   }
 
   @override
-  List<Object?> get props => [available, upcoming];
+  List<Object?> get props => [available, upcoming, otherCurrency];
 }

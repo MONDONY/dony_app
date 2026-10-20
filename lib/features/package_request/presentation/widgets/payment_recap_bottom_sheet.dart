@@ -1,13 +1,9 @@
 import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/phone/normalize_payer_phone.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
-import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone_field.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart'
@@ -67,12 +63,6 @@ class PaymentRecapBottomSheet {
     // bouton dès le 1er tap et rend `onPressed` ré-entrant.
     final processing = ValueNotifier<bool>(false);
 
-    // Mobile money : le numéro payeur est saisi dans le `child` (son
-    // `TextEditingController` vit dans le `State` de `_MobileMoneyRecapContent`)
-    // et le bouton du `stickyBottom` le lit au tap par cette fonction, remise
-    // via `onSubmitReady` (motif « Bouton dépend d'état local »).
-    String Function()? readPhone;
-
     final l = context.l10n;
     await DonyBottomSheet.show<void>(
       context,
@@ -118,8 +108,6 @@ class PaymentRecapBottomSheet {
                           callerContext: context,
                           bloc: bloc,
                           thread: thread,
-                          processing: processing,
-                          readPhone: () => readPhone?.call() ?? '',
                         );
                       } else if (!isCash) {
                         // Stripe: require biometric/PIN before payment
@@ -253,154 +241,46 @@ class PaymentRecapBottomSheet {
           },
         ),
       ),
-      child: isMobileMoney
-          ? _MobileMoneyRecapContent(
-              net: net,
-              gross: gross,
-              fee: fee,
-              currency: thread.currency,
-              onSubmitReady: (fn) => readPhone = fn,
-            )
-          : PaymentRecapContent(
-              net: net,
-              gross: gross,
-              fee: fee,
-              isCash: isCash,
-              currency: thread.currency,
-            ),
+      child: PaymentRecapContent(
+        net: net,
+        gross: gross,
+        fee: fee,
+        isCash: isCash,
+        isMobileMoney: isMobileMoney,
+        currency: thread.currency,
+      ),
     ).whenComplete(processing.dispose);
   }
 
-  /// Branche mobile money du bouton : authentification locale, puis la feuille
-  /// se ferme et l'écran d'attente du dépôt (`/negotiations/:id/mobile-money/
-  /// awaiting`) est poussé avec le numéro payeur normalisé en `extra`. Cet
-  /// écran fait lui-même l'unique appel `initiate` et se referme sur `true`
-  /// quand le dépôt est séquestré, `false` à l'échéance. Au retour, le fil est
+  /// Branche mobile money du bouton : la feuille se ferme et l'écran d'attente
+  /// du dépôt (`/negotiations/:id/mobile-money/awaiting`) est poussé, sans
+  /// `extra` : le numéro qui paiera se choisit sur cet écran (« Payer le
+  /// colis »), jamais ici. Aucune vérification locale à ce stade (rien ne
+  /// bouge) : l'écran d'attente la demande avant chaque dépôt. Il fait
+  /// lui-même l'unique appel `initiate` et se referme sur `true` quand le
+  /// dépôt est séquestré, `false` à l'échéance. Au retour, le fil est
   /// rechargé dans tous les cas ; l'écran de succès n'est poussé que sur
   /// `true`. Si l'expéditeur quitte l'attente sans payer, le fil reste en
   /// « dépôt en cours » jusqu'à l'échéance côté serveur : rien à faire ici.
   ///
-  /// [processing] n'est plus touché après la fermeture de la feuille : il est
-  /// disposé par le `whenComplete` de [show] dès que la route est retirée.
+  /// Le notifier `processing` n'est plus touché ici : il est disposé par le
+  /// `whenComplete` de [show] dès que la route de la feuille est retirée.
   static Future<void> _payByMobileMoney({
     required BuildContext sheetContext,
     required BuildContext callerContext,
     required NegotiationBloc bloc,
     required NegotiationThread thread,
-    required ValueNotifier<bool> processing,
-    required String Function() readPhone,
   }) async {
-    final authenticated = await requirePaymentAuth(
-      sheetContext,
-      authService: getIt<LocalAuthService>(),
-      userPrefs: getIt<HiveService>().userPrefs,
-    );
-    if (!sheetContext.mounted) return;
-    if (!authenticated) {
-      processing.value = false;
-      DonySnackbar.show(
-        sheetContext,
-        message: sheetContext.l10n.bidCreatePaymentNotConfirmedError,
-        type: DonySnackbarType.warning,
-      );
-      return;
-    }
-    // Lu avant la fermeture : le contrôleur du champ vit dans le `State` du
-    // `child` et est disposé avec lui.
-    final phone = normalizePayerPhone(readPhone());
     Navigator.of(sheetContext, rootNavigator: true).pop();
     if (!callerContext.mounted) return;
     final paid = await callerContext.push<bool>(
       '/negotiations/${thread.id}/mobile-money/awaiting',
-      extra: phone,
     );
     if (!callerContext.mounted) return;
     bloc.add(NegotiationFetchRequested(thread.id));
     if (paid == true) {
       unawaited(callerContext.push('/negotiations/${thread.id}/paid'));
     }
-  }
-}
-
-/// Contenu de la feuille en mode mobile money : le récapitulatif habituel
-/// suivi du champ du numéro payeur. Ce `State` n'existe que pour le cycle de
-/// vie du [TextEditingController] (créé ici, disposé dans [dispose], jamais
-/// dans un `whenComplete` qui se déclenche pendant l'animation de sortie) :
-/// aucun `setState`.
-class _MobileMoneyRecapContent extends StatefulWidget {
-  const _MobileMoneyRecapContent({
-    required this.net,
-    required this.gross,
-    required this.fee,
-    required this.currency,
-    required this.onSubmitReady,
-  });
-
-  final double net;
-  final double gross;
-  final double fee;
-  final String currency;
-
-  /// Remet au bouton du `stickyBottom` la lecture du numéro saisi.
-  final void Function(String Function() readPhone) onSubmitReady;
-
-  @override
-  State<_MobileMoneyRecapContent> createState() =>
-      _MobileMoneyRecapContentState();
-}
-
-class _MobileMoneyRecapContentState extends State<_MobileMoneyRecapContent> {
-  late final TextEditingController _phoneController;
-  late final bool _hasProfilePhone;
-
-  @override
-  void initState() {
-    super.initState();
-    final initial = _initialPayerPhone();
-    _phoneController = TextEditingController(text: initial);
-    _hasProfilePhone = initial.isNotEmpty;
-    widget.onSubmitReady(() => _phoneController.text);
-  }
-
-  /// Numéro du compte connecté, pré-rempli mais toujours modifiable ou
-  /// effaçable (un champ vide laisse le backend replier sur le téléphone
-  /// Firebase). `AuthBloc` est fourni au-dessus du navigateur racine dans
-  /// l'app ; certains harnais de test ne le fournissent pas, le champ démarre
-  /// alors simplement vide.
-  String _initialPayerPhone() {
-    try {
-      return context.read<AuthBloc>().state.currentUser?.phoneNumber ?? '';
-    } on ProviderNotFoundException {
-      return '';
-    }
-  }
-
-  @override
-  void dispose() {
-    _phoneController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        PaymentRecapContent(
-          net: widget.net,
-          gross: widget.gross,
-          fee: widget.fee,
-          isCash: false,
-          isMobileMoney: true,
-          currency: widget.currency,
-        ),
-        const SizedBox(height: DonySpacing.base),
-        PayerPhoneField(
-          controller: _phoneController,
-          hasProfilePhone: _hasProfilePhone,
-        ),
-      ],
-    );
   }
 }
 

@@ -6,13 +6,12 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/phone/phone_last_digits.dart';
-import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/storage/hive_service.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
-import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
+import 'package:dony/features/payments/presentation/mobile_money_failure_message.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
-import 'package:dony/features/payments/presentation/widgets/mobile_money_awaiting_ring.dart';
+import 'package:dony/features/payments/presentation/widgets/mobile_money_awaiting_panel.dart';
+import 'package:dony/features/payments/presentation/widgets/mobile_money_outcome_body.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
@@ -195,20 +194,20 @@ class _WalletTopupMobileMoneyAwaitingScreenState
         expiresAt: s.expiresAt,
         amount: s.amount ?? widget.amount,
       ),
-      WalletTopupMobileMoneyOverdue() => _OutcomeBody(
+      WalletTopupMobileMoneyOverdue() => MobileMoneyOutcomeBody(
         iconAsset: 'clock',
         warning: true,
         title: l.walletTopupMmOverdueTitle,
         message: l.walletTopupMmOverdueBody,
       ),
-      final WalletTopupMobileMoneyFailed f => _OutcomeBody(
+      final WalletTopupMobileMoneyFailed f => MobileMoneyOutcomeBody(
         iconAsset: 'circle-alert',
         title: l.walletTopupMmFailedTitle,
         message: walletTopupFailureMessage(l, f),
       ),
       // Erreur technique (réseau coupé pendant « Renvoyer une demande ») :
       // message et boutons de reprise, jamais une roue infinie.
-      final WalletTopupMobileMoneyError e => _OutcomeBody(
+      final WalletTopupMobileMoneyError e => MobileMoneyOutcomeBody(
         iconAsset: 'circle-alert',
         message: ErrorPresenter.resolve(e.error, l10n: l).message,
       ),
@@ -276,24 +275,14 @@ class _WalletTopupMobileMoneyAwaitingScreenState
 String walletTopupFailureMessage(
   AppLocalizations l,
   WalletTopupMobileMoneyFailed state,
-) {
-  // Codes Yadony du back (liste fermée), jamais affichés.
-  final byCode = switch (state.failureCode) {
-    'insufficient-balance' =>
-      l.walletTopupFailureInsufficientBalance, // i18n-ignore
-    'not-approved' => l.walletTopupFailureNotApproved, // i18n-ignore
-    'payer-limit-reached' => l.walletTopupFailurePayerLimit, // i18n-ignore
-    'invalid-number' => l.walletTopupFailureInvalidNumber, // i18n-ignore
-    'provider-unavailable' =>
-      l.walletTopupFailureProviderUnavailable, // i18n-ignore
-    'expired' => l.walletTopupFailureExpired, // i18n-ignore
-    'other' => l.walletTopupFailureOther, // i18n-ignore
-    _ => null,
-  };
-  return byCode ?? state.failureReason ?? l.walletTopupFailureOther;
-}
+) => mobileMoneyFailureMessage(
+  l,
+  code: state.failureCode,
+  fallback: state.failureReason,
+);
 
-/// Anneau, consigne de validation et récapitulatif de la recharge.
+/// Récapitulatif de la recharge (montant, compte qui paie, portefeuille
+/// crédité) dans le panneau d'attente partagé.
 class _AwaitingBody extends StatelessWidget {
   const _AwaitingBody({
     required this.topup,
@@ -307,138 +296,32 @@ class _AwaitingBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     final l = context.l10n;
     final currency = SupportedCurrency.fromCodeOrDefault(topup.currency);
-    final (title, body) = switch (topup.validationHint) {
-      MobileMoneyValidationHint.smsLink => (
-        l.walletTopupMmSmsSentTitle(topup.msisdnMasked),
-        l.walletTopupMmSmsSentBody,
-      ),
-      MobileMoneyValidationHint.pinPrompt => (
-        l.walletTopupMmPromptTitle(topup.msisdnMasked),
-        l.walletTopupMmPromptBody,
-      ),
-      MobileMoneyValidationHint.generic => (
-        l.walletTopupMmPromptTitle(topup.msisdnMasked),
-        l.walletTopupMmGenericBody,
-      ),
-    };
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(DonySpacing.lg),
-      child: Column(
-        children: [
-          const SizedBox(height: DonySpacing.md),
-          MobileMoneyAwaitingRing(expiresAt: expiresAt, now: DateTime.now),
-          const SizedBox(height: DonySpacing.xl),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: DonySpacing.xl),
-          DonyCard(
-            child: Column(
-              children: [
-                DonyInfoRow(
-                  label: l.walletTopupMmAmountLabel,
-                  value: CurrencyFormatter.format(amount, currency),
-                ),
-                const DonyInfoRow.divider(),
-                DonyInfoRow(
-                  label: l.walletTopupMmFromLabel,
-                  value: l.walletTopupMmFromValue(
-                    topup.providerLabel,
-                    phoneLastDigits(topup.msisdnMasked),
-                  ),
-                ),
-                const DonyInfoRow.divider(),
-                DonyInfoRow(
-                  label: l.walletTopupMmCreditedToLabel,
-                  value: l.walletTopupMmCreditedTo(currency.symbol),
-                ),
-              ],
-            ),
-          ),
-          if (topup.authorizationUrl case final String url) ...[
-            const SizedBox(height: DonySpacing.xl),
-            DonyButton(
-              key: const Key('mobile-money-awaiting-open-authorization'),
-              label: l.walletTopupMmOpenProvider(topup.providerLabel),
-              iconAsset: 'external-link',
-              onPressed: () =>
-                  getIt<ExternalUrlLauncher>().open(Uri.parse(url)),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Issue sans attente : « Pas encore validé » (échéance passée), échec
-/// final ou erreur technique. Icône dans une pastille, titre, texte.
-class _OutcomeBody extends StatelessWidget {
-  const _OutcomeBody({
-    required this.iconAsset,
-    required this.message,
-    this.title,
-    this.warning = false,
-  });
-
-  final String iconAsset;
-  final String? title;
-  final String message;
-
-  /// Pastille ambre (rien n'est perdu) plutôt que rouge (échec).
-  final bool warning;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final tone = warning ? cs.warning : cs.error;
-
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: tone.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Center(child: DonyIcon(iconAsset, color: tone, size: 26)),
-            ),
-            const SizedBox(height: DonySpacing.base),
-            if (title case final String t) ...[
-              Text(
-                t,
-                textAlign: TextAlign.center,
-                style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: DonySpacing.sm),
-            ],
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
+    return MobileMoneyAwaitingPanel(
+      expiresAt: expiresAt,
+      hint: topup.validationHint,
+      msisdnMasked: topup.msisdnMasked,
+      authorizationUrl: topup.authorizationUrl,
+      providerLabel: topup.providerLabel,
+      recap: [
+        (
+          label: l.walletTopupMmAmountLabel,
+          value: CurrencyFormatter.format(amount, currency),
         ),
-      ),
+        (
+          label: l.walletTopupMmFromLabel,
+          value: l.walletTopupMmFromValue(
+            topup.providerLabel,
+            phoneLastDigits(topup.msisdnMasked),
+          ),
+        ),
+        (
+          label: l.walletTopupMmCreditedToLabel,
+          value: l.walletTopupMmCreditedTo(currency.symbol),
+        ),
+      ],
     );
   }
 }

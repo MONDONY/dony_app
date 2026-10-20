@@ -1918,18 +1918,6 @@
   "@bidCreatePhotosVisibleHint": {
     "description": "Explication de l'utilité des photos du colis (create_bid/photo_section.dart)"
   },
-  "bidCreatePayerPhoneLabel": "Payer's number (optional)",
-  "@bidCreatePayerPhoneLabel": {
-    "description": "Libellé du champ numéro payeur mobile money (create_bid/payer_phone_field.dart)"
-  },
-  "bidCreatePayerPhoneHintWithProfile": "By default, your Yadony number. You'll receive the payment request on this number.",
-  "@bidCreatePayerPhoneHintWithProfile": {
-    "description": "Texte d'aide quand le compte a un numéro de téléphone (create_bid/payer_phone_field.dart)"
-  },
-  "bidCreatePayerPhoneHintNoProfile": "Your account has no number: enter the one that will pay. You'll receive the payment request on it.",
-  "@bidCreatePayerPhoneHintNoProfile": {
-    "description": "Texte d'aide quand le compte n'a pas de numéro de téléphone (create_bid/payer_phone_field.dart)"
-  },
   "bidCreateCustomItemsSectionTitle": "Other items",
   "@bidCreateCustomItemsSectionTitle": {
     "description": "Titre de la section articles hors grille en négociation (custom_items_section.dart)"
@@ -4687,7 +4675,6 @@
   "mobileMoneyAllNetworks": "All networks",
   "mobileMoneyDetectedForNumber": "Detected for this number",
 
-  "mobileMoneyAwaitingTitle": "Mobile money payment",
   "mobileMoneyPaymentConfirmedSecured": "Payment confirmed, your shipment is secured",
   "mobileMoneyTimeLeft": "Time left {time}",
   "@mobileMoneyTimeLeft": {
@@ -4698,10 +4685,7 @@
     }
   },
   "mobileMoneyTravelerFallback": "The traveler",
-  "mobileMoneyChooseOperatorTitle": "Which operator?",
   "mobileMoneyPayingNumberLabel": "Paying number",
-  "mobileMoneyPayWithAnotherNumberOptional": "Pay with a different number (optional)",
-  "mobileMoneyConfirmInWaveApp": "You confirm in the Wave app",
   "mobileMoneyAcceptsAndReceives": "{name} accepts {networks} and receives on the network you choose.",
   "@mobileMoneyAcceptsAndReceives": {
     "placeholders": {
@@ -4709,21 +4693,6 @@
         "type": "String"
       },
       "networks": {
-        "type": "String"
-      }
-    }
-  },
-  "mobileMoneyNoNetworkForPayment": "No mobile money network is available for this payment.",
-  "mobileMoneyNoCommonNetwork": "{name} accepts {networks}, which aren't available for your number ({country}). Change the paying number or message them from the conversation.",
-  "@mobileMoneyNoCommonNetwork": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "networks": {
-        "type": "String"
-      },
-      "country": {
         "type": "String"
       }
     }
@@ -4736,19 +4705,6 @@
       }
     }
   },
-  "mobileMoneyFinishInWaveApp": "Finish the payment in the Wave app",
-  "mobileMoneyOpenWave": "Open Wave",
-  "mobileMoneyPinSent": "Approve the payment on your phone: {provider} just sent you a PIN request.",
-  "@mobileMoneyPinSent": {
-    "placeholders": {
-      "provider": {
-        "type": "String"
-      }
-    }
-  },
-  "mobileMoneyPinSentUnknownProvider": "Approve the payment on your phone: your mobile operator just sent you a PIN request.",
-  "mobileMoneyConfirmationAutomatic": "Confirmation is automatic, keep this screen open.",
-  "mobileMoneyDepositRefusedFallback": "The payment was declined by the mobile operator",
   "mobileMoneyPhoneRequiredExplanation": "Your Yadony account has no phone number: enter the mobile money number that will pay.",
   "mobileMoneyPayerUnsupportedExplanation": "This number can't pay by mobile money for this parcel. Enter the mobile money number that will pay (Côte d'Ivoire, Senegal, Mali…).",
   "mobileMoneyPhoneThatWillPayLabel": "Number that will pay",
@@ -10934,6 +10890,16 @@
   "mobileMoneyOperatorSwitched": "This is a {operator} number: the operator was changed.",
   "mobileMoneyNumberUnrecognized": "No operator in this country recognises this number.",
   "mobileMoneyRecognitionFailed": "We can't check this number right now.",
+  "mobileMoneyOperatorNotAccepted": "Not accepted",
+  "mobileMoneyNumberOperatorNotAccepted": "This is a {operator} number, which this traveler does not accept.",
+  "mobileMoneyCountryOtherCurrency": "This payment is in {currency}",
+  "mobileMoneyPayerHelper": "Yours or a relative's.",
+  "mobileMoneyPayParcelTitle": "Pay for the parcel",
+  "mobileMoneyPaySupplementTitle": "Pay the extra charge",
+  "mobileMoneyOverdueBody": "If you still approve within the next few minutes, your payment will go through.",
+  "mobileMoneyPaymentFailedTitle": "Payment not completed",
+  "mobileMoneyPaidToTravelerLabel": "Paid to the traveler",
+  "mobileMoneyPaidToTravelerValue": "On delivery",
   "walletTopupSwitchToCard": "Top up by card",
   "walletTopupMmRingCaption": "to approve",
   "walletTopupMmSmsSentTitle": "SMS sent to {number}",

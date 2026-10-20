@@ -48,10 +48,11 @@ typedef SupplementMobileMoneyOpener =
 /// `onSuccess`, puis relecture du colis. Feuille fermée sans payer : rien ne
 /// change, le bouton reste « Payer ».
 ///
-/// Mobile money : `requirePaymentAuth`, `POST …/accept` (`PAYMENT_PENDING`),
-/// puis l'écran d'attente du supplément (choix de l'opérateur, numéro,
-/// initiation, sondage) ; à son retour, relecture du colis et message selon
-/// l'issue.
+/// Mobile money : `POST …/accept` (`PAYMENT_PENDING`) sans vérification
+/// locale (aucun argent ne bouge à ce stade), puis l'écran d'attente du
+/// supplément (choix du payeur, initiation, sondage) ; c'est lui qui demande
+/// la vérification locale avant chaque dépôt. À son retour, relecture du
+/// colis et message selon l'issue.
 ///
 /// Espèces (PR A4) : « Accepter {brut} » ouvre une feuille de confirmation
 /// (« Vous remettrez {brut} en espèces »), sans vérification locale ni
@@ -185,6 +186,12 @@ class _PayButtonView extends StatelessWidget {
 
   Future<void> _pay(BuildContext context) async {
     final cubit = context.read<SupplementPaymentCubit>();
+    // Mobile money : `accept` ne débite rien, l'écran d'attente demande la
+    // vérification locale juste avant chaque dépôt. Une seule invite.
+    if (SupplementPayButton.railOf(bid) == SupplementCheckout.railPawapay) {
+      await cubit.pay(bid, supplement);
+      return;
+    }
     // Bouton désactivé pendant l'invite : un double tap n'en ouvre pas deux.
     if (!cubit.beginAuthorization()) return;
     final authenticated = await authorize(context);

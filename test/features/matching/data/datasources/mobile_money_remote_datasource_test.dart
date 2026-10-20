@@ -147,121 +147,66 @@ void main() {
       });
     });
 
-    group('providers', () {
-      const path = '/bids/$bidId/mobile-money/providers';
-      final catalogJson = {
-        'country': 'CI',
+    group('acceptedOperators', () {
+      final json = {
         'currency': 'XOF',
-        'msisdnMasked': '+225 •••• 77',
-        'detected': 'ORANGE_CIV',
-        'providers': [
-          {'code': 'ORANGE_CIV', 'label': 'Orange Money', 'detected': true},
-        ],
-        'travelerAccepts': ['Orange Money', 'Wave'],
-        'travelerFirstName': 'Aminata',
+        'travelerFirstName': 'Awa',
+        'providers': ['ORANGE_CIV', 'MTN_MOMO_CIV'],
       };
 
-      test('sans numéro : corps null', () async {
+      test('bid : GET sur la route du colis', () async {
+        const path = '/bids/$bidId/mobile-money/accepted-operators';
         when(
-          () => dio.post<Map<String, dynamic>>(
-            path,
-            // ignore: avoid_redundant_argument_values
-            data: null,
-          ),
-        ).thenAnswer((_) async => _ok(catalogJson, path));
+          () => dio.get<Map<String, dynamic>>(path),
+        ).thenAnswer((_) async => _ok(json, path));
 
-        final result = await datasource.providers(bidScope);
+        final result = await datasource.acceptedOperators(bidScope);
 
-        expect(result.travelerFirstName, 'Aminata');
-        expect(result.providers.single.code, 'ORANGE_CIV');
+        expect(result.travelerFirstName, 'Awa');
+        expect(result.providers, {'ORANGE_CIV', 'MTN_MOMO_CIV'});
+        verify(() => dio.get<Map<String, dynamic>>(path)).called(1);
       });
 
-      test('numéro non vide : envoyé après trim', () async {
+      test('fil de négociation : GET sur la route du fil', () async {
+        const path = '/negotiations/$threadId/mobile-money/accepted-operators';
         when(
-          () => dio.post<Map<String, dynamic>>(
-            path,
-            data: {'phoneNumber': '+225 05'},
-          ),
-        ).thenAnswer((_) async => _ok(catalogJson, path));
+          () => dio.get<Map<String, dynamic>>(path),
+        ).thenAnswer((_) async => _ok(json, path));
 
-        await datasource.providers(bidScope, phoneNumber: '  +225 05  ');
+        final result = await datasource.acceptedOperators(negotiationScope);
 
-        verify(
-          () => dio.post<Map<String, dynamic>>(
-            path,
-            data: {'phoneNumber': '+225 05'},
-          ),
-        ).called(1);
+        expect(result.currency, 'XOF');
+        verify(() => dio.get<Map<String, dynamic>>(path)).called(1);
       });
 
-      test('numéro vide après trim : corps null', () async {
+      test('supplément : GET sur la route du colis', () async {
+        const path = '/bids/$bidId/mobile-money/accepted-operators';
         when(
-          () => dio.post<Map<String, dynamic>>(
-            path,
-            // ignore: avoid_redundant_argument_values
-            data: null,
-          ),
-        ).thenAnswer((_) async => _ok(catalogJson, path));
+          () => dio.get<Map<String, dynamic>>(path),
+        ).thenAnswer((_) async => _ok(json, path));
 
-        await datasource.providers(bidScope, phoneNumber: '   ');
+        await datasource.acceptedOperators(supplementScope);
 
-        verify(
-          () => dio.post<Map<String, dynamic>>(
-            path,
-            // ignore: avoid_redundant_argument_values
-            data: null,
-          ),
-        ).called(1);
+        verify(() => dio.get<Map<String, dynamic>>(path)).called(1);
       });
 
       test('propage la DioException', () async {
-        when(
-          () => dio.post<Map<String, dynamic>>(
-            path,
-            // ignore: avoid_redundant_argument_values
-            data: null,
-          ),
-        ).thenThrow(
+        const path = '/bids/$bidId/mobile-money/accepted-operators';
+        when(() => dio.get<Map<String, dynamic>>(path)).thenThrow(
           DioException(
             requestOptions: RequestOptions(path: path),
             type: DioExceptionType.badResponse,
             response: Response(
-              statusCode: 422,
+              statusCode: 404,
               requestOptions: RequestOptions(path: path),
             ),
           ),
         );
 
-        expect(datasource.providers(bidScope), throwsA(isA<DioException>()));
-      });
-
-      test('supplément : catalogue dédié du supplément', () async {
-        const supplementPath =
-            '/bids/$bidId/supplements/$supplementId/mobile-money/providers';
-        when(
-          () => dio.post<Map<String, dynamic>>(
-            supplementPath,
-            data: {'phoneNumber': '+22505'},
-          ),
-        ).thenAnswer((_) async => _ok(catalogJson, supplementPath));
-
-        final result = await datasource.providers(
-          supplementScope,
-          phoneNumber: '+22505',
-        );
-
-        expect(result.providers.single.code, 'ORANGE_CIV');
-        verifyNever(
-          () => dio.post<Map<String, dynamic>>(path, data: any(named: 'data')),
-        );
-      });
-
-      test('fil de négociation : aucun catalogue, ArgumentError', () {
         expect(
-          () => datasource.providers(negotiationScope),
-          throwsArgumentError,
+          datasource.acceptedOperators(bidScope),
+          throwsA(isA<DioException>()),
         );
-        verifyZeroInteractions(dio);
       });
     });
 

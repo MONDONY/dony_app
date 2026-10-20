@@ -583,7 +583,6 @@ void main() {
       final captured = await submitProposal(tester);
       expect(captured, hasLength(1));
       expect(captured.single.paymentMethod, BidPaymentMethod.cash);
-      expect(captured.single.phoneNumber, isNull);
     },
   );
 

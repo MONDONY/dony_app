@@ -5862,17 +5862,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Visibles par le voyageur, elles rassurent sur le contenu.';
 
   @override
-  String get bidCreatePayerPhoneLabel => 'Numéro qui paiera (facultatif)';
-
-  @override
-  String get bidCreatePayerPhoneHintWithProfile =>
-      'Par défaut, votre numéro Yadony. Vous recevrez la demande de paiement sur ce numéro.';
-
-  @override
-  String get bidCreatePayerPhoneHintNoProfile =>
-      'Votre compte n\'a pas de numéro : indiquez celui qui paiera. Vous recevrez la demande de paiement dessus.';
-
-  @override
   String get bidCreateCustomItemsSectionTitle => 'Autres articles';
 
   @override
@@ -9653,9 +9642,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mobileMoneyDetectedForNumber => 'Détecté pour ce numéro';
 
   @override
-  String get mobileMoneyAwaitingTitle => 'Paiement mobile money';
-
-  @override
   String get mobileMoneyPaymentConfirmedSecured =>
       'Paiement confirmé, votre envoi est sécurisé';
 
@@ -9668,18 +9654,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mobileMoneyTravelerFallback => 'Le voyageur';
 
   @override
-  String get mobileMoneyChooseOperatorTitle => 'Avec quel opérateur ?';
-
-  @override
   String get mobileMoneyPayingNumberLabel => 'Numéro qui paie';
-
-  @override
-  String get mobileMoneyPayWithAnotherNumberOptional =>
-      'Payer avec un autre numéro (facultatif)';
-
-  @override
-  String get mobileMoneyConfirmInWaveApp =>
-      'Vous confirmez dans l\'application Wave';
 
   @override
   String mobileMoneyAcceptsAndReceives(String name, String networks) {
@@ -9687,46 +9662,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get mobileMoneyNoNetworkForPayment =>
-      'Aucun réseau mobile money disponible pour ce paiement.';
-
-  @override
-  String mobileMoneyNoCommonNetwork(
-    String name,
-    String networks,
-    String country,
-  ) {
-    return '$name accepte $networks, qui n\'existent pas pour votre numéro ($country). Changez de numéro payeur ou écrivez-lui depuis la conversation.';
-  }
-
-  @override
   String mobileMoneyPay(String amount) {
     return 'Payer $amount';
   }
-
-  @override
-  String get mobileMoneyFinishInWaveApp =>
-      'Terminez le paiement dans l\'application Wave';
-
-  @override
-  String get mobileMoneyOpenWave => 'Ouvrir Wave';
-
-  @override
-  String mobileMoneyPinSent(String provider) {
-    return 'Validez le paiement sur votre téléphone : une demande de code PIN vient de vous être envoyée par $provider.';
-  }
-
-  @override
-  String get mobileMoneyPinSentUnknownProvider =>
-      'Validez le paiement sur votre téléphone : une demande de code PIN vient de vous être envoyée par votre opérateur.';
-
-  @override
-  String get mobileMoneyConfirmationAutomatic =>
-      'La confirmation est automatique, gardez cet écran ouvert.';
-
-  @override
-  String get mobileMoneyDepositRefusedFallback =>
-      'Le paiement a été refusé par l\'opérateur';
 
   @override
   String get mobileMoneyPhoneRequiredExplanation =>
@@ -21494,6 +21432,41 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get mobileMoneyRecognitionFailed =>
       'Vérification impossible pour le moment.';
+
+  @override
+  String get mobileMoneyOperatorNotAccepted => 'Non accepté';
+
+  @override
+  String mobileMoneyNumberOperatorNotAccepted(String operator) {
+    return 'C\'est un numéro $operator, que ce voyageur n\'accepte pas.';
+  }
+
+  @override
+  String mobileMoneyCountryOtherCurrency(String currency) {
+    return 'Ce paiement se fait en $currency';
+  }
+
+  @override
+  String get mobileMoneyPayerHelper => 'Le vôtre ou celui d\'un proche.';
+
+  @override
+  String get mobileMoneyPayParcelTitle => 'Payer le colis';
+
+  @override
+  String get mobileMoneyPaySupplementTitle => 'Payer le supplément';
+
+  @override
+  String get mobileMoneyOverdueBody =>
+      'Si vous validez quand même dans les prochaines minutes, votre paiement sera pris en compte.';
+
+  @override
+  String get mobileMoneyPaymentFailedTitle => 'Paiement non abouti';
+
+  @override
+  String get mobileMoneyPaidToTravelerLabel => 'Versé au voyageur';
+
+  @override
+  String get mobileMoneyPaidToTravelerValue => 'À la livraison';
 
   @override
   String get walletTopupSwitchToCard => 'Recharger par carte';
