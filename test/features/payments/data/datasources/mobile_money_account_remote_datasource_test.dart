@@ -237,4 +237,99 @@ void main() {
       ).called(1);
     });
   });
+
+  group('comptes de versement (nouveau contrat)', () {
+    const accountsPath = '/payments/mobile-money/accounts';
+    final payoutJson = {
+      'id': 'acc-1',
+      'provider': 'ORANGE_CIV',
+      'providerLabel': 'Orange Money',
+      'brand': 'ORANGE',
+      'country': 'CI',
+      'currency': 'XOF',
+      'msisdnMasked': '+225 •••• 36',
+      'pendingPayouts': 0,
+    };
+
+    test('accounts : GET /accounts et parse la liste', () async {
+      when(() => mockDio.get(accountsPath)).thenAnswer(
+        (_) async => _ok({
+          'accounts': [payoutJson],
+          'suggestedProviders': [
+            {'code': 'WAVE_CIV', 'label': 'Wave'},
+          ],
+        }, accountsPath),
+      );
+
+      final result = await datasource.accounts();
+
+      expect(result.accounts.single.id, 'acc-1');
+      expect(result.suggested.single.code, 'WAVE_CIV');
+      verify(() => mockDio.get(accountsPath)).called(1);
+    });
+
+    test('addAccount : POST /accounts avec numéro et réseau', () async {
+      when(
+        () => mockDio.post(
+          accountsPath,
+          data: {'phoneNumber': '+2250708091036', 'provider': 'ORANGE_CIV'},
+        ),
+      ).thenAnswer((_) async => _ok(payoutJson, accountsPath));
+
+      final result = await datasource.addAccount(
+        phoneNumber: '+2250708091036',
+        provider: 'ORANGE_CIV',
+      );
+
+      expect(result.provider, 'ORANGE_CIV');
+    });
+
+    test('changeNumber : PUT /accounts/{id}/number', () async {
+      const path = '$accountsPath/acc-1/number';
+      when(
+        () => mockDio.put(path, data: {'phoneNumber': '+2250708091037'}),
+      ).thenAnswer((_) async => _ok(payoutJson, path));
+
+      final result = await datasource.changeNumber(
+        id: 'acc-1',
+        phoneNumber: '+2250708091037',
+      );
+
+      expect(result.id, 'acc-1');
+    });
+
+    test('removeAccount : DELETE /accounts/{id} sans corps', () async {
+      const path = '$accountsPath/acc-1';
+      when(() => mockDio.delete(path)).thenAnswer((_) async => _ok(null, path));
+
+      await datasource.removeAccount('acc-1');
+
+      verify(() => mockDio.delete(path)).called(1);
+      verifyNever(() => mockDio.delete(path, data: any(named: 'data')));
+    });
+
+    test('payoutCountries : GET countries?operation=PAYOUT', () async {
+      const path = '/payments/mobile-money/countries';
+      when(
+        () => mockDio.get(path, queryParameters: {'operation': 'PAYOUT'}),
+      ).thenAnswer(
+        (_) async => _ok({
+          'available': [],
+          'upcoming': ['ML'],
+        }, path),
+      );
+
+      final result = await datasource.payoutCountries();
+
+      expect(result.upcoming, ['ML']);
+    });
+
+    test('propage la DioException', () async {
+      when(() => mockDio.get(accountsPath)).thenThrow(
+        DioException(requestOptions: RequestOptions(path: accountsPath)),
+      );
+
+      expect(datasource.accounts(), throwsA(isA<DioException>()));
+    });
+  });
 }
