@@ -135,7 +135,13 @@ double netForSenderGross(
 double listUnitPrice(double netUnit, String? currencyCode) =>
     commissionMinimumFor(currencyCode) != null
     ? netUnit
-    : netUnit * (1 + donyCommissionRate);
+    : flatRateGross(netUnit);
+
+/// Brut au taux unique historique, sans arrondi : `net × (1 +
+/// donyCommissionRate)`. Aperçus locaux d'avant les paliers (prix au kilo,
+/// total d'une offre sans grille), où l'arrondi HALF_UP de
+/// [senderPriceForNet] changerait le montant affiché.
+double flatRateGross(double net) => net * (1 + donyCommissionRate);
 
 /// Frais de service minimum de la grille en vigueur dans [currencyCode]
 /// (repli EUR), `null` sans grille ou sans minimum pour la devise.

@@ -222,4 +222,20 @@ void main() {
       expect(commissionGridActive, isTrue);
     });
   });
+
+  group('flatRateGross', () {
+    test('net × (1 + taux unique), sans arrondi, même produit qu\'avant', () {
+      // setUp : taux 0,05.
+      const weight = 1.15;
+      const price = 8.5;
+      expect(flatRateGross(weight * price), weight * price * (1 + 0.05));
+      setDonyCommissionRate(0.12);
+      expect(flatRateGross(10), closeTo(11.2, 1e-12));
+      // Inverse exact du repli de netForSenderGross au taux unique.
+      expect(
+        netForSenderGross(11.2, 'EUR', legacy: true),
+        11.2 / (1 + 0.12),
+      );
+    });
+  });
 }

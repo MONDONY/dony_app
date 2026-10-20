@@ -831,7 +831,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final price = _pricePerKg;
     // Sans grille : taux unique historique sur le net au kilo.
     final kg = (price != null && price > 0)
-        ? _weightNotifier.value * price * (1 + donyCommissionRate)
+        ? flatRateGross(_weightNotifier.value * price)
         : 0.0;
     return kg + _gridDisplayTotal();
   }
@@ -980,7 +980,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     if (commissionGridActive) return _localGridPrice().gross;
     final price = _pricePerKg;
     final kg = price == null ? 0.0 : data.weightKg * price;
-    return kg * (1 + donyCommissionRate) + _gridDisplayTotal();
+    return flatRateGross(kg) + _gridDisplayTotal();
   }
 
   // ── Content helpers ─────────────────────────────────────────────────────────
@@ -1898,7 +1898,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 }
                 // Sans grille : taux unique historique, comme avant.
                 final kgDisplayLocal = hasKgPricing
-                    ? weightKg * kgPrice * (1 + donyCommissionRate)
+                    ? flatRateGross(weightKg * kgPrice)
                     : 0.0;
                 final localTotal = kgDisplayLocal + gridTotal;
 
@@ -1911,7 +1911,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 // qu'au voyageur.
                 double kgNet = hasKgPricing ? weightKg * kgPrice : 0.0;
                 double gridNet = hasGridPricing
-                    ? gridTotal / (1 + donyCommissionRate)
+                    ? netForSenderGross(
+                        gridTotal,
+                        widget.announcement.currency,
+                        legacy: true,
+                      )
                     : 0.0;
                 double total = localTotal;
                 double? original;
