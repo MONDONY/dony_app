@@ -41,8 +41,15 @@ jobs:
     # dans l'env de l'étape "Create env.prod.json from secrets" (plus bas),
     # elle était invisible de ces deux étapes-là : manifestPlaceholders
     # ["GOOGLE_MAPS_API_KEY"] vide, cartes blanches dans l'artefact publié.
+    #
+    # Le manifest Android lit désormais GOOGLE_MAPS_ANDROID_API_KEY (clé
+    # yadony-prod-android, restreinte Android). GOOGLE_MAPS_API_KEY est la clé
+    # iOS (yadony-prod-ios) : la mettre dans le manifest a donné une carte vide
+    # sur le build 143 (Sentry YADONY-FLUTTER-PROD-1T). En production, Gradle
+    # refuse le build si la clé Android manque, au lieu de retomber sur l'iOS.
     env:
       GOOGLE_MAPS_API_KEY: ${{ secrets.FLUTTER_GOOGLE_MAPS_API_KEY }}
+      GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.FLUTTER_GOOGLE_MAPS_ANDROID_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -93,6 +100,7 @@ jobs:
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.FLUTTER_STRIPE_PUBLISHABLE_KEY }}
           SENTRY_DSN: ${{ secrets.FLUTTER_SENTRY_DSN }}
           GOOGLE_MAPS_API_KEY: ${{ secrets.FLUTTER_GOOGLE_MAPS_API_KEY }}
+          GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.FLUTTER_GOOGLE_MAPS_ANDROID_API_KEY }}
           POSTHOG_API_KEY: ${{ secrets.FLUTTER_POSTHOG_API_KEY }}
         run: |
           # Bloquantes : leur absence casse soit le démarrage (Firebase,
@@ -105,14 +113,21 @@ jobs:
           # FIREBASE_IOS_* dégradent une fonctionnalité sans empêcher l'app
           # de s'ouvrir sur Android (seule plateforme buildée ici) : non
           # bloquantes, mais injectées dès qu'elles sont disponibles.
+          # GOOGLE_MAPS_ANDROID_API_KEY, elle, est bloquante : env.prod.json
+          # porte ENVIRONMENT=production, et Gradle refuserait de toute façon
+          # le build sans elle. Autant échouer ici, avec le nom du secret.
           MISSING=""
-          for KEY in API_BASE_URL FIREBASE_PROJECT_ID FIREBASE_MESSAGING_SENDER_ID FIREBASE_STORAGE_BUCKET FIREBASE_ANDROID_API_KEY FIREBASE_ANDROID_APP_ID STRIPE_PUBLISHABLE_KEY; do
+          for KEY in API_BASE_URL FIREBASE_PROJECT_ID FIREBASE_MESSAGING_SENDER_ID FIREBASE_STORAGE_BUCKET FIREBASE_ANDROID_API_KEY FIREBASE_ANDROID_APP_ID STRIPE_PUBLISHABLE_KEY GOOGLE_MAPS_ANDROID_API_KEY; do
             if [ -z "${!KEY}" ]; then
               MISSING="$MISSING $KEY"
             fi
           done
           if [ -n "$MISSING" ]; then
             echo "::error::Secrets manquants pour un build de release fonctionnel :$MISSING"
+            exit 1
+          fi
+          if [ -n "$GOOGLE_MAPS_API_KEY" ] && [ "$GOOGLE_MAPS_ANDROID_API_KEY" = "$GOOGLE_MAPS_API_KEY" ]; then
+            echo "::error::FLUTTER_GOOGLE_MAPS_ANDROID_API_KEY vaut la clé iOS FLUTTER_GOOGLE_MAPS_API_KEY : carte vide sur Android (YADONY-FLUTTER-PROD-1T). Y mettre la clé yadony-prod-android."
             exit 1
           fi
 
@@ -132,6 +147,7 @@ jobs:
             "STRIPE_PUBLISHABLE_KEY": "$STRIPE_PUBLISHABLE_KEY",
             "SENTRY_DSN": "$SENTRY_DSN",
             "GOOGLE_MAPS_API_KEY": "$GOOGLE_MAPS_API_KEY",
+            "GOOGLE_MAPS_ANDROID_API_KEY": "$GOOGLE_MAPS_ANDROID_API_KEY",
             "POSTHOG_API_KEY": "$POSTHOG_API_KEY"
           }
           EOF

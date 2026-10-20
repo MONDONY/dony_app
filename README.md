@@ -26,3 +26,18 @@ tutorials + social links) via the remote parameter
 [`docs/help-center-remote-config.md`](docs/help-center-remote-config.md) for
 the JSON schema, publishing steps, dev testing, staged rollout and
 rollback.
+
+## Clés Google Maps (une par plateforme)
+
+- `GOOGLE_MAPS_API_KEY` : clé **iOS** (`yadony-prod-ios` en production), lue par
+  `ios/Runner/Info.plist` via les xcconfig.
+- `GOOGLE_MAPS_ANDROID_API_KEY` : clé **Android** (`yadony-prod-android`,
+  restreinte `com.yadony.yadony` + SHA-1 de signature), lue par
+  `android/app/build.gradle.kts` pour le manifest (variable d'environnement,
+  puis `--dart-define-from-file`, puis `env.dev.json`).
+
+En production (`ENVIRONMENT=production`), un build release Android sans
+`GOOGLE_MAPS_ANDROID_API_KEY` échoue ; hors production, il retombe sur
+`GOOGLE_MAPS_API_KEY`. `tool/verify_android_release_config.sh` refuse un
+manifest qui porte la clé iOS (build 143, carte vide, Sentry
+YADONY-FLUTTER-PROD-1T). En CI, secret `FLUTTER_GOOGLE_MAPS_ANDROID_API_KEY`.

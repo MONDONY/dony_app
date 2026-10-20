@@ -109,13 +109,27 @@ fi
 echo "OK : $WHERE est bien sur le projet $EXPECTED_ID ($EXPECTED_NUMBER)."
 
 # La clé Google Maps du manifest natif est résolue par build.gradle.kts :
-# $GOOGLE_MAPS_API_KEY, puis le fichier passé à --dart-define-from-file, puis
-# env.dev.json. La tâche Gradle qui lance ce script lui exporte la clé retenue :
-# c'est elle qui est contrôlée. Avant la lecture des dart-defines, un build lancé
-# avec env.staging.json recevait la clé de env.dev.json, ou une chaîne vide. Même classe de panne que la divergence Firebase ci-dessus : ça compile,
-# ça s'installe, ça se lance, et aucune carte ne s'affiche. Les builds 1.0.0+78
-# à +83 sont partis ainsi. build-release.yml exporte la variable depuis un
-# secret ; rien ne couvrait les builds lancés à la main.
+# GOOGLE_MAPS_ANDROID_API_KEY (variable, puis fichier passé à
+# --dart-define-from-file, puis env.dev.json), avec repli sur
+# GOOGLE_MAPS_API_KEY hors production seulement. La tâche Gradle qui lance ce
+# script lui exporte la clé retenue dans GOOGLE_MAPS_ANDROID_API_KEY : c'est
+# elle qui est contrôlée. Avant la lecture des dart-defines, un build lancé avec
+# env.staging.json recevait la clé de env.dev.json, ou une chaîne vide (builds
+# 1.0.0+78 à +83, aucune carte).
+#
+# Deuxième panne, même symptôme (build 143, Sentry YADONY-FLUTTER-PROD-1T) : le
+# manifest portait une clé, mais celle d'iOS (GOOGLE_MAPS_API_KEY de
+# env.prod.json, yadony-prod-ios, restreinte au bundle iOS). Le SDK Android la
+# refuse et la carte reste vide. Un contrôle de simple présence passait. La clé
+# du manifest doit donc aussi DIFFÉRER de la clé iOS de env.prod.json.
+#
+# Aucune clé n'est jamais affichée : seuls des messages fixes sortent d'ici.
+IOS_MAPS_KEY=$(python3 - <<'PY2'
+import json
+print(json.load(open("env.prod.json")).get("GOOGLE_MAPS_API_KEY", "").strip())
+PY2
+)
+
 if [ $# -ge 1 ]; then
   # Seule la valeur injectée dans le manifest prouve quelque chose : la clé vue
   # par Dart est compilée dans le binaire et reste correcte même quand le natif
@@ -127,25 +141,30 @@ if [ $# -ge 1 ]; then
   # garde-fou refusait alors les artefacts valides. Même remède que pour `read`
   # plus haut : on capture, puis on teste.
   MANIFEST_STRINGS=$(unzip -p "$AAB" base/manifest/AndroidManifest.xml | strings)
-  if ! grep -qF 'AIza' <<<"$MANIFEST_STRINGS"; then
+  # LC_ALL=C : le manifest est du protobuf, la ligne de la clé peut porter des
+  # octets non UTF-8 ; sous une locale UTF-8, grep -o de macOS n'en extrait
+  # alors rien (constaté sur l'AAB 143) et le garde-fou croirait la clé absente.
+  MAPS_KEY=$(LC_ALL=C grep -oE 'AIza[0-9A-Za-z_-]{35}' <<<"$MANIFEST_STRINGS" | head -n 1 || true)
+  if [ -z "$MAPS_KEY" ]; then
     echo "ÉCHEC : $WHERE n'embarque aucune clé Google Maps dans son manifest."
-    echo "Les cartes seront blanches. Rebâtir avec GOOGLE_MAPS_API_KEY exportée."
+    echo "Les cartes seront blanches. Rebâtir avec GOOGLE_MAPS_ANDROID_API_KEY renseignée."
     exit 1
   fi
 else
-  MAPS_KEY="${GOOGLE_MAPS_API_KEY:-}"
+  MAPS_KEY="${GOOGLE_MAPS_ANDROID_API_KEY:-}"
   if [ -z "$MAPS_KEY" ] && [ -f env.dev.json ]; then
-    MAPS_KEY=$(python3 - <<'PY'
+    MAPS_KEY=$(python3 - <<'PY2'
 import json
-print(json.load(open("env.dev.json")).get("GOOGLE_MAPS_API_KEY", "").strip())
-PY
+env = json.load(open("env.dev.json"))
+print((env.get("GOOGLE_MAPS_ANDROID_API_KEY") or env.get("GOOGLE_MAPS_API_KEY") or "").strip())
+PY2
 )
   fi
   case "$MAPS_KEY" in
     AIza*) ;;
     "")
-      echo "ÉCHEC : aucune clé Google Maps pour le manifest natif."
-      echo "Exporter GOOGLE_MAPS_API_KEY, ou renseigner env.dev.json."
+      echo "ÉCHEC : aucune clé Google Maps Android pour le manifest natif."
+      echo "Renseigner GOOGLE_MAPS_ANDROID_API_KEY (env.prod.json ou variable d'environnement)."
       exit 1
       ;;
     *)
@@ -155,4 +174,42 @@ PY
   esac
 fi
 
-echo "OK : clé Google Maps présente pour le manifest natif."
+if [ -n "$IOS_MAPS_KEY" ] && [ "$MAPS_KEY" = "$IOS_MAPS_KEY" ]; then
+  echo "ÉCHEC : la clé Google Maps du manifest Android est la clé iOS (GOOGLE_MAPS_API_KEY de env.prod.json)."
+  echo "Restreinte au bundle iOS, le SDK Maps Android la refuse : carte vide (build 143, YADONY-FLUTTER-PROD-1T)."
+  echo "Renseigner GOOGLE_MAPS_ANDROID_API_KEY avec la clé yadony-prod-android."
+  exit 1
+fi
+
+# Contrôle en ligne, facultatif : si gcloud est installé et authentifié, la clé
+# doit porter une restriction Android. Hors-ligne, ou sans droit sur le projet,
+# il est sauté sans échec : le contrôle ci-dessus suffit à refuser le cas du
+# build 143. VERIFY_MAPS_KEY_GCLOUD=0 le désactive (tests, CI).
+if [ "${VERIFY_MAPS_KEY_GCLOUD:-1}" != "0" ] && command -v gcloud >/dev/null 2>&1 \
+   && gcloud auth print-access-token >/dev/null 2>&1; then
+  KEY_NAME=$(gcloud services api-keys lookup "$MAPS_KEY" --format='value(name)' 2>/dev/null || true)
+  if [ -z "$KEY_NAME" ]; then
+    echo "AVERTISSEMENT : gcloud ne retrouve pas la clé Maps (projet inaccessible ?), contrôle de restriction sauté."
+  else
+    RESTRICTION=$(gcloud services api-keys describe "$KEY_NAME" --format=json 2>/dev/null | python3 -c '
+import json, sys
+try:
+    r = json.load(sys.stdin).get("restrictions", {})
+except ValueError:
+    print("inconnue"); sys.exit()
+print("android" if "androidKeyRestrictions" in r else ",".join(k for k in r if k.endswith("KeyRestrictions")) or "aucune")
+' || echo inconnue)
+    case "$RESTRICTION" in
+      android) echo "OK : la clé Maps du manifest porte une restriction Android (gcloud)." ;;
+      inconnue) echo "AVERTISSEMENT : restriction de la clé Maps illisible via gcloud, contrôle sauté." ;;
+      aucune) echo "AVERTISSEMENT : la clé Maps du manifest n'a aucune restriction d'application (acceptée par Android, mais à restreindre)." ;;
+      *)
+        echo "ÉCHEC : la clé Maps du manifest n'est pas restreinte Android (restriction : $RESTRICTION)."
+        echo "Le SDK Maps Android la refusera. Utiliser la clé yadony-prod-android."
+        exit 1
+        ;;
+    esac
+  fi
+fi
+
+echo "OK : clé Google Maps Android présente pour le manifest natif, distincte de la clé iOS."

@@ -15,6 +15,15 @@ SCRIPT="$(cd "$(dirname "$0")" && pwd)/verify_android_release_config.sh"
 PASS=0
 FAIL=0
 
+# Deux fausses clés distinctes : celle d'iOS (GOOGLE_MAPS_API_KEY de
+# env.prod.json) et celle d'Android. Le build 143 est parti avec la première
+# dans le manifest Android ; le garde-fou doit la reconnaître et la refuser.
+IOS_KEY="AIzaSyFAKEiosIOSfakeIOSfakeIOSfakeIOS00"
+ANDROID_KEY="AIzaSyFAKEfakeFAKEfakeFAKEfakeFAKEfake0"
+# Jamais de réseau ni de compte Google dans les tests : le contrôle gcloud est
+# facultatif et coupé ici.
+export VERIFY_MAPS_KEY_GCLOUD=0
+
 # Monte une arborescence jetable et rend son chemin.
 make_repo() {
   local project="$1" number="$2" env_project="${3:-yadony-prod}" env_sender="${4:-799389399791}"
@@ -22,12 +31,12 @@ make_repo() {
   mkdir -p "$dir/tool" "$dir/android/app"
   cp "$SCRIPT" "$dir/tool/"
   cat > "$dir/env.prod.json" <<JSON
-{ "FIREBASE_PROJECT_ID": "$env_project", "FIREBASE_MESSAGING_SENDER_ID": "$env_sender" }
+{ "FIREBASE_PROJECT_ID": "$env_project", "FIREBASE_MESSAGING_SENDER_ID": "$env_sender", "GOOGLE_MAPS_API_KEY": "$IOS_KEY" }
 JSON
   # La clé Maps du manifest natif se lit ici, pas dans env.prod.json. Sans elle
   # tous les cas « doit accepter » échoueraient pour une raison sans rapport.
-  cat > "$dir/env.dev.json" <<'JSON'
-{ "GOOGLE_MAPS_API_KEY": "AIzaSyFAKEfakeFAKEfakeFAKEfakeFAKEfake0" }
+  cat > "$dir/env.dev.json" <<JSON
+{ "GOOGLE_MAPS_API_KEY": "$ANDROID_KEY" }
 JSON
   if [ "$project" != "__none__" ]; then
     cat > "$dir/android/app/google-services.json" <<JSON
@@ -40,7 +49,7 @@ JSON
 check() {
   local label="$1" expected="$2" dir="$3"
   local out code
-  out=$(env -u GOOGLE_MAPS_API_KEY "$dir/tool/verify_android_release_config.sh" 2>&1); code=$?
+  out=$(env -u GOOGLE_MAPS_API_KEY -u GOOGLE_MAPS_ANDROID_API_KEY "$dir/tool/verify_android_release_config.sh" 2>&1); code=$?
   if [ "$code" -eq "$expected" ]; then
     echo "  ok   $label (code $code)"; PASS=$((PASS + 1))
   else
@@ -100,6 +109,24 @@ cat > "$tplMaps/env.dev.json" <<'JSON'
 JSON
 check "clé Maps au gabarit non rempli" 1 "$tplMaps"
 
+# Build 143 (YADONY-FLUTTER-PROD-1T) : une clé est bien présente, mais c'est la
+# clé iOS. Un contrôle de simple présence passait ; la carte restait vide.
+iosAsAndroid=$(make_repo yadony-prod 799389399791); rm "$iosAsAndroid/env.dev.json"
+iosOut=$(GOOGLE_MAPS_ANDROID_API_KEY="$IOS_KEY" "$iosAsAndroid/tool/verify_android_release_config.sh" 2>&1); iosCode=$?
+if [ "$iosCode" -eq 1 ] && grep -qF "clé iOS" <<<"$iosOut" && ! grep -qF "$IOS_KEY" <<<"$iosOut"; then
+  echo "  ok   clé iOS dans le manifest Android, refusée sans être affichée (code 1)"; PASS=$((PASS + 1))
+else
+  echo "  ÉCHEC clé iOS dans le manifest Android : attendu 1 sans clé affichée, obtenu $iosCode"
+  echo "$iosOut" | sed 's/^/         /'; FAIL=$((FAIL + 1))
+fi
+rm -rf "$iosAsAndroid"
+
+iosInDev=$(make_repo yadony-prod 799389399791)
+cat > "$iosInDev/env.dev.json" <<JSON
+{ "GOOGLE_MAPS_API_KEY": "$IOS_KEY" }
+JSON
+check "repli env.dev.json sur la clé iOS de production" 1 "$iosInDev"
+
 echo "Garde-fou Android — ce qu'il doit ACCEPTER :"
 check "production cohérente" 0 "$(make_repo yadony-prod 799389399791)"
 
@@ -107,12 +134,14 @@ check "production cohérente" 0 "$(make_repo yadony-prod 799389399791)"
 # celle des builds à la main. Sans ce test, le garde-fou pourrait n'accepter que
 # le fichier et casser la release.
 envKeyDir=$(make_repo yadony-prod 799389399791); rm "$envKeyDir/env.dev.json"
-envOut=$(GOOGLE_MAPS_API_KEY=AIzaSyFAKEfakeFAKEfakeFAKEfakeFAKEfake0 \
+# GOOGLE_MAPS_API_KEY (la clé iOS) exportée en même temps, comme le fait le
+# workflow de release : elle ne doit ni masquer ni remplacer la clé Android.
+envOut=$(GOOGLE_MAPS_API_KEY="$IOS_KEY" GOOGLE_MAPS_ANDROID_API_KEY="$ANDROID_KEY" \
   "$envKeyDir/tool/verify_android_release_config.sh" 2>&1); envCode=$?
 if [ "$envCode" -eq 0 ]; then
-  echo "  ok   clé Maps fournie par la variable d'environnement (code 0)"; PASS=$((PASS + 1))
+  echo "  ok   clé Android distincte fournie par la variable d'environnement (code 0)"; PASS=$((PASS + 1))
 else
-  echo "  ÉCHEC clé Maps fournie par la variable d'environnement : attendu 0, obtenu $envCode"
+  echo "  ÉCHEC clé Android distincte fournie par la variable d'environnement : attendu 0, obtenu $envCode"
   echo "$envOut" | sed 's/^/         /'; FAIL=$((FAIL + 1))
 fi
 rm -rf "$envKeyDir"
@@ -131,7 +160,13 @@ make_aab() {
   mkdir -p "$dir/base/manifest"
   printf 'yadony-prod\n799389399791\n' > "$dir/base/resources.pb"
   if [ "$with_key" = "with_key" ]; then
-    printf 'com.google.android.geo.API_KEY\nAIzaSyFAKEfakeFAKEfakeFAKEfakeFAKEfake0\n' \
+    # Octets d'encadrement relevés dans l'AAB 143 : « ' » avant la clé, « ( »
+    # puis un octet non UTF-8 après. Sous une locale UTF-8, grep -o de macOS
+    # n'extrait alors plus rien et le garde-fou croyait la clé absente.
+    printf "com.google.android.geo.API_KEY\n'%s(\244\n" "$ANDROID_KEY" \
+      > "$dir/base/manifest/AndroidManifest.xml"
+  elif [ "$with_key" = "ios_key" ]; then
+    printf "com.google.android.geo.API_KEY\n'%s(\244\n" "$IOS_KEY" \
       > "$dir/base/manifest/AndroidManifest.xml"
   else
     printf 'com.google.android.geo.API_KEY\n\n' > "$dir/base/manifest/AndroidManifest.xml"
@@ -141,10 +176,11 @@ make_aab() {
 }
 
 check_aab() {
-  local label="$1" expected="$2" aab="$3" dir="$4"
+  local label="$1" expected="$2" aab="$3" dir="$4" reason="${5:-}"
   local out code
-  out=$(cd "$dir" && env -u GOOGLE_MAPS_API_KEY "$dir/tool/verify_android_release_config.sh" "$aab" 2>&1); code=$?
-  if [ "$code" -eq "$expected" ]; then
+  out=$(cd "$dir" && env -u GOOGLE_MAPS_API_KEY -u GOOGLE_MAPS_ANDROID_API_KEY "$dir/tool/verify_android_release_config.sh" "$aab" 2>&1); code=$?
+  # Le motif attendu évite qu'un refus pour une AUTRE raison passe pour le bon.
+  if [ "$code" -eq "$expected" ] && { [ -z "$reason" ] || grep -qF "$reason" <<<"$out"; }; then
     echo "  ok   $label (code $code)"; PASS=$((PASS + 1))
   else
     echo "  ÉCHEC $label : attendu $expected, obtenu $code"
@@ -159,6 +195,9 @@ check_aab "AAB avec clé Maps" 0 "$(make_aab with_key "$okAab")" "$okAab"
 
 koAab=$(make_repo yadony-prod 799389399791)
 check_aab "AAB sans clé Maps" 1 "$(make_aab no_key "$koAab")" "$koAab"
+
+iosAab=$(make_repo yadony-prod 799389399791)
+check_aab "AAB avec la clé iOS dans le manifest (build 143)" 1 "$(make_aab ios_key "$iosAab")" "$iosAab" "clé iOS"
 
 echo ""
 echo "$PASS réussis, $FAIL échoués"
