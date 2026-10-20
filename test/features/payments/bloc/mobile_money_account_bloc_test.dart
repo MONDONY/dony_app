@@ -112,6 +112,35 @@ void main() {
         const MobileMoneyAccountError(NetworkException('offline')),
       ],
     );
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'relecture d\'une liste affichée : pas de Loading, la liste reste '
+      'jusqu\'à la nouvelle',
+      build: () {
+        when(() => repository.accounts()).thenAnswer((_) async => two);
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountActionFailed(
+        one,
+        ConflictException('bloqué', code: 'mobile-money-account-locked'),
+      ),
+      act: (b) => b.add(const MobileMoneyAccountsRequested()),
+      expect: () => [const MobileMoneyAccountLoaded(two)],
+    );
+
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'relecture d\'une liste affichée en échec : Error, sans Loading',
+      build: () {
+        when(
+          () => repository.accounts(),
+        ).thenThrow(const NetworkException('offline'));
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountLoaded(one),
+      act: (b) => b.add(const MobileMoneyAccountsRequested()),
+      expect: () => [
+        const MobileMoneyAccountError(NetworkException('offline')),
+      ],
+    );
   });
 
   group('MobileMoneyAccountAddRequested', () {
@@ -259,6 +288,44 @@ void main() {
     );
   });
 
+  group('relecture après une écriture réussie', () {
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'ajout passé, relecture en échec : ActionDone sur la liste d\'avant '
+      '(l\'écran d\'ajout se ferme)',
+      build: () {
+        when(
+          () => repository.accounts(),
+        ).thenThrow(const NetworkException('offline'));
+        when(
+          () => repository.addAccount(
+            phoneNumber: any(named: 'phoneNumber'),
+            provider: any(named: 'provider'),
+          ),
+        ).thenAnswer((_) async {});
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountLoaded(one),
+      act: (b) => b.add(
+        const MobileMoneyAccountAddRequested(
+          phoneNumber: '+221770000067',
+          provider: 'ORANGE_SEN',
+        ),
+      ),
+      expect: () => [
+        const MobileMoneyAccountLoaded(one, submitting: true),
+        const MobileMoneyAccountActionDone(one, MobileMoneyAccountAction.added),
+      ],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyPayoutAccountAdded,
+            properties: {'provider': 'ORANGE_SEN'},
+          ),
+        ).called(1);
+      },
+    );
+  });
+
   group('MobileMoneyAccountNumberChangeRequested', () {
     blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
       'change le numéro puis relit la liste, event number_changed',
@@ -392,8 +459,8 @@ void main() {
     );
 
     blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
-      'liste illisible après un retrait réussi : Error, event tout de même '
-      'émis sans accounts_count',
+      'liste illisible après un retrait réussi : ActionDone sur la liste '
+      'd\'avant, event tout de même émis sans accounts_count',
       build: () {
         when(
           () => repository.accounts(),
@@ -405,7 +472,10 @@ void main() {
       act: (b) => b.add(const MobileMoneyAccountRemoveRequested(orangeSn)),
       expect: () => [
         const MobileMoneyAccountLoaded(two, submitting: true),
-        const MobileMoneyAccountError(NetworkException('offline')),
+        const MobileMoneyAccountActionDone(
+          two,
+          MobileMoneyAccountAction.removed,
+        ),
       ],
       verify: (_) {
         verify(

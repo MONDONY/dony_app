@@ -35,7 +35,8 @@ class MobileMoneyAccountLoaded extends MobileMoneyAccountState {
   List<Object?> get props => [data, submitting];
 }
 
-/// Écriture réussie : [data] est la liste relue après l'action.
+/// Écriture réussie : [data] est la liste relue après l'action (celle d'avant
+/// si la relecture a échoué).
 class MobileMoneyAccountActionDone extends MobileMoneyAccountState {
   const MobileMoneyAccountActionDone(this.data, this.action);
 
@@ -60,8 +61,7 @@ class MobileMoneyAccountActionFailed extends MobileMoneyAccountState {
   List<Object?> get props => [data, error];
 }
 
-/// Lecture de la liste en échec (ou liste illisible après une écriture
-/// réussie) : l'écran propose de réessayer.
+/// Lecture de la liste en échec : l'écran propose de réessayer.
 class MobileMoneyAccountError extends MobileMoneyAccountState {
   const MobileMoneyAccountError(this.error);
 

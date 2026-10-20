@@ -487,11 +487,9 @@ void main() {
       expect(pushed, isEmpty);
     });
 
-    testWidgets('409 verrouillé après le retrait : feuille bloquée', (
-      tester,
-    ) async {
+    Future<void> refuseRemovalAsLocked(WidgetTester tester) async {
       // Liste lue avant le paiement du colis : le compte paraît libre, le
-      // back refuse. Le nombre exact est inconnu, au moins un colis attend.
+      // back refuse.
       await pumpScreen(tester, loaded(const [_orangeCi]));
       await openMenu(tester, 'a1');
       await tester.tap(find.text('Retirer'));
@@ -506,22 +504,44 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+    }
 
-      expect(
-        find.text('1 colis attend encore son versement sur ce compte.'),
-        findsOneWidget,
-      );
-      // La liste est relue : la ligne passe bloquée avec le vrai nombre.
+    testWidgets('409 verrouillé après le retrait : feuille ouverte une fois '
+        'la liste relue, avec le vrai nombre', (tester) async {
+      await refuseRemovalAsLocked(tester);
+
+      // La liste est relue ; la feuille attend sa réponse.
       verify(() => bloc.add(const MobileMoneyAccountsRequested())).called(1);
-      await tester.tap(find.text('Compris'));
-      await tester.pumpAndSettle();
+      expect(find.text('Compris'), findsNothing);
+
       states.add(loaded(const [_lockedOrange]));
       await tester.pumpAndSettle();
+
+      expect(
+        find.text('2 colis attendent encore leur versement sur ce compte.'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Compris'));
+      await tester.pumpAndSettle();
+      // La ligne est passée bloquée : le menu rouvre la même feuille.
       await openMenu(tester, 'a1');
       await tester.tap(find.text('Retirer'));
       await tester.pumpAndSettle();
       expect(
         find.text('2 colis attendent encore leur versement sur ce compte.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('409 verrouillé, relecture en échec : feuille avec au moins '
+        'un colis', (tester) async {
+      await refuseRemovalAsLocked(tester);
+
+      states.add(const MobileMoneyAccountError(NetworkException('offline')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('1 colis attend encore son versement sur ce compte.'),
         findsOneWidget,
       );
     });

@@ -31,6 +31,18 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorMobileMoneyAccountRequiredTitle,
   'errorMobileMoneyAccountRequiredMessage': (l) =>
       l.errorMobileMoneyAccountRequiredMessage,
+  'errorMobileMoneyAccountWrongNetworkTitle': (l) =>
+      l.errorMobileMoneyAccountWrongNetworkTitle,
+  'errorMobileMoneyAccountWrongNetworkMessage': (l) =>
+      l.errorMobileMoneyAccountWrongNetworkMessage,
+  'errorMobileMoneyAccountExistsTitle': (l) =>
+      l.errorMobileMoneyAccountExistsTitle,
+  'errorMobileMoneyAccountExistsMessage': (l) =>
+      l.errorMobileMoneyAccountExistsMessage,
+  'errorMobileMoneyAccountNotFoundTitle': (l) =>
+      l.errorMobileMoneyAccountNotFoundTitle,
+  'errorMobileMoneyAccountNotFoundMessage': (l) =>
+      l.errorMobileMoneyAccountNotFoundMessage,
   'errorMobileMoneyCurrencyMismatchTitle': (l) =>
       l.errorMobileMoneyCurrencyMismatchTitle,
   'errorMobileMoneyCurrencyMismatchMessage': (l) =>
@@ -7346,6 +7358,13 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'mobileMoneyPaidToTravelerValue': (l) => l.mobileMoneyPaidToTravelerValue,
   'mobileMoneyOperatorAlreadyAdded': (l) =>
       l.mobileMoneyOperatorAlreadyAdded(placeholderMarker('operator')),
+  'mobileMoneyPayoutNumberWrongOperator': (l) =>
+      l.mobileMoneyPayoutNumberWrongOperator(
+        placeholderMarker('operator'),
+        placeholderMarker('accountOperator'),
+      ),
+  'mobileMoneyNumberNotOperator': (l) =>
+      l.mobileMoneyNumberNotOperator(placeholderMarker('operator')),
   'walletTopupSwitchToCard': (l) => l.walletTopupSwitchToCard,
   'walletTopupMmRingCaption': (l) => l.walletTopupMmRingCaption,
   'walletTopupMmSmsSentTitle': (l) =>
@@ -8239,6 +8258,8 @@ const textParameters = <String, List<String>>{
   'mobileMoneyNumberOperatorNotAccepted': ['operator'],
   'mobileMoneyCountryOtherCurrency': ['currency'],
   'mobileMoneyOperatorAlreadyAdded': ['operator'],
+  'mobileMoneyPayoutNumberWrongOperator': ['operator', 'accountOperator'],
+  'mobileMoneyNumberNotOperator': ['operator'],
   'walletTopupMmSmsSentTitle': ['number'],
   'walletTopupMmPromptTitle': ['number'],
   'walletTopupMmFromValue': ['operator', 'last2'],

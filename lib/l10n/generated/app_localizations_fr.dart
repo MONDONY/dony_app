@@ -51,6 +51,28 @@ class AppLocalizationsFr extends AppLocalizations {
       'Activez votre versement mobile money avant d\'accepter cette offre.';
 
   @override
+  String get errorMobileMoneyAccountWrongNetworkTitle =>
+      'Numéro d\'un autre opérateur';
+
+  @override
+  String get errorMobileMoneyAccountWrongNetworkMessage =>
+      'Ce numéro appartient à un autre opérateur. Choisissez l\'opérateur de ce numéro.';
+
+  @override
+  String get errorMobileMoneyAccountExistsTitle => 'Compte déjà enregistré';
+
+  @override
+  String get errorMobileMoneyAccountExistsMessage =>
+      'Vous avez déjà un compte chez cet opérateur dans ce pays. Changez son numéro plutôt que d\'en ajouter un autre.';
+
+  @override
+  String get errorMobileMoneyAccountNotFoundTitle => 'Compte introuvable';
+
+  @override
+  String get errorMobileMoneyAccountNotFoundMessage =>
+      'Ce compte de versement n\'existe plus. Revenez à la liste de vos comptes.';
+
+  @override
   String get errorMobileMoneyCurrencyMismatchTitle => 'Devise différente';
 
   @override
@@ -21404,6 +21426,19 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String mobileMoneyOperatorAlreadyAdded(String operator) {
     return 'Vous avez déjà un compte $operator.';
+  }
+
+  @override
+  String mobileMoneyPayoutNumberWrongOperator(
+    String operator,
+    String accountOperator,
+  ) {
+    return 'C\'est un numéro $operator. Saisissez un numéro $accountOperator.';
+  }
+
+  @override
+  String mobileMoneyNumberNotOperator(String operator) {
+    return 'Ce numéro n\'est pas un numéro $operator.';
   }
 
   @override

@@ -64,7 +64,9 @@ class MobileMoneyAccountBloc
     MobileMoneyAccountsRequested event,
     Emitter<MobileMoneyAccountState> emit,
   ) async {
-    emit(const MobileMoneyAccountLoading());
+    // Relecture d'une liste déjà affichée (après un 409 « bloqué », au retour
+    // d'un écran) : elle reste visible jusqu'à la nouvelle.
+    if (state.data == null) emit(const MobileMoneyAccountLoading());
     try {
       emit(MobileMoneyAccountLoaded(await _repository.accounts()));
     } catch (e) {
@@ -111,14 +113,17 @@ class MobileMoneyAccountBloc
     }
 
     // Écriture passée : la liste est relue, c'est elle que l'écran affiche.
+    // Relecture en échec : l'écriture reste acquise, l'action est donc
+    // réussie (l'écran d'ajout se ferme, la liste se relit au retour), sur
+    // la liste d'avant.
     try {
       final after = await _repository.accounts();
       emit(MobileMoneyAccountActionDone(after, action));
       unawaited(
         _logDone(action, provider, accountsCount: after.accounts.length),
       );
-    } catch (e) {
-      emit(MobileMoneyAccountError(unwrapDioError(e)));
+    } catch (_) {
+      emit(MobileMoneyAccountActionDone(before, action));
       unawaited(_logDone(action, provider));
     }
   }

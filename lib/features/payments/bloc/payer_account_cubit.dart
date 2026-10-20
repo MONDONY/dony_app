@@ -11,6 +11,10 @@ import 'package:dony/features/payments/data/payer_account_source.dart';
 import 'package:dony/features/payments/data/payer_phone_memory.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Flux du compte qui paie servi par le catalogue des versements (ajout d'un
+/// compte de versement, changement de son numéro).
+const payerAccountPayoutFlow = 'payout';
+
 /// Pays (code ISO) et code opérateur imposés au composant : changement de
 /// numéro d'un compte existant.
 typedef FixedPayerAccount = ({String country, String operator});
@@ -22,7 +26,9 @@ typedef FixedPayerAccount = ({String country, String operator});
 /// de versement : [PayerAccountSource] fournit le catalogue (dépôts ou
 /// versements). Sans [PayerPhoneMemory] (versement), rien n'est prérempli ni
 /// retenu. [flow] (`topup`, `payout`...) étiquette les événements analytics,
-/// qui ne portent jamais de numéro.
+/// qui ne portent jamais de numéro. En [payerAccountPayoutFlow], un opérateur
+/// choisi à la main contre celui reconnu ne permet pas de continuer
+/// ([PayerAccountState.overrideAccepted]) : le back le refuserait.
 ///
 /// Le minuteur de debounce vit ici, jamais côté écran : [close] l'annule, et
 /// aucun `emit` n'a lieu après fermeture.
@@ -32,12 +38,23 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     this._memory,
     this._analytics, {
     required this.flow,
-  }) : super(const PayerAccountState());
+  }) : super(
+         PayerAccountState(overrideAccepted: flow != payerAccountPayoutFlow),
+       );
 
   static const debounce = Duration(milliseconds: 500);
 
   /// Longueur minimale (chiffres locaux) quand le pays n'a pas de `hint`.
   static const _fallbackLocalDigits = 8;
+
+  /// Reconnaissance aboutie pour le numéro saisi, quel que soit le choix
+  /// d'opérateur qui a suivi.
+  static const _recognizedStatuses = {
+    RecognitionStatus.recognized,
+    RecognitionStatus.autoSwitched,
+    RecognitionStatus.overridden,
+    RecognitionStatus.notAllowed,
+  };
 
   static const _unrecognizedCodes = {
     'mobile-money-invalid-phone',
@@ -227,6 +244,7 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     allowedOperators: _allowed,
     currency: _currency,
     fixed: _fixed != null,
+    overrideAccepted: flow != payerAccountPayoutFlow,
   );
 
   /// Choisit un pays servi (vide opérateur et numéro) ou affiche l'état
@@ -306,7 +324,7 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
         detected != null &&
         e164 != null &&
         e164 == _recognizedE164 &&
-        (state.canProceed || state.recognition == RecognitionStatus.notAllowed);
+        _recognizedStatuses.contains(state.recognition);
     if (recognizedBefore) {
       emit(
         state.copyWith(

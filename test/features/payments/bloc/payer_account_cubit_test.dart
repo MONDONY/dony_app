@@ -440,6 +440,7 @@ void main() {
         expect(cubit.state.operator, orange);
         expect(cubit.state.recognition, RecognitionStatus.overridden);
         expect(cubit.state.switchedFrom, isNull);
+        expect(cubit.state.overrideAccepted, isTrue);
         expect(cubit.state.canProceed, isTrue);
 
         cubit.selectOperator('WAVE_CIV');
@@ -1390,6 +1391,39 @@ void main() {
           'to': 'MTN_MOMO_CIV',
           'flow': 'payout',
         });
+      });
+    });
+
+    test('selectOperator_overridesRecognition_cannotProceed', () {
+      // Le back refuse un compte sur un autre opérateur que celui prédit :
+      // le choix manuel est gardé, mais « Continuer » reste grisé.
+      when(
+        () => accounts.payoutProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('MTN_MOMO_CIV'));
+      fakeAsync((async) {
+        expect(cubit.state.overrideAccepted, isFalse);
+        cubit.load();
+        async.flushMicrotasks();
+        expect(cubit.state.overrideAccepted, isFalse);
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+        expect(cubit.state.canProceed, isTrue);
+
+        cubit.selectOperator('ORANGE_CIV');
+
+        expect(cubit.state.recognition, RecognitionStatus.overridden);
+        expect(cubit.state.overrideAccepted, isFalse);
+        expect(cubit.state.canProceed, isFalse);
+
+        // Retour sur l'opérateur du numéro : reconnu, sans nouvel appel.
+        cubit.selectOperator('MTN_MOMO_CIV');
+
+        expect(cubit.state.recognition, RecognitionStatus.recognized);
+        expect(cubit.state.canProceed, isTrue);
+        verify(() => accounts.payoutProviders(e164)).called(1);
       });
     });
 

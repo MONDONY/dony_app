@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
@@ -90,17 +92,37 @@ class _MobileMoneyAccountScreenState extends State<MobileMoneyAccountScreen> {
   }
 
   /// Refus d'une écriture. Sur un 409 « bloqué », la liste lue paraissait à
-  /// jour mais un colis attend : elle est relue pour que la ligne passe
-  /// bloquée avec le vrai nombre de colis, puis la feuille s'ouvre.
-  void _onWriteFailed(BuildContext context, MobileMoneyAccountState state) {
+  /// jour alors qu'un colis attend : elle est relue (la ligne passe bloquée),
+  /// et la feuille s'ouvre une fois la relecture finie, avec le nombre de
+  /// colis qu'elle donne (celui d'avant si elle échoue).
+  Future<void> _onWriteFailed(
+    BuildContext context,
+    MobileMoneyAccountState state,
+  ) async {
     final error = (state as MobileMoneyAccountActionFailed).error;
+    final removing = _removing;
+    var pendingPayouts = removing?.pendingPayouts ?? 0;
     if (isPayoutAccountLocked(error)) {
+      // Abonné avant l'envoi : la réponse ne peut pas filer entre les deux.
+      final reloaded = _bloc.stream.firstWhere(
+        (s) => s is MobileMoneyAccountLoaded || s is MobileMoneyAccountError,
+      );
       _bloc.add(const MobileMoneyAccountsRequested());
+      final MobileMoneyAccountState next;
+      try {
+        next = await reloaded;
+      } on StateError {
+        return; // BLoC fermé : l'écran est parti.
+      }
+      if (!context.mounted) return;
+      for (final account in next.data?.accounts ?? const []) {
+        if (account.id == removing?.id) pendingPayouts = account.pendingPayouts;
+      }
     }
-    presentPayoutAccountFailure(
+    await presentPayoutAccountFailure(
       context,
       error,
-      pendingPayouts: _removing?.pendingPayouts ?? 0,
+      pendingPayouts: pendingPayouts,
     );
   }
 
@@ -138,7 +160,8 @@ class _MobileMoneyAccountScreenState extends State<MobileMoneyAccountScreen> {
         child: BlocConsumer<MobileMoneyAccountBloc, MobileMoneyAccountState>(
           listenWhen: (previous, current) =>
               previous != current && current is MobileMoneyAccountActionFailed,
-          listener: _onWriteFailed,
+          listener: (context, state) =>
+              unawaited(_onWriteFailed(context, state)),
           builder: (context, state) {
             final data = state.data;
             if (data != null) {

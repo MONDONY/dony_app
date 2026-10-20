@@ -170,6 +170,42 @@ abstract class AppLocalizations {
   /// **'Activez votre versement mobile money avant d\'accepter cette offre.'**
   String get errorMobileMoneyAccountRequiredMessage;
 
+  /// No description provided for @errorMobileMoneyAccountWrongNetworkTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro d\'un autre opérateur'**
+  String get errorMobileMoneyAccountWrongNetworkTitle;
+
+  /// No description provided for @errorMobileMoneyAccountWrongNetworkMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro appartient à un autre opérateur. Choisissez l\'opérateur de ce numéro.'**
+  String get errorMobileMoneyAccountWrongNetworkMessage;
+
+  /// No description provided for @errorMobileMoneyAccountExistsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte déjà enregistré'**
+  String get errorMobileMoneyAccountExistsTitle;
+
+  /// No description provided for @errorMobileMoneyAccountExistsMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà un compte chez cet opérateur dans ce pays. Changez son numéro plutôt que d\'en ajouter un autre.'**
+  String get errorMobileMoneyAccountExistsMessage;
+
+  /// No description provided for @errorMobileMoneyAccountNotFoundTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte introuvable'**
+  String get errorMobileMoneyAccountNotFoundTitle;
+
+  /// No description provided for @errorMobileMoneyAccountNotFoundMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte de versement n\'existe plus. Revenez à la liste de vos comptes.'**
+  String get errorMobileMoneyAccountNotFoundMessage;
+
   /// No description provided for @errorMobileMoneyCurrencyMismatchTitle.
   ///
   /// In fr, this message translates to:
@@ -34547,6 +34583,21 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vous avez déjà un compte {operator}.'**
   String mobileMoneyOperatorAlreadyAdded(String operator);
+
+  /// Message sous le numéro à saisir (changement de numéro d'un compte de versement) : le numéro saisi appartient à un autre opérateur que celui du compte. {operator} : opérateur détecté sur le numéro ; {accountOperator} : opérateur du compte.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est un numéro {operator}. Saisissez un numéro {accountOperator}.'**
+  String mobileMoneyPayoutNumberWrongOperator(
+    String operator,
+    String accountOperator,
+  );
+
+  /// Message sous le numéro à saisir (ajout d'un compte de versement) : le numéro a été reconnu sur un autre opérateur que celui choisi ensuite à la main ; le versement exige l'opérateur du numéro, « Continuer » reste grisé. {operator} : opérateur choisi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro n\'est pas un numéro {operator}.'**
+  String mobileMoneyNumberNotOperator(String operator);
 
   /// Bouton du bas de l'écran Recharger quand le pays choisi n'a pas encore le mobile money : passe à la carte bancaire.
   ///

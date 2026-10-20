@@ -416,6 +416,64 @@ void main() {
       ).called(1);
     });
 
+    testWidgets('numéro d\'un autre opérateur : message de correction, '
+        'jamais « déjà un compte »', (tester) async {
+      await pumpScreen(
+        tester,
+        state: _withOrange,
+        accountId: 'a1',
+        fixed: fixed,
+        payerState: const PayerAccountState(
+          status: PayerAccountStatus.ready,
+          countries: kPayerCountries,
+          country: kCoteDIvoire,
+          operator: kOrangeCiv,
+          localNumber: '0544556677',
+          e164: '+2250544556677',
+          recognition: RecognitionStatus.notAllowed,
+          rejectedOperator: kMtnCiv,
+          fixed: true,
+        ),
+      );
+
+      expect(
+        find.text(
+          "C'est un numéro MTN MoMo. Saisissez un numéro Orange Money.",
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('déjà un compte'), findsNothing);
+      expect(continueButton(tester).onPressed, isNull);
+    });
+
+    testWidgets('anglais : message de correction traduit', (tester) async {
+      await pumpScreen(
+        tester,
+        state: _withOrange,
+        accountId: 'a1',
+        fixed: fixed,
+        locale: AppL10n.en,
+        payerState: const PayerAccountState(
+          status: PayerAccountStatus.ready,
+          countries: kPayerCountries,
+          country: kCoteDIvoire,
+          operator: kOrangeCiv,
+          localNumber: '0544556677',
+          e164: '+2250544556677',
+          recognition: RecognitionStatus.notAllowed,
+          rejectedOperator: kMtnCiv,
+          fixed: true,
+        ),
+      );
+
+      expect(
+        find.text(
+          'This number belongs to MTN MoMo. Enter your Orange Money number.',
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('« Oui » envoie NumberChangeRequested', (tester) async {
       await pumpScreen(
         tester,

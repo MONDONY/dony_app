@@ -367,6 +367,29 @@ void main() {
       expect(find.textContaining('aucun opérateur'), findsNothing);
     });
 
+    testWidgets('choix manuel refusé (versement) : message sur l\'opérateur', (
+      tester,
+    ) async {
+      await pumpWith(
+        tester,
+        const PayerAccountState(
+          status: PayerAccountStatus.ready,
+          countries: kPayerCountries,
+          country: kCoteDIvoire,
+          operator: kMtnCiv,
+          localNumber: '0748840856',
+          e164: '+2250748840856',
+          recognition: RecognitionStatus.overridden,
+          overrideAccepted: false,
+        ),
+      );
+
+      expect(
+        find.text("Ce numéro n'est pas un numéro MTN MoMo."),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('non reconnu : message', (tester) async {
       await pumpWith(
         tester,

@@ -252,8 +252,19 @@ class _MobileMoneyPayoutAccountAddScreenState
                           PayerAccountSection(
                             sectionLabel: l.mobileMoneyPayoutSectionLabel,
                             disallowedOperatorLabel: l.mobileMoneyOperatorAdded,
-                            notAllowedMessage:
-                                l.mobileMoneyOperatorAlreadyAdded,
+                            // Changement de numéro : seul l'opérateur du
+                            // compte est permis, un autre n'est pas « déjà
+                            // ajouté », c'est un numéro à corriger.
+                            notAllowedMessage: widget.isNumberChange
+                                ? (detected) =>
+                                      l.mobileMoneyPayoutNumberWrongOperator(
+                                        detected,
+                                        // Lu à l'affichage du message : le
+                                        // `payer` de ce builder date du
+                                        // chargement.
+                                        _payer.state.operator?.label ?? '',
+                                      )
+                                : l.mobileMoneyOperatorAlreadyAdded,
                           ),
                         );
                       },

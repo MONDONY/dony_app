@@ -29,6 +29,7 @@ enum RecognitionStatus {
 
   /// Numéro reconnu sur un autre opérateur que celui que l'utilisateur a
   /// ensuite choisi lui-même : son choix est respecté, sans nouvel appel.
+  /// Il ne permet de continuer que si [PayerAccountState.overrideAccepted].
   overridden,
 
   /// Le numéro appartient à un opérateur du pays que ce paiement n'accepte
@@ -60,6 +61,7 @@ class PayerAccountState extends Equatable {
     this.rejectedOperator,
     this.currency,
     this.fixed = false,
+    this.overrideAccepted = true,
   });
 
   final PayerAccountStatus status;
@@ -98,6 +100,12 @@ class PayerAccountState extends Equatable {
   /// numéro se saisit.
   final bool fixed;
 
+  /// Un choix manuel contre l'opérateur reconnu
+  /// ([RecognitionStatus.overridden]) permet-il de continuer ? Faux pour un
+  /// compte de versement : le back refuse tout opérateur autre que celui
+  /// prédit pour le numéro.
+  final bool overrideAccepted;
+
   /// L'opérateur [o] est-il accepté ici ? En mode [fixed], seul l'opérateur
   /// imposé l'est, quelle que soit la restriction.
   bool isAllowed(MobileMoneyOperator o) {
@@ -108,7 +116,7 @@ class PayerAccountState extends Equatable {
   bool get canProceed =>
       recognition == RecognitionStatus.recognized ||
       recognition == RecognitionStatus.autoSwitched ||
-      recognition == RecognitionStatus.overridden;
+      (recognition == RecognitionStatus.overridden && overrideAccepted);
 
   PayerAccountState copyWith({
     PayerAccountStatus? status,
@@ -156,6 +164,7 @@ class PayerAccountState extends Equatable {
         : rejectedOperator as MobileMoneyOperator?,
     currency: identical(currency, _unset) ? this.currency : currency as String?,
     fixed: fixed ?? this.fixed,
+    overrideAccepted: overrideAccepted,
   );
 
   @override
@@ -173,5 +182,6 @@ class PayerAccountState extends Equatable {
     rejectedOperator,
     currency,
     fixed,
+    overrideAccepted,
   ];
 }

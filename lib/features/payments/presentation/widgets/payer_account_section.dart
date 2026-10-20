@@ -699,6 +699,15 @@ class _Feedback extends StatelessWidget {
             child: Text(l.commonRetry),
           ),
         ),
+        // Choix manuel après reconnaissance, refusé ici (compte de
+        // versement : le back exige l'opérateur du numéro).
+        RecognitionStatus.overridden when !state.overrideAccepted => _Note(
+          key: const ValueKey('overriddenRefused'),
+          background: cs.warningLight,
+          foreground: cs.onSurface,
+          leading: DonyIcon('circle-alert', size: 18, color: cs.warning),
+          text: l.mobileMoneyNumberNotOperator(operator.label),
+        ),
         // Choix manuel après reconnaissance : respecté sans commentaire.
         RecognitionStatus.overridden ||
         RecognitionStatus.idle ||

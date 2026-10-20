@@ -49,6 +49,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Turn on mobile money payouts before accepting this offer.';
 
   @override
+  String get errorMobileMoneyAccountWrongNetworkTitle =>
+      'Number from another operator';
+
+  @override
+  String get errorMobileMoneyAccountWrongNetworkMessage =>
+      'This number belongs to another operator. Choose this number\'s operator.';
+
+  @override
+  String get errorMobileMoneyAccountExistsTitle => 'Account already added';
+
+  @override
+  String get errorMobileMoneyAccountExistsMessage =>
+      'You already have an account with this operator in this country. Change its number instead of adding another one.';
+
+  @override
+  String get errorMobileMoneyAccountNotFoundTitle => 'Account not found';
+
+  @override
+  String get errorMobileMoneyAccountNotFoundMessage =>
+      'This payout account no longer exists. Go back to your account list.';
+
+  @override
   String get errorMobileMoneyCurrencyMismatchTitle => 'Different currency';
 
   @override
@@ -21260,6 +21282,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String mobileMoneyOperatorAlreadyAdded(String operator) {
     return 'You already have an account with $operator.';
+  }
+
+  @override
+  String mobileMoneyPayoutNumberWrongOperator(
+    String operator,
+    String accountOperator,
+  ) {
+    return 'This number belongs to $operator. Enter your $accountOperator number.';
+  }
+
+  @override
+  String mobileMoneyNumberNotOperator(String operator) {
+    return 'This number does not belong to $operator.';
   }
 
   @override

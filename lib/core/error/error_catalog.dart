@@ -91,6 +91,28 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
+    // Comptes de versement (`MobileMoneyPayoutAccountService`, back) : le
+    // `detail` traduit côté back nomme l'opérateur (« Ce numéro est un
+    // numéro MTN. »), d'où leur place dans `_serverDetailCodes`. Le texte
+    // ci-dessous ne sert qu'en repli (detail vide ou technique).
+    'mobile-money-account-wrong-network': _Entry(
+      title: (l) => l.errorMobileMoneyAccountWrongNetworkTitle,
+      message: (l) => l.errorMobileMoneyAccountWrongNetworkMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'mobile-money-account-exists': _Entry(
+      title: (l) => l.errorMobileMoneyAccountExistsTitle,
+      message: (l) => l.errorMobileMoneyAccountExistsMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'mobile-money-account-not-found': _Entry(
+      title: (l) => l.errorMobileMoneyAccountNotFoundTitle,
+      message: (l) => l.errorMobileMoneyAccountNotFoundMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
     'mobile-money-account-required': _Entry(
       title: (l) => l.errorMobileMoneyAccountRequiredTitle,
       message: (l) => l.errorMobileMoneyAccountRequiredMessage,
@@ -1761,6 +1783,9 @@ abstract final class ErrorCatalog {
   /// garde son texte de catalogue même si le serveur fournit un detail.
   static const Set<String> _serverDetailCodes = {
     'mobile-money-account-unsupported',
+    'mobile-money-account-wrong-network',
+    'mobile-money-account-exists',
+    'mobile-money-account-not-found',
     'topup-amount-out-of-range',
     'topup-phone-unsupported',
     // `commission/confirm-failed` EXCLU (relecture finale du lot K) :
