@@ -122,7 +122,11 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
           properties: {'count': _pendingSuggestionsCount},
         ),
       );
-      showTravelerAnnouncementSheet(context, announcement: state.announcement);
+      showTravelerAnnouncementSheet(
+        context,
+        announcement: state.announcement,
+        fromDetail: true,
+      );
     } else if (state is AnnouncementNotFound || state is AnnouncementError) {
       _loadingSuggestionId.value = null;
       DonySnackbar.show(

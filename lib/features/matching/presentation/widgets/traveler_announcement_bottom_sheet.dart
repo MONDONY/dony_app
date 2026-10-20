@@ -91,6 +91,12 @@ final class TravelerSheetFollowUp extends TravelerSheetExit {
 ///
 /// [fromMap] : fiche ouverte depuis la carte des trajets, où la mention des
 /// frais de service ne dit pas leur minimum (« + frais de service »).
+///
+/// [fromDetail] : le trajet vient de `GET /announcements/{id}` (route
+/// `/traveler/:id`, relecture après un rematch, lien d'affiche). Ses réseaux
+/// mobile money sont alors définitifs, une liste vide veut dire « aucun compte »
+/// et la feuille ne relit pas le détail. Faux par défaut : un trajet venu de
+/// la recherche ou de l'accueil n'a pas ses réseaux.
 Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
   BuildContext context, {
   required AnnouncementModel announcement,
@@ -98,6 +104,7 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
   BidModel? existingBid,
   bool returnsNavigation = false,
   bool fromMap = false,
+  bool fromDetail = false,
 }) {
   // Captured before DonyBottomSheet.show() — context may be invalid inside
   // onPressed since useRootNavigator: true places the sheet outside BlocProvider.
@@ -453,6 +460,7 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
       lecteurId: lecteurId,
       returnsNavigation: returnsNavigation,
       fromMap: fromMap,
+      fromDetail: fromDetail,
     ),
   );
 }
@@ -536,10 +544,14 @@ class _TravelerAnnouncementContent extends StatelessWidget {
     this.lecteurId,
     this.returnsNavigation = false,
     this.fromMap = false,
+    this.fromDetail = false,
   });
 
   /// Ouverte depuis la carte : frais de service sans minimum.
   final bool fromMap;
+
+  /// Trajet issu du détail : ses réseaux mobile money sont définitifs.
+  final bool fromDetail;
 
   /// Ouverte par `/traveler/:id` : « Signaler ce trajet » rend sa route au
   /// lieu de naviguer (voir [TravelerSheetExit]).
@@ -619,7 +631,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
 
         if (announcement.acceptedPaymentMethods.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
-          _AcceptedPayments(announcement: announcement),
+          _AcceptedPayments(announcement: announcement, fromDetail: fromDetail),
         ],
 
         if (announcement.arrivalInstructions != null &&
@@ -1428,11 +1440,16 @@ class _MobileMoneyNetworkChip extends StatelessWidget {
 /// pastille par réseau du voyageur. Ouvert depuis la recherche ou l'accueil,
 /// le trajet arrive sans ses réseaux (le back ne les sert qu'au détail) :
 /// [TripMobileMoneyNetworksCubit] les relit, la puce générique « Mobile
-/// money » reste en attendant ou en cas d'échec.
+/// money » reste en attendant ou en cas d'échec. Un trajet déjà issu du détail
+/// ([fromDetail]) n'est pas relu.
 class _AcceptedPayments extends StatelessWidget {
-  const _AcceptedPayments({required this.announcement});
+  const _AcceptedPayments({
+    required this.announcement,
+    required this.fromDetail,
+  });
 
   final AnnouncementModel announcement;
+  final bool fromDetail;
 
   @override
   Widget build(BuildContext context) {
@@ -1444,7 +1461,9 @@ class _AcceptedPayments extends StatelessWidget {
     return BlocProvider<TripMobileMoneyNetworksCubit>(
       // Un autre trajet dans la même feuille repart d'une lecture neuve.
       key: ValueKey(announcement.id),
-      create: (_) => getIt<TripMobileMoneyNetworksCubit>()..load(announcement),
+      create: (_) =>
+          getIt<TripMobileMoneyNetworksCubit>()
+            ..load(announcement, fromDetail: fromDetail),
       child:
           BlocBuilder<TripMobileMoneyNetworksCubit, List<MobileMoneyNetwork>>(
             builder: _content,

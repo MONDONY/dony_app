@@ -104,6 +104,7 @@ class _AnnouncementSheetHostState extends State<_AnnouncementSheetHost> {
       context,
       announcement: widget.announcement,
       returnsNavigation: true,
+      fromDetail: true,
     );
     if (!mounted) return;
     switch (exit) {

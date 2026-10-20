@@ -113,6 +113,11 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   /// modèle complet.
   AnnouncementModel? _current;
 
+  /// Dernier modèle reçu de `GET /announcements/{id}`. Le modèle passé en
+  /// `extra` vient de la liste, sans réseaux mobile money : seul celui-ci dit
+  /// que « aucun réseau » est la réponse du back.
+  AnnouncementModel? _detailModel;
+
   /// L'écran a déjà été quitté au profit de la vue expéditeur — ne jamais
   /// rediriger deux fois (les listeners Auth et Announcement peuvent tous deux
   /// aboutir au même verdict).
@@ -198,7 +203,11 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     } else {
       router.go('/home');
     }
-    showTravelerAnnouncementSheet(rootCtx, announcement: a);
+    showTravelerAnnouncementSheet(
+      rootCtx,
+      announcement: a,
+      fromDetail: identical(a, _detailModel),
+    );
   }
 
   @override
@@ -251,6 +260,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
           listener: (context, state) {
             if (state is AnnouncementDetailLoaded) {
               _current = state.announcement;
+              _detailModel = state.announcement;
               _evaluateViewer(context, state.announcement);
             } else if (state is AnnouncementUpdated) {
               _current = state.announcement;
