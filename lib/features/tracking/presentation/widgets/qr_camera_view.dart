@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/camera_handoff.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
@@ -116,7 +118,15 @@ class QrTorch extends ValueNotifier<QrTorchStatus> {
 /// - [paused] à `true` coupe la caméra (feuille dépliée, écran recouvert,
 ///   traitement d'un scan en cours) ; repassé à `false`, elle redémarre ;
 /// - l'app mise en arrière-plan coupe aussi la caméra ;
-/// - [torch] pilote la lampe et reçoit son état réel.
+/// - [torch] pilote la lampe et reçoit son état réel ;
+/// - l'appareil photo système ([CameraHandoff]) coupe aussi la caméra, et
+///   l'ouverture attend que cet arrêt soit fini.
+///
+/// Démarrages et arrêts passent dans une file, un seul à la fois, et un
+/// redémarrage attend [CameraHandoff.settleDelay] après le dernier arrêt
+/// (le nôtre ou celui de l'appareil photo système) : sur iOS, démarrer une
+/// session pendant qu'une autre s'arrête gèle le thread principal
+/// (YADONY-FLUTTER-PROD-V).
 ///
 /// La permission caméra est demandée au premier démarrage, jamais avant :
 /// un écran qui ne monte pas ce widget n'ouvre pas la caméra.
@@ -126,6 +136,7 @@ class QrCameraView extends StatefulWidget {
     required this.onBidId,
     this.paused,
     this.torch,
+    this.cameraHandoff,
   });
 
   /// Appelé à chaque QR Yadony détecté tant que la caméra n'est pas en pause.
@@ -134,6 +145,9 @@ class QrCameraView extends StatefulWidget {
 
   final ValueListenable<bool>? paused;
   final QrTorch? torch;
+
+  /// Relais avec l'appareil photo système. Par défaut, celui de GetIt.
+  final CameraHandoff? cameraHandoff;
 
   @override
   State<QrCameraView> createState() => _QrCameraViewState();
@@ -147,7 +161,17 @@ class _QrCameraViewState extends State<QrCameraView>
   bool _appResumed = true;
   bool _disposed = false;
 
-  bool get _shouldRun => _appResumed && !(widget.paused?.value ?? false);
+  CameraHandoff? _handoff;
+  VoidCallback? _unregisterHandoff;
+
+  /// File des démarrages et arrêts : un seul à la fois, dans l'ordre.
+  Future<void> _ops = Future<void>.value();
+  DateTime? _lastStop;
+
+  bool get _shouldRun =>
+      _appResumed &&
+      !(widget.paused?.value ?? false) &&
+      !(_handoff?.systemCameraActive.value ?? false);
 
   @override
   void initState() {
@@ -156,6 +180,10 @@ class _QrCameraViewState extends State<QrCameraView>
     widget.paused?.addListener(_sync);
     _controller.addListener(_reportTorch);
     _attachTorch(widget.torch);
+    _attachHandoff(
+      widget.cameraHandoff ??
+          (getIt.isRegistered<CameraHandoff>() ? getIt<CameraHandoff>() : null),
+    );
     // Le contrôleur ne démarre qu'une fois le widget MobileScanner attaché.
     WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
   }
@@ -172,6 +200,36 @@ class _QrCameraViewState extends State<QrCameraView>
       _detachTorch(oldWidget.torch);
       _attachTorch(widget.torch);
     }
+    if (widget.cameraHandoff != null &&
+        oldWidget.cameraHandoff != widget.cameraHandoff) {
+      _detachHandoff();
+      _attachHandoff(widget.cameraHandoff);
+      unawaited(_sync());
+    }
+  }
+
+  void _attachHandoff(CameraHandoff? handoff) {
+    _handoff = handoff;
+    if (handoff == null) return;
+    handoff.systemCameraActive.addListener(_sync);
+    _unregisterHandoff = handoff.register(_releaseForSystemCamera);
+  }
+
+  void _detachHandoff() {
+    _handoff?.systemCameraActive.removeListener(_sync);
+    _unregisterHandoff?.call();
+    _unregisterHandoff = null;
+    _handoff = null;
+  }
+
+  /// Appelé avant l'ouverture de l'appareil photo système : arrête la caméra
+  /// et attend la fin de l'arrêt. Rend `true` si elle tournait.
+  Future<bool> _releaseForSystemCamera() async {
+    if (_disposed) return false;
+    final value = _controller.value;
+    final wasActive = value.isRunning || value.isStarting;
+    await _sync();
+    return wasActive;
   }
 
   @override
@@ -180,11 +238,23 @@ class _QrCameraViewState extends State<QrCameraView>
     _sync();
   }
 
-  Future<void> _sync() async {
+  /// Met la caméra dans l'état voulu ([_shouldRun]). Chaque appel passe
+  /// dans la file : jamais d'arrêt pendant un démarrage, ni l'inverse. Le
+  /// futur se termine une fois cet appel traité.
+  Future<void> _sync() {
+    final next = _ops.then((_) => _apply()).catchError((Object _) {});
+    _ops = next;
+    return next;
+  }
+
+  Future<void> _apply() async {
     if (_disposed) return;
     final value = _controller.value;
     if (_shouldRun) {
       if (value.isRunning || value.isStarting) return;
+      await _waitForSettle();
+      // Une pause a pu être demandée pendant l'attente.
+      if (_disposed || !_shouldRun) return;
       try {
         await _controller.start();
       } on Exception {
@@ -192,11 +262,26 @@ class _QrCameraViewState extends State<QrCameraView>
         // affiche l'erreur via son errorBuilder, rien à faire de plus ici.
         return;
       }
-      // Une pause a pu être demandée pendant le démarrage.
-      if (!_disposed && !_shouldRun) await _sync();
+      // Une pause demandée pendant le démarrage a mis un appel dans la file :
+      // il arrêtera la caméra juste après.
     } else if (value.isRunning) {
       await _controller.stop();
+      _lastStop = DateTime.now();
     }
+  }
+
+  /// Attend que [CameraHandoff.settleDelay] soit écoulé depuis le dernier
+  /// arrêt d'une session caméra, la nôtre ou celle de l'appareil photo.
+  Future<void> _waitForSettle() async {
+    final settle = _handoff?.settleDelay ?? CameraHandoff.defaultSettleDelay;
+    final ours = _lastStop;
+    final system = _handoff?.lastSystemCameraEnd;
+    final last = ours == null
+        ? system
+        : (system == null || ours.isAfter(system) ? ours : system);
+    if (last == null) return;
+    final remaining = settle - DateTime.now().difference(last);
+    if (remaining > Duration.zero) await Future<void>.delayed(remaining);
   }
 
   void _attachTorch(QrTorch? torch) {
@@ -279,6 +364,7 @@ class _QrCameraViewState extends State<QrCameraView>
     WidgetsBinding.instance.removeObserver(this);
     widget.paused?.removeListener(_sync);
     _controller.removeListener(_reportTorch);
+    _detachHandoff();
     _detachTorch(widget.torch);
     unawaited(_controller.dispose());
     super.dispose();

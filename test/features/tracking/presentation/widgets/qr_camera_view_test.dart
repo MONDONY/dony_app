@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/services/camera_handoff.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -396,6 +399,71 @@ void main() {
       );
     });
   });
+
+  group(
+    'QrCameraView : relais avec l\'appareil photo (YADONY-FLUTTER-PROD-V)',
+    () {
+      testWidgets('s\'inscrit au relais, libère la caméra, se désinscrit', (
+        tester,
+      ) async {
+        final handoff = CameraHandoff(settleDelay: Duration.zero);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: QrCameraView(onBidId: (_) {}, cameraHandoff: handoff),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(handoff.releaserCount, 1);
+
+        // Ouverture de l'appareil photo : le lecteur rend la main et
+        // l'ouverture aboutit.
+        var opened = false;
+        var activeDuringOpen = false;
+        unawaited(
+          handoff.runWithSystemCamera(() async {
+            activeDuringOpen = handoff.systemCameraActive.value;
+            opened = true;
+          }),
+        );
+        // Pas de vraie caméra en test : le démarrage reste en suspens, le
+        // relais n'attend pas plus que [releaseTimeout].
+        await tester.pump(CameraHandoff.defaultReleaseTimeout);
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(opened, isTrue);
+        expect(activeDuringOpen, isTrue);
+        expect(handoff.systemCameraActive.value, isFalse);
+        // Appareil photo refermé : le lecteur repart sans planter.
+        await tester.pump(const Duration(milliseconds: 600));
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        expect(handoff.releaserCount, 0);
+        await tester.pump(const Duration(seconds: 1));
+      });
+
+      testWidgets('nouveau relais : l\'ancien est quitté', (tester) async {
+        final first = CameraHandoff(settleDelay: Duration.zero);
+        final second = CameraHandoff(settleDelay: Duration.zero);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: QrCameraView(onBidId: (_) {}, cameraHandoff: first),
+          ),
+        );
+        await tester.pump();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: QrCameraView(onBidId: (_) {}, cameraHandoff: second),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(first.releaserCount, 0);
+        expect(second.releaserCount, 1);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        expect(second.releaserCount, 0);
+        await tester.pump(const Duration(seconds: 1));
+      });
+    },
+  );
 }
 
 /// Lampe sans caméra : compte les demandes, l'état réel reste piloté

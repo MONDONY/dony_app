@@ -14,6 +14,7 @@ import 'package:dony/core/services/analytics_consent_remote.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/app_badge_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
+import 'package:dony/core/services/camera_handoff.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
@@ -355,7 +356,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<FirebaseSessionProbe>(
     () => const FirebaseSessionProbe(),
   );
-  getIt.registerLazySingleton<DonyMediaService>(() => DonyMediaService());
+  getIt.registerLazySingleton<CameraHandoff>(CameraHandoff.new);
+  getIt.registerLazySingleton<DonyMediaService>(
+    () => DonyMediaService(cameraHandoff: getIt<CameraHandoff>()),
+  );
   getIt.registerLazySingleton<ContactPickerService>(
     () => ContactPickerService(),
   );
