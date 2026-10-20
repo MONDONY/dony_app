@@ -5416,8 +5416,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.currencyMobileMoneyAndCashDescription,
   'currencyCashOnlyAvailable': (l) =>
       l.currencyCashOnlyAvailable(placeholderMarker('currency')),
-  'currencyCashOnlyDescription': (l) =>
-      l.currencyCashOnlyDescription(placeholderMarker('currency')),
+  'currencyCashOnlyDescription': (l) => l.currencyCashOnlyDescription,
+  'currencyCashOnlyUnsupportedDescription': (l) =>
+      l.currencyCashOnlyUnsupportedDescription(placeholderMarker('currency')),
   'currencyCashOnlyWithDescription': (l) => l.currencyCashOnlyWithDescription(
     placeholderMarker('currency'),
     placeholderMarker('description'),
@@ -8004,7 +8005,7 @@ const textParameters = <String, List<String>>{
   'currencyCardAndCashAvailable': ['currency'],
   'currencyMobileMoneyAndCashAvailable': ['currency'],
   'currencyCashOnlyAvailable': ['currency'],
-  'currencyCashOnlyDescription': ['currency'],
+  'currencyCashOnlyUnsupportedDescription': ['currency'],
   'currencyCashOnlyWithDescription': ['currency', 'description'],
   'currencyPublishBannerTitle': ['currencyName', 'code'],
   'currencyPublishBannerSemanticsKnown': [

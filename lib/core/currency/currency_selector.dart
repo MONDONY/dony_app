@@ -198,7 +198,12 @@ class _PaymentMethodsNotice extends StatelessWidget {
           '${l.currencyMobileMoneyAndCashAvailable(currency.name(l))}.';
     } else {
       title = l.currencyCashOnlyAvailable(currency.code);
-      description = l.currencyCashOnlyDescription(currency.code);
+      // Devise prise en charge par Stripe : la carte manque parce que le
+      // voyageur n'a pas activé ses paiements. Sinon, la devise elle-même
+      // n'a pas de rail carte.
+      description = currency.isStripeEligible
+          ? l.currencyCashOnlyDescription
+          : l.currencyCashOnlyUnsupportedDescription(currency.code);
       semanticsLabel = l.currencyCashOnlyWithDescription(
         currency.name(l),
         description,
