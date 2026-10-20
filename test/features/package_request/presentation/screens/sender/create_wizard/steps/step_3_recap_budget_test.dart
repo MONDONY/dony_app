@@ -707,6 +707,25 @@ void main() {
       expect(find.text('Réduction du code promo'), findsNothing);
     });
 
+    testWidgets('budget 21,48 € non atteignable au centime : le budget public '
+        'affiché est le brut prélevé, 21,47 €', (tester) async {
+      // 7 % : net 20,07 € → frais 1,40 € (brut 21,47 €) ; net 20,08 € →
+      // frais 1,41 € (brut 21,49 €). Le back stocke et prélève 21,47 €.
+      const seed = PackageRequestFormState(
+        totalBudgetEur: 21.48,
+        currency: SupportedCurrency.eur,
+      );
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+      );
+      await tester.pump();
+
+      expect(find.text(eur(21.47)), findsOneWidget);
+      expect(find.text(eur(21.48)), findsNothing);
+      expect(find.text(eur(1.40)), findsOneWidget);
+      expect(find.text(eur(20.07)), findsOneWidget);
+    });
+
     testWidgets('sans devis, budget 5 € : frais au minimum, suivis de '
         '« (minimum) »', (tester) async {
       const seed = PackageRequestFormState(

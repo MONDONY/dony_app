@@ -928,6 +928,10 @@ class _BudgetBreakdown extends StatelessWidget {
     // Total sans code promo : celui du budget public.
     final base = senderPriceForNet(net, cur.code, grid: calcGrid);
     final baseGross = base.fromGrid ? base.gross : budgetEur;
+    // Sous grille, ~7 % des budgets ne sont pas atteignables au centime (le
+    // total saute de 2 centimes) : le back stocke et prélève le brut
+    // atteignable, inférieur au budget saisi. C'est lui qu'on affiche.
+    final publicBudget = baseGross < budgetEur ? baseGross : budgetEur;
     final commission = q?.commissionEur ?? base.commission;
     final total = q?.totalEur ?? baseGross;
     final minimum = q?.minimumApplied ?? base.minimumApplied;
@@ -940,7 +944,7 @@ class _BudgetBreakdown extends StatelessWidget {
     return _card(
       cs,
       children: [
-        _line(tt, cs, l10n.requestPublicBudget, fmt(budgetEur)),
+        _line(tt, cs, l10n.requestPublicBudget, fmt(publicBudget)),
         const SizedBox(height: DonySpacing.xs),
         _line(
           tt,
