@@ -156,7 +156,6 @@ void main() {
           recipientName: 'Awa',
           recipientPhone: '+221',
           paymentMethod: BidPaymentMethod.wave,
-          phoneNumber: '+221770000000',
           countryCode: 'SN',
           promoCode: ' bienvenue ',
           photoKeys: const ['k1', 'k2'],
@@ -168,7 +167,8 @@ void main() {
         final body = api.last.data as Map<String, dynamic>;
         expect(body['paymentMethod'], 'WAVE');
         expect(body['weightKg'], 2);
-        expect(body['phoneNumber'], '+221770000000');
+        // Le payeur se choisit au paiement : l'offre ne porte jamais de numéro.
+        expect(body.containsKey('phoneNumber'), isFalse);
         expect(body['countryCode'], 'SN');
         expect(body['promoCode'], 'BIENVENUE');
         expect(body['photoKeys'], ['k1', 'k2']);

@@ -3,9 +3,6 @@ import 'package:equatable/equatable.dart';
 
 sealed class MobileMoneyPaymentEvent extends Equatable {
   const MobileMoneyPaymentEvent();
-
-  @override
-  List<Object?> get props => [];
 }
 
 /// Ouverture de l'écran de paiement : lit le statut courant de la portée

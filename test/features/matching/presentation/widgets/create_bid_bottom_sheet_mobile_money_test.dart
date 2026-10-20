@@ -673,8 +673,8 @@ void main() {
 
   group('Soumission — BidCreateRequested (site direct)', () {
     testWidgets(
-      'createBid_mobileMoney_sendsNoPhoneNumber : paymentMethod=mobileMoney, '
-      'aucun numéro envoyé (le payeur se choisit au moment de payer)',
+      'createBid_mobileMoney_sendsNoPhoneNumber : paymentMethod=mobileMoney '
+      'sans champ numéro payeur (il se choisit au moment de payer)',
       (tester) async {
         await _openSheet(
           tester,
@@ -692,48 +692,9 @@ void main() {
         expect(captured, hasLength(1));
         final event = captured.single as BidCreateRequested;
         expect(event.paymentMethod, BidPaymentMethod.mobileMoney);
-        expect(event.phoneNumber, isNull);
         verifyNever(
           () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
         );
-      },
-    );
-
-    testWidgets(
-      'createBid_mobileMoney_withAccountPhone_sendsNoPhoneNumber : le numéro '
-      'du compte Yadony n\'est jamais envoyé',
-      (tester) async {
-        final authBloc = _MockAuthBloc();
-        whenListen(
-          authBloc,
-          const Stream<AuthState>.empty(),
-          initialState: const AuthAuthenticated(
-            UserModel(
-              id: 'u1',
-              roles: [],
-              kycStatus: 'VERIFIED',
-              status: 'ACTIVE',
-              phoneNumber: '+221771234567',
-            ),
-          ),
-        );
-
-        await _openSheet(
-          tester,
-          _announcement(methods: const {BidPaymentMethod.mobileMoney}),
-          authBloc: authBloc,
-        );
-        await _goToPaymentPicker(tester);
-
-        await tester.tap(find.textContaining(mobileMoneyCtaLabel));
-        await tester.pump();
-
-        final captured = verify(
-          () =>
-              _currentBidBloc.add(captureAny(that: isA<BidCreateRequested>())),
-        ).captured;
-        final event = captured.single as BidCreateRequested;
-        expect(event.phoneNumber, isNull);
       },
     );
 
@@ -762,7 +723,6 @@ void main() {
       ).captured;
       final event = captured.single as BidCreateRequested;
       expect(event.paymentMethod, BidPaymentMethod.cash);
-      expect(event.phoneNumber, isNull);
     });
   });
 
@@ -790,8 +750,7 @@ void main() {
       testWidgets(
         // En zone euro le mobile money n'existe pas (isAllowedIn) : sans
         // alternative à la carte, la proposition part sans étape paiement.
-        'annonce EUR STRIPE+MOBILE_MONEY → pas d étape paiement, carte, '
-        'phoneNumber null',
+        'annonce EUR STRIPE+MOBILE_MONEY → pas d étape paiement, carte',
         (tester) async {
           await _openNegotiation(
             tester,
@@ -813,7 +772,6 @@ void main() {
           final captured = await _submitProposal(tester);
           expect(captured, hasLength(1));
           expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
-          expect(captured.single.phoneNumber, isNull);
         },
       );
 
@@ -844,7 +802,6 @@ void main() {
           final captured = await _submitProposal(tester);
           expect(captured, hasLength(1));
           expect(captured.single.paymentMethod, BidPaymentMethod.mobileMoney);
-          expect(captured.single.phoneNumber, isNull);
         },
       );
 
@@ -876,7 +833,6 @@ void main() {
           // Espèces avant mobile money quand la carte manque (défaut
           // inchangé depuis l'offre directe).
           expect(captured.single.paymentMethod, BidPaymentMethod.cash);
-          expect(captured.single.phoneNumber, isNull);
         },
       );
     },

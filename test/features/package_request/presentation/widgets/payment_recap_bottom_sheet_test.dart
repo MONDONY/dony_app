@@ -651,10 +651,10 @@ void main() {
       authBloc.close();
     });
 
-    /// Routeur de test : la vraie route d'attente est remplacée par un stub qui
-    /// capture `state.extra` (attendu null : le payeur se choisit sur l'écran
-    /// d'attente) et se referme avec le résultat choisi ; la route de succès monte le vrai
-    /// [NegotiationPaidSuccessScreen].
+    /// Routeur de test : la vraie route d'attente est remplacée par un stub
+    /// qui capture `state.extra` (attendu null : le payeur se choisit sur
+    /// l'écran d'attente) et se referme avec le résultat choisi ; la route de
+    /// succès monte le vrai [NegotiationPaidSuccessScreen].
     Widget buildRoutedApp({required List<Object?> capturedExtras}) {
       final thread = _makeThread(paymentMethod: PaymentMethod.mobileMoney);
       final router = GoRouter(

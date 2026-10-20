@@ -12,7 +12,6 @@ BidNegotiationProposeRequested _propose({
   double? weightKg = 4,
   double total = 60,
   BidPaymentMethod method = BidPaymentMethod.stripe,
-  String? phone,
   List<Map<String, dynamic>>? gridItems,
 }) => BidNegotiationProposeRequested(
   announcementId: 'a-1',
@@ -23,7 +22,6 @@ BidNegotiationProposeRequested _propose({
   recipientPhone: '+221770000000',
   proposedTotalEur: total,
   paymentMethod: method,
-  phoneNumber: phone,
   countryCode: 'SN',
   photoKeys: const ['p1'],
   customItems: const [],
@@ -47,7 +45,6 @@ void main() {
         _propose(weightKg: null),
         _propose(total: 61),
         _propose(method: BidPaymentMethod.cash),
-        _propose(phone: '+221780000000'),
         _propose(
           gridItems: const [
             {'id': 'g1', 'qty': 2},

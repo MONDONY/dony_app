@@ -95,7 +95,6 @@ class BidNegotiationBloc
         recipientPhone: event.recipientPhone,
         proposedTotalEur: event.proposedTotalEur,
         paymentMethod: event.paymentMethod,
-        phoneNumber: event.phoneNumber,
         countryCode: event.countryCode,
         photoKeys: event.photoKeys,
         customItems: event.customItems,

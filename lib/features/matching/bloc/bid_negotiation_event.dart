@@ -39,7 +39,6 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
   final String recipientPhone;
   final double proposedTotalEur;
   final BidPaymentMethod paymentMethod;
-  final String? phoneNumber;
   final String? countryCode;
   final List<String>? photoKeys;
   final List<Map<String, dynamic>>? customItems;
@@ -54,7 +53,6 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
     required this.recipientPhone,
     required this.proposedTotalEur,
     this.paymentMethod = BidPaymentMethod.stripe,
-    this.phoneNumber,
     this.countryCode,
     this.photoKeys,
     this.customItems,
@@ -71,7 +69,6 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
     recipientPhone,
     proposedTotalEur,
     paymentMethod,
-    phoneNumber,
     countryCode,
     photoKeys,
     customItems,

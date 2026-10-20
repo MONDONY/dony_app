@@ -72,7 +72,6 @@ void main() {
         recipientName: any(named: 'recipientName'),
         recipientPhone: any(named: 'recipientPhone'),
         paymentMethod: any(named: 'paymentMethod'),
-        phoneNumber: any(named: 'phoneNumber'),
         countryCode: any(named: 'countryCode'),
         promoCode: any(named: 'promoCode'),
         photoKeys: any(named: 'photoKeys'),
