@@ -18939,6 +18939,18 @@ abstract class AppLocalizations {
   /// **'Réponse généralement sous 24 h'**
   String get profileHelpContactSupportSubtitle;
 
+  /// Tuile de la section AIDE (profile_sections.dart) : ouvre la fiche Google Play / App Store pour laisser un avis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Noter Yadony'**
+  String get profileHelpRateApp;
+
+  /// Sous-titre de la tuile « Noter Yadony » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre avis aide d\'autres personnes à nous trouver'**
+  String get profileHelpRateAppSubtitle;
+
   /// Type de ligne « à renseigner » dans MON COMPTE (profile_sections.dart, _ContactRow) ; réutilisé pour le libellé TÉLÉPHONE de edit_profile_screen.dart (même feature, même texte).
   ///
   /// In fr, this message translates to:

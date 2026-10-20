@@ -43,6 +43,8 @@ void main() {
       AnalyticsEvents.walletTopupCompleted,
       AnalyticsEvents.walletActiveCurrencySwitched,
       AnalyticsEvents.ratingSubmitted,
+      AnalyticsEvents.storeReviewRequested,
+      AnalyticsEvents.storeListingOpened,
       AnalyticsEvents.cancellationInitiated,
       AnalyticsEvents.rematchAccepted,
       AnalyticsEvents.upgradeToProStarted,

@@ -53,6 +53,9 @@ dependencies:
   # Contacts — picker natif OS (aucune permission READ_CONTACTS requise)
   flutter_native_contact_picker: ^0.0.12
 
+  # Avis Store — fenêtre native de notation Google Play / App Store
+  in_app_review: ^2.0.12
+
   # Local storage
   hive: ^2.2.3
   hive_flutter: ^1.1.0

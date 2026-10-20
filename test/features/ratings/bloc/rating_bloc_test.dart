@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart' show ServerException;
+import 'package:dony/core/services/store_review_service.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
@@ -15,6 +16,8 @@ import '../../../helpers/mock_analytics_backend.dart';
 class MockRatingRepository extends Mock implements RatingRepository {}
 
 class _MockPromptTracker extends Mock implements RatingPromptTracker {}
+
+class _MockStoreReview extends Mock implements StoreReviewService {}
 
 void main() {
   late MockRatingRepository mockRepo;
@@ -301,6 +304,78 @@ void main() {
           'Utilisateur introuvable',
         ),
       ],
+    );
+  });
+
+  group('avis Store après une note', () {
+    late _MockStoreReview storeReview;
+
+    setUp(() {
+      storeReview = _MockStoreReview();
+      when(
+        () => storeReview.requestAfterRating(
+          stars: any(named: 'stars'),
+          roleRated: any(named: 'roleRated'),
+        ),
+      ).thenAnswer((_) async => true);
+    });
+
+    RatingBloc buildWithReview() => RatingBloc(
+      mockRepo,
+      makeDisabledAnalytics(backend),
+      storeReview: storeReview,
+    );
+
+    blocTest<RatingBloc, RatingState>(
+      'note du voyageur envoyée : propose l\'avis Store avec la note',
+      setUp: () {
+        when(
+          () => mockRepo.submitRating(bidId: 'bid-1', stars: 5),
+        ).thenAnswer((_) async {});
+      },
+      build: buildWithReview,
+      act: (bloc) =>
+          bloc.add(const RatingSubmitRequested(bidId: 'bid-1', stars: 5)),
+      expect: () => [isA<RatingLoading>(), isA<RatingSuccess>()],
+      verify: (_) => verify(
+        () => storeReview.requestAfterRating(stars: 5, roleRated: 'traveler'),
+      ).called(1),
+    );
+
+    blocTest<RatingBloc, RatingState>(
+      'note de l\'expéditeur envoyée : propose l\'avis Store avec la note',
+      setUp: () {
+        when(
+          () => mockRepo.submitTravelerRating(bidId: 'bid-1', stars: 4),
+        ).thenAnswer((_) async {});
+      },
+      build: buildWithReview,
+      act: (bloc) => bloc.add(
+        const TravelerRatingSubmitRequested(bidId: 'bid-1', stars: 4),
+      ),
+      expect: () => [isA<RatingLoading>(), isA<RatingSuccess>()],
+      verify: (_) => verify(
+        () => storeReview.requestAfterRating(stars: 4, roleRated: 'sender'),
+      ).called(1),
+    );
+
+    blocTest<RatingBloc, RatingState>(
+      'note refusée par le serveur : aucun avis Store proposé',
+      setUp: () {
+        when(
+          () => mockRepo.submitRating(bidId: 'bid-1', stars: 5),
+        ).thenThrow(const ServerException('Bid non trouvé'));
+      },
+      build: buildWithReview,
+      act: (bloc) =>
+          bloc.add(const RatingSubmitRequested(bidId: 'bid-1', stars: 5)),
+      expect: () => [isA<RatingLoading>(), isA<RatingError>()],
+      verify: (_) => verifyNever(
+        () => storeReview.requestAfterRating(
+          stars: any(named: 'stars'),
+          roleRated: any(named: 'roleRated'),
+        ),
+      ),
     );
   });
 }

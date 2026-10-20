@@ -4095,6 +4095,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'profileHelpContactSupport': (l) => l.profileHelpContactSupport,
   'profileHelpContactSupportSubtitle': (l) =>
       l.profileHelpContactSupportSubtitle,
+  'profileHelpRateApp': (l) => l.profileHelpRateApp,
+  'profileHelpRateAppSubtitle': (l) => l.profileHelpRateAppSubtitle,
   'profileContactTypePhone': (l) => l.profileContactTypePhone,
   'profileContactTypeEmail': (l) => l.profileContactTypeEmail,
   'profileNotAdded': (l) => l.profileNotAdded,

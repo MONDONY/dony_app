@@ -472,6 +472,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `disputes_opened` | DisputeListBloc._onLoad — premier chargement de « Mes litiges » (propriété `count`) |
 | `dispute_detail_opened` | DisputeDetailScreen.initState — ouverture du détail d'un litige (propriété `status`) |
 | `rating_submitted` | RatingBloc._onSubmit()/_onTravelerSubmit() |
+| `store_review_requested` | StoreReviewService.requestAfterRating, appelé par RatingBloc après une note de 4 ou 5 étoiles acceptée par le serveur (des deux côtés) — fenêtre native d'avis Google Play / App Store demandée (`in_app_review`), au plus une fois tous les 120 jours par appareil (Hive `store_review_last_request_at`). Propriétés `stars`, `role_rated` (`traveler`/`sender`). Le système peut ne rien afficher (quota Apple de 3 par an, app hors Play Store, TestFlight) et ne dit jamais si la personne a noté. Jamais derrière une question de satisfaction, jamais contre une récompense |
+| `store_listing_opened` | StoreReviewService.openStoreListing — tuile « Noter Yadony » de la section Aide de l'onglet Moi : fiche Google Play, ou App Store sur « Écrire un avis », ouverte. Propriété `source` (`profile`) |
 | `cancellation_initiated` | CancellationBloc._onTripCancellationRequested() |
 | `rematch_accepted` | RematchSearchScreen — tap « Envoyer une demande » sur une alternative (propriété `count`) |
 | `rematch_alternatives_opened` | RematchSearchScreen.initState — ouverture de l'écran alternatives (propriétés `source`: `in_app`/`deep_link`, `parcel_return`: colis remis puis annulé) |
