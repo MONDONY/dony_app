@@ -57,6 +57,8 @@ class CompatibleTravelerCard extends StatelessWidget {
                     name: name,
                     imageUrl: trip.traveler?.avatarUrl,
                     verified: trip.traveler?.kycVerified ?? false,
+                    pro: trip.traveler?.isProAccount ?? false,
+                    gpPro: trip.traveler?.gpPro ?? false,
                   ),
                   const SizedBox(width: DonySpacing.md),
                   Expanded(

@@ -140,6 +140,7 @@ class _SenderProfileSheet extends StatelessWidget {
                         size: DonyAvatarSize.xl,
                         verified: bid.senderKycVerified,
                         pro: bid.senderIsProAccount,
+                        gpPro: bid.senderGpPro,
                       ),
                       const SizedBox(height: DonySpacing.md),
                       Text(

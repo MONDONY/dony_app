@@ -113,6 +113,7 @@ class RequestOfferCard extends StatelessWidget {
                     name: name,
                     imageUrl: t.travelerPhotoUrl,
                     verified: (t.travelerTripsCount ?? 0) > 0,
+                    gpPro: t.travelerGpPro,
                   ),
                   const SizedBox(width: DonySpacing.md),
                   Expanded(

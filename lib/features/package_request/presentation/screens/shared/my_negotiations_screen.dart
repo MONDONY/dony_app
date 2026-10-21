@@ -899,6 +899,7 @@ class _NegoCard extends StatelessWidget {
                 imageUrl: thread.travelerPhotoUrl,
                 size: DonyAvatarSize.sm,
                 verified: (thread.travelerTripsCount ?? 0) > 0,
+                gpPro: thread.travelerGpPro,
               ),
               const SizedBox(width: 6),
               Expanded(

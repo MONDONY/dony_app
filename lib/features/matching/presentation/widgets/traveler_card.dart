@@ -288,6 +288,7 @@ class TravelerCard extends StatelessWidget {
                       imageUrl: traveler?.avatarUrl,
                       verified: traveler?.kycVerified ?? false,
                       pro: isProAccount,
+                      gpPro: isGpPro,
                     ),
                     const SizedBox(width: DonySpacing.md),
                     Expanded(

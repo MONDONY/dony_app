@@ -369,6 +369,7 @@ class _PartnerTitle extends StatelessWidget {
           imageUrl: photoUrl,
           size: DonyAvatarSize.sm,
           verified: (trips ?? 0) > 0,
+          gpPro: partnerGpPro,
         ),
         const SizedBox(width: DonySpacing.sm + 2),
         Expanded(

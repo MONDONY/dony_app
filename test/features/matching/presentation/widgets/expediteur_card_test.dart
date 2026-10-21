@@ -1,5 +1,4 @@
-import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/core/design/widgets/gp_pro_badge.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/expediteur_card.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +12,7 @@ BidModel _bid({
   int? senderTotalShipments,
   bool senderKycVerified = false,
   bool senderGpPro = false,
+  bool senderIsProAccount = false,
   int? senderIncidentCount,
 }) => BidModel(
   id: 'b1',
@@ -23,6 +23,7 @@ BidModel _bid({
   senderTotalShipments: senderTotalShipments,
   senderKycVerified: senderKycVerified,
   senderGpPro: senderGpPro,
+  senderIsProAccount: senderIsProAccount,
   senderIncidentCount: senderIncidentCount,
   createdAt: DateTime(2026, 10, 6),
   updatedAt: DateTime(2026, 10, 6),
@@ -108,5 +109,33 @@ void main() {
     expect(find.byKey(const Key('sender-reliability-label')), findsNothing);
     await _pump(tester, _bid(senderName: 'Aïcha D.', senderIncidentCount: 0));
     expect(find.byKey(const Key('sender-reliability-label')), findsNothing);
+  });
+
+  testWidgets('coche de l\'avatar : niveau GP Pro et PRO transmis', (
+    tester,
+  ) async {
+    DonyAvatar avatar() => tester.widget<DonyAvatar>(find.byType(DonyAvatar));
+
+    await _pump(tester, _bid(senderName: 'Aïcha D.', senderKycVerified: true));
+    expect(avatar().gpPro, isFalse);
+    expect(avatar().pro, isFalse);
+
+    await _pump(
+      tester,
+      _bid(senderName: 'Aïcha D.', senderKycVerified: true, senderGpPro: true),
+    );
+    expect(avatar().gpPro, isTrue);
+    expect(avatar().pro, isFalse);
+
+    await _pump(
+      tester,
+      _bid(
+        senderName: 'Aïcha D.',
+        senderKycVerified: true,
+        senderGpPro: true,
+        senderIsProAccount: true,
+      ),
+    );
+    expect(avatar().pro, isTrue);
   });
 }

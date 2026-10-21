@@ -100,6 +100,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
             imageUrl: sender.avatarUrl,
             size: DonyAvatarSize.xl,
             verified: sender.kycVerified,
+            gpPro: sender.gpPro,
           ),
           const SizedBox(height: DonySpacing.md),
           Text(

@@ -111,6 +111,7 @@ class ExpediteurContactCard extends StatelessWidget {
                   imageUrl: bid.senderAvatarUrl,
                   verified: bid.senderKycVerified,
                   pro: bid.senderIsProAccount,
+                  gpPro: bid.senderGpPro,
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
