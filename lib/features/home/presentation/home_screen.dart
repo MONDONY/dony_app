@@ -38,13 +38,17 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
+import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/matching/presentation/unmet_criterion_label.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/similar_trips_section.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
@@ -299,6 +303,11 @@ String homeListTitle(
 /// nombre de trajets actifs, connu ou non (voir `knownActiveTrips`) :
 /// [activeTrips] à `null` annonce les résultats sans inventer un « 0 trajet
 /// actif » que rien ne prouve.
+///
+/// [hasSimilar] : le bloc « Autres annonces sur ce trajet » est affiché. Sans
+/// trajet exact, le sous-titre dit alors qu'aucun trajet ne correspond
+/// exactement, au lieu d'un « personne ne propose ce trajet » démenti par
+/// les cartes juste en dessous.
 @visibleForTesting
 String homeListSubtitle(
   AppLocalizations l, {
@@ -307,11 +316,13 @@ String homeListSubtitle(
   required int parcels,
   required bool matching,
   required int? activeTrips,
+  bool hasSimilar = false,
 }) {
   if (mode.isTrips) {
-    return trips == 0
-        ? l.homeListSubtitleNoTraveler
-        : l.homeListSubtitleTravelersCanCarry;
+    if (trips > 0) return l.homeListSubtitleTravelersCanCarry;
+    return hasSimilar
+        ? l.similarTripsNoExactMatch
+        : l.homeListSubtitleNoTraveler;
   }
   if (matching) {
     if (activeTrips == null) {
@@ -1612,6 +1623,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             tripsTotal: state is AnnouncementSearchLoaded
                                 ? state.displayCount
                                 : null,
+                            // Seul un chargement réussi porte le bloc : une
+                            // erreur n'en invente jamais.
+                            similarTrips: state is AnnouncementSearchLoaded
+                                ? state.similar
+                                : const [],
                           ),
                         );
                       },
@@ -2012,6 +2028,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     required bool tripsFailed,
     required bool tripsLoading,
     int? tripsTotal,
+    List<SimilarAnnouncement> similarTrips = const [],
   }) {
     final tt = Theme.of(ctx).textTheme;
     final cs = Theme.of(ctx).colorScheme;
@@ -2155,6 +2172,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     parcels: parcels,
                                     matching: matching,
                                     activeTrips: trips,
+                                    hasSimilar:
+                                        _mode.isTrips &&
+                                        similarTrips.isNotEmpty,
                                   ),
                                   // Une ligne : la feuille repliée a une
                                   // hauteur fixe, un sous-titre qui passerait
@@ -2408,7 +2428,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         ),
                       ),
                     )
-                  else if (count == 0)
+                  // Zéro trajet exact mais des trajets proches : le bloc
+                  // « Autres annonces » remplace l'état vide pleine page, qui
+                  // dirait à tort qu'il n'y a rien sur ce trajet.
+                  else if (count == 0 && similarTrips.isEmpty)
                     _aboveFloatingControls(
                       bottomPad,
                       SliverFillRemaining(
@@ -2438,94 +2461,75 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       ),
                     )
                   else
-                    SliverMainAxisGroup(
-                      slivers: [
-                        SliverPadding(
-                          padding: EdgeInsets.fromLTRB(
-                            DonySpacing.base,
-                            DonySpacing.sm,
-                            DonySpacing.base,
+                    BlocBuilder<BidBloc, BidState>(
+                      buildWhen: (prev, curr) =>
+                          curr is BidListLoaded || prev is BidListLoaded,
+                      builder: (context, bidState) {
+                        final myActiveBidsByAnnouncement = bidState
+                            .existingTripBidsByAnnouncement();
+                        final listBottom =
                             bottomPad +
-                                DonySpacing.huge +
-                                _kFloatingNavClearance,
-                          ),
-                          sliver: BlocBuilder<BidBloc, BidState>(
-                            buildWhen: (prev, curr) =>
-                                curr is BidListLoaded || prev is BidListLoaded,
-                            builder: (context, bidState) {
-                              final myActiveBidsByAnnouncement = bidState
-                                  .existingTripBidsByAnnouncement();
-                              return SliverList.separated(
-                                itemCount: count,
-                                separatorBuilder: (_, _) =>
-                                    const SizedBox(height: DonySpacing.md),
-                                itemBuilder: (context, i) {
-                                  final a = announcements[i];
-                                  final authState = context
-                                      .read<AuthBloc>()
-                                      .state;
-                                  final currentUserId = authState.currentUserId;
-                                  final isOwn =
-                                      currentUserId != null &&
-                                      a.travelerId == currentUserId;
-                                  final badge = _isNearMeActive
-                                      ? buildDistanceBadge(
-                                          a,
-                                          _userPosition != null
-                                              ? (
-                                                  lat: _userPosition!.latitude,
-                                                  lng: _userPosition!.longitude,
-                                                )
-                                              : null,
-                                        )
-                                      : null;
-                                  final existingBid =
-                                      myActiveBidsByAnnouncement[a.id];
-                                  return TravelerCard(
-                                    announcement: a,
-                                    index: i,
-                                    isOwnAnnouncement: isOwn,
-                                    showFavorite: !isOwn,
-                                    distanceBadge: badge,
-                                    existingBidStatus: existingBid?.status,
-                                    onTap: isOwn
-                                        ? () async {
-                                            final changed = await context
-                                                .push<bool>(
-                                                  '/announcements/${a.id}/trip',
-                                                  extra: a,
-                                                );
-                                            if ((changed ?? false) &&
-                                                context.mounted) {
-                                              _dispatchSearch();
-                                            }
-                                          }
-                                        : existingBid != null
-                                        ? () async {
-                                            await context.push(
-                                              existingTripBidRoute(existingBid),
-                                              extra: existingBid,
-                                            );
-                                            if (!context.mounted) {
-                                              return;
-                                            }
-                                            context.read<BidBloc>().add(
-                                              const BidMyListAutoRefreshRequested(
-                                                force: true,
-                                              ),
-                                            );
-                                          }
-                                        : () => showTravelerAnnouncementSheet(
-                                            context,
-                                            announcement: a,
+                            DonySpacing.huge +
+                            _kFloatingNavClearance;
+                        final l = context.l10n;
+                        return SliverMainAxisGroup(
+                          slivers: [
+                            if (count > 0)
+                              SliverPadding(
+                                padding: EdgeInsets.fromLTRB(
+                                  DonySpacing.base,
+                                  DonySpacing.sm,
+                                  DonySpacing.base,
+                                  // Le bloc suivant porte la marge du bas.
+                                  similarTrips.isEmpty ? listBottom : 0,
+                                ),
+                                sliver: SliverList.separated(
+                                  itemCount: count,
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(height: DonySpacing.md),
+                                  itemBuilder: (context, i) => _buildTripCard(
+                                    context,
+                                    announcements[i],
+                                    i,
+                                    myActiveBidsByAnnouncement,
+                                  ),
+                                ),
+                              ),
+                            SimilarTripsSection(
+                              items: similarTrips,
+                              onClearFilters:
+                                  count == 0 &&
+                                      !_isNearMeActive &&
+                                      _activeFilterCount > 0
+                                  ? _resetFilters
+                                  : null,
+                              padding: EdgeInsets.fromLTRB(
+                                DonySpacing.base,
+                                count > 0 ? DonySpacing.xl : DonySpacing.base,
+                                DonySpacing.base,
+                                listBottom,
+                              ),
+                              cardBuilder: (item, i) => _buildTripCard(
+                                context,
+                                item.announcement,
+                                i,
+                                myActiveBidsByAnnouncement,
+                                // Jamais de carte sans explication.
+                                unmetReasons: item.unmet.isEmpty
+                                    ? [l.unmetGeneric]
+                                    : [
+                                        for (final c in item.unmet)
+                                          unmetCriterionLabel(
+                                            l,
+                                            c,
+                                            localeName: l.localeName,
                                           ),
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                                      ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                 ],
               ),
@@ -2533,6 +2537,62 @@ class _MapSenderViewState extends State<_MapSenderView> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Carte d'un trajet de la liste des résultats, exact ou proche : mêmes
+  /// actions dans les deux cas (ouverture, favori, offre déjà déposée). Seules
+  /// les [unmetReasons] distinguent une carte du bloc « Autres annonces ».
+  Widget _buildTripCard(
+    BuildContext context,
+    AnnouncementModel a,
+    int index,
+    Map<String, BidModel> myActiveBidsByAnnouncement, {
+    List<String> unmetReasons = const [],
+  }) {
+    final currentUserId = context.read<AuthBloc>().state.currentUserId;
+    final isOwn = currentUserId != null && a.travelerId == currentUserId;
+    final badge = _isNearMeActive
+        ? buildDistanceBadge(
+            a,
+            _userPosition != null
+                ? (lat: _userPosition!.latitude, lng: _userPosition!.longitude)
+                : null,
+          )
+        : null;
+    final existingBid = myActiveBidsByAnnouncement[a.id];
+    return TravelerCard(
+      announcement: a,
+      index: index,
+      isOwnAnnouncement: isOwn,
+      showFavorite: !isOwn,
+      distanceBadge: badge,
+      existingBidStatus: existingBid?.status,
+      unmetReasons: unmetReasons,
+      onTap: isOwn
+          ? () async {
+              final changed = await context.push<bool>(
+                '/announcements/${a.id}/trip',
+                extra: a,
+              );
+              if ((changed ?? false) && context.mounted) {
+                _dispatchSearch();
+              }
+            }
+          : existingBid != null
+          ? () async {
+              await context.push(
+                existingTripBidRoute(existingBid),
+                extra: existingBid,
+              );
+              if (!context.mounted) {
+                return;
+              }
+              context.read<BidBloc>().add(
+                const BidMyListAutoRefreshRequested(force: true),
+              );
+            }
+          : () => showTravelerAnnouncementSheet(context, announcement: a),
     );
   }
 }

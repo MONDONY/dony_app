@@ -1215,6 +1215,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPosterPriceFromItem': (l) =>
       l.tripPosterPriceFromItem(placeholderMarker('price')),
   'tripPosterTitle': (l) => l.tripPosterTitle,
+  'posterTitleShared': (l) => l.posterTitleShared,
   'tripPosterNotFoundTitle': (l) => l.tripPosterNotFoundTitle,
   'tripPosterNotFoundDescription': (l) => l.tripPosterNotFoundDescription,
   'tripPosterCaptionCorridor': (l) => l.tripPosterCaptionCorridor(
@@ -6170,9 +6171,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'chatPhotoRateLimited': (l) => l.chatPhotoRateLimited,
   'chatPhotoSendFailed': (l) => l.chatPhotoSendFailed,
   'chatReportMessageAction': (l) => l.chatReportMessageAction,
-  'senderReliabilityLabel': (l) =>
-      l.senderReliabilityLabel(intPlaceholderValue),
-  'senderReliabilityTooltip': (l) => l.senderReliabilityTooltip,
   'walletActiveCurrencyCardLabel': (l) => l.walletActiveCurrencyCardLabel,
   'walletActiveCurrencyCardHint': (l) => l.walletActiveCurrencyCardHint,
   'walletActiveCurrencyChange': (l) => l.walletActiveCurrencyChange,
@@ -7670,6 +7668,29 @@ final allMessages = <String, String Function(AppLocalizations)>{
   ),
   'listingHandoverClosedBadge': (l) => l.listingHandoverClosedBadge,
   'listingHandoverClosedMessage': (l) => l.listingHandoverClosedMessage,
+  'similarTripsTitle': (l) => l.similarTripsTitle,
+  'similarTripsSubtitle': (l) => l.similarTripsSubtitle,
+  'similarTripsNoExactMatch': (l) => l.similarTripsNoExactMatch,
+  'unmetDate': (l) =>
+      l.unmetDate(placeholderMarker('requested'), placeholderMarker('actual')),
+  'unmetMinKg': (l) =>
+      l.unmetMinKg(placeholderMarker('requested'), placeholderMarker('actual')),
+  'unmetMaxKg': (l) =>
+      l.unmetMaxKg(placeholderMarker('requested'), placeholderMarker('actual')),
+  'unmetTransport': (l) => l.unmetTransport(
+    placeholderMarker('requested'),
+    placeholderMarker('actual'),
+  ),
+  'unmetMinRating': (l) => l.unmetMinRating(
+    placeholderMarker('requested'),
+    placeholderMarker('actual'),
+  ),
+  'unmetContentType': (l) => l.unmetContentType(placeholderMarker('requested')),
+  'unmetRadius': (l) => l.unmetRadius,
+  'unmetWeekend': (l) => l.unmetWeekend(placeholderMarker('actual')),
+  'unmetUrgent': (l) => l.unmetUrgent,
+  'unmetGpPro': (l) => l.unmetGpPro,
+  'unmetGeneric': (l) => l.unmetGeneric,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8287,4 +8308,11 @@ const textParameters = <String, List<String>>{
   'demandesTripFilterLabel': ['route'],
   'tripTimeInCity': ['time', 'city'],
   'tripTimeInCityElided': ['time', 'city'],
+  'unmetDate': ['requested', 'actual'],
+  'unmetMinKg': ['requested', 'actual'],
+  'unmetMaxKg': ['requested', 'actual'],
+  'unmetTransport': ['requested', 'actual'],
+  'unmetMinRating': ['requested', 'actual'],
+  'unmetContentType': ['requested'],
+  'unmetWeekend': ['actual'],
 };

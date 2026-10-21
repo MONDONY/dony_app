@@ -1,6 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/core/widgets/sender_reliability_label.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
@@ -128,10 +127,6 @@ class _SenderPublicProfileContent extends StatelessWidget {
           if (sender.gpPro) ...[
             const SizedBox(height: DonySpacing.xs),
             const GpProBadge(surface: 'sender_public_profile'),
-          ],
-          if (SenderReliabilityLabel.isVisible(sender.incidentCount)) ...[
-            const SizedBox(height: DonySpacing.sm),
-            SenderReliabilityLabel(count: sender.incidentCount),
           ],
           const SizedBox(height: DonySpacing.xl),
           Container(

@@ -17565,21 +17565,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatReportMessageAction => 'Report';
 
   @override
-  String senderReliabilityLabel(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count cancellations or no-shows',
-      one: '1 cancellation or no-show',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get senderReliabilityTooltip =>
-      'Parcels cancelled after a traveler accepted them, and confirmed no-shows at the handover meeting.';
-
-  @override
   String get walletActiveCurrencyCardLabel => 'Active wallet';
 
   @override
@@ -22066,4 +22051,61 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get listingHandoverClosedMessage =>
       'The parcel drop-off deadline has passed: this trip no longer accepts requests.';
+
+  @override
+  String get similarTripsTitle => 'Other listings on this route';
+
+  @override
+  String get similarTripsSubtitle =>
+      'These trips do not exactly match your criteria.';
+
+  @override
+  String get similarTripsNoExactMatch => 'No trip exactly matches your search.';
+
+  @override
+  String unmetDate(String requested, String actual) {
+    return 'Departs on $actual instead of $requested';
+  }
+
+  @override
+  String unmetMinKg(String requested, String actual) {
+    return '$actual kg available instead of $requested';
+  }
+
+  @override
+  String unmetMaxKg(String requested, String actual) {
+    return '$actual kg available, more than the $requested kg wanted';
+  }
+
+  @override
+  String unmetTransport(String requested, String actual) {
+    return 'Transport: $actual (requested: $requested)';
+  }
+
+  @override
+  String unmetMinRating(String requested, String actual) {
+    return 'Rated $actual instead of $requested minimum';
+  }
+
+  @override
+  String unmetContentType(String requested) {
+    return 'Does not accept: $requested';
+  }
+
+  @override
+  String get unmetRadius => 'Outside the chosen pickup area';
+
+  @override
+  String unmetWeekend(String actual) {
+    return 'Departs on a $actual (not a weekend)';
+  }
+
+  @override
+  String get unmetUrgent => 'Departure outside the urgent window';
+
+  @override
+  String get unmetGpPro => 'Traveler is not a GP Pro';
+
+  @override
+  String get unmetGeneric => 'Does not match one of your criteria';
 }

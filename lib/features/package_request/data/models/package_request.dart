@@ -51,7 +51,6 @@ class PackageRequest extends Equatable {
     this.convertedDisplayPrice,
     this.convertedCurrency,
     this.grossPriceEur,
-    this.senderIncidentCount,
     this.commissionGridId,
   });
 
@@ -134,11 +133,6 @@ class PackageRequest extends Equatable {
   /// Devise cible de [convertedDisplayPrice] : celle du lecteur.
   final String? convertedCurrency;
 
-  /// Fiabilité de l'expéditeur, servie au voyageur qui consulte la demande
-  /// (FLUTTER-E0/E6) : annulations après acceptation et absences au rendez-vous
-  /// de remise confirmées. `null` pour le propriétaire ou un back antérieur.
-  final int? senderIncidentCount;
-
   /// Grille de commission figée à la création de la demande : le back calcule
   /// le net d'un nouveau budget sur elle, jamais sur la grille en vigueur.
   /// `null` pour une demande antérieure aux paliers ou un back antérieur.
@@ -200,7 +194,6 @@ class PackageRequest extends Equatable {
           ?.toDouble(),
       convertedCurrency: json['convertedCurrency'] as String?,
       grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
-      senderIncidentCount: (json['senderIncidentCount'] as num?)?.toInt(),
       commissionGridId: json['commissionGridId'] as String?,
     );
   }
@@ -235,7 +228,6 @@ class PackageRequest extends Equatable {
     convertedDisplayPrice,
     convertedCurrency,
     grossPriceEur,
-    senderIncidentCount,
     commissionGridId,
   ];
 }

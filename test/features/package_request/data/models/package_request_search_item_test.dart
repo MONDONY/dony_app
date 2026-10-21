@@ -274,19 +274,15 @@ void main() {
     });
   });
 
-  group('SenderPublicProfile.incidentCount (FLUTTER-E0/E6)', () {
-    test('lu quand le serveur le fournit', () {
+  group('SenderPublicProfile : incidents retirés', () {
+    test('ignores_legacy_sender_incident_count_in_json', () {
       final json = _baseJson();
       (json['sender'] as Map<String, dynamic>)['incidentCount'] = 2;
-      expect(PackageRequestSearchItem.fromJson(json).sender.incidentCount, 2);
-    });
-
-    test('0 sur un back antérieur (champ absent)', () {
+      final item = PackageRequestSearchItem.fromJson(json);
       expect(
-        PackageRequestSearchItem.fromJson(_baseJson()).sender.incidentCount,
-        0,
+        item.sender,
+        PackageRequestSearchItem.fromJson(_baseJson()).sender,
       );
-      expect(SenderPublicProfile.guest('Awa').incidentCount, 0);
     });
   });
 

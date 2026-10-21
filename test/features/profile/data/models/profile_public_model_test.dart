@@ -63,19 +63,15 @@ void main() {
     });
   });
 
-  group('ProfilePublicModel.senderIncidentCount (FLUTTER-E0/E6)', () {
-    test('lu, 0 quand absent (back antérieur)', () {
-      expect(
-        ProfilePublicModel.fromJson({
-          'userId': 'u1',
-          'senderIncidentCount': 4,
-        }).senderIncidentCount,
-        4,
-      );
-      expect(
-        ProfilePublicModel.fromJson({'userId': 'u1'}).senderIncidentCount,
-        0,
-      );
+  group('ProfilePublicModel : incidents expéditeur retirés', () {
+    test('ignores_legacy_sender_incident_count_in_json', () {
+      final model = ProfilePublicModel.fromJson({
+        'userId': 'u1',
+        'senderIncidentCount': 4,
+        'reliabilityPercent': 90,
+      });
+      expect(model.userId, 'u1');
+      expect(model.reliabilityPercent, 90);
     });
   });
 }

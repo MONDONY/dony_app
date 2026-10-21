@@ -1,7 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/core/widgets/sender_reliability_label.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
@@ -107,7 +106,6 @@ class ExpediteurCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                      SenderReliabilityLabel(count: bid.senderIncidentCount),
                       Text(
                         l.bidSubmittedOn(
                           DateFormat.yMd(

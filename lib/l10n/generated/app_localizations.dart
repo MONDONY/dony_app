@@ -28897,18 +28897,6 @@ abstract class AppLocalizations {
   /// **'Signaler'**
   String get chatReportMessageAction;
 
-  /// Fiabilité d'un expéditeur vue par les voyageurs : annulations après acceptation et absences confirmées au rendez-vous de remise (sender_reliability_label.dart, FLUTTER-E0/E6).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{1 annulation ou absence} other{{count} annulations ou absences}}'**
-  String senderReliabilityLabel(int count);
-
-  /// Infobulle du libellé de fiabilité expéditeur (FLUTTER-E0/E6).
-  ///
-  /// In fr, this message translates to:
-  /// **'Colis annulés après l\'acceptation d\'un voyageur et absences confirmées au rendez-vous de remise.'**
-  String get senderReliabilityTooltip;
-
   /// Libellé de la carte du portefeuille actif (wallet_screen.dart, FLUTTER-8F).
   ///
   /// In fr, this message translates to:
@@ -35795,6 +35783,90 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'La date limite de dépôt des colis est passée : ce trajet n\'accepte plus de demande.'**
   String get listingHandoverClosedMessage;
+
+  /// Titre du bloc des trajets proches affiché sous les résultats exacts.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autres annonces sur ce trajet'**
+  String get similarTripsTitle;
+
+  /// Sous-titre du bloc des trajets proches.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces trajets ne correspondent pas exactement à vos critères.'**
+  String get similarTripsSubtitle;
+
+  /// Message affiché quand seuls des trajets proches existent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet ne correspond exactement à votre recherche.'**
+  String get similarTripsNoExactMatch;
+
+  /// Écart de date de départ d'un trajet proche.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ le {actual} au lieu du {requested}'**
+  String unmetDate(String requested, String actual);
+
+  /// Écart de capacité : pas assez de kilos disponibles.
+  ///
+  /// In fr, this message translates to:
+  /// **'{actual} kg disponibles au lieu de {requested}'**
+  String unmetMinKg(String requested, String actual);
+
+  /// Écart de capacité : plus de kilos que souhaité.
+  ///
+  /// In fr, this message translates to:
+  /// **'{actual} kg disponibles, plus que les {requested} kg souhaités'**
+  String unmetMaxKg(String requested, String actual);
+
+  /// Écart de mode de transport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transport : {actual} (demandé : {requested})'**
+  String unmetTransport(String requested, String actual);
+
+  /// Écart de note minimale du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Note de {actual} au lieu de {requested} minimum'**
+  String unmetMinRating(String requested, String actual);
+
+  /// Écart de type de contenu non accepté.
+  ///
+  /// In fr, this message translates to:
+  /// **'N\'accepte pas : {requested}'**
+  String unmetContentType(String requested);
+
+  /// Écart de zone de retrait.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hors de la zone de retrait choisie'**
+  String get unmetRadius;
+
+  /// Écart : départ hors week-end.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ un {actual} (pas un week-end)'**
+  String unmetWeekend(String actual);
+
+  /// Écart : départ hors de la fenêtre urgente.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ hors de la fenêtre urgente'**
+  String get unmetUrgent;
+
+  /// Écart : le voyageur n'est pas GP Pro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur non GP Pro'**
+  String get unmetGpPro;
+
+  /// Écart générique pour un code inconnu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne correspond pas à l\'un de vos critères'**
+  String get unmetGeneric;
 }
 
 class _AppLocalizationsDelegate

@@ -1,7 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/core/widgets/sender_reliability_label.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
@@ -266,16 +265,6 @@ class _SenderProfileSheet extends StatelessWidget {
                     );
                   },
                 ),
-                if (SenderReliabilityLabel.isVisible(
-                  bid.senderIncidentCount,
-                )) ...[
-                  const SizedBox(height: DonySpacing.md),
-                  Center(
-                    child: SenderReliabilityLabel(
-                      count: bid.senderIncidentCount,
-                    ),
-                  ),
-                ],
                 const SizedBox(height: DonySpacing.xl),
 
                 // ── Évaluations ────────────────────────────────────────────

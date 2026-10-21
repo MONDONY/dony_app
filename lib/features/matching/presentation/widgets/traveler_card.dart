@@ -28,6 +28,7 @@ class TravelerCard extends StatelessWidget {
     this.distanceBadge,
     this.existingBidStatus,
     this.showFavorite = false,
+    this.unmetReasons = const [],
   });
 
   final AnnouncementModel announcement;
@@ -50,6 +51,11 @@ class TravelerCard extends StatelessWidget {
   /// user. The in-card heart has no owner guard; the backend returns 422 on an
   /// own-trip add, but the optimistic UI would flash before the error arrives.
   final bool showFavorite;
+
+  /// Critères de la recherche que ce trajet ne remplit pas, déjà traduits
+  /// (bloc « Autres annonces sur ce trajet »). Une ligne d'avertissement par
+  /// raison, en pied de carte ; rien quand la liste est vide (résultat exact).
+  final List<String> unmetReasons;
 
   /// Nombre de catégories affichées avant la pastille « +N ».
   ///
@@ -433,11 +439,65 @@ class TravelerCard extends StatelessWidget {
                   maxVisible: _maxVisibleChips,
                 ),
               ],
+              if (unmetReasons.isNotEmpty) ...[
+                const SizedBox(height: DonySpacing.md),
+                for (var i = 0; i < unmetReasons.length; i++) ...[
+                  if (i > 0) const SizedBox(height: DonySpacing.xxs),
+                  _UnmetReasonLine(
+                    key: ValueKey('traveler-card-unmet-$i'),
+                    reason: unmetReasons[i],
+                  ),
+                ],
+              ],
             ],
           ),
         ),
       ),
     ).animate().fadeIn(delay: Duration(milliseconds: 60 * index)).slideY(begin: 0.04, curve: Curves.easeOutCubic);
+  }
+}
+
+/// Une raison pour laquelle un trajet proche ne correspond pas à la recherche.
+/// Le texte passe à la ligne plutôt que d'être coupé : la phrase porte une
+/// information (date, kilos, note) qui ne doit jamais perdre son sens.
+class _UnmetReasonLine extends StatelessWidget {
+  const _UnmetReasonLine({super.key, required this.reason});
+
+  final String reason;
+
+  /// Hauteur de ligne du texte (bodySmall) moins la taille de l'icône, divisée
+  /// par deux : l'icône reste centrée sur la première ligne, même quand la
+  /// phrase passe sur deux lignes.
+  static const double _iconTopInset = 2;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Semantics(
+      label: reason,
+      excludeSemantics: true,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: _iconTopInset),
+            child: DonyIcon('triangle-alert', size: 13, color: cs.warning),
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          Expanded(
+            child: Text(
+              reason,
+              style: tt.bodySmall?.copyWith(
+                color: cs.warning,
+                fontWeight: FontWeight.w600,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

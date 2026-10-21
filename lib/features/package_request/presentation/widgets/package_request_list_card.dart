@@ -5,7 +5,6 @@ import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/owner_views_label.dart';
-import 'package:dony/core/widgets/sender_reliability_label.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -613,7 +612,6 @@ class _SenderRow extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SenderReliabilityLabel(count: item.sender.incidentCount),
                 ],
               ),
             ),

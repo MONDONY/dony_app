@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -9,6 +10,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/announcement_search_page.dart';
+import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -66,11 +68,21 @@ AnnouncementSearchPage _page(
   List<AnnouncementModel> content, {
   int? total,
   int page = 0,
+  List<SimilarAnnouncement> similar = const [],
 }) => AnnouncementSearchPage(
   content: content,
   totalElements: total ?? content.length,
   page: page,
+  similar: similar,
 );
+
+SimilarAnnouncement _similar(String id) => SimilarAnnouncement(
+  announcement: buildAnnouncement(id: id),
+  unmet: const [UnmetCriterion(code: 'DATE')],
+);
+
+String _ids(List<SimilarAnnouncement> l) =>
+    l.map((s) => s.announcement.id).join(',');
 
 void main() {
   late MockAnnouncementRepository mockRepo;
@@ -948,6 +960,348 @@ void main() {
       final full = buildAnnouncement(id: 'f', status: 'FULL');
       final state = AnnouncementSearchLoaded([buildAnnouncement(), full]);
       expect(state.displayCount, 1);
+    });
+  });
+
+  group('autres annonces (similar)', () {
+    void stubPage(int page, AnnouncementSearchPage result, {String? sortBy}) {
+      when(
+        () => mockRepo.searchAnnouncementsPage(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDateFrom: any(named: 'departureDateFrom'),
+          departureDateTo: any(named: 'departureDateTo'),
+          minAvailableKg: any(named: 'minAvailableKg'),
+          userLat: any(named: 'userLat'),
+          userLng: any(named: 'userLng'),
+          radiusKm: any(named: 'radiusKm'),
+          sortBy: sortBy ?? any(named: 'sortBy'),
+          sortDir: any(named: 'sortDir'),
+          urgent: any(named: 'urgent'),
+          page: page,
+          includeFull: any(named: 'includeFull'),
+        ),
+      ).thenAnswer((_) async => result);
+    }
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'search_emits_similar_from_first_page',
+      build: () {
+        stubPage(
+          0,
+          _page([buildAnnouncement(id: 'a')], similar: [_similar('s1')]),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementSearchRequested()),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        predicate<AnnouncementState>(
+          (s) => s is AnnouncementSearchLoaded && _ids(s.similar) == 's1',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'load_more_stops_when_page_brings_nothing_new',
+      build: () {
+        stubPage(
+          0,
+          _page(
+            [buildAnnouncement(id: 'a')],
+            total: 50,
+            similar: [_similar('s1')],
+          ),
+        );
+        stubPage(1, _page([buildAnnouncement(id: 'a')], total: 50, page: 1));
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(AnnouncementSearchRequested());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(AnnouncementSearchMoreRequested());
+      },
+      skip: 3,
+      expect: () => [
+        predicate<AnnouncementState>(
+          (s) =>
+              s is AnnouncementSearchLoaded &&
+              !s.isLoadingMore &&
+              !s.hasMore &&
+              s.results.length == 1 &&
+              s.totalElements == 1 &&
+              s.page == 1 &&
+              _ids(s.similar) == 's1',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'load_more_keeps_similar_from_first_page',
+      build: () {
+        stubPage(
+          0,
+          _page(
+            [buildAnnouncement(id: 'a')],
+            total: 2,
+            similar: [_similar('s1')],
+          ),
+        );
+        stubPage(1, _page([buildAnnouncement(id: 'b')], total: 2, page: 1));
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(AnnouncementSearchRequested());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(AnnouncementSearchMoreRequested());
+      },
+      skip: 2,
+      expect: () => [
+        predicate<AnnouncementState>(
+          (s) =>
+              s is AnnouncementSearchLoaded &&
+              s.isLoadingMore &&
+              _ids(s.similar) == 's1',
+        ),
+        predicate<AnnouncementState>(
+          (s) =>
+              s is AnnouncementSearchLoaded &&
+              !s.isLoadingMore &&
+              s.results.length == 2 &&
+              _ids(s.similar) == 's1',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'load_more_does_not_duplicate_similar',
+      build: () {
+        stubPage(
+          0,
+          _page(
+            [buildAnnouncement(id: 'a')],
+            total: 2,
+            similar: [_similar('s1'), _similar('s2')],
+          ),
+        );
+        // Une page suivante qui rejouerait le bloc ne doit rien dupliquer.
+        stubPage(
+          1,
+          _page(
+            [buildAnnouncement(id: 'b')],
+            total: 2,
+            page: 1,
+            similar: [_similar('s1')],
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(AnnouncementSearchRequested());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(AnnouncementSearchMoreRequested());
+      },
+      skip: 3,
+      expect: () => [
+        predicate<AnnouncementState>(
+          (s) => s is AnnouncementSearchLoaded && _ids(s.similar) == 's1,s2',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'similar_ids_already_in_results_are_dropped',
+      build: () {
+        stubPage(
+          0,
+          _page(
+            [buildAnnouncement(id: 'a')],
+            total: 2,
+            similar: [_similar('a'), _similar('b'), _similar('s1')],
+          ),
+        );
+        stubPage(1, _page([buildAnnouncement(id: 'b')], total: 2, page: 1));
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(AnnouncementSearchRequested());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(AnnouncementSearchMoreRequested());
+      },
+      skip: 1,
+      expect: () => [
+        // Première page : « a » est exact, il quitte les similaires.
+        predicate<AnnouncementState>(
+          (s) => s is AnnouncementSearchLoaded && _ids(s.similar) == 'b,s1',
+        ),
+        predicate<AnnouncementState>(
+          (s) => s is AnnouncementSearchLoaded && s.isLoadingMore,
+        ),
+        // « b » arrive en exact à la page suivante : il quitte aussi.
+        predicate<AnnouncementState>(
+          (s) =>
+              s is AnnouncementSearchLoaded &&
+              !s.isLoadingMore &&
+              _ids(s.similar) == 's1',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'default_sort_is_score',
+      build: () {
+        stubPage(0, _page([buildAnnouncement(id: 'a')]), sortBy: 'score');
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementSearchRequested()),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        predicate<AnnouncementState>(
+          (s) => s is AnnouncementSearchLoaded && s.results.length == 1,
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'reload_keeps_previous_similar_while_reloading',
+      build: () {
+        stubPage(
+          0,
+          _page([buildAnnouncement(id: 'a')], similar: [_similar('s1')]),
+        );
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(AnnouncementSearchRequested());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(AnnouncementSearchRequested());
+      },
+      skip: 2,
+      expect: () => [
+        predicate<AnnouncementState>(
+          (s) =>
+              s is AnnouncementSearchLoaded &&
+              s.isReloading &&
+              _ids(s.similar) == 's1',
+        ),
+        predicate<AnnouncementState>(
+          (s) =>
+              s is AnnouncementSearchLoaded &&
+              !s.isReloading &&
+              _ids(s.similar) == 's1',
+        ),
+      ],
+    );
+
+    group('analytics search_similar_shown', () {
+      late MockAnalyticsBackend backend;
+
+      AnnouncementBloc buildTrackedBloc() {
+        backend = MockAnalyticsBackend();
+        final analytics = makeEnabledAnalytics(backend);
+        analytics.onConfigured();
+        return AnnouncementBloc(mockRepo, analytics);
+      }
+
+      blocTest<AnnouncementBloc, AnnouncementState>(
+        'logs_once_when_similar_present',
+        build: () {
+          stubPage(
+            0,
+            _page(
+              [buildAnnouncement(id: 'a'), buildAnnouncement(id: 'b')],
+              similar: [_similar('a'), _similar('s1'), _similar('s2')],
+            ),
+          );
+          return buildTrackedBloc();
+        },
+        act: (bloc) => bloc.add(AnnouncementSearchRequested()),
+        verify: (_) {
+          // 'a' est retiré par la dédup exact-gagne : 2 similaires restent.
+          verify(
+            () => backend.capture(AnalyticsEvents.searchSimilarShown, {
+              'similar_count': 2,
+              'exact_count': 2,
+            }),
+          ).called(1);
+        },
+      );
+
+      blocTest<AnnouncementBloc, AnnouncementState>(
+        'does_not_log_without_similar',
+        build: () {
+          stubPage(0, _page([buildAnnouncement(id: 'a')]));
+          return buildTrackedBloc();
+        },
+        act: (bloc) => bloc.add(AnnouncementSearchRequested()),
+        verify: (_) {
+          verifyNever(
+            () => backend.capture(AnalyticsEvents.searchSimilarShown, any()),
+          );
+        },
+      );
+
+      blocTest<AnnouncementBloc, AnnouncementState>(
+        'does_not_log_on_load_more',
+        build: () {
+          stubPage(
+            0,
+            _page(
+              [buildAnnouncement(id: 'a')],
+              total: 2,
+              similar: [_similar('s1')],
+            ),
+          );
+          stubPage(
+            1,
+            _page(
+              [buildAnnouncement(id: 'b')],
+              total: 2,
+              page: 1,
+              similar: [_similar('s2')],
+            ),
+          );
+          return buildTrackedBloc();
+        },
+        act: (bloc) async {
+          bloc.add(AnnouncementSearchRequested());
+          await bloc.stream.firstWhere(
+            (s) => s is AnnouncementSearchLoaded && s.results.length == 1,
+          );
+          bloc.add(AnnouncementSearchMoreRequested());
+          await bloc.stream.firstWhere(
+            (s) =>
+                s is AnnouncementSearchLoaded &&
+                s.results.length == 2 &&
+                !s.isLoadingMore,
+          );
+        },
+        verify: (_) {
+          verify(
+            () => backend.capture(AnalyticsEvents.searchSimilarShown, any()),
+          ).called(1);
+        },
+      );
+
+      blocTest<AnnouncementBloc, AnnouncementState>(
+        'does_not_log_when_all_similar_are_duplicates_of_exact',
+        build: () {
+          stubPage(
+            0,
+            _page(
+              [buildAnnouncement(id: 'a'), buildAnnouncement(id: 'b')],
+              similar: [_similar('a'), _similar('b')],
+            ),
+          );
+          return buildTrackedBloc();
+        },
+        act: (bloc) => bloc.add(AnnouncementSearchRequested()),
+        verify: (_) {
+          verifyNever(
+            () => backend.capture(AnalyticsEvents.searchSimilarShown, any()),
+          );
+        },
+      );
     });
   });
 

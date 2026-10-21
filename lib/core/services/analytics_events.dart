@@ -1103,6 +1103,7 @@ abstract final class AnalyticsEvents {
   static const searchFilterApplied = 'search_filter_applied';
   static const searchFilterCleared = 'search_filter_cleared';
   static const searchSubmitted = 'search_submitted';
+  static const searchSimilarShown = 'search_similar_shown';
 
   // Onboarding progressif — lot 1
   static const onboardingStepSkipped = 'onboarding_step_skipped';
