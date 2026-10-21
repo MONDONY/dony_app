@@ -1,6 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/core/design/widgets/gp_pro_badge.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/expediteur_card.dart';
 import 'package:flutter/material.dart';
