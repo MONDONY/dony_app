@@ -135,7 +135,7 @@ void main() {
   // ─── Test 2: Subscribed ─────────────────────────────────────────────────────
 
   testWidgets(
-    'affiche Abonné ✓ et l\'icône cloche désactivée quand push est off',
+    'affiche Abonné et l\'icône cloche désactivée quand push est off',
     (tester) async {
       // Use a larger surface to avoid overflow in DonyEmptyState during test
       await tester.binding.setSurfaceSize(const Size(400, 900));
@@ -160,7 +160,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       // Subscribed button label
-      expect(find.text('Abonné ✓'), findsOneWidget);
+      expect(find.text('Abonné'), findsOneWidget);
 
       // Bell off icon
       expect(

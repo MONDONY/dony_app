@@ -13009,7 +13009,7 @@
   "@followFollowButton": {
     "description": "Bouton d'abonnement à un voyageur, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)"
   },
-  "followFollowingButton": "Abonné ✓",
+  "followFollowingButton": "Abonné",
   "@followFollowingButton": {
     "description": "État abonné du bouton d'abonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)"
   },

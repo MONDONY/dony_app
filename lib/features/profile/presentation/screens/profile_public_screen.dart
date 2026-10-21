@@ -205,15 +205,10 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
 
         final cs = Theme.of(context).colorScheme;
 
-        // La barre se fond dans le bandeau bleu une fois le profil affiché.
-        final onBand = state is ProfilePublicLoaded;
-
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: DonyAppBar(
             title: appBarTitle,
-            backgroundColor: onBand ? cs.primary : null,
-            foregroundColor: onBand ? cs.onPrimary : null,
             actions: isOwnProfile
                 ? null
                 : [
@@ -222,10 +217,7 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
                     // actions rares en bruit permanent.
                     PopupMenuButton<String>(
                       tooltip: l.profilePublicMoreOptionsTooltip,
-                      icon: DonyIcon(
-                        'ellipsis',
-                        color: onBand ? cs.onPrimary : cs.onSurfaceVariant,
-                      ),
+                      icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
                       onSelected: (value) {
                         switch (value) {
                           case 'report':
@@ -470,11 +462,11 @@ class _FlatSection extends StatelessWidget {
   }
 }
 
-// ─── Profile hero — bandeau bleu Yadony, identité + abonnement ───────────────
+// ─── Profile hero — fond de header standard, identité + abonnement ────────────
 
-/// Bandeau d'identité : aplat `cs.primary` (bleu Yadony, bleu clair en thème
-/// sombre), avatar à gauche, badges sous le nom, abonnement dans le bandeau.
-/// La carte de chiffres [stats] chevauche le bas du bandeau.
+/// En-tête d'identité : même fond (`cs.surface`) que la barre du haut et que
+/// les headers des autres écrans (voir `ProfileHeader`). Avatar à gauche, badges
+/// sous le nom, abonnement et chiffres dans le même bloc.
 class _ProfileHero extends StatelessWidget {
   const _ProfileHero({
     required this.profile,
@@ -491,7 +483,6 @@ class _ProfileHero extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    final onBand = cs.onPrimary;
 
     final ratingStr = profile.averageRating > 0
         ? formatOneDecimal(l, profile.averageRating)
@@ -502,125 +493,100 @@ class _ProfileHero extends StatelessWidget {
       profile.memberSince,
     );
 
-    return Column(
-      children: [
-        Container(
-          key: const Key('profile-public-band'),
-          width: double.infinity,
-          color: cs.primary,
-          padding: const EdgeInsets.fromLTRB(
-            DonySpacing.lg,
-            DonySpacing.base,
-            DonySpacing.lg,
-            DonySpacing.huge,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      key: const Key('profile-public-header'),
+      width: double.infinity,
+      color: cs.surface,
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.base,
+        DonySpacing.lg,
+        DonySpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  _HeroAvatar(
-                    name: profile.displayName,
-                    imageUrl: profile.avatarUrl,
-                    verified: profile.kycVerified,
-                    pro: profile.isProAccount,
-                    gpPro: profile.gpPro,
-                  ),
-                  const SizedBox(width: DonySpacing.base),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          profile.displayName,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: tt.headlineLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: onBand,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          metaLine,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: tt.bodySmall?.copyWith(
-                            color: onBand.withValues(alpha: 0.92),
-                            fontWeight: FontWeight.w600,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                        if (profile.lastSeenDaysAgo != null)
-                          Text(
-                            lastSeenLabel(l, profile.lastSeenDaysAgo!),
-                            key: const Key('profile-last-seen'),
-                            style: tt.bodySmall?.copyWith(
-                              color: onBand.withValues(alpha: 0.92),
-                            ),
-                          ),
-                        if (profile.kycVerified ||
-                            profile.isProAccount ||
-                            profile.gpPro) ...[
-                          const SizedBox(height: DonySpacing.sm),
-                          Wrap(
-                            spacing: DonySpacing.xs,
-                            runSpacing: DonySpacing.xs,
-                            children: [
-                              if (profile.kycVerified)
-                                _HeroPill(
-                                  label: l.profilePublicVerified,
-                                  background: cs.onPrimary,
-                                  foreground: cs.primary,
-                                ),
-                              if (profile.isProAccount)
-                                _HeroPill(
-                                  label: l.profilePublicProBadge,
-                                  background: DonyColors.kycBadgeGold,
-                                  foreground: _kProPillText,
-                                ),
-                              if (profile.gpPro)
-                                const GpProBadge(surface: 'public_profile'),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
+              _HeroAvatar(
+                name: profile.displayName,
+                imageUrl: profile.avatarUrl,
+                verified: profile.kycVerified,
+                pro: profile.isProAccount,
+                gpPro: profile.gpPro,
               ),
-              if (subscribeAction != null) ...[
-                const SizedBox(height: DonySpacing.base),
-                subscribeAction!,
-              ],
+              const SizedBox(width: DonySpacing.base),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.displayName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: cs.onSurface,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      metaLine,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    if (profile.lastSeenDaysAgo != null)
+                      Text(
+                        lastSeenLabel(l, profile.lastSeenDaysAgo!),
+                        key: const Key('profile-last-seen'),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    if (profile.kycVerified ||
+                        profile.isProAccount ||
+                        profile.gpPro) ...[
+                      const SizedBox(height: DonySpacing.sm),
+                      Wrap(
+                        spacing: DonySpacing.xs,
+                        runSpacing: DonySpacing.xs,
+                        children: [
+                          if (profile.kycVerified)
+                            _HeroPill(
+                              label: l.profilePublicVerified,
+                              background: cs.primaryContainer,
+                              foreground: cs.primary,
+                            ),
+                          if (profile.isProAccount)
+                            _HeroPill(
+                              label: l.profilePublicProBadge,
+                              background: DonyColors.kycBadgeGold,
+                              foreground: _kProPillText,
+                            ),
+                          if (profile.gpPro)
+                            const GpProBadge(surface: 'public_profile'),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        // Chevauche le bandeau de la moitié de sa hauteur : l'Align réduit la
-        // hauteur de mise en page, la carte déborde vers le haut sans clip.
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            heightFactor: 0.5,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: cs.surface,
-                borderRadius: BorderRadius.circular(DonyRadius.card),
-                border: Border.all(color: cs.outline.withValues(alpha: 0.6)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.sm,
-                  vertical: DonySpacing.xs,
-                ),
-                child: stats,
-              ),
-            ),
-          ),
-        ),
-      ],
+          if (subscribeAction != null) ...[
+            const SizedBox(height: DonySpacing.base),
+            subscribeAction!,
+          ],
+          const SizedBox(height: DonySpacing.sm),
+          stats,
+        ],
+      ),
     );
   }
 }
@@ -677,7 +643,10 @@ class _HeroAvatar extends StatelessWidget {
           height: size + 6,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: cs.onPrimary, width: 3),
+            border: Border.all(
+              color: cs.primary.withValues(alpha: 0.35),
+              width: 2,
+            ),
           ),
           child: ClipOval(child: avatar),
         ),
@@ -1508,7 +1477,7 @@ class _InitialsCircle extends StatelessWidget {
   }
 }
 
-// ─── Subscribe action — boutons posés sur le bandeau bleu ────────────────────
+// ─── Subscribe action — compact button + interactive bell (in-hero) ──────────
 
 class _SubscribeAction extends StatelessWidget {
   const _SubscribeAction();
@@ -1533,23 +1502,17 @@ class _SubscribeAction extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
 
+    // Pleine largeur du header, 44 pt de haut (zone tactile minimale).
+    const size = Size.fromHeight(kDonyMinTapTarget);
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(DonyRadius.lg),
+    );
+
     return BlocBuilder<TravelerSubscribeBloc, TravelerSubscribeState>(
       builder: (context, state) {
         final isLoading =
             state.status == TravelerSubscribeStatus.loading ||
             state.status == TravelerSubscribeStatus.initial;
-
-        // Plein : blanc (noir en sombre) sur le bandeau, texte bleu.
-        final filled = FilledButton.styleFrom(
-          backgroundColor: cs.onPrimary,
-          foregroundColor: cs.primary,
-          disabledBackgroundColor: cs.onPrimary.withValues(alpha: 0.6),
-          disabledForegroundColor: cs.primary.withValues(alpha: 0.6),
-          minimumSize: const Size(0, kDonyMinTapTarget),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.lg),
-          ),
-        );
 
         if (state.subscribed) {
           return Row(
@@ -1560,12 +1523,9 @@ class _SubscribeAction extends StatelessWidget {
                       ? null
                       : () => _confirmUnsubscribe(context),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: cs.onPrimary,
-                    side: BorderSide(color: cs.onPrimary, width: 1.5),
-                    minimumSize: const Size(0, kDonyMinTapTarget),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(DonyRadius.lg),
-                    ),
+                    minimumSize: size,
+                    shape: shape,
+                    side: BorderSide(color: cs.primary, width: 1.5),
                   ),
                   child: Text(l.followFollowingButton),
                 ),
@@ -1576,15 +1536,13 @@ class _SubscribeAction extends StatelessWidget {
                     ? l.profilePublicDisablePushTooltip
                     : l.profilePublicEnablePushTooltip,
                 style: IconButton.styleFrom(
-                  minimumSize: const Size(kDonyMinTapTarget, kDonyMinTapTarget),
-                  side: BorderSide(color: cs.onPrimary, width: 1.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.lg),
-                  ),
+                  minimumSize: const Size.square(kDonyMinTapTarget),
+                  shape: shape,
+                  side: BorderSide(color: cs.primary, width: 1.5),
                 ),
                 icon: DonyIcon(
                   state.pushEnabled ? 'bell' : 'bell-off',
-                  color: cs.onPrimary,
+                  color: cs.primary,
                 ),
                 onPressed: isLoading
                     ? null
@@ -1599,13 +1557,13 @@ class _SubscribeAction extends StatelessWidget {
         return SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-            style: filled,
             onPressed: isLoading
                 ? null
                 : () => context.read<TravelerSubscribeBloc>().add(
                     const SubscribePressed(),
                   ),
-            icon: DonyIcon('plus', color: cs.primary, size: 18),
+            style: FilledButton.styleFrom(minimumSize: size, shape: shape),
+            icon: DonyIcon('plus', size: 18, color: cs.onPrimary),
             label: Text(l.followFollowButton),
           ),
         );
