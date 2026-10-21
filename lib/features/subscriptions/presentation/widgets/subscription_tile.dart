@@ -339,7 +339,7 @@ class _MetaLine extends StatelessWidget {
         // « ⭐ - » pour un voyageur jamais noté, ce qui se lisait comme une
         // mauvaise note plutôt que comme une absence.
         if (rating != null) ...[
-          DonyIcon('star', size: 12, color: cs.warning),
+          DonyIcon('star-fill', size: 12, color: cs.warning),
           const SizedBox(width: 3),
           Text(
             formatOneDecimal(l, rating!),

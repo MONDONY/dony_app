@@ -1368,7 +1368,7 @@ class _FlatReviewRow extends StatelessWidget {
                 Row(
                   children: List.generate(5, (i) {
                     return DonyIcon(
-                      'star',
+                      i < item.stars ? 'star-fill' : 'star',
                       size: 13,
                       color: i < item.stars
                           ? DonyColors.warning500

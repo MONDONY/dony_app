@@ -62,7 +62,7 @@ class RatingSummaryCard extends StatelessWidget {
                     children: List.generate(
                       5,
                       (i) => DonyIcon(
-                        'star',
+                        i < averageRating.round() ? 'star-fill' : 'star',
                         size: 14,
                         color: i < averageRating.round()
                             ? DonyColors.starGold
@@ -93,7 +93,7 @@ class RatingSummaryCard extends StatelessWidget {
                           Text('$star', style: tt.bodySmall),
                           const SizedBox(width: DonySpacing.xs),
                           const DonyIcon(
-                            'star',
+                            'star-fill',
                             size: 10,
                             color: Color(0xFFF59E0B),
                           ),

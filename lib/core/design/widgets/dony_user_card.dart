@@ -74,7 +74,7 @@ class DonyUserCard extends StatelessWidget {
                     ),
                     if (rating != null) ...[
                       const SizedBox(width: DonySpacing.xs),
-                      DonyIcon('star', size: 13, color: cs.warning),
+                      DonyIcon('star-fill', size: 13, color: cs.warning),
                       const SizedBox(width: DonySpacing.xxs),
                       Text(
                         '${rating!.toStringAsFixed(1)}/5',

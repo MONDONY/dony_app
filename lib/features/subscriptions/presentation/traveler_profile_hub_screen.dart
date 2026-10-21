@@ -325,7 +325,7 @@ class _StatSentence extends StatelessWidget {
           alignment: PlaceholderAlignment.middle,
           child: Padding(
             padding: const EdgeInsets.only(right: DonySpacing.xxs),
-            child: DonyIcon('star', size: 13, color: cs.warning),
+            child: DonyIcon('star-fill', size: 13, color: cs.warning),
           ),
         ),
         TextSpan(
@@ -643,7 +643,7 @@ class _ReviewsList extends StatelessWidget {
           ),
           child: Row(
             children: [
-              DonyIcon('star', color: cs.warning, size: 28),
+              DonyIcon('star-fill', color: cs.warning, size: 28),
               const SizedBox(width: DonySpacing.sm),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -701,7 +701,7 @@ class _ReviewCard extends StatelessWidget {
             children: [
               ...List.generate(5, (i) {
                 return DonyIcon(
-                  'star',
+                  i < item.stars ? 'star-fill' : 'star',
                   size: 14,
                   color: i < item.stars ? cs.warning : cs.onSurfaceVariant,
                 );

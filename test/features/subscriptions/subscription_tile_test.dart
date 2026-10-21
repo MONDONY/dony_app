@@ -163,7 +163,7 @@ void main() {
   ) async {
     await tester.pumpWidget(host(_item(rating: null)));
     expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name.startsWith('star')),
       findsNothing,
     );
     expect(find.textContaining('-'), findsNothing);

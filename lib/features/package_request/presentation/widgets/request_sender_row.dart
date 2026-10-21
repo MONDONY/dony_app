@@ -138,7 +138,11 @@ class _SenderRowContent extends StatelessWidget {
                           if (sender.totalRatings > 0)
                             Row(
                               children: [
-                                DonyIcon('star', size: 12, color: cs.warning),
+                                DonyIcon(
+                                  'star-fill',
+                                  size: 12,
+                                  color: cs.warning,
+                                ),
                                 const SizedBox(width: 2),
                                 Text(
                                   sender.averageRating.toStringAsFixed(1),

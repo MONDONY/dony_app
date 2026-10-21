@@ -55,7 +55,7 @@ class StarSelector extends StatelessWidget {
                     duration: const Duration(milliseconds: 180),
                     child: Builder(
                       builder: (context) => DonyIcon(
-                        'star',
+                        filled ? 'star-fill' : 'star',
                         key: ValueKey(filled),
                         size: 44,
                         color: filled

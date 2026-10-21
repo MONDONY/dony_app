@@ -590,11 +590,11 @@ void main() {
 
     // Stars widget renders (both filled and empty stars should exist for 3/5)
     expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name.startsWith('star')),
       findsWidgets,
     );
     expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name.startsWith('star')),
       findsWidgets,
     );
   });

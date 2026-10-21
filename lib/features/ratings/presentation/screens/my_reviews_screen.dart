@@ -282,7 +282,7 @@ class _HeaderSummary extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(right: 2),
               child: DonyIcon(
-                'star',
+                i < rounded ? 'star-fill' : 'star',
                 size: 18,
                 color: i < rounded ? DonyColors.warning500 : cs.outline,
               ),
@@ -481,7 +481,7 @@ class _ReviewItem extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: List.generate(5, (i) {
                       return DonyIcon(
-                        'star',
+                        i < item.stars ? 'star-fill' : 'star',
                         size: 15,
                         color: i < item.stars
                             ? DonyColors.warning500

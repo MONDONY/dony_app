@@ -308,7 +308,11 @@ class TravelerCard extends StatelessWidget {
                             crossAxisAlignment: WrapCrossAlignment.center,
                             spacing: DonySpacing.xxs,
                             children: [
-                              DonyIcon('star', size: 13, color: cs.warning),
+                              DonyIcon(
+                                'star-fill',
+                                size: 13,
+                                color: cs.warning,
+                              ),
                               Text(
                                 rating != null
                                     ? rating.toStringAsFixed(1)
@@ -812,7 +816,7 @@ class _ProBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DonyIcon('star', size: 10, color: cs.warning),
+          DonyIcon('star-fill', size: 10, color: cs.warning),
           const SizedBox(width: DonySpacing.xxs),
           Text(
             context.l10n.listingProBadge,

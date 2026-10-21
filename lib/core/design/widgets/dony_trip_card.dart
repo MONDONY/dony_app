@@ -89,7 +89,7 @@ class DonyTripCard extends StatelessWidget {
                     if (rating != null)
                       Row(
                         children: [
-                          DonyIcon('star', size: 13, color: cs.warning),
+                          DonyIcon('star-fill', size: 13, color: cs.warning),
                           const SizedBox(width: DonySpacing.xxs),
                           Text(
                             '${rating!.toStringAsFixed(1)}/5',

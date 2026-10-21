@@ -147,7 +147,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      DonyIcon('star', color: cs.warning, size: 22),
+                      DonyIcon('star-fill', color: cs.warning, size: 22),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
                         sender.averageRating.toStringAsFixed(1),

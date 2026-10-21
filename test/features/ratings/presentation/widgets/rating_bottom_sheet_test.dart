@@ -48,10 +48,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Évaluer Amadou'), findsOneWidget);
-    // Étoiles du sélecteur = DonyIcon('star') taille 44 (rempli/vide par couleur).
+    // Étoiles du sélecteur = DonyIcon('star-fill' pleine / 'star' contour) taille 44.
     expect(
       find.byWidgetPredicate(
-        (w) => w is DonyIcon && w.name == 'star' && w.size == 44,
+        (w) => w is DonyIcon && w.name.startsWith('star') && w.size == 44,
       ),
       findsWidgets,
     );
@@ -111,7 +111,7 @@ void main() {
 
     // Tape sur la 3ème étoile (DonyIcon('star') taille 44 du sélecteur)
     final stars = find.byWidgetPredicate(
-      (w) => w is DonyIcon && w.name == 'star' && w.size == 44,
+      (w) => w is DonyIcon && w.name.startsWith('star') && w.size == 44,
     );
     await tester.tap(stars.at(2));
     await tester.pumpAndSettle();

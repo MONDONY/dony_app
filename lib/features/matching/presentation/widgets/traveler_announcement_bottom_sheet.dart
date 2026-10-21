@@ -1848,7 +1848,7 @@ class _TravelerCard extends StatelessWidget {
                     const SizedBox(height: DonySpacing.xxs),
                     Row(
                       children: [
-                        DonyIcon('star', size: 14, color: cs.warning),
+                        DonyIcon('star-fill', size: 14, color: cs.warning),
                         const SizedBox(width: DonySpacing.xxs),
                         Text(
                           rating != null
