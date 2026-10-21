@@ -50,6 +50,59 @@ void main() {
     expect(find.byType(DonyFeedbackButton), findsNothing);
   });
 
+  group('hauteur fixe (heightFraction)', () {
+    Widget fixedHarness({bool withFooter = true}) => MaterialApp(
+      theme: AppTheme.light(),
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => DonyBottomSheet.show<void>(
+              context,
+              title: 'Titre',
+              heightFraction: 0.9,
+              stickyBottom: withFooter
+                  ? const SizedBox(key: Key('cta'), height: 52)
+                  : null,
+              child: const SizedBox(key: Key('content'), height: 40),
+            ),
+            child: const Text('ouvrir'),
+          ),
+        ),
+      ),
+    );
+
+    testWidgets('le pied reste collé au bas de la feuille, pas sous le '
+        'contenu court', (tester) async {
+      tester.view
+        ..devicePixelRatio = 2
+        ..physicalSize = const Size(720, 1640);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(fixedHarness());
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+
+      final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+      final content = tester.getRect(find.byKey(const Key('content')));
+      final footer = tester.getRect(
+        find.byKey(const Key('donyBottomSheetFooter')),
+      );
+      // Pied au bas de l'écran (feuille ancrée en bas).
+      expect(footer.bottom, closeTo(screen.height, 1));
+      // Et loin du contenu court : la feuille fait 90 % de la hauteur.
+      expect(footer.top - content.bottom, greaterThan(300));
+    });
+
+    testWidgets('sans pied : le contenu défile toujours dans la feuille', (
+      tester,
+    ) async {
+      await tester.pumpWidget(fixedHarness(withFooter: false));
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('content')), findsOneWidget);
+      expect(find.byKey(const Key('donyBottomSheetFooter')), findsNothing);
+    });
+  });
+
   group('clavier ouvert (FLUTTER-AM)', () {
     // Petit Android (Redmi 720×1640 @2) : barre de navigation de 48, clavier
     // de 300 qui la recouvre.
