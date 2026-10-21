@@ -119,6 +119,22 @@ class _DonyBottomSheetContent extends StatelessWidget {
         ? cs.error.withValues(alpha: 0.35)
         : cs.onSurfaceVariant.withValues(alpha: 0.4);
 
+    final scroll = SingleChildScrollView(
+      // Faire défiler la feuille referme le clavier : sans ça, une
+      // saisie en cours garde le clavier collé par-dessus les champs
+      // suivants et les listes d'autocomplétion.
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        title != null ? 0 : DonySpacing.sm,
+        DonySpacing.lg,
+        stickyBottom != null ? DonySpacing.xl : DonySpacing.xl + bottomInset,
+      ),
+      // Material ancestor so ListTiles in sheet content paint ink above
+      // the sheet's colored Container (Flutter 3.44 ListTile assertion).
+      child: Material(type: MaterialType.transparency, child: child),
+    );
+
     return Container(
       margin: expand ? EdgeInsets.zero : EdgeInsets.only(top: topMargin),
       decoration: BoxDecoration(
@@ -196,25 +212,11 @@ class _DonyBottomSheetContent extends StatelessWidget {
             const Divider(height: DonySpacing.base),
           ] else
             const SizedBox(height: DonySpacing.sm),
-          Flexible(
-            child: SingleChildScrollView(
-              // Faire défiler la feuille referme le clavier : sans ça, une
-              // saisie en cours garde le clavier collé par-dessus les champs
-              // suivants et les listes d'autocomplétion.
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                title != null ? 0 : DonySpacing.sm,
-                DonySpacing.lg,
-                stickyBottom != null
-                    ? DonySpacing.xl
-                    : DonySpacing.xl + bottomInset,
-              ),
-              // Material ancestor so ListTiles in sheet content paint ink above
-              // the sheet's colored Container (Flutter 3.44 ListTile assertion).
-              child: Material(type: MaterialType.transparency, child: child),
-            ),
-          ),
+          // Feuille à hauteur fixe (`heightFraction`) : le contenu prend toute la
+          // place restante, le pied (`stickyBottom`) reste collé au bas de la
+          // feuille, à portée de pouce. Sans hauteur fixe, la feuille épouse son
+          // contenu.
+          expand ? Expanded(child: scroll) : Flexible(child: scroll),
           if (stickyBottom != null)
             Container(
               key: const Key('donyBottomSheetFooter'),
