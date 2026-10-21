@@ -217,6 +217,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your account has been suspended. Contact support for more information.';
 
   @override
+  String get errorAccountReactivationDeniedTitle => 'Account closed';
+
+  @override
+  String get errorAccountReactivationDeniedMessage =>
+      'This account was deleted or suspended and can\'t be reactivated. Contact support if you think this is a mistake.';
+
+  @override
   String get errorAuthTokenUnavailableTitle => 'Authentication failed';
 
   @override
@@ -709,6 +716,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorBidNotAwaitingPaymentMessage =>
       'This negotiation isn\'t waiting for a card payment. Open it again to see where it stands.';
+
+  @override
+  String get errorBidNotPendingTitle => 'Request no longer available';
+
+  @override
+  String get errorBidNotPendingMessage =>
+      'This request isn\'t waiting for an answer anymore: it was cancelled, declined or has expired. No commission was charged. Refresh to see its latest status.';
 
   @override
   String get errorBidAlreadyPaidTitle => 'Already paid';

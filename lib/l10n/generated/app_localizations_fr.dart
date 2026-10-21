@@ -220,6 +220,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre compte a été suspendu. Contactez le support pour plus d\'informations.';
 
   @override
+  String get errorAccountReactivationDeniedTitle => 'Compte fermé';
+
+  @override
+  String get errorAccountReactivationDeniedMessage =>
+      'Ce compte a été supprimé ou suspendu et ne peut pas être réactivé. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.';
+
+  @override
   String get errorAuthTokenUnavailableTitle => 'Authentification impossible';
 
   @override
@@ -714,6 +721,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorBidNotAwaitingPaymentMessage =>
       'Cette discussion n\'attend pas de paiement par carte. Rouvrez-la pour voir où elle en est.';
+
+  @override
+  String get errorBidNotPendingTitle => 'Demande plus disponible';
+
+  @override
+  String get errorBidNotPendingMessage =>
+      'Cette demande n\'attend plus de réponse : elle a été annulée, refusée ou a expiré. Aucune commission n\'a été prélevée. Actualisez pour voir son état à jour.';
 
   @override
   String get errorBidAlreadyPaidTitle => 'Déjà payé';

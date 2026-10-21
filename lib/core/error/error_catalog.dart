@@ -510,6 +510,15 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.critical,
       icon: Icons.gpp_bad_rounded,
     ),
+    // 403 de `POST /auth/register` : la ligne supprimée de ce compte Firebase
+    // est un compte finalisé (rôles conservés) ou banni, jamais réactivable
+    // par une simple inscription (`AuthService.register`).
+    'account-reactivation-denied': _Entry(
+      title: (l) => l.errorAccountReactivationDeniedTitle,
+      message: (l) => l.errorAccountReactivationDeniedMessage,
+      severity: ErrorSeverity.critical,
+      icon: Icons.gpp_bad_rounded,
+    ),
     // Émis par `_AuthInterceptor.onRequest` (api_client.dart) quand
     // `FirebaseAuth.currentUser.getIdToken()` échoue : sans entrée dédiée,
     // le code retombait sur le type `UnauthorizedException` générique
@@ -1199,6 +1208,16 @@ abstract final class ErrorCatalog {
     'bid-not-awaiting-payment': _Entry(
       title: (l) => l.errorBidNotAwaitingPaymentTitle,
       message: (l) => l.errorBidNotAwaitingPaymentMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_empty_rounded,
+    ),
+    // 409 de l'acceptation d'une demande espèces par le voyageur : la demande
+    // a été annulée, refusée ou a expiré entre-temps. Le refus tombe avant
+    // tout débit (`CashCommissionService.acceptCashBid`), d'où la phrase
+    // rassurante sur la commission.
+    'bid-not-pending': _Entry(
+      title: (l) => l.errorBidNotPendingTitle,
+      message: (l) => l.errorBidNotPendingMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_empty_rounded,
     ),
