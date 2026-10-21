@@ -28,7 +28,7 @@ class DonyAvatar extends StatelessWidget {
   /// Compte PRO : coche dorée (prime sur [gpPro]).
   final bool pro;
 
-  /// Voyageur GP Pro : coche argent, sauf si le compte est aussi PRO.
+  /// Voyageur GP Pro : coche verte, sauf si le compte est aussi PRO.
   final bool gpPro;
 
   double get _dimension => switch (size) {
@@ -133,7 +133,7 @@ class DonyAvatar extends StatelessWidget {
 }
 
 /// Coche « identité vérifiée ». Sa couleur dit le niveau du compte : bleue pour
-/// un compte vérifié seul, argent pour un GP Pro, or pour un PRO (l'or prime
+/// un compte vérifié seul, vert pour un GP Pro, or pour un PRO (l'or prime
 /// quand le compte est PRO et GP Pro).
 class DonyVerifiedBadge extends StatelessWidget {
   const DonyVerifiedBadge({
@@ -155,7 +155,7 @@ class DonyVerifiedBadge extends StatelessWidget {
   /// qui la dessinent eux-mêmes (titre replié de l'onglet Moi).
   static Color colorFor({required bool pro, required bool gpPro}) {
     if (pro) return DonyColors.kycBadgeGold;
-    if (gpPro) return DonyColors.kycBadgeSilver;
+    if (gpPro) return DonyColors.kycBadgeGpPro;
     return _kVerifiedBlue;
   }
 

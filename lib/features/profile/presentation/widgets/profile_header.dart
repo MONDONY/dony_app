@@ -190,13 +190,13 @@ class _ProBadge extends StatelessWidget {
         vertical: DonySpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.amberLight,
+        color: DonyColors.kycBadgeGold,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
         context.l10n.profileProBadge,
         style: tt.labelSmall?.copyWith(
-          color: DonyColors.amberDark,
+          color: const Color(0xFF2B1B00),
           fontWeight: FontWeight.w800,
           letterSpacing: 0.5,
         ),

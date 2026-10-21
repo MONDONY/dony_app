@@ -1,3 +1,4 @@
+import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_info_sheet.dart';
@@ -10,7 +11,7 @@ enum GpProBadgeSize { compact, full }
 
 /// Badge « GP Pro » : voyageur régulier accordé par l'équipe Yadony.
 ///
-/// Argent, comme la coche GP Pro de l'avatar : le PRO payant est doré, le
+/// Vert, comme la coche GP Pro de l'avatar : le PRO payant est doré, le
 /// compte vérifié seul bleu. Touché, il ouvre [GpProInfoSheet]. La zone
 /// tactile fait au moins 44 pt sans grossir le visuel.
 ///
@@ -30,28 +31,26 @@ class GpProBadge extends StatelessWidget {
 
   static const double _minTap = 44;
 
-  /// Argent : fond clair et texte gris-bleu foncé (≥ 7:1), identiques en thème
-  /// clair et sombre pour rester lisibles sur le bandeau bleu du profil.
-  static const Color _silverBg = Color(0xFFE6EAF0);
-  static const Color _silverFg = Color(0xFF3A4556);
+  /// Vert plein, texte blanc (≥ 5:1) ; en thème sombre vert clair, texte foncé.
+  static const Color _lightFg = Colors.white;
+  static const Color _darkFg = Color(0xFF03281A);
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final compact = size == GpProBadgeSize.compact;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final bg = dark ? DonyColors.kycBadgeGpProDark : DonyColors.kycBadgeGpPro;
+    final fg = dark ? _darkFg : _lightFg;
 
     final visual = compact
         ? Container(
             width: 16,
             height: 16,
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: _silverBg,
-              shape: BoxShape.circle,
-              border: Border.all(color: _silverFg.withValues(alpha: 0.4)),
-            ),
-            child: const DonyIcon('luggage', size: 10, color: _silverFg),
+            decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+            child: DonyIcon('luggage', size: 10, color: fg),
           )
         : Container(
             padding: const EdgeInsets.symmetric(
@@ -59,19 +58,19 @@ class GpProBadge extends StatelessWidget {
               vertical: DonySpacing.xxs,
             ),
             decoration: BoxDecoration(
-              color: _silverBg,
+              color: bg,
               borderRadius: BorderRadius.circular(DonyRadius.full),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const DonyIcon('luggage', size: 12, color: _silverFg),
+                DonyIcon('luggage', size: 12, color: fg),
                 const SizedBox(width: DonySpacing.xxs),
                 Text(
                   l.gpProBadgeLabel,
                   style: tt.labelSmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: _silverFg,
+                    color: fg,
                     letterSpacing: 0.5,
                   ),
                 ),

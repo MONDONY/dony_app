@@ -284,5 +284,19 @@ void main() {
       expect(avatar().pro, isTrue);
       expect(avatar().gpPro, isTrue);
     });
+
+    testWidgets('pastille PRO : or plein, texte très foncé', (tester) async {
+      await tester.pumpWidget(
+        _buildHeader(isKycVerified: true, isProAccount: true),
+      );
+      final box = tester.widget<Container>(
+        find
+            .ancestor(of: find.text('PRO'), matching: find.byType(Container))
+            .first,
+      );
+      expect((box.decoration! as BoxDecoration).color, DonyColors.kycBadgeGold);
+      final text = tester.widget<Text>(find.text('PRO'));
+      expect(text.style?.color, const Color(0xFF2B1B00));
+    });
   });
 }

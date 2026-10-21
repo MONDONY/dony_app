@@ -12,10 +12,10 @@ void main() {
       );
     });
 
-    test('argent pour un GP Pro', () {
+    test('vert pour un GP Pro', () {
       expect(
         DonyVerifiedBadge.colorFor(pro: false, gpPro: true),
-        DonyColors.kycBadgeSilver,
+        DonyColors.kycBadgeGpPro,
       );
     });
 
@@ -56,7 +56,7 @@ void main() {
     }
 
     expect(await iconColor(), DonyColors.primary);
-    expect(await iconColor(gpPro: true), DonyColors.kycBadgeSilver);
+    expect(await iconColor(gpPro: true), DonyColors.kycBadgeGpPro);
     expect(await iconColor(pro: true), DonyColors.kycBadgeGold);
     expect(await iconColor(pro: true, gpPro: true), DonyColors.kycBadgeGold);
   });

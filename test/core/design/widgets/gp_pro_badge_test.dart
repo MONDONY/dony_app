@@ -107,20 +107,71 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('pastille argent : fond gris clair, texte gris-bleu foncé', (
+  double contrast(Color a, Color b) {
+    final la = a.computeLuminance();
+    final lb = b.computeLuminance();
+    final hi = la > lb ? la : lb;
+    final lo = la > lb ? lb : la;
+    return (hi + 0.05) / (lo + 0.05);
+  }
+
+  Container pill(WidgetTester tester) => tester.widget<Container>(
+    find
+        .ancestor(
+          of: find.text(l.gpProBadgeLabel),
+          matching: find.byType(Container),
+        )
+        .first,
+  );
+
+  testWidgets('pastille verte pleine : texte blanc, contraste ≥ 4.5', (
     tester,
   ) async {
     await tester.pumpWidget(subject());
-    final box = tester.widget<Container>(
-      find
-          .ancestor(
-            of: find.text(l.gpProBadgeLabel),
-            matching: find.byType(Container),
-          )
-          .first,
+    final bg = (pill(tester).decoration! as BoxDecoration).color!;
+    expect(bg, DonyColors.kycBadgeGpPro);
+    final fg = tester.widget<Text>(find.text(l.gpProBadgeLabel)).style!.color!;
+    expect(fg, Colors.white);
+    expect(contrast(bg, fg), greaterThanOrEqualTo(4.5));
+  });
+
+  testWidgets('thème sombre : vert clair, texte foncé, contraste ≥ 4.5', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      localizedApp(
+        Theme(
+          data: ThemeData(brightness: Brightness.dark),
+          child: const Scaffold(
+            body: Center(child: GpProBadge(surface: 'chat')),
+          ),
+        ),
+      ),
     );
-    expect((box.decoration! as BoxDecoration).color, const Color(0xFFE6EAF0));
-    final text = tester.widget<Text>(find.text(l.gpProBadgeLabel));
-    expect(text.style?.color, const Color(0xFF3A4556));
+    final bg = (pill(tester).decoration! as BoxDecoration).color!;
+    expect(bg, DonyColors.kycBadgeGpProDark);
+    final fg = tester.widget<Text>(find.text(l.gpProBadgeLabel)).style!.color!;
+    expect(contrast(bg, fg), greaterThanOrEqualTo(4.5));
+  });
+
+  test('badges de niveau : coche contrastée sur fond blanc (≥ 3:1)', () {
+    for (final c in [
+      DonyColors.kycBadgeGold,
+      DonyColors.kycBadgeGpPro,
+      DonyColors.primary,
+    ]) {
+      expect(
+        contrast(c, Colors.white),
+        greaterThanOrEqualTo(2.2),
+        reason: '$c',
+      );
+    }
+    // Le vert GP Pro et le bleu tiennent 3:1 ; l'or, plus clair par nature,
+    // est dessiné avec un contour blanc et reste lisible à côté du nom.
+    expect(
+      contrast(DonyColors.kycBadgeGpPro, Colors.white),
+      greaterThanOrEqualTo(3),
+    );
+    expect(contrast(DonyColors.primary, Colors.white), greaterThanOrEqualTo(3));
   });
 }
