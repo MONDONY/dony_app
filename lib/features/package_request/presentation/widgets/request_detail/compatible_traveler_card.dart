@@ -88,7 +88,11 @@ class CompatibleTravelerCard extends StatelessWidget {
                             ],
                             if (trip.traveler?.averageRating != null) ...[
                               const SizedBox(width: 4),
-                              DonyIcon('star', size: 13, color: cs.warning),
+                              DonyIcon(
+                                'star-fill',
+                                size: 13,
+                                color: cs.warning,
+                              ),
                               Text(
                                 NumberFormat(
                                   '0.0',

@@ -171,7 +171,7 @@ class _DeliveryCard extends StatelessWidget {
                       if (bid.travelerAverageRating != null)
                         Row(
                           children: [
-                            DonyIcon('star', size: 14, color: cs.tertiary),
+                            DonyIcon('star-fill', size: 14, color: cs.tertiary),
                             const SizedBox(width: 2),
                             Text(
                               bid.travelerAverageRating!.toStringAsFixed(1),

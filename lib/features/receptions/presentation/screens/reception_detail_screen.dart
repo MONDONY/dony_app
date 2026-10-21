@@ -1473,7 +1473,7 @@ class _MyRatingCard extends StatelessWidget {
               children: [
                 for (var i = 1; i <= 5; i++)
                   DonyIcon(
-                    'star',
+                    i <= stars ? 'star-fill' : 'star',
                     size: 18,
                     color: i <= stars ? DonyColors.starGold : cs.outlineVariant,
                   ),

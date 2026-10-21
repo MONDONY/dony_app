@@ -112,7 +112,9 @@ void main() {
       await tester.pump();
       expect(find.text('4.7/5'), findsOneWidget);
       expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name.startsWith('star'),
+        ),
         findsOneWidget,
       );
     });
@@ -130,7 +132,9 @@ void main() {
       );
       await tester.pump();
       expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name.startsWith('star'),
+        ),
         findsNothing,
       );
     });
@@ -651,7 +655,9 @@ void main() {
       await tester.pump();
       expect(find.text('4.8/5'), findsOneWidget);
       expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name.startsWith('star'),
+        ),
         findsOneWidget,
       );
     });
@@ -660,7 +666,9 @@ void main() {
       await tester.pumpWidget(_wrap(const DonyUserCard(name: 'Bamba')));
       await tester.pump();
       expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name.startsWith('star'),
+        ),
         findsNothing,
       );
     });

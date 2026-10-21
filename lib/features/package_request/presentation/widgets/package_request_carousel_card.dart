@@ -382,7 +382,7 @@ class _InfoSection extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              DonyIcon('star', size: 12, color: cs.warning),
+              DonyIcon('star-fill', size: 12, color: cs.warning),
               const SizedBox(width: 2),
               Text(
                 item.sender.averageRating.toStringAsFixed(1),

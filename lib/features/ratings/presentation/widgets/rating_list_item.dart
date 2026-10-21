@@ -50,7 +50,7 @@ class RatingListItem extends StatelessWidget {
                     ...List.generate(
                       5,
                       (i) => DonyIcon(
-                        'star',
+                        i < item.stars ? 'star-fill' : 'star',
                         size: 16,
                         color: i < item.stars
                             ? DonyColors.starGold

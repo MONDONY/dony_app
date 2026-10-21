@@ -35,7 +35,7 @@ class RatingPendingPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DonyIcon('star', size: 12, color: cs.warning),
+          DonyIcon('star-fill', size: 12, color: cs.warning),
           const SizedBox(width: DonySpacing.xxs),
           Text(
             context.l10n.ratingPendingPillLabel,

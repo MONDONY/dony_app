@@ -243,11 +243,11 @@ class _ReviewRow extends StatelessWidget {
                 children: List.generate(
                   5,
                   (i) => DonyIcon(
-                    'star',
+                    i < item.stars ? 'star-fill' : 'star',
                     size: 14,
                     color: i < item.stars
                         ? DonyColors.starGold
-                        : DonyColors.starGold.withValues(alpha: 0.35),
+                        : cs.onSurfaceVariant.withValues(alpha: 0.35),
                   ),
                 ),
               ),
