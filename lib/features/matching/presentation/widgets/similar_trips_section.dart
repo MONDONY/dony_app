@@ -1,0 +1,90 @@
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/data/models/similar_announcement.dart';
+import 'package:dony/l10n/l10n.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
+/// Bloc « Autres annonces sur ce trajet » de la recherche de trajets : les
+/// trajets proches qui ne remplissent pas tous les critères, sous la liste
+/// exacte. Chaque carte est construite par [cardBuilder], pour qu'elle se
+/// comporte exactement comme une carte de la liste exacte (ouverture, favori,
+/// offre déjà déposée).
+///
+/// Sliver : se pose directement dans un `CustomScrollView`. Rien n'est rendu
+/// quand [items] est vide (back antérieur, ou aucun trajet proche).
+class SimilarTripsSection extends StatelessWidget {
+  const SimilarTripsSection({
+    super.key,
+    required this.items,
+    required this.cardBuilder,
+    this.showNoExactMatch = false,
+    this.padding = const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+  });
+
+  final List<SimilarAnnouncement> items;
+  final Widget Function(SimilarAnnouncement item, int index) cardBuilder;
+
+  /// Aucun trajet exact : une ligne le dit au-dessus du titre, à la place de
+  /// l'état vide pleine page qui annoncerait « aucun résultat ».
+  final bool showNoExactMatch;
+
+  /// Marges du bloc entier (en-tête et cartes).
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+    final l = context.l10n;
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    final header = Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showNoExactMatch) ...[
+            Text(
+              l.similarTripsNoExactMatch,
+              key: const Key('similar-trips-no-exact-match'),
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: DonySpacing.base),
+          ],
+          Semantics(
+            header: true,
+            child: Text(
+              l.similarTripsTitle,
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(height: DonySpacing.xxs),
+          Text(
+            l.similarTripsSubtitle,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 250.ms, curve: Curves.easeOutCubic);
+
+    return SliverPadding(
+      key: const Key('similar-trips-section'),
+      padding: padding,
+      sliver: SliverMainAxisGroup(
+        slivers: [
+          SliverToBoxAdapter(child: header),
+          SliverList.separated(
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+            itemBuilder: (_, i) => cardBuilder(items[i], i),
+          ),
+        ],
+      ),
+    );
+  }
+}

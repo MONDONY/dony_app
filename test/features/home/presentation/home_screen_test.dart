@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
@@ -36,6 +37,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
@@ -1110,6 +1112,112 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1000));
 
       expect(find.text('Aucun voyageur sur ce trajet'), findsOneWidget);
+    });
+
+    group('bloc « Autres annonces sur ce trajet »', () {
+      SimilarAnnouncement proche(String id) => SimilarAnnouncement(
+        announcement: _makeAnn(id: id, travelerId: 'traveler-$id'),
+        unmet: const [
+          UnmetCriterion(
+            code: 'DATE',
+            requested: '2026-06-13',
+            actual: '2026-06-15',
+          ),
+        ],
+      );
+
+      testWidgets('zero_exact_with_similar_shows_block_not_full_empty_state', (
+        tester,
+      ) async {
+        await pumpHome(
+          tester,
+          announcementState: AnnouncementSearchLoaded(
+            const [],
+            similar: [proche('s1')],
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        expect(find.text('Aucun voyageur sur ce trajet'), findsNothing);
+        expect(find.byKey(const Key('similar-trips-section')), findsOneWidget);
+        expect(
+          find.text('Aucun trajet ne correspond exactement à votre recherche.'),
+          findsOneWidget,
+        );
+        expect(find.byType(TravelerCard), findsOneWidget);
+        // La carte proche dit pourquoi elle ne correspond pas.
+        expect(
+          find.byKey(const ValueKey('traveler-card-unmet-0')),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('exact_results_and_similar_show_block_below_list', (
+        tester,
+      ) async {
+        await pumpHome(
+          tester,
+          announcementState: AnnouncementSearchLoaded(
+            [_makeAnn()],
+            similar: [proche('s1')],
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        expect(find.byKey(const Key('similar-trips-section')), findsOneWidget);
+        expect(
+          find.text('Aucun trajet ne correspond exactement à votre recherche.'),
+          findsNothing,
+        );
+        final cards = find.byType(TravelerCard);
+        expect(cards, findsNWidgets(2));
+        // La carte exacte n'a aucun avertissement, la carte proche en a un,
+        // et le bloc vient après la liste exacte.
+        final exacte = tester.widget<TravelerCard>(cards.first);
+        final prochaine = tester.widget<TravelerCard>(cards.last);
+        expect(exacte.announcement.id, 'a1');
+        expect(exacte.unmetReasons, isEmpty);
+        expect(prochaine.announcement.id, 's1');
+        expect(prochaine.unmetReasons, hasLength(1));
+        expect(
+          tester.getTopLeft(find.text('Autres annonces sur ce trajet')).dy,
+          greaterThan(tester.getTopLeft(cards.first).dy),
+        );
+      });
+
+      testWidgets('block_hidden_for_parcels_mode', (tester) async {
+        await pumpHome(
+          tester,
+          announcementState: AnnouncementSearchLoaded(
+            const [],
+            similar: [proche('s1')],
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+        expect(find.byKey(const Key('similar-trips-section')), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('similar-trips-section')), findsNothing);
+        expect(find.byType(TravelerCard), findsNothing);
+      });
+
+      testWidgets('erreur après des résultats : aucun bloc inventé', (
+        tester,
+      ) async {
+        await pumpHome(
+          tester,
+          announcementState: AnnouncementError(
+            const NetworkException('boom'),
+            previousResults: [_makeAnn()],
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        expect(find.byKey(const Key('similar-trips-section')), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
     });
 
     testWidgets('état vide et en-tête de liste traduits en anglais', (
