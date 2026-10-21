@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -1157,6 +1158,90 @@ void main() {
         ),
       ],
     );
+
+    group('analytics search_similar_shown', () {
+      late MockAnalyticsBackend backend;
+
+      AnnouncementBloc buildTrackedBloc() {
+        backend = MockAnalyticsBackend();
+        final analytics = makeEnabledAnalytics(backend);
+        analytics.onConfigured();
+        return AnnouncementBloc(mockRepo, analytics);
+      }
+
+      blocTest<AnnouncementBloc, AnnouncementState>(
+        'logs_once_when_similar_present',
+        build: () {
+          stubPage(
+            0,
+            _page(
+              [buildAnnouncement(id: 'a'), buildAnnouncement(id: 'b')],
+              similar: [_similar('a'), _similar('s1'), _similar('s2')],
+            ),
+          );
+          return buildTrackedBloc();
+        },
+        act: (bloc) => bloc.add(AnnouncementSearchRequested()),
+        verify: (_) {
+          // 'a' est retiré par la dédup exact-gagne : 2 similaires restent.
+          verify(
+            () => backend.capture(AnalyticsEvents.searchSimilarShown, {
+              'similar_count': 2,
+              'exact_count': 2,
+            }),
+          ).called(1);
+        },
+      );
+
+      blocTest<AnnouncementBloc, AnnouncementState>(
+        'does_not_log_without_similar',
+        build: () {
+          stubPage(0, _page([buildAnnouncement(id: 'a')]));
+          return buildTrackedBloc();
+        },
+        act: (bloc) => bloc.add(AnnouncementSearchRequested()),
+        verify: (_) {
+          verifyNever(
+            () => backend.capture(AnalyticsEvents.searchSimilarShown, any()),
+          );
+        },
+      );
+
+      blocTest<AnnouncementBloc, AnnouncementState>(
+        'does_not_log_on_load_more',
+        build: () {
+          stubPage(
+            0,
+            _page(
+              [buildAnnouncement(id: 'a')],
+              total: 2,
+              similar: [_similar('s1')],
+            ),
+          );
+          stubPage(
+            1,
+            _page(
+              [buildAnnouncement(id: 'b')],
+              total: 2,
+              page: 1,
+              similar: [_similar('s2')],
+            ),
+          );
+          return buildTrackedBloc();
+        },
+        act: (bloc) async {
+          bloc.add(AnnouncementSearchRequested());
+          await Future<void>.delayed(Duration.zero);
+          bloc.add(AnnouncementSearchMoreRequested());
+          await Future<void>.delayed(Duration.zero);
+        },
+        verify: (_) {
+          verify(
+            () => backend.capture(AnalyticsEvents.searchSimilarShown, any()),
+          ).called(1);
+        },
+      );
+    });
   });
 
   group('AnnouncementSearchRequested', () {

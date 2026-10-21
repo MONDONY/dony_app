@@ -254,14 +254,26 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     try {
       _lastSearch = event;
       final result = await _fetchSearchPage(event, page: 0);
+      final similar = _withoutExact(result.similar, result.content);
       emit(
         AnnouncementSearchLoaded(
           result.content,
           totalElements: result.totalElements,
           bookableElements: result.bookableElements,
-          similar: _withoutExact(result.similar, result.content),
+          similar: similar,
         ),
       );
+      if (similar.isNotEmpty) {
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.searchSimilarShown,
+            properties: {
+              'similar_count': similar.length,
+              'exact_count': result.content.length,
+            },
+          ),
+        );
+      }
     } catch (e, stacktrace) {
       if (kDebugMode) debugPrint('=== SEARCH ERROR ===');
       if (kDebugMode) debugPrint(e.toString());
