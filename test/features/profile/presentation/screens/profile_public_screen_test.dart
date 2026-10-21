@@ -63,7 +63,6 @@ const _profile = ProfilePublicModel(
 ProfilePublicModel profileWith({
   String? bio,
   List<String> languages = const [],
-  int? reliabilityPercent,
 }) {
   return ProfilePublicModel(
     userId: _userId,
@@ -78,7 +77,6 @@ ProfilePublicModel profileWith({
     badges: const [],
     bio: bio,
     languages: languages,
-    reliabilityPercent: reliabilityPercent,
   );
 }
 
@@ -520,39 +518,26 @@ void main() {
     expect(find.byKey(const Key('profile-response-time')), findsNothing);
   });
 
-  // FLUTTER-NV : taux de fiabilité à la place des compteurs d'incidents.
-  testWidgets('avec taux : « Fiabilité 96 % », aucun compteur d\'incidents', (
+  // La fiabilité n'est plus publique : même si un ancien back renvoie encore
+  // `reliabilityPercent`, rien ne s'affiche.
+  testWidgets('ignore_legacy_reliability_percent : aucun taux affiché', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
-    await tester.pumpWidget(
-      _wrapLoaded(profile: profileWith(reliabilityPercent: 96)),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-
-    expect(find.byKey(const Key('profile-reliability-label')), findsOneWidget);
-    expect(find.text('Fiabilité 96\u00a0%'), findsOneWidget);
-    expect(find.byKey(const Key('sender-reliability-label')), findsNothing);
-    expect(find.textContaining('annulation'), findsNothing);
-  });
-
-  testWidgets('sans taux : ni taux ni compteur d\'incidents', (tester) async {
-    tester.view.physicalSize = const Size(800, 2400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    await tester.pumpWidget(_wrapLoaded(profile: profileWith()));
+    final legacy = ProfilePublicModel.fromJson({
+      'userId': _userId,
+      'displayName': 'Fatou Diallo',
+      'reliabilityPercent': 96,
+    });
+    await tester.pumpWidget(_wrapLoaded(profile: legacy));
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byKey(const Key('profile-reliability-label')), findsNothing);
     expect(find.byKey(const Key('sender-reliability-label')), findsNothing);
+    expect(find.textContaining('Fiabilité'), findsNothing);
     expect(find.textContaining('annulation'), findsNothing);
-  });
-
-  test('libellé de fiabilité en anglais : « Reliability 96% »', () {
-    final l = lookupAppLocalizations(const Locale('en'));
-    expect(l.profileReliabilityPercent(96), 'Reliability 96%');
   });
 
   test('libellés : dernière connexion au jour près, réponse arrondie', () {

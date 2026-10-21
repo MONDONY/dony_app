@@ -19892,15 +19892,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ratingPendingPillLabel => 'To rate';
 
   @override
-  String profileReliabilityPercent(int percent) {
-    return 'Reliability $percent%';
-  }
-
-  @override
-  String get profileReliabilityHelp =>
-      'Share of shipments completed. Cancellations this person is not responsible for do not count.';
-
-  @override
   String get tripEditCurrencyLockedHint =>
       'The currency can no longer change: this trip already has requests.';
 

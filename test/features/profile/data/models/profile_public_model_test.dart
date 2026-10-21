@@ -37,29 +37,15 @@ void main() {
     });
   });
 
-  group('ProfilePublicModel.reliabilityPercent (FLUTTER-NV)', () {
-    test('lu tel quel, borné à 0..100', () {
-      expect(
-        ProfilePublicModel.fromJson({
-          'userId': 'u1',
-          'reliabilityPercent': 96,
-        }).reliabilityPercent,
-        96,
-      );
-      expect(
-        ProfilePublicModel.fromJson({
-          'userId': 'u1',
-          'reliabilityPercent': 120,
-        }).reliabilityPercent,
-        100,
-      );
-    });
-
-    test('absent (moins de 3 envois, back antérieur) → null', () {
-      expect(
-        ProfilePublicModel.fromJson({'userId': 'u1'}).reliabilityPercent,
-        isNull,
-      );
+  group('ProfilePublicModel : taux de fiabilité retiré', () {
+    test('ignores_legacy_reliability_percent_in_json', () {
+      final model = ProfilePublicModel.fromJson({
+        'userId': 'u1',
+        'displayName': 'Fatou',
+        'reliabilityPercent': 96,
+      });
+      expect(model.userId, 'u1');
+      expect(model.displayName, 'Fatou');
     });
   });
 
@@ -68,10 +54,8 @@ void main() {
       final model = ProfilePublicModel.fromJson({
         'userId': 'u1',
         'senderIncidentCount': 4,
-        'reliabilityPercent': 90,
       });
       expect(model.userId, 'u1');
-      expect(model.reliabilityPercent, 90);
     });
   });
 }
