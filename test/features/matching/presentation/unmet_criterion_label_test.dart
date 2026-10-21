@@ -75,6 +75,8 @@ void main() {
     );
     expect(s, contains(fr.tripTransportBus));
     expect(s, contains(fr.tripTransportPlane));
+    expect(s, fr.unmetTransport(fr.tripTransportPlane, fr.tripTransportBus));
+    expect(s, startsWith('Transport : '));
   });
 
   test('CONTENT_TYPE, RADIUS, URGENT, KILO_PRO_ONLY', () {
@@ -85,6 +87,17 @@ void main() {
     expect(lab(const UnmetCriterion(code: 'RADIUS')), fr.unmetRadius);
     expect(lab(const UnmetCriterion(code: 'URGENT')), fr.unmetUrgent);
     expect(lab(const UnmetCriterion(code: 'KILO_PRO_ONLY')), fr.unmetGpPro);
+  });
+
+  test('CONTENT_TYPE traduit le libellé canonique français en anglais', () {
+    const c = UnmetCriterion(
+      code: 'CONTENT_TYPE',
+      requested: 'Cosmétiques & parfums',
+    );
+    expect(lab(c), "N'accepte pas : Cosmétiques & parfums");
+    final s = lab(c, english: true);
+    expect(s, isNot(contains('Cosmétiques')));
+    expect(s, en.unmetContentType(en.contentCategoryCosmetics));
   });
 
   test('weekend_maps_english_day_name_to_localized_day', () {

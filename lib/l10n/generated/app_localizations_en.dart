@@ -22079,7 +22079,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String unmetTransport(String requested, String actual) {
-    return 'Travels by $actual instead of $requested';
+    return 'Transport: $actual (requested: $requested)';
   }
 
   @override

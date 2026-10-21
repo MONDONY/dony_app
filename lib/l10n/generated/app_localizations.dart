@@ -35823,7 +35823,7 @@ abstract class AppLocalizations {
   /// Écart de mode de transport.
   ///
   /// In fr, this message translates to:
-  /// **'Voyage en {actual} au lieu de {requested}'**
+  /// **'Transport : {actual} (demandé : {requested})'**
   String unmetTransport(String requested, String actual);
 
   /// Écart de note minimale du voyageur.

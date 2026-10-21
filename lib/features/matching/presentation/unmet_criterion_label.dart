@@ -1,3 +1,4 @@
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
@@ -37,7 +38,7 @@ String unmetCriterionLabel(
       return l.unmetMinRating(requested, actual);
     case 'CONTENT_TYPE':
       if (requested.isEmpty) return generic;
-      return l.unmetContentType(requested);
+      return l.unmetContentType(contentCategoryDisplayName(l, requested));
     case 'RADIUS':
       return l.unmetRadius;
     case 'WEEKEND_ONLY':

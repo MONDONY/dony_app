@@ -22375,7 +22375,7 @@
   "@unmetMinKg": {"description": "Écart de capacité : pas assez de kilos disponibles.", "placeholders": {"requested": {"type": "String", "example": "10"}, "actual": {"type": "String", "example": "5"}}},
   "unmetMaxKg": "{actual} kg disponibles, plus que les {requested} kg souhaités",
   "@unmetMaxKg": {"description": "Écart de capacité : plus de kilos que souhaité.", "placeholders": {"requested": {"type": "String", "example": "5"}, "actual": {"type": "String", "example": "20"}}},
-  "unmetTransport": "Voyage en {actual} au lieu de {requested}",
+  "unmetTransport": "Transport : {actual} (demandé : {requested})",
   "@unmetTransport": {"description": "Écart de mode de transport.", "placeholders": {"requested": {"type": "String", "example": "Avion"}, "actual": {"type": "String", "example": "Bus"}}},
   "unmetMinRating": "Note de {actual} au lieu de {requested} minimum",
   "@unmetMinRating": {"description": "Écart de note minimale du voyageur.", "placeholders": {"requested": {"type": "String", "example": "4.5"}, "actual": {"type": "String", "example": "4.0"}}},

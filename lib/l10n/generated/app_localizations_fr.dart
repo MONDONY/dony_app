@@ -22229,7 +22229,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String unmetTransport(String requested, String actual) {
-    return 'Voyage en $actual au lieu de $requested';
+    return 'Transport : $actual (demandé : $requested)';
   }
 
   @override
