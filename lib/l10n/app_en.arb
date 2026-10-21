@@ -1018,6 +1018,7 @@
   "tripPosterPricePerKg": "{price} per kg",
   "tripPosterPriceFromItem": "from {price} per item",
   "tripPosterTitle": "My poster",
+  "posterTitleShared": "Poster",
   "tripPosterNotFoundTitle": "Trip not found",
   "tripPosterNotFoundDescription": "Couldn't load this trip right now.",
   "tripPosterCaptionCorridor": "{departure} to {arrival}",

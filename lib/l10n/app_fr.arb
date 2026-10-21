@@ -2146,6 +2146,10 @@
   "@tripPosterTitle": {
     "description": "Titre de l'écran d'aperçu de l'affiche du trajet (trip_poster_screen.dart)"
   },
+  "posterTitleShared": "Affiche",
+  "@posterTitleShared": {
+    "description": "Titre de l'écran d'affiche (trajet ou demande) quand la personne qui la partage n'est pas l'auteur de l'annonce"
+  },
   "tripPosterNotFoundTitle": "Trajet introuvable",
   "@tripPosterNotFoundTitle": {
     "description": "Titre de l'état vide quand le trajet de l'affiche ne charge pas (trip_poster_screen.dart)"

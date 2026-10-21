@@ -38,6 +38,8 @@ import 'package:dony/features/matching/presentation/widgets/address_location_row
 import 'package:dony/features/matching/presentation/widgets/billet/trip_billet_card.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart'
+    show canShareTripPoster;
 import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -642,6 +644,20 @@ class _TravelerAnnouncementContent extends StatelessWidget {
 
   final AnnouncementModel announcement;
 
+  /// Ferme la feuille puis ouvre l'affiche partageable du trajet, comme
+  /// « Signaler ce trajet » : la navigation passe par [TravelerSheetRoute]
+  /// quand la feuille vient de `/traveler/:id` (FLUTTER-HR).
+  void _openPoster(BuildContext context) {
+    final location = '/announcements/${announcement.id}/affiche';
+    final navigator = Navigator.of(context, rootNavigator: true);
+    if (returnsNavigation) {
+      navigator.pop(TravelerSheetRoute(location, extra: announcement));
+      return;
+    }
+    navigator.pop();
+    context.push(location, extra: announcement);
+  }
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -652,13 +668,25 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         announcement.pricingMode == 'MIXED' &&
         announcement.priceGridItems.isNotEmpty;
 
+    // Une personne qui ne possède pas le trajet peut en partager l'affiche,
+    // tant qu'il est ouvert (même règle que l'icône du propriétaire).
+    final estSien = lecteurId != null && lecteurId == announcement.travelerId;
+    final onShare = !estSien && canShareTripPoster(announcement)
+        ? () => _openPoster(context)
+        : null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (avecFavori)
-          _HeroWithFavorite(announcement: announcement)
+          _HeroWithFavorite(announcement: announcement, onShare: onShare)
         else
-          TripBilletCard(announcement: announcement),
+          TripBilletCard(
+            announcement: announcement,
+            trailing: onShare == null
+                ? null
+                : _SharePosterButton(onPressed: onShare),
+          ),
         const SizedBox(height: DonySpacing.md),
         _StatCardsRow(
           announcement: announcement,
@@ -820,9 +848,12 @@ class _TravelerAnnouncementContent extends StatelessWidget {
 /// écran disparaît au profit de cette feuille : sans ce report, une annonce
 /// ouverte depuis une notification ne pourrait plus être mise en favori.
 class _HeroWithFavorite extends StatelessWidget {
-  const _HeroWithFavorite({required this.announcement});
+  const _HeroWithFavorite({required this.announcement, this.onShare});
 
   final AnnouncementModel announcement;
+
+  /// Ouvre l'affiche du trajet ; `null` quand il ne se partage pas.
+  final VoidCallback? onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -833,13 +864,22 @@ class _HeroWithFavorite extends StatelessWidget {
         final estFavori = state.tripIds.contains(announcement.id);
         // Billet clair (FLUTTER-GG) : signet aux couleurs par défaut, dans
         // l'en-tête du billet plutôt que superposé au corridor.
+        final coeur = FavoriteHeartButton(
+          isFavorite: estFavori,
+          onToggle: () => unawaited(_basculerFavori(context, announcement.id)),
+        );
+        final partage = onShare;
         return TripBilletCard(
           announcement: announcement,
-          trailing: FavoriteHeartButton(
-            isFavorite: estFavori,
-            onToggle: () =>
-                unawaited(_basculerFavori(context, announcement.id)),
-          ),
+          trailing: partage == null
+              ? coeur
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _SharePosterButton(onPressed: partage),
+                    coeur,
+                  ],
+                ),
         );
       },
     );
@@ -868,6 +908,24 @@ class _HeroWithFavorite extends StatelessWidget {
         type: DonySnackbarType.error,
       );
     }
+  }
+}
+
+/// Icône de partage de l'en-tête du billet, qui ouvre l'affiche du trajet.
+class _SharePosterButton extends StatelessWidget {
+  const _SharePosterButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return IconButton(
+      key: const Key('trip-sheet-share-button'),
+      tooltip: context.l10n.tripPosterShareButton,
+      onPressed: onPressed,
+      icon: DonyIcon('share-2', size: 22, color: cs.onPrimaryContainer),
+    );
   }
 }
 

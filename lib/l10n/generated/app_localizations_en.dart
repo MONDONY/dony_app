@@ -3418,6 +3418,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPosterTitle => 'My poster';
 
   @override
+  String get posterTitleShared => 'Poster';
+
+  @override
   String get tripPosterNotFoundTitle => 'Trip not found';
 
   @override

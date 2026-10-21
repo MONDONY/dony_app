@@ -88,6 +88,7 @@ PackageRequest _makeRequest({
   double? targetPriceEur,
   double? grossPriceEur,
   Set<PaymentMethod> acceptedPaymentMethods = const {},
+  PackageRequestStatus status = PackageRequestStatus.open,
 }) => PackageRequest(
   id: 'pr-owner-test',
   senderId: _senderId,
@@ -99,7 +100,7 @@ PackageRequest _makeRequest({
   parcelSize: ParcelSize.medium,
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
-  status: PackageRequestStatus.open,
+  status: status,
   createdAt: DateTime(2026, 6),
   viewerThreadId: viewerThreadId,
   negotiable: negotiable,
@@ -138,6 +139,15 @@ Future<GoRouter> _pumpRouted(
         path: '/package-requests/:id',
         builder: (ctx, state) =>
             Scaffold(body: Text('MA DEMANDE ${state.pathParameters['id']}')),
+      ),
+      GoRoute(
+        path: '/package-requests/:id/affiche',
+        builder: (ctx, state) => Scaffold(
+          body: Text(
+            'AFFICHE ${state.pathParameters['id']} '
+            '${state.extra is PackageRequest}',
+          ),
+        ),
       ),
     ],
   );
@@ -262,6 +272,66 @@ void main() {
       expect(find.text('Demande d\'envoi'), findsOneWidget);
     },
   );
+
+  // ── Partage de l'affiche par un visiteur ─────────────────────────────────
+  group('partage de l\'affiche', () {
+    const visitor = UserModel(
+      id: 'visitor-042',
+      roles: [],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+    );
+
+    Future<void> ouvrir(
+      WidgetTester tester, {
+      required PackageRequestStatus status,
+    }) async {
+      when(
+        () => repo.getById(any()),
+      ).thenAnswer((_) async => _makeRequest(status: status));
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(visitor));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(visitor),
+      );
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+    }
+
+    final share = find.byKey(const Key('request-public-share-button'));
+
+    testWidgets('demande ouverte → l\'icône ouvre l\'affiche', (tester) async {
+      await ouvrir(tester, status: PackageRequestStatus.open);
+
+      expect(share, findsOneWidget);
+      await tester.tap(share);
+      await tester.pumpAndSettle();
+
+      expect(find.text('AFFICHE pr-owner-test true'), findsOneWidget);
+    });
+
+    testWidgets('demande en négociation → l\'icône est là', (tester) async {
+      await ouvrir(tester, status: PackageRequestStatus.negotiating);
+
+      expect(share, findsOneWidget);
+    });
+
+    for (final status in [
+      PackageRequestStatus.accepted,
+      PackageRequestStatus.expired,
+      PackageRequestStatus.cancelled,
+      PackageRequestStatus.completed,
+    ]) {
+      testWidgets('demande ${status.wireName} → pas d\'icône', (tester) async {
+        await ouvrir(tester, status: status);
+
+        expect(share, findsNothing);
+        // Le signalement reste disponible.
+        expect(find.byTooltip('Signaler'), findsOneWidget);
+      });
+    }
+  });
 
   // ── Invité (session anonyme) ─────────────────────────────────────────────
   testWidgets('session invité → reste sur la vue publique', (tester) async {

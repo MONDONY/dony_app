@@ -28,6 +28,8 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/package_request_poster_screen.dart'
+    show canShareRequestPoster;
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
@@ -268,6 +270,16 @@ class _PackageRequestPublicDetailScreenState
         appBar: DonyAppBar(
           title: context.l10n.requestPublicTitle,
           actions: [
+            // Affiche partageable : tant que la demande cherche encore un
+            // voyageur (même règle que le partage du propriétaire).
+            if (_request case final r? when canShareRequestPoster(r))
+              IconButton(
+                key: const Key('request-public-share-button'),
+                tooltip: context.l10n.tripPosterShareButton,
+                icon: const DonyIcon('share-2', size: 22),
+                onPressed: () =>
+                    context.push('/package-requests/${r.id}/affiche', extra: r),
+              ),
             IconButton(
               tooltip: context.l10n.requestPublicReportTooltip,
               icon: const DonyIcon('flag', size: 20),

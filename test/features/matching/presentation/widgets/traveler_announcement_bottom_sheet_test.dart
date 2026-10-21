@@ -246,6 +246,17 @@ Widget _harness({
         ),
       ),
       GoRoute(
+        path: '/announcements/:id/affiche',
+        builder: (context, state) => Scaffold(
+          body: Center(
+            child: Text(
+              'Affiche ${state.pathParameters['id']} '
+              '${state.extra is AnnouncementModel}',
+            ),
+          ),
+        ),
+      ),
+      GoRoute(
         path: '/bids/:bidId/negotiation',
         builder: (context, state) =>
             const Scaffold(body: Center(child: Text('Fil négo'))),
@@ -2236,6 +2247,100 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Manage my trip'), findsOneWidget);
+    });
+  });
+
+  group('partage de l\'affiche par un tiers', () {
+    late FavoriteIdsCubit cubit;
+
+    setUp(() => cubit = FavoriteIdsCubit(_MockFavoriteRepository()));
+    tearDown(() => cubit.close());
+
+    Future<void> ouvrir(
+      WidgetTester tester,
+      AnnouncementModel a, {
+      AuthState? authState,
+      FavoriteIdsCubit? favorites,
+    }) async {
+      await tester.pumpWidget(
+        _harness(announcement: a, authState: authState, favorites: favorites),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('trajet ouvert d\'un tiers : l\'icône ouvre l\'affiche', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement();
+      await ouvrir(tester, a);
+
+      expect(find.byKey(const Key('trip-sheet-share-button')), findsOneWidget);
+      expect(find.byType(FavoriteHeartButton), findsNothing);
+
+      await tester.tap(find.byKey(const Key('trip-sheet-share-button')));
+      await tester.pumpAndSettle();
+
+      // La feuille se ferme, l'affiche reçoit le trajet en `extra`.
+      expect(find.text('Affiche a1 true'), findsOneWidget);
+      expect(find.text('Détail du trajet'), findsNothing);
+    });
+
+    testWidgets('avec le cœur des favoris : les deux icônes côte à côte', (
+      tester,
+    ) async {
+      await ouvrir(tester, _buildAnnouncement(), favorites: cubit);
+
+      expect(find.byKey(const Key('trip-sheet-share-button')), findsOneWidget);
+      expect(find.byType(FavoriteHeartButton), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('trip-sheet-share-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Affiche a1 true'), findsOneWidget);
+    });
+
+    testWidgets('trajet parti ou annulé : pas d\'icône de partage', (
+      tester,
+    ) async {
+      for (final status in ['IN_PROGRESS', 'COMPLETED', 'CANCELLED']) {
+        await ouvrir(tester, _buildAnnouncement(status: status));
+        expect(
+          find.byKey(const Key('trip-sheet-share-button')),
+          findsNothing,
+          reason: status,
+        );
+        await tester.pumpWidget(const SizedBox());
+      }
+    });
+
+    testWidgets(
+      'son propre trajet : pas d\'icône (il a l\'affiche propriétaire)',
+      (tester) async {
+        final a = _buildAnnouncement();
+        await ouvrir(
+          tester,
+          a,
+          authState: AuthAuthenticated(
+            UserModel(
+              id: a.travelerId,
+              roles: const [],
+              kycStatus: 'VERIFIED',
+              status: 'ACTIVE',
+            ),
+          ),
+          favorites: cubit,
+        );
+
+        expect(find.byKey(const Key('trip-sheet-share-button')), findsNothing);
+      },
+    );
+
+    testWidgets('en anglais : info-bulle traduite', (tester) async {
+      useEnglish();
+      await ouvrir(tester, _buildAnnouncement());
+
+      expect(find.byTooltip('Share the poster'), findsOneWidget);
     });
   });
 

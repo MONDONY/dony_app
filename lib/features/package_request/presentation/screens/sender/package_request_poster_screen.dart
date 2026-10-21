@@ -14,6 +14,7 @@ import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/presentation/screens/trip_poster_screen.dart'
     show PosterShareChannel;
+import 'package:dony/features/matching/presentation/widgets/poster/poster_viewer.dart';
 import 'package:dony/features/package_request/bloc/package_request_detail_cubit.dart';
 import 'package:dony/features/package_request/bloc/package_request_detail_state.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -25,6 +26,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+
+/// `true` si la demande peut être partagée par son affiche : tant qu'elle
+/// cherche encore un voyageur (ouverte ou en négociation). Même règle pour le
+/// propriétaire et pour un voyageur qui consulte la fiche publique.
+bool canShareRequestPoster(PackageRequest r) =>
+    r.status == PackageRequestStatus.open ||
+    r.status == PackageRequestStatus.negotiating;
 
 /// Point d'entrée de la route `/package-requests/:id/affiche`.
 ///
@@ -119,9 +127,13 @@ class _PackageRequestPosterScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       unawaited(
         getItSafe<AnalyticsService>()?.logEvent(
           AnalyticsEvents.packageRequestPosterOpened,
+          properties: {
+            'shared_by_owner': isPosterOwner(context, widget.request.senderId),
+          },
         ),
       );
     });
@@ -284,7 +296,11 @@ class _PackageRequestPosterScreenState
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
-        title: Text(l.tripPosterTitle),
+        title: Text(
+          isPosterOwner(context, widget.request.senderId)
+              ? l.tripPosterTitle
+              : l.posterTitleShared,
+        ),
         centerTitle: false,
       ),
       body: SingleChildScrollView(

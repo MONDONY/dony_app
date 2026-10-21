@@ -14,6 +14,7 @@ import 'package:dony/core/utils/trip_local_time.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/poster/poster_viewer.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/trip_poster_card.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
@@ -143,9 +144,16 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       unawaited(
         getItSafe<AnalyticsService>()?.logEvent(
           AnalyticsEvents.tripPosterOpened,
+          properties: {
+            'shared_by_owner': isPosterOwner(
+              context,
+              widget.announcement.travelerId,
+            ),
+          },
         ),
       );
     });
@@ -409,7 +417,11 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
-        title: Text(l.tripPosterTitle),
+        title: Text(
+          isPosterOwner(context, widget.announcement.travelerId)
+              ? l.tripPosterTitle
+              : l.posterTitleShared,
+        ),
         centerTitle: false,
       ),
       body: SingleChildScrollView(
