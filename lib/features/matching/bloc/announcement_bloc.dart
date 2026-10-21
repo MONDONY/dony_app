@@ -11,6 +11,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/announcement_payload.dart';
 import 'package:dony/features/matching/data/models/announcement_search_page.dart';
+import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -240,7 +241,13 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   ) async {
     final current = state;
     if (current is AnnouncementSearchLoaded) {
-      emit(AnnouncementSearchLoaded(current.results, isReloading: true));
+      emit(
+        AnnouncementSearchLoaded(
+          current.results,
+          isReloading: true,
+          similar: current.similar,
+        ),
+      );
     } else {
       emit(AnnouncementLoading());
     }
@@ -252,6 +259,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
           result.content,
           totalElements: result.totalElements,
           bookableElements: result.bookableElements,
+          similar: _withoutExact(result.similar, result.content),
         ),
       );
     } catch (e, stacktrace) {
@@ -325,6 +333,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         bookableElements: current.bookableElements,
         page: current.page,
         isLoadingMore: true,
+        similar: current.similar,
       ),
     );
     try {
@@ -332,15 +341,20 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       // Une recherche relancée entre-temps a remplacé la liste : on jette.
       if (!identical(search, _lastSearch)) return;
       final known = {for (final a in current.results) a.id};
+      final merged = [
+        ...current.results,
+        ...next.content.where((a) => !known.contains(a.id)),
+      ];
       emit(
         AnnouncementSearchLoaded(
-          [
-            ...current.results,
-            ...next.content.where((a) => !known.contains(a.id)),
-          ],
+          merged,
           totalElements: next.totalElements,
           bookableElements: next.bookableElements,
           page: next.page,
+          // Le back n'envoie les autres annonces qu'à la page 0 : on garde
+          // celles de la première page, sans les rejouer, en retirant ce qui
+          // est devenu un résultat exact.
+          similar: _withoutExact(current.similar, merged),
         ),
       );
     } catch (_) {
@@ -352,9 +366,20 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
           totalElements: current.totalElements,
           bookableElements: current.bookableElements,
           page: current.page,
+          similar: current.similar,
         ),
       );
     }
+  }
+
+  /// Un trajet exact l'emporte sur sa version « autre annonce ».
+  List<SimilarAnnouncement> _withoutExact(
+    List<SimilarAnnouncement> similar,
+    List<AnnouncementModel> exact,
+  ) {
+    if (similar.isEmpty) return similar;
+    final ids = {for (final a in exact) a.id};
+    return similar.where((s) => !ids.contains(s.announcement.id)).toList();
   }
 
   Future<void> _onDeleteRequested(

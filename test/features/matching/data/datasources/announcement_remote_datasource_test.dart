@@ -617,6 +617,17 @@ void main() {
       expect(capturedQuery()['includeFull'], true);
     });
 
+    test('tri par score par défaut, pour les deux méthodes', () async {
+      stubSearch({'content': <dynamic>[], 'totalElements': 0});
+
+      await datasource.searchAnnouncementsPage();
+      expect(capturedQuery()['sortBy'], 'score');
+
+      clearInteractions(mockDio);
+      await datasource.searchAnnouncements();
+      expect(capturedQuery()['sortBy'], 'score');
+    });
+
     test('absent par défaut (recherche de trajets compatibles)', () async {
       stubSearch({'content': <dynamic>[], 'totalElements': 0});
 

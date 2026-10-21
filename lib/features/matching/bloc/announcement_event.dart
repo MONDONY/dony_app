@@ -114,7 +114,7 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   final double? userLat;
   final double? userLng;
   final double? radiusKm;
-  final String sortBy; // date | price | rating
+  final String sortBy; // score | date | price
   final String sortDir; // asc | desc
   /// Filtre serveur « annonces urgentes » (`urgent=true`) — jamais `false`
   /// envoyé explicitement, seulement présent ou absent côté datasource.
@@ -145,7 +145,7 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.userLat,
     this.userLng,
     this.radiusKm,
-    this.sortBy = 'date',
+    this.sortBy = 'score',
     this.sortDir = 'asc',
     this.urgent,
     this.maxStops,
