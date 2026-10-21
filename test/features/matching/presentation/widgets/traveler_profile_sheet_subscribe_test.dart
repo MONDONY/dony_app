@@ -103,9 +103,7 @@ void main() {
     verify(() => subscribeBloc.add(const SubscribePressed())).called(1);
   });
 
-  testWidgets('affiche « Abonné » et la cloche pour un abonné', (
-    tester,
-  ) async {
+  testWidgets('affiche « Abonné » et la cloche pour un abonné', (tester) async {
     whenListen(
       subscribeBloc,
       const Stream<TravelerSubscribeState>.empty(),
