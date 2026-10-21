@@ -366,7 +366,7 @@ void main() {
               (w) => w is DonyIcon && w.name == 'badge-check',
             ),
           )
-          .where((icon) => icon.color == const Color(0xFFF0B829));
+          .where((icon) => icon.color == DonyColors.kycBadgeGold);
       expect(goldIcons, isNotEmpty);
     });
 
@@ -390,7 +390,7 @@ void main() {
                 (w) => w is DonyIcon && w.name == 'badge-check',
               ),
             )
-            .where((icon) => icon.color != const Color(0xFFF0B829));
+            .where((icon) => icon.color != DonyColors.kycBadgeGold);
         expect(blueIcons, isNotEmpty);
       },
     );
