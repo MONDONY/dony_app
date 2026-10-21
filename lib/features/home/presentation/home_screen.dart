@@ -2497,6 +2497,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               ),
                             SimilarTripsSection(
                               items: similarTrips,
+                              onClearFilters:
+                                  count == 0 &&
+                                      !_isNearMeActive &&
+                                      _activeFilterCount > 0
+                                  ? _resetFilters
+                                  : null,
                               padding: EdgeInsets.fromLTRB(
                                 DonySpacing.base,
                                 count > 0 ? DonySpacing.xl : DonySpacing.base,
@@ -2508,14 +2514,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                 item.announcement,
                                 i,
                                 myActiveBidsByAnnouncement,
-                                unmetReasons: [
-                                  for (final c in item.unmet)
-                                    unmetCriterionLabel(
-                                      l,
-                                      c,
-                                      localeName: l.localeName,
-                                    ),
-                                ],
+                                // Jamais de carte sans explication.
+                                unmetReasons: item.unmet.isEmpty
+                                    ? [l.unmetGeneric]
+                                    : [
+                                        for (final c in item.unmet)
+                                          unmetCriterionLabel(
+                                            l,
+                                            c,
+                                            localeName: l.localeName,
+                                          ),
+                                      ],
                               ),
                             ),
                           ],

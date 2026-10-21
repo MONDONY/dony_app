@@ -22,6 +22,7 @@ class SimilarTripsSection extends StatelessWidget {
     required this.items,
     required this.cardBuilder,
     this.padding = const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+    this.onClearFilters,
   });
 
   final List<SimilarAnnouncement> items;
@@ -29,6 +30,11 @@ class SimilarTripsSection extends StatelessWidget {
 
   /// Marges du bloc entier (en-tête et cartes).
   final EdgeInsetsGeometry padding;
+
+  /// Action « Effacer les filtres » sous le sous-titre, quand le bloc remplace
+  /// l'état vide de la liste exacte et que des filtres sont actifs. Absente si
+  /// null.
+  final VoidCallback? onClearFilters;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +62,18 @@ class SimilarTripsSection extends StatelessWidget {
             l.similarTripsSubtitle,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
+          if (onClearFilters != null)
+            TextButton(
+              key: const Key('similar-trips-clear-filters'),
+              onPressed: onClearFilters,
+              style: TextButton.styleFrom(
+                minimumSize: const Size(44, 44),
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.padded,
+                alignment: Alignment.centerLeft,
+              ),
+              child: Text(l.commonClearFilters),
+            ),
         ],
       ),
     ).animate().fadeIn(duration: 250.ms, curve: Curves.easeOutCubic);

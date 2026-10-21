@@ -1162,6 +1162,75 @@ void main() {
         );
       });
 
+      testWidgets('zero_exact_with_similar_and_filter_shows_clear_action', (
+        tester,
+      ) async {
+        await pumpHome(
+          tester,
+          announcementState: AnnouncementSearchLoaded(
+            const [],
+            similar: [proche('s1')],
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+        expect(
+          find.byKey(const Key('similar-trips-clear-filters')),
+          findsNothing,
+        );
+
+        await tester.tap(find.text('🔥 Urgent'));
+        await tester.pumpAndSettle();
+
+        final action = find.byKey(const Key('similar-trips-clear-filters'));
+        expect(action, findsOneWidget);
+        expect(find.text('Effacer les filtres'), findsOneWidget);
+        expect(tester.getSize(action).height, greaterThanOrEqualTo(44));
+
+        await tester.tap(action);
+        await tester.pumpAndSettle();
+        expect(action, findsNothing);
+      });
+
+      testWidgets('exact_results_with_filter_hide_clear_action', (
+        tester,
+      ) async {
+        await pumpHome(
+          tester,
+          announcementState: AnnouncementSearchLoaded(
+            [_makeAnn()],
+            similar: [proche('s1')],
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+        await tester.tap(find.text('🔥 Urgent'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('similar-trips-section')), findsOneWidget);
+        expect(
+          find.byKey(const Key('similar-trips-clear-filters')),
+          findsNothing,
+        );
+      });
+
+      testWidgets('similar_without_unmet_shows_generic_reason', (tester) async {
+        await pumpHome(
+          tester,
+          announcementState: AnnouncementSearchLoaded(
+            const [],
+            similar: [
+              SimilarAnnouncement(
+                announcement: _makeAnn(id: 's9', travelerId: 'traveler-s9'),
+                unmet: const [],
+              ),
+            ],
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        final card = tester.widget<TravelerCard>(find.byType(TravelerCard));
+        expect(card.unmetReasons, ["Ne correspond pas à l'un de vos critères"]);
+      });
+
       testWidgets('exact_results_and_similar_show_block_below_list', (
         tester,
       ) async {
