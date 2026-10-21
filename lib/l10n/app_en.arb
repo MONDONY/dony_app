@@ -10773,7 +10773,6 @@
   "aiFormDraftWarningBudget": "This budget is outside the accepted amounts: enter it in step 3.",
   "aiFormDraftFilledBanner": "Filled in by AI. Check each field before publishing.",
   "aiFormDraftTalkAgain": "Talk again",
-  "assistantMicStart": "Tap to speak",
   "assistantMicListening": "Listening… Tap to send",
   "assistantMicTooltipStart": "Ask your question out loud",
   "assistantMicTooltipStop": "Stop and send my question",

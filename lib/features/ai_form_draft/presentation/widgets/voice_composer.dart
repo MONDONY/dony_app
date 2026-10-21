@@ -2,15 +2,16 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/widgets/dony_mic_button.dart';
+import 'package:dony/core/widgets/dony_voice_action_button.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_form_draft_bloc.dart';
 import 'package:dony/features/ai_form_draft/data/speech_service.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Gros micro rond centré (le même que l'assistant, FLUTTER-RE) au-dessus du
-/// champ écrit + envoyer, dans le `stickyBottom` de la feuille.
+/// Champ de saisie avec, à droite, le bouton micro / envoyer / arrêter (le même
+/// que l'assistant, FLUTTER-RE), dans le `stickyBottom` de la feuille. Le micro
+/// ne prend plus de bande à lui : il remplace l'envoi tant que rien n'est écrit.
 class AiVoiceComposer extends StatefulWidget {
   const AiVoiceComposer({
     super.key,
@@ -85,59 +86,26 @@ class _AiVoiceComposerState extends State<AiVoiceComposer> {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
-    // Lu sur la vue : la feuille retire le clavier des marges de son contenu.
-    final keyboardOpen = View.of(context).viewInsets.bottom > 0;
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final listening = widget.listening;
-    final Widget mic;
-    if (widget.micUnavailable) {
-      mic = Padding(
-        padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-        child: Text(
-          l.aiFormDraftMicUnavailable,
-          key: const Key('ai-mic-unavailable'),
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
-      );
-    } else if (keyboardOpen && !listening) {
-      // Clavier ouvert : le champ reste visible, le micro s'efface.
-      mic = const SizedBox(width: double.infinity);
-    } else {
-      mic = Padding(
-        padding: const EdgeInsets.only(bottom: DonySpacing.xs),
-        child: Center(
-          child: DonyMicButton(
-            tapKey: Key(listening ? 'ai-mic-stop' : 'ai-mic-start'),
-            discKey: const Key('ai-mic-disc'),
-            captionKey: const Key('ai-mic-caption'),
-            listeningCaption: l.aiFormDraftListening,
-            idleTooltip: l.aiFormDraftMicStart,
-            listeningTooltip: l.aiFormDraftListening,
-            listening: listening,
-            enabled: widget.enabled,
-            onTap: () =>
-                unawaited(listening ? _stopListening() : _startListening()),
-          ),
-        ),
-      );
-    }
-    final dock = SizedBox(width: double.infinity, child: mic);
+    OutlineInputBorder border(Color color) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(DonyRadius.xl),
+      borderSide: BorderSide(color: color),
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Animations réduites : la place change d'un coup.
-        if (reduceMotion)
-          dock
-        else
-          AnimatedSize(
-            duration: DonyDuration.base,
-            curve: DonyCurve.enter,
-            alignment: Alignment.bottomCenter,
-            child: dock,
+        if (widget.micUnavailable)
+          Padding(
+            padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+            child: Text(
+              l.aiFormDraftMicUnavailable,
+              key: const Key('ai-mic-unavailable'),
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
           ),
         Row(
           children: [
@@ -152,16 +120,34 @@ class _AiVoiceComposerState extends State<AiVoiceComposer> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _sendText(),
                 decoration: InputDecoration(
-                  hintText: l.aiFormDraftInputHint,
+                  hintText: listening
+                      ? l.aiFormDraftListening
+                      : l.aiFormDraftInputHint,
                   counterText: '',
+                  border: border(listening ? cs.primary : cs.outline),
+                  enabledBorder: border(listening ? cs.primary : cs.outline),
+                  focusedBorder: border(cs.primary),
                 ),
               ),
             ),
-            IconButton(
-              key: const Key('ai-send'),
-              tooltip: l.aiFormDraftSend,
-              onPressed: widget.enabled ? _sendText : null,
-              icon: const Icon(Icons.send_rounded),
+            const SizedBox(width: DonySpacing.sm),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _controller,
+              builder: (context, value, _) => DonyVoiceActionButton(
+                hasText: value.text.trim().isNotEmpty,
+                listening: listening,
+                micAvailable: !widget.micUnavailable,
+                enabled: widget.enabled,
+                onMic: () =>
+                    unawaited(listening ? _stopListening() : _startListening()),
+                onSend: _sendText,
+                micTooltip: l.aiFormDraftMicStart,
+                stopTooltip: l.aiFormDraftListening,
+                sendTooltip: l.aiFormDraftSend,
+                micKey: const Key('ai-mic-start'),
+                stopKey: const Key('ai-mic-stop'),
+                sendKey: const Key('ai-send'),
+              ),
             ),
           ],
         ),

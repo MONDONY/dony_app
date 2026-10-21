@@ -21122,9 +21122,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiFormDraftTalkAgain => 'Talk again';
 
   @override
-  String get assistantMicStart => 'Tap to speak';
-
-  @override
   String get assistantMicListening => 'Listening… Tap to send';
 
   @override

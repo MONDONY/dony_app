@@ -1,3 +1,4 @@
+import 'package:dony/core/widgets/dony_voice_action_button.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -50,10 +51,24 @@ class AssistantComposer extends StatelessWidget {
     required this.controller,
     required this.busy,
     required this.onSend,
+    required this.onMic,
+    this.listening = false,
+    this.micAvailable = true,
   });
 
   final TextEditingController controller;
   final bool busy;
+
+  /// Dictée en cours : le bouton de droite devient « arrêter et envoyer » et
+  /// le champ passe en bleu, le texte reconnu s'y affiche en direct.
+  final bool listening;
+
+  /// Faux sans micro (permission refusée, reconnaissance absente) : il ne
+  /// reste que l'envoi.
+  final bool micAvailable;
+
+  /// Démarre la dictée, ou l'arrête quand elle est en cours.
+  final VoidCallback onMic;
 
   /// Reçoit le texte déjà nettoyé des espaces de bord, jamais vide.
   final ValueChanged<String> onSend;
@@ -126,7 +141,9 @@ class AssistantComposer extends StatelessWidget {
                         );
                       },
                   decoration: InputDecoration(
-                    hintText: l.assistantInputHint,
+                    hintText: listening
+                        ? l.assistantMicListening
+                        : l.assistantInputHint,
                     isDense: true,
                     filled: true,
                     fillColor: Theme.of(context).scaffoldBackgroundColor,
@@ -134,8 +151,8 @@ class AssistantComposer extends StatelessWidget {
                       horizontal: 18,
                       vertical: 14,
                     ),
-                    border: border(cs.outline),
-                    enabledBorder: border(cs.outline),
+                    border: border(listening ? cs.primary : cs.outline),
+                    enabledBorder: border(listening ? cs.primary : cs.outline),
                     focusedBorder: border(cs.primary),
                   ),
                 ),
@@ -143,25 +160,20 @@ class AssistantComposer extends StatelessWidget {
               const SizedBox(width: 8),
               ValueListenableBuilder<TextEditingValue>(
                 valueListenable: controller,
-                builder: (context, value, _) {
-                  final canSend = !busy && value.text.trim().isNotEmpty;
-                  return IconButton.filled(
-                    key: const Key('assistant-send'),
-                    tooltip: l.assistantSend,
-                    onPressed: canSend ? _submit : null,
-                    constraints: const BoxConstraints.tightFor(
-                      width: 48,
-                      height: 48,
-                    ),
-                    style: IconButton.styleFrom(
-                      backgroundColor: cs.primary,
-                      foregroundColor: cs.onPrimary,
-                      disabledBackgroundColor: cs.surfaceContainerHighest,
-                      disabledForegroundColor: cs.onSurfaceVariant,
-                    ),
-                    icon: const Icon(Icons.send_rounded, size: 22),
-                  );
-                },
+                builder: (context, value, _) => DonyVoiceActionButton(
+                  hasText: value.text.trim().isNotEmpty,
+                  listening: listening,
+                  micAvailable: micAvailable,
+                  enabled: !busy,
+                  onMic: onMic,
+                  onSend: _submit,
+                  micTooltip: l.assistantMicTooltipStart,
+                  stopTooltip: l.assistantMicTooltipStop,
+                  sendTooltip: l.assistantSend,
+                  micKey: const Key('assistant-mic'),
+                  stopKey: const Key('assistant-mic'),
+                  sendKey: const Key('assistant-send'),
+                ),
               ),
             ],
           ),

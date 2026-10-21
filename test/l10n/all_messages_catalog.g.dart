@@ -7301,7 +7301,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'aiFormDraftWarningBudget': (l) => l.aiFormDraftWarningBudget,
   'aiFormDraftFilledBanner': (l) => l.aiFormDraftFilledBanner,
   'aiFormDraftTalkAgain': (l) => l.aiFormDraftTalkAgain,
-  'assistantMicStart': (l) => l.assistantMicStart,
   'assistantMicListening': (l) => l.assistantMicListening,
   'assistantMicTooltipStart': (l) => l.assistantMicTooltipStart,
   'assistantMicTooltipStop': (l) => l.assistantMicTooltipStop,
