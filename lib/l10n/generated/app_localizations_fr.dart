@@ -22215,4 +22215,62 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get listingHandoverClosedMessage =>
       'La date limite de dépôt des colis est passée : ce trajet n\'accepte plus de demande.';
+
+  @override
+  String get similarTripsTitle => 'Autres annonces sur ce trajet';
+
+  @override
+  String get similarTripsSubtitle =>
+      'Ces trajets ne correspondent pas exactement à vos critères.';
+
+  @override
+  String get similarTripsNoExactMatch =>
+      'Aucun trajet ne correspond exactement à votre recherche.';
+
+  @override
+  String unmetDate(String requested, String actual) {
+    return 'Départ le $actual au lieu du $requested';
+  }
+
+  @override
+  String unmetMinKg(String requested, String actual) {
+    return '$actual kg disponibles au lieu de $requested';
+  }
+
+  @override
+  String unmetMaxKg(String requested, String actual) {
+    return '$actual kg disponibles, plus que les $requested kg souhaités';
+  }
+
+  @override
+  String unmetTransport(String requested, String actual) {
+    return 'Voyage en $actual au lieu de $requested';
+  }
+
+  @override
+  String unmetMinRating(String requested, String actual) {
+    return 'Note de $actual au lieu de $requested minimum';
+  }
+
+  @override
+  String unmetContentType(String requested) {
+    return 'N\'accepte pas : $requested';
+  }
+
+  @override
+  String get unmetRadius => 'Hors de la zone de retrait choisie';
+
+  @override
+  String unmetWeekend(String actual) {
+    return 'Départ un $actual (pas un week-end)';
+  }
+
+  @override
+  String get unmetUrgent => 'Départ hors de la fenêtre urgente';
+
+  @override
+  String get unmetGpPro => 'Voyageur non GP Pro';
+
+  @override
+  String get unmetGeneric => 'Ne correspond pas à l\'un de vos critères';
 }
