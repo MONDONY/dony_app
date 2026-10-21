@@ -123,7 +123,6 @@ abstract final class DonyColors {
   static const torchOn = Color(0xFFFBBF24);
 
   // KYC badges — icônes de statut sur profil utilisateur
-  static const kycBadgeBlue = Color(0xFF6FA8FF);
   static const kycBadgeGold = Color(0xFFF0B829);
   static const kycBadgeSilver = Color(0xFFAEB8C6);
 

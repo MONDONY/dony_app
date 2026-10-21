@@ -905,6 +905,33 @@ void main() {
       );
     });
 
+    testWidgets('coche GP Pro : l\'en-tête et le titre replié la reçoivent', (
+      tester,
+    ) async {
+      await pumpWith(tester, _verifiedUser.copyWith(gpPro: true));
+
+      final avatars = tester.widgetList<DonyAvatar>(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byType(DonyAvatar),
+        ),
+      );
+      expect(avatars, hasLength(2));
+      expect(avatars.every((a) => a.gpPro && a.verified && !a.pro), isTrue);
+    });
+
+    testWidgets('sans GP Pro : coche inchangée', (tester) async {
+      await pumpWith(tester, _verifiedUser);
+
+      final avatars = tester.widgetList<DonyAvatar>(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byType(DonyAvatar),
+        ),
+      );
+      expect(avatars.every((a) => !a.gpPro), isTrue);
+    });
+
     testWidgets('aucune pastille de rôle (modèle additif)', (tester) async {
       await pumpWith(tester, _dualRoleUser);
 

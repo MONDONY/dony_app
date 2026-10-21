@@ -151,7 +151,8 @@ class DonyVerifiedBadge extends StatelessWidget {
   /// Contour derrière la coche (blanc par défaut, couleur du fond sinon).
   final Color ringColor;
 
-  @visibleForTesting
+  /// Couleur de la coche pour un niveau de compte, partagée avec les écrans
+  /// qui la dessinent eux-mêmes (titre replié de l'onglet Moi).
   static Color colorFor({required bool pro, required bool gpPro}) {
     if (pro) return DonyColors.kycBadgeGold;
     if (gpPro) return DonyColors.kycBadgeSilver;

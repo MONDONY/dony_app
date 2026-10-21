@@ -27,6 +27,11 @@ class UserModel extends Equatable {
   final int totalTrips;
   final int totalShipments;
   final bool isProAccount;
+
+  /// Voyageur régulier GP Pro, accordé par l'équipe (`GET /auth/me`, yadony-back
+  /// #632). La coche d'identité de l'onglet Moi passe en argent. Absent sur un
+  /// ancien back : faux.
+  final bool gpPro;
   final String? companyName;
   final String? siret;
   final String stripeAccountStatus;
@@ -73,6 +78,7 @@ class UserModel extends Equatable {
     this.totalTrips = 0,
     this.totalShipments = 0,
     this.isProAccount = false,
+    this.gpPro = false,
     this.companyName,
     this.siret,
     this.stripeAccountStatus = 'NOT_CREATED',
@@ -104,6 +110,7 @@ class UserModel extends Equatable {
     totalTrips: (json['totalTrips'] as num?)?.toInt() ?? 0,
     totalShipments: (json['totalShipments'] as num?)?.toInt() ?? 0,
     isProAccount: json['isProAccount'] as bool? ?? false,
+    gpPro: json['gpPro'] == true,
     companyName: json['companyName'] as String?,
     siret: json['siret'] as String?,
     stripeAccountStatus:
@@ -142,6 +149,7 @@ class UserModel extends Equatable {
     'totalTrips': totalTrips,
     'totalShipments': totalShipments,
     'isProAccount': isProAccount,
+    'gpPro': gpPro,
     'companyName': companyName,
     'siret': siret,
     'stripeAccountStatus': stripeAccountStatus,
@@ -171,6 +179,7 @@ class UserModel extends Equatable {
     int? totalTrips,
     int? totalShipments,
     bool? isProAccount,
+    bool? gpPro,
     String? companyName,
     String? siret,
     String? stripeAccountStatus,
@@ -198,6 +207,7 @@ class UserModel extends Equatable {
     totalTrips: totalTrips ?? this.totalTrips,
     totalShipments: totalShipments ?? this.totalShipments,
     isProAccount: isProAccount ?? this.isProAccount,
+    gpPro: gpPro ?? this.gpPro,
     companyName: companyName ?? this.companyName,
     siret: siret ?? this.siret,
     stripeAccountStatus: stripeAccountStatus ?? this.stripeAccountStatus,
@@ -292,6 +302,7 @@ class UserModel extends Equatable {
     totalTrips,
     totalShipments,
     isProAccount,
+    gpPro,
     companyName,
     siret,
     stripeAccountStatus,

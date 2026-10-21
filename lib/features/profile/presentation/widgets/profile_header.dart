@@ -12,6 +12,7 @@ class ProfileHeader extends StatelessWidget {
     required this.isSender,
     required this.isKycVerified,
     required this.isProAccount,
+    this.gpPro = false,
     this.avatarUrl,
     this.phoneNumber,
     this.email,
@@ -26,6 +27,9 @@ class ProfileHeader extends StatelessWidget {
   final bool isSender;
   final bool isKycVerified;
   final bool isProAccount;
+
+  /// GP Pro : coche de l'avatar en argent (l'or du PRO prime).
+  final bool gpPro;
   final String? avatarUrl;
   final String? phoneNumber;
   final String? email;
@@ -83,6 +87,7 @@ class ProfileHeader extends StatelessWidget {
                   size: DonyAvatarSize.xl,
                   verified: isKycVerified,
                   pro: isProAccount,
+                  gpPro: gpPro,
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(

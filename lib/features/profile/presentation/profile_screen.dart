@@ -188,6 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final isSender = user.isSender;
             final isKycVerified = user.isKycVerified;
             final isProAccount = user.isProAccount;
+            final isGpPro = user.gpPro;
             final displayName = user.displayName;
 
             return Builder(
@@ -219,6 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   isSender: isSender,
                   isKycVerified: isKycVerified,
                   isProAccount: isProAccount,
+                  gpPro: isGpPro,
                   avatarUrl: user.avatarUrl,
                   phoneNumber: user.phoneNumber,
                   email: user.email,
@@ -279,6 +281,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             avatarUrl: user.avatarUrl,
                             isKycVerified: isKycVerified,
                             isProAccount: isProAccount,
+                            gpPro: isGpPro,
                             header: profileHeader,
                             onMenu: () => _openMenu(user),
                           ),
@@ -318,6 +321,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String? avatarUrl,
     required bool isKycVerified,
     required bool isProAccount,
+    required bool gpPro,
     required Widget header,
     required VoidCallback onMenu,
   }) {
@@ -354,6 +358,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   size: DonyAvatarSize.xs,
                   verified: isKycVerified,
                   pro: isProAccount,
+                  gpPro: gpPro,
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 Flexible(
@@ -372,9 +377,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   DonyIcon(
                     'badge-check',
                     size: 13,
-                    color: isProAccount
-                        ? DonyColors.kycBadgeGold
-                        : DonyColors.kycBadgeBlue,
+                    color: DonyVerifiedBadge.colorFor(
+                      pro: isProAccount,
+                      gpPro: gpPro,
+                    ),
                   ),
                 ],
               ],
