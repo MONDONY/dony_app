@@ -4581,7 +4581,7 @@
       }
     }
   },
-  "listingSuitcaseCapacityLabel": "{count} × valise {kg} kg",
+  "listingSuitcaseCapacityLabel": "{count, plural, =1{{count} valise {kg} kg} other{{count} valises {kg} kg}}",
   "@listingSuitcaseCapacityLabel": {
     "description": "Capacité d'un trajet en valises, sur la card de recherche et le détail (traveler_card.dart, trip_billet_card.dart)",
     "placeholders": {"count": {"type": "int"}, "kg": {"type": "int"}}

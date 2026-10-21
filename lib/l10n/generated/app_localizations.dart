@@ -8928,7 +8928,7 @@ abstract class AppLocalizations {
   /// Capacité d'un trajet en valises, sur la card de recherche et le détail (traveler_card.dart, trip_billet_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'{count} × valise {kg} kg'**
+  /// **'{count, plural, =1{{count} valise {kg} kg} other{{count} valises {kg} kg}}'**
   String listingSuitcaseCapacityLabel(int count, int kg);
 
   /// Numéro de valise dans la jauge du détail (trip_suitcase_gauge.dart)

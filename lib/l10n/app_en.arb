@@ -1539,7 +1539,7 @@
   "listingFavoriteRemovedMessage": "Trip removed from saved",
   "listingFavoriteToggleErrorMessage": "Couldn't update your saved items",
   "listingKgAvailableLabel": "{kg} kg available",
-  "listingSuitcaseCapacityLabel": "{count} × {kg} kg suitcase",
+  "listingSuitcaseCapacityLabel": "{count, plural, =1{{count} suitcase of {kg} kg} other{{count} suitcases of {kg} kg}}",
   "listingSuitcaseShort": "S{n}",
   "listingSuitcaseRemaining": "{free} of {size} kg",
   "listingSuitcaseFull": "full",
