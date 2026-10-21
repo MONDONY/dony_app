@@ -914,7 +914,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text("S'abonner"), findsNothing);
-    expect(find.text('Abonné ✓'), findsNothing);
+    expect(find.text('Abonné'), findsNothing);
     verifyNever(() => subBloc.add(any()));
   });
 
@@ -1015,7 +1015,7 @@ void main() {
     expect(loadCalls(subBloc), hasLength(1));
   });
 
-  testWidgets('shows "Abonné ✓" + bell icon when already subscribed', (
+  testWidgets('shows "Abonné" + bell icon when already subscribed', (
     tester,
   ) async {
     final subBloc = MockTravelerSubscribeBloc();
@@ -1032,7 +1032,7 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Abonné ✓'), findsOneWidget);
+    expect(find.text('Abonné'), findsOneWidget);
     expect(find.text("S'abonner"), findsNothing);
     expect(find.byTooltip('Désactiver les notifications'), findsOneWidget);
   });
@@ -1082,7 +1082,7 @@ void main() {
   });
 
   testWidgets(
-    'tapping "Abonné ✓" opens confirm dialog, confirming unsubscribes',
+    'tapping "Abonné" opens confirm dialog, confirming unsubscribes',
     (tester) async {
       final subBloc = MockTravelerSubscribeBloc();
       const subState = TravelerSubscribeState(
@@ -1097,7 +1097,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 600));
 
-      await tester.tap(find.text('Abonné ✓'));
+      await tester.tap(find.text('Abonné'));
       await tester.pumpAndSettle();
 
       expect(find.text('Se désabonner ?'), findsOneWidget);
@@ -1454,18 +1454,18 @@ void main() {
         : tester.widget<DonyVerifiedBadge>(finder);
   }
 
-  testWidgets('bandeau : aplat bleu Yadony (couleur primaire), sans dégradé', (
+  testWidgets('header : même fond que les autres écrans, sans dégradé', (
     tester,
   ) async {
     await pumpBadge(tester, tier());
-    final band = tester.widget<Container>(
-      find.byKey(const Key('profile-public-band')),
+    final header = tester.widget<Container>(
+      find.byKey(const Key('profile-public-header')),
     );
-    final primary = Theme.of(
-      tester.element(find.byKey(const Key('profile-public-band'))),
-    ).colorScheme.primary;
-    expect(band.color, primary);
-    expect(band.decoration, isNull);
+    final surface = Theme.of(
+      tester.element(find.byKey(const Key('profile-public-header'))),
+    ).colorScheme.surface;
+    expect(header.color, surface);
+    expect(header.decoration, isNull);
   });
 
   testWidgets('coche bleue : vérifié seul', (tester) async {

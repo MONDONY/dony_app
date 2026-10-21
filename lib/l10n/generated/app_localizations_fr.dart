@@ -12038,7 +12038,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get followFollowButton => 'S\'abonner';
 
   @override
-  String get followFollowingButton => 'Abonné ✓';
+  String get followFollowingButton => 'Abonné';
 
   @override
   String get followUnfollowDialogTitle => 'Se désabonner ?';

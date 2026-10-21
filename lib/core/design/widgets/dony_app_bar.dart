@@ -26,8 +26,6 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.bottom,
     this.showFeedback = true,
     this.centerTitle = false,
-    this.backgroundColor,
-    this.foregroundColor,
   }) : assert(
          variant == DonyAppBarVariant.compact,
          'Use DonySliverAppBar for the large variant inside a CustomScrollView.', // i18n-ignore
@@ -56,13 +54,6 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// aligné à gauche par défaut.
   final bool centerTitle;
 
-  /// Fond imposé (écran dont l'en-tête se prolonge dans un bandeau de couleur,
-  /// ex. profil public). Avec lui, [foregroundColor] teinte titre, retour et
-  /// actions, et le filet du bas disparaît pour que barre et bandeau ne fassent
-  /// qu'un. Les deux se donnent ensemble.
-  final Color? backgroundColor;
-  final Color? foregroundColor;
-
   @override
   Size get preferredSize =>
       Size.fromHeight(56 + (bottom?.preferredSize.height ?? 0));
@@ -70,18 +61,13 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final onColor = foregroundColor;
 
     return AppBar(
-      backgroundColor: backgroundColor,
-      foregroundColor: onColor,
       title: Text(
         title,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: onColor == null
-            ? tt.headlineMedium
-            : tt.headlineMedium?.copyWith(color: onColor),
+        style: tt.headlineMedium,
       ),
       centerTitle: centerTitle,
       scrolledUnderElevation: 0,
@@ -90,19 +76,16 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
               onBack: onBack,
               leadingIcon: leadingIcon,
               leadingIconAsset: leadingIconAsset,
-              onColor: onColor,
             )
           : null,
       automaticallyImplyLeading: showBackButton,
       actions: withFeedbackButton(actions, showFeedback),
       bottom:
           bottom ??
-          (backgroundColor != null
-              ? null
-              : const PreferredSize(
-                  preferredSize: Size.fromHeight(1),
-                  child: Divider(height: 1),
-                )),
+          const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1),
+          ),
     );
   }
 }
@@ -116,21 +99,15 @@ class DonyAppBarBackButton extends StatelessWidget {
     this.onBack,
     this.leadingIcon,
     this.leadingIconAsset,
-    this.onColor,
   });
 
   final VoidCallback? onBack;
   final IconData? leadingIcon;
   final String? leadingIconAsset;
 
-  /// Couleur du chevron quand la barre a un fond imposé : le carré passe en
-  /// voile translucide de cette couleur au lieu de `primaryContainer`.
-  final Color? onColor;
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final iconColor = onColor ?? cs.primary;
     final l = context.l10n;
     return IconButton(
       tooltip: leadingIcon != null ? l.commonClose : l.commonBack,
@@ -148,17 +125,15 @@ class DonyAppBarBackButton extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: onColor == null
-              ? cs.primaryContainer
-              : onColor!.withValues(alpha: 0.18),
+          color: cs.primaryContainer,
           borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
         ),
         child: leadingIconAsset != null
-            ? DonyIcon(leadingIconAsset!, size: 20, color: iconColor)
+            ? DonyIcon(leadingIconAsset!, size: 20, color: cs.primary)
             : Icon(
                 leadingIcon ?? Icons.chevron_left_rounded,
                 size: 20,
-                color: iconColor,
+                color: cs.primary,
               ),
       ),
     );

@@ -11962,7 +11962,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get followFollowButton => 'Follow';
 
   @override
-  String get followFollowingButton => 'Following ✓';
+  String get followFollowingButton => 'Following';
 
   @override
   String get followUnfollowDialogTitle => 'Unfollow?';

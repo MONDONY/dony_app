@@ -19872,7 +19872,7 @@ abstract class AppLocalizations {
   /// État abonné du bouton d'abonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Abonné ✓'**
+  /// **'Abonné'**
   String get followFollowingButton;
 
   /// Titre du dialog de confirmation de désabonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)

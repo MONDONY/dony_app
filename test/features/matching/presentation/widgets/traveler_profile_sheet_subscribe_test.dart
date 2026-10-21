@@ -103,9 +103,7 @@ void main() {
     verify(() => subscribeBloc.add(const SubscribePressed())).called(1);
   });
 
-  testWidgets('affiche « Abonné ✓ » et la cloche pour un abonné', (
-    tester,
-  ) async {
+  testWidgets('affiche « Abonné » et la cloche pour un abonné', (tester) async {
     whenListen(
       subscribeBloc,
       const Stream<TravelerSubscribeState>.empty(),
@@ -118,7 +116,7 @@ void main() {
 
     await _openSheet(tester);
 
-    expect(find.text('Abonné ✓'), findsOneWidget);
+    expect(find.text('Abonné'), findsOneWidget);
     expect(
       find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell'),
       findsWidgets,
@@ -139,6 +137,6 @@ void main() {
     await _openSheet(tester);
 
     expect(find.text("S'abonner à ce voyageur"), findsNothing);
-    expect(find.text('Abonné ✓'), findsNothing);
+    expect(find.text('Abonné'), findsNothing);
   });
 }

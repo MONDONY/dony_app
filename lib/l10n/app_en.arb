@@ -7090,7 +7090,7 @@
   "profilePublicSeeAllReviews": "See all reviews ({count}) ›",
   "profileUserFallback": "User",
   "followFollowButton": "Follow",
-  "followFollowingButton": "Following ✓",
+  "followFollowingButton": "Following",
   "followUnfollowDialogTitle": "Unfollow?",
   "followUnfollowButton": "Unfollow",
   "profilePublicUnfollowDialogMessage": "You will no longer receive this traveler's notifications.",

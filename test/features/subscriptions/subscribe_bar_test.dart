@@ -46,7 +46,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Abonné ✓'), findsOneWidget);
+    expect(find.text('Abonné'), findsOneWidget);
     expect(find.text('Push'), findsOneWidget);
   });
 
@@ -87,7 +87,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Abonné ✓'));
+    await tester.tap(find.text('Abonné'));
     await tester.pumpAndSettle();
     expect(find.text('Se désabonner ?'), findsOneWidget);
     expect(desabonne, isFalse);
@@ -107,11 +107,11 @@ void main() {
     expect(find.text('Follow'), findsOneWidget);
 
     await tester.pumpWidget(host(subscribed: true, pushEnabled: false));
-    expect(find.text('Following ✓'), findsOneWidget);
+    expect(find.text('Following'), findsOneWidget);
     expect(find.text('Push'), findsOneWidget);
     expect(find.textContaining('their trips will only arrive'), findsOneWidget);
 
-    await tester.tap(find.text('Following ✓'));
+    await tester.tap(find.text('Following'));
     await tester.pumpAndSettle();
     expect(find.text('Unfollow?'), findsOneWidget);
     expect(find.text('Unfollow'), findsWidgets);
