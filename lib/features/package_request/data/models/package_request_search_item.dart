@@ -234,7 +234,6 @@ class SenderPublicProfile extends Equatable {
     required this.totalRatings,
     required this.kycVerified,
     this.avatarUrl,
-    this.incidentCount = 0,
     this.gpPro = false,
   });
 
@@ -251,10 +250,6 @@ class SenderPublicProfile extends Equatable {
   /// URL de l'avatar de l'expéditeur (nullable, fourni par le backend).
   final String? avatarUrl;
 
-  /// Annulations après acceptation et absences au rendez-vous de remise
-  /// confirmées (FLUTTER-E0/E6). `0` sur un back antérieur.
-  final int incidentCount;
-
   /// Badge GP Pro de l'expéditeur (yadony-back #560). `false` sur un back antérieur.
   final bool gpPro;
 
@@ -266,7 +261,6 @@ class SenderPublicProfile extends Equatable {
         totalRatings: json['totalRatings'] as int,
         kycVerified: json['kycVerified'] as bool,
         avatarUrl: json['avatarUrl'] as String?,
-        incidentCount: (json['incidentCount'] as num?)?.toInt() ?? 0,
         gpPro: json['gpPro'] as bool? ?? false,
       );
 
@@ -286,7 +280,6 @@ class SenderPublicProfile extends Equatable {
     totalRatings,
     kycVerified,
     avatarUrl,
-    incidentCount,
     gpPro,
   ];
 }

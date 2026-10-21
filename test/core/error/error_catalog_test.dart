@@ -498,6 +498,31 @@ void main() {
     });
   });
 
+  // Controles d'acces du back (fix/controles-acces) : sans entree dediee, ces
+  // refus retombaient sur le message generique du type d'exception.
+  group('ErrorCatalog — controles d acces', () {
+    test('demande espece qui n attend plus : message dedie et rassurant', () {
+      const error = ConflictException('brut', code: 'bid-not-pending');
+      final p = ErrorCatalog.lookup(error);
+
+      expect(ErrorCatalog.isKnown(error), isTrue);
+      expect(p.message, isNot(contains('brut')));
+      expect(p.message, contains('Aucune commission'));
+      expect(p.severity, ErrorSeverity.warning);
+      expect(p.message, isNot(contains('\u2014')));
+    });
+
+    test('compte supprime ou banni non reactivable', () {
+      const error = ForbiddenException('brut', 'account-reactivation-denied');
+      final p = ErrorCatalog.lookup(error);
+
+      expect(ErrorCatalog.isKnown(error), isTrue);
+      expect(p.title, 'Compte fermé');
+      expect(p.message, isNot(contains('brut')));
+      expect(p.message, isNot(contains('\u2014')));
+    });
+  });
+
   // Regression : ces codes n avaient aucune entree et retombaient sur le
   // generique « Donnees invalides ». Le message du serveur, qui disait
   // pourtant quoi faire, n atteignait jamais l utilisateur.

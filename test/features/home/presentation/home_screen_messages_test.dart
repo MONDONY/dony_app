@@ -266,6 +266,58 @@ void main() {
       });
     }
 
+    // Bloc « Autres annonces sur ce trajet » : sans trajet exact, le
+    // sous-titre ne dit plus « personne » au-dessus de cartes visibles.
+    group('trajets avec des annonces proches', () {
+      String subtitle({required int trips, required bool hasSimilar}) =>
+          homeListSubtitle(
+            fr,
+            mode: SearchMode.trips,
+            trips: trips,
+            parcels: 0,
+            matching: false,
+            activeTrips: null,
+            hasSimilar: hasSimilar,
+          );
+
+      test('0 exact + proches : aucun trajet exact', () {
+        expect(
+          subtitle(trips: 0, hasSimilar: true),
+          'Aucun trajet ne correspond exactement à votre recherche.',
+        );
+      });
+      test('0 exact sans proches : texte inchangé', () {
+        expect(
+          subtitle(trips: 0, hasSimilar: false),
+          "Personne ne propose ce trajet pour l'instant",
+        );
+      });
+      test('des trajets exacts : texte inchangé, proches ou non', () {
+        expect(
+          subtitle(trips: 3, hasSimilar: true),
+          'Ils peuvent emporter votre colis',
+        );
+        expect(
+          subtitle(trips: 3, hasSimilar: false),
+          'Ils peuvent emporter votre colis',
+        );
+      });
+      test('mode colis : ignoré', () {
+        expect(
+          homeListSubtitle(
+            fr,
+            mode: SearchMode.parcels,
+            trips: 0,
+            parcels: 0,
+            matching: false,
+            activeTrips: null,
+            hasSimilar: true,
+          ),
+          "Aucune demande d'envoi pour l'instant",
+        );
+      });
+    });
+
     const parcelsExpected = {
       0: "Aucune demande d'envoi pour l'instant",
       1: 'Vous pouvez les emporter sur votre trajet',

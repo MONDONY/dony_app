@@ -1254,5 +1254,84 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('traveler-card-fee-suffix')), findsNothing);
     });
+
+    // Bloc « Autres annonces sur ce trajet » : une ligne par critère manqué.
+    testWidgets('card_shows_one_warning_line_per_reason', (tester) async {
+      const reasons = [
+        'Départ le 5 nov. au lieu du 3 nov.',
+        'Note de 4,2 au lieu de 4,5 minimum, une phrase assez longue pour '
+            'passer sur deux lignes sans être coupée',
+      ];
+      await tester.pumpWidget(
+        _wrapAt(
+          300,
+          TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+            unmetReasons: reasons,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('traveler-card-unmet-0')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('traveler-card-unmet-1')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('traveler-card-unmet-2')), findsNothing);
+      for (final r in reasons) {
+        final text = tester.widget<Text>(find.text(r));
+        // Le sens ne se perd jamais : pas de coupure ni de points de
+        // suspension.
+        expect(text.maxLines, isNull);
+        expect(text.overflow, isNot(TextOverflow.ellipsis));
+        expect(text.style?.color, DonyColors.warning500);
+      }
+      final icons = tester
+          .widgetList<DonyIcon>(find.byType(DonyIcon))
+          .where((i) => i.name == 'triangle-alert');
+      expect(icons, hasLength(2));
+      // Chaque ligne porte sa phrase en libellé d'accessibilité (la carte,
+      // tactile, fusionne ensuite ses descendants en un seul nœud).
+      final semantics = tester.widget<Semantics>(
+        find
+            .descendant(
+              of: find.byKey(const ValueKey('traveler-card-unmet-0')),
+              matching: find.byType(Semantics),
+              matchRoot: true,
+            )
+            .first,
+      );
+      expect(semantics.properties.label, reasons.first);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('no_warning_when_reasons_empty', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('traveler-card-unmet-0')), findsNothing);
+      expect(
+        tester
+            .widgetList<DonyIcon>(find.byType(DonyIcon))
+            .where((i) => i.name == 'triangle-alert'),
+        isEmpty,
+      );
+    });
   });
 }

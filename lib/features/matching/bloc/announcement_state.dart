@@ -1,5 +1,6 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 
 abstract class AnnouncementState {}
@@ -84,6 +85,10 @@ class AnnouncementSearchLoaded extends AnnouncementState {
   /// Page suivante en cours de chargement.
   final bool isLoadingMore;
 
+  /// Trajets proches qui ne remplissent pas tous les critères (bloc « autres
+  /// annonces »), ceux déjà présents dans [results] en sont exclus.
+  final List<SimilarAnnouncement> similar;
+
   AnnouncementSearchLoaded(
     this.results, {
     this.isReloading = false,
@@ -91,6 +96,7 @@ class AnnouncementSearchLoaded extends AnnouncementState {
     this.bookableElements,
     this.page = 0,
     this.isLoadingMore = false,
+    this.similar = const [],
   }) : isEmpty = results.isEmpty;
 
   /// D'autres trajets restent à charger.

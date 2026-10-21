@@ -13,7 +13,6 @@ BidModel _bid({
   bool senderKycVerified = false,
   bool senderGpPro = false,
   bool senderIsProAccount = false,
-  int? senderIncidentCount,
 }) => BidModel(
   id: 'b1',
   announcementId: 'a1',
@@ -24,7 +23,6 @@ BidModel _bid({
   senderKycVerified: senderKycVerified,
   senderGpPro: senderGpPro,
   senderIsProAccount: senderIsProAccount,
-  senderIncidentCount: senderIncidentCount,
   createdAt: DateTime(2026, 10, 6),
   updatedAt: DateTime(2026, 10, 6),
 );
@@ -94,21 +92,21 @@ void main() {
     expect(find.text('Submitted on 10/6/2026'), findsOneWidget);
   });
 
-  testWidgets(
-    'fiabilité : annulations ou absences de l expediteur (FLUTTER-E0/E6)',
-    (tester) async {
-      await _pump(tester, _bid(senderName: 'Aïcha D.', senderIncidentCount: 2));
-      expect(find.text('2 annulations ou absences'), findsOneWidget);
-    },
-  );
-
-  testWidgets('fiabilité masquée à zéro et sur un back antérieur', (
-    tester,
-  ) async {
-    await _pump(tester, _bid(senderName: 'Aïcha D.'));
+  testWidgets('does_not_render_sender_incident_label', (tester) async {
+    final bid = BidModel.fromJson({
+      'id': 'b1',
+      'announcementId': 'a1',
+      'senderId': 's1',
+      'senderName': 'Aïcha D.',
+      'weightKg': 5.0,
+      'status': 'PENDING',
+      'senderIncidentCount': 3,
+      'createdAt': '2026-10-06T00:00:00Z',
+      'updatedAt': '2026-10-06T00:00:00Z',
+    });
+    await _pump(tester, bid);
     expect(find.byKey(const Key('sender-reliability-label')), findsNothing);
-    await _pump(tester, _bid(senderName: 'Aïcha D.', senderIncidentCount: 0));
-    expect(find.byKey(const Key('sender-reliability-label')), findsNothing);
+    expect(find.textContaining('annulation'), findsNothing);
   });
 
   testWidgets('coche de l\'avatar : niveau GP Pro et PRO transmis', (

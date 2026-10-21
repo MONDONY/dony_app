@@ -220,6 +220,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre compte a été suspendu. Contactez le support pour plus d\'informations.';
 
   @override
+  String get errorAccountReactivationDeniedTitle => 'Compte fermé';
+
+  @override
+  String get errorAccountReactivationDeniedMessage =>
+      'Ce compte a été supprimé ou suspendu et ne peut pas être réactivé. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.';
+
+  @override
   String get errorAuthTokenUnavailableTitle => 'Authentification impossible';
 
   @override
@@ -714,6 +721,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorBidNotAwaitingPaymentMessage =>
       'Cette discussion n\'attend pas de paiement par carte. Rouvrez-la pour voir où elle en est.';
+
+  @override
+  String get errorBidNotPendingTitle => 'Demande plus disponible';
+
+  @override
+  String get errorBidNotPendingMessage =>
+      'Cette demande n\'attend plus de réponse : elle a été annulée, refusée ou a expiré. Aucune commission n\'a été prélevée. Actualisez pour voir son état à jour.';
 
   @override
   String get errorBidAlreadyPaidTitle => 'Déjà payé';
@@ -17711,21 +17725,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatReportMessageAction => 'Signaler';
 
   @override
-  String senderReliabilityLabel(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count annulations ou absences',
-      one: '1 annulation ou absence',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get senderReliabilityTooltip =>
-      'Colis annulés après l\'acceptation d\'un voyageur et absences confirmées au rendez-vous de remise.';
-
-  @override
   String get walletActiveCurrencyCardLabel => 'Portefeuille actif';
 
   @override
@@ -22239,4 +22238,62 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get listingHandoverClosedMessage =>
       'La date limite de dépôt des colis est passée : ce trajet n\'accepte plus de demande.';
+
+  @override
+  String get similarTripsTitle => 'Autres annonces sur ce trajet';
+
+  @override
+  String get similarTripsSubtitle =>
+      'Ces trajets ne correspondent pas exactement à vos critères.';
+
+  @override
+  String get similarTripsNoExactMatch =>
+      'Aucun trajet ne correspond exactement à votre recherche.';
+
+  @override
+  String unmetDate(String requested, String actual) {
+    return 'Départ le $actual au lieu du $requested';
+  }
+
+  @override
+  String unmetMinKg(String requested, String actual) {
+    return '$actual kg disponibles au lieu de $requested';
+  }
+
+  @override
+  String unmetMaxKg(String requested, String actual) {
+    return '$actual kg disponibles, plus que les $requested kg souhaités';
+  }
+
+  @override
+  String unmetTransport(String requested, String actual) {
+    return 'Transport : $actual (demandé : $requested)';
+  }
+
+  @override
+  String unmetMinRating(String requested, String actual) {
+    return 'Note de $actual au lieu de $requested minimum';
+  }
+
+  @override
+  String unmetContentType(String requested) {
+    return 'N\'accepte pas : $requested';
+  }
+
+  @override
+  String get unmetRadius => 'Hors de la zone de retrait choisie';
+
+  @override
+  String unmetWeekend(String actual) {
+    return 'Départ un $actual (pas un week-end)';
+  }
+
+  @override
+  String get unmetUrgent => 'Départ hors de la fenêtre urgente';
+
+  @override
+  String get unmetGpPro => 'Voyageur non GP Pro';
+
+  @override
+  String get unmetGeneric => 'Ne correspond pas à l\'un de vos critères';
 }
