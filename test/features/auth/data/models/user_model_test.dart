@@ -462,6 +462,43 @@ void main() {
       });
     });
 
+    // ─── gpPro (yadony-back #632) ─────────────────────────────────────────────
+
+    group('gpPro', () {
+      test('absent (ancien back) → faux', () {
+        final user = UserModel.fromJson(const {'id': 'u1', 'roles': []});
+        expect(user.gpPro, isFalse);
+      });
+
+      test('renvoyé par /auth/me → lu', () {
+        expect(
+          UserModel.fromJson(const {
+            'id': 'u1',
+            'roles': [],
+            'gpPro': true,
+          }).gpPro,
+          isTrue,
+        );
+        expect(
+          UserModel.fromJson(const {
+            'id': 'u1',
+            'roles': [],
+            'gpPro': false,
+          }).gpPro,
+          isFalse,
+        );
+      });
+
+      test('toJson, copyWith et égalité le portent', () {
+        final user = baseUser.copyWith(gpPro: true);
+        expect(user.gpPro, isTrue);
+        expect(user.toJson()['gpPro'], isTrue);
+        expect(UserModel.fromJson(user.toJson()).gpPro, isTrue);
+        expect(user == baseUser, isFalse);
+        expect(baseUser.copyWith().gpPro, isFalse);
+      });
+    });
+
     // ─── Equatable ────────────────────────────────────────────────────────────
 
     group('Equatable', () {

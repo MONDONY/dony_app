@@ -11,6 +11,7 @@ Widget _buildHeader({
   bool isSender = true,
   bool isKycVerified = false,
   bool isProAccount = false,
+  bool gpPro = false,
   String? avatarUrl,
   String? phoneNumber,
   String? email,
@@ -28,6 +29,7 @@ Widget _buildHeader({
         isSender: isSender,
         isKycVerified: isKycVerified,
         isProAccount: isProAccount,
+        gpPro: gpPro,
         avatarUrl: avatarUrl,
         phoneNumber: phoneNumber,
         email: email,
@@ -261,6 +263,26 @@ void main() {
     testWidgets('sans onTap, le header reste inerte', (tester) async {
       await tester.pumpWidget(_buildHeader());
       expect(find.byKey(const Key('profile-header-open')), findsNothing);
+    });
+
+    testWidgets('niveau de la coche : GP Pro et PRO transmis à l\'avatar', (
+      tester,
+    ) async {
+      DonyAvatar avatar() => tester.widget<DonyAvatar>(find.byType(DonyAvatar));
+
+      await tester.pumpWidget(_buildHeader(isKycVerified: true));
+      expect(avatar().gpPro, isFalse);
+      expect(avatar().pro, isFalse);
+
+      await tester.pumpWidget(_buildHeader(isKycVerified: true, gpPro: true));
+      expect(avatar().gpPro, isTrue);
+      expect(avatar().pro, isFalse);
+
+      await tester.pumpWidget(
+        _buildHeader(isKycVerified: true, gpPro: true, isProAccount: true),
+      );
+      expect(avatar().pro, isTrue);
+      expect(avatar().gpPro, isTrue);
     });
   });
 }
