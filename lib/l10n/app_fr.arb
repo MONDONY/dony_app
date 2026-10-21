@@ -4581,6 +4581,27 @@
       }
     }
   },
+  "listingSuitcaseCapacityLabel": "{count} × valise {kg} kg",
+  "@listingSuitcaseCapacityLabel": {
+    "description": "Capacité d'un trajet en valises, sur la card de recherche et le détail (traveler_card.dart, trip_billet_card.dart)",
+    "placeholders": {"count": {"type": "int"}, "kg": {"type": "int"}}
+  },
+  "listingSuitcaseShort": "V{n}",
+  "@listingSuitcaseShort": {
+    "description": "Numéro de valise dans la jauge du détail (trip_suitcase_gauge.dart)",
+    "placeholders": {"n": {"type": "int"}}
+  },
+  "listingSuitcaseRemaining": "{free} / {size} kg",
+  "@listingSuitcaseRemaining": {
+    "description": "Kilos libres d'une valise sur sa taille (trip_suitcase_gauge.dart)",
+    "placeholders": {"free": {"type": "String"}, "size": {"type": "int"}}
+  },
+  "listingSuitcaseFull": "pleine",
+  "@listingSuitcaseFull": {"description": "Valise sans kilo libre (trip_suitcase_gauge.dart)"},
+  "listingSuitcaseGaugeRemaining": "Restant",
+  "@listingSuitcaseGaugeRemaining": {"description": "Légende de la jauge de valises : kilos libres (trip_suitcase_gauge.dart)"},
+  "listingSuitcaseGaugeReserved": "Réservé",
+  "@listingSuitcaseGaugeReserved": {"description": "Légende de la jauge de valises : kilos pris par des colis (trip_suitcase_gauge.dart)"},
   "listingIdentityBadge": "Identité",
   "@listingIdentityBadge": {
     "description": "Badge compact identité vérifiée du voyageur (traveler_announcement_bottom_sheet.dart, traveler_card.dart)"

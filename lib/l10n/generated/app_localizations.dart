@@ -8925,6 +8925,42 @@ abstract class AppLocalizations {
   /// **'{kg} kg dispo'**
   String listingKgAvailableLabel(String kg);
 
+  /// Capacité d'un trajet en valises, sur la card de recherche et le détail (traveler_card.dart, trip_billet_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} × valise {kg} kg'**
+  String listingSuitcaseCapacityLabel(int count, int kg);
+
+  /// Numéro de valise dans la jauge du détail (trip_suitcase_gauge.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'V{n}'**
+  String listingSuitcaseShort(int n);
+
+  /// Kilos libres d'une valise sur sa taille (trip_suitcase_gauge.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{free} / {size} kg'**
+  String listingSuitcaseRemaining(String free, int size);
+
+  /// Valise sans kilo libre (trip_suitcase_gauge.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'pleine'**
+  String get listingSuitcaseFull;
+
+  /// Légende de la jauge de valises : kilos libres (trip_suitcase_gauge.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Restant'**
+  String get listingSuitcaseGaugeRemaining;
+
+  /// Légende de la jauge de valises : kilos pris par des colis (trip_suitcase_gauge.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservé'**
+  String get listingSuitcaseGaugeReserved;
+
   /// Badge compact identité vérifiée du voyageur (traveler_announcement_bottom_sheet.dart, traveler_card.dart)
   ///
   /// In fr, this message translates to:

@@ -2,8 +2,10 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/features/matching/presentation/utils/trip_capacity.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_route.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_suitcase_gauge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -44,6 +46,7 @@ class TripBilletCard extends StatelessWidget {
     final transportLabel = announcement.transportMode?.label(l);
     final trailing = this.trailing;
     final notch = notchColor ?? cs.surface;
+    final capacity = TripCapacity.fromAnnouncement(announcement);
 
     // Billet blanc, bordé, avec un bandeau teinté en tête : sur le fond gris
     // clair de l'app, l'ancien ton `surfaceContainerLow` était exactement
@@ -126,6 +129,8 @@ class TripBilletCard extends StatelessWidget {
                   _BilletChip(
                     label: announcement.isKgFree
                         ? l.tripKgFree
+                        : capacity != null
+                        ? '${l.listingSuitcaseCapacityLabel(capacity.count, capacity.unitKg)} · ${l.listingKgAvailableLabel(announcement.availableKg.toStringAsFixed(0))}'
                         : l.listingKgAvailableLabel(
                             announcement.availableKg.toStringAsFixed(0),
                           ),
@@ -133,6 +138,16 @@ class TripBilletCard extends StatelessWidget {
               ],
             ),
           ),
+          if (showKg && capacity != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.base,
+                0,
+                DonySpacing.base,
+                DonySpacing.base,
+              ),
+              child: TripSuitcaseGauge(capacity: capacity),
+            ),
         ],
       ),
     );

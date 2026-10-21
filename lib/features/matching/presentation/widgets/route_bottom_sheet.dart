@@ -167,7 +167,6 @@ class RouteBottomSheet extends StatelessWidget {
                               announcement: ann,
                               index: i,
                               isOwnAnnouncement: isOwn,
-                              showFavorite: !isOwn,
                               existingBidStatus: existingBid?.status,
                               onTap: existingBid != null
                                   ? () {
