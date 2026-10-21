@@ -13,7 +13,6 @@ import 'package:dony/features/profile/bloc/profile_public_state.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
 import 'package:dony/features/profile/presentation/profile_labels.dart';
 import 'package:dony/features/profile/presentation/widgets/all_reviews_bottom_sheet.dart';
-import 'package:dony/features/profile/presentation/widgets/profile_reliability_label.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/ratings/presentation/widgets/report_rating_button.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
@@ -361,23 +360,7 @@ class _LoadedView extends StatelessWidget {
                   .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         ),
 
-        // Taux de fiabilité (FLUTTER-NV) à la place des compteurs publics
-        // d'annulations et d'absences : rien sous trois envois engagés ni sur
-        // un back antérieur, jamais de compteur négatif sur le profil public.
-        if (profile.reliabilityPercent case final percent?)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.md,
-                DonySpacing.lg,
-                DonySpacing.lg,
-              ),
-              child: ProfileReliabilityLabel(percent: percent),
-            ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
-          )
-        else
-          const SliverToBoxAdapter(child: SizedBox(height: DonySpacing.md)),
+        const SliverToBoxAdapter(child: SizedBox(height: DonySpacing.md)),
 
         // ── Vérifications (FLUTTER-4H) ────────────────────────────────────────
         SliverToBoxAdapter(

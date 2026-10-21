@@ -32394,18 +32394,6 @@ abstract class AppLocalizations {
   /// **'À noter'**
   String get ratingPendingPillLabel;
 
-  /// Profil public : taux de fiabilité, part des envois menés à bien (reliabilityPercent, FLUTTER-NV)
-  ///
-  /// In fr, this message translates to:
-  /// **'Fiabilité {percent} %'**
-  String profileReliabilityPercent(int percent);
-
-  /// Aide affichée au tap sur le taux de fiabilité du profil public (FLUTTER-NV)
-  ///
-  /// In fr, this message translates to:
-  /// **'Part des envois menés à bien. Les annulations dont la personne n\'est pas responsable ne comptent pas.'**
-  String get profileReliabilityHelp;
-
   /// Modification d'un trajet : explication sous l'en-tête quand le serveur fige la devise (currencyEditable false, FLUTTER-KV)
   ///
   /// In fr, this message translates to:
