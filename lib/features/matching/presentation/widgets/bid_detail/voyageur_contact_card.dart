@@ -118,6 +118,7 @@ class VoyageurContactCard extends StatelessWidget {
                   imageUrl: bid.travelerAvatarUrl,
                   verified: bid.travelerKycVerified,
                   pro: bid.travelerIsProAccount,
+                  gpPro: bid.travelerGpPro,
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(

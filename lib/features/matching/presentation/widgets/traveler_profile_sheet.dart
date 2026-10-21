@@ -322,6 +322,7 @@ class _ProfileHeader extends StatelessWidget {
               size: DonyAvatarSize.lg,
               verified: traveler.kycVerified,
               pro: traveler.isProAccount,
+              gpPro: traveler.gpPro,
             ),
           ),
           const SizedBox(width: DonySpacing.md),

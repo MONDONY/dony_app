@@ -582,6 +582,7 @@ class _SenderRow extends StatelessWidget {
               imageUrl: item.sender.avatarUrl,
               size: DonyAvatarSize.sm,
               verified: item.sender.kycVerified,
+              gpPro: item.sender.gpPro,
             ),
             const SizedBox(width: DonySpacing.sm),
             Expanded(

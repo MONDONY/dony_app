@@ -167,6 +167,7 @@ class _LoadedProfileHeader extends StatelessWidget {
                     size: DonyAvatarSize.lg,
                     verified: profile.kycVerified,
                     pro: profile.isProAccount,
+                    gpPro: profile.gpPro,
                   ),
                   const SizedBox(width: DonySpacing.md),
                   Expanded(
