@@ -127,9 +127,54 @@ void main() {
       expect(find.byKey(const Key('trip-stops-badge')), findsNothing);
     });
 
-    testWidgets('capacité en valises : « 2 × valise 23 kg · 32 kg dispo »', (
-      tester,
-    ) async {
+    // Le corridor va du drapeau de départ au drapeau d'arrivée, sans vide à
+    // droite, avec ou sans escales (la ligne ne se réduit pas à l'avion).
+    for (final stops in <TripStops?>[
+      null,
+      TripStops.direct,
+      TripStops.one,
+      TripStops.twoOrMore,
+    ]) {
+      testWidgets('corridor pleine largeur, escales : $stops', (tester) async {
+        await tester.pumpWidget(
+          _wrapAt(
+            500,
+            TravelerCard(
+              announcement: _makeAnn(
+                departureCity: 'Rome',
+                arrivalCity: 'Lomé',
+                departureFlag: '🇪🇸',
+                arrivalFlag: '🇨🇮',
+                stops: stops,
+              ),
+              index: 0,
+              isOwnAnnouncement: false,
+              onTap: () {},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final header = tester.getRect(find.byKey(const Key('route-header')));
+        final arrivalFlag = tester.getRect(find.text('🇨🇮'));
+        final connector = tester.getRect(
+          find.byKey(const Key('route-connector')),
+        );
+        expect(
+          header.right - arrivalFlag.right,
+          lessThan(1),
+          reason: 'le drapeau d\'arrivée colle au bord droit',
+        );
+        expect(
+          connector.width,
+          greaterThan(100),
+          reason: 'la ligne prend la place laissée par les villes',
+        );
+      });
+    }
+
+    testWidgets('capacité en valises : « 2 valises 23 kg » sans les kilos '
+        'restants, qui sont dans le détail', (tester) async {
       await tester.pumpWidget(
         _wrap(
           TravelerCard(
@@ -145,7 +190,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('2 × valise 23 kg · 32 kg dispo'), findsOneWidget);
+      expect(find.text('2 valises 23 kg'), findsOneWidget);
+      expect(find.textContaining('dispo'), findsNothing);
     });
 
     testWidgets('personnalisé : seulement les kilos, sans valise', (

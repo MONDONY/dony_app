@@ -5354,7 +5354,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String listingSuitcaseCapacityLabel(int count, int kg) {
-    return '$count × valise $kg kg';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count valises $kg kg',
+      one: '$count valise $kg kg',
+    );
+    return '$_temp0';
   }
 
   @override

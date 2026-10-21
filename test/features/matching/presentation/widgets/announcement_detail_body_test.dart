@@ -148,7 +148,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('trip-suitcase-gauge')), findsOneWidget);
-    expect(find.text('2 × valise 23 kg'), findsWidgets);
+    expect(find.text('2 valises 23 kg'), findsWidgets);
     expect(find.text('9 / 23 kg'), findsOneWidget);
     expect(find.text('23 / 23 kg'), findsOneWidget);
   });

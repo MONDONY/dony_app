@@ -397,7 +397,12 @@ class TravelerCard extends StatelessWidget {
                       announcement.capacityUnit == 'KG_FREE'
                           ? l.tripKgFree
                           : capacity != null
-                          ? '${l.listingSuitcaseCapacityLabel(capacity.count, capacity.unitKg)} · ${l.listingKgAvailableLabel(announcement.availableKg.toStringAsFixed(0))}'
+                          // Valises : le restant en kilos n'est que dans le détail,
+                          // la card reste légère.
+                          ? l.listingSuitcaseCapacityLabel(
+                              capacity.count,
+                              capacity.unitKg,
+                            )
                           : l.listingKgAvailableLabel(
                               announcement.availableKg.toStringAsFixed(0),
                             ),
@@ -551,47 +556,92 @@ class _RouteHeader extends StatelessWidget {
   /// celle d'avant.
   final TripStops? stops;
 
+  /// Largeur que la ligne garde au minimum entre les deux villes.
+  static const double _minConnectorWidth = 48;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final cityStyle = tt.headlineMedium?.copyWith(color: cs.onSurface);
 
-    return Row(
-      children: [
-        _FlagEndpoint(flag: depFlag),
-        const SizedBox(width: DonySpacing.xs),
-        Flexible(
-          child: Text(
-            departureCity,
-            style: cityStyle,
+    // Les villes gardent leur largeur naturelle et la ligne prend tout le reste.
+    // Avec des `Flexible`, l'espace libre était partagé en parts égales et ce
+    // que les villes n'utilisaient pas restait vide à droite. Quand les deux
+    // noms ne tiennent pas, ils se partagent la place au prorata de leur
+    // longueur (points de suspension), en laissant [_minConnectorWidth] à la
+    // ligne.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scaler = MediaQuery.textScalerOf(context);
+        double measure(String text, TextStyle? style) {
+          final painter = TextPainter(
+            text: TextSpan(text: text, style: style),
+            textDirection: Directionality.of(context),
+            textScaler: scaler,
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(width: DonySpacing.sm),
-        Expanded(
-          child: stops == null
-              ? const _RouteConnector()
-              : _RouteConnectorWithStops(stops: stops!),
-        ),
-        const SizedBox(width: DonySpacing.sm),
-        Flexible(
-          child: Text(
-            arrivalCity,
-            style: cityStyle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.right,
-          ),
-        ),
-        const SizedBox(width: DonySpacing.xs),
-        _FlagEndpoint(flag: arrFlag),
-        if (showChevron) ...[
-          const SizedBox(width: DonySpacing.xs),
-          DonyIcon('chevron-right', size: 18, color: cs.primary),
-        ],
-      ],
+          )..layout();
+          final width = painter.width;
+          painter.dispose();
+          return width.ceilToDouble() + 1;
+        }
+
+        const flagStyle = TextStyle(fontSize: 18);
+        final fixed =
+            (depFlag != null ? measure(depFlag!, flagStyle) : 8) +
+            (arrFlag != null ? measure(arrFlag!, flagStyle) : 8) +
+            DonySpacing.xs * 2 +
+            DonySpacing.sm * 2 +
+            (showChevron ? DonySpacing.xs + 18 : 0) +
+            _minConnectorWidth;
+        final depNatural = measure(departureCity, cityStyle);
+        final arrNatural = measure(arrivalCity, cityStyle);
+        final available = (constraints.maxWidth - fixed).clamp(0.0, 1e6);
+        final total = depNatural + arrNatural;
+        final fits = total <= available;
+        final maxDep = fits ? depNatural : available * depNatural / total;
+        final maxArr = fits ? arrNatural : available * arrNatural / total;
+        return Row(
+          key: const Key('route-header'),
+          children: [
+            _FlagEndpoint(flag: depFlag),
+            const SizedBox(width: DonySpacing.xs),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxDep),
+              child: Text(
+                departureCity,
+                style: cityStyle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: DonySpacing.sm),
+            Expanded(
+              key: const Key('route-connector'),
+              child: stops == null
+                  ? const _RouteConnector()
+                  : _RouteConnectorWithStops(stops: stops!),
+            ),
+            const SizedBox(width: DonySpacing.sm),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxArr),
+              child: Text(
+                arrivalCity,
+                style: cityStyle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.right,
+              ),
+            ),
+            const SizedBox(width: DonySpacing.xs),
+            _FlagEndpoint(flag: arrFlag),
+            if (showChevron) ...[
+              const SizedBox(width: DonySpacing.xs),
+              DonyIcon('chevron-right', size: 18, color: cs.primary),
+            ],
+          ],
+        );
+      },
     );
   }
 }
@@ -616,8 +666,11 @@ class _RouteConnectorWithStops extends StatelessWidget {
       TripStops.twoOrMore => const [1 / 3, 2 / 3],
     };
 
+    // `stretch` : sans lui, la colonne donne à la ligne une largeur libre et elle
+    // se réduit à la taille de l'avion (ou des cercles).
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: _labelHeight),
         if (fractions.isEmpty)
