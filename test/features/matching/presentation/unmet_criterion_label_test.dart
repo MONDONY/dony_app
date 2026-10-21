@@ -27,7 +27,7 @@ void main() {
     expect(s, startsWith('Départ le'));
   });
 
-  test('URGENT avec date : date localisée', () {
+  test('URGENT : la valeur reçue est ignorée, texte fixe', () {
     final s = lab(const UnmetCriterion(code: 'URGENT', actual: '2026-11-12'));
     expect(s, 'Départ hors de la fenêtre urgente');
   });

@@ -58,7 +58,7 @@ class ProfilePublicModel {
 
   /// Part des envois menés à bien, de 0 à 100 (FLUTTER-NV, yadony-back #517).
   /// Absente sous trois envois engagés ou sur un back antérieur : le profil
-  /// public n'affiche alors ni taux ni compteur d'incidents.
+  /// public n'affiche alors pas de taux.
   final int? reliabilityPercent;
 
   factory ProfilePublicModel.fromJson(Map<String, dynamic> json) {

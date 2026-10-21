@@ -1231,14 +1231,41 @@ void main() {
         },
         act: (bloc) async {
           bloc.add(AnnouncementSearchRequested());
-          await Future<void>.delayed(Duration.zero);
+          await bloc.stream.firstWhere(
+            (s) => s is AnnouncementSearchLoaded && s.results.length == 1,
+          );
           bloc.add(AnnouncementSearchMoreRequested());
-          await Future<void>.delayed(Duration.zero);
+          await bloc.stream.firstWhere(
+            (s) =>
+                s is AnnouncementSearchLoaded &&
+                s.results.length == 2 &&
+                !s.isLoadingMore,
+          );
         },
         verify: (_) {
           verify(
             () => backend.capture(AnalyticsEvents.searchSimilarShown, any()),
           ).called(1);
+        },
+      );
+
+      blocTest<AnnouncementBloc, AnnouncementState>(
+        'does_not_log_when_all_similar_are_duplicates_of_exact',
+        build: () {
+          stubPage(
+            0,
+            _page(
+              [buildAnnouncement(id: 'a'), buildAnnouncement(id: 'b')],
+              similar: [_similar('a'), _similar('b')],
+            ),
+          );
+          return buildTrackedBloc();
+        },
+        act: (bloc) => bloc.add(AnnouncementSearchRequested()),
+        verify: (_) {
+          verifyNever(
+            () => backend.capture(AnalyticsEvents.searchSimilarShown, any()),
+          );
         },
       );
     });
