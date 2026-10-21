@@ -458,6 +458,18 @@ abstract class AppLocalizations {
   /// **'Votre compte a été suspendu. Contactez le support pour plus d\'informations.'**
   String get errorAccountBannedMessage;
 
+  /// No description provided for @errorAccountReactivationDeniedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte fermé'**
+  String get errorAccountReactivationDeniedTitle;
+
+  /// No description provided for @errorAccountReactivationDeniedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte a été supprimé ou suspendu et ne peut pas être réactivé. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.'**
+  String get errorAccountReactivationDeniedMessage;
+
   /// No description provided for @errorAuthTokenUnavailableTitle.
   ///
   /// In fr, this message translates to:
@@ -1297,6 +1309,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Cette discussion n\'attend pas de paiement par carte. Rouvrez-la pour voir où elle en est.'**
   String get errorBidNotAwaitingPaymentMessage;
+
+  /// No description provided for @errorBidNotPendingTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande plus disponible'**
+  String get errorBidNotPendingTitle;
+
+  /// No description provided for @errorBidNotPendingMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette demande n\'attend plus de réponse : elle a été annulée, refusée ou a expiré. Aucune commission n\'a été prélevée. Actualisez pour voir son état à jour.'**
+  String get errorBidNotPendingMessage;
 
   /// No description provided for @errorBidAlreadyPaidTitle.
   ///
