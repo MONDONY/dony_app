@@ -6,7 +6,9 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/utils/trip_capacity.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/trip_billet_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_suitcase_gauge.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -112,6 +114,33 @@ class AnnouncementDetailBody extends StatelessWidget {
           ),
         ).animate().fadeIn(delay: 60.ms),
         const SizedBox(height: DonySpacing.sm),
+
+        // ── Valises : kilos restants dans chacune ───────────────────────────
+        if (TripCapacity.fromAnnouncement(a) case final capacity?) ...[
+          Container(
+            padding: const EdgeInsets.all(DonySpacing.base),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+              border: Border.all(color: cs.outline),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l.listingSuitcaseCapacityLabel(
+                    capacity.count,
+                    capacity.unitKg,
+                  ),
+                  style: tt.titleMedium,
+                ),
+                const SizedBox(height: DonySpacing.md),
+                TripSuitcaseGauge(capacity: capacity),
+              ],
+            ),
+          ).animate().fadeIn(delay: 70.ms),
+          const SizedBox(height: DonySpacing.sm),
+        ],
 
         // ── Colis : acceptés vs en attente ───────────────────────────────────
         _ParcelStatsRow(

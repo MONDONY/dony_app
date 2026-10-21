@@ -2485,7 +2485,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     announcement: a,
                                     index: i,
                                     isOwnAnnouncement: isOwn,
-                                    showFavorite: !isOwn,
                                     distanceBadge: badge,
                                     existingBidStatus: existingBid?.status,
                                     onTap: isOwn

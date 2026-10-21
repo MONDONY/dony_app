@@ -5,17 +5,16 @@ import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/owner_views_label.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
-import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
-import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/features/matching/presentation/utils/trip_capacity.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 class TravelerCard extends StatelessWidget {
@@ -27,7 +26,6 @@ class TravelerCard extends StatelessWidget {
     required this.onTap,
     this.distanceBadge,
     this.existingBidStatus,
-    this.showFavorite = false,
   });
 
   final AnnouncementModel announcement;
@@ -41,15 +39,6 @@ class TravelerCard extends StatelessWidget {
   /// ouverte. Si non null, la carte affiche un chip de statut + une bordure
   /// colorée pour rappeler à l'expéditeur qu'il a déjà sollicité ce trajet.
   final String? existingBidStatus;
-
-  /// When true, renders a heart button in the top-right of the card header.
-  /// Requires a [FavoriteIdsCubit] to be in the widget tree; if absent the
-  /// heart is silently omitted (defensive read — never crashes).
-  ///
-  /// Caller is responsible for NOT passing true on items owned by the current
-  /// user. The in-card heart has no owner guard; the backend returns 422 on an
-  /// own-trip add, but the optimistic UI would flash before the error arrives.
-  final bool showFavorite;
 
   /// Nombre de catégories affichées avant la pastille « +N ».
   ///
@@ -141,6 +130,7 @@ class TravelerCard extends StatelessWidget {
       l.localeName,
     ).format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];
+    final capacity = TripCapacity.fromAnnouncement(announcement);
     final hasExistingBid = existingBidStatus != null;
     final bidStyle = _bidStyle(cs, l);
     // Trajet déjà sollicité ou complet : la carte s'efface pour laisser voir
@@ -222,24 +212,13 @@ class TravelerCard extends StatelessWidget {
               ],
 
               // ── Zone 1 : trajet (hero) ──
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _RouteHeader(
-                      departureCity: announcement.departureCity,
-                      arrivalCity: announcement.arrivalCity,
-                      depFlag: depFlag,
-                      arrFlag: arrFlag,
-                      showChevron: isOwnAnnouncement,
-                    ),
-                  ),
-                  // Pas de SizedBox : le padding interne du bouton (halo autour
-                  // de l'icône) suffit à l'écarter du corridor. En ajouter un
-                  // creusait un vide visible entre le signet et le trajet.
-                  if (showFavorite)
-                    _buildFavoriteHeart(context, announcement.id),
-                ],
+              _RouteHeader(
+                departureCity: announcement.departureCity,
+                arrivalCity: announcement.arrivalCity,
+                depFlag: depFlag,
+                arrFlag: arrFlag,
+                showChevron: isOwnAnnouncement,
+                stops: announcement.stops,
               ),
               const SizedBox(height: DonySpacing.xs),
               Row(
@@ -382,10 +361,7 @@ class TravelerCard extends StatelessWidget {
               // selon la largeur (liste vs carousel), donnant deux hauteurs. Ici
               // ils disposent de toute la largeur de la carte et s'alignent de
               // façon identique dans les deux vues.
-              if (isGpPro ||
-                  isProAccount ||
-                  announcement.isUrgent ||
-                  announcement.stops != null) ...[
+              if (isGpPro || isProAccount || announcement.isUrgent) ...[
                 const SizedBox(height: DonySpacing.sm),
                 Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
@@ -399,25 +375,32 @@ class TravelerCard extends StatelessWidget {
                       ),
                     if (isProAccount) const _ProBadge(),
                     if (announcement.isUrgent) const DonyUrgentBadge(),
-                    // Escales (FLUTTER-GE) : rien si non renseignées.
-                    TripStopsBadge(stops: announcement.stops),
                   ],
                 ),
               ],
               const SizedBox(height: DonySpacing.sm),
               Row(
                 children: [
-                  const DonyEmoji.parcel(size: 13),
+                  if (capacity != null)
+                    Icon(DonyIcons.suitcase, size: 15, color: cs.primary)
+                  else
+                    const DonyEmoji.parcel(size: 13),
                   const SizedBox(width: DonySpacing.xxs),
-                  Text(
-                    announcement.capacityUnit == 'KG_FREE'
-                        ? l.tripKgFree
-                        : l.listingKgAvailableLabel(
-                            announcement.availableKg.toStringAsFixed(0),
-                          ),
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                  Flexible(
+                    child: Text(
+                      announcement.capacityUnit == 'KG_FREE'
+                          ? l.tripKgFree
+                          : capacity != null
+                          ? '${l.listingSuitcaseCapacityLabel(capacity.count, capacity.unitKg)} · ${l.listingKgAvailableLabel(announcement.availableKg.toStringAsFixed(0))}'
+                          : l.listingKgAvailableLabel(
+                              announcement.availableKg.toStringAsFixed(0),
+                            ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
                   ),
                   if (isOwnAnnouncement) ...[
@@ -439,43 +422,6 @@ class TravelerCard extends StatelessWidget {
       ),
     ).animate().fadeIn(delay: Duration(milliseconds: 60 * index)).slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
-}
-
-// ─────────────────────────────────────────────────────────────
-// Shared helper — defensive favorite heart
-// ─────────────────────────────────────────────────────────────
-
-/// Renders a [FavoriteHeartButton] driven by [FavoriteIdsCubit].
-/// Silently returns [SizedBox.shrink] if no cubit is in the tree —
-/// so the card never crashes when rendered outside a cubit provider.
-Widget _buildFavoriteHeart(BuildContext context, String tripId) {
-  FavoriteIdsCubit? cubit;
-  try {
-    cubit = context.read<FavoriteIdsCubit>();
-  } catch (_) {
-    // No FavoriteIdsCubit in the tree — render nothing.
-    return const SizedBox.shrink();
-  }
-  final c = cubit;
-  return BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
-    bloc: c,
-    builder: (ctx, _) => FavoriteHeartButton(
-      isFavorite: c.isTripFav(tripId),
-      onToggle: () async {
-        try {
-          await c.toggleTrip(tripId);
-        } catch (_) {
-          if (ctx.mounted) {
-            DonySnackbar.show(
-              ctx,
-              message: ctx.l10n.listingRetryActionMessage,
-              type: DonySnackbarType.error,
-            );
-          }
-        }
-      },
-    ),
-  );
 }
 
 /// Carte tactile : applique un léger scale 0.97 pendant l'appui (feedback
@@ -528,6 +474,7 @@ class _RouteHeader extends StatelessWidget {
     required this.depFlag,
     required this.arrFlag,
     this.showChevron = false,
+    this.stops,
   });
 
   final String departureCity;
@@ -538,6 +485,11 @@ class _RouteHeader extends StatelessWidget {
   /// Affiche un chevron `>` après le drapeau d'arrivée pour signaler que la
   /// carte est cliquable (cas « Votre trajet »).
   final bool showChevron;
+
+  /// Escales du vol (FLUTTER-GE) : portées par la ligne elle-même, un cercle
+  /// par escale et le libellé dessous. `null` = non renseigné, la ligne reste
+  /// celle d'avant.
+  final TripStops? stops;
 
   @override
   Widget build(BuildContext context) {
@@ -558,7 +510,11 @@ class _RouteHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: DonySpacing.sm),
-        const Expanded(child: _RouteConnector()),
+        Expanded(
+          child: stops == null
+              ? const _RouteConnector()
+              : _RouteConnectorWithStops(stops: stops!),
+        ),
         const SizedBox(width: DonySpacing.sm),
         Flexible(
           child: Text(
@@ -575,6 +531,82 @@ class _RouteHeader extends StatelessWidget {
           const SizedBox(width: DonySpacing.xs),
           DonyIcon('chevron-right', size: 18, color: cs.primary),
         ],
+      ],
+    );
+  }
+}
+
+/// Connecteur avec escales : l'avion au milieu d'un vol direct, un cercle par
+/// escale sinon, et le libellé sous la ligne. Un espace de même hauteur au-dessus
+/// garde la ligne centrée sur les villes.
+class _RouteConnectorWithStops extends StatelessWidget {
+  const _RouteConnectorWithStops({required this.stops});
+
+  final TripStops stops;
+
+  static const double _labelHeight = 16;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final fractions = switch (stops) {
+      TripStops.direct => const <double>[],
+      TripStops.one => const [0.5],
+      TripStops.twoOrMore => const [1 / 3, 2 / 3],
+    };
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: _labelHeight),
+        if (fractions.isEmpty)
+          const _RouteConnector()
+        else
+          SizedBox(
+            key: const Key('route-stop-markers'),
+            height: 18,
+            child: LayoutBuilder(
+              builder: (context, constraints) => Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    height: 1.5,
+                    decoration: BoxDecoration(
+                      color: DonyColors.blue200,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  for (final f in fractions)
+                    Positioned(
+                      left: constraints.maxWidth * f - 6,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: cs.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: cs.primary, width: 2.5),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        SizedBox(
+          height: _labelHeight,
+          child: Text(
+            tripStopsBadgeLabel(context.l10n, stops),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: tt.labelSmall?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ],
     );
   }

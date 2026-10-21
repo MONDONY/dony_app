@@ -120,6 +120,55 @@ void main() {
     expect(find.byKey(const Key('detail-stops-chip')), findsNothing);
   });
 
+  AnnouncementModel suitcases({
+    required String unit,
+    required double total,
+    required double available,
+  }) => AnnouncementModel.fromJson({
+    'id': 'ann-4',
+    'travelerId': 'trav-1',
+    'departureCity': 'Madrid',
+    'arrivalCity': 'Abidjan',
+    'departureDate': DateTime(2026, 9, 2).toIso8601String(),
+    'availableKg': available,
+    'totalKg': total,
+    'capacityUnit': unit,
+    'pricePerKg': 6,
+    'status': 'ACTIVE',
+    'createdAt': DateTime(2026, 7).toIso8601String(),
+    'updatedAt': DateTime(2026, 7).toIso8601String(),
+  });
+
+  testWidgets('valises : jauge avec les kilos restants dans chacune', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(suitcases(unit: 'SUITCASE_23KG', total: 46, available: 32)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('trip-suitcase-gauge')), findsOneWidget);
+    expect(find.text('2 × valise 23 kg'), findsWidgets);
+    expect(find.text('9 / 23 kg'), findsOneWidget);
+    expect(find.text('23 / 23 kg'), findsOneWidget);
+  });
+
+  testWidgets('personnalisé ou total non multiple : pas de jauge', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(suitcases(unit: 'CUSTOM', total: 30, available: 30)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('trip-suitcase-gauge')), findsNothing);
+
+    await tester.pumpWidget(
+      host(suitcases(unit: 'SUITCASE_23KG', total: 50, available: 50)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('trip-suitcase-gauge')), findsNothing);
+  });
+
   // PROD-1R : limite reçue en UTC, affichée à l'heure de la ville de départ.
   testWidgets('date limite à l\'heure de Paris (18:30Z en été → 20:30)', (
     tester,

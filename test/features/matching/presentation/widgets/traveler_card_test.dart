@@ -3,23 +3,16 @@ import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/widgets/gp_pro_badge.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
-import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
-import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
-
-class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
 
 AnnouncementModel _makeAnn({
   String departureCity = 'Paris',
@@ -39,6 +32,9 @@ AnnouncementModel _makeAnn({
   String status = 'ACTIVE',
   TripStops? stops,
   double? pricePerKgDisplay,
+  String capacityUnit = 'CUSTOM',
+  double availableKg = 8,
+  double totalKg = 8,
 }) => AnnouncementModel(
   id: 'a1',
   travelerId: 't1',
@@ -47,8 +43,9 @@ AnnouncementModel _makeAnn({
   departureFlag: departureFlag,
   arrivalFlag: arrivalFlag,
   departureDate: departureDate ?? DateTime(2026, 6, 15),
-  availableKg: 8,
-  totalKg: 8,
+  availableKg: availableKg,
+  totalKg: totalKg,
+  capacityUnit: capacityUnit,
   pricePerKg: 12,
   pricePerKgDisplay: pricePerKgDisplay,
   currency: currency,
@@ -94,26 +91,53 @@ void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
   group('TravelerCard', () {
-    // FLUTTER-GE : badge d'escales, absent quand non renseigné.
-    testWidgets('badge d\'escales seulement si renseigné', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          TravelerCard(
-            announcement: _makeAnn(stops: TripStops.direct),
-            index: 0,
-            isOwnAnnouncement: false,
-            onTap: () {},
+    // FLUTTER-GE : les escales sont portées par la ligne du corridor.
+    testWidgets('escales sur la ligne du corridor, seulement si renseignées', (
+      tester,
+    ) async {
+      Future<void> pumpStops(TripStops? stops) async {
+        await tester.pumpWidget(
+          _wrap(
+            TravelerCard(
+              announcement: _makeAnn(stops: stops),
+              index: 0,
+              isOwnAnnouncement: false,
+              onTap: () {},
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('trip-stops-badge')), findsOneWidget);
-      expect(find.text('Vol direct'), findsOneWidget);
+        );
+        await tester.pumpAndSettle();
+      }
 
+      await pumpStops(TripStops.direct);
+      expect(find.text('Vol direct'), findsOneWidget);
+      expect(find.byKey(const Key('route-stop-markers')), findsNothing);
+
+      await pumpStops(TripStops.one);
+      expect(find.text('1 escale'), findsOneWidget);
+      expect(find.byKey(const Key('route-stop-markers')), findsOneWidget);
+
+      await pumpStops(TripStops.twoOrMore);
+      expect(find.text('2 escales et +'), findsOneWidget);
+
+      await pumpStops(null);
+      expect(find.text('Vol direct'), findsNothing);
+      expect(find.byKey(const Key('route-stop-markers')), findsNothing);
+      // Plus de pastille d'escales parmi les badges.
+      expect(find.byKey(const Key('trip-stops-badge')), findsNothing);
+    });
+
+    testWidgets('capacité en valises : « 2 × valise 23 kg · 32 kg dispo »', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           TravelerCard(
-            announcement: _makeAnn(),
+            announcement: _makeAnn(
+              capacityUnit: 'SUITCASE_23KG',
+              totalKg: 46,
+              availableKg: 32,
+            ),
             index: 0,
             isOwnAnnouncement: false,
             onTap: () {},
@@ -121,7 +145,44 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('trip-stops-badge')), findsNothing);
+      expect(find.text('2 × valise 23 kg · 32 kg dispo'), findsOneWidget);
+    });
+
+    testWidgets('personnalisé : seulement les kilos, sans valise', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(totalKg: 30, availableKg: 30),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('30 kg dispo'), findsOneWidget);
+      expect(find.textContaining('valise'), findsNothing);
+    });
+
+    testWidgets('valise sans total multiple : repli en kilos', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(
+              capacityUnit: 'SUITCASE_23KG',
+              totalKg: 50,
+              availableKg: 50,
+            ),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('50 kg dispo'), findsOneWidget);
     });
 
     testWidgets('shows traveler name and price', (tester) async {
@@ -786,177 +847,27 @@ void main() {
     });
   });
 
-  // ── showFavorite ────────────────────────────────────────────────────────────
+  // ── Signet des favoris ──────────────────────────────────────────────────────
 
-  group('TravelerCard – showFavorite', () {
-    testWidgets(
-      'showFavorite=false (défaut) : aucun FavoriteHeartButton affiché',
-      (tester) async {
-        await tester.pumpWidget(
-          _wrap(
-            TravelerCard(
-              announcement: _makeAnn(),
-              index: 0,
-              isOwnAnnouncement: false,
-              onTap: () {},
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.byType(FavoriteHeartButton), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'showFavorite=true sans cubit dans l\'arbre : dégradation silencieuse (pas de crash)',
-      (tester) async {
-        // No FavoriteIdsCubit provided — defensive read must not crash.
-        await tester.pumpWidget(
-          _wrap(
-            TravelerCard(
-              announcement: _makeAnn(),
-              index: 0,
-              isOwnAnnouncement: false,
-              onTap: () {},
-              showFavorite: true,
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.byType(FavoriteHeartButton), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'showFavorite=true avec cubit : FavoriteHeartButton affiché non-favori',
-      (tester) async {
-        final repo = _MockFavoriteRepository();
-        final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
-
-        await tester.pumpWidget(
-          BlocProvider<FavoriteIdsCubit>.value(
-            value: cubit,
-            child: _wrap(
-              TravelerCard(
-                announcement: _makeAnn(),
-                index: 0,
-                isOwnAnnouncement: false,
-                onTap: () {},
-                showFavorite: true,
-              ),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.byType(FavoriteHeartButton), findsOneWidget);
-        final icons = find.descendant(
-          of: find.byType(FavoriteHeartButton),
-          matching: find.byType(Icon),
-        );
-        final icon = tester.widget<Icon>(icons.first);
-        expect(icon.icon, Icons.bookmark_border);
-      },
-    );
-
-    testWidgets('showFavorite=true avec cubit seeded favori : signet rempli', (
+  group('TravelerCard – pas de signet', () {
+    testWidgets('le corridor prend toute la ligne : aucun signet sur la card', (
       tester,
     ) async {
-      final repo = _MockFavoriteRepository();
-      // 'a1' is the id used in _makeAnn()
-      final cubit = FavoriteIdsCubit(repo)
-        ..emitSeed(trips: {'a1'}, requests: {});
-
       await tester.pumpWidget(
-        BlocProvider<FavoriteIdsCubit>.value(
-          value: cubit,
-          child: _wrap(
-            TravelerCard(
-              announcement: _makeAnn(),
-              index: 0,
-              isOwnAnnouncement: false,
-              onTap: () {},
-              showFavorite: true,
-            ),
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(FavoriteHeartButton), findsOneWidget);
-      final icons = find.descendant(
-        of: find.byType(FavoriteHeartButton),
-        matching: find.byType(Icon),
-      );
-      final icon = tester.widget<Icon>(icons.first);
-      expect(icon.icon, Icons.bookmark);
-      expect(icon.color, DonyColors.primary);
+      expect(find.byIcon(Icons.bookmark_border), findsNothing);
+      expect(find.byIcon(Icons.bookmark), findsNothing);
     });
-
-    testWidgets(
-      'showFavorite=true : tap cœur appelle toggleTrip sur l\'id de l\'annonce',
-      (tester) async {
-        final repo = _MockFavoriteRepository();
-        when(() => repo.add(any(), any())).thenAnswer((_) async {});
-
-        final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
-
-        await tester.pumpWidget(
-          BlocProvider<FavoriteIdsCubit>.value(
-            value: cubit,
-            child: _wrap(
-              TravelerCard(
-                announcement: _makeAnn(),
-                index: 0,
-                isOwnAnnouncement: false,
-                onTap: () {},
-                showFavorite: true,
-              ),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byType(FavoriteHeartButton));
-        await tester.pump(const Duration(milliseconds: 500));
-
-        // 'a1' is the announcement id from _makeAnn()
-        expect(cubit.isTripFav('a1'), isTrue);
-        verify(() => repo.add('trip', 'a1')).called(1);
-      },
-    );
-
-    testWidgets(
-      'isOwnAnnouncement=true : même avec showFavorite=true (défense en amont), le cœur est rendu — owner guard est la responsabilité de l\'appelant',
-      (tester) async {
-        // The card itself has no owner guard; the caller must pass showFavorite:false
-        // for own announcements. This test documents/verifies the card renders the
-        // heart when showFavorite=true regardless of ownership.
-        final repo = _MockFavoriteRepository();
-        final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
-
-        await tester.pumpWidget(
-          BlocProvider<FavoriteIdsCubit>.value(
-            value: cubit,
-            child: _wrap(
-              TravelerCard(
-                announcement: _makeAnn(),
-                index: 0,
-                isOwnAnnouncement: true,
-                onTap: () {},
-                showFavorite: true,
-              ),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        // Card renders the heart — owner guard is caller's responsibility
-        expect(find.byType(FavoriteHeartButton), findsOneWidget);
-      },
-    );
   });
 
   // ── Badge urgent ─────────────────────────────────────────────────────────

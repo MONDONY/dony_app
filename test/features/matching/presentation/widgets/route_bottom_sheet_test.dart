@@ -213,7 +213,7 @@ void main() {
 
   group('RouteBottomSheet – showFavorite', () {
     testWidgets(
-      'non-owned card shows FavoriteHeartButton when FavoriteIdsCubit is provided',
+      'non-owned card does NOT show FavoriteHeartButton (le signet est dans le détail)',
       (tester) async {
         final repo = _MockFavoriteRepository();
         final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
@@ -228,7 +228,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.byType(FavoriteHeartButton), findsOneWidget);
+        expect(find.byType(FavoriteHeartButton), findsNothing);
       },
     );
 

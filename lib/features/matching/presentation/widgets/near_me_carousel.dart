@@ -187,7 +187,6 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
                         announcement: a,
                         index: i,
                         isOwnAnnouncement: isOwn,
-                        showFavorite: !isOwn,
                         distanceBadge: badge,
                         existingBidStatus: existingBid?.status,
                         onTap: isOwn

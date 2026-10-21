@@ -133,7 +133,6 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
                       announcement: a,
                       index: i,
                       isOwnAnnouncement: isOwn,
-                      showFavorite: !isOwn,
                       existingBidStatus: existingBid?.status,
                       onTap: isOwn
                           ? null

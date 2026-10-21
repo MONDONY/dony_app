@@ -1814,7 +1814,7 @@ void main() {
     );
 
     testWidgets(
-      'un invité voit le cœur sur une carte de trajet et peut le basculer',
+      'la carte de trajet n\'a plus de signet : il se pose depuis le détail',
       (tester) async {
         final favCubit = _makeFavCubit();
         getIt.unregister<FirebaseSessionProbe>();
@@ -1829,15 +1829,9 @@ void main() {
           favCubit: favCubit,
         );
 
-        // Les favoris sont le seul contenu qu'un visiteur peut conserver :
-        // le cœur doit apparaître sur les cartes trajet (FavoriteIdsCubit est
-        // fourni globalement) et rester déclenchable.
-        expect(find.byType(FavoriteHeartButton), findsWidgets);
-
-        await tester.tap(find.byType(FavoriteHeartButton).first);
-        await tester.pump();
-
-        verify(() => favCubit.toggleTrip(any())).called(1);
+        // Le corridor prend toute la ligne du haut : le signet des favoris
+        // n'est plus sur la carte, il reste dans le détail du trajet.
+        expect(find.byType(FavoriteHeartButton), findsNothing);
       },
     );
 

@@ -5339,6 +5339,30 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String listingSuitcaseCapacityLabel(int count, int kg) {
+    return '$count × valise $kg kg';
+  }
+
+  @override
+  String listingSuitcaseShort(int n) {
+    return 'V$n';
+  }
+
+  @override
+  String listingSuitcaseRemaining(String free, int size) {
+    return '$free / $size kg';
+  }
+
+  @override
+  String get listingSuitcaseFull => 'pleine';
+
+  @override
+  String get listingSuitcaseGaugeRemaining => 'Restant';
+
+  @override
+  String get listingSuitcaseGaugeReserved => 'Réservé';
+
+  @override
   String get listingIdentityBadge => 'Identité';
 
   @override
