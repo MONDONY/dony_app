@@ -69,8 +69,7 @@ void main() {
     ThemeData? theme,
     String initialLocation = '/assistant',
   }) async {
-    // Le gros micro prend une centaine de points sous la conversation : la
-    // vue de test par défaut (800 × 600) est agrandie pour garder visibles
+    // La vue de test par défaut (800 × 600) est agrandie pour garder visibles
     // les éléments que vérifient les tests. Un test qui choisit sa taille
     // (téléphone) la garde.
     if (tester.view.physicalSize == const Size(2400, 1800)) {
@@ -156,6 +155,12 @@ void main() {
   IconButton sendButton(WidgetTester tester) =>
       tester.widget<IconButton>(find.byKey(const Key('assistant-send')));
 
+  /// Rien de saisi : seul le micro est là, pas de flèche d'envoi.
+  void expectMicOnly() {
+    expect(find.byKey(const Key('assistant-mic')), findsOneWidget);
+    expect(find.byKey(const Key('assistant-send')), findsNothing);
+  }
+
   testWidgets('accueil : mention IA et suggestions', (tester) async {
     await pump(tester, const AssistantState());
     expect(find.text('IA'), findsOneWidget);
@@ -203,11 +208,14 @@ void main() {
     verify(() => bloc.add(const AssistantOpened('bubble'))).called(1);
   });
 
-  testWidgets('envoi : bouton désactivé si vide, puis envoie', (tester) async {
+  testWidgets('envoi : micro seul si vide, la flèche apparaît à la saisie', (
+    tester,
+  ) async {
     await pump(tester, const AssistantState());
-    expect(sendButton(tester).onPressed, isNull);
+    expectMicOnly();
     await tester.enterText(find.byKey(const Key('assistant-input')), 'Où ?');
     await tester.pump();
+    expect(find.byKey(const Key('assistant-mic')), findsNothing);
     expect(sendButton(tester).onPressed, isNotNull);
     await tester.tap(find.byKey(const Key('assistant-send')));
     await tester.pump();
@@ -221,14 +229,15 @@ void main() {
           .text,
       isEmpty,
     );
-    expect(sendButton(tester).onPressed, isNull);
+    // Champ vidé par l'envoi : le micro revient à la place de la flèche.
+    expectMicOnly();
   });
 
   testWidgets('envoi : des espaces seuls ne suffisent pas', (tester) async {
     await pump(tester, const AssistantState());
     await tester.enterText(find.byKey(const Key('assistant-input')), '   ');
     await tester.pump();
-    expect(sendButton(tester).onPressed, isNull);
+    expectMicOnly();
   });
 
   testWidgets('envoi : la touche Envoyer du clavier envoie aussi', (
@@ -254,6 +263,7 @@ void main() {
     expect(find.byKey(const Key('assistant-typing')), findsOneWidget);
     await tester.enterText(find.byKey(const Key('assistant-input')), 'Autre');
     await tester.pump();
+    // Du texte est saisi, mais l'envoi reste grisé tant que la réponse arrive.
     expect(sendButton(tester).onPressed, isNull);
     await tester.testTextInput.receiveAction(TextInputAction.send);
     await tester.pump();
@@ -454,7 +464,7 @@ void main() {
       'assistant-thumb-up-2',
       'assistant-thumb-down-2',
       'assistant-human-2',
-      'assistant-send',
+      'assistant-mic',
       'assistant-menu',
       'assistant-action-/profile/edit/phone',
     ]) {
@@ -921,21 +931,16 @@ void main() {
       final answer = AssistantMessage(
         id: 200,
         author: AssistantAuthor.assistant,
-        text: 'Réponse finale ${'très longue ' * 40}',
+        text: 'Réponse finale ${'très longue ' * 700}',
       );
       controller.add(AssistantState(messages: [...many, answer]));
       await tester.pumpAndSettle();
-      final composerTop = tester
-          .getTopLeft(find.byKey(const Key('assistant-input')))
-          .dy;
-      final bottom = tester
-          .getBottomLeft(find.textContaining('Réponse finale'))
-          .dy;
-      expect(bottom, lessThanOrEqualTo(composerTop));
-      final position = tester
-          .state<ScrollableState>(find.byType(Scrollable).first)
-          .position;
-      expect(position.pixels, closeTo(position.maxScrollExtent, 1));
+      // La réponse se lit depuis son premier mot : son haut est calé en haut
+      // de la zone de conversation, pas son bas collé à la saisie.
+      final list = tester.getRect(find.byType(Scrollable).first);
+      final top = tester.getTopLeft(find.textContaining('Réponse finale')).dy;
+      expect(top, greaterThanOrEqualTo(list.top));
+      expect(top, lessThan(list.top + 60));
     },
   );
 
@@ -1657,7 +1662,7 @@ void main() {
     });
   });
 
-  // FLUTTER-RE : gros micro rond, centré en bas, au-dessus de la saisie.
+  // FLUTTER-RE : micro dans la barre de saisie, à droite du champ.
   group('micro', () {
     Future<void> phone(WidgetTester tester) async {
       tester.view.physicalSize = const Size(390 * 3, 844 * 3);
@@ -1665,22 +1670,23 @@ void main() {
       addTearDown(tester.view.reset);
     }
 
-    testWidgets('centré en bas, juste au-dessus de la barre de saisie, '
-        'cible ≥ 64 pt', (tester) async {
+    testWidgets('dans la barre de saisie : à droite du champ, 48 pt, aucune '
+        'bande au-dessus', (tester) async {
       await phone(tester);
       await pump(tester, const AssistantState(messages: [_question, _answer]));
-      final mic = find.byKey(const Key('assistant-mic-disc'));
+      final mic = find.byKey(const Key('assistant-mic'));
       expect(mic, findsOneWidget);
       final micRect = tester.getRect(mic);
       final input = tester.getRect(find.byKey(const Key('assistant-input')));
-      expect(micRect.width, greaterThanOrEqualTo(64));
-      expect(micRect.height, greaterThanOrEqualTo(64));
-      expect(micRect.center.dx, closeTo(390 / 2, 1));
-      expect(micRect.bottom, lessThanOrEqualTo(input.top));
-      expect(input.top - micRect.bottom, lessThan(48));
-      // Dans le tiers bas de l'écran, à portée de pouce.
-      expect(micRect.top, greaterThan(844 * 2 / 3));
-      expect(find.text('Touchez pour parler'), findsOneWidget);
+      expect(micRect.width, greaterThanOrEqualTo(48));
+      expect(micRect.height, greaterThanOrEqualTo(48));
+      // Même rangée que le champ, à sa droite.
+      expect(micRect.left, greaterThanOrEqualTo(input.right));
+      expect(micRect.center.dy, closeTo(input.center.dy, 24));
+      // Plus de légende ni de gros disque.
+      expect(find.text('Touchez pour parler'), findsNothing);
+      expect(find.byKey(const Key('assistant-mic-disc')), findsNothing);
+      expect(find.byKey(const Key('assistant-send')), findsNothing);
     });
 
     testWidgets('toucher : la dictée démarre en français ; le texte reconnu '
@@ -1737,9 +1743,9 @@ void main() {
       ).called(1);
     });
 
-    testWidgets('envoyer pendant l’écoute : la dictée s’annule, le champ reste '
-        'vide après le résultat final, une seule question part '
-        '(YADONY-FLUTTER-PROD-X)', (tester) async {
+    testWidgets('envoyer pendant l’écoute (touche Envoyer du clavier) : la '
+        'dictée s’annule, le champ reste vide après le résultat final, une '
+        'seule question part (YADONY-FLUTTER-PROD-X)', (tester) async {
       await phone(tester);
       await pump(tester, const AssistantState(messages: [_question, _answer]));
       await tester.tap(find.byKey(const Key('assistant-mic')));
@@ -1748,7 +1754,8 @@ void main() {
       speech.emit('Comment payer');
       await tester.pump();
       expect(find.text('Comment payer'), findsOneWidget);
-      await tester.tap(find.byKey(const Key('assistant-send')));
+      await tester.showKeyboard(find.byKey(const Key('assistant-input')));
+      await tester.testTextInput.receiveAction(TextInputAction.send);
       await tester.pump();
       expect(speech.cancelCount, 1);
       // Le moteur de reconnaissance livre encore son résultat final.
@@ -1861,7 +1868,7 @@ void main() {
     testWidgets('anglais : dictée en en_US', (tester) async {
       await phone(tester);
       await pump(tester, const AssistantState(), locale: const Locale('en'));
-      expect(find.text('Tap to speak'), findsOneWidget);
+      expect(find.byKey(const Key('assistant-mic')), findsOneWidget);
       await tester.tap(find.byKey(const Key('assistant-mic')));
       await tester.pump();
       expect(speech.lastLocaleId, 'en_US');
@@ -1894,16 +1901,20 @@ void main() {
       );
     });
 
-    testWidgets('clavier ouvert : le micro s’efface, le champ reste visible', (
-      tester,
-    ) async {
-      await phone(tester);
-      tester.view.viewInsets = const FakeViewPadding(bottom: 336 * 3);
-      await pump(tester, const AssistantState(messages: [_question, _answer]));
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byKey(const Key('assistant-mic')), findsNothing);
-      expect(find.byKey(const Key('assistant-input')), findsOneWidget);
-    });
+    testWidgets(
+      'clavier ouvert : le micro reste dans la barre, à côté du champ',
+      (tester) async {
+        await phone(tester);
+        tester.view.viewInsets = const FakeViewPadding(bottom: 336 * 3);
+        await pump(
+          tester,
+          const AssistantState(messages: [_question, _answer]),
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.byKey(const Key('assistant-mic')), findsOneWidget);
+        expect(find.byKey(const Key('assistant-input')), findsOneWidget);
+      },
+    );
 
     testWidgets('animations réduites : le micro s’affiche et écoute', (
       tester,

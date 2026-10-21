@@ -126,6 +126,9 @@ void main() {
       find.byKey(const Key('ai-text-input')),
       ' 23 kilos ',
     );
+    await tester.pump();
+    // Du texte est saisi : la flèche d'envoi a pris la place du micro.
+    expect(find.byKey(const Key('ai-mic-start')), findsNothing);
     await tester.tap(find.byKey(const Key('ai-send')));
     await tester.pump();
     expect(added(), const [AiFormDraftTextSubmitted('23 kilos')]);
@@ -136,11 +139,21 @@ void main() {
           .text,
       isEmpty,
     );
-    await tester.tap(find.byKey(const Key('ai-send')));
+    // Champ vidé : le micro revient, plus de flèche, rien d'envoyé à vide.
+    expect(find.byKey(const Key('ai-send')), findsNothing);
+    expect(find.byKey(const Key('ai-mic-start')), findsOneWidget);
     verifyNever(() => bloc.add(const AiFormDraftTextSubmitted('')));
   });
 
-  testWidgets('gros micro rond (≥ 64 pt) centré au-dessus du champ', (
+  testWidgets('au repos : le micro seul, pas de flèche d’envoi', (
+    tester,
+  ) async {
+    await pump(tester);
+    expect(find.byKey(const Key('ai-mic-start')), findsOneWidget);
+    expect(find.byKey(const Key('ai-send')), findsNothing);
+  });
+
+  testWidgets('micro dans la barre de saisie : à droite du champ, 48 pt', (
     tester,
   ) async {
     tester.view
@@ -148,13 +161,15 @@ void main() {
       ..physicalSize = const Size(390 * 3, 844 * 3);
     addTearDown(tester.view.reset);
     await pump(tester);
-    final disc = tester.getRect(find.byKey(const Key('ai-mic-disc')));
+    final mic = tester.getRect(find.byKey(const Key('ai-mic-start')));
     final input = tester.getRect(find.byKey(const Key('ai-text-input')));
-    expect(disc.width, greaterThanOrEqualTo(64));
-    expect(disc.height, greaterThanOrEqualTo(64));
-    expect(disc.center.dx, closeTo(390 / 2, 1));
-    expect(disc.bottom, lessThanOrEqualTo(input.top));
-    expect(find.text('Touchez pour parler'), findsOneWidget);
+    expect(mic.width, greaterThanOrEqualTo(48));
+    expect(mic.height, greaterThanOrEqualTo(48));
+    // Même rangée que le champ, à sa droite : plus de bande au-dessus.
+    expect(mic.left, greaterThanOrEqualTo(input.right));
+    expect(mic.center.dy, closeTo(input.center.dy, 24));
+    expect(find.byKey(const Key('ai-mic-disc')), findsNothing);
+    expect(find.text('Touchez pour parler'), findsNothing);
   });
 
   testWidgets('micro indisponible : message et saisie écrite seule', (
@@ -173,37 +188,39 @@ void main() {
     await tester.pump();
     expect(speech.startCount, 0);
     expect(
-      tester.widget<IconButton>(find.byKey(const Key('ai-send'))).onPressed,
+      tester
+          .widget<IconButton>(find.byKey(const Key('ai-mic-start')))
+          .onPressed,
       isNull,
     );
   });
 
-  testWidgets('pendant l’écoute : disque rouge et icône stop', (tester) async {
+  testWidgets('pendant l’écoute : bouton rouge et icône stop', (tester) async {
     await pump(tester, listening: true);
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byIcon(Icons.stop_rounded), findsOneWidget);
-    final disc = tester.widget<AnimatedContainer>(
-      find.byKey(const Key('ai-mic-disc')),
+    final stop = tester.widget<IconButton>(
+      find.byKey(const Key('ai-mic-stop')),
     );
-    final decoration = disc.decoration! as BoxDecoration;
     expect(
-      decoration.color,
+      stop.style!.backgroundColor!.resolve(<WidgetState>{}),
       Theme.of(
-        tester.element(find.byKey(const Key('ai-mic-disc'))),
+        tester.element(find.byKey(const Key('ai-mic-stop'))),
       ).colorScheme.error,
     );
   });
 
-  testWidgets('clavier ouvert : le micro s’efface, le champ reste', (
-    tester,
-  ) async {
-    tester.view.viewInsets = const FakeViewPadding(bottom: 900);
-    addTearDown(tester.view.reset);
-    await pump(tester);
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(find.byKey(const Key('ai-mic-start')), findsNothing);
-    expect(find.byKey(const Key('ai-text-input')), findsOneWidget);
-  });
+  testWidgets(
+    'clavier ouvert : le micro reste dans la barre, à côté du champ',
+    (tester) async {
+      tester.view.viewInsets = const FakeViewPadding(bottom: 900);
+      addTearDown(tester.view.reset);
+      await pump(tester);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('ai-mic-start')), findsOneWidget);
+      expect(find.byKey(const Key('ai-text-input')), findsOneWidget);
+    },
+  );
 
   testWidgets('clavier ouvert pendant l’écoute : le stop reste accessible', (
     tester,

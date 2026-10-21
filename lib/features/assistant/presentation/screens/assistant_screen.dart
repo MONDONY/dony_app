@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/ai_consent_service.dart';
 import 'package:dony/core/widgets/ai_consent_sheet.dart';
-import 'package:dony/core/widgets/dony_mic_button.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/bloc/assistant_voice_cubit.dart';
 import 'package:dony/features/assistant/data/assistant_models.dart';
@@ -68,6 +67,15 @@ class _AssistantScreenState extends State<AssistantScreen> {
   /// Dernière question envoyée, vidée au début de chaque nouvelle dictée.
   String? _lastSentText;
   final ScrollController _scroll = ScrollController();
+
+  /// Une clé par message : sert à caler une réponse qui arrive sur son
+  /// premier mot ([_scrollToAnswerStart]). Vidée quand la conversation repart
+  /// de zéro.
+  final Map<int, GlobalKey> _messageKeys = {};
+
+  /// Dernière réponse déjà calée : une même réponse n'est pas recalée quand
+  /// l'état change autour d'elle (envoi, quota, retour de dictée).
+  int? _lastAnswerScrolledId;
 
   /// Incrémenté à chaque geste de l'utilisateur sur la liste : un défilement
   /// vers la réponse lancé avant ce geste ne le ramène plus au bas.
@@ -158,6 +166,35 @@ class _AssistantScreenState extends State<AssistantScreen> {
     });
   }
 
+  /// Cale l'écran sur le premier mot de la réponse [messageId], pas sur sa fin :
+  /// une réponse longue se lit du début, sans remonter. Une réponse qui tient
+  /// dans l'écran finit au même endroit qu'avant, au bas. Liste remontée loin :
+  /// la réponse n'est pas encore construite, on saute au bas pour la
+  /// construire puis on la cale ([attempts] passes au plus).
+  void _scrollToAnswerStart(int messageId, [int attempts = 2]) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      final target = _messageKeys[messageId]?.currentContext;
+      if (target == null) {
+        if (attempts == 0) {
+          _scrollToEnd(animated: false);
+          return;
+        }
+        _scroll.jumpTo(_scroll.position.maxScrollExtent);
+        _scrollToAnswerStart(messageId, attempts - 1);
+        return;
+      }
+      final animated = !MediaQuery.disableAnimationsOf(context);
+      unawaited(
+        Scrollable.ensureVisible(
+          target,
+          duration: animated ? DonyDuration.base : Duration.zero,
+          curve: DonyCurve.enter,
+        ),
+      );
+    });
+  }
+
   /// Recolle au bas réel du contenu, en 3 passes au plus : chaque saut
   /// construit des éléments et affine l'étendue. Abandonne dès que
   /// l'utilisateur a touché la liste depuis le lancement ([generation]) : il
@@ -231,53 +268,25 @@ class _AssistantScreenState extends State<AssistantScreen> {
     voice.toggle(localeId: _locale == 'en' ? 'en_US' : 'fr_FR');
   }
 
-  /// Gros micro centré au-dessus de la barre de saisie. Clavier ouvert, il
-  /// s'efface pour laisser le champ visible (sauf pendant une dictée, qu'il
-  /// doit pouvoir arrêter).
-  Widget _micDock(BuildContext context, AssistantState state) {
-    // Lu sur la vue : le Scaffold retire le clavier des marges de son corps.
-    final keyboardOpen = View.of(context).viewInsets.bottom > 0;
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+  /// Message « micro indisponible » au-dessus de la saisie. Le micro lui-même
+  /// vit dans la barre de saisie ([AssistantComposer]).
+  Widget _micUnavailableNote(BuildContext context) {
     return BlocBuilder<AssistantVoiceCubit, AssistantVoiceState>(
+      buildWhen: (a, b) => a.status != b.status,
       builder: (context, voice) {
-        final cs = Theme.of(context).colorScheme;
-        final Widget child;
-        if (keyboardOpen && !voice.listening) {
-          child = const SizedBox(width: double.infinity);
-        } else if (voice.status == AssistantVoiceStatus.unavailable) {
-          child = Padding(
-            key: const Key('assistant-mic-unavailable'),
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: Text(
-              context.l10n.assistantMicUnavailable,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall!.copyWith(color: cs.onSurfaceVariant),
-            ),
-          );
-        } else {
-          child = Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: DonyMicButton(
-              listening: voice.listening,
-              enabled: !state.isSending,
-              onTap: _toggleMic,
-            ),
-          );
+        if (voice.status != AssistantVoiceStatus.unavailable) {
+          return const SizedBox.shrink();
         }
-        final dock = SizedBox(
-          key: const Key('assistant-mic-dock'),
-          width: double.infinity,
-          child: child,
-        );
-        // Animations réduites : la place change d'un coup.
-        if (reduceMotion) return dock;
-        return AnimatedSize(
-          duration: DonyDuration.base,
-          curve: DonyCurve.enter,
-          alignment: Alignment.bottomCenter,
-          child: dock,
+        return Padding(
+          key: const Key('assistant-mic-unavailable'),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: Text(
+            context.l10n.assistantMicUnavailable,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         );
       },
     );
@@ -380,12 +389,30 @@ class _AssistantScreenState extends State<AssistantScreen> {
                 p.messages.length != c.messages.length ||
                 p.isSending != c.isSending ||
                 p.quotaExceeded != c.quotaExceeded,
-            listener: (_, _) => _scrollToEnd(),
+            listener: (_, state) {
+              final last = state.messages.isEmpty ? null : state.messages.last;
+              // Une réponse (ou une explication d'écran) vient d'arriver :
+              // on la lit depuis son début. Toute autre nouveauté, la question
+              // qui part, l'attente, un avis de quota, descend au bas.
+              if (last != null &&
+                  last.author == AssistantAuthor.assistant &&
+                  !state.isSending &&
+                  last.id != _lastAnswerScrolledId) {
+                _lastAnswerScrolledId = last.id;
+                _scrollToAnswerStart(last.id);
+              } else {
+                _scrollToEnd();
+              }
+            },
           ),
         ],
         child: BlocBuilder<AssistantBloc, AssistantState>(
           builder: (context, state) {
-            if (state.messages.isEmpty) _reportedUnmatched.clear();
+            if (state.messages.isEmpty) {
+              _reportedUnmatched.clear();
+              _messageKeys.clear();
+              _lastAnswerScrolledId = null;
+            }
             _baselineId ??= state.messages.isEmpty
                 ? -1
                 : state.messages.last.id;
@@ -393,11 +420,17 @@ class _AssistantScreenState extends State<AssistantScreen> {
             return Column(
               children: [
                 Expanded(child: _conversation(context, state, cs)),
-                _micDock(context, state),
-                AssistantComposer(
-                  controller: _input,
-                  busy: state.isSending,
-                  onSend: _send,
+                _micUnavailableNote(context),
+                BlocBuilder<AssistantVoiceCubit, AssistantVoiceState>(
+                  builder: (context, voice) => AssistantComposer(
+                    controller: _input,
+                    busy: state.isSending,
+                    onSend: _send,
+                    onMic: _toggleMic,
+                    listening: voice.listening,
+                    micAvailable:
+                        voice.status != AssistantVoiceStatus.unavailable,
+                  ),
                 ),
               ],
             );
@@ -487,41 +520,45 @@ class _AssistantScreenState extends State<AssistantScreen> {
           ),
       ],
       for (final message in state.messages)
-        AssistantEntrance(
-          key: ValueKey(message.id),
-          shouldAnimate: () =>
-              message.id > (_baselineId ?? -1) &&
-              !_entered.contains(message.id),
-          onEnd: () => _entered.add(message.id),
-          child: AssistantMessageBubble(
-            message: message,
-            liveRegion: message.id > (_baselineId ?? -1),
-            actions: _visibleActions(context, message, toReport),
-            onAction: _openAction,
-            onFeedback: (up) => context.read<AssistantBloc>().add(
-              AssistantFeedbackGiven(message.id, up: up),
+        KeyedSubtree(
+          key: _messageKeys.putIfAbsent(message.id, GlobalKey.new),
+          child: AssistantEntrance(
+            key: ValueKey(message.id),
+            shouldAnimate: () =>
+                message.id > (_baselineId ?? -1) &&
+                !_entered.contains(message.id),
+            onEnd: () => _entered.add(message.id),
+            child: AssistantMessageBubble(
+              message: message,
+              liveRegion: message.id > (_baselineId ?? -1),
+              actions: _visibleActions(context, message, toReport),
+              onAction: _openAction,
+              onFeedback: (up) => context.read<AssistantBloc>().add(
+                AssistantFeedbackGiven(message.id, up: up),
+              ),
+              onTalkToHuman: _escalate,
+              onParcelChosen:
+                  identical(message, lastMessage) && !state.isSending
+                  ? (parcel, label, position) =>
+                        context.read<AssistantBloc>().add(
+                          AssistantParcelChosen(
+                            parcel,
+                            label: label,
+                            position: position,
+                            locale: _locale,
+                          ),
+                        )
+                  : null,
+              onRetry:
+                  message.isError &&
+                      identical(message, lastMessage) &&
+                      state.lastFailedQuestion != null &&
+                      !state.isSending
+                  ? () => context.read<AssistantBloc>().add(
+                      AssistantRetryRequested(locale: _locale),
+                    )
+                  : null,
             ),
-            onTalkToHuman: _escalate,
-            onParcelChosen: identical(message, lastMessage) && !state.isSending
-                ? (parcel, label, position) =>
-                      context.read<AssistantBloc>().add(
-                        AssistantParcelChosen(
-                          parcel,
-                          label: label,
-                          position: position,
-                          locale: _locale,
-                        ),
-                      )
-                : null,
-            onRetry:
-                message.isError &&
-                    identical(message, lastMessage) &&
-                    state.lastFailedQuestion != null &&
-                    !state.isSending
-                ? () => context.read<AssistantBloc>().add(
-                    AssistantRetryRequested(locale: _locale),
-                  )
-                : null,
           ),
         ),
       // Questions de l'écran expliqué, sous la dernière réponse seulement.

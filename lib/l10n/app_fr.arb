@@ -21875,8 +21875,6 @@
   "@aiFormDraftFilledBanner": {"description": "Bandeau du formulaire après remplissage par l'IA."},
   "aiFormDraftTalkAgain": "Reparler",
   "@aiFormDraftTalkAgain": {"description": "Bouton du bandeau qui rouvre le dialogue IA."},
-  "assistantMicStart": "Touchez pour parler",
-  "@assistantMicStart": {"description": "Légende sous le gros bouton micro de l'assistant, au repos (FLUTTER-RE)."},
   "assistantMicListening": "Je vous écoute… Touchez pour envoyer",
   "@assistantMicListening": {"description": "Légende sous le bouton micro de l'assistant pendant la dictée."},
   "assistantMicTooltipStart": "Poser ma question à voix haute",

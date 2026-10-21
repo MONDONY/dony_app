@@ -34314,12 +34314,6 @@ abstract class AppLocalizations {
   /// **'Reparler'**
   String get aiFormDraftTalkAgain;
 
-  /// Légende sous le gros bouton micro de l'assistant, au repos (FLUTTER-RE).
-  ///
-  /// In fr, this message translates to:
-  /// **'Touchez pour parler'**
-  String get assistantMicStart;
-
   /// Légende sous le bouton micro de l'assistant pendant la dictée.
   ///
   /// In fr, this message translates to:

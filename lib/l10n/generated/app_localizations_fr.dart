@@ -21264,9 +21264,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiFormDraftTalkAgain => 'Reparler';
 
   @override
-  String get assistantMicStart => 'Touchez pour parler';
-
-  @override
   String get assistantMicListening => 'Je vous écoute… Touchez pour envoyer';
 
   @override
