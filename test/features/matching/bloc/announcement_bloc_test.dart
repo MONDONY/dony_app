@@ -1003,6 +1003,40 @@ void main() {
     );
 
     blocTest<AnnouncementBloc, AnnouncementState>(
+      'load_more_stops_when_page_brings_nothing_new',
+      build: () {
+        stubPage(
+          0,
+          _page(
+            [buildAnnouncement(id: 'a')],
+            total: 50,
+            similar: [_similar('s1')],
+          ),
+        );
+        stubPage(1, _page([buildAnnouncement(id: 'a')], total: 50, page: 1));
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(AnnouncementSearchRequested());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(AnnouncementSearchMoreRequested());
+      },
+      skip: 3,
+      expect: () => [
+        predicate<AnnouncementState>(
+          (s) =>
+              s is AnnouncementSearchLoaded &&
+              !s.isLoadingMore &&
+              !s.hasMore &&
+              s.results.length == 1 &&
+              s.totalElements == 1 &&
+              s.page == 1 &&
+              _ids(s.similar) == 's1',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
       'load_more_keeps_similar_from_first_page',
       build: () {
         stubPage(

@@ -353,14 +353,16 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       // Une recherche relancée entre-temps a remplacé la liste : on jette.
       if (!identical(search, _lastSearch)) return;
       final known = {for (final a in current.results) a.id};
-      final merged = [
-        ...current.results,
-        ...next.content.where((a) => !known.contains(a.id)),
-      ];
+      final fresh = next.content.where((a) => !known.contains(a.id)).toList();
+      final merged = [...current.results, ...fresh];
+      // Page sans aucune annonce nouvelle (le mode score du back sert des
+      // pages vides au-delà de son plafond de candidats alors que
+      // totalElements reste élevé) : on arrête de paginer.
+      final exhausted = fresh.isEmpty;
       emit(
         AnnouncementSearchLoaded(
           merged,
-          totalElements: next.totalElements,
+          totalElements: exhausted ? merged.length : next.totalElements,
           bookableElements: next.bookableElements,
           page: next.page,
           // Le back n'envoie les autres annonces qu'à la page 0 : on garde
