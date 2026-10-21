@@ -122,9 +122,14 @@ abstract final class DonyColors {
   // (contraste > 10:1), lisible sur le flux caméra clair comme sombre.
   static const torchOn = Color(0xFFFBBF24);
 
-  // KYC badges — icônes de statut sur profil utilisateur
-  static const kycBadgeGold = Color(0xFFF0B829);
-  static const kycBadgeSilver = Color(0xFFAEB8C6);
+  // Badges de niveau (coche d'identité, pastilles PRO et GP Pro) : franches, à
+  // plat, lisibles sur fond blanc comme sombre. Bleu = vérifié seul
+  // (`DonyColors.primary`), or = PRO, vert = GP Pro. Le vert est plus soutenu
+  // que `success500` pour que le badge ne se lise pas comme un simple « OK ».
+  static const kycBadgeGold = Color(0xFFE3A008);
+  static const kycBadgeGpPro = Color(0xFF0B7A4B);
+  // GP Pro en thème sombre : le vert profond y manque de contraste sur le fond.
+  static const kycBadgeGpProDark = Color(0xFF3CC291);
 
   // Thread status — couleurs de chips dans thread_hero_card
   static const threadStatusOpen = Color(0xFF0E1B2E);

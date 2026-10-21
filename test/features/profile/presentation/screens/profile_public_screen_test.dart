@@ -1484,7 +1484,7 @@ void main() {
     expect(badge!.gpPro, isTrue);
     expect(
       DonyVerifiedBadge.colorFor(pro: badge.pro, gpPro: badge.gpPro),
-      DonyColors.kycBadgeSilver,
+      DonyColors.kycBadgeGpPro,
     );
   });
 
@@ -1505,6 +1505,27 @@ void main() {
       DonyVerifiedBadge.colorFor(pro: badge.pro, gpPro: badge.gpPro),
       DonyColors.kycBadgeGold,
     );
+  });
+
+  Color? pillColor(WidgetTester tester, String label) {
+    final box = tester.widget<Container>(
+      find
+          .ancestor(of: find.text(label), matching: find.byType(Container))
+          .first,
+    );
+    return (box.decoration! as BoxDecoration).color;
+  }
+
+  testWidgets('pastilles pleines : Vérifié bleu, PRO or, GP Pro vert', (
+    tester,
+  ) async {
+    await pumpBadge(tester, tier(pro: true, gp: true));
+    final primary = Theme.of(
+      tester.element(find.byKey(const Key('profile-public-header'))),
+    ).colorScheme.primary;
+    expect(pillColor(tester, '✓ Vérifié'), primary);
+    expect(pillColor(tester, 'PRO'), DonyColors.kycBadgeGold);
+    expect(pillColor(tester, 'GP Pro'), DonyColors.kycBadgeGpPro);
   });
 
   testWidgets('pas de coche quand l\'identité n\'est pas vérifiée', (

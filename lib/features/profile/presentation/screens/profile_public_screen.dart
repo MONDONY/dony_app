@@ -560,8 +560,8 @@ class _ProfileHero extends StatelessWidget {
                           if (profile.kycVerified)
                             _HeroPill(
                               label: l.profilePublicVerified,
-                              background: cs.primaryContainer,
-                              foreground: cs.primary,
+                              background: cs.primary,
+                              foreground: cs.onPrimary,
                             ),
                           if (profile.isProAccount)
                             _HeroPill(
@@ -595,8 +595,8 @@ class _ProfileHero extends StatelessWidget {
 const Color _kInitialsBgDark = Color(0xFF3A2218);
 const Color _kInitialsFgDark = Color(0xFFE98A62);
 
-/// Texte foncé sur la pastille dorée PRO (≥ 7:1).
-const Color _kProPillText = Color(0xFF4A3000);
+/// Texte très foncé sur la pastille dorée PRO (≥ 8:1).
+const Color _kProPillText = Color(0xFF2B1B00);
 
 class _HeroAvatar extends StatelessWidget {
   const _HeroAvatar({
