@@ -5322,7 +5322,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String listingSuitcaseRemaining(String free, int size) {
-    return '$free / $size kg';
+    return '$free of $size kg';
   }
 
   @override
