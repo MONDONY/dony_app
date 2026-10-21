@@ -125,6 +125,7 @@ abstract final class DonyColors {
   // KYC badges — icônes de statut sur profil utilisateur
   static const kycBadgeBlue = Color(0xFF6FA8FF);
   static const kycBadgeGold = Color(0xFFF0B829);
+  static const kycBadgeSilver = Color(0xFFAEB8C6);
 
   // Thread status — couleurs de chips dans thread_hero_card
   static const threadStatusOpen = Color(0xFF0E1B2E);

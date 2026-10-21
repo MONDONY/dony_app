@@ -205,10 +205,15 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
 
         final cs = Theme.of(context).colorScheme;
 
+        // La barre se fond dans le bandeau bleu une fois le profil affiché.
+        final onBand = state is ProfilePublicLoaded;
+
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: DonyAppBar(
             title: appBarTitle,
+            backgroundColor: onBand ? cs.primary : null,
+            foregroundColor: onBand ? cs.onPrimary : null,
             actions: isOwnProfile
                 ? null
                 : [
@@ -217,7 +222,10 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
                     // actions rares en bruit permanent.
                     PopupMenuButton<String>(
                       tooltip: l.profilePublicMoreOptionsTooltip,
-                      icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
+                      icon: DonyIcon(
+                        'ellipsis',
+                        color: onBand ? cs.onPrimary : cs.onSurfaceVariant,
+                      ),
                       onSelected: (value) {
                         switch (value) {
                           case 'report':
@@ -346,11 +354,12 @@ class _LoadedView extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        // ── Hero — flat, centered ───────────────────────────────────────────────
+        // ── Hero — bandeau bleu + carte de chiffres à cheval ────────────────────
         SliverToBoxAdapter(
           child:
               _ProfileHero(
                     profile: profile,
+                    stats: _StatsRow(profile: profile),
                     subscribeAction: showSubscribeButton
                         ? const _SubscribeAction()
                         : null,
@@ -360,25 +369,23 @@ class _LoadedView extends StatelessWidget {
                   .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         ),
 
-        // ── Stats section ─────────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: _FlatSection(
-            topBorder: false,
-            child: Column(
-              children: [
-                _StatsRow(profile: profile),
-                // Taux de fiabilité (FLUTTER-NV) à la place des compteurs
-                // publics d'annulations et d'absences : rien sous trois
-                // envois engagés ni sur un back antérieur, jamais de
-                // compteur négatif affiché sur le profil public.
-                if (profile.reliabilityPercent case final percent?) ...[
-                  const SizedBox(height: DonySpacing.md),
-                  ProfileReliabilityLabel(percent: percent),
-                ],
-              ],
-            ),
-          ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
-        ),
+        // Taux de fiabilité (FLUTTER-NV) à la place des compteurs publics
+        // d'annulations et d'absences : rien sous trois envois engagés ni sur
+        // un back antérieur, jamais de compteur négatif sur le profil public.
+        if (profile.reliabilityPercent case final percent?)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.md,
+                DonySpacing.lg,
+                DonySpacing.lg,
+              ),
+              child: ProfileReliabilityLabel(percent: percent),
+            ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
+          )
+        else
+          const SliverToBoxAdapter(child: SizedBox(height: DonySpacing.md)),
 
         // ── Vérifications (FLUTTER-4H) ────────────────────────────────────────
         SliverToBoxAdapter(
@@ -439,19 +446,18 @@ class _LoadedView extends StatelessWidget {
 // ─── Flat section wrapper — hairline top border, horizontal padding ───────────
 
 class _FlatSection extends StatelessWidget {
-  const _FlatSection({required this.child, this.topBorder = true});
+  const _FlatSection({required this.child});
 
   final Widget child;
-  final bool topBorder;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return DecoratedBox(
       decoration: BoxDecoration(
-        border: topBorder
-            ? Border(top: BorderSide(color: cs.outline.withValues(alpha: 0.6)))
-            : const Border(),
+        border: Border(
+          top: BorderSide(color: cs.outline.withValues(alpha: 0.6)),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -464,12 +470,20 @@ class _FlatSection extends StatelessWidget {
   }
 }
 
-// ─── Profile hero — flat background, centered ────────────────────────────────
+// ─── Profile hero — bandeau bleu Yadony, identité + abonnement ───────────────
 
+/// Bandeau d'identité : aplat `cs.primary` (bleu Yadony, bleu clair en thème
+/// sombre), avatar à gauche, badges sous le nom, abonnement dans le bandeau.
+/// La carte de chiffres [stats] chevauche le bas du bandeau.
 class _ProfileHero extends StatelessWidget {
-  const _ProfileHero({required this.profile, this.subscribeAction});
+  const _ProfileHero({
+    required this.profile,
+    required this.stats,
+    this.subscribeAction,
+  });
 
   final ProfilePublicModel profile;
+  final Widget stats;
   final Widget? subscribeAction;
 
   @override
@@ -477,6 +491,7 @@ class _ProfileHero extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
+    final onBand = cs.onPrimary;
 
     final ratingStr = profile.averageRating > 0
         ? formatOneDecimal(l, profile.averageRating)
@@ -487,91 +502,155 @@ class _ProfileHero extends StatelessWidget {
       profile.memberSince,
     );
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        DonySpacing.base,
-        DonySpacing.lg,
-        DonySpacing.sm,
-      ),
-      child: Column(
-        children: [
-          _HeroAvatar(
-            name: profile.displayName,
-            imageUrl: profile.avatarUrl,
-            verified: profile.kycVerified,
+    return Column(
+      children: [
+        Container(
+          key: const Key('profile-public-band'),
+          width: double.infinity,
+          color: cs.primary,
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.lg,
+            DonySpacing.base,
+            DonySpacing.lg,
+            DonySpacing.huge,
           ),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            profile.displayName,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: tt.headlineLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
-              letterSpacing: -0.3,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          if (profile.kycVerified || profile.isProAccount || profile.gpPro) ...[
-            const SizedBox(height: DonySpacing.xs),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: DonySpacing.xs,
-              runSpacing: DonySpacing.xs,
-              children: [
-                if (profile.kycVerified)
-                  _HeroPill(label: l.profilePublicVerified),
-                if (profile.isProAccount)
-                  _HeroPill(label: l.profilePublicProBadge),
-                if (profile.gpPro) const GpProBadge(surface: 'public_profile'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _HeroAvatar(
+                    name: profile.displayName,
+                    imageUrl: profile.avatarUrl,
+                    verified: profile.kycVerified,
+                    pro: profile.isProAccount,
+                    gpPro: profile.gpPro,
+                  ),
+                  const SizedBox(width: DonySpacing.base),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profile.displayName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.headlineLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: onBand,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          metaLine,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.bodySmall?.copyWith(
+                            color: onBand.withValues(alpha: 0.92),
+                            fontWeight: FontWeight.w600,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        if (profile.lastSeenDaysAgo != null)
+                          Text(
+                            lastSeenLabel(l, profile.lastSeenDaysAgo!),
+                            key: const Key('profile-last-seen'),
+                            style: tt.bodySmall?.copyWith(
+                              color: onBand.withValues(alpha: 0.92),
+                            ),
+                          ),
+                        if (profile.kycVerified ||
+                            profile.isProAccount ||
+                            profile.gpPro) ...[
+                          const SizedBox(height: DonySpacing.sm),
+                          Wrap(
+                            spacing: DonySpacing.xs,
+                            runSpacing: DonySpacing.xs,
+                            children: [
+                              if (profile.kycVerified)
+                                _HeroPill(
+                                  label: l.profilePublicVerified,
+                                  background: cs.onPrimary,
+                                  foreground: cs.primary,
+                                ),
+                              if (profile.isProAccount)
+                                _HeroPill(
+                                  label: l.profilePublicProBadge,
+                                  background: DonyColors.kycBadgeGold,
+                                  foreground: _kProPillText,
+                                ),
+                              if (profile.gpPro)
+                                const GpProBadge(surface: 'public_profile'),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (subscribeAction != null) ...[
+                const SizedBox(height: DonySpacing.base),
+                subscribeAction!,
               ],
-            ),
-          ],
-          const SizedBox(height: DonySpacing.xs),
-          Text(
-            metaLine,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: tt.bodySmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-              fontFeatures: const [FontFeature.tabularFigures()],
+            ],
+          ),
+        ),
+        // Chevauche le bandeau de la moitié de sa hauteur : l'Align réduit la
+        // hauteur de mise en page, la carte déborde vers le haut sans clip.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            heightFactor: 0.5,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(DonyRadius.card),
+                border: Border.all(color: cs.outline.withValues(alpha: 0.6)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.sm,
+                  vertical: DonySpacing.xs,
+                ),
+                child: stats,
+              ),
             ),
           ),
-          if (profile.lastSeenDaysAgo != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              lastSeenLabel(l, profile.lastSeenDaysAgo!),
-              key: const Key('profile-last-seen'),
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-          if (subscribeAction != null) ...[
-            const SizedBox(height: DonySpacing.base),
-            subscribeAction!,
-          ],
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
+
+/// Initiales du profil en thème sombre (aplat brun, texte terre cuite clair).
+const Color _kInitialsBgDark = Color(0xFF3A2218);
+const Color _kInitialsFgDark = Color(0xFFE98A62);
+
+/// Texte foncé sur la pastille dorée PRO (≥ 7:1).
+const Color _kProPillText = Color(0xFF4A3000);
 
 class _HeroAvatar extends StatelessWidget {
   const _HeroAvatar({
     required this.name,
     required this.verified,
+    required this.pro,
+    required this.gpPro,
     this.imageUrl,
   });
 
   final String name;
   final bool verified;
+  final bool pro;
+  final bool gpPro;
   final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    const size = 64.0;
+    const size = 76.0;
     final initials = _initials(name);
 
     Widget avatar;
@@ -581,12 +660,12 @@ class _HeroAvatar extends StatelessWidget {
           url: imageUrl!,
           width: size,
           height: size,
-          placeholder: (_) => _initialsCircle(initials, size),
-          errorWidget: (_) => _initialsCircle(initials, size),
+          placeholder: (_) => _initialsCircle(context, initials, size),
+          errorWidget: (_) => _initialsCircle(context, initials, size),
         ),
       );
     } else {
-      avatar = _initialsCircle(initials, size);
+      avatar = _initialsCircle(context, initials, size);
     }
 
     final hasPhoto = imageUrl != null && imageUrl!.isNotEmpty;
@@ -594,48 +673,30 @@ class _HeroAvatar extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         Container(
-          width: size + 4,
-          height: size + 4,
+          width: size + 6,
+          height: size + 6,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: cs.primary.withValues(alpha: 0.35),
-              width: 2,
-            ),
+            border: Border.all(color: cs.onPrimary, width: 3),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(1),
-            child: ClipOval(child: avatar),
-          ),
+          child: ClipOval(child: avatar),
         ),
         if (verified)
           Positioned(
-            right: -2,
-            bottom: -2,
-            child: Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: DonyColors.warning500,
-                shape: BoxShape.circle,
-                border: Border.all(color: cs.surface, width: 2),
-              ),
-              alignment: Alignment.center,
-              child: const Text(
-                '✓',
-                style: TextStyle(
-                  fontSize: 9,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+            right: -4,
+            bottom: -4,
+            child: DonyVerifiedBadge(
+              key: const Key('profile-public-verified-badge'),
+              size: 28,
+              pro: pro,
+              gpPro: gpPro,
             ),
           ),
       ],
     );
     if (!hasPhoto) return avatarStack;
-    // Toucher la photo l'ouvre en grand, zoomable : la vignette de 64 px ne
-    // laisse pas voir le visage (Sentry FLUTTER-8D).
+    // Toucher la photo l'ouvre en grand, zoomable : la vignette ne laisse pas
+    // voir le visage (Sentry FLUTTER-8D).
     return Semantics(
       button: true,
       label: context.l10n.profilePhotoViewAction,
@@ -659,22 +720,24 @@ class _HeroAvatar extends StatelessWidget {
     return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
 
-  Widget _initialsCircle(String initials, double size) {
+  Widget _initialsCircle(BuildContext context, String initials, double size) {
+    // Terre cuite pâle et texte terre cuite foncé (≥ 4.5:1), versions sombres
+    // en thème sombre.
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: size,
       height: size,
-      // Terre cuite foncée fixe : le blanc des initiales y garde 4.5:1.
-      decoration: const BoxDecoration(
-        color: DonyColors.terra600,
+      decoration: BoxDecoration(
+        color: dark ? _kInitialsBgDark : DonyColors.terra50,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
       child: Text(
         initials,
-        style: const TextStyle(
-          fontSize: 22,
+        style: TextStyle(
+          fontSize: 26,
           fontWeight: FontWeight.w800,
-          color: Colors.white,
+          color: dark ? _kInitialsFgDark : DonyColors.terra700,
         ),
       ),
     );
@@ -682,27 +745,32 @@ class _HeroAvatar extends StatelessWidget {
 }
 
 class _HeroPill extends StatelessWidget {
-  const _HeroPill({required this.label});
+  const _HeroPill({
+    required this.label,
+    required this.background,
+    required this.foreground,
+  });
 
   final String label;
+  final Color background;
+  final Color foreground;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,
         vertical: 3,
       ),
       decoration: BoxDecoration(
-        color: cs.primaryContainer,
+        color: background,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
         label,
         style: tt.labelSmall?.copyWith(
-          color: cs.primary,
+          color: foreground,
           fontWeight: FontWeight.w800,
         ),
       ),
@@ -1440,7 +1508,7 @@ class _InitialsCircle extends StatelessWidget {
   }
 }
 
-// ─── Subscribe action — compact button + interactive bell (in-hero) ──────────
+// ─── Subscribe action — boutons posés sur le bandeau bleu ────────────────────
 
 class _SubscribeAction extends StatelessWidget {
   const _SubscribeAction();
@@ -1471,27 +1539,52 @@ class _SubscribeAction extends StatelessWidget {
             state.status == TravelerSubscribeStatus.loading ||
             state.status == TravelerSubscribeStatus.initial;
 
+        // Plein : blanc (noir en sombre) sur le bandeau, texte bleu.
+        final filled = FilledButton.styleFrom(
+          backgroundColor: cs.onPrimary,
+          foregroundColor: cs.primary,
+          disabledBackgroundColor: cs.onPrimary.withValues(alpha: 0.6),
+          disabledForegroundColor: cs.primary.withValues(alpha: 0.6),
+          minimumSize: const Size(0, kDonyMinTapTarget),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.lg),
+          ),
+        );
+
         if (state.subscribed) {
           return Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              DonyButton(
-                label: l.followFollowingButton,
-                variant: DonyButtonVariant.secondary,
-                fullWidth: false,
-                isLoading: isLoading,
-                onPressed: isLoading
-                    ? null
-                    : () => _confirmUnsubscribe(context),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () => _confirmUnsubscribe(context),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: cs.onPrimary,
+                    side: BorderSide(color: cs.onPrimary, width: 1.5),
+                    minimumSize: const Size(0, kDonyMinTapTarget),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(DonyRadius.lg),
+                    ),
+                  ),
+                  child: Text(l.followFollowingButton),
+                ),
               ),
               const SizedBox(width: DonySpacing.sm),
               IconButton(
                 tooltip: state.pushEnabled
                     ? l.profilePublicDisablePushTooltip
                     : l.profilePublicEnablePushTooltip,
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(kDonyMinTapTarget, kDonyMinTapTarget),
+                  side: BorderSide(color: cs.onPrimary, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.lg),
+                  ),
+                ),
                 icon: DonyIcon(
                   state.pushEnabled ? 'bell' : 'bell-off',
-                  color: cs.primary,
+                  color: cs.onPrimary,
                 ),
                 onPressed: isLoading
                     ? null
@@ -1503,16 +1596,18 @@ class _SubscribeAction extends StatelessWidget {
           );
         }
 
-        return DonyButton(
-          label: l.followFollowButton,
-          iconAsset: 'plus',
-          fullWidth: false,
-          isLoading: isLoading,
-          onPressed: isLoading
-              ? null
-              : () => context.read<TravelerSubscribeBloc>().add(
-                  const SubscribePressed(),
-                ),
+        return SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            style: filled,
+            onPressed: isLoading
+                ? null
+                : () => context.read<TravelerSubscribeBloc>().add(
+                    const SubscribePressed(),
+                  ),
+            icon: DonyIcon('plus', color: cs.primary, size: 18),
+            label: Text(l.followFollowButton),
+          ),
         );
       },
     );
