@@ -17565,21 +17565,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatReportMessageAction => 'Report';
 
   @override
-  String senderReliabilityLabel(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count cancellations or no-shows',
-      one: '1 cancellation or no-show',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get senderReliabilityTooltip =>
-      'Parcels cancelled after a traveler accepted them, and confirmed no-shows at the handover meeting.';
-
-  @override
   String get walletActiveCurrencyCardLabel => 'Active wallet';
 
   @override

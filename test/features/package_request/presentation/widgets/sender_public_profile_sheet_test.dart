@@ -22,7 +22,6 @@ SenderPublicProfile _sender({
   bool kycVerified = true,
   double averageRating = 4.8,
   int totalRatings = 12,
-  int incidentCount = 0,
   bool gpPro = false,
 }) => SenderPublicProfile(
   id: 'sender-1',
@@ -30,7 +29,6 @@ SenderPublicProfile _sender({
   averageRating: averageRating,
   totalRatings: totalRatings,
   kycVerified: kycVerified,
-  incidentCount: incidentCount,
   gpPro: gpPro,
 );
 
@@ -70,13 +68,12 @@ Widget _buildApp(SenderPublicProfile sender, {String? authUserId}) {
 
 void main() {
   group('SenderPublicProfileSheet', () {
-    testWidgets('fiabilité de l expéditeur affichée (FLUTTER-E0/E6)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_buildApp(_sender(incidentCount: 1)));
+    testWidgets('does_not_render_sender_incident_label', (tester) async {
+      await tester.pumpWidget(_buildApp(_sender()));
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
-      expect(find.text('1 annulation ou absence'), findsOneWidget);
+      expect(find.byKey(const Key('sender-reliability-label')), findsNothing);
+      expect(find.textContaining('annulation'), findsNothing);
     });
 
     testWidgets('badge GP Pro affiché quand gpPro est vrai', (tester) async {

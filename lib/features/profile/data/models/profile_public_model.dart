@@ -20,7 +20,6 @@ class ProfilePublicModel {
     this.residenceCountry,
     this.measuredResponseMinutes,
     this.lastSeenDaysAgo,
-    this.senderIncidentCount = 0,
     this.reliabilityPercent,
   });
 
@@ -56,11 +55,6 @@ class ProfilePublicModel {
   /// Jours depuis la dernière ouverture de l'app (0 = aujourd'hui) ; nul si
   /// l'utilisateur la masque ou si elle est inconnue.
   final int? lastSeenDaysAgo;
-
-  /// Fiabilité en tant qu'expéditeur (FLUTTER-E0/E6) : annulations après
-  /// acceptation d'un voyageur et absences au rendez-vous de remise
-  /// confirmées. `0` sur un back antérieur.
-  final int senderIncidentCount;
 
   /// Part des envois menés à bien, de 0 à 100 (FLUTTER-NV, yadony-back #517).
   /// Absente sous trois envois engagés ou sur un back antérieur : le profil
@@ -98,7 +92,6 @@ class ProfilePublicModel {
       measuredResponseMinutes: (json['measuredResponseMinutes'] as num?)
           ?.toInt(),
       lastSeenDaysAgo: (json['lastSeenDaysAgo'] as num?)?.toInt(),
-      senderIncidentCount: (json['senderIncidentCount'] as num?)?.toInt() ?? 0,
       reliabilityPercent: switch (json['reliabilityPercent']) {
         final num v => v.toInt().clamp(0, 100),
         _ => null,

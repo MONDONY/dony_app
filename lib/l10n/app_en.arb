@@ -9490,8 +9490,6 @@
   "chatPhotoRateLimited": "You've sent a lot of photos. Please try again in a few minutes.",
   "chatPhotoSendFailed": "The photo couldn't be sent.",
   "chatReportMessageAction": "Report",
-  "senderReliabilityLabel": "{count, plural, =1{1 cancellation or no-show} other{{count} cancellations or no-shows}}",
-  "senderReliabilityTooltip": "Parcels cancelled after a traveler accepted them, and confirmed no-shows at the handover meeting.",
   "walletActiveCurrencyCardLabel": "Active wallet",
   "walletActiveCurrencyCardHint": "Card top-ups and new listings use this currency",
   "walletActiveCurrencyChange": "Change",

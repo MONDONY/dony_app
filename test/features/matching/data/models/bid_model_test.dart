@@ -150,17 +150,13 @@ void main() {
     });
   });
 
-  group('BidModel.senderIncidentCount (FLUTTER-E0/E6)', () {
-    test('lu et renvoyé en toJson', () {
+  group('BidModel : incidents expéditeur retirés', () {
+    test('ignores_legacy_sender_incident_count_in_json', () {
       final model = BidModel.fromJson(
         _minimalBid()..['senderIncidentCount'] = 2,
       );
-      expect(model.senderIncidentCount, 2);
-      expect(model.toJson()['senderIncidentCount'], 2);
-    });
-
-    test('absent (back antérieur) → null', () {
-      expect(BidModel.fromJson(_minimalBid()).senderIncidentCount, isNull);
+      expect(model.id, 'bid1');
+      expect(model.toJson().containsKey('senderIncidentCount'), isFalse);
     });
   });
 

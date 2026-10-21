@@ -64,7 +64,6 @@ ProfilePublicModel profileWith({
   String? bio,
   List<String> languages = const [],
   int? reliabilityPercent,
-  int senderIncidentCount = 0,
 }) {
   return ProfilePublicModel(
     userId: _userId,
@@ -80,7 +79,6 @@ ProfilePublicModel profileWith({
     bio: bio,
     languages: languages,
     reliabilityPercent: reliabilityPercent,
-    senderIncidentCount: senderIncidentCount,
   );
 }
 
@@ -530,9 +528,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     await tester.pumpWidget(
-      _wrapLoaded(
-        profile: profileWith(reliabilityPercent: 96, senderIncidentCount: 2),
-      ),
+      _wrapLoaded(profile: profileWith(reliabilityPercent: 96)),
     );
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -542,15 +538,11 @@ void main() {
     expect(find.textContaining('annulation'), findsNothing);
   });
 
-  testWidgets('sans taux : ni taux ni compteur, même avec des incidents', (
-    tester,
-  ) async {
+  testWidgets('sans taux : ni taux ni compteur d\'incidents', (tester) async {
     tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
-    await tester.pumpWidget(
-      _wrapLoaded(profile: profileWith(senderIncidentCount: 3)),
-    );
+    await tester.pumpWidget(_wrapLoaded(profile: profileWith()));
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byKey(const Key('profile-reliability-label')), findsNothing);

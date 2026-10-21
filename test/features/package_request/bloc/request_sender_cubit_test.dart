@@ -23,7 +23,6 @@ const _profile = ProfilePublicModel(
   ratingCount: 8,
   memberSince: '2025-01-01',
   badges: [],
-  senderIncidentCount: 1,
 );
 
 void main() {
@@ -59,8 +58,7 @@ void main() {
           .having((s) => s.sender.averageRating, 'note', 4.5)
           .having((s) => s.sender.totalRatings, 'avis', 8)
           .having((s) => s.sender.kycVerified, 'kyc', isTrue)
-          .having((s) => s.sender.avatarUrl, 'avatar', isNotNull)
-          .having((s) => s.sender.incidentCount, 'incidents', 1),
+          .having((s) => s.sender.avatarUrl, 'avatar', isNotNull),
     ],
   );
 
