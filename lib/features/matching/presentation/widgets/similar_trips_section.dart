@@ -12,21 +12,20 @@ import 'package:flutter_animate/flutter_animate.dart';
 ///
 /// Sliver : se pose directement dans un `CustomScrollView`. Rien n'est rendu
 /// quand [items] est vide (back antérieur, ou aucun trajet proche).
+///
+/// Sans trajet exact, c'est le sous-titre de l'en-tête de la feuille qui dit
+/// « aucun trajet ne correspond exactement » (`homeListSubtitle`) : le bloc ne
+/// répète pas la phrase juste en dessous.
 class SimilarTripsSection extends StatelessWidget {
   const SimilarTripsSection({
     super.key,
     required this.items,
     required this.cardBuilder,
-    this.showNoExactMatch = false,
     this.padding = const EdgeInsets.symmetric(horizontal: DonySpacing.base),
   });
 
   final List<SimilarAnnouncement> items;
   final Widget Function(SimilarAnnouncement item, int index) cardBuilder;
-
-  /// Aucun trajet exact : une ligne le dit au-dessus du titre, à la place de
-  /// l'état vide pleine page qui annoncerait « aucun résultat ».
-  final bool showNoExactMatch;
 
   /// Marges du bloc entier (en-tête et cartes).
   final EdgeInsetsGeometry padding;
@@ -45,17 +44,6 @@ class SimilarTripsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showNoExactMatch) ...[
-            Text(
-              l.similarTripsNoExactMatch,
-              key: const Key('similar-trips-no-exact-match'),
-              style: tt.bodyMedium?.copyWith(
-                color: cs.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: DonySpacing.base),
-          ],
           Semantics(
             header: true,
             child: Text(

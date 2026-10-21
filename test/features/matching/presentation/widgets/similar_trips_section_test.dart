@@ -71,49 +71,24 @@ void main() {
 
     testWidgets('empty_items_render_nothing', (tester) async {
       await tester.pumpWidget(
-        _host(
-          const SimilarTripsSection(
-            items: [],
-            cardBuilder: _card,
-            showNoExactMatch: true,
-          ),
-        ),
+        _host(const SimilarTripsSection(items: [], cardBuilder: _card)),
       );
       await _settle(tester);
 
       expect(find.byKey(const Key('similar-trips-section')), findsNothing);
       expect(find.text('Autres annonces sur ce trajet'), findsNothing);
-      expect(
-        find.text('Aucun trajet ne correspond exactement à votre recherche.'),
-        findsNothing,
-      );
     });
 
-    testWidgets('no_exact_match_line_shown_only_when_flagged', (tester) async {
-      const line = 'Aucun trajet ne correspond exactement à votre recherche.';
+    // Sans trajet exact, le sous-titre de l'en-tête de la feuille le dit
+    // déjà (homeListSubtitle) : le bloc ne répète jamais la phrase.
+    testWidgets('never_repeats_the_no_exact_match_sentence', (tester) async {
       await tester.pumpWidget(
         _host(SimilarTripsSection(items: [_similar('a')], cardBuilder: _card)),
       );
       await _settle(tester);
-      expect(find.text(line), findsNothing);
-
-      await tester.pumpWidget(
-        _host(
-          SimilarTripsSection(
-            items: [_similar('a')],
-            cardBuilder: _card,
-            showNoExactMatch: true,
-          ),
-        ),
-      );
-      await _settle(tester);
-      expect(find.text(line), findsOneWidget);
-      // La ligne précède le titre du bloc.
       expect(
-        tester.getTopLeft(find.text(line)).dy,
-        lessThan(
-          tester.getTopLeft(find.text('Autres annonces sur ce trajet')).dy,
-        ),
+        find.text('Aucun trajet ne correspond exactement à votre recherche.'),
+        findsNothing,
       );
     });
 
@@ -124,11 +99,7 @@ void main() {
           Scaffold(
             body: CustomScrollView(
               slivers: [
-                SimilarTripsSection(
-                  items: [_similar('a')],
-                  cardBuilder: _card,
-                  showNoExactMatch: true,
-                ),
+                SimilarTripsSection(items: [_similar('a')], cardBuilder: _card),
               ],
             ),
           ),
@@ -137,7 +108,10 @@ void main() {
       );
       await _settle(tester);
       expect(find.text('Other listings on this route'), findsOneWidget);
-      expect(find.text('No trip exactly matches your search.'), findsOneWidget);
+      expect(
+        find.text('These trips do not exactly match your criteria.'),
+        findsOneWidget,
+      );
     });
   });
 }

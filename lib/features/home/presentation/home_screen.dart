@@ -303,6 +303,11 @@ String homeListTitle(
 /// nombre de trajets actifs, connu ou non (voir `knownActiveTrips`) :
 /// [activeTrips] à `null` annonce les résultats sans inventer un « 0 trajet
 /// actif » que rien ne prouve.
+///
+/// [hasSimilar] : le bloc « Autres annonces sur ce trajet » est affiché. Sans
+/// trajet exact, le sous-titre dit alors qu'aucun trajet ne correspond
+/// exactement, au lieu d'un « personne ne propose ce trajet » démenti par
+/// les cartes juste en dessous.
 @visibleForTesting
 String homeListSubtitle(
   AppLocalizations l, {
@@ -311,11 +316,13 @@ String homeListSubtitle(
   required int parcels,
   required bool matching,
   required int? activeTrips,
+  bool hasSimilar = false,
 }) {
   if (mode.isTrips) {
-    return trips == 0
-        ? l.homeListSubtitleNoTraveler
-        : l.homeListSubtitleTravelersCanCarry;
+    if (trips > 0) return l.homeListSubtitleTravelersCanCarry;
+    return hasSimilar
+        ? l.similarTripsNoExactMatch
+        : l.homeListSubtitleNoTraveler;
   }
   if (matching) {
     if (activeTrips == null) {
@@ -2165,6 +2172,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     parcels: parcels,
                                     matching: matching,
                                     activeTrips: trips,
+                                    hasSimilar:
+                                        _mode.isTrips &&
+                                        similarTrips.isNotEmpty,
                                   ),
                                   // Une ligne : la feuille repliée a une
                                   // hauteur fixe, un sous-titre qui passerait
@@ -2487,7 +2497,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               ),
                             SimilarTripsSection(
                               items: similarTrips,
-                              showNoExactMatch: count == 0,
                               padding: EdgeInsets.fromLTRB(
                                 DonySpacing.base,
                                 count > 0 ? DonySpacing.xl : DonySpacing.base,

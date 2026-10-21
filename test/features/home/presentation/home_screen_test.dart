@@ -1140,9 +1140,19 @@ void main() {
 
         expect(find.text('Aucun voyageur sur ce trajet'), findsNothing);
         expect(find.byKey(const Key('similar-trips-section')), findsOneWidget);
+        // L'en-tête ne dit plus « personne » au-dessus des cartes proches, et
+        // la phrase n'est dite qu'une fois (pas de doublon dans le bloc).
+        expect(
+          sousTitreListe(tester),
+          'Aucun trajet ne correspond exactement à votre recherche.',
+        );
         expect(
           find.text('Aucun trajet ne correspond exactement à votre recherche.'),
           findsOneWidget,
+        );
+        expect(
+          find.text("Personne ne propose ce trajet pour l'instant"),
+          findsNothing,
         );
         expect(find.byType(TravelerCard), findsOneWidget);
         // La carte proche dit pourquoi elle ne correspond pas.
@@ -1169,6 +1179,7 @@ void main() {
           find.text('Aucun trajet ne correspond exactement à votre recherche.'),
           findsNothing,
         );
+        expect(sousTitreListe(tester), 'Ils peuvent emporter votre colis');
         final cards = find.byType(TravelerCard);
         expect(cards, findsNWidgets(2));
         // La carte exacte n'a aucun avertissement, la carte proche en a un,
@@ -1183,6 +1194,47 @@ void main() {
           tester.getTopLeft(find.text('Autres annonces sur ce trajet')).dy,
           greaterThan(tester.getTopLeft(cards.first).dy),
         );
+      });
+
+      testWidgets('similar_card_tap_opens_same_trip_sheet_as_exact_card', (
+        tester,
+      ) async {
+        await pumpHome(
+          tester,
+          announcementState: AnnouncementSearchLoaded(
+            [_makeAnn()],
+            similar: [proche('s1')],
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        // Identifiants des trajets dont la feuille « Détail du trajet » s'est
+        // ouverte (recordTripView, appelé par showTravelerAnnouncementSheet).
+        List<String> vus() => verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.announcementViewed,
+            properties: captureAny(named: 'properties'),
+          ),
+        ).captured.map((p) => (p as Map)['announcement_id'] as String).toList();
+
+        Future<void> ouvrirPuisFermer(String id) async {
+          final carte = find.byWidgetPredicate(
+            (w) => w is TravelerCard && w.announcement.id == id,
+          );
+          await tester.ensureVisible(carte);
+          await tester.pumpAndSettle();
+          await tester.tap(carte);
+          await tester.pumpAndSettle();
+          expect(find.text('Détail du trajet'), findsOneWidget);
+          await tester.tapAt(const Offset(500, 20));
+          await tester.pumpAndSettle();
+          expect(find.text('Détail du trajet'), findsNothing);
+        }
+
+        await ouvrirPuisFermer('a1');
+        expect(vus(), ['a1']);
+        await ouvrirPuisFermer('s1');
+        expect(vus(), ['s1']);
       });
 
       testWidgets('block_hidden_for_parcels_mode', (tester) async {
