@@ -26,6 +26,7 @@ import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_aler
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/home/presentation/home_sheet_session.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/home_publish_button.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
@@ -309,7 +310,12 @@ String homeListTitle(
 /// exactement, au lieu d'un « personne ne propose ce trajet » démenti par
 /// les cartes juste en dessous.
 @visibleForTesting
-String homeListSubtitle(
+/// Phrase d'aide sous le titre de la liste, ou `null` quand elle ne dit rien de
+/// plus que le titre. « Ils peuvent emporter votre colis » et « Vous pouvez les
+/// transporter » répétaient ce que la liste montre déjà et prenaient une ligne
+/// à la place des annonces : elles ne sont plus affichées. Restent les phrases
+/// qui expliquent un état (aucun résultat, trajets actifs, trajets proches).
+String? homeListSubtitle(
   AppLocalizations l, {
   required SearchMode mode,
   required int trips,
@@ -319,7 +325,7 @@ String homeListSubtitle(
   bool hasSimilar = false,
 }) {
   if (mode.isTrips) {
-    if (trips > 0) return l.homeListSubtitleTravelersCanCarry;
+    if (trips > 0) return null;
     return hasSimilar
         ? l.similarTripsNoExactMatch
         : l.homeListSubtitleNoTraveler;
@@ -330,9 +336,7 @@ String homeListSubtitle(
     }
     return l.homeListSubtitleActiveTrips(activeTrips);
   }
-  return parcels == 0
-      ? l.homeListSubtitleNoRequest
-      : l.homeListSubtitleYouCanCarry;
+  return parcels == 0 ? l.homeListSubtitleNoRequest : null;
 }
 
 class _MapSenderView extends StatefulWidget {
@@ -395,6 +399,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   /// La feuille ne monte qu'une fois, au premier affichage de la liste.
   bool _didRaiseOnOpen = false;
+
+  /// Première arrivée sur l'onglet depuis l'ouverture de l'app : la feuille se
+  /// pose à 100 % (voir [HomeSheetSession]). Reste vrai tant que la feuille
+  /// existe : `DraggableScrollableSheet` remplace sa taille quand
+  /// `initialChildSize` change d'un rendu à l'autre, il ne doit donc pas
+  /// varier. Une feuille recréée plus tard (« Près de moi ») repart repliée :
+  /// [_activateNearMe] le remet à faux avant de la détruire.
+  bool _sheetStartsFull = false;
 
   /// Dernier cran de la feuille signalé à l'analytics, et temporisation qui
   /// attend qu'elle se soit posée avant de le mesurer.
@@ -463,6 +475,18 @@ class _MapSenderViewState extends State<_MapSenderView> {
     // fonctionne désormais pour un visiteur (Task 7), il n'y a plus de raison
     // de le distinguer d'un inscrit à l'ouverture de l'écran.
     _mode = SearchMode.trips;
+    if (HomeSheetSession.takeFullOpening()) {
+      _sheetStartsFull = true;
+      _sheetSize = 1.0;
+      _didRaiseOnOpen = true;
+      // Le cran n'est pas un changement de taille : aucun écouteur ne le
+      // verrait. On le mesure une fois, comme une montée automatique.
+      _autoRaising = true;
+      _sheetSettleTimer = Timer(
+        const Duration(milliseconds: 400),
+        _reportSheetSettled,
+      );
+    }
     if (getIt.isRegistered<PendingSearchNotifier>()) {
       _pendingSearchNotifier = getIt<PendingSearchNotifier>();
       _pendingSearchNotifier!.addListener(_consumePendingSearch);
@@ -1153,6 +1177,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
   }
 
   Future<void> _activateNearMe() async {
+    // La feuille est détruite par « Près de moi » : recréée, elle repart repliée.
+    _sheetStartsFull = false;
     const locationService = GeolocatorLocationService();
     final access = await requestLocationAccess(locationService);
     if (!mounted) return;
@@ -1597,25 +1623,33 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         opacity: (_isMapHidden || _isNearMeActive) ? 0.0 : 1.0,
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeInOut,
-                        child: ConstrainedBox(
-                          key: _topOverlayKey,
-                          constraints: BoxConstraints(
-                            maxHeight: MediaQuery.sizeOf(context).height * 0.45,
-                          ),
-                          child: SingleChildScrollView(
-                            primary: false,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _topRow(context),
-                                const SizedBox(height: DonySpacing.sm),
-                                _modeSelector(),
-                                const SizedBox(height: DonySpacing.sm),
-                                _filterChipsRow(),
-                              ],
-                            ),
-                          ),
-                        ),
+                        // Plein écran : la rangée favoris, recherche, « + » et
+                        // cloche vit dans l'en-tête de la feuille. Elle quitte
+                        // l'arbre ici pour ne pas exister deux fois (boutons,
+                        // clés, lecteur d'écran).
+                        child: _isMapHidden
+                            ? const SizedBox.shrink()
+                            : ConstrainedBox(
+                                key: _topOverlayKey,
+                                constraints: BoxConstraints(
+                                  maxHeight:
+                                      MediaQuery.sizeOf(context).height * 0.45,
+                                ),
+                                child: SingleChildScrollView(
+                                  primary: false,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _topRow(context),
+                                      const SizedBox(height: DonySpacing.sm),
+                                      _modeSelector(),
+                                      const SizedBox(height: DonySpacing.sm),
+                                      _filterChipsRow(),
+                                    ],
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -1682,7 +1716,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         }
                         return DraggableScrollableSheet(
                           controller: _sheetController,
-                          initialChildSize: peekSize,
+                          initialChildSize: _sheetStartsFull ? 1.0 : peekSize,
                           minChildSize: peekSize,
                           snap: true,
                           snapSizes: [peekSize, middleSnap, 1.0],
@@ -1977,7 +2011,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// boutons ronds passent à 44 et les écarts à 4, et sous
   /// [kHomeTopRowTinyWidth] (iPhone SE 1re génération, 320 dp) la barre
   /// laisse tomber sa loupe pour garder de la place au trajet recherché.
-  Widget _topRow(BuildContext context) {
+  /// Rangée favoris, barre de recherche, « + » et cloche. Posée sur la carte
+  /// quand la feuille n'est pas à 100 %, et en tête de la feuille quand elle y
+  /// est : une seule rangée, deux emplacements, [barKey] distingue les deux
+  /// barres de recherche présentes en même temps dans l'arbre.
+  Widget _topRow(
+    BuildContext context, {
+    Key barKey = const Key('corridor-bar'),
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -1990,7 +2031,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
             SizedBox(width: gap),
             Expanded(
               child: _CorridorBar(
-                key: const Key('corridor-bar'),
+                key: barKey,
                 label: _corridorLabel,
                 activeFilterCount: _activeFilterCount,
                 onTap: () => _openComposer(context),
@@ -2163,7 +2204,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
             ),
           ),
           if (_isMapHidden) ...[
-            _pullHintForMode(cs, down: true, tripCount: tripCount),
+            // Plein écran : favoris, recherche, « + » et cloche passent dans
+            // l'en-tête de la liste (la rangée de la carte est masquée), sans
+            // le scarabée, et sans phrase « Tirer vers le bas » : le bouton
+            // « Carte » flottant ramène à la carte.
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 DonySpacing.lg,
@@ -2171,24 +2215,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 DonySpacing.lg,
                 DonySpacing.sm,
               ),
-              // Le scarabée de signalement vit dans la feuille, jamais sur la
-              // carte où il se perd dans le fond : à côté de la barre de
-              // recherche quand la feuille est dépliée, à côté de « Trier »
-              // quand elle est repliée (voir plus bas).
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _CorridorBar(
-                      key: const Key('corridor-bar-sheet'),
-                      label: _corridorLabel,
-                      activeFilterCount: _activeFilterCount,
-                      onTap: () => _openComposer(ctx),
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                  const DonyFeedbackButton(key: Key('feedback-sheet-expanded')),
-                ],
-              ),
+              child: _topRow(ctx, barKey: const Key('corridor-bar-sheet')),
             ),
             Padding(
               padding: const EdgeInsets.only(
@@ -2235,6 +2262,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             // compteur grimperait à chaque page), voir
                             // `displayCount`.
                             final parcels = prState.displayCount;
+                            final subtitle = homeListSubtitle(
+                              context.l10n,
+                              mode: _mode,
+                              trips: tripCount,
+                              parcels: parcels,
+                              matching: matching,
+                              activeTrips: trips,
+                              hasSimilar:
+                                  _mode.isTrips && similarTrips.isNotEmpty,
+                            );
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -2252,30 +2289,22 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  key: const Key('results-header-subtitle'),
-                                  homeListSubtitle(
-                                    context.l10n,
-                                    mode: _mode,
-                                    trips: tripCount,
-                                    parcels: parcels,
-                                    matching: matching,
-                                    activeTrips: trips,
-                                    hasSimilar:
-                                        _mode.isTrips &&
-                                        similarTrips.isNotEmpty,
+                                if (subtitle != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    key: const Key('results-header-subtitle'),
+                                    subtitle,
+                                    // Une ligne : la feuille repliée a une
+                                    // hauteur fixe, un sous-titre qui passerait
+                                    // sur deux lignes à 200 % de taille de
+                                    // texte ferait déborder sa colonne.
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: tt.labelSmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
                                   ),
-                                  // Une ligne : la feuille repliée a une
-                                  // hauteur fixe, un sous-titre qui passerait
-                                  // sur deux lignes à 200 % de taille de texte
-                                  // ferait déborder sa colonne.
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: tt.labelSmall?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
+                                ],
                               ],
                             );
                           },
@@ -2458,6 +2487,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   return PackageRequestListCard(
                                     item: pr,
                                     index: i,
+                                    compact: true,
                                     isOwnRequest: isOwn,
                                     showFavorite: _isTraveler && !isOwn,
                                     onTap: () async {
@@ -2658,6 +2688,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
     return TravelerCard(
       announcement: a,
       index: index,
+      // Liste de l'onglet Rechercher : carte compacte, plus d'annonces à
+      // l'écran. Le carrousel « Près de moi » garde la carte d'origine.
+      compact: true,
       isOwnAnnouncement: isOwn,
       distanceBadge: badge,
       existingBidStatus: existingBid?.status,

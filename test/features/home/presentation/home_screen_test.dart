@@ -26,6 +26,7 @@ import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
+import 'package:dony/features/home/presentation/home_sheet_session.dart';
 import 'package:dony/features/home/presentation/screens/search_composer_screen.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
@@ -467,9 +468,12 @@ Widget _buildHome({
 String titreListe(WidgetTester tester) =>
     tester.widget<Text>(find.byKey(const Key('results-header-title'))).data!;
 
-/// Sous-titre de l'en-tête de liste (« Ils peuvent emporter votre colis »).
-String sousTitreListe(WidgetTester tester) =>
-    tester.widget<Text>(find.byKey(const Key('results-header-subtitle'))).data!;
+/// Sous-titre de l'en-tête de liste, `null` quand il n'est pas affiché (une
+/// phrase qui répète le titre est retirée, voir `homeListSubtitle`).
+String? sousTitreListe(WidgetTester tester) {
+  final finder = find.byKey(const Key('results-header-subtitle'));
+  return finder.evaluate().isEmpty ? null : tester.widget<Text>(finder).data;
+}
 
 Future<void> pumpHome(
   WidgetTester tester, {
@@ -748,6 +752,10 @@ void main() {
   });
 
   setUp(() {
+    // La plupart des tests supposent l'ouverture d'avant (feuille repliée puis
+    // montée à mi-hauteur) : l'ouverture à 100 % se rallume dans les tests
+    // qui la vérifient.
+    HomeSheetSession.reset(enabled: false);
     getIt.registerSingleton<FirebaseSessionProbe>(
       const _StubSessionProbe(true),
     );
@@ -1247,7 +1255,7 @@ void main() {
           find.text('Aucun trajet ne correspond exactement à votre recherche.'),
           findsNothing,
         );
-        expect(sousTitreListe(tester), 'Ils peuvent emporter votre colis');
+        expect(sousTitreListe(tester), isNull);
         final cards = find.byType(TravelerCard);
         expect(cards, findsNWidgets(2));
         // La carte exacte n'a aucun avertissement, la carte proche en a un,
@@ -1355,8 +1363,8 @@ void main() {
     });
 
     testWidgets(
-      'scarabée : à côté de « Trier » replié, à côté de la recherche déplié, '
-      'jamais sur la carte',
+      'scarabée : à côté de « Trier » quand la liste n\'est pas à 100 %, '
+      'absent de l\'en-tête plein écran, jamais sur la carte',
       (tester) async {
         await pumpHome(tester);
         await tester.pump(const Duration(milliseconds: 1000));
@@ -1379,23 +1387,30 @@ void main() {
         expect((bug.dy - header.dy).abs(), lessThan(kDonyMinTapTarget));
         expect(bug.dx, greaterThan(header.dx));
 
-        // Déplié : il rejoint la barre de recherche de la feuille.
+        // Plein écran : plus de scarabée. Favoris, recherche, « + » et cloche
+        // prennent sa place dans l'en-tête de la liste, et la rangée de la
+        // carte n'existe plus (pas de doublon).
         await replierFeuille(tester);
         await tester.tap(find.textContaining('Tirer pour voir'));
         await tester.pumpAndSettle();
-        expect(
-          find.byKey(const Key('feedback-sheet-expanded')),
-          findsOneWidget,
-        );
+        expect(find.byType(DonyFeedbackButton), findsNothing);
+        expect(find.byKey(const Key('feedback-sheet-expanded')), findsNothing);
         expect(find.byKey(const Key('feedback-sheet-collapsed')), findsNothing);
-        expect(find.byType(DonyFeedbackButton), findsOneWidget);
-        final bugTop = tester.getCenter(
-          find.byKey(const Key('feedback-sheet-expanded')),
+        expect(find.byKey(const Key('corridor-bar-sheet')), findsOneWidget);
+        expect(find.byKey(const Key('corridor-bar')), findsNothing);
+        expect(find.byKey(const Key('favorites-button')), findsOneWidget);
+        expect(find.byKey(const Key('home-publish-button')), findsOneWidget);
+        final bar = tester.getRect(find.byKey(const Key('corridor-bar-sheet')));
+        final publier = tester.getCenter(
+          find.byKey(const Key('home-publish-button')),
         );
-        final search = tester.getCenter(
-          find.byKey(const Key('corridor-bar-sheet')),
+        final favoris = tester.getCenter(
+          find.byKey(const Key('favorites-button')),
         );
-        expect((bugTop.dy - search.dy).abs(), lessThan(kDonyMinTapTarget));
+        // Une seule rangée : favoris à gauche de la barre, « + » à sa droite.
+        expect(favoris.dx, lessThan(bar.left));
+        expect(publier.dx, greaterThan(bar.right));
+        expect((publier.dy - favoris.dy).abs(), lessThan(4));
       },
     );
 
@@ -1558,8 +1573,11 @@ void main() {
       await tester.tap(find.textContaining('Tirer pour voir'));
       await tester.pumpAndSettle();
 
-      // En plein écran, l'indication bascule sur « voir la carte ».
-      expect(find.textContaining('voir la carte'), findsOneWidget);
+      // En plein écran : l'en-tête de la liste porte la recherche, et la
+      // phrase « Tirer vers le bas » a laissé la place au bouton « Carte ».
+      expect(find.byKey(const Key('corridor-bar-sheet')), findsOneWidget);
+      expect(find.textContaining('Tirer vers le bas'), findsNothing);
+      expect(find.text('Carte'), findsOneWidget);
     });
 
     // Sentry FLUTTER-4X : en paysage (≈360 dp de haut), 30 % de hauteur ne
@@ -1952,6 +1970,82 @@ void main() {
       expect(last.minAvailableKg, 23);
       expect(last.maxAvailableKg, isNull);
       expect(chipLabel(tester), 'Kilos');
+    });
+  });
+
+  group('première arrivée sur l\'onglet : liste à 100 %', () {
+    testWidgets(
+      'la feuille se pose à 100 % : favoris, recherche, « + » dans son '
+      'en-tête, ni scarabée ni phrase « Tirer vers le bas »',
+      (tester) async {
+        HomeSheetSession.reset();
+        await pumpHome(tester, tripResults: [_makeAnn()]);
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        expect(find.byKey(const Key('corridor-bar-sheet')), findsOneWidget);
+        expect(find.byKey(const Key('corridor-bar')), findsNothing);
+        expect(find.byKey(const Key('favorites-button')), findsOneWidget);
+        expect(find.byKey(const Key('home-publish-button')), findsOneWidget);
+        expect(find.byType(DonyFeedbackButton), findsNothing);
+        expect(find.textContaining('Tirer'), findsNothing);
+        // La liste est visible dès l'arrivée : la feuille couvre l'écran.
+        final sheet = tester.getRect(find.byKey(const Key('home-sheet')));
+        expect(sheet.top, lessThan(1));
+        expect(find.byType(TravelerCard), findsWidgets);
+      },
+    );
+
+    testWidgets('le cran « plein écran » est mesuré comme une ouverture '
+        'automatique', (tester) async {
+      HomeSheetSession.reset();
+      await pumpHome(tester, tripResults: [_makeAnn()]);
+      await tester.pump(const Duration(seconds: 1));
+
+      final snaps = verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeSheetSnapped,
+          properties: captureAny(named: 'properties'),
+        ),
+      ).captured.cast<Map<String, Object>>();
+      expect(snaps, hasLength(1));
+      expect(snaps.single['size'], 'full');
+      expect(snaps.single['auto'], isTrue);
+      expect(snaps.single.containsKey('from'), isFalse);
+    });
+
+    testWidgets('une seule fois par session : le second écran s\'ouvre comme '
+        'avant, à mi-hauteur, avec la rangée sur la carte', (tester) async {
+      HomeSheetSession.reset();
+      await pumpHome(tester, tripResults: [_makeAnn()]);
+      await tester.pump(const Duration(milliseconds: 1000));
+      expect(find.byKey(const Key('corridor-bar-sheet')), findsOneWidget);
+
+      // Un nouvel écran dans le même processus (reconnexion) : l'ouverture à
+      // 100 % est consommée.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      expect(find.byKey(const Key('corridor-bar')), findsOneWidget);
+      expect(find.byKey(const Key('corridor-bar-sheet')), findsNothing);
+    });
+
+    testWidgets('en repliant la liste depuis le plein écran, la rangée '
+        'favoris, recherche, « + » repasse sur la carte et le scarabée '
+        'revient', (tester) async {
+      HomeSheetSession.reset();
+      await pumpHome(tester, tripResults: [_makeAnn()]);
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      await tester.tap(find.text('Carte'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('corridor-bar')), findsOneWidget);
+      expect(find.byKey(const Key('corridor-bar-sheet')), findsNothing);
+      expect(find.byKey(const Key('favorites-button')), findsOneWidget);
+      expect(find.byType(DonyFeedbackButton), findsOneWidget);
     });
   });
 

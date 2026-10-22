@@ -32,6 +32,7 @@ import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
+import 'package:dony/features/home/presentation/home_sheet_session.dart';
 import 'package:dony/features/home/presentation/screens/search_composer_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -257,6 +258,9 @@ void main() {
   });
 
   setUp(() {
+    // Ces tests suivent la barre de la carte : l'ouverture à 100 % (barre dans
+    // l'en-tête de la liste) est vérifiée dans home_screen_test.
+    HomeSheetSession.reset(enabled: false);
     getIt.registerSingleton<FirebaseSessionProbe>(
       const _StubSessionProbe(true),
     );

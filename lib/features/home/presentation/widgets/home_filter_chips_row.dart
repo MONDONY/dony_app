@@ -6,10 +6,12 @@
 // divergence : la date, commune aux deux modes, y était rendue par deux
 // widgets différents et effacée par deux chemins différents.
 //
-// Ordre imposé : les chips COMMUNS (urgent, date) à `key` stable d'abord, puis
-// ceux du mode courant. Les clés stables évitent qu'un chip commun soit
-// détruit/reconstruit à la bascule, ce qui perdrait son animation et, plus
-// grave, ferait clignoter un état identique.
+// Ordre : celui de l'usage mesuré pendant le test du 27/09 au 12/10 (date,
+// poids, urgent en tête), pas celui du code. Les chips COMMUNS (date, urgent)
+// gardent une `key` stable : elle évite qu'un chip commun soit
+// détruit/reconstruit à la bascule de mode même quand sa position change, ce
+// qui perdrait son animation et, plus grave, ferait clignoter un état
+// identique.
 //
 // Le sélecteur de mode ne vit plus ici : rendu au milieu des chips, il se
 // lisait comme un filtre de plus. Il a sa propre ligne, sous la barre de
@@ -142,6 +144,14 @@ class HomeFilterChipsRow extends StatelessWidget {
       ? filters.parcelSize!.wireName
       : l.homeFilterChipsSize;
 
+  /// Chip « Urgent », commun aux deux modes (même `key`, même rendu).
+  Widget _urgentChip(AppLocalizations l) => HomeSmallChip(
+    key: const Key('chip-urgent'),
+    label: l.homeFilterChipsUrgent,
+    isActive: filters.urgentOnly,
+    onTap: onUrgentToggle,
+  );
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -151,14 +161,7 @@ class HomeFilterChipsRow extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          // ── Communs ─────────────────────────────────────────────────────────
-          HomeSmallChip(
-            key: const Key('chip-urgent'),
-            label: l.homeFilterChipsUrgent,
-            isActive: filters.urgentOnly,
-            onTap: onUrgentToggle,
-          ),
-          const SizedBox(width: DonySpacing.xs),
+          // ── Date : commune aux deux modes, toujours en tête ─────────────────
           HomeSmallChip(
             key: const Key('chip-date'),
             label: _dateLabel(l),
@@ -168,10 +171,21 @@ class HomeFilterChipsRow extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.xs),
 
-          // ── Spécifiques au mode ─────────────────────────────────────────────
           if (mode.isTrips) ...[
-            // Juste après la date : le besoin le plus courant de la diaspora
-            // (une valise en soute), en un toucher (YADONY-FLUTTER-PROD-Z).
+            // Les kilos juste après la date : le filtre le plus posé après la
+            // date et le corridor.
+            HomeSmallChip(
+              key: const Key('chip-capacity'),
+              label: _capacityLabel(l),
+              isActive: hasCapacity,
+              iconAsset: 'dumbbell',
+              onTap: hasCapacity ? onCapacityClear : onCapacityTap,
+            ),
+            const SizedBox(width: DonySpacing.xs),
+            _urgentChip(l),
+            const SizedBox(width: DonySpacing.xs),
+            // Le besoin le plus courant de la diaspora (une valise en soute),
+            // en un toucher (YADONY-FLUTTER-PROD-Z).
             HomeSmallChip(
               key: const Key('chip-suitcase-23'),
               label: l.homeFilterChipsSuitcase23,
@@ -184,14 +198,6 @@ class HomeFilterChipsRow extends StatelessWidget {
               isActive: filters.minRating != null,
               iconAsset: 'star',
               onTap: filters.minRating != null ? onRatingClear : onRatingTap,
-            ),
-            const SizedBox(width: DonySpacing.xs),
-            HomeSmallChip(
-              key: const Key('chip-capacity'),
-              label: _capacityLabel(l),
-              isActive: hasCapacity,
-              iconAsset: 'dumbbell',
-              onTap: hasCapacity ? onCapacityClear : onCapacityTap,
             ),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
@@ -230,6 +236,8 @@ class HomeFilterChipsRow extends StatelessWidget {
                   ? onMaxWeightClear
                   : onMaxWeightTap,
             ),
+            const SizedBox(width: DonySpacing.xs),
+            _urgentChip(l),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
               label: _parcelSizeLabel(l),
