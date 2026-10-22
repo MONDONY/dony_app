@@ -13,10 +13,13 @@ import 'package:flutter/material.dart';
 /// l'écart des chips de filtre. Les testeurs lisaient « Trajets » / « Colis »,
 /// dessinés comme les chips voisines, comme deux filtres de plus et non comme
 /// l'interrupteur qui change ce que la liste contient. Chaque segment nomme
-/// donc l'intention (« J'envoie un colis », « Je voyage ») et dit en sous-titre
-/// ce que la liste montrera. Le compteur [otherModeCount] s'inscrit dans le
-/// sous-titre du segment inactif ; l'appelant ne le passe que lorsqu'il porte
-/// une information, c'est-à-dire quand un filtre commun est posé.
+/// donc l'intention (« J'envoie un colis », « Je voyage »).
+///
+/// Une seule ligne par segment : le sous-titre (« Voyageurs disponibles »)
+/// prenait de la hauteur à la liste, il ne reste que pour le lecteur d'écran.
+/// Le compteur [otherModeCount] s'affiche en pastille après le titre du segment
+/// inactif ; l'appelant ne le passe que lorsqu'il porte une information,
+/// c'est-à-dire quand un filtre commun est posé.
 class SearchModeSelector extends StatelessWidget {
   const SearchModeSelector({
     super.key,
@@ -86,7 +89,9 @@ class SearchModeSelector extends StatelessWidget {
                     iconName: 'package',
                     title: tripsTitle(l),
                     subtitle: _subtitle(l, SearchMode.trips),
-                    countShown: _countShown(SearchMode.trips),
+                    count: _countShown(SearchMode.trips)
+                        ? otherModeCount
+                        : null,
                     isActive: mode.isTrips,
                     onTap: () =>
                         mode.isTrips ? null : onChanged(SearchMode.trips),
@@ -99,7 +104,9 @@ class SearchModeSelector extends StatelessWidget {
                     iconName: 'plane',
                     title: parcelsTitle(l),
                     subtitle: _subtitle(l, SearchMode.parcels),
-                    countShown: _countShown(SearchMode.parcels),
+                    count: _countShown(SearchMode.parcels)
+                        ? otherModeCount
+                        : null,
                     isActive: mode.isParcels,
                     onTap: () =>
                         mode.isParcels ? null : onChanged(SearchMode.parcels),
@@ -120,7 +127,7 @@ class _Segment extends StatelessWidget {
     required this.iconName,
     required this.title,
     required this.subtitle,
-    required this.countShown,
+    required this.count,
     required this.isActive,
     required this.onTap,
   });
@@ -129,10 +136,14 @@ class _Segment extends StatelessWidget {
   /// hub Activités (`package` pour l'envoi, `plane` pour le voyage).
   final String iconName;
   final String title;
+
+  /// Ce que la liste montrera dans ce mode. Plus affiché : porté par le
+  /// libellé sémantique du segment.
   final String subtitle;
 
-  /// Vrai quand le sous-titre porte le compteur de l'autre mode.
-  final bool countShown;
+  /// Nombre d'éléments de l'autre mode, `null` quand il ne porte pas
+  /// d'information (segment actif, ou aucun filtre commun posé).
+  final int? count;
   final bool isActive;
   final VoidCallback onTap;
 
@@ -160,6 +171,7 @@ class _Segment extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive ? cs.surface : Colors.transparent,
             borderRadius: BorderRadius.circular(DonyRadius.md),
+            border: isActive ? Border.all(color: cs.primary, width: 1.5) : null,
             boxShadow: isActive
                 ? [
                     BoxShadow(
@@ -170,55 +182,62 @@ class _Segment extends StatelessWidget {
                   ]
                 : const [],
           ),
-          child: Column(
+          // Icône, titre et pastille forment une ligne centrée. Le titre est
+          // Flexible : sur un écran étroit ou en grande police, c'est lui qui
+          // s'abrège, jamais l'icône ni la pastille qui débordent. L'icône est
+          // décorative, le libellé du segment suffit à la sémantique.
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Icône et titre forment une ligne centrée. Le titre est
-              // Flexible : sur un écran étroit ou en grande police, c'est lui
-              // qui s'abrège, jamais l'icône qui déborde. L'icône est
-              // décorative, le libellé du segment suffit à la sémantique.
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ExcludeSemantics(
-                    child: DonyIcon(
-                      iconName,
-                      key: Key('search_mode_icon_$iconName'),
-                      size: 16,
-                      color: titleColor,
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.xs),
-                  Flexible(
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: tt.labelLarge?.copyWith(
-                        color: titleColor,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: DonySpacing.xxs),
-              Text(
-                subtitle,
-                // Le compteur, et lui seul, porte cette clé : un seul segment
-                // (l'inactif) peut l'afficher à la fois. Vérifier son absence
-                // vérifie bien l'absence du compteur, pas celle du sélecteur.
-                key: countShown ? const Key('mode-other-count') : null,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: tt.labelSmall?.copyWith(
-                  color: isActive ? cs.primary : cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              ExcludeSemantics(
+                child: DonyIcon(
+                  iconName,
+                  key: Key('search_mode_icon_$iconName'),
+                  size: 16,
+                  color: titleColor,
                 ),
               ),
+              const SizedBox(width: DonySpacing.xs),
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: tt.labelLarge?.copyWith(
+                    color: titleColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (count != null) ...[
+                const SizedBox(width: DonySpacing.xs),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.xs,
+                  ),
+                  constraints: const BoxConstraints(minWidth: 20),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                  ),
+                  // Le compteur, et lui seul, porte cette clé : un seul
+                  // segment (l'inactif) peut l'afficher à la fois. Vérifier
+                  // son absence vérifie bien l'absence du compteur, pas celle
+                  // du sélecteur.
+                  child: Text(
+                    '$count',
+                    key: const Key('mode-other-count'),
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w700,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
