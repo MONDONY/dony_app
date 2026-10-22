@@ -12,6 +12,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+/// Nombre de jours de calendrier de [from] à [to] (négatif si [to] précède
+/// [from]), indépendant des heures : un `Duration` franchissant un changement
+/// d'heure compte un jour de 23 h ou 25 h pour 0 ou 1 jour.
+int calendarDaysBetween(DateTime from, DateTime to) {
+  final a = DateTime.utc(from.year, from.month, from.day);
+  final b = DateTime.utc(to.year, to.month, to.day);
+  return b.difference(a).inDays;
+}
+
+/// Jour d'arrivée, [offsetDays] jours de calendrier après [departure]. Un
+/// `Duration` de 24 h par jour tomberait à 23 h la veille au changement
+/// d'heure d'hiver.
+DateTime rescheduleArrivalDate(DateTime departure, int offsetDays) =>
+    DateTime(departure.year, departure.month, departure.day + offsetDays);
+
+/// Jour par défaut de la remise : [leadDays] jours de calendrier (0 à 7)
+/// avant le [newDeparture], à minuit, jamais avant [today]. Minuit est
+/// obligatoire : l'heure se déduit à l'envoi, une heure décalée par un
+/// changement d'heure serait prise pour un choix du voyageur.
+DateTime rescheduleDefaultHandoverDay({
+  required DateTime newDeparture,
+  required int leadDays,
+  required DateTime today,
+}) {
+  final candidate = DateTime(
+    newDeparture.year,
+    newDeparture.month,
+    newDeparture.day - leadDays.clamp(0, 7),
+  );
+  return candidate.isBefore(today) ? today : candidate;
+}
+
 /// Bottom sheet « Reporter le trajet » : vol annulé, voyage repoussé. Le
 /// voyageur choisit la nouvelle date même avec des colis acceptés ; chaque
 /// expéditeur concerné pourra garder son colis ou se retirer sans frais.
@@ -140,10 +172,7 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
   int _initialArrivalOffset() {
     final a = widget.announcement;
     if (a.arrivalDate == null) return 0;
-    final days = DateUtils.dateOnly(
-      a.arrivalDate!,
-    ).difference(DateUtils.dateOnly(a.departureDate)).inDays;
-    return days.clamp(0, 2);
+    return calendarDaysBetween(a.departureDate, a.arrivalDate!).clamp(0, 2);
   }
 
   /// Date limite actuelle, jamais avant aujourd'hui : le champ est rempli et
@@ -165,12 +194,12 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
     final a = widget.announcement;
     final lead = a.handoverDeadline == null
         ? 0
-        : DateUtils.dateOnly(a.departureDate)
-              .difference(DateUtils.dateOnly(a.handoverDeadline!.toLocal()))
-              .inDays;
-    final candidate = newDate.subtract(Duration(days: lead.clamp(0, 7)));
-    final today = DateUtils.dateOnly(DateTime.now());
-    return candidate.isBefore(today) ? today : candidate;
+        : calendarDaysBetween(a.handoverDeadline!.toLocal(), a.departureDate);
+    return rescheduleDefaultHandoverDay(
+      newDeparture: newDate,
+      leadDays: lead,
+      today: DateUtils.dateOnly(DateTime.now()),
+    );
   }
 
   bool get _isSameSchedule {
@@ -219,7 +248,7 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
       context: context,
       initialDate: initial.isBefore(today) ? today : initial,
       firstDate: today,
-      lastDate: today.add(const Duration(days: 365)),
+      lastDate: DateTime(today.year, today.month, today.day + 365),
     );
     if (picked == null) return;
     _date.value = picked;
@@ -318,7 +347,9 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
         departureTime: _wire(time),
         arrivalTime: arrival == null ? null : _wire(arrival),
         arrivalDate: offset > 0
-            ? DateFormat('yyyy-MM-dd').format(date.add(Duration(days: offset)))
+            ? DateFormat(
+                'yyyy-MM-dd',
+              ).format(rescheduleArrivalDate(date, offset))
             : null,
         handoverDeadline: _resolveHandoverDeadline(
           _handoverDay.value!,
