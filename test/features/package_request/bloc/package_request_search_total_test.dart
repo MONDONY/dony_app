@@ -180,7 +180,7 @@ void main() {
     });
 
     test('copyWith conserve le total et peut le remplacer', () {
-      final s = const PackageRequestSearchState(totalElements: 45);
+      const s = PackageRequestSearchState(totalElements: 45);
       expect(s.copyWith(page: 1).totalElements, 45);
       expect(s.copyWith(totalElements: 46).totalElements, 46);
       expect(s, isNot(equals(s.copyWith(totalElements: 46))));
