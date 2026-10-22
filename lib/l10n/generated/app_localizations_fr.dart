@@ -2304,7 +2304,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonDateThisMonthLong => 'Ce mois-ci';
 
   @override
-  String get homeChooseDate => 'Choisir une date';
+  String get homeChoosePeriod => 'Choisir une période';
 
   @override
   String get homeMinRatingTitle => 'Note minimum';
@@ -2519,7 +2519,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeFilterChipsSuitcase23 => '🧳 Valise 23 kg';
 
   @override
-  String get homeFilterFieldsExactDate => 'DATE PRÉCISE';
+  String get homeFilterFieldsPeriod => 'PÉRIODE';
 
   @override
   String get homeFilterFieldsMaxPrice => 'PRIX MAX';
