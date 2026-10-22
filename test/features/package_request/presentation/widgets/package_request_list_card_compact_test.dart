@@ -66,6 +66,41 @@ void main() {
   });
 
   group('PackageRequestListCard compact', () {
+    testWidgets('la pastille « Ouverte » est au bord droit, pas contre '
+        'l\'étiquette', (tester) async {
+      await tester.pumpWidget(
+        _wrapAt(
+          360,
+          1,
+          const PackageRequestListCard(
+            item: PackageRequestSearchItem(
+              id: 'pr2',
+              departureCity: 'Paris',
+              arrivalCity: 'Abidjan',
+              dateToleranceDays: 0,
+              weightKg: 5,
+              parcelSize: ParcelSize.medium,
+              categories: ['Documents & administratif'],
+              targetPriceEur: 35,
+              sender: SenderPublicProfile(
+                id: 's2',
+                displayName: 'Awa K.',
+                averageRating: 4.5,
+                totalRatings: 0,
+                kycVerified: false,
+              ),
+            ),
+            compact: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final chip = tester.getRect(find.text('Ouverte'));
+      final card = tester.getRect(find.byType(PackageRequestListCard));
+      expect(card.right - chip.right, lessThan(40));
+      expect(chip.left, greaterThan(card.center.dx));
+    });
+
     for (final width in [320.0, 360.0]) {
       for (final scale in [1.0, 1.5, 2.0]) {
         testWidgets(

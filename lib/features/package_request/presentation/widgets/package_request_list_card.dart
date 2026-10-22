@@ -17,6 +17,7 @@ import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/widgets/my_negotiation_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_header_row.dart';
 import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -145,66 +146,20 @@ class PackageRequestListCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // ── Micro-label + chip statut/own + optional heart ──
-                            if (compact)
-                              // Une seule ligne : étiquette abrégée au besoin,
-                              // pastilles (statut ou « Ma demande », Urgent) à
-                              // droite. Pas de cœur : les favoris se gèrent
-                              // depuis le détail.
-                              // Un Wrap : étiquette à gauche, pastilles à droite
-                              // sur une ligne ; sans place, les pastilles
-                              // passent sous l'étiquette, jamais de débordement.
-                              Wrap(
-                                alignment: WrapAlignment.spaceBetween,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                runSpacing: DonySpacing.xxs,
-                                children: [
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      DonyIcon(
-                                        'package',
-                                        size: 13,
-                                        color: accent,
-                                      ),
-                                      const SizedBox(width: DonySpacing.xxs),
-                                      Flexible(
-                                        child: Text(
-                                          l.requestPublicTitle,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: tt.labelSmall?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: 0.4,
-                                            color: accent,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Wrap(
-                                    crossAxisAlignment:
-                                        WrapCrossAlignment.center,
-                                    spacing: DonySpacing.xs,
-                                    runSpacing: DonySpacing.xxs,
-                                    children: [
-                                      if (isOwnRequest)
-                                        _OwnRequestChip(cs: cs, tt: tt)
-                                      else
-                                        packageStatusChip(context, status),
-                                      if (item.isUrgent)
-                                        const DonyUrgentBadge(),
-                                    ],
-                                  ),
-                                ],
-                              )
-                            else
-                              Row(
+                            // Étiquette à gauche, pastilles (statut ou « Ma
+                            // demande », Urgent, cœur) collées au bord droit.
+                            // Pas de cœur en compact : les favoris se gèrent
+                            // depuis le détail.
+                            RequestHeaderRow(
+                              leading: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   DonyIcon('package', size: 13, color: accent),
                                   const SizedBox(width: DonySpacing.xxs),
-                                  Expanded(
+                                  Flexible(
                                     child: Text(
                                       l.requestPublicTitle,
+                                      maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: tt.labelSmall?.copyWith(
                                         fontWeight: FontWeight.w800,
@@ -213,21 +168,18 @@ class PackageRequestListCard extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: DonySpacing.sm),
-                                  if (isOwnRequest)
-                                    _OwnRequestChip(cs: cs, tt: tt)
-                                  else
-                                    packageStatusChip(context, status),
-                                  if (item.isUrgent) ...[
-                                    const SizedBox(width: DonySpacing.xs),
-                                    const DonyUrgentBadge(),
-                                  ],
-                                  if (showFavorite) ...[
-                                    const SizedBox(width: DonySpacing.xs),
-                                    _buildRequestFavoriteHeart(context),
-                                  ],
                                 ],
                               ),
+                              trailing: [
+                                if (isOwnRequest)
+                                  _OwnRequestChip(cs: cs, tt: tt)
+                                else
+                                  packageStatusChip(context, status),
+                                if (item.isUrgent) const DonyUrgentBadge(),
+                                if (showFavorite && !compact)
+                                  _buildRequestFavoriteHeart(context),
+                              ],
+                            ),
                             // ── Score de compatibilité (filtre « Pour mes
                             //    trajets ») : présent uniquement quand le
                             //    serveur a renvoyé un score.

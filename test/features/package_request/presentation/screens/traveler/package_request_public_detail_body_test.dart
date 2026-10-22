@@ -84,6 +84,60 @@ void main() {
     expect(find.text('Proposer mon trajet'), findsOneWidget);
   });
 
+  testWidgets('la pastille de statut est collée au bord droit de la carte', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(_req()));
+    await tester.pumpAndSettle();
+    final card = tester.getRect(find.byKey(const Key('request-hero-card')));
+    final chip = tester.getRect(find.text('Ouverte'));
+    // Dans le bord droit (marge interne de 16), dans la moitié droite.
+    expect(card.right - chip.right, lessThan(40));
+    expect(chip.left, greaterThan(card.center.dx));
+  });
+
+  testWidgets('le budget est affiché une seule fois, dans la carte héros', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(_req(targetPriceEur: 40)));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('request-hero-price')), findsOneWidget);
+    expect(find.text('Budget'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('request-hero-card')),
+        matching: find.byKey(const Key('request-hero-price')),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('prix ferme à 320 dp avec texte ×2 : aucun débordement', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(320, 800),
+            textScaler: TextScaler.linear(2),
+          ),
+          child: Scaffold(
+            body: PackageRequestPublicDetailBody(
+              request: _req(negotiable: false, desiredDate: DateTime.now()),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('demande sans date : « Date flexible », jamais urgente', (
     tester,
   ) async {
@@ -95,9 +149,8 @@ void main() {
     expect(find.textContaining('Urgent'), findsNothing);
   });
 
-  testWidgets('corridor : villes, sous-titres Départ / Arrivée et date', (
-    tester,
-  ) async {
+  testWidgets('corridor : villes et sous-titres Départ / Arrivée, date dans la '
+      'carte héros', (tester) async {
     await tester.pumpWidget(wrap(_req()));
     await tester.pumpAndSettle();
     final corridor = find.byKey(const Key('request-public-corridor'));
@@ -124,48 +177,36 @@ void main() {
       ),
       findsOneWidget,
     );
+    // Le corridor vit dans la carte héros, qui porte aussi la date.
+    final hero = find.byKey(const Key('request-hero-card'));
+    expect(find.descendant(of: hero, matching: corridor), findsOneWidget);
     expect(
       find.descendant(
-        of: corridor,
+        of: hero,
         matching: find.textContaining('2026', findRichText: true),
       ),
       findsOneWidget,
     );
   });
 
-  testWidgets('corridor : petit écran, texte agrandi et villes longues → '
-      'aucun débordement', (tester) async {
-    tester.view.physicalSize = const Size(320, 700);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    final long = _req(
-      departureCity: 'Saint-Denis de la Réunion',
-      arrivalCity: 'Port-au-Prince Toussaint Louverture',
-    );
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: const TextScaler.linear(1.4)),
-          child: child!,
-        ),
-        home: Scaffold(
-          body: PackageRequestPublicDetailBody(request: long, onReport: () {}),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(find.byKey(const Key('request-public-corridor')), findsOneWidget);
-  });
-
-  testWidgets('bandeau Poids / Format', (tester) async {
+  testWidgets('carte Poids / Taille : poids, taille et libellé', (
+    tester,
+  ) async {
     await tester.pumpWidget(wrap(_req()));
     await tester.pumpAndSettle();
-    expect(find.text('5 kg'), findsOneWidget);
-    expect(find.text('Carton M'), findsOneWidget);
+    final facts = find.byKey(const Key('request-facts-card'));
+    expect(
+      find.descendant(of: facts, matching: find.text('5 kg')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: facts, matching: find.text('M')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: facts, matching: find.text('Carton')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('aucune photo → bandeau d\'illustration', (tester) async {
