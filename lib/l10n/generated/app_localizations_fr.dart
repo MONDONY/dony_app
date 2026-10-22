@@ -16004,8 +16004,66 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailPickupInstructionsLabel => 'Retrait à l\'arrivée';
 
   @override
+  String negotiationMakeOfferStepProgress(int step, String name) {
+    return 'Étape $step sur 3 · $name';
+  }
+
+  @override
+  String get negotiationMakeOfferStepTrip => 'Trajet';
+
+  @override
+  String get negotiationMakeOfferStepPrice => 'Prix';
+
+  @override
+  String get negotiationMakeOfferStepRecap => 'Récap et message';
+
+  @override
+  String get negotiationMakeOfferEnterValidPrice => 'Saisissez un prix valide';
+
+  @override
+  String get negotiationMakeOfferEnterValidCapacity =>
+      'Saisissez une capacité valide';
+
+  @override
+  String get negotiationMakeOfferPickDateToContinue =>
+      'Choisissez votre date de voyage pour continuer';
+
+  @override
+  String get negotiationMakeOfferRecapDeparture => 'Départ';
+
+  @override
+  String get negotiationMakeOfferRecapCapacity => 'Capacité';
+
+  @override
+  String get negotiationMakeOfferRecapPrice => 'Prix';
+
+  @override
+  String get negotiationMakeOfferRecapFirm => 'ferme';
+
+  @override
+  String get negotiationMakeOfferGaugeBelow => 'Sous le prix du marché';
+
+  @override
+  String get negotiationMakeOfferGaugeWithin => 'Dans le prix du marché';
+
+  @override
+  String get negotiationMakeOfferGaugeAbove => 'Au-dessus du marché';
+
+  @override
+  String get negotiationMakeOfferPriceDecrease => 'Baisser le prix';
+
+  @override
+  String get negotiationMakeOfferPriceIncrease => 'Augmenter le prix';
+
+  @override
+  String get negotiationMakeOfferCapacityDecrease => 'Moins de kilos';
+
+  @override
+  String get negotiationMakeOfferCapacityIncrease => 'Plus de kilos';
+
+  @override
   String get negotiationMakeOfferSelectTripHint =>
-      'Choisissez un de vos trajets ci-dessus pour envoyer l\'offre';
+      'Choisissez un trajet pour continuer';
 
   @override
   String get errorPaymentMethodNoneAvailableTitle =>

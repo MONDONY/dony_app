@@ -15895,8 +15895,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailPickupInstructionsLabel => 'Pickup on arrival';
 
   @override
-  String get negotiationMakeOfferSelectTripHint =>
-      'Pick one of your trips above to send the offer';
+  String negotiationMakeOfferStepProgress(int step, String name) {
+    return 'Step $step of 3 · $name';
+  }
+
+  @override
+  String get negotiationMakeOfferStepTrip => 'Trip';
+
+  @override
+  String get negotiationMakeOfferStepPrice => 'Price';
+
+  @override
+  String get negotiationMakeOfferStepRecap => 'Summary and message';
+
+  @override
+  String get negotiationMakeOfferEnterValidPrice => 'Enter a valid price';
+
+  @override
+  String get negotiationMakeOfferEnterValidCapacity => 'Enter a valid capacity';
+
+  @override
+  String get negotiationMakeOfferPickDateToContinue =>
+      'Pick your travel date to continue';
+
+  @override
+  String get negotiationMakeOfferRecapDeparture => 'Departure';
+
+  @override
+  String get negotiationMakeOfferRecapCapacity => 'Capacity';
+
+  @override
+  String get negotiationMakeOfferRecapPrice => 'Price';
+
+  @override
+  String get negotiationMakeOfferRecapFirm => 'firm';
+
+  @override
+  String get negotiationMakeOfferGaugeBelow => 'Below the market price';
+
+  @override
+  String get negotiationMakeOfferGaugeWithin => 'Within the market price';
+
+  @override
+  String get negotiationMakeOfferGaugeAbove => 'Above the market price';
+
+  @override
+  String get negotiationMakeOfferPriceDecrease => 'Lower the price';
+
+  @override
+  String get negotiationMakeOfferPriceIncrease => 'Raise the price';
+
+  @override
+  String get negotiationMakeOfferCapacityDecrease => 'Fewer kilos';
+
+  @override
+  String get negotiationMakeOfferCapacityIncrease => 'More kilos';
+
+  @override
+  String get negotiationMakeOfferSelectTripHint => 'Pick a trip to continue';
 
   @override
   String get errorPaymentMethodNoneAvailableTitle => 'No common payment method';

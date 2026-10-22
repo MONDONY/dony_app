@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -19,6 +20,8 @@ import '../../../../../helpers/l10n_test_helpers.dart';
 
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _MockPriceEstimationRepository extends Mock
     implements PriceEstimationRepository {}
@@ -397,6 +400,9 @@ void main() {
       when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
         (_) async => (announcements: <AnnouncementModel>[], totalElements: 0),
       );
+      if (getIt.isRegistered<AnalyticsService>()) {
+        getIt.unregister<AnalyticsService>();
+      }
       if (getIt.isRegistered<NegotiationBloc>()) {
         getIt.unregister<NegotiationBloc>();
       }
@@ -406,6 +412,12 @@ void main() {
       if (getIt.isRegistered<AnnouncementRepository>()) {
         getIt.unregister<AnnouncementRepository>();
       }
+      // La feuille d'offre mesure chaque étape affichée.
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerLazySingleton<AnalyticsService>(() => analytics);
       getIt.registerFactory<NegotiationBloc>(() => negoBloc);
       getIt.registerLazySingleton<PriceEstimationRepository>(() => priceRepo);
       getIt.registerLazySingleton<AnnouncementRepository>(
@@ -414,6 +426,9 @@ void main() {
     });
 
     tearDown(() {
+      if (getIt.isRegistered<AnalyticsService>()) {
+        getIt.unregister<AnalyticsService>();
+      }
       if (getIt.isRegistered<NegotiationBloc>()) {
         getIt.unregister<NegotiationBloc>();
       }

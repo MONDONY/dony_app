@@ -310,6 +310,10 @@ abstract final class AnalyticsEvents {
   static const packageRequestSenderOpened = 'package_request_sender_opened';
   static const packageRequestSearched = 'package_request_searched';
   static const negotiationOfferMade = 'negotiation_offer_made';
+
+  /// Étape de la feuille « Faire une offre » affichée (`trip` / `price` /
+  /// `recap`) : mesure où le voyageur abandonne le parcours en trois étapes.
+  static const makeOfferStepViewed = 'make_offer_step_viewed';
   static const negotiationOfferAccepted = 'negotiation_offer_accepted';
 
   /// Négociation terminée par l'une des parties ("end negotiation").
