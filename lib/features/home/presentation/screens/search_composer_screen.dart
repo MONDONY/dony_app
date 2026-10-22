@@ -126,15 +126,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
               ? l.homeComposerTitleTrips
               : l.homeComposerTitleParcels,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => context.read<SearchComposerBloc>().add(
-              const SearchComposerCleared(),
-            ),
-            child: Text(l.homeComposerClearAll),
-          ),
-          const DonyFeedbackButton(),
-        ],
+        actions: const [DonyFeedbackButton()],
       ),
       body: BlocConsumer<SearchComposerBloc, SearchComposerState>(
         // `error` persiste dans l'état tant qu'aucune nouvelle valeur ne le
@@ -151,8 +143,24 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
           return ListView(
             // Pas de titre au-dessus des villes : la carte départ/arrivée ouvre
             // l'écran, ses deux champs portent déjà leur libellé.
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
             children: [
+              // « Tout effacer » vit dans le corps et non dans la barre : à
+              // 360 dp il ne laissait pas la place au titre, qui se coupait
+              // alors que c'est lui qui distingue Trajets de Colis.
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(44, 44),
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                  ),
+                  onPressed: () => context.read<SearchComposerBloc>().add(
+                    const SearchComposerCleared(),
+                  ),
+                  child: Text(l.homeComposerClearAll),
+                ),
+              ),
               CityCorridorFields(
                 departureValue: f.departureCity,
                 arrivalValue: f.arrivalCity,
