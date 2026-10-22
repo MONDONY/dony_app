@@ -226,6 +226,85 @@ void main() {
       expect(dialog.lastDate, DateTime(today.year + 2, today.month, today.day));
     });
 
+    testWidgets('refermer le calendrier sans choisir ne change rien', (
+      tester,
+    ) async {
+      final value = const HomeSearchFilters().withCustomPeriod(
+        inDays(2),
+        inDays(9),
+      );
+      var calls = 0;
+      await tester.pumpWidget(
+        _wrap(DatePresetsField(value: value, onChanged: (_) => calls++)),
+      );
+
+      await tester.tap(find.byKey(const Key('search-period-field')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip(loc.closeButtonTooltip).last);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DateRangePickerDialog), findsNothing);
+      expect(calls, 0);
+    });
+
+    testWidgets('lecteur d\'écran : un bouton « PÉRIODE, valeur »', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final year = DateTime.now().year;
+      await tester.pumpWidget(
+        _wrap(
+          SearchPeriodField(
+            start: DateTime(year, 11, 15),
+            end: DateTime(year, 12, 15),
+            onChanged: (_) {},
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(
+          find.bySemanticsLabel('PÉRIODE, 15 nov. → 15 déc.'),
+        ),
+        matchesSemantics(
+          label: 'PÉRIODE, 15 nov. → 15 déc.',
+          isButton: true,
+          hasTapAction: true,
+        ),
+      );
+      handle.dispose();
+    });
+
+    testWidgets(
+      'grand texte : une période passe sur deux lignes, sans coupure',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+              child: Scaffold(
+                body: SizedBox(
+                  width: 220,
+                  child: SearchPeriodField(
+                    start: DateTime(2026, 12, 20),
+                    end: DateTime(2027, 1, 5),
+                    onChanged: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        final text = tester.widget<Text>(
+          find.text('20 déc. 2026 → 5 janv. 2027'),
+        );
+        expect(text.maxLines, 2);
+        expect(text.overflow, isNull);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets('une période choisie s\'affiche « début → fin »', (
       tester,
     ) async {

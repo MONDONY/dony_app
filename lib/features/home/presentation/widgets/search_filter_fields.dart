@@ -51,15 +51,11 @@ class DatePresetsField extends StatelessWidget {
     );
   }
 
-  /// Calendrier refermé sans choix (`null`) : la période est retirée, comme
-  /// le faisait déjà l'ancien champ d'un seul jour.
+  /// Calendrier refermé sans choix (`null`) : rien ne change, ni la période
+  /// ni le preset actif (comme la feuille « Date de départ » de l'accueil).
+  /// Pour retirer la date : retoucher le preset actif, ou « Effacer ».
   void _onPeriod(DateTimeRange? range) {
-    if (range == null) {
-      onChanged(
-        value.copyWith(datePreset: DonyDatePreset.none, clearCustomDate: true),
-      );
-      return;
-    }
+    if (range == null) return;
     onChanged(value.withCustomPeriod(range.start, range.end));
   }
 
@@ -558,17 +554,23 @@ class SearchPeriodField extends StatelessWidget {
     final l = context.l10n;
     final from = start;
     final active = from != null;
-    return GestureDetector(
+    final isPeriod = active && end != null;
+    final valueLabel = active
+        ? formatSearchPeriod(from, end, l.localeName)
+        : l.homeFilterFieldsChoose;
+    Future<void> open() async {
+      final range = await showSearchPeriodPicker(
+        context,
+        start: from,
+        end: end,
+      );
+      onChanged(range);
+    }
+
+    final field = GestureDetector(
       key: const Key('search-period-field'),
       behavior: HitTestBehavior.opaque,
-      onTap: () async {
-        final range = await showSearchPeriodPicker(
-          context,
-          start: from,
-          end: end,
-        );
-        onChanged(range);
-      },
+      onTap: open,
       child: Container(
         constraints: const BoxConstraints(minHeight: 44),
         padding: const EdgeInsets.symmetric(
@@ -594,11 +596,11 @@ class SearchPeriodField extends StatelessWidget {
                 const SizedBox(width: DonySpacing.xs),
                 Flexible(
                   child: Text(
-                    active
-                        ? formatSearchPeriod(from, end, l.localeName)
-                        : l.homeFilterFieldsChoose,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    valueLabel,
+                    // Une période peut passer sur deux lignes en grand texte
+                    // plutôt que d'être coupée ; un seul jour tient sur une.
+                    maxLines: isPeriod ? 2 : 1,
+                    overflow: isPeriod ? null : TextOverflow.ellipsis,
                     style: tt.titleSmall?.copyWith(
                       color: active ? cs.primary : cs.onSurfaceVariant,
                       fontWeight: active ? FontWeight.w700 : FontWeight.w400,
@@ -611,6 +613,16 @@ class SearchPeriodField extends StatelessWidget {
           ],
         ),
       ),
+    );
+    // Un seul nœud pour le lecteur d'écran : « PÉRIODE, 15 nov. → 15 déc. »,
+    // activable (l'action du GestureDetector est masquée par
+    // `excludeSemantics`, elle est donc reportée ici).
+    return Semantics(
+      button: true,
+      label: '${l.homeFilterFieldsPeriod}, $valueLabel',
+      excludeSemantics: true,
+      onTap: open,
+      child: field,
     );
   }
 }

@@ -169,11 +169,17 @@ void main() {
       });
 
       test('un preset ignore la fin d\'une période restée en mémoire', () {
+        // Pas de clearCustomDate : la période reste stockée, seul le preset
+        // change, et ses bornes ne doivent rien lui emprunter.
         final f = const HomeSearchFilters()
             .withCustomPeriod(start, end)
-            .copyWith(datePreset: DonyDatePreset.today, clearCustomDate: true);
+            .copyWith(datePreset: DonyDatePreset.today);
+        expect(f.customDateTo, end);
         final today = DateTime.now();
-        expect(f.dateTo, DateTime(today.year, today.month, today.day));
+        final midnight = DateTime(today.year, today.month, today.day);
+        expect(f.dateFrom, midnight);
+        expect(f.dateTo, midnight);
+        expect(f.toAnnouncementQuery().departureDateTo, midnight);
       });
     });
 
