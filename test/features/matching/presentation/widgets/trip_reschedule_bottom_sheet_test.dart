@@ -33,6 +33,8 @@ DateTime _departureDay() {
 }
 
 void main() {
+  _calendarArithmeticTests();
+
   late _MockAnnouncementBloc bloc;
   late StreamController<AnnouncementState> states;
   final departure = _departureDay();
@@ -368,4 +370,173 @@ void main() {
       );
     },
   );
+}
+
+// Arithmétique de calendrier du report : dates fixes, indépendantes du jour
+// d'exécution et du fuseau de la machine (heure d'été 2026 : dimanche 29 mars
+// de 23 h, heure d'hiver : dimanche 25 octobre de 25 h en Europe/Paris).
+void _calendarArithmeticTests() {
+  group('calendarDaysBetween', () {
+    test('semaine ordinaire', () {
+      expect(
+        calendarDaysBetween(DateTime(2026, 6, 10), DateTime(2026, 6, 11)),
+        1,
+      );
+      expect(
+        calendarDaysBetween(DateTime(2026, 6, 10), DateTime(2026, 6, 10)),
+        0,
+      );
+      expect(
+        calendarDaysBetween(DateTime(2026, 6, 12), DateTime(2026, 6, 10)),
+        -2,
+      );
+    });
+
+    test('ignore les heures', () {
+      expect(
+        calendarDaysBetween(
+          DateTime(2026, 6, 10, 23, 59),
+          DateTime(2026, 6, 11, 0, 1),
+        ),
+        1,
+      );
+    });
+
+    test('jour de 23 h (29 mars) : 29 -> 30 mars vaut 1 jour', () {
+      expect(
+        calendarDaysBetween(DateTime(2026, 3, 29), DateTime(2026, 3, 30)),
+        1,
+      );
+      expect(
+        calendarDaysBetween(DateTime(2026, 3, 28), DateTime(2026, 3, 30)),
+        2,
+      );
+      expect(
+        calendarDaysBetween(DateTime(2026, 3, 30), DateTime(2026, 3, 28)),
+        -2,
+      );
+    });
+
+    test('jour de 25 h (25 octobre) : 25 -> 26 octobre vaut 1 jour', () {
+      expect(
+        calendarDaysBetween(DateTime(2026, 10, 25), DateTime(2026, 10, 26)),
+        1,
+      );
+      expect(
+        calendarDaysBetween(DateTime(2026, 10, 24), DateTime(2026, 10, 26)),
+        2,
+      );
+      expect(
+        calendarDaysBetween(DateTime(2026, 10, 26), DateTime(2026, 10, 24)),
+        -2,
+      );
+    });
+  });
+
+  group('rescheduleArrivalDate', () {
+    test('semaine ordinaire', () {
+      expect(
+        rescheduleArrivalDate(DateTime(2026, 6, 10), 0),
+        DateTime(2026, 6, 10),
+      );
+      expect(
+        rescheduleArrivalDate(DateTime(2026, 6, 10), 1),
+        DateTime(2026, 6, 11),
+      );
+      expect(
+        rescheduleArrivalDate(DateTime(2026, 6, 30), 2),
+        DateTime(2026, 7, 2),
+      );
+    });
+
+    test('heure d\'hiver : 25 octobre + 1 jour = 26 octobre minuit', () {
+      expect(
+        rescheduleArrivalDate(DateTime(2026, 10, 25), 1),
+        DateTime(2026, 10, 26),
+      );
+      expect(
+        rescheduleArrivalDate(DateTime(2026, 10, 24), 2),
+        DateTime(2026, 10, 26),
+      );
+      expect(
+        rescheduleArrivalDate(DateTime(2026, 10, 25), 2),
+        DateTime(2026, 10, 27),
+      );
+    });
+
+    test('heure d\'été : 28/29 mars + jours', () {
+      expect(
+        rescheduleArrivalDate(DateTime(2026, 3, 29), 1),
+        DateTime(2026, 3, 30),
+      );
+      expect(
+        rescheduleArrivalDate(DateTime(2026, 3, 28), 2),
+        DateTime(2026, 3, 30),
+      );
+    });
+  });
+
+  group('rescheduleDefaultHandoverDay', () {
+    final past = DateTime(2026);
+
+    DateTime day(DateTime d, int lead) => rescheduleDefaultHandoverDay(
+      newDeparture: d,
+      leadDays: lead,
+      today: past,
+    );
+
+    test('semaine ordinaire, écart 0, 1 et 2 jours', () {
+      final d = DateTime(2026, 6, 10);
+      expect(day(d, 0), DateTime(2026, 6, 10));
+      expect(day(d, 1), DateTime(2026, 6, 9));
+      expect(day(d, 2), DateTime(2026, 6, 8));
+    });
+
+    test('heure d\'hiver : départ lundi 26 octobre 00:00, veille à minuit', () {
+      final d = DateTime(2026, 10, 26);
+      expect(day(d, 0), DateTime(2026, 10, 26));
+      expect(day(d, 1), DateTime(2026, 10, 25));
+      expect(day(d, 2), DateTime(2026, 10, 24));
+      // Jamais une heure décalée : le jour sans heure reste à minuit.
+      expect(day(d, 1).hour, 0);
+    });
+
+    test('heure d\'hiver : départ le jour du changement', () {
+      final d = DateTime(2026, 10, 25);
+      expect(day(d, 1), DateTime(2026, 10, 24));
+      expect(day(d, 2), DateTime(2026, 10, 23));
+    });
+
+    test('heure d\'été : départ lundi 30 mars, veille et avant-veille', () {
+      final d = DateTime(2026, 3, 30);
+      expect(day(d, 0), DateTime(2026, 3, 30));
+      expect(day(d, 1), DateTime(2026, 3, 29));
+      expect(day(d, 2), DateTime(2026, 3, 28));
+      expect(day(d, 1).hour, 0);
+    });
+
+    test('heure d\'été : départ le jour du changement', () {
+      final d = DateTime(2026, 3, 29);
+      expect(day(d, 1), DateTime(2026, 3, 28));
+      expect(day(d, 2), DateTime(2026, 3, 27));
+    });
+
+    test('écart plafonné à 7 jours et jamais négatif', () {
+      final d = DateTime(2026, 6, 20);
+      expect(day(d, 30), DateTime(2026, 6, 13));
+      expect(day(d, -3), DateTime(2026, 6, 20));
+    });
+
+    test('jamais avant aujourd\'hui', () {
+      final today = DateTime(2026, 10, 25);
+      expect(
+        rescheduleDefaultHandoverDay(
+          newDeparture: DateTime(2026, 10, 26),
+          leadDays: 2,
+          today: today,
+        ),
+        today,
+      );
+    });
+  });
 }
