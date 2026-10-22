@@ -1,11 +1,18 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/package_request/data/models/my_negotiation_summary.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
 
 /// Demande la plus chargée possible : urgente, compatible avec un trajet,
 /// négociation en cours, noms longs.
@@ -116,6 +123,48 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('Ma demande'), findsOneWidget);
       expect(find.text('5 vues'), findsOneWidget);
+    });
+
+    testWidgets('compacte : pas de cœur favori même si showFavorite', (
+      tester,
+    ) async {
+      final cubit = FavoriteIdsCubit(_MockFavoriteRepository())
+        ..emitSeed(trips: {}, requests: {});
+      addTearDown(cubit.close);
+      await tester.pumpWidget(
+        BlocProvider<FavoriteIdsCubit>.value(
+          value: cubit,
+          child: _wrapAt(
+            390,
+            1,
+            PackageRequestListCard(
+              item: _loaded(),
+              compact: true,
+              showFavorite: true,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(FavoriteHeartButton), findsNothing);
+    });
+
+    testWidgets('390 dp : libellé d\'en-tête entier, sur la ligne du statut', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapAt(390, 1, PackageRequestListCard(item: _loaded(), compact: true)),
+      );
+      await tester.pumpAndSettle();
+
+      final label = find.text('Demande d\'envoi');
+      expect(label, findsOneWidget);
+      final renderBox = tester.renderObject<RenderBox>(label);
+      final painter = tester.widget<Text>(label);
+      expect(painter.maxLines, 1);
+      expect(renderBox.size.width, greaterThan(90));
     });
 
     testWidgets('même contenu que la carte normale, en moins haute', (

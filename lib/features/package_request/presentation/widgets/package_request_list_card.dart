@@ -146,65 +146,54 @@ class PackageRequestListCard extends StatelessWidget {
                           children: [
                             // ── Micro-label + chip statut/own + optional heart ──
                             if (compact)
-                              // Étiquette à gauche, pastilles (statut ou « Ma
-                              // demande », Urgent, cœur) à droite dans un Wrap :
-                              // sur écran étroit ou texte agrandi, les pastilles
-                              // passent à la ligne, l'étiquette s'abrège.
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              // Une seule ligne : étiquette abrégée au besoin,
+                              // pastilles (statut ou « Ma demande », Urgent) à
+                              // droite. Pas de cœur : les favoris se gèrent
+                              // depuis le détail.
+                              // Un Wrap : étiquette à gauche, pastilles à droite
+                              // sur une ligne ; sans place, les pastilles
+                              // passent sous l'étiquette, jamais de débordement.
+                              Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                runSpacing: DonySpacing.xxs,
                                 children: [
-                                  Flexible(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: DonySpacing.xxs,
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      DonyIcon(
+                                        'package',
+                                        size: 13,
+                                        color: accent,
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          DonyIcon(
-                                            'package',
-                                            size: 13,
+                                      const SizedBox(width: DonySpacing.xxs),
+                                      Flexible(
+                                        child: Text(
+                                          l.requestPublicTitle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: tt.labelSmall?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 0.4,
                                             color: accent,
                                           ),
-                                          const SizedBox(
-                                            width: DonySpacing.xxs,
-                                          ),
-                                          Flexible(
-                                            child: Text(
-                                              l.requestPublicTitle,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: tt.labelSmall?.copyWith(
-                                                fontWeight: FontWeight.w800,
-                                                letterSpacing: 0.4,
-                                                color: accent,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                  const SizedBox(width: DonySpacing.sm),
-                                  Flexible(
-                                    flex: 2,
-                                    child: Wrap(
-                                      alignment: WrapAlignment.end,
-                                      crossAxisAlignment:
-                                          WrapCrossAlignment.center,
-                                      spacing: DonySpacing.xs,
-                                      runSpacing: DonySpacing.xxs,
-                                      children: [
-                                        if (isOwnRequest)
-                                          _OwnRequestChip(cs: cs, tt: tt)
-                                        else
-                                          packageStatusChip(context, status),
-                                        if (item.isUrgent)
-                                          const DonyUrgentBadge(),
-                                        if (showFavorite)
-                                          _buildRequestFavoriteHeart(context),
-                                      ],
-                                    ),
+                                  Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: DonySpacing.xs,
+                                    runSpacing: DonySpacing.xxs,
+                                    children: [
+                                      if (isOwnRequest)
+                                        _OwnRequestChip(cs: cs, tt: tt)
+                                      else
+                                        packageStatusChip(context, status),
+                                      if (item.isUrgent)
+                                        const DonyUrgentBadge(),
+                                    ],
                                   ),
                                 ],
                               )
@@ -355,6 +344,7 @@ class PackageRequestListCard extends StatelessWidget {
                                               cs: cs,
                                               tt: tt,
                                               ownRequest: isOwnRequest,
+                                              compact: true,
                                             ),
                                             if (OwnerViewsLabel.isVisible(
                                               count: item.uniqueViewerCount,
@@ -563,8 +553,12 @@ class _Budget extends StatelessWidget {
     required this.cs,
     required this.tt,
     this.ownRequest = false,
+    this.compact = false,
   });
   final PackageRequestSearchItem item;
+
+  /// Carte compacte : le montant converti passe à côté du montant, pas dessous.
+  final bool compact;
 
   /// Demande de l'expéditeur lui-même : il voit le budget qu'il paie (brut),
   /// pas ce que touchera le voyageur.
@@ -608,41 +602,58 @@ class _Budget extends StatelessWidget {
         ),
       );
     }
+    final amount = _amountParts(context, label, displayPrice, converted);
+    if (compact) {
+      return Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: DonySpacing.xs,
+        children: amount,
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      children: [
-        // Un seul Text.rich : libellé et montant passent à la ligne au
-        // besoin au lieu de déborder (« Vous recevez » est plus long que
-        // « Budget »).
-        Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: '$label ',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-              TextSpan(
-                text: formatPriceIn(displayPrice, item.currency),
-                style: tt.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: cs.primary,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Repère « environ » dans la devise du lecteur (serveur, lot 5) : le
-        // budget d'origine reste seul montant réel.
-        ConvertedPriceLabel(
-          originalCurrency: item.currency,
-          convertedPricePerKg: converted,
-          convertedCurrency: item.convertedCurrency,
-          suffix: '',
-        ),
-      ],
+      children: amount,
     );
+  }
+
+  List<Widget> _amountParts(
+    BuildContext context,
+    String label,
+    double displayPrice,
+    double? converted,
+  ) {
+    return [
+      // Un seul Text.rich : libellé et montant passent à la ligne au
+      // besoin au lieu de déborder (« Vous recevez » est plus long que
+      // « Budget »).
+      Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: '$label ',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            TextSpan(
+              text: formatPriceIn(displayPrice, item.currency),
+              style: tt.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: cs.primary,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+      // Repère « environ » dans la devise du lecteur (serveur, lot 5) : le
+      // budget d'origine reste seul montant réel.
+      ConvertedPriceLabel(
+        originalCurrency: item.currency,
+        convertedPricePerKg: converted,
+        convertedCurrency: item.convertedCurrency,
+        suffix: '',
+      ),
+    ];
   }
 }
 
