@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -262,6 +263,89 @@ void main() {
     await tester.pumpWidget(wrap(_req()));
     await tester.pumpAndSettle();
     expect(find.textContaining('📷'), findsNothing);
+  });
+
+  group('photos : tap → galerie plein écran', () {
+    const urls = ['https://host.invalid/1.jpg', 'https://host.invalid/2.jpg'];
+
+    testWidgets('toucher la photo ouvre la galerie sur la photo affichée', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(_req(photoUrls: urls)));
+      await tester.pumpAndSettle();
+      expect(find.byType(DonyPhotoDismiss), findsNothing);
+
+      await tester.tap(find.byKey(const Key('request-photo-0')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(DonyPhotoDismiss), findsOneWidget);
+      expect(find.text('1 / 2'), findsOneWidget);
+    });
+
+    testWidgets('après avoir balayé le carrousel, la galerie s\'ouvre sur la '
+        'photo touchée', (tester) async {
+      await tester.pumpWidget(wrap(_req(photoUrls: urls)));
+      await tester.pumpAndSettle();
+
+      await tester.drag(
+        find.byKey(const Key('request-photo-0')),
+        const Offset(-500, 0),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('request-photo-1')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('2 / 2'), findsOneWidget);
+    });
+
+    testWidgets('l\'ouverture est mesurée (nombre de photos et rang)', (
+      tester,
+    ) async {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerLazySingleton<AnalyticsService>(() => analytics);
+      addTearDown(() => getIt.unregister<AnalyticsService>());
+
+      await tester.pumpWidget(wrap(_req(photoUrls: urls)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('request-photo-0')));
+      await tester.pump();
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.packageRequestPhotosViewed,
+          properties: {'photo_count': 2, 'index': 0},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('la photo se présente comme un bouton accessible', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(wrap(_req(photoUrls: urls)));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.bySemanticsLabel('Voir la photo en plein écran'),
+        findsWidgets,
+      );
+      semantics.dispose();
+    });
+
+    testWidgets('anglais : libellé d\'accessibilité traduit', (tester) async {
+      useEnglish();
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(wrap(_req(photoUrls: urls)));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('View photo full screen'), findsWidgets);
+      semantics.dispose();
+    });
   });
 
   testWidgets('statut reflété par le chip', (tester) async {

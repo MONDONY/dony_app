@@ -1360,6 +1360,7 @@
   "requestPublicFromLabel": "From",
   "requestPublicToLabel": "To",
   "requestPublicNoPhoto": "No photo for this parcel",
+  "requestPublicPhotoOpenLabel": "View photo full screen",
   "requestPublicReportTooltip": "Report",
   "requestPublicReportSheetTitle": "Report this request",
   "requestPublicReportReasonProhibited": "Prohibited content",

@@ -4679,6 +4679,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestPublicNoPhoto => 'No photo for this parcel';
 
   @override
+  String get requestPublicPhotoOpenLabel => 'View photo full screen';
+
+  @override
   String get requestPublicReportTooltip => 'Report';
 
   @override

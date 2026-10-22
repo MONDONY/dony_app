@@ -427,6 +427,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `package_request_photo_added` | PackageRequestPhotosCubit.add() — photo colis uploadée au wizard |
 | `package_request_photo_removed` | PackageRequestPhotosCubit.remove() — photo retirée avant publication |
 | `package_request_detail_opened` | PackageRequestPublicDetailScreen.initState — ouverture du détail plein écran |
+| `package_request_photos_viewed` | `_PhotoCarouselState._openViewer` — photo du carrousel de la fiche publique d'une demande touchée : la galerie plein écran (`RequestPhotoViewer`) s'ouvre sur cette photo (propriétés `photo_count`, `index` : rang de la photo touchée, à partir de 0). Événement de vue émis depuis le widget (comme `bid_photos_viewed`) ; jamais d'URL |
 | `package_request_reported` | PackageRequestPublicDetailScreen._report() — signalement (propriété `reason`) |
 | `package_request_searched` | PackageRequestSearchBloc |
 | `negotiation_offer_made` | NegotiationBloc._onStart()/_onCounter() |
