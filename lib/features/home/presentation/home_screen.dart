@@ -30,6 +30,7 @@ import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.da
 import 'package:dony/features/home/presentation/widgets/home_publish_button.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
+import 'package:dony/features/home/presentation/widgets/search_period.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -70,7 +71,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:intl/intl.dart';
 
 // ── HomeScreen ───────────────────────────────────────────────────────────────
 
@@ -1195,7 +1195,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   Future<void> _showDatePresetSheet() async {
     final result =
         await showModalBottomSheet<
-          ({DonyDatePreset preset, DateTime? customDate})
+          ({DonyDatePreset preset, DateTime? start, DateTime? end})
         >(
           context: context,
           useRootNavigator: true,
@@ -1203,19 +1203,18 @@ class _MapSenderViewState extends State<_MapSenderView> {
           backgroundColor: Colors.transparent,
           builder: (_) => _DatePresetSheet(
             currentPreset: _filters.datePreset,
-            customDate: _filters.customDate,
+            customStart: _filters.customDate,
+            customEnd: _filters.customDateTo,
           ),
         );
     if (result != null && mounted) {
+      final start = result.start;
       _onFiltersChanged(
-        result.customDate == null
-            ? _filters.copyWith(
-                datePreset: result.preset,
-                clearCustomDate: true,
-              )
+        result.preset == DonyDatePreset.custom && start != null
+            ? _filters.withCustomPeriod(start, result.end)
             : _filters.copyWith(
                 datePreset: result.preset,
-                customDate: result.customDate,
+                clearCustomDate: true,
               ),
       );
     }
@@ -1408,12 +1407,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
       next = next.copyWith(departureCity: dep, arrivalCity: arr);
     }
     // Les deux villes nulles = l'utilisateur les a vidées : on garde le corridor.
-    if (result.date != null) {
-      next = next.copyWith(
-        datePreset: DonyDatePreset.custom,
-        customDate: result.date,
-      );
-    }
+    final date = result.date;
+    if (date != null) next = next.withCustomPeriod(date);
     next = next.copyWith(
       gpProOnly: result.gpProOnly,
       weekendOnly: result.weekendFilter,
@@ -3015,11 +3010,15 @@ class _NearMeRadiusPill extends StatelessWidget {
 class _DatePresetSheet extends StatefulWidget {
   const _DatePresetSheet({
     required this.currentPreset,
-    required this.customDate,
+    required this.customStart,
+    required this.customEnd,
   });
 
   final DonyDatePreset currentPreset;
-  final DateTime? customDate;
+
+  /// Période choisie au calendrier : début, et fin incluse (`null` = un jour).
+  final DateTime? customStart;
+  final DateTime? customEnd;
 
   @override
   State<_DatePresetSheet> createState() => _DatePresetSheetState();
@@ -3027,27 +3026,28 @@ class _DatePresetSheet extends StatefulWidget {
 
 class _DatePresetSheetState extends State<_DatePresetSheet> {
   late DonyDatePreset _selected;
-  late DateTime? _customDate;
+  late DateTime? _customStart;
+  late DateTime? _customEnd;
 
   @override
   void initState() {
     super.initState();
     _selected = widget.currentPreset;
-    _customDate = widget.customDate;
+    _customStart = widget.customStart;
+    _customEnd = widget.customEnd;
   }
 
-  Future<void> _pickCustomDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _customDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      locale: Localizations.localeOf(context),
+  Future<void> _pickCustomPeriod() async {
+    final picked = await showSearchPeriodPicker(
+      context,
+      start: _customStart,
+      end: _customEnd,
     );
     if (picked != null && mounted) {
       setState(() {
         _selected = DonyDatePreset.custom;
-        _customDate = picked;
+        _customStart = picked.start;
+        _customEnd = picked.end;
       });
     }
   }
@@ -3106,11 +3106,16 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
             onTap: () => setState(() => _selected = DonyDatePreset.thisMonth),
           ),
           _PresetOption(
-            label: _selected == DonyDatePreset.custom && _customDate != null
-                ? DateFormat.MMMEd(context.l10n.localeName).format(_customDate!)
-                : context.l10n.homeChooseDate,
+            label: _selected == DonyDatePreset.custom && _customStart != null
+                ? formatSearchPeriod(
+                    _customStart!,
+                    _customEnd,
+                    context.l10n.localeName,
+                    withWeekday: true,
+                  )
+                : context.l10n.homeChoosePeriod,
             isSelected: _selected == DonyDatePreset.custom,
-            onTap: _pickCustomDate,
+            onTap: _pickCustomPeriod,
           ),
           const SizedBox(height: DonySpacing.lg),
           Row(
@@ -3119,7 +3124,8 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop((
                     preset: DonyDatePreset.none,
-                    customDate: null as DateTime?,
+                    start: null as DateTime?,
+                    end: null as DateTime?,
                   )),
                   child: Container(
                     height: 50,
@@ -3144,9 +3150,11 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
               Expanded(
                 child: DonyButton(
                   label: context.l10n.commonApply,
-                  onPressed: () => Navigator.of(
-                    context,
-                  ).pop((preset: _selected, customDate: _customDate)),
+                  onPressed: () => Navigator.of(context).pop((
+                    preset: _selected,
+                    start: _customStart,
+                    end: _customEnd,
+                  )),
                 ),
               ),
             ],

@@ -977,7 +977,10 @@
   "commonDateToday": "Aujourd'hui",
   "commonDateThisWeek": "Cette semaine",
   "commonDateThisMonthLong": "Ce mois-ci",
-  "homeChooseDate": "Choisir une date",
+  "homeChoosePeriod": "Choisir une période",
+  "@homeChoosePeriod": {
+    "description": "Option de la feuille « Date de départ » de l'accueil qui ouvre le calendrier de période (home_screen.dart)"
+  },
   "homeMinRatingTitle": "Note minimum",
   "homeRatingOnlyFive": "★ 5.0 uniquement",
   "homeRatingAndUp": "★ {rating} et plus",
@@ -1098,7 +1101,10 @@
   "homeFilterChipsUrgent": "🔥 Urgent",
   "homeFilterChipsSuitcase23": "🧳 Valise 23 kg",
   "@homeFilterChipsSuitcase23": {"description": "Puce rapide de l'accueil (mode Trajets) et du composeur : trajets avec au moins 23 kg disponibles, une valise en soute."},
-  "homeFilterFieldsExactDate": "DATE PRÉCISE",
+  "homeFilterFieldsPeriod": "PÉRIODE",
+  "@homeFilterFieldsPeriod": {
+    "description": "Libellé du champ du composeur de recherche qui ouvre le calendrier de période (un jour ou du … au …), sous les presets de date (search_filter_fields.dart)"
+  },
   "homeFilterFieldsMaxPrice": "PRIX MAX",
   "homeFilterFieldsAll": "Tous",
   "@homeFilterFieldsAll": {

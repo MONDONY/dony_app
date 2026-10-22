@@ -553,4 +553,153 @@ void main() {
       ).called(1);
     },
   );
+
+  // ─── Période choisie au calendrier : les deux bornes partent au serveur.
+  group('période du … au …', () {
+    final start = DateTime(2026, 11, 15);
+    final end = DateTime(2026, 12, 15);
+    final period = const HomeSearchFilters().withCustomPeriod(start, end);
+
+    blocTest<SearchComposerBloc, SearchComposerState>(
+      'mode trajets : le compteur reçoit le début et la fin',
+      build: build,
+      act: (bloc) => bloc.add(SearchComposerFiltersChanged(period)),
+      wait: const Duration(milliseconds: 600),
+      verify: (bloc) {
+        expect(bloc.state.filters.customDateTo, end);
+        verify(
+          () => announcementRepo.countAnnouncements(
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            departureDateFrom: start,
+            departureDateTo: end,
+            minAvailableKg: any(named: 'minAvailableKg'),
+            maxAvailableKg: any(named: 'maxAvailableKg'),
+            maxPricePerKg: any(named: 'maxPricePerKg'),
+            gpProOnly: any(named: 'gpProOnly'),
+            minRating: any(named: 'minRating'),
+            weekendOnly: any(named: 'weekendOnly'),
+            transportMode: any(named: 'transportMode'),
+            kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+            contentType: any(named: 'contentType'),
+            userLat: any(named: 'userLat'),
+            userLng: any(named: 'userLng'),
+            radiusKm: any(named: 'radiusKm'),
+            urgent: any(named: 'urgent'),
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<SearchComposerBloc, SearchComposerState>(
+      'mode colis : la recherche de demandes reçoit dateFrom et dateTo',
+      build: () {
+        when(
+          () => packageRepo.search(
+            departure: any(named: 'departure'),
+            arrival: any(named: 'arrival'),
+            dateFrom: any(named: 'dateFrom'),
+            dateTo: any(named: 'dateTo'),
+            maxWeight: any(named: 'maxWeight'),
+            parcelSize: any(named: 'parcelSize'),
+            lat: any(named: 'lat'),
+            lng: any(named: 'lng'),
+            radiusKm: any(named: 'radiusKm'),
+            urgent: any(named: 'urgent'),
+            matchingMyTrips: any(named: 'matchingMyTrips'),
+            // ignore: avoid_redundant_argument_values
+            page: 0,
+            size: 1,
+          ),
+        ).thenAnswer(
+          (_) async => const PackageRequestSearchPage(
+            content: [],
+            totalElements: 3,
+            page: 0,
+            size: 1,
+          ),
+        );
+        return SearchComposerBloc(
+          parseRepo,
+          announcementRepo,
+          packageRepo,
+          analytics,
+          mode: SearchMode.parcels,
+          initialFilters: const HomeSearchFilters(),
+        );
+      },
+      act: (bloc) => bloc.add(SearchComposerFiltersChanged(period)),
+      wait: const Duration(milliseconds: 600),
+      verify: (bloc) {
+        expect(bloc.state.resultCount, 3);
+        verify(
+          () => packageRepo.search(
+            departure: any(named: 'departure'),
+            arrival: any(named: 'arrival'),
+            dateFrom: start,
+            dateTo: end,
+            maxWeight: any(named: 'maxWeight'),
+            parcelSize: any(named: 'parcelSize'),
+            lat: any(named: 'lat'),
+            lng: any(named: 'lng'),
+            radiusKm: any(named: 'radiusKm'),
+            urgent: any(named: 'urgent'),
+            matchingMyTrips: any(named: 'matchingMyTrips'),
+            // ignore: avoid_redundant_argument_values
+            page: 0,
+            size: 1,
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<SearchComposerBloc, SearchComposerState>(
+      'une phrase « en mars » pose toute la période rendue par le serveur',
+      build: () {
+        when(() => parseRepo.parse(any(), any())).thenAnswer(
+          (_) async => _result(
+            filters: const {
+              'departureDateFrom': '2027-03-01',
+              'departureDateTo': '2027-03-31',
+            },
+          ),
+        );
+        return build();
+      },
+      act: (bloc) => bloc.add(const SearchComposerPhraseSubmitted('en mars')),
+      wait: const Duration(milliseconds: 600),
+      verify: (bloc) {
+        expect(bloc.state.filters.datePreset, DonyDatePreset.custom);
+        expect(bloc.state.filters.dateFrom, DateTime(2027, 3));
+        expect(bloc.state.filters.dateTo, DateTime(2027, 3, 31));
+      },
+    );
+
+    blocTest<SearchComposerBloc, SearchComposerState>(
+      'une date ISO en réponse à une date vague pose un seul jour en custom',
+      build: build,
+      seed: () => SearchComposerState(
+        filters: period,
+        unresolved: const [
+          UnresolvedItem(
+            kind: UnresolvedKind.dateVague,
+            phrase: 'bientôt',
+            options: [],
+          ),
+        ],
+      ),
+      act: (bloc) => bloc.add(
+        const SearchComposerUnresolvedAnswered(
+          kind: UnresolvedKind.dateVague,
+          value: '2026-12-01',
+        ),
+      ),
+      wait: const Duration(milliseconds: 600),
+      verify: (bloc) {
+        expect(bloc.state.filters.datePreset, DonyDatePreset.custom);
+        expect(bloc.state.filters.dateFrom, DateTime(2026, 12));
+        expect(bloc.state.filters.dateTo, DateTime(2026, 12));
+      },
+    );
+  });
 }

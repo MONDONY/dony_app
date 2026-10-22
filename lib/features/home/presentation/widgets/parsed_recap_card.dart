@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/home/data/models/search_parse_result.dart';
+import 'package:dony/features/home/presentation/widgets/search_period.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -23,6 +24,21 @@ class ParsedRecapCard extends StatelessWidget {
     _ => null,
   };
 
+  /// Valeur affichée d'un champ. La date arrive en ISO (`2027-03-01`) : elle
+  /// s'écrit comme dans le champ « PÉRIODE », avec la borne haute
+  /// `departureDateTo` quand le parseur rend une période (« en mars »). Une
+  /// valeur illisible reste telle quelle.
+  String _value(AppLocalizations l, RecognizedField f) {
+    if (f.field != 'departureDateFrom') return f.value;
+    final from = DateTime.tryParse(f.value);
+    if (from == null) return f.value;
+    final to = fields
+        .where((e) => e.field == 'departureDateTo')
+        .map((e) => DateTime.tryParse(e.value))
+        .firstOrNull;
+    return formatSearchPeriod(from, to, l.localeName);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -32,7 +48,7 @@ class ParsedRecapCard extends StatelessWidget {
     final known = [
       for (final f in fields)
         if (_label(l, f.field) case final label?)
-          (label: label, value: f.value),
+          (label: label, value: _value(l, f)),
     ];
     if (known.isEmpty) return const SizedBox.shrink();
 

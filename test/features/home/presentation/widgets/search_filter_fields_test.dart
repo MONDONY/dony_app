@@ -40,7 +40,7 @@ void main() {
     expect(find.text("Aujourd'hui"), findsOneWidget);
     expect(find.text('Cette semaine'), findsOneWidget);
     expect(find.text('Ce mois'), findsOneWidget);
-    expect(find.text('DATE PRÉCISE'), findsOneWidget);
+    expect(find.text('PÉRIODE'), findsOneWidget);
     expect(find.text('Choisir'), findsOneWidget);
     expect(find.text('PRIX MAX'), findsOneWidget);
     expect(find.text('Tous'), findsNWidgets(2));
@@ -54,7 +54,7 @@ void main() {
     expect(find.text('Today'), findsOneWidget);
     expect(find.text('This week'), findsOneWidget);
     expect(find.text('This month'), findsOneWidget);
-    expect(find.text('EXACT DATE'), findsOneWidget);
+    expect(find.text('PERIOD'), findsOneWidget);
     expect(find.text('Choose'), findsOneWidget);
     expect(find.text('MAX PRICE'), findsOneWidget);
     expect(find.text('Any'), findsNWidgets(2));
@@ -117,15 +117,212 @@ void main() {
     expect(find.text('DATE'), findsOneWidget);
   });
 
-  testWidgets('DateField garde le libellé passé par l\'appelant', (
+  testWidgets('le champ de période du composeur s\'appelle « PÉRIODE »', (
     tester,
   ) async {
     await tester.pumpWidget(
-      _wrap(DateField(date: null, onChanged: (_) {}, label: 'QUAND')),
+      _wrap(SearchPeriodField(start: null, end: null, onChanged: (_) {})),
     );
 
-    expect(find.text('QUAND'), findsOneWidget);
+    expect(find.text('PÉRIODE'), findsOneWidget);
     expect(find.text('DATE'), findsNothing);
+  });
+
+  group('champ PÉRIODE : calendrier de période', () {
+    const loc = DefaultMaterialLocalizations();
+
+    // Jour à [n] jours d'aujourd'hui, sans `Duration` : un changement d'heure
+    // décalerait l'heure de minuit.
+    DateTime inDays(int n) {
+      final now = DateTime.now();
+      return DateTime(now.year, now.month, now.day + n);
+    }
+
+    Future<HomeSearchFilters?> pick(
+      WidgetTester tester, {
+      required HomeSearchFilters value,
+      required DateTime start,
+      required DateTime end,
+    }) async {
+      HomeSearchFilters? received;
+      await tester.pumpWidget(
+        _wrap(DatePresetsField(value: value, onChanged: (f) => received = f)),
+      );
+      await tester.tap(find.byKey(const Key('search-period-field')));
+      await tester.pumpAndSettle();
+      expect(find.byType(DateRangePickerDialog), findsOneWidget);
+
+      // Saisie au clavier : indépendante du jour où tourne le test.
+      await tester.tap(find.byTooltip(loc.inputDateModeButtonLabel));
+      await tester.pumpAndSettle();
+      final fields = find.descendant(
+        of: find.byType(DateRangePickerDialog),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(fields.at(0), loc.formatCompactDate(start));
+      await tester.enterText(fields.at(1), loc.formatCompactDate(end));
+      await tester.tap(find.text(loc.okButtonLabel));
+      await tester.pumpAndSettle();
+      return received;
+    }
+
+    testWidgets('choisir du … au … pose la période dans les filtres', (
+      tester,
+    ) async {
+      final start = inDays(3);
+      final end = inDays(30);
+
+      final f = await pick(
+        tester,
+        value: const HomeSearchFilters(departureCity: 'Paris'),
+        start: start,
+        end: end,
+      );
+
+      expect(f?.datePreset, DonyDatePreset.custom);
+      expect(f?.dateFrom, start);
+      expect(f?.dateTo, end);
+      expect(f?.departureCity, 'Paris');
+    });
+
+    testWidgets('le même jour deux fois = un seul jour', (tester) async {
+      final day = inDays(5);
+
+      final f = await pick(
+        tester,
+        value: const HomeSearchFilters(),
+        start: day,
+        end: day,
+      );
+
+      expect(f?.customDate, day);
+      expect(f?.customDateTo, isNull);
+      expect(f?.dateTo, day);
+    });
+
+    testWidgets('le calendrier s\'ouvre sur la période en cours', (
+      tester,
+    ) async {
+      final today = inDays(0);
+      final start = inDays(2);
+      final end = inDays(9);
+      await tester.pumpWidget(
+        _wrap(
+          DatePresetsField(
+            value: const HomeSearchFilters().withCustomPeriod(start, end),
+            onChanged: (_) {},
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('search-period-field')));
+      await tester.pumpAndSettle();
+
+      final dialog = tester.widget<DateRangePickerDialog>(
+        find.byType(DateRangePickerDialog),
+      );
+      expect(dialog.initialDateRange, DateTimeRange(start: start, end: end));
+      expect(dialog.firstDate, today);
+      expect(dialog.lastDate, DateTime(today.year + 2, today.month, today.day));
+    });
+
+    testWidgets('refermer le calendrier sans choisir ne change rien', (
+      tester,
+    ) async {
+      final value = const HomeSearchFilters().withCustomPeriod(
+        inDays(2),
+        inDays(9),
+      );
+      var calls = 0;
+      await tester.pumpWidget(
+        _wrap(DatePresetsField(value: value, onChanged: (_) => calls++)),
+      );
+
+      await tester.tap(find.byKey(const Key('search-period-field')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip(loc.closeButtonTooltip).last);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DateRangePickerDialog), findsNothing);
+      expect(calls, 0);
+    });
+
+    testWidgets('lecteur d\'écran : un bouton « PÉRIODE, valeur »', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final year = DateTime.now().year;
+      await tester.pumpWidget(
+        _wrap(
+          SearchPeriodField(
+            start: DateTime(year, 11, 15),
+            end: DateTime(year, 12, 15),
+            onChanged: (_) {},
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(
+          find.bySemanticsLabel('PÉRIODE, 15 nov. → 15 déc.'),
+        ),
+        matchesSemantics(
+          label: 'PÉRIODE, 15 nov. → 15 déc.',
+          isButton: true,
+          hasTapAction: true,
+        ),
+      );
+      handle.dispose();
+    });
+
+    testWidgets(
+      'grand texte : une période passe sur deux lignes, sans coupure',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+              child: Scaffold(
+                body: SizedBox(
+                  width: 220,
+                  child: SearchPeriodField(
+                    start: DateTime(2026, 12, 20),
+                    end: DateTime(2027, 1, 5),
+                    onChanged: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        final text = tester.widget<Text>(
+          find.text('20 déc. 2026 → 5 janv. 2027'),
+        );
+        expect(text.maxLines, 2);
+        expect(text.overflow, isNull);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('une période choisie s\'affiche « début → fin »', (
+      tester,
+    ) async {
+      final year = DateTime.now().year;
+      await tester.pumpWidget(
+        _wrap(
+          DatePresetsField(
+            value: const HomeSearchFilters().withCustomPeriod(
+              DateTime(year, 11, 15),
+              DateTime(year, 12, 15),
+            ),
+            onChanged: (_) {},
+          ),
+        ),
+      );
+
+      expect(find.text('15 nov. → 15 déc.'), findsOneWidget);
+    });
   });
 
   testWidgets('en anglais : en-tête et valeur de TransportModeField', (
