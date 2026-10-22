@@ -20,9 +20,9 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/home/presentation/widgets/search_period.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class HomeFilterChipsRow extends StatelessWidget {
   const HomeFilterChipsRow({
@@ -102,8 +102,9 @@ class HomeFilterChipsRow extends StatelessWidget {
       case DonyDatePreset.thisMonth:
         return l.commonDateThisMonthLong;
       case DonyDatePreset.custom:
-        return filters.customDate != null
-            ? DateFormat.MMMd(l.localeName).format(filters.customDate!)
+        final start = filters.customDate;
+        return start != null
+            ? formatSearchPeriod(start, filters.customDateTo, l.localeName)
             : l.homeFilterChipsDate;
       case DonyDatePreset.none:
         return l.homeFilterChipsAnyDate;

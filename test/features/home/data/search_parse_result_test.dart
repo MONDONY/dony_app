@@ -140,15 +140,15 @@ void main() {
         expect(applied.departureCity, 'Paris');
 
         // C1 : `datePreset` DOIT passer à `custom` en même temps que
-        // `customDate`, sinon `dateFrom`/`dateTo` (qui ne lisent `customDate`
+        // `customDate`, sinon `dateFrom`/`dateTo` (qui ne lisent la période
         // qu'en mode `custom`) renvoient `null` et la date n'a aucun effet.
         expect(applied.datePreset, DonyDatePreset.custom);
         expect(applied.customDate, DateTime.parse('2027-03-01'));
         expect(applied.dateFrom, DateTime.parse('2027-03-01'));
-        // `departureDateTo` est ignoré volontairement (modèle à date unique) :
-        // `dateTo` retombe donc sur la même valeur que `dateFrom`, jamais sur
-        // le 2027-03-31 envoyé par le serveur.
-        expect(applied.dateTo, DateTime.parse('2027-03-01'));
+        // « en mars » : le serveur rend une période, sa borne haute est
+        // désormais gardée (fin de la période choisie).
+        expect(applied.customDateTo, DateTime.parse('2027-03-31'));
+        expect(applied.dateTo, DateTime.parse('2027-03-31'));
 
         expect(applied.weightMin, 20);
 
@@ -227,6 +227,58 @@ void main() {
           apply({'gpProOnly': false, 'kiloProOnly': true}).gpProOnly,
           isFalse,
         );
+      });
+    });
+
+    group('date ou période', () {
+      HomeSearchFilters apply(
+        Map<String, dynamic> filters, {
+        HomeSearchFilters base = const HomeSearchFilters(),
+      }) => SearchParseResult.fromJson({
+        'filters': filters,
+        'recognized': [],
+        'unresolved': [],
+        'ignored': [],
+      }).applyTo(base);
+
+      test('une période : les deux bornes passent dans les filtres', () {
+        final f = apply({
+          'departureDateFrom': '2026-11-15',
+          'departureDateTo': '2026-12-15',
+        });
+        expect(f.datePreset, DonyDatePreset.custom);
+        expect(f.dateFrom, DateTime(2026, 11, 15));
+        expect(f.dateTo, DateTime(2026, 12, 15));
+        expect(f.toAnnouncementQuery().departureDateTo, DateTime(2026, 12, 15));
+      });
+
+      test('un seul jour (bornes égales ou début seul) : comme avant', () {
+        for (final filters in [
+          {'departureDateFrom': '2026-11-15', 'departureDateTo': '2026-11-15'},
+          {'departureDateFrom': '2026-11-15'},
+        ]) {
+          final f = apply(filters);
+          expect(f.customDate, DateTime(2026, 11, 15));
+          expect(f.customDateTo, isNull);
+          expect(f.dateFrom, DateTime(2026, 11, 15));
+          expect(f.dateTo, DateTime(2026, 11, 15));
+        }
+      });
+
+      test('un jour seul remplace une période déjà réglée au doigt', () {
+        final base = const HomeSearchFilters().withCustomPeriod(
+          DateTime(2026, 11, 2),
+          DateTime(2026, 11, 30),
+        );
+        final f = apply({'departureDateFrom': '2026-11-15'}, base: base);
+        expect(f.dateFrom, DateTime(2026, 11, 15));
+        expect(f.dateTo, DateTime(2026, 11, 15));
+      });
+
+      test('une borne haute seule est ignorée, comme avant', () {
+        final f = apply({'departureDateTo': '2026-12-15'});
+        expect(f.datePreset, DonyDatePreset.none);
+        expect(f.dateTo, isNull);
       });
     });
   });

@@ -101,16 +101,19 @@ class SearchParseResult {
     final departure = filters['departureCity'] as String?;
     if (departure != null) out = out.copyWith(departureCity: departure);
 
-    // `HomeSearchFilters` ne porte qu'une seule date (`customDate`), jamais
-    // de plage : la borne haute `departureDateTo` est donc ignorée
-    // volontairement, limitation du modèle existant, hors périmètre de ce
-    // correctif. `datePreset` DOIT passer à `custom` en même temps que
-    // `customDate` : `dateFrom`/`dateTo` ne lisent `customDate` qu'en mode
-    // `custom`, sinon la date posée ici n'a silencieusement aucun effet sur
-    // la recherche alors que le récapitulatif l'affiche comme appliquée.
+    // Le parseur du back (`DateExpressionParser.putRange`) rend toujours les
+    // deux bornes, la dernière expression de la phrase l'emportant : une
+    // vraie période seulement pour « en <mois> » (tout le mois) et « mois
+    // prochain » ; « le 12 mars » donne deux bornes égales, donc un seul jour,
+    // et « du 15 novembre au 15 décembre » ne garde aujourd'hui que le
+    // dernier jour cité (amélioration à faire côté back). `withCustomPeriod`
+    // pose le preset `custom` avec les deux bornes : `dateFrom`/`dateTo` ne
+    // lisent la période qu'en mode `custom`, sinon la date posée ici n'aurait
+    // aucun effet sur la recherche alors que le récapitulatif l'affiche. Une
+    // borne haute seule (sans début) reste ignorée, comme avant les périodes.
     final from = _date(filters['departureDateFrom']);
     if (from != null) {
-      out = out.copyWith(datePreset: DonyDatePreset.custom, customDate: from);
+      out = out.withCustomPeriod(from, _date(filters['departureDateTo']));
     }
 
     final price = _number(filters['maxPricePerKg']);

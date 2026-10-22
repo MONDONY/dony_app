@@ -145,6 +145,33 @@ void _customDateChipTests() {
       findsOneWidget,
     );
   });
+
+  testWidgets('puce d\'une période : « début → fin »', (tester) async {
+    final year = DateTime.now().year;
+    await tester.pumpWidget(
+      _wrap(
+        filters: const HomeSearchFilters(
+          departureCity: 'Paris',
+        ).withCustomPeriod(DateTime(year, 11, 15), DateTime(year, 12, 15)),
+      ),
+    );
+
+    expect(find.text('15 nov. → 15 déc.'), findsOneWidget);
+  });
+
+  testWidgets('puce d\'une période en anglais', (tester) async {
+    useEnglish();
+    final year = DateTime.now().year;
+    await tester.pumpWidget(
+      _wrap(
+        filters: const HomeSearchFilters(
+          departureCity: 'Paris',
+        ).withCustomPeriod(DateTime(year, 11, 15), DateTime(year, 12, 15)),
+      ),
+    );
+
+    expect(find.text('Nov 15 → Dec 15'), findsOneWidget);
+  });
 }
 
 void _translationTests() {

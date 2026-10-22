@@ -127,6 +127,7 @@ class HomeSearchFilters {
     this.arrivalCity,
     this.datePreset = DonyDatePreset.none,
     this.customDate,
+    this.customDateTo,
     this.urgentOnly = false,
     this.nearMeActive = false,
     this.nearMeRadiusKm,
@@ -156,7 +157,16 @@ class HomeSearchFilters {
   final String? departureCity;
   final String? arrivalCity;
   final DonyDatePreset datePreset;
+
+  /// Début de la période choisie au calendrier (preset `custom`). Seul, sans
+  /// [customDateTo], c'est un seul jour, comme avant les périodes.
   final DateTime? customDate;
+
+  /// Fin de la période choisie, incluse ; `null` = un seul jour
+  /// ([customDate]). Passer par [withCustomPeriod] ou [copyWith], qui
+  /// remettent les bornes dans l'ordre : les getters [dateFrom] et [dateTo]
+  /// ne font que relire ces champs.
+  final DateTime? customDateTo;
   final bool urgentOnly;
   final bool nearMeActive;
   final double? nearMeRadiusKm;
@@ -229,6 +239,9 @@ class HomeSearchFilters {
     }
   }
 
+  /// Borne haute incluse. Pour une période choisie au calendrier, la fin de
+  /// la période, ou le jour choisi s'il n'y en a qu'un (début = fin, la
+  /// recherche d'un seul jour reste celle d'avant les périodes).
   DateTime? get dateTo {
     final now = DateTime.now();
     switch (datePreset) {
@@ -241,11 +254,23 @@ class HomeSearchFilters {
       case DonyDatePreset.thisMonth:
         return DateTime(now.year, now.month + 1, 0);
       case DonyDatePreset.custom:
-        return customDate;
+        return customDateTo ?? customDate;
       case DonyDatePreset.none:
         return null;
     }
   }
+
+  /// Pose une période choisie au calendrier (preset `custom`) : du [start] au
+  /// [end] inclus, ou le seul jour [start] quand [end] est absent ou tombe le
+  /// même jour. Seule porte d'entrée d'une date choisie : elle remplace aussi
+  /// la fin d'une période précédente, qu'un `copyWith(customDate: …)` seul
+  /// laisserait en place.
+  HomeSearchFilters withCustomPeriod(DateTime start, [DateTime? end]) =>
+      copyWith(clearCustomDate: true).copyWith(
+        datePreset: DonyDatePreset.custom,
+        customDate: start,
+        customDateTo: end,
+      );
 
   /// Sert uniquement à pré-remplir la sheet de filtres (valeurs par défaut des
   /// champs affichés) : ce n'est PAS le payload envoyé au serveur pour la
@@ -486,12 +511,16 @@ class HomeSearchFilters {
   ).copyWith(departureCity: arrivalCity, arrivalCity: departureCity);
 
   /// Les drapeaux `clearXxx` permettent de remettre un champ à null, ce qu'un
-  /// paramètre optionnel seul ne sait pas exprimer.
+  /// paramètre optionnel seul ne sait pas exprimer. `clearCustomDate` vide la
+  /// période entière (début et fin). Les bornes de la période sont remises
+  /// dans l'ordre : une fin avant le début est intervertie, une fin le même
+  /// jour que le début retombe à `null` (un seul jour).
   HomeSearchFilters copyWith({
     String? departureCity,
     String? arrivalCity,
     DonyDatePreset? datePreset,
     DateTime? customDate,
+    DateTime? customDateTo,
     bool? urgentOnly,
     bool? nearMeActive,
     double? nearMeRadiusKm,
@@ -526,13 +555,18 @@ class HomeSearchFilters {
     bool clearParcelSize = false,
     bool clearNearMe = false,
   }) {
+    final period = _orderedPeriod(
+      clearCustomDate ? null : (customDate ?? this.customDate),
+      clearCustomDate ? null : (customDateTo ?? this.customDateTo),
+    );
     return HomeSearchFilters(
       departureCity: clearCorridor
           ? null
           : (departureCity ?? this.departureCity),
       arrivalCity: clearCorridor ? null : (arrivalCity ?? this.arrivalCity),
       datePreset: datePreset ?? this.datePreset,
-      customDate: clearCustomDate ? null : (customDate ?? this.customDate),
+      customDate: period.start,
+      customDateTo: period.end,
       urgentOnly: urgentOnly ?? this.urgentOnly,
       nearMeActive: clearNearMe ? false : (nearMeActive ?? this.nearMeActive),
       nearMeRadiusKm: clearNearMe
@@ -563,5 +597,22 @@ class HomeSearchFilters {
       parcelSize: clearParcelSize ? null : (parcelSize ?? this.parcelSize),
       matchingMyTrips: matchingMyTrips ?? this.matchingMyTrips,
     );
+  }
+
+  /// Remet une période dans l'ordre : fin avant début intervertie, fin le
+  /// même jour que le début (ou seule, sans début) ramenée à un seul jour.
+  static ({DateTime? start, DateTime? end}) _orderedPeriod(
+    DateTime? start,
+    DateTime? end,
+  ) {
+    if (start == null || end == null) return (start: start ?? end, end: null);
+    final sameDay =
+        start.year == end.year &&
+        start.month == end.month &&
+        start.day == end.day;
+    if (sameDay) return (start: start, end: null);
+    return end.isBefore(start)
+        ? (start: end, end: start)
+        : (start: start, end: end);
   }
 }

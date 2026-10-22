@@ -108,6 +108,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorAccessDeniedMessage': (l) => l.errorAccessDeniedMessage,
   'errorAccountBannedTitle': (l) => l.errorAccountBannedTitle,
   'errorAccountBannedMessage': (l) => l.errorAccountBannedMessage,
+  'errorAccountReactivationDeniedTitle': (l) =>
+      l.errorAccountReactivationDeniedTitle,
+  'errorAccountReactivationDeniedMessage': (l) =>
+      l.errorAccountReactivationDeniedMessage,
   'errorAuthTokenUnavailableTitle': (l) => l.errorAuthTokenUnavailableTitle,
   'errorAuthTokenUnavailableMessage': (l) => l.errorAuthTokenUnavailableMessage,
   'errorAuthGenericErrorTitle': (l) => l.errorAuthGenericErrorTitle,
@@ -274,6 +278,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorBidNotAwaitingPaymentTitle': (l) => l.errorBidNotAwaitingPaymentTitle,
   'errorBidNotAwaitingPaymentMessage': (l) =>
       l.errorBidNotAwaitingPaymentMessage,
+  'errorBidNotPendingTitle': (l) => l.errorBidNotPendingTitle,
+  'errorBidNotPendingMessage': (l) => l.errorBidNotPendingMessage,
   'errorBidAlreadyPaidTitle': (l) => l.errorBidAlreadyPaidTitle,
   'errorBidAlreadyPaidMessage': (l) => l.errorBidAlreadyPaidMessage,
   'errorPaymentAlreadyCompletedTitle': (l) =>
@@ -782,7 +788,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'commonDateToday': (l) => l.commonDateToday,
   'commonDateThisWeek': (l) => l.commonDateThisWeek,
   'commonDateThisMonthLong': (l) => l.commonDateThisMonthLong,
-  'homeChooseDate': (l) => l.homeChooseDate,
+  'homeChoosePeriod': (l) => l.homeChoosePeriod,
   'homeMinRatingTitle': (l) => l.homeMinRatingTitle,
   'homeRatingOnlyFive': (l) => l.homeRatingOnlyFive,
   'homeRatingAndUp': (l) => l.homeRatingAndUp(placeholderMarker('rating')),
@@ -855,7 +861,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'homeFilterChipsSize': (l) => l.homeFilterChipsSize,
   'homeFilterChipsUrgent': (l) => l.homeFilterChipsUrgent,
   'homeFilterChipsSuitcase23': (l) => l.homeFilterChipsSuitcase23,
-  'homeFilterFieldsExactDate': (l) => l.homeFilterFieldsExactDate,
+  'homeFilterFieldsPeriod': (l) => l.homeFilterFieldsPeriod,
   'homeFilterFieldsMaxPrice': (l) => l.homeFilterFieldsMaxPrice,
   'homeFilterFieldsAll': (l) => l.homeFilterFieldsAll,
   'homeFilterFieldsChoose': (l) => l.homeFilterFieldsChoose,
@@ -1855,6 +1861,16 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.listingFavoriteToggleErrorMessage,
   'listingKgAvailableLabel': (l) =>
       l.listingKgAvailableLabel(placeholderMarker('kg')),
+  'listingSuitcaseCapacityLabel': (l) =>
+      l.listingSuitcaseCapacityLabel(intPlaceholderValue, intPlaceholderValue),
+  'listingSuitcaseShort': (l) => l.listingSuitcaseShort(intPlaceholderValue),
+  'listingSuitcaseRemaining': (l) => l.listingSuitcaseRemaining(
+    placeholderMarker('free'),
+    intPlaceholderValue,
+  ),
+  'listingSuitcaseFull': (l) => l.listingSuitcaseFull,
+  'listingSuitcaseGaugeRemaining': (l) => l.listingSuitcaseGaugeRemaining,
+  'listingSuitcaseGaugeReserved': (l) => l.listingSuitcaseGaugeReserved,
   'listingIdentityBadge': (l) => l.listingIdentityBadge,
   'listingCategoriesAcceptedTitle': (l) => l.listingCategoriesAcceptedTitle,
   'listingTravelerMessageTitle': (l) => l.listingTravelerMessageTitle,
@@ -7786,6 +7802,7 @@ const textParameters = <String, List<String>>{
   'listingApproxPricePerKg': ['price'],
   'listingApproxPrice': ['price'],
   'listingKgAvailableLabel': ['kg'],
+  'listingSuitcaseRemaining': ['free'],
   'listingHabitualOperatorNotAcceptedCard': ['operator'],
   'listingHabitualOperatorNotAcceptedCash': ['operator'],
   'listingDateTodayLabel': ['date'],

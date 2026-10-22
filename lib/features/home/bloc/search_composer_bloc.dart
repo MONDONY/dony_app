@@ -181,9 +181,11 @@ class SearchComposerBloc
           );
         } else {
           // Filet de sécurité au cas où une vraie date ISO arriverait un jour
-          // depuis une autre source de valeurs pour cette question.
+          // depuis une autre source de valeurs pour cette question. Elle passe
+          // par `withCustomPeriod`, qui pose aussi le preset `custom` : sans
+          // lui, `dateFrom`/`dateTo` ignoraient la date en silence.
           final date = DateTime.tryParse(value);
-          if (date != null) filters = filters.copyWith(customDate: date);
+          if (date != null) filters = filters.withCustomPeriod(date);
         }
     }
 
