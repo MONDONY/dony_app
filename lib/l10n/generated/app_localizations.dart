@@ -7851,6 +7851,12 @@ abstract class AppLocalizations {
   /// **'Pas de photo pour ce colis'**
   String get requestPublicNoPhoto;
 
+  /// Libellé d'accessibilité d'une photo du carrousel de la fiche d'une demande, qui s'ouvre en plein écran (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir la photo en plein écran'**
+  String get requestPublicPhotoOpenLabel;
+
   /// Tooltip du bouton de signalement (package_request_public_detail_screen.dart)
   ///
   /// In fr, this message translates to:

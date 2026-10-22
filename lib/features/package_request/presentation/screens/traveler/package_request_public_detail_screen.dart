@@ -35,6 +35,7 @@ import 'package:dony/features/package_request/presentation/widgets/package_statu
 import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_corridor.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_detail/request_photo_viewer.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_header_row.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_sender_row.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
@@ -767,6 +768,22 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
     super.dispose();
   }
 
+  /// Photo touchée : galerie plein écran ouverte sur celle qu'on regarde, les
+  /// autres se balaient une à une (zoom, glissement vers le bas pour fermer).
+  void _openViewer(int index) {
+    if (getIt.isRegistered<AnalyticsService>()) {
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.packageRequestPhotosViewed,
+          properties: {'photo_count': widget.urls.length, 'index': index},
+        ),
+      );
+    }
+    unawaited(
+      RequestPhotoViewer.show(context, urls: widget.urls, initialIndex: index),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -778,17 +795,26 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
             controller: _controller,
             itemCount: widget.urls.length,
             onPageChanged: (i) => setState(() => _index = i),
-            itemBuilder: (_, i) => CachedNetworkImage(
-              imageUrl: widget.urls[i],
-              cacheKey: DonyImage.stableCacheKey(widget.urls[i]),
-              fit: BoxFit.cover,
-              placeholder: (_, _) =>
-                  ColoredBox(color: cs.surfaceContainerHighest),
-              errorWidget: (_, _, _) => ColoredBox(
-                color: cs.surfaceContainerHighest,
-                child: Icon(
-                  Icons.broken_image_rounded,
-                  color: cs.onSurfaceVariant,
+            itemBuilder: (_, i) => Semantics(
+              button: true,
+              label: context.l10n.requestPublicPhotoOpenLabel,
+              child: GestureDetector(
+                key: Key('request-photo-$i'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _openViewer(i),
+                child: CachedNetworkImage(
+                  imageUrl: widget.urls[i],
+                  cacheKey: DonyImage.stableCacheKey(widget.urls[i]),
+                  fit: BoxFit.cover,
+                  placeholder: (_, _) =>
+                      ColoredBox(color: cs.surfaceContainerHighest),
+                  errorWidget: (_, _, _) => ColoredBox(
+                    color: cs.surfaceContainerHighest,
+                    child: Icon(
+                      Icons.broken_image_rounded,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               ),
             ),

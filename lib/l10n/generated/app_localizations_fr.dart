@@ -4702,6 +4702,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestPublicNoPhoto => 'Pas de photo pour ce colis';
 
   @override
+  String get requestPublicPhotoOpenLabel => 'Voir la photo en plein écran';
+
+  @override
   String get requestPublicReportTooltip => 'Signaler';
 
   @override

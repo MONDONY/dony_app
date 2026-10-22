@@ -308,6 +308,9 @@ abstract final class AnalyticsEvents {
 
   /// Ligne expéditeur de la fiche publique d'une demande tapée (FLUTTER-GF).
   static const packageRequestSenderOpened = 'package_request_sender_opened';
+
+  /// Photo du carrousel d'une demande touchée : galerie plein écran ouverte.
+  static const packageRequestPhotosViewed = 'package_request_photos_viewed';
   static const packageRequestSearched = 'package_request_searched';
   static const negotiationOfferMade = 'negotiation_offer_made';
 
