@@ -430,6 +430,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `package_request_reported` | PackageRequestPublicDetailScreen._report() — signalement (propriété `reason`) |
 | `package_request_searched` | PackageRequestSearchBloc |
 | `negotiation_offer_made` | NegotiationBloc._onStart()/_onCounter() |
+| `make_offer_step_viewed` | `_MakeOfferContentState._trackStep` — étape de la feuille « Faire une offre » / « Prendre ce colis » du voyageur (fiche d'une demande) affichée : `trip` (choix du trajet), `price` (prix et capacité), `recap` (récapitulatif et message). Propriétés `step`, `price_type` (`negotiable`/`firm`), `new_trip` (le trajet reste à créer). Ni prix, ni capacité, ni trajet. Vue d'étape d'un parcours émise depuis le widget (comme `wallet_topup_started`), pas une action métier : l'envoi reste `negotiation_offer_made` / `firm_price_taken` |
 | `negotiation_offer_accepted` | NegotiationBloc._onAccept() |
 | `negotiation_cancelled` | NegotiationBloc._onCancel() — l'une des parties met fin à la négociation |
 | `negotiation_nudge_sent` | NegotiationBloc._onNudge() — relance envoyée |

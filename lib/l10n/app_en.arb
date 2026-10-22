@@ -8737,7 +8737,25 @@
   "@bidDetailPickupInstructionsLabel": {
     "description": "Plus de détails d'une demande (details_accordion.dart)"
   },
-  "negotiationMakeOfferSelectTripHint": "Pick one of your trips above to send the offer",
+  "negotiationMakeOfferStepProgress": "Step {step} of 3 · {name}",
+  "negotiationMakeOfferStepTrip": "Trip",
+  "negotiationMakeOfferStepPrice": "Price",
+  "negotiationMakeOfferStepRecap": "Summary and message",
+  "negotiationMakeOfferEnterValidPrice": "Enter a valid price",
+  "negotiationMakeOfferEnterValidCapacity": "Enter a valid capacity",
+  "negotiationMakeOfferPickDateToContinue": "Pick your travel date to continue",
+  "negotiationMakeOfferRecapDeparture": "Departure",
+  "negotiationMakeOfferRecapCapacity": "Capacity",
+  "negotiationMakeOfferRecapPrice": "Price",
+  "negotiationMakeOfferRecapFirm": "firm",
+  "negotiationMakeOfferGaugeBelow": "Below the market price",
+  "negotiationMakeOfferGaugeWithin": "Within the market price",
+  "negotiationMakeOfferGaugeAbove": "Above the market price",
+  "negotiationMakeOfferPriceDecrease": "Lower the price",
+  "negotiationMakeOfferPriceIncrease": "Raise the price",
+  "negotiationMakeOfferCapacityDecrease": "Fewer kilos",
+  "negotiationMakeOfferCapacityIncrease": "More kilos",
+  "negotiationMakeOfferSelectTripHint": "Pick a trip to continue",
   "@negotiationMakeOfferSelectTripHint": {
     "description": "Sous le bouton grisé de la feuille d'offre tant qu'aucun trajet n'est choisi (make_offer_bottom_sheet.dart, FLUTTER-4W)"
   },

@@ -8,6 +8,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
@@ -32,6 +33,8 @@ import '../../../../../helpers/stripe_account_test_doubles.dart';
 
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _MockPriceEstimationRepository extends Mock
     implements PriceEstimationRepository {}
@@ -93,7 +96,13 @@ void main() {
     when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
       (_) async => (announcements: <AnnouncementModel>[], totalElements: 0),
     );
+    // La feuille d'offre mesure chaque étape affichée.
+    final analytics = _MockAnalyticsService();
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
     getIt
+      ..registerLazySingleton<AnalyticsService>(() => analytics)
       ..registerFactory<NegotiationBloc>(() => negoBloc)
       ..registerLazySingleton<PriceEstimationRepository>(() => priceRepo)
       ..registerLazySingleton<AnnouncementRepository>(() => announcementRepo);
@@ -101,6 +110,7 @@ void main() {
 
   tearDown(() {
     getIt
+      ..unregister<AnalyticsService>()
       ..unregister<NegotiationBloc>()
       ..unregister<PriceEstimationRepository>()
       ..unregister<AnnouncementRepository>();

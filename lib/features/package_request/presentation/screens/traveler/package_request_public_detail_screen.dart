@@ -19,7 +19,6 @@ import 'package:dony/features/content_categories/presentation/content_category_l
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_sender_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -35,6 +34,7 @@ import 'package:dony/features/package_request/presentation/widgets/make_offer_bo
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_corridor.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_header_row.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_sender_row.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
@@ -420,8 +420,6 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final depFlag = cityFlag(r.departureCity);
-    final arrFlag = cityFlag(r.arrivalCity);
     // Le modèle de détail n'expose pas de champ `urgent` (backend ne l'envoie
     // pas ici) — repli local sur le seuil d'urgence, comme documenté dans
     // dony_urgency.dart.
@@ -465,8 +463,6 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                       request: r,
                       price: _displayPrice,
                       isUrgent: isUrgent,
-                      departureFlag: depFlag,
-                      arrivalFlag: arrFlag,
                     ),
                     const SizedBox(height: DonySpacing.md),
 
@@ -1207,188 +1203,6 @@ class _NoPhotoBand extends StatelessWidget {
   }
 }
 
-// ── Corridor ─────────────────────────────────────────────────────────────────
-
-/// Corridor : ville de départ à gauche, d'arrivée à droite, flèche pointillée
-/// entre les deux. Posé dans la carte héros, qui porte la date et le budget.
-class _CorridorRoute extends StatelessWidget {
-  const _CorridorRoute({
-    required this.departureCity,
-    required this.arrivalCity,
-    this.departureFlag,
-    this.arrivalFlag,
-  });
-
-  final String departureCity;
-  final String arrivalCity;
-  final String? departureFlag;
-  final String? arrivalFlag;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
-    final cityStyle = tt.headlineMedium?.copyWith(
-      fontSize: 22,
-      fontWeight: FontWeight.w800,
-      letterSpacing: -0.4,
-      color: cs.onSurface,
-    );
-    final subStyle = tt.labelMedium?.copyWith(color: cs.onSurfaceVariant);
-    return Row(
-      key: const Key('request-public-corridor'),
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                departureCity,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: cityStyle,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${departureFlag != null ? '$departureFlag ' : ''}'
-                '${l.requestPublicFromLabel}',
-                style: subStyle,
-              ),
-            ],
-          ),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-          child: _CorridorArrow(),
-        ),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                arrivalCity,
-                maxLines: 2,
-                textAlign: TextAlign.end,
-                overflow: TextOverflow.ellipsis,
-                style: cityStyle,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${l.requestPublicToLabel}'
-                '${arrivalFlag != null ? ' $arrivalFlag' : ''}',
-                textAlign: TextAlign.end,
-                style: subStyle,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Flèche du corridor : ligne pointillée qui part d'un point (départ), avion
-/// dans une pastille au milieu, pointe de flèche à l'arrivée. Couleurs unies.
-class _CorridorArrow extends StatelessWidget {
-  const _CorridorArrow();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return ExcludeSemantics(
-      child: SizedBox(
-        width: 76,
-        height: 28,
-        child: CustomPaint(
-          painter: _CorridorArrowPainter(
-            line: cs.outline,
-            dot: cs.primary,
-            head: cs.warning,
-            surface: cs.surface,
-          ),
-          child: Center(
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: RotatedBox(
-                quarterTurns: 1,
-                child: Icon(Icons.flight_rounded, size: 14, color: cs.primary),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CorridorArrowPainter extends CustomPainter {
-  const _CorridorArrowPainter({
-    required this.line,
-    required this.dot,
-    required this.head,
-    required this.surface,
-  });
-
-  final Color line;
-  final Color dot;
-  final Color head;
-  final Color surface;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final y = size.height / 2;
-    const dotR = 3.5;
-    const headLen = 6.0;
-    final dash = Paint()
-      ..color = line
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-    // Pointillé de la pastille de départ jusqu'à la pointe.
-    var x = dotR * 2 + 2;
-    final endX = size.width - headLen - 2;
-    while (x < endX) {
-      canvas.drawLine(Offset(x, y), Offset((x + 4).clamp(0, endX), y), dash);
-      x += 8;
-    }
-    canvas
-      ..drawCircle(Offset(dotR, y), dotR, Paint()..color = surface)
-      ..drawCircle(
-        Offset(dotR, y),
-        dotR - 1,
-        Paint()
-          ..color = dot
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
-      );
-    final arrow = Paint()
-      ..color = head
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(
-      Path()
-        ..moveTo(size.width - headLen - 1, y - 5)
-        ..lineTo(size.width - 1, y)
-        ..lineTo(size.width - headLen - 1, y + 5),
-      arrow,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_CorridorArrowPainter old) =>
-      old.line != line ||
-      old.dot != dot ||
-      old.head != head ||
-      old.surface != surface;
-}
-
 // ── Carte héros ──────────────────────────────────────────────────────────────
 
 /// Carte héros du détail : étiquette « Demande d'envoi » et pastilles au bord
@@ -1399,15 +1213,11 @@ class _HeroCard extends StatelessWidget {
     required this.request,
     required this.price,
     required this.isUrgent,
-    this.departureFlag,
-    this.arrivalFlag,
   });
 
   final PackageRequest request;
   final double? price;
   final bool isUrgent;
-  final String? departureFlag;
-  final String? arrivalFlag;
 
   @override
   Widget build(BuildContext context) {
@@ -1479,11 +1289,10 @@ class _HeroCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: DonySpacing.md),
-          _CorridorRoute(
+          RequestCorridor(
+            key: const Key('request-public-corridor'),
             departureCity: r.departureCity,
             arrivalCity: r.arrivalCity,
-            departureFlag: departureFlag,
-            arrivalFlag: arrivalFlag,
           ),
           const SizedBox(height: DonySpacing.md),
           Divider(height: 1, color: cs.outline),

@@ -17984,7 +17984,87 @@
   "@bidDetailPickupInstructionsLabel": {
     "description": "Plus de détails d'une demande (details_accordion.dart)"
   },
-  "negotiationMakeOfferSelectTripHint": "Choisissez un de vos trajets ci-dessus pour envoyer l'offre",
+  "negotiationMakeOfferStepProgress": "Étape {step} sur 3 · {name}",
+  "@negotiationMakeOfferStepProgress": {
+    "description": "Indicateur d'étape de la feuille « Faire une offre » (make_offer_bottom_sheet.dart)",
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationMakeOfferStepTrip": "Trajet",
+  "@negotiationMakeOfferStepTrip": {
+    "description": "Nom de l'étape 1 de la feuille d'offre"
+  },
+  "negotiationMakeOfferStepPrice": "Prix",
+  "@negotiationMakeOfferStepPrice": {
+    "description": "Nom de l'étape 2 de la feuille d'offre"
+  },
+  "negotiationMakeOfferStepRecap": "Récap et message",
+  "@negotiationMakeOfferStepRecap": {
+    "description": "Nom de l'étape 3 de la feuille d'offre"
+  },
+  "negotiationMakeOfferEnterValidPrice": "Saisissez un prix valide",
+  "@negotiationMakeOfferEnterValidPrice": {
+    "description": "Aide sous le bouton Continuer quand le prix est vide ou nul"
+  },
+  "negotiationMakeOfferEnterValidCapacity": "Saisissez une capacité valide",
+  "@negotiationMakeOfferEnterValidCapacity": {
+    "description": "Aide sous le bouton Continuer quand la capacité est vide ou nulle"
+  },
+  "negotiationMakeOfferPickDateToContinue": "Choisissez votre date de voyage pour continuer",
+  "@negotiationMakeOfferPickDateToContinue": {
+    "description": "Aide sous le bouton Continuer quand la date d'un nouveau trajet manque"
+  },
+  "negotiationMakeOfferRecapDeparture": "Départ",
+  "@negotiationMakeOfferRecapDeparture": {
+    "description": "Ligne du récapitulatif de l'offre : date de départ"
+  },
+  "negotiationMakeOfferRecapCapacity": "Capacité",
+  "@negotiationMakeOfferRecapCapacity": {
+    "description": "Ligne du récapitulatif de l'offre : kilos proposés"
+  },
+  "negotiationMakeOfferRecapPrice": "Prix",
+  "@negotiationMakeOfferRecapPrice": {
+    "description": "Ligne du récapitulatif de l'offre : prix"
+  },
+  "negotiationMakeOfferRecapFirm": "ferme",
+  "@negotiationMakeOfferRecapFirm": {
+    "description": "Mention après le prix du récapitulatif quand le prix est ferme"
+  },
+  "negotiationMakeOfferGaugeBelow": "Sous le prix du marché",
+  "@negotiationMakeOfferGaugeBelow": {
+    "description": "Position du prix saisi par rapport à l'estimation"
+  },
+  "negotiationMakeOfferGaugeWithin": "Dans le prix du marché",
+  "@negotiationMakeOfferGaugeWithin": {
+    "description": "Position du prix saisi par rapport à l'estimation"
+  },
+  "negotiationMakeOfferGaugeAbove": "Au-dessus du marché",
+  "@negotiationMakeOfferGaugeAbove": {
+    "description": "Position du prix saisi par rapport à l'estimation"
+  },
+  "negotiationMakeOfferPriceDecrease": "Baisser le prix",
+  "@negotiationMakeOfferPriceDecrease": {
+    "description": "Info-bulle du bouton − du prix"
+  },
+  "negotiationMakeOfferPriceIncrease": "Augmenter le prix",
+  "@negotiationMakeOfferPriceIncrease": {
+    "description": "Info-bulle du bouton + du prix"
+  },
+  "negotiationMakeOfferCapacityDecrease": "Moins de kilos",
+  "@negotiationMakeOfferCapacityDecrease": {
+    "description": "Info-bulle du bouton − de la capacité"
+  },
+  "negotiationMakeOfferCapacityIncrease": "Plus de kilos",
+  "@negotiationMakeOfferCapacityIncrease": {
+    "description": "Info-bulle du bouton + de la capacité"
+  },
+  "negotiationMakeOfferSelectTripHint": "Choisissez un trajet pour continuer",
   "@negotiationMakeOfferSelectTripHint": {
     "description": "Sous le bouton grisé de la feuille d'offre tant qu'aucun trajet n'est choisi (make_offer_bottom_sheet.dart, FLUTTER-4W)"
   },

@@ -26191,10 +26191,118 @@ abstract class AppLocalizations {
   /// **'Retrait à l\'arrivée'**
   String get bidDetailPickupInstructionsLabel;
 
+  /// Indicateur d'étape de la feuille « Faire une offre » (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {step} sur 3 · {name}'**
+  String negotiationMakeOfferStepProgress(int step, String name);
+
+  /// Nom de l'étape 1 de la feuille d'offre
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet'**
+  String get negotiationMakeOfferStepTrip;
+
+  /// Nom de l'étape 2 de la feuille d'offre
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix'**
+  String get negotiationMakeOfferStepPrice;
+
+  /// Nom de l'étape 3 de la feuille d'offre
+  ///
+  /// In fr, this message translates to:
+  /// **'Récap et message'**
+  String get negotiationMakeOfferStepRecap;
+
+  /// Aide sous le bouton Continuer quand le prix est vide ou nul
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez un prix valide'**
+  String get negotiationMakeOfferEnterValidPrice;
+
+  /// Aide sous le bouton Continuer quand la capacité est vide ou nulle
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez une capacité valide'**
+  String get negotiationMakeOfferEnterValidCapacity;
+
+  /// Aide sous le bouton Continuer quand la date d'un nouveau trajet manque
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez votre date de voyage pour continuer'**
+  String get negotiationMakeOfferPickDateToContinue;
+
+  /// Ligne du récapitulatif de l'offre : date de départ
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get negotiationMakeOfferRecapDeparture;
+
+  /// Ligne du récapitulatif de l'offre : kilos proposés
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité'**
+  String get negotiationMakeOfferRecapCapacity;
+
+  /// Ligne du récapitulatif de l'offre : prix
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix'**
+  String get negotiationMakeOfferRecapPrice;
+
+  /// Mention après le prix du récapitulatif quand le prix est ferme
+  ///
+  /// In fr, this message translates to:
+  /// **'ferme'**
+  String get negotiationMakeOfferRecapFirm;
+
+  /// Position du prix saisi par rapport à l'estimation
+  ///
+  /// In fr, this message translates to:
+  /// **'Sous le prix du marché'**
+  String get negotiationMakeOfferGaugeBelow;
+
+  /// Position du prix saisi par rapport à l'estimation
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans le prix du marché'**
+  String get negotiationMakeOfferGaugeWithin;
+
+  /// Position du prix saisi par rapport à l'estimation
+  ///
+  /// In fr, this message translates to:
+  /// **'Au-dessus du marché'**
+  String get negotiationMakeOfferGaugeAbove;
+
+  /// Info-bulle du bouton − du prix
+  ///
+  /// In fr, this message translates to:
+  /// **'Baisser le prix'**
+  String get negotiationMakeOfferPriceDecrease;
+
+  /// Info-bulle du bouton + du prix
+  ///
+  /// In fr, this message translates to:
+  /// **'Augmenter le prix'**
+  String get negotiationMakeOfferPriceIncrease;
+
+  /// Info-bulle du bouton − de la capacité
+  ///
+  /// In fr, this message translates to:
+  /// **'Moins de kilos'**
+  String get negotiationMakeOfferCapacityDecrease;
+
+  /// Info-bulle du bouton + de la capacité
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus de kilos'**
+  String get negotiationMakeOfferCapacityIncrease;
+
   /// Sous le bouton grisé de la feuille d'offre tant qu'aucun trajet n'est choisi (make_offer_bottom_sheet.dart, FLUTTER-4W)
   ///
   /// In fr, this message translates to:
-  /// **'Choisissez un de vos trajets ci-dessus pour envoyer l\'offre'**
+  /// **'Choisissez un trajet pour continuer'**
   String get negotiationMakeOfferSelectTripHint;
 
   /// Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur
