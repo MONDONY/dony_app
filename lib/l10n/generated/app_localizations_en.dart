@@ -4670,6 +4670,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestDescriptionLabel => 'Description';
 
   @override
+  String get requestPublicFromLabel => 'From';
+
+  @override
+  String get requestPublicToLabel => 'To';
+
+  @override
+  String get requestPublicNoPhoto => 'No photo for this parcel';
+
+  @override
   String get requestPublicReportTooltip => 'Report';
 
   @override
