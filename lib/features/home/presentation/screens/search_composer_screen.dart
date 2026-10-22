@@ -149,9 +149,10 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         builder: (context, state) {
           final f = state.filters;
           return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+            // Pas de titre au-dessus des villes : la carte départ/arrivée ouvre
+            // l'écran, ses deux champs portent déjà leur libellé.
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             children: [
-              SearchSectionLabel(l.homeComposerSectionWhere),
               CityCorridorFields(
                 departureValue: f.departureCity,
                 arrivalValue: f.arrivalCity,

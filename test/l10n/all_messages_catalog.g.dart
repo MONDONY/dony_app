@@ -802,7 +802,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'homeComposerTitleTrips': (l) => l.homeComposerTitleTrips,
   'homeComposerTitleParcels': (l) => l.homeComposerTitleParcels,
   'homeComposerClearAll': (l) => l.homeComposerClearAll,
-  'homeComposerSectionWhere': (l) => l.homeComposerSectionWhere,
   'homeComposerMoreFilters': (l) => l.homeComposerMoreFilters,
   'homeComposerMoreFiltersHint': (l) => l.homeComposerMoreFiltersHint,
   'homeComposerSectionWhen': (l) => l.homeComposerSectionWhen,

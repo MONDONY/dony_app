@@ -2346,9 +2346,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeComposerClearAll => 'Tout effacer';
 
   @override
-  String get homeComposerSectionWhere => 'OÙ';
-
-  @override
   String get homeComposerMoreFilters => 'Plus de filtres';
 
   @override

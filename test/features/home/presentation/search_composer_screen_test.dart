@@ -203,8 +203,9 @@ void main() {
     await tester.pumpAndSettle();
 
     final tops = <String, double>{};
+    // Plus de titre « OÙ » : la carte des villes ouvre l'écran.
+    expect(find.text('OÙ'), findsNothing);
     for (final label in const [
-      'OÙ',
       'QUAND',
       'POIDS ET PRIX',
       'FILTRES RAPIDES',
@@ -550,8 +551,8 @@ void main() {
       // « Pour mes trajets » vit entre FILTRES RAPIDES et AUTOUR DE MOI dans le
       // ListView : vérifié à sa place, avant que le scroll ne le dépasse (le
       // scroll ne revient jamais en arrière dans cette boucle).
+      expect(find.text('OÙ'), findsNothing);
       for (final label in const [
-        'OÙ',
         'QUAND',
         'POIDS MAXIMAL',
         'TAILLE DU COLIS',
@@ -749,7 +750,7 @@ void main() {
 
       expect(find.text('Filter trips'), findsOneWidget);
       expect(find.text('Clear all'), findsOneWidget);
-      expect(find.text('WHERE'), findsOneWidget);
+      expect(find.text('WHERE'), findsNothing);
       expect(find.text('Search (3)'), findsOneWidget);
     });
 
