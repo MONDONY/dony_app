@@ -18,16 +18,19 @@ void main() {
   );
 
   testWidgets(
-    'les deux segments nomment l\'intention et ce que la liste montre',
+    'les deux segments nomment l\'intention, sur une seule ligne, sans '
+    'sous-titre affiché',
     (tester) async {
       await tester.pumpWidget(
         wrap(SearchModeSelector(mode: SearchMode.trips, onChanged: (_) {})),
       );
 
       expect(find.text('J\'envoie un colis'), findsOneWidget);
-      expect(find.text('Voyageurs disponibles'), findsOneWidget);
       expect(find.text('Je voyage'), findsOneWidget);
-      expect(find.text('Colis à transporter'), findsOneWidget);
+      // Le sous-titre prenait une ligne à la liste : il ne reste que dans le
+      // libellé sémantique (voir plus bas).
+      expect(find.text('Voyageurs disponibles'), findsNothing);
+      expect(find.text('Colis à transporter'), findsNothing);
     },
   );
 
@@ -62,7 +65,7 @@ void main() {
   });
 
   testWidgets(
-    'le compteur s\'inscrit dans le sous-titre du segment inactif seulement',
+    'le compteur s\'affiche en pastille sur le segment inactif seulement',
     (tester) async {
       await tester.pumpWidget(
         wrap(
@@ -74,7 +77,6 @@ void main() {
         ),
       );
 
-      expect(find.text('8 colis à transporter'), findsOneWidget);
       expect(
         find.descendant(
           of: find.byKey(_colisKey),
@@ -82,6 +84,7 @@ void main() {
         ),
         findsOneWidget,
       );
+      expect(tester.widget<Text>(find.byKey(_compteurKey)).data, '8');
       expect(
         find.descendant(
           of: find.byKey(_trajetsKey),
@@ -89,12 +92,10 @@ void main() {
         ),
         findsNothing,
       );
-      // Le segment actif garde son sous-titre sans nombre.
-      expect(find.text('Voyageurs disponibles'), findsOneWidget);
     },
   );
 
-  testWidgets('compteur nul ou zéro : sous-titre sans nombre, sans clé', (
+  testWidgets('compteur nul ou zéro : aucune pastille, sans clé', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -108,11 +109,10 @@ void main() {
     );
 
     expect(find.byKey(_compteurKey), findsNothing);
-    expect(find.text('Colis à transporter'), findsOneWidget);
-    expect(find.textContaining('0 colis'), findsNothing);
+    expect(find.text('0'), findsNothing);
   });
 
-  testWidgets('un seul résultat de l\'autre côté : accord au singulier', (
+  testWidgets('un seul résultat de l\'autre côté : pastille « 1 »', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -125,7 +125,18 @@ void main() {
       ),
     );
 
-    expect(find.text('1 voyageur disponible'), findsOneWidget);
+    expect(tester.widget<Text>(find.byKey(_compteurKey)).data, '1');
+    // L'accord au singulier reste dit au lecteur d'écran.
+    final handle = tester.ensureSemantics();
+    expect(
+      tester.getSemantics(find.byKey(_trajetsKey)),
+      matchesSemantics(
+        label: 'J\'envoie un colis, 1 voyageur disponible',
+        isButton: true,
+        hasSelectedState: true,
+      ),
+    );
+    handle.dispose();
   });
 
   testWidgets(
@@ -250,8 +261,8 @@ void main() {
 
     expect(find.text("I'm sending a parcel"), findsOneWidget);
     expect(find.text("I'm traveling"), findsOneWidget);
-    expect(find.text('2 travelers available'), findsOneWidget);
-    expect(find.text('Parcels to carry'), findsOneWidget);
+    expect(tester.widget<Text>(find.byKey(_compteurKey)).data, '2');
+    expect(find.text('Parcels to carry'), findsNothing);
   });
 
   testWidgets('en anglais : compteur de colis au singulier', (tester) async {
@@ -266,8 +277,17 @@ void main() {
       ),
     );
 
-    expect(find.text('1 parcel to carry'), findsOneWidget);
-    expect(find.text('Travelers available'), findsOneWidget);
+    expect(tester.widget<Text>(find.byKey(_compteurKey)).data, '1');
+    final handle = tester.ensureSemantics();
+    expect(
+      tester.getSemantics(find.byKey(_colisKey)),
+      matchesSemantics(
+        label: "I'm traveling, 1 parcel to carry",
+        isButton: true,
+        hasSelectedState: true,
+      ),
+    );
+    handle.dispose();
   });
 
   testWidgets('chaque segment porte son icône Lucide, teintée selon l\'état', (
@@ -318,7 +338,7 @@ void main() {
     handle.dispose();
   });
 
-  for (final scale in [1.0, 1.3]) {
+  for (final scale in [1.0, 1.3, 2.0]) {
     testWidgets('aucun débordement à 320 dp avec textScaler $scale', (
       tester,
     ) async {

@@ -244,11 +244,12 @@ void main() {
   });
 
   group('homeListSubtitle (fr)', () {
-    const tripsExpected = {
+    // Avec des trajets, la phrase répétait le titre : plus de sous-titre.
+    const Map<int, String?> tripsExpected = {
       0: "Personne ne propose ce trajet pour l'instant",
-      1: 'Ils peuvent emporter votre colis',
-      2: 'Ils peuvent emporter votre colis',
-      12: 'Ils peuvent emporter votre colis',
+      1: null,
+      2: null,
+      12: null,
     };
     for (final e in tripsExpected.entries) {
       test('trajets, ${e.key}', () {
@@ -269,7 +270,7 @@ void main() {
     // Bloc « Autres annonces sur ce trajet » : sans trajet exact, le
     // sous-titre ne dit plus « personne » au-dessus de cartes visibles.
     group('trajets avec des annonces proches', () {
-      String subtitle({required int trips, required bool hasSimilar}) =>
+      String? subtitle({required int trips, required bool hasSimilar}) =>
           homeListSubtitle(
             fr,
             mode: SearchMode.trips,
@@ -292,15 +293,9 @@ void main() {
           "Personne ne propose ce trajet pour l'instant",
         );
       });
-      test('des trajets exacts : texte inchangé, proches ou non', () {
-        expect(
-          subtitle(trips: 3, hasSimilar: true),
-          'Ils peuvent emporter votre colis',
-        );
-        expect(
-          subtitle(trips: 3, hasSimilar: false),
-          'Ils peuvent emporter votre colis',
-        );
+      test('des trajets exacts : pas de sous-titre, proches ou non', () {
+        expect(subtitle(trips: 3, hasSimilar: true), isNull);
+        expect(subtitle(trips: 3, hasSimilar: false), isNull);
       });
       test('mode colis : ignoré', () {
         expect(
@@ -318,11 +313,11 @@ void main() {
       });
     });
 
-    const parcelsExpected = {
+    const Map<int, String?> parcelsExpected = {
       0: "Aucune demande d'envoi pour l'instant",
-      1: 'Vous pouvez les emporter sur votre trajet',
-      2: 'Vous pouvez les emporter sur votre trajet',
-      12: 'Vous pouvez les emporter sur votre trajet',
+      1: null,
+      2: null,
+      12: null,
     };
     for (final e in parcelsExpected.entries) {
       test('colis, ${e.key}', () {

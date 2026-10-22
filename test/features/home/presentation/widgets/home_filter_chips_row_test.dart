@@ -59,6 +59,7 @@ void main() {
   group('puce Valise 23 kg', _suitcaseChipTests);
   group('date personnalisée', _customDateChipTests);
   group('puce Capacité', _capacityChipTests);
+  group('ordre des puces', _chipOrderTests);
 }
 
 void _capacityChipTests() {
@@ -386,5 +387,58 @@ void _suitcaseChipTests() {
     await tester.pumpWidget(_wrap(mode: SearchMode.trips));
 
     expect(find.text('🧳 23 kg suitcase'), findsOneWidget);
+  });
+}
+
+/// Ordre d'usage mesuré pendant le test du 27/09 au 12/10 : date, poids et
+/// urgent en tête, avant les filtres plus rares.
+void _chipOrderTests() {
+  double left(WidgetTester tester, Finder f) => tester.getTopLeft(f).dx;
+
+  testWidgets('trajets : date, kilos, urgent, puis le reste', (tester) async {
+    await tester.pumpWidget(_wrap(mode: SearchMode.trips));
+
+    final date = left(tester, find.byKey(const Key('chip-date')));
+    final kilos = left(tester, find.byKey(const Key('chip-capacity')));
+    final urgent = left(tester, find.byKey(const Key('chip-urgent')));
+    final valise = left(tester, find.byKey(const Key('chip-suitcase-23')));
+    final note = left(tester, find.text('Note'));
+    final prix = left(tester, find.text('Prix'));
+
+    expect(date, lessThan(kilos));
+    expect(kilos, lessThan(urgent));
+    expect(urgent, lessThan(valise));
+    expect(valise, lessThan(note));
+    expect(note, lessThan(prix));
+  });
+
+  testWidgets('colis : date, pour mes trajets, poids, urgent, taille', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap());
+
+    final date = left(tester, find.byKey(const Key('chip-date')));
+    final trajets = left(
+      tester,
+      find.byKey(const Key('chip-row-matching-my-trips')),
+    );
+    final poids = left(tester, find.text('Kilos'));
+    final urgent = left(tester, find.byKey(const Key('chip-urgent')));
+    final taille = left(tester, find.text('Taille'));
+
+    expect(date, lessThan(trajets));
+    expect(trajets, lessThan(poids));
+    expect(poids, lessThan(urgent));
+    expect(urgent, lessThan(taille));
+  });
+
+  testWidgets('les puces communes gardent la même clé dans les deux modes', (
+    tester,
+  ) async {
+    for (final mode in SearchMode.values) {
+      await tester.pumpWidget(_wrap(mode: mode));
+      expect(find.byKey(const Key('chip-date')), findsOneWidget);
+      expect(find.byKey(const Key('chip-urgent')), findsOneWidget);
+    }
   });
 }

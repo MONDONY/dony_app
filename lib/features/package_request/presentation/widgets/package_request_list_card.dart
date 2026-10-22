@@ -37,6 +37,7 @@ class PackageRequestListCard extends StatelessWidget {
     this.status = PackageRequestStatus.open,
     this.index = 0,
     this.showFavorite = false,
+    this.compact = false,
   });
 
   final PackageRequestSearchItem item;
@@ -55,6 +56,13 @@ class PackageRequestListCard extends StatelessWidget {
   /// user. The in-card heart has no owner guard; the backend returns 422 on an
   /// own-request add, but the optimistic UI would flash before the error arrives.
   final bool showFavorite;
+
+  /// Version resserrée pour la liste de l'onglet Rechercher : mêmes éléments,
+  /// même style, moins de hauteur. Marges réduites, vignette plus petite,
+  /// budget et audience sur une même ligne, pastilles dans un `Wrap`. Elle
+  /// passe à la ligne au lieu de déborder, quelle que soit la largeur ou la
+  /// taille du texte.
+  final bool compact;
 
   String get _sizeLabel => switch (item.parcelSize) {
     ParcelSize.small => 'S',
@@ -129,66 +137,173 @@ class PackageRequestListCard extends StatelessWidget {
                     Container(width: 6, color: accent),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.all(DonySpacing.md),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: DonySpacing.md,
+                          vertical: compact ? DonySpacing.sm : DonySpacing.md,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // ── Micro-label + chip statut/own + optional heart ──
-                            Row(
-                              children: [
-                                DonyIcon('package', size: 13, color: accent),
-                                const SizedBox(width: DonySpacing.xxs),
-                                Expanded(
-                                  child: Text(
-                                    l.requestPublicTitle,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: tt.labelSmall?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.4,
-                                      color: accent,
+                            if (compact)
+                              // Étiquette à gauche, pastilles (statut ou « Ma
+                              // demande », Urgent, cœur) à droite dans un Wrap :
+                              // sur écran étroit ou texte agrandi, les pastilles
+                              // passent à la ligne, l'étiquette s'abrège.
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Flexible(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        top: DonySpacing.xxs,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          DonyIcon(
+                                            'package',
+                                            size: 13,
+                                            color: accent,
+                                          ),
+                                          const SizedBox(
+                                            width: DonySpacing.xxs,
+                                          ),
+                                          Flexible(
+                                            child: Text(
+                                              l.requestPublicTitle,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: tt.labelSmall?.copyWith(
+                                                fontWeight: FontWeight.w800,
+                                                letterSpacing: 0.4,
+                                                color: accent,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: DonySpacing.sm),
-                                if (isOwnRequest)
-                                  _OwnRequestChip(cs: cs, tt: tt)
-                                else
-                                  packageStatusChip(context, status),
-                                if (item.isUrgent) ...[
-                                  const SizedBox(width: DonySpacing.xs),
-                                  const DonyUrgentBadge(),
+                                  const SizedBox(width: DonySpacing.sm),
+                                  Flexible(
+                                    flex: 2,
+                                    child: Wrap(
+                                      alignment: WrapAlignment.end,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
+                                      spacing: DonySpacing.xs,
+                                      runSpacing: DonySpacing.xxs,
+                                      children: [
+                                        if (isOwnRequest)
+                                          _OwnRequestChip(cs: cs, tt: tt)
+                                        else
+                                          packageStatusChip(context, status),
+                                        if (item.isUrgent)
+                                          const DonyUrgentBadge(),
+                                        if (showFavorite)
+                                          _buildRequestFavoriteHeart(context),
+                                      ],
+                                    ),
+                                  ),
                                 ],
-                                if (showFavorite) ...[
-                                  const SizedBox(width: DonySpacing.xs),
-                                  _buildRequestFavoriteHeart(context),
+                              )
+                            else
+                              Row(
+                                children: [
+                                  DonyIcon('package', size: 13, color: accent),
+                                  const SizedBox(width: DonySpacing.xxs),
+                                  Expanded(
+                                    child: Text(
+                                      l.requestPublicTitle,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: tt.labelSmall?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.4,
+                                        color: accent,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: DonySpacing.sm),
+                                  if (isOwnRequest)
+                                    _OwnRequestChip(cs: cs, tt: tt)
+                                  else
+                                    packageStatusChip(context, status),
+                                  if (item.isUrgent) ...[
+                                    const SizedBox(width: DonySpacing.xs),
+                                    const DonyUrgentBadge(),
+                                  ],
+                                  if (showFavorite) ...[
+                                    const SizedBox(width: DonySpacing.xs),
+                                    _buildRequestFavoriteHeart(context),
+                                  ],
                                 ],
-                              ],
-                            ),
+                              ),
                             // ── Score de compatibilité (filtre « Pour mes
                             //    trajets ») : présent uniquement quand le
                             //    serveur a renvoyé un score.
-                            if (item.hasMatchScore) ...[
+                            if (item.hasMatchScore && !compact) ...[
                               const SizedBox(height: DonySpacing.xs),
                               _MatchScoreRow(item: item, cs: cs, tt: tt),
+                            ],
+                            // Version compacte : score de compatibilité et
+                            // négociation en cours sur une même ligne, qui passe
+                            // à la suivante au besoin.
+                            if (compact &&
+                                (item.hasMatchScore ||
+                                    (!isOwnRequest &&
+                                        item.myNegotiation != null))) ...[
+                              const SizedBox(height: DonySpacing.xs),
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: DonySpacing.sm,
+                                runSpacing: DonySpacing.xxs,
+                                children: [
+                                  if (item.hasMatchScore)
+                                    _MatchScoreRow(
+                                      item: item,
+                                      cs: cs,
+                                      tt: tt,
+                                      inline: true,
+                                    ),
+                                  if (!isOwnRequest &&
+                                      item.myNegotiation != null)
+                                    MyNegotiationChip(
+                                      negotiation: item.myNegotiation!,
+                                    ),
+                                ],
+                              ),
                             ],
                             // ── Négociation déjà engagée par le voyageur
                             //    (FLUTTER-NZ) : « Votre tour » ou
                             //    « Proposition en attente », ouvre le fil.
-                            if (!isOwnRequest && item.myNegotiation != null)
+                            if (!compact &&
+                                !isOwnRequest &&
+                                item.myNegotiation != null)
                               Align(
                                 alignment: AlignmentDirectional.centerStart,
                                 child: MyNegotiationChip(
                                   negotiation: item.myNegotiation!,
                                 ),
                               ),
-                            const SizedBox(height: DonySpacing.sm),
+                            SizedBox(
+                              height: compact ? DonySpacing.xs : DonySpacing.sm,
+                            ),
 
                             // ── Photo colis + infos colis ─────────────────────
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _Thumbnail(item: item, cs: cs),
-                                const SizedBox(width: DonySpacing.md),
+                                _Thumbnail(
+                                  item: item,
+                                  cs: cs,
+                                  size: compact ? 52 : 76,
+                                ),
+                                SizedBox(
+                                  width: compact
+                                      ? DonySpacing.sm
+                                      : DonySpacing.md,
+                                ),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -198,45 +313,97 @@ class PackageRequestListCard extends StatelessWidget {
                                       Text(
                                         '${item.weightKg.toStringAsFixed(0)} kg · '
                                         '${item.categories.isNotEmpty ? '${contentCategoryDisplayName(l, item.categories.first)} · ' : ''}$_sizeLabel',
-                                        style: tt.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: -0.3,
-                                          color: cs.onSurface,
-                                        ),
+                                        style:
+                                            (compact
+                                                    ? tt.titleSmall
+                                                    : tt.titleMedium)
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w800,
+                                                  letterSpacing: -0.3,
+                                                  color: cs.onSurface,
+                                                ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: DonySpacing.xs),
-                                      _RouteMeta(item: item, cs: cs, tt: tt),
-                                      const SizedBox(height: DonySpacing.xs),
-                                      _Budget(
+                                      SizedBox(
+                                        height: compact
+                                            ? DonySpacing.xxs
+                                            : DonySpacing.xs,
+                                      ),
+                                      _RouteMeta(
                                         item: item,
                                         cs: cs,
                                         tt: tt,
-                                        ownRequest: isOwnRequest,
+                                        maxLines: compact ? 2 : 1,
                                       ),
-                                      // Audience de ma demande, visible de moi
-                                      // seul : sous le budget plutôt que sur la
-                                      // ligne du trajet, dont la date serait
-                                      // tronquée.
-                                      if (OwnerViewsLabel.isVisible(
-                                        count: item.uniqueViewerCount,
-                                        isOwner: isOwnRequest,
-                                      )) ...[
-                                        const SizedBox(height: DonySpacing.xxs),
-                                        OwnerViewsLabel(
+                                      SizedBox(
+                                        height: compact
+                                            ? DonySpacing.xxs
+                                            : DonySpacing.xs,
+                                      ),
+                                      if (compact)
+                                        // Budget et audience sur une même ligne
+                                        // qui passe à la suivante au besoin.
+                                        Wrap(
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
+                                          spacing: DonySpacing.sm,
+                                          runSpacing: DonySpacing.xxs,
+                                          children: [
+                                            _Budget(
+                                              item: item,
+                                              cs: cs,
+                                              tt: tt,
+                                              ownRequest: isOwnRequest,
+                                            ),
+                                            if (OwnerViewsLabel.isVisible(
+                                              count: item.uniqueViewerCount,
+                                              isOwner: isOwnRequest,
+                                            ))
+                                              OwnerViewsLabel(
+                                                count: item.uniqueViewerCount,
+                                                isOwner: isOwnRequest,
+                                              ),
+                                          ],
+                                        )
+                                      else ...[
+                                        _Budget(
+                                          item: item,
+                                          cs: cs,
+                                          tt: tt,
+                                          ownRequest: isOwnRequest,
+                                        ),
+                                        // Audience de ma demande, visible de moi
+                                        // seul : sous le budget plutôt que sur la
+                                        // ligne du trajet, dont la date serait
+                                        // tronquée.
+                                        if (OwnerViewsLabel.isVisible(
                                           count: item.uniqueViewerCount,
                                           isOwner: isOwnRequest,
-                                        ),
+                                        )) ...[
+                                          const SizedBox(
+                                            height: DonySpacing.xxs,
+                                          ),
+                                          OwnerViewsLabel(
+                                            count: item.uniqueViewerCount,
+                                            isOwner: isOwnRequest,
+                                          ),
+                                        ],
                                       ],
                                     ],
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: DonySpacing.sm),
+                            SizedBox(
+                              height: compact ? DonySpacing.xs : DonySpacing.sm,
+                            ),
                             Divider(height: 1, color: cs.outlineVariant),
-                            const SizedBox(height: DonySpacing.xs),
+                            SizedBox(
+                              height: compact
+                                  ? DonySpacing.xxs
+                                  : DonySpacing.xs,
+                            ),
                             _SenderRow(item: item, cs: cs, tt: tt),
                           ],
                         ),
@@ -268,7 +435,12 @@ class _MatchScoreRow extends StatelessWidget {
     required this.item,
     required this.cs,
     required this.tt,
+    this.inline = false,
   });
+
+  /// Posée dans un `Wrap` (carte compacte) : pas de `Expanded`, la ligne prend
+  /// sa largeur naturelle et la date du trajet s'abrège si besoin.
+  final bool inline;
 
   final PackageRequestSearchItem item;
   final ColorScheme cs;
@@ -277,7 +449,20 @@ class _MatchScoreRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final depart = item.matchedTripDepartureDate;
+    final dateText = depart == null
+        ? null
+        : Text(
+            context.l10n.requestListYourTripOn(
+              DateFormat.MMMd(context.l10n.localeName).format(depart),
+            ),
+            overflow: TextOverflow.ellipsis,
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          );
     return Row(
+      mainAxisSize: inline ? MainAxisSize.min : MainAxisSize.max,
       children: [
         Container(
           key: const Key('match-score-badge'),
@@ -307,18 +492,7 @@ class _MatchScoreRow extends StatelessWidget {
         ),
         if (depart != null) ...[
           const SizedBox(width: DonySpacing.sm),
-          Expanded(
-            child: Text(
-              context.l10n.requestListYourTripOn(
-                DateFormat.MMMd(context.l10n.localeName).format(depart),
-              ),
-              overflow: TextOverflow.ellipsis,
-              style: tt.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          inline ? Flexible(child: dateText!) : Expanded(child: dateText!),
         ],
       ],
     );
@@ -328,8 +502,17 @@ class _MatchScoreRow extends StatelessWidget {
 // ── Route meta (drapeaux + date) ─────────────────────────────────────────────
 
 class _RouteMeta extends StatelessWidget {
-  const _RouteMeta({required this.item, required this.cs, required this.tt});
+  const _RouteMeta({
+    required this.item,
+    required this.cs,
+    required this.tt,
+    this.maxLines = 1,
+  });
   final PackageRequestSearchItem item;
+
+  /// Lignes autorisées avant les points de suspension. La version compacte en
+  /// accorde deux : la date du trajet ne doit pas disparaître sur écran étroit.
+  final int maxLines;
   final ColorScheme cs;
   final TextTheme tt;
 
@@ -363,7 +546,7 @@ class _RouteMeta extends StatelessWidget {
               color: cs.onSurfaceVariant,
               fontWeight: FontWeight.w600,
             ),
-            maxLines: 1,
+            maxLines: maxLines,
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -477,9 +660,12 @@ double? _netFromGross(double? gross, String? currency) {
 // ── Thumbnail + compteur photos ──────────────────────────────────────────────
 
 class _Thumbnail extends StatelessWidget {
-  const _Thumbnail({required this.item, required this.cs});
+  const _Thumbnail({required this.item, required this.cs, this.size = 76});
   final PackageRequestSearchItem item;
   final ColorScheme cs;
+
+  /// Côté de la vignette : 76 pour la carte normale, plus petit en compact.
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -488,15 +674,15 @@ class _Thumbnail extends StatelessWidget {
         : item.photoUrl;
     final count = item.photoUrls.length;
     return SizedBox(
-      width: 76,
-      height: 76,
+      width: size,
+      height: size,
       child: Stack(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(DonyRadius.md),
             child: SizedBox(
-              width: 76,
-              height: 76,
+              width: size,
+              height: size,
               child: url != null && url.isNotEmpty
                   ? CachedNetworkImage(
                       imageUrl: url,
@@ -593,7 +779,10 @@ class _SenderRow extends StatelessWidget {
                     style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Row(
+                  // Wrap et non Row : sur écran étroit ou texte agrandi, le
+                  // nombre d'avis passe à la ligne au lieu de déborder.
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       DonyIcon('star-fill', size: 12, color: cs.warning),
                       const SizedBox(width: 2),
@@ -650,11 +839,15 @@ class _OwnRequestChip extends StatelessWidget {
         children: [
           DonyIcon('user', size: 12, color: cs.primary),
           const SizedBox(width: DonySpacing.xs),
-          Text(
-            context.l10n.requestDetailTitle,
-            style: tt.labelSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: cs.primary,
+          Flexible(
+            child: Text(
+              context.l10n.requestDetailTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: tt.labelSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: cs.primary,
+              ),
             ),
           ),
         ],
