@@ -1032,6 +1032,19 @@ abstract final class AnalyticsEvents {
   /// vers l'annonce, distinct du tap sur la carte qui mène au profil.
   static const subscriptionLastTripOpened = 'subscription_last_trip_opened';
 
+  /// Section « En cours » d'un profil chargée (trajets et demandes ouverts de
+  /// ce membre, `GET /users/{id}/open-listings`). Propriétés `trip_count` et
+  /// `request_count`. Non émis en cas d'échec ni sur un back sans la route.
+  static const openListingsViewed = 'open_listings_viewed';
+
+  /// Filtre « Tout / Trajets / Demandes » de la section « En cours » touché
+  /// (propriété `filter` : `all`/`trips`/`requests`).
+  static const openListingsFilterChanged = 'open_listings_filter_changed';
+
+  /// Carte de la section « En cours » ouverte (propriété `kind` : `trip` ou
+  /// `request`). Jamais l'identifiant ni le profil consulté.
+  static const openListingOpened = 'open_listing_opened';
+
   static const corridorAlertToggled = 'corridor_alert_toggled';
   static const corridorAlertDeleted = 'corridor_alert_deleted';
   static const corridorAlertCreated = 'corridor_alert_created';

@@ -13,54 +13,6 @@ class SubscriptionStatus {
       );
 }
 
-class TravelerAnnouncement {
-  final String id;
-  final String departureCity;
-  final String arrivalCity;
-  final DateTime departureDate;
-  final double pricePerKg;
-  final double availableKg;
-  final String status;
-  final String currency;
-
-  /// `KG` ou `MIXED` (grille). Absent d'un serveur antérieur : `KG`.
-  final String pricingMode;
-
-  /// Prix affiché expéditeur le plus bas de la grille (« dès X »), `null`
-  /// hors grille ou sur un serveur antérieur (yadony-back #526).
-  final double? minGridUnitPriceDisplay;
-  const TravelerAnnouncement({
-    required this.id,
-    required this.departureCity,
-    required this.arrivalCity,
-    required this.departureDate,
-    required this.pricePerKg,
-    required this.availableKg,
-    required this.status,
-    this.currency = 'EUR',
-    this.pricingMode = 'KG',
-    this.minGridUnitPriceDisplay,
-  });
-
-  /// Trajet tarifé à la grille seulement : son prix au kilo vaut 0.
-  bool get gridOnly => pricingMode == 'MIXED' || pricePerKg <= 0;
-
-  factory TravelerAnnouncement.fromJson(Map<String, dynamic> json) =>
-      TravelerAnnouncement(
-        id: json['id'] as String,
-        departureCity: json['departureCity'] as String,
-        arrivalCity: json['arrivalCity'] as String,
-        departureDate: DateTime.parse(json['departureDate'] as String),
-        pricePerKg: (json['pricePerKg'] as num).toDouble(),
-        availableKg: (json['availableKg'] as num).toDouble(),
-        status: json['status'] as String,
-        currency: json['currency'] as String? ?? 'EUR',
-        pricingMode: json['pricingMode'] as String? ?? 'KG',
-        minGridUnitPriceDisplay: (json['minGridUnitPriceDisplay'] as num?)
-            ?.toDouble(),
-      );
-}
-
 class LastAnnouncement {
   final String announcementId;
   final String departureCity;
@@ -180,7 +132,4 @@ abstract class SubscriptionsRepository {
 
   /// Retire l'indicateur « nouveau » de tous les abonnements d'un coup.
   Future<void> markAllSeen();
-  Future<List<TravelerAnnouncement>> getTravelerAnnouncements(
-    String travelerId,
-  );
 }

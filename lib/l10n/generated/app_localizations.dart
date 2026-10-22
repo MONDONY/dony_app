@@ -23547,114 +23547,6 @@ abstract class AppLocalizations {
   /// **'Aucun voyageur ne correspond à cette recherche.'**
   String get followNoMatchMessage;
 
-  /// Erreur de chargement de l'en-tête du profil voyageur (traveler_profile_hub_screen.dart, _ProfileHeader).
-  ///
-  /// In fr, this message translates to:
-  /// **'Impossible de charger le profil'**
-  String get followHubProfileLoadError;
-
-  /// Marque de confiance compte PRO dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks).
-  ///
-  /// In fr, this message translates to:
-  /// **'Compte PRO'**
-  String get followHubProAccountLabel;
-
-  /// Marque de confiance identité vérifiée dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks).
-  ///
-  /// In fr, this message translates to:
-  /// **'Identité vérifiée'**
-  String get followHubVerifiedBadge;
-
-  /// Phrase de réputation, note moyenne déjà formatée (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).
-  ///
-  /// In fr, this message translates to:
-  /// **'{rating} de note'**
-  String followHubRating(String rating);
-
-  /// Phrase de réputation, nombre de livraisons (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{{count} livraison} other{{count} livraisons}}'**
-  String followHubDeliveries(int count);
-
-  /// Phrase de réputation, délai de réponse moyen (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).
-  ///
-  /// In fr, this message translates to:
-  /// **'répond en {hours} h'**
-  String followHubRespondsIn(int hours);
-
-  /// Repli de la phrase de réputation quand le voyageur n'a ni note ni livraison (traveler_profile_hub_screen.dart, _StatSentence).
-  ///
-  /// In fr, this message translates to:
-  /// **'Nouveau sur Yadony'**
-  String get followHubNewOnYadony;
-
-  /// Onglet des trajets du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar).
-  ///
-  /// In fr, this message translates to:
-  /// **'Trajets'**
-  String get followHubTripsTab;
-
-  /// Onglet des avis du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar).
-  ///
-  /// In fr, this message translates to:
-  /// **'Avis'**
-  String get followHubReviewsTab;
-
-  /// Description de l'état d'erreur de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab).
-  ///
-  /// In fr, this message translates to:
-  /// **'Impossible de charger les trajets. Réessayez dans un instant.'**
-  String get followHubTripsLoadError;
-
-  /// Description de l'état vide de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab).
-  ///
-  /// In fr, this message translates to:
-  /// **'Ce voyageur n\'a pas encore publié de trajet.'**
-  String get followHubNoTripsDescription;
-
-  /// Titre de l'état d'erreur de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsTab).
-  ///
-  /// In fr, this message translates to:
-  /// **'Impossible de charger les avis'**
-  String get followHubReviewsLoadError;
-
-  /// Titre de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList).
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucun avis'**
-  String get followHubNoReviewsTitle;
-
-  /// Description de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList).
-  ///
-  /// In fr, this message translates to:
-  /// **'Ce voyageur n\'a pas encore reçu d\'avis.'**
-  String get followHubNoReviewsDescription;
-
-  /// Nombre d'avis dans l'en-tête de l'onglet Avis ; invariant en français, pluralisé en anglais (traveler_profile_hub_screen.dart, _ReviewsList).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{{count} avis} other{{count} avis}}'**
-  String followHubReviewsCount(int count);
-
-  /// Bouton de réservation d'un trajet du voyageur (traveler_announcement_card.dart, TravelerAnnouncementCard).
-  ///
-  /// In fr, this message translates to:
-  /// **'Réserver'**
-  String get followHubReserveButton;
-
-  /// Badge quand le trajet n'a plus de kg disponible (traveler_announcement_card.dart, _MetaLine).
-  ///
-  /// In fr, this message translates to:
-  /// **'Complet'**
-  String get followHubFullBadge;
-
-  /// Poids disponible du trajet, déjà formaté (traveler_announcement_card.dart, _MetaLine).
-  ///
-  /// In fr, this message translates to:
-  /// **'{kg} kg disponibles'**
-  String followHubAvailableKg(String kg);
-
   /// Message du bandeau d'abonnement PRO impayé (subscription_status_banner.dart, SubscriptionStatusBanner).
   ///
   /// In fr, this message translates to:
@@ -35951,6 +35843,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ne correspond pas à l\'un de vos critères'**
   String get unmetGeneric;
+
+  /// Section « En cours » du profil d'un membre (open_listings_section.dart). Titre.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours'**
+  String get openListingsTitle;
+
+  /// Section « En cours » du profil d'un membre (open_listings_section.dart). Filtre : tout.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout'**
+  String get openListingsFilterAll;
+
+  /// Section « En cours » du profil d'un membre (open_listings_section.dart). Filtre : trajets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets'**
+  String get openListingsFilterTrips;
+
+  /// Section « En cours » du profil d'un membre (open_listings_section.dart). Filtre : demandes d'envoi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes'**
+  String get openListingsFilterRequests;
+
+  /// Section « En cours » du profil d'un membre (open_listings_section.dart). État vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien en cours pour le moment.'**
+  String get openListingsEmpty;
+
+  /// Section « En cours » du profil d'un membre (open_listings_section.dart). Repère de date devant chaque carte ; {when} vient de followRecency* (« hier », « il y a 2 j »).
+  ///
+  /// In fr, this message translates to:
+  /// **'En ligne {when}'**
+  String openListingsPostedAgo(String when);
 }
 
 class _AppLocalizationsDelegate

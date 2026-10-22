@@ -126,22 +126,4 @@ void main() {
     await ds.markSeen('t1');
     verify(() => dio.post('/me/subscriptions/t1/mark-seen')).called(1);
   });
-
-  test('getTravelerAnnouncements parse', () async {
-    when(() => dio.get('/travelers/t1/announcements')).thenAnswer(
-      (_) async => _ok([
-        {
-          'id': 'a1',
-          'departureCity': 'Paris',
-          'arrivalCity': 'Dakar',
-          'departureDate': '2026-06-01',
-          'pricePerKg': 8.0,
-          'availableKg': 5.0,
-          'status': 'ACTIVE',
-        },
-      ], '/travelers/t1/announcements'),
-    );
-    final list = await ds.getTravelerAnnouncements('t1');
-    expect(list.single.departureCity, 'Paris');
-  });
 }

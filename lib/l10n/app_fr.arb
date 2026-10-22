@@ -15762,93 +15762,6 @@
   "@followNoMatchMessage": {
     "description": "Message quand la recherche ne trouve aucun voyageur suivi (mes_abonnements_screen.dart, _NoMatch)."
   },
-  "followHubProfileLoadError": "Impossible de charger le profil",
-  "@followHubProfileLoadError": {
-    "description": "Erreur de chargement de l'en-tête du profil voyageur (traveler_profile_hub_screen.dart, _ProfileHeader)."
-  },
-  "followHubProAccountLabel": "Compte PRO",
-  "@followHubProAccountLabel": {
-    "description": "Marque de confiance compte PRO dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks)."
-  },
-  "followHubVerifiedBadge": "Identité vérifiée",
-  "@followHubVerifiedBadge": {
-    "description": "Marque de confiance identité vérifiée dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks)."
-  },
-  "followHubRating": "{rating} de note",
-  "@followHubRating": {
-    "description": "Phrase de réputation, note moyenne déjà formatée (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).",
-    "placeholders": {
-      "rating": {"type": "String"}
-    }
-  },
-  "followHubDeliveries": "{count, plural, =1{{count} livraison} other{{count} livraisons}}",
-  "@followHubDeliveries": {
-    "description": "Phrase de réputation, nombre de livraisons (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).",
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "followHubRespondsIn": "répond en {hours} h",
-  "@followHubRespondsIn": {
-    "description": "Phrase de réputation, délai de réponse moyen (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).",
-    "placeholders": {
-      "hours": {"type": "int"}
-    }
-  },
-  "followHubNewOnYadony": "Nouveau sur Yadony",
-  "@followHubNewOnYadony": {
-    "description": "Repli de la phrase de réputation quand le voyageur n'a ni note ni livraison (traveler_profile_hub_screen.dart, _StatSentence)."
-  },
-  "followHubTripsTab": "Trajets",
-  "@followHubTripsTab": {
-    "description": "Onglet des trajets du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar)."
-  },
-  "followHubReviewsTab": "Avis",
-  "@followHubReviewsTab": {
-    "description": "Onglet des avis du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar)."
-  },
-  "followHubTripsLoadError": "Impossible de charger les trajets. Réessayez dans un instant.",
-  "@followHubTripsLoadError": {
-    "description": "Description de l'état d'erreur de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab)."
-  },
-  "followHubNoTripsDescription": "Ce voyageur n'a pas encore publié de trajet.",
-  "@followHubNoTripsDescription": {
-    "description": "Description de l'état vide de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab)."
-  },
-  "followHubReviewsLoadError": "Impossible de charger les avis",
-  "@followHubReviewsLoadError": {
-    "description": "Titre de l'état d'erreur de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsTab)."
-  },
-  "followHubNoReviewsTitle": "Aucun avis",
-  "@followHubNoReviewsTitle": {
-    "description": "Titre de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList)."
-  },
-  "followHubNoReviewsDescription": "Ce voyageur n'a pas encore reçu d'avis.",
-  "@followHubNoReviewsDescription": {
-    "description": "Description de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList)."
-  },
-  "followHubReviewsCount": "{count, plural, =1{{count} avis} other{{count} avis}}",
-  "@followHubReviewsCount": {
-    "description": "Nombre d'avis dans l'en-tête de l'onglet Avis ; invariant en français, pluralisé en anglais (traveler_profile_hub_screen.dart, _ReviewsList).",
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "followHubReserveButton": "Réserver",
-  "@followHubReserveButton": {
-    "description": "Bouton de réservation d'un trajet du voyageur (traveler_announcement_card.dart, TravelerAnnouncementCard)."
-  },
-  "followHubFullBadge": "Complet",
-  "@followHubFullBadge": {
-    "description": "Badge quand le trajet n'a plus de kg disponible (traveler_announcement_card.dart, _MetaLine)."
-  },
-  "followHubAvailableKg": "{kg} kg disponibles",
-  "@followHubAvailableKg": {
-    "description": "Poids disponible du trajet, déjà formaté (traveler_announcement_card.dart, _MetaLine).",
-    "placeholders": {
-      "kg": {"type": "String"}
-    }
-  },
   "proPastDueMessage": "Votre dernier paiement n'a pas abouti. Sans régularisation, votre accès PRO sera suspendu.",
   "@proPastDueMessage": {
     "description": "Message du bandeau d'abonnement PRO impayé (subscription_status_banner.dart, SubscriptionStatusBanner)."
@@ -22461,5 +22374,17 @@
   "unmetGpPro": "Voyageur non GP Pro",
   "@unmetGpPro": {"description": "Écart : le voyageur n'est pas GP Pro."},
   "unmetGeneric": "Ne correspond pas à l'un de vos critères",
-  "@unmetGeneric": {"description": "Écart générique pour un code inconnu."}
+  "@unmetGeneric": {"description": "Écart générique pour un code inconnu."},
+  "openListingsTitle": "En cours",
+  "@openListingsTitle": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Titre."},
+  "openListingsFilterAll": "Tout",
+  "@openListingsFilterAll": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Filtre : tout."},
+  "openListingsFilterTrips": "Trajets",
+  "@openListingsFilterTrips": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Filtre : trajets."},
+  "openListingsFilterRequests": "Demandes",
+  "@openListingsFilterRequests": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Filtre : demandes d'envoi."},
+  "openListingsEmpty": "Rien en cours pour le moment.",
+  "@openListingsEmpty": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). État vide."},
+  "openListingsPostedAgo": "En ligne {when}",
+  "@openListingsPostedAgo": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Repère de date devant chaque carte ; {when} vient de followRecency* (« hier », « il y a 2 j »).", "placeholders": {"when": {"type": "String", "example": "hier"}}}
 }
