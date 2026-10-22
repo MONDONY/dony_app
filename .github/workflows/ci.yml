@@ -228,6 +228,14 @@ jobs:
       # Une seule ABI : ce job vérifie que le code natif et les plugins
       # compilent, ce que les autres ABI ne testent pas davantage. L'APK n'est
       # jamais téléchargé (les builds de recette se font en local).
+      # Le 2026-10-22, l'image ubuntu-latest est passée au JDK 25 par défaut :
+      # Gradle 8.14 ne sait pas lire sa version (« 25.0.4.1 ») et le build
+      # échoue en 5 s. On fixe un JDK 17 comme en local.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Build APK (debug)
         run: flutter build apk --debug --target-platform android-arm64
 
