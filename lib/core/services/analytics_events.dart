@@ -726,6 +726,12 @@ abstract final class AnalyticsEvents {
   /// Lien d'invitation `yadony://referral?code=…` ouvert dans l'app.
   static const referralLinkOpened = 'referral_link_opened';
 
+  /// Bouton « Ouvrir Yadony » d'un e-mail de notification ouvert dans l'app
+  /// (lien universel `https://yadony.com/ouvrir?type=…` ou
+  /// `yadony://open?type=…`). Propriétés `type` (type de notification) et
+  /// `resolved` (un écran correspond).
+  static const emailLinkOpened = 'email_link_opened';
+
   // Settings
   static const analyticsConsentChanged = 'analytics_consent_changed';
   static const accountDeletionRequested = 'account_deletion_requested';

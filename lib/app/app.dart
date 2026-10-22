@@ -6,6 +6,7 @@ import 'package:dony/app/deep_link_gate.dart';
 import 'package:dony/app/flight_alert_offers_deep_link.dart';
 import 'package:dony/app/language_change_guard.dart';
 import 'package:dony/app/mobile_money_deep_link.dart';
+import 'package:dony/app/open_deep_link.dart';
 import 'package:dony/app/package_request_deep_link.dart';
 import 'package:dony/app/parcel_deep_link.dart';
 import 'package:dony/app/reduced_motion_priming.dart';
@@ -270,6 +271,21 @@ class _DonyAppState extends State<DonyApp> {
   };
 
   void _handleDeepLink(Uri uri) {
+    // https : seul le lien universel des e-mails (`https://yadony.com/ouvrir`)
+    // est traité, par handleOpenDeepLink ; tout autre lien https sort ici.
+    if (uri.scheme != 'yadony' && uri.scheme != 'https') {
+      return;
+    }
+
+    // Bouton « Ouvrir Yadony » d'un e-mail de notification : même écran que le
+    // toucher du push de la même notification.
+    if (handleOpenDeepLink(
+      uri,
+      analytics: getIt<AnalyticsService>(),
+      dispatch: _deepLinkGate.dispatch,
+    )) {
+      return;
+    }
     if (uri.scheme != 'yadony') {
       return;
     }

@@ -141,6 +141,48 @@ void _platformDeepLinkConfig() {
       }
     });
 
+    test('le bouton des e-mails s\'ouvre dans l\'app : App Link vérifié et '
+        'schéma yadony://open', () {
+      final manifest = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync().replaceAll(RegExp(r'\s+'), ' ');
+
+      expect(
+        manifest,
+        contains(
+          '<intent-filter android:autoVerify="true"> '
+          '<action android:name="android.intent.action.VIEW"/> '
+          '<category android:name="android.intent.category.DEFAULT"/> '
+          '<category android:name="android.intent.category.BROWSABLE"/> '
+          '<data android:scheme="https" android:host="yadony.com" '
+          'android:pathPrefix="/ouvrir"/>',
+        ),
+        reason:
+            'Sans ce filtre (et assetlinks.json sur yadony.com), le bouton '
+            'des e-mails ouvre le site au lieu de l\'app.',
+      );
+      expect(manifest, contains('android:scheme="yadony" android:host="open"'));
+    });
+
+    test('iOS déclare le domaine associé yadony.com (liens universels)', () {
+      for (final file in const [
+        'ios/Runner/Runner.entitlements',
+        'ios/Runner/Runner-Release.entitlements',
+      ]) {
+        final entitlements = File(
+          file,
+        ).readAsStringSync().replaceAll(RegExp(r'\s+'), ' ');
+        expect(
+          entitlements,
+          contains(
+            '<key>com.apple.developer.associated-domains</key> <array> '
+            '<string>applinks:yadony.com</string> </array>',
+          ),
+          reason: '$file sans applinks:yadony.com',
+        );
+      }
+    });
+
     test('les deux retours Stripe restent déclarés dans le manifeste', () {
       final manifest = File(
         'android/app/src/main/AndroidManifest.xml',
