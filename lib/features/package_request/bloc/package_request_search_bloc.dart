@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:bloc/bloc.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -79,6 +80,7 @@ class PackageRequestSearchState extends Equatable {
     this.results = const [],
     this.page = 0,
     this.hasMore = true,
+    this.totalElements,
     this.errorMessage,
     this.departure,
     this.arrival,
@@ -97,6 +99,10 @@ class PackageRequestSearchState extends Equatable {
   final List<PackageRequestSearchItem> results;
   final int page;
   final bool hasMore;
+
+  /// Total serveur des demandes correspondant aux filtres (toutes pages
+  /// confondues). `null` tant qu'aucune page n'est arrivée.
+  final int? totalElements;
   final Object? errorMessage;
   final String? departure;
   final String? arrival;
@@ -112,11 +118,24 @@ class PackageRequestSearchState extends Equatable {
 
   bool get isNearMeActive => userLat != null && userLng != null;
 
+  /// Nombre de demandes à afficher dans les titres et compteurs.
+  ///
+  /// Suit le total serveur, pas le nombre de lignes déjà chargées (sinon le
+  /// compteur passe de 20 à 40 au fil du défilement). Deux cas gardent le
+  /// nombre chargé : un total absent ou plus petit que la liste (un back qui
+  /// n'en renvoie pas, lu comme 0), et « près de moi », où le back filtre
+  /// APRÈS la pagination : son total peut alors dépasser la liste filtrée.
+  int get displayCount {
+    if (isNearMeActive) return results.length;
+    return math.max(totalElements ?? 0, results.length);
+  }
+
   PackageRequestSearchState copyWith({
     SearchStatus? status,
     List<PackageRequestSearchItem>? results,
     int? page,
     bool? hasMore,
+    int? totalElements,
     Object? errorMessage,
     String? departure,
     String? arrival,
@@ -134,6 +153,7 @@ class PackageRequestSearchState extends Equatable {
     results: results ?? this.results,
     page: page ?? this.page,
     hasMore: hasMore ?? this.hasMore,
+    totalElements: totalElements ?? this.totalElements,
     errorMessage: errorMessage ?? this.errorMessage,
     departure: departure ?? this.departure,
     arrival: arrival ?? this.arrival,
@@ -154,6 +174,7 @@ class PackageRequestSearchState extends Equatable {
     results,
     page,
     hasMore,
+    totalElements,
     errorMessage,
     departure,
     arrival,
@@ -221,6 +242,7 @@ class PackageRequestSearchBloc
           results: page.content,
           page: 0,
           hasMore: page.content.length >= page.size,
+          totalElements: page.totalElements,
         ),
       );
       unawaited(
@@ -280,6 +302,7 @@ class PackageRequestSearchBloc
           results: [...state.results, ...page.content],
           page: next,
           hasMore: page.content.length >= page.size,
+          totalElements: page.totalElements,
         ),
       );
     } catch (err) {

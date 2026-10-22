@@ -613,7 +613,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     return BlocBuilder<PackageRequestSearchBloc, PackageRequestSearchState>(
       // Même liste que le fil, ses propres demandes comprises.
       builder: (ctx, prState) =>
-          _pullHint(cs, down: down, count: prState.results.length),
+          _pullHint(cs, down: down, count: prState.displayCount),
     );
   }
 
@@ -2143,8 +2143,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             final matching = prState.matchingMyTrips == true;
                             // Inconnu reste inconnu : voir `knownActiveTrips`.
                             final trips = summaryState.knownActiveTrips;
-                            // Même liste que le fil, ses demandes comprises.
-                            final parcels = prState.results.length;
+                            // Total serveur (pas les lignes chargées : le
+                            // compteur grimperait à chaque page), voir
+                            // `displayCount`.
+                            final parcels = prState.displayCount;
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
