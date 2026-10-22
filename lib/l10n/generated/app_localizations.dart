@@ -3956,17 +3956,23 @@ abstract class AppLocalizations {
   /// **'Tout effacer'**
   String get homeComposerClearAll;
 
-  /// No description provided for @homeComposerSectionPhrase.
-  ///
-  /// In fr, this message translates to:
-  /// **'EN UNE PHRASE'**
-  String get homeComposerSectionPhrase;
-
   /// No description provided for @homeComposerSectionWhere.
   ///
   /// In fr, this message translates to:
   /// **'OÙ'**
   String get homeComposerSectionWhere;
+
+  /// No description provided for @homeComposerMoreFilters.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus de filtres'**
+  String get homeComposerMoreFilters;
+
+  /// No description provided for @homeComposerMoreFiltersHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Type de contenu, transport, note, escales, paiement'**
+  String get homeComposerMoreFiltersHint;
 
   /// No description provided for @homeComposerSectionWhen.
   ///
@@ -4082,101 +4088,11 @@ abstract class AppLocalizations {
   /// **'Localisation en cours…'**
   String get homeComposerLocating;
 
-  /// No description provided for @homeRecapTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'RÉGLÉ DEPUIS VOTRE PHRASE'**
-  String get homeRecapTitle;
-
-  /// No description provided for @homeRecapArrival.
-  ///
-  /// In fr, this message translates to:
-  /// **'Arrivée'**
-  String get homeRecapArrival;
-
-  /// No description provided for @homeRecapDeparture.
-  ///
-  /// In fr, this message translates to:
-  /// **'Départ'**
-  String get homeRecapDeparture;
-
-  /// No description provided for @homeRecapWhen.
-  ///
-  /// In fr, this message translates to:
-  /// **'Quand'**
-  String get homeRecapWhen;
-
-  /// No description provided for @homeRecapMinWeight.
-  ///
-  /// In fr, this message translates to:
-  /// **'Poids minimum'**
-  String get homeRecapMinWeight;
-
-  /// No description provided for @homeRecapFieldLine.
-  ///
-  /// In fr, this message translates to:
-  /// **'{label} : {value}'**
-  String homeRecapFieldLine(String label, String value);
-
-  /// No description provided for @homeUnresolvedPriceQuestion.
-  ///
-  /// In fr, this message translates to:
-  /// **'« {phrase} », c\'est combien ?'**
-  String homeUnresolvedPriceQuestion(String phrase);
-
-  /// No description provided for @homeUnresolvedCityUnknown.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vers quelle ville ?'**
-  String get homeUnresolvedCityUnknown;
-
-  /// No description provided for @homeUnresolvedCityAmbiguous.
-  ///
-  /// In fr, this message translates to:
-  /// **'Quelle ville exactement ?'**
-  String get homeUnresolvedCityAmbiguous;
-
-  /// No description provided for @homeUnresolvedDateQuestion.
-  ///
-  /// In fr, this message translates to:
-  /// **'Quand voulez-vous partir ?'**
-  String get homeUnresolvedDateQuestion;
-
-  /// No description provided for @homeUnresolvedUpTo.
-  ///
-  /// In fr, this message translates to:
-  /// **'Jusqu\'à {price}/kg'**
-  String homeUnresolvedUpTo(String price);
-
-  /// No description provided for @homeUnresolvedAnyPrice.
-  ///
-  /// In fr, this message translates to:
-  /// **'Peu importe le prix'**
-  String get homeUnresolvedAnyPrice;
-
   /// No description provided for @commonDateThisMonth.
   ///
   /// In fr, this message translates to:
   /// **'Ce mois'**
   String get commonDateThisMonth;
-
-  /// No description provided for @homeUnresolvedAnyTime.
-  ///
-  /// In fr, this message translates to:
-  /// **'Peu importe'**
-  String get homeUnresolvedAnyTime;
-
-  /// No description provided for @homePhraseHint.
-  ///
-  /// In fr, this message translates to:
-  /// **'20 kilos à Bamako en mars'**
-  String get homePhraseHint;
-
-  /// No description provided for @homeSectionOptional.
-  ///
-  /// In fr, this message translates to:
-  /// **'Facultatif'**
-  String get homeSectionOptional;
 
   /// No description provided for @homeModeSelectorSending.
   ///

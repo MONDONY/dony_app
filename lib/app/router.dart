@@ -66,7 +66,6 @@ import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_signup_cubit.dart';
 import 'package:dony/features/gp_pro/presentation/screens/gp_pro_screen.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
-import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
@@ -2002,7 +2001,6 @@ final appRouter = GoRouter(
             const HomeSearchFilters();
         return BlocProvider(
           create: (_) => SearchComposerBloc(
-            getIt<SearchParseRepository>(),
             getIt<AnnouncementRepository>(),
             getIt<PackageRequestRepository>(),
             getIt<AnalyticsService>(),

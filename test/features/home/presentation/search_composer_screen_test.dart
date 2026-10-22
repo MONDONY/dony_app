@@ -1,11 +1,9 @@
-// Tests de SearchComposerScreen — l'écran plein qui remplace SearchFilterSheet.
+// Tests de SearchComposerScreen — l'écran plein « Filtrer ».
 //
-// Le point vérifié n'est pas la richesse de chaque filtre (déjà couverte par
-// search_filter_sheet_test.dart pour les mêmes widgets) mais la PARITÉ : les
-// huit blocs doivent tous être là, dans l'ordre imposé par la Task 3, et une
-// recherche complète doit rester possible sans jamais toucher la barre « En
-// une phrase ». C'est cette dernière propriété — et non la présence du champ
-// — qui distingue un champ de recherche « facultatif » d'un héros déguisé.
+// Ordre vérifié : OÙ, QUAND, POIDS ET PRIX, FILTRES RAPIDES, « Plus de
+// filtres » replié (contenu, transport, note, week-end, escales, paiement,
+// urgence), AUTOUR DE MOI. Le bloc « En une phrase » n'existe plus : une
+// recherche complète se fait aux filtres seuls.
 //
 // `context.pop(filters)` exige un `GoRouter` ancêtre (voir
 // `go_router.GoRouterHelper.pop`) : le harnais place donc l'écran sur une
@@ -19,13 +17,9 @@ import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
-import 'package:dony/features/home/bloc/search_composer_event.dart';
-import 'package:dony/features/home/data/models/search_parse_result.dart';
-import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/screens/search_composer_screen.dart';
-import 'package:dony/features/home/presentation/widgets/search_phrase_field.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter/material.dart';
@@ -40,8 +34,6 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_recent_city_store.dart';
-
-class _MockParseRepo extends Mock implements SearchParseRepository {}
 
 class _MockAnnouncementRepo extends Mock implements AnnouncementRepository {}
 
@@ -114,10 +106,10 @@ class _FakeGeolocatorPlatform extends Mock
 }
 
 /// `scrollUntilVisible` sans `scrollable:` cherche l'unique `Scrollable` de
-/// l'arbre — or il y en a deux ici : le `ListView` de l'écran ET
-/// l'`EditableText` du champ de phrase (tout `TextField` en construit un pour
-/// son défilement horizontal interne). `.first` désigne le plus englobant des
-/// deux, rencontré avant lui dans l'arbre : celui de l'écran.
+/// l'arbre — or il y en a plusieurs ici : le `ListView` de l'écran ET les
+/// `EditableText` des champs de ville (tout `TextField` en construit un pour
+/// son défilement horizontal interne). `.first` désigne le plus englobant,
+/// rencontré avant les autres dans l'arbre : celui de l'écran.
 ///
 /// Suivi d'un `pumpAndSettle()` : le scroll amène dans l'arbre des blocs qui
 /// portaient jusque-là un `.animate().fadeIn(delay: ...)` jamais monté — leur
@@ -203,18 +195,19 @@ void main() {
   });
 
   // Les blocs doivent tous être là : le lot est un échec si un filtre disparaît.
-  testWidgets('les huit blocs de filtres sont présents', (tester) async {
+  testWidgets('les blocs, dans l\'ordre, « Plus de filtres » replié', (
+    tester,
+  ) async {
+    _vueHaute(tester);
     await tester.pumpWidget(const _Harness());
     await tester.pumpAndSettle();
 
+    final tops = <String, double>{};
     for (final label in const [
-      'EN UNE PHRASE',
       'OÙ',
       'QUAND',
       'POIDS ET PRIX',
-      'MON COLIS CONTIENT',
       'FILTRES RAPIDES',
-      'URGENCE DU DÉPART',
       'AUTOUR DE MOI',
     ]) {
       await _scrollTo(tester, find.text(label));
@@ -223,7 +216,123 @@ void main() {
         findsOneWidget,
         reason: 'bloc « $label » absent',
       );
+      tops[label] = tester.getTopLeft(find.text(label)).dy;
     }
+    expect(find.text('EN UNE PHRASE'), findsNothing);
+
+    // « Plus de filtres » vient entre les filtres rapides et « Autour de moi ».
+    await _scrollTo(tester, find.text('Plus de filtres'));
+    final more = tester.getTopLeft(find.text('Plus de filtres')).dy;
+    await _scrollTo(tester, find.text('AUTOUR DE MOI'));
+    final around = tester.getTopLeft(find.text('AUTOUR DE MOI')).dy;
+    expect(more, lessThan(around));
+
+    // Replié : les filtres rares ne sont pas dans l'arbre.
+    for (final label in const [
+      'MON COLIS CONTIENT',
+      'ESCALES',
+      'MOYENS DE PAIEMENT',
+      'URGENCE DU DÉPART',
+    ]) {
+      expect(
+        find.text(label),
+        findsNothing,
+        reason: '« $label » devrait être replié',
+      );
+    }
+  });
+
+  testWidgets('« Plus de filtres » s\'ouvre au toucher et montre les filtres '
+      'rares', (tester) async {
+    _vueHaute(tester);
+    await tester.pumpWidget(const _Harness());
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+    await tester.tap(find.byKey(const Key('composer-more-filters')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('composer-more-filters-body')), findsOneWidget);
+    for (final label in const [
+      'MON COLIS CONTIENT',
+      'ESCALES',
+      'MOYENS DE PAIEMENT',
+      'URGENCE DU DÉPART',
+    ]) {
+      await _scrollTo(tester, find.text(label));
+      expect(find.text(label), findsOneWidget, reason: '« $label » absent');
+    }
+
+    // Un second toucher le referme.
+    await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+    await tester.tap(find.byKey(const Key('composer-more-filters')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('composer-more-filters-body')), findsNothing);
+  });
+
+  testWidgets('un filtre rare déjà actif ouvre « Plus de filtres » d\'office, '
+      'avec son compte', (tester) async {
+    _vueHaute(tester);
+    await tester.pumpWidget(
+      const _Harness(
+        initialFilters: HomeSearchFilters(weekendOnly: true, minRating: 4.5),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+    expect(find.byKey(const Key('composer-more-filters-body')), findsOneWidget);
+    final count = tester.widget<Text>(
+      find.descendant(
+        of: find.byKey(const Key('composer-more-filters-count')),
+        matching: find.byType(Text),
+      ),
+    );
+    expect(count.data, '2');
+  });
+
+  testWidgets('filtres rapides : Urgent, Valise 23 kg, GP Pro, Identité '
+      'vérifiée', (tester) async {
+    _vueHaute(tester);
+    final repo = _MockAnnouncementRepo();
+    await tester.pumpWidget(_Harness(announcementRepo: repo));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.byKey(const Key('composer-urgent')));
+    await tester.tap(find.byKey(const Key('composer-urgent')));
+    await _settleFilterChange(tester);
+
+    expect(find.byKey(const Key('composer-suitcase-23')), findsOneWidget);
+    expect(find.text('GP Pro'), findsWidgets);
+    expect(find.text('Identité vérifiée'), findsOneWidget);
+    // La note et le week-end ne sont plus des filtres rapides.
+    expect(find.text('Note ≥ 4.5'), findsNothing);
+    expect(find.text('Week-end'), findsNothing);
+
+    final calls = verify(
+      () => repo.countAnnouncements(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        departureDateFrom: any(named: 'departureDateFrom'),
+        departureDateTo: any(named: 'departureDateTo'),
+        minAvailableKg: any(named: 'minAvailableKg'),
+        maxAvailableKg: any(named: 'maxAvailableKg'),
+        maxPricePerKg: any(named: 'maxPricePerKg'),
+        gpProOnly: any(named: 'gpProOnly'),
+        minRating: any(named: 'minRating'),
+        weekendOnly: any(named: 'weekendOnly'),
+        transportMode: any(named: 'transportMode'),
+        kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+        contentType: any(named: 'contentType'),
+        userLat: any(named: 'userLat'),
+        userLng: any(named: 'userLng'),
+        radiusKm: any(named: 'radiusKm'),
+        urgent: captureAny(named: 'urgent'),
+        maxStops: any(named: 'maxStops'),
+        paymentMethods: any(named: 'paymentMethods'),
+      ),
+    ).captured;
+    expect(calls.last, isTrue);
   });
 
   // Le curseur « Poids min » laissé au minimum ne pose aucun minimum.
@@ -277,6 +386,9 @@ void main() {
     await tester.pumpWidget(_Harness(announcementRepo: repo));
     await tester.pumpAndSettle();
 
+    await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+    await tester.tap(find.byKey(const Key('composer-more-filters')));
+    await tester.pumpAndSettle();
     await _scrollTo(tester, find.text('ESCALES'));
     await tester.tap(find.byKey(const Key('chip-stops-directOnly')));
     await _settleFilterChange(tester);
@@ -391,24 +503,17 @@ void main() {
     expect(find.byKey(const Key('composer-suitcase-23')), findsNothing);
   });
 
-  testWidgets('le bloc de phrase est marqué facultatif', (tester) async {
-    await tester.pumpWidget(const _Harness());
-    await tester.pumpAndSettle();
-
-    expect(find.text('Facultatif'), findsOneWidget);
-  });
-
   testWidgets('une recherche complète est possible sans toucher la barre', (
     tester,
   ) async {
     await tester.pumpWidget(const _Harness());
     await tester.pumpAndSettle();
 
-    // On ne touche jamais le champ de phrase : uniquement les filtres.
+    // Uniquement les filtres : aucun autre parcours n'existe.
     await tester.tap(find.text('Ce mois'));
     await tester.pumpAndSettle();
 
-    // Le bouton reste présent et actionnable sans qu'une phrase ait été saisie.
+    // Le bouton reste présent et actionnable.
     expect(find.textContaining('Rechercher'), findsOneWidget);
     await tester.tap(find.textContaining('Rechercher'));
     await tester.pumpAndSettle();
@@ -426,28 +531,11 @@ void main() {
     expect(find.textContaining('14'), findsOneWidget);
   });
 
-  testWidgets(
-    'une ambiguïté de prix affiche sa question et aucun filtre deviné',
-    (tester) async {
-      _vueHaute(tester);
-      await tester.pumpWidget(const _Harness(withPriceAmbiguity: true));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('c\'est combien'), findsOneWidget);
-      expect(
-        find.text('Tous'),
-        findsWidgets,
-        reason: 'le prix reste non réglé',
-      );
-    },
-  );
-
   // ── Couverture complémentaire (au-delà des 5 tests du brief) ────────────────
   //
   // Le brief n'exerçait que la parité des blocs et le parcours « au doigt ».
   // Ces tests couvrent le reste du comportement propre à l'écran : le mode
-  // colis (blocs différents), « Tout effacer », le récapitulatif de phrase,
-  // la réponse à une question, et l'affichage d'une erreur via ErrorCatalog.
+  // colis (blocs différents) et « Tout effacer ».
 
   testWidgets(
     'mode colis : POIDS MAXIMAL et TAILLE DU COLIS remplacent POIDS ET PRIX',
@@ -463,7 +551,6 @@ void main() {
       // ListView : vérifié à sa place, avant que le scroll ne le dépasse (le
       // scroll ne revient jamais en arrière dans cette boucle).
       for (final label in const [
-        'EN UNE PHRASE',
         'OÙ',
         'QUAND',
         'POIDS MAXIMAL',
@@ -494,55 +581,6 @@ void main() {
     // L'écran reste ouvert (Tout effacer ne ferme rien) : le bouton Rechercher
     // est toujours là pour le prouver.
     expect(find.textContaining('Rechercher'), findsOneWidget);
-  });
-
-  testWidgets('le récapitulatif affiche les champs reconnus au libellé connu', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const _Harness(withRecognizedArrival: true));
-    await tester.pumpAndSettle();
-
-    // Correspondance exacte : « Bamako » seul matcherait aussi le hint du
-    // champ de phrase et la valeur du champ ville d'arrivée du bloc OÙ.
-    expect(find.text('Arrivée : Bamako'), findsOneWidget);
-  });
-
-  testWidgets('répondre à une question de prix la retire et pose le filtre', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const _Harness(withPriceAmbiguity: true));
-    await tester.pumpAndSettle();
-
-    // Libellé généré par formatPriceActive (espace insécable, montants scalés
-    // par devise) : on vise la première option de prix, pas une chaîne figée.
-    await tester.tap(find.textContaining('Jusqu\'à').first);
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('c\'est combien'), findsNothing);
-  });
-
-  testWidgets('un échec du parseur affiche une erreur via ErrorCatalog', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const _Harness(withParseFailure: true));
-    await tester.pumpAndSettle();
-
-    // Le champ précis, pas `find.byType(TextField)` : le bloc OÙ en construit
-    // d'autres (ville de départ/arrivée).
-    final phraseField = find.byKey(const Key('search-phrase-textfield'));
-    await tester.enterText(phraseField, 'à Bamako');
-    await tester.testTextInput.receiveAction(TextInputAction.search);
-    // Pas de `pumpAndSettle()` ici : la snackbar a un auto-dismiss de 4 s que
-    // `pumpAndSettle()` traverserait entièrement, la faisant disparaître avant
-    // l'assertion. On laisse le BlocListener réagir avec des pumps ciblés.
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 600));
-    await tester.pump();
-
-    // ErrorCatalog.lookup() résout l'exception générique vers sa présentation
-    // riche (titre + message) : c'est ce titre qui doit apparaître, jamais
-    // `state.error.toString()` ni le message technique brut.
-    expect(find.textContaining('Erreur réseau'), findsWidgets);
   });
 
   testWidgets('AUTOUR DE MOI affiche l interrupteur de proximité', (
@@ -728,20 +766,15 @@ void main() {
       expect(find.text('Around me'), findsOneWidget);
     });
 
-    // Le parseur serveur ne comprend que le français : le bloc « En une
-    // phrase » et son récapitulatif sont masqués en anglais.
-    testWidgets('bloc de phrase masqué, filtres au doigt présents', (
-      tester,
-    ) async {
+    testWidgets('« Plus de filtres » traduit', (tester) async {
       useEnglish();
-      await tester.pumpWidget(const _Harness(withRecognizedArrival: true));
+      _vueHaute(tester);
+      await tester.pumpWidget(const _Harness());
       await tester.pumpAndSettle();
 
+      await _scrollTo(tester, find.text('More filters'));
+      expect(find.text('More filters'), findsOneWidget);
       expect(find.text('IN ONE SENTENCE'), findsNothing);
-      expect(find.text('Optional'), findsNothing);
-      expect(find.text('SET FROM YOUR SENTENCE'), findsNothing);
-      expect(find.byType(SearchPhraseField), findsNothing);
-      expect(find.text('WHERE'), findsOneWidget);
     });
   });
 }
@@ -750,32 +783,22 @@ void main() {
 /// `context.pop(filters)` dans l'écran l'exige, voir `dony_app_bar_test.dart`.
 ///
 /// [count] fixe la valeur renvoyée par le comptage (`countAnnouncements`).
-/// [withPriceAmbiguity] injecte un `UnresolvedItem` de prix en dispatchant un
-/// `SearchComposerPhraseSubmitted` avant le premier pump, avec un parseur
-/// mocké qui renvoie l'ambiguïté au lieu d'un filtre tranché.
-/// [withRecognizedArrival] simule une phrase entièrement comprise
-/// (`arrivalCity: 'Bamako'`), pour exercer `ParsedRecapCard`.
-/// [withParseFailure] fait échouer le parseur pour exercer `ErrorPresenter`.
+/// [initialFilters] part de filtres déjà posés (ex. un filtre rare actif).
 class _Harness extends StatelessWidget {
   const _Harness({
     this.mode = SearchMode.trips,
     this.count,
-    this.withPriceAmbiguity = false,
-    this.withRecognizedArrival = false,
-    this.withParseFailure = false,
     this.announcementRepo,
+    this.initialFilters = const HomeSearchFilters(),
   });
 
   final _MockAnnouncementRepo? announcementRepo;
   final SearchMode mode;
   final int? count;
-  final bool withPriceAmbiguity;
-  final bool withRecognizedArrival;
-  final bool withParseFailure;
+  final HomeSearchFilters initialFilters;
 
   @override
   Widget build(BuildContext context) {
-    final parseRepo = _MockParseRepo();
     final announcementRepo = this.announcementRepo ?? _MockAnnouncementRepo();
     final packageRepo = _MockPackageRepo();
     final analytics = _MockAnalytics();
@@ -831,51 +854,13 @@ class _Harness extends StatelessWidget {
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
 
-    if (withPriceAmbiguity) {
-      when(() => parseRepo.parse(any(), any())).thenAnswer(
-        (_) async => SearchParseResult.fromJson({
-          'filters': const <String, dynamic>{},
-          'recognized': const <dynamic>[],
-          'unresolved': const [
-            {
-              'kind': 'PRICE_VAGUE',
-              'phrase': 'pas trop cher',
-              'options': ['6', '9'],
-            },
-          ],
-        }),
-      );
-    } else if (withParseFailure) {
-      when(
-        () => parseRepo.parse(any(), any()),
-      ).thenThrow(Exception('réseau indisponible'));
-    } else if (withRecognizedArrival) {
-      when(() => parseRepo.parse(any(), any())).thenAnswer(
-        (_) async => SearchParseResult.fromJson({
-          'filters': const {'arrivalCity': 'Bamako'},
-          'recognized': const [
-            {'field': 'arrivalCity', 'value': 'Bamako'},
-          ],
-          'unresolved': const <dynamic>[],
-        }),
-      );
-    }
-
     final bloc = SearchComposerBloc(
-      parseRepo,
       announcementRepo,
       packageRepo,
       analytics,
       mode: mode,
-      initialFilters: const HomeSearchFilters(),
+      initialFilters: initialFilters,
     );
-
-    if (withPriceAmbiguity) {
-      bloc.add(const SearchComposerPhraseSubmitted('pas trop cher'));
-    }
-    if (withRecognizedArrival) {
-      bloc.add(const SearchComposerPhraseSubmitted('à Bamako'));
-    }
 
     // Route fille NESTED (pas une route sœur) : c'est ce qui met deux pages
     // dans la pile de GoRouter (« / » puis « /child ») et rend `context.pop()`
@@ -894,7 +879,7 @@ class _Harness extends StatelessWidget {
                 value: bloc,
                 child: SearchComposerScreen(
                   mode: mode,
-                  initialFilters: const HomeSearchFilters(),
+                  initialFilters: initialFilters,
                 ),
               ),
             ),

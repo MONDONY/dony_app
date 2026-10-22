@@ -23,7 +23,6 @@ import 'package:dony/features/content_categories/data/content_category_repositor
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
-import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
@@ -171,8 +170,6 @@ class MockPackageRequestRepository extends Mock
 /// Dépôt de parsing simulé, requis par `SearchComposerBloc` — voir
 /// `_composerRoute`. Jamais stubé ici : aucun test de ce fichier ne saisit de
 /// phrase, seule `search_composer_screen_test.dart` couvre ce chemin.
-class MockSearchParseRepository extends Mock implements SearchParseRepository {}
-
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
   @override
   Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
@@ -366,7 +363,6 @@ GoRoute _composerRoute() => GoRoute(
         (extra['filters'] as HomeSearchFilters?) ?? const HomeSearchFilters();
     return BlocProvider(
       create: (_) => SearchComposerBloc(
-        MockSearchParseRepository(),
         MockAnnouncementRepository(),
         MockPackageRequestRepository(),
         getIt<AnalyticsService>(),
@@ -2194,8 +2190,8 @@ void main() {
     });
 
     testWidgets(
-      'valider depuis l\'écran de composition trace came_from_phrase: false '
-      'et le bon nombre de filtres actifs',
+      'valider depuis l\'écran de composition trace le mode et le bon nombre '
+      'de filtres actifs',
       (tester) async {
         await pumpHome(tester);
 
@@ -2205,11 +2201,7 @@ void main() {
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.searchSubmitted,
-            properties: {
-              'mode': 'trips',
-              'filter_count': 1,
-              'came_from_phrase': false,
-            },
+            properties: {'mode': 'trips', 'filter_count': 1},
           ),
         ).called(1);
       },

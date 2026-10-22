@@ -1124,10 +1124,8 @@ abstract final class AnalyticsEvents {
   static const packageRequestPosterLinkCopied =
       'package_request_poster_link_copied';
 
-  // Recherche en langage naturel — écran de composition
+  // Écran de composition de la recherche (« Filtrer »)
   static const searchComposerOpened = 'search_composer_opened';
-  static const searchPhraseParsed = 'search_phrase_parsed';
-  static const searchParseFailed = 'search_parse_failed';
   static const searchFilterApplied = 'search_filter_applied';
   static const searchFilterCleared = 'search_filter_cleared';
   static const searchSubmitted = 'search_submitted';

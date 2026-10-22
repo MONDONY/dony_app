@@ -117,8 +117,6 @@ import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_signup_cubit.dart';
 import 'package:dony/features/gp_pro/data/datasources/gp_pro_remote_datasource.dart';
 import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
-import 'package:dony/features/home/data/datasources/search_parse_datasource.dart';
-import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
 import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
 import 'package:dony/features/incident_report/data/datasources/incident_report_remote_datasource.dart';
@@ -1836,13 +1834,5 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<AppUpdateService>(
     () => AppUpdateService(getIt<AppUpdateConfigSource>()),
-  );
-
-  // Search Parse — parseur de requête texte en filtre (langage naturel)
-  getIt.registerLazySingleton<SearchParseDatasource>(
-    () => SearchParseDatasource(dio: getIt<ApiClient>().dio),
-  );
-  getIt.registerLazySingleton<SearchParseRepository>(
-    () => SearchParseRepository(getIt<SearchParseDatasource>()),
   );
 }
