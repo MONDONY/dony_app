@@ -13,6 +13,7 @@ import 'package:dony/features/profile/bloc/profile_public_state.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
 import 'package:dony/features/profile/presentation/profile_labels.dart';
 import 'package:dony/features/profile/presentation/widgets/all_reviews_bottom_sheet.dart';
+import 'package:dony/features/profile/presentation/widgets/open_listings_section.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/ratings/presentation/widgets/report_rating_button.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
@@ -376,6 +377,12 @@ class _LoadedView extends StatelessWidget {
               child: _AboutSection(bio: profile.bio!),
             ).animate().fadeIn(delay: 80.ms, duration: 300.ms),
           ),
+
+        // ── En cours : trajets et demandes ouverts de ce membre ───────────────
+        // Seulement sur le profil d'un autre : le sien, on le voit déjà dans
+        // « Mes trajets » et « Mes colis ». Se masque seul sans cubit fourni.
+        if (showSubscribeButton)
+          const SliverToBoxAdapter(child: OpenListingsSection()),
 
         // ── Langues section ───────────────────────────────────────────────────
         if (profile.languages.isNotEmpty)

@@ -617,6 +617,9 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `subscription_removed` | SubscriptionsBloc._onUnsubscribe — désabonnement confirmé, après acquittement du serveur |
 | `subscriptions_marked_all_seen` | SubscriptionsBloc._onMarkAllSeen — « Tout marquer comme vu » de l'en-tête (propriété `count` : pastilles réellement retirées). Non émis si l'appel échoue et que les pastilles reviennent |
 | `subscription_last_trip_opened` | MesAbonnementsScreen — tap sur la ligne du dernier trajet d'une carte, raccourci vers l'annonce, distinct du tap sur la carte qui mène au profil du voyageur |
+| `open_listings_viewed` | OpenListingsCubit.load — section « En cours » du profil d'un autre membre chargée (`GET /users/{id}/open-listings`, yadony-back #645), sur `/travelers/:id` (profil d'un voyageur suivi) et `/profile/public`. Propriétés `trip_count`, `request_count`. Non émis en cas d'échec ni sur un back sans la route (section masquée) |
+| `open_listings_filter_changed` | OpenListingsCubit.selectFilter — filtre « Tout / Trajets / Demandes » de cette section touché (propriété `filter` : `all`/`trips`/`requests`). Le filtre n'apparaît que si le membre a les deux types d'annonces |
+| `open_listing_opened` | OpenListingsSection — carte de la section ouverte (propriété `kind` : `trip`/`request`). Jamais l'identifiant ni le membre consulté |
 | `corridor_alert_toggled` | CorridorAlertListBloc._onToggle — actif/pause d'une alerte corridor (propriété `active`) |
 | `corridor_alert_deleted` | CorridorAlertListBloc._onDelete — suppression d'une alerte corridor |
 | `corridor_alert_created` | CorridorAlertFormCubit.submit() — création d'une alerte corridor |

@@ -4,7 +4,7 @@ import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// BLoC léger pour la barre « S'abonner » d'un voyageur (statut + abonnement +
-/// cloche push). Ne charge PAS les annonces — contrairement à TravelerHubBloc.
+/// cloche push). Ne charge PAS les annonces : elles viennent de l'OpenListingsCubit.
 class TravelerSubscribeBloc
     extends Bloc<TravelerSubscribeEvent, TravelerSubscribeState> {
   final SubscriptionsRepository _repository;

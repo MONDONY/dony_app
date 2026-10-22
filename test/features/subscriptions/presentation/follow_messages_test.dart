@@ -62,34 +62,6 @@ void main() {
     });
   });
 
-  group('followHubDeliveries', () {
-    test('fr — « 0 livraison » au singulier, même rendu qu\'avant', () {
-      expect(fr.followHubDeliveries(0), '0 livraison');
-      expect(fr.followHubDeliveries(1), '1 livraison');
-      expect(fr.followHubDeliveries(3), '3 livraisons');
-    });
-
-    test('en', () {
-      expect(en.followHubDeliveries(0), '0 deliveries');
-      expect(en.followHubDeliveries(1), '1 delivery');
-      expect(en.followHubDeliveries(3), '3 deliveries');
-    });
-  });
-
-  group('followHubReviewsCount (invariant en français)', () {
-    test('fr', () {
-      expect(fr.followHubReviewsCount(0), '0 avis');
-      expect(fr.followHubReviewsCount(1), '1 avis');
-      expect(fr.followHubReviewsCount(3), '3 avis');
-    });
-
-    test('en', () {
-      expect(en.followHubReviewsCount(0), '0 reviews');
-      expect(en.followHubReviewsCount(1), '1 review');
-      expect(en.followHubReviewsCount(3), '3 reviews');
-    });
-  });
-
   group('proFreeAccessEndsInDays', () {
     test('fr — accord singulier à 1 jour', () {
       expect(

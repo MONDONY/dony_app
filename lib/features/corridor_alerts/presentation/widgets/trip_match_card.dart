@@ -18,7 +18,7 @@ import 'package:intl/intl.dart';
 ///
 /// Un trajet complet (0 kg restant ou statut `FULL`) reste affiché — l'alerte
 /// le garde tant que la date n'est pas passée — mais grisé, marqué
-/// « Complet » et non sélectionnable, comme `TravelerAnnouncementCard`.
+/// « Complet » et non sélectionnable, comme les cartes de la recherche.
 class TripMatchCard extends StatelessWidget {
   const TripMatchCard({
     super.key,

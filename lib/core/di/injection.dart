@@ -238,6 +238,7 @@ import 'package:dony/features/price_grid/data/datasources/price_grid_datasource.
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/bloc/open_listings_cubit.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
@@ -301,7 +302,6 @@ import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/data/stripe_account_datasource.dart';
 import 'package:dony/features/stripe_account/data/stripe_account_repository.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
-import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_remote_datasource.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
@@ -1347,6 +1347,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<RatingRepository>(),
     ),
   );
+  getIt.registerFactory<OpenListingsCubit>(
+    () => OpenListingsCubit(
+      getIt<ProfileRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
   getIt.registerFactory<RequestSenderCubit>(
     () => RequestSenderCubit(
       getIt<ProfileRepository>(),
@@ -1558,9 +1564,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
       blockEvents: getIt<BlockEventsService>(),
     ),
-  );
-  getIt.registerFactory<TravelerHubBloc>(
-    () => TravelerHubBloc(getIt<SubscriptionsRepository>()),
   );
   getIt.registerFactory<TravelerSubscribeBloc>(
     () => TravelerSubscribeBloc(getIt<SubscriptionsRepository>()),

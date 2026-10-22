@@ -1,5 +1,6 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/profile/data/models/open_listing.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
 
 class ProfileRepository {
@@ -27,6 +28,27 @@ class ProfileRepository {
     try {
       final response = await _client.dio.get('/users/$userId/profile-public');
       return ProfilePublicModel.fromJson(response.data as Map<String, dynamic>);
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  /// Trajets et demandes d'envoi ouverts d'un membre, du plus récent au plus
+  /// ancien. Un élément illisible ou de type inconnu est écarté plutôt que de
+  /// faire échouer toute la section.
+  Future<List<OpenListing>> getOpenListings(String userId) async {
+    try {
+      final response = await _client.dio.get('/users/$userId/open-listings');
+      final items = <OpenListing>[];
+      for (final raw in response.data as List) {
+        try {
+          final item = OpenListing.fromJson(raw as Map<String, dynamic>);
+          if (item != null) items.add(item);
+        } catch (_) {
+          // Un seul élément malformé ne doit pas masquer les autres.
+        }
+      }
+      return items;
     } catch (e) {
       throw unwrapDioError(e);
     }

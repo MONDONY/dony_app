@@ -1650,6 +1650,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'requestReviewCount': (l) => l.requestReviewCount(intPlaceholderValue),
   'requestPublicTitle': (l) => l.requestPublicTitle,
   'requestDescriptionLabel': (l) => l.requestDescriptionLabel,
+  'requestPublicFromLabel': (l) => l.requestPublicFromLabel,
+  'requestPublicToLabel': (l) => l.requestPublicToLabel,
+  'requestPublicNoPhoto': (l) => l.requestPublicNoPhoto,
   'requestPublicReportTooltip': (l) => l.requestPublicReportTooltip,
   'requestPublicReportSheetTitle': (l) => l.requestPublicReportSheetTitle,
   'requestPublicReportReasonProhibited': (l) =>
@@ -5019,25 +5022,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.followPushEnabledMessage(placeholderMarker('name')),
   'followPushDisabledMessage': (l) => l.followPushDisabledMessage,
   'followNoMatchMessage': (l) => l.followNoMatchMessage,
-  'followHubProfileLoadError': (l) => l.followHubProfileLoadError,
-  'followHubProAccountLabel': (l) => l.followHubProAccountLabel,
-  'followHubVerifiedBadge': (l) => l.followHubVerifiedBadge,
-  'followHubRating': (l) => l.followHubRating(placeholderMarker('rating')),
-  'followHubDeliveries': (l) => l.followHubDeliveries(intPlaceholderValue),
-  'followHubRespondsIn': (l) => l.followHubRespondsIn(intPlaceholderValue),
-  'followHubNewOnYadony': (l) => l.followHubNewOnYadony,
-  'followHubTripsTab': (l) => l.followHubTripsTab,
-  'followHubReviewsTab': (l) => l.followHubReviewsTab,
-  'followHubTripsLoadError': (l) => l.followHubTripsLoadError,
-  'followHubNoTripsDescription': (l) => l.followHubNoTripsDescription,
-  'followHubReviewsLoadError': (l) => l.followHubReviewsLoadError,
-  'followHubNoReviewsTitle': (l) => l.followHubNoReviewsTitle,
-  'followHubNoReviewsDescription': (l) => l.followHubNoReviewsDescription,
-  'followHubReviewsCount': (l) => l.followHubReviewsCount(intPlaceholderValue),
-  'followHubReserveButton': (l) => l.followHubReserveButton,
-  'followHubFullBadge': (l) => l.followHubFullBadge,
-  'followHubAvailableKg': (l) =>
-      l.followHubAvailableKg(placeholderMarker('kg')),
   'proPastDueMessage': (l) => l.proPastDueMessage,
   'proPayAction': (l) => l.proPayAction,
   'proSubscribeAction': (l) => l.proSubscribeAction,
@@ -5577,6 +5561,36 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailRouteLabel': (l) => l.bidDetailRouteLabel,
   'bidDetailArrivalTimeLabel': (l) => l.bidDetailArrivalTimeLabel,
   'bidDetailPickupInstructionsLabel': (l) => l.bidDetailPickupInstructionsLabel,
+  'negotiationMakeOfferStepProgress': (l) => l.negotiationMakeOfferStepProgress(
+    intPlaceholderValue,
+    placeholderMarker('name'),
+  ),
+  'negotiationMakeOfferStepTrip': (l) => l.negotiationMakeOfferStepTrip,
+  'negotiationMakeOfferStepPrice': (l) => l.negotiationMakeOfferStepPrice,
+  'negotiationMakeOfferStepRecap': (l) => l.negotiationMakeOfferStepRecap,
+  'negotiationMakeOfferEnterValidPrice': (l) =>
+      l.negotiationMakeOfferEnterValidPrice,
+  'negotiationMakeOfferEnterValidCapacity': (l) =>
+      l.negotiationMakeOfferEnterValidCapacity,
+  'negotiationMakeOfferPickDateToContinue': (l) =>
+      l.negotiationMakeOfferPickDateToContinue,
+  'negotiationMakeOfferRecapDeparture': (l) =>
+      l.negotiationMakeOfferRecapDeparture,
+  'negotiationMakeOfferRecapCapacity': (l) =>
+      l.negotiationMakeOfferRecapCapacity,
+  'negotiationMakeOfferRecapPrice': (l) => l.negotiationMakeOfferRecapPrice,
+  'negotiationMakeOfferRecapFirm': (l) => l.negotiationMakeOfferRecapFirm,
+  'negotiationMakeOfferGaugeBelow': (l) => l.negotiationMakeOfferGaugeBelow,
+  'negotiationMakeOfferGaugeWithin': (l) => l.negotiationMakeOfferGaugeWithin,
+  'negotiationMakeOfferGaugeAbove': (l) => l.negotiationMakeOfferGaugeAbove,
+  'negotiationMakeOfferPriceDecrease': (l) =>
+      l.negotiationMakeOfferPriceDecrease,
+  'negotiationMakeOfferPriceIncrease': (l) =>
+      l.negotiationMakeOfferPriceIncrease,
+  'negotiationMakeOfferCapacityDecrease': (l) =>
+      l.negotiationMakeOfferCapacityDecrease,
+  'negotiationMakeOfferCapacityIncrease': (l) =>
+      l.negotiationMakeOfferCapacityIncrease,
   'negotiationMakeOfferSelectTripHint': (l) =>
       l.negotiationMakeOfferSelectTripHint,
   'errorPaymentMethodNoneAvailableTitle': (l) =>
@@ -7685,6 +7699,13 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'unmetUrgent': (l) => l.unmetUrgent,
   'unmetGpPro': (l) => l.unmetGpPro,
   'unmetGeneric': (l) => l.unmetGeneric,
+  'openListingsTitle': (l) => l.openListingsTitle,
+  'openListingsFilterAll': (l) => l.openListingsFilterAll,
+  'openListingsFilterTrips': (l) => l.openListingsFilterTrips,
+  'openListingsFilterRequests': (l) => l.openListingsFilterRequests,
+  'openListingsEmpty': (l) => l.openListingsEmpty,
+  'openListingsPostedAgo': (l) =>
+      l.openListingsPostedAgo(placeholderMarker('when')),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8003,8 +8024,6 @@ const textParameters = <String, List<String>>{
   'followPushSemanticsFor': ['name'],
   'followUnsubscribeConfirmTitle': ['name'],
   'followPushEnabledMessage': ['name'],
-  'followHubRating': ['rating'],
-  'followHubAvailableKg': ['kg'],
   'proSubscriptionEndsOn': ['date'],
   'proCancellationScheduledOn': ['date'],
   'proNextRenewalOn': ['date'],
@@ -8078,6 +8097,7 @@ const textParameters = <String, List<String>>{
   'trackingHeadlineArrivedIn': ['city'],
   'travelerArrivalPromptTitle': ['city'],
   'bidDetailPaymentMethodValue': ['method'],
+  'negotiationMakeOfferStepProgress': ['name'],
   'suiviQrRecognized': ['parcel'],
   'bidDetailTravelerRequestTitle': ['name'],
   'profilePublicResidesIn': ['country'],
@@ -8307,4 +8327,5 @@ const textParameters = <String, List<String>>{
   'unmetMinRating': ['requested', 'actual'],
   'unmetContentType': ['requested'],
   'unmetWeekend': ['actual'],
+  'openListingsPostedAgo': ['when'],
 };

@@ -14215,85 +14215,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get followNoMatchMessage => 'No traveler matches this search.';
 
   @override
-  String get followHubProfileLoadError => 'Unable to load the profile';
-
-  @override
-  String get followHubProAccountLabel => 'Pro account';
-
-  @override
-  String get followHubVerifiedBadge => 'Verified identity';
-
-  @override
-  String followHubRating(String rating) {
-    return '$rating rating';
-  }
-
-  @override
-  String followHubDeliveries(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count deliveries',
-      one: '$count delivery',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String followHubRespondsIn(int hours) {
-    return 'replies in $hours h';
-  }
-
-  @override
-  String get followHubNewOnYadony => 'New on Yadony';
-
-  @override
-  String get followHubTripsTab => 'Trips';
-
-  @override
-  String get followHubReviewsTab => 'Reviews';
-
-  @override
-  String get followHubTripsLoadError =>
-      'Unable to load trips. Try again in a moment.';
-
-  @override
-  String get followHubNoTripsDescription =>
-      'This traveler hasn\'t posted a trip yet.';
-
-  @override
-  String get followHubReviewsLoadError => 'Unable to load reviews';
-
-  @override
-  String get followHubNoReviewsTitle => 'No reviews';
-
-  @override
-  String get followHubNoReviewsDescription =>
-      'This traveler hasn\'t received any reviews yet.';
-
-  @override
-  String followHubReviewsCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count reviews',
-      one: '$count review',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get followHubReserveButton => 'Book';
-
-  @override
-  String get followHubFullBadge => 'Full';
-
-  @override
-  String followHubAvailableKg(String kg) {
-    return '$kg kg available';
-  }
-
-  @override
   String get proPastDueMessage =>
       'Your last payment didn\'t go through. Without payment, your Pro access will be suspended.';
 
@@ -22161,4 +22082,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unmetGeneric => 'Does not match one of your criteria';
+
+  @override
+  String get openListingsTitle => 'Ongoing';
+
+  @override
+  String get openListingsFilterAll => 'All';
+
+  @override
+  String get openListingsFilterTrips => 'Trips';
+
+  @override
+  String get openListingsFilterRequests => 'Requests';
+
+  @override
+  String get openListingsEmpty => 'Nothing ongoing right now.';
+
+  @override
+  String openListingsPostedAgo(String when) {
+    return 'Posted $when';
+  }
 }

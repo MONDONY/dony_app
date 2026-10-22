@@ -14318,85 +14318,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun voyageur ne correspond à cette recherche.';
 
   @override
-  String get followHubProfileLoadError => 'Impossible de charger le profil';
-
-  @override
-  String get followHubProAccountLabel => 'Compte PRO';
-
-  @override
-  String get followHubVerifiedBadge => 'Identité vérifiée';
-
-  @override
-  String followHubRating(String rating) {
-    return '$rating de note';
-  }
-
-  @override
-  String followHubDeliveries(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count livraisons',
-      one: '$count livraison',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String followHubRespondsIn(int hours) {
-    return 'répond en $hours h';
-  }
-
-  @override
-  String get followHubNewOnYadony => 'Nouveau sur Yadony';
-
-  @override
-  String get followHubTripsTab => 'Trajets';
-
-  @override
-  String get followHubReviewsTab => 'Avis';
-
-  @override
-  String get followHubTripsLoadError =>
-      'Impossible de charger les trajets. Réessayez dans un instant.';
-
-  @override
-  String get followHubNoTripsDescription =>
-      'Ce voyageur n\'a pas encore publié de trajet.';
-
-  @override
-  String get followHubReviewsLoadError => 'Impossible de charger les avis';
-
-  @override
-  String get followHubNoReviewsTitle => 'Aucun avis';
-
-  @override
-  String get followHubNoReviewsDescription =>
-      'Ce voyageur n\'a pas encore reçu d\'avis.';
-
-  @override
-  String followHubReviewsCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count avis',
-      one: '$count avis',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get followHubReserveButton => 'Réserver';
-
-  @override
-  String get followHubFullBadge => 'Complet';
-
-  @override
-  String followHubAvailableKg(String kg) {
-    return '$kg kg disponibles';
-  }
-
-  @override
   String get proPastDueMessage =>
       'Votre dernier paiement n\'a pas abouti. Sans régularisation, votre accès PRO sera suspendu.';
 
@@ -22313,4 +22234,24 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get unmetGeneric => 'Ne correspond pas à l\'un de vos critères';
+
+  @override
+  String get openListingsTitle => 'En cours';
+
+  @override
+  String get openListingsFilterAll => 'Tout';
+
+  @override
+  String get openListingsFilterTrips => 'Trajets';
+
+  @override
+  String get openListingsFilterRequests => 'Demandes';
+
+  @override
+  String get openListingsEmpty => 'Rien en cours pour le moment.';
+
+  @override
+  String openListingsPostedAgo(String when) {
+    return 'En ligne $when';
+  }
 }

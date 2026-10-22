@@ -187,6 +187,7 @@ import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/presentation/price_grid_screen.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
+import 'package:dony/features/profile/bloc/open_listings_cubit.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
@@ -241,11 +242,8 @@ import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/screens/account_disabled_screen.dart';
 import 'package:dony/features/stripe_account/presentation/screens/account_rejected_screen.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
-import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
-import 'package:dony/features/subscriptions/bloc/traveler_hub_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/presentation/mes_abonnements_screen.dart';
-import 'package:dony/features/subscriptions/presentation/traveler_profile_hub_screen.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/presentation/screens/support_home_screen.dart';
@@ -1696,7 +1694,8 @@ final appRouter = GoRouter(
       ],
     ),
 
-    // ── Profil voyageur enrichi (hors shell) ─────────────────────────
+    // ── Profil d'un voyageur suivi (hors shell) ──────────────────────
+    // Le profil public, avec la section « En cours » de ses annonces ouvertes.
     GoRoute(
       path: '/travelers/:travelerId',
       builder: (context, state) {
@@ -1707,11 +1706,10 @@ final appRouter = GoRouter(
               create: (_) =>
                   getIt<ProfilePublicBloc>()..add(ProfilePublicRequested(id)),
             ),
-            BlocProvider(
-              create: (_) => getIt<TravelerHubBloc>()..add(LoadTravelerHub(id)),
-            ),
+            BlocProvider(create: (_) => getIt<TravelerSubscribeBloc>()),
+            BlocProvider(create: (_) => getIt<OpenListingsCubit>()..load(id)),
           ],
-          child: TravelerProfileHubScreen(travelerId: id),
+          child: ProfilePublicScreen(userId: id),
         );
       },
     ),
@@ -1809,6 +1807,10 @@ final appRouter = GoRouter(
                     ..add(ProfilePublicRequested(args.userId ?? '')),
             ),
             BlocProvider(create: (_) => getIt<TravelerSubscribeBloc>()),
+            BlocProvider(
+              create: (_) =>
+                  getIt<OpenListingsCubit>()..load(args.userId ?? ''),
+            ),
           ],
           child: ProfilePublicScreen(userId: args.userId),
         );

@@ -47,14 +47,4 @@ class SubscriptionsRemoteDatasource implements SubscriptionsRepository {
   Future<void> markAllSeen() async {
     await _apiClient.dio.post('/me/subscriptions/mark-seen');
   }
-
-  @override
-  Future<List<TravelerAnnouncement>> getTravelerAnnouncements(
-    String travelerId,
-  ) async {
-    final r = await _apiClient.dio.get('/travelers/$travelerId/announcements');
-    return (r.data as List)
-        .map((j) => TravelerAnnouncement.fromJson(j as Map<String, dynamic>))
-        .toList();
-  }
 }

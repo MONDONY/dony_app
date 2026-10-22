@@ -5,9 +5,11 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/profile/bloc/open_listings_cubit.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
+import 'package:dony/features/profile/data/models/open_listing.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
@@ -22,6 +24,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../data/models/open_listing_test.dart' show requestJson, tripJson;
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -34,6 +37,9 @@ class MockTravelerSubscribeBloc
     implements TravelerSubscribeBloc {}
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+class MockOpenListingsCubit extends MockCubit<OpenListingsState>
+    implements OpenListingsCubit {}
 
 class FakeProfilePublicEvent extends Fake implements ProfilePublicEvent {}
 
@@ -144,6 +150,7 @@ Widget _wrap(
   MockProfilePublicBloc profileBloc, {
   MockTravelerSubscribeBloc? subscribeBloc,
   MockAuthBloc? authBloc,
+  OpenListingsCubit? listings,
   String? screenUserId = _userId,
   String authUserId = _currentUserId,
 }) {
@@ -180,6 +187,8 @@ Widget _wrap(
       BlocProvider<ProfilePublicBloc>.value(value: profileBloc),
       BlocProvider<TravelerSubscribeBloc>.value(value: subBloc),
       BlocProvider<AuthBloc>.value(value: aBloc),
+      if (listings != null)
+        BlocProvider<OpenListingsCubit>.value(value: listings),
     ],
     child: MaterialApp.router(
       routerConfig: GoRouter(
@@ -209,6 +218,7 @@ Widget _wrapLoaded({
   required ProfilePublicModel profile,
   MockTravelerSubscribeBloc? subscribeBloc,
   MockAuthBloc? authBloc,
+  OpenListingsCubit? listings,
   String? screenUserId = _userId,
   String authUserId = _currentUserId,
 }) {
@@ -223,9 +233,31 @@ Widget _wrapLoaded({
     bloc,
     subscribeBloc: subscribeBloc,
     authBloc: authBloc,
+    listings: listings,
     screenUserId: screenUserId,
     authUserId: authUserId,
   );
+}
+
+MockOpenListingsCubit _listingsCubit() {
+  final cubit = MockOpenListingsCubit();
+  final loaded = OpenListingsLoaded(
+    items: [
+      OpenListing.fromJson({
+        'kind': 'REQUEST',
+        'publishedAt': DateTime.now().toUtc().toIso8601String(),
+        'request': requestJson(),
+      })!,
+      OpenListing.fromJson({
+        'kind': 'TRIP',
+        'publishedAt': DateTime.now().toUtc().toIso8601String(),
+        'trip': tripJson(),
+      })!,
+    ],
+  );
+  when(() => cubit.state).thenReturn(loaded);
+  when(() => cubit.stream).thenAnswer((_) => Stream.value(loaded));
+  return cubit;
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -1050,8 +1082,7 @@ void main() {
 
     await tester.tap(find.byTooltip('Désactiver les notifications'));
 
-    // TogglePushPressed doesn't implement ==, capture and verify the field
-    // (same pattern as HubTogglePush in traveler_profile_hub_screen_test.dart).
+    // TogglePushPressed doesn't implement ==, capture and verify the field.
     final captured = verify(() => subBloc.add(captureAny())).captured;
     final toggle = captured.whereType<TogglePushPressed>().toList();
     expect(toggle, hasLength(1));
@@ -1509,5 +1540,50 @@ void main() {
     tester,
   ) async {
     expect(await pumpBadge(tester, tier(kyc: false, gp: true)), isNull);
+  });
+
+  // ── En cours : trajets et demandes ouverts du membre ───────────────────────
+
+  testWidgets('profil d\'un autre + cubit fourni → section « En cours »', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 4000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      _wrapLoaded(profile: _profile, listings: _listingsCubit()),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('EN COURS'), findsOneWidget);
+    expect(find.byType(DonyDetailSkeleton), findsNothing);
+  });
+
+  testWidgets('mon profil → pas de section « En cours »', (tester) async {
+    tester.view.physicalSize = const Size(800, 4000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        listings: _listingsCubit(),
+        authUserId: _userId, // same → own profile
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('EN COURS'), findsNothing);
+  });
+
+  testWidgets('sans cubit fourni (anciens appelants) → profil inchangé', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrapLoaded(profile: _profile));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('EN COURS'), findsNothing);
+    expect(find.text('Fatou Diallo'), findsWidgets);
   });
 }
