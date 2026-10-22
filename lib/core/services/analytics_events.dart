@@ -799,6 +799,28 @@ abstract final class AnalyticsEvents {
   /// Bascule du sélecteur de mode de la recherche. Propriété `mode` : trips / parcels.
   static const homeSearchModeChanged = 'home_search_mode_changed';
 
+  /// Tap sur un point de la carte de l'accueil. Propriétés `mode`
+  /// (trips / parcels) et `kind` : `trip` (marqueur d'un trajet),
+  /// `package_request` (marqueur d'une demande) ou `cluster` (groupe de
+  /// points, dont `cluster_size`). Jamais la ville ni l'identifiant.
+  static const homeMapMarkerTapped = 'home_map_marker_tapped';
+
+  /// Glissement de l'utilisateur dans le carrousel « Près de moi ». Propriétés
+  /// `mode` et `position` (rang de la carte atteinte, à partir de 0). Un
+  /// défilement déclenché par un tap sur la carte n'est pas compté.
+  static const homeCarouselSwiped = 'home_carousel_swiped';
+
+  /// Fiche ouverte depuis l'accueil. Propriétés `source` (`map` marqueur,
+  /// `carousel` carrousel « Près de moi », `list` liste de la feuille), `mode`
+  /// et `kind` (`trip` / `package_request`). Sert à comparer les trois chemins.
+  static const homeCardOpened = 'home_card_opened';
+
+  /// Feuille de résultats de l'accueil posée sur un nouveau cran. Propriétés
+  /// `size` (`peek` repliée, `raised` mi-hauteur, `full` plein écran), `from`
+  /// (cran précédent, absent au premier) et `auto` (montée d'elle-même à
+  /// l'ouverture, FLUTTER-CD, plutôt que geste de l'utilisateur).
+  static const homeSheetSnapped = 'home_sheet_snapped';
+
   /// Tap sur la ligne de bascule de l'état vide. Propriétés `from_mode`, `count`.
   static const homeCrossDiscoveryTapped = 'home_cross_discovery_tapped';
 

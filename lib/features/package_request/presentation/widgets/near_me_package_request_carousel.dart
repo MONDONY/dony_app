@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
@@ -23,6 +24,7 @@ class NearMePackageRequestCarousel extends StatefulWidget {
     this.currentUserId,
     this.selectedRequestId,
     this.onCardChanged,
+    this.onSwiped,
     this.onTapCard,
     this.onMakeOffer,
   });
@@ -33,6 +35,10 @@ class NearMePackageRequestCarousel extends StatefulWidget {
   final String? currentUserId;
   final String? selectedRequestId;
   final void Function(String id)? onCardChanged;
+
+  /// Glissement de l'utilisateur vers la carte de rang `position`. Muet quand
+  /// le carrousel se recale de lui-même sur un marqueur touché sur la carte.
+  final void Function(int position)? onSwiped;
   final void Function(PackageRequestSearchItem)? onTapCard;
   final void Function(PackageRequestSearchItem)? onMakeOffer;
 
@@ -45,6 +51,10 @@ class _NearMePackageRequestCarouselState
     extends State<NearMePackageRequestCarousel> {
   late final PageController _controller;
   int _currentIndex = 0;
+
+  /// Vrai pendant que le carrousel se recale sur la sélection de la carte :
+  /// ces changements de page ne sont pas des glissements.
+  bool _recentering = false;
 
   @override
   void initState() {
@@ -73,10 +83,15 @@ class _NearMePackageRequestCarouselState
         (it) => it.id == widget.selectedRequestId,
       );
       if (idx >= 0 && idx != _currentIndex && _controller.hasClients) {
-        _controller.animateToPage(
-          idx,
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeOutCubic,
+        _recentering = true;
+        unawaited(
+          _controller
+              .animateToPage(
+                idx,
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+              )
+              .whenComplete(() => _recentering = false),
         );
       }
     }
@@ -120,6 +135,7 @@ class _NearMePackageRequestCarouselState
             onPageChanged: (i) {
               setState(() => _currentIndex = i);
               widget.onCardChanged?.call(widget.items[i].id);
+              if (!_recentering) widget.onSwiped?.call(i);
             },
             itemBuilder: (_, i) {
               final item = widget.items[i];
