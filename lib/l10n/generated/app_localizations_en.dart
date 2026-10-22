@@ -2337,9 +2337,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeComposerClearAll => 'Clear all';
 
   @override
-  String get homeComposerSectionWhere => 'WHERE';
-
-  @override
   String get homeComposerMoreFilters => 'More filters';
 
   @override

@@ -3956,12 +3956,6 @@ abstract class AppLocalizations {
   /// **'Tout effacer'**
   String get homeComposerClearAll;
 
-  /// No description provided for @homeComposerSectionWhere.
-  ///
-  /// In fr, this message translates to:
-  /// **'OÙ'**
-  String get homeComposerSectionWhere;
-
   /// No description provided for @homeComposerMoreFilters.
   ///
   /// In fr, this message translates to:

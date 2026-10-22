@@ -693,7 +693,6 @@
   "homeComposerTitleTrips": "Filter trips",
   "homeComposerTitleParcels": "Filter parcels",
   "homeComposerClearAll": "Clear all",
-  "homeComposerSectionWhere": "WHERE",
   "homeComposerMoreFilters": "More filters",
   "homeComposerMoreFiltersHint": "Content type, transport, rating, stops, payment",
   "homeComposerSectionWhen": "WHEN",

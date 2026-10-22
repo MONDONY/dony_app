@@ -10,6 +10,9 @@
 // route fille (`/child`), comme `dony_app_bar_test.dart` le fait déjà pour
 // `DonyAppBarBackButton`.
 
+import 'dart:io';
+
+import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -23,6 +26,8 @@ import 'package:dony/features/home/presentation/screens/search_composer_screen.d
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
@@ -144,6 +149,32 @@ Future<void> _settleFilterChange(WidgetTester tester) async {
 /// Viewport haute : l'écran empile huit blocs, le viewport 800×600 par défaut
 /// du test binding ne montre que le tout début sans un scroll explicite. Même
 /// valeurs que `search_filter_sheet_test.dart` (`vueHaute`).
+/// Charge les vraies polices de l'app : avec la police de repli des tests,
+/// chaque glyphe fait un cadratin et la mesure d'un titre serait fausse.
+Future<void> _loadAppFonts() async {
+  const families = {
+    'HankenGrotesk': [
+      'HankenGrotesk-SemiBold',
+      'HankenGrotesk-Bold',
+      'HankenGrotesk-ExtraBold',
+    ],
+    'PlusJakartaSans': [
+      'PlusJakartaSans-Regular',
+      'PlusJakartaSans-Medium',
+      'PlusJakartaSans-SemiBold',
+      'PlusJakartaSans-Bold',
+    ],
+  };
+  for (final MapEntry(key: family, value: files) in families.entries) {
+    final loader = FontLoader(family);
+    for (final file in files) {
+      final bytes = File('assets/fonts/$file.ttf').readAsBytesSync();
+      loader.addFont(Future.value(ByteData.sublistView(bytes)));
+    }
+    await loader.load();
+  }
+}
+
 void _vueHaute(WidgetTester tester) {
   tester.view.physicalSize = const Size(1000, 2400);
   tester.view.devicePixelRatio = 1.0;
@@ -203,8 +234,9 @@ void main() {
     await tester.pumpAndSettle();
 
     final tops = <String, double>{};
+    // Plus de titre « OÙ » : la carte des villes ouvre l'écran.
+    expect(find.text('OÙ'), findsNothing);
     for (final label in const [
-      'OÙ',
       'QUAND',
       'POIDS ET PRIX',
       'FILTRES RAPIDES',
@@ -550,8 +582,8 @@ void main() {
       // « Pour mes trajets » vit entre FILTRES RAPIDES et AUTOUR DE MOI dans le
       // ListView : vérifié à sa place, avant que le scroll ne le dépasse (le
       // scroll ne revient jamais en arrière dans cette boucle).
+      expect(find.text('OÙ'), findsNothing);
       for (final label in const [
-        'OÙ',
         'QUAND',
         'POIDS MAXIMAL',
         'TAILLE DU COLIS',
@@ -571,17 +603,67 @@ void main() {
     },
   );
 
-  testWidgets('Tout effacer déclenche SearchComposerCleared', (tester) async {
-    await tester.pumpWidget(const _Harness());
+  testWidgets('Tout effacer : dans le corps, hors de la barre, et efface les '
+      'filtres', (tester) async {
+    await tester.pumpWidget(
+      const _Harness(initialFilters: HomeSearchFilters(departureCity: 'Paris')),
+    );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Tout effacer'));
+    final clear = find.text('Tout effacer');
+    expect(clear, findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(AppBar), matching: clear),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: find.byType(ListView), matching: clear),
+      findsOneWidget,
+    );
+    expect(
+      tester.getSize(find.byType(TextButton).first).height,
+      greaterThanOrEqualTo(44),
+    );
+    expect(find.text('Paris'), findsWidgets);
+
+    await tester.tap(clear);
     await tester.pumpAndSettle();
 
-    // L'écran reste ouvert (Tout effacer ne ferme rien) : le bouton Rechercher
-    // est toujours là pour le prouver.
+    expect(find.text('Paris'), findsNothing);
+    // L'écran reste ouvert : le bouton Rechercher est toujours là.
     expect(find.textContaining('Rechercher'), findsOneWidget);
   });
+
+  for (final mode in SearchMode.values) {
+    testWidgets('titre de la barre complet à 360 dp (${mode.name})', (
+      tester,
+    ) async {
+      await _loadAppFonts();
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_Harness(mode: mode, theme: AppTheme.light()));
+      await tester.pumpAndSettle();
+
+      final title = mode.isTrips ? 'Filtrer les trajets' : 'Filtrer les colis';
+      final finder = find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text(title),
+      );
+      expect(finder, findsOneWidget);
+      // Le paragraphe réellement posé : coupé par « … » s'il dépasse la place.
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.descendant(of: finder, matching: find.byType(RichText)).first,
+      );
+      expect(paragraph.didExceedMaxLines, isFalse);
+      expect(
+        tester.getSize(finder).width,
+        greaterThanOrEqualTo(
+          paragraph.getMaxIntrinsicWidth(double.infinity) - 0.5,
+        ),
+      );
+    });
+  }
 
   testWidgets('AUTOUR DE MOI affiche l interrupteur de proximité', (
     tester,
@@ -749,7 +831,7 @@ void main() {
 
       expect(find.text('Filter trips'), findsOneWidget);
       expect(find.text('Clear all'), findsOneWidget);
-      expect(find.text('WHERE'), findsOneWidget);
+      expect(find.text('WHERE'), findsNothing);
       expect(find.text('Search (3)'), findsOneWidget);
     });
 
@@ -790,12 +872,16 @@ class _Harness extends StatelessWidget {
     this.count,
     this.announcementRepo,
     this.initialFilters = const HomeSearchFilters(),
+    this.theme,
   });
 
   final _MockAnnouncementRepo? announcementRepo;
   final SearchMode mode;
   final int? count;
   final HomeSearchFilters initialFilters;
+
+  /// Thème de l'app quand le test mesure du texte (sinon thème par défaut).
+  final ThemeData? theme;
 
   @override
   Widget build(BuildContext context) {
@@ -888,6 +974,6 @@ class _Harness extends StatelessWidget {
       ],
     );
 
-    return MaterialApp.router(routerConfig: router);
+    return MaterialApp.router(routerConfig: router, theme: theme);
   }
 }
