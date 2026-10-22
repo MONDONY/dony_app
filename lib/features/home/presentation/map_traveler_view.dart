@@ -239,7 +239,7 @@ class _TravelerSheet extends StatelessWidget {
         controller: scrollController,
         slivers: [
           SliverToBoxAdapter(child: _SheetHandle()),
-          SliverToBoxAdapter(child: _SheetTitle(count: state.results.length)),
+          SliverToBoxAdapter(child: _SheetTitle(count: state.displayCount)),
           if (isNearMe)
             SliverToBoxAdapter(
               child: SizedBox(

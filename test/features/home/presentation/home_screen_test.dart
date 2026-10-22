@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -1472,6 +1474,52 @@ void main() {
           find.textContaining('Tirer pour voir les 3 colis'),
           findsOneWidget,
         );
+      },
+    );
+
+    // Le compteur suivait les lignes chargées (20 puis 40 au défilement) au
+    // lieu du total serveur.
+    testWidgets(
+      'le compteur Colis suit le total serveur, pas les pages chargées',
+      (tester) async {
+        final avant = PackageRequestSearchState(
+          status: SearchStatus.loaded,
+          results: [for (var i = 0; i < 20; i++) _makeRequest('a$i')],
+          totalElements: 45,
+        );
+        final apres = avant.copyWith(
+          results: [for (var i = 0; i < 40; i++) _makeRequest('a$i')],
+          page: 1,
+        );
+        final flux = StreamController<PackageRequestSearchState>();
+        addTearDown(flux.close);
+        getIt.unregister<PackageRequestSearchBloc>();
+        getIt.registerFactory<PackageRequestSearchBloc>(() {
+          final mock = MockPackageRequestSearchBloc();
+          when(() => mock.state).thenReturn(avant);
+          whenListen(mock, flux.stream, initialState: avant);
+          return mock;
+        });
+
+        await pumpHome(tester, tripResults: [_makeAnn()]);
+        await replierFeuille(tester);
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('Tirer pour voir les 45 colis'),
+          findsOneWidget,
+        );
+
+        // Le chargement de la page suivante amène 40 lignes, le total reste.
+        flux.add(apres);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('Tirer pour voir les 45 colis'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('40 colis'), findsNothing);
       },
     );
 
