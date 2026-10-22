@@ -3026,6 +3026,29 @@ void main() {
       expect(departure.day, inInclusiveRange(4, 26));
     });
 
+    test(
+      'le départ de test tient pour chaque jour d\'une année bissextile',
+      () {
+        for (var i = 0; i < 366; i++) {
+          final now = DateTime(2028, 1, 1 + i, 14, 30);
+          final d = _handoverPickDeparture(now: now);
+          final veille = DateTime(d.year, d.month, d.day - 1);
+          final avantVeille = DateTime(d.year, d.month, d.day - 2);
+          final reason = 'le $now';
+          expect(d.day, inInclusiveRange(4, 26), reason: reason);
+          expect(d.hour, 0, reason: reason);
+          expect(veille.month, d.month, reason: reason);
+          expect(avantVeille.month, d.month, reason: reason);
+          expect(avantVeille.isAfter(now), isTrue, reason: reason);
+          expect(
+            d.isBefore(DateTime(now.year, now.month, now.day + 5)),
+            isFalse,
+            reason: reason,
+          );
+        }
+      },
+    );
+
     testWidgets('jour puis heure choisie : ligne et valeur envoyée', (
       tester,
     ) async {
@@ -3235,7 +3258,7 @@ void main() {
       tester,
     ) async {
       final departure = _handoverPickDeparture();
-      final day = departure.subtract(const Duration(days: 1));
+      final day = DateTime(departure.year, departure.month, departure.day - 1);
       tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -3244,7 +3267,19 @@ void main() {
         _wrapWithRouter(
           CreateTripScreen(
             args: CreateTripArgs(
-              announcement: _makeFullAnnouncement(departureDate: departure),
+              // Une limite dans le mois du départ : le calendrier s'ouvre sur
+              // ce mois, où se trouve le jour à toucher (sans elle, il
+              // s'ouvrait sur le mois courant, sans ce jour à la fin du mois).
+              announcement: _makeFullAnnouncement(
+                departureDate: departure,
+                handoverDeadline: DateTime(
+                  departure.year,
+                  departure.month,
+                  departure.day - 1,
+                  23,
+                  59,
+                ),
+              ),
             ),
           ),
           use24h: true,
@@ -5036,12 +5071,14 @@ class _PopObserver extends NavigatorObserver {
 }
 
 /// Départ dans quelques jours, avec la veille et l'avant-veille dans la même
-/// grille du calendrier (le calendrier s'ouvre sur le mois de la limite).
-DateTime _handoverPickDeparture() {
-  final now = DateTime.now();
-  var d = DateTime(now.year, now.month, now.day).add(const Duration(days: 5));
+/// grille du calendrier (le calendrier s'ouvre sur le mois de la limite : le
+/// scénario doit poser une limite dans le mois du départ). Arithmétique de
+/// calendrier, jamais `Duration` : un changement d'heure décalerait minuit.
+DateTime _handoverPickDeparture({DateTime? now}) {
+  final today = now ?? DateTime.now();
+  var d = DateTime(today.year, today.month, today.day + 5);
   while (d.day > 26 || d.day < 4) {
-    d = d.add(const Duration(days: 1));
+    d = DateTime(d.year, d.month, d.day + 1);
   }
   return d;
 }

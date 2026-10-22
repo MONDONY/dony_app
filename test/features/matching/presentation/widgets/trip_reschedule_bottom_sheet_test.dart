@@ -18,12 +18,16 @@ class _MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
 
+/// Jour à [n] jours de [d], en arithmétique de calendrier : un `Duration`
+/// franchissant un changement d'heure décalerait minuit d'une heure.
+DateTime _plusDays(DateTime d, int n) => DateTime(d.year, d.month, d.day + n);
+
 /// Départ dans quelques jours, un jour du mois où le lendemain existe encore
 /// dans la même grille du sélecteur de date.
 DateTime _departureDay() {
-  var d = DateUtils.dateOnly(DateTime.now()).add(const Duration(days: 3));
+  var d = _plusDays(DateTime.now(), 3);
   while (d.day > 26) {
-    d = d.add(const Duration(days: 1));
+    d = _plusDays(d, 1);
   }
   return d;
 }
@@ -41,8 +45,8 @@ void main() {
     departureDate: departure,
     departureTime: '22:00',
     arrivalTime: '06:30',
-    arrivalDate: departure.add(const Duration(days: 1)),
-    handoverDeadline: departure.subtract(const Duration(days: 1)),
+    arrivalDate: _plusDays(departure, 1),
+    handoverDeadline: _plusDays(departure, -1),
     availableKg: 10,
     totalKg: 20,
     pricePerKg: 5,
@@ -178,7 +182,7 @@ void main() {
   ) async {
     await open(tester);
 
-    final day = departure.subtract(const Duration(days: 1));
+    final day = _plusDays(departure, -1);
     expect(
       find.descendant(
         of: find.byKey(const Key('reschedule-handover-field')),
@@ -253,7 +257,7 @@ void main() {
       final event =
           verify(() => bloc.add(captureAny())).captured.single
               as AnnouncementRescheduleRequested;
-      final newDay = departure.add(const Duration(days: 1));
+      final newDay = _plusDays(departure, 1);
       expect(event.announcementId, 'a1');
       expect(DateUtils.isSameDay(event.departureDate, newDay), isTrue);
       expect(event.departureTime, '22:00');
@@ -262,7 +266,7 @@ void main() {
       expect(
         event.arrivalDate,
         DateUtils.dateOnly(
-          newDay.add(const Duration(days: 1)),
+          _plusDays(newDay, 1),
         ).toIso8601String().substring(0, 10),
       );
       // Même écart qu'avant (remise la veille), en fin de journée.
@@ -281,7 +285,7 @@ void main() {
     await open(tester);
     await tester.tap(find.byKey(const Key('reschedule-reason-POSTPONED')));
     await pickNextDay(tester);
-    final newDay = departure.add(const Duration(days: 1));
+    final newDay = _plusDays(departure, 1);
 
     await pickHandover(tester, newDay, hour: '18');
 
@@ -308,7 +312,7 @@ void main() {
       await open(tester);
       await tester.tap(find.byKey(const Key('reschedule-reason-POSTPONED')));
       await pickNextDay(tester);
-      final newDay = departure.add(const Duration(days: 1));
+      final newDay = _plusDays(departure, 1);
 
       await pickHandover(tester, newDay, hour: '23');
 
@@ -326,7 +330,7 @@ void main() {
     await open(tester);
     await tester.tap(find.byKey(const Key('reschedule-reason-POSTPONED')));
     await pickNextDay(tester);
-    final newDay = departure.add(const Duration(days: 1));
+    final newDay = _plusDays(departure, 1);
 
     await pickHandover(tester, newDay);
     await tester.tap(find.byKey(const Key('trip-reschedule-submit')));
