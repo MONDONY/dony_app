@@ -16,6 +16,8 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
@@ -270,6 +272,8 @@ class _PackageRequestPublicDetailScreenState
         appBar: DonyAppBar(
           title: context.l10n.requestPublicTitle,
           actions: [
+            // Favori : le signet de la carte de liste, visible en permanence.
+            if (_request case final r?) _RequestFavoriteButton(requestId: r.id),
             // Affiche partageable : tant que la demande cherche encore un
             // voyageur (même règle que le partage du propriétaire).
             if (_request case final r? when canShareRequestPoster(r))
@@ -280,11 +284,6 @@ class _PackageRequestPublicDetailScreenState
                 onPressed: () =>
                     context.push('/package-requests/${r.id}/affiche', extra: r),
               ),
-            IconButton(
-              tooltip: context.l10n.requestPublicReportTooltip,
-              icon: const DonyIcon('flag', size: 20),
-              onPressed: _showReportSheet,
-            ),
           ],
         ),
         body: _loading
@@ -331,6 +330,7 @@ class _PackageRequestPublicDetailScreenState
                               ),
                               profileCountry: profileCountry,
                               showSenderRow: true,
+                              onReport: _showReportSheet,
                             ),
                       ),
                 ),
@@ -352,7 +352,13 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     this.cardCapabilityGap,
     this.profileCountry,
     this.showSenderRow = false,
+    this.onReport,
   });
+
+  /// Ouvre la feuille de signalement. Le drapeau a quitté l'en-tête (favori,
+  /// partage et scarabée suffisent) : le signalement est un bouton discret en
+  /// bas de fiche. `null` (tests du corps seul) : bouton absent.
+  final VoidCallback? onReport;
 
   /// Ligne expéditeur en tête (FLUTTER-GF). Exige un [RequestSenderCubit]
   /// au-dessus : l'écran le fournit, les tests du corps seul s'en passent.
@@ -431,152 +437,173 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     return Stack(
       children: [
         SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            DonySpacing.lg,
-            DonySpacing.lg,
-            DonySpacing.lg,
-            MediaQuery.of(context).padding.bottom + 100,
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + 110,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Expéditeur (FLUTTER-GF) ──────────────────────────────────
-              if (showSenderRow) const RequestSenderRow(),
-
-              // ── Photos colis (carousel) ──────────────────────────────────
-              if (r.photoUrls.isNotEmpty) ...[
-                _PhotoCarousel(urls: r.photoUrls),
-                const SizedBox(height: DonySpacing.base),
-              ],
-
-              // ── Carte héros : identité, corridor, date, budget ───────────
-              _HeroCard(
-                request: r,
-                price: _displayPrice,
-                isUrgent: isUrgent,
-                routeTitle:
-                    '${depFlag != null ? '$depFlag ' : ''}${r.departureCity} → '
-                    '${r.arrivalCity}${arrFlag != null ? ' $arrFlag' : ''}',
+              // ── Photos colis, plein cadre sous l'en-tête ─────────────────
+              // Sans photo : bandeau d'illustration plus court.
+              _Hero(
+                child: r.photoUrls.isNotEmpty
+                    ? _PhotoCarousel(urls: r.photoUrls)
+                    : const _NoPhotoBand(),
               ),
-              const SizedBox(height: DonySpacing.md),
-
-              // ── Poids / Taille ───────────────────────────────────────────
-              _FactsCard(
-                weight:
-                    '${r.weightKg.toStringAsFixed(r.weightKg % 1 == 0 ? 0 : 1)} kg',
-                weightLabel: l.requestCreateRecapWeight,
-                size: _sizeLabel,
-                sizeLabel: _parcelHint(l),
-              ),
-
-              // ── Catégories (chips) ───────────────────────────────────────
-              if (r.categories.isNotEmpty) ...[
-                const SizedBox(height: DonySpacing.md),
-                Text(
-                  l.requestPublicCategoriesLabel,
-                  style: tt.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurfaceVariant,
-                    letterSpacing: 0.5,
-                  ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xs,
+                  DonySpacing.lg,
+                  0,
                 ),
-                const SizedBox(height: DonySpacing.sm),
-                Wrap(
-                  spacing: DonySpacing.sm,
-                  runSpacing: DonySpacing.sm,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    for (final cat in r.categories) _CategoryChip(label: cat),
+                    // ── Carte héros : identité, corridor, date, budget ───────
+                    _HeroCard(
+                      request: r,
+                      price: _displayPrice,
+                      isUrgent: isUrgent,
+                      departureFlag: depFlag,
+                      arrivalFlag: arrFlag,
+                    ),
+                    const SizedBox(height: DonySpacing.md),
+
+                    // ── Poids / Taille ───────────────────────────────────────
+                    _FactsCard(
+                      weight:
+                          '${r.weightKg.toStringAsFixed(r.weightKg % 1 == 0 ? 0 : 1)} kg',
+                      weightLabel: l.requestCreateRecapWeight,
+                      size: _sizeLabel,
+                      sizeLabel: _parcelHint(l),
+                    ),
+
+                    // ── Expéditeur (FLUTTER-GF) ──────────────────────────────────
+                    if (showSenderRow) ...[
+                      const SizedBox(height: DonySpacing.md),
+                      const RequestSenderRow(),
+                    ],
+
+                    // ── Catégories (chips) ───────────────────────────────────────
+                    if (r.categories.isNotEmpty) ...[
+                      const SizedBox(height: DonySpacing.md),
+                      Text(
+                        l.requestPublicCategoriesLabel,
+                        style: tt.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurfaceVariant,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                      Wrap(
+                        spacing: DonySpacing.sm,
+                        runSpacing: DonySpacing.sm,
+                        children: [
+                          for (final cat in r.categories)
+                            _CategoryChip(label: cat),
+                        ],
+                      ),
+                    ],
+
+                    // ── Description ──────────────────────────────────────────────
+                    if (r.description != null && r.description!.isNotEmpty) ...[
+                      const SizedBox(height: DonySpacing.md),
+                      _detailCard(context, l.requestDescriptionLabel, [
+                        Text(
+                          r.description!,
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurface,
+                            height: 1.5,
+                          ),
+                        ),
+                      ]),
+                    ],
+
+                    if (r.acceptedPaymentMethods.isNotEmpty) ...[
+                      const SizedBox(height: DonySpacing.md),
+                      _PaymentMethodsCard(methods: r.acceptedPaymentMethods),
+                    ],
+                    if (cardBlocked) ...[
+                      const SizedBox(height: DonySpacing.sm),
+                      _CardOnlyWarning(
+                        gap: cardCapabilityGap!,
+                        profileCountry: profileCountry,
+                      ),
+                    ],
+                    if (r.pickupNeighborhood != null ||
+                        r.deliveryNeighborhood != null) ...[
+                      const SizedBox(height: DonySpacing.md),
+                      _detailCard(context, l.requestPublicZonesLabel, [
+                        if (r.pickupNeighborhood != null)
+                          _kv(
+                            context,
+                            'map-pin',
+                            l.requestPublicPickupLabel,
+                            r.pickupNeighborhood!,
+                          ),
+                        if (r.deliveryNeighborhood != null)
+                          _kv(
+                            context,
+                            'map-pin',
+                            l.requestPublicDeliveryLabel,
+                            r.deliveryNeighborhood!,
+                          ),
+                      ]),
+                    ],
+                    // ── Signalement (discret, bas de fiche) ─────────────────
+                    if (onReport != null) ...[
+                      const SizedBox(height: DonySpacing.lg),
+                      _ReportButton(onPressed: onReport!),
+                    ],
                   ],
                 ),
-              ],
-
-              // ── Description ──────────────────────────────────────────────
-              if (r.description != null && r.description!.isNotEmpty) ...[
-                const SizedBox(height: DonySpacing.md),
-                _detailCard(context, l.requestDescriptionLabel, [
-                  Text(
-                    r.description!,
-                    style: tt.bodyMedium?.copyWith(
-                      color: cs.onSurface,
-                      height: 1.5,
-                    ),
-                  ),
-                ]),
-              ],
-
-              if (r.acceptedPaymentMethods.isNotEmpty) ...[
-                const SizedBox(height: DonySpacing.md),
-                _PaymentMethodsCard(methods: r.acceptedPaymentMethods),
-              ],
-              if (cardBlocked) ...[
-                const SizedBox(height: DonySpacing.sm),
-                _CardOnlyWarning(
-                  gap: cardCapabilityGap!,
-                  profileCountry: profileCountry,
-                ),
-              ],
-              if (r.pickupNeighborhood != null ||
-                  r.deliveryNeighborhood != null) ...[
-                const SizedBox(height: DonySpacing.md),
-                _detailCard(context, l.requestPublicZonesLabel, [
-                  if (r.pickupNeighborhood != null)
-                    _kv(
-                      context,
-                      'map-pin',
-                      l.requestPublicPickupLabel,
-                      r.pickupNeighborhood!,
-                    ),
-                  if (r.deliveryNeighborhood != null)
-                    _kv(
-                      context,
-                      'map-pin',
-                      l.requestPublicDeliveryLabel,
-                      r.deliveryNeighborhood!,
-                    ),
-                ]),
-              ],
+              ),
             ],
           ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
         ),
         Positioned(
-          left: 20,
-          right: 20,
-          bottom: MediaQuery.of(context).padding.bottom + 20,
-          child: isGuest
-              ? _GuestLockedCta(
-                  label: r.negotiable
-                      ? l.requestPublicProposeTripCta
-                      : _displayPrice != null
-                      ? l.requestPublicTakeAt(
-                          PriceDisplay.money(_displayPrice!, r.currency),
-                        )
-                      : l.requestPublicTakePackageCta,
-                )
-              : currentUserId == r.senderId
-              ? _OwnerCta(request: r, onChanged: onChanged)
-              : r.viewerThreadId != null
-              ? DonyButton(
-                  // Le voyageur a déjà une offre en cours → on bascule vers sa
-                  // négociation (négociable) / proposition de trajet (prix ferme).
-                  label: r.negotiable
-                      ? l.requestPublicViewNegotiationCta
-                      : l.requestPublicViewProposalCta,
-                  onPressed: () => _openThread(context, r.viewerThreadId!),
-                )
-              : r.negotiable
-              ? DonyButton(
-                  key: const Key('propose-trip'),
-                  label: l.requestPublicProposeTripCta,
-                  onPressed: () => cardBlocked
-                      ? showCardCapabilityRequiredSheet(context)
-                      : _makeOffer(context),
-                )
-              : _FirmPriceCta(
-                  request: r,
-                  announcement: announcement,
-                  onChanged: onChanged,
-                  cardBlocked: cardBlocked,
-                ),
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: _BottomBar(
+            child: isGuest
+                ? _GuestLockedCta(
+                    label: r.negotiable
+                        ? l.requestPublicProposeTripCta
+                        : _displayPrice != null
+                        ? l.requestPublicTakeAt(
+                            PriceDisplay.money(_displayPrice!, r.currency),
+                          )
+                        : l.requestPublicTakePackageCta,
+                  )
+                : currentUserId == r.senderId
+                ? _OwnerCta(request: r, onChanged: onChanged)
+                : r.viewerThreadId != null
+                ? DonyButton(
+                    // Le voyageur a déjà une offre en cours → on bascule vers sa
+                    // négociation (négociable) / proposition de trajet (prix ferme).
+                    label: r.negotiable
+                        ? l.requestPublicViewNegotiationCta
+                        : l.requestPublicViewProposalCta,
+                    onPressed: () => _openThread(context, r.viewerThreadId!),
+                  )
+                : r.negotiable
+                ? DonyButton(
+                    key: const Key('propose-trip'),
+                    label: l.requestPublicProposeTripCta,
+                    onPressed: () => cardBlocked
+                        ? showCardCapabilityRequiredSheet(context)
+                        : _makeOffer(context),
+                  )
+                : _FirmPriceCta(
+                    request: r,
+                    announcement: announcement,
+                    onChanged: onChanged,
+                    cardBlocked: cardBlocked,
+                  ),
+          ),
         ),
       ],
     );
@@ -687,261 +714,6 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
   }
 }
 
-/// Carte héros du détail : étiquette « Demande d'envoi » et pastilles au bord
-/// droit, corridor, date souhaitée, puis le budget en gros au pied de la
-/// carte (un seul endroit pour le prix, plus de carte « Budget » redondante).
-class _HeroCard extends StatelessWidget {
-  const _HeroCard({
-    required this.request,
-    required this.price,
-    required this.isUrgent,
-    required this.routeTitle,
-  });
-
-  final PackageRequest request;
-  final double? price;
-  final bool isUrgent;
-  final String routeTitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final r = request;
-    final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      key: const Key('request-hero-card'),
-      width: double.infinity,
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RequestHeaderRow(
-            leading: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DonyIcon('package', size: 14, color: cs.warning),
-                const SizedBox(width: DonySpacing.xxs),
-                Flexible(
-                  child: Text(
-                    l.requestPublicBadge,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: tt.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
-                      color: cs.warning,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            trailing: [
-              if (!r.negotiable)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.sm,
-                    vertical: DonySpacing.xxs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(DonyRadius.sm),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DonyIcon('lock', size: 11, color: cs.onSurfaceVariant),
-                      const SizedBox(width: DonySpacing.xxs),
-                      Text(
-                        l.requestPublicFirmPriceBadge,
-                        style: tt.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.4,
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              packageStatusChip(context, r.status),
-              if (isUrgent) const DonyUrgentBadge(),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.md),
-          Text(
-            routeTitle,
-            style: tt.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
-              letterSpacing: -0.4,
-            ),
-          ),
-          const SizedBox(height: DonySpacing.xs),
-          Row(
-            children: [
-              Icon(Icons.event_rounded, size: 16, color: cs.onSurfaceVariant),
-              const SizedBox(width: DonySpacing.xs),
-              Expanded(
-                child: Text(
-                  r.desiredDate == null
-                      ? l.requestDateFlexible
-                      : l.requestPublicDesiredDate(
-                          shortDayMonthYear(l, r.desiredDate!),
-                          toleranceCompactLabel(l, r.dateToleranceDays),
-                        ),
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ),
-            ],
-          ),
-          if (price != null) ...[
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: DonySpacing.md),
-              child: Divider(height: 1),
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        r.negotiable ? l.requestPublicBudget : l.tripFixedPrice,
-                        style: tt.labelMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      // Repère « environ » dans la devise du lecteur
-                      // (serveur, lot 5).
-                      ConvertedPriceLabel(
-                        originalCurrency: r.currency,
-                        convertedPricePerKg: r.convertedDisplayPrice,
-                        convertedCurrency: r.convertedCurrency,
-                        suffix: '',
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                Text(
-                  PriceDisplay.money(price!, r.currency),
-                  key: const Key('request-hero-price'),
-                  style: tt.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: cs.primary,
-                    letterSpacing: -0.4,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Poids et taille du colis dans une seule carte, deux colonnes séparées.
-class _FactsCard extends StatelessWidget {
-  const _FactsCard({
-    required this.weight,
-    required this.weightLabel,
-    required this.size,
-    required this.sizeLabel,
-  });
-
-  final String weight;
-  final String weightLabel;
-  final String size;
-  final String sizeLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      key: const Key('request-facts-card'),
-      padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Expanded(
-              child: _Fact(icon: 'scale', value: weight, label: weightLabel),
-            ),
-            VerticalDivider(width: 1, color: cs.outline),
-            Expanded(
-              child: _Fact(icon: 'package', value: size, label: sizeLabel),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Fact extends StatelessWidget {
-  const _Fact({required this.icon, required this.value, required this.label});
-  final String icon;
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-            ),
-            child: Center(child: DonyIcon(icon, size: 18, color: cs.primary)),
-          ),
-          const SizedBox(width: DonySpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Chip catégorie (lecture seule) — emoji + libellé.
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({required this.label});
@@ -1002,79 +774,73 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: AspectRatio(
-        aspectRatio: 4 / 3,
-        child: Stack(
-          children: [
-            PageView.builder(
-              controller: _controller,
-              itemCount: widget.urls.length,
-              onPageChanged: (i) => setState(() => _index = i),
-              itemBuilder: (_, i) => CachedNetworkImage(
-                imageUrl: widget.urls[i],
-                cacheKey: DonyImage.stableCacheKey(widget.urls[i]),
-                fit: BoxFit.cover,
-                placeholder: (_, _) =>
-                    ColoredBox(color: cs.surfaceContainerHighest),
-                errorWidget: (_, _, _) => ColoredBox(
-                  color: cs.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.broken_image_rounded,
-                    color: cs.onSurfaceVariant,
-                  ),
+    return AspectRatio(
+      aspectRatio: 4 / 3,
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _controller,
+            itemCount: widget.urls.length,
+            onPageChanged: (i) => setState(() => _index = i),
+            itemBuilder: (_, i) => CachedNetworkImage(
+              imageUrl: widget.urls[i],
+              cacheKey: DonyImage.stableCacheKey(widget.urls[i]),
+              fit: BoxFit.cover,
+              placeholder: (_, _) =>
+                  ColoredBox(color: cs.surfaceContainerHighest),
+              errorWidget: (_, _, _) => ColoredBox(
+                color: cs.surfaceContainerHighest,
+                child: Icon(
+                  Icons.broken_image_rounded,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ),
+          ),
+          Positioned(
+            top: 10,
+            right: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(DonyRadius.xl),
+              ),
+              child: Text(
+                '📷 ${_index + 1} / ${widget.urls.length}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          if (widget.urls.length > 1)
             Positioned(
-              top: 10,
-              right: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(DonyRadius.xl),
-                ),
-                child: Text(
-                  '📷 ${_index + 1} / ${widget.urls.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+              bottom: 34,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < widget.urls.length; i++)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: i == _index ? 18 : 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: i == _index
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(DonyRadius.full),
+                      ),
+                    ),
+                ],
               ),
             ),
-            if (widget.urls.length > 1)
-              Positioned(
-                bottom: 12,
-                left: 0,
-                right: 0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var i = 0; i < widget.urls.length; i++)
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        width: i == _index ? 18 : 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: i == _index
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.55),
-                          borderRadius: BorderRadius.circular(DonyRadius.full),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -1372,6 +1138,613 @@ class _PaymentMethodsCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
           PaymentMethodsChips(methods: methods),
         ],
+      ),
+    );
+  }
+}
+
+// ── Hero (photo plein cadre + liseré arrondi) ────────────────────────────────
+
+/// Photo (ou bandeau d'illustration) plein cadre sous l'en-tête. Le contenu
+/// qui suit remonte visuellement dessus par un liseré arrondi aux couleurs du
+/// fond : il est peint sur la photo, sans rien décaler dans la mise en page.
+class _Hero extends StatelessWidget {
+  const _Hero({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: -1,
+          height: 22,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(22),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Bandeau sans photo : illustration du colis et légende, plus court qu'une
+/// photo pour ne pas laisser un grand vide.
+class _NoPhotoBand extends StatelessWidget {
+  const _NoPhotoBand();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      height: 168,
+      color: cs.surfaceContainerHighest,
+      padding: const EdgeInsets.only(bottom: 22),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          DonyIcon('package', size: 56, color: cs.onSurfaceVariant),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            context.l10n.requestPublicNoPhoto,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Corridor ─────────────────────────────────────────────────────────────────
+
+/// Corridor : ville de départ à gauche, d'arrivée à droite, flèche pointillée
+/// entre les deux. Posé dans la carte héros, qui porte la date et le budget.
+class _CorridorRoute extends StatelessWidget {
+  const _CorridorRoute({
+    required this.departureCity,
+    required this.arrivalCity,
+    this.departureFlag,
+    this.arrivalFlag,
+  });
+
+  final String departureCity;
+  final String arrivalCity;
+  final String? departureFlag;
+  final String? arrivalFlag;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final cityStyle = tt.headlineMedium?.copyWith(
+      fontSize: 22,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -0.4,
+      color: cs.onSurface,
+    );
+    final subStyle = tt.labelMedium?.copyWith(color: cs.onSurfaceVariant);
+    return Row(
+      key: const Key('request-public-corridor'),
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                departureCity,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: cityStyle,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${departureFlag != null ? '$departureFlag ' : ''}'
+                '${l.requestPublicFromLabel}',
+                style: subStyle,
+              ),
+            ],
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: DonySpacing.xs),
+          child: _CorridorArrow(),
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                arrivalCity,
+                maxLines: 2,
+                textAlign: TextAlign.end,
+                overflow: TextOverflow.ellipsis,
+                style: cityStyle,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${l.requestPublicToLabel}'
+                '${arrivalFlag != null ? ' $arrivalFlag' : ''}',
+                textAlign: TextAlign.end,
+                style: subStyle,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Flèche du corridor : ligne pointillée qui part d'un point (départ), avion
+/// dans une pastille au milieu, pointe de flèche à l'arrivée. Couleurs unies.
+class _CorridorArrow extends StatelessWidget {
+  const _CorridorArrow();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: 76,
+        height: 28,
+        child: CustomPaint(
+          painter: _CorridorArrowPainter(
+            line: cs.outline,
+            dot: cs.primary,
+            head: cs.warning,
+            surface: cs.surface,
+          ),
+          child: Center(
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: RotatedBox(
+                quarterTurns: 1,
+                child: Icon(Icons.flight_rounded, size: 14, color: cs.primary),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CorridorArrowPainter extends CustomPainter {
+  const _CorridorArrowPainter({
+    required this.line,
+    required this.dot,
+    required this.head,
+    required this.surface,
+  });
+
+  final Color line;
+  final Color dot;
+  final Color head;
+  final Color surface;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = size.height / 2;
+    const dotR = 3.5;
+    const headLen = 6.0;
+    final dash = Paint()
+      ..color = line
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    // Pointillé de la pastille de départ jusqu'à la pointe.
+    var x = dotR * 2 + 2;
+    final endX = size.width - headLen - 2;
+    while (x < endX) {
+      canvas.drawLine(Offset(x, y), Offset((x + 4).clamp(0, endX), y), dash);
+      x += 8;
+    }
+    canvas
+      ..drawCircle(Offset(dotR, y), dotR, Paint()..color = surface)
+      ..drawCircle(
+        Offset(dotR, y),
+        dotR - 1,
+        Paint()
+          ..color = dot
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    final arrow = Paint()
+      ..color = head
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(
+      Path()
+        ..moveTo(size.width - headLen - 1, y - 5)
+        ..lineTo(size.width - 1, y)
+        ..lineTo(size.width - headLen - 1, y + 5),
+      arrow,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CorridorArrowPainter old) =>
+      old.line != line ||
+      old.dot != dot ||
+      old.head != head ||
+      old.surface != surface;
+}
+
+// ── Carte héros ──────────────────────────────────────────────────────────────
+
+/// Carte héros du détail : étiquette « Demande d'envoi » et pastilles au bord
+/// droit, corridor (villes et flèche), date souhaitée, puis le budget en gros au
+/// pied de la carte (un seul endroit pour le prix).
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({
+    required this.request,
+    required this.price,
+    required this.isUrgent,
+    this.departureFlag,
+    this.arrivalFlag,
+  });
+
+  final PackageRequest request;
+  final double? price;
+  final bool isUrgent;
+  final String? departureFlag;
+  final String? arrivalFlag;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = request;
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      key: const Key('request-hero-card'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RequestHeaderRow(
+            leading: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DonyIcon('package', size: 14, color: cs.warning),
+                const SizedBox(width: DonySpacing.xxs),
+                Flexible(
+                  child: Text(
+                    l.requestPublicBadge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tt.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      color: cs.warning,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            trailing: [
+              if (!r.negotiable)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.sm,
+                    vertical: DonySpacing.xxs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DonyIcon('lock', size: 11, color: cs.onSurfaceVariant),
+                      const SizedBox(width: DonySpacing.xxs),
+                      Text(
+                        l.requestPublicFirmPriceBadge,
+                        style: tt.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.4,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              packageStatusChip(context, r.status),
+              if (isUrgent) const DonyUrgentBadge(),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.md),
+          _CorridorRoute(
+            departureCity: r.departureCity,
+            arrivalCity: r.arrivalCity,
+            departureFlag: departureFlag,
+            arrivalFlag: arrivalFlag,
+          ),
+          const SizedBox(height: DonySpacing.md),
+          Divider(height: 1, color: cs.outline),
+          const SizedBox(height: DonySpacing.md),
+          Row(
+            children: [
+              DonyIcon('calendar', size: 17, color: cs.onSurfaceVariant),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  r.desiredDate == null
+                      ? l.requestDateFlexible
+                      : l.requestPublicDesiredDate(
+                          shortDayMonthYear(l, r.desiredDate!),
+                          toleranceCompactLabel(l, r.dateToleranceDays),
+                        ),
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (price != null) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: DonySpacing.md),
+              child: Divider(height: 1),
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        r.negotiable ? l.requestPublicBudget : l.tripFixedPrice,
+                        style: tt.labelMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      // Repère « environ » dans la devise du lecteur
+                      // (serveur, lot 5).
+                      ConvertedPriceLabel(
+                        originalCurrency: r.currency,
+                        convertedPricePerKg: r.convertedDisplayPrice,
+                        convertedCurrency: r.convertedCurrency,
+                        suffix: '',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Text(
+                  PriceDisplay.money(price!, r.currency),
+                  key: const Key('request-hero-price'),
+                  style: tt.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: cs.primary,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Poids et taille du colis dans une seule carte, deux colonnes séparées.
+class _FactsCard extends StatelessWidget {
+  const _FactsCard({
+    required this.weight,
+    required this.weightLabel,
+    required this.size,
+    required this.sizeLabel,
+  });
+
+  final String weight;
+  final String weightLabel;
+  final String size;
+  final String sizeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('request-facts-card'),
+      padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
+              child: _Fact(icon: 'scale', value: weight, label: weightLabel),
+            ),
+            VerticalDivider(width: 1, color: cs.outline),
+            Expanded(
+              child: _Fact(icon: 'package', value: size, label: sizeLabel),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Fact extends StatelessWidget {
+  const _Fact({required this.icon, required this.value, required this.label});
+  final String icon;
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: Center(child: DonyIcon(icon, size: 18, color: cs.primary)),
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Bas de fiche : signalement, barre d'action, favori ──────────────────────
+
+/// Signalement discret en pied de fiche (l'en-tête porte favori, partage et
+/// scarabée). Même feuille qu'avant : le motif est choisi ensuite.
+class _ReportButton extends StatelessWidget {
+  const _ReportButton({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return Tooltip(
+      message: l.requestPublicReportTooltip,
+      child: SizedBox(
+        width: double.infinity,
+        height: kDonyMinTapTarget,
+        child: OutlinedButton.icon(
+          key: const Key('request-public-report-button'),
+          onPressed: onPressed,
+          icon: DonyIcon('flag', size: 16, color: cs.onSurfaceVariant),
+          label: Text(l.requestPublicReportSheetTitle),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: cs.onSurfaceVariant,
+            side: BorderSide(color: cs.outline),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Barre d'action fixe : fond de surface, filet haut, zone de sécurité du bas.
+/// Le bouton principal (selon le rôle) y garde toute la largeur.
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(top: BorderSide(color: cs.outline)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          DonySpacing.lg,
+          DonySpacing.md,
+          DonySpacing.lg,
+          MediaQuery.of(context).padding.bottom + DonySpacing.md,
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Signet favori de l'en-tête. Même cubit et même signet que la carte de la
+/// liste ; défensif comme elle (rien ne s'affiche sans [FavoriteIdsCubit]).
+class _RequestFavoriteButton extends StatelessWidget {
+  const _RequestFavoriteButton({required this.requestId});
+  final String requestId;
+
+  @override
+  Widget build(BuildContext context) {
+    final FavoriteIdsCubit cubit;
+    try {
+      cubit = context.read<FavoriteIdsCubit>();
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+    return BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
+      bloc: cubit,
+      builder: (ctx, _) => FavoriteHeartButton(
+        key: const Key('request-public-favorite-button'),
+        isFavorite: cubit.isRequestFav(requestId),
+        onToggle: () async {
+          try {
+            await cubit.toggleRequest(requestId);
+          } catch (_) {
+            if (ctx.mounted) {
+              DonySnackbar.show(
+                ctx,
+                message: ctx.l10n.requestFavoriteToggleError,
+                type: DonySnackbarType.error,
+              );
+            }
+          }
+        },
       ),
     );
   }

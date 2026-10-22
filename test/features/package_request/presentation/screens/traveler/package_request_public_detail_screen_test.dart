@@ -11,6 +11,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
@@ -114,10 +116,13 @@ PackageRequest _makeRequest({
 // Reproduit la topologie de `app.dart` : `AuthBloc` est AU-DESSUS de
 // `MaterialApp.router`. Nécessaire pour tester la redirection propriétaire →
 // « Ma demande », qui quitte l'écran (pop) avant de pousser la destination.
+class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
+
 Future<GoRouter> _pumpRouted(
   WidgetTester tester, {
   required _MockAuthBloc authBloc,
   MockStripeAccountBloc? stripeBloc,
+  FavoriteIdsCubit? favCubit,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1.0;
@@ -156,6 +161,8 @@ Future<GoRouter> _pumpRouted(
     MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>.value(value: authBloc),
+        if (favCubit != null)
+          BlocProvider<FavoriteIdsCubit>.value(value: favCubit),
         // Fournis à l'échelle de l'app (`app.dart`) : la fiche y lit la
         // capacité carte du voyageur (FLUTTER-E9).
         BlocProvider<StripeAccountBloc>.value(
@@ -272,6 +279,100 @@ void main() {
       expect(find.text('Demande d\'envoi'), findsOneWidget);
     },
   );
+
+  // ── Favori dans l'en-tête ────────────────────────────────────────────────
+  group('favori', () {
+    const visitor = UserModel(
+      id: 'visitor-042',
+      roles: [],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+    );
+    final heart = find.byKey(const Key('request-public-favorite-button'));
+    late _MockFavoriteRepository favRepo;
+
+    setUp(() {
+      favRepo = _MockFavoriteRepository();
+      when(() => favRepo.add(any(), any())).thenAnswer((_) async {});
+      when(() => favRepo.remove(any(), any())).thenAnswer((_) async {});
+    });
+
+    Future<FavoriteIdsCubit> ouvrir(
+      WidgetTester tester, {
+      Set<String> requests = const {},
+    }) async {
+      when(() => repo.getById(any())).thenAnswer((_) async => _makeRequest());
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(visitor));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(visitor),
+      );
+      final cubit = FavoriteIdsCubit(favRepo)
+        ..emitSeed(trips: {}, requests: requests);
+      addTearDown(cubit.close);
+      await _pumpRouted(tester, authBloc: authBloc, favCubit: cubit);
+      await tester.pumpAndSettle();
+      return cubit;
+    }
+
+    testWidgets('signet vide → un tap ajoute la demande aux favoris', (
+      tester,
+    ) async {
+      final cubit = await ouvrir(tester);
+
+      expect(heart, findsOneWidget);
+      expect(find.byTooltip('Ajouter aux favoris'), findsOneWidget);
+      await tester.tap(heart);
+      await tester.pumpAndSettle();
+
+      verify(() => favRepo.add('package-request', 'pr-owner-test')).called(1);
+      expect(cubit.isRequestFav('pr-owner-test'), isTrue);
+      expect(find.byTooltip('Retirer des favoris'), findsOneWidget);
+    });
+
+    testWidgets('demande déjà favorite → un tap la retire', (tester) async {
+      final cubit = await ouvrir(tester, requests: {'pr-owner-test'});
+
+      expect(find.byTooltip('Retirer des favoris'), findsOneWidget);
+      await tester.tap(heart);
+      await tester.pumpAndSettle();
+
+      verify(
+        () => favRepo.remove('package-request', 'pr-owner-test'),
+      ).called(1);
+      expect(cubit.isRequestFav('pr-owner-test'), isFalse);
+    });
+
+    testWidgets('échec réseau → retour arrière et message d\'erreur', (
+      tester,
+    ) async {
+      when(() => favRepo.add(any(), any())).thenThrow(Exception('réseau'));
+      final cubit = await ouvrir(tester);
+
+      await tester.tap(heart);
+      await tester.pumpAndSettle();
+
+      expect(cubit.isRequestFav('pr-owner-test'), isFalse);
+      expect(find.text('Action impossible, réessayez'), findsOneWidget);
+    });
+
+    testWidgets('sans FavoriteIdsCubit dans l\'arbre → pas de signet, pas de '
+        'crash', (tester) async {
+      when(() => repo.getById(any())).thenAnswer((_) async => _makeRequest());
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(visitor));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(visitor),
+      );
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      expect(heart, findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  });
 
   // ── Partage de l'affiche par un visiteur ─────────────────────────────────
   group('partage de l\'affiche', () {

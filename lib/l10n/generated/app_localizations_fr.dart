@@ -4693,6 +4693,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestDescriptionLabel => 'Description';
 
   @override
+  String get requestPublicFromLabel => 'Départ';
+
+  @override
+  String get requestPublicToLabel => 'Arrivée';
+
+  @override
+  String get requestPublicNoPhoto => 'Pas de photo pour ce colis';
+
+  @override
   String get requestPublicReportTooltip => 'Signaler';
 
   @override
