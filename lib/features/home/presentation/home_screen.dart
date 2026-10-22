@@ -396,6 +396,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// La feuille ne monte qu'une fois, au premier affichage de la liste.
   bool _didRaiseOnOpen = false;
 
+  /// Dernier cran de la feuille signalé à l'analytics, et temporisation qui
+  /// attend qu'elle se soit posée avant de le mesurer.
+  String? _lastSheetBucket;
+  Timer? _sheetSettleTimer;
+
+  /// Vrai pendant la montée automatique d'ouverture : distingue ce cran de
+  /// celui d'un geste de l'utilisateur.
+  bool _autoRaising = false;
+
   /// Enveloppe de la barre du haut (corridor, mode, filtres), mesurée pour
   /// caler la hauteur d'ouverture de la feuille juste en dessous.
   final _topOverlayKey = GlobalKey();
@@ -520,11 +529,72 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final wasHidden = _isMapHidden;
     final wasRaised = _isSheetRaised;
     _sheetSize = newSize;
+    _sheetSettleTimer?.cancel();
+    _sheetSettleTimer = Timer(
+      const Duration(milliseconds: 400),
+      _reportSheetSettled,
+    );
     // Rebuild quand l'état plein écran ou mi-hauteur change (swap indications
     // / filtres, position du bouton « Près de moi »).
     if (wasHidden != _isMapHidden || wasRaised != _isSheetRaised) {
       setState(() {});
     }
+  }
+
+  String get _sheetBucket => _isMapHidden
+      ? 'full'
+      : _isSheetRaised
+      ? 'raised'
+      : 'peek';
+
+  /// Un event quand la feuille s'est posée sur un autre cran (`peek` /
+  /// `raised` / `full`), pour savoir si les testeurs la gardent à mi-hauteur
+  /// ou la remontent en plein écran. Les crans traversés en glissant ne
+  /// comptent pas : la temporisation attend la fin du mouvement.
+  void _reportSheetSettled() {
+    if (!mounted) return;
+    final bucket = _sheetBucket;
+    final from = _lastSheetBucket;
+    if (bucket == from) return;
+    _lastSheetBucket = bucket;
+    final auto = _autoRaising;
+    _autoRaising = false;
+    _trackHome(AnalyticsEvents.homeSheetSnapped, {
+      'size': bucket,
+      'from': ?from,
+      'auto': auto,
+    });
+  }
+
+  void _trackHome(String event, Map<String, Object> properties) {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(event, properties: properties),
+    );
+  }
+
+  /// Tap sur un point de la carte (`home_map_marker_tapped`), et ouverture de
+  /// la fiche (`home_card_opened`, `source: map`) quand le tap en ouvre une.
+  void _trackMapMarker(String kind, {required bool opensCard}) {
+    _trackHome(AnalyticsEvents.homeMapMarkerTapped, {
+      'mode': _mode.name,
+      'kind': kind,
+    });
+    if (opensCard) _trackCardOpened('map', kind);
+  }
+
+  void _trackCardOpened(String source, String kind) {
+    _trackHome(AnalyticsEvents.homeCardOpened, {
+      'source': source,
+      'mode': _mode.name,
+      'kind': kind,
+    });
+  }
+
+  void _trackCarouselSwiped(int position) {
+    _trackHome(AnalyticsEvents.homeCarouselSwiped, {
+      'mode': _mode.name,
+      'position': position,
+    });
   }
 
   /// FLUTTER-CD : la feuille repliée laissait un nouvel utilisateur devant
@@ -545,6 +615,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _raisedSize = target;
       _raisedFabPadding = areaHeight * target + DonySpacing.sm;
     });
+    _autoRaising = true;
     _sheetController.animateTo(
       target,
       duration: const Duration(milliseconds: 320),
@@ -688,6 +759,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     unawaited(_receptionsPrompt?.close());
     _blockSub?.cancel();
     _pendingSearchNotifier?.removeListener(_consumePendingSearch);
+    _sheetSettleTimer?.cancel();
     _sheetController.removeListener(_onSheetSizeChanged);
     _sheetController.dispose();
     super.dispose();
@@ -1407,6 +1479,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
           position: LatLng(item.departureLat!, item.departureLng!),
           icon: icon,
           onTap: () {
+            _trackMapMarker('package_request', opensCard: true);
             final uid = context.read<AuthBloc>().state.currentUserId;
             PackageRequestPreviewBottomSheet.show(
               context,
@@ -1504,8 +1577,25 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           ? _raisedFabPadding!
                           : MediaQuery.of(context).size.height * 0.45,
                       selectedAnnouncementId: _selectedAnnouncementId,
-                      onAnnouncementSelected: (id) =>
-                          setState(() => _selectedAnnouncementId = id),
+                      onAnnouncementSelected: (id) {
+                        // Ses propres trajets ne s'ouvrent pas au tap sur la
+                        // carte : le tap est compté, pas une fiche ouverte.
+                        final tapped = announcements
+                            .where((a) => a.id == id)
+                            .firstOrNull;
+                        final isOwn =
+                            tapped != null &&
+                            currentUserId != null &&
+                            tapped.travelerId == currentUserId;
+                        _trackMapMarker('trip', opensCard: !isOwn);
+                        setState(() => _selectedAnnouncementId = id);
+                      },
+                      onClusterTapped: (size) =>
+                          _trackHome(AnalyticsEvents.homeMapMarkerTapped, {
+                            'mode': _mode.name,
+                            'kind': 'cluster',
+                            'cluster_size': size,
+                          }),
                     ),
                   ),
 
@@ -1658,8 +1748,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       onCardChanged: (id) => setState(
                                         () => _selectedAnnouncementId = id,
                                       ),
+                                      onSwiped: _trackCarouselSwiped,
                                       onSeeAll: _exitNearMeAndShowList,
-                                      onTapCard: (it) =>
+                                      onTapCard: (it) {
+                                        _trackCardOpened(
+                                          'carousel',
+                                          'package_request',
+                                        );
+                                        unawaited(
                                           PackageRequestPreviewBottomSheet.show(
                                             context,
                                             item: it,
@@ -1667,6 +1763,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                                 currentUserId != null &&
                                                 it.sender.id == currentUserId,
                                           ),
+                                        );
+                                      },
                                       onMakeOffer: (it) =>
                                           currentUserId == null ||
                                               it.sender.id != currentUserId
@@ -1695,9 +1793,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       onCardChanged: (id) => setState(
                                         () => _selectedAnnouncementId = id,
                                       ),
+                                      onSwiped: _trackCarouselSwiped,
                                       onSeeAll: _exitNearMeAndShowList,
-                                      onTapCard: (a) =>
-                                          _onTravelerCardTap(context, a),
+                                      onTapCard: (a) {
+                                        _trackCardOpened('carousel', 'trip');
+                                        _onTravelerCardTap(context, a);
+                                      },
                                     )
                                     .animate()
                                     .fadeIn(duration: 250.ms)
@@ -2371,6 +2472,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     isOwnRequest: isOwn,
                                     showFavorite: _isTraveler && !isOwn,
                                     onTap: () async {
+                                      _trackCardOpened(
+                                        'list',
+                                        'package_request',
+                                      );
                                       await PackageRequestPreviewBottomSheet.show(
                                         ctx,
                                         item: pr,
@@ -2568,30 +2673,35 @@ class _MapSenderViewState extends State<_MapSenderView> {
       distanceBadge: badge,
       existingBidStatus: existingBid?.status,
       unmetReasons: unmetReasons,
-      onTap: isOwn
-          ? () async {
-              final changed = await context.push<bool>(
-                '/announcements/${a.id}/trip',
-                extra: a,
-              );
-              if ((changed ?? false) && context.mounted) {
-                _dispatchSearch();
-              }
+      onTap: () {
+        _trackCardOpened('list', 'trip');
+        if (isOwn) {
+          unawaited(() async {
+            final changed = await context.push<bool>(
+              '/announcements/${a.id}/trip',
+              extra: a,
+            );
+            if ((changed ?? false) && context.mounted) {
+              _dispatchSearch();
             }
-          : existingBid != null
-          ? () async {
-              await context.push(
-                existingTripBidRoute(existingBid),
-                extra: existingBid,
-              );
-              if (!context.mounted) {
-                return;
-              }
-              context.read<BidBloc>().add(
-                const BidMyListAutoRefreshRequested(force: true),
-              );
+          }());
+        } else if (existingBid != null) {
+          unawaited(() async {
+            await context.push(
+              existingTripBidRoute(existingBid),
+              extra: existingBid,
+            );
+            if (!context.mounted) {
+              return;
             }
-          : () => showTravelerAnnouncementSheet(context, announcement: a),
+            context.read<BidBloc>().add(
+              const BidMyListAutoRefreshRequested(force: true),
+            );
+          }());
+        } else {
+          showTravelerAnnouncementSheet(context, announcement: a);
+        }
+      },
     );
   }
 }

@@ -1910,6 +1910,123 @@ void main() {
     });
   });
 
+  group('mesure de la carte, du carrousel et de la feuille', () {
+    testWidgets(
+      'tap sur une carte de la liste : home_card_opened source list',
+      (tester) async {
+        await pumpHome(tester, tripResults: [_makeAnn()]);
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        final carte = find.byType(TravelerCard).first;
+        await tester.ensureVisible(carte);
+        await tester.pumpAndSettle();
+        await tester.tap(carte);
+        await tester.pumpAndSettle();
+
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeCardOpened,
+            properties: {'source': 'list', 'mode': 'trips', 'kind': 'trip'},
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'carrousel Près de moi : un glissement trace le rang, un tap trace '
+      'home_card_opened source carousel',
+      (tester) async {
+        GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+        await tester.pumpWidget(
+          _buildHome(
+            announcementState: AnnouncementSearchLoaded([
+              _makeAnn(),
+              _makeAnn(id: 'a2'),
+            ]),
+          ),
+        );
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('near-me-fab')));
+        await tester.pumpAndSettle();
+        expect(find.byType(NearMeCarousel), findsOneWidget);
+
+        // Aucun glissement avant le geste : l'ouverture ne trace rien.
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeCarouselSwiped,
+            properties: any(named: 'properties'),
+          ),
+        );
+
+        await tester.drag(find.byType(PageView), const Offset(-500, 0));
+        await tester.pumpAndSettle();
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeCarouselSwiped,
+            properties: {'mode': 'trips', 'position': 1},
+          ),
+        ).called(1);
+
+        await tester.tap(find.byType(TravelerCard).last);
+        await tester.pumpAndSettle();
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeCardOpened,
+            properties: {'source': 'carousel', 'mode': 'trips', 'kind': 'trip'},
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'la feuille trace son cran une fois posée : montée d\'ouverture auto, '
+      'puis repli par geste, jamais pendant le mouvement',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+        // Laisse la montée d'ouverture se poser, puis la temporisation de
+        // mesure s'écouler.
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(seconds: 1));
+
+        List<Map<String, Object>> snaps() => verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeSheetSnapped,
+            properties: captureAny(named: 'properties'),
+          ),
+        ).captured.cast<Map<String, Object>>();
+
+        final ouverture = snaps();
+        expect(ouverture, hasLength(1));
+        expect(ouverture.single['size'], 'raised');
+        expect(ouverture.single['auto'], isTrue);
+        expect(ouverture.single.containsKey('from'), isFalse);
+        clearInteractions(analytics);
+
+        // Le geste de l'utilisateur : replier la feuille.
+        await tester.tap(find.textContaining('voir la carte'));
+        await tester.pump(const Duration(milliseconds: 100));
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeSheetSnapped,
+            properties: any(named: 'properties'),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(seconds: 1));
+
+        final geste = snaps();
+        expect(geste, hasLength(1));
+        expect(geste.single['size'], 'peek');
+        expect(geste.single['from'], 'raised');
+        expect(geste.single['auto'], isFalse);
+      },
+    );
+  });
+
   group('search_submitted', () {
     testWidgets('un changement direct au doigt (hors composer) ne trace rien', (
       tester,

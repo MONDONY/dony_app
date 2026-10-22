@@ -133,4 +133,71 @@ void main() {
       expect(find.text('See 2 requests'), findsOneWidget);
     });
   });
+
+  group('NearMePackageRequestCarousel – onSwiped', () {
+    testWidgets('un glissement de l\'utilisateur signale le rang atteint', (
+      tester,
+    ) async {
+      final swiped = <int>[];
+      await tester.pumpWidget(
+        wrap(
+          NearMePackageRequestCarousel(
+            items: [
+              _item('1', 'Paris'),
+              _item('2', 'Lyon'),
+              _item('3', 'Nice'),
+            ],
+            userPosition: null,
+            onSeeAll: () {},
+            onSwiped: swiped.add,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(PageView), const Offset(-500, 0));
+      await tester.pumpAndSettle();
+
+      expect(swiped, [1]);
+    });
+
+    testWidgets('le recalage sur un marqueur touché n\'est pas un glissement', (
+      tester,
+    ) async {
+      final selected = ValueNotifier<String?>('1');
+      addTearDown(selected.dispose);
+      final swiped = <int>[];
+      final cards = <String>[];
+      await tester.pumpWidget(
+        wrap(
+          ValueListenableBuilder<String?>(
+            valueListenable: selected,
+            builder: (_, id, _) => NearMePackageRequestCarousel(
+              items: [
+                _item('1', 'Paris'),
+                _item('2', 'Lyon'),
+                _item('3', 'Nice'),
+              ],
+              userPosition: null,
+              onSeeAll: () {},
+              selectedRequestId: id,
+              onCardChanged: cards.add,
+              onSwiped: swiped.add,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      selected.value = '3';
+      await tester.pumpAndSettle();
+
+      expect(cards, isNotEmpty, reason: 'le carrousel a bien changé de page');
+      expect(swiped, isEmpty);
+
+      await tester.drag(find.byType(PageView), const Offset(500, 0));
+      await tester.pumpAndSettle();
+      expect(swiped, [1]);
+    });
+  });
 }

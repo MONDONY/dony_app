@@ -59,6 +59,7 @@ class AnnouncementMapView extends StatefulWidget {
     this.mapStyle,
     this.selectedAnnouncementId,
     this.onAnnouncementSelected,
+    this.onClusterTapped,
     this.onNearMeToggle,
     this.isLocating = false,
   });
@@ -84,6 +85,9 @@ class AnnouncementMapView extends StatefulWidget {
 
   /// Called when user taps a single marker.
   final void Function(String id)? onAnnouncementSelected;
+
+  /// Called when the user taps a cluster badge (nombre de trajets groupés).
+  final void Function(int size)? onClusterTapped;
 
   /// Called when the user taps the single "Près de moi" FAB. When null, the
   /// FAB is hidden. The parent owns the near-me filter lifecycle (permission,
@@ -576,6 +580,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
   }
 
   void _onClusterTapped(MarkerCluster<_AnnouncementPoint> cluster) {
+    widget.onClusterTapped?.call(cluster.items.length);
     if (cluster.isSameSpot) {
       // Same address → list sheet (type known at build time, no recheck needed).
       final firstItem = cluster.items.first;

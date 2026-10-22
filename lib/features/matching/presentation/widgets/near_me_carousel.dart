@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -49,6 +51,7 @@ class NearMeCarousel extends StatefulWidget {
     required this.onSeeAll,
     this.selectedAnnouncementId,
     this.onCardChanged,
+    this.onSwiped,
     this.onTapCard,
   });
 
@@ -57,6 +60,10 @@ class NearMeCarousel extends StatefulWidget {
   final VoidCallback onSeeAll;
   final String? selectedAnnouncementId;
   final void Function(String id)? onCardChanged;
+
+  /// Glissement de l'utilisateur vers la carte de rang `position`. Muet quand
+  /// le carrousel se recale de lui-même sur un marqueur touché sur la carte.
+  final void Function(int position)? onSwiped;
 
   /// Gestionnaire de tap custom. Si null, ouvre [showTravelerAnnouncementSheet].
   final void Function(AnnouncementModel)? onTapCard;
@@ -67,6 +74,10 @@ class NearMeCarousel extends StatefulWidget {
 
 class _NearMeCarouselState extends State<NearMeCarousel> {
   late final PageController _pageController;
+
+  /// Vrai pendant que le carrousel se recale sur la sélection de la carte :
+  /// ces changements de page ne sont pas des glissements.
+  bool _recentering = false;
 
   @override
   void initState() {
@@ -84,10 +95,15 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
         widget.selectedAnnouncementId != null) {
       final page = _pageForId(widget.selectedAnnouncementId);
       if (_pageController.hasClients) {
-        _pageController.animateToPage(
-          page,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
+        _recentering = true;
+        unawaited(
+          _pageController
+              .animateToPage(
+                page,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+              )
+              .whenComplete(() => _recentering = false),
         );
       }
     }
@@ -163,6 +179,7 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
             itemCount: widget.announcements.length,
             onPageChanged: (i) {
               widget.onCardChanged?.call(widget.announcements[i].id);
+              if (!_recentering) widget.onSwiped?.call(i);
             },
             itemBuilder: (context, i) {
               final a = widget.announcements[i];

@@ -409,4 +409,64 @@ void main() {
       expect(find.byKey(const Key('negotiation-route')), findsOneWidget);
     },
   );
+
+  group('onSwiped', () {
+    testWidgets('un glissement de l\'utilisateur signale le rang atteint', (
+      tester,
+    ) async {
+      final swiped = <int>[];
+      await tester.pumpWidget(
+        _wrap(
+          NearMeCarousel(
+            announcements: [_ann('a1'), _ann('a2'), _ann('a3')],
+            userPosition: null,
+            onSeeAll: () {},
+            onSwiped: swiped.add,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(PageView), const Offset(-500, 0));
+      await tester.pumpAndSettle();
+
+      expect(swiped, [1]);
+    });
+
+    testWidgets('le recalage sur un marqueur touché n\'est pas un glissement', (
+      tester,
+    ) async {
+      final selected = ValueNotifier<String?>('a1');
+      addTearDown(selected.dispose);
+      final swiped = <int>[];
+      final cards = <String>[];
+      await tester.pumpWidget(
+        _wrap(
+          ValueListenableBuilder<String?>(
+            valueListenable: selected,
+            builder: (_, id, _) => NearMeCarousel(
+              announcements: [_ann('a1'), _ann('a2'), _ann('a3')],
+              userPosition: null,
+              onSeeAll: () {},
+              selectedAnnouncementId: id,
+              onCardChanged: cards.add,
+              onSwiped: swiped.add,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      selected.value = 'a3';
+      await tester.pumpAndSettle();
+
+      expect(cards, isNotEmpty, reason: 'le carrousel a bien changé de page');
+      expect(swiped, isEmpty);
+
+      // Le drapeau est retombé : un vrai glissement compte de nouveau.
+      await tester.drag(find.byType(PageView), const Offset(500, 0));
+      await tester.pumpAndSettle();
+      expect(swiped, [1]);
+    });
+  });
 }
