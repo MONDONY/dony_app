@@ -1,12 +1,9 @@
 import 'dart:async';
 
-import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/home/bloc/search_composer_event.dart';
 import 'package:dony/features/home/bloc/search_composer_state.dart';
-import 'package:dony/features/home/data/models/search_parse_result.dart';
-import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -16,13 +13,13 @@ import 'package:rxdart/rxdart.dart';
 
 /// Porte l'écran de composition d'une recherche.
 ///
-/// Deux chemins mènent au même état : la phrase, qui passe par le parseur, et les
-/// filtres réglés au doigt, qui n'y passent pas. Le compteur se met à jour dans les
-/// deux cas, c'est lui qui remplace la liste de résultats absente de cet écran.
+/// Les filtres sont réglés au doigt. Le compteur se met à jour à chaque
+/// changement : c'est lui qui remplace la liste de résultats absente de cet
+/// écran. (La saisie « en une phrase » et son parseur serveur ont été retirés :
+/// 2 % des recherches du test du 27/09 au 12/10 en venaient.)
 class SearchComposerBloc
     extends Bloc<SearchComposerEvent, SearchComposerState> {
   SearchComposerBloc(
-    this._parseRepository,
     this._announcementRepository,
     this._packageRequestRepository,
     this._analytics, {
@@ -31,8 +28,6 @@ class SearchComposerBloc
   }) : _mode = mode,
        super(SearchComposerState(filters: initialFilters)) {
     on<SearchComposerStarted>(_onStarted);
-    on<SearchComposerPhraseSubmitted>(_onPhraseSubmitted);
-    on<SearchComposerUnresolvedAnswered>(_onUnresolvedAnswered);
     on<SearchComposerCleared>(_onCleared);
 
     // Le réglage au doigt produit une rafale d'événements : seul le COMPTAGE
@@ -50,7 +45,6 @@ class SearchComposerBloc
     );
   }
 
-  final SearchParseRepository _parseRepository;
   final AnnouncementRepository _announcementRepository;
   final PackageRequestRepository _packageRequestRepository;
   final AnalyticsService _analytics;
@@ -69,60 +63,6 @@ class SearchComposerBloc
     await _refreshCount(emit, state.filters);
   }
 
-  Future<void> _onPhraseSubmitted(
-    SearchComposerPhraseSubmitted event,
-    Emitter<SearchComposerState> emit,
-  ) async {
-    final text = event.text.trim();
-    if (text.isEmpty) return;
-
-    emit(state.copyWith(isParsing: true, phrase: text, clearError: true));
-
-    try {
-      final result = await _parseRepository.parse(text, _mode);
-      final applied = result.applyTo(state.filters);
-
-      emit(
-        state.copyWith(
-          filters: applied,
-          recognized: result.recognized,
-          unresolved: result.unresolved,
-          isParsing: false,
-        ),
-      );
-
-      // La phrase elle-même n'est jamais envoyée : seules des mesures agrégées.
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.searchPhraseParsed,
-          properties: {
-            'recognized_count': result.recognized.length,
-            'unresolved_count': result.unresolved.length,
-          },
-        ),
-      );
-
-      if (result.recognized.isEmpty) {
-        unawaited(
-          _analytics.logEvent(
-            AnalyticsEvents.searchParseFailed,
-            properties: {
-              'unresolved_kinds': result.unresolved
-                  .map((u) => u.kind.name)
-                  .toList(),
-            },
-          ),
-        );
-      }
-
-      await _refreshCount(emit, applied);
-    } catch (e) {
-      // Les filtres déjà réglés survivent à un échec du parseur : l'écran reste
-      // utilisable au doigt, ce qui est tout l'intérêt de la parité.
-      emit(state.copyWith(isParsing: false, error: unwrapDioError(e)));
-    }
-  }
-
   Future<void> _onFiltersChanged(
     SearchComposerFiltersChanged event,
     Emitter<SearchComposerState> emit,
@@ -135,70 +75,6 @@ class SearchComposerBloc
     // arrive avant son terme, sans jamais toucher l'`emit` déjà appliqué.
     await Future<void>.delayed(const Duration(milliseconds: 400));
     await _refreshCount(emit, event.filters);
-  }
-
-  Future<void> _onUnresolvedAnswered(
-    SearchComposerUnresolvedAnswered event,
-    Emitter<SearchComposerState> emit,
-  ) async {
-    var filters = state.filters;
-    final value = event.value;
-
-    // Une valeur vide (« Peu importe ») signifie « pas de contrainte » : elle
-    // retire un filtre déjà réglé plutôt que de le laisser tel quel, sinon un
-    // prix ou une date posés avant la phrase survivraient à un choix qui dit
-    // explicitement le contraire.
-    switch (event.kind) {
-      case UnresolvedKind.priceVague:
-        if (value.isEmpty) {
-          filters = filters.copyWith(clearMaxPricePerKg: true);
-        } else {
-          final price = double.tryParse(value);
-          if (price != null) filters = filters.copyWith(maxPricePerKg: price);
-        }
-      case UnresolvedKind.cityUnknown:
-      case UnresolvedKind.cityAmbiguous:
-        if (value.isNotEmpty) filters = filters.copyWith(arrivalCity: value);
-      case UnresolvedKind.dateVague:
-        if (value.isEmpty) {
-          filters = filters.copyWith(
-            datePreset: DonyDatePreset.none,
-            clearCustomDate: true,
-          );
-        } else if (value == 'thisWeek') {
-          // `unresolved_question.dart` propose des noms de `DonyDatePreset`
-          // pour cette question, pas des dates ISO : `DateTime.tryParse` y
-          // échouerait toujours en silence (aucun filtre posé, la question
-          // disparaît quand même de l'écran).
-          filters = filters.copyWith(
-            datePreset: DonyDatePreset.thisWeek,
-            clearCustomDate: true,
-          );
-        } else if (value == 'thisMonth') {
-          filters = filters.copyWith(
-            datePreset: DonyDatePreset.thisMonth,
-            clearCustomDate: true,
-          );
-        } else {
-          // Filet de sécurité au cas où une vraie date ISO arriverait un jour
-          // depuis une autre source de valeurs pour cette question. Elle passe
-          // par `withCustomPeriod`, qui pose aussi le preset `custom` : sans
-          // lui, `dateFrom`/`dateTo` ignoraient la date en silence.
-          final date = DateTime.tryParse(value);
-          if (date != null) filters = filters.withCustomPeriod(date);
-        }
-    }
-
-    emit(
-      state.copyWith(
-        filters: filters,
-        unresolved: state.unresolved
-            .where((u) => u.kind != event.kind)
-            .toList(),
-      ),
-    );
-
-    await _refreshCount(emit, filters);
   }
 
   Future<void> _onCleared(

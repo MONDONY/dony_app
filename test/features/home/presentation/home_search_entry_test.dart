@@ -29,7 +29,6 @@ import 'package:dony/features/content_categories/data/content_category_model.dar
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
-import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
@@ -112,8 +111,6 @@ class MockAnnouncementRepository extends Mock
 class MockPackageRequestRepository extends Mock
     implements PackageRequestRepository {}
 
-class MockSearchParseRepository extends Mock implements SearchParseRepository {}
-
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
   @override
   Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
@@ -170,7 +167,6 @@ GoRoute _composerRoute() => GoRoute(
         (extra['filters'] as HomeSearchFilters?) ?? const HomeSearchFilters();
     return BlocProvider(
       create: (_) => SearchComposerBloc(
-        MockSearchParseRepository(),
         MockAnnouncementRepository(),
         MockPackageRequestRepository(),
         getIt<AnalyticsService>(),

@@ -1,14 +1,16 @@
-// Écran plein de composition de recherche — remplace la feuille de filtres
-// (`SearchFilterSheet`) comme point d'entrée « Filtrer » de l'écran Rechercher.
+// Écran plein de composition de recherche — point d'entrée « Filtrer » de
+// l'écran Rechercher (il a remplacé l'ancienne `SearchFilterSheet`).
 //
-// Parité stricte avec la feuille : les huit blocs de filtres (OÙ, QUAND,
-// POIDS ET PRIX / POIDS MAXIMAL + TAILLE DU COLIS, MON COLIS CONTIENT,
-// FILTRES RAPIDES, URGENCE DU DÉPART, AUTOUR DE MOI) sont tous présents, sans
-// qu'aucun ne soit retiré. Le seul ajout est le bloc « EN UNE PHRASE » en
-// tête, qui porte la MÊME étiquette de section que les autres — juste
-// marquée `optional: true` — plutôt qu'un champ héros : chercher aux
-// filtres seuls, sans jamais toucher la barre, doit rester un parcours
-// complet et non un pis-aller.
+// Ordre d'après l'usage mesuré pendant le test du 27/09 au 12/10 : OÙ, QUAND,
+// POIDS ET PRIX, FILTRES RAPIDES (urgent, valise 23 kg, GP Pro, identité
+// vérifiée), puis « Plus de filtres », replié, pour les filtres rares (type de
+// contenu, mode de transport, note, week-end, escales, moyens de paiement,
+// urgence du départ), et AUTOUR DE MOI. Un filtre rare déjà actif ouvre
+// « Plus de filtres » d'office : un filtre posé n'est jamais caché.
+//
+// La saisie « en une phrase » et son parseur serveur ont été retirés (2 % des
+// recherches validées en venaient) ; les filtres au doigt sont l'unique
+// parcours.
 //
 // La route (Task 5) fournira le `BlocProvider<SearchComposerBloc>` ancêtre :
 // cet écran ne le crée pas lui-même, il le consomme via `context.read`.
@@ -28,11 +30,8 @@ import 'package:dony/features/home/bloc/search_composer_state.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
-import 'package:dony/features/home/presentation/widgets/parsed_recap_card.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
-import 'package:dony/features/home/presentation/widgets/search_phrase_field.dart';
 import 'package:dony/features/home/presentation/widgets/search_section_label.dart';
-import 'package:dony/features/home/presentation/widgets/unresolved_question.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
@@ -70,8 +69,6 @@ class SearchComposerScreen extends StatefulWidget {
 }
 
 class _SearchComposerScreenState extends State<SearchComposerScreen> {
-  final _phraseController = TextEditingController();
-
   static const _maxWeightPresets = <double>[5, 10, 20];
 
   @override
@@ -87,21 +84,10 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _phraseController.dispose();
-    super.dispose();
-  }
-
   void _update(HomeSearchFilters filters) {
     context.read<SearchComposerBloc>().add(
       SearchComposerFiltersChanged(filters),
     );
-  }
-
-  void _submitPhrase(String text) {
-    if (text.trim().isEmpty) return;
-    context.read<SearchComposerBloc>().add(SearchComposerPhraseSubmitted(text));
   }
 
   // Vider un champ de ville DOIT vider le filtre correspondant : sans ça le
@@ -165,21 +151,6 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
             children: [
-              // Le parseur serveur (/search/parse) ne comprend que le
-              // français : la saisie en une phrase n'est proposée qu'en
-              // français, les filtres au doigt restent disponibles partout.
-              if (l.localeName == 'fr') ...[
-                SearchSectionLabel(l.homeComposerSectionPhrase, optional: true),
-                SearchPhraseField(
-                  controller: _phraseController,
-                  onSubmitted: _submitPhrase,
-                  isParsing: state.isParsing,
-                ).animate().fadeIn(duration: 250.ms),
-                if (state.recognized.isNotEmpty)
-                  ParsedRecapCard(state.recognized),
-                for (final item in state.unresolved) UnresolvedQuestion(item),
-              ],
-
               SearchSectionLabel(l.homeComposerSectionWhere),
               CityCorridorFields(
                 departureValue: f.departureCity,
@@ -234,17 +205,9 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
                 // filtres, eux, ont bougé. Lire l'état au tap plutôt que celui
                 // du dernier rebuild garantit que ce sont les VRAIS derniers
                 // filtres qui reviennent, pas une capture périmée.
-                //
-                // `phrase` retombe à '' dès « Tout effacer » (nouvel état
-                // repartant de zéro) : un `cameFromPhrase` calculé ici, plutôt
-                // que suivi par un flag séparé, épouse donc naturellement une
-                // recherche recommencée au doigt après une phrase abandonnée.
                 onPressed: () {
                   final latest = context.read<SearchComposerBloc>().state;
-                  context.pop((
-                    filters: latest.filters,
-                    cameFromPhrase: latest.phrase.isNotEmpty,
-                  ));
+                  context.pop(latest.filters);
                 },
               );
             },
@@ -297,50 +260,19 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
           ),
         ],
       ).animate().fadeIn(delay: 40.ms),
-      const SizedBox(height: DonySpacing.base),
-      Row(
-        children: [
-          Expanded(
-            child: TransportModeField(
-              mode: f.transportMode,
-              onTap: () => unawaited(
-                showTransportPicker(
-                  context,
-                  mode: f.transportMode,
-                  onApply: (v) => _update(
-                    v == null
-                        ? f.copyWith(clearTransportMode: true)
-                        : f.copyWith(transportMode: v),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const Spacer(),
-        ],
-      ).animate().fadeIn(delay: 60.ms),
 
-      SearchSectionLabel(l.homeComposerSectionContents),
-      // Autocomplétion plutôt que les onze types dépliés : la liste occuperait
-      // l'écran entier. `singleSelection` conserve la sémantique du filtre.
-      ContentCategorySelector(
-        repository: getIt<IContentCategoryRepository>(),
-        keyPrefix: 'filter-content',
-        singleSelection: true,
-        hint: l.homeComposerContentHint,
-        selected: f.contentType == null ? const [] : [f.contentType!],
-        onChanged: (sel) => _update(
-          sel.isEmpty
-              ? f.copyWith(clearContentType: true)
-              : f.copyWith(contentType: sel.last),
-        ),
-      ).animate().fadeIn(delay: 80.ms),
-
+      // Les filtres les plus posés pendant le test, en un toucher.
       SearchSectionLabel(l.homeComposerSectionQuickFilters),
       Wrap(
         spacing: DonySpacing.sm,
         runSpacing: DonySpacing.sm,
         children: [
+          QuickChip(
+            key: const Key('composer-urgent'),
+            label: l.homeFilterChipsUrgent,
+            active: f.urgentOnly,
+            onChanged: (v) => _update(f.copyWith(urgentOnly: v)),
+          ),
           QuickChip(
             key: const Key('composer-suitcase-23'),
             label: l.homeFilterChipsSuitcase23,
@@ -354,115 +286,189 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
             onChanged: (v) => _update(f.copyWith(gpProOnly: v)),
           ),
           QuickChip(
-            label: l.homeComposerMinRating,
-            iconAsset: 'star',
-            active: f.minRating != null,
-            onChanged: (v) => _update(
-              v ? f.copyWith(minRating: 4.5) : f.copyWith(clearMinRating: true),
-            ),
-          ),
-          QuickChip(
-            label: l.homeComposerWeekend,
-            iconAsset: 'sofa',
-            active: f.weekendOnly,
-            onChanged: (v) => _update(f.copyWith(weekendOnly: v)),
-          ),
-          QuickChip(
             label: l.homeComposerVerifiedIdentity,
             iconAsset: 'shield-check',
             active: f.kycVerifiedOnly,
             onChanged: (v) => _update(f.copyWith(kycVerifiedOnly: v)),
           ),
         ],
-      ).animate().fadeIn(delay: 100.ms),
+      ).animate().fadeIn(delay: 60.ms),
 
-      // ── Escales (FLUTTER-GD) ── choix unique, « Peu importe » = aucun filtre.
-      SearchSectionLabel(l.homeComposerSectionStops),
-      Wrap(
-        spacing: DonySpacing.sm,
-        runSpacing: DonySpacing.sm,
+      const SizedBox(height: DonySpacing.base),
+      // Les filtres rares, repliés. Un filtre de ce bloc déjà actif l'ouvre
+      // d'office (voir `_MoreFiltersSection`).
+      _MoreFiltersSection(
+        activeCount: _moreFiltersActiveCount(f),
         children: [
-          for (final (filter, label) in <(StopsFilter?, String)>[
-            (StopsFilter.directOnly, l.homeComposerStopsDirectOnly),
-            (StopsFilter.maxOne, l.homeComposerStopsMaxOne),
-            (null, l.homeComposerStopsAny),
-          ])
-            QuickChip(
-              key: Key('chip-stops-${filter?.name ?? 'any'}'),
-              label: label,
-              iconAsset: 'plane',
-              active: f.stopsFilter == filter,
-              onChanged: (_) => _update(
-                filter == null
-                    ? f.copyWith(clearStopsFilter: true)
-                    : f.copyWith(stopsFilter: filter),
+          Row(
+            children: [
+              Expanded(
+                child: TransportModeField(
+                  mode: f.transportMode,
+                  onTap: () => unawaited(
+                    showTransportPicker(
+                      context,
+                      mode: f.transportMode,
+                      onApply: (v) => _update(
+                        v == null
+                            ? f.copyWith(clearTransportMode: true)
+                            : f.copyWith(transportMode: v),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-        ],
-      ).animate().fadeIn(delay: 110.ms),
-      const SizedBox(height: DonySpacing.sm),
-      Text(
-        l.homeComposerStopsHint,
-        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-      ),
+              const Spacer(),
+            ],
+          ),
 
-      // ── Moyens de paiement (FLUTTER-G0) ── choix multiple, filtré serveur.
-      SearchSectionLabel(l.homeComposerSectionPaymentMethods),
-      Wrap(
-        spacing: DonySpacing.sm,
-        runSpacing: DonySpacing.sm,
-        children: [
-          for (final (method, label, icon)
-              in <(BidPaymentMethod, String, String)>[
-                (
-                  BidPaymentMethod.stripe,
-                  l.homeComposerPaymentCard,
-                  'credit-card',
+          SearchSectionLabel(l.homeComposerSectionContents),
+          // Autocomplétion plutôt que les onze types dépliés : la liste
+          // occuperait l'écran entier. `singleSelection` conserve la sémantique
+          // du filtre.
+          ContentCategorySelector(
+            repository: getIt<IContentCategoryRepository>(),
+            keyPrefix: 'filter-content',
+            singleSelection: true,
+            hint: l.homeComposerContentHint,
+            selected: f.contentType == null ? const [] : [f.contentType!],
+            onChanged: (sel) => _update(
+              sel.isEmpty
+                  ? f.copyWith(clearContentType: true)
+                  : f.copyWith(contentType: sel.last),
+            ),
+          ),
+
+          const SizedBox(height: DonySpacing.base),
+          Wrap(
+            spacing: DonySpacing.sm,
+            runSpacing: DonySpacing.sm,
+            children: [
+              QuickChip(
+                label: l.homeComposerMinRating,
+                iconAsset: 'star',
+                active: f.minRating != null,
+                onChanged: (v) => _update(
+                  v
+                      ? f.copyWith(minRating: 4.5)
+                      : f.copyWith(clearMinRating: true),
                 ),
-                (BidPaymentMethod.cash, l.homeComposerPaymentCash, 'banknote'),
-                (
-                  BidPaymentMethod.mobileMoney,
-                  l.homeComposerPaymentMobileMoney,
-                  'smartphone',
-                ),
+              ),
+              QuickChip(
+                label: l.homeComposerWeekend,
+                iconAsset: 'sofa',
+                active: f.weekendOnly,
+                onChanged: (v) => _update(f.copyWith(weekendOnly: v)),
+              ),
+            ],
+          ),
+
+          // ── Escales (FLUTTER-GD) ── choix unique, « Peu importe » = aucun
+          // filtre.
+          SearchSectionLabel(l.homeComposerSectionStops),
+          Wrap(
+            spacing: DonySpacing.sm,
+            runSpacing: DonySpacing.sm,
+            children: [
+              for (final (filter, label) in <(StopsFilter?, String)>[
+                (StopsFilter.directOnly, l.homeComposerStopsDirectOnly),
+                (StopsFilter.maxOne, l.homeComposerStopsMaxOne),
+                (null, l.homeComposerStopsAny),
               ])
-            QuickChip(
-              key: Key('chip-payment-${method.name}'),
-              label: label,
-              iconAsset: icon,
-              active: f.paymentMethods.contains(method),
-              onChanged: (v) => _update(
-                f.copyWith(
-                  paymentMethods: v
-                      ? {...f.paymentMethods, method}
-                      : ({...f.paymentMethods}..remove(method)),
+                QuickChip(
+                  key: Key('chip-stops-${filter?.name ?? 'any'}'),
+                  label: label,
+                  iconAsset: 'plane',
+                  active: f.stopsFilter == filter,
+                  onChanged: (_) => _update(
+                    filter == null
+                        ? f.copyWith(clearStopsFilter: true)
+                        : f.copyWith(stopsFilter: filter),
+                  ),
                 ),
-              ),
-            ),
-        ],
-      ).animate().fadeIn(delay: 115.ms),
-      const SizedBox(height: DonySpacing.sm),
-      Text(
-        l.homeComposerPaymentMethodsHint,
-        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-      ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            l.homeComposerStopsHint,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
 
-      SearchSectionLabel(l.homeComposerSectionUrgency),
-      Text(
-        l.homeComposerUrgencyHint,
-        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          // ── Moyens de paiement (FLUTTER-G0) ── choix multiple, filtré
+          // serveur.
+          SearchSectionLabel(l.homeComposerSectionPaymentMethods),
+          Wrap(
+            spacing: DonySpacing.sm,
+            runSpacing: DonySpacing.sm,
+            children: [
+              for (final (method, label, icon)
+                  in <(BidPaymentMethod, String, String)>[
+                    (
+                      BidPaymentMethod.stripe,
+                      l.homeComposerPaymentCard,
+                      'credit-card',
+                    ),
+                    (
+                      BidPaymentMethod.cash,
+                      l.homeComposerPaymentCash,
+                      'banknote',
+                    ),
+                    (
+                      BidPaymentMethod.mobileMoney,
+                      l.homeComposerPaymentMobileMoney,
+                      'smartphone',
+                    ),
+                  ])
+                QuickChip(
+                  key: Key('chip-payment-${method.name}'),
+                  label: label,
+                  iconAsset: icon,
+                  active: f.paymentMethods.contains(method),
+                  onChanged: (v) => _update(
+                    f.copyWith(
+                      paymentMethods: v
+                          ? {...f.paymentMethods, method}
+                          : ({...f.paymentMethods}..remove(method)),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            l.homeComposerPaymentMethodsHint,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+
+          SearchSectionLabel(l.homeComposerSectionUrgency),
+          Text(
+            l.homeComposerUrgencyHint,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: DonySpacing.md),
+          UrgencyFilterChips(
+            selected: f.urgencyFilter,
+            onChanged: (v) => _update(
+              v == null
+                  ? f.copyWith(clearUrgencyFilter: true)
+                  : f.copyWith(urgencyFilter: v),
+            ),
+          ),
+        ],
       ),
-      const SizedBox(height: DonySpacing.md),
-      UrgencyFilterChips(
-        selected: f.urgencyFilter,
-        onChanged: (v) => _update(
-          v == null
-              ? f.copyWith(clearUrgencyFilter: true)
-              : f.copyWith(urgencyFilter: v),
-        ),
-      ).animate().fadeIn(delay: 120.ms),
     ];
   }
+
+  /// Nombre de filtres actifs rangés sous « Plus de filtres ». Il s'affiche en
+  /// pastille sur l'en-tête replié et ouvre le bloc d'office s'il n'est pas nul.
+  static int _moreFiltersActiveCount(HomeSearchFilters f) =>
+      (f.transportMode != null ? 1 : 0) +
+      (f.contentType != null ? 1 : 0) +
+      (f.minRating != null ? 1 : 0) +
+      (f.weekendOnly ? 1 : 0) +
+      (f.stopsFilter != null ? 1 : 0) +
+      (f.paymentMethods.isNotEmpty ? 1 : 0) +
+      (f.urgencyFilter != null ? 1 : 0);
 
   // ── Colis ────────────────────────────────────────────────────────────────
 
@@ -548,6 +554,152 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
     ParcelSize.medium => '📫',
     ParcelSize.large => '🧳',
   };
+}
+
+// ── PLUS DE FILTRES ──────────────────────────────────────────────────────────
+
+/// Bloc replié des filtres rares. L'en-tête dit ce qu'il contient et combien de
+/// filtres y sont actifs ; il s'ouvre d'office quand l'un d'eux l'est déjà, pour
+/// qu'un filtre posé ne soit jamais caché derrière un repli. Pas de `setState` :
+/// l'état ouvert/fermé vit dans un `ValueNotifier`, comme les autres états
+/// locaux de cet écran.
+class _MoreFiltersSection extends StatefulWidget {
+  const _MoreFiltersSection({
+    required this.activeCount,
+    required this.children,
+  });
+
+  final int activeCount;
+  final List<Widget> children;
+
+  @override
+  State<_MoreFiltersSection> createState() => _MoreFiltersSectionState();
+}
+
+class _MoreFiltersSectionState extends State<_MoreFiltersSection> {
+  late final ValueNotifier<bool> _expanded = ValueNotifier<bool>(
+    widget.activeCount > 0,
+  );
+
+  @override
+  void dispose() {
+    _expanded.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant _MoreFiltersSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Un filtre de ce bloc devient actif alors qu'il est replié (ex. posé par
+    // une autre voie) : on l'ouvre pour qu'il se voie.
+    if (widget.activeCount > oldWidget.activeCount) {
+      _expanded.value = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return ValueListenableBuilder<bool>(
+      valueListenable: _expanded,
+      builder: (context, expanded, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Semantics(
+            button: true,
+            expanded: expanded,
+            label: l.homeComposerMoreFilters,
+            excludeSemantics: true,
+            child: InkWell(
+              key: const Key('composer-more-filters'),
+              onTap: () => _expanded.value = !expanded,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                  vertical: DonySpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  border: Border.all(color: cs.outline),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l.homeComposerMoreFilters,
+                            style: tt.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            l.homeComposerMoreFiltersHint,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (widget.activeCount > 0) ...[
+                      Container(
+                        key: const Key('composer-more-filters-count'),
+                        constraints: const BoxConstraints(minWidth: 20),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: cs.primary,
+                          borderRadius: BorderRadius.circular(DonyRadius.full),
+                        ),
+                        child: Text(
+                          '${widget.activeCount}',
+                          textAlign: TextAlign.center,
+                          style: tt.labelSmall?.copyWith(
+                            color: cs.onPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: DonySpacing.sm),
+                    ],
+                    Icon(
+                      expanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: expanded
+                ? Column(
+                    key: const Key('composer-more-filters-body'),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: DonySpacing.base),
+                      ...widget.children,
+                    ],
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── AUTOUR DE MOI ────────────────────────────────────────────────────────────

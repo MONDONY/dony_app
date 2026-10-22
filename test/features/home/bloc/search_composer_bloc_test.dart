@@ -4,8 +4,6 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/bloc/search_composer_event.dart';
 import 'package:dony/features/home/bloc/search_composer_state.dart';
-import 'package:dony/features/home/data/models/search_parse_result.dart';
-import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
@@ -14,26 +12,13 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockParseRepo extends Mock implements SearchParseRepository {}
-
 class _MockAnnouncementRepo extends Mock implements AnnouncementRepository {}
 
 class _MockPackageRepo extends Mock implements PackageRequestRepository {}
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
-SearchParseResult _result({
-  Map<String, dynamic> filters = const {},
-  List<Map<String, dynamic>> unresolved = const [],
-}) => SearchParseResult.fromJson({
-  'filters': filters,
-  'recognized': const [],
-  'unresolved': unresolved,
-  'ignored': const [],
-});
-
 void main() {
-  late _MockParseRepo parseRepo;
   late _MockAnnouncementRepo announcementRepo;
   late _MockPackageRepo packageRepo;
   late _MockAnalytics analytics;
@@ -49,7 +34,6 @@ void main() {
   });
 
   setUp(() {
-    parseRepo = _MockParseRepo();
     announcementRepo = _MockAnnouncementRepo();
     packageRepo = _MockPackageRepo();
     analytics = _MockAnalytics();
@@ -82,7 +66,6 @@ void main() {
   });
 
   SearchComposerBloc build() => SearchComposerBloc(
-    parseRepo,
     announcementRepo,
     packageRepo,
     analytics,
@@ -91,215 +74,7 @@ void main() {
   );
 
   blocTest<SearchComposerBloc, SearchComposerState>(
-    'une phrase comprise pose les filtres et met à jour le compteur',
-    build: () {
-      when(() => parseRepo.parse(any(), any())).thenAnswer(
-        (_) async => _result(filters: const {'arrivalCity': 'Bamako'}),
-      );
-      return build();
-    },
-    act: (bloc) => bloc.add(const SearchComposerPhraseSubmitted('à Bamako')),
-    wait: const Duration(milliseconds: 600),
-    expect: () => [
-      isA<SearchComposerState>().having((s) => s.isParsing, 'isParsing', true),
-      isA<SearchComposerState>()
-          .having((s) => s.filters.arrivalCity, 'arrivalCity', 'Bamako')
-          .having((s) => s.isParsing, 'isParsing', false),
-      isA<SearchComposerState>().having(
-        (s) => s.isCounting,
-        'isCounting',
-        true,
-      ),
-      isA<SearchComposerState>().having(
-        (s) => s.resultCount,
-        'resultCount',
-        14,
-      ),
-    ],
-  );
-
-  blocTest<SearchComposerBloc, SearchComposerState>(
-    'une ambiguïté de prix ne pose aucun filtre de prix',
-    build: () {
-      when(() => parseRepo.parse(any(), any())).thenAnswer(
-        (_) async => _result(
-          filters: const {'arrivalCity': 'Kolda'},
-          unresolved: const [
-            {
-              'kind': 'PRICE_VAGUE',
-              'phrase': 'pas trop cher',
-              'options': ['6', '9'],
-            },
-          ],
-        ),
-      );
-      return build();
-    },
-    act: (bloc) =>
-        bloc.add(const SearchComposerPhraseSubmitted('à Kolda pas trop cher')),
-    wait: const Duration(milliseconds: 600),
-    verify: (bloc) {
-      expect(bloc.state.filters.maxPricePerKg, isNull);
-      expect(bloc.state.unresolved.first.kind, UnresolvedKind.priceVague);
-    },
-  );
-
-  blocTest<SearchComposerBloc, SearchComposerState>(
-    'répondre à une ambiguïté pose le filtre et retire la question',
-    build: () {
-      when(() => parseRepo.parse(any(), any())).thenAnswer(
-        (_) async => _result(
-          unresolved: const [
-            {
-              'kind': 'PRICE_VAGUE',
-              'phrase': 'pas cher',
-              'options': ['6', '9'],
-            },
-          ],
-        ),
-      );
-      return build();
-    },
-    act: (bloc) async {
-      bloc.add(const SearchComposerPhraseSubmitted('pas cher'));
-      await Future<void>.delayed(const Duration(milliseconds: 600));
-      bloc.add(
-        const SearchComposerUnresolvedAnswered(
-          kind: UnresolvedKind.priceVague,
-          value: '6',
-        ),
-      );
-    },
-    wait: const Duration(milliseconds: 900),
-    verify: (bloc) {
-      expect(bloc.state.filters.maxPricePerKg, 6);
-      expect(bloc.state.unresolved, isEmpty);
-    },
-  );
-
-  blocTest<SearchComposerBloc, SearchComposerState>(
-    '"peu importe" efface un prix déjà réglé et retire la question sans en poser un nouveau',
-    build: build,
-    seed: () => const SearchComposerState(
-      filters: HomeSearchFilters(maxPricePerKg: 9),
-      unresolved: [
-        UnresolvedItem(
-          kind: UnresolvedKind.priceVague,
-          phrase: 'pas cher',
-          options: ['6', '9'],
-        ),
-      ],
-    ),
-    act: (bloc) => bloc.add(
-      const SearchComposerUnresolvedAnswered(
-        kind: UnresolvedKind.priceVague,
-        value: '',
-      ),
-    ),
-    wait: const Duration(milliseconds: 600),
-    verify: (bloc) {
-      expect(bloc.state.filters.maxPricePerKg, isNull);
-      expect(bloc.state.unresolved, isEmpty);
-    },
-  );
-
-  blocTest<SearchComposerBloc, SearchComposerState>(
-    '"peu importe" efface une date déjà réglée sans poser de nouvelle contrainte',
-    build: build,
-    seed: () => const SearchComposerState(
-      filters: HomeSearchFilters(datePreset: DonyDatePreset.thisWeek),
-      unresolved: [
-        UnresolvedItem(
-          kind: UnresolvedKind.dateVague,
-          phrase: 'bientôt',
-          options: [],
-        ),
-      ],
-    ),
-    act: (bloc) => bloc.add(
-      const SearchComposerUnresolvedAnswered(
-        kind: UnresolvedKind.dateVague,
-        value: '',
-      ),
-    ),
-    wait: const Duration(milliseconds: 600),
-    verify: (bloc) {
-      expect(bloc.state.filters.datePreset, DonyDatePreset.none);
-      expect(bloc.state.unresolved, isEmpty);
-    },
-  );
-
-  // ─── I1 : « Cette semaine »/« Ce mois » sont des DonyDatePreset, pas des
-  // dates ISO — `unresolved_question.dart` propose ces deux valeurs pour
-  // `dateVague`, `DateTime.tryParse` échouait toujours en silence dessus.
-  blocTest<SearchComposerBloc, SearchComposerState>(
-    '"cette semaine" pose DonyDatePreset.thisWeek plutôt que de ne rien faire',
-    build: build,
-    seed: () => const SearchComposerState(
-      filters: HomeSearchFilters(),
-      unresolved: [
-        UnresolvedItem(
-          kind: UnresolvedKind.dateVague,
-          phrase: 'bientôt',
-          options: [],
-        ),
-      ],
-    ),
-    act: (bloc) => bloc.add(
-      const SearchComposerUnresolvedAnswered(
-        kind: UnresolvedKind.dateVague,
-        value: 'thisWeek',
-      ),
-    ),
-    wait: const Duration(milliseconds: 600),
-    verify: (bloc) {
-      expect(bloc.state.filters.datePreset, DonyDatePreset.thisWeek);
-      expect(bloc.state.unresolved, isEmpty);
-    },
-  );
-
-  blocTest<SearchComposerBloc, SearchComposerState>(
-    '"ce mois" pose DonyDatePreset.thisMonth plutôt que de ne rien faire',
-    build: build,
-    seed: () => const SearchComposerState(
-      filters: HomeSearchFilters(),
-      unresolved: [
-        UnresolvedItem(
-          kind: UnresolvedKind.dateVague,
-          phrase: 'bientôt',
-          options: [],
-        ),
-      ],
-    ),
-    act: (bloc) => bloc.add(
-      const SearchComposerUnresolvedAnswered(
-        kind: UnresolvedKind.dateVague,
-        value: 'thisMonth',
-      ),
-    ),
-    wait: const Duration(milliseconds: 600),
-    verify: (bloc) {
-      expect(bloc.state.filters.datePreset, DonyDatePreset.thisMonth);
-      expect(bloc.state.unresolved, isEmpty);
-    },
-  );
-
-  blocTest<SearchComposerBloc, SearchComposerState>(
-    'un échec réseau laisse les filtres intacts et n efface pas la saisie',
-    build: () {
-      when(() => parseRepo.parse(any(), any())).thenThrow(Exception('réseau'));
-      return build();
-    },
-    act: (bloc) => bloc.add(const SearchComposerPhraseSubmitted('à Bamako')),
-    wait: const Duration(milliseconds: 600),
-    verify: (bloc) {
-      expect(bloc.state.error, isNotNull);
-      expect(bloc.state.filters.arrivalCity, isNull);
-    },
-  );
-
-  blocTest<SearchComposerBloc, SearchComposerState>(
-    'régler un filtre à la main met le compteur à jour sans appeler le parseur',
+    'régler un filtre à la main met le compteur à jour',
     build: build,
     act: (bloc) => bloc.add(
       const SearchComposerFiltersChanged(
@@ -309,7 +84,6 @@ void main() {
     wait: const Duration(milliseconds: 600),
     verify: (bloc) {
       expect(bloc.state.resultCount, 14);
-      verifyNever(() => parseRepo.parse(any(), any()));
     },
   );
 
@@ -423,18 +197,10 @@ void main() {
   );
 
   blocTest<SearchComposerBloc, SearchComposerState>(
-    'tout effacer vide les filtres, la phrase et les questions puis recompte',
+    'tout effacer vide les filtres puis recompte',
     build: build,
     seed: () => const SearchComposerState(
       filters: HomeSearchFilters(arrivalCity: 'Dakar'),
-      phrase: 'à Dakar pas cher',
-      unresolved: [
-        UnresolvedItem(
-          kind: UnresolvedKind.priceVague,
-          phrase: 'pas cher',
-          options: ['6'],
-        ),
-      ],
       resultCount: 3,
     ),
     act: (bloc) => bloc.add(const SearchComposerCleared()),
@@ -446,8 +212,6 @@ void main() {
       // seul le corridor (commun) était réglé par le seed.
       expect(bloc.state.filters.arrivalCity, isNull);
       expect(bloc.state.filters.departureCity, isNull);
-      expect(bloc.state.phrase, isEmpty);
-      expect(bloc.state.unresolved, isEmpty);
       expect(bloc.state.resultCount, 14);
     },
   );
@@ -511,7 +275,6 @@ void main() {
         ),
       );
       return SearchComposerBloc(
-        parseRepo,
         announcementRepo,
         packageRepo,
         analytics,
@@ -620,7 +383,6 @@ void main() {
           ),
         );
         return SearchComposerBloc(
-          parseRepo,
           announcementRepo,
           packageRepo,
           analytics,
@@ -650,55 +412,6 @@ void main() {
             size: 1,
           ),
         ).called(1);
-      },
-    );
-
-    blocTest<SearchComposerBloc, SearchComposerState>(
-      'une phrase « en mars » pose toute la période rendue par le serveur',
-      build: () {
-        when(() => parseRepo.parse(any(), any())).thenAnswer(
-          (_) async => _result(
-            filters: const {
-              'departureDateFrom': '2027-03-01',
-              'departureDateTo': '2027-03-31',
-            },
-          ),
-        );
-        return build();
-      },
-      act: (bloc) => bloc.add(const SearchComposerPhraseSubmitted('en mars')),
-      wait: const Duration(milliseconds: 600),
-      verify: (bloc) {
-        expect(bloc.state.filters.datePreset, DonyDatePreset.custom);
-        expect(bloc.state.filters.dateFrom, DateTime(2027, 3));
-        expect(bloc.state.filters.dateTo, DateTime(2027, 3, 31));
-      },
-    );
-
-    blocTest<SearchComposerBloc, SearchComposerState>(
-      'une date ISO en réponse à une date vague pose un seul jour en custom',
-      build: build,
-      seed: () => SearchComposerState(
-        filters: period,
-        unresolved: const [
-          UnresolvedItem(
-            kind: UnresolvedKind.dateVague,
-            phrase: 'bientôt',
-            options: [],
-          ),
-        ],
-      ),
-      act: (bloc) => bloc.add(
-        const SearchComposerUnresolvedAnswered(
-          kind: UnresolvedKind.dateVague,
-          value: '2026-12-01',
-        ),
-      ),
-      wait: const Duration(milliseconds: 600),
-      verify: (bloc) {
-        expect(bloc.state.filters.datePreset, DonyDatePreset.custom);
-        expect(bloc.state.filters.dateFrom, DateTime(2026, 12));
-        expect(bloc.state.filters.dateTo, DateTime(2026, 12));
       },
     );
   });

@@ -2337,10 +2337,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeComposerClearAll => 'Clear all';
 
   @override
-  String get homeComposerSectionPhrase => 'IN ONE SENTENCE';
+  String get homeComposerSectionWhere => 'WHERE';
 
   @override
-  String get homeComposerSectionWhere => 'WHERE';
+  String get homeComposerMoreFilters => 'More filters';
+
+  @override
+  String get homeComposerMoreFiltersHint =>
+      'Content type, transport, rating, stops, payment';
 
   @override
   String get homeComposerSectionWhen => 'WHEN';
@@ -2403,58 +2407,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeComposerLocating => 'Finding your location…';
 
   @override
-  String get homeRecapTitle => 'SET FROM YOUR SENTENCE';
-
-  @override
-  String get homeRecapArrival => 'Arrival';
-
-  @override
-  String get homeRecapDeparture => 'Departure';
-
-  @override
-  String get homeRecapWhen => 'When';
-
-  @override
-  String get homeRecapMinWeight => 'Minimum weight';
-
-  @override
-  String homeRecapFieldLine(String label, String value) {
-    return '$label: $value';
-  }
-
-  @override
-  String homeUnresolvedPriceQuestion(String phrase) {
-    return '“$phrase”: how much?';
-  }
-
-  @override
-  String get homeUnresolvedCityUnknown => 'To which city?';
-
-  @override
-  String get homeUnresolvedCityAmbiguous => 'Which city exactly?';
-
-  @override
-  String get homeUnresolvedDateQuestion => 'When do you want to leave?';
-
-  @override
-  String homeUnresolvedUpTo(String price) {
-    return 'Up to $price/kg';
-  }
-
-  @override
-  String get homeUnresolvedAnyPrice => 'Any price';
-
-  @override
   String get commonDateThisMonth => 'This month';
-
-  @override
-  String get homeUnresolvedAnyTime => 'Any time';
-
-  @override
-  String get homePhraseHint => '20 kg to Bamako in March';
-
-  @override
-  String get homeSectionOptional => 'Optional';
 
   @override
   String get homeModeSelectorSending => 'I\'m sending a parcel';

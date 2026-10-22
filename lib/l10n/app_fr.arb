@@ -1001,8 +1001,9 @@
   "homeComposerTitleTrips": "Filtrer les trajets",
   "homeComposerTitleParcels": "Filtrer les colis",
   "homeComposerClearAll": "Tout effacer",
-  "homeComposerSectionPhrase": "EN UNE PHRASE",
   "homeComposerSectionWhere": "OÙ",
+  "homeComposerMoreFilters": "Plus de filtres",
+  "homeComposerMoreFiltersHint": "Type de contenu, transport, note, escales, paiement",
   "homeComposerSectionWhen": "QUAND",
   "homeComposerSectionAroundMe": "AUTOUR DE MOI",
   "homeComposerSearch": "Rechercher",
@@ -1029,46 +1030,7 @@
   "homeComposerAlertTip": "Astuce, vous pouvez être prévenu des nouveaux colis compatibles depuis Réglages, Notifications.",
   "homeComposerAroundMe": "Autour de moi",
   "homeComposerLocating": "Localisation en cours…",
-  "homeRecapTitle": "RÉGLÉ DEPUIS VOTRE PHRASE",
-  "homeRecapArrival": "Arrivée",
-  "homeRecapDeparture": "Départ",
-  "homeRecapWhen": "Quand",
-  "homeRecapMinWeight": "Poids minimum",
-  "homeRecapFieldLine": "{label} : {value}",
-  "@homeRecapFieldLine": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      },
-      "value": {
-        "type": "String"
-      }
-    }
-  },
-  "homeUnresolvedPriceQuestion": "« {phrase} », c'est combien ?",
-  "@homeUnresolvedPriceQuestion": {
-    "placeholders": {
-      "phrase": {
-        "type": "String"
-      }
-    }
-  },
-  "homeUnresolvedCityUnknown": "Vers quelle ville ?",
-  "homeUnresolvedCityAmbiguous": "Quelle ville exactement ?",
-  "homeUnresolvedDateQuestion": "Quand voulez-vous partir ?",
-  "homeUnresolvedUpTo": "Jusqu'à {price}/kg",
-  "@homeUnresolvedUpTo": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "homeUnresolvedAnyPrice": "Peu importe le prix",
   "commonDateThisMonth": "Ce mois",
-  "homeUnresolvedAnyTime": "Peu importe",
-  "homePhraseHint": "20 kilos à Bamako en mars",
-  "homeSectionOptional": "Facultatif",
   "homeModeSelectorSending": "J'envoie un colis",
   "homeModeSelectorTraveling": "Je voyage",
   "homeModeSelectorTravelersAvailable": "{count, plural, =1{{count} voyageur disponible} other{{count} voyageurs disponibles}}",

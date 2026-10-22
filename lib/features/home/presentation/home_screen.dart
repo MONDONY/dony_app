@@ -1330,24 +1330,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// bascule ne se constate qu'au retour.
   Future<void> _openComposer(BuildContext ctx) async {
     final activeTrips = _activeTrips;
-    final result = await ctx
-        .push<({HomeSearchFilters filters, bool cameFromPhrase})>(
-          '/recherche/composer',
-          extra: {
-            'mode': _mode,
-            'filters': _filters,
-            'activeTrips': activeTrips,
-            'onPublishTrip': _onPublishTripRequested,
-          },
-        );
+    final result = await ctx.push<HomeSearchFilters>(
+      '/recherche/composer',
+      extra: {
+        'mode': _mode,
+        'filters': _filters,
+        'activeTrips': activeTrips,
+        'onPublishTrip': _onPublishTripRequested,
+      },
+    );
     if (result == null || !mounted) return;
 
-    if (result.filters.matchingMyTrips != _filters.matchingMyTrips) {
+    if (result.matchingMyTrips != _filters.matchingMyTrips) {
       unawaited(
         getIt<AnalyticsService>().logEvent(
           AnalyticsEvents.homeMatchingTripsFilterToggled,
           properties: {
-            'active': result.filters.matchingMyTrips,
+            'active': result.matchingMyTrips,
             // Nombre inconnu : la propriété est absente plutôt que remplie
             // d'un zéro qui fausserait l'analyse.
             'active_trips': ?activeTrips,
@@ -1355,21 +1354,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
         ),
       );
     }
-    _onFiltersChanged(result.filters);
+    _onFiltersChanged(result);
     // Seul point de sortie de `search_submitted` : c'est ici, et nulle part
     // ailleurs (voir `_onFiltersChanged`), qu'une recherche est réellement
-    // « soumise ». `came_from_phrase` mesure la part des recherches qui
-    // passent par la phrase plutôt que par les filtres au doigt — si elle
-    // dépasse 90 % des cas après un mois, le bloc « En une phrase » se
-    // retire sans rien casser.
+    // « soumise ».
     unawaited(
       getIt<AnalyticsService>().logEvent(
         AnalyticsEvents.searchSubmitted,
-        properties: {
-          'mode': _mode.name,
-          'filter_count': result.filters.activeCount,
-          'came_from_phrase': result.cameFromPhrase,
-        },
+        properties: {'mode': _mode.name, 'filter_count': result.activeCount},
       ),
     );
   }

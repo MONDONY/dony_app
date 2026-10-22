@@ -4,7 +4,6 @@
 // certains constructeurs ne sont jamais évalués par la suite.
 
 import 'package:dony/features/home/bloc/search_composer_event.dart';
-import 'package:dony/features/home/data/models/search_parse_result.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -19,27 +18,6 @@ void main() {
         const SearchComposerStarted(),
         isNot(const SearchComposerCleared()),
       );
-    });
-  });
-
-  group('SearchComposerPhraseSubmitted', () {
-    test('égal avec le même texte', () {
-      expect(
-        const SearchComposerPhraseSubmitted('à Bamako'),
-        const SearchComposerPhraseSubmitted('à Bamako'),
-      );
-    });
-
-    test('différent si le texte diffère', () {
-      expect(
-        const SearchComposerPhraseSubmitted('à Bamako'),
-        isNot(const SearchComposerPhraseSubmitted('à Dakar')),
-      );
-    });
-
-    test('expose text', () {
-      const event = SearchComposerPhraseSubmitted('pas trop cher');
-      expect(event.text, 'pas trop cher');
     });
   });
 
@@ -69,60 +47,6 @@ void main() {
       const filters = HomeSearchFilters(arrivalCity: 'Dakar');
       const event = SearchComposerFiltersChanged(filters);
       expect(event.filters, filters);
-    });
-  });
-
-  group('SearchComposerUnresolvedAnswered', () {
-    test('égal avec le même kind et la même value', () {
-      expect(
-        const SearchComposerUnresolvedAnswered(
-          kind: UnresolvedKind.priceVague,
-          value: '6',
-        ),
-        const SearchComposerUnresolvedAnswered(
-          kind: UnresolvedKind.priceVague,
-          value: '6',
-        ),
-      );
-    });
-
-    test('différent si le kind diffère (même value)', () {
-      expect(
-        const SearchComposerUnresolvedAnswered(
-          kind: UnresolvedKind.priceVague,
-          value: '',
-        ),
-        isNot(
-          const SearchComposerUnresolvedAnswered(
-            kind: UnresolvedKind.dateVague,
-            value: '',
-          ),
-        ),
-      );
-    });
-
-    test('différent si la value diffère (même kind)', () {
-      expect(
-        const SearchComposerUnresolvedAnswered(
-          kind: UnresolvedKind.cityAmbiguous,
-          value: 'Bamako',
-        ),
-        isNot(
-          const SearchComposerUnresolvedAnswered(
-            kind: UnresolvedKind.cityAmbiguous,
-            value: 'Dakar',
-          ),
-        ),
-      );
-    });
-
-    test('expose kind et value', () {
-      const event = SearchComposerUnresolvedAnswered(
-        kind: UnresolvedKind.cityUnknown,
-        value: 'Lomé',
-      );
-      expect(event.kind, UnresolvedKind.cityUnknown);
-      expect(event.value, 'Lomé');
     });
   });
 
