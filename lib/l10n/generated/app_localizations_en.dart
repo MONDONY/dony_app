@@ -2295,7 +2295,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonDateThisMonthLong => 'This month';
 
   @override
-  String get homeChooseDate => 'Choose a date';
+  String get homeChoosePeriod => 'Choose a period';
 
   @override
   String get homeMinRatingTitle => 'Minimum rating';
@@ -2515,7 +2515,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFilterChipsSuitcase23 => '🧳 23 kg suitcase';
 
   @override
-  String get homeFilterFieldsExactDate => 'EXACT DATE';
+  String get homeFilterFieldsPeriod => 'PERIOD';
 
   @override
   String get homeFilterFieldsMaxPrice => 'MAX PRICE';

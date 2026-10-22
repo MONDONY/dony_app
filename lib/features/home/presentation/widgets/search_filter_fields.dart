@@ -13,6 +13,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
+import 'package:dony/features/home/presentation/widgets/search_period.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
@@ -21,9 +22,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 
-/// Presets de date (Aujourd'hui / Cette semaine / Ce mois) + date précise,
-/// sans corridor ni en-tête propre : `SearchComposerScreen` le place sous sa
-/// propre étiquette « QUAND », distincte de « OÙ ».
+/// Presets de date (Aujourd'hui / Cette semaine / Ce mois) + période choisie
+/// au calendrier, sans corridor ni en-tête propre : `SearchComposerScreen` le
+/// place sous sa propre étiquette « QUAND », distincte de « OÙ ».
 class DatePresetsField extends StatelessWidget {
   const DatePresetsField({
     super.key,
@@ -50,24 +51,19 @@ class DatePresetsField extends StatelessWidget {
     );
   }
 
-  void _onCustomDate(DateTime? date) {
-    if (date == null) {
-      onChanged(
-        value.copyWith(datePreset: DonyDatePreset.none, clearCustomDate: true),
-      );
-      return;
-    }
-    onChanged(
-      value.copyWith(datePreset: DonyDatePreset.custom, customDate: date),
-    );
+  /// Calendrier refermé sans choix (`null`) : rien ne change, ni la période
+  /// ni le preset actif (comme la feuille « Date de départ » de l'accueil).
+  /// Pour retirer la date : retoucher le preset actif, ou « Effacer ».
+  void _onPeriod(DateTimeRange? range) {
+    if (range == null) return;
+    onChanged(value.withCustomPeriod(range.start, range.end));
   }
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final customDate = value.datePreset == DonyDatePreset.custom
-        ? value.customDate
-        : null;
+    final custom = value.datePreset == DonyDatePreset.custom;
+    final isPeriod = custom && value.customDateTo != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,13 +84,15 @@ class DatePresetsField extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: DateField(
-                label: l.homeFilterFieldsExactDate,
-                date: customDate,
-                onChanged: _onCustomDate,
+              child: SearchPeriodField(
+                start: custom ? value.customDate : null,
+                end: custom ? value.customDateTo : null,
+                onChanged: _onPeriod,
               ),
             ),
-            const Spacer(),
+            // Une période de plusieurs jours prend toute la largeur : à cheval
+            // sur deux années, son libellé ne tiendrait pas dans une demi-ligne.
+            if (!isPeriod) const Spacer(),
           ],
         ),
       ],
@@ -461,19 +459,10 @@ class UrgencyFilterChips extends StatelessWidget {
 // ── Date field ────────────────────────────────────────────────────────────────
 
 class DateField extends StatelessWidget {
-  const DateField({
-    super.key,
-    required this.date,
-    required this.onChanged,
-    this.label,
-  });
+  const DateField({super.key, required this.date, required this.onChanged});
 
   final DateTime? date;
   final ValueChanged<DateTime?> onChanged;
-
-  /// Libellé du champ, « DATE » par défaut (`null`). Le bloc commun affiche
-  /// « DATE PRÉCISE » pour le distinguer des presets qui le précèdent.
-  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -510,7 +499,7 @@ class DateField extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              label ?? context.l10n.homeFilterFieldsDate,
+              context.l10n.homeFilterFieldsDate,
               style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.xs),
@@ -534,6 +523,106 @@ class DateField extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Period field ──────────────────────────────────────────────────────────────
+
+/// Champ « PÉRIODE » du composeur : ouvre le calendrier de période et affiche
+/// le jour ou la période choisis (« 15 nov. → 15 déc. »). Reçoit `null` quand
+/// le calendrier est refermé sans choix.
+class SearchPeriodField extends StatelessWidget {
+  const SearchPeriodField({
+    super.key,
+    required this.start,
+    required this.end,
+    required this.onChanged,
+  });
+
+  /// Début de la période, `null` = aucune période choisie.
+  final DateTime? start;
+
+  /// Fin incluse, `null` = un seul jour ([start]).
+  final DateTime? end;
+  final ValueChanged<DateTimeRange?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    final from = start;
+    final active = from != null;
+    final isPeriod = active && end != null;
+    final valueLabel = active
+        ? formatSearchPeriod(from, end, l.localeName)
+        : l.homeFilterFieldsChoose;
+    Future<void> open() async {
+      final range = await showSearchPeriodPicker(
+        context,
+        start: from,
+        end: end,
+      );
+      onChanged(range);
+    }
+
+    final field = GestureDetector(
+      key: const Key('search-period-field'),
+      behavior: HitTestBehavior.opaque,
+      onTap: open,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: active ? cs.primaryContainer : cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: active ? cs.primary : cs.outline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l.homeFilterFieldsPeriod,
+              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: DonySpacing.xs),
+            Row(
+              children: [
+                DonyIcon('calendar', size: 14, color: cs.primary),
+                const SizedBox(width: DonySpacing.xs),
+                Flexible(
+                  child: Text(
+                    valueLabel,
+                    // Une période peut passer sur deux lignes en grand texte
+                    // plutôt que d'être coupée ; un seul jour tient sur une.
+                    maxLines: isPeriod ? 2 : 1,
+                    overflow: isPeriod ? null : TextOverflow.ellipsis,
+                    style: tt.titleSmall?.copyWith(
+                      color: active ? cs.primary : cs.onSurfaceVariant,
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    // Un seul nœud pour le lecteur d'écran : « PÉRIODE, 15 nov. → 15 déc. »,
+    // activable (l'action du GestureDetector est masquée par
+    // `excludeSemantics`, elle est donc reportée ici).
+    return Semantics(
+      button: true,
+      label: '${l.homeFilterFieldsPeriod}, $valueLabel',
+      excludeSemantics: true,
+      onTap: open,
+      child: field,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
@@ -727,6 +728,25 @@ void main() {
       expect(q['departureDateFrom'], '2026-01-05');
       expect(q['departureDateTo'], '2026-02-28');
     });
+
+    test(
+      'période du filtre de recherche : début et fin bornes incluses',
+      () async {
+        stubCount({'totalElements': 0});
+        final q0 = const HomeSearchFilters()
+            .withCustomPeriod(DateTime(2026, 11, 15), DateTime(2026, 12, 15))
+            .toAnnouncementQuery();
+
+        await datasource.countAnnouncements(
+          departureDateFrom: q0.departureDateFrom,
+          departureDateTo: q0.departureDateTo,
+        );
+
+        final q = capturedQuery();
+        expect(q['departureDateFrom'], '2026-11-15');
+        expect(q['departureDateTo'], '2026-12-15');
+      },
+    );
 
     test('transmet la position et le rayon de « près de moi »', () async {
       stubCount({'totalElements': 3});

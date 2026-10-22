@@ -30,6 +30,7 @@ import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/home/presentation/screens/search_composer_screen.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
+import 'package:dony/features/home/presentation/widgets/search_period.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -3667,50 +3668,63 @@ void main() {
 
   // ── Feuille « Date de départ » (_DatePresetSheet) ─────────────────────────
   //
-  // K3 : la date choisie via le calendrier natif s'affiche dans l'option
-  // « date précise » de la feuille selon l'ordre de la langue (motif fixe
-  // 'EEE d MMM' en fr, squelette MMMEd en en).
+  // K3 : la date choisie via le calendrier s'affiche dans l'option de la
+  // feuille selon l'ordre de la langue (motif fixe 'EEE d MMM' en fr,
+  // squelette MMMEd en en). Le calendrier est désormais celui d'une période :
+  // un seul jour reste affiché comme avant, une période « début → fin ».
   group('feuille de date personnalisée', () {
     setUpAll(() async {
       await initializeDateFormatting('fr');
       await initializeDateFormatting('en');
     });
 
-    // Choisit un jour du calendrier natif garanti visible dans le mois
-    // affiché par défaut (celui d'aujourd'hui) et sélectionnable
-    // (firstDate: DateTime.now()) : le lendemain, ou aujourd'hui même si le
-    // mois se termine ce jour-là (jamais de bascule de mois qui rendrait le
-    // jour cible invisible dans la grille ouverte).
-    Future<DateTime> choisirDemain(
+    // Jour à [n] jours d'aujourd'hui, sans `Duration` (changement d'heure).
+    DateTime inDays(int n) {
+      final now = DateTime.now();
+      return DateTime(now.year, now.month, now.day + n);
+    }
+
+    // Ouvre la feuille puis le calendrier de période, et saisit les bornes
+    // au clavier : indépendant du jour où tourne le test (le calendrier
+    // affiche plusieurs mois, un numéro de jour y est ambigu).
+    Future<void> choisirPeriode(
       WidgetTester tester, {
       required String choisirLabel,
+      required DateTime start,
+      required DateTime end,
     }) async {
-      final today = DateTime.now();
-      final daysInMonth = DateTime(today.year, today.month + 1, 0).day;
-      final targetDay = today.day < daysInMonth ? today.day + 1 : today.day;
-      final expected = DateTime(today.year, today.month, targetDay);
-
       await tester.tap(find.byKey(const Key('chip-date')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text(choisirLabel));
       await tester.pumpAndSettle();
+      expect(find.byType(DateRangePickerDialog), findsOneWidget);
 
-      await tester.tap(find.text('$targetDay').last);
+      final loc = MaterialLocalizations.of(
+        tester.element(find.byType(DateRangePickerDialog)),
+      );
+      await tester.tap(find.byTooltip(loc.inputDateModeButtonLabel));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
+      final fields = find.descendant(
+        of: find.byType(DateRangePickerDialog),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(fields.at(0), loc.formatCompactDate(start));
+      await tester.enterText(fields.at(1), loc.formatCompactDate(end));
+      await tester.tap(find.text(loc.okButtonLabel));
       await tester.pumpAndSettle();
-
-      return expected;
     }
 
     testWidgets(
-      'fr non-régression : option « date précise » au motif EEE d MMM inchangé',
+      'fr non-régression : un seul jour au motif EEE d MMM inchangé',
       (tester) async {
         await pumpHome(tester);
-        final date = await choisirDemain(
+        final date = inDays(1);
+        await choisirPeriode(
           tester,
-          choisirLabel: 'Choisir une date',
+          choisirLabel: 'Choisir une période',
+          start: date,
+          end: date,
         );
 
         expect(
@@ -3720,18 +3734,69 @@ void main() {
       },
     );
 
-    testWidgets('en anglais : option « date précise » dans l\'ordre anglais', (
+    testWidgets('en anglais : un seul jour dans l\'ordre anglais', (
       tester,
     ) async {
       useEnglish();
       await pumpHome(tester);
-      final date = await choisirDemain(tester, choisirLabel: 'Choose a date');
+      final date = inDays(1);
+      await choisirPeriode(
+        tester,
+        choisirLabel: 'Choose a period',
+        start: date,
+        end: date,
+      );
 
       expect(
         find.textContaining(DateFormat.MMMEd('en').format(date)),
         findsOneWidget,
       );
     });
+
+    testWidgets(
+      'une période : option et puce « début → fin », recherche bornée',
+      (tester) async {
+        final bloc = MockAnnouncementBloc();
+        tester.view.physicalSize = const Size(1000, 2000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          _buildHome(
+            announcementBlocOverride: bloc,
+            user: _makeUser(roles: const ['SENDER', 'TRAVELER']),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        final start = inDays(3);
+        final end = inDays(40);
+        await choisirPeriode(
+          tester,
+          choisirLabel: 'Choisir une période',
+          start: start,
+          end: end,
+        );
+        final label = formatSearchPeriod(start, end, 'fr', withWeekday: true);
+        expect(find.text(label), findsOneWidget);
+
+        await tester.tap(find.text('Appliquer'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('chip-date')),
+            matching: find.text(formatSearchPeriod(start, end, 'fr')),
+          ),
+          findsOneWidget,
+        );
+        final last = verify(
+          () => bloc.add(captureAny()),
+        ).captured.whereType<AnnouncementSearchRequested>().last;
+        expect(last.departureDateFrom, start);
+        expect(last.departureDateTo, end);
+      },
+    );
   });
 
   // FLUTTER-CD : « 17 voyageurs disponibles » au-dessus d'une carte vide, la

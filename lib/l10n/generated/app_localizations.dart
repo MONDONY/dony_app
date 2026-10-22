@@ -3884,11 +3884,11 @@ abstract class AppLocalizations {
   /// **'Ce mois-ci'**
   String get commonDateThisMonthLong;
 
-  /// No description provided for @homeChooseDate.
+  /// Option de la feuille « Date de départ » de l'accueil qui ouvre le calendrier de période (home_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Choisir une date'**
-  String get homeChooseDate;
+  /// **'Choisir une période'**
+  String get homeChoosePeriod;
 
   /// No description provided for @homeMinRatingTitle.
   ///
@@ -4262,11 +4262,11 @@ abstract class AppLocalizations {
   /// **'🧳 Valise 23 kg'**
   String get homeFilterChipsSuitcase23;
 
-  /// No description provided for @homeFilterFieldsExactDate.
+  /// Libellé du champ du composeur de recherche qui ouvre le calendrier de période (un jour ou du … au …), sous les presets de date (search_filter_fields.dart)
   ///
   /// In fr, this message translates to:
-  /// **'DATE PRÉCISE'**
-  String get homeFilterFieldsExactDate;
+  /// **'PÉRIODE'**
+  String get homeFilterFieldsPeriod;
 
   /// No description provided for @homeFilterFieldsMaxPrice.
   ///
