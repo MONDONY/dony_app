@@ -36,11 +36,13 @@ PackageRequest _req({
   double? grossPriceEur,
   List<String> categories = const ['Vêtements'],
   bool flexibleDate = false,
+  String departureCity = 'Paris',
+  String arrivalCity = 'Dakar',
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
-  departureCity: 'Paris',
-  arrivalCity: 'Dakar',
+  departureCity: departureCity,
+  arrivalCity: arrivalCity,
   desiredDate: flexibleDate ? null : desiredDate ?? DateTime(2026, 8),
   dateToleranceDays: flexibleDate ? 0 : 3,
   weightKg: 5,
@@ -77,7 +79,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('DEMANDE D\'ENVOI'), findsOneWidget);
     expect(find.text('Ouverte'), findsOneWidget);
-    expect(find.textContaining('Paris → Dakar'), findsOneWidget);
     expect(find.text('Vêtements'), findsOneWidget);
     expect(find.text('5 kg'), findsOneWidget);
     expect(find.text('Proposer mon trajet'), findsOneWidget);
@@ -92,6 +93,119 @@ void main() {
     expect(find.text('Date flexible'), findsOneWidget);
     expect(find.textContaining('null'), findsNothing);
     expect(find.textContaining('Urgent'), findsNothing);
+  });
+
+  testWidgets('corridor : villes, sous-titres Départ / Arrivée et date', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(_req()));
+    await tester.pumpAndSettle();
+    final corridor = find.byKey(const Key('request-public-corridor'));
+    expect(corridor, findsOneWidget);
+    expect(
+      find.descendant(of: corridor, matching: find.text('Paris')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: corridor, matching: find.text('Dakar')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: corridor,
+        matching: find.textContaining('Départ', findRichText: true),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: corridor,
+        matching: find.textContaining('Arrivée', findRichText: true),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: corridor,
+        matching: find.textContaining('2026', findRichText: true),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('corridor : petit écran, texte agrandi et villes longues → '
+      'aucun débordement', (tester) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    final long = _req(
+      departureCity: 'Saint-Denis de la Réunion',
+      arrivalCity: 'Port-au-Prince Toussaint Louverture',
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(1.4)),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: PackageRequestPublicDetailBody(request: long, onReport: () {}),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('request-public-corridor')), findsOneWidget);
+  });
+
+  testWidgets('bandeau Poids / Format', (tester) async {
+    await tester.pumpWidget(wrap(_req()));
+    await tester.pumpAndSettle();
+    expect(find.text('5 kg'), findsOneWidget);
+    expect(find.text('Carton M'), findsOneWidget);
+  });
+
+  testWidgets('aucune photo → bandeau d\'illustration', (tester) async {
+    await tester.pumpWidget(wrap(_req()));
+    await tester.pumpAndSettle();
+    expect(find.text('Pas de photo pour ce colis'), findsOneWidget);
+  });
+
+  testWidgets('avec photos → pas de bandeau d\'illustration', (tester) async {
+    await tester.pumpWidget(wrap(_req(photoUrls: const ['u1', 'u2'])));
+    await tester.pumpAndSettle();
+    expect(find.text('Pas de photo pour ce colis'), findsNothing);
+  });
+
+  testWidgets('signalement : bouton absent sans callback', (tester) async {
+    await tester.pumpWidget(wrap(_req()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('request-public-report-button')), findsNothing);
+  });
+
+  testWidgets('signalement : bouton en bas de fiche → callback', (
+    tester,
+  ) async {
+    var reported = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: PackageRequestPublicDetailBody(
+            request: _req(),
+            onReport: () => reported++,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final button = find.byKey(const Key('request-public-report-button'));
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    expect(reported, 1);
   });
 
   testWidgets('photos → carousel avec compteur', (tester) async {

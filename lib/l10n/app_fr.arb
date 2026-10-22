@@ -3772,6 +3772,18 @@
   "@requestDescriptionLabel": {
     "description": "Libellé générique « Description » (package_request_public_detail_screen.dart, package_request_preview_sheet.dart)"
   },
+  "requestPublicFromLabel": "Départ",
+  "@requestPublicFromLabel": {
+    "description": "Sous-titre de la ville de départ dans la carte du corridor (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicToLabel": "Arrivée",
+  "@requestPublicToLabel": {
+    "description": "Sous-titre de la ville d'arrivée dans la carte du corridor (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicNoPhoto": "Pas de photo pour ce colis",
+  "@requestPublicNoPhoto": {
+    "description": "Légende du bandeau d'illustration quand la demande n'a aucune photo (package_request_public_detail_screen.dart)"
+  },
   "requestPublicReportTooltip": "Signaler",
   "@requestPublicReportTooltip": {
     "description": "Tooltip du bouton de signalement (package_request_public_detail_screen.dart)"

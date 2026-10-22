@@ -7833,6 +7833,24 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get requestDescriptionLabel;
 
+  /// Sous-titre de la ville de départ dans la carte du corridor (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get requestPublicFromLabel;
+
+  /// Sous-titre de la ville d'arrivée dans la carte du corridor (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get requestPublicToLabel;
+
+  /// Légende du bandeau d'illustration quand la demande n'a aucune photo (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de photo pour ce colis'**
+  String get requestPublicNoPhoto;
+
   /// Tooltip du bouton de signalement (package_request_public_detail_screen.dart)
   ///
   /// In fr, this message translates to:
