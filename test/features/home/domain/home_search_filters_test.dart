@@ -96,6 +96,87 @@ void main() {
       expect(f.toAnnouncementQuery().departureDateTo, DateTime(2026, 8, 12));
     });
 
+    group('période choisie au calendrier', () {
+      final start = DateTime(2026, 11, 15);
+      final end = DateTime(2026, 12, 15);
+
+      test('du … au … : bornes incluses vers trajets et colis', () {
+        final f = const HomeSearchFilters().withCustomPeriod(start, end);
+
+        expect(f.datePreset, DonyDatePreset.custom);
+        expect(f.dateFrom, start);
+        expect(f.dateTo, end);
+        expect(f.toAnnouncementQuery().departureDateFrom, start);
+        expect(f.toAnnouncementQuery().departureDateTo, end);
+        expect(f.toPackageRequestQuery().dateFrom, start);
+        expect(f.toPackageRequestQuery().dateTo, end);
+        // Clé analytics inchangée : une période reste le filtre « date ».
+        expect(f.activeKeys, {'date'});
+      });
+
+      test('un seul jour : début = fin, comme avant les périodes', () {
+        final f = const HomeSearchFilters().withCustomPeriod(start);
+        expect(f.customDateTo, isNull);
+        expect(f.dateFrom, start);
+        expect(f.dateTo, start);
+
+        // Le même jour touché deux fois au calendrier = un seul jour.
+        final same = const HomeSearchFilters().withCustomPeriod(
+          start,
+          DateTime(2026, 11, 15, 23, 59),
+        );
+        expect(same.customDateTo, isNull);
+        expect(same.dateTo, start);
+      });
+
+      test('une fin avant le début est remise dans l\'ordre', () {
+        final f = const HomeSearchFilters().withCustomPeriod(end, start);
+        expect(f.customDate, start);
+        expect(f.customDateTo, end);
+
+        final g = const HomeSearchFilters()
+            .withCustomPeriod(start)
+            .copyWith(customDateTo: DateTime(2026, 11));
+        expect(g.dateFrom, DateTime(2026, 11));
+        expect(g.dateTo, start);
+      });
+
+      test('un jour posé ensuite remplace la fin de la période', () {
+        final f = const HomeSearchFilters()
+            .withCustomPeriod(start, end)
+            .withCustomPeriod(DateTime(2026, 12));
+        expect(f.dateFrom, DateTime(2026, 12));
+        expect(f.dateTo, DateTime(2026, 12));
+      });
+
+      test('clearCustomDate vide le début et la fin', () {
+        final f = const HomeSearchFilters()
+            .withCustomPeriod(start, end)
+            .copyWith(datePreset: DonyDatePreset.none, clearCustomDate: true);
+        expect(f.customDate, isNull);
+        expect(f.customDateTo, isNull);
+        expect(f.dateFrom, isNull);
+        expect(f.dateTo, isNull);
+      });
+
+      test('la période survit aux autres modifications', () {
+        final f = const HomeSearchFilters()
+            .withCustomPeriod(start, end)
+            .copyWith(departureCity: 'Paris')
+            .swapCorridor();
+        expect(f.customDate, start);
+        expect(f.customDateTo, end);
+      });
+
+      test('un preset ignore la fin d\'une période restée en mémoire', () {
+        final f = const HomeSearchFilters()
+            .withCustomPeriod(start, end)
+            .copyWith(datePreset: DonyDatePreset.today, clearCustomDate: true);
+        final today = DateTime.now();
+        expect(f.dateTo, DateTime(today.year, today.month, today.day));
+      });
+    });
+
     test(
       'poids trajets et poids colis ne se propagent jamais l\'un vers l\'autre',
       () {
