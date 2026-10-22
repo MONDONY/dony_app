@@ -83,6 +83,60 @@ void main() {
     expect(find.text('Proposer mon trajet'), findsOneWidget);
   });
 
+  testWidgets('la pastille de statut est collée au bord droit de la carte', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(_req()));
+    await tester.pumpAndSettle();
+    final card = tester.getRect(find.byKey(const Key('request-hero-card')));
+    final chip = tester.getRect(find.text('Ouverte'));
+    // Dans le bord droit (marge interne de 16), dans la moitié droite.
+    expect(card.right - chip.right, lessThan(40));
+    expect(chip.left, greaterThan(card.center.dx));
+  });
+
+  testWidgets('le budget est affiché une seule fois, dans la carte héros', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(_req(targetPriceEur: 40)));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('request-hero-price')), findsOneWidget);
+    expect(find.text('Budget'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('request-hero-card')),
+        matching: find.byKey(const Key('request-hero-price')),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('prix ferme à 320 dp avec texte ×2 : aucun débordement', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(320, 800),
+            textScaler: TextScaler.linear(2),
+          ),
+          child: Scaffold(
+            body: PackageRequestPublicDetailBody(
+              request: _req(negotiable: false, desiredDate: DateTime.now()),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('demande sans date : « Date flexible », jamais urgente', (
     tester,
   ) async {

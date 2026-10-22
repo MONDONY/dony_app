@@ -33,6 +33,7 @@ import 'package:dony/features/package_request/presentation/widgets/make_offer_bo
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_header_row.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_sender_row.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -448,120 +449,24 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                 const SizedBox(height: DonySpacing.base),
               ],
 
-              // ── Identité demande + statut ────────────────────────────────
-              Row(
-                children: [
-                  DonyIcon('package', size: 14, color: cs.warning),
-                  const SizedBox(width: DonySpacing.xxs),
-                  Flexible(
-                    child: Text(
-                      l.requestPublicBadge,
-                      overflow: TextOverflow.ellipsis,
-                      style: tt.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                        color: cs.warning,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                  if (!r.negotiable) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                        vertical: DonySpacing.xxs,
-                      ),
-                      decoration: BoxDecoration(
-                        color: cs.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(DonyRadius.sm),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          DonyIcon(
-                            'lock',
-                            size: 11,
-                            color: cs.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: DonySpacing.xxs),
-                          Text(
-                            l.requestPublicFirmPriceBadge,
-                            style: tt.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.4,
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: DonySpacing.xs),
-                  ],
-                  packageStatusChip(context, r.status),
-                  if (isUrgent) ...[
-                    const SizedBox(width: DonySpacing.xs),
-                    const DonyUrgentBadge(),
-                  ],
-                ],
+              // ── Carte héros : identité, corridor, date, budget ───────────
+              _HeroCard(
+                request: r,
+                price: _displayPrice,
+                isUrgent: isUrgent,
+                routeTitle:
+                    '${depFlag != null ? '$depFlag ' : ''}${r.departureCity} → '
+                    '${r.arrivalCity}${arrFlag != null ? ' $arrFlag' : ''}',
               ),
-              const SizedBox(height: DonySpacing.sm),
+              const SizedBox(height: DonySpacing.md),
 
-              // ── Titre corridor ───────────────────────────────────────────
-              Text(
-                '${depFlag != null ? '$depFlag ' : ''}${r.departureCity} → '
-                '${r.arrivalCity}${arrFlag != null ? ' $arrFlag' : ''}',
-                style: tt.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: cs.onSurface,
-                  letterSpacing: -0.4,
-                ),
-              ),
-              const SizedBox(height: DonySpacing.xs),
-              Row(
-                children: [
-                  Icon(
-                    Icons.flight_rounded,
-                    size: 15,
-                    color: cs.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: DonySpacing.xs),
-                  Expanded(
-                    child: Text(
-                      r.desiredDate == null
-                          ? l.requestDateFlexible
-                          : l.requestPublicDesiredDate(
-                              shortDayMonthYear(l, r.desiredDate!),
-                              toleranceCompactLabel(l, r.dateToleranceDays),
-                            ),
-                      style: tt.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: DonySpacing.base),
-
-              // ── Poids / Taille (tuiles) ──────────────────────────────────
-              Row(
-                children: [
-                  Expanded(
-                    child: _StatTile(
-                      icon: 'scale',
-                      value:
-                          '${r.weightKg.toStringAsFixed(r.weightKg % 1 == 0 ? 0 : 1)} kg',
-                      label: l.requestCreateRecapWeight,
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.md),
-                  Expanded(
-                    child: _StatTile(
-                      icon: 'package',
-                      value: _sizeLabel,
-                      label: _parcelHint(l),
-                    ),
-                  ),
-                ],
+              // ── Poids / Taille ───────────────────────────────────────────
+              _FactsCard(
+                weight:
+                    '${r.weightKg.toStringAsFixed(r.weightKg % 1 == 0 ? 0 : 1)} kg',
+                weightLabel: l.requestCreateRecapWeight,
+                size: _sizeLabel,
+                sizeLabel: _parcelHint(l),
               ),
 
               // ── Catégories (chips) ───────────────────────────────────────
@@ -599,27 +504,6 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                 ]),
               ],
 
-              if (_displayPrice != null) ...[
-                const SizedBox(height: DonySpacing.md),
-                _detailCard(context, l.requestPublicBudget, [
-                  _kv(
-                    context,
-                    'banknote',
-                    r.negotiable ? l.requestPublicBudget : l.tripFixedPrice,
-                    PriceDisplay.money(_displayPrice!, r.currency),
-                  ),
-                  // Repère « environ » dans la devise du lecteur (serveur, lot 5).
-                  Padding(
-                    padding: const EdgeInsets.only(top: DonySpacing.xxs),
-                    child: ConvertedPriceLabel(
-                      originalCurrency: r.currency,
-                      convertedPricePerKg: r.convertedDisplayPrice,
-                      convertedCurrency: r.convertedCurrency,
-                      suffix: '',
-                    ),
-                  ),
-                ]),
-              ],
               if (r.acceptedPaymentMethods.isNotEmpty) ...[
                 const SizedBox(height: DonySpacing.md),
                 _PaymentMethodsCard(methods: r.acceptedPaymentMethods),
@@ -803,13 +687,211 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
   }
 }
 
-/// Tuile statistique (Poids / Taille) — icône + grande valeur + libellé.
-class _StatTile extends StatelessWidget {
-  const _StatTile({
-    required this.icon,
-    required this.value,
-    required this.label,
+/// Carte héros du détail : étiquette « Demande d'envoi » et pastilles au bord
+/// droit, corridor, date souhaitée, puis le budget en gros au pied de la
+/// carte (un seul endroit pour le prix, plus de carte « Budget » redondante).
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({
+    required this.request,
+    required this.price,
+    required this.isUrgent,
+    required this.routeTitle,
   });
+
+  final PackageRequest request;
+  final double? price;
+  final bool isUrgent;
+  final String routeTitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = request;
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      key: const Key('request-hero-card'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RequestHeaderRow(
+            leading: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DonyIcon('package', size: 14, color: cs.warning),
+                const SizedBox(width: DonySpacing.xxs),
+                Flexible(
+                  child: Text(
+                    l.requestPublicBadge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tt.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      color: cs.warning,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            trailing: [
+              if (!r.negotiable)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.sm,
+                    vertical: DonySpacing.xxs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DonyIcon('lock', size: 11, color: cs.onSurfaceVariant),
+                      const SizedBox(width: DonySpacing.xxs),
+                      Text(
+                        l.requestPublicFirmPriceBadge,
+                        style: tt.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.4,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              packageStatusChip(context, r.status),
+              if (isUrgent) const DonyUrgentBadge(),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.md),
+          Text(
+            routeTitle,
+            style: tt.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: cs.onSurface,
+              letterSpacing: -0.4,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Row(
+            children: [
+              Icon(Icons.event_rounded, size: 16, color: cs.onSurfaceVariant),
+              const SizedBox(width: DonySpacing.xs),
+              Expanded(
+                child: Text(
+                  r.desiredDate == null
+                      ? l.requestDateFlexible
+                      : l.requestPublicDesiredDate(
+                          shortDayMonthYear(l, r.desiredDate!),
+                          toleranceCompactLabel(l, r.dateToleranceDays),
+                        ),
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ),
+            ],
+          ),
+          if (price != null) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: DonySpacing.md),
+              child: Divider(height: 1),
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        r.negotiable ? l.requestPublicBudget : l.tripFixedPrice,
+                        style: tt.labelMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      // Repère « environ » dans la devise du lecteur
+                      // (serveur, lot 5).
+                      ConvertedPriceLabel(
+                        originalCurrency: r.currency,
+                        convertedPricePerKg: r.convertedDisplayPrice,
+                        convertedCurrency: r.convertedCurrency,
+                        suffix: '',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Text(
+                  PriceDisplay.money(price!, r.currency),
+                  key: const Key('request-hero-price'),
+                  style: tt.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: cs.primary,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Poids et taille du colis dans une seule carte, deux colonnes séparées.
+class _FactsCard extends StatelessWidget {
+  const _FactsCard({
+    required this.weight,
+    required this.weightLabel,
+    required this.size,
+    required this.sizeLabel,
+  });
+
+  final String weight;
+  final String weightLabel;
+  final String size;
+  final String sizeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('request-facts-card'),
+      padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
+              child: _Fact(icon: 'scale', value: weight, label: weightLabel),
+            ),
+            VerticalDivider(width: 1, color: cs.outline),
+            Expanded(
+              child: _Fact(icon: 'package', value: size, label: sizeLabel),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Fact extends StatelessWidget {
+  const _Fact({required this.icon, required this.value, required this.label});
   final String icon;
   final String value;
   final String label;
@@ -818,17 +900,9 @@ class _StatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: DonySpacing.base,
-        horizontal: DonySpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
+      child: Row(
         children: [
           Container(
             width: 38,
@@ -839,18 +913,28 @@ class _StatTile extends StatelessWidget {
             ),
             child: Center(child: DonyIcon(icon, size: 18, color: cs.primary)),
           ),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            value,
-            style: tt.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 1),
-          Text(
-            label,
-            style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),
