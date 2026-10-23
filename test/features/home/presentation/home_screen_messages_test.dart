@@ -358,37 +358,6 @@ void main() {
     }
   });
 
-  group('homePullHintLabel (fr)', () {
-    const expected = {
-      'trips|0': 'Tirer pour voir la liste',
-      'trips|1': 'Tirer pour voir le voyageur',
-      'trips|2': 'Tirer pour voir les 2 voyageurs',
-      'trips|12': 'Tirer pour voir les 12 voyageurs',
-      'parcels|0': 'Tirer pour voir la liste',
-      'parcels|1': 'Tirer pour voir le colis',
-      'parcels|2': 'Tirer pour voir les 2 colis',
-      'parcels|12': 'Tirer pour voir les 12 colis',
-    };
-    for (final mode in SearchMode.values) {
-      for (final n in const [0, 1, 2, 12]) {
-        final key = '${mode.name}|$n';
-        test(key, () {
-          expect(homePullUpLabel(fr, mode: mode, count: n), expected[key]);
-          expect(
-            homePullHintLabel(fr, mode: mode, count: n, down: false),
-            expected[key],
-          );
-        });
-      }
-      test('${mode.name}, vers le bas', () {
-        expect(
-          homePullHintLabel(fr, mode: mode, count: 4, down: true),
-          'Tirer vers le bas pour voir la carte',
-        );
-      });
-    }
-  });
-
   group('anglais', () {
     test('découverte croisée, mode trajets', () {
       expect(
@@ -520,14 +489,6 @@ void main() {
           arrivalCity: 'Bamako',
         ),
         'Alert me when a trip appears on Lyon → Bamako',
-      );
-      expect(
-        homePullHintLabel(en, mode: SearchMode.trips, count: 2, down: false),
-        'Pull up to see the 2 travelers',
-      );
-      expect(
-        homePullHintLabel(en, mode: SearchMode.trips, count: 2, down: true),
-        'Pull down to see the map',
       );
     });
   });

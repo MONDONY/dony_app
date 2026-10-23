@@ -49,6 +49,7 @@ class HomeFilterChipsRow extends StatelessWidget {
     required this.onMatchingMyTripsToggle,
     required this.onMatchingMyTripsBlocked,
     this.activeTrips,
+    this.onNearMeClear,
   });
 
   final SearchMode mode;
@@ -90,6 +91,11 @@ class HomeFilterChipsRow extends StatelessWidget {
   /// exemple si le résumé d'activité a échoué : on ne grise pas sur une
   /// supposition, le serveur tranchera.
   final int? activeTrips;
+
+  /// Retire le filtre « Près de moi » : la puce « Près de moi · 50 km ✕ » ne
+  /// s'affiche en tête de rangée que quand il est actif et que cette action
+  /// est fournie.
+  final VoidCallback? onNearMeClear;
 
   /// Le filtre n'est bloqué que sur une certitude : zéro trajet actif connu.
   /// Même règle que dans la feuille de filtres, les deux doivent rester alignés.
@@ -161,6 +167,18 @@ class HomeFilterChipsRow extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
+          if (filters.nearMeActive &&
+              onNearMeClear != null &&
+              filters.nearMeRadiusKm != null) ...[
+            HomeSmallChip(
+              key: const Key('chip-near-me'),
+              label: l.homeNearMeChip(filters.nearMeRadiusKm!.round()),
+              isActive: true,
+              trailingIconAsset: 'x',
+              onTap: onNearMeClear!,
+            ),
+            const SizedBox(width: DonySpacing.xs),
+          ],
           // ── Date : commune aux deux modes, toujours en tête ─────────────────
           HomeSmallChip(
             key: const Key('chip-date'),
@@ -263,12 +281,16 @@ class HomeSmallChip extends StatelessWidget {
     required this.isActive,
     required this.onTap,
     this.iconAsset,
+    this.trailingIconAsset,
   });
 
   final String label;
   final bool isActive;
   final VoidCallback onTap;
   final String? iconAsset;
+
+  /// Icône à droite du libellé (la croix d'une puce qui se retire d'un tap).
+  final String? trailingIconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -312,6 +334,14 @@ class HomeSmallChip extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            if (trailingIconAsset != null) ...[
+              const SizedBox(width: DonySpacing.xs),
+              DonyIcon(
+                trailingIconAsset!,
+                size: 14,
+                color: isActive ? Colors.white : cs.onSurfaceVariant,
+              ),
+            ],
           ],
         ),
       ),

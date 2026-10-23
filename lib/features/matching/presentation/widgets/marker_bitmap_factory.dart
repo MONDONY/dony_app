@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:dony/core/design/design_system.dart';
@@ -90,6 +91,8 @@ class MarkerBitmapFactory {
     String prefix = '',
     String? currencyCode,
     String feeSuffix = '',
+    String? flagEmoji,
+    bool isOwn = false,
   }) async {
     final key = _PricePillKey(
       priceCents: (pricePerKg * 100).round(),
@@ -100,6 +103,8 @@ class MarkerBitmapFactory {
       currencyCode: currencyCode ?? 'EUR', // i18n-ignore — code devise ISO
       gridLabel: gridLabel,
       feeSuffix: feeSuffix,
+      flagEmoji: flagEmoji ?? '',
+      isOwn: isOwn,
     );
     final cached = _pillCache[key];
     if (cached != null) {
@@ -114,6 +119,8 @@ class MarkerBitmapFactory {
       prefix: prefix,
       currencyCode: currencyCode,
       feeSuffix: feeSuffix,
+      flagEmoji: flagEmoji,
+      isOwn: isOwn,
     );
     _pillCache[key] = bitmap;
     return bitmap;
@@ -400,21 +407,46 @@ class MarkerBitmapFactory {
     String prefix = '',
     String? currencyCode,
     String feeSuffix = '',
+    String? flagEmoji,
+    bool isOwn = false,
   }) async {
-    final palette = _pillPalette(brightness);
+    final basePalette = _pillPalette(brightness);
+    // Trajet sélectionné : pastille bleu nuit, plus grande. Son propre
+    // trajet : pastille bleue. Sinon pastille blanche (thème).
+    final palette = isSelected
+        ? (
+            fill: DonyColors.ink900,
+            text: Colors.white,
+            border: DonyColors.ink900,
+            ghostFill: basePalette.ghostFill,
+            ghostStroke: basePalette.ghostStroke,
+          )
+        : isOwn
+        ? (
+            fill: DonyColors.primary,
+            text: Colors.white,
+            border: DonyColors.primary,
+            ghostFill: basePalette.ghostFill,
+            ghostStroke: basePalette.ghostStroke,
+          )
+        : basePalette;
     final label = pricePerKg <= 0
         ? gridLabel
         : formatPriceIn(pricePerKg, currencyCode);
 
-    const fontSize = 12.0;
+    final fontSize = isSelected ? 13.5 : 12.0;
     const paddingH = 6.0;
-    const paddingV = 4.0;
+    final paddingV = isSelected ? 5.0 : 4.0;
     final textColor = palette.text;
 
     const dotR = 3.0;
     const halo1R = 4.5;
     const halo2R = 5.5;
-    const dotSectionW = halo2R * 2;
+    // Drapeau du pays d'arrivée dans un rond ; sans code pays, le point
+    // d'urgence historique reste affiché.
+    final hasFlag = flagEmoji != null && flagEmoji.isNotEmpty;
+    final flagR = isSelected ? 9.0 : 7.5;
+    final dotSectionW = hasFlag ? flagR * 2 : halo2R * 2;
     const dotGap = 4.0;
 
     final tp = TextPainter(
@@ -439,7 +471,7 @@ class MarkerBitmapFactory {
     )..layout();
 
     final pillW = paddingH + dotSectionW + dotGap + tp.width + paddingH;
-    final pillH = tp.height + paddingV * 2;
+    final pillH = math.max(tp.height + paddingV * 2, flagR * 2 + 6);
 
     const shadowSpread = 4.0;
     const shadowOffY = 2.0;
@@ -480,20 +512,6 @@ class MarkerBitmapFactory {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
 
-    // Selected ring
-    if (isSelected) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(offsetX - 2.5, offsetY - 2.5, pillW + 5, pillH + 5),
-          Radius.circular((pillH + 5) / 2),
-        ),
-        Paint()
-          ..color = _selectionRing(brightness)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.5,
-      );
-    }
-
     // Pill background
     canvas.drawRRect(
       pillRect,
@@ -527,28 +545,61 @@ class MarkerBitmapFactory {
         ..style = PaintingStyle.fill,
     );
 
-    // Urgency dot + halos
-    const dotCx = offsetX + paddingH + halo2R;
+    final dotCx = offsetX + paddingH + (hasFlag ? flagR : halo2R);
     final dotCy = offsetY + pillH / 2;
     final dotCenter = Offset(dotCx, dotCy);
-    canvas.drawCircle(
-      dotCenter,
-      halo2R,
-      Paint()..color = dotColor.withValues(alpha: 0.15),
-    );
-    canvas.drawCircle(
-      dotCenter,
-      halo1R,
-      Paint()..color = dotColor.withValues(alpha: 0.35),
-    );
-    canvas.drawCircle(dotCenter, dotR, Paint()..color = dotColor);
+    if (hasFlag) {
+      // Drapeau d'arrivée dans un rond, cerclé d'un filet fin.
+      final flagTp = TextPainter(
+        text: TextSpan(
+          text: flagEmoji,
+          style: TextStyle(fontSize: flagR * 2 - 2, color: Colors.black),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      canvas
+        ..save()
+        ..clipPath(
+          Path()..addOval(Rect.fromCircle(center: dotCenter, radius: flagR)),
+        );
+      flagTp.paint(
+        canvas,
+        Offset(
+          dotCenter.dx - flagTp.width / 2,
+          dotCenter.dy - flagTp.height / 2,
+        ),
+      );
+      canvas.restore();
+      canvas.drawCircle(
+        dotCenter,
+        flagR,
+        Paint()
+          ..color = const Color(0x14000000)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+    } else {
+      // Urgency dot + halos (pays d'arrivée inconnu).
+      canvas
+        ..drawCircle(
+          dotCenter,
+          halo2R,
+          Paint()..color = dotColor.withValues(alpha: 0.15),
+        )
+        ..drawCircle(
+          dotCenter,
+          halo1R,
+          Paint()..color = dotColor.withValues(alpha: 0.35),
+        )
+        ..drawCircle(dotCenter, dotR, Paint()..color = dotColor);
+    }
 
     // Price text
     tp.paint(
       canvas,
-      const Offset(
+      Offset(
         offsetX + paddingH + dotSectionW + dotGap,
-        offsetY + paddingV,
+        offsetY + (pillH - tp.height) / 2,
       ),
     );
 
@@ -572,24 +623,34 @@ class MarkerBitmapFactory {
     const size = _clusterSize;
     const center = Offset(size / 2, size / 2);
 
-    final halo = Paint()
-      ..color = DonyColors.primary.withValues(alpha: 0.20)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, size / 2, halo);
-
-    final fill = Paint()
-      ..color = DonyColors.primary
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, size / 2 - 8, fill);
+    // Rond blanc cerclé de bleu, chiffre bleu, ombre douce.
+    const ringR = size / 2 - 8;
+    canvas
+      ..drawCircle(
+        center.translate(0, 1.5),
+        ringR + 1,
+        Paint()
+          ..color = const Color(0x40000000)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      )
+      ..drawCircle(center, ringR, Paint()..color = Colors.white)
+      ..drawCircle(
+        center,
+        ringR - 1.5,
+        Paint()
+          ..color = DonyColors.primary
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3,
+      );
 
     final label = count > 99 ? '99+' : '$count';
     final tp = TextPainter(
       text: TextSpan(
         text: label,
         style: TextStyle(
-          color: Colors.white,
-          fontSize: count > 99 ? 16 : 20,
-          fontWeight: FontWeight.w800,
+          color: DonyColors.primary,
+          fontSize: count > 99 ? 14 : 18,
+          fontWeight: FontWeight.w700,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -692,6 +753,8 @@ class _PricePillKey {
     required this.currencyCode,
     required this.gridLabel,
     required this.feeSuffix,
+    required this.flagEmoji,
+    required this.isOwn,
   });
 
   final int priceCents;
@@ -708,6 +771,12 @@ class _PricePillKey {
   /// Mention « + frais de service » de la pastille, vide sans grille.
   final String feeSuffix;
 
+  /// Drapeau emoji du pays d'arrivée (vide : point d'urgence).
+  final String flagEmoji;
+
+  /// Pastille de son propre trajet (bleue).
+  final bool isOwn;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -719,7 +788,9 @@ class _PricePillKey {
           prefix == other.prefix &&
           currencyCode == other.currencyCode &&
           gridLabel == other.gridLabel &&
-          feeSuffix == other.feeSuffix;
+          feeSuffix == other.feeSuffix &&
+          flagEmoji == other.flagEmoji &&
+          isOwn == other.isOwn;
 
   @override
   int get hashCode => Object.hash(
@@ -731,6 +802,8 @@ class _PricePillKey {
     currencyCode,
     gridLabel,
     feeSuffix,
+    flagEmoji,
+    isOwn,
   );
 }
 

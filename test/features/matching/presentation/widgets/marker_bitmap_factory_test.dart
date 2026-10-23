@@ -331,4 +331,77 @@ void main() {
       },
     );
   });
+
+  group('MarkerBitmapFactory.pricePill : drapeau, sélection, son trajet', () {
+    test('le drapeau d\'arrivée remplace le point d\'urgence', () async {
+      final sansDrapeau = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12,
+        gridLabel: 'Par article',
+      );
+      final avecDrapeau = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12,
+        gridLabel: 'Par article',
+        flagEmoji: '🇲🇱',
+      );
+      final autreDrapeau = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12,
+        gridLabel: 'Par article',
+        flagEmoji: '🇨🇮',
+      );
+      final memeDrapeau = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12,
+        gridLabel: 'Par article',
+        flagEmoji: '🇲🇱',
+      );
+      expect(identical(sansDrapeau, avecDrapeau), isFalse);
+      expect(identical(avecDrapeau, autreDrapeau), isFalse);
+      expect(identical(avecDrapeau, memeDrapeau), isTrue);
+    });
+
+    test(
+      'trajet sélectionné et son propre trajet : pastilles distinctes',
+      () async {
+        final normal = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 12,
+          gridLabel: 'Par article',
+          flagEmoji: '🇲🇱',
+        );
+        final selectionne = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 12,
+          gridLabel: 'Par article',
+          flagEmoji: '🇲🇱',
+          isSelected: true,
+        );
+        final sien = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 12,
+          gridLabel: 'Par article',
+          flagEmoji: '🇲🇱',
+          isOwn: true,
+        );
+        final sienSelectionne = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 12,
+          gridLabel: 'Par article',
+          flagEmoji: '🇲🇱',
+          isOwn: true,
+          isSelected: true,
+        );
+        expect(identical(normal, selectionne), isFalse);
+        expect(identical(normal, sien), isFalse);
+        expect(identical(selectionne, sien), isFalse);
+        // La sélection l'emporte : bleu nuit, même pour son propre trajet.
+        expect(sienSelectionne, isA<BitmapDescriptor>());
+      },
+    );
+
+    test('prix « Grille » sélectionné avec drapeau', () async {
+      final desc = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 0,
+        gridLabel: 'Par article',
+        flagEmoji: '🇸🇳',
+        isSelected: true,
+        brightness: Brightness.dark,
+      );
+      expect(desc, isA<BitmapDescriptor>());
+    });
+  });
 }

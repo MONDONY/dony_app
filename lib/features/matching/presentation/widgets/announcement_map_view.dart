@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:dony/core/currency/country_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -62,6 +63,12 @@ class AnnouncementMapView extends StatefulWidget {
     this.onClusterTapped,
     this.onNearMeToggle,
     this.isLocating = false,
+    this.onMapTapped,
+    this.currentUserId,
+    this.previewCenter,
+    this.previewRadiusKm,
+    this.fitAllSignal = 0,
+    this.onZoneEmptyChanged,
   });
 
   final List<AnnouncementModel> announcements;
@@ -96,6 +103,24 @@ class AnnouncementMapView extends StatefulWidget {
 
   /// True while the parent acquires the position after a FAB tap (FAB spinner).
   final bool isLocating;
+
+  /// Tap sur une zone vide de la carte : le parent désélectionne le trajet.
+  final VoidCallback? onMapTapped;
+
+  /// Compte connecté : ses propres trajets ont une pastille bleue.
+  final String? currentUserId;
+
+  /// Cercle d'aperçu du rayon, tracé pendant le réglage de « Près de moi »
+  /// avant que le filtre soit actif (la feuille de rayon est ouverte).
+  final LatLng? previewCenter;
+  final double? previewRadiusKm;
+
+  /// Change quand le parent demande de recadrer la carte sur tous les trajets.
+  final int fitAllSignal;
+
+  /// Signale que la zone visible ne contient aucun des trajets chargés, ou
+  /// qu'elle en contient de nouveau.
+  final ValueChanged<bool>? onZoneEmptyChanged;
 
   @override
   State<AnnouncementMapView> createState() => _AnnouncementMapViewState();
@@ -317,8 +342,21 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
   void didUpdateWidget(covariant AnnouncementMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.announcements != widget.announcements ||
-        oldWidget.selectedAnnouncementId != widget.selectedAnnouncementId) {
+        oldWidget.selectedAnnouncementId != widget.selectedAnnouncementId ||
+        oldWidget.currentUserId != widget.currentUserId) {
       _rebuildMarkers();
+    }
+    if (oldWidget.fitAllSignal != widget.fitAllSignal) {
+      unawaited(_fitInitialBounds());
+    }
+    // Aperçu du rayon : la carte se cadre sur le cercle pendant le réglage.
+    if (widget.previewCenter != null &&
+        widget.previewRadiusKm != null &&
+        (oldWidget.previewCenter != widget.previewCenter ||
+            oldWidget.previewRadiusKm != widget.previewRadiusKm)) {
+      unawaited(
+        _fitNearMeBounds(widget.previewCenter!, widget.previewRadiusKm!),
+      );
     }
     // Auto-fit when "Près de moi" turns on or its radius/position changes
     // (e.g. user toggled it from the filter sheet).
@@ -427,6 +465,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
     buf
       ..write('|sel=')
       ..write(widget.selectedAnnouncementId)
+      ..write('|u=')
+      ..write(widget.currentUserId)
       ..write('|b=')
       ..write(_brightness.index)
       ..write('|l=')
@@ -543,15 +583,20 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
       brightness: _brightness,
     );
     final isSelected = item.announcement.id == widget.selectedAnnouncementId;
+    final currentUserId = widget.currentUserId;
+    final isOwn =
+        currentUserId != null && item.announcement.travelerId == currentUserId;
     final icon = await MarkerBitmapFactory.pricePill(
       // Idem : absent → sentinelle `<= 0`, déjà rendue comme « Grille ».
       pricePerKg: item.announcement.searchCardPricePerKg ?? 0,
       dotColor: urgencyColor,
       isSelected: isSelected,
       brightness: _brightness,
-      prefix: '✈️',
       currencyCode: item.announcement.currency,
       gridLabel: context.l10n.listingPriceGridShort,
+      // Drapeau du pays d'arrivée à la place du point d'urgence.
+      flagEmoji: countryFlagEmoji(item.announcement.arrivalCountryCode),
+      isOwn: isOwn,
     );
     return Marker(
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),
@@ -570,13 +615,10 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
     return icon;
   }
 
+  /// Un tap sélectionne le trajet : la carte-résumé de l'accueil s'affiche
+  /// au-dessus du bouton « Liste » et ouvre la fiche au tap.
   void _onMarkerTapped(AnnouncementModel a) {
     widget.onAnnouncementSelected?.call(a.id);
-    final authState = context.read<AuthBloc>().state;
-    final currentUserId = authState.currentUserId;
-    final isOwn = currentUserId != null && a.travelerId == currentUserId;
-    if (isOwn) return;
-    showTravelerAnnouncementSheet(context, announcement: a, fromMap: true);
   }
 
   void _onClusterTapped(MarkerCluster<_AnnouncementPoint> cluster) {
@@ -645,7 +687,11 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
             _currentZoom = position.zoom;
             _lastCamera = position;
           },
-          onCameraIdle: () => _rebuildMarkers(),
+          onCameraIdle: () {
+            unawaited(_rebuildMarkers());
+            unawaited(_reportZoneEmpty());
+          },
+          onTap: (_) => widget.onMapTapped?.call(),
           markers: {..._markers, ...widget.extraMarkers},
           circles: _radiusCircle(),
           myLocationEnabled: _locationGranted,
@@ -754,6 +800,21 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
   }
 
   Set<Circle> _radiusCircle() {
+    final previewCenter = widget.previewCenter;
+    final previewRadiusKm = widget.previewRadiusKm;
+    if (previewCenter != null && previewRadiusKm != null) {
+      final primary = Theme.of(context).colorScheme.primary;
+      return {
+        Circle(
+          circleId: const CircleId('near-me-radius'),
+          center: previewCenter,
+          radius: previewRadiusKm * 1000,
+          strokeColor: primary,
+          strokeWidth: 2,
+          fillColor: primary.withValues(alpha: 0.10),
+        ),
+      };
+    }
     if (!widget.isNearMeActive ||
         widget.userPosition == null ||
         widget.activeRadiusKm == null) {
@@ -792,6 +853,37 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
       ),
     );
     await controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 60.0));
+  }
+
+  bool _lastZoneEmpty = false;
+
+  /// La zone visible ne contient aucun trajet chargé ? Sans trajet du tout,
+  /// ou carte pas encore créée, rien à signaler.
+  Future<void> _reportZoneEmpty() async {
+    final callback = widget.onZoneEmptyChanged;
+    final controller = _mapController;
+    if (callback == null || controller == null) return;
+    final points = _pickupPoints();
+    var empty = false;
+    if (points.isNotEmpty) {
+      final region = await controller.getVisibleRegion();
+      empty = !points.any((p) => _inBounds(region, p.location));
+    }
+    if (!mounted || empty == _lastZoneEmpty) return;
+    _lastZoneEmpty = empty;
+    callback(empty);
+  }
+
+  bool _inBounds(LatLngBounds b, LatLng p) {
+    final inLat =
+        p.latitude >= b.southwest.latitude &&
+        p.latitude <= b.northeast.latitude;
+    final west = b.southwest.longitude;
+    final east = b.northeast.longitude;
+    final inLng = west <= east
+        ? p.longitude >= west && p.longitude <= east
+        : p.longitude >= west || p.longitude <= east; // franchit l'antiméridien
+    return inLat && inLng;
   }
 
   Future<void> _fitInitialBounds() async {

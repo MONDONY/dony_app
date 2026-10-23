@@ -43,7 +43,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
-import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
+import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -465,13 +465,21 @@ Widget _buildHome({
 /// Titre de l'en-tête de liste (« 4 voyageurs pour Lyon → Bamako »). Il porte
 /// une clé stable : les tests ne s'accrochent pas à un texte en capitales qui
 /// change avec le mode, le corridor et le nombre.
-String titreListe(WidgetTester tester) =>
-    tester.widget<Text>(find.byKey(const Key('results-header-title'))).data!;
+String titreListe(WidgetTester tester) => tester
+    .widget<Text>(
+      // La liste reste construite hors affichage tant qu'on est sur la carte :
+      // son en-tête se lit sans l'ouvrir.
+      find.byKey(const Key('results-header-title'), skipOffstage: false),
+    )
+    .data!;
 
 /// Sous-titre de l'en-tête de liste, `null` quand il n'est pas affiché (une
 /// phrase qui répète le titre est retirée, voir `homeListSubtitle`).
 String? sousTitreListe(WidgetTester tester) {
-  final finder = find.byKey(const Key('results-header-subtitle'));
+  final finder = find.byKey(
+    const Key('results-header-subtitle'),
+    skipOffstage: false,
+  );
   return finder.evaluate().isEmpty ? null : tester.widget<Text>(finder).data;
 }
 
@@ -543,12 +551,26 @@ Future<void> pumpHome(
   await tester.pump(const Duration(milliseconds: 1000));
 }
 
-/// FLUTTER-CD : la feuille de résultats s'ouvre à mi-hauteur. La replier par
-/// son indication « voir la carte » rend l'état replié (peek) des tests qui
-/// partent de là.
+/// L'écran s'ouvre sur la carte plein écran, sans panneau de résultats : il
+/// n'y a plus rien à replier. Le helper laisse l'écran se poser, pour les tests
+/// qui partent de la vue carte.
 Future<void> replierFeuille(WidgetTester tester) async {
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Tirer vers le bas pour voir la carte'));
+}
+
+/// Touche la pastille « Liste » : la liste prend tout l'écran.
+Future<void> ouvrirListe(WidgetTester tester) async {
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const Key('home-list-pill')));
+  await tester.pumpAndSettle();
+}
+
+/// Touche le bouton de localisation, puis « Activer le filtre » dans la
+/// feuille de rayon : « Près de moi » est actif au rayon proposé.
+Future<void> activerPresDeMoi(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('near-me-fab')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Activer le filtre'));
   await tester.pumpAndSettle();
 }
 
@@ -571,7 +593,14 @@ Future<void> ouvrirSheetEtSaisirCorridor(
   String depart,
   String arrivee,
 ) async {
-  await tester.tap(find.byKey(const Key('corridor-bar')));
+  // Sur la carte la barre s'appelle `corridor-bar`, dans la liste plein écran
+  // `corridor-bar-sheet`.
+  final surCarte = find.byKey(const Key('corridor-bar'));
+  await tester.tap(
+    surCarte.evaluate().isNotEmpty
+        ? surCarte
+        : find.byKey(const Key('corridor-bar-sheet')),
+  );
   await tester.pumpAndSettle();
 
   await _choisirVille(tester, const Key('composer-departure-city'), depart);
@@ -1054,6 +1083,7 @@ void main() {
         ),
       );
       await tester.pump(const Duration(milliseconds: 1000));
+      await ouvrirListe(tester);
 
       expect(find.byType(TravelerCard), findsAtLeastNWidgets(1));
     });
@@ -1079,7 +1109,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 1000));
 
-      await tester.tap(find.textContaining('Tirer pour voir'));
+      await ouvrirListe(tester);
       await tester.pumpAndSettle();
 
       expect(find.byType(TravelerCard), findsNWidgets(2));
@@ -1106,8 +1136,8 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 1000));
 
+      await ouvrirListe(tester);
       expect(titreListe(tester), startsWith('22 '));
-      expect(find.textContaining('Tirer pour voir les 22'), findsOneWidget);
     });
 
     testWidgets('shows empty message when search loaded with no results', (
@@ -1117,6 +1147,7 @@ void main() {
         _buildHome(announcementState: AnnouncementSearchLoaded(const [])),
       );
       await tester.pump(const Duration(milliseconds: 1000));
+      await ouvrirListe(tester);
 
       expect(find.text('Aucun voyageur sur ce trajet'), findsOneWidget);
     });
@@ -1144,6 +1175,7 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 1000));
+        await ouvrirListe(tester);
 
         expect(find.text('Aucun voyageur sur ce trajet'), findsNothing);
         expect(find.byKey(const Key('similar-trips-section')), findsOneWidget);
@@ -1180,6 +1212,7 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 1000));
+        await ouvrirListe(tester);
         expect(
           find.byKey(const Key('similar-trips-clear-filters')),
           findsNothing,
@@ -1209,6 +1242,7 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 1000));
+        await ouvrirListe(tester);
         await tester.tap(find.text('🔥 Urgent'));
         await tester.pumpAndSettle();
 
@@ -1233,6 +1267,7 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 1000));
+        await ouvrirListe(tester);
 
         final card = tester.widget<TravelerCard>(find.byType(TravelerCard));
         expect(card.unmetReasons, ["Ne correspond pas à l'un de vos critères"]);
@@ -1249,6 +1284,7 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 1000));
+        await ouvrirListe(tester);
 
         expect(find.byKey(const Key('similar-trips-section')), findsOneWidget);
         expect(
@@ -1283,6 +1319,7 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 1000));
+        await ouvrirListe(tester);
 
         // Identifiants des trajets dont la feuille « Détail du trajet » s'est
         // ouverte (recordTripView, appelé par showTravelerAnnouncementSheet).
@@ -1322,6 +1359,7 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 1000));
+        await ouvrirListe(tester);
         expect(find.byKey(const Key('similar-trips-section')), findsOneWidget);
 
         await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
@@ -1356,6 +1394,7 @@ void main() {
         _buildHome(announcementState: AnnouncementSearchLoaded(const [])),
       );
       await tester.pump(const Duration(milliseconds: 1000));
+      await ouvrirListe(tester);
 
       expect(find.text('No travelers on this route'), findsOneWidget);
       expect(find.text('0 travelers · All routes'), findsOneWidget);
@@ -1363,39 +1402,28 @@ void main() {
     });
 
     testWidgets(
-      'scarabée : à côté de « Trier » quand la liste n\'est pas à 100 %, '
-      'absent de l\'en-tête plein écran, jamais sur la carte',
+      'scarabée : posé à gauche sur la carte, à la hauteur de la pastille '
+      '« Liste » ; absent de la liste plein écran',
       (tester) async {
         await pumpHome(tester);
         await tester.pump(const Duration(milliseconds: 1000));
 
-        // Replié : un seul scarabée, dans la ligne des résultats.
-        expect(
-          find.byKey(const Key('feedback-sheet-collapsed')),
-          findsOneWidget,
-        );
-        expect(find.byKey(const Key('feedback-sheet-expanded')), findsNothing);
+        // Carte : un seul scarabée, à gauche, sur la ligne de la pastille.
+        expect(find.byKey(const Key('feedback-map')), findsOneWidget);
         expect(find.byType(DonyFeedbackButton), findsOneWidget);
-        final bug = tester.getCenter(
-          find.byKey(const Key('feedback-sheet-collapsed')),
+        final bug = tester.getCenter(find.byKey(const Key('feedback-map')));
+        final pastille = tester.getCenter(
+          find.byKey(const Key('home-list-pill')),
         );
-        // « Trier » n'existe qu'avec des résultats : on se cale sur le titre
-        // de la ligne, toujours présent.
-        final header = tester.getCenter(
-          find.byKey(const Key('results-header-title')),
-        );
-        expect((bug.dy - header.dy).abs(), lessThan(kDonyMinTapTarget));
-        expect(bug.dx, greaterThan(header.dx));
+        expect((bug.dy - pastille.dy).abs(), lessThan(kDonyMinTapTarget));
+        expect(bug.dx, lessThan(pastille.dx));
 
         // Plein écran : plus de scarabée. Favoris, recherche, « + » et cloche
         // prennent sa place dans l'en-tête de la liste, et la rangée de la
         // carte n'existe plus (pas de doublon).
-        await replierFeuille(tester);
-        await tester.tap(find.textContaining('Tirer pour voir'));
-        await tester.pumpAndSettle();
+        await ouvrirListe(tester);
         expect(find.byType(DonyFeedbackButton), findsNothing);
-        expect(find.byKey(const Key('feedback-sheet-expanded')), findsNothing);
-        expect(find.byKey(const Key('feedback-sheet-collapsed')), findsNothing);
+        expect(find.byKey(const Key('feedback-map')), findsNothing);
         expect(find.byKey(const Key('corridor-bar-sheet')), findsOneWidget);
         expect(find.byKey(const Key('corridor-bar')), findsNothing);
         expect(find.byKey(const Key('favorites-button')), findsOneWidget);
@@ -1414,7 +1442,7 @@ void main() {
       },
     );
 
-    testWidgets('shows DraggableScrollableSheet by default (regression)', (
+    testWidgets('vue carte par défaut : pastille « Liste », aucune liste', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -1422,15 +1450,16 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.byType(DraggableScrollableSheet), findsOneWidget);
-      expect(find.byType(NearMeCarousel), findsNothing);
-      // Indication de drag (peek) avec le compteur d'éléments.
-      expect(find.textContaining('Tirer pour voir'), findsOneWidget);
+      expect(find.byKey(const Key('home-list-pill')), findsOneWidget);
+      // La liste n'est pas construite tant qu'on reste sur la carte.
+      expect(find.byKey(const Key('home-sheet')), findsNothing);
+      expect(find.byType(TravelerCard), findsNothing);
+      expect(find.text('Liste'), findsOneWidget);
     });
 
     testWidgets(
-      'le compteur de l\'indication peek suit le mode : en Colis il compte les '
-      'demandes, pas les trajets',
+      'le titre de la liste suit le mode : en Colis il compte les demandes, '
+      'pas les trajets',
       (tester) async {
         // Deux jeux de tailles différentes, pour qu'un compteur pris du mauvais
         // côté soit visible : 1 trajet contre 3 demandes.
@@ -1440,24 +1469,13 @@ void main() {
         );
 
         await pumpHome(tester, tripResults: [_makeAnn()]);
-        await replierFeuille(tester);
-
-        expect(
-          find.textContaining('Tirer pour voir le voyageur'),
-          findsOneWidget,
-        );
+        await ouvrirListe(tester);
+        expect(titreListe(tester), startsWith('1 '));
 
         await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
 
-        expect(
-          find.textContaining('Tirer pour voir les 3 colis'),
-          findsOneWidget,
-        );
-        expect(
-          find.textContaining('Tirer pour voir le voyageur'),
-          findsNothing,
-        );
+        expect(titreListe(tester), startsWith('3 '));
       },
     );
 
@@ -1477,14 +1495,11 @@ void main() {
         );
 
         await pumpHome(tester, tripResults: [_makeAnn()]);
-        await replierFeuille(tester);
+        await ouvrirListe(tester);
         await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
 
-        expect(
-          find.textContaining('Tirer pour voir les 3 colis'),
-          findsOneWidget,
-        );
+        expect(titreListe(tester), startsWith('3 '));
       },
     );
 
@@ -1513,23 +1528,17 @@ void main() {
         });
 
         await pumpHome(tester, tripResults: [_makeAnn()]);
-        await replierFeuille(tester);
+        await ouvrirListe(tester);
         await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
 
-        expect(
-          find.textContaining('Tirer pour voir les 45 colis'),
-          findsOneWidget,
-        );
+        expect(titreListe(tester), startsWith('45 '));
 
         // Le chargement de la page suivante amène 40 lignes, le total reste.
         flux.add(apres);
         await tester.pumpAndSettle();
 
-        expect(
-          find.textContaining('Tirer pour voir les 45 colis'),
-          findsOneWidget,
-        );
+        expect(titreListe(tester), startsWith('45 '));
         expect(find.textContaining('40 colis'), findsNothing);
       },
     );
@@ -1545,9 +1554,7 @@ void main() {
       await pumpHome(tester, tripResults: [_makeAnn()]);
       await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
-      await replierFeuille(tester);
-      await tester.tap(find.textContaining('Tirer pour voir'));
-      await tester.pumpAndSettle();
+      await ouvrirListe(tester);
 
       final cards = tester
           .widgetList<PackageRequestListCard>(
@@ -1562,7 +1569,7 @@ void main() {
       expect(cards.singleWhere((c) => c.item.id == 'r1').isOwnRequest, isFalse);
     });
 
-    testWidgets('tap sur l\'indication peek agrandit le sheet en plein écran', (
+    testWidgets('« Liste » ouvre la liste plein écran, « Carte » revient', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -1570,19 +1577,28 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 600));
 
-      await tester.tap(find.textContaining('Tirer pour voir'));
-      await tester.pumpAndSettle();
+      await ouvrirListe(tester);
 
       // En plein écran : l'en-tête de la liste porte la recherche, et la
-      // phrase « Tirer vers le bas » a laissé la place au bouton « Carte ».
+      // pastille « Carte » ramène à la carte au même endroit que « Liste ».
       expect(find.byKey(const Key('corridor-bar-sheet')), findsOneWidget);
-      expect(find.textContaining('Tirer vers le bas'), findsNothing);
-      expect(find.text('Carte'), findsOneWidget);
+      expect(find.byKey(const Key('home-map-pill')), findsOneWidget);
+      final carte = tester.getCenter(find.byKey(const Key('home-map-pill')));
+
+      await tester.tap(find.byKey(const Key('home-map-pill')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('home-sheet')), findsNothing);
+      final liste = tester.getCenter(find.byKey(const Key('home-list-pill')));
+      expect((liste.dy - carte.dy).abs(), lessThan(1));
+      expect((liste.dx - carte.dx).abs(), lessThan(1));
     });
 
-    // Sentry FLUTTER-4X : en paysage (≈360 dp de haut), 30 % de hauteur ne
-    // suffisaient pas au contenu replié de la feuille (débordement de 2 px).
-    testWidgets('paysage : la feuille repliée ne déborde pas', (tester) async {
+    // Sentry FLUTTER-4X : en paysage (≈360 dp de haut) la feuille ne doit
+    // jamais déborder, ni sur la carte ni en liste plein écran.
+    testWidgets('paysage : la carte et la liste ne débordent pas', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(820, 360);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -1594,11 +1610,15 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(tester.takeException(), isNull);
-      expect(find.textContaining('Tirer pour voir'), findsOneWidget);
+      expect(find.byKey(const Key('home-list-pill')), findsOneWidget);
+
+      await ouvrirListe(tester);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets(
-      'shows NearMeCarousel and hides sheet when near-me FAB activated',
+      'bouton de localisation : la feuille de rayon s\'ouvre avant d\'activer '
+      'le filtre',
       (tester) async {
         GeolocatorPlatform.instance = _MockGeolocatorPlatform();
 
@@ -1610,12 +1630,26 @@ void main() {
         await tester.tap(find.byKey(const Key('near-me-fab')));
         await tester.pumpAndSettle();
 
-        expect(find.byType(NearMeCarousel), findsOneWidget);
-        expect(find.byType(DraggableScrollableSheet), findsNothing);
+        // Feuille « Près de moi » ouverte, filtre pas encore actif.
+        expect(find.text('Près de moi'), findsOneWidget);
+        expect(find.text('Activer le filtre'), findsOneWidget);
+        expect(find.byKey(const Key('near-me-radius-pill')), findsNothing);
+        expect(find.text('5 km'), findsOneWidget);
+        expect(find.text('200 km'), findsOneWidget);
+
+        await tester.tap(find.text('Activer le filtre'));
+        await tester.pumpAndSettle();
+
+        // Filtre actif : puce de rayon sous les filtres, plus de carrousel de
+        // trajets, la liste reste à un tap.
+        expect(find.byKey(const Key('near-me-radius-pill')), findsOneWidget);
+        expect(find.text('Rayon · 25 km'), findsOneWidget);
+        expect(find.byKey(const Key('home-list-pill')), findsOneWidget);
+        expect(find.byKey(const Key('chip-near-me')), findsOneWidget);
       },
     );
 
-    testWidgets('2e tap sur le FAB désactive le filtre Près de moi', (
+    testWidgets('fermer la feuille de rayon sans valider n\'active rien', (
       tester,
     ) async {
       GeolocatorPlatform.instance = _MockGeolocatorPlatform();
@@ -1625,17 +1659,71 @@ void main() {
       );
       await tester.pump();
 
-      // 1er tap : active → carousel.
       await tester.tap(find.byKey(const Key('near-me-fab')));
       await tester.pumpAndSettle();
-      expect(find.byType(NearMeCarousel), findsOneWidget);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
 
-      // 2e tap : le FAB doit rester tappable (au-dessus du carousel) et
-      // désactiver → retour à la liste + carte.
+      expect(find.byKey(const Key('near-me-radius-pill')), findsNothing);
+      expect(find.byKey(const Key('chip-near-me')), findsNothing);
+    });
+
+    testWidgets('2e tap sur le bouton désactive le filtre Près de moi', (
+      tester,
+    ) async {
+      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+      );
+      await tester.pump();
+
+      await activerPresDeMoi(tester);
+      expect(find.byKey(const Key('near-me-radius-pill')), findsOneWidget);
+
       await tester.tap(find.byKey(const Key('near-me-fab')));
       await tester.pumpAndSettle();
-      expect(find.byType(NearMeCarousel), findsNothing);
-      expect(find.byType(DraggableScrollableSheet), findsOneWidget);
+      expect(find.byKey(const Key('near-me-radius-pill')), findsNothing);
+      expect(find.byKey(const Key('home-list-pill')), findsOneWidget);
+    });
+
+    testWidgets('la croix de la puce Rayon désactive « Près de moi »', (
+      tester,
+    ) async {
+      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+      );
+      await tester.pump();
+
+      await activerPresDeMoi(tester);
+      await tester.tap(find.byKey(const Key('near-me-radius-clear')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('near-me-radius-pill')), findsNothing);
+      expect(find.byKey(const Key('chip-near-me')), findsNothing);
+    });
+
+    testWidgets('la puce Près de moi de la liste se retire d\'un tap', (
+      tester,
+    ) async {
+      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+      );
+      await tester.pump();
+
+      await activerPresDeMoi(tester);
+      await ouvrirListe(tester);
+
+      // La liste garde le filtre : puce « Près de moi · 25 km ✕ » en tête.
+      expect(find.text('Près de moi · 25 km'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('chip-near-me')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('chip-near-me')), findsNothing);
     });
 
     testWidgets('radius pill re-opens the slider without losing the filter', (
@@ -1648,24 +1736,20 @@ void main() {
       );
       await tester.pump();
 
-      // Activate near-me.
-      await tester.tap(find.byKey(const Key('near-me-fab')));
-      await tester.pumpAndSettle();
-      expect(find.byType(NearMeCarousel), findsOneWidget);
+      await activerPresDeMoi(tester);
 
-      // The radius pill is shown while active.
+      // La puce de rayon est affichée tant que le filtre est actif.
       expect(find.byKey(const Key('near-me-radius-pill')), findsOneWidget);
 
-      // Tapping it re-opens the slider with the in-place "Appliquer" CTA.
-      await tester.tap(find.byKey(const Key('near-me-radius-pill')));
+      // Un tap la rouvre avec le CTA « Appliquer » sur place.
+      await tester.tap(find.text('Rayon · 25 km'));
       await tester.pumpAndSettle();
       expect(find.text('Appliquer'), findsOneWidget);
 
       await tester.tap(find.text('Appliquer'));
       await tester.pumpAndSettle();
 
-      // Filter is still on — the carousel never went away.
-      expect(find.byType(NearMeCarousel), findsOneWidget);
+      // Le filtre est toujours actif.
       expect(find.byKey(const Key('near-me-radius-pill')), findsOneWidget);
     });
 
@@ -1707,8 +1791,7 @@ void main() {
         await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byKey(const Key('near-me-fab')));
-        await tester.pumpAndSettle();
+        await activerPresDeMoi(tester);
 
         verify(
           () => prBloc.add(
@@ -1976,7 +2059,7 @@ void main() {
   group('première arrivée sur l\'onglet : liste à 100 %', () {
     testWidgets(
       'la feuille se pose à 100 % : favoris, recherche, « + » dans son '
-      'en-tête, ni scarabée ni phrase « Tirer vers le bas »',
+      'en-tête, sans scarabée',
       (tester) async {
         HomeSheetSession.reset();
         await pumpHome(tester, tripResults: [_makeAnn()]);
@@ -1987,7 +2070,6 @@ void main() {
         expect(find.byKey(const Key('favorites-button')), findsOneWidget);
         expect(find.byKey(const Key('home-publish-button')), findsOneWidget);
         expect(find.byType(DonyFeedbackButton), findsNothing);
-        expect(find.textContaining('Tirer'), findsNothing);
         // La liste est visible dès l'arrivée : la feuille couvre l'écran.
         final sheet = tester.getRect(find.byKey(const Key('home-sheet')));
         expect(sheet.top, lessThan(1));
@@ -2014,7 +2096,7 @@ void main() {
     });
 
     testWidgets('une seule fois par session : le second écran s\'ouvre comme '
-        'avant, à mi-hauteur, avec la rangée sur la carte', (tester) async {
+        'avant, sur la carte, avec la rangée sur la carte', (tester) async {
       HomeSheetSession.reset();
       await pumpHome(tester, tripResults: [_makeAnn()]);
       await tester.pump(const Duration(milliseconds: 1000));
@@ -2055,6 +2137,7 @@ void main() {
       (tester) async {
         await pumpHome(tester, tripResults: [_makeAnn()]);
         await tester.pump(const Duration(milliseconds: 1000));
+        await ouvrirListe(tester);
 
         final carte = find.byType(TravelerCard).first;
         await tester.ensureVisible(carte);
@@ -2072,10 +2155,9 @@ void main() {
     );
 
     testWidgets(
-      'carrousel Près de moi : un glissement trace le rang, un tap trace '
-      'home_card_opened source carousel',
+      'un tap sur un marqueur ne fait que sélectionner le trajet : la carte-'
+      'résumé s\'ouvre, et son tap trace home_card_opened source map',
       (tester) async {
-        GeolocatorPlatform.instance = _MockGeolocatorPlatform();
         await tester.pumpWidget(
           _buildHome(
             announcementState: AnnouncementSearchLoaded([
@@ -2084,49 +2166,74 @@ void main() {
             ]),
           ),
         );
-        await tester.pump();
-        await tester.tap(find.byKey(const Key('near-me-fab')));
-        await tester.pumpAndSettle();
-        expect(find.byType(NearMeCarousel), findsOneWidget);
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(find.byKey(const Key('map-trip-summary')), findsNothing);
 
-        // Aucun glissement avant le geste : l'ouverture ne trace rien.
+        tester
+            .widget<AnnouncementMapView>(find.byType(AnnouncementMapView))
+            .onAnnouncementSelected!('a2');
+        await tester.pumpAndSettle();
+
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeMapMarkerTapped,
+            properties: {'mode': 'trips', 'kind': 'trip'},
+          ),
+        ).called(1);
+        // Le marqueur n'ouvre aucune fiche à lui seul.
         verifyNever(
           () => analytics.logEvent(
-            AnalyticsEvents.homeCarouselSwiped,
+            AnalyticsEvents.homeCardOpened,
             properties: any(named: 'properties'),
           ),
         );
+        expect(find.byKey(const Key('map-trip-summary')), findsOneWidget);
 
-        await tester.drag(find.byType(PageView), const Offset(-500, 0));
-        await tester.pumpAndSettle();
-        verify(
-          () => analytics.logEvent(
-            AnalyticsEvents.homeCarouselSwiped,
-            properties: {'mode': 'trips', 'position': 1},
-          ),
-        ).called(1);
-
-        await tester.tap(find.byType(TravelerCard).last);
+        await tester.tap(find.byType(TravelerCard));
         await tester.pumpAndSettle();
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.homeCardOpened,
-            properties: {'source': 'carousel', 'mode': 'trips', 'kind': 'trip'},
+            properties: {'source': 'map', 'mode': 'trips', 'kind': 'trip'},
           ),
         ).called(1);
       },
     );
 
     testWidgets(
-      'la feuille trace son cran une fois posée : montée d\'ouverture auto, '
-      'puis repli par geste, jamais pendant le mouvement',
+      'la croix de la carte-résumé et le tap sur la carte la ferment',
       (tester) async {
         await tester.pumpWidget(
           _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
         );
         await tester.pump(const Duration(milliseconds: 600));
-        // Laisse la montée d'ouverture se poser, puis la temporisation de
-        // mesure s'écouler.
+        final map = tester.widget<AnnouncementMapView>(
+          find.byType(AnnouncementMapView),
+        );
+
+        map.onAnnouncementSelected!('a1');
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('map-summary-close')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('map-trip-summary')), findsNothing);
+
+        map.onAnnouncementSelected!('a1');
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('map-trip-summary')), findsOneWidget);
+        map.onMapTapped!();
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('map-trip-summary')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'la bascule trace son cran une fois posée : liste par geste, puis '
+      'retour sur la carte, jamais pendant le mouvement',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
         await tester.pumpAndSettle();
         await tester.pump(const Duration(seconds: 1));
 
@@ -2137,16 +2244,7 @@ void main() {
           ),
         ).captured.cast<Map<String, Object>>();
 
-        final ouverture = snaps();
-        expect(ouverture, hasLength(1));
-        expect(ouverture.single['size'], 'raised');
-        expect(ouverture.single['auto'], isTrue);
-        expect(ouverture.single.containsKey('from'), isFalse);
-        clearInteractions(analytics);
-
-        // Le geste de l'utilisateur : replier la feuille.
-        await tester.tap(find.textContaining('voir la carte'));
-        await tester.pump(const Duration(milliseconds: 100));
+        // Au repos sur la carte : rien à tracer.
         verifyNever(
           () => analytics.logEvent(
             AnalyticsEvents.homeSheetSnapped,
@@ -2154,14 +2252,34 @@ void main() {
           ),
         );
 
+        // « Liste » : rien pendant le mouvement.
+        await tester.tap(find.byKey(const Key('home-list-pill')));
+        await tester.pump(const Duration(milliseconds: 100));
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeSheetSnapped,
+            properties: any(named: 'properties'),
+          ),
+        );
         await tester.pumpAndSettle();
         await tester.pump(const Duration(seconds: 1));
 
-        final geste = snaps();
-        expect(geste, hasLength(1));
-        expect(geste.single['size'], 'peek');
-        expect(geste.single['from'], 'raised');
-        expect(geste.single['auto'], isFalse);
+        final liste = snaps();
+        expect(liste, hasLength(1));
+        expect(liste.single['size'], 'full');
+        expect(liste.single['auto'], isFalse);
+        expect(liste.single.containsKey('from'), isFalse);
+        clearInteractions(analytics);
+
+        // « Carte » : retour sur la carte.
+        await tester.tap(find.byKey(const Key('home-map-pill')));
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(seconds: 1));
+
+        final carte = snaps();
+        expect(carte, hasLength(1));
+        expect(carte.single['size'], 'map');
+        expect(carte.single['from'], 'full');
       },
     );
   });
@@ -2240,7 +2358,7 @@ void main() {
     ) async {
       await pumpHome(tester, tripResults: [_makeAnn()]);
 
-      await tester.tap(find.textContaining('Tirer pour voir'));
+      await ouvrirListe(tester);
       await tester.pumpAndSettle();
 
       expect(
@@ -2256,6 +2374,7 @@ void main() {
   group('modes de recherche', () {
     testWidgets('ouvre en mode Trajets', (tester) async {
       await pumpHome(tester);
+      await ouvrirListe(tester);
 
       expect(
         find.byKey(const Key('search_mode_segment_trips')),
@@ -2276,6 +2395,7 @@ void main() {
         );
 
         await pumpHome(tester, authState: const AuthGuestSessionReady());
+        await ouvrirListe(tester);
 
         expect(
           find.byKey(const Key('search_mode_segment_trips')),
@@ -2330,6 +2450,7 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester);
+      await ouvrirListe(tester);
 
       await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
@@ -2504,8 +2625,7 @@ void main() {
         expect(appels.last[#arrivalCity], 'Dakar');
 
         final avantNearMe = appels.length;
-        await tester.tap(find.byKey(const Key('near-me-fab')));
-        await tester.pumpAndSettle();
+        await activerPresDeMoi(tester);
 
         // « Près de moi » neutralise le corridor dans la vraie recherche : le
         // compteur doit annoncer ce que la bascule produira, donc compter sans
@@ -2788,6 +2908,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
+      await ouvrirListe(tester);
 
       expect(titreListe(tester), '2 colis compatibles');
       expect(titreListe(tester), isNot(contains('à transporter')));
@@ -2803,6 +2924,7 @@ void main() {
         matchingMyTrips: true,
       );
       await pumpHome(tester, activeTrips: 1);
+      await ouvrirListe(tester);
 
       await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
@@ -2841,6 +2963,7 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester, isTraveler: false);
+      await ouvrirListe(tester);
 
       await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
@@ -3005,6 +3128,7 @@ void main() {
       tester.view.physicalSize = const Size(1000, 2400);
       await tester.pump();
       await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+      await ouvrirListe(tester);
 
       final tile = find.byKey(const Key('alert-for-search'));
       expect(tile, findsOneWidget);
@@ -3050,6 +3174,7 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+      await ouvrirListe(tester);
       await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
 
       expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
@@ -3065,6 +3190,7 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+      await ouvrirListe(tester);
       await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
 
       expect(
@@ -3077,6 +3203,7 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+      await ouvrirListe(tester);
 
       // Fenêtre agrandie après coup pour garder la tuile de découverte
       // croisée dans le viewport (pumpHome fixe systématiquement 1000×2000,
@@ -3138,6 +3265,7 @@ void main() {
     ) async {
       await pumpHome(tester, tripResults: const [], otherModeCount: 1);
       await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+      await ouvrirListe(tester);
 
       expect(
         labelTuile(tester),
@@ -3149,8 +3277,9 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+      await ouvrirListe(tester);
 
-      await tester.tap(find.byKey(const Key('corridor-bar')));
+      await tester.tap(find.byKey(const Key('corridor-bar-sheet')));
       await tester.pumpAndSettle();
       await _choisirVille(tester, const Key('composer-departure-city'), 'Lyon');
       await tester.tap(find.text('Rechercher'));
@@ -3175,6 +3304,7 @@ void main() {
       await _choisirVille(tester, const Key('composer-arrival-city'), 'Bamako');
       await tester.tap(find.text('Rechercher'));
       await tester.pumpAndSettle();
+      await ouvrirListe(tester);
 
       expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
       expect(labelTuile(tester), '5 colis cherchent un voyageur vers Bamako');
@@ -3195,6 +3325,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Appliquer'));
         await tester.pumpAndSettle();
+        await ouvrirListe(tester);
 
         expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
         expect(labelTuile(tester), '5 colis cherchent un voyageur');
@@ -3231,6 +3362,7 @@ void main() {
       getIt.registerSingleton<AnnouncementRepository>(annRepo);
 
       await pumpHome(tester);
+      await ouvrirListe(tester);
 
       await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
@@ -3271,6 +3403,7 @@ void main() {
         await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
         await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+        await ouvrirListe(tester);
 
         expect(labelTuile(tester), '1 voyageur passe sur Lyon → Bamako');
       },
@@ -3284,12 +3417,11 @@ void main() {
       (tester) async {
         await pumpHome(tester, tripResults: const [], otherModeCount: 0);
         await ouvrirSheetEtSaisirCorridor(tester, 'Abidjan', 'Usangi');
-        expect(find.text('Aucun voyageur avec ces filtres'), findsOneWidget);
 
-        // Déplie la feuille en plein écran par l'indication de drag : la
-        // pastille « Carte » descend alors dans la feuille.
-        await replierFeuille(tester);
-        await tester.tap(find.textContaining('Tirer pour voir'));
+        // La liste plein écran : la pastille « Carte » prend la place de
+        // « Liste ».
+        await ouvrirListe(tester);
+        expect(find.text('Aucun voyageur avec ces filtres'), findsOneWidget);
         await tester.pump(const Duration(milliseconds: 400));
         await tester.pump(const Duration(milliseconds: 400));
 
@@ -3346,6 +3478,7 @@ void main() {
         getIt.registerSingleton<AnnouncementRepository>(annRepo);
 
         await pumpHome(tester);
+        await ouvrirListe(tester);
 
         // Mode Colis : autre mode (Trajets) à 0 via le mock ci-dessus →
         // aucune tuile de découverte croisée, donc rien ne masque le bouton.
@@ -4004,18 +4137,11 @@ void main() {
 
   // FLUTTER-CD : « 17 voyageurs disponibles » au-dessus d'une carte vide, la
   // feuille repliée tout en bas : un nouvel utilisateur croyait que rien ne
-  // chargeait. La feuille s'ouvre désormais à mi-hauteur, annonces visibles.
-  group('FLUTTER-CD : feuille de résultats ouverte à l\'ouverture', () {
-    double hauteurFeuille(WidgetTester tester) {
-      final ecran =
-          tester.view.physicalSize.height / tester.view.devicePixelRatio;
-      final haut = tester.getTopLeft(find.byKey(const Key('home-sheet'))).dy;
-      return (ecran - haut) / ecran;
-    }
-
-    testWidgets('la feuille monte à ≈ 60 % et montre les premières annonces', (
-      tester,
-    ) async {
+  // chargeait. La carte est désormais plein écran, la liste à un tap de
+  // pastille « Liste », et le bouton de localisation juste au-dessus d'elle.
+  group('carte plein écran et pastille « Liste »', () {
+    testWidgets('la carte est plein écran : aucune feuille, barre de recherche '
+        'visible, pastille « Liste » centrée en bas', (tester) async {
       await pumpHome(
         tester,
         tripResults: [
@@ -4025,49 +4151,45 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(hauteurFeuille(tester), closeTo(kHomeRaisedSheetSize, 0.01));
-      // Une annonce est à l'écran sans rien tirer.
-      final carte = tester.getRect(find.byType(TravelerCard).first);
-      expect(carte.top, lessThan(2000));
-      expect(carte.top, greaterThan(2000 * (1 - kHomeRaisedSheetSize)));
-      // L'indication propose la carte, plus la liste.
-      expect(find.text('Tirer vers le bas pour voir la carte'), findsOneWidget);
-      expect(find.textContaining('Tirer pour voir'), findsNothing);
-      // La barre de recherche reste visible au-dessus de la feuille.
-      final barre = tester.getRect(find.byKey(const Key('corridor-bar')));
-      expect(
-        barre.bottom,
-        lessThan(tester.getTopLeft(find.byKey(const Key('home-sheet'))).dy),
-      );
-      // Le bouton « Près de moi » se pose juste au-dessus de la feuille.
-      final fab = tester.getRect(find.byKey(const Key('near-me-fab')));
-      expect(
-        fab.bottom,
-        lessThan(tester.getTopLeft(find.byKey(const Key('home-sheet'))).dy),
-      );
-      expect(fab.top, greaterThan(barre.bottom));
+      expect(find.byKey(const Key('home-sheet')), findsNothing);
+      expect(find.byKey(const Key('corridor-bar')), findsOneWidget);
+      final ecran = tester.view.physicalSize / tester.view.devicePixelRatio;
+      final pastille = tester.getRect(find.byKey(const Key('home-list-pill')));
+      expect(pastille.center.dx, closeTo(ecran.width / 2, 1));
+      expect(pastille.bottom, lessThan(ecran.height));
+      expect(pastille.height, 44);
     });
 
-    testWidgets(
-      '« voir la carte » replie la feuille, la carte redevient visible',
-      (tester) async {
-        await pumpHome(tester, tripResults: [_makeAnn()]);
-        await tester.pumpAndSettle();
+    testWidgets('le bouton de localisation se pose au-dessus de la pastille', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: [_makeAnn()]);
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Tirer vers le bas pour voir la carte'));
-        await tester.pumpAndSettle();
+      final fab = tester.getRect(find.byKey(const Key('near-me-fab')));
+      final pastille = tester.getRect(find.byKey(const Key('home-list-pill')));
+      expect(fab.bottom, lessThanOrEqualTo(pastille.top));
+      expect(fab.right, greaterThan(pastille.right));
+    });
 
-        expect(hauteurFeuille(tester), lessThan(0.35));
-        expect(find.textContaining('Tirer pour voir'), findsOneWidget);
-        // Le bouton « Près de moi » reste au-dessus de la feuille repliée.
-        expect(
-          tester.getRect(find.byKey(const Key('near-me-fab'))).bottom,
-          lessThan(tester.getTopLeft(find.byKey(const Key('home-sheet'))).dy),
-        );
-      },
-    );
+    testWidgets('la carte-résumé s\'ouvre au-dessus de la pastille et le '
+        'bouton de localisation la surmonte', (tester) async {
+      await pumpHome(tester, tripResults: [_makeAnn()]);
+      await tester.pumpAndSettle();
 
-    testWidgets('pendant le chargement, la feuille ouverte montre l\'attente', (
+      tester
+          .widget<AnnouncementMapView>(find.byType(AnnouncementMapView))
+          .onAnnouncementSelected!('a1');
+      await tester.pumpAndSettle();
+
+      final resume = tester.getRect(find.byKey(const Key('map-trip-summary')));
+      final pastille = tester.getRect(find.byKey(const Key('home-list-pill')));
+      final fab = tester.getRect(find.byKey(const Key('near-me-fab')));
+      expect(resume.bottom, lessThanOrEqualTo(pastille.top));
+      expect(fab.bottom, lessThanOrEqualTo(resume.top));
+    });
+
+    testWidgets('pendant le chargement, la carte reste plein écran', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1000, 2000);
@@ -4082,21 +4204,38 @@ void main() {
       }
 
       expect(tester.takeException(), isNull);
-      expect(hauteurFeuille(tester), closeTo(kHomeRaisedSheetSize, 0.01));
+      expect(find.byKey(const Key('home-sheet')), findsNothing);
+      expect(find.byKey(const Key('home-list-pill')), findsOneWidget);
     });
 
-    testWidgets('sans résultat, l\'état vide reste affiché dans la feuille', (
+    testWidgets('sans résultat, l\'état vide s\'affiche dans la liste', (
       tester,
     ) async {
       await pumpHome(tester, tripResults: const []);
       await tester.pumpAndSettle();
+      expect(find.text('Aucun voyageur sur ce trajet'), findsNothing);
+
+      await ouvrirListe(tester);
 
       expect(tester.takeException(), isNull);
       expect(find.text('Aucun voyageur sur ce trajet'), findsOneWidget);
-      expect(hauteurFeuille(tester), closeTo(kHomeRaisedSheetSize, 0.01));
     });
 
-    testWidgets('paysage : la feuille reste repliée faute de place', (
+    testWidgets('la liste plein écran couvre tout l\'écran', (tester) async {
+      await pumpHome(tester, tripResults: [_makeAnn()]);
+      await ouvrirListe(tester);
+
+      expect(
+        tester.getTopLeft(find.byKey(const Key('home-sheet'))).dy,
+        lessThan(1),
+      );
+      expect(
+        find.byKey(const Key('home-list-pill')).hitTestable(),
+        findsNothing,
+      );
+    });
+
+    testWidgets('paysage : aucune erreur d\'affichage sur la carte', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(820, 360);
@@ -4110,63 +4249,60 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.textContaining('Tirer pour voir'), findsOneWidget);
+      expect(find.byKey(const Key('home-list-pill')), findsOneWidget);
     });
   });
 
-  group('computeHomeRaisedSheetSize', () {
-    test('écran haut : 60 %', () {
-      expect(
-        computeHomeRaisedSheetSize(
-          areaHeight: 2000,
-          areaTop: 0,
-          overlayBottom: 250,
-          peekSize: 0.30,
-        ),
-        kHomeRaisedSheetSize,
+  group('cartes d\'état vide sur la carte', () {
+    testWidgets('Près de moi sans voyageur : message, « Élargir à 50 km » et '
+        '« Désactiver »', (tester) async {
+      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded(const [])),
       );
+      await tester.pump();
+
+      await activerPresDeMoi(tester);
+
+      expect(find.byKey(const Key('map-near-me-empty')), findsOneWidget);
+      expect(find.text('Aucun voyageur à proximité'), findsOneWidget);
+      expect(find.text('Élargir à 50 km'), findsOneWidget);
+
+      await tester.tap(find.text('Élargir à 50 km'));
+      await tester.pumpAndSettle();
+      expect(find.text('Rayon · 50 km'), findsOneWidget);
+
+      await tester.tap(find.text('Désactiver « Près de moi »'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('near-me-radius-pill')), findsNothing);
     });
 
-    test('barre du haut haute : la feuille s\'arrête sous elle', () {
-      final size = computeHomeRaisedSheetSize(
-        areaHeight: 800,
-        areaTop: 0,
-        overlayBottom: 300,
-        peekSize: 0.30,
-      )!;
-      expect(size, lessThan(kHomeRaisedSheetSize));
-      expect(800 * (1 - size), 300 + kHomeNearMeFabClearance);
-    });
+    testWidgets('zone visible sans trajet : « Voir tous les trajets » recadre '
+        'la carte', (tester) async {
+      await pumpHome(tester, tripResults: [_makeAnn()]);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('map-zone-empty')), findsNothing);
 
-    test('pas de place : null, la feuille reste repliée', () {
-      expect(
-        computeHomeRaisedSheetSize(
-          areaHeight: 360,
-          areaTop: 0,
-          overlayBottom: 200,
-          peekSize: 0.33,
-        ),
-        isNull,
-      );
-      expect(
-        computeHomeRaisedSheetSize(
-          areaHeight: 0,
-          areaTop: 0,
-          overlayBottom: 0,
-          peekSize: 0.30,
-        ),
-        isNull,
-      );
-    });
+      tester
+          .widget<AnnouncementMapView>(find.byType(AnnouncementMapView))
+          .onZoneEmptyChanged!(true);
+      await tester.pumpAndSettle();
 
-    test('barre non mesurée : plafond de 45 % supposé', () {
-      final size = computeHomeRaisedSheetSize(
-        areaHeight: 1000,
-        areaTop: 0,
-        overlayBottom: null,
-        peekSize: 0.30,
-      )!;
-      expect(size, closeTo(1 - (450 + kHomeNearMeFabClearance) / 1000, 1e-9));
+      expect(find.text('Aucun trajet dans cette zone'), findsOneWidget);
+      final avant = tester
+          .widget<AnnouncementMapView>(find.byType(AnnouncementMapView))
+          .fitAllSignal;
+
+      await tester.tap(find.text('Voir tous les trajets'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('map-zone-empty')), findsNothing);
+      expect(
+        tester
+            .widget<AnnouncementMapView>(find.byType(AnnouncementMapView))
+            .fitAllSignal,
+        avant + 1,
+      );
     });
   });
 }
