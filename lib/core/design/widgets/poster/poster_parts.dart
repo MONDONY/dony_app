@@ -17,6 +17,7 @@ abstract final class PosterPalette {
   static const Color terra = DonyColors.terra500;
   static const Color terraDeep = DonyColors.terra600;
   static const Color terraTint = DonyColors.terra50;
+  static const Color danger = DonyColors.danger500;
   static const Color tile = DonyColors.sand100;
   static const Color muted = DonyColors.neutral500;
   static const Color line = DonyColors.neutral200;
@@ -114,26 +115,35 @@ class PosterHero extends StatelessWidget {
   const PosterHero({
     super.key,
     required this.background,
-    required this.eyebrow,
+    this.eyebrow,
     required this.corridor,
     this.subtitle,
+    this.body,
     this.footer,
   });
 
   final Color background;
-  final String eyebrow;
+
+  /// Surtitre en capitales au-dessus du corridor. Facultatif : l'affiche de
+  /// trajet le range dans [body] pour gagner une ligne.
+  final String? eyebrow;
   final Widget corridor;
   final String? subtitle;
+
+  /// Bloc libre sous le corridor (date de départ de l'affiche de trajet).
+  final Widget? body;
   final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final eyebrow = this.eyebrow;
     final subtitle = this.subtitle;
+    final body = this.body;
     final footer = this.footer;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -142,19 +152,22 @@ class PosterHero extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            eyebrow.toUpperCase(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: text.labelSmall?.copyWith(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.1,
-              color: PosterPalette.paper.withValues(alpha: 0.8),
+          if (eyebrow != null) ...[
+            Text(
+              eyebrow.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: text.labelSmall?.copyWith(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.1,
+                color: PosterPalette.paper.withValues(alpha: 0.8),
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
+            const SizedBox(height: 6),
+          ],
           corridor,
+          if (body != null) ...[const SizedBox(height: 7), body],
           if (subtitle != null) ...[
             const SizedBox(height: 6),
             Text(
@@ -170,14 +183,133 @@ class PosterHero extends StatelessWidget {
             ),
           ],
           if (footer != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 7),
             Container(
               height: 1,
               color: PosterPalette.paper.withValues(alpha: 0.16),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 7),
             footer,
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Date en gros d'une affiche : un bloc de couleur avec le jour de la semaine
+/// en petit et « 26 OCT. » en grand, puis à droite un titre (horaire, souplesse
+/// de la date) et une précision. C'est la première chose qu'un expéditeur ou un
+/// voyageur cherche sur une affiche de départ.
+class PosterDateBlock extends StatelessWidget {
+  const PosterDateBlock({
+    super.key,
+    required this.value,
+    required this.color,
+    this.label,
+    this.title,
+    this.detail,
+    this.valueKey,
+  });
+
+  /// « 26 OCT. » : la date en grand, déjà mise en capitales.
+  final String value;
+  final Color color;
+
+  /// Petit libellé au-dessus de la date (« LUN. · DÉPART »), déjà en capitales.
+  final String? label;
+
+  /// Ligne en gras à droite du bloc (« 14h30 → 20h05 »).
+  final String? title;
+
+  /// Ligne de précision sous [title].
+  final String? detail;
+
+  /// Clé posée sur la date, pour les tests.
+  final Key? valueKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final label = this.label;
+    final title = this.title;
+    final detail = this.detail;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(11, 6, 11, 6),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (label != null)
+                  Text(
+                    label,
+                    maxLines: 1,
+                    style: text.labelSmall?.copyWith(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                      color: PosterPalette.paper,
+                    ),
+                  ),
+                Text(
+                  value,
+                  key: valueKey,
+                  maxLines: 1,
+                  style: text.displaySmall?.copyWith(
+                    fontSize: 27,
+                    height: 1.05,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1,
+                    color: PosterPalette.paper,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (title != null)
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      style: text.titleSmall?.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: PosterPalette.paper,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                if (detail != null)
+                  Text(
+                    detail,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.bodySmall?.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: PosterPalette.paper.withValues(alpha: 0.85),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -199,11 +331,15 @@ class PosterTile extends StatelessWidget {
     this.valueColor = PosterPalette.ink,
     this.labelColor = PosterPalette.muted,
     this.gauge,
+    this.valueSize = 21,
   });
 
   final String label;
   final String value;
   final String? detail;
+
+  /// Corps de la valeur : plus grand pour la tuile qui porte le prix.
+  final double valueSize;
 
   /// Mention de fin sous [detail], sur deux lignes au plus (frais de service
   /// qui s'ajoutent à un prix net).
@@ -252,7 +388,7 @@ class PosterTile extends StatelessWidget {
                 value,
                 maxLines: 1,
                 style: text.displaySmall?.copyWith(
-                  fontSize: 21,
+                  fontSize: valueSize,
                   height: 1.05,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.6,

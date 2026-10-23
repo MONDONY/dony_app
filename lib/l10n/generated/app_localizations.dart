@@ -5747,12 +5747,6 @@ abstract class AppLocalizations {
   /// **'l\'article'**
   String get tripPosterUnitPerItem;
 
-  /// Unité affichée à côté du prix quand il s'agit d'un tarif au kilo (trip_poster_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'le kilo'**
-  String get tripPosterUnitPerKg;
-
   /// Prix affiché quand ni la grille ni le tarif au kilo ne sont renseignés (trip_poster_card.dart, trip_poster_screen.dart)
   ///
   /// In fr, this message translates to:
@@ -30865,24 +30859,6 @@ abstract class AppLocalizations {
   /// **'Trajet'**
   String get tripPosterEyebrow;
 
-  /// Ligne de départ du bandeau de l'affiche de trajet
-  ///
-  /// In fr, this message translates to:
-  /// **'Départ {day}'**
-  String tripPosterHeroDeparture(String day);
-
-  /// Ligne de départ avec heure du bandeau de l'affiche de trajet
-  ///
-  /// In fr, this message translates to:
-  /// **'Départ {day}, {time}'**
-  String tripPosterHeroDepartureAt(String day, String time);
-
-  /// Fin de la ligne de départ : heure ou date d'arrivée
-  ///
-  /// In fr, this message translates to:
-  /// **'arrivée {when}'**
-  String tripPosterHeroArrival(String when);
-
   /// Nombre de trajets du voyageur sur l'affiche
   ///
   /// In fr, this message translates to:
@@ -30900,12 +30876,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Place libre'**
   String get tripPosterTileCapacity;
-
-  /// Capacité totale sous la place libre (ex. sur 23 kg)
-  ///
-  /// In fr, this message translates to:
-  /// **'sur {total}'**
-  String tripPosterCapacityOf(String total);
 
   /// Libellé de la tuile de prix de l'affiche de trajet
   ///
@@ -30966,6 +30936,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Colis à transporter'**
   String get requestPosterEyebrow;
+
+  /// Étiquette au-dessus de la date du bloc de l'affiche de demande, en capitales à l'affichage
+  ///
+  /// In fr, this message translates to:
+  /// **'Autour du · {weekday}'**
+  String requestPosterDateLabel(String weekday);
+
+  /// Souplesse de la date souhaitée, à droite du bloc date de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{à 1 jour près} other{à {count} jours près}}'**
+  String requestPosterToleranceShort(int count);
+
+  /// Valeur du bloc date de l'affiche de demande quand l'expéditeur n'a pas fixé de date, en capitales à l'affichage
+  ///
+  /// In fr, this message translates to:
+  /// **'Flexible'**
+  String get requestPosterDateFlexibleValue;
 
   /// Date souhaitée sans tolérance, affiche de demande
   ///
@@ -31128,6 +31116,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Paiement : {methods}'**
   String tripPosterCaptionPayment(String methods);
+
+  /// Étiquette au-dessus de la date du bloc de départ de l'affiche de trajet, en capitales à l'affichage
+  ///
+  /// In fr, this message translates to:
+  /// **'{weekday} · départ'**
+  String tripPosterDateLabel(String weekday);
+
+  /// Horaire de l'affiche de trajet : heure de départ puis arrivée (heure, ou date et heure si un autre jour)
+  ///
+  /// In fr, this message translates to:
+  /// **'{departure} → {arrival}'**
+  String tripPosterTimeRange(String departure, String arrival);
+
+  /// Titre de la grille d'articles de l'affiche de trajet, en capitales à l'affichage
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix par article'**
+  String get tripPosterItemsTitle;
+
+  /// Nombre d'articles de la grille de prix, à droite du titre de la grille
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 article} other{{count} articles}}'**
+  String tripPosterItemsCount(int count);
+
+  /// Sous le « +N » de la grille d'articles de l'affiche : le reste des articles est dans l'application
+  ///
+  /// In fr, this message translates to:
+  /// **'dans l\'app'**
+  String get tripPosterItemsMore;
+
+  /// Prix au kilo de la tuile de prix de l'affiche de trajet (ex. 10 €/kg)
+  ///
+  /// In fr, this message translates to:
+  /// **'{price}/kg'**
+  String tripPosterPricePerKgShort(String price);
 
   /// Onglet Suivi : une étape de la file hors ligne est partie sans sa photo, dont le fichier local a disparu (cache purgé, FLUTTER-MJ). step = libellé d'étape traduit.
   ///

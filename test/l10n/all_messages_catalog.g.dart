@@ -783,6 +783,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'homeEmptyTravelersFilteredHint': (l) => l.homeEmptyTravelersFilteredHint,
   'homeEmptyTravelersRouteHint': (l) => l.homeEmptyTravelersRouteHint,
   'homeMapButton': (l) => l.homeMapButton,
+  'homeListButton': (l) => l.homeListButton,
+  'homeMapNoTripsInZoneTitle': (l) => l.homeMapNoTripsInZoneTitle,
+  'homeMapNoTripsInZoneHint': (l) => l.homeMapNoTripsInZoneHint,
+  'homeMapSeeAllTrips': (l) => l.homeMapSeeAllTrips,
+  'homeNearMeWiden': (l) => l.homeNearMeWiden(intPlaceholderValue),
+  'homeNearMeDisable': (l) => l.homeNearMeDisable,
+  'homeNearMeChip': (l) => l.homeNearMeChip(intPlaceholderValue),
+  'homeMapSummaryClose': (l) => l.homeMapSummaryClose,
   'homeRadiusKm': (l) => l.homeRadiusKm(intPlaceholderValue),
   'homeDepartureDateTitle': (l) => l.homeDepartureDateTitle,
   'commonDateToday': (l) => l.commonDateToday,
@@ -1195,7 +1203,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPosterFromPrice': (l) =>
       l.tripPosterFromPrice(placeholderMarker('price')),
   'tripPosterUnitPerItem': (l) => l.tripPosterUnitPerItem,
-  'tripPosterUnitPerKg': (l) => l.tripPosterUnitPerKg,
   'tripPosterPriceUnavailable': (l) => l.tripPosterPriceUnavailable,
   'tripPosterPricePerKg': (l) =>
       l.tripPosterPricePerKg(placeholderMarker('price')),
@@ -1653,6 +1660,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'requestPublicFromLabel': (l) => l.requestPublicFromLabel,
   'requestPublicToLabel': (l) => l.requestPublicToLabel,
   'requestPublicNoPhoto': (l) => l.requestPublicNoPhoto,
+  'requestPublicPhotoOpenLabel': (l) => l.requestPublicPhotoOpenLabel,
   'requestPublicReportTooltip': (l) => l.requestPublicReportTooltip,
   'requestPublicReportSheetTitle': (l) => l.requestPublicReportSheetTitle,
   'requestPublicReportReasonProhibited': (l) =>
@@ -6599,20 +6607,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorTravelerNotEligibleMessage': (l) => l.errorTravelerNotEligibleMessage,
   'tripPosterBadge': (l) => l.tripPosterBadge,
   'tripPosterEyebrow': (l) => l.tripPosterEyebrow,
-  'tripPosterHeroDeparture': (l) =>
-      l.tripPosterHeroDeparture(placeholderMarker('day')),
-  'tripPosterHeroDepartureAt': (l) => l.tripPosterHeroDepartureAt(
-    placeholderMarker('day'),
-    placeholderMarker('time'),
-  ),
-  'tripPosterHeroArrival': (l) =>
-      l.tripPosterHeroArrival(placeholderMarker('when')),
   'tripPosterTravelerTrips': (l) =>
       l.tripPosterTravelerTrips(intPlaceholderValue),
   'tripPosterVerified': (l) => l.tripPosterVerified,
   'tripPosterTileCapacity': (l) => l.tripPosterTileCapacity,
-  'tripPosterCapacityOf': (l) =>
-      l.tripPosterCapacityOf(placeholderMarker('total')),
   'tripPosterTilePrice': (l) => l.tripPosterTilePrice,
   'tripPosterTileDeadline': (l) => l.tripPosterTileDeadline,
   'tripPosterTileDeadlineTime': (l) =>
@@ -6624,6 +6622,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPosterCaptionGpPro': (l) => l.tripPosterCaptionGpPro,
   'requestPosterBadge': (l) => l.requestPosterBadge,
   'requestPosterEyebrow': (l) => l.requestPosterEyebrow,
+  'requestPosterDateLabel': (l) =>
+      l.requestPosterDateLabel(placeholderMarker('weekday')),
+  'requestPosterToleranceShort': (l) =>
+      l.requestPosterToleranceShort(intPlaceholderValue),
+  'requestPosterDateFlexibleValue': (l) => l.requestPosterDateFlexibleValue,
   'requestPosterDate': (l) => l.requestPosterDate(placeholderMarker('day')),
   'requestPosterDateTolerance': (l) => l.requestPosterDateTolerance(
     intPlaceholderValue,
@@ -6673,6 +6676,17 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPosterPayment': (l) => l.tripPosterPayment,
   'tripPosterCaptionPayment': (l) =>
       l.tripPosterCaptionPayment(placeholderMarker('methods')),
+  'tripPosterDateLabel': (l) =>
+      l.tripPosterDateLabel(placeholderMarker('weekday')),
+  'tripPosterTimeRange': (l) => l.tripPosterTimeRange(
+    placeholderMarker('departure'),
+    placeholderMarker('arrival'),
+  ),
+  'tripPosterItemsTitle': (l) => l.tripPosterItemsTitle,
+  'tripPosterItemsCount': (l) => l.tripPosterItemsCount(intPlaceholderValue),
+  'tripPosterItemsMore': (l) => l.tripPosterItemsMore,
+  'tripPosterPricePerKgShort': (l) =>
+      l.tripPosterPricePerKgShort(placeholderMarker('price')),
   'suiviPhotoLost': (l) => l.suiviPhotoLost(placeholderMarker('step')),
   'suiviPhotoLostDismiss': (l) => l.suiviPhotoLostDismiss,
   'authRequiredFlightAlertSubtitle': (l) => l.authRequiredFlightAlertSubtitle,
@@ -8208,11 +8222,8 @@ const textParameters = <String, List<String>>{
   'moneyBankStepTodoSemantics': ['label'],
   'moneyTripSemantics': ['route', 'parcels', 'counters'],
   'billetTeamCancelledSupportSubject': ['number'],
-  'tripPosterHeroDeparture': ['day'],
-  'tripPosterHeroDepartureAt': ['day', 'time'],
-  'tripPosterHeroArrival': ['when'],
-  'tripPosterCapacityOf': ['total'],
   'tripPosterTileDeadlineTime': ['time'],
+  'requestPosterDateLabel': ['weekday'],
   'requestPosterDate': ['day'],
   'requestPosterDateTolerance': ['day'],
   'requestPosterSize': ['size'],
@@ -8225,6 +8236,9 @@ const textParameters = <String, List<String>>{
   'requestPosterCaptionTo': ['place'],
   'requestPosterShareSubject': ['departure', 'arrival'],
   'tripPosterCaptionPayment': ['methods'],
+  'tripPosterDateLabel': ['weekday'],
+  'tripPosterTimeRange': ['departure', 'arrival'],
+  'tripPosterPricePerKgShort': ['price'],
   'suiviPhotoLost': ['step'],
   'flightsDealFrom': ['date'],
   'flightsDealSemantics': ['origin', 'destination', 'price'],

@@ -104,6 +104,9 @@ int _matchingBrace(String text, int openIndex) {
 /// Clés dont l'anglais est volontairement identique au français.
 /// Toute nouvelle entrée doit être justifiée en commentaire.
 const _sameInBothLanguages = <String>{
+  'requestPosterDateFlexibleValue', // « Flexible » se dit pareil
+  'tripPosterTimeRange', // « {departure} → {arrival} » : heures déjà localisées
+  'tripPosterPricePerKgShort', // « {price}/kg » : montant et unité
   'assistantCharCount', // « {count}/500 » : chiffres seuls
   'moneyChannelMobileMoney', // nom de service, FLUTTER-P3
   'flightsRouteTitle', // « {origin} → {destination} » : le trajet, sans mot

@@ -73,22 +73,24 @@ void main() {
     expect(find.text('LYON'), findsOneWidget);
     expect(find.text('ABIDJAN'), findsOneWidget);
     expect(find.text('CHERCHE UN VOYAGEUR'), findsOneWidget);
-    expect(find.text('COLIS À TRANSPORTER · AVION'), findsOneWidget);
+    expect(find.text('Colis à transporter · Avion'), findsOneWidget);
   });
 
   testWidgets('date souhaitée avec sa tolérance', (tester) async {
     await _pump(tester, request());
 
-    expect(
-      find.text('Autour du vendredi 23 octobre, à 3 jours près'),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('request-poster-day')), findsOneWidget);
+    expect(find.text('23 OCT.'), findsOneWidget);
+    expect(find.text('AUTOUR DU · VEN.'), findsOneWidget);
+    expect(find.text('à 3 jours près'), findsOneWidget);
   });
 
   testWidgets('date souhaitée sans tolérance', (tester) async {
     await _pump(tester, request(tolerance: 0));
 
-    expect(find.text('Autour du vendredi 23 octobre'), findsOneWidget);
+    expect(find.text('23 OCT.'), findsOneWidget);
+    expect(find.text('AUTOUR DU · VEN.'), findsOneWidget);
+    expect(find.textContaining('jours près'), findsNothing);
   });
 
   testWidgets('demande sans date : « Date flexible » (affiche et légende)', (
@@ -97,8 +99,8 @@ void main() {
     await _pump(tester, request(flexibleDate: true));
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Date flexible'), findsOneWidget);
-    expect(find.textContaining('Autour du'), findsNothing);
+    expect(find.text('FLEXIBLE'), findsOneWidget);
+    expect(find.textContaining('AUTOUR DU'), findsNothing);
   });
 
   test('dateLabel sans date, en anglais : « Flexible date »', () {
@@ -239,11 +241,52 @@ void main() {
     await _pump(tester, request());
 
     expect(find.text('LOOKING FOR A TRAVELER'), findsOneWidget);
-    expect(
-      find.text('Around Friday, October 23, give or take 3 days'),
-      findsOneWidget,
-    );
+    expect(find.text('AROUND · FRI'), findsOneWidget);
+    expect(find.text('23 OCT'), findsOneWidget);
+    expect(find.text('within 3 days'), findsOneWidget);
     expect(find.text('Size medium'), findsOneWidget);
+  });
+
+  /// Le budget mène la rangée de tuiles, à gauche du poids : c'est ce que le
+  /// voyageur compare d'abord.
+  testWidgets('le budget précède le poids', (tester) async {
+    await _pump(tester, request());
+
+    final budget = tester.getTopLeft(find.text('BUDGET'));
+    final weight = tester.getTopLeft(find.text('POIDS'));
+    expect(budget.dx, lessThan(weight.dx));
+    expect((budget.dy - weight.dy).abs(), lessThan(1));
+  });
+
+  testWidgets('la date est dans le bandeau, plus grande que le corridor '
+      'n\'est bas', (tester) async {
+    await _pump(tester, request());
+
+    final day = tester.widget<Text>(
+      find.byKey(const Key('request-poster-day')),
+    );
+    expect(day.style!.fontSize, 27);
+  });
+
+  testWidgets('une demande très remplie ne déborde pas', (tester) async {
+    await _pump(
+      tester,
+      request(
+        departureCity: 'Marseille',
+        arrivalCity: 'Ouagadougou',
+        tolerance: 7,
+        categories: const ['Vêtements', 'Chaussures', 'Documents', 'Épices'],
+        payments: const {
+          PaymentMethod.stripe,
+          PaymentMethod.cash,
+          PaymentMethod.orangeMoney,
+        },
+      ),
+      qrData: 'https://yadony.com/demande/r1?c=qr',
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('à 7 jours près'), findsOneWidget);
   });
 
   test('libellé de lieu : quartier facultatif', () {

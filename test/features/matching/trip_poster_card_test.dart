@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/trip_poster_card.dart';
@@ -87,8 +88,8 @@ void main() {
   ) async {
     await _pump(tester, _announcement(pricePerKg: 6, pricePerKgDisplay: 8));
 
-    expect(find.text(formatPriceIn(8, 'EUR')), findsOneWidget);
-    expect(find.text(formatPriceIn(6, 'EUR')), findsNothing);
+    expect(find.text('${formatPriceIn(8, 'EUR')}/kg'), findsOneWidget);
+    expect(find.text('${formatPriceIn(6, 'EUR')}/kg'), findsNothing);
   });
 
   /// Sans `pricePerKgDisplay`, il faut appliquer la commission au net, pas
@@ -99,10 +100,10 @@ void main() {
     await _pump(tester, _announcement(pricePerKg: 6, pricePerKgDisplay: null));
 
     expect(
-      find.text(formatPriceIn(6 * (1 + donyCommissionRate), 'EUR')),
+      find.text('${formatPriceIn(6 * (1 + donyCommissionRate), 'EUR')}/kg'),
       findsOneWidget,
     );
-    expect(find.text(formatPriceIn(6, 'EUR')), findsNothing);
+    expect(find.text('${formatPriceIn(6, 'EUR')}/kg'), findsNothing);
   });
 
   testWidgets('affiche la date limite de dépôt quand elle existe', (
@@ -238,7 +239,7 @@ void main() {
       _announcement(currency: 'XOF', pricePerKgDisplay: 6000),
     );
 
-    expect(find.text(formatPriceIn(6000, 'XOF')), findsOneWidget);
+    expect(find.text('${formatPriceIn(6000, 'XOF')}/kg'), findsOneWidget);
     expect(find.textContaining('XOF'), findsNothing);
   });
 
@@ -248,7 +249,7 @@ void main() {
       _announcement(currency: 'XAF', pricePerKgDisplay: 6000),
     );
 
-    expect(find.text(formatPriceIn(6000, 'XAF')), findsOneWidget);
+    expect(find.text('${formatPriceIn(6000, 'XAF')}/kg'), findsOneWidget);
     expect(find.textContaining('XAF'), findsNothing);
   });
 
@@ -288,9 +289,10 @@ void main() {
       ),
     );
 
-    expect(find.text('dès ${formatPriceIn(25, 'EUR')}'), findsOneWidget);
+    // Le kilo mène la tuile (« 8 €/kg »), la grille ne reste qu'un « dès ».
+    expect(find.text('${formatPriceIn(8, 'EUR')}/kg'), findsOneWidget);
     expect(
-      find.text("l'article · ${formatPriceIn(8, 'EUR')} le kilo"),
+      find.text("dès ${formatPriceIn(25, 'EUR')} l'article"),
       findsOneWidget,
     );
   });
@@ -379,21 +381,24 @@ void main() {
     expect(find.text('at 2:05 PM'), findsOneWidget);
   });
 
-  testWidgets('rend le jour de départ en français : "mar. 6 oct."', (
+  testWidgets('met la date de départ en gros, en français : "6 OCT."', (
     tester,
   ) async {
     await _pump(tester, _announcement(departureDate: DateTime(2026, 10, 6)));
 
-    expect(find.text('Départ mar. 6 oct.'), findsOneWidget);
+    expect(find.byKey(const Key('poster-departure-day')), findsOneWidget);
+    expect(find.text('6 OCT.'), findsOneWidget);
+    expect(find.text('MAR. · DÉPART'), findsOneWidget);
   });
 
-  testWidgets('rend le jour de départ en anglais : "Tue, Oct 6"', (
+  testWidgets('met la date de départ en gros, en anglais : "6 OCT"', (
     tester,
   ) async {
     useEnglish();
     await _pump(tester, _announcement(departureDate: DateTime(2026, 10, 6)));
 
-    expect(find.text('Departs Tue, Oct 6'), findsOneWidget);
+    expect(find.text('6 OCT'), findsOneWidget);
+    expect(find.text('TUE · DEPARTS'), findsOneWidget);
   });
 
   group('refonte de l\'affiche', () {
@@ -424,10 +429,7 @@ void main() {
         ),
       );
 
-      expect(
-        find.text('Départ mar. 6 oct., 14h05 · arrivée 21h40'),
-        findsOneWidget,
-      );
+      expect(find.text('14h05 → 21h40'), findsOneWidget);
     });
 
     testWidgets('date l\'arrivée quand elle tombe un autre jour', (
@@ -445,10 +447,7 @@ void main() {
         ),
       );
 
-      expect(
-        find.text('Départ mar. 6 oct., 23h10 · arrivée 7 oct. à 06h30'),
-        findsOneWidget,
-      );
+      expect(find.text('23h10 → 7 oct. à 06h30'), findsOneWidget);
     });
 
     testWidgets('présente le voyageur vérifié, sa note et ses trajets', (
@@ -470,11 +469,33 @@ void main() {
       );
 
       expect(find.text('MD'), findsOneWidget);
-      expect(
-        find.text('Moussa D. · ★ 4,9 · 14 trajets', findRichText: true),
-        findsOneWidget,
-      );
+      expect(find.text('Moussa D.'), findsOneWidget);
+      expect(find.text(' · ★ 4,9 · 14 trajets'), findsOneWidget);
       expect(find.text('Vérifié'), findsOneWidget);
+    });
+
+    testWidgets('un nom très long est raccourci, jamais la note ni les '
+        'trajets', (tester) async {
+      await _pump(
+        tester,
+        _announcement(
+          extra: {
+            'traveler': {
+              'id': 't1',
+              'displayName': 'Fatoumata Kouyaté-Diarra Ouédraogo',
+              'averageRating': 4.8,
+              'totalTrips': 120,
+              'kycVerified': true,
+              'gpPro': true,
+            },
+          },
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text(' · ★ 4,8 · 120 trajets'), findsOneWidget);
+      final name = tester.widget<Text>(find.textContaining('Fatoumata'));
+      expect(name.overflow, TextOverflow.ellipsis);
     });
 
     testWidgets('ne prétend jamais une identité non vérifiée', (tester) async {
@@ -491,7 +512,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Awa', findRichText: true), findsOneWidget);
+      expect(find.text('Awa'), findsOneWidget);
       expect(find.text('Vérifié'), findsNothing);
     });
 
@@ -573,12 +594,9 @@ void main() {
       expect(find.text('+2'), findsOneWidget);
     });
 
-    testWidgets('annonce la capacité totale sous la place libre', (
-      tester,
-    ) async {
+    testWidgets('montre la place libre sur une jauge', (tester) async {
       await _pump(tester, _announcement());
 
-      expect(find.text('sur 23 kg'), findsOneWidget);
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
     });
 
@@ -616,6 +634,197 @@ void main() {
       expect(find.text('MARSEILLE'), findsOneWidget);
       expect(find.text('OUAGADOUGOU'), findsOneWidget);
     });
+  });
+
+  group('drapeaux du corridor', () {
+    testWidgets('pose un drapeau de chaque côté quand les pays sont connus', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _announcement(
+          departureCity: 'Abidjan',
+          arrivalCity: 'Paris',
+          extra: {'departureCountryCode': 'CI', 'arrivalCountryCode': 'FR'},
+        ),
+      );
+
+      expect(find.byKey(const Key('poster-flag')), findsNWidgets(2));
+      expect(find.text('🇨🇮'), findsOneWidget);
+      expect(find.text('🇫🇷'), findsOneWidget);
+    });
+
+    testWidgets('sans code pays, pas de drapeau et pas de trou', (
+      tester,
+    ) async {
+      await _pump(tester, _announcement());
+
+      expect(find.byKey(const Key('poster-flag')), findsNothing);
+    });
+
+    testWidgets('un seul pays connu : un seul drapeau', (tester) async {
+      await _pump(tester, _announcement(extra: {'departureCountryCode': 'FR'}));
+
+      expect(find.byKey(const Key('poster-flag')), findsOneWidget);
+    });
+
+    testWidgets('un corridor long avec drapeaux ne déborde pas', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _announcement(
+          departureCity: 'Marseille',
+          arrivalCity: 'Ouagadougou',
+          extra: {'departureCountryCode': 'FR', 'arrivalCountryCode': 'BF'},
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('poster-flag')), findsNWidgets(2));
+    });
+  });
+
+  group('grille d\'articles', () {
+    List<Map<String, dynamic>> items(int n) => [
+      for (var i = 0; i < n; i++) _gridItem('Article $i', 10.0 + i),
+    ];
+
+    testWidgets('affiche chaque article avec son prix', (tester) async {
+      await _pump(
+        tester,
+        _announcement(
+          pricingMode: 'MIXED',
+          gridItems: [_gridItem('Téléphone', 15), _gridItem('Chaussures', 12)],
+        ),
+      );
+
+      expect(find.text('PRIX PAR ARTICLE'), findsOneWidget);
+      expect(find.text('2 articles'), findsOneWidget);
+      expect(find.text('Téléphone'), findsOneWidget);
+      expect(find.text(formatPriceIn(15, 'EUR')), findsOneWidget);
+      expect(find.text('Chaussures'), findsOneWidget);
+      expect(find.byKey(const Key('poster-items-more')), findsNothing);
+    });
+
+    testWidgets('six articles tiennent dans les six cases, sans « + N »', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _announcement(pricingMode: 'MIXED', gridItems: items(6)),
+      );
+
+      expect(find.byKey(const Key('poster-item')), findsNWidgets(6));
+      expect(find.byKey(const Key('poster-items-more')), findsNothing);
+    });
+
+    testWidgets('au-delà de six, la sixième case dit « + N » et renvoie à '
+        'l\'app', (tester) async {
+      await _pump(
+        tester,
+        _announcement(pricingMode: 'MIXED', gridItems: items(9)),
+      );
+
+      expect(find.byKey(const Key('poster-item')), findsNWidgets(5));
+      expect(find.byKey(const Key('poster-items-more')), findsOneWidget);
+      expect(find.text('+ 4'), findsOneWidget);
+      expect(find.text("dans l'app"), findsOneWidget);
+      expect(find.text('9 articles'), findsOneWidget);
+    });
+
+    testWidgets('ne tronque pas un libellé long', (tester) async {
+      await _pump(
+        tester,
+        _announcement(
+          pricingMode: 'MIXED',
+          gridItems: [_gridItem('Ordinateur portable 17 pouces gamer', 35)],
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Ordinateur portable 17 pouces gamer'), findsOneWidget);
+    });
+
+    testWidgets('sans grille, pas de section articles', (tester) async {
+      await _pump(tester, _announcement());
+
+      expect(find.text('PRIX PAR ARTICLE'), findsNothing);
+      expect(find.byKey(const Key('poster-item')), findsNothing);
+    });
+
+    testWidgets('avec une grille, les lieux et paiements cèdent la place et '
+        'la remise passe sous l\'horaire', (tester) async {
+      await _pump(
+        tester,
+        _announcement(
+          pricingMode: 'MIXED',
+          gridItems: items(3),
+          pickupLabel: 'Abatta, carrefour Lapin',
+          deliveryLabel: 'Paris 18e',
+          extra: {
+            'acceptedPaymentMethods': ['STRIPE'],
+            'acceptedContentTypes': ['Livres'],
+            'departureTime': '14:30',
+          },
+        ),
+      );
+
+      expect(find.text('Remise : Abatta, carrefour Lapin'), findsOneWidget);
+      expect(find.text('Récupération'), findsNothing);
+      expect(find.text('Paiement'), findsNothing);
+      expect(find.text("J'ACCEPTE"), findsNothing);
+    });
+
+    testWidgets('une grille de neuf articles sur un corridor long ne '
+        'déborde pas', (tester) async {
+      await _pump(
+        tester,
+        _announcement(
+          departureCity: 'Marseille',
+          arrivalCity: 'Ouagadougou',
+          pricingMode: 'MIXED',
+          gridItems: items(9),
+          pickupLabel: '12 rue de la République, 13001 Marseille, France',
+          handoverDeadline: DateTime(2026, 8, 19, 19).toIso8601String(),
+          extra: {
+            'departureCountryCode': 'FR',
+            'arrivalCountryCode': 'BF',
+            'departureTime': '06:15',
+            'arrivalTime': '18:40',
+            'traveler': {
+              'id': 't1',
+              'displayName': 'Fatoumata Kouyaté-Diarra',
+              'averageRating': 5,
+              'totalTrips': 120,
+              'kycVerified': true,
+            },
+          },
+        ),
+        qrData: 'https://yadony.com/annonce/a1?c=qr',
+      );
+
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('la date limite de dépôt est sur fond rouge', (tester) async {
+    await _pump(
+      tester,
+      _announcement(
+        handoverDeadline: DateTime(2026, 8, 19, 19).toIso8601String(),
+      ),
+    );
+
+    final tile = tester.widget<Container>(
+      find
+          .ancestor(
+            of: find.text('DÉPÔT AVANT'),
+            matching: find.byType(Container),
+          )
+          .first,
+    );
+    expect((tile.decoration! as BoxDecoration).color, PosterPalette.danger);
   });
 
   testWidgets('sous grille, l\'affiche montre le prix frais inclus, sans '
