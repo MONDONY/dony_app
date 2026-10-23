@@ -965,6 +965,48 @@
   "@homeMapButton": {
     "description": "Pastille flottante de l'accueil qui ouvre la vue carte"
   },
+  "homeListButton": "Liste",
+  "@homeListButton": {
+    "description": "Pastille flottante de l'accueil qui ouvre la liste des résultats depuis la carte plein écran"
+  },
+  "homeMapNoTripsInZoneTitle": "Aucun trajet dans cette zone",
+  "@homeMapNoTripsInZoneTitle": {
+    "description": "Titre de la carte affichée quand la zone visible de la carte ne contient aucun trajet"
+  },
+  "homeMapNoTripsInZoneHint": "Déplacez la carte ou affichez tous les trajets.",
+  "@homeMapNoTripsInZoneHint": {
+    "description": "Sous-titre de la carte « Aucun trajet dans cette zone »"
+  },
+  "homeMapSeeAllTrips": "Voir tous les trajets",
+  "@homeMapSeeAllTrips": {
+    "description": "Bouton qui recadre la carte sur tous les trajets chargés"
+  },
+  "homeNearMeWiden": "Élargir à {km} km",
+  "@homeNearMeWiden": {
+    "description": "Bouton de la carte « Aucun voyageur à proximité » qui agrandit le rayon de Près de moi",
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "homeNearMeDisable": "Désactiver « Près de moi »",
+  "@homeNearMeDisable": {
+    "description": "Bouton de la carte « Aucun voyageur à proximité » qui coupe le filtre Près de moi"
+  },
+  "homeNearMeChip": "Près de moi · {km} km",
+  "@homeNearMeChip": {
+    "description": "Puce de la rangée de filtres quand Près de moi est actif, avec le rayon",
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "homeMapSummaryClose": "Fermer l'aperçu du trajet",
+  "@homeMapSummaryClose": {
+    "description": "Libellé d'accessibilité de la croix de la carte-résumé d'un trajet sur la carte"
+  },
   "homeRadiusKm": "Rayon · {km} km",
   "@homeRadiusKm": {
     "placeholders": {

@@ -2287,6 +2287,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeMapButton => 'Carte';
 
   @override
+  String get homeListButton => 'Liste';
+
+  @override
+  String get homeMapNoTripsInZoneTitle => 'Aucun trajet dans cette zone';
+
+  @override
+  String get homeMapNoTripsInZoneHint =>
+      'Déplacez la carte ou affichez tous les trajets.';
+
+  @override
+  String get homeMapSeeAllTrips => 'Voir tous les trajets';
+
+  @override
+  String homeNearMeWiden(int km) {
+    return 'Élargir à $km km';
+  }
+
+  @override
+  String get homeNearMeDisable => 'Désactiver « Près de moi »';
+
+  @override
+  String homeNearMeChip(int km) {
+    return 'Près de moi · $km km';
+  }
+
+  @override
+  String get homeMapSummaryClose => 'Fermer l\'aperçu du trajet';
+
+  @override
   String homeRadiusKm(int km) {
     return 'Rayon · $km km';
   }

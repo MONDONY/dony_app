@@ -2278,6 +2278,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeMapButton => 'Map';
 
   @override
+  String get homeListButton => 'List';
+
+  @override
+  String get homeMapNoTripsInZoneTitle => 'No trips in this area';
+
+  @override
+  String get homeMapNoTripsInZoneHint => 'Move the map or show all trips.';
+
+  @override
+  String get homeMapSeeAllTrips => 'See all trips';
+
+  @override
+  String homeNearMeWiden(int km) {
+    return 'Widen to $km km';
+  }
+
+  @override
+  String get homeNearMeDisable => 'Turn off “Near me”';
+
+  @override
+  String homeNearMeChip(int km) {
+    return 'Near me · $km km';
+  }
+
+  @override
+  String get homeMapSummaryClose => 'Close trip preview';
+
+  @override
   String homeRadiusKm(int km) {
     return 'Radius · $km km';
   }

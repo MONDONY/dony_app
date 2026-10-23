@@ -46,9 +46,9 @@ import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/unmet_criterion_label.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/distance_badge.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
-import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/similar_trips_section.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
@@ -142,67 +142,6 @@ String homeCorridorLabel(AppLocalizations l, HomeSearchFilters filters) {
   }
   return l.homeCorridorAll;
 }
-
-/// « Tirer pour voir les 4 voyageurs » : la poignée nomme ce qu'il y a
-/// dessous, dans les mots du sélecteur de mode, jamais « résultats ».
-@visibleForTesting
-String homePullUpLabel(
-  AppLocalizations l, {
-  required SearchMode mode,
-  required int count,
-}) {
-  if (count == 0) {
-    return l.homePullToList;
-  }
-  return mode.isTrips
-      ? l.homePullToTravelers(count)
-      : l.homePullToParcels(count);
-}
-
-/// Indication de drag dans le header du sheet selon l'état : peek → « tirer
-/// pour voir les N voyageurs/colis », plein écran → « tirer pour voir la
-/// carte ».
-@visibleForTesting
-String homePullHintLabel(
-  AppLocalizations l, {
-  required SearchMode mode,
-  required int count,
-  required bool down,
-}) {
-  return down ? l.homePullToMap : homePullUpLabel(l, mode: mode, count: count);
-}
-
-/// Hauteur d'ouverture de la feuille de résultats (FLUTTER-CD) : ≈ 60 % de
-/// la zone, sans jamais monter au-dessus de la barre de recherche (bas de
-/// [overlayBottom]) ni masquer le bouton « Près de moi » posé juste au-dessus
-/// de la feuille. Null quand la place manque (paysage, texte très agrandi) :
-/// la feuille reste alors à sa hauteur repliée [peekSize].
-@visibleForTesting
-double? computeHomeRaisedSheetSize({
-  required double areaHeight,
-  required double areaTop,
-  required double? overlayBottom,
-  required double peekSize,
-  double preferred = kHomeRaisedSheetSize,
-}) {
-  if (areaHeight <= 0) return null;
-  // Barre du haut non mesurée : on suppose son plafond (45 % de la zone).
-  final overlay = (overlayBottom ?? areaTop + areaHeight * 0.45) - areaTop;
-  final reserved = overlay + kHomeNearMeFabClearance;
-  final fit = 1 - reserved / areaHeight;
-  final target = math.min(preferred, fit);
-  // Moins de 8 points au-dessus de la hauteur repliée : rien à gagner.
-  if (target < peekSize + 0.08) return null;
-  return target;
-}
-
-/// Hauteur d'ouverture visée pour la feuille de résultats.
-const double kHomeRaisedSheetSize = 0.60;
-
-/// Place réservée entre la barre du haut et la feuille ouverte : bouton
-/// « Près de moi » (48), son décalage au-dessus de la feuille (sm + lg, voir
-/// `fabBottomPadding`) et un espace sous la barre du haut (sm).
-const double kHomeNearMeFabClearance = 48 + DonySpacing.sm * 2 + DonySpacing.lg;
 
 /// Nomme le corridor courant : « 5 colis cherchent un voyageur sur Lyon →
 /// Bamako » en mode trajets, son symétrique « 12 voyageurs passent sur Lyon →
@@ -381,24 +320,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   final _sheetController = DraggableScrollableController();
 
-  /// Hauteur repliée de la feuille, recalculée à chaque build (texte agrandi,
-  /// paysage) : la poignée y revient au lieu d'un 0.30 en dur.
-  double _peekSize = 0.30;
-  double _sheetSize = 0.20;
+  /// Taille de la feuille de résultats : 0 = carte plein écran (aucun panneau
+  /// sous la carte), 1 = liste plein écran. Il n'existe pas de cran
+  /// intermédiaire : la bascule se fait par la pastille « Liste » / « Carte ».
+  double _sheetSize = 0;
+
+  /// Liste plein écran affichée (la carte est alors masquée).
   bool get _isMapHidden => _sheetSize > 0.92;
 
-  /// Hauteur d'ouverture de la feuille (≈ 60 %), mesurée au premier rendu
-  /// pour ne jamais recouvrir la barre de recherche ni le bouton « Près de
-  /// moi ». Null tant qu'elle n'est pas mesurée, ou quand l'écran est trop bas
-  /// pour la loger (paysage, texte très agrandi) : la feuille reste repliée.
-  double? _raisedSize;
-
-  /// Marge basse du bouton « Près de moi » quand la feuille est à
-  /// mi-hauteur : juste au-dessus d'elle.
-  double? _raisedFabPadding;
-
-  /// La feuille ne monte qu'une fois, au premier affichage de la liste.
-  bool _didRaiseOnOpen = false;
+  /// La feuille a une hauteur : en dessous, elle reste construite mais hors
+  /// affichage (voir le `Offstage` du build).
+  bool get _isSheetShown => _sheetSize > 0.001;
 
   /// Première arrivée sur l'onglet depuis l'ouverture de l'app : la feuille se
   /// pose à 100 % (voir [HomeSheetSession]). Reste vrai tant que la feuille
@@ -413,17 +345,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
   String? _lastSheetBucket;
   Timer? _sheetSettleTimer;
 
-  /// Vrai pendant la montée automatique d'ouverture : distingue ce cran de
+  /// Vrai pendant l'ouverture automatique en liste : distingue ce cran de
   /// celui d'un geste de l'utilisateur.
   bool _autoRaising = false;
-
-  /// Enveloppe de la barre du haut (corridor, mode, filtres), mesurée pour
-  /// caler la hauteur d'ouverture de la feuille juste en dessous.
-  final _topOverlayKey = GlobalKey();
-
-  /// Feuille ouverte à mi-hauteur : les annonces sont visibles, la carte
-  /// reste au-dessus (FLUTTER-CD).
-  bool get _isSheetRaised => !_isMapHidden && _sheetSize > _peekSize + 0.08;
 
   // Cached markers for package_requests (rebuilt when search results change).
   Set<Marker> _packageRequestMarkers = {};
@@ -433,9 +357,35 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   StreamSubscription<BlockChange>? _blockSub;
 
-  bool _nearMeShowList = false;
   // True between the FAB tap and the position being acquired (FAB spinner).
   bool _isLocatingNearMe = false;
+
+  /// Cercle d'aperçu tracé derrière la feuille « Près de moi » pendant que
+  /// l'utilisateur glisse le curseur de rayon, avant d'activer le filtre.
+  LatLng? _previewCenter;
+  double? _previewRadiusKm;
+
+  /// La zone visible de la carte ne contient aucun trajet chargé : la carte
+  /// « Aucun trajet dans cette zone » propose de tout afficher.
+  bool _isZoneEmpty = false;
+
+  /// Hauteur mesurée de la carte du bas (résumé d'un trajet ou état vide) : le
+  /// bouton de localisation se pose au-dessus.
+  final _bottomCardKey = GlobalKey();
+  double _bottomCardHeight = 0;
+
+  void _measureBottomCard() {
+    if (!mounted) return;
+    final ro = _bottomCardKey.currentContext?.findRenderObject();
+    final h = ro is RenderBox && ro.hasSize ? ro.size.height : 0.0;
+    if ((h - _bottomCardHeight).abs() > 0.5) {
+      setState(() => _bottomCardHeight = h);
+    }
+  }
+
+  /// Incrémenté par « Voir tous les trajets » : la carte se recadre sur
+  /// l'ensemble des trajets chargés.
+  int _fitAllSignal = 0;
 
   String? _selectedAnnouncementId;
 
@@ -478,7 +428,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (HomeSheetSession.takeFullOpening()) {
       _sheetStartsFull = true;
       _sheetSize = 1.0;
-      _didRaiseOnOpen = true;
       // Le cran n'est pas un changement de taille : aucun écouteur ne le
       // verrait. On le mesure une fois, comme une montée automatique.
       _autoRaising = true;
@@ -551,29 +500,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (!_sheetController.isAttached) return;
     final newSize = _sheetController.size;
     final wasHidden = _isMapHidden;
-    final wasRaised = _isSheetRaised;
+    final wasShown = _isSheetShown;
     _sheetSize = newSize;
     _sheetSettleTimer?.cancel();
     _sheetSettleTimer = Timer(
       const Duration(milliseconds: 400),
       _reportSheetSettled,
     );
-    // Rebuild quand l'état plein écran ou mi-hauteur change (swap indications
-    // / filtres, position du bouton « Près de moi »).
-    if (wasHidden != _isMapHidden || wasRaised != _isSheetRaised) {
+    // Rebuild quand on passe de la carte à la liste (en-tête, pastille).
+    if (wasHidden != _isMapHidden || wasShown != _isSheetShown) {
       setState(() {});
     }
   }
 
-  String get _sheetBucket => _isMapHidden
-      ? 'full'
-      : _isSheetRaised
-      ? 'raised'
-      : 'peek';
+  String get _sheetBucket => _isMapHidden ? 'full' : 'map';
 
-  /// Un event quand la feuille s'est posée sur un autre cran (`peek` /
-  /// `raised` / `full`), pour savoir si les testeurs la gardent à mi-hauteur
-  /// ou la remontent en plein écran. Les crans traversés en glissant ne
+  /// Un event quand l'écran s'est posé sur l'autre vue (`map` / `full`), pour
+  /// savoir si les testeurs restent sur la carte ou sur la liste. Les crans traversés en glissant ne
   /// comptent pas : la temporisation attend la fin du mouvement.
   void _reportSheetSettled() {
     if (!mounted) return;
@@ -621,148 +564,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
     });
   }
 
-  /// FLUTTER-CD : la feuille repliée laissait un nouvel utilisateur devant
-  /// une carte vide, persuadé que rien ne chargeait. À l'ouverture, la feuille
-  /// monte d'elle-même pour montrer les premières annonces ; la carte reste
-  /// au-dessus, et l'indication « voir la carte » la replie.
-  void _raiseSheetOnOpen() {
-    if (!mounted || !_sheetController.isAttached) return;
-    final target = computeHomeRaisedSheetSize(
-      areaHeight: _areaHeight(),
-      areaTop: _areaTop(),
-      overlayBottom: _topOverlayBottom(),
-      peekSize: _peekSize,
-    );
-    if (target == null) return;
-    final areaHeight = _areaHeight();
-    setState(() {
-      _raisedSize = target;
-      _raisedFabPadding = areaHeight * target + DonySpacing.sm;
-    });
-    _autoRaising = true;
-    _sheetController.animateTo(
-      target,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  RenderBox? _areaBox() {
-    final ro = context.findRenderObject();
-    return ro is RenderBox && ro.hasSize ? ro : null;
-  }
-
-  double _areaHeight() =>
-      _areaBox()?.size.height ?? MediaQuery.sizeOf(context).height;
-
-  double _areaTop() => _areaBox()?.localToGlobal(Offset.zero).dy ?? 0;
-
-  double? _topOverlayBottom() {
-    final ro = _topOverlayKey.currentContext?.findRenderObject();
-    if (ro is! RenderBox || !ro.hasSize) return null;
-    return ro.localToGlobal(Offset(0, ro.size.height)).dy;
-  }
-
   /// Drag manuel de la poignée → pilote directement la taille du sheet (un
   /// DraggableScrollableSheet seul ne réagit qu'au scroll de sa liste interne,
   /// pas au drag sur le header).
   void _onHandleDrag(BuildContext context, DragUpdateDetails d) {
     if (!_sheetController.isAttached) return;
     final h = MediaQuery.of(context).size.height;
-    final next = (_sheetController.size - d.primaryDelta! / h).clamp(
-      _peekSize,
-      1.0,
-    );
+    final next = (_sheetController.size - d.primaryDelta! / h).clamp(0.0, 1.0);
     _sheetController.jumpTo(next);
   }
 
-  /// Aimante le sheet au snap le plus proche au relâcher de la poignée.
+  /// Aimante le sheet sur la carte ou sur la liste au relâcher de la poignée.
   void _snapSheet() {
     if (!_sheetController.isAttached) return;
-    final snaps = [_peekSize, _raisedSize ?? 0.6, 1.0];
-    final s = _sheetController.size;
-    var best = snaps.first;
-    for (final v in snaps) {
-      if ((v - s).abs() < (best - s).abs()) best = v;
-    }
     _sheetController.animateTo(
-      best,
+      _sheetController.size > 0.5 ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOutCubic,
-    );
-  }
-
-  /// Variante de [_pullHint] qui compte les résultats du mode courant.
-  ///
-  /// Le compteur des trajets vient de la liste déjà construite, celui des colis
-  /// de l'état du bloc de recherche des demandes : sans ce branchement, le mode
-  /// Colis afficherait le nombre de trajets, ce qui a été constaté à l'écran.
-  Widget _pullHintForMode(
-    ColorScheme cs, {
-    required bool down,
-    required int tripCount,
-  }) {
-    if (!_mode.isParcels) {
-      return _pullHint(cs, down: down, count: tripCount);
-    }
-    return BlocBuilder<PackageRequestSearchBloc, PackageRequestSearchState>(
-      // Même liste que le fil, ses propres demandes comprises.
-      builder: (ctx, prState) =>
-          _pullHint(cs, down: down, count: prState.displayCount),
-    );
-  }
-
-  /// Indication de drag dans le header du sheet selon l'état : peek → « tirer
-  /// pour voir les N voyageurs/colis », plein écran → « tirer pour voir la
-  /// carte ».
-  Widget _pullHint(ColorScheme cs, {required bool down, required int count}) {
-    final text = homePullHintLabel(
-      context.l10n,
-      mode: _mode,
-      count: count,
-      down: down,
-    );
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        if (!_sheetController.isAttached) return;
-        _sheetController.animateTo(
-          down ? _peekSize : 1.0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(
-          left: DonySpacing.lg,
-          right: DonySpacing.lg,
-          bottom: DonySpacing.xs,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              down
-                  ? Icons.keyboard_arrow_down_rounded
-                  : Icons.keyboard_arrow_up_rounded,
-              size: 18,
-              color: cs.primary,
-            ),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                text,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: cs.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1156,10 +974,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   }
 
   void _deactivateNearMe() {
-    setState(() {
-      _nearMeShowList = false;
-      _selectedAnnouncementId = null;
-    });
+    setState(() => _selectedAnnouncementId = null);
     _onFiltersChanged(_filters.copyWith(clearNearMe: true));
   }
 
@@ -1176,9 +991,26 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _onFiltersChanged(_filters.copyWith(nearMeRadiusKm: radiusKm));
   }
 
+  /// Rayons proposés par « Élargir » : on prend le premier palier au-dessus
+  /// du rayon courant (5 km → 25, 25 → 50, 50 → 100, 100 → 200).
+  static const _nearMeRadiusSteps = <int>[25, 50, 100, 200];
+
+  /// Prochain rayon proposé quand rien n'est trouvé, ou null au maximum.
+  int? get _nextNearMeRadiusKm {
+    final current = _nearMeRadiusKm ?? 25;
+    for (final step in _nearMeRadiusSteps) {
+      if (step > current) return step;
+    }
+    return null;
+  }
+
+  void _widenNearMeRadius() {
+    final next = _nextNearMeRadiusKm;
+    if (next == null) return;
+    _onFiltersChanged(_filters.copyWith(nearMeRadiusKm: next.toDouble()));
+  }
+
   Future<void> _activateNearMe() async {
-    // La feuille est détruite par « Près de moi » : recréée, elle repart repliée.
-    _sheetStartsFull = false;
     const locationService = GeolocatorLocationService();
     final access = await requestLocationAccess(locationService);
     if (!mounted) return;
@@ -1187,9 +1019,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
       return;
     }
 
-    // Toggle simple : on active directement avec le rayon par défaut (ou le
-    // dernier utilisé) sans ré-ouvrir le sélecteur. Le rayon se change ensuite
-    // via la pastille _NearMeRadiusPill ; un 2e tap sur le FAB désactive.
     setState(() => _isLocatingNearMe = true);
     final Position pos;
     try {
@@ -1207,11 +1036,31 @@ class _MapSenderViewState extends State<_MapSenderView> {
     }
     if (!mounted) return;
 
-    setState(() => _isLocatingNearMe = false);
+    // La feuille « Près de moi » s'ouvre avant d'activer le filtre : le cercle
+    // se redessine sur la carte pendant que l'utilisateur règle le rayon.
+    final initialKm = _filters.nearMeRadiusKm ?? 25;
+    setState(() {
+      _isLocatingNearMe = false;
+      _previewCenter = LatLng(pos.latitude, pos.longitude);
+      _previewRadiusKm = initialKm;
+    });
+    final radiusKm = await NearMeRadiusSheet.show(
+      context,
+      initialRadiusKm: initialKm,
+      onPreview: (km) {
+        if (mounted) setState(() => _previewRadiusKm = km);
+      },
+    );
+    if (!mounted) return;
+    setState(() {
+      _previewCenter = null;
+      _previewRadiusKm = null;
+    });
+    if (radiusKm == null) return;
     _onFiltersChanged(
       _filters.copyWith(
         nearMeActive: true,
-        nearMeRadiusKm: _filters.nearMeRadiusKm ?? 25,
+        nearMeRadiusKm: radiusKm,
         userLat: pos.latitude,
         userLng: pos.longitude,
       ),
@@ -1300,48 +1149,21 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
-  void _exitNearMeAndShowList() {
-    // La feuille s'ouvre ici en plein écran : pas de montée à mi-hauteur.
-    _didRaiseOnOpen = true;
-    _deactivateNearMe();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_sheetController.isAttached) return;
-      _sheetController.animateTo(
-        1.0,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-      );
-    });
-  }
-
-  void _onTravelerCardTap(BuildContext context, AnnouncementModel a) {
-    final authState = context.read<AuthBloc>().state;
-    final currentUserId = authState.currentUserId;
-    final isOwn = currentUserId != null && a.travelerId == currentUserId;
-    if (isOwn) {
-      unawaited(() async {
-        final changed = await context.push<bool>(
-          '/announcements/${a.id}/trip',
-          extra: a,
-        );
-        if ((changed ?? false) && mounted) {
-          _dispatchSearch();
-        }
-      }());
-      return;
-    }
-    final bidState = context.read<BidBloc>().state;
-    final existingBid = bidState.existingTripBidsByAnnouncement()[a.id];
-    if (existingBid != null) {
-      context.push(existingTripBidRoute(existingBid), extra: existingBid);
-    } else {
-      showTravelerAnnouncementSheet(context, announcement: a);
-    }
-  }
-
+  /// Bouton « Carte » de la liste : la carte reprend tout l'écran.
   void _showMap() {
     _sheetController.animateTo(
-      0.45,
+      0,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  /// Bouton « Liste » de la carte : la liste prend tout l'écran. Les filtres,
+  /// « Près de moi » compris, restent actifs.
+  void _showList() {
+    setState(() => _selectedAnnouncementId = null);
+    _sheetController.animateTo(
+      1,
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeOutCubic,
     );
@@ -1559,6 +1381,18 @@ class _MapSenderViewState extends State<_MapSenderView> {
               }
             },
             builder: (ctx, prState) {
+              final parcelsCarousel =
+                  _isNearMeActive && _mode.isParcels && !_isMapHidden;
+              final bottomCard = _buildBottomCard(
+                ctx,
+                announcements,
+                searchLoaded: state is AnnouncementSearchLoaded,
+              );
+              if (bottomCard != null) {
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _measureBottomCard(),
+                );
+              }
               return Stack(
                 children: [
                   Positioned.fill(
@@ -1570,38 +1404,50 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       isNearMeActive: _isNearMeActive,
                       activeRadiusKm: _nearMeRadiusKm,
                       userPosition: _userPosition,
+                      currentUserId: currentUserId,
+                      previewCenter: _previewCenter,
+                      previewRadiusKm: _previewRadiusKm,
                       isLocating: _isLocatingNearMe,
                       onNearMeToggle: () => _isNearMeActive
                           ? _deactivateNearMe()
                           : _activateNearMe(),
-                      // Quand « Près de moi » est actif, le carousel (min 384px)
-                      // recouvre le bas : on remonte le FAB juste au-dessus pour
-                      // qu'il reste tappable (2e tap = désactiver le filtre).
-                      fabBottomPadding: _isNearMeActive
+                      // Le bouton de localisation se pose juste au-dessus de la
+                      // pastille « Liste », et au-dessus de la carte-résumé
+                      // quand elle est affichée. En mode Colis « Près de moi »,
+                      // le carrousel (min 384 px) recouvre le bas : le bouton
+                      // le surmonte pour rester tappable.
+                      fabBottomPadding: parcelsCarousel
                           ? (MediaQuery.of(context).size.height * 0.40).clamp(
                                   384.0,
                                   470.0,
                                 ) +
                                 MediaQuery.of(context).padding.bottom +
                                 DonySpacing.base
-                          // Feuille ouverte à mi-hauteur : le bouton se pose
-                          // juste au-dessus d'elle au lieu d'être recouvert.
-                          : _isSheetRaised && _raisedFabPadding != null
-                          ? _raisedFabPadding!
-                          : MediaQuery.of(context).size.height * 0.45,
+                          : MediaQuery.of(context).padding.bottom +
+                                _kViewPillHeight +
+                                DonySpacing.md +
+                                (bottomCard != null
+                                    ? _bottomCardHeight + DonySpacing.md
+                                    : 0),
                       selectedAnnouncementId: _selectedAnnouncementId,
                       onAnnouncementSelected: (id) {
-                        // Ses propres trajets ne s'ouvrent pas au tap sur la
-                        // carte : le tap est compté, pas une fiche ouverte.
-                        final tapped = announcements
-                            .where((a) => a.id == id)
-                            .firstOrNull;
-                        final isOwn =
-                            tapped != null &&
-                            currentUserId != null &&
-                            tapped.travelerId == currentUserId;
-                        _trackMapMarker('trip', opensCard: !isOwn);
+                        // Un tap sélectionne le trajet : la carte-résumé
+                        // s'ouvre au-dessus de la pastille « Liste », et c'est
+                        // elle qui ouvre la fiche (même pour ses propres
+                        // trajets : « Votre trajet »).
+                        _trackMapMarker('trip', opensCard: false);
                         setState(() => _selectedAnnouncementId = id);
+                      },
+                      onMapTapped: () {
+                        if (_selectedAnnouncementId != null) {
+                          setState(() => _selectedAnnouncementId = null);
+                        }
+                      },
+                      fitAllSignal: _fitAllSignal,
+                      onZoneEmptyChanged: (empty) {
+                        if (empty != _isZoneEmpty && mounted) {
+                          setState(() => _isZoneEmpty = empty);
+                        }
                       },
                       onClusterTapped: (size) =>
                           _trackHome(AnalyticsEvents.homeMapMarkerTapped, {
@@ -1612,15 +1458,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     ),
                   ),
 
-                  // ── Top overlay (disparaît en plein écran ou mode Près de moi) ──
+                  // ── Top overlay : disparaît en liste plein écran ──────────────
                   Positioned(
                     top: MediaQuery.of(context).padding.top + DonySpacing.sm,
                     left: DonySpacing.md,
                     right: DonySpacing.md,
                     child: IgnorePointer(
-                      ignoring: _isMapHidden || _isNearMeActive,
+                      ignoring: _isMapHidden,
                       child: AnimatedOpacity(
-                        opacity: (_isMapHidden || _isNearMeActive) ? 0.0 : 1.0,
+                        opacity: _isMapHidden ? 0.0 : 1.0,
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeInOut,
                         // Plein écran : la rangée favoris, recherche, « + » et
@@ -1630,7 +1476,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         child: _isMapHidden
                             ? const SizedBox.shrink()
                             : ConstrainedBox(
-                                key: _topOverlayKey,
                                 constraints: BoxConstraints(
                                   maxHeight:
                                       MediaQuery.sizeOf(context).height * 0.45,
@@ -1646,6 +1491,22 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       _modeSelector(),
                                       const SizedBox(height: DonySpacing.sm),
                                       _filterChipsRow(),
+                                      // « Près de moi » actif : la puce du
+                                      // rayon se pose sous les filtres, tap =
+                                      // changer le rayon, croix = couper.
+                                      if (_isNearMeActive) ...[
+                                        const SizedBox(height: DonySpacing.sm),
+                                        Center(
+                                          child: _NearMeRadiusPill(
+                                            key: const Key(
+                                              'near-me-radius-pill',
+                                            ),
+                                            radiusKm: _nearMeRadiusKm ?? 25,
+                                            onTap: _changeNearMeRadius,
+                                            onClear: _deactivateNearMe,
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),
@@ -1654,96 +1515,67 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     ),
                   ),
 
-                  // ── Pastille rayon (mode Près de moi actif) : change le rayon ──
-                  //    sans couper le filtre.
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 260),
-                    curve: Curves.easeOutCubic,
-                    top: _isNearMeActive
-                        ? MediaQuery.of(context).padding.top + DonySpacing.sm
-                        : MediaQuery.of(context).padding.top - 80,
-                    left: DonySpacing.md,
-                    child: AnimatedOpacity(
-                      opacity: _isNearMeActive ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 220),
-                      child: IgnorePointer(
-                        ignoring: !_isNearMeActive,
-                        child: _NearMeRadiusPill(
-                          key: const Key('near-me-radius-pill'),
-                          radiusKm: _nearMeRadiusKm ?? 25,
-                          onTap: _changeNearMeRadius,
+                  // ── Liste plein écran (hors écran en vue carte) ───────────────
+                  Builder(
+                    builder: (sheetCtx) {
+                      return DraggableScrollableSheet(
+                        controller: _sheetController,
+                        initialChildSize: _sheetStartsFull ? 1.0 : 0.0,
+                        minChildSize: 0,
+                        snap: true,
+                        // Vue carte : la feuille est à hauteur 0. Elle reste
+                        // construite (le contrôleur exige un défilant monté),
+                        // mais hors affichage : rien n'est peint, donc aucun
+                        // débordement d'une hauteur nulle.
+                        builder: (ctx, scrollCtrl) => LayoutBuilder(
+                          builder: (_, box) {
+                            // Une hauteur nulle ferait déborder le contenu
+                            // pendant la mise en page : il garde au moins
+                            // [_kSheetMinContentHeight], rogné par le clip.
+                            final contentHeight = math.max(
+                              box.maxHeight,
+                              _kSheetMinContentHeight,
+                            );
+                            return Offstage(
+                              offstage: !_isSheetShown,
+                              child: ClipRect(
+                                child: OverflowBox(
+                                  alignment: Alignment.topCenter,
+                                  minHeight: contentHeight,
+                                  maxHeight: contentHeight,
+                                  child: _buildSheet(
+                                    ctx,
+                                    scrollCtrl,
+                                    announcements,
+                                    MediaQuery.of(context).padding.bottom,
+                                    currentUserId: currentUserId,
+                                    isKycVerified: isKycVerified,
+                                    tripsFailed: state is AnnouncementError,
+                                    tripsLoading: state is AnnouncementLoading,
+                                    // Total serveur, toutes pages, filtre
+                                    // d'urgence compris.
+                                    tripsTotal:
+                                        state is AnnouncementSearchLoaded
+                                        ? state.displayCount
+                                        : null,
+                                    // Seul un chargement réussi porte le bloc :
+                                    // une erreur n'en invente jamais.
+                                    similarTrips:
+                                        state is AnnouncementSearchLoaded
+                                        ? state.similar
+                                        : const [],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
 
-                  // ── Liste ou Carousel selon le mode Près de moi ───────────────
-                  if (!_isNearMeActive || _nearMeShowList)
-                    Builder(
-                      builder: (sheetCtx) {
-                        // La fraction de peek (0.30) est calibrée pour le
-                        // contenu à 100 % : poignée + indication + en-tête. À
-                        // 200 %, ce même contenu ne tient plus dans 30 % de la
-                        // hauteur (RenderFlex overflow constaté). On agrandit
-                        // le peek proportionnellement au facteur d'échelle du
-                        // texte, sans rien changer à 100 % (facteur = 1).
-                        final textScale =
-                            MediaQuery.textScalerOf(sheetCtx).scale(14) / 14;
-                        // À 200 %, la poignée, l'indication et l'en-tête
-                        // dépassent encore 55 % sur les petits écrans. Une
-                        // peek plus haute garde le contenu utilisable sans
-                        // modifier la taille normale à 100 %.
-                        // Plancher en pixels : en paysage (≈360 dp de haut),
-                        // 30 % ne laissait que ≈108 dp pour ≈110 dp de
-                        // contenu replié (Sentry FLUTTER-4X, 2 px).
-                        final screenHeight = MediaQuery.sizeOf(sheetCtx).height;
-                        final minPeek = screenHeight > 0
-                            ? (120 * textScale) / screenHeight
-                            : 0.30;
-                        final peekSize = math
-                            .max(0.30 * textScale, minPeek)
-                            .clamp(0.30, 0.90)
-                            .toDouble();
-                        _peekSize = peekSize;
-                        final middleSnap =
-                            _raisedSize ??
-                            (peekSize < 0.5 ? 0.6 : (peekSize + 1) / 2);
-                        if (!_didRaiseOnOpen) {
-                          _didRaiseOnOpen = true;
-                          WidgetsBinding.instance.addPostFrameCallback(
-                            (_) => _raiseSheetOnOpen(),
-                          );
-                        }
-                        return DraggableScrollableSheet(
-                          controller: _sheetController,
-                          initialChildSize: _sheetStartsFull ? 1.0 : peekSize,
-                          minChildSize: peekSize,
-                          snap: true,
-                          snapSizes: [peekSize, middleSnap, 1.0],
-                          builder: (ctx, scrollCtrl) => _buildSheet(
-                            ctx,
-                            scrollCtrl,
-                            announcements,
-                            MediaQuery.of(context).padding.bottom,
-                            currentUserId: currentUserId,
-                            isKycVerified: isKycVerified,
-                            tripsFailed: state is AnnouncementError,
-                            tripsLoading: state is AnnouncementLoading,
-                            // Total serveur, toutes pages, filtre d'urgence
-                            // compris.
-                            tripsTotal: state is AnnouncementSearchLoaded
-                                ? state.displayCount
-                                : null,
-                            // Seul un chargement réussi porte le bloc : une
-                            // erreur n'en invente jamais.
-                            similarTrips: state is AnnouncementSearchLoaded
-                                ? state.similar
-                                : const [],
-                          ),
-                        );
-                      },
-                    )
-                  else
+                  // ── Carte « Colis » près de moi : carrousel d'origine ─────────
+                  if (parcelsCarousel)
                     Positioned(
                       left: 0,
                       right: 0,
@@ -1752,86 +1584,130 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         child: SizedBox(
                           height: (MediaQuery.of(context).size.height * 0.40)
                               .clamp(384.0, 470.0),
-                          // Un seul carousel : celui du mode courant. La vue
-                          // mixte à deux onglets a disparu avec le mode « Tout ».
-                          child: _mode.isParcels
-                              ? NearMePackageRequestCarousel(
-                                      items: prState.results,
-                                      userPosition: _userPosition != null
-                                          ? (
-                                              lat: _userPosition!.latitude,
-                                              lng: _userPosition!.longitude,
-                                            )
-                                          : null,
-                                      currentUserId: currentUserId,
-                                      selectedRequestId:
-                                          _selectedAnnouncementId,
-                                      onCardChanged: (id) => setState(
-                                        () => _selectedAnnouncementId = id,
-                                      ),
-                                      onSwiped: _trackCarouselSwiped,
-                                      onSeeAll: _exitNearMeAndShowList,
-                                      onTapCard: (it) {
-                                        _trackCardOpened(
-                                          'carousel',
-                                          'package_request',
-                                        );
-                                        unawaited(
-                                          PackageRequestPreviewBottomSheet.show(
+                          child:
+                              NearMePackageRequestCarousel(
+                                    items: prState.results,
+                                    userPosition: _userPosition != null
+                                        ? (
+                                            lat: _userPosition!.latitude,
+                                            lng: _userPosition!.longitude,
+                                          )
+                                        : null,
+                                    currentUserId: currentUserId,
+                                    selectedRequestId: _selectedAnnouncementId,
+                                    onCardChanged: (id) => setState(
+                                      () => _selectedAnnouncementId = id,
+                                    ),
+                                    onSwiped: _trackCarouselSwiped,
+                                    onSeeAll: _showList,
+                                    onTapCard: (it) {
+                                      _trackCardOpened(
+                                        'carousel',
+                                        'package_request',
+                                      );
+                                      unawaited(
+                                        PackageRequestPreviewBottomSheet.show(
+                                          context,
+                                          item: it,
+                                          isOwnRequest:
+                                              currentUserId != null &&
+                                              it.sender.id == currentUserId,
+                                        ),
+                                      );
+                                    },
+                                    onMakeOffer: (it) =>
+                                        currentUserId == null ||
+                                            it.sender.id != currentUserId
+                                        ? PackageRequestPreviewBottomSheet.show(
                                             context,
                                             item: it,
-                                            isOwnRequest:
-                                                currentUserId != null &&
-                                                it.sender.id == currentUserId,
-                                          ),
-                                        );
-                                      },
-                                      onMakeOffer: (it) =>
-                                          currentUserId == null ||
-                                              it.sender.id != currentUserId
-                                          ? PackageRequestPreviewBottomSheet.show(
-                                              context,
-                                              item: it,
-                                            )
-                                          : null,
-                                    )
-                                    .animate()
-                                    .fadeIn(duration: 250.ms)
-                                    .slideY(
-                                      begin: 0.1,
-                                      curve: Curves.easeOutCubic,
-                                    )
-                              : NearMeCarousel(
-                                      announcements: announcements,
-                                      userPosition: _userPosition != null
-                                          ? (
-                                              lat: _userPosition!.latitude,
-                                              lng: _userPosition!.longitude,
-                                            )
-                                          : null,
-                                      selectedAnnouncementId:
-                                          _selectedAnnouncementId,
-                                      onCardChanged: (id) => setState(
-                                        () => _selectedAnnouncementId = id,
-                                      ),
-                                      onSwiped: _trackCarouselSwiped,
-                                      onSeeAll: _exitNearMeAndShowList,
-                                      onTapCard: (a) {
-                                        _trackCardOpened('carousel', 'trip');
-                                        _onTravelerCardTap(context, a);
-                                      },
-                                    )
-                                    .animate()
-                                    .fadeIn(duration: 250.ms)
-                                    .slideY(
-                                      begin: 0.1,
-                                      curve: Curves.easeOutCubic,
-                                    ),
+                                          )
+                                        : null,
+                                  )
+                                  .animate()
+                                  .fadeIn(duration: 250.ms)
+                                  .slideY(
+                                    begin: 0.1,
+                                    curve: Curves.easeOutCubic,
+                                  ),
                         ),
                       ),
                     ),
 
-                  // ── FAB "Carte" (visible quand sheet plein écran) ─────────────
+                  // ── Carte du bas : résumé du trajet touché, ou état vide ─────
+                  if (bottomCard != null)
+                    Positioned(
+                      left: DonySpacing.md,
+                      right: DonySpacing.md,
+                      bottom:
+                          MediaQuery.of(context).padding.bottom +
+                          DonySpacing.lg +
+                          _kViewPillHeight +
+                          DonySpacing.md,
+                      child:
+                          NotificationListener<SizeChangedLayoutNotification>(
+                            onNotification: (_) {
+                              _measureBottomCard();
+                              return true;
+                            },
+                            child: SizeChangedLayoutNotifier(
+                              child: KeyedSubtree(
+                                key: _bottomCardKey,
+                                child: bottomCard,
+                              ),
+                            ),
+                          ),
+                    ),
+
+                  // ── Scarabée de signalement (vue carte) ──────────────────────
+                  //    Il vivait dans l'en-tête de la feuille repliée, qui
+                  //    n'existe plus : il se pose à gauche, à la hauteur de la
+                  //    pastille « Liste ».
+                  if (!_isMapHidden && !parcelsCarousel)
+                    Positioned(
+                      left: DonySpacing.lg,
+                      bottom:
+                          MediaQuery.of(context).padding.bottom +
+                          DonySpacing.lg,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const SizedBox.square(
+                          dimension: _kViewPillHeight,
+                          child: DonyFeedbackButton(key: Key('feedback-map')),
+                        ),
+                      ),
+                    ),
+
+                  // ── Pastille « Liste » (vue carte) ───────────────────────────
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutCubic,
+                    bottom: (!_isMapHidden && !parcelsCarousel)
+                        ? MediaQuery.of(context).padding.bottom + DonySpacing.lg
+                        : -80,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: _HomeViewPill(
+                        key: const Key('home-list-pill'),
+                        iconName: 'list',
+                        label: context.l10n.homeListButton,
+                        onTap: _showList,
+                      ),
+                    ),
+                  ),
+
+                  // ── Pastille « Carte » (liste plein écran) ───────────────────
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 280),
                     curve: Curves.easeOutCubic,
@@ -1840,7 +1716,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         : -80,
                     left: 0,
                     right: 0,
-                    child: Center(child: _HomeCarteFab(onTap: _showMap)),
+                    child: Center(
+                      child: _HomeViewPill(
+                        key: const Key('home-map-pill'),
+                        iconName: 'map',
+                        label: context.l10n.homeMapButton,
+                        onTap: _showMap,
+                      ),
+                    ),
                   ),
                 ],
               );
@@ -2062,6 +1945,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     return HomeFilterChipsRow(
       mode: _mode,
       filters: _filters,
+      onNearMeClear: _deactivateNearMe,
       onUrgentToggle: _onUrgentToggle,
       onDateTap: _showDatePresetSheet,
       onDateClear: () => _onFiltersChanged(
@@ -2344,10 +2228,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
               ],
             ),
           ),
-          if (!_isMapHidden)
-            // Mi-hauteur : les annonces sont déjà là, l'indication propose la
-            // carte (FLUTTER-CD). Repliée : elle propose la liste.
-            _pullHintForMode(cs, down: _isSheetRaised, tripCount: tripCount),
           Divider(height: 1, color: cs.outline),
           Expanded(
             child: NotificationListener<ScrollNotification>(
@@ -2667,12 +2547,63 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Carte d'un trajet de la liste des résultats, exact ou proche : mêmes
   /// actions dans les deux cas (ouverture, favori, offre déjà déposée). Seules
   /// les [unmetReasons] distinguent une carte du bloc « Autres annonces ».
+  /// Carte posée au-dessus de la pastille « Liste » : résumé du trajet touché
+  /// sur la carte, ou message quand « Près de moi » ou la zone visible ne
+  /// contient rien. Null quand il n'y a rien à dire.
+  Widget? _buildBottomCard(
+    BuildContext ctx,
+    List<AnnouncementModel> announcements, {
+    required bool searchLoaded,
+  }) {
+    if (_isMapHidden || !_mode.isTrips) return null;
+    final selectedId = _selectedAnnouncementId;
+    final selected = selectedId == null
+        ? null
+        : announcements.where((a) => a.id == selectedId).firstOrNull;
+    if (selected != null) {
+      final bids = ctx.read<BidBloc>().state.existingTripBidsByAnnouncement();
+      return _MapBottomCard(
+        key: const Key('map-trip-summary'),
+        onClose: () => setState(() => _selectedAnnouncementId = null),
+        child: _buildTripCard(ctx, selected, 0, bids, source: 'map'),
+      );
+    }
+    if (_isNearMeActive && searchLoaded && announcements.isEmpty) {
+      final l = ctx.l10n;
+      final next = _nextNearMeRadiusKm;
+      return _MapBottomCard(
+        key: const Key('map-near-me-empty'),
+        title: l.listingNoTravelersNearbyTitle,
+        message: l.listingNoTravelersNearbyDesc,
+        primaryLabel: next == null ? null : l.homeNearMeWiden(next),
+        onPrimary: _widenNearMeRadius,
+        secondaryLabel: l.homeNearMeDisable,
+        onSecondary: _deactivateNearMe,
+      );
+    }
+    if (_isZoneEmpty && announcements.isNotEmpty) {
+      final l = ctx.l10n;
+      return _MapBottomCard(
+        key: const Key('map-zone-empty'),
+        title: l.homeMapNoTripsInZoneTitle,
+        message: l.homeMapNoTripsInZoneHint,
+        primaryLabel: l.homeMapSeeAllTrips,
+        onPrimary: () => setState(() {
+          _isZoneEmpty = false;
+          _fitAllSignal++;
+        }),
+      );
+    }
+    return null;
+  }
+
   Widget _buildTripCard(
     BuildContext context,
     AnnouncementModel a,
     int index,
     Map<String, BidModel> myActiveBidsByAnnouncement, {
     List<String> unmetReasons = const [],
+    String source = 'list',
   }) {
     final currentUserId = context.read<AuthBloc>().state.currentUserId;
     final isOwn = currentUserId != null && a.travelerId == currentUserId;
@@ -2696,7 +2627,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       existingBidStatus: existingBid?.status,
       unmetReasons: unmetReasons,
       onTap: () {
-        _trackCardOpened('list', 'trip');
+        _trackCardOpened(source, 'trip');
         if (isOwn) {
           unawaited(() async {
             final changed = await context.push<bool>(
@@ -2923,9 +2854,26 @@ class _CrossDiscoveryTile extends StatelessWidget {
 
 // ── _HomeCarteFab ─────────────────────────────────────────────────────────────
 
-class _HomeCarteFab extends StatelessWidget {
-  const _HomeCarteFab({required this.onTap});
+/// Hauteur minimale donnée au contenu de la feuille de résultats, même quand
+/// la feuille est repliée à 0 (vue carte).
+const double _kSheetMinContentHeight = 420;
 
+/// Hauteur de la pastille « Liste » / « Carte » : le bouton de localisation et
+/// la carte du bas se calent dessus.
+const double _kViewPillHeight = 44;
+
+/// Pastille sombre qui fait passer de la carte à la liste, et inversement,
+/// toujours au même endroit.
+class _HomeViewPill extends StatelessWidget {
+  const _HomeViewPill({
+    super.key,
+    required this.iconName,
+    required this.label,
+    required this.onTap,
+  });
+
+  final String iconName;
+  final String label;
   final VoidCallback onTap;
 
   @override
@@ -2935,10 +2883,8 @@ class _HomeCarteFab extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.lg,
-          vertical: DonySpacing.md,
-        ),
+        height: _kViewPillHeight,
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
         decoration: BoxDecoration(
           color: cs.onSurface,
           borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -2953,10 +2899,10 @@ class _HomeCarteFab extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DonyIcon('map', size: 16, color: cs.surface),
+            DonyIcon(iconName, size: 16, color: cs.surface),
             const SizedBox(width: DonySpacing.xs),
             Text(
-              context.l10n.homeMapButton,
+              label,
               style: tt.labelMedium?.copyWith(
                 color: cs.surface,
                 fontWeight: FontWeight.w600,
@@ -2964,6 +2910,114 @@ class _HomeCarteFab extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Carte posée sur la carte, au-dessus de la pastille « Liste » : résumé d'un
+/// trajet (avec une croix pour le refermer) ou message d'état vide avec ses
+/// boutons.
+class _MapBottomCard extends StatelessWidget {
+  const _MapBottomCard({
+    super.key,
+    this.child,
+    this.onClose,
+    this.title,
+    this.message,
+    this.primaryLabel,
+    this.onPrimary,
+    this.secondaryLabel,
+    this.onSecondary,
+  });
+
+  /// Contenu d'un résumé de trajet ; sinon le message d'état vide.
+  final Widget? child;
+  final VoidCallback? onClose;
+  final String? title;
+  final String? message;
+  final String? primaryLabel;
+  final VoidCallback? onPrimary;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final body =
+        child ??
+        Padding(
+          padding: const EdgeInsets.all(DonySpacing.base),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                title ?? '',
+                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: DonySpacing.xxs),
+              Text(
+                message ?? '',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              if (primaryLabel != null && onPrimary != null) ...[
+                const SizedBox(height: DonySpacing.md),
+                DonyButton(label: primaryLabel!, onPressed: onPrimary),
+              ],
+              if (secondaryLabel != null && onSecondary != null)
+                TextButton(
+                  onPressed: onSecondary,
+                  child: Text(secondaryLabel!),
+                ),
+            ],
+          ),
+        );
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.lg),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          body,
+          if (onClose != null)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Semantics(
+                button: true,
+                label: context.l10n.homeMapSummaryClose,
+                child: GestureDetector(
+                  key: const Key('map-summary-close'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onClose,
+                  child: SizedBox.square(
+                    dimension: kDonyMinTapTarget,
+                    child: Center(
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerHighest,
+                          shape: BoxShape.circle,
+                        ),
+                        child: DonyIcon('x', size: 12, color: cs.onSurface),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -2978,55 +3032,80 @@ class _NearMeRadiusPill extends StatelessWidget {
     super.key,
     required this.radiusKm,
     required this.onTap,
+    required this.onClear,
   });
 
   final double radiusKm;
   final VoidCallback onTap;
 
+  /// Croix de la puce : coupe le filtre « Près de moi ».
+  final VoidCallback onClear;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.full),
-        child: Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.full),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
-              ),
-            ],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DonyIcon('circle-dot', size: 16, color: cs.primary),
-              const SizedBox(width: DonySpacing.xs),
-              Text(
-                context.l10n.homeRadiusKm(radiusKm.round()),
-                style: tt.labelLarge?.copyWith(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w700,
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            onTap: onTap,
+            borderRadius: const BorderRadius.horizontal(
+              left: Radius.circular(DonyRadius.full),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: DonySpacing.base,
+                right: DonySpacing.xs,
+              ),
+              child: SizedBox(
+                height: 36,
+                child: Center(
+                  child: Text(
+                    context.l10n.homeRadiusKm(radiusKm.round()),
+                    style: tt.labelLarge?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: DonySpacing.xs),
-              DonyIcon(
-                'sliders-horizontal',
-                size: 15,
-                color: cs.onSurfaceVariant,
-              ),
-            ],
+            ),
           ),
-        ),
+          Semantics(
+            button: true,
+            label: context.l10n.homeNearMeDisable,
+            child: InkWell(
+              key: const Key('near-me-radius-clear'),
+              onTap: onClear,
+              borderRadius: const BorderRadius.horizontal(
+                right: Radius.circular(DonyRadius.full),
+              ),
+              child: SizedBox(
+                width: 36,
+                height: 36,
+                child: Center(
+                  child: ExcludeSemantics(
+                    child: DonyIcon('x', size: 14, color: cs.primary),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

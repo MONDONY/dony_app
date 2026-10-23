@@ -20,6 +20,7 @@ Widget _wrap({
   VoidCallback? onMatchingMyTripsBlocked,
   VoidCallback? onGpProToggle,
   VoidCallback? onSuitcase23Toggle,
+  VoidCallback? onNearMeClear,
 }) => MaterialApp(
   home: Scaffold(
     body: HomeFilterChipsRow(
@@ -43,6 +44,7 @@ Widget _wrap({
       onParcelSizeClear: () {},
       onMatchingMyTripsToggle: onMatchingMyTripsToggle ?? () {},
       onMatchingMyTripsBlocked: onMatchingMyTripsBlocked ?? () {},
+      onNearMeClear: onNearMeClear,
     ),
   ),
 );
@@ -53,6 +55,7 @@ void main() {
     await initializeDateFormatting('en');
   });
 
+  group('puce Près de moi', _nearMeChipTests);
   group('pastille « Pour mes trajets »', _matchingMyTripsChipTests);
   group('traductions', _translationTests);
   group('puce GP Pro', _gpProChipTests);
@@ -440,5 +443,62 @@ void _chipOrderTests() {
       expect(find.byKey(const Key('chip-date')), findsOneWidget);
       expect(find.byKey(const Key('chip-urgent')), findsOneWidget);
     }
+  });
+}
+
+void _nearMeChipTests() {
+  const actif = HomeSearchFilters(
+    nearMeActive: true,
+    nearMeRadiusKm: 50,
+    userLat: 48.85,
+    userLng: 2.35,
+  );
+
+  testWidgets('actif : la puce « Près de moi · 50 km » ouvre la rangée', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(mode: SearchMode.trips, filters: actif, onNearMeClear: () {}),
+    );
+
+    expect(find.byKey(const Key('chip-near-me')), findsOneWidget);
+    expect(find.text('Près de moi · 50 km'), findsOneWidget);
+    final puce = tester.getRect(find.byKey(const Key('chip-near-me')));
+    final date = tester.getRect(find.byKey(const Key('chip-date')));
+    expect(puce.left, lessThan(date.left));
+  });
+
+  testWidgets('un tap sur la puce retire le filtre', (tester) async {
+    var retire = 0;
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: actif,
+        onNearMeClear: () => retire++,
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('chip-near-me')));
+    expect(retire, 1);
+  });
+
+  testWidgets('inactif ou sans action : aucune puce', (tester) async {
+    await tester.pumpWidget(
+      _wrap(mode: SearchMode.trips, filters: const HomeSearchFilters()),
+    );
+    expect(find.byKey(const Key('chip-near-me')), findsNothing);
+
+    await tester.pumpWidget(_wrap(mode: SearchMode.trips, filters: actif));
+    expect(find.byKey(const Key('chip-near-me')), findsNothing);
+  });
+
+  testWidgets('en anglais : « Near me · 50 km »', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(mode: SearchMode.trips, filters: actif, onNearMeClear: () {}),
+    );
+
+    expect(find.text('Near me · 50 km'), findsOneWidget);
+    expect(find.text('Près de moi · 50 km'), findsNothing);
   });
 }

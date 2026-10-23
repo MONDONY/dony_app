@@ -10,10 +10,17 @@ class NearMeRadiusSheet {
     BuildContext context, {
     double initialRadiusKm = 25,
     String? confirmLabel,
+
+    /// Appelé à chaque déplacement du curseur : la carte redessine le cercle
+    /// derrière la feuille avant que le filtre soit activé.
+    ValueChanged<double>? onPreview,
   }) {
     final radiusNotifier = ValueNotifier<double>(
       initialRadiusKm.clamp(minRadiusKm, maxRadiusKm),
     );
+    if (onPreview != null) {
+      radiusNotifier.addListener(() => onPreview(radiusNotifier.value));
+    }
 
     return DonyBottomSheet.show<double>(
       context,
@@ -46,10 +53,11 @@ class _NearMeRadiusContent extends StatelessWidget {
       builder: (context, radius, _) {
         return Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               context.l10n.homeNearMeExplanation,
+              textAlign: TextAlign.center,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.lg),
@@ -70,6 +78,22 @@ class _NearMeRadiusContent extends StatelessWidget {
               label: '${radius.round()} km',
               activeColor: cs.primary,
               onChanged: (v) => radiusNotifier.value = v,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${NearMeRadiusSheet.minRadiusKm.round()} km',
+                    style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  Text(
+                    '${NearMeRadiusSheet.maxRadiusKm.round()} km',
+                    style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ],
+              ),
             ),
           ],
         );

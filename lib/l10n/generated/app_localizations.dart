@@ -3854,6 +3854,54 @@ abstract class AppLocalizations {
   /// **'Carte'**
   String get homeMapButton;
 
+  /// Pastille flottante de l'accueil qui ouvre la liste des résultats depuis la carte plein écran
+  ///
+  /// In fr, this message translates to:
+  /// **'Liste'**
+  String get homeListButton;
+
+  /// Titre de la carte affichée quand la zone visible de la carte ne contient aucun trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet dans cette zone'**
+  String get homeMapNoTripsInZoneTitle;
+
+  /// Sous-titre de la carte « Aucun trajet dans cette zone »
+  ///
+  /// In fr, this message translates to:
+  /// **'Déplacez la carte ou affichez tous les trajets.'**
+  String get homeMapNoTripsInZoneHint;
+
+  /// Bouton qui recadre la carte sur tous les trajets chargés
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir tous les trajets'**
+  String get homeMapSeeAllTrips;
+
+  /// Bouton de la carte « Aucun voyageur à proximité » qui agrandit le rayon de Près de moi
+  ///
+  /// In fr, this message translates to:
+  /// **'Élargir à {km} km'**
+  String homeNearMeWiden(int km);
+
+  /// Bouton de la carte « Aucun voyageur à proximité » qui coupe le filtre Près de moi
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactiver « Près de moi »'**
+  String get homeNearMeDisable;
+
+  /// Puce de la rangée de filtres quand Près de moi est actif, avec le rayon
+  ///
+  /// In fr, this message translates to:
+  /// **'Près de moi · {km} km'**
+  String homeNearMeChip(int km);
+
+  /// Libellé d'accessibilité de la croix de la carte-résumé d'un trajet sur la carte
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer l\'aperçu du trajet'**
+  String get homeMapSummaryClose;
+
   /// No description provided for @homeRadiusKm.
   ///
   /// In fr, this message translates to:

@@ -674,6 +674,28 @@
   "homeEmptyTravelersFilteredHint": "Change your filters to see more travelers.",
   "homeEmptyTravelersRouteHint": "New trips are posted every day. Check back soon.",
   "homeMapButton": "Map",
+  "homeListButton": "List",
+  "homeMapNoTripsInZoneTitle": "No trips in this area",
+  "homeMapNoTripsInZoneHint": "Move the map or show all trips.",
+  "homeMapSeeAllTrips": "See all trips",
+  "homeNearMeWiden": "Widen to {km} km",
+  "@homeNearMeWiden": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "homeNearMeDisable": "Turn off “Near me”",
+  "homeNearMeChip": "Near me · {km} km",
+  "@homeNearMeChip": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "homeMapSummaryClose": "Close trip preview",
   "homeRadiusKm": "Radius · {km} km",
   "homeDepartureDateTitle": "Departure date",
   "commonDateToday": "Today",

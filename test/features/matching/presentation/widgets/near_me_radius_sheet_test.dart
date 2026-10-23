@@ -149,4 +149,53 @@ void main() {
     expect(find.text('Apply'), findsOneWidget);
     expect(find.text('Turn on the filter'), findsNothing);
   });
+
+  testWidgets('les bornes 5 km et 200 km sont affichées sous le curseur', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: ElevatedButton(
+              onPressed: () => NearMeRadiusSheet.show(ctx),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('5 km'), findsOneWidget);
+    expect(find.text('200 km'), findsOneWidget);
+  });
+
+  testWidgets('onPreview suit le curseur pendant qu\'on le déplace', (
+    tester,
+  ) async {
+    final apercus = <double>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: ElevatedButton(
+              onPressed: () =>
+                  NearMeRadiusSheet.show(ctx, onPreview: apercus.add),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(apercus, isEmpty);
+
+    await tester.drag(find.byType(Slider), const Offset(120, 0));
+    await tester.pumpAndSettle();
+
+    expect(apercus, isNotEmpty);
+    expect(apercus.last, greaterThan(25));
+  });
 }
