@@ -3391,9 +3391,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPosterUnitPerItem => 'per item';
 
   @override
-  String get tripPosterUnitPerKg => 'per kg';
-
-  @override
   String get tripPosterPriceUnavailable => 'Price unavailable';
 
   @override
@@ -18850,21 +18847,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPosterEyebrow => 'Trip';
 
   @override
-  String tripPosterHeroDeparture(String day) {
-    return 'Departs $day';
-  }
-
-  @override
-  String tripPosterHeroDepartureAt(String day, String time) {
-    return 'Departs $day, $time';
-  }
-
-  @override
-  String tripPosterHeroArrival(String when) {
-    return 'arrives $when';
-  }
-
-  @override
   String tripPosterTravelerTrips(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -18880,11 +18862,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPosterTileCapacity => 'Space left';
-
-  @override
-  String tripPosterCapacityOf(String total) {
-    return 'of $total';
-  }
 
   @override
   String get tripPosterTilePrice => 'Price';
@@ -18919,6 +18896,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestPosterEyebrow => 'Parcel to carry';
+
+  @override
+  String requestPosterDateLabel(String weekday) {
+    return 'Around · $weekday';
+  }
+
+  @override
+  String requestPosterToleranceShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'within $count days',
+      one: 'within 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get requestPosterDateFlexibleValue => 'Flexible';
 
   @override
   String requestPosterDate(String day) {
@@ -19033,6 +19029,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String tripPosterCaptionPayment(String methods) {
     return 'Payment: $methods';
+  }
+
+  @override
+  String tripPosterDateLabel(String weekday) {
+    return '$weekday · departs';
+  }
+
+  @override
+  String tripPosterTimeRange(String departure, String arrival) {
+    return '$departure → $arrival';
+  }
+
+  @override
+  String get tripPosterItemsTitle => 'Price per item';
+
+  @override
+  String tripPosterItemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripPosterItemsMore => 'in the app';
+
+  @override
+  String tripPosterPricePerKgShort(String price) {
+    return '$price/kg';
   }
 
   @override

@@ -19,6 +19,11 @@ import 'package:intl/intl.dart';
 /// terracotta : sur un fil Facebook ou un groupe WhatsApp, on distingue d'un
 /// coup d'œil « je propose des kilos » de « je cherche un voyageur ».
 ///
+/// Même refonte que l'affiche de trajet : la date en gros dans un bloc sombre
+/// sur le bandeau (« AUTOUR DU · LUN. / 26 OCT. » et sa souplesse), le budget
+/// en premier et en grand. Pas de drapeaux : une demande ne porte pas de code
+/// pays.
+///
 /// **Ni nom ni numéro de l'expéditeur.** L'affiche circule hors de
 /// l'application, chez des inconnus : les propositions arrivent dans
 /// l'application, où l'identité est vérifiée.
@@ -118,12 +123,8 @@ class PackageRequestPosterCard extends StatelessWidget {
                         const SizedBox(height: PosterLayout.gap),
                         PosterHero(
                           background: PosterPalette.terra,
-                          eyebrow: [
-                            l.requestPosterEyebrow,
-                            r.transportMode.label(l),
-                          ].join(' · '),
                           corridor: _corridor(text),
-                          subtitle: dateLabel(l, r),
+                          body: _dateBlock(l),
                         ),
                         const SizedBox(height: PosterLayout.gap),
                         _details(l, payments),
@@ -173,6 +174,36 @@ class PackageRequestPosterCard extends StatelessWidget {
     );
   }
 
+  /// Date souhaitée en gros. Sans date, le bloc dit « Date flexible » à la
+  /// place du jour. La souplesse (« à 3 jours près ») et la nature de l'affiche
+  /// (« Colis à transporter · Avion ») passent à droite du bloc.
+  Widget _dateBlock(AppLocalizations l) {
+    final r = request;
+    final desired = r.desiredDate;
+    final kind = [l.requestPosterEyebrow, r.transportMode.label(l)].join(' · ');
+    if (desired == null) {
+      return PosterDateBlock(
+        color: PosterPalette.ink,
+        value: l.requestPosterDateFlexibleValue.toUpperCase(),
+        valueKey: const Key('request-poster-day'),
+        title: kind,
+      );
+    }
+    final locale = l.localeName;
+    return PosterDateBlock(
+      color: PosterPalette.ink,
+      label: l
+          .requestPosterDateLabel(DateFormat.E(locale).format(desired))
+          .toUpperCase(),
+      value: DateFormat('d MMM', locale).format(desired).toUpperCase(),
+      valueKey: const Key('request-poster-day'),
+      title: r.dateToleranceDays > 0
+          ? l.requestPosterToleranceShort(r.dateToleranceDays)
+          : null,
+      detail: kind,
+    );
+  }
+
   /// Photo à gauche, tuiles à droite : poids et budget côte à côte, moyens de
   /// paiement dessous quand l'expéditeur en a choisi.
   Widget _details(AppLocalizations l, List<String> payments) {
@@ -196,25 +227,28 @@ class PackageRequestPosterCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
-                        child: PosterTile(
-                          label: l.requestPosterTileWeight,
-                          value: weightLabel(l, r),
-                          detail: l.requestPosterSize(
-                            r.parcelSize.label(l).toLowerCase(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 7),
-                      Expanded(
+                        flex: 5,
                         child: PosterTile(
                           label: l.requestPosterTileBudget,
                           value: budget ?? l.requestPosterBudgetNone,
+                          valueSize: 25,
                           detail: r.negotiable
                               ? l.requestPosterNegotiable
                               : l.requestPosterFirmPrice,
                           background: PosterPalette.ink,
                           valueColor: PosterPalette.paper,
                           labelColor: PosterPalette.inkOnDark,
+                        ),
+                      ),
+                      const SizedBox(width: 7),
+                      Expanded(
+                        flex: 4,
+                        child: PosterTile(
+                          label: l.requestPosterTileWeight,
+                          value: weightLabel(l, r),
+                          detail: l.requestPosterSize(
+                            r.parcelSize.label(l).toLowerCase(),
+                          ),
                         ),
                       ),
                     ],
