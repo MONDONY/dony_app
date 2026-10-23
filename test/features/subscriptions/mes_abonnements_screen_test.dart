@@ -10,6 +10,7 @@ import 'package:dony/features/subscriptions/presentation/mes_abonnements_screen.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/l10n_test_helpers.dart';
@@ -81,6 +82,47 @@ void main() {
     expect(find.text('Awa'), findsOneWidget);
     expect(find.text('Moussa'), findsOneWidget);
   });
+
+  testWidgets(
+    'retour du profil d\'un voyageur → la liste est rechargée (FLUTTER-RZ)',
+    (tester) async {
+      givenItems([_item('Awa')]);
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => BlocProvider<SubscriptionsBloc>.value(
+              value: bloc,
+              child: const MesAbonnementsScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/travelers/:id',
+            builder: (context, state) => Scaffold(
+              body: TextButton(
+                onPressed: () => context.pop(),
+                child: Text('Retour ${state.pathParameters['id']}'),
+              ),
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pump(const Duration(milliseconds: 600));
+      // Un chargement au démarrage de l'écran.
+      verify(() => bloc.add(any(that: isA<LoadSubscriptions>()))).called(1);
+
+      await tester.tap(find.text('Awa'));
+      await tester.pumpAndSettle();
+      expect(find.text('Retour t-Awa'), findsOneWidget);
+
+      await tester.tap(find.text('Retour t-Awa'));
+      await tester.pumpAndSettle();
+
+      // Un second chargement au retour : l'abonnement a pu changer dans le profil.
+      verify(() => bloc.add(any(that: isA<LoadSubscriptions>()))).called(1);
+    },
+  );
 
   testWidgets('état vide affiche le message', (tester) async {
     when(

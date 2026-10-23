@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
@@ -50,6 +51,8 @@ class OpenListingsSection extends StatelessWidget {
         ),
         OpenListingsLoaded() => _Frame(
           count: state.items.length,
+          expanded: state.expanded,
+          onToggle: cubit.toggleExpanded,
           child: _Loaded(state: state, cubit: cubit),
         ),
       },
@@ -58,17 +61,85 @@ class OpenListingsSection extends StatelessWidget {
 }
 
 /// Filet fin, marges et titre, comme les autres sections du profil public.
+///
+/// Avec [onToggle], l'en-tête replie ou déplie le contenu : le profil est long et
+/// la section « En cours » repousse les avis tout en bas (retour de testeur
+/// FLUTTER-RY). Sans [onToggle] (chargement), l'en-tête reste inerte.
 class _Frame extends StatelessWidget {
-  const _Frame({required this.child, this.count});
+  const _Frame({
+    required this.child,
+    this.count,
+    this.expanded = true,
+    this.onToggle,
+  });
 
   final Widget child;
   final int? count;
+  final bool expanded;
+  final VoidCallback? onToggle;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 250);
+
+    final header = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
+      child: Row(
+        children: [
+          Text(
+            l.openListingsTitle.toUpperCase(),
+            style: tt.labelSmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              letterSpacing: 0.7,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (count != null && count! > 0) ...[
+            const SizedBox(width: DonySpacing.sm),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                borderRadius: BorderRadius.circular(DonyRadius.full),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.sm,
+                  vertical: 1,
+                ),
+                child: Text(
+                  '$count',
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.onPrimaryContainer,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (onToggle != null) ...[
+            const Spacer(),
+            AnimatedRotation(
+              key: const Key('open-listings-chevron'),
+              turns: expanded ? 0.5 : 0,
+              duration: duration,
+              curve: Curves.easeOutCubic,
+              child: DonyIcon(
+                'chevron-down',
+                size: 20,
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(
@@ -80,43 +151,36 @@ class _Frame extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text(
-                  l.openListingsTitle.toUpperCase(),
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    letterSpacing: 0.7,
-                    fontWeight: FontWeight.w800,
-                  ),
+            if (onToggle == null)
+              header
+            else
+              Semantics(
+                button: true,
+                expanded: expanded,
+                label: l.openListingsTitle,
+                hint: expanded
+                    ? l.openListingsCollapseLabel
+                    : l.openListingsExpandLabel,
+                excludeSemantics: true,
+                onTap: onToggle,
+                child: GestureDetector(
+                  key: const Key('open-listings-header'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onToggle,
+                  child: header,
                 ),
-                if (count != null && count! > 0) ...[
-                  const SizedBox(width: DonySpacing.sm),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: cs.primaryContainer,
-                      borderRadius: BorderRadius.circular(DonyRadius.full),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                        vertical: 1,
-                      ),
-                      child: Text(
-                        '$count',
-                        style: tt.labelSmall?.copyWith(
-                          color: cs.onPrimaryContainer,
-                          fontWeight: FontWeight.w800,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+              ),
+            AnimatedSize(
+              duration: duration,
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: expanded
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: DonySpacing.sm),
+                      child: child,
+                    )
+                  : const SizedBox(width: double.infinity),
             ),
-            const SizedBox(height: DonySpacing.md),
-            child,
           ],
         ),
       ),

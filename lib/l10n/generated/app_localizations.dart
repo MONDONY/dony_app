@@ -1952,6 +1952,12 @@ abstract class AppLocalizations {
   /// **'Vérifiez les informations saisies puis réessayez.'**
   String get errorValidationMessage;
 
+  /// Erreur invalid-price du back : un trajet en mode « au kilo » exige un prix par kg supérieur à 0 (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un prix par kg supérieur à 0, ou choisissez le tarif à la grille.'**
+  String get errorInvalidPriceMessage;
+
   /// No description provided for @errorConflictTitle.
   ///
   /// In fr, this message translates to:
@@ -35957,6 +35963,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'En ligne {when}'**
   String openListingsPostedAgo(String when);
+
+  /// Section « En cours » du profil d'un membre (open_listings_section.dart). Indication d'accessibilité de l'en-tête quand la section est dépliée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Replier la section'**
+  String get openListingsCollapseLabel;
+
+  /// Section « En cours » du profil d'un membre (open_listings_section.dart). Indication d'accessibilité de l'en-tête quand la section est repliée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déplier la section'**
+  String get openListingsExpandLabel;
+
+  /// Libellé d'accessibilité de la ligne note · avis · ancienneté du profil public, touchable pour ouvrir la feuille des avis (profile_public_screen.dart, _ProfileHero).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les avis'**
+  String get profilePublicRatingTapSemantics;
 }
 
 class _AppLocalizationsDelegate

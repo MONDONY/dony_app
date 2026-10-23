@@ -1102,6 +1102,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vérifiez les informations saisies puis réessayez.';
 
   @override
+  String get errorInvalidPriceMessage =>
+      'Indiquez un prix par kg supérieur à 0, ou choisissez le tarif à la grille.';
+
+  @override
   String get errorConflictTitle => 'Action impossible';
 
   @override
@@ -22311,4 +22315,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String openListingsPostedAgo(String when) {
     return 'En ligne $when';
   }
+
+  @override
+  String get openListingsCollapseLabel => 'Replier la section';
+
+  @override
+  String get openListingsExpandLabel => 'Déplier la section';
+
+  @override
+  String get profilePublicRatingTapSemantics => 'Voir les avis';
 }

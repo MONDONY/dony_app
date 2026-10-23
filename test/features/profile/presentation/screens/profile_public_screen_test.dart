@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -9,6 +10,7 @@ import 'package:dony/features/profile/bloc/open_listings_cubit.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
+import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/profile/data/models/open_listing.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
@@ -18,6 +20,7 @@ import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
 import 'package:dony/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -37,6 +40,8 @@ class MockTravelerSubscribeBloc
     implements TravelerSubscribeBloc {}
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+class MockUserReviewsCubit extends Mock implements UserReviewsCubit {}
 
 class MockOpenListingsCubit extends MockCubit<OpenListingsState>
     implements OpenListingsCubit {}
@@ -1359,6 +1364,103 @@ void main() {
       find.textContaining('4.5 · 12 reviews · mars 2025', skipOffstage: false),
       findsOneWidget,
     );
+  });
+
+  testWidgets(
+    'ligne méta : trop longue pour une ligne, elle passe sur deux au lieu d\'être coupée (FLUTTER-S2)',
+    (tester) async {
+      // Police de test à chasse fixe (12 px par caractère) : la ligne de ce profil
+      // (« ⭐ 4,5 · 12 avis · mars 2025 ») ne tient pas dans les ~200 px du bandeau.
+      await tester.binding.setSurfaceSize(const Size(360, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(_wrapLoaded(profile: _profileTwelveReviews));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      final finder = find.byKey(const Key('profile-public-meta-line'));
+      expect(tester.widget<Text>(finder).maxLines, 2);
+      expect(
+        tester.renderObject<RenderParagraph>(finder).didExceedMaxLines,
+        isFalse,
+        reason: 'rien n\'est remplacé par « … »',
+      );
+      // Deux lignes de texte : plus haut qu'une seule.
+      expect(tester.getSize(finder).height, greaterThanOrEqualTo(30));
+      // Le texte entier reste dans l'arbre, ancienneté comprise.
+      expect(
+        find.textContaining('mars 2025', skipOffstage: false),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('la note ouvre la feuille des avis (FLUTTER-RY)', (tester) async {
+    final reviewsCubit = MockUserReviewsCubit();
+    final state = UserReviewsLoaded(
+      summary: _ratingSummary,
+      allRatings: _ratingSummary.ratings,
+    );
+    when(() => reviewsCubit.state).thenReturn(state);
+    when(
+      () => reviewsCubit.stream,
+    ).thenAnswer((_) => Stream<UserReviewsState>.value(state));
+    when(() => reviewsCubit.close()).thenAnswer((_) async {});
+    when(
+      () => reviewsCubit.load(any(), seed: any(named: 'seed')),
+    ).thenAnswer((_) async {});
+    when(() => reviewsCubit.loadNextPage(any())).thenAnswer((_) async {});
+    if (getIt.isRegistered<UserReviewsCubit>()) {
+      getIt.unregister<UserReviewsCubit>();
+    }
+    getIt.registerFactory<UserReviewsCubit>(() => reviewsCubit);
+    addTearDown(() {
+      if (getIt.isRegistered<UserReviewsCubit>()) {
+        getIt.unregister<UserReviewsCubit>();
+      }
+    });
+
+    await tester.pumpWidget(_wrapLoaded(profile: _profileOneReview));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('Avis'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('profile-public-rating-tap')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Avis'), findsOneWidget);
+    verify(
+      () => reviewsCubit.load(_userId, seed: any(named: 'seed')),
+    ).called(1);
+  });
+
+  testWidgets('la zone de la note fait au moins 44 pt de haut', (tester) async {
+    await tester.pumpWidget(_wrapLoaded(profile: _profileOneReview));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      tester.getSize(find.byKey(const Key('profile-public-rating-tap'))).height,
+      greaterThanOrEqualTo(44),
+    );
+  });
+
+  testWidgets('sans avis, la ligne n\'est pas touchable', (tester) async {
+    const profile = ProfilePublicModel(
+      userId: _userId,
+      displayName: 'Fatou Diallo',
+      kycVerified: false,
+      isProAccount: false,
+      gpPro: false,
+      completedBidsCount: 0,
+      averageRating: 0,
+      ratingCount: 0,
+      memberSince: 'mars 2025',
+      badges: [],
+    );
+
+    await tester.pumpWidget(_wrapLoaded(profile: profile));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byKey(const Key('profile-public-rating-tap')), findsNothing);
+    expect(find.byKey(const Key('profile-public-meta-line')), findsOneWidget);
   });
 
   // ── 13. Non-régression date d'avis (remplacement dd/MM/yyyy -> yMd) ──────

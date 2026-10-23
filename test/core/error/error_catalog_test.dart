@@ -45,6 +45,33 @@ void main() {
     });
   });
 
+  group('ErrorCatalog — invalid-price (FLUTTER-RX)', () {
+    test('422 sans détail par champ → dit quoi corriger, pas le générique', () {
+      const error = ValidationException(
+        'Le prix par kg est obligatoire en mode KG',
+        code: 'invalid-price',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Données invalides');
+      expect(p.message, contains('prix par kg'));
+      expect(
+        p.message,
+        isNot('Vérifiez les informations saisies puis réessayez.'),
+      );
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('même message quel que soit le type d\'exception portant le code', () {
+      final p = ErrorCatalog.lookup(
+        const NetworkException('ignored', code: 'invalid-price'),
+      );
+
+      expect(p.message, contains('prix par kg'));
+    });
+  });
+
   group('ErrorCatalog — price-out-of-bounds (FLUTTER-GK)', () {
     for (final code in [
       'price-out-of-bounds',

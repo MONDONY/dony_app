@@ -25,11 +25,16 @@ class OpenListingsLoaded extends OpenListingsState {
   const OpenListingsLoaded({
     required this.items,
     this.filter = OpenListingsFilter.all,
+    this.expanded = true,
   });
 
   /// Toutes les annonces ouvertes, de la plus récente à la plus ancienne.
   final List<OpenListing> items;
   final OpenListingsFilter filter;
+
+  /// Section dépliée (par défaut) ou repliée sur son seul en-tête : le profil
+  /// est long, replier laisse atteindre les avis sans défiler jusqu'en bas.
+  final bool expanded;
 
   int get tripCount => items.whereType<OpenTripListing>().length;
   int get requestCount => items.whereType<OpenRequestListing>().length;
@@ -43,7 +48,10 @@ class OpenListingsLoaded extends OpenListingsState {
   };
 
   OpenListingsLoaded withFilter(OpenListingsFilter next) =>
-      OpenListingsLoaded(items: items, filter: next);
+      OpenListingsLoaded(items: items, filter: next, expanded: expanded);
+
+  OpenListingsLoaded withExpanded({required bool value}) =>
+      OpenListingsLoaded(items: items, filter: filter, expanded: value);
 }
 
 /// Échec (réseau, back pas encore déployé) : la section se masque, le reste
@@ -91,6 +99,20 @@ class OpenListingsCubit extends Cubit<OpenListingsState> {
       _analytics.logEvent(
         AnalyticsEvents.openListingsFilterChanged,
         properties: {'filter': filter.name},
+      ),
+    );
+  }
+
+  /// Replie ou déplie la section depuis son en-tête. Le filtre choisi est gardé.
+  void toggleExpanded() {
+    final current = state;
+    if (current is! OpenListingsLoaded) return;
+    final next = current.withExpanded(value: !current.expanded);
+    emit(next);
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.openListingsToggled,
+        properties: {'expanded': next.expanded},
       ),
     );
   }

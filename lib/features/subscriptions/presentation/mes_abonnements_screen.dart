@@ -273,7 +273,14 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
       ),
       child: SubscriptionTile(
         item: item,
-        onTap: () => context.push('/travelers/${item.travelerId}'),
+        onTap: () async {
+          await context.push<void>('/travelers/${item.travelerId}');
+          // Le profil permet de suivre, de se désabonner et d'activer la cloche :
+          // au retour, la liste en mémoire peut être périmée (FLUTTER-RZ).
+          if (context.mounted) {
+            context.read<SubscriptionsBloc>().add(const LoadSubscriptions());
+          }
+        },
         onToggleBell: () => _togglePush(context, item),
         onOpenLastTrip: item.lastAnnouncement == null
             ? null

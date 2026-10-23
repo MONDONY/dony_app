@@ -162,6 +162,75 @@ void main() {
     );
   });
 
+  group('toggleExpanded', () {
+    blocTest<OpenListingsCubit, OpenListingsState>(
+      'déplié par défaut ; replie puis déplie, filtre et annonces gardés, et mesure',
+      setUp: () => when(
+        () => repo.getOpenListings('u1'),
+      ).thenAnswer((_) async => [_request(), _trip()]),
+      build: build,
+      act: (c) async {
+        await c.load('u1');
+        c
+          ..selectFilter(OpenListingsFilter.trips)
+          ..toggleExpanded()
+          ..toggleExpanded();
+      },
+      skip: 3,
+      expect: () => [
+        isA<OpenListingsLoaded>()
+            .having((s) => s.expanded, 'expanded', isFalse)
+            .having((s) => s.filter, 'filter', OpenListingsFilter.trips)
+            .having((s) => s.items.length, 'items', 2),
+        isA<OpenListingsLoaded>()
+            .having((s) => s.expanded, 'expanded', isTrue)
+            .having((s) => s.filter, 'filter', OpenListingsFilter.trips),
+      ],
+      verify: (_) {
+        verify(
+          () => backend.capture(AnalyticsEvents.openListingsToggled, {
+            'expanded': false,
+          }),
+        ).called(1);
+        verify(
+          () => backend.capture(AnalyticsEvents.openListingsToggled, {
+            'expanded': true,
+          }),
+        ).called(1);
+      },
+    );
+
+    blocTest<OpenListingsCubit, OpenListingsState>(
+      'changer de filtre une fois replié garde la section repliée',
+      setUp: () => when(
+        () => repo.getOpenListings('u1'),
+      ).thenAnswer((_) async => [_request(), _trip()]),
+      build: build,
+      act: (c) async {
+        await c.load('u1');
+        c
+          ..toggleExpanded()
+          ..selectFilter(OpenListingsFilter.requests);
+      },
+      skip: 3,
+      expect: () => [
+        isA<OpenListingsLoaded>()
+            .having((s) => s.expanded, 'expanded', isFalse)
+            .having((s) => s.filter, 'filter', OpenListingsFilter.requests),
+      ],
+    );
+
+    blocTest<OpenListingsCubit, OpenListingsState>(
+      'avant le chargement, la bascule est sans effet et ne mesure rien',
+      build: build,
+      act: (c) => c.toggleExpanded(),
+      expect: () => <OpenListingsState>[],
+      verify: (_) => verifyNever(
+        () => backend.capture(AnalyticsEvents.openListingsToggled, any()),
+      ),
+    );
+  });
+
   group('trackOpened', () {
     test('mesure le type de carte ouverte, jamais son identifiant', () async {
       build().trackOpened('request');

@@ -1794,6 +1794,15 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
+    // Trajet en mode « au kilo » sans prix par kg (création ou modification,
+    // `AnnouncementService`) : un 422 sans détail par champ retombait sur le
+    // message générique « Vérifiez les informations saisies » (FLUTTER-RX).
+    'invalid-price': _Entry(
+      title: (l) => l.errorValidationTitle,
+      message: (l) => l.errorInvalidPriceMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.rule_rounded,
+    ),
   };
 
   /// Codes dont le `detail` renvoyé par le back est déjà rédigé pour

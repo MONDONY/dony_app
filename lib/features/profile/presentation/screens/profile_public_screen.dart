@@ -355,6 +355,15 @@ class _LoadedView extends StatelessWidget {
                     subscribeAction: showSubscribeButton
                         ? const _SubscribeAction()
                         : null,
+                    // La note ouvre la feuille des avis : sur un profil long,
+                    // les avis sont tout en bas (retour de testeur FLUTTER-RY).
+                    onRatingTap: profile.ratingCount > 0
+                        ? () => AllReviewsBottomSheet.show(
+                            context,
+                            userId: userId,
+                            initialSummary: recentRatings,
+                          )
+                        : null,
                   )
                   .animate()
                   .fadeIn(duration: 300.ms)
@@ -462,11 +471,15 @@ class _ProfileHero extends StatelessWidget {
     required this.profile,
     required this.stats,
     this.subscribeAction,
+    this.onRatingTap,
   });
 
   final ProfilePublicModel profile;
   final Widget stats;
   final Widget? subscribeAction;
+
+  /// Ouvre la feuille des avis ; `null` sans avis (rien à ouvrir, ligne inerte).
+  final VoidCallback? onRatingTap;
 
   @override
   Widget build(BuildContext context) {
@@ -481,6 +494,19 @@ class _ProfileHero extends StatelessWidget {
       ratingStr,
       profile.ratingCount,
       profile.memberSince,
+    );
+    // Deux lignes au plus : « Membre depuis … » restait coupé par des points de
+    // suspension sur un écran étroit (retour de testeur FLUTTER-S2).
+    final metaText = Text(
+      metaLine,
+      key: const Key('profile-public-meta-line'),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: tt.bodySmall?.copyWith(
+        color: cs.onSurfaceVariant,
+        fontWeight: FontWeight.w600,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
     );
 
     return Container(
@@ -521,16 +547,34 @@ class _ProfileHero extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      metaLine,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                    if (onRatingTap == null)
+                      metaText
+                    else
+                      Semantics(
+                        button: true,
+                        hint: l.profilePublicRatingTapSemantics,
+                        child: GestureDetector(
+                          key: const Key('profile-public-rating-tap'),
+                          behavior: HitTestBehavior.opaque,
+                          onTap: onRatingTap,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              minHeight: kDonyMinTapTarget,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(child: metaText),
+                                const SizedBox(width: DonySpacing.xs),
+                                DonyIcon(
+                                  'chevron-right',
+                                  size: 16,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
                     if (profile.lastSeenDaysAgo != null)
                       Text(
                         lastSeenLabel(l, profile.lastSeenDaysAgo!),
