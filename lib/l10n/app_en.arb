@@ -357,6 +357,8 @@
   "errorNotFoundMessage": "This item can't be found or has been deleted.",
   "errorValidationTitle": "Invalid information",
   "errorValidationMessage": "Check the information you entered and try again.",
+  "errorInvalidPriceMessage": "Enter a price per kg above 0, or choose the price grid.",
+  "@errorInvalidPriceMessage": {"description": "Erreur invalid-price du back : un trajet en mode « au kilo » exige un prix par kg supérieur à 0 (error_catalog.dart)."},
   "errorConflictTitle": "Can't do this",
   "errorConflictMessage": "The current status doesn't allow this.",
   "errorStorageTitle": "Storage unavailable",
@@ -11091,5 +11093,11 @@
   "openListingsEmpty": "Nothing ongoing right now.",
   "@openListingsEmpty": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). État vide."},
   "openListingsPostedAgo": "Posted {when}",
-  "@openListingsPostedAgo": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Repère de date devant chaque carte ; {when} vient de followRecency*.", "placeholders": {"when": {"type": "String", "example": "hier"}}}
+  "@openListingsPostedAgo": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Repère de date devant chaque carte ; {when} vient de followRecency*.", "placeholders": {"when": {"type": "String", "example": "hier"}}},
+  "openListingsCollapseLabel": "Collapse the section",
+  "@openListingsCollapseLabel": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Indication d'accessibilité de l'en-tête quand la section est dépliée."},
+  "openListingsExpandLabel": "Expand the section",
+  "@openListingsExpandLabel": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Indication d'accessibilité de l'en-tête quand la section est repliée."},
+  "profilePublicRatingTapSemantics": "See reviews",
+  "@profilePublicRatingTapSemantics": {"description": "Libellé d'accessibilité de la ligne note · avis · ancienneté du profil public, touchable pour ouvrir la feuille des avis (profile_public_screen.dart, _ProfileHero)."}
 }

@@ -382,6 +382,8 @@
   "errorNotFoundMessage": "Cette ressource est introuvable ou a été supprimée.",
   "errorValidationTitle": "Données invalides",
   "errorValidationMessage": "Vérifiez les informations saisies puis réessayez.",
+  "errorInvalidPriceMessage": "Indiquez un prix par kg supérieur à 0, ou choisissez le tarif à la grille.",
+  "@errorInvalidPriceMessage": {"description": "Erreur invalid-price du back : un trajet en mode « au kilo » exige un prix par kg supérieur à 0 (error_catalog.dart)."},
   "errorConflictTitle": "Action impossible",
   "errorConflictMessage": "L'état actuel ne permet pas cette action.",
   "errorStorageTitle": "Stockage indisponible",
@@ -22438,5 +22440,11 @@
   "openListingsEmpty": "Rien en cours pour le moment.",
   "@openListingsEmpty": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). État vide."},
   "openListingsPostedAgo": "En ligne {when}",
-  "@openListingsPostedAgo": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Repère de date devant chaque carte ; {when} vient de followRecency* (« hier », « il y a 2 j »).", "placeholders": {"when": {"type": "String", "example": "hier"}}}
+  "@openListingsPostedAgo": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Repère de date devant chaque carte ; {when} vient de followRecency* (« hier », « il y a 2 j »).", "placeholders": {"when": {"type": "String", "example": "hier"}}},
+  "openListingsCollapseLabel": "Replier la section",
+  "@openListingsCollapseLabel": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Indication d'accessibilité de l'en-tête quand la section est dépliée."},
+  "openListingsExpandLabel": "Déplier la section",
+  "@openListingsExpandLabel": {"description": "Section « En cours » du profil d'un membre (open_listings_section.dart). Indication d'accessibilité de l'en-tête quand la section est repliée."},
+  "profilePublicRatingTapSemantics": "Voir les avis",
+  "@profilePublicRatingTapSemantics": {"description": "Libellé d'accessibilité de la ligne note · avis · ancienneté du profil public, touchable pour ouvrir la feuille des avis (profile_public_screen.dart, _ProfileHero)."}
 }

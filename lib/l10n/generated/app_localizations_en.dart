@@ -1094,6 +1094,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check the information you entered and try again.';
 
   @override
+  String get errorInvalidPriceMessage =>
+      'Enter a price per kg above 0, or choose the price grid.';
+
+  @override
   String get errorConflictTitle => 'Can\'t do this';
 
   @override
@@ -22158,4 +22162,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String openListingsPostedAgo(String when) {
     return 'Posted $when';
   }
+
+  @override
+  String get openListingsCollapseLabel => 'Collapse the section';
+
+  @override
+  String get openListingsExpandLabel => 'Expand the section';
+
+  @override
+  String get profilePublicRatingTapSemantics => 'See reviews';
 }

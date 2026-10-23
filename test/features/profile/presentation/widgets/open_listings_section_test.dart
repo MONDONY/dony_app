@@ -141,6 +141,78 @@ void main() {
     },
   );
 
+  testWidgets(
+    'section repliée : l\'en-tête et le compteur restent, les cartes disparaissent',
+    (tester) async {
+      await pump(
+        tester,
+        state: OpenListingsLoaded(
+          items: [_request(), _trip()],
+          expanded: false,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('EN COURS'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+      expect(find.byKey(const Key('open-listings-chevron')), findsOneWidget);
+      expect(find.byType(PackageRequestListCard), findsNothing);
+      expect(find.byType(TravelerCard), findsNothing);
+      expect(
+        find.byType(DonySegmentedControl<OpenListingsFilter>),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets('toucher l\'en-tête demande la bascule au cubit', (tester) async {
+    await pump(tester, state: OpenListingsLoaded(items: [_request(), _trip()]));
+
+    await tester.tap(find.byKey(const Key('open-listings-header')));
+
+    verify(() => cubit.toggleExpanded()).called(1);
+  });
+
+  testWidgets('l\'en-tête fait au moins 44 pt de haut (zone tactile)', (
+    tester,
+  ) async {
+    await pump(tester, state: OpenListingsLoaded(items: [_trip()]));
+
+    expect(
+      tester.getSize(find.byKey(const Key('open-listings-header'))).height,
+      greaterThanOrEqualTo(44),
+    );
+  });
+
+  testWidgets('accessibilité : l\'indication suit l\'état replié ou déplié', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await pump(tester, state: OpenListingsLoaded(items: [_trip()]));
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('En cours')).hint,
+      'Replier la section',
+    );
+
+    await pump(
+      tester,
+      state: OpenListingsLoaded(items: [_trip()], expanded: false),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('En cours')).hint,
+      'Déplier la section',
+    );
+    handle.dispose();
+  });
+
+  testWidgets('pendant le chargement, l\'en-tête est inerte', (tester) async {
+    await pump(tester, state: const OpenListingsLoading());
+
+    expect(find.byKey(const Key('open-listings-header')), findsNothing);
+    expect(find.byKey(const Key('open-listings-chevron')), findsNothing);
+  });
+
   testWidgets('toucher « Trajets » demande le filtre au cubit', (tester) async {
     await pump(tester, state: OpenListingsLoaded(items: [_request(), _trip()]));
 

@@ -1044,6 +1044,10 @@ abstract final class AnalyticsEvents {
   /// (propriété `filter` : `all`/`trips`/`requests`).
   static const openListingsFilterChanged = 'open_listings_filter_changed';
 
+  /// Section « En cours » repliée ou dépliée depuis son en-tête (propriété
+  /// `expanded`, état après le geste), pour atteindre les avis plus bas dans la page.
+  static const openListingsToggled = 'open_listings_toggled';
+
   /// Carte de la section « En cours » ouverte (propriété `kind` : `trip` ou
   /// `request`). Jamais l'identifiant ni le profil consulté.
   static const openListingOpened = 'open_listing_opened';
