@@ -66,6 +66,19 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'BID_SUPPLEMENT_WITHDRAWN' ||
     'BID_SUPPLEMENT_REFUNDED' ||
     'BID_SUPPLEMENT_PAID_OUT' when _isUuid(bidId) => '/bids/$bidId',
+    // Modification d'un colis accepté : la demande, son rappel et l'acceptation
+    // (paiement à finir) amènent la carte de la modification à l'écran ; les
+    // issues (refus, annulation, expiration, colis non apporté, remboursement)
+    // ouvrent simplement la fiche.
+    'BID_AMENDMENT_REQUESTED' ||
+    'BID_AMENDMENT_REMINDER' ||
+    'BID_AMENDMENT_ACCEPTED' when _isUuid(bidId) =>
+      '/bids/$bidId?action=amendment',
+    'BID_AMENDMENT_DECLINED' ||
+    'BID_AMENDMENT_CANCELLED' ||
+    'BID_AMENDMENT_EXPIRED' ||
+    'BID_AMENDMENT_NOT_BROUGHT' ||
+    'BID_AMENDMENT_REFUNDED' when _isUuid(bidId) => '/bids/$bidId',
     'BID_EXPIRED' when _isUuid(bidId) => '/bids/$bidId',
     // Demande carte jamais payée, annulée à la date limite de dépôt puis
     // supprimée : le back n'envoie plus de bidId (back #459) mais le trajet,

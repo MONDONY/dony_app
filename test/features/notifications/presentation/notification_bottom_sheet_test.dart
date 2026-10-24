@@ -1,4 +1,6 @@
+import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -296,5 +298,56 @@ void main() {
     testWidgets('un type inconnu garde la cloche neutre', (tester) async {
       expect(await iconAssetFor(tester, 'TYPE_INEXISTANT'), 'bell');
     });
+  });
+
+  group('icône par type — modification de colis', () {
+    // Couleur attendue par type, lue sur le fond teinté de la pastille.
+    Color? tileColor(WidgetTester tester) {
+      final container = tester.widget<Container>(
+        find
+            .ancestor(
+              of: find.byType(DonyEmoji),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+      return (container.decoration as BoxDecoration).color;
+    }
+
+    ColorScheme schemeOf(WidgetTester tester) => Theme.of(
+      tester.element(find.byType(NotificationBottomSheet)),
+    ).colorScheme;
+
+    final expected = <String, Color Function(ColorScheme)>{
+      'BID_AMENDMENT_REQUESTED': (cs) => cs.warning,
+      'BID_AMENDMENT_REMINDER': (cs) => cs.warning,
+      'BID_AMENDMENT_ACCEPTED': (cs) => cs.success,
+      'BID_AMENDMENT_DECLINED': (cs) => cs.error,
+      'BID_AMENDMENT_CANCELLED': (cs) => cs.onSurfaceVariant,
+      'BID_AMENDMENT_EXPIRED': (cs) => cs.onSurfaceVariant,
+      'BID_AMENDMENT_NOT_BROUGHT': (cs) => cs.error,
+      'BID_AMENDMENT_REFUNDED': (cs) => cs.primary,
+    };
+
+    for (final entry in expected.entries) {
+      testWidgets('${entry.key} : icône colis et couleur de sa famille', (
+        tester,
+      ) async {
+        stub(
+          NotificationLoaded(
+            notifications: [_notif(type: entry.key)],
+            unreadCount: 1,
+          ),
+        );
+
+        await pumpSheet(tester);
+
+        expect(find.byType(DonyEmoji), findsOneWidget);
+        expect(
+          tileColor(tester),
+          entry.value(schemeOf(tester)).withValues(alpha: 0.12),
+        );
+      });
+    }
   });
 }

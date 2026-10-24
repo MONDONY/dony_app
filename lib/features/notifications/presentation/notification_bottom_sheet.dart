@@ -752,6 +752,7 @@ class _NotificationIcon extends StatelessWidget {
       'request_accepted' => (cs.success, 'circle-check'),
       'negotiation_awaiting_trip' => (cs.success, 'circle-check'),
       'PAYMENT_RELEASED' => (cs.success, 'banknote'),
+      'BID_AMENDMENT_ACCEPTED' => (cs.success, 'package'),
       'BID_SUPPLEMENT_PAID' => (cs.success, 'banknote'),
       'BID_SUPPLEMENT_PAID_OUT' => (cs.success, 'banknote'),
       'BANK_PAYOUT_PAID' => (cs.success, 'landmark'),
@@ -763,6 +764,8 @@ class _NotificationIcon extends StatelessWidget {
       // Perdu
       'BID_REJECTED' => (cs.error, 'circle-x'),
       'PARCEL_REFUSED' => (cs.error, 'circle-x'),
+      'BID_AMENDMENT_DECLINED' => (cs.error, 'package'),
+      'BID_AMENDMENT_NOT_BROUGHT' => (cs.error, 'package'),
       'BID_SUPPLEMENT_DECLINED' => (cs.error, 'circle-x'),
       'negotiation_commission_declined' => (cs.error, 'circle-x'),
       'TRIP_CANCELLED' => (cs.error, 'ban'),
@@ -780,6 +783,8 @@ class _NotificationIcon extends StatelessWidget {
       'negotiation_commission_pending' => (cs.warning, 'wallet'),
       'BID_NEGOTIATION_COMMISSION_DUE' => (cs.warning, 'wallet'),
       'MM_PAYMENT_PENDING' => (cs.warning, 'credit-card'),
+      'BID_AMENDMENT_REQUESTED' => (cs.warning, 'package'),
+      'BID_AMENDMENT_REMINDER' => (cs.warning, 'package'),
       'BID_SUPPLEMENT_REQUESTED' => (cs.warning, 'credit-card'),
       'CARD_EXPIRING' => (cs.warning, 'credit-card'),
       'BANK_PAYOUT_FAILED' => (cs.warning, 'landmark'),
@@ -801,6 +806,7 @@ class _NotificationIcon extends StatelessWidget {
 
       // Informe / met en relation
       'BID_CREATED' => (cs.primary, 'package'),
+      'BID_AMENDMENT_REFUNDED' => (cs.primary, 'package'),
       'BID_SUPPLEMENT_REFUNDED' => (cs.primary, 'refresh-cw'),
       'PACKAGE_MATCH' => (cs.primary, 'package'),
       'NEW_MESSAGE' => (cs.primary, 'message-circle'),
@@ -825,6 +831,8 @@ class _NotificationIcon extends StatelessWidget {
 
       // Éteint tout seul, sans action possible
       'BID_EXPIRED' => (cs.onSurfaceVariant, 'timer-off'),
+      'BID_AMENDMENT_EXPIRED' => (cs.onSurfaceVariant, 'package'),
+      'BID_AMENDMENT_CANCELLED' => (cs.onSurfaceVariant, 'package'),
       'BID_SUPPLEMENT_EXPIRED' => (cs.onSurfaceVariant, 'timer-off'),
       'BID_SUPPLEMENT_WITHDRAWN' => (cs.onSurfaceVariant, 'ban'),
       'request_expired' => (cs.onSurfaceVariant, 'timer-off'),
