@@ -11159,6 +11159,8 @@
   "amendmentPaymentTotal": "Parcel total",
   "amendmentPaymentHeldByCard": "Paid by card, held until delivery",
   "amendmentPaymentCashToHand": "Cash to hand over to {name}",
+  "amendmentPaymentHeldOnline": "Paid online, held until delivery",
+  "amendmentLineSupplement": "Price supplement · {method}",
   "amendmentTravelerInviteStatus": "{name} wants to enlarge their parcel",
   "amendmentTravelerDeadline": "Reply before {deadline} · {hours} h",
   "amendmentTravelerForYou": "For you on top",

@@ -12,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -48,7 +49,9 @@ BidModel _bid({
   BidPaymentMethod method = BidPaymentMethod.stripe,
   String? trackingToken,
   bool amendmentAllowed = false,
+  BidMoneyBreakdown? moneyBreakdown,
 }) => BidModel(
+  moneyBreakdown: moneyBreakdown,
   id: 'bid-42',
   announcementId: 'ann-1',
   senderId: 'sender-1',
@@ -308,6 +311,67 @@ void main() {
           (_) => EscrowBadge(
             payment: _payment(PaymentStatus.escrow),
             bidStatus: 'HANDED_OVER',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(_l.bidDetailEscrowSecuredLabel(amount)), findsOneWidget);
+    });
+
+    testWidgets('senderActionBar_escrowBadge_usesBreakdownOnlineAmount', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          (_) => SenderActionBar(
+            bid: _bid(
+              status: 'ACCEPTED',
+              moneyBreakdown: const BidMoneyBreakdown(
+                lines: [],
+                total: 88,
+                onlineAmount: 61.2,
+                cashAmount: 26.8,
+              ),
+            ),
+            isLoading: false,
+            paymentLoaded: true,
+            existingPayment: _payment(PaymentStatus.escrow),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(_l.bidDetailEscrowSecuredLabel(formatPriceIn(61.2, 'EUR'))),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('escrowBadge_usesOnlineAmount', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          (_) => EscrowBadge(
+            payment: _payment(PaymentStatus.escrow),
+            bidStatus: 'ACCEPTED',
+            onlineAmount: 61.2,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(_l.bidDetailEscrowSecuredLabel(formatPriceIn(61.2, 'EUR'))),
+        findsOneWidget,
+      );
+      expect(find.text(_l.bidDetailEscrowSecuredLabel(amount)), findsNothing);
+    });
+
+    testWidgets('escrowBadge_withoutOnlineAmount_usesPaymentAmount', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          (_) => EscrowBadge(
+            payment: _payment(PaymentStatus.escrow),
+            bidStatus: 'ACCEPTED',
           ),
         ),
       );

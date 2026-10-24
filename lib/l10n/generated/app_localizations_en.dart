@@ -22392,6 +22392,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amendmentPaymentHeldByCard => 'Paid by card, held until delivery';
 
   @override
+  String get amendmentPaymentHeldOnline => 'Paid online, held until delivery';
+
+  @override
+  String amendmentLineSupplement(String method) {
+    return 'Price supplement · $method';
+  }
+
+  @override
   String amendmentPaymentCashToHand(String name) {
     return 'Cash to hand over to $name';
   }

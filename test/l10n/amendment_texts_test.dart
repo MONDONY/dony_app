@@ -53,6 +53,18 @@ void main() {
     });
   });
 
+  group('cartes d\'argent additionnées (A5)', () {
+    test('ligne payée en ligne et ligne du supplément', () {
+      expect(
+        fr.amendmentPaymentHeldOnline,
+        "Payé en ligne, gardé jusqu'à la livraison",
+      );
+      expect(en.amendmentPaymentHeldOnline, 'Paid online, held until delivery');
+      expect(fr.amendmentLineSupplement('Carte'), 'Supplément de prix · Carte');
+      expect(en.amendmentLineSupplement('Card'), 'Price supplement · Card');
+    });
+  });
+
   group('messages d\'erreur de la modification', () {
     const codes = [
       'amendment-disabled',

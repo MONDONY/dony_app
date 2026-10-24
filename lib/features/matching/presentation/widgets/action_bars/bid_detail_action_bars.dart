@@ -305,6 +305,7 @@ class SenderActionBar extends StatelessWidget {
                   ? EscrowBadge(
                       payment: existingPayment!,
                       bidStatus: bid.status,
+                      onlineAmount: bid.moneyBreakdown?.onlineAmount,
                     )
                   : FilledButton.icon(
                       onPressed: () =>
@@ -422,10 +423,14 @@ class EscrowBadge extends StatelessWidget {
   final PaymentModel payment;
   final String bidStatus;
 
+  /// Montant payé en ligne servi par le serveur pour un colis modifié.
+  final double? onlineAmount;
+
   const EscrowBadge({
     super.key,
     required this.payment,
     required this.bidStatus,
+    this.onlineAmount,
   });
 
   @override
@@ -460,7 +465,10 @@ class EscrowBadge extends StatelessWidget {
   }
 
   (String, Color, String) _resolve(AppLocalizations l, ColorScheme cs) {
-    final amount = formatPriceIn(payment.amount, payment.currency);
+    final amount = formatPriceIn(
+      onlineAmount ?? payment.amount,
+      payment.currency,
+    );
     return switch (payment.status) {
       PaymentStatus.released => (
         'circle-check',

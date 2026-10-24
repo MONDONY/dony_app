@@ -22548,6 +22548,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Payé par carte, gardé jusqu\'à la livraison';
 
   @override
+  String get amendmentPaymentHeldOnline =>
+      'Payé en ligne, gardé jusqu\'à la livraison';
+
+  @override
+  String amendmentLineSupplement(String method) {
+    return 'Supplément de prix · $method';
+  }
+
+  @override
   String amendmentPaymentCashToHand(String name) {
     return 'À remettre en espèces à $name';
   }

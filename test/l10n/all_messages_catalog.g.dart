@@ -7813,6 +7813,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'amendmentPaymentPendingBadge': (l) => l.amendmentPaymentPendingBadge,
   'amendmentPaymentTotal': (l) => l.amendmentPaymentTotal,
   'amendmentPaymentHeldByCard': (l) => l.amendmentPaymentHeldByCard,
+  'amendmentPaymentHeldOnline': (l) => l.amendmentPaymentHeldOnline,
+  'amendmentLineSupplement': (l) =>
+      l.amendmentLineSupplement(placeholderMarker('method')),
   'amendmentPaymentCashToHand': (l) =>
       l.amendmentPaymentCashToHand(placeholderMarker('name')),
   'amendmentTravelerInviteStatus': (l) =>
@@ -8559,6 +8562,7 @@ const textParameters = <String, List<String>>{
   'amendmentSenderAcceptedBody': ['summary'],
   'amendmentPaymentInitial': ['method'],
   'amendmentPaymentAmendment': ['method'],
+  'amendmentLineSupplement': ['method'],
   'amendmentPaymentCashToHand': ['name'],
   'amendmentTravelerInviteStatus': ['name'],
   'amendmentTravelerDeadline': ['deadline', 'hours'],

@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
@@ -49,8 +50,10 @@ BidModel _bid({
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   bool senderHasRated = false,
   String? cancellationNoShowStatus,
+  BidMoneyBreakdown? moneyBreakdown,
 }) {
   return BidModel(
+    moneyBreakdown: moneyBreakdown,
     id: 'bid-test-1',
     announcementId: 'ann-1',
     senderId: 'sender-1',
@@ -330,6 +333,38 @@ void main() {
       expect(find.text('Afficher le QR de remise'), findsOneWidget);
     },
   );
+
+  testWidgets('stickyBar_escrowBadge_receivesOnlineAmountOfBreakdown', (
+    tester,
+  ) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
+    await tester.pumpWidget(
+      _host(
+        bloc,
+        _bid(
+          status: 'ACCEPTED',
+          moneyBreakdown: const BidMoneyBreakdown(
+            lines: [],
+            total: 88,
+            onlineAmount: 61.2,
+            cashAmount: 26.8,
+          ),
+        ),
+        paymentLoaded: true,
+        existingPayment: _payment(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<EscrowBadge>(find.byType(EscrowBadge)).onlineAmount,
+      61.2,
+    );
+  });
 
   // Test 10: PENDING + stripe + payé → EscrowBadge présent, AUCUN DonyButton (badge seul)
   testWidgets(

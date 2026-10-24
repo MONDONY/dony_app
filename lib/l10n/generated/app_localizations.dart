@@ -36334,6 +36334,18 @@ abstract class AppLocalizations {
   /// **'Payé par carte, gardé jusqu\'à la livraison'**
   String get amendmentPaymentHeldByCard;
 
+  /// Ligne : part payée en ligne (mobile money) et séquestrée
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé en ligne, gardé jusqu\'à la livraison'**
+  String get amendmentPaymentHeldOnline;
+
+  /// Ligne du supplément de prix dans les cartes Paiement et gain. {method} : moyen de paiement
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément de prix · {method}'**
+  String amendmentLineSupplement(String method);
+
   /// Ligne : espèces à remettre. {name} : prénom du voyageur
   ///
   /// In fr, this message translates to:
