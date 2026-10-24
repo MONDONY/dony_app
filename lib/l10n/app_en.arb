@@ -11130,7 +11130,6 @@
   "errorHandoverAmendmentPendingTitle": "Edit pending",
   "errorHandoverAmendmentPendingMessage": "An edit to the parcel is awaiting the traveler's reply. Scan the parcel once they've replied.",
   "amendmentEntryTitle": "EDIT MY PARCEL",
-  "amendmentEntryBody": "{kg} left on this trip. Add kilos or items: {name} has 48 h to accept.",
   "amendmentEntryButton": "Add kilos or items",
   "amendmentSheetTitle": "Edit my parcel",
   "amendmentSheetKgLabel": "EXTRA KILOS · {price}/KG · {free} KG FREE",

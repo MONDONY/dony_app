@@ -7768,8 +7768,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorHandoverAmendmentPendingMessage': (l) =>
       l.errorHandoverAmendmentPendingMessage,
   'amendmentEntryTitle': (l) => l.amendmentEntryTitle,
-  'amendmentEntryBody': (l) =>
-      l.amendmentEntryBody(placeholderMarker('kg'), placeholderMarker('name')),
   'amendmentEntryButton': (l) => l.amendmentEntryButton,
   'amendmentSheetTitle': (l) => l.amendmentSheetTitle,
   'amendmentSheetKgLabel': (l) => l.amendmentSheetKgLabel(
@@ -8483,7 +8481,6 @@ const textParameters = <String, List<String>>{
   'unmetContentType': ['requested'],
   'unmetWeekend': ['actual'],
   'openListingsPostedAgo': ['when'],
-  'amendmentEntryBody': ['kg', 'name'],
   'amendmentSheetKgLabel': ['price', 'free'],
   'amendmentSheetKgValue': ['kg'],
   'amendmentSheetItemsLabel': ['name'],

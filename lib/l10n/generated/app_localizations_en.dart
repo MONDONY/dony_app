@@ -22277,11 +22277,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amendmentEntryTitle => 'EDIT MY PARCEL';
 
   @override
-  String amendmentEntryBody(String kg, String name) {
-    return '$kg left on this trip. Add kilos or items: $name has 48 h to accept.';
-  }
-
-  @override
   String get amendmentEntryButton => 'Add kilos or items';
 
   @override

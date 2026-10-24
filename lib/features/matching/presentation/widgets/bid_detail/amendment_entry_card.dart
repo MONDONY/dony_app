@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -56,7 +58,7 @@ class AmendmentEntryCard extends StatelessWidget {
             label: l.amendmentEntryButton,
             iconAsset: 'plus',
             variant: DonyButtonVariant.secondary,
-            onPressed: () => openSheet(context, bid),
+            onPressed: () => unawaited(openSheet(context, bid)),
           ),
         ],
       ),

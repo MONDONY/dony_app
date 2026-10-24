@@ -22,6 +22,8 @@ BidModel _bid() => BidModel(
   announcementId: 'ann-1',
   senderId: 'sender-1',
   travelerName: 'Moussa',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
   status: 'ACCEPTED',
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
@@ -362,5 +364,62 @@ void main() {
 
     expect(calls, 2);
     expect(_txt('ARTICLES DE LA GRILLE DE MOUSSA'), findsOneWidget);
+  });
+
+  testWidgets('sheet_subtitle_showsTravelerAndCorridor', (tester) async {
+    await open(tester);
+
+    expect(_txt('Moussa · Paris → Dakar'), findsOneWidget);
+  });
+
+  testWidgets('sheet_card_confirmFails_retryReconfirms_noSecondCreate', (
+    tester,
+  ) async {
+    when(
+      () => repository.create(
+        'bid-1',
+        addedKg: 1,
+        items: const {},
+        method: BidPaymentMethod.stripe,
+      ),
+    ).thenAnswer((_) async => _cardCheckout);
+    var confirms = 0;
+    when(() => repository.confirmAuthorization('bid-1', 'am-1')).thenAnswer((
+      _,
+    ) async {
+      confirms++;
+      if (confirms == 1) throw const NetworkException('x');
+      return _cashAmendment;
+    });
+    var authCalls = 0;
+    await open(
+      tester,
+      authorize: (_) async {
+        authCalls++;
+        return true;
+      },
+    );
+    await addKilos(tester, 2);
+    await tester.tap(_txt('Carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(submit('Bloquer 22,40 € et envoyer'));
+    await tester.pumpAndSettle();
+    expect(result, isNull);
+
+    await tester.tap(submit('Bloquer 22,40 € et envoyer'));
+    await tester.pumpAndSettle();
+
+    verify(
+      () => repository.create(
+        any(),
+        addedKg: any(named: 'addedKg'),
+        items: any(named: 'items'),
+        method: any(named: 'method'),
+      ),
+    ).called(1);
+    expect(confirms, 2);
+    expect(authCalls, 1);
+    expect(presentCalls, 1);
+    expect(result, isTrue);
   });
 }

@@ -197,7 +197,7 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
 
   /// Kilos en plus : bornés à `[0, kilos libres]`, par pas de 0,5.
   void setKg(double kg) {
-    final max = state.options?.availableKg;
+    final max = _maxKg();
     var value = (kg * 2).round() / 2;
     if (max != null && value > max) value = (max * 2).floor() / 2;
     if (value < 0) value = 0;
@@ -205,6 +205,14 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
   }
 
   void setItemQuantity(String id, int quantity) {
+    final unit = state.options?.gridItems
+        .where((g) => g.id == id)
+        .map((g) => g.unitPriceDisplay)
+        .firstOrNull;
+    final max = state.options?.maxAmount;
+    if (unit != null && unit > 0 && max != null && quantity > max ~/ unit) {
+      quantity = max ~/ unit;
+    }
     final items = Map<String, int>.from(state.items);
     if (quantity > 0) {
       items[id] = quantity;
@@ -215,12 +223,26 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
   }
 
   void selectMethod(BidPaymentMethod method) {
-    if (state.isBusy) return;
+    // Montant déjà bloqué : le formulaire ne change plus.
+    if (state.isBusy || state.checkout != null) return;
     emit(state.copyWith(method: method));
   }
 
+  /// Plafond d'affichage des kilos : kilos libres, sinon le plafond du net
+  /// divisé par le prix au kilo (le serveur reste l'autorité).
+  double? _maxKg() {
+    final options = state.options;
+    if (options == null) return null;
+    if (options.availableKg != null) return options.availableKg;
+    final price = options.pricePerKgDisplay;
+    if (price == null || price <= 0) return null;
+    return options.maxAmount / price;
+  }
+
   void _changed({double? addedKg, Map<String, int>? items}) {
-    if (state.options == null || state.isBusy) return;
+    if (state.options == null || state.isBusy || state.checkout != null) {
+      return;
+    }
     final next = state.copyWith(
       addedKg: addedKg,
       items: items,
@@ -283,6 +305,13 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
   }
 
   Future<void> submit() async {
+    // Carte : le montant est déjà bloqué (la confirmation a échoué). On
+    // reconfirme la demande existante, on n'en crée jamais une seconde.
+    if (state.checkout != null &&
+        state.status == AmendmentRequestStatus.failure) {
+      await cardAuthorized();
+      return;
+    }
     final bidId = _bidId;
     final method = state.method;
     final fromAuthorization = _authorizing;

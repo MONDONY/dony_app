@@ -544,4 +544,115 @@ void main() {
       expect(c.state.canSubmit, isTrue);
     },
   );
+
+  blocTest<AmendmentRequestCubit, AmendmentRequestState>(
+    'cardAuthorized_confirmFails_retryReconfirms_noSecondCreate',
+    build: () {
+      when(
+        () => repository.create(
+          'bid-1',
+          addedKg: 3,
+          items: const {},
+          method: BidPaymentMethod.stripe,
+        ),
+      ).thenAnswer((_) async => _cardCheckout);
+      var calls = 0;
+      when(() => repository.confirmAuthorization('bid-1', 'am-1')).thenAnswer((
+        _,
+      ) async {
+        calls++;
+        if (calls == 1) {
+          throw const NetworkException('x');
+        }
+        return _amendment;
+      });
+      return build();
+    },
+    act: (c) async {
+      await prepare(c);
+      c.selectMethod(BidPaymentMethod.stripe);
+      await c.submit();
+      await c.cardAuthorized();
+      expect(c.state.status, AmendmentRequestStatus.failure);
+      expect(c.state.canSubmit, isTrue);
+      await c.submit();
+    },
+    verify: (c) {
+      verify(
+        () => repository.create(
+          'bid-1',
+          addedKg: 3,
+          items: const {},
+          method: BidPaymentMethod.stripe,
+        ),
+      ).called(1);
+      verify(() => repository.confirmAuthorization('bid-1', 'am-1')).called(2);
+      expect(c.state.status, AmendmentRequestStatus.sent);
+    },
+  );
+
+  blocTest<AmendmentRequestCubit, AmendmentRequestState>(
+    'amountAlreadyBlocked_formIsFrozen',
+    build: () {
+      when(
+        () => repository.create(
+          'bid-1',
+          addedKg: 3,
+          items: const {},
+          method: BidPaymentMethod.stripe,
+        ),
+      ).thenAnswer((_) async => _cardCheckout);
+      when(
+        () => repository.confirmAuthorization('bid-1', 'am-1'),
+      ).thenThrow(const NetworkException('x'));
+      return build();
+    },
+    act: (c) async {
+      await prepare(c);
+      c.selectMethod(BidPaymentMethod.stripe);
+      await c.submit();
+      await c.cardAuthorized();
+      c.setKg(1);
+      c.selectMethod(BidPaymentMethod.cash);
+    },
+    wait: settle,
+    verify: (c) {
+      expect(c.state.addedKg, 3);
+      expect(c.state.method, BidPaymentMethod.stripe);
+    },
+  );
+
+  blocTest<AmendmentRequestCubit, AmendmentRequestState>(
+    'setKg_openCapacity_cappedByMaxAmount',
+    build: () {
+      when(() => repository.options('bid-1')).thenAnswer(
+        (_) async => const AmendmentOptions(
+          currency: 'EUR',
+          pricePerKgDisplay: 5,
+          paymentMethods: [BidPaymentMethod.cash],
+          minAmount: 1,
+          maxAmount: 300,
+        ),
+      );
+      return build();
+    },
+    act: (c) async {
+      await c.load(_bid);
+      c.setKg(100);
+    },
+    wait: settle,
+    verify: (c) => expect(c.state.addedKg, 60),
+  );
+
+  blocTest<AmendmentRequestCubit, AmendmentRequestState>(
+    'setItemQuantity_cappedByMaxAmount',
+    build: build,
+    act: (c) async {
+      await c.load(_bid);
+      c.setItemQuantity('g1', 99);
+    },
+    wait: settle,
+    // 300 / 11,4 = 26,3 -> 26
+    verify: (c) => expect(c.state.items, {'g1': 26}),
+  );
 }

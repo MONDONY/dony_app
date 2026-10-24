@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/share_position.dart';
@@ -672,7 +674,7 @@ class _SenderOptionsSheet extends StatelessWidget {
                 subtitle: l.amendmentEntryButton,
                 onTap: () {
                   context.pop();
-                  AmendmentEntryCard.openSheet(outerContext, bid);
+                  unawaited(AmendmentEntryCard.openSheet(outerContext, bid));
                 },
               ),
               const SizedBox(height: DonySpacing.sm),

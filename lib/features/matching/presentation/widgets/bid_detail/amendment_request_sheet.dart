@@ -46,6 +46,7 @@ class AmendmentRequestSheet extends StatelessWidget {
       context,
       analyticsName: 'bid/amendment-request',
       title: l.amendmentSheetTitle,
+      subtitle: _subtitle(context, bid),
       // Le glissement vers le bas ferme sans consulter `PopScope` : il
       // laisserait partir la feuille pendant l'envoi. La croix, la barrière
       // et le retour respectent le garde.
@@ -80,6 +81,15 @@ class AmendmentRequestSheet extends StatelessWidget {
 
 String _travelerName(BuildContext context, BidModel bid) =>
     bid.travelerName ?? context.l10n.bidDetailSenderTravelerFallback;
+
+/// « Moussa · Paris → Dakar » (le corridor manque si le colis ne le porte pas).
+String _subtitle(BuildContext context, BidModel bid) {
+  final name = _travelerName(context, bid);
+  final from = bid.departureCity;
+  final to = bid.arrivalCity;
+  if (from == null || to == null) return name;
+  return '$name · $from → $to';
+}
 
 String _kgText(BuildContext context, double kg) =>
     NumberFormat('0.#', Localizations.localeOf(context).toString()).format(kg);
@@ -604,7 +614,9 @@ class _AmendmentActions extends StatelessWidget {
 
   Future<void> _submit(BuildContext context, bool card) async {
     final cubit = context.read<AmendmentRequestCubit>();
-    if (!card) {
+    // Montant déjà bloqué (reprise après un échec de confirmation) : rien à
+    // vérifier ni à débiter, on reconfirme la demande existante.
+    if (!card || cubit.state.checkout != null) {
       await cubit.submit();
       return;
     }

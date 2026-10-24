@@ -22432,11 +22432,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get amendmentEntryTitle => 'MODIFIER MON COLIS';
 
   @override
-  String amendmentEntryBody(String kg, String name) {
-    return 'Il reste $kg sur ce trajet. Ajoutez des kilos ou des articles : $name a 48 h pour accepter.';
-  }
-
-  @override
   String get amendmentEntryButton => 'Ajouter des kilos ou des articles';
 
   @override

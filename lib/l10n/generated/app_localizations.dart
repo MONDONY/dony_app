@@ -36162,12 +36162,6 @@ abstract class AppLocalizations {
   /// **'MODIFIER MON COLIS'**
   String get amendmentEntryTitle;
 
-  /// Carte d'entrée. {kg} : kilos libres formatés, {name} : prénom du voyageur
-  ///
-  /// In fr, this message translates to:
-  /// **'Il reste {kg} sur ce trajet. Ajoutez des kilos ou des articles : {name} a 48 h pour accepter.'**
-  String amendmentEntryBody(String kg, String name);
-
   /// Bouton d'entrée de la modification
   ///
   /// In fr, this message translates to:

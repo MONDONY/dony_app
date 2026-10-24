@@ -22505,8 +22505,6 @@
   "@errorHandoverAmendmentPendingMessage": {"description": "ErrorCatalog handover-amendment-pending"},
   "amendmentEntryTitle": "MODIFIER MON COLIS",
   "@amendmentEntryTitle": {"description": "Titre de la carte d'entrée de l'expéditeur"},
-  "amendmentEntryBody": "Il reste {kg} sur ce trajet. Ajoutez des kilos ou des articles : {name} a 48 h pour accepter.",
-  "@amendmentEntryBody": {"description": "Carte d'entrée. {kg} : kilos libres formatés, {name} : prénom du voyageur", "placeholders": {"kg": {"type": "String"}, "name": {"type": "String"}}},
   "amendmentEntryButton": "Ajouter des kilos ou des articles",
   "@amendmentEntryButton": {"description": "Bouton d'entrée de la modification"},
   "amendmentSheetTitle": "Modifier mon colis",
