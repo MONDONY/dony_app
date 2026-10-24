@@ -47,3 +47,10 @@ Exemple : `gh secret set ANDROID_KEYSTORE_BASE64 --repo MONDONY/dony_app < <(bas
 - Profil de distribution : il expire (le dernier, « Yadony AppStore 146 », au 2027-08-07). Régénérer et remplacer le secret avant.
 - Le build prod part vers TestFlight même si le back prod n'est pas déployé : vérifier la PR jumelle avant de promouvoir un build.
 - Le projet Xcode est en signature automatique ; la CI archive en signature manuelle par surcharge de réglages, rien à changer en local.
+
+## Sécurité
+
+Le job `prepare` n'accepte que : un lancement manuel, ou une CI verte issue d'un
+**push sur main de ce dépôt** (pas d'un fork). Recommandé en plus : déclarer
+les secrets de signature dans un Environment GitHub « stores » limité à la
+branche main, avec relecteur obligatoire si tu veux un go avant chaque envoi.

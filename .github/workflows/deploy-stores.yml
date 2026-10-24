@@ -35,7 +35,16 @@ jobs:
     name: Préparer
     runs-on: ubuntu-latest
     # workflow_run se déclenche aussi sur CI rouge ou annulée.
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # Le filtre `branches: [main]` ne regarde que le NOM de la branche : une PR
+    # d'un fork dont la branche s'appelle main le satisfait. On exige donc un
+    # push, dans CE dépôt, sur main, sinon du code externe tournerait avec les
+    # secrets de signature.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     outputs:
       sha: ${{ steps.v.outputs.sha }}
       build_number: ${{ steps.v.outputs.build_number }}
