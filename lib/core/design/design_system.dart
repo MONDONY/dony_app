@@ -25,6 +25,7 @@ export 'package:dony/core/design/widgets/dony_brand_mark.dart';
 export 'package:dony/core/design/widgets/dony_button.dart';
 export 'package:dony/core/design/widgets/dony_card.dart';
 export 'package:dony/core/design/widgets/dony_chat_bubble.dart';
+export 'package:dony/core/design/widgets/dony_chat_composer.dart';
 export 'package:dony/core/design/widgets/dony_chat_date_separator.dart';
 export 'package:dony/core/design/widgets/dony_checkbox.dart';
 export 'package:dony/core/design/widgets/dony_chip.dart';
