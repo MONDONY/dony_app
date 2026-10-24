@@ -47,7 +47,12 @@ void main() {
     addTearDown(controller.dispose);
     await tester.pumpWidget(const SizedBox());
 
-    moveSheetWhenAttached(controller, 1, isMounted: () => true);
+    moveSheetWhenAttached(
+      controller,
+      1,
+      isMounted: () => true,
+      duration: const Duration(milliseconds: 100),
+    );
     for (var i = 0; i < kSheetAttachRetryFrames + 2; i++) {
       await tester.pump();
     }
@@ -60,7 +65,12 @@ void main() {
     addTearDown(controller.dispose);
     await tester.pumpWidget(const SizedBox());
 
-    moveSheetWhenAttached(controller, 1, isMounted: () => false);
+    moveSheetWhenAttached(
+      controller,
+      1,
+      isMounted: () => false,
+      duration: const Duration(milliseconds: 100),
+    );
     await tester.pump();
     expect(tester.takeException(), isNull);
   });
