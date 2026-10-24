@@ -1,0 +1,79 @@
+name: Env de production
+description: >
+  Écrit env.prod.json depuis les secrets et refuse le build si une valeur
+  bloquante manque. Même contrat que build-release.yml, factorisé pour les
+  jobs Android et iOS de deploy-stores.yml.
+inputs:
+  platform:
+    description: android ou ios (décide quelles clés sont bloquantes)
+    required: true
+  api-base-url: { required: true }
+  firebase-project-id: { required: true }
+  firebase-messaging-sender-id: { required: true }
+  firebase-storage-bucket: { required: true }
+  firebase-android-api-key: { required: false, default: '' }
+  firebase-android-app-id: { required: false, default: '' }
+  firebase-ios-api-key: { required: false, default: '' }
+  firebase-ios-app-id: { required: false, default: '' }
+  stripe-publishable-key: { required: true }
+  sentry-dsn: { required: false, default: '' }
+  google-maps-api-key: { required: false, default: '' }
+  google-maps-android-api-key: { required: false, default: '' }
+  posthog-api-key: { required: false, default: '' }
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        PLATFORM: ${{ inputs.platform }}
+        API_BASE_URL: ${{ inputs.api-base-url }}
+        FIREBASE_PROJECT_ID: ${{ inputs.firebase-project-id }}
+        FIREBASE_MESSAGING_SENDER_ID: ${{ inputs.firebase-messaging-sender-id }}
+        FIREBASE_STORAGE_BUCKET: ${{ inputs.firebase-storage-bucket }}
+        FIREBASE_ANDROID_API_KEY: ${{ inputs.firebase-android-api-key }}
+        FIREBASE_ANDROID_APP_ID: ${{ inputs.firebase-android-app-id }}
+        FIREBASE_IOS_API_KEY: ${{ inputs.firebase-ios-api-key }}
+        FIREBASE_IOS_APP_ID: ${{ inputs.firebase-ios-app-id }}
+        STRIPE_PUBLISHABLE_KEY: ${{ inputs.stripe-publishable-key }}
+        SENTRY_DSN: ${{ inputs.sentry-dsn }}
+        GOOGLE_MAPS_API_KEY: ${{ inputs.google-maps-api-key }}
+        GOOGLE_MAPS_ANDROID_API_KEY: ${{ inputs.google-maps-android-api-key }}
+        POSTHOG_API_KEY: ${{ inputs.posthog-api-key }}
+      run: |
+        REQUIRED="API_BASE_URL FIREBASE_PROJECT_ID FIREBASE_MESSAGING_SENDER_ID FIREBASE_STORAGE_BUCKET STRIPE_PUBLISHABLE_KEY"
+        if [ "$PLATFORM" = "android" ]; then
+          REQUIRED="$REQUIRED FIREBASE_ANDROID_API_KEY FIREBASE_ANDROID_APP_ID GOOGLE_MAPS_ANDROID_API_KEY"
+        else
+          REQUIRED="$REQUIRED FIREBASE_IOS_API_KEY FIREBASE_IOS_APP_ID GOOGLE_MAPS_API_KEY"
+        fi
+        MISSING=""
+        for KEY in $REQUIRED; do
+          [ -z "${!KEY}" ] && MISSING="$MISSING $KEY"
+        done
+        if [ -n "$MISSING" ]; then
+          echo "::error::Secrets manquants pour un build de release fonctionnel :$MISSING"
+          exit 1
+        fi
+        # Une clé iOS dans le manifest Android donne une carte vide
+        # (YADONY-FLUTTER-PROD-1T, build 143).
+        if [ -n "$GOOGLE_MAPS_API_KEY" ] && [ "$GOOGLE_MAPS_ANDROID_API_KEY" = "$GOOGLE_MAPS_API_KEY" ]; then
+          echo "::error::La clé Maps Android vaut la clé iOS : carte vide sur Android."
+          exit 1
+        fi
+        python3 - <<'PY'
+        import json, os
+        e = os.environ
+        d = {
+          "API_BASE_URL": e["API_BASE_URL"],
+          "POSTER_SHARE_BASE_URL": "https://yadony.com",
+          "ENVIRONMENT": "production",
+          "TLS_PINNING": "on",
+        }
+        for k in ["FIREBASE_PROJECT_ID","FIREBASE_MESSAGING_SENDER_ID","FIREBASE_STORAGE_BUCKET",
+                  "FIREBASE_ANDROID_API_KEY","FIREBASE_ANDROID_APP_ID","FIREBASE_IOS_API_KEY",
+                  "FIREBASE_IOS_APP_ID","STRIPE_PUBLISHABLE_KEY","SENTRY_DSN","GOOGLE_MAPS_API_KEY",
+                  "GOOGLE_MAPS_ANDROID_API_KEY","POSTHOG_API_KEY"]:
+            d[k] = e.get(k, "")
+        json.dump(d, open("env.prod.json", "w"), indent=2)
+        PY
+        echo "env.prod.json créé, valeurs bloquantes vérifiées."
