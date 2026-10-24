@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/home/presentation/sheet_controller_guard.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
@@ -54,7 +55,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
   void initState() {
     super.initState();
     _sheetController.addListener(() {
-      if (!mounted) return;
+      if (!mounted || !_sheetController.isAttached) return;
       final newSize = _sheetController.size;
       if ((newSize - _sheetSize).abs() > 0.02) {
         setState(() => _sheetSize = newSize);
@@ -183,10 +184,11 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
                   selectedRequestId: _selectedRequestId,
                   onCardChanged: (id) =>
                       setState(() => _selectedRequestId = id),
-                  onSeeAll: () => _sheetController.animateTo(
+                  onSeeAll: () => moveSheetWhenAttached(
+                    _sheetController,
                     0.95,
+                    isMounted: () => mounted,
                     duration: const Duration(milliseconds: 280),
-                    curve: Curves.easeOutCubic,
                   ),
                   onTapItem: (it) => _openPreview(ctx, it),
                 ),
