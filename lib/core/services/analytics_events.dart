@@ -577,6 +577,54 @@ abstract final class AnalyticsEvents {
   /// `handover-supplement-pending`) : un supplément attend la réponse de
   /// l'expéditeur. Propriété `channel` (`direct`/`offline`).
   static const handoverBlockedSupplement = 'handover_blocked_supplement';
+
+  // Modification d'un colis accepté (`/bids/{bidId}/amendments`). Jamais le
+  // montant exact (tranche `amount_bracket` + `currency`).
+
+  /// Feuille « Modifier mon colis » ouverte.
+  /// Propriété `rails_count` (moyens de paiement proposés).
+  static const bidAmendmentSheetOpened = 'bid_amendment_sheet_opened';
+
+  /// Demande de modification créée par le serveur.
+  /// Propriétés `method` (`card`/`mobile_money`/`cash`), `added_kg`, `items_count`, `amount_bracket`, `currency`.
+  static const bidAmendmentRequested = 'bid_amendment_requested';
+
+  /// Demande impossible.
+  /// Propriété `error_code`.
+  static const bidAmendmentRequestFailed = 'bid_amendment_request_failed';
+
+  /// Encart de la modification affiché dans le détail d'envoi, une fois par écran.
+  /// Propriétés `role` (`sender`/`traveler`), `status`.
+  static const bidAmendmentViewed = 'bid_amendment_viewed';
+
+  /// L'expéditeur annule sa demande, confirmé par le serveur.
+  /// Aucune propriété.
+  static const bidAmendmentCancelled = 'bid_amendment_cancelled';
+
+  /// Le voyageur accepte la modification, confirmé par le serveur.
+  /// Propriétés `method`, et en espèces `commission_source` (`wallet`/`card`).
+  static const bidAmendmentAccepted = 'bid_amendment_accepted';
+
+  /// Le voyageur refuse la modification.
+  /// Propriété `method`.
+  static const bidAmendmentDeclined = 'bid_amendment_declined';
+
+  /// Le voyageur déclare ne pas avoir apporté le complément d'une modification acceptée.
+  /// Propriété `method`.
+  static const bidAmendmentNotBrought = 'bid_amendment_not_brought';
+
+  /// Action impossible.
+  /// Propriétés `action` (`cancel`/`accept`/`decline`/`not_brought`/`confirm_authorization`/`confirm_commission`), `error_code`.
+  static const bidAmendmentActionFailed = 'bid_amendment_action_failed';
+
+  /// Le paiement de la modification démarre (autorisation carte ou dépôt mobile money).
+  /// Propriété `method`.
+  /// Le paiement lui-même est tracé en `payment_*` (`context: bid_amendment`).
+  static const bidAmendmentPaymentStarted = 'bid_amendment_payment_started';
+
+  /// Scan de remise refusé par le serveur (409 `handover-amendment-pending`) : une modification attend le voyageur.
+  /// Propriété `channel` (`direct`/`offline`).
+  static const handoverBlockedAmendment = 'handover_blocked_amendment';
   static const rematchAccepted = 'rematch_accepted';
   static const rematchAlternativesOpened = 'rematch_alternatives_opened';
   static const noShowReportedBySender = 'no_show_reported_by_sender';

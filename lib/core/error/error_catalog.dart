@@ -312,6 +312,91 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.flight_takeoff_rounded,
     ),
+    // ─── Modification d'un colis accepté (`BidAmendmentService`) ────────
+    'amendment-disabled': _Entry(
+      title: (l) => l.errorAmendmentDisabledTitle,
+      message: (l) => l.errorAmendmentDisabledMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-not-eligible': _Entry(
+      title: (l) => l.errorAmendmentNotEligibleTitle,
+      message: (l) => l.errorAmendmentNotEligibleMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-already-open': _Entry(
+      title: (l) => l.errorAmendmentAlreadyOpenTitle,
+      message: (l) => l.errorAmendmentAlreadyOpenMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-limit-reached': _Entry(
+      title: (l) => l.errorAmendmentLimitReachedTitle,
+      message: (l) => l.errorAmendmentLimitReachedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-rail-unavailable': _Entry(
+      title: (l) => l.errorAmendmentRailUnavailableTitle,
+      message: (l) => l.errorAmendmentRailUnavailableMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-amount-out-of-range': _Entry(
+      title: (l) => l.errorAmendmentAmountOutOfRangeTitle,
+      message: (l) => l.errorAmendmentAmountOutOfRangeMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-capacity-unavailable': _Entry(
+      title: (l) => l.errorAmendmentCapacityUnavailableTitle,
+      message: (l) => l.errorAmendmentCapacityUnavailableMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-empty': _Entry(
+      title: (l) => l.errorAmendmentEmptyTitle,
+      message: (l) => l.errorAmendmentEmptyMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-item-unknown': _Entry(
+      title: (l) => l.errorAmendmentItemUnknownTitle,
+      message: (l) => l.errorAmendmentItemUnknownMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-expired': _Entry(
+      title: (l) => l.errorAmendmentExpiredTitle,
+      message: (l) => l.errorAmendmentExpiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-payment-in-progress': _Entry(
+      title: (l) => l.errorAmendmentPaymentInProgressTitle,
+      message: (l) => l.errorAmendmentPaymentInProgressMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-capture-failed': _Entry(
+      title: (l) => l.errorAmendmentCaptureFailedTitle,
+      message: (l) => l.errorAmendmentCaptureFailedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-commission-unfunded': _Entry(
+      title: (l) => l.errorAmendmentCommissionUnfundedTitle,
+      message: (l) => l.errorAmendmentCommissionUnfundedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
+    'amendment-not-found': _Entry(
+      title: (l) => l.errorAmendmentNotFoundTitle,
+      message: (l) => l.errorAmendmentNotFoundMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.edit_note_rounded,
+    ),
     // ─── Supplément de prix à la remise (`BidSupplementService`) ────────
     'supplement-disabled': _Entry(
       title: (l) => l.errorSupplementDisabledTitle,
@@ -439,6 +524,14 @@ abstract final class ErrorCatalog {
     'handover-supplement-pending': _Entry(
       title: (l) => l.errorHandoverSupplementPendingTitle,
       message: (l) => l.errorHandoverSupplementPendingMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    // Scan DEPART refusé tant qu'une modification attend le voyageur (même
+    // traitement que le supplément : `handoverRetryLaterCodes`).
+    'handover-amendment-pending': _Entry(
+      title: (l) => l.errorHandoverAmendmentPendingTitle,
+      message: (l) => l.errorHandoverAmendmentPendingMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_top_rounded,
     ),

@@ -22168,4 +22168,314 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profilePublicRatingTapSemantics => 'See reviews';
+
+  @override
+  String get errorAmendmentDisabledTitle => 'Edit unavailable';
+
+  @override
+  String get errorAmendmentDisabledMessage =>
+      'Editing parcels isn\'t available right now.';
+
+  @override
+  String get errorAmendmentNotEligibleTitle => 'Edit not possible';
+
+  @override
+  String get errorAmendmentNotEligibleMessage =>
+      'This parcel can no longer be edited.';
+
+  @override
+  String get errorAmendmentAlreadyOpenTitle => 'Request already pending';
+
+  @override
+  String get errorAmendmentAlreadyOpenMessage =>
+      'An edit to this parcel is already awaiting a reply.';
+
+  @override
+  String get errorAmendmentLimitReachedTitle => 'No more edits allowed';
+
+  @override
+  String get errorAmendmentLimitReachedMessage =>
+      'This parcel has reached the maximum number of edits.';
+
+  @override
+  String get errorAmendmentRailUnavailableTitle => 'Payment method unavailable';
+
+  @override
+  String get errorAmendmentRailUnavailableMessage =>
+      'This payment method is no longer offered for this edit. Please choose another one.';
+
+  @override
+  String get errorAmendmentAmountOutOfRangeTitle => 'Amount not accepted';
+
+  @override
+  String get errorAmendmentAmountOutOfRangeMessage =>
+      'The amount of this edit isn\'t accepted.';
+
+  @override
+  String get errorAmendmentCapacityUnavailableTitle => 'Not enough room left';
+
+  @override
+  String get errorAmendmentCapacityUnavailableMessage =>
+      'The trip no longer has enough free kilos for this edit.';
+
+  @override
+  String get errorAmendmentEmptyTitle => 'Nothing to add';
+
+  @override
+  String get errorAmendmentEmptyMessage =>
+      'Add some kilos or at least one item before sending the request.';
+
+  @override
+  String get errorAmendmentItemUnknownTitle => 'Item not found';
+
+  @override
+  String get errorAmendmentItemUnknownMessage =>
+      'One of the chosen items is no longer in the price grid.';
+
+  @override
+  String get errorAmendmentExpiredTitle => 'Request expired';
+
+  @override
+  String get errorAmendmentExpiredMessage =>
+      'The time to reply to this edit has passed.';
+
+  @override
+  String get errorAmendmentPaymentInProgressTitle => 'Payment in progress';
+
+  @override
+  String get errorAmendmentPaymentInProgressMessage =>
+      'The payment for this edit is being confirmed. Please wait a moment.';
+
+  @override
+  String get errorAmendmentCaptureFailedTitle => 'Payment not collected';
+
+  @override
+  String get errorAmendmentCaptureFailedMessage =>
+      'The payment couldn\'t be collected. Nothing was charged and the request is cancelled.';
+
+  @override
+  String get errorAmendmentCommissionUnfundedTitle => 'Insufficient balance';
+
+  @override
+  String get errorAmendmentCommissionUnfundedMessage =>
+      'Your balance doesn\'t cover the Yadony commission for this edit. Top it up to accept.';
+
+  @override
+  String get errorAmendmentNotFoundTitle => 'Edit not found';
+
+  @override
+  String get errorAmendmentNotFoundMessage => 'This edit no longer exists.';
+
+  @override
+  String get errorHandoverAmendmentPendingTitle => 'Edit pending';
+
+  @override
+  String get errorHandoverAmendmentPendingMessage =>
+      'An edit to the parcel is awaiting the traveler\'s reply. Scan the parcel once they\'ve replied.';
+
+  @override
+  String get amendmentEntryTitle => 'EDIT MY PARCEL';
+
+  @override
+  String amendmentEntryBody(String kg, String name) {
+    return '$kg left on this trip. Add kilos or items: $name has 48 h to accept.';
+  }
+
+  @override
+  String get amendmentEntryButton => 'Add kilos or items';
+
+  @override
+  String get amendmentSheetTitle => 'Edit my parcel';
+
+  @override
+  String amendmentSheetKgLabel(String price, String free) {
+    return 'EXTRA KILOS · $price/KG · $free KG FREE';
+  }
+
+  @override
+  String amendmentSheetKgValue(String kg) {
+    return '+$kg kg';
+  }
+
+  @override
+  String amendmentSheetItemsLabel(String name) {
+    return '$name\'S PRICE GRID ITEMS';
+  }
+
+  @override
+  String get amendmentSheetPayLabel => 'PAY THE DIFFERENCE BY';
+
+  @override
+  String get amendmentRailCard => 'Card';
+
+  @override
+  String get amendmentRailMobileMoney => 'Mobile money';
+
+  @override
+  String get amendmentRailCash => 'Cash';
+
+  @override
+  String get amendmentCashNoteCardParcel =>
+      'Your parcel stays paid by card. Only the difference is settled in cash, in person at handover.';
+
+  @override
+  String get amendmentTotalLabel => 'To pay in addition';
+
+  @override
+  String amendmentSubmitCard(String amount) {
+    return 'Block $amount and send';
+  }
+
+  @override
+  String amendmentSubmit(String name) {
+    return 'Send the request to $name';
+  }
+
+  @override
+  String get amendmentSenderTitle => 'PARCEL EDIT';
+
+  @override
+  String amendmentSenderPendingStatus(String name) {
+    return 'Waiting for $name';
+  }
+
+  @override
+  String get amendmentSenderPendingLine => 'On top, in cash at handover';
+
+  @override
+  String amendmentSenderPendingDeadline(
+    String deadline,
+    String hours,
+    String kg,
+  ) {
+    return 'Reply expected before $deadline ($hours h). With no reply, the request is cancelled and your parcel stays at $kg.';
+  }
+
+  @override
+  String get amendmentCancelButton => 'Cancel my request';
+
+  @override
+  String amendmentSenderRefusedStatus(String name) {
+    return '$name didn\'t accept the edit';
+  }
+
+  @override
+  String amendmentSenderRefusedBody(String kg) {
+    return 'Your parcel stays at $kg, at the planned price. Nothing more is asked of you.';
+  }
+
+  @override
+  String amendmentSenderAcceptedStatus(String name) {
+    return 'Edit accepted by $name';
+  }
+
+  @override
+  String amendmentSenderAcceptedBody(String summary) {
+    return 'Your parcel is now $summary.';
+  }
+
+  @override
+  String get amendmentPaymentTitle => 'PAYMENT';
+
+  @override
+  String amendmentPaymentInitial(String method) {
+    return 'Original parcel · $method';
+  }
+
+  @override
+  String amendmentPaymentAmendment(String method) {
+    return 'Edit · $method';
+  }
+
+  @override
+  String get amendmentPaymentPendingBadge => 'PENDING';
+
+  @override
+  String get amendmentPaymentTotal => 'Parcel total';
+
+  @override
+  String get amendmentPaymentHeldByCard => 'Paid by card, held until delivery';
+
+  @override
+  String amendmentPaymentCashToHand(String name) {
+    return 'Cash to hand over to $name';
+  }
+
+  @override
+  String amendmentTravelerInviteStatus(String name) {
+    return '$name wants to enlarge their parcel';
+  }
+
+  @override
+  String amendmentTravelerDeadline(String deadline, String hours) {
+    return 'Reply before $deadline · $hours h';
+  }
+
+  @override
+  String get amendmentTravelerForYou => 'For you on top';
+
+  @override
+  String get amendmentTravelerKgSold => 'Kilos sold on this trip';
+
+  @override
+  String amendmentTravelerKgSoldValue(String from, String to, String total) {
+    return '$from → $to kg of $total';
+  }
+
+  @override
+  String amendmentTravelerCashNote(
+    String name,
+    String amount,
+    String commission,
+  ) {
+    return 'Paid in cash by $name at handover: $amount. If you accept, the Yadony commission of $commission is taken from your balance.';
+  }
+
+  @override
+  String amendmentAccept(String amount) {
+    return 'Accept ($amount)';
+  }
+
+  @override
+  String get amendmentDecline => 'Decline';
+
+  @override
+  String get amendmentNotBrought => 'I didn\'t take the extra';
+
+  @override
+  String get amendmentGainTitle => 'WHAT YOU RECEIVE';
+
+  @override
+  String amendmentGainInitial(String method) {
+    return 'Original request · $method';
+  }
+
+  @override
+  String amendmentGainAmendment(String method) {
+    return 'Edit · $method';
+  }
+
+  @override
+  String get amendmentGainTotal => 'Total for you';
+
+  @override
+  String get amendmentGainPaidOut => 'Paid to your account after delivery';
+
+  @override
+  String amendmentGainCashDue(String name) {
+    return 'To collect in cash from $name';
+  }
+
+  @override
+  String amendmentGainCommissionNote(String amount) {
+    return 'including $amount Yadony commission, already taken from your balance';
+  }
+
+  @override
+  String amendmentGainHandoverNote(String amount) {
+    return 'At handover, collect $amount in cash before scanning the parcel QR code.';
+  }
+
+  @override
+  String get amendmentPaymentContextLabel => 'Parcel edit';
 }

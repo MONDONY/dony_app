@@ -15,7 +15,10 @@ typedef TrackingPhotoUpload = ({String? key, bool dropped, bool lost});
 /// requête passera plus tard. `handover-supplement-pending` : un supplément
 /// de prix attend la réponse de l'expéditeur, le scan de remise (DEPART)
 /// est bloqué jusqu'à sa réponse (2 h au plus).
-const handoverRetryLaterCodes = {'handover-supplement-pending'};
+const handoverRetryLaterCodes = {
+  'handover-supplement-pending',
+  'handover-amendment-pending',
+};
 
 /// Vrai quand le back a refusé l'étape pour l'instant seulement
 /// ([handoverRetryLaterCodes]) : la file hors ligne la garde et la renvoie

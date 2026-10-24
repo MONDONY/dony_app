@@ -68,6 +68,17 @@ void main() {
       AnalyticsEvents.bidSupplementCashAccepted,
       AnalyticsEvents.bidSupplementCommissionResumed,
       AnalyticsEvents.handoverBlockedSupplement,
+      AnalyticsEvents.bidAmendmentSheetOpened,
+      AnalyticsEvents.bidAmendmentRequested,
+      AnalyticsEvents.bidAmendmentRequestFailed,
+      AnalyticsEvents.bidAmendmentViewed,
+      AnalyticsEvents.bidAmendmentCancelled,
+      AnalyticsEvents.bidAmendmentAccepted,
+      AnalyticsEvents.bidAmendmentDeclined,
+      AnalyticsEvents.bidAmendmentNotBrought,
+      AnalyticsEvents.bidAmendmentActionFailed,
+      AnalyticsEvents.bidAmendmentPaymentStarted,
+      AnalyticsEvents.handoverBlockedAmendment,
       AnalyticsEvents.blocError,
     ];
     for (final e in events) {
