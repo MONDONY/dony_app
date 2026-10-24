@@ -23,7 +23,7 @@ enum ChatAttachState {
   hidden,
 }
 
-/// Règle d'affichage du trombone :
+/// Règle d'affichage du « + » et du raccourci appareil photo de la saisie :
 /// - **masqué** si l'utilisateur ne peut pas écrire (fil en lecture seule,
 ///   copie supprimée), ou si la demande est terminée sans photo possible
 ///   (annulée, ou livrée et fenêtre de J+3 refermée) ;
@@ -43,54 +43,6 @@ ChatAttachState chatAttachStateFor(
     'TRIP_CANCELLED' || 'DELIVERY_CONFIRMED' => ChatAttachState.hidden,
     _ => ChatAttachState.locked,
   };
-}
-
-/// Trombone à gauche du champ de saisie.
-class ChatAttachButton extends StatelessWidget {
-  const ChatAttachButton({
-    super.key,
-    required this.state,
-    required this.onPick,
-    required this.onLocked,
-  });
-
-  final ChatAttachState state;
-  final VoidCallback onPick;
-  final VoidCallback onLocked;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-    final enabled = state == ChatAttachState.enabled;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Semantics(
-        button: true,
-        label: enabled ? l.chatAttachPhotoTooltip : l.chatPhotoLockedSemantics,
-        container: true,
-        excludeSemantics: true,
-        child: DonyPressable(
-          onTap: enabled ? onPick : onLocked,
-          child: SizedBox(
-            key: const Key('chat-attach-button'),
-            width: 38,
-            height: 38,
-            child: AnimatedOpacity(
-              opacity: enabled ? 1 : 0.4,
-              duration: const Duration(milliseconds: 150),
-              curve: Curves.easeOutCubic,
-              child: Icon(
-                Icons.attach_file_rounded,
-                size: 22,
-                color: enabled ? cs.primary : cs.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ── Photo servie par le back ──────────────────────────────────────────────────
