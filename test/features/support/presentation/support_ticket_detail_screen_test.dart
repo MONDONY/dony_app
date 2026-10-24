@@ -109,12 +109,12 @@ const _ticketWithAttachedMessage = SupportTicket(
 /// Le bouton d'envoi de la barre de saisie partagée est-il actif ? Faux aussi
 /// pendant l'envoi (le spinner remplace le bouton).
 bool _sendEnabled(WidgetTester tester) {
-  final ink = find.descendant(
+  final tap = find.descendant(
     of: find.byKey(const Key('chat-send-button')),
-    matching: find.byType(InkWell),
+    matching: find.byType(GestureDetector),
   );
-  if (ink.evaluate().isEmpty) return false;
-  return tester.widget<InkWell>(ink).onTap != null;
+  if (tap.evaluate().isEmpty) return false;
+  return tester.widget<GestureDetector>(tap.first).onTap != null;
 }
 
 Widget _harness(SupportBloc bloc) {

@@ -217,6 +217,17 @@ void main() {
     expect(submitted, 'ok');
   });
 
+  testWidgets('envoi : toute la zone de 44 pt est tactile, bords compris', (
+    tester,
+  ) async {
+    controller.text = 'bonjour';
+    await tester.pumpWidget(wrap(composer()));
+    final box = tester.getRect(find.byKey(send));
+    await tester.tapAt(box.topLeft + const Offset(2, 2));
+    await tester.pump();
+    expect(sent, 1);
+  });
+
   testWidgets('thèmes clair et sombre : sans exception', (tester) async {
     for (final b in Brightness.values) {
       await tester.pumpWidget(wrap(composer(), brightness: b));

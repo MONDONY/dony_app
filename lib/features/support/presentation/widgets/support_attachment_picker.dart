@@ -21,7 +21,13 @@ import 'package:image_picker/image_picker.dart';
 abstract final class SupportAttachmentActions {
   static const int max = 4;
 
+  /// Une prise est en cours : un second tap la ferait échouer côté
+  /// `image_picker` (multiple_request) avec un message d'erreur à tort.
+  static bool _picking = false;
+
   static Future<void> pick(BuildContext context, ImageSource source) async {
+    if (_picking) return;
+    _picking = true;
     try {
       final file = await getIt<DonyMediaService>().pick(source: source);
       if (file != null && context.mounted) {
@@ -37,6 +43,8 @@ abstract final class SupportAttachmentActions {
           type: DonySnackbarType.error,
         );
       }
+    } finally {
+      _picking = false;
     }
   }
 

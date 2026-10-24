@@ -101,11 +101,13 @@ void main() {
       await pump(tester, _ready);
       bool sendEnabled() =>
           tester
-              .widget<InkWell>(
-                find.descendant(
-                  of: find.byKey(const Key('chat-send-button')),
-                  matching: find.byType(InkWell),
-                ),
+              .widget<GestureDetector>(
+                find
+                    .descendant(
+                      of: find.byKey(const Key('chat-send-button')),
+                      matching: find.byType(GestureDetector),
+                    )
+                    .first,
               )
               .onTap !=
           null;
@@ -165,7 +167,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(const Key('chat-send-button')),
-          matching: find.byType(InkWell),
+          matching: find.byType(GestureDetector),
         ),
         findsNothing,
       );

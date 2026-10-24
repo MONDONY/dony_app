@@ -248,41 +248,56 @@ class _SendButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: DonyChatComposer._hit,
-      height: DonyChatComposer._hit,
-      child: Center(
-        child: sending
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2.5),
-              )
-            : AnimatedScale(
-                scale: enabled ? 1.0 : 0.85,
-                duration: duration,
-                curve: Curves.easeOutCubic,
-                child: Material(
-                  color: enabled ? cs.primary : cs.outlineVariant,
-                  shape: const CircleBorder(),
-                  child: Semantics(
-                    button: true,
-                    enabled: enabled,
-                    label: context.l10n.chatSendMessageSemantics,
-                    container: true,
-                    excludeSemantics: true,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: enabled ? onTap : null,
-                      child: SizedBox(
-                        width: 38,
-                        height: 38,
-                        child: DonyIcon('send', color: cs.onPrimary, size: 18),
-                      ),
-                    ),
+    if (sending) {
+      return const SizedBox(
+        width: DonyChatComposer._hit,
+        height: DonyChatComposer._hit,
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2.5),
+          ),
+        ),
+      );
+    }
+    // Zone tactile de 44 pt (opaque jusqu'aux bords), disque visuel de 38 pt
+    // dont l'InkWell porte l'ondulation.
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: context.l10n.chatSendMessageSemantics,
+      container: true,
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled ? onTap : null,
+        child: SizedBox(
+          width: DonyChatComposer._hit,
+          height: DonyChatComposer._hit,
+          child: Center(
+            child: AnimatedScale(
+              scale: enabled ? 1.0 : 0.85,
+              duration: duration,
+              curve: Curves.easeOutCubic,
+              child: Material(
+                color: enabled ? cs.primary : cs.outlineVariant,
+                shape: const CircleBorder(),
+                // Ondulation seulement : le tap et le nom accessible sont portés
+                // par le GestureDetector et le Semantics englobants.
+                child: InkResponse(
+                  customBorder: const CircleBorder(),
+                  onTap: enabled ? onTap : null,
+                  child: SizedBox(
+                    width: 38,
+                    height: 38,
+                    child: DonyIcon('send', color: cs.onPrimary, size: 18),
                   ),
                 ),
               ),
+            ),
+          ),
+        ),
       ),
     );
   }

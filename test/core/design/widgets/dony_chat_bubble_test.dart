@@ -142,4 +142,59 @@ void main() {
     final ratio = (a > b ? a + 0.05 : b + 0.05) / (a > b ? b + 0.05 : a + 0.05);
     expect(ratio, greaterThanOrEqualTo(4.5));
   });
+
+  group('largeur sous contrainte bornée (comme dans les écrans)', () {
+    Widget bounded(Widget shell) => wrap(
+      Align(
+        alignment: Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 300),
+          child: shell,
+        ),
+      ),
+    );
+
+    testWidgets('texte court : la bulle épouse son contenu', (tester) async {
+      await tester.pumpWidget(
+        bounded(const DonyChatBubbleShell(isMe: true, child: Text('ok'))),
+      );
+      final width = tester.getSize(find.byKey(const Key('chat-bubble-shell')));
+      expect(width.width, lessThan(100));
+    });
+
+    testWidgets('photo de 200 px : la bulle ne l\u2019étire pas', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        bounded(
+          const DonyChatBubbleShell(
+            isMe: true,
+            child: SizedBox(width: 200, height: 200),
+          ),
+        ),
+      );
+      final size = tester.getSize(find.byKey(const Key('chat-bubble-shell')));
+      expect(size.width, 200);
+    });
+
+    testWidgets('meta reste alignée à droite dans une bulle étroite', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        bounded(
+          const DonyChatBubbleShell(
+            isMe: true,
+            meta: Text('14:05'),
+            child: Padding(
+              padding: EdgeInsets.all(10),
+              child: Text('un message un peu plus long'),
+            ),
+          ),
+        ),
+      );
+      final shell = tester.getRect(find.byKey(const Key('chat-bubble-shell')));
+      final meta = tester.getRect(find.text('14:05'));
+      expect(shell.right - meta.right, lessThanOrEqualTo(10.5));
+    });
+  });
 }

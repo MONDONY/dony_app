@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -371,6 +372,36 @@ void main() {
         expect(event.bytes, kPng);
       },
     );
+
+    testWidgets('deux taps rapides sur l’appareil photo : une seule prise', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(const ChatLoaded([], mediaAllowed: true));
+      final gate = Completer<Uint8List?>();
+      var picks = 0;
+      await pump(
+        tester,
+        conversation: _conv(mediaAllowed: true),
+        pick: (_) {
+          picks++;
+          return gate.future;
+        },
+        preview: (_) async => false,
+      );
+
+      await tester.tap(camera);
+      await tester.tap(camera);
+      gate.complete(kPng);
+      await tester.pumpAndSettle();
+
+      expect(picks, 1);
+      expect(
+        find.text('Image non supportée ou trop volumineuse'),
+        findsNothing,
+      );
+    });
 
     testWidgets('grisé : l\u2019appareil photo explique, jamais la caméra', (
       tester,

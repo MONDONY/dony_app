@@ -115,6 +115,9 @@ class _ChatScreenState extends State<ChatScreen> {
   /// Un fil en lecture seule n'a pas de champ de saisie : rien à garder.
   bool get _keepsDraft => !widget.conversation.readOnly;
 
+  /// Une photo est en cours de prise, d'aperçu ou d'envoi (anti double tap).
+  bool _pickingPhoto = false;
+
   String get _myUid {
     final override = widget.currentUidOverride;
     if (override != null) return override;
@@ -540,6 +543,18 @@ class _ChatScreenState extends State<ChatScreen> {
   /// Prend une photo (appareil ou galerie), l'aperçoit, puis l'envoie au bloc.
   /// Raccourci appareil photo de la saisie : appelé sans passer par la feuille.
   Future<void> _sendPhotoFrom(ImageSource source) async {
+    // Un second tap pendant la prise ou l'aperçu fait échouer la première
+    // demande côté `image_picker` (multiple_request) : message d'erreur à tort.
+    if (_pickingPhoto) return;
+    _pickingPhoto = true;
+    try {
+      await _pickPreviewAndSend(source);
+    } finally {
+      _pickingPhoto = false;
+    }
+  }
+
+  Future<void> _pickPreviewAndSend(ImageSource source) async {
     final Uint8List? bytes;
     try {
       bytes = await _pickPhoto(source);

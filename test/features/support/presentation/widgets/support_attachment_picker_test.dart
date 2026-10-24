@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
@@ -131,6 +133,30 @@ void main() {
       ).thenAnswer((_) async => XFile('/tmp/support.jpg'));
       await tester.pumpWidget(_harness(bloc));
       await choose(tester, 'Take a photo');
+      verify(
+        () =>
+            bloc.add(const SupportAttachmentPickRequested('/tmp/support.jpg')),
+      ).called(1);
+    });
+
+    testWidgets('deux demandes rapides : une seule prise de photo', (
+      tester,
+    ) async {
+      final gate = Completer<XFile?>();
+      when(
+        () => media.pick(source: ImageSource.camera),
+      ).thenAnswer((_) => gate.future);
+      await tester.pumpWidget(_harness(bloc));
+      final context = tester.element(
+        find.byKey(const Key('open-source-sheet')),
+      );
+
+      unawaited(SupportAttachmentActions.pick(context, ImageSource.camera));
+      unawaited(SupportAttachmentActions.pick(context, ImageSource.camera));
+      gate.complete(XFile('/tmp/support.jpg'));
+      await tester.pumpAndSettle();
+
+      verify(() => media.pick(source: ImageSource.camera)).called(1);
       verify(
         () =>
             bloc.add(const SupportAttachmentPickRequested('/tmp/support.jpg')),

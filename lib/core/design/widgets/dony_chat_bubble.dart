@@ -44,18 +44,23 @@ class DonyChatBubbleShell extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: radius,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            child,
-            if (meta != null)
-              Padding(
-                key: const Key('chat-bubble-meta'),
-                padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
-                child: Align(alignment: Alignment.centerRight, child: meta),
-              ),
-          ],
+        // Largeur intrinsèque : sans elle, `stretch` donne à la colonne toute la
+        // largeur autorisée par l'écran et chaque bulle (même « ok », même une
+        // photo de 200 px) s'étire à 72 % de l'écran.
+        child: IntrinsicWidth(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              child,
+              if (meta != null)
+                Padding(
+                  key: const Key('chat-bubble-meta'),
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
+                  child: Align(alignment: Alignment.centerRight, child: meta),
+                ),
+            ],
+          ),
         ),
       ),
     );
