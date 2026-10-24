@@ -1149,8 +1149,24 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
+  /// Feuille sans défilant attaché (Sentry 155532570) : `animateTo` lèverait
+  /// une assertion. La taille en cache est alignée sur la vue demandée pour
+  /// que les pastilles restent cohérentes ; le geste est appliqué à la frame
+  /// suivante si la feuille s'est rattachée entre-temps.
+  void _resyncDetachedSheet({required double size}) {
+    if (_sheetSize != size) setState(() => _sheetSize = size);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_sheetController.isAttached) return;
+      _sheetController.jumpTo(size);
+    });
+  }
+
   /// Bouton « Carte » de la liste : la carte reprend tout l'écran.
   void _showMap() {
+    if (!_sheetController.isAttached) {
+      _resyncDetachedSheet(size: 0);
+      return;
+    }
     _sheetController.animateTo(
       0,
       duration: const Duration(milliseconds: 350),
@@ -1162,6 +1178,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// « Près de moi » compris, restent actifs.
   void _showList() {
     setState(() => _selectedAnnouncementId = null);
+    if (!_sheetController.isAttached) {
+      _resyncDetachedSheet(size: 1);
+      return;
+    }
     _sheetController.animateTo(
       1,
       duration: const Duration(milliseconds: 350),
