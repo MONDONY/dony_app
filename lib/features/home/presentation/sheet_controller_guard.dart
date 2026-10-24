@@ -33,10 +33,7 @@ void _move(
     return;
   }
   if (retriesLeft <= 0) {
-    AppLog.warn(
-      'home.sheet_gesture_dropped',
-      data: {'target_size': size},
-    );
+    AppLog.warn('home.sheet_gesture_dropped', data: {'target_size': size});
     return;
   }
   WidgetsBinding.instance.addPostFrameCallback((_) {
