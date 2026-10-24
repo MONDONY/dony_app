@@ -1,6 +1,6 @@
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/design/widgets/dony_pressable.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -97,7 +97,7 @@ class DonyChatComposer extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (above != null) above!,
+            ?above,
             Container(
               key: const Key('chat-composer-pill'),
               constraints: const BoxConstraints(maxHeight: 132),
