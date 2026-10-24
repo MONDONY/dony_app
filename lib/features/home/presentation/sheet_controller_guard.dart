@@ -43,4 +43,6 @@ void _move(
     if (!isMounted()) return;
     _move(controller, size, isMounted, duration, retriesLeft - 1);
   });
+  // Un écran au repos ne produit pas de frame : sans cela, la reprise ne part pas.
+  WidgetsBinding.instance.ensureVisualUpdate();
 }
