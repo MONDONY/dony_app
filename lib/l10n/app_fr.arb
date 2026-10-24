@@ -22600,5 +22600,17 @@
   "amendmentGainHandoverNote": "À la remise, récupérez {amount} en espèces avant de scanner le QR du colis.",
   "@amendmentGainHandoverNote": {"description": "Note de remise côté voyageur", "placeholders": {"amount": {"type": "String"}}},
   "amendmentPaymentContextLabel": "Modification du colis",
-  "@amendmentPaymentContextLabel": {"description": "Libellé de contexte de la feuille de paiement"}
+  "@amendmentPaymentContextLabel": {"description": "Libellé de contexte de la feuille de paiement"},
+  "amendmentEntryBodyShort": "Ajoutez des kilos ou des articles : {name} a 48 h pour accepter.",
+  "@amendmentEntryBodyShort": {"description": "Texte de la carte d'entrée sans kilos libres. {name} : prénom du voyageur", "placeholders": {"name": {"type": "String"}}},
+  "amendmentSheetKgLabelOpen": "KILOS EN PLUS · {price}/KG",
+  "@amendmentSheetKgLabelOpen": {"description": "Titre du sélecteur de kilos quand la capacité est libre. {price} : prix au kilo formaté", "placeholders": {"price": {"type": "String"}}},
+  "amendmentSheetLoadFailed": "Impossible de charger les options de modification.",
+  "@amendmentSheetLoadFailed": {"description": "Options de modification introuvables"},
+  "amendmentQuantityLess": "Moins",
+  "@amendmentQuantityLess": {"description": "Infobulle du bouton moins d'un sélecteur"},
+  "amendmentQuantityMore": "Plus",
+  "@amendmentQuantityMore": {"description": "Infobulle du bouton plus d'un sélecteur"},
+  "amendmentSentSnackbar": "Demande envoyée à {name}",
+  "@amendmentSentSnackbar": {"description": "Confirmation d'envoi. {name} : prénom du voyageur", "placeholders": {"name": {"type": "String"}}}
 }

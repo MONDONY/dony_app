@@ -11177,5 +11177,11 @@
   "amendmentGainCashDue": "To collect in cash from {name}",
   "amendmentGainCommissionNote": "including {amount} Yadony commission, already taken from your balance",
   "amendmentGainHandoverNote": "At handover, collect {amount} in cash before scanning the parcel QR code.",
-  "amendmentPaymentContextLabel": "Parcel edit"
+  "amendmentPaymentContextLabel": "Parcel edit",
+  "amendmentEntryBodyShort": "Add kilos or items: {name} has 48 h to accept.",
+  "amendmentSheetKgLabelOpen": "EXTRA KILOS · {price}/KG",
+  "amendmentSheetLoadFailed": "Couldn't load the edit options.",
+  "amendmentQuantityLess": "Fewer",
+  "amendmentQuantityMore": "More",
+  "amendmentSentSnackbar": "Request sent to {name}"
 }

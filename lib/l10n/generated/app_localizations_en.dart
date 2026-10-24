@@ -22478,4 +22478,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get amendmentPaymentContextLabel => 'Parcel edit';
+
+  @override
+  String amendmentEntryBodyShort(String name) {
+    return 'Add kilos or items: $name has 48 h to accept.';
+  }
+
+  @override
+  String amendmentSheetKgLabelOpen(String price) {
+    return 'EXTRA KILOS · $price/KG';
+  }
+
+  @override
+  String get amendmentSheetLoadFailed => 'Couldn\'t load the edit options.';
+
+  @override
+  String get amendmentQuantityLess => 'Fewer';
+
+  @override
+  String get amendmentQuantityMore => 'More';
+
+  @override
+  String amendmentSentSnackbar(String name) {
+    return 'Request sent to $name';
+  }
 }

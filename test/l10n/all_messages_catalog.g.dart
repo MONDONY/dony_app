@@ -7852,6 +7852,15 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'amendmentGainHandoverNote': (l) =>
       l.amendmentGainHandoverNote(placeholderMarker('amount')),
   'amendmentPaymentContextLabel': (l) => l.amendmentPaymentContextLabel,
+  'amendmentEntryBodyShort': (l) =>
+      l.amendmentEntryBodyShort(placeholderMarker('name')),
+  'amendmentSheetKgLabelOpen': (l) =>
+      l.amendmentSheetKgLabelOpen(placeholderMarker('price')),
+  'amendmentSheetLoadFailed': (l) => l.amendmentSheetLoadFailed,
+  'amendmentQuantityLess': (l) => l.amendmentQuantityLess,
+  'amendmentQuantityMore': (l) => l.amendmentQuantityMore,
+  'amendmentSentSnackbar': (l) =>
+      l.amendmentSentSnackbar(placeholderMarker('name')),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8499,4 +8508,7 @@ const textParameters = <String, List<String>>{
   'amendmentGainCashDue': ['name'],
   'amendmentGainCommissionNote': ['amount'],
   'amendmentGainHandoverNote': ['amount'],
+  'amendmentEntryBodyShort': ['name'],
+  'amendmentSheetKgLabelOpen': ['price'],
+  'amendmentSentSnackbar': ['name'],
 };

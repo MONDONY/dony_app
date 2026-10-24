@@ -36457,6 +36457,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Modification du colis'**
   String get amendmentPaymentContextLabel;
+
+  /// Texte de la carte d'entrée sans kilos libres. {name} : prénom du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez des kilos ou des articles : {name} a 48 h pour accepter.'**
+  String amendmentEntryBodyShort(String name);
+
+  /// Titre du sélecteur de kilos quand la capacité est libre. {price} : prix au kilo formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'KILOS EN PLUS · {price}/KG'**
+  String amendmentSheetKgLabelOpen(String price);
+
+  /// Options de modification introuvables
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les options de modification.'**
+  String get amendmentSheetLoadFailed;
+
+  /// Infobulle du bouton moins d'un sélecteur
+  ///
+  /// In fr, this message translates to:
+  /// **'Moins'**
+  String get amendmentQuantityLess;
+
+  /// Infobulle du bouton plus d'un sélecteur
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus'**
+  String get amendmentQuantityMore;
+
+  /// Confirmation d'envoi. {name} : prénom du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée à {name}'**
+  String amendmentSentSnackbar(String name);
 }
 
 class _AppLocalizationsDelegate

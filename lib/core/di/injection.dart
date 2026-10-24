@@ -131,6 +131,7 @@ import 'package:dony/features/maintenance/data/repositories/maintenance_reposito
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_request_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
@@ -484,6 +485,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<DonyMediaService>(),
       getIt<AnalyticsService>(),
       commissionFlow: getIt<SupplementCommissionFlow>(),
+    ),
+  );
+  getIt.registerFactory<AmendmentRequestCubit>(
+    () => AmendmentRequestCubit(
+      getIt<BidAmendmentRepository>(),
+      getIt<AnalyticsService>(),
     ),
   );
   getIt.registerFactory<SupplementActionCubit>(

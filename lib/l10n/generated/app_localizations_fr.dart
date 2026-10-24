@@ -22635,4 +22635,29 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get amendmentPaymentContextLabel => 'Modification du colis';
+
+  @override
+  String amendmentEntryBodyShort(String name) {
+    return 'Ajoutez des kilos ou des articles : $name a 48 h pour accepter.';
+  }
+
+  @override
+  String amendmentSheetKgLabelOpen(String price) {
+    return 'KILOS EN PLUS · $price/KG';
+  }
+
+  @override
+  String get amendmentSheetLoadFailed =>
+      'Impossible de charger les options de modification.';
+
+  @override
+  String get amendmentQuantityLess => 'Moins';
+
+  @override
+  String get amendmentQuantityMore => 'Plus';
+
+  @override
+  String amendmentSentSnackbar(String name) {
+    return 'Demande envoyée à $name';
+  }
 }
