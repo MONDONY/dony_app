@@ -196,7 +196,9 @@ void main() {
     }
   });
 
-  testWidgets('action du clavier : onSubmitted reçoit le texte', (tester) async {
+  testWidgets('action du clavier : onSubmitted reçoit le texte', (
+    tester,
+  ) async {
     String? submitted;
     await tester.pumpWidget(
       wrap(
