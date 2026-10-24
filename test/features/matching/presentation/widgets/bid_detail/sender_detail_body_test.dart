@@ -6,6 +6,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -13,9 +14,13 @@ import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cub
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
+import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
@@ -44,6 +49,8 @@ import '../../../../../helpers/l10n_test_helpers.dart';
 
 class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
+
+class _MockAmendmentRepository extends Mock implements BidAmendmentRepository {}
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
@@ -98,8 +105,12 @@ BidModel _bid({
   bool senderHasRated = false,
   String? arrivalInstructions,
   BidSupplement? supplement,
+  List<BidAmendment> amendments = const [],
+  bool amendmentAllowed = false,
 }) => BidModel(
   supplement: supplement,
+  amendments: amendments,
+  amendmentAllowed: amendmentAllowed,
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: 'sender-001',
@@ -138,6 +149,7 @@ Widget _host(
   _MockCancellationBloc cancellationBloc,
   _MockConversationOpenBloc conversationOpenBloc, {
   bool focusSupplement = false,
+  bool focusAmendment = false,
 }) {
   return MaterialApp(
     theme: AppTheme.light(),
@@ -151,7 +163,11 @@ Widget _host(
           // Le numéro n'est plus dans le bid : la carte de contact lit ce bloc.
           BlocProvider<ContactRevealBloc>.value(value: _revealBloc()),
         ],
-        child: SenderDetailBody(bid: bid, focusSupplement: focusSupplement),
+        child: SenderDetailBody(
+          bid: bid,
+          focusSupplement: focusSupplement,
+          focusAmendment: focusAmendment,
+        ),
       ),
     ),
   );
@@ -447,6 +463,103 @@ void main() {
 
       expect(find.byType(SupplementSenderCard), findsNothing);
       expect(scrollOffset(tester), 0);
+    });
+  });
+
+  group('modification du colis', () {
+    const open = BidAmendment(
+      id: 'am-1',
+      status: BidAmendmentStatus.proposed,
+      rail: 'CASH',
+      addedWeightKg: 3,
+      grossAmount: 26.8,
+    );
+
+    setUp(() {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerFactory<AmendmentActionCubit>(
+        () => AmendmentActionCubit(_MockAmendmentRepository(), analytics),
+      );
+    });
+
+    tearDown(() async => getIt.reset());
+
+    double scrollOffset(WidgetTester tester) => tester
+        .state<ScrollableState>(find.byType(Scrollable).first)
+        .position
+        .pixels;
+
+    testWidgets('demande ouverte : carte affichée sous le hero', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _host(
+          _bid(amendments: const [open]),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(AmendmentSenderCard), findsOneWidget);
+      expect(scrollOffset(tester), 0);
+    });
+
+    testWidgets('?action=amendment : la carte est amenée à l\'écran', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _host(
+          _bid(amendments: const [open]),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusAmendment: true,
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(scrollOffset(tester), greaterThan(0));
+    });
+
+    testWidgets('modification autorisée sans demande : encart d\'entrée', (
+      tester,
+    ) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(amendmentAllowed: true),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(AmendmentEntryCard), findsOneWidget);
+      expect(find.byType(AmendmentSenderCard), findsNothing);
+    });
+
+    testWidgets('sans modification : aucune carte', (tester) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(_bid(), cancellationBloc, conversationOpenBloc),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(AmendmentSenderCard), findsNothing);
+      expect(find.byType(AmendmentEntryCard), findsNothing);
     });
   });
 }

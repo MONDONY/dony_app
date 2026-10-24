@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
@@ -90,6 +91,9 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
       // Supplément de prix : en attente, il bloque le scan de remise.
       if (SupplementTravelerCard.shouldShow(widget.bid))
         SupplementTravelerCard(bid: widget.bid),
+      // Modification du colis : en attente, elle bloque le scan de remise.
+      if (AmendmentTravelerCard.shouldShow(widget.bid))
+        AmendmentTravelerCard(bid: widget.bid),
       if (TripRescheduleCard.shouldShow(widget.bid))
         TripRescheduleCard(bid: widget.bid, isSender: false),
       // Procédure « destinataire absent » (FLUTTER-E2) ; elle retombe sur
@@ -125,15 +129,14 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
       // Autres cartes : stagger uniquement lors du premier affichage.
       final child = children[i];
       if (_playEntrance && i > 0) {
+        // Délai plafonné à l'index 9 : la durée totale du timer ci-dessus
+        // reste vraie quel que soit le nombre de cartes.
+        final delay = (60 * (i > 9 ? 9 : i)).ms;
         staggered.add(
           child
               .animate()
-              .fadeIn(duration: 300.ms, delay: (60 * i).ms)
-              .slideY(
-                begin: 0.04,
-                curve: Curves.easeOutCubic,
-                delay: (60 * i).ms,
-              ),
+              .fadeIn(duration: 300.ms, delay: delay)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic, delay: delay),
         );
       } else {
         staggered.add(child);

@@ -22435,7 +22435,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amendmentDecline => 'Decline';
 
   @override
-  String get amendmentNotBrought => 'I didn\'t take the extra';
+  String get amendmentNotBrought => 'The extra kilos aren\'t here';
 
   @override
   String get amendmentGainTitle => 'WHAT YOU RECEIVE';
@@ -22496,5 +22496,127 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String amendmentSentSnackbar(String name) {
     return 'Request sent to $name';
+  }
+
+  @override
+  String get amendmentSenderPendingLineCard => 'Extra, held on your card';
+
+  @override
+  String get amendmentSenderPendingLineMobileMoney =>
+      'Extra, to pay with mobile money';
+
+  @override
+  String get amendmentSenderPayNow =>
+      'Pay now for the change to be taken into account.';
+
+  @override
+  String amendmentSenderExpiredStatus(String name) {
+    return '$name didn\'t reply in time';
+  }
+
+  @override
+  String get amendmentSenderCancelledStatus => 'Request cancelled';
+
+  @override
+  String get amendmentSenderCaptureFailedStatus =>
+      'The payment for the change failed';
+
+  @override
+  String amendmentSenderCaptureFailedBody(String kg) {
+    return 'Your parcel stays at $kg. The amount held on your card is released.';
+  }
+
+  @override
+  String get amendmentCancelConfirmTitle => 'Cancel your request?';
+
+  @override
+  String get amendmentCancelConfirmMessage =>
+      'Your parcel stays as it is. Any amount held on your card is released.';
+
+  @override
+  String get amendmentCancelledSnackbar => 'Request cancelled';
+
+  @override
+  String amendmentTravelerCardNote(String name, String amount) {
+    return 'Paid by card by $name: $amount. Paid out to your account after delivery.';
+  }
+
+  @override
+  String amendmentTravelerMobileMoneyNote(String name, String amount) {
+    return '$name will pay $amount by mobile money once you accept.';
+  }
+
+  @override
+  String amendmentTravelerWaitingPayment(String name) {
+    return 'Waiting for $name to pay';
+  }
+
+  @override
+  String get amendmentTravelerCommissionPending => 'Commission being confirmed';
+
+  @override
+  String get amendmentTravelerAcceptedStatus => 'Change accepted';
+
+  @override
+  String get amendmentTravelerAcceptedBody =>
+      'Collect the extra kilos at handover. If they aren\'t there, say so before scanning the QR.';
+
+  @override
+  String get amendmentTravelerDeclinedStatus => 'You declined the change';
+
+  @override
+  String get amendmentTravelerExpiredStatus => 'Change expired';
+
+  @override
+  String amendmentTravelerCancelledStatus(String name) {
+    return '$name cancelled the request';
+  }
+
+  @override
+  String get amendmentTravelerClosedStatus => 'Change not secured';
+
+  @override
+  String get amendmentTravelerParcelWeight => 'Parcel weight';
+
+  @override
+  String amendmentTravelerParcelWeightValue(String from, String to) {
+    return '$from → $to kg';
+  }
+
+  @override
+  String get amendmentAcceptedSnackbar => 'Change accepted';
+
+  @override
+  String get amendmentDeclinedSnackbar => 'Change declined';
+
+  @override
+  String get amendmentDeclineConfirmTitle => 'Decline the change?';
+
+  @override
+  String get amendmentDeclineConfirmMessage =>
+      'The parcel keeps its original kilos and price.';
+
+  @override
+  String get amendmentNotBroughtConfirmTitle => 'The extra kilos aren\'t here?';
+
+  @override
+  String get amendmentNotBroughtConfirmMessage =>
+      'The change will be cancelled and the sender refunded. The parcel stays at its original weight.';
+
+  @override
+  String get amendmentNotBroughtSnackbar =>
+      'Change cancelled, the sender is refunded';
+
+  @override
+  String get amendmentScanBlocked =>
+      'A change is waiting for your reply: scanning is blocked.';
+
+  @override
+  String get amendmentCommissionAuthInterrupted =>
+      'Confirmation interrupted, try accepting again.';
+
+  @override
+  String amendmentSenderNotBroughtStatus(String name) {
+    return '$name didn\'t bring the extra kilos';
   }
 }

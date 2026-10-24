@@ -22591,7 +22591,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get amendmentDecline => 'Refuser';
 
   @override
-  String get amendmentNotBrought => 'Je n\'ai pas pris ce supplément';
+  String get amendmentNotBrought => 'Les kilos en plus ne sont pas là';
 
   @override
   String get amendmentGainTitle => 'CE QUE VOUS RECEVEZ';
@@ -22654,5 +22654,131 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String amendmentSentSnackbar(String name) {
     return 'Demande envoyée à $name';
+  }
+
+  @override
+  String get amendmentSenderPendingLineCard =>
+      'En plus, bloqué sur votre carte';
+
+  @override
+  String get amendmentSenderPendingLineMobileMoney =>
+      'En plus, à payer en mobile money';
+
+  @override
+  String get amendmentSenderPayNow =>
+      'Payez maintenant pour que la modification soit prise en compte.';
+
+  @override
+  String amendmentSenderExpiredStatus(String name) {
+    return '$name n\'a pas répondu à temps';
+  }
+
+  @override
+  String get amendmentSenderCancelledStatus => 'Demande annulée';
+
+  @override
+  String get amendmentSenderCaptureFailedStatus =>
+      'Le paiement de la modification a échoué';
+
+  @override
+  String amendmentSenderCaptureFailedBody(String kg) {
+    return 'Votre colis reste à $kg. Le montant bloqué sur votre carte est libéré.';
+  }
+
+  @override
+  String get amendmentCancelConfirmTitle => 'Annuler votre demande ?';
+
+  @override
+  String get amendmentCancelConfirmMessage =>
+      'Votre colis reste tel qu\'il est. Un montant bloqué sur votre carte est libéré.';
+
+  @override
+  String get amendmentCancelledSnackbar => 'Demande annulée';
+
+  @override
+  String amendmentTravelerCardNote(String name, String amount) {
+    return 'Payé par carte par $name : $amount. Versé sur votre compte après la livraison.';
+  }
+
+  @override
+  String amendmentTravelerMobileMoneyNote(String name, String amount) {
+    return '$name paiera $amount en mobile money après votre acceptation.';
+  }
+
+  @override
+  String amendmentTravelerWaitingPayment(String name) {
+    return 'En attente du paiement de $name';
+  }
+
+  @override
+  String get amendmentTravelerCommissionPending =>
+      'Commission en cours de validation';
+
+  @override
+  String get amendmentTravelerAcceptedStatus => 'Modification acceptée';
+
+  @override
+  String get amendmentTravelerAcceptedBody =>
+      'Récupérez les kilos en plus à la remise. S\'ils ne sont pas là, dites-le avant de scanner le QR.';
+
+  @override
+  String get amendmentTravelerDeclinedStatus =>
+      'Vous avez refusé la modification';
+
+  @override
+  String get amendmentTravelerExpiredStatus => 'Modification expirée';
+
+  @override
+  String amendmentTravelerCancelledStatus(String name) {
+    return '$name a annulé sa demande';
+  }
+
+  @override
+  String get amendmentTravelerClosedStatus => 'Modification non acquise';
+
+  @override
+  String get amendmentTravelerParcelWeight => 'Poids du colis';
+
+  @override
+  String amendmentTravelerParcelWeightValue(String from, String to) {
+    return '$from → $to kg';
+  }
+
+  @override
+  String get amendmentAcceptedSnackbar => 'Modification acceptée';
+
+  @override
+  String get amendmentDeclinedSnackbar => 'Modification refusée';
+
+  @override
+  String get amendmentDeclineConfirmTitle => 'Refuser la modification ?';
+
+  @override
+  String get amendmentDeclineConfirmMessage =>
+      'Le colis garde ses kilos d\'origine et son prix.';
+
+  @override
+  String get amendmentNotBroughtConfirmTitle =>
+      'Les kilos en plus ne sont pas là ?';
+
+  @override
+  String get amendmentNotBroughtConfirmMessage =>
+      'La modification sera annulée et l\'expéditeur remboursé. Le colis reste à son poids d\'origine.';
+
+  @override
+  String get amendmentNotBroughtSnackbar =>
+      'Modification annulée, l\'expéditeur est remboursé';
+
+  @override
+  String get amendmentScanBlocked =>
+      'Une modification attend votre réponse : le scan est bloqué.';
+
+  @override
+  String get amendmentCommissionAuthInterrupted =>
+      'Validation interrompue, réessayez d\'accepter.';
+
+  @override
+  String amendmentSenderNotBroughtStatus(String name) {
+    return '$name n\'a pas apporté les kilos en plus';
   }
 }

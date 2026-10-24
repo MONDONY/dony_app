@@ -7859,6 +7859,58 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'amendmentQuantityMore': (l) => l.amendmentQuantityMore,
   'amendmentSentSnackbar': (l) =>
       l.amendmentSentSnackbar(placeholderMarker('name')),
+  'amendmentSenderPendingLineCard': (l) => l.amendmentSenderPendingLineCard,
+  'amendmentSenderPendingLineMobileMoney': (l) =>
+      l.amendmentSenderPendingLineMobileMoney,
+  'amendmentSenderPayNow': (l) => l.amendmentSenderPayNow,
+  'amendmentSenderExpiredStatus': (l) =>
+      l.amendmentSenderExpiredStatus(placeholderMarker('name')),
+  'amendmentSenderCancelledStatus': (l) => l.amendmentSenderCancelledStatus,
+  'amendmentSenderCaptureFailedStatus': (l) =>
+      l.amendmentSenderCaptureFailedStatus,
+  'amendmentSenderCaptureFailedBody': (l) =>
+      l.amendmentSenderCaptureFailedBody(placeholderMarker('kg')),
+  'amendmentCancelConfirmTitle': (l) => l.amendmentCancelConfirmTitle,
+  'amendmentCancelConfirmMessage': (l) => l.amendmentCancelConfirmMessage,
+  'amendmentCancelledSnackbar': (l) => l.amendmentCancelledSnackbar,
+  'amendmentTravelerCardNote': (l) => l.amendmentTravelerCardNote(
+    placeholderMarker('name'),
+    placeholderMarker('amount'),
+  ),
+  'amendmentTravelerMobileMoneyNote': (l) => l.amendmentTravelerMobileMoneyNote(
+    placeholderMarker('name'),
+    placeholderMarker('amount'),
+  ),
+  'amendmentTravelerWaitingPayment': (l) =>
+      l.amendmentTravelerWaitingPayment(placeholderMarker('name')),
+  'amendmentTravelerCommissionPending': (l) =>
+      l.amendmentTravelerCommissionPending,
+  'amendmentTravelerAcceptedStatus': (l) => l.amendmentTravelerAcceptedStatus,
+  'amendmentTravelerAcceptedBody': (l) => l.amendmentTravelerAcceptedBody,
+  'amendmentTravelerDeclinedStatus': (l) => l.amendmentTravelerDeclinedStatus,
+  'amendmentTravelerExpiredStatus': (l) => l.amendmentTravelerExpiredStatus,
+  'amendmentTravelerCancelledStatus': (l) =>
+      l.amendmentTravelerCancelledStatus(placeholderMarker('name')),
+  'amendmentTravelerClosedStatus': (l) => l.amendmentTravelerClosedStatus,
+  'amendmentTravelerParcelWeight': (l) => l.amendmentTravelerParcelWeight,
+  'amendmentTravelerParcelWeightValue': (l) =>
+      l.amendmentTravelerParcelWeightValue(
+        placeholderMarker('from'),
+        placeholderMarker('to'),
+      ),
+  'amendmentAcceptedSnackbar': (l) => l.amendmentAcceptedSnackbar,
+  'amendmentDeclinedSnackbar': (l) => l.amendmentDeclinedSnackbar,
+  'amendmentDeclineConfirmTitle': (l) => l.amendmentDeclineConfirmTitle,
+  'amendmentDeclineConfirmMessage': (l) => l.amendmentDeclineConfirmMessage,
+  'amendmentNotBroughtConfirmTitle': (l) => l.amendmentNotBroughtConfirmTitle,
+  'amendmentNotBroughtConfirmMessage': (l) =>
+      l.amendmentNotBroughtConfirmMessage,
+  'amendmentNotBroughtSnackbar': (l) => l.amendmentNotBroughtSnackbar,
+  'amendmentScanBlocked': (l) => l.amendmentScanBlocked,
+  'amendmentCommissionAuthInterrupted': (l) =>
+      l.amendmentCommissionAuthInterrupted,
+  'amendmentSenderNotBroughtStatus': (l) =>
+      l.amendmentSenderNotBroughtStatus(placeholderMarker('name')),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8508,4 +8560,12 @@ const textParameters = <String, List<String>>{
   'amendmentEntryBodyShort': ['name'],
   'amendmentSheetKgLabelOpen': ['price'],
   'amendmentSentSnackbar': ['name'],
+  'amendmentSenderExpiredStatus': ['name'],
+  'amendmentSenderCaptureFailedBody': ['kg'],
+  'amendmentTravelerCardNote': ['name', 'amount'],
+  'amendmentTravelerMobileMoneyNote': ['name', 'amount'],
+  'amendmentTravelerWaitingPayment': ['name'],
+  'amendmentTravelerCancelledStatus': ['name'],
+  'amendmentTravelerParcelWeightValue': ['from', 'to'],
+  'amendmentSenderNotBroughtStatus': ['name'],
 };

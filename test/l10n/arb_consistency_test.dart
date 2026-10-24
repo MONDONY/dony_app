@@ -106,6 +106,7 @@ int _matchingBrace(String text, int openIndex) {
 const _sameInBothLanguages = <String>{
   'amendmentSheetKgValue', // « +{kg} kg » : signe, nombre et unité
   'amendmentRailMobileMoney', // nom de service
+  'amendmentTravelerParcelWeightValue', // « {from} → {to} kg » : même texte
   'requestPosterDateFlexibleValue', // « Flexible » se dit pareil
   'tripPosterTimeRange', // « {departure} → {arrival} » : heures déjà localisées
   'tripPosterPricePerKgShort', // « {price}/kg » : montant et unité

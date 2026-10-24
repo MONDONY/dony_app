@@ -160,7 +160,9 @@ class _ScanBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final h = DonyLayout.hPadding(context);
-    final blocked = bid.supplement?.blocksHandover ?? false;
+    final supplementBlocks = bid.supplement?.blocksHandover ?? false;
+    final amendmentBlocks = bid.amendments.any((a) => a.blocksHandover);
+    final blocked = supplementBlocks || amendmentBlocks;
     return Container(
       color: cs.surface,
       padding: EdgeInsets.fromLTRB(
@@ -186,7 +188,9 @@ class _ScanBar extends StatelessWidget {
           if (blocked) ...[
             const SizedBox(height: DonySpacing.xs),
             Text(
-              context.l10n.bidDetailScanBlockedSupplement,
+              supplementBlocks
+                  ? context.l10n.bidDetailScanBlockedSupplement
+                  : context.l10n.amendmentScanBlocked,
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,

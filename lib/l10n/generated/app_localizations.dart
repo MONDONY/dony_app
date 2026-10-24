@@ -36395,7 +36395,7 @@ abstract class AppLocalizations {
   /// Action du voyageur : modification acceptée mais non apportée à la remise
   ///
   /// In fr, this message translates to:
-  /// **'Je n\'ai pas pris ce supplément'**
+  /// **'Les kilos en plus ne sont pas là'**
   String get amendmentNotBrought;
 
   /// Titre de la carte gain du voyageur
@@ -36487,6 +36487,198 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Demande envoyée à {name}'**
   String amendmentSentSnackbar(String name);
+
+  /// Ligne du total côté expéditeur, rail carte
+  ///
+  /// In fr, this message translates to:
+  /// **'En plus, bloqué sur votre carte'**
+  String get amendmentSenderPendingLineCard;
+
+  /// Ligne du total côté expéditeur, rail mobile money
+  ///
+  /// In fr, this message translates to:
+  /// **'En plus, à payer en mobile money'**
+  String get amendmentSenderPendingLineMobileMoney;
+
+  /// Mobile money : le voyageur a accepté, le dépôt de l'expéditeur attend
+  ///
+  /// In fr, this message translates to:
+  /// **'Payez maintenant pour que la modification soit prise en compte.'**
+  String get amendmentSenderPayNow;
+
+  /// Statut expirée côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} n\'a pas répondu à temps'**
+  String amendmentSenderExpiredStatus(String name);
+
+  /// Statut annulée côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée'**
+  String get amendmentSenderCancelledStatus;
+
+  /// Statut capture échouée côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement de la modification a échoué'**
+  String get amendmentSenderCaptureFailedStatus;
+
+  /// Détail capture échouée
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis reste à {kg}. Le montant bloqué sur votre carte est libéré.'**
+  String amendmentSenderCaptureFailedBody(String kg);
+
+  /// Titre du dialogue d'annulation
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler votre demande ?'**
+  String get amendmentCancelConfirmTitle;
+
+  /// Message du dialogue d'annulation
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis reste tel qu\'il est. Un montant bloqué sur votre carte est libéré.'**
+  String get amendmentCancelConfirmMessage;
+
+  /// Confirmation d'annulation
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée'**
+  String get amendmentCancelledSnackbar;
+
+  /// Note rail carte côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé par carte par {name} : {amount}. Versé sur votre compte après la livraison.'**
+  String amendmentTravelerCardNote(String name, String amount);
+
+  /// Note rail mobile money côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} paiera {amount} en mobile money après votre acceptation.'**
+  String amendmentTravelerMobileMoneyNote(String name, String amount);
+
+  /// Statut paiement mobile money en attente côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du paiement de {name}'**
+  String amendmentTravelerWaitingPayment(String name);
+
+  /// Statut commission en attente côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission en cours de validation'**
+  String get amendmentTravelerCommissionPending;
+
+  /// Statut acceptée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification acceptée'**
+  String get amendmentTravelerAcceptedStatus;
+
+  /// Détail acceptée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Récupérez les kilos en plus à la remise. S\'ils ne sont pas là, dites-le avant de scanner le QR.'**
+  String get amendmentTravelerAcceptedBody;
+
+  /// Statut refusée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez refusé la modification'**
+  String get amendmentTravelerDeclinedStatus;
+
+  /// Statut expirée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification expirée'**
+  String get amendmentTravelerExpiredStatus;
+
+  /// Statut annulée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} a annulé sa demande'**
+  String amendmentTravelerCancelledStatus(String name);
+
+  /// Statut générique clos côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification non acquise'**
+  String get amendmentTravelerClosedStatus;
+
+  /// Libellé du poids avant/après
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids du colis'**
+  String get amendmentTravelerParcelWeight;
+
+  /// Poids avant → après
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} → {to} kg'**
+  String amendmentTravelerParcelWeightValue(String from, String to);
+
+  /// Confirmation d'acceptation
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification acceptée'**
+  String get amendmentAcceptedSnackbar;
+
+  /// Confirmation de refus
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification refusée'**
+  String get amendmentDeclinedSnackbar;
+
+  /// Titre du dialogue de refus
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser la modification ?'**
+  String get amendmentDeclineConfirmTitle;
+
+  /// Message du dialogue de refus
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis garde ses kilos d\'origine et son prix.'**
+  String get amendmentDeclineConfirmMessage;
+
+  /// Titre du dialogue « non apportée »
+  ///
+  /// In fr, this message translates to:
+  /// **'Les kilos en plus ne sont pas là ?'**
+  String get amendmentNotBroughtConfirmTitle;
+
+  /// Message du dialogue « non apportée »
+  ///
+  /// In fr, this message translates to:
+  /// **'La modification sera annulée et l\'expéditeur remboursé. Le colis reste à son poids d\'origine.'**
+  String get amendmentNotBroughtConfirmMessage;
+
+  /// Confirmation « non apportée »
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification annulée, l\'expéditeur est remboursé'**
+  String get amendmentNotBroughtSnackbar;
+
+  /// Scan de remise bloqué côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Une modification attend votre réponse : le scan est bloqué.'**
+  String get amendmentScanBlocked;
+
+  /// 3DS commission abandonnée
+  ///
+  /// In fr, this message translates to:
+  /// **'Validation interrompue, réessayez d\'accepter.'**
+  String get amendmentCommissionAuthInterrupted;
+
+  /// Statut côté expéditeur : le voyageur déclare que les kilos en plus n'étaient pas là
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} n\'a pas apporté les kilos en plus'**
+  String amendmentSenderNotBroughtStatus(String name);
 }
 
 class _AppLocalizationsDelegate

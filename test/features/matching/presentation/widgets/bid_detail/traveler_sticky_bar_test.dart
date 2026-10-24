@@ -10,6 +10,7 @@ import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
@@ -39,9 +40,11 @@ BidModel _bid({
   String? arrivalCity,
   DateTime? departureAt,
   BidSupplement? supplement,
+  List<BidAmendment> amendments = const [],
 }) => BidModel(
   id: 'b1',
   supplement: supplement,
+  amendments: amendments,
   announcementId: 'a1',
   senderId: 's1',
   status: status,
@@ -165,6 +168,55 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('scanDisabled_whenAmendmentBlocksHandover', (tester) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'ACCEPTED',
+        voyageurConfirmed: true,
+        amendments: const [
+          BidAmendment(
+            id: 'am-1',
+            status: BidAmendmentStatus.proposed,
+            rail: 'CASH',
+            grossAmount: 26.8,
+            blocksHandover: true,
+          ),
+        ],
+      ),
+    );
+    final button = tester.widget<DonyButton>(
+      find.byKey(const Key('traveler-scan-btn')),
+    );
+    expect(button.onPressed, isNull);
+    expect(
+      find.text('Une modification attend votre réponse : le scan est bloqué.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('modification acceptée → scan possible', (tester) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'ACCEPTED',
+        voyageurConfirmed: true,
+        amendments: const [
+          BidAmendment(
+            id: 'am-1',
+            status: BidAmendmentStatus.accepted,
+            rail: 'CASH',
+            grossAmount: 26.8,
+          ),
+        ],
+      ),
+    );
+    final button = tester.widget<DonyButton>(
+      find.byKey(const Key('traveler-scan-btn')),
+    );
+    expect(button.onPressed, isNotNull);
   });
 
   testWidgets('supplément refusé → scan de nouveau possible', (tester) async {

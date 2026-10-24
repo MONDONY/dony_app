@@ -711,6 +711,9 @@ final appRouter = GoRouter(
           // Notification BID_SUPPLEMENT_REQUESTED : la fiche amène l'encart
           // du supplément à l'écran de l'expéditeur.
           focusSupplement: action == 'supplement',
+          // Notifications de modification de colis : la fiche amène la
+          // carte de la modification à l'écran de l'expéditeur.
+          focusAmendment: action == 'amendment',
         );
       },
     ),

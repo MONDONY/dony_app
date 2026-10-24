@@ -6,6 +6,8 @@ import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
@@ -47,10 +49,15 @@ class SenderDetailBody extends StatefulWidget {
   /// premier affichage où il existe.
   final bool focusSupplement;
 
+  /// Ouvert depuis une notification de modification
+  /// (`?action=amendment`).
+  final bool focusAmendment;
+
   const SenderDetailBody({
     super.key,
     required this.bid,
     this.focusSupplement = false,
+    this.focusAmendment = false,
   });
 
   @override
@@ -99,6 +106,10 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
   final _supplementKey = GlobalKey();
   bool _supplementFocused = false;
 
+  /// Encart de la modification, cible de [SenderDetailBody.focusAmendment].
+  final _amendmentKey = GlobalKey();
+  bool _amendmentFocused = false;
+
   @override
   void dispose() {
     _entranceTimer?.cancel();
@@ -114,8 +125,23 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       return;
     }
     _supplementFocused = true;
+    _scrollTo(_supplementKey);
+  }
+
+  /// Même chose pour la carte de la modification (`?action=amendment`).
+  void _maybeFocusAmendment() {
+    if (!widget.focusAmendment ||
+        _amendmentFocused ||
+        !AmendmentSenderCard.shouldShow(widget.bid)) {
+      return;
+    }
+    _amendmentFocused = true;
+    _scrollTo(_amendmentKey);
+  }
+
+  void _scrollTo(GlobalKey key) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final target = _supplementKey.currentContext;
+      final target = key.currentContext;
       if (!mounted || target == null) return;
       Scrollable.ensureVisible(
         target,
@@ -131,6 +157,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     final h = DonyLayout.hPadding(context);
     final status = widget.bid.status;
     _maybeFocusSupplement();
+    _maybeFocusAmendment();
 
     final children = <Widget>[
       // index 0 — ColisBillet possède déjà son propre .animate().fadeIn().slideY()
@@ -142,6 +169,12 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // la remise, juste sous le hero.
       if (SupplementSenderCard.shouldShow(widget.bid))
         SupplementSenderCard(key: _supplementKey, bid: widget.bid),
+      // Modification du colis : la demande en attente ou sa fin, sinon
+      // l'entrée « Modifier mon colis » quand le serveur l'autorise.
+      if (AmendmentSenderCard.shouldShow(widget.bid))
+        AmendmentSenderCard(key: _amendmentKey, bid: widget.bid)
+      else if (AmendmentEntryCard.shouldShow(widget.bid))
+        AmendmentEntryCard(bid: widget.bid),
       if (TripRescheduleCard.shouldShow(widget.bid))
         TripRescheduleCard(bid: widget.bid, isSender: true),
       // Lieu de remise puis lieu de récupération, ouvrables dans la carte
@@ -185,15 +218,14 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // Autres cartes : stagger uniquement lors du premier affichage.
       final child = children[i];
       if (_playEntrance && i > 0) {
+        // Délai plafonné à l'index 7 : la durée totale du timer ci-dessus
+        // reste vraie quel que soit le nombre de cartes.
+        final delay = (60 * (i > 7 ? 7 : i)).ms;
         staggered.add(
           child
               .animate()
-              .fadeIn(duration: 300.ms, delay: (60 * i).ms)
-              .slideY(
-                begin: 0.04,
-                curve: Curves.easeOutCubic,
-                delay: (60 * i).ms,
-              ),
+              .fadeIn(duration: 300.ms, delay: delay)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic, delay: delay),
         );
       } else {
         staggered.add(child);
