@@ -27,6 +27,7 @@ import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_sheet_session.dart';
+import 'package:dony/features/home/presentation/sheet_controller_guard.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/home_publish_button.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
@@ -1149,28 +1150,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
-  /// Feuille sans défilant attaché (Sentry 155532570) : `animateTo` lèverait
-  /// une assertion. La taille en cache est alignée sur la vue demandée pour
-  /// que les pastilles restent cohérentes ; le geste est appliqué à la frame
-  /// suivante si la feuille s'est rattachée entre-temps.
-  void _resyncDetachedSheet({required double size}) {
-    if (_sheetSize != size) setState(() => _sheetSize = size);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_sheetController.isAttached) return;
-      _sheetController.jumpTo(size);
-    });
-  }
-
-  /// Bouton « Carte » de la liste : la carte reprend tout l'écran.
+  /// Bouton « Carte » de la liste : la carte reprend tout l'écran. Feuille
+  /// détachée (Sentry 155532570) : voir [moveSheetWhenAttached].
   void _showMap() {
-    if (!_sheetController.isAttached) {
-      _resyncDetachedSheet(size: 0);
-      return;
-    }
-    _sheetController.animateTo(
+    moveSheetWhenAttached(
+      _sheetController,
       0,
+      isMounted: () => mounted,
       duration: const Duration(milliseconds: 350),
-      curve: Curves.easeOutCubic,
     );
   }
 
@@ -1178,14 +1165,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// « Près de moi » compris, restent actifs.
   void _showList() {
     setState(() => _selectedAnnouncementId = null);
-    if (!_sheetController.isAttached) {
-      _resyncDetachedSheet(size: 1);
-      return;
-    }
-    _sheetController.animateTo(
+    moveSheetWhenAttached(
+      _sheetController,
       1,
+      isMounted: () => mounted,
       duration: const Duration(milliseconds: 350),
-      curve: Curves.easeOutCubic,
     );
   }
 

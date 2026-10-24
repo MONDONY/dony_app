@@ -1,0 +1,43 @@
+import 'package:flutter/widgets.dart';
+
+/// Nombre de frames pendant lesquelles un geste sur une feuille détachée
+/// attend le rattachement du défilant avant d'être abandonné.
+const kSheetAttachRetryFrames = 5;
+
+/// Amène la feuille à [size] sans jamais appeler le contrôleur détaché
+/// (`animateTo` lève une assertion, Sentry 155532570).
+///
+/// Détachée, la feuille n'est pas touchée et aucune taille en cache n'est
+/// écrite : `_onSheetSizeChanged` reste la seule source du cache. Le geste est
+/// réessayé aux [kSheetAttachRetryFrames] frames suivantes, puis abandonné.
+void moveSheetWhenAttached(
+  DraggableScrollableController controller,
+  double size, {
+  required bool Function() isMounted,
+  Duration? duration,
+  int retriesLeft = kSheetAttachRetryFrames,
+}) {
+  if (controller.isAttached) {
+    if (duration == null) {
+      controller.jumpTo(size);
+    } else {
+      controller.animateTo(
+        size,
+        duration: duration,
+        curve: Curves.easeOutCubic,
+      );
+    }
+    return;
+  }
+  if (retriesLeft <= 0) return;
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!isMounted()) return;
+    moveSheetWhenAttached(
+      controller,
+      size,
+      isMounted: isMounted,
+      duration: duration,
+      retriesLeft: retriesLeft - 1,
+    );
+  });
+}
