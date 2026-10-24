@@ -22743,12 +22743,6 @@ abstract class AppLocalizations {
   /// **'Votre message'**
   String get supportMessageHint;
 
-  /// Tooltip du bouton trombone, sans et avec vignettes déjà présentes (support_attachment_picker.dart, deux usages).
-  ///
-  /// In fr, this message translates to:
-  /// **'Joindre une image'**
-  String get supportAttachTooltip;
-
   /// Libellé d'accessibilité du bouton de retrait d'une vignette en attente d'envoi (support_attachment_picker.dart).
   ///
   /// In fr, this message translates to:

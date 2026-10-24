@@ -99,17 +99,23 @@ void main() {
       tester,
     ) async {
       await pump(tester, _ready);
-      IconButton sendButton() => tester.widget<IconButton>(
-        find.ancestor(
-          of: find.byTooltip('Send'),
-          matching: find.byType(IconButton),
-        ),
-      );
-      expect(sendButton().onPressed, isNull);
+      bool sendEnabled() =>
+          tester
+              .widget<GestureDetector>(
+                find
+                    .descendant(
+                      of: find.byKey(const Key('chat-send-button')),
+                      matching: find.byType(GestureDetector),
+                    )
+                    .first,
+              )
+              .onTap !=
+          null;
+      expect(sendEnabled(), isFalse);
 
       await tester.enterText(find.byType(TextField), '  Merci  ');
       await tester.pump();
-      await tester.tap(find.byTooltip('Send'));
+      await tester.tap(find.byKey(const Key('chat-send-button')));
       await tester.pump();
 
       verify(
@@ -157,7 +163,14 @@ void main() {
           sendStatus: SupportActionStatus.submitting,
         ),
       );
-      expect(find.byTooltip('Send'), findsNothing);
+      expect(find.byKey(const Key('chat-send-button')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('chat-send-button')),
+          matching: find.byType(GestureDetector),
+        ),
+        findsNothing,
+      );
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 

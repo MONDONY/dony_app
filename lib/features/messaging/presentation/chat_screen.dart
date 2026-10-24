@@ -115,6 +115,9 @@ class _ChatScreenState extends State<ChatScreen> {
   /// Un fil en lecture seule n'a pas de champ de saisie : rien à garder.
   bool get _keepsDraft => !widget.conversation.readOnly;
 
+  /// Une photo est en cours de prise, d'aperçu ou d'envoi (anti double tap).
+  bool _pickingPhoto = false;
+
   String get _myUid {
     final override = widget.currentUidOverride;
     if (override != null) return override;
@@ -503,8 +506,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // ── Photos (FLUTTER-B4) ──────────────────────────────────────────────────
 
-  /// Trombone actif : galerie ou appareil photo, aperçu, puis envoi.
-  Future<void> _onAttachTapped() async {
+  /// « + » actif : choix galerie ou appareil photo, aperçu, puis envoi.
+  Future<void> _onPlusTapped() async {
     final l = context.l10n;
     final source = await DonyBottomSheet.show<ImageSource>(
       context,
@@ -534,7 +537,24 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
     if (!mounted || source == null) return;
+    await _sendPhotoFrom(source);
+  }
 
+  /// Prend une photo (appareil ou galerie), l'aperçoit, puis l'envoie au bloc.
+  /// Raccourci appareil photo de la saisie : appelé sans passer par la feuille.
+  Future<void> _sendPhotoFrom(ImageSource source) async {
+    // Un second tap pendant la prise ou l'aperçu fait échouer la première
+    // demande côté `image_picker` (multiple_request) : message d'erreur à tort.
+    if (_pickingPhoto) return;
+    _pickingPhoto = true;
+    try {
+      await _pickPreviewAndSend(source);
+    } finally {
+      _pickingPhoto = false;
+    }
+  }
+
+  Future<void> _pickPreviewAndSend(ImageSource source) async {
     final Uint8List? bytes;
     try {
       bytes = await _pickPhoto(source);
@@ -577,7 +597,8 @@ class _ChatScreenState extends State<ChatScreen> {
     return context.push<bool>('/chat/photo-preview', extra: bytes);
   }
 
-  /// Trombone grisé : la demande n'est pas encore acceptée et payée.
+  /// « + » ou appareil photo grisé : la demande n'est pas encore acceptée et
+  /// payée.
   void _onAttachLocked() {
     final l = context.l10n;
     unawaited(
@@ -1220,11 +1241,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           return Column(
                             children: [
                               if (showSep)
-                                _DateSeparator(
-                                  date: message.sentAt,
-                                  cs: cs,
-                                  tt: tt,
-                                ),
+                                DonyChatDateSeparator(date: message.sentAt),
                               KeyedSubtree(
                                 key: _keyFor(message.id),
                                 child: ValueListenableBuilder<String?>(
@@ -1328,7 +1345,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           disabled: isReadOnly,
                           onSendText: _sendText,
                           attachState: attachState,
-                          onAttach: () => unawaited(_onAttachTapped()),
+                          onPlus: () => unawaited(_onPlusTapped()),
+                          onCamera: () =>
+                              unawaited(_sendPhotoFrom(ImageSource.camera)),
                           onAttachLocked: _onAttachLocked,
                         ),
                       ),
@@ -1697,59 +1716,6 @@ class _BidStatusBanner extends StatelessWidget {
 
 // ── Date separator ─────────────────────────────────────────────────────────────
 
-class _DateSeparator extends StatelessWidget {
-  final DateTime date;
-  final ColorScheme cs;
-  final TextTheme tt;
-
-  const _DateSeparator({
-    required this.date,
-    required this.cs,
-    required this.tt,
-  });
-
-  String _label(AppLocalizations l) {
-    final now = DateTime.now();
-    final local = date.toLocal();
-    final today = DateTime(now.year, now.month, now.day);
-    final day = DateTime(local.year, local.month, local.day);
-    final isToday = day == today;
-    // Jour calendaire, pas 24 h d'écart : un message d'hier 12 h lu à 1 h du
-    // matin tombait sous les 24 h et s'affichait avec sa date complète.
-    final yesterday = DateTime(now.year, now.month, now.day - 1);
-    final isYesterday = day == yesterday;
-    if (isToday) return l.commonDateToday;
-    if (isYesterday) return l.commonDateYesterday;
-    return DateFormat.yMMMMd(l.localeName).format(date);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.md,
-            vertical: 5,
-          ),
-          decoration: BoxDecoration(
-            color: cs.onSurface.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(DonyRadius.full),
-          ),
-          child: Text(
-            _label(context.l10n),
-            style: tt.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ── Message bubble ─────────────────────────────────────────────────────────────
 
 class _MessageBubble extends StatelessWidget {
@@ -1901,17 +1867,11 @@ class _MessageBubble extends StatelessWidget {
       );
     }
 
-    // Coin « queue » uniquement sur le dernier d'un groupe.
-    final tail = Radius.circular(
-      isLastOfGroup ? DonyRadius.xs : DonyRadius.card,
-    );
-    final radius = BorderRadius.only(
-      topLeft: const Radius.circular(DonyRadius.card),
-      topRight: const Radius.circular(DonyRadius.card),
-      bottomLeft: isMe ? const Radius.circular(DonyRadius.card) : tail,
-      bottomRight: isMe ? tail : const Radius.circular(DonyRadius.card),
-    );
-
+    // Heure et coches vivent dans la bulle : sur ma bulle colorée, la couleur
+    // de la bulle reçue (gris sur fond neutre) serait illisible.
+    final metaColor = isMe
+        ? cs.onPrimary.withValues(alpha: 0.75)
+        : cs.onSurfaceVariant;
     final replyLabel = l.chatReplyAction;
     final onReply = this.onReply;
     final onReport = this.onReport;
@@ -1939,22 +1899,53 @@ class _MessageBubble extends StatelessWidget {
                     ? CrossAxisAlignment.end
                     : CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isMe ? cs.primary : cs.surface,
-                      borderRadius: radius,
-                      // Bulle reçue : ombre douce, SANS bordure (principe
-                      // « ombres > bordures »). Bulle envoyée : aplat coloré.
-                      boxShadow: isMe
-                          ? null
-                          : [
-                              const BoxShadow(
-                                color: DonyColors.shadow,
-                                blurRadius: 6,
-                                offset: Offset(0, 2),
-                              ),
+                  DonyChatBubbleShell(
+                    isMe: isMe,
+                    tail: isLastOfGroup,
+                    meta: (isLastOfGroup || message.isEdited)
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (message.isEdited) ...[
+                                Text(
+                                  l.chatMessageEditedLabel,
+                                  key: const Key('chat-message-edited'),
+                                  style: tt.bodySmall?.copyWith(
+                                    fontSize: 10,
+                                    fontStyle: FontStyle.italic,
+                                    color: metaColor,
+                                  ),
+                                ),
+                                if (isLastOfGroup) const SizedBox(width: 4),
+                              ],
+                              if (isLastOfGroup)
+                                Text(
+                                  DateFormat.jm(
+                                    l.localeName,
+                                  ).format(message.sentAt.toLocal()),
+                                  style: tt.bodySmall?.copyWith(
+                                    fontSize: 10,
+                                    color: metaColor,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                              if (isMe && isLastOfGroup) ...[
+                                const SizedBox(width: 3),
+                                DonyIcon(
+                                  message.readAt != null
+                                      ? 'check-check'
+                                      : 'check',
+                                  size: 12,
+                                  color: message.readAt != null
+                                      ? cs.onPrimary
+                                      : metaColor,
+                                ),
+                              ],
                             ],
-                    ),
+                          )
+                        : null,
                     child: _withQuote(
                       message.isDeleted
                           ? _DeletedContent(
@@ -1993,51 +1984,6 @@ class _MessageBubble extends StatelessWidget {
                             ),
                     ),
                   ),
-                  // Horodatage + accusé : seulement sur le dernier du groupe.
-                  // « modifié » : sur toute bulle modifiée (FLUTTER-MG).
-                  if (isLastOfGroup || message.isEdited) ...[
-                    const SizedBox(height: 3),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (message.isEdited) ...[
-                          Text(
-                            l.chatMessageEditedLabel,
-                            key: const Key('chat-message-edited'),
-                            style: tt.bodySmall?.copyWith(
-                              fontSize: 10,
-                              fontStyle: FontStyle.italic,
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                          if (isLastOfGroup) const SizedBox(width: 4),
-                        ],
-                        if (isLastOfGroup)
-                          Text(
-                            DateFormat.jm(
-                              l.localeName,
-                            ).format(message.sentAt.toLocal()),
-                            style: tt.bodySmall?.copyWith(
-                              fontSize: 10,
-                              color: cs.onSurfaceVariant,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
-                        if (isMe && isLastOfGroup) ...[
-                          const SizedBox(width: 3),
-                          DonyIcon(
-                            message.readAt != null ? 'check-check' : 'check',
-                            size: 12,
-                            color: message.readAt != null
-                                ? cs.primary
-                                : cs.onSurfaceVariant,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -2832,9 +2778,11 @@ class _InputBar extends StatelessWidget {
   final bool showTopBorder;
   final VoidCallback onSendText;
 
-  /// Trombone photo (FLUTTER-B4) : actif, grisé ou masqué.
+  /// Photos (FLUTTER-B4, FLUTTER-S0) : « + » et appareil photo actifs, grisés
+  /// ou masqués.
   final ChatAttachState attachState;
-  final VoidCallback? onAttach;
+  final VoidCallback? onPlus;
+  final VoidCallback? onCamera;
   final VoidCallback? onAttachLocked;
 
   const _InputBar({
@@ -2845,7 +2793,8 @@ class _InputBar extends StatelessWidget {
     this.showTopBorder = true,
     required this.onSendText,
     this.attachState = ChatAttachState.hidden,
-    this.onAttach,
+    this.onPlus,
+    this.onCamera,
     this.onAttachLocked,
   });
 
@@ -2854,7 +2803,6 @@ class _InputBar extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
 
     if (disabled) {
       return Container(
@@ -2882,117 +2830,22 @@ class _InputBar extends StatelessWidget {
       );
     }
 
-    return AnimatedPadding(
-      padding: EdgeInsets.only(bottom: bottom),
-      duration: 160.ms,
-      curve: Curves.easeOutCubic,
-      child: Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          border: showTopBorder
-              ? Border(top: BorderSide(color: cs.outlineVariant))
-              : null,
-        ),
-        padding: EdgeInsets.fromLTRB(
-          DonySpacing.lg,
-          DonySpacing.sm,
-          DonySpacing.lg,
-          DonySpacing.sm + MediaQuery.of(context).padding.bottom,
-        ),
-        // F1 : une seule pill — champ + bouton envoi à l'intérieur.
-        child: Container(
-          constraints: const BoxConstraints(maxHeight: 132),
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: BorderRadius.circular(DonyRadius.xl),
-            border: Border.all(color: cs.outlineVariant),
-          ),
-          // Trombone présent : marges symétriques autour des deux boutons
-          // ronds, pour que la pill reste centrée optiquement.
-          padding: EdgeInsets.only(
-            left: attachState == ChatAttachState.hidden ? DonySpacing.base : 5,
-            right: 5,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (attachState != ChatAttachState.hidden) ...[
-                ChatAttachButton(
-                  state: attachState,
-                  onPick: onAttach ?? () {},
-                  onLocked: onAttachLocked ?? () {},
-                ),
-                const SizedBox(width: DonySpacing.xs),
-              ],
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  maxLines: null,
-                  minLines: 1,
-                  maxLength: ChatMessageRules.maxLength,
-                  keyboardType: TextInputType.multiline,
-                  textInputAction: TextInputAction.newline,
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-                  decoration: InputDecoration(
-                    hintText: l.chatMessageHint,
-                    hintStyle: tt.bodyMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-                    border: InputBorder.none,
-                    counterText: '',
-                    contentPadding: const EdgeInsets.symmetric(vertical: 11),
-                    isDense: true,
-                  ),
-                ),
-              ),
-              const SizedBox(width: DonySpacing.xs),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: controller,
-                  builder: (context, value, _) {
-                    final hasText = value.text.trim().isNotEmpty;
-                    return AnimatedScale(
-                      scale: hasText ? 1.0 : 0.85,
-                      duration: 150.ms,
-                      curve: Curves.easeOutCubic,
-                      child: Material(
-                        color: hasText ? cs.primary : cs.outlineVariant,
-                        shape: const CircleBorder(),
-                        // Bouton à icône seule, et seul moyen d'envoyer un
-                        // message depuis que le chat est le canal de contact
-                        // unique. Sans nom accessible il était annoncé
-                        // « bouton », sans plus.
-                        child: Semantics(
-                          button: true,
-                          enabled: hasText && !isSending,
-                          label: l.chatSendMessageSemantics,
-                          container: true,
-                          excludeSemantics: true,
-                          child: InkWell(
-                            customBorder: const CircleBorder(),
-                            onTap: hasText && !isSending ? onSendText : null,
-                            child: const SizedBox(
-                              width: 38,
-                              height: 38,
-                              child: DonyIcon(
-                                'send',
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return DonyChatComposer(
+      controller: controller,
+      focusNode: focusNode,
+      hintText: l.chatMessageHint,
+      maxLength: ChatMessageRules.maxLength,
+      showTopBorder: showTopBorder,
+      onSend: onSendText,
+      canSend: (draft) => draft.trim().isNotEmpty && !isSending,
+      attach: attachState == ChatAttachState.hidden
+          ? null
+          : DonyComposerAttach(
+              onPlus: onPlus ?? () {},
+              onCamera: onCamera ?? () {},
+              onLocked: onAttachLocked ?? () {},
+              locked: attachState == ChatAttachState.locked,
+            ),
     );
   }
 }

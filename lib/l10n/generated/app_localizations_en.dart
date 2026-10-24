@@ -13672,9 +13672,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportMessageHint => 'Your message';
 
   @override
-  String get supportAttachTooltip => 'Attach an image';
-
-  @override
   String get supportRemoveAttachmentLabel => 'Remove this image';
 
   @override

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
@@ -8,7 +9,6 @@ import 'package:dony/features/support/data/support_attachment.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/data/support_repository.dart';
 import 'package:dony/features/support/presentation/screens/support_ticket_detail_screen.dart';
-import 'package:dony/features/support/presentation/widgets/support_attachment_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -105,6 +105,17 @@ const _ticketWithAttachedMessage = SupportTicket(
   status: SupportTicketStatuses.waitingUser,
   messages: [_attachedMessage],
 );
+
+/// Le bouton d'envoi de la barre de saisie partagée est-il actif ? Faux aussi
+/// pendant l'envoi (le spinner remplace le bouton).
+bool _sendEnabled(WidgetTester tester) {
+  final tap = find.descendant(
+    of: find.byKey(const Key('chat-send-button')),
+    matching: find.byType(GestureDetector),
+  );
+  if (tap.evaluate().isEmpty) return false;
+  return tester.widget<GestureDetector>(tap.first).onTap != null;
+}
 
 Widget _harness(SupportBloc bloc) {
   final router = GoRouter(
@@ -300,7 +311,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Votre message'), findsOneWidget);
-    expect(find.byTooltip('Envoyer'), findsOneWidget);
+    expect(find.byKey(const Key('chat-send-button')), findsOneWidget);
   });
 
   testWidgets('masque la saisie sur un ticket résolu', (tester) async {
@@ -315,7 +326,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Votre message'), findsNothing);
-    expect(find.byTooltip('Envoyer'), findsNothing);
+    expect(find.byKey(const Key('chat-send-button')), findsNothing);
     expect(find.textContaining('Ce ticket est résolu'), findsOneWidget);
     // DonyBadge rend son libellé en majuscules.
     expect(find.text('RÉSOLU'), findsOneWidget);
@@ -360,16 +371,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     // Le bouton Envoyer doit être inactif (onPressed null) car upload en cours
-    final sendFinder = find.byTooltip('Envoyer');
-    expect(sendFinder, findsOneWidget);
-    final sendParent =
-        tester.widget(
-              find
-                  .ancestor(of: sendFinder, matching: find.byType(IconButton))
-                  .first,
-            )
-            as IconButton;
-    expect(sendParent.onPressed, isNull);
+    expect(_sendEnabled(tester), isFalse);
   });
 
   testWidgets('le bouton s active avec une image prete et aucun texte', (
@@ -388,16 +390,7 @@ void main() {
     await tester.pump();
 
     // Le bouton doit être actif grâce à l'image prête
-    final sendFinder = find.byTooltip('Envoyer');
-    expect(sendFinder, findsOneWidget);
-    final sendParent =
-        tester.widget(
-              find
-                  .ancestor(of: sendFinder, matching: find.byType(IconButton))
-                  .first,
-            )
-            as IconButton;
-    expect(sendParent.onPressed, isNotNull);
+    expect(_sendEnabled(tester), isTrue);
   });
 
   testWidgets('une image en echec est retirable et ne bloque pas l envoi', (
@@ -423,19 +416,12 @@ void main() {
     await tester.pump();
 
     // Bouton d'envoi doit être actif (texte saisi + image en échec ne bloque pas)
-    final sendFinder = find.byTooltip('Envoyer');
-    expect(sendFinder, findsOneWidget);
-    final sendParent =
-        tester.widget(
-              find
-                  .ancestor(of: sendFinder, matching: find.byType(IconButton))
-                  .first,
-            )
-            as IconButton;
-    expect(sendParent.onPressed, isNotNull);
+    expect(_sendEnabled(tester), isTrue);
   });
 
-  testWidgets('un ticket resolu n offre ni champ ni trombone', (tester) async {
+  testWidgets('un ticket resolu n offre ni champ ni piece jointe', (
+    tester,
+  ) async {
     stubState(
       const SupportState(
         detailStatus: SupportViewStatus.ready,
@@ -446,9 +432,10 @@ void main() {
     await tester.pumpWidget(_harness(bloc));
     await tester.pumpAndSettle();
 
-    // Ni champ de saisie ni trombone
+    // Ni champ de saisie, ni « + », ni appareil photo
     expect(find.byType(TextField), findsNothing);
-    expect(find.byType(SupportAttachmentPicker), findsNothing);
+    expect(find.byType(DonyChatComposer), findsNothing);
+    expect(find.byKey(const Key('chat-attach-button')), findsNothing);
   });
 
   testWidgets('affiche les images d un message en grille', (tester) async {
@@ -561,14 +548,170 @@ void main() {
     await tester.pumpWidget(_harness(bloc));
     await tester.pump();
 
-    // A 4 images, le trombone doit être absent du widget tree car canAdd == false.
-    // Le SupportAttachmentPicker n'affiche le bouton inline que si canAdd.
-    final addButtonFinder = find.byTooltip('Joindre une image');
-    expect(addButtonFinder, findsNothing);
+    // À 4 images, « + » et l'appareil photo sont grisés et sans effet.
+    final plus = find.byKey(const Key('chat-attach-button'));
+    expect(
+      tester
+          .widget<Opacity>(
+            find.descendant(of: plus, matching: find.byType(Opacity)),
+          )
+          .opacity,
+      0.4,
+    );
+    await tester.tap(plus);
+    await tester.pumpAndSettle();
+    expect(find.text('Prendre une photo'), findsNothing);
+  });
+
+  group('style façon WhatsApp (FLUTTER-S0)', () {
+    SupportTicket ticketWith(List<SupportMessage> messages) => SupportTicket(
+      id: 'ticket-1',
+      category: 'PAYMENT',
+      subject: 'Paiement bloque',
+      status: SupportTicketStatuses.waitingUser,
+      messages: messages,
+    );
+
+    Finder shellWith(String text) => find.ancestor(
+      of: find.text(text),
+      matching: find.byType(DonyChatBubbleShell),
+    );
+
+    BoxDecoration decorationOf(WidgetTester tester, String text) {
+      final container = find.descendant(
+        of: shellWith(text),
+        matching: find.byKey(const Key('chat-bubble-shell')),
+      );
+      return tester.widget<Container>(container).decoration! as BoxDecoration;
+    }
+
+    testWidgets(
+      'mon message : primaire ; message du support : surface + contour',
+      (tester) async {
+        stubState(
+          SupportState(
+            detailStatus: SupportViewStatus.ready,
+            ticket: ticketWith(const [_userMessage, _adminMessage]),
+          ),
+        );
+        await tester.pumpWidget(_harness(bloc));
+        await tester.pumpAndSettle();
+
+        final cs = Theme.of(tester.element(find.byType(Scaffold))).colorScheme;
+        final mine = decorationOf(tester, 'Bonjour, mon paiement est bloque.');
+        expect(mine.color, cs.primary);
+        expect(mine.border, isNull);
+        final theirs = decorationOf(
+          tester,
+          'Bonjour, on regarde ca tout de suite.',
+        );
+        expect(theirs.color, cs.surface);
+        expect(theirs.border, Border.all(color: cs.outlineVariant));
+      },
+    );
+
+    testWidgets('message sans date : ni heure ni séparateur, sans plantage', (
+      tester,
+    ) async {
+      stubState(
+        SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: ticketWith(const [_userMessage]),
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(DonyChatDateSeparator), findsNothing);
+      expect(find.byKey(const Key('chat-bubble-meta')), findsNothing);
+    });
+
+    testWidgets('message daté : heure dans la bulle et séparateur de date', (
+      tester,
+    ) async {
+      stubState(
+        SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: ticketWith([
+            SupportMessage(
+              id: 'a',
+              authorType: 'USER',
+              content: 'Premier jour',
+              createdAt: DateTime(2025, 10, 5, 9, 30),
+            ),
+            SupportMessage(
+              id: 'b',
+              authorType: 'ADMIN',
+              content: 'Même jour',
+              createdAt: DateTime(2025, 10, 5, 18),
+            ),
+            SupportMessage(
+              id: 'c',
+              authorType: 'USER',
+              content: 'Lendemain',
+              createdAt: DateTime(2025, 10, 6, 14, 5),
+            ),
+          ]),
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonyChatDateSeparator), findsNWidgets(2));
+      expect(find.text('5 octobre 2025'), findsOneWidget);
+      expect(find.text('6 octobre 2025'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: shellWith('Lendemain'),
+          matching: find.text('14:05'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('texte saisi : appareil photo masqué, « + » reste', (
+      tester,
+    ) async {
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('chat-camera-button')), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'un message');
+      await tester.pump();
+
+      expect(find.byKey(const Key('chat-camera-button')), findsNothing);
+      expect(find.byKey(const Key('chat-attach-button')), findsOneWidget);
+    });
+
+    testWidgets('« + » ouvre le choix appareil photo / galerie', (
+      tester,
+    ) async {
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('chat-attach-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Prendre une photo'), findsOneWidget);
+      expect(find.text('Choisir dans la galerie'), findsOneWidget);
+    });
   });
 
   testWidgets(
-    'anglais : sujet, statut, catégorie, bulle admin et trombone traduits',
+    'anglais : sujet, statut, catégorie, bulle admin et saisie traduits',
     (tester) async {
       useEnglish();
       stubState(
@@ -587,8 +730,8 @@ void main() {
       expect(find.text('Payment'), findsOneWidget);
       expect(find.text('Yadony Support'), findsOneWidget);
       expect(find.text('Your message'), findsOneWidget);
-      expect(find.byTooltip('Attach an image'), findsOneWidget);
-      expect(find.byTooltip('Send'), findsOneWidget);
+      expect(find.byKey(const Key('chat-attach-button')), findsOneWidget);
+      expect(find.byKey(const Key('chat-send-button')), findsOneWidget);
     },
   );
 

@@ -410,6 +410,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorNotFoundMessage': (l) => l.errorNotFoundMessage,
   'errorValidationTitle': (l) => l.errorValidationTitle,
   'errorValidationMessage': (l) => l.errorValidationMessage,
+  'errorInvalidPriceMessage': (l) => l.errorInvalidPriceMessage,
   'errorConflictTitle': (l) => l.errorConflictTitle,
   'errorConflictMessage': (l) => l.errorConflictMessage,
   'errorStorageTitle': (l) => l.errorStorageTitle,
@@ -4847,7 +4848,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.supportPhotoIndex(intPlaceholderValue, intPlaceholderValue),
   'supportResolvedBannerMessage': (l) => l.supportResolvedBannerMessage,
   'supportMessageHint': (l) => l.supportMessageHint,
-  'supportAttachTooltip': (l) => l.supportAttachTooltip,
   'supportRemoveAttachmentLabel': (l) => l.supportRemoveAttachmentLabel,
   'supportConversationDefaultPreview': (l) =>
       l.supportConversationDefaultPreview,
@@ -7720,6 +7720,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'openListingsEmpty': (l) => l.openListingsEmpty,
   'openListingsPostedAgo': (l) =>
       l.openListingsPostedAgo(placeholderMarker('when')),
+  'openListingsCollapseLabel': (l) => l.openListingsCollapseLabel,
+  'openListingsExpandLabel': (l) => l.openListingsExpandLabel,
+  'profilePublicRatingTapSemantics': (l) => l.profilePublicRatingTapSemantics,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

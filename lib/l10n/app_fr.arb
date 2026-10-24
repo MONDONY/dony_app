@@ -15112,10 +15112,6 @@
     "description": "Texte d'indication du champ de réponse d'un ticket (support_ticket_detail_screen.dart)."
   },
 
-  "supportAttachTooltip": "Joindre une image",
-  "@supportAttachTooltip": {
-    "description": "Tooltip du bouton trombone, sans et avec vignettes déjà présentes (support_attachment_picker.dart, deux usages)."
-  },
   "supportRemoveAttachmentLabel": "Retirer cette image",
   "@supportRemoveAttachmentLabel": {
     "description": "Libellé d'accessibilité du bouton de retrait d'une vignette en attente d'envoi (support_attachment_picker.dart)."

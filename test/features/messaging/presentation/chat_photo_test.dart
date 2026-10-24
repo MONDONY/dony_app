@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -140,6 +141,7 @@ void main() {
   }
 
   final attach = find.byKey(const Key('chat-attach-button'));
+  final camera = find.byKey(const Key('chat-camera-button'));
 
   group('trombone : règle d’état', () {
     test('masqué / grisé / actif', () {
@@ -321,10 +323,136 @@ void main() {
         () => bloc.state,
       ).thenReturn(const ChatLoaded([], mediaAllowed: true));
       await pump(tester, conversation: _conv());
-      final opacity = tester.widget<AnimatedOpacity>(
-        find.descendant(of: attach, matching: find.byType(AnimatedOpacity)),
+      final opacity = tester.widget<Opacity>(
+        find.descendant(of: attach, matching: find.byType(Opacity)),
       );
       expect(opacity.opacity, 1);
+    });
+
+    testWidgets('grisé : « + » à 40 % d\u2019opacité', (tester) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      await pump(tester, conversation: _conv());
+      final opacity = tester.widget<Opacity>(
+        find.descendant(of: attach, matching: find.byType(Opacity)),
+      );
+      expect(opacity.opacity, 0.4);
+    });
+
+    testWidgets(
+      'actif : l\u2019appareil photo de la saisie envoie sans feuille',
+      (tester) async {
+        when(
+          () => bloc.state,
+        ).thenReturn(const ChatLoaded([], mediaAllowed: true));
+        ImageSource? picked;
+        Uint8List? previewed;
+        await pump(
+          tester,
+          conversation: _conv(mediaAllowed: true),
+          pick: (source) async {
+            picked = source;
+            return kPng;
+          },
+          preview: (bytes) async {
+            previewed = bytes;
+            return true;
+          },
+        );
+
+        await tester.tap(camera);
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('chat-photo-source-camera')), findsNothing);
+        expect(picked, ImageSource.camera);
+        expect(previewed, kPng);
+        final event = verify(
+          () => bloc.add(captureAny()),
+        ).captured.whereType<ChatImageSendRequested>().single;
+        expect(event.conversationId, 'conv-1');
+        expect(event.bytes, kPng);
+      },
+    );
+
+    testWidgets('deux taps rapides sur l’appareil photo : une seule prise', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(const ChatLoaded([], mediaAllowed: true));
+      final gate = Completer<Uint8List?>();
+      var picks = 0;
+      await pump(
+        tester,
+        conversation: _conv(mediaAllowed: true),
+        pick: (_) {
+          picks++;
+          return gate.future;
+        },
+        preview: (_) async => false,
+      );
+
+      await tester.tap(camera);
+      await tester.tap(camera);
+      gate.complete(kPng);
+      await tester.pumpAndSettle();
+
+      expect(picks, 1);
+      expect(
+        find.text('Image non supportée ou trop volumineuse'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('grisé : l\u2019appareil photo explique, jamais la caméra', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      var picks = 0;
+      await pump(
+        tester,
+        conversation: _conv(),
+        pick: (_) async {
+          picks++;
+          return kPng;
+        },
+        preview: (_) async => true,
+      );
+
+      await tester.tap(camera);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('chat-photo-locked-message')),
+        findsOneWidget,
+      );
+      expect(picks, 0);
+    });
+
+    testWidgets(
+      'texte saisi : l\u2019appareil photo disparaît, le « + » reste',
+      (tester) async {
+        when(
+          () => bloc.state,
+        ).thenReturn(const ChatLoaded([], mediaAllowed: true));
+        await pump(tester, conversation: _conv(mediaAllowed: true));
+        expect(camera, findsOneWidget);
+
+        await tester.enterText(
+          find.byKey(const Key('chat-composer-field')),
+          'a',
+        );
+        await tester.pump();
+
+        expect(camera, findsNothing);
+        expect(attach, findsOneWidget);
+      },
+    );
+
+    testWidgets('masqué : ni « + » ni appareil photo', (tester) async {
+      when(() => bloc.state).thenReturn(const ChatReadOnly([]));
+      await pump(tester, conversation: _conv());
+      expect(attach, findsNothing);
+      expect(camera, findsNothing);
     });
   });
 
