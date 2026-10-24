@@ -7840,8 +7840,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.amendmentGainAmendment(placeholderMarker('method')),
   'amendmentGainTotal': (l) => l.amendmentGainTotal,
   'amendmentGainPaidOut': (l) => l.amendmentGainPaidOut,
-  'amendmentGainCashDue': (l) =>
-      l.amendmentGainCashDue(placeholderMarker('name')),
+  'amendmentGainCashDue': (l) => l.amendmentGainCashDue(
+    placeholderMarker('elide'),
+    placeholderMarker('name'),
+  ),
+  'amendmentLineMethodCard': (l) => l.amendmentLineMethodCard,
+  'amendmentLineMethodMobileMoney': (l) => l.amendmentLineMethodMobileMoney,
+  'amendmentLineMethodCash': (l) => l.amendmentLineMethodCash,
+  'amendmentLineMethodUnknown': (l) => l.amendmentLineMethodUnknown,
   'amendmentGainCommissionNote': (l) =>
       l.amendmentGainCommissionNote(placeholderMarker('amount')),
   'amendmentGainHandoverNote': (l) =>
@@ -8570,7 +8576,7 @@ const textParameters = <String, List<String>>{
   'amendmentAccept': ['amount'],
   'amendmentGainInitial': ['method'],
   'amendmentGainAmendment': ['method'],
-  'amendmentGainCashDue': ['name'],
+  'amendmentGainCashDue': ['elide', 'name'],
   'amendmentGainCommissionNote': ['amount'],
   'amendmentGainHandoverNote': ['amount'],
   'amendmentEntryBodyShort': ['name'],

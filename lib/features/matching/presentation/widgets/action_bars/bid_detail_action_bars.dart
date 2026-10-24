@@ -12,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/money_breakdown_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
@@ -465,10 +466,10 @@ class EscrowBadge extends StatelessWidget {
   }
 
   (String, Color, String) _resolve(AppLocalizations l, ColorScheme cs) {
-    final amount = formatPriceIn(
-      onlineAmount ?? payment.amount,
-      payment.currency,
-    );
+    // Colis modifié : même format que la carte Paiement juste au-dessus.
+    final amount = onlineAmount != null
+        ? formatBreakdownAmount(onlineAmount!, payment.currency)
+        : formatPriceIn(payment.amount, payment.currency);
     return switch (payment.status) {
       PaymentStatus.released => (
         'circle-check',

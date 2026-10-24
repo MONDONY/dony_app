@@ -67,9 +67,13 @@ class MoneyBreakdownCard extends StatelessWidget {
   List<Widget> _senderDestinations(BuildContext context, BidMoneyBreakdown b) {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
-    final cardHeld = b.lines.any(
-      (m) => m.isSecured && m.paymentMethod == BidPaymentMethod.stripe,
+    // « par carte » seulement si toutes les lignes en ligne acquises le sont.
+    final online = b.lines.where(
+      (m) => m.isSecured && m.paymentMethod != BidPaymentMethod.cash,
     );
+    final cardHeld =
+        online.isNotEmpty &&
+        online.every((m) => m.paymentMethod == BidPaymentMethod.stripe);
     return [
       if (b.onlineAmount > 0)
         _DestinationRow(
@@ -100,6 +104,7 @@ class MoneyBreakdownCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final commission = b.cashCommissionPaid;
+    final senderName = bid.senderName ?? l.bidSenderFallbackName;
     return [
       if (b.onlineAmount > 0)
         _DestinationRow(
@@ -113,7 +118,8 @@ class MoneyBreakdownCard extends StatelessWidget {
           icon: 'banknote',
           color: cs.warning,
           label: l.amendmentGainCashDue(
-            bid.senderName ?? l.bidSenderFallbackName,
+            _elides(senderName) ? 'yes' : 'no',
+            senderName,
           ),
           amount: _fmt(b.cashAmount),
         ),
@@ -154,22 +160,27 @@ class MoneyBreakdownCard extends StatelessWidget {
     ];
   }
 
-  String _fmt(double v) => CurrencyFormatter.format(
-    v,
-    SupportedCurrency.fromCodeOrDefault(bid.currency),
-  );
+  String _fmt(double v) => formatBreakdownAmount(v, bid.currency);
+
+  /// « d'Aïcha » devant une voyelle ou un h, « de Moussa » sinon.
+  static bool _elides(String name) => RegExp(
+    '^[aeiouyh\u00e0\u00e2\u00e4\u00e9\u00e8\u00ea\u00eb\u00ee\u00ef\u00f4\u00f6\u00f9\u00fb\u00fc\u0153]',
+    caseSensitive: false,
+  ).hasMatch(name.trim());
 
   String _iconOf(MoneyLine line) => switch (line.paymentMethod) {
+    BidPaymentMethod.stripe => 'credit-card',
     BidPaymentMethod.mobileMoney => 'smartphone',
     BidPaymentMethod.cash => 'banknote',
-    _ => 'credit-card',
+    _ => 'wallet',
   };
 
   String _labelOf(AppLocalizations l, MoneyLine line) {
     final method = switch (line.paymentMethod) {
-      BidPaymentMethod.mobileMoney => l.amendmentRailMobileMoney,
-      BidPaymentMethod.cash => l.amendmentRailCash,
-      _ => l.amendmentRailCard,
+      BidPaymentMethod.stripe => l.amendmentLineMethodCard,
+      BidPaymentMethod.mobileMoney => l.amendmentLineMethodMobileMoney,
+      BidPaymentMethod.cash => l.amendmentLineMethodCash,
+      _ => l.amendmentLineMethodUnknown,
     };
     return switch (line.kind) {
       MoneyLineKind.principal =>
@@ -185,6 +196,12 @@ class MoneyBreakdownCard extends StatelessWidget {
     };
   }
 }
+
+/// Montant d'une carte d'argent : décimales fixes (« 61,00 € »), sans
+/// compactage, pour que les colonnes restent alignées. Partagé avec le badge
+/// du bas (`EscrowBadge`) pour un même format sur un même écran.
+String formatBreakdownAmount(double v, String? currency) =>
+    CurrencyFormatter.format(v, SupportedCurrency.fromCodeOrDefault(currency));
 
 /// Largeur de la colonne d'icône (icône 20 + espace 8), pour aligner les notes.
 const double _iconColumn = 28;

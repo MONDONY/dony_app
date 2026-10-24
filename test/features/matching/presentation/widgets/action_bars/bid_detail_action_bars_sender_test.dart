@@ -364,6 +364,23 @@ void main() {
       expect(find.text(_l.bidDetailEscrowSecuredLabel(amount)), findsNothing);
     });
 
+    testWidgets('escrowBadge_onlineAmount_keepsFixedDecimals', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          (_) => EscrowBadge(
+            payment: _payment(PaymentStatus.escrow),
+            bidStatus: 'ACCEPTED',
+            onlineAmount: 61,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(_l.bidDetailEscrowSecuredLabel('61,00\u00a0€')),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('escrowBadge_withoutOnlineAmount_usesPaymentAmount', (
       tester,
     ) async {

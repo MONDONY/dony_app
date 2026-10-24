@@ -22615,9 +22615,25 @@ class AppLocalizationsFr extends AppLocalizations {
       'Versé sur votre compte après la livraison';
 
   @override
-  String amendmentGainCashDue(String name) {
-    return 'À récupérer en espèces auprès de $name';
+  String amendmentGainCashDue(String elide, String name) {
+    String _temp0 = intl.Intl.selectLogic(elide, {
+      'yes': 'd\'',
+      'other': 'de ',
+    });
+    return 'À récupérer en espèces auprès $_temp0$name';
   }
+
+  @override
+  String get amendmentLineMethodCard => 'carte';
+
+  @override
+  String get amendmentLineMethodMobileMoney => 'mobile money';
+
+  @override
+  String get amendmentLineMethodCash => 'espèces';
+
+  @override
+  String get amendmentLineMethodUnknown => 'autre moyen';
 
   @override
   String amendmentGainCommissionNote(String amount) {

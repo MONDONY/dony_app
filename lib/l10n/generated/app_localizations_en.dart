@@ -22457,9 +22457,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amendmentGainPaidOut => 'Paid to your account after delivery';
 
   @override
-  String amendmentGainCashDue(String name) {
-    return 'To collect in cash from $name';
+  String amendmentGainCashDue(String elide, String name) {
+    String _temp0 = intl.Intl.selectLogic(elide, {'yes': '', 'other': ''});
+    return 'To collect in cash from $_temp0$name';
   }
+
+  @override
+  String get amendmentLineMethodCard => 'card';
+
+  @override
+  String get amendmentLineMethodMobileMoney => 'mobile money';
+
+  @override
+  String get amendmentLineMethodCash => 'cash';
+
+  @override
+  String get amendmentLineMethodUnknown => 'other method';
 
   @override
   String amendmentGainCommissionNote(String amount) {

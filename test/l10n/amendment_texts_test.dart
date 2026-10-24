@@ -54,6 +54,28 @@ void main() {
   });
 
   group('cartes d\'argent additionnées (A5)', () {
+    test('moyens en minuscules, espèces dues avec élision', () {
+      expect(fr.amendmentLineMethodCard, 'carte');
+      expect(fr.amendmentLineMethodCash, 'espèces');
+      expect(fr.amendmentLineMethodMobileMoney, 'mobile money');
+      expect(fr.amendmentLineMethodUnknown, 'autre moyen');
+      expect(en.amendmentLineMethodCard, 'card');
+      expect(en.amendmentLineMethodCash, 'cash');
+      expect(en.amendmentLineMethodUnknown, 'other method');
+      expect(
+        fr.amendmentGainCashDue('yes', 'Aïcha'),
+        "À récupérer en espèces auprès d'Aïcha",
+      );
+      expect(
+        fr.amendmentGainCashDue('no', 'Moussa'),
+        'À récupérer en espèces auprès de Moussa',
+      );
+      expect(
+        en.amendmentGainCashDue('yes', 'Aïcha'),
+        'To collect in cash from Aïcha',
+      );
+    });
+
     test('ligne payée en ligne et ligne du supplément', () {
       expect(
         fr.amendmentPaymentHeldOnline,

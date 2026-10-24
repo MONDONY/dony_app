@@ -36428,11 +36428,35 @@ abstract class AppLocalizations {
   /// **'Versé sur votre compte après la livraison'**
   String get amendmentGainPaidOut;
 
-  /// Ligne : espèces à récupérer
+  /// Ligne : espèces à récupérer. {elide} : yes si le prénom commence par une voyelle ou un h (d'Aïcha), sinon de (de Moussa)
   ///
   /// In fr, this message translates to:
-  /// **'À récupérer en espèces auprès de {name}'**
-  String amendmentGainCashDue(String name);
+  /// **'À récupérer en espèces auprès {elide, select, yes{d\'} other{de }}{name}'**
+  String amendmentGainCashDue(String elide, String name);
+
+  /// Moyen dans une ligne des cartes Paiement et gain (minuscule, après un point médian)
+  ///
+  /// In fr, this message translates to:
+  /// **'carte'**
+  String get amendmentLineMethodCard;
+
+  /// Moyen dans une ligne des cartes Paiement et gain
+  ///
+  /// In fr, this message translates to:
+  /// **'mobile money'**
+  String get amendmentLineMethodMobileMoney;
+
+  /// Moyen dans une ligne des cartes Paiement et gain
+  ///
+  /// In fr, this message translates to:
+  /// **'espèces'**
+  String get amendmentLineMethodCash;
+
+  /// Moyen de paiement inconnu de l'app dans une ligne des cartes Paiement et gain
+  ///
+  /// In fr, this message translates to:
+  /// **'autre moyen'**
+  String get amendmentLineMethodUnknown;
 
   /// Précision sous la ligne espèces
   ///

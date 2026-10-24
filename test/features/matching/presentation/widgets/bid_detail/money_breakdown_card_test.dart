@@ -1,5 +1,6 @@
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/money_breakdown_card.dart';
@@ -24,6 +25,7 @@ MoneyLine _line(
 BidModel _bid(
   BidMoneyBreakdown? breakdown, {
   String status = 'ACCEPTED',
+  String senderName = 'Aïcha',
   BidPaymentMethod method = BidPaymentMethod.stripe,
 }) => BidModel(
   id: 'b1',
@@ -34,7 +36,7 @@ BidModel _bid(
   totalAmountEur: 48,
   totalSenderAmountEur: 54,
   paymentMethod: method,
-  senderName: 'Aïcha',
+  senderName: senderName,
   travelerName: 'Moussa',
   moneyBreakdown: breakdown,
   createdAt: DateTime(2026, 5),
@@ -79,8 +81,8 @@ void main() {
         MoneyBreakdownCard(bid: _bid(_travelerCashBreakdown), isSender: false),
       );
       expect(find.text('CE QUE VOUS RECEVEZ'), findsOneWidget);
-      expect(find.text('Demande initiale · Carte'), findsOneWidget);
-      expect(find.text('Modification · Espèces'), findsOneWidget);
+      expect(find.text('Demande initiale · carte'), findsOneWidget);
+      expect(find.text('Modification · espèces'), findsOneWidget);
       expect(find.text('54,00\u00a0€'), findsNWidgets(2)); // ligne + versé
       expect(find.text('23,50\u00a0€'), findsOneWidget);
       expect(find.text('Total pour vous'), findsOneWidget);
@@ -90,7 +92,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text('À récupérer en espèces auprès de Aïcha'),
+        find.text('À récupérer en espèces auprès d\'Aïcha'),
         findsOneWidget,
       );
       expect(find.text('26,80\u00a0€'), findsOneWidget); // destination espèces
@@ -113,7 +115,7 @@ void main() {
       );
       expect(find.textContaining('avant de scanner'), findsNothing);
       expect(
-        find.text('À récupérer en espèces auprès de Aïcha'),
+        find.text('À récupérer en espèces auprès d\'Aïcha'),
         findsOneWidget,
       );
     });
@@ -145,8 +147,8 @@ void main() {
         MoneyBreakdownCard(bid: _bid(_senderCashBreakdown), isSender: true),
       );
       expect(find.text('PAIEMENT'), findsOneWidget);
-      expect(find.text('Colis initial · Carte'), findsOneWidget);
-      expect(find.text('Modification · Espèces'), findsOneWidget);
+      expect(find.text('Colis initial · carte'), findsOneWidget);
+      expect(find.text('Modification · espèces'), findsOneWidget);
       expect(find.text('61,20\u00a0€'), findsNWidgets(2));
       expect(find.text('Total du colis'), findsOneWidget);
       expect(find.text('88,00\u00a0€'), findsOneWidget);
@@ -173,6 +175,65 @@ void main() {
       await _pump(tester, MoneyBreakdownCard(bid: _bid(b), isSender: true));
       expect(
         find.text('Payé en ligne, gardé jusqu\'à la livraison'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('par carte'), findsNothing);
+    });
+
+    testWidgets('traveler_consonantName_usesDe', (tester) async {
+      await _pump(
+        tester,
+        MoneyBreakdownCard(
+          bid: _bid(_travelerCashBreakdown, senderName: 'Moussa'),
+          isSender: false,
+        ),
+      );
+      expect(
+        find.text('À récupérer en espèces auprès de Moussa'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('traveler_hName_elides', (tester) async {
+      await _pump(
+        tester,
+        MoneyBreakdownCard(
+          bid: _bid(_travelerCashBreakdown, senderName: 'Hawa'),
+          isSender: false,
+        ),
+      );
+      expect(find.text("À récupérer en espèces auprès d'Hawa"), findsOneWidget);
+    });
+
+    testWidgets('unknownMethod_neutralLabelAndIcon', (tester) async {
+      final b = BidMoneyBreakdown(
+        lines: [_line(MoneyLineKind.principal, 'CRYPTO', 61.2)],
+        total: 61.2,
+        onlineAmount: 61.2,
+        cashAmount: 0,
+      );
+      await _pump(tester, MoneyBreakdownCard(bid: _bid(b), isSender: true));
+      expect(find.text('Colis initial · autre moyen'), findsOneWidget);
+      expect(find.textContaining('carte'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'wallet'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('sender_cardAndMobileMoneyMix_saysPaidOnline', (tester) async {
+      final b = BidMoneyBreakdown(
+        lines: [
+          _line(MoneyLineKind.principal, 'STRIPE', 61.2),
+          _line(MoneyLineKind.amendment, 'MOBILE_MONEY', 10),
+        ],
+        total: 71.2,
+        onlineAmount: 71.2,
+        cashAmount: 0,
+      );
+      await _pump(tester, MoneyBreakdownCard(bid: _bid(b), isSender: true));
+      expect(
+        find.text("Payé en ligne, gardé jusqu'à la livraison"),
         findsOneWidget,
       );
       expect(find.textContaining('par carte'), findsNothing);
@@ -206,7 +267,7 @@ void main() {
         cashAmount: 0,
       );
       await _pump(tester, MoneyBreakdownCard(bid: _bid(b), isSender: true));
-      expect(find.text('Supplément de prix · Carte'), findsOneWidget);
+      expect(find.text('Supplément de prix · carte'), findsOneWidget);
     });
   });
 
