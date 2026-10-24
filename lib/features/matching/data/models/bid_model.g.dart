@@ -143,6 +143,18 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
       (json['totalSenderAmountWithSupplementEur'] as num?)?.toDouble(),
   totalNetAmountWithSupplementEur:
       (json['totalNetAmountWithSupplementEur'] as num?)?.toDouble(),
+  amendments:
+      (json['amendments'] as List<dynamic>?)
+          ?.map((e) => BidAmendment.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      [],
+  amendmentAllowed: json['amendmentAllowed'] as bool? ?? false,
+  totalWeightKg: (json['totalWeightKg'] as num?)?.toDouble(),
+  moneyBreakdown: json['moneyBreakdown'] == null
+      ? null
+      : BidMoneyBreakdown.fromJson(
+          json['moneyBreakdown'] as Map<String, dynamic>,
+        ),
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -234,6 +246,10 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'totalSenderAmountWithSupplementEur':
       instance.totalSenderAmountWithSupplementEur,
   'totalNetAmountWithSupplementEur': instance.totalNetAmountWithSupplementEur,
+  'amendments': instance.amendments,
+  'amendmentAllowed': instance.amendmentAllowed,
+  'totalWeightKg': instance.totalWeightKg,
+  'moneyBreakdown': instance.moneyBreakdown,
 };
 
 const _$BidPaymentMethodEnumMap = {
