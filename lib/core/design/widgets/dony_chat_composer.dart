@@ -43,6 +43,7 @@ class DonyChatComposer extends StatelessWidget {
     this.attach,
     this.above,
     this.maxLength,
+    this.onSubmitted,
     this.showTopBorder = true,
   });
 
@@ -59,6 +60,9 @@ class DonyChatComposer extends StatelessWidget {
   /// Contenu posé au-dessus de la pilule (vignettes d'images en attente).
   final Widget? above;
   final int? maxLength;
+
+  /// Action du clavier (touche de validation) : le support y envoie le message.
+  final ValueChanged<String>? onSubmitted;
 
   /// Faux sous une barre qui porte déjà le filet supérieur (barre de réponse).
   final bool showTopBorder;
@@ -136,6 +140,7 @@ class DonyChatComposer extends StatelessWidget {
                           maxLines: null,
                           minLines: 1,
                           maxLength: maxLength,
+                          onSubmitted: onSubmitted,
                           keyboardType: TextInputType.multiline,
                           textInputAction: TextInputAction.newline,
                           style: tt.bodyMedium?.copyWith(color: cs.onSurface),

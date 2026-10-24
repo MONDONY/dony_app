@@ -7658,7 +7658,6 @@
   "supportResolvedBannerMessage": "This ticket is resolved. Another issue? Open a new ticket from the Support page.",
   "supportMessageHint": "Your message",
 
-  "supportAttachTooltip": "Attach an image",
   "supportRemoveAttachmentLabel": "Remove this image",
 
   "supportConversationDefaultPreview": "A question? Our team will get back to you here.",

@@ -196,6 +196,25 @@ void main() {
     }
   });
 
+  testWidgets('action du clavier : onSubmitted reçoit le texte', (tester) async {
+    String? submitted;
+    await tester.pumpWidget(
+      wrap(
+        DonyChatComposer(
+          controller: controller,
+          hintText: 'Message',
+          onSend: () {},
+          canSend: (_) => true,
+          onSubmitted: (v) => submitted = v,
+        ),
+      ),
+    );
+    await tester.enterText(find.byKey(const Key('chat-composer-field')), 'ok');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    expect(submitted, 'ok');
+  });
+
   testWidgets('thèmes clair et sombre : sans exception', (tester) async {
     for (final b in Brightness.values) {
       await tester.pumpWidget(wrap(composer(), brightness: b));

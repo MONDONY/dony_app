@@ -22,7 +22,19 @@ Widget _harness(SupportBloc bloc) => MaterialApp(
   home: Scaffold(
     body: BlocProvider<SupportBloc>.value(
       value: bloc,
-      child: const SupportAttachmentPicker(),
+      child: Column(
+        children: [
+          Builder(
+            builder: (context) => TextButton(
+              key: const Key('open-source-sheet'),
+              onPressed: () =>
+                  SupportAttachmentActions.showSourceSheet(context),
+              child: const Text('ouvrir'),
+            ),
+          ),
+          const SupportAttachmentStrip(),
+        ],
+      ),
     ),
   ),
 );
@@ -39,33 +51,35 @@ void main() {
     );
   });
 
-  testWidgets('trombone : tooltip et sheet de sélection en français', (
-    tester,
-  ) async {
+  testWidgets('feuille de sélection en français', (tester) async {
     await tester.pumpWidget(_harness(bloc));
 
-    expect(find.byTooltip('Joindre une image'), findsOneWidget);
-
-    await tester.tap(find.byTooltip('Joindre une image'));
+    await tester.tap(find.byKey(const Key('open-source-sheet')));
     await tester.pumpAndSettle();
 
     expect(find.text('Prendre une photo'), findsOneWidget);
     expect(find.text('Choisir dans la galerie'), findsOneWidget);
   });
 
-  testWidgets('anglais : tooltip et sheet de sélection traduits', (
-    tester,
-  ) async {
+  testWidgets('anglais : feuille de sélection traduite', (tester) async {
     useEnglish();
     await tester.pumpWidget(_harness(bloc));
 
-    expect(find.byTooltip('Attach an image'), findsOneWidget);
-
-    await tester.tap(find.byTooltip('Attach an image'));
+    await tester.tap(find.byKey(const Key('open-source-sheet')));
     await tester.pumpAndSettle();
 
     expect(find.text('Take a photo'), findsOneWidget);
     expect(find.text('Choose from gallery'), findsOneWidget);
+  });
+
+  testWidgets('sans image en attente : le bandeau ne prend aucune place', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_harness(bloc));
+    expect(
+      tester.getSize(find.byType(SupportAttachmentStrip)),
+      const Size(0, 0),
+    );
   });
 
   testWidgets('anglais : libellé de retrait d\'une vignette traduit', (
@@ -105,7 +119,7 @@ void main() {
     tearDown(() => getIt.unregister<DonyMediaService>());
 
     Future<void> choose(WidgetTester tester, String source) async {
-      await tester.tap(find.byTooltip('Attach an image'));
+      await tester.tap(find.byKey(const Key('open-source-sheet')));
       await tester.pumpAndSettle();
       await tester.tap(find.text(source));
       await tester.pumpAndSettle();
@@ -146,7 +160,7 @@ void main() {
       await tester.pump(const Duration(seconds: 10));
     });
 
-    testWidgets('vignettes : retrait, ajout inline et image illisible', (
+    testWidgets('vignettes : retrait, choix après coup et image illisible', (
       tester,
     ) async {
       whenListen(

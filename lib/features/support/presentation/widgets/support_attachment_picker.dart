@@ -10,21 +10,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-/// Rangée de vignettes d'images en attente + bouton trombone.
+/// Choix des images jointes à un ticket (« + » et appareil photo de la barre de
+/// saisie).
 ///
 /// - Réutilise [DonyMediaService] (même chemin que les photos de demande :
 ///   compression JPEG 85 %, max 1920 × 1080, plafond 50 Mo).
-/// - Max 4 images. Le trombone est désactivé au quatrième.
-/// - La sélection émet [SupportAttachmentPickRequested] ; le retrait émet
-///   [SupportAttachmentRemoved]. Tout l'état vit dans le BLoC.
-/// - Ne jamais appeler depuis un ticket résolu : [_TicketThread] ne l'instancie
-///   que quand `!ticket.isResolved`.
-class SupportAttachmentPicker extends StatelessWidget {
-  const SupportAttachmentPicker({super.key});
+/// - Max [max] images : au quatrième, « + » et l'appareil photo sont grisés.
+/// - La sélection émet [SupportAttachmentPickRequested] ; le retrait (vignette)
+///   émet [SupportAttachmentRemoved]. Tout l'état vit dans le BLoC.
+abstract final class SupportAttachmentActions {
+  static const int max = 4;
 
-  static const int _maxAttachments = 4;
-
-  Future<void> _pick(BuildContext context, ImageSource source) async {
+  static Future<void> pick(BuildContext context, ImageSource source) async {
     try {
       final file = await getIt<DonyMediaService>().pick(source: source);
       if (file != null && context.mounted) {
@@ -43,7 +40,7 @@ class SupportAttachmentPicker extends StatelessWidget {
     }
   }
 
-  void _showSourceSheet(BuildContext context) {
+  static void showSourceSheet(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -59,7 +56,7 @@ class SupportAttachmentPicker extends StatelessWidget {
                 title: Text(l.commonTakePhoto),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
-                  _pick(context, ImageSource.camera);
+                  pick(context, ImageSource.camera);
                 },
               ),
               ListTile(
@@ -67,7 +64,7 @@ class SupportAttachmentPicker extends StatelessWidget {
                 title: Text(l.commonPickFromGallery),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
-                  _pick(context, ImageSource.gallery);
+                  pick(context, ImageSource.gallery);
                 },
               ),
             ],
@@ -76,6 +73,15 @@ class SupportAttachmentPicker extends StatelessWidget {
       },
     );
   }
+}
+
+/// Rangée de vignettes d'images en attente, au-dessus de la barre de saisie.
+/// Rien quand aucune image n'est en attente.
+///
+/// Ne jamais instancier depuis un ticket résolu : `_TicketThread` n'affiche la
+/// barre de saisie que quand `!ticket.isResolved`.
+class SupportAttachmentStrip extends StatelessWidget {
+  const SupportAttachmentStrip({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -84,47 +90,24 @@ class SupportAttachmentPicker extends StatelessWidget {
           prev.pendingAttachments != curr.pendingAttachments,
       builder: (context, state) {
         final attachments = state.pendingAttachments;
-        final canAdd = attachments.length < _maxAttachments;
-
-        if (attachments.isEmpty) {
-          return IconButton(
-            tooltip: context.l10n.supportAttachTooltip,
-            onPressed: canAdd ? () => _showSourceSheet(context) : null,
-            icon: const Icon(Icons.attach_file_rounded),
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Rangée de vignettes
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
-              child: Row(
-                children: [
-                  for (final att in attachments)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _AttachmentThumb(
-                        upload: att,
-                        onRemove: () => context.read<SupportBloc>().add(
-                          SupportAttachmentRemoved(att.localId),
-                        ),
-                      ),
+        if (attachments.isEmpty) return const SizedBox.shrink();
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              for (final att in attachments)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _AttachmentThumb(
+                    upload: att,
+                    onRemove: () => context.read<SupportBloc>().add(
+                      SupportAttachmentRemoved(att.localId),
                     ),
-                  // Bouton d'ajout inline quand la liste n'est pas pleine
-                  if (canAdd)
-                    IconButton(
-                      tooltip: context.l10n.supportAttachTooltip,
-                      onPressed: () => _showSourceSheet(context),
-                      icon: const Icon(Icons.attach_file_rounded),
-                    ),
-                ],
-              ),
-            ),
-          ],
+                  ),
+                ),
+            ],
+          ),
         );
       },
     );

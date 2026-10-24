@@ -9,6 +9,8 @@ import 'package:dony/features/support/presentation/widgets/support_attachment_pi
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 /// Fil d'un ticket support. Lecture seule quand le ticket est résolu : un
 /// nouveau problème passe par un nouveau ticket.
@@ -160,8 +162,18 @@ class _TicketThread extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
             itemCount: ticket.messages.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
-            itemBuilder: (context, index) =>
-                _MessageBubble(message: ticket.messages[index]),
+            itemBuilder: (context, index) {
+              final message = ticket.messages[index];
+              final previous = index == 0 ? null : ticket.messages[index - 1];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_startsNewDay(previous, message))
+                    DonyChatDateSeparator(date: message.createdAt!),
+                  _MessageBubble(message: message),
+                ],
+              );
+            },
           ),
         ),
         if (ticket.isResolved)
@@ -177,6 +189,18 @@ class _TicketThread extends StatelessWidget {
   }
 }
 
+/// Vrai quand [message] ouvre un nouveau jour : un message sans date n'ouvre
+/// jamais de séparateur.
+bool _startsNewDay(SupportMessage? previous, SupportMessage message) {
+  final date = message.createdAt?.toLocal();
+  if (date == null) return false;
+  final before = previous?.createdAt?.toLocal();
+  if (before == null) return true;
+  return before.year != date.year ||
+      before.month != date.month ||
+      before.day != date.day;
+}
+
 class _MessageBubble extends StatelessWidget {
   const _MessageBubble({required this.message});
 
@@ -185,54 +209,67 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final fromUser = message.isFromUser;
+    final sentAt = message.createdAt;
+    final hasMeta = sentAt != null;
     return Align(
       alignment: fromUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
+      child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.sizeOf(context).width * 0.78,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: fromUser ? cs.primary : cs.surface,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(fromUser ? 16 : 4),
-            bottomRight: Radius.circular(fromUser ? 4 : 16),
-          ),
-          border: fromUser ? null : Border.all(color: cs.outlineVariant),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!fromUser)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Text(
-                  context.l10n.supportBrandName,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w700,
+        child: DonyChatBubbleShell(
+          isMe: fromUser,
+          meta: hasMeta
+              ? Text(
+                  DateFormat.jm(
+                    context.l10n.localeName,
+                  ).format(sentAt.toLocal()),
+                  style: tt.bodySmall?.copyWith(
+                    fontSize: 10,
+                    color: fromUser
+                        ? cs.onPrimary.withValues(alpha: 0.75)
+                        : cs.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
-                ),
-              ),
-            if (message.content.isNotEmpty)
-              Text(
-                message.content,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: fromUser ? cs.onPrimary : cs.onSurface,
-                ),
-              ),
-            // Grille des images jointes. L'URL est présignée (expire en 1 h) :
-            // on utilise Image.network qui maintient un cache mémoire (keyed
-            // par URL). Aucun cache disque : les URLs présignées expirent après
-            // 1 h, et une URL expirée en cache disque retournerait un 403.
-            if (message.attachments.isNotEmpty) ...[
-              if (message.content.isNotEmpty) const SizedBox(height: 6),
-              _AttachmentsGrid(message: message),
-            ],
-          ],
+                )
+              : null,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(14, 10, 14, hasMeta ? 4 : 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!fromUser)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Text(
+                      context.l10n.supportBrandName,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                if (message.content.isNotEmpty)
+                  Text(
+                    message.content,
+                    style: tt.bodyMedium?.copyWith(
+                      color: fromUser ? cs.onPrimary : cs.onSurface,
+                    ),
+                  ),
+                // Grille des images jointes. L'URL est présignée (expire en
+                // 1 h) : on utilise Image.network qui maintient un cache
+                // mémoire (keyed par URL). Aucun cache disque : les URLs
+                // présignées expirent après 1 h, et une URL expirée en cache
+                // disque retournerait un 403.
+                if (message.attachments.isNotEmpty) ...[
+                  if (message.content.isNotEmpty) const SizedBox(height: 6),
+                  _AttachmentsGrid(message: message),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -519,7 +556,7 @@ class _ResolvedBanner extends StatelessWidget {
   }
 }
 
-class _MessageComposer extends StatefulWidget {
+class _MessageComposer extends StatelessWidget {
   const _MessageComposer({
     required this.ticketId,
     required this.controller,
@@ -530,109 +567,40 @@ class _MessageComposer extends StatefulWidget {
   final TextEditingController controller;
   final bool sending;
 
-  @override
-  State<_MessageComposer> createState() => _MessageComposerState();
-}
-
-class _MessageComposerState extends State<_MessageComposer> {
-  /// Brouillon courant — réévalué à chaque frappe pour que le bouton d'envoi
-  /// reflète [SupportState.canSendWith] correctement.
-  String _draft = '';
-
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.addListener(_onTextChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_onTextChanged);
-    super.dispose();
-  }
-
-  void _onTextChanged() {
-    setState(() => _draft = widget.controller.text);
-  }
-
   void _send(BuildContext context, SupportState state) {
-    if (!state.canSendWith(_draft) || widget.sending) return;
+    final draft = controller.text;
+    if (!state.canSendWith(draft) || sending) return;
     context.read<SupportBloc>().add(
-      SupportMessageSendRequested(
-        ticketId: widget.ticketId,
-        content: _draft.trim(),
-      ),
+      SupportMessageSendRequested(ticketId: ticketId, content: draft.trim()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return BlocBuilder<SupportBloc, SupportState>(
       buildWhen: (prev, curr) =>
           prev.pendingAttachments != curr.pendingAttachments ||
           prev.sendStatus != curr.sendStatus,
       builder: (context, state) {
-        final canSend = state.canSendWith(_draft) && !widget.sending;
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              0,
-              20,
-              12 + MediaQuery.viewInsetsOf(context).bottom,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Vignettes au-dessus du champ de saisie : chaque vignette fait
-                // 64 px + marge. À quatre images dans la même Row que le champ,
-                // il reste moins de 20 px pour saisir du texte sur 375 pt.
-                const SupportAttachmentPicker(),
-                // Rangée champ de saisie + bouton d'envoi
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: DonyTextField(
-                        controller: widget.controller,
-                        hint: context.l10n.supportMessageHint,
-                        minLines: 1,
-                        maxLines: 4,
-                        onSubmitted: (_) => _send(context, state),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: widget.sending
-                          ? const Center(
-                              child: SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                ),
-                              ),
-                            )
-                          : IconButton.filled(
-                              onPressed: canSend
-                                  ? () => _send(context, state)
-                                  : null,
-                              tooltip: context.l10n.commonSend,
-                              icon: Icon(
-                                Icons.send_rounded,
-                                color: cs.onPrimary,
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+        final atQuota =
+            state.pendingAttachments.length >= SupportAttachmentActions.max;
+        return DonyChatComposer(
+          controller: controller,
+          hintText: context.l10n.supportMessageHint,
+          sending: sending,
+          canSend: (draft) => state.canSendWith(draft) && !sending,
+          onSend: () => _send(context, state),
+          onSubmitted: (_) => _send(context, state),
+          // Vignettes au-dessus de la pilule : à quatre images dans la même
+          // rangée que le champ, il resterait moins de 20 px pour saisir.
+          above: const SupportAttachmentStrip(),
+          attach: DonyComposerAttach(
+            onPlus: () => SupportAttachmentActions.showSourceSheet(context),
+            onCamera: () =>
+                SupportAttachmentActions.pick(context, ImageSource.camera),
+            // Quota atteint : « + » et appareil photo grisés, sans action.
+            onLocked: () {},
+            locked: atQuota,
           ),
         );
       },
