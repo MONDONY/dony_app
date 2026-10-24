@@ -118,9 +118,14 @@ void main() {
         rail: 'STRIPE',
         grossAmount: 26.8,
       );
-      when(
-        () => repository.accept('bid-1', 'am-1'),
-      ).thenAnswer((_) async => card.withCommissionClientSecret(null));
+      when(() => repository.accept('bid-1', 'am-1')).thenAnswer(
+        (_) async => const BidAmendment(
+          id: 'am-1',
+          status: BidAmendmentStatus.accepted,
+          rail: 'STRIPE',
+          grossAmount: 26.8,
+        ),
+      );
 
       await cubit.accept(_bid, card);
 
@@ -302,6 +307,122 @@ void main() {
       await first;
 
       verify(() => repository.accept('bid-1', 'am-1')).called(1);
+    });
+
+    test(
+      'accept_serverStillCommissionPending_emitsPending_noAcceptedLog',
+      () async {
+        when(
+          () => repository.accept(
+            'bid-1',
+            'am-1',
+            commissionSource: SupplementCommissionSource.wallet,
+            fundingCurrency: any(named: 'fundingCurrency'),
+          ),
+        ).thenAnswer(
+          (_) async => const BidAmendment(
+            id: 'am-1',
+            status: BidAmendmentStatus.commissionPending,
+            rail: 'CASH',
+            grossAmount: 26.8,
+          ),
+        );
+
+        await cubit.accept(_bid, _proposed);
+
+        expect(cubit.state.status, AmendmentAcceptStatus.pending);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.bidAmendmentAccepted,
+            properties: any(named: 'properties'),
+          ),
+        );
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.paymentSucceeded,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+  });
+
+  group('resume', () {
+    const pending = BidAmendment(
+      id: 'am-1',
+      status: BidAmendmentStatus.commissionPending,
+      rail: 'CASH',
+      grossAmount: 26.8,
+      commissionAmount: 3.3,
+    );
+
+    test('resume_confirmsCommission_thenAccepted', () async {
+      when(
+        () => repository.confirmCommission('bid-1', 'am-1'),
+      ).thenAnswer((_) async => _accepted);
+
+      await cubit.resume(_bid, pending);
+
+      expect(cubit.state.status, AmendmentAcceptStatus.accepted);
+      verifyNever(() => repository.accept(any(), any()));
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidAmendmentAccepted,
+          properties: {'method': 'cash', 'commission_source': 'card'},
+        ),
+      ).called(1);
+    });
+
+    test('resume_3dsRequired_runsFlow', () async {
+      when(() => repository.confirmCommission('bid-1', 'am-1')).thenAnswer(
+        (_) async => const BidAmendment(
+          id: 'am-1',
+          status: BidAmendmentStatus.commissionPending,
+          rail: 'CASH',
+          grossAmount: 26.8,
+          commissionClientSecret: 'pi_7_secret',
+        ),
+      );
+      var calls = 0;
+      when(() => repository.confirmCommission('bid-1', 'am-1')).thenAnswer((
+        _,
+      ) async {
+        calls++;
+        return calls == 1
+            ? const BidAmendment(
+                id: 'am-1',
+                status: BidAmendmentStatus.commissionPending,
+                rail: 'CASH',
+                grossAmount: 26.8,
+                commissionClientSecret: 'pi_7_secret',
+              )
+            : _accepted;
+      });
+
+      await cubit.resume(_bid, pending);
+
+      expect(threeDsSecrets, ['pi_7_secret']);
+      expect(cubit.state.status, AmendmentAcceptStatus.accepted);
+    });
+
+    test('resume_failure_emitsFailure_logsConfirmCommission', () async {
+      when(() => repository.confirmCommission('bid-1', 'am-1')).thenThrow(
+        const ConflictException('x', code: 'amendment-commission-declined'),
+      );
+
+      await cubit.resume(_bid, pending);
+
+      expect(cubit.state.status, AmendmentAcceptStatus.failure);
+      expect(cubit.state.error?.code, 'amendment-commission-declined');
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidAmendmentActionFailed,
+          properties: {
+            'action': 'confirm_commission',
+            'error_code': 'amendment-commission-declined',
+          },
+        ),
+      ).called(1);
     });
   });
 }

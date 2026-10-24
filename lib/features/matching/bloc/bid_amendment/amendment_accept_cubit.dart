@@ -21,6 +21,9 @@ enum AmendmentAcceptStatus {
   commissionAuth,
   accepted,
 
+  /// Stripe traite encore la commission : le webhook tranchera.
+  pending,
+
   /// Espèces : le solde ne couvre pas la commission, rien n'est accepté.
   unfunded,
   failure,
@@ -65,8 +68,7 @@ class AmendmentAcceptCubit extends Cubit<AmendmentAcceptState> {
     BidAmendment a, {
     SupplementCommissionSource? source,
     String? fundingCurrency,
-  }) async {
-    if (state.isBusy) return;
+  }) {
     final cash = a.isCash;
     final commissionSource = cash
         ? (source ?? SupplementCommissionSource.wallet)
@@ -75,14 +77,46 @@ class AmendmentAcceptCubit extends Cubit<AmendmentAcceptState> {
         cash && commissionSource == SupplementCommissionSource.wallet
         ? fundingCurrency
         : null;
-    emit(const AmendmentAcceptState(status: AmendmentAcceptStatus.accepting));
-    try {
-      var result = await _repository.accept(
+    return _run(
+      bid,
+      a,
+      commissionSource: commissionSource,
+      funding: funding,
+      action: 'accept',
+      call: () => _repository.accept(
         bid.id,
         a.id,
         commissionSource: commissionSource,
         fundingCurrency: funding,
-      );
+      ),
+    );
+  }
+
+  /// Reprise d'une modification restée en `COMMISSION_PENDING` (3DS abandonnée) :
+  /// `…/commission/confirm` puis la 3DS si la carte la redemande, jamais un
+  /// nouvel `accept`.
+  Future<void> resume(BidModel bid, BidAmendment a) => _run(
+    bid,
+    a,
+    commissionSource: SupplementCommissionSource.card,
+    funding: null,
+    action: 'confirm_commission',
+    call: () => _repository.confirmCommission(bid.id, a.id),
+  );
+
+  Future<void> _run(
+    BidModel bid,
+    BidAmendment a, {
+    required SupplementCommissionSource? commissionSource,
+    required String? funding,
+    required String action,
+    required Future<BidAmendment> Function() call,
+  }) async {
+    if (state.isBusy) return;
+    final cash = a.isCash;
+    emit(const AmendmentAcceptState(status: AmendmentAcceptStatus.accepting));
+    try {
+      var result = await call();
       if (result.needsCommissionAuth) {
         if (isClosed) return;
         emit(
@@ -93,31 +127,40 @@ class AmendmentAcceptCubit extends Cubit<AmendmentAcceptState> {
         );
         result = await _flow.settle(bid.id, result);
       }
-      if (cash) _flow.logCharged(result, commissionSource!);
-      if (funding != null) {
+      // Acquise, ou en attente du dépôt mobile money : le serveur a tranché.
+      // Sinon Stripe traite encore la commission, le webhook décidera.
+      final settled =
+          result.status.isSecured ||
+          result.status == BidAmendmentStatus.paymentPending;
+      if (settled) {
+        if (cash) _flow.logCharged(result, commissionSource!);
+        if (funding != null) {
+          unawaited(
+            _analytics.logEvent(
+              AnalyticsEvents.commissionFundingCurrencyChosen,
+              properties: {
+                'currency': funding,
+                'context': AnalyticsPaymentContext.bidAmendment,
+              },
+            ),
+          );
+        }
         unawaited(
           _analytics.logEvent(
-            AnalyticsEvents.commissionFundingCurrencyChosen,
+            AnalyticsEvents.bidAmendmentAccepted,
             properties: {
-              'currency': funding,
-              'context': AnalyticsPaymentContext.bidAmendment,
+              'method': amendmentMethodOf(a),
+              'commission_source': ?commissionSource?.analyticsValue,
             },
           ),
         );
       }
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.bidAmendmentAccepted,
-          properties: {
-            'method': amendmentMethodOf(a),
-            'commission_source': ?commissionSource?.analyticsValue,
-          },
-        ),
-      );
       if (isClosed) return;
       emit(
         AmendmentAcceptState(
-          status: AmendmentAcceptStatus.accepted,
+          status: settled
+              ? AmendmentAcceptStatus.accepted
+              : AmendmentAcceptStatus.pending,
           amendment: result,
         ),
       );
@@ -127,7 +170,7 @@ class AmendmentAcceptCubit extends Cubit<AmendmentAcceptState> {
         reason: 'authentication_failed',
         errorCode: 'commission/3ds-interrupted',
       );
-      _logFailed('commission/3ds-interrupted');
+      _logFailed(action, 'commission/3ds-interrupted');
       if (isClosed) return;
       emit(const AmendmentAcceptState(status: AmendmentAcceptStatus.failure));
     } catch (e) {
@@ -142,7 +185,7 @@ class AmendmentAcceptCubit extends Cubit<AmendmentAcceptState> {
           currency: unfunded.currency,
         );
       }
-      _logFailed(code);
+      _logFailed(action, code);
       if (isClosed) return;
       emit(
         AmendmentAcceptState(
@@ -156,10 +199,10 @@ class AmendmentAcceptCubit extends Cubit<AmendmentAcceptState> {
     }
   }
 
-  void _logFailed(String code) => unawaited(
+  void _logFailed(String action, String code) => unawaited(
     _analytics.logEvent(
       AnalyticsEvents.bidAmendmentActionFailed,
-      properties: {'action': 'accept', 'error_code': code},
+      properties: {'action': action, 'error_code': code},
     ),
   );
 }

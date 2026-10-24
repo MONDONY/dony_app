@@ -29,6 +29,7 @@ class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 class _FakeBidEvent extends Fake implements BidEvent {}
 
 BidAmendment _am({
+  String id = 'am-1',
   BidAmendmentStatus status = BidAmendmentStatus.proposed,
   String rail = BidAmendment.railCash,
   Duration? expiresIn = const Duration(hours: 46, minutes: 30),
@@ -36,7 +37,7 @@ BidAmendment _am({
   double? commission = 3.3,
   String? closedReason,
 }) => BidAmendment(
-  id: 'am-1',
+  id: id,
   status: status,
   rail: rail,
   addedWeightKg: 3,
@@ -56,7 +57,11 @@ BidAmendment _am({
   blocksHandover: status.isOpen,
 );
 
-BidModel _bid(BidAmendment? a, {String status = 'ACCEPTED'}) => BidModel(
+BidModel _bid(
+  BidAmendment? a, {
+  String status = 'ACCEPTED',
+  List<BidAmendment>? all,
+}) => BidModel(
   id: 'bid-1',
   announcementId: 'ann-1',
   senderId: 'sender-1',
@@ -65,7 +70,7 @@ BidModel _bid(BidAmendment? a, {String status = 'ACCEPTED'}) => BidModel(
   weightKg: 12,
   totalWeightKg: 17,
   status: status,
-  amendments: a == null ? const [] : [a],
+  amendments: all ?? (a == null ? const [] : [a]),
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
 );
@@ -450,6 +455,281 @@ void main() {
       expect(find.text("En attente du paiement d'Aïcha"), findsNothing);
       expect(find.textContaining('En attente du paiement de'), findsOneWidget);
       expect(find.textContaining('Accepter'), findsNothing);
+    });
+  });
+
+  group('plusieurs modifications', () {
+    final declined = _am(status: BidAmendmentStatus.declined);
+    final accepted = _am(id: 'am-2', status: BidAmendmentStatus.accepted);
+
+    testWidgets('traveler_declinedThenAccepted_showsNotBrought', (
+      tester,
+    ) async {
+      when(() => repository.notBrought('bid-1', 'am-2')).thenAnswer(
+        (_) async => _am(id: 'am-2', status: BidAmendmentStatus.cancelled),
+      );
+      await pump(tester, traveler(_bid(null, all: [declined, accepted])));
+
+      expect(find.text('Les kilos en plus ne sont pas là'), findsOneWidget);
+      expect(find.text('Vous avez refusé la modification'), findsNothing);
+      await tester.tap(find.text('Les kilos en plus ne sont pas là'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Les kilos en plus ne sont pas là').last);
+      await tester.pumpAndSettle();
+      verify(() => repository.notBrought('bid-1', 'am-2')).called(1);
+    });
+
+    testWidgets('traveler_acceptedThenDeclined_showsNotBrought', (
+      tester,
+    ) async {
+      final first = _am(status: BidAmendmentStatus.accepted);
+      final second = _am(id: 'am-2', status: BidAmendmentStatus.declined);
+      await pump(tester, traveler(_bid(null, all: [first, second])));
+
+      expect(find.text('Les kilos en plus ne sont pas là'), findsOneWidget);
+      expect(find.text('Vous avez refusé la modification'), findsNothing);
+    });
+
+    testWidgets('traveler_twoAccepted_oneButtonEach', (tester) async {
+      final first = _am(status: BidAmendmentStatus.accepted);
+      await pump(tester, traveler(_bid(null, all: [first, accepted])));
+
+      expect(find.text('Les kilos en plus ne sont pas là'), findsNWidgets(2));
+    });
+
+    testWidgets('traveler_openAndAccepted_showsBoth', (tester) async {
+      final first = _am(status: BidAmendmentStatus.accepted);
+      final open = _am(id: 'am-2');
+      await pump(tester, traveler(_bid(null, all: [first, open])));
+
+      expect(find.textContaining('Accepter'), findsOneWidget);
+      expect(find.text('Les kilos en plus ne sont pas là'), findsOneWidget);
+    });
+
+    test('sender_acceptedHidesEarlierOrLaterClosed_whileAccepted', () {
+      expect(
+        AmendmentSenderCard.shouldShow(_bid(null, all: [declined, accepted])),
+        isFalse,
+      );
+      expect(
+        AmendmentSenderCard.shouldShow(
+          _bid(
+            null,
+            all: [
+              _am(status: BidAmendmentStatus.accepted),
+              _am(id: 'am-2', status: BidAmendmentStatus.declined),
+            ],
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('sender_openWinsOverAccepted_closedShownWhenNothingSecured', () {
+      expect(
+        AmendmentSenderCard.shouldShow(
+          _bid(
+            null,
+            all: [
+              _am(status: BidAmendmentStatus.accepted),
+              _am(id: 'am-2'),
+            ],
+          ),
+        ),
+        isTrue,
+      );
+      expect(
+        AmendmentSenderCard.shouldShow(
+          _bid(
+            null,
+            all: [
+              declined,
+              _am(id: 'am-2', status: BidAmendmentStatus.expired),
+            ],
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    testWidgets('sender_latestClosedWins_whenNoneSecured', (tester) async {
+      await pump(
+        tester,
+        AmendmentSenderCard(
+          bid: _bid(
+            null,
+            all: [
+              declined,
+              _am(id: 'am-2', status: BidAmendmentStatus.expired),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text("Moussa n'a pas répondu à temps"), findsOneWidget);
+    });
+  });
+
+  group('reprise de la commission', () {
+    final pending = _am(status: BidAmendmentStatus.commissionPending);
+
+    testWidgets('travelerCommissionPending_finalizeConfirmsCommission', (
+      tester,
+    ) async {
+      when(
+        () => repository.confirmCommission('bid-1', 'am-1'),
+      ).thenAnswer((_) async => _am(status: BidAmendmentStatus.accepted));
+      await pump(tester, traveler(_bid(pending)));
+
+      expect(find.text('Commission en cours de validation'), findsOneWidget);
+      expect(find.textContaining('pas encore finalisée'), findsOneWidget);
+      await tester.tap(find.text('Finaliser la commission'));
+      await tester.pumpAndSettle();
+
+      expect(authorizations, 1);
+      verify(() => repository.confirmCommission('bid-1', 'am-1')).called(1);
+      verifyNever(() => repository.accept(any(), any()));
+      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+    });
+  });
+
+  group('textes de fin côté expéditeur', () {
+    Future<void> pumpSender(WidgetTester tester, BidAmendment a) =>
+        pump(tester, AmendmentSenderCard(bid: _bid(a)));
+
+    testWidgets('notBrought_refunded_card_saysReportedAndRefund', (
+      tester,
+    ) async {
+      await pumpSender(
+        tester,
+        _am(
+          status: BidAmendmentStatus.refunded,
+          rail: BidAmendment.railStripe,
+          closedReason: 'NOT_BROUGHT',
+        ),
+      );
+
+      expect(
+        find.text("Moussa a signalé que les kilos en plus n'étaient pas là"),
+        findsOneWidget,
+      );
+      expect(find.textContaining('vous est remboursée'), findsOneWidget);
+      expect(find.textContaining("n'a pas apporté"), findsNothing);
+    });
+
+    testWidgets('refundPending_showsRefundInProgress', (tester) async {
+      await pumpSender(
+        tester,
+        _am(
+          status: BidAmendmentStatus.refundPending,
+          rail: BidAmendment.railStripe,
+        ),
+      );
+
+      expect(
+        find.text('Remboursement de la modification en cours'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('vous est remboursée'), findsOneWidget);
+    });
+
+    testWidgets('refunded_otherReason_saysRefunded', (tester) async {
+      await pumpSender(
+        tester,
+        _am(
+          status: BidAmendmentStatus.refunded,
+          rail: BidAmendment.railStripe,
+          closedReason: 'BID_ENDED',
+        ),
+      );
+
+      expect(find.text('Modification remboursée'), findsOneWidget);
+    });
+
+    testWidgets('cancelledByMe_card_saysAmountReleased', (tester) async {
+      await pumpSender(
+        tester,
+        _am(
+          status: BidAmendmentStatus.cancelled,
+          rail: BidAmendment.railStripe,
+          closedReason: 'CANCELLED_BY_SENDER',
+        ),
+      );
+
+      expect(find.text('Demande annulée'), findsOneWidget);
+      expect(find.textContaining('est libéré'), findsOneWidget);
+    });
+
+    testWidgets('expired_cash_saysNothingAsked_noRelease', (tester) async {
+      await pumpSender(tester, _am(status: BidAmendmentStatus.expired));
+
+      expect(find.textContaining('Rien ne vous est demandé'), findsOneWidget);
+      expect(find.textContaining('est libéré'), findsNothing);
+    });
+
+    testWidgets('declined_card_saysAmountReleased', (tester) async {
+      await pumpSender(
+        tester,
+        _am(status: BidAmendmentStatus.declined, rail: BidAmendment.railStripe),
+      );
+
+      expect(find.textContaining('est libéré'), findsOneWidget);
+    });
+
+    testWidgets('captureFailed_card_saysAmountReleased', (tester) async {
+      await pumpSender(
+        tester,
+        _am(
+          status: BidAmendmentStatus.cancelled,
+          rail: BidAmendment.railStripe,
+          closedReason: 'CAPTURE_FAILED',
+        ),
+      );
+
+      expect(find.textContaining('est libéré'), findsOneWidget);
+    });
+  });
+
+  group('détails', () {
+    testWidgets('travelerCash_noCommissionAmount_hidesCommissionSentence', (
+      tester,
+    ) async {
+      await pump(tester, traveler(_bid(_am(commission: null))));
+
+      expect(find.textContaining('commission Yadony'), findsNothing);
+      expect(find.textContaining('0,00'), findsNothing);
+      expect(find.textContaining('Payé en espèces par Aïcha'), findsOneWidget);
+    });
+
+    testWidgets('travelerAccept_stillProcessing_noAcceptedSnackbar', (
+      tester,
+    ) async {
+      when(
+        () => repository.accept(
+          'bid-1',
+          'am-1',
+          commissionSource: SupplementCommissionSource.wallet,
+          fundingCurrency: any(named: 'fundingCurrency'),
+        ),
+      ).thenAnswer(
+        (_) async => _am(status: BidAmendmentStatus.commissionPending),
+      );
+      await pump(tester, traveler(_bid(_am())));
+
+      await tester.tap(find.textContaining('Accepter'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Modification acceptée'), findsNothing);
+      expect(find.textContaining('en cours de traitement'), findsOneWidget);
+    });
+
+    testWidgets('deadline_usesDateAtTimeFormat', (tester) async {
+      await pump(tester, AmendmentSenderCard(bid: _bid(_am())));
+
+      expect(
+        find.textContaining(RegExp(r'avant le .+ à \d{2}:\d{2}')),
+        findsOneWidget,
+      );
     });
   });
 }

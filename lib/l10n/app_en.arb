@@ -11162,8 +11162,6 @@
   "amendmentTravelerInviteStatus": "{name} wants to enlarge their parcel",
   "amendmentTravelerDeadline": "Reply before {deadline} · {hours} h",
   "amendmentTravelerForYou": "For you on top",
-  "amendmentTravelerKgSold": "Kilos sold on this trip",
-  "amendmentTravelerKgSoldValue": "{from} → {to} kg of {total}",
   "amendmentTravelerCashNote": "Paid in cash by {name} at handover: {amount}. If you accept, the Yadony commission of {commission} is taken from your balance.",
   "amendmentAccept": "Accept ({amount})",
   "amendmentDecline": "Decline",
@@ -11189,7 +11187,6 @@
   "amendmentSenderExpiredStatus": "{name} didn't reply in time",
   "amendmentSenderCancelledStatus": "Request cancelled",
   "amendmentSenderCaptureFailedStatus": "The payment for the change failed",
-  "amendmentSenderCaptureFailedBody": "Your parcel stays at {kg}. The amount held on your card is released.",
   "amendmentCancelConfirmTitle": "Cancel your request?",
   "amendmentCancelConfirmMessage": "Your parcel stays as it is. Any amount held on your card is released.",
   "amendmentCancelledSnackbar": "Request cancelled",
@@ -11214,5 +11211,14 @@
   "amendmentNotBroughtSnackbar": "Change cancelled, the sender is refunded",
   "amendmentScanBlocked": "A change is waiting for your reply: scanning is blocked.",
   "amendmentCommissionAuthInterrupted": "Confirmation interrupted, try accepting again.",
-  "amendmentSenderNotBroughtStatus": "{name} didn't bring the extra kilos"
+  "amendmentSenderNotBroughtStatus": "{name} reported the extra kilos weren't there",
+  "amendmentSenderBodyCardReleased": "Your parcel stays at {kg}. The amount held on your card is released.",
+  "amendmentSenderRefundBody": "Your parcel stays at {kg}. The change is refunded to your payment method.",
+  "amendmentSenderRefundPendingStatus": "Refund of the change in progress",
+  "amendmentSenderRefundedStatus": "Change refunded",
+  "amendmentTravelerCommissionPendingHelp": "Your acceptance isn't final yet: the Yadony commission must be confirmed before the deadline.",
+  "amendmentCommissionFinalize": "Finalize the commission",
+  "amendmentCommissionProcessingSnackbar": "Commission being processed, the change will be confirmed once it clears.",
+  "amendmentTravelerCashNoteNoCommission": "Paid in cash by {name} at handover: {amount}.",
+  "amendmentDeadlineFormat": "{date} at {time}"
 }

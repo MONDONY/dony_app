@@ -39,6 +39,23 @@ enum BidAmendmentStatus {
   refunded,
   unknown;
 
+  /// Valeur du serveur (`AUTHORIZATION_PENDING`...).
+  String get wire => switch (this) {
+    authorizationPending => 'AUTHORIZATION_PENDING',
+    proposed => 'PROPOSED',
+    commissionPending => 'COMMISSION_PENDING',
+    paymentPending => 'PAYMENT_PENDING',
+    accepted => 'ACCEPTED',
+    payoutPending => 'PAYOUT_PENDING',
+    paidOut => 'PAID_OUT',
+    declined => 'DECLINED',
+    expired => 'EXPIRED',
+    cancelled => 'CANCELLED',
+    refundPending => 'REFUND_PENDING',
+    refunded => 'REFUNDED',
+    unknown => 'UNKNOWN',
+  };
+
   /// En attente d'une autorisation, d'une réponse ou d'un paiement : une seule
   /// par colis, elle bloque la remise et finit par expirer.
   bool get isOpen =>

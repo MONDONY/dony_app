@@ -4,8 +4,6 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../helpers/l10n_test_helpers.dart';
-
 void main() {
   final fr = lookupAppLocalizations(AppL10n.fr);
   final en = lookupAppLocalizations(AppL10n.en);
@@ -32,6 +30,26 @@ void main() {
       expect(en.amendmentAccept('+€23.50'), 'Accept (+€23.50)');
       expect(fr.amendmentDecline, 'Refuser');
       expect(en.amendmentDecline, 'Decline');
+    });
+
+    test('reprise de la commission et textes de fin (A4)', () {
+      expect(fr.amendmentCommissionFinalize, 'Finaliser la commission');
+      expect(en.amendmentCommissionFinalize, 'Finalize the commission');
+      expect(
+        fr.amendmentSenderNotBroughtStatus('Moussa'),
+        "Moussa a signalé que les kilos en plus n'étaient pas là",
+      );
+      expect(
+        en.amendmentSenderNotBroughtStatus('Moussa'),
+        "Moussa reported the extra kilos weren't there",
+      );
+      expect(fr.amendmentSenderRefundedStatus, 'Modification remboursée');
+      expect(fr.amendmentDeadlineFormat('25 oct.', '14:30'), '25 oct. à 14:30');
+      expect(en.amendmentDeadlineFormat('Oct 25', '14:30'), 'Oct 25 at 14:30');
+      expect(
+        fr.amendmentSenderBodyCardReleased('12 kg'),
+        'Votre colis reste à 12 kg. Le montant bloqué sur votre carte est libéré.',
+      );
     });
   });
 
@@ -97,7 +115,7 @@ void main() {
     test('scan de remise bloqué', () {
       expect(
         message('handover-amendment-pending', AppL10n.fr),
-        "Une modification du colis attend la réponse du voyageur. Scannez le "
+        'Une modification du colis attend la réponse du voyageur. Scannez le '
         "colis une fois qu'il a répondu.",
       );
       expect(

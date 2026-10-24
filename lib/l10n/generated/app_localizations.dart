@@ -36358,18 +36358,6 @@ abstract class AppLocalizations {
   /// **'Pour vous en plus'**
   String get amendmentTravelerForYou;
 
-  /// Ligne : kilos vendus
-  ///
-  /// In fr, this message translates to:
-  /// **'Kilos vendus sur ce trajet'**
-  String get amendmentTravelerKgSold;
-
-  /// Valeur : kilos vendus avant/après sur la capacité
-  ///
-  /// In fr, this message translates to:
-  /// **'{from} → {to} kg sur {total}'**
-  String amendmentTravelerKgSoldValue(String from, String to, String total);
-
   /// Note côté voyageur, espèces
   ///
   /// In fr, this message translates to:
@@ -36524,12 +36512,6 @@ abstract class AppLocalizations {
   /// **'Le paiement de la modification a échoué'**
   String get amendmentSenderCaptureFailedStatus;
 
-  /// Détail capture échouée
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre colis reste à {kg}. Le montant bloqué sur votre carte est libéré.'**
-  String amendmentSenderCaptureFailedBody(String kg);
-
   /// Titre du dialogue d'annulation
   ///
   /// In fr, this message translates to:
@@ -36677,8 +36659,62 @@ abstract class AppLocalizations {
   /// Statut côté expéditeur : le voyageur déclare que les kilos en plus n'étaient pas là
   ///
   /// In fr, this message translates to:
-  /// **'{name} n\'a pas apporté les kilos en plus'**
+  /// **'{name} a signalé que les kilos en plus n\'étaient pas là'**
   String amendmentSenderNotBroughtStatus(String name);
+
+  /// Corps de fin côté expéditeur, carte : le montant bloqué est libéré
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis reste à {kg}. Le montant bloqué sur votre carte est libéré.'**
+  String amendmentSenderBodyCardReleased(String kg);
+
+  /// Corps de fin côté expéditeur : remboursement
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis reste à {kg}. La modification vous est remboursée sur votre moyen de paiement.'**
+  String amendmentSenderRefundBody(String kg);
+
+  /// Statut remboursement en cours côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement de la modification en cours'**
+  String get amendmentSenderRefundPendingStatus;
+
+  /// Statut remboursée côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification remboursée'**
+  String get amendmentSenderRefundedStatus;
+
+  /// Aide 3DS abandonnée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre acceptation n\'est pas encore finalisée : la commission Yadony doit être validée avant la fin du délai.'**
+  String get amendmentTravelerCommissionPendingHelp;
+
+  /// Bouton de reprise de la commission
+  ///
+  /// In fr, this message translates to:
+  /// **'Finaliser la commission'**
+  String get amendmentCommissionFinalize;
+
+  /// Commission encore en traitement chez Stripe
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission en cours de traitement, la modification sera confirmée dès sa validation.'**
+  String get amendmentCommissionProcessingSnackbar;
+
+  /// Note espèces sans montant de commission
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé en espèces par {name} à la remise : {amount}.'**
+  String amendmentTravelerCashNoteNoCommission(String name, String amount);
+
+  /// Échéance : date puis heure
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} à {time}'**
+  String amendmentDeadlineFormat(String date, String time);
 }
 
 class _AppLocalizationsDelegate

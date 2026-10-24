@@ -59,7 +59,7 @@ void main() {
     verify(
       () => analytics.logEvent(
         AnalyticsEvents.bidAmendmentViewed,
-        properties: {'role': 'sender', 'status': 'proposed'},
+        properties: {'role': 'sender', 'status': 'PROPOSED'},
       ),
     ).called(1);
   });

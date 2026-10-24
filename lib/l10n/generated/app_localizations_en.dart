@@ -22410,14 +22410,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amendmentTravelerForYou => 'For you on top';
 
   @override
-  String get amendmentTravelerKgSold => 'Kilos sold on this trip';
-
-  @override
-  String amendmentTravelerKgSoldValue(String from, String to, String total) {
-    return '$from → $to kg of $total';
-  }
-
-  @override
   String amendmentTravelerCashNote(
     String name,
     String amount,
@@ -22522,11 +22514,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The payment for the change failed';
 
   @override
-  String amendmentSenderCaptureFailedBody(String kg) {
-    return 'Your parcel stays at $kg. The amount held on your card is released.';
-  }
-
-  @override
   String get amendmentCancelConfirmTitle => 'Cancel your request?';
 
   @override
@@ -22617,6 +22604,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String amendmentSenderNotBroughtStatus(String name) {
-    return '$name didn\'t bring the extra kilos';
+    return '$name reported the extra kilos weren\'t there';
+  }
+
+  @override
+  String amendmentSenderBodyCardReleased(String kg) {
+    return 'Your parcel stays at $kg. The amount held on your card is released.';
+  }
+
+  @override
+  String amendmentSenderRefundBody(String kg) {
+    return 'Your parcel stays at $kg. The change is refunded to your payment method.';
+  }
+
+  @override
+  String get amendmentSenderRefundPendingStatus =>
+      'Refund of the change in progress';
+
+  @override
+  String get amendmentSenderRefundedStatus => 'Change refunded';
+
+  @override
+  String get amendmentTravelerCommissionPendingHelp =>
+      'Your acceptance isn\'t final yet: the Yadony commission must be confirmed before the deadline.';
+
+  @override
+  String get amendmentCommissionFinalize => 'Finalize the commission';
+
+  @override
+  String get amendmentCommissionProcessingSnackbar =>
+      'Commission being processed, the change will be confirmed once it clears.';
+
+  @override
+  String amendmentTravelerCashNoteNoCommission(String name, String amount) {
+    return 'Paid in cash by $name at handover: $amount.';
+  }
+
+  @override
+  String amendmentDeadlineFormat(String date, String time) {
+    return '$date at $time';
   }
 }

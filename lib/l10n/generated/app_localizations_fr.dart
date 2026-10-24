@@ -22566,14 +22566,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get amendmentTravelerForYou => 'Pour vous en plus';
 
   @override
-  String get amendmentTravelerKgSold => 'Kilos vendus sur ce trajet';
-
-  @override
-  String amendmentTravelerKgSoldValue(String from, String to, String total) {
-    return '$from → $to kg sur $total';
-  }
-
-  @override
   String amendmentTravelerCashNote(
     String name,
     String amount,
@@ -22681,11 +22673,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le paiement de la modification a échoué';
 
   @override
-  String amendmentSenderCaptureFailedBody(String kg) {
-    return 'Votre colis reste à $kg. Le montant bloqué sur votre carte est libéré.';
-  }
-
-  @override
   String get amendmentCancelConfirmTitle => 'Annuler votre demande ?';
 
   @override
@@ -22779,6 +22766,44 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String amendmentSenderNotBroughtStatus(String name) {
-    return '$name n\'a pas apporté les kilos en plus';
+    return '$name a signalé que les kilos en plus n\'étaient pas là';
+  }
+
+  @override
+  String amendmentSenderBodyCardReleased(String kg) {
+    return 'Votre colis reste à $kg. Le montant bloqué sur votre carte est libéré.';
+  }
+
+  @override
+  String amendmentSenderRefundBody(String kg) {
+    return 'Votre colis reste à $kg. La modification vous est remboursée sur votre moyen de paiement.';
+  }
+
+  @override
+  String get amendmentSenderRefundPendingStatus =>
+      'Remboursement de la modification en cours';
+
+  @override
+  String get amendmentSenderRefundedStatus => 'Modification remboursée';
+
+  @override
+  String get amendmentTravelerCommissionPendingHelp =>
+      'Votre acceptation n\'est pas encore finalisée : la commission Yadony doit être validée avant la fin du délai.';
+
+  @override
+  String get amendmentCommissionFinalize => 'Finaliser la commission';
+
+  @override
+  String get amendmentCommissionProcessingSnackbar =>
+      'Commission en cours de traitement, la modification sera confirmée dès sa validation.';
+
+  @override
+  String amendmentTravelerCashNoteNoCommission(String name, String amount) {
+    return 'Payé en espèces par $name à la remise : $amount.';
+  }
+
+  @override
+  String amendmentDeadlineFormat(String date, String time) {
+    return '$date à $time';
   }
 }

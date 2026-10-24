@@ -27,8 +27,9 @@ BidAmendment? _openOf(BidModel bid) =>
 BidAmendment? _closedOf(BidModel bid) =>
     bid.amendments.where((a) => a.status.isClosedUnaccepted).lastOrNull;
 
-BidAmendment? _securedOf(BidModel bid) =>
-    bid.amendments.where((a) => a.status.isSecured).lastOrNull;
+/// Acquises, de la plus ancienne à la plus récente (le serveur trie ainsi).
+List<BidAmendment> _securedOf(BidModel bid) =>
+    bid.amendments.where((a) => a.status.isSecured).toList();
 
 /// Encart « Modification du colis » de la vue expéditeur : la demande en
 /// attente (brut, échéance, « Annuler ma demande ») ou sa fin (refusée,
@@ -39,7 +40,15 @@ class AmendmentSenderCard extends StatelessWidget {
 
   final BidModel bid;
 
-  static BidAmendment? _current(BidModel bid) => _openOf(bid) ?? _closedOf(bid);
+  /// La demande ouverte d'abord. Tant que le colis est `ACCEPTED`, une
+  /// modification acquise passe avant une close : la fin d'une autre demande
+  /// ne doit pas la masquer (elle se lit dans la carte Paiement). Sinon la
+  /// plus récente des closes.
+  static BidAmendment? _current(BidModel bid) =>
+      _openOf(bid) ??
+      (bid.status == 'ACCEPTED' && _securedOf(bid).isNotEmpty
+          ? null
+          : _closedOf(bid));
 
   static bool shouldShow(BidModel bid) => _current(bid) != null;
 
@@ -68,26 +77,41 @@ class AmendmentTravelerCard extends StatelessWidget {
   /// prélevée) ; `null` en usage réel (`requirePaymentAuth`).
   final SupplementRequestAuthorizer? authorize;
 
-  static BidAmendment? _current(BidModel bid) =>
-      _openOf(bid) ??
-      _closedOf(bid) ??
-      (bid.status == 'ACCEPTED' ? _securedOf(bid) : null);
+  /// Demande ouverte, puis une section par modification acquise tant que le
+  /// colis est `ACCEPTED` (une « Les kilos en plus ne sont pas là » chacune),
+  /// sinon la dernière close.
+  static List<BidAmendment> _sections(BidModel bid) {
+    final open = _openOf(bid);
+    final secured = bid.status == 'ACCEPTED'
+        ? _securedOf(bid)
+        : const <BidAmendment>[];
+    final closed = _closedOf(bid);
+    return [?open, ...secured, if (open == null && secured.isEmpty) ?closed];
+  }
 
-  static bool shouldShow(BidModel bid) => _current(bid) != null;
+  static bool shouldShow(BidModel bid) => _sections(bid).isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
-    final amendment = _current(bid);
-    if (amendment == null) return const SizedBox.shrink();
-    return _AmendmentCardShell(
-      bid: bid,
-      amendment: amendment,
-      isSender: false,
-      child: _TravelerContent(
-        bid: bid,
-        amendment: amendment,
-        authorize: authorize ?? defaultSupplementAuthorize,
-      ),
+    final sections = _sections(bid);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < sections.length; i++) ...[
+          if (i > 0) const SizedBox(height: DonySpacing.base),
+          _AmendmentCardShell(
+            key: ValueKey(sections[i].id),
+            bid: bid,
+            amendment: sections[i],
+            isSender: false,
+            child: _TravelerContent(
+              bid: bid,
+              amendment: sections[i],
+              authorize: authorize ?? defaultSupplementAuthorize,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -96,6 +120,7 @@ class AmendmentTravelerCard extends StatelessWidget {
 /// action (le `BidBloc` de l'écran, s'il est là).
 class _AmendmentCardShell extends StatelessWidget {
   const _AmendmentCardShell({
+    super.key,
     required this.bid,
     required this.amendment,
     required this.isSender,
@@ -157,10 +182,14 @@ String _money(double amount, String currency, {bool signed = false}) =>
 String _kg(double kg) =>
     '${kg == kg.roundToDouble() ? kg.toStringAsFixed(0) : kg.toString()} kg';
 
-/// « 25 oct. 14:30 » en heure locale.
+/// « 25 oct. à 14:30 » en heure locale.
 String _deadlineLabel(BuildContext context, DateTime at) {
-  final loc = context.l10n.localeName;
-  return DateFormat.MMMd(loc).add_Hm().format(at.toLocal());
+  final l = context.l10n;
+  final local = at.toLocal();
+  return l.amendmentDeadlineFormat(
+    DateFormat.MMMd(l.localeName).format(local),
+    DateFormat.Hm(l.localeName).format(local),
+  );
 }
 
 int _hoursLeft(DateTime at) {
@@ -341,39 +370,51 @@ class _SenderContent extends StatelessWidget {
         a.status == BidAmendmentStatus.authorizationPending;
 
     if (!a.status.isOpen) {
+      final held = a.rail == BidAmendment.railStripe;
+      final refund =
+          a.status == BidAmendmentStatus.refundPending ||
+          a.status == BidAmendmentStatus.refunded;
       final captureFailed = a.closedReason == 'CAPTURE_FAILED';
-      final status = captureFailed
-          ? _StatusLine(
-              iconAsset: 'circle-x',
-              color: cs.error,
-              text: l.amendmentSenderCaptureFailedStatus,
-            )
-          : _StatusLine(
-              iconAsset: a.status == BidAmendmentStatus.expired
-                  ? 'timer-off'
-                  : 'circle-x',
-              color: cs.onSurfaceVariant,
-              text: switch (a.status) {
-                BidAmendmentStatus.declined => l.amendmentSenderRefusedStatus(
-                  name,
-                ),
-                BidAmendmentStatus.expired => l.amendmentSenderExpiredStatus(
-                  name,
-                ),
-                _ when a.closedReason == 'NOT_BROUGHT' =>
-                  l.amendmentSenderNotBroughtStatus(name),
-                _ => l.amendmentSenderCancelledStatus,
-              },
-            );
+      final String statusText;
+      final String body;
+      if (a.status == BidAmendmentStatus.refundPending) {
+        statusText = l.amendmentSenderRefundPendingStatus;
+      } else if (a.closedReason == 'NOT_BROUGHT') {
+        statusText = l.amendmentSenderNotBroughtStatus(name);
+      } else if (refund) {
+        statusText = l.amendmentSenderRefundedStatus;
+      } else if (captureFailed) {
+        statusText = l.amendmentSenderCaptureFailedStatus;
+      } else if (a.status == BidAmendmentStatus.declined) {
+        statusText = l.amendmentSenderRefusedStatus(name);
+      } else if (a.status == BidAmendmentStatus.expired) {
+        statusText = l.amendmentSenderExpiredStatus(name);
+      } else {
+        statusText = l.amendmentSenderCancelledStatus;
+      }
+      // Cash : rien n'a été payé. Carte : le montant bloqué est libéré, ou
+      // remboursé si la modification avait été acquise. Mobile money : seul
+      // un dépôt déjà fait se rembourse.
+      if (refund || a.closedReason == 'NOT_BROUGHT') {
+        body = a.isCash
+            ? l.amendmentSenderRefusedBody(kg)
+            : l.amendmentSenderRefundBody(kg);
+      } else {
+        body = held
+            ? l.amendmentSenderBodyCardReleased(kg)
+            : l.amendmentSenderRefusedBody(kg);
+      }
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: _spaced([
-          status,
-          _Note(
-            captureFailed
-                ? l.amendmentSenderCaptureFailedBody(kg)
-                : l.amendmentSenderRefusedBody(kg),
+          _StatusLine(
+            iconAsset: a.status == BidAmendmentStatus.expired
+                ? 'timer-off'
+                : 'circle-x',
+            color: captureFailed ? cs.error : cs.onSurfaceVariant,
+            text: statusText,
           ),
+          _Note(body),
         ]),
       );
     }
@@ -493,11 +534,7 @@ class _TravelerContentState extends State<_TravelerContent> {
       case BidAmendmentStatus.proposed:
         return _proposed(context, name);
       case BidAmendmentStatus.commissionPending:
-        return _StatusLine(
-          iconAsset: 'credit-card',
-          color: cs.warning,
-          text: l.amendmentTravelerCommissionPending,
-        );
+        return _commissionPending(context);
       case BidAmendmentStatus.paymentPending:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -597,11 +634,16 @@ class _TravelerContentState extends State<_TravelerContent> {
                 ),
               const SizedBox(height: DonySpacing.sm),
               _Note(
-                a.isCash
+                a.isCash && commission == null
+                    ? l.amendmentTravelerCashNoteNoCommission(
+                        name,
+                        _money(a.grossAmount, a.currency),
+                      )
+                    : a.isCash
                     ? l.amendmentTravelerCashNote(
                         name,
                         _money(a.grossAmount, a.currency),
-                        _money(commission ?? 0, a.currency),
+                        _money(commission!, a.currency),
                       )
                     : a.isMobileMoney
                     ? l.amendmentTravelerMobileMoneyNote(
@@ -654,6 +696,56 @@ class _TravelerContentState extends State<_TravelerContent> {
         },
       ),
     );
+  }
+
+  /// 3DS abandonnée : l'acceptation n'est pas finalisée. « Finaliser la
+  /// commission » passe par `…/commission/confirm`, jamais un nouvel accept.
+  Widget _commissionPending(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    return BlocProvider(
+      create: (_) => getIt<AmendmentAcceptCubit>(),
+      child: BlocConsumer<AmendmentAcceptCubit, AmendmentAcceptState>(
+        listenWhen: (prev, curr) => prev.status != curr.status,
+        listener: _onAcceptState,
+        builder: (context, accept) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ..._spaced([
+              _StatusLine(
+                iconAsset: 'credit-card',
+                color: cs.warning,
+                text: l.amendmentTravelerCommissionPending,
+              ),
+              _Note(l.amendmentTravelerCommissionPendingHelp),
+            ]),
+            const SizedBox(height: DonySpacing.md),
+            DonyButton(
+              key: const Key('amendment-finalize-commission-btn'),
+              label: l.amendmentCommissionFinalize,
+              iconAsset: 'credit-card',
+              isLoading: accept.isBusy,
+              onPressed: accept.isBusy ? null : () => _finalize(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _finalize(BuildContext context) async {
+    final cubit = context.read<AmendmentAcceptCubit>();
+    final authenticated = await widget.authorize(context);
+    if (!context.mounted) return;
+    if (!authenticated) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.paymentNotConfirmedSnackbar,
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
+    await cubit.resume(bid, a);
   }
 
   Widget _accepted(BuildContext context) {
@@ -729,6 +821,12 @@ class _TravelerContentState extends State<_TravelerContent> {
         }
         // Capture refusée, expirée entre-temps : la fiche montre le vrai état.
         _reloadBid(context, bid.id);
+      case AmendmentAcceptStatus.pending:
+        _reloadBid(context, bid.id);
+        DonySnackbar.show(
+          context,
+          message: l.amendmentCommissionProcessingSnackbar,
+        );
       case AmendmentAcceptStatus.unfunded ||
           AmendmentAcceptStatus.idle ||
           AmendmentAcceptStatus.accepting ||

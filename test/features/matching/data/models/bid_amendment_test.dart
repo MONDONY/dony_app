@@ -240,4 +240,15 @@ void main() {
     expect(checkout.paymentMethodTypes, isEmpty);
     expect(checkout.needsPaymentSheet, isFalse);
   });
+
+  test('wire_isServerValue_forEveryStatus', () {
+    expect(
+      BidAmendmentStatus.authorizationPending.wire,
+      'AUTHORIZATION_PENDING',
+    );
+    expect(BidAmendmentStatus.proposed.wire, 'PROPOSED');
+    expect(BidAmendmentStatus.commissionPending.wire, 'COMMISSION_PENDING');
+    expect(BidAmendmentStatus.paidOut.wire, 'PAID_OUT');
+    expect(BidAmendmentStatus.unknown.wire, 'UNKNOWN');
+  });
 }

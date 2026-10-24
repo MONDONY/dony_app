@@ -44,7 +44,7 @@ class AmendmentActionCubit extends Cubit<AmendmentActionState> {
         AnalyticsEvents.bidAmendmentViewed,
         properties: {
           'role': isSender ? 'sender' : 'traveler',
-          'status': status.name,
+          'status': status.wire,
         },
       ),
     );
