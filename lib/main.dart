@@ -177,7 +177,10 @@ Future<void> _bootstrap() async {
   // première réponse.
   getIt<MaintenanceCubit>().start();
 
-  runApp(const DonyApp());
+  // PostHogWidget capture les écrans du replay de session : sans lui,
+  // `sessionReplay = true` n'enregistre rien. Inerte sans clé PostHog ou sans
+  // consentement (opt-out par défaut, textes et images masqués).
+  runApp(const PostHogWidget(child: DonyApp()));
 
   // Heavy async init runs after UI is displayed (no ANR risk)
   getIt<OfflineSyncService>().startListening();
