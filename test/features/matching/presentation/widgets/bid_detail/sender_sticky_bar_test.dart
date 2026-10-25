@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
+import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
@@ -51,9 +52,11 @@ BidModel _bid({
   bool senderHasRated = false,
   String? cancellationNoShowStatus,
   BidMoneyBreakdown? moneyBreakdown,
+  List<BidAmendment> amendments = const [],
 }) {
   return BidModel(
     moneyBreakdown: moneyBreakdown,
+    amendments: amendments,
     id: 'bid-test-1',
     announcementId: 'ann-1',
     senderId: 'sender-1',
@@ -137,6 +140,32 @@ void main() {
       expect(find.text('Payer mon envoi'), findsOneWidget);
     },
   );
+
+  testWidgets('modification à payer en mobile money → bouton « Payer » de la '
+      'modification, avant l\'action du colis', (tester) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
+    final bid = _bid(
+      amendments: const [
+        BidAmendment(
+          id: 'am-1',
+          status: BidAmendmentStatus.paymentPending,
+          rail: BidAmendment.railPawapay,
+          grossAmount: 26.8,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(_host(bloc, bid, paymentLoaded: true));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('amendment-pay-btn')), findsOneWidget);
+    expect(find.text('Payer mon envoi'), findsNothing);
+  });
 
   // Test 2: PENDING cash → pas de 'Payer mon envoi'
   testWidgets('2. PENDING cash → pas de "Payer mon envoi"', (tester) async {
@@ -397,6 +426,38 @@ void main() {
   // ── Tests hasAction() static method ──────────────────────────────────────────
 
   group('hasAction() static', () {
+    test('modification acceptée à payer en mobile money → true', () {
+      final bid = _bid(
+        status: 'COMPLETED',
+        senderHasRated: true,
+        amendments: const [
+          BidAmendment(
+            id: 'am-1',
+            status: BidAmendmentStatus.paymentPending,
+            rail: BidAmendment.railPawapay,
+            grossAmount: 26.8,
+          ),
+        ],
+      );
+      expect(SenderStickyBar.hasAction(bid), isTrue);
+    });
+
+    test('modification en espèces ou close → pas d\'action de paiement', () {
+      final bid = _bid(
+        status: 'COMPLETED',
+        senderHasRated: true,
+        amendments: const [
+          BidAmendment(
+            id: 'am-1',
+            status: BidAmendmentStatus.paymentPending,
+            rail: BidAmendment.railCash,
+            grossAmount: 26.8,
+          ),
+        ],
+      );
+      expect(SenderStickyBar.hasAction(bid), isFalse);
+    });
+
     test('PENDING_CONFIRMATION → false (hero handles it)', () {
       final bid = _bid(
         status: 'ACCEPTED',

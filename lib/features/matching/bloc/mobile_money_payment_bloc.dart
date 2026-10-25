@@ -410,8 +410,9 @@ class MobileMoneyPaymentBloc
   }
 
   /// Issue d'un paiement mobile money d'un colis (ou de son supplément de
-  /// prix, `context: bid_supplement`) dans la famille commune
-  /// `payment_succeeded` / `payment_failed` (`method: mobile_money`), pour
+  /// prix, `bid_supplement`, ou de sa modification, `bid_amendment`) dans la
+  /// famille commune `payment_succeeded` / `payment_failed`
+  /// (`method: mobile_money`), pour
   /// lire tous les moyens dans un même tableau. Les événements
   /// `mobile_money_*` restent émis à côté.
   void _logPayment(
@@ -433,6 +434,7 @@ class MobileMoneyPaymentBloc
               AnalyticsPaymentContext.negotiation,
             SupplementMobileMoneyScope() =>
               AnalyticsPaymentContext.bidSupplement,
+            AmendmentMobileMoneyScope() => AnalyticsPaymentContext.bidAmendment,
           },
           'currency': status.currency,
           if (amount != null) 'amount_bracket': analyticsAmountBracket(amount),
@@ -485,24 +487,26 @@ class MobileMoneyPaymentBloc
   /// dernier dépôt, un dépôt encore en cours. `null` quand aucun dépôt n'a
   /// jamais été tenté : l'expéditeur doit d'abord choisir qui paie.
   ///
-  /// Supplément : un statut que l'app ne connaît pas encore (back plus
-  /// récent) passe d'abord par l'échéance : échu, il expire ; sinon il
+  /// Supplément et modification : un statut que l'app ne connaît pas encore
+  /// (back plus récent) passe d'abord par l'échéance : échu, il expire ; sinon il
   /// s'affiche « en cours » plutôt que de rouvrir un choix que le back
   /// refuserait. Exception : avec un dépôt encore ouvert et l'échéance
   /// passée, `Overdue` prime aussi pour ce statut inconnu (le back attend
-  /// l'issue du dépôt avant de clore le supplément).
+  /// l'issue du dépôt avant de clore le supplément ou la modification).
   MobileMoneyPaymentState? _stateFor(
     MobileMoneyPaymentStatus s,
     MobileMoneyScope scope,
   ) {
     if (s.isEscrowed) return MobileMoneyPaymentEscrowed(s);
-    final isSupplement = scope is SupplementMobileMoneyScope;
-    if (isSupplement && (s.isRefunded || s.isRefundInProgress)) {
+    // Supplément et modification ont leur propre fenêtre de paiement, close
+    // pour de bon (`CANCELLED` définitif) : mêmes règles.
+    final ownWindow = scope.cancelledIsFinal;
+    if (ownWindow && (s.isRefunded || s.isRefundInProgress)) {
       return MobileMoneyPaymentExpired(s);
     }
     if (_isOverdue(s)) return MobileMoneyPaymentOverdue(s);
     if (s.isExpired(_now())) return MobileMoneyPaymentExpired(s);
-    if (isSupplement && !s.hasKnownPaymentStatus) {
+    if (ownWindow && !s.hasKnownPaymentStatus) {
       return MobileMoneyPaymentAwaitingConfirmation(s);
     }
     if (s.isDepositFailed) return MobileMoneyPaymentDepositFailed(s);

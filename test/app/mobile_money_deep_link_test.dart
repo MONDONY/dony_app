@@ -209,4 +209,57 @@ void main() {
       });
     });
   });
+
+  group('modification d\'un colis accepté', () {
+    const amendmentId = '4c1d2e3f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
+
+    test('résout vers l\'écran d\'attente de la modification', () {
+      expect(
+        resolveMobileMoneyAwaitingDeepLink(
+          Uri.parse(
+            'yadony://bids/$uuid/amendments/$amendmentId/mobile-money/awaiting',
+          ),
+        ),
+        '/bids/$uuid/amendments/$amendmentId/mobile-money/awaiting',
+      );
+    });
+
+    test('rejette une modification qui n\'est pas un UUID', () {
+      expect(
+        resolveMobileMoneyAwaitingDeepLink(
+          Uri.parse('yadony://bids/$uuid/amendments/42/mobile-money/awaiting'),
+        ),
+        isNull,
+      );
+    });
+
+    test('rejette une modification sous un fil de négociation', () {
+      expect(
+        resolveMobileMoneyAwaitingDeepLink(
+          Uri.parse(
+            'yadony://negotiations/$uuid/amendments/$amendmentId/'
+            'mobile-money/awaiting',
+          ),
+        ),
+        isNull,
+      );
+    });
+
+    test('rejette une fin différente ou absente', () {
+      expect(
+        resolveMobileMoneyAwaitingDeepLink(
+          Uri.parse(
+            'yadony://bids/$uuid/amendments/$amendmentId/mobile-money/status',
+          ),
+        ),
+        isNull,
+      );
+      expect(
+        resolveMobileMoneyAwaitingDeepLink(
+          Uri.parse('yadony://bids/$uuid/amendments/$amendmentId'),
+        ),
+        isNull,
+      );
+    });
+  });
 }

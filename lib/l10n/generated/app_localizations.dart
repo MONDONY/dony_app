@@ -34500,6 +34500,30 @@ abstract class AppLocalizations {
   /// **'Payer le supplément'**
   String get mobileMoneyPaySupplementTitle;
 
+  /// Titre de l'écran d'attente mobile money quand il paie la modification d'un colis accepté (kilos ou articles ajoutés), après l'acceptation du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer la modification'**
+  String get mobileMoneyPayAmendmentTitle;
+
+  /// Texte de la fenêtre close quand la portée est la modification d'un colis (mobile_money_awaiting_screen.dart _ExpiredBody)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette modification n\'est plus à payer : la demande a expiré ou a été close. Le colis reste tel qu\'il était.'**
+  String get mobileMoneyExpiredAmendment;
+
+  /// Snackbar de l'écran d'attente mobile money quand le dépôt de la modification d'un colis est confirmé
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification payée'**
+  String get amendmentPaidSnackbar;
+
+  /// Bouton de la barre du bas de l'expéditeur : payer en mobile money la modification acceptée par le voyageur. {amount} : brut formaté, jamais le net
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer {amount}'**
+  String amendmentPay(String amount);
+
   /// Texte de l'état « Pas encore validé » du paiement d'un colis : l'échéance est passée mais le dépôt reste ouvert, il peut encore aboutir. Ne dit jamais que le délai est dépassé ni que le paiement est perdu (mobile_money_awaiting_screen.dart).
   ///
   /// In fr, this message translates to:

@@ -2297,13 +2297,23 @@ final appRouter = GoRouter(
 );
 
 /// Routes de l'écran « Payer le colis » en mobile money (bid, fil de
-/// négociation, supplément de prix), isolées du routeur pour être montées dans
+/// négociation, supplément de prix, modification de colis), isolées du routeur pour être montées dans
 /// un test. Chacune fournit le bloc de paiement et le composant « compte qui
 /// paie » (`PayerAccountCubit`, [flow] = nom analytics de la portée) à
 /// l'écran. Le composant naît sans devise (elle n'est connue qu'avec le
 /// statut) et reste inerte tant que l'écran ne l'a pas configuré : un dépôt
 /// repris n'appelle jamais le catalogue des pays.
 List<GoRoute> buildMobileMoneyAwaitingRoutes() => [
+  GoRoute(
+    path: '/bids/:bidId/amendments/:amendmentId/mobile-money/awaiting',
+    name: '/bids/:bidId/amendments/:amendmentId/mobile-money/awaiting',
+    builder: (context, state) => _mobileMoneyAwaitingPage(
+      MobileMoneyScope.amendment(
+        bidId: state.pathParameters['bidId']!,
+        amendmentId: state.pathParameters['amendmentId']!,
+      ),
+    ),
+  ),
   GoRoute(
     path: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
     name: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',

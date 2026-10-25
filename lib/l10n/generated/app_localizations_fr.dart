@@ -21373,6 +21373,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mobileMoneyPaySupplementTitle => 'Payer le supplément';
 
   @override
+  String get mobileMoneyPayAmendmentTitle => 'Payer la modification';
+
+  @override
+  String get mobileMoneyExpiredAmendment =>
+      'Cette modification n\'est plus à payer : la demande a expiré ou a été close. Le colis reste tel qu\'il était.';
+
+  @override
+  String get amendmentPaidSnackbar => 'Modification payée';
+
+  @override
+  String amendmentPay(String amount) {
+    return 'Payer $amount';
+  }
+
+  @override
   String get mobileMoneyOverdueBody =>
       'Si vous validez quand même dans les prochaines minutes, votre paiement sera pris en compte.';
 
