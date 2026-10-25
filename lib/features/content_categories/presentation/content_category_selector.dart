@@ -575,27 +575,31 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
                 width: isFocused ? 1.5 : 1,
               ),
             ),
-            child: TextField(
-              key: Key('${widget.keyPrefix}-field'),
-              controller: _controller,
-              focusNode: _focusNode,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-              textCapitalization: TextCapitalization.sentences,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _focusNode.unfocus(),
-              decoration: InputDecoration(
-                hintText:
-                    widget.hint ?? context.l10n.contentCategoryHintDefault,
-                hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.base,
-                  vertical: DonySpacing.md,
-                ),
-                suffixIcon: DonyIcon(
-                  'chevron-down',
-                  size: 16,
-                  color: cs.onSurfaceVariant,
+            child: DonyReplayMask(
+              child: TextField(
+                key: Key('${widget.keyPrefix}-field'),
+                controller: _controller,
+                focusNode: _focusNode,
+                style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                textCapitalization: TextCapitalization.sentences,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _focusNode.unfocus(),
+                decoration: InputDecoration(
+                  hintText:
+                      widget.hint ?? context.l10n.contentCategoryHintDefault,
+                  hintStyle: tt.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.base,
+                    vertical: DonySpacing.md,
+                  ),
+                  suffixIcon: DonyIcon(
+                    'chevron-down',
+                    size: 16,
+                    color: cs.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),

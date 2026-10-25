@@ -54,15 +54,19 @@ abstract final class DonyBottomSheet {
             )
           : null,
       builder: (ctx) {
-        final Widget content = _DonyBottomSheetContent(
-          title: title,
-          subtitle: subtitle,
-          showHandle: showHandle,
-          isDanger: isDanger,
-          expand: heightFraction != null,
-          stickyBottom: stickyBottom,
-          showFeedback: showFeedback,
-          child: child,
+        // Toute feuille est masquée dans le replay de session : elles portent
+        // les formulaires (offre, destinataire, adresse) et les paiements.
+        final Widget content = DonyReplayMask(
+          child: _DonyBottomSheetContent(
+            title: title,
+            subtitle: subtitle,
+            showHandle: showHandle,
+            isDanger: isDanger,
+            expand: heightFraction != null,
+            stickyBottom: stickyBottom,
+            showFeedback: showFeedback,
+            child: child,
+          ),
         );
         return wrapper != null ? wrapper(content) : content;
       },

@@ -206,47 +206,53 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                               cityCtrl: _recipientCityCtrl,
                               fallbackCity: state.request?.arrivalCity,
                               children: [
-                                TextFormField(
-                                  textInputAction: TextInputAction.next,
-                                  controller: _recipientNameCtrl,
-                                  decoration: InputDecoration(
-                                    labelText:
-                                        l10n.requestCreateRecipientNameLabel,
+                                DonyReplayMask(
+                                  child: TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    controller: _recipientNameCtrl,
+                                    decoration: InputDecoration(
+                                      labelText:
+                                          l10n.requestCreateRecipientNameLabel,
+                                    ),
+                                    validator: _required,
                                   ),
-                                  validator: _required,
                                 ),
                                 const SizedBox(height: DonySpacing.md),
-                                TextFormField(
-                                  textInputAction: TextInputAction.next,
-                                  controller: _recipientPhoneCtrl,
-                                  keyboardType: TextInputType.phone,
-                                  decoration: InputDecoration(
-                                    labelText:
-                                        l10n.requestCreateRecipientPhoneLabel,
-                                    hintText: '+221771234567',
+                                DonyReplayMask(
+                                  child: TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    controller: _recipientPhoneCtrl,
+                                    keyboardType: TextInputType.phone,
+                                    decoration: InputDecoration(
+                                      labelText:
+                                          l10n.requestCreateRecipientPhoneLabel,
+                                      hintText: '+221771234567',
+                                    ),
+                                    validator: (v) {
+                                      if (v == null || v.trim().isEmpty) {
+                                        return l10n.requestCreateRequiredField;
+                                      }
+                                      if (!RegExp(
+                                        r'^\+[1-9]\d{6,14}$',
+                                      ).hasMatch(v.trim())) {
+                                        return l10n
+                                            .requestCreateRecipientPhoneFormat;
+                                      }
+                                      return null;
+                                    },
                                   ),
-                                  validator: (v) {
-                                    if (v == null || v.trim().isEmpty) {
-                                      return l10n.requestCreateRequiredField;
-                                    }
-                                    if (!RegExp(
-                                      r'^\+[1-9]\d{6,14}$',
-                                    ).hasMatch(v.trim())) {
-                                      return l10n
-                                          .requestCreateRecipientPhoneFormat;
-                                    }
-                                    return null;
-                                  },
                                 ),
                                 const SizedBox(height: DonySpacing.md),
-                                TextFormField(
-                                  textInputAction: TextInputAction.done,
-                                  controller: _recipientCityCtrl,
-                                  decoration: InputDecoration(
-                                    labelText:
-                                        l10n.requestCreateRecipientCityLabel,
-                                    hintText:
-                                        l10n.requestCreateRecipientCityHint,
+                                DonyReplayMask(
+                                  child: TextFormField(
+                                    textInputAction: TextInputAction.done,
+                                    controller: _recipientCityCtrl,
+                                    decoration: InputDecoration(
+                                      labelText:
+                                          l10n.requestCreateRecipientCityLabel,
+                                      hintText:
+                                          l10n.requestCreateRecipientCityHint,
+                                    ),
                                   ),
                                 ),
                               ],

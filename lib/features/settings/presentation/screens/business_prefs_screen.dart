@@ -781,36 +781,40 @@ class _TravelerSectionState extends State<_TravelerSection> {
                   const SizedBox(width: DonySpacing.sm),
                   SizedBox(
                     width: 64,
-                    child: TextField(
-                      controller: _delayController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: InputDecoration(
-                        hintText: l.prefsResponseDelayHint,
-                        suffixText:
-                            'h', // i18n-ignore: unité, identique en anglais
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.sm,
-                          vertical: DonySpacing.sm,
+                    child: DonyReplayMask(
+                      child: TextField(
+                        controller: _delayController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: InputDecoration(
+                          hintText: l.prefsResponseDelayHint,
+                          suffixText:
+                              'h', // i18n-ignore: unité, identique en anglais
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.sm,
+                            vertical: DonySpacing.sm,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(DonyRadius.md),
+                          ),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(DonyRadius.md),
-                        ),
-                      ),
-                      onChanged: (v) {
-                        if (v.isEmpty) {
-                          context.read<BusinessPrefsBloc>().add(
-                            const ResponseDelayChanged(null),
-                          );
-                        } else {
-                          final parsed = int.tryParse(v);
-                          if (parsed != null && parsed >= 1) {
+                        onChanged: (v) {
+                          if (v.isEmpty) {
                             context.read<BusinessPrefsBloc>().add(
-                              ResponseDelayChanged(parsed),
+                              const ResponseDelayChanged(null),
                             );
+                          } else {
+                            final parsed = int.tryParse(v);
+                            if (parsed != null && parsed >= 1) {
+                              context.read<BusinessPrefsBloc>().add(
+                                ResponseDelayChanged(parsed),
+                              );
+                            }
                           }
-                        }
-                      },
+                        },
+                      ),
                     ),
                   ),
                 ],

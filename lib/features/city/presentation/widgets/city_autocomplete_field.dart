@@ -444,23 +444,25 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
     // fournit déjà `filled` + OutlineInputBorder arrondi. Un ClipRRect
     // coupait la moitié haute du label flottant (centré sur la bordure
     // supérieure) → label illisible au focus. On laisse le décor au thème.
-    return TextField(
-      key: widget.fieldKey,
-      controller: _controller,
-      focusNode: _focusNode,
-      style: Theme.of(
-        context,
-      ).textTheme.bodyMedium!.copyWith(fontSize: 15, color: cs.onSurface),
-      decoration: InputDecoration(
-        // Si requiredLabel, label widget (RichText) ; sinon labelText.
-        label: labelWidget,
-        labelText: labelWidget == null ? widget.label : null,
-        errorText: widget.errorText ?? selectionError,
-        prefixIcon: widget.prefixIcon,
-        suffixIcon: _buildClearButton(context, cs),
+    return DonyReplayMask(
+      child: TextField(
+        key: widget.fieldKey,
+        controller: _controller,
+        focusNode: _focusNode,
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium!.copyWith(fontSize: 15, color: cs.onSurface),
+        decoration: InputDecoration(
+          // Si requiredLabel, label widget (RichText) ; sinon labelText.
+          label: labelWidget,
+          labelText: labelWidget == null ? widget.label : null,
+          errorText: widget.errorText ?? selectionError,
+          prefixIcon: widget.prefixIcon,
+          suffixIcon: _buildClearButton(context, cs),
+        ),
+        onChanged: _onChanged,
+        onSubmitted: (_) => _resolveTypedText(),
       ),
-      onChanged: _onChanged,
-      onSubmitted: (_) => _resolveTypedText(),
     );
   }
 
@@ -501,42 +503,44 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
         // valeur est rognée dès les grands crans.
         SizedBox(
           height: MediaQuery.textScalerOf(context).scale(_connectedValueHeight),
-          child: TextField(
-            key: widget.fieldKey,
-            controller: _controller,
-            focusNode: _focusNode,
-            style: tt.headlineMedium?.copyWith(
-              fontSize: 21,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
-              color: cs.onSurface,
-            ),
-            decoration: InputDecoration(
-              isDense: true,
-              isCollapsed: true,
-              // Le thème global pose `filled: true` : sans ce false, le champ
-              // peint son propre rectangle de fond par-dessus la rangée du
-              // billet — visible comme une « boîte dans la boîte ».
-              filled: false,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: const EdgeInsets.only(top: 3),
-              hintText: context.l10n.cityChooseCity,
-              hintStyle: tt.headlineMedium?.copyWith(
+          child: DonyReplayMask(
+            child: TextField(
+              key: widget.fieldKey,
+              controller: _controller,
+              focusNode: _focusNode,
+              style: tt.headlineMedium?.copyWith(
                 fontSize: 21,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+                color: cs.onSurface,
               ),
-              suffix: widget.valueSuffix,
-              suffixIcon: _buildClearButton(context, cs),
-              suffixIconConstraints: const BoxConstraints(
-                minWidth: 32,
-                minHeight: 32,
+              decoration: InputDecoration(
+                isDense: true,
+                isCollapsed: true,
+                // Le thème global pose `filled: true` : sans ce false, le champ
+                // peint son propre rectangle de fond par-dessus la rangée du
+                // billet — visible comme une « boîte dans la boîte ».
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: const EdgeInsets.only(top: 3),
+                hintText: context.l10n.cityChooseCity,
+                hintStyle: tt.headlineMedium?.copyWith(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurfaceVariant,
+                ),
+                suffix: widget.valueSuffix,
+                suffixIcon: _buildClearButton(context, cs),
+                suffixIconConstraints: const BoxConstraints(
+                  minWidth: 32,
+                  minHeight: 32,
+                ),
               ),
+              onChanged: _onChanged,
+              onSubmitted: (_) => _resolveTypedText(),
             ),
-            onChanged: _onChanged,
-            onSubmitted: (_) => _resolveTypedText(),
           ),
         ),
       ],

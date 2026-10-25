@@ -160,58 +160,62 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
           const SizedBox(height: DonySpacing.sm),
 
           // Champ prix — grand format comme maquette
-          TextFormField(
-            controller: _priceCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
-            ],
-            autofocus: true,
-            style: tt.bodyMedium!.copyWith(
-              fontSize: 32,
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
-              letterSpacing: -0.5,
-            ),
-            decoration: InputDecoration(
-              hintText: '0',
-              hintStyle: tt.bodyMedium!.copyWith(
+          DonyReplayMask(
+            child: TextFormField(
+              controller: _priceCtrl,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
+              ],
+              autofocus: true,
+              style: tt.bodyMedium!.copyWith(
                 fontSize: 32,
                 fontWeight: FontWeight.w800,
-                color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+                color: cs.onSurface,
+                letterSpacing: -0.5,
               ),
-              suffixText: SupportedCurrency.symbolOf(widget.pricer.currency),
-              suffixStyle: tt.bodyMedium!.copyWith(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurfaceVariant,
+              decoration: InputDecoration(
+                hintText: '0',
+                hintStyle: tt.bodyMedium!.copyWith(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+                ),
+                suffixText: SupportedCurrency.symbolOf(widget.pricer.currency),
+                suffixStyle: tt.bodyMedium!.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurfaceVariant,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                  vertical: DonySpacing.base,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  borderSide: BorderSide(color: cs.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  borderSide: BorderSide(color: cs.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  borderSide: BorderSide(color: cs.primary, width: 2),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  borderSide: const BorderSide(color: DonyColors.danger500),
+                ),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.base,
-                vertical: DonySpacing.base,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.outline),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.outline),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.primary, width: 2),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: const BorderSide(color: DonyColors.danger500),
-              ),
+              validator: (v) {
+                final d = double.tryParse((v ?? '').replaceAll(',', '.'));
+                if (d == null || d <= 0) return l.requestCreateWeightInvalid;
+                return null;
+              },
             ),
-            validator: (v) {
-              final d = double.tryParse((v ?? '').replaceAll(',', '.'));
-              if (d == null || d <= 0) return l.requestCreateWeightInvalid;
-              return null;
-            },
           ),
           // Le prix saisi est le net du voyageur : sans ce détail, l'expéditeur
           // voyait son montant revenir majoré sans savoir que c'était la
@@ -244,39 +248,43 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
           const SizedBox(height: DonySpacing.sm),
 
           // Champ message
-          TextFormField(
-            controller: _bodyCtrl,
-            maxLines: 3,
-            maxLength: 280,
-            buildCounter:
-                (_, {required currentLength, required isFocused, maxLength}) =>
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        '$currentLength/${maxLength ?? 280}',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
+          DonyReplayMask(
+            child: TextFormField(
+              controller: _bodyCtrl,
+              maxLines: 3,
+              maxLength: 280,
+              buildCounter:
+                  (
+                    _, {
+                    required currentLength,
+                    required isFocused,
+                    maxLength,
+                  }) => Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '$currentLength/${maxLength ?? 280}',
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
-            style: tt.bodyLarge,
-            decoration: InputDecoration(
-              hintText: l.negotiationCounterOfferMessageHint,
-              hintStyle: tt.bodyLarge?.copyWith(
-                color: cs.onSurfaceVariant.withValues(alpha: 0.6),
-              ),
-              contentPadding: const EdgeInsets.all(DonySpacing.base),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.outline),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.outline),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.primary, width: 2),
+                  ),
+              style: tt.bodyLarge,
+              decoration: InputDecoration(
+                hintText: l.negotiationCounterOfferMessageHint,
+                hintStyle: tt.bodyLarge?.copyWith(
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                ),
+                contentPadding: const EdgeInsets.all(DonySpacing.base),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  borderSide: BorderSide(color: cs.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  borderSide: BorderSide(color: cs.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  borderSide: BorderSide(color: cs.primary, width: 2),
+                ),
               ),
             ),
           ),

@@ -164,49 +164,51 @@ class _CancellationDialogState extends State<CancellationDialog> {
                   ],
 
                   // ── Champ motif ────────────────────────────────────────
-                  TextField(
-                    controller: _reasonCtrl,
-                    maxLines: 3,
-                    textInputAction: TextInputAction.done,
-                    onChanged: (_) {
-                      if (_showReasonError) {
-                        setState(() => _showReasonError = false);
-                      }
-                    },
-                    decoration: InputDecoration(
-                      hintText: widget._isAfterHandover
-                          ? l.bidCancelReasonRequiredHint
-                          : l.bidCancelReasonOptionalHint,
-                      hintStyle: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                        borderSide: BorderSide(color: cs.outline),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                        borderSide: BorderSide(
-                          color: _showReasonError ? cs.error : cs.outline,
+                  DonyReplayMask(
+                    child: TextField(
+                      controller: _reasonCtrl,
+                      maxLines: 3,
+                      textInputAction: TextInputAction.done,
+                      onChanged: (_) {
+                        if (_showReasonError) {
+                          setState(() => _showReasonError = false);
+                        }
+                      },
+                      decoration: InputDecoration(
+                        hintText: widget._isAfterHandover
+                            ? l.bidCancelReasonRequiredHint
+                            : l.bidCancelReasonOptionalHint,
+                        hintStyle: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
                         ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                        borderSide: BorderSide(
-                          color: _showReasonError ? cs.error : cs.primary,
-                          width: 1.5,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                          borderSide: BorderSide(color: cs.outline),
                         ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                        borderSide: BorderSide(color: cs.error),
-                      ),
-                      errorText: _showReasonError
-                          ? l.bidCancelReasonRequiredError
-                          : null,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.base,
-                        vertical: DonySpacing.md,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                          borderSide: BorderSide(
+                            color: _showReasonError ? cs.error : cs.outline,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                          borderSide: BorderSide(
+                            color: _showReasonError ? cs.error : cs.primary,
+                            width: 1.5,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                          borderSide: BorderSide(color: cs.error),
+                        ),
+                        errorText: _showReasonError
+                            ? l.bidCancelReasonRequiredError
+                            : null,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.base,
+                          vertical: DonySpacing.md,
+                        ),
                       ),
                     ),
                   ),

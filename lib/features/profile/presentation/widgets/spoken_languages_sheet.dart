@@ -200,20 +200,22 @@ class _SpokenLanguagesBodyState extends State<_SpokenLanguagesBody> {
             Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    key: const Key('spoken-language-other-field'),
-                    controller: _otherCtrl,
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.sentences,
-                    inputFormatters: [
-                      LengthLimitingTextInputFormatter(
-                        kSpokenLanguageMaxLength,
+                  child: DonyReplayMask(
+                    child: TextField(
+                      key: const Key('spoken-language-other-field'),
+                      controller: _otherCtrl,
+                      autofocus: true,
+                      textCapitalization: TextCapitalization.sentences,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(
+                          kSpokenLanguageMaxLength,
+                        ),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: l.profileLanguagesSheetOtherHint,
                       ),
-                    ],
-                    decoration: InputDecoration(
-                      labelText: l.profileLanguagesSheetOtherHint,
+                      onSubmitted: (_) => _addOther(),
                     ),
-                    onSubmitted: (_) => _addOther(),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.sm),

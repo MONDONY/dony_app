@@ -167,28 +167,30 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
                   ),
                 ).animate().fadeIn(duration: 200.ms),
               const SizedBox(height: DonySpacing.base),
-              TextField(
-                controller: _commentCtrl,
-                maxLines: 3,
-                maxLength: 200,
-                keyboardType: TextInputType.multiline,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  labelText: l.ratingCommentLabel,
-                  hintText: l.ratingCommentHint,
-                  filled: true,
-                  fillColor: cs.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.card),
-                    borderSide: BorderSide(color: cs.outline),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.card),
-                    borderSide: BorderSide(color: cs.outline),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.card),
-                    borderSide: BorderSide(color: cs.primary, width: 2),
+              DonyReplayMask(
+                child: TextField(
+                  controller: _commentCtrl,
+                  maxLines: 3,
+                  maxLength: 200,
+                  keyboardType: TextInputType.multiline,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    labelText: l.ratingCommentLabel,
+                    hintText: l.ratingCommentHint,
+                    filled: true,
+                    fillColor: cs.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      borderSide: BorderSide(color: cs.outline),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      borderSide: BorderSide(color: cs.outline),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      borderSide: BorderSide(color: cs.primary, width: 2),
+                    ),
                   ),
                 ),
               ),

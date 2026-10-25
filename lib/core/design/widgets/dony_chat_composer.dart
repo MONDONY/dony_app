@@ -1,5 +1,4 @@
-import 'package:dony/core/design/tokens/spacing_tokens.dart';
-import 'package:dony/core/design/widgets/dony_pressable.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -133,28 +132,30 @@ class DonyChatComposer extends StatelessWidget {
                       else
                         const SizedBox(width: DonySpacing.sm),
                       Expanded(
-                        child: TextField(
-                          key: const Key('chat-composer-field'),
-                          controller: controller,
-                          focusNode: focusNode,
-                          maxLines: null,
-                          minLines: 1,
-                          maxLength: maxLength,
-                          onSubmitted: onSubmitted,
-                          keyboardType: TextInputType.multiline,
-                          textInputAction: TextInputAction.newline,
-                          style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-                          decoration: InputDecoration(
-                            hintText: hintText,
-                            hintStyle: tt.bodyMedium?.copyWith(
-                              color: cs.onSurfaceVariant,
+                        child: DonyReplayMask(
+                          child: TextField(
+                            key: const Key('chat-composer-field'),
+                            controller: controller,
+                            focusNode: focusNode,
+                            maxLines: null,
+                            minLines: 1,
+                            maxLength: maxLength,
+                            onSubmitted: onSubmitted,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.newline,
+                            style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                            decoration: InputDecoration(
+                              hintText: hintText,
+                              hintStyle: tt.bodyMedium?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                              border: InputBorder.none,
+                              counterText: '',
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 11,
+                              ),
+                              isDense: true,
                             ),
-                            border: InputBorder.none,
-                            counterText: '',
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 11,
-                            ),
-                            isDense: true,
                           ),
                         ),
                       ),

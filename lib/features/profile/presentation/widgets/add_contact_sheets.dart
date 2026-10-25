@@ -494,19 +494,21 @@ class _PhoneInputStep extends StatelessWidget {
                 ),
                 Container(width: 1, height: 40, color: cs.outline),
                 Expanded(
-                  child: TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.phone,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    style: tt.bodyLarge?.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      hintText: country.hint,
-                      hintStyle: tt.bodyLarge?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.md,
+                  child: DonyReplayMask(
+                    child: TextField(
+                      controller: controller,
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      style: tt.bodyLarge?.copyWith(color: cs.onSurface),
+                      decoration: InputDecoration(
+                        hintText: country.hint,
+                        hintStyle: tt.bodyLarge?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.md,
+                        ),
                       ),
                     ),
                   ),
@@ -718,23 +720,25 @@ class _EmailInputStep extends StatelessWidget {
               borderRadius: BorderRadius.circular(DonyRadius.md),
               color: cs.surface,
             ),
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.emailAddress,
-              autocorrect: false,
-              style: tt.bodyLarge?.copyWith(color: cs.onSurface),
-              decoration: InputDecoration(
-                hintText: 'exemple@email.com',
-                hintStyle: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
-                border: InputBorder.none,
-                prefixIcon: DonyIcon(
-                  'mail',
-                  color: cs.onSurfaceVariant,
-                  size: 20,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.md,
-                  vertical: DonySpacing.md,
+            child: DonyReplayMask(
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+                style: tt.bodyLarge?.copyWith(color: cs.onSurface),
+                decoration: InputDecoration(
+                  hintText: 'exemple@email.com',
+                  hintStyle: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+                  border: InputBorder.none,
+                  prefixIcon: DonyIcon(
+                    'mail',
+                    color: cs.onSurfaceVariant,
+                    size: 20,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.md,
+                    vertical: DonySpacing.md,
+                  ),
                 ),
               ),
             ),

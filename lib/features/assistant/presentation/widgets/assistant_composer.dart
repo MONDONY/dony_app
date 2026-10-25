@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_voice_action_button.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -102,58 +103,64 @@ class AssistantComposer extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
-                child: TextField(
-                  key: const Key('assistant-input'),
-                  controller: controller,
-                  minLines: 1,
-                  maxLines: 4,
-                  // Plusieurs lignes à l'écran, mais la touche d'action du
-                  // clavier envoie au lieu d'insérer un retour à la ligne.
-                  keyboardType: TextInputType.text,
-                  textInputAction: TextInputAction.send,
-                  textCapitalization: TextCapitalization.sentences,
-                  maxLength: kAssistantQuestionMax,
-                  maxLengthEnforcement: MaxLengthEnforcement.none,
-                  inputFormatters: const [
-                    Utf16LengthLimiter(kAssistantQuestionMax),
-                  ],
-                  style: tt.bodyLarge!.copyWith(fontSize: 15),
-                  // Garde le clavier ouvert après l'envoi.
-                  onEditingComplete: () {},
-                  onSubmitted: (_) => _submit(),
-                  buildCounter:
-                      (
-                        context, {
-                        required currentLength,
-                        required isFocused,
-                        required maxLength,
-                      }) {
-                        final length = controller.text.length;
-                        if (length < kAssistantCounterFrom) return null;
-                        return Text(
-                          l.assistantCharCount(length),
-                          style: tt.bodySmall!.copyWith(
-                            color: length >= kAssistantQuestionMax
-                                ? cs.error
-                                : cs.onSurfaceVariant,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        );
-                      },
-                  decoration: InputDecoration(
-                    hintText: listening
-                        ? l.assistantMicListening
-                        : l.assistantInputHint,
-                    isDense: true,
-                    filled: true,
-                    fillColor: Theme.of(context).scaffoldBackgroundColor,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 14,
+                child: DonyReplayMask(
+                  child: TextField(
+                    key: const Key('assistant-input'),
+                    controller: controller,
+                    minLines: 1,
+                    maxLines: 4,
+                    // Plusieurs lignes à l'écran, mais la touche d'action du
+                    // clavier envoie au lieu d'insérer un retour à la ligne.
+                    keyboardType: TextInputType.text,
+                    textInputAction: TextInputAction.send,
+                    textCapitalization: TextCapitalization.sentences,
+                    maxLength: kAssistantQuestionMax,
+                    maxLengthEnforcement: MaxLengthEnforcement.none,
+                    inputFormatters: const [
+                      Utf16LengthLimiter(kAssistantQuestionMax),
+                    ],
+                    style: tt.bodyLarge!.copyWith(fontSize: 15),
+                    // Garde le clavier ouvert après l'envoi.
+                    onEditingComplete: () {},
+                    onSubmitted: (_) => _submit(),
+                    buildCounter:
+                        (
+                          context, {
+                          required currentLength,
+                          required isFocused,
+                          required maxLength,
+                        }) {
+                          final length = controller.text.length;
+                          if (length < kAssistantCounterFrom) return null;
+                          return Text(
+                            l.assistantCharCount(length),
+                            style: tt.bodySmall!.copyWith(
+                              color: length >= kAssistantQuestionMax
+                                  ? cs.error
+                                  : cs.onSurfaceVariant,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          );
+                        },
+                    decoration: InputDecoration(
+                      hintText: listening
+                          ? l.assistantMicListening
+                          : l.assistantInputHint,
+                      isDense: true,
+                      filled: true,
+                      fillColor: Theme.of(context).scaffoldBackgroundColor,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 14,
+                      ),
+                      border: border(listening ? cs.primary : cs.outline),
+                      enabledBorder: border(
+                        listening ? cs.primary : cs.outline,
+                      ),
+                      focusedBorder: border(cs.primary),
                     ),
-                    border: border(listening ? cs.primary : cs.outline),
-                    enabledBorder: border(listening ? cs.primary : cs.outline),
-                    focusedBorder: border(cs.primary),
                   ),
                 ),
               ),

@@ -762,27 +762,29 @@ class PrixConditionsStep extends StatelessWidget {
                       horizontal: DonySpacing.base,
                       vertical: DonySpacing.xs,
                     ),
-                    child: TextField(
-                      controller: descriptionCtrl,
-                      maxLines: 4,
-                      maxLength: 500,
-                      scrollPadding: const EdgeInsets.only(bottom: 120),
-                      buildCounter:
-                          (
-                            _, {
-                            required currentLength,
-                            required isFocused,
-                            maxLength,
-                          }) => null,
-                      style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-                      decoration: InputDecoration(
-                        hintText: l.tripPublishNoteToSendersHint,
-                        hintStyle: tt.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: DonySpacing.md,
+                    child: DonyReplayMask(
+                      child: TextField(
+                        controller: descriptionCtrl,
+                        maxLines: 4,
+                        maxLength: 500,
+                        scrollPadding: const EdgeInsets.only(bottom: 120),
+                        buildCounter:
+                            (
+                              _, {
+                              required currentLength,
+                              required isFocused,
+                              maxLength,
+                            }) => null,
+                        style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                        decoration: InputDecoration(
+                          hintText: l.tripPublishNoteToSendersHint,
+                          hintStyle: tt.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: DonySpacing.md,
+                          ),
                         ),
                       ),
                     ),

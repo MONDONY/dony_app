@@ -405,36 +405,38 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                     ),
                   ),
                   const SizedBox(height: DonySpacing.md),
-                  TextField(
-                    controller: _codeCtrl,
-                    enabled: !isSubmitting,
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    // Chiffres seuls : un code collé avec une espace (« 123 456 »)
-                    // était tronqué à 6 caractères puis refusé par le serveur.
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    autofillHints: const [AutofillHints.oneTimeCode],
-                    textAlign: TextAlign.center,
-                    style: tt.displayMedium?.copyWith(letterSpacing: 10),
-                    decoration: InputDecoration(
-                      counterText: '',
-                      hintText: '------',
-                      hintStyle: tt.displayMedium?.copyWith(
-                        color: cs.outlineVariant,
-                        letterSpacing: 10,
-                      ),
-                      filled: true,
-                      fillColor: cs.surfaceContainerHighest,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                        borderSide: BorderSide(color: cs.outline),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                        borderSide: BorderSide(color: cs.primary, width: 2),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: DonySpacing.base,
+                  DonyReplayMask(
+                    child: TextField(
+                      controller: _codeCtrl,
+                      enabled: !isSubmitting,
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      // Chiffres seuls : un code collé avec une espace (« 123 456 »)
+                      // était tronqué à 6 caractères puis refusé par le serveur.
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      autofillHints: const [AutofillHints.oneTimeCode],
+                      textAlign: TextAlign.center,
+                      style: tt.displayMedium?.copyWith(letterSpacing: 10),
+                      decoration: InputDecoration(
+                        counterText: '',
+                        hintText: '------',
+                        hintStyle: tt.displayMedium?.copyWith(
+                          color: cs.outlineVariant,
+                          letterSpacing: 10,
+                        ),
+                        filled: true,
+                        fillColor: cs.surfaceContainerHighest,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                          borderSide: BorderSide(color: cs.outline),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                          borderSide: BorderSide(color: cs.primary, width: 2),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: DonySpacing.base,
+                        ),
                       ),
                     ),
                   ),

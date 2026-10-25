@@ -59,6 +59,7 @@ export 'package:dony/core/design/widgets/dony_pressable.dart';
 export 'package:dony/core/design/widgets/dony_price_tag.dart';
 export 'package:dony/core/design/widgets/dony_pulsing_dot.dart';
 export 'package:dony/core/design/widgets/dony_radio_group.dart';
+export 'package:dony/core/design/widgets/dony_replay_mask.dart';
 export 'package:dony/core/design/widgets/dony_search_field.dart';
 // Structural
 export 'package:dony/core/design/widgets/dony_section_header.dart';

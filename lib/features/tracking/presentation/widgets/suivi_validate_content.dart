@@ -238,28 +238,30 @@ class _ValidateNumberFieldState extends State<_ValidateNumberField> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
-                    child: TextField(
-                      key: const Key('suivi-validate-number-field'),
-                      controller: _controller,
-                      focusNode: widget.focusNode,
-                      textCapitalization: TextCapitalization.characters,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _submit(),
-                      // L'erreur d'un numéro précédent ne survit pas à la saisie.
-                      onChanged: (_) =>
-                          context.read<SuiviCubit>().clearNumberError(),
-                      style: tt.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontFeatures: _tabular,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: l.suiviNumberHint,
-                        filled: true,
-                        fillColor: cs.surface,
-                        border: border,
-                        enabledBorder: border,
-                        focusedBorder: border.copyWith(
-                          borderSide: BorderSide(color: cs.primary, width: 2),
+                    child: DonyReplayMask(
+                      child: TextField(
+                        key: const Key('suivi-validate-number-field'),
+                        controller: _controller,
+                        focusNode: widget.focusNode,
+                        textCapitalization: TextCapitalization.characters,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _submit(),
+                        // L'erreur d'un numéro précédent ne survit pas à la saisie.
+                        onChanged: (_) =>
+                            context.read<SuiviCubit>().clearNumberError(),
+                        style: tt.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontFeatures: _tabular,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: l.suiviNumberHint,
+                          filled: true,
+                          fillColor: cs.surface,
+                          border: border,
+                          enabledBorder: border,
+                          focusedBorder: border.copyWith(
+                            borderSide: BorderSide(color: cs.primary, width: 2),
+                          ),
                         ),
                       ),
                     ),

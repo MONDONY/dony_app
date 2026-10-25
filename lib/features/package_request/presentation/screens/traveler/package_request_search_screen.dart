@@ -87,24 +87,28 @@ class _SearchViewState extends State<_SearchView> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _depCtrl,
-                    decoration: InputDecoration(
-                      hintText: l.cityDepartureLabel,
-                      prefixIcon: const DonyEmoji.planeTakeoff(size: 18),
+                  child: DonyReplayMask(
+                    child: TextField(
+                      controller: _depCtrl,
+                      decoration: InputDecoration(
+                        hintText: l.cityDepartureLabel,
+                        prefixIcon: const DonyEmoji.planeTakeoff(size: 18),
+                      ),
+                      onSubmitted: (_) => _applyFilters(),
                     ),
-                    onSubmitted: (_) => _applyFilters(),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
-                  child: TextField(
-                    controller: _arrCtrl,
-                    decoration: InputDecoration(
-                      hintText: l.cityArrivalLabel,
-                      prefixIcon: const DonyEmoji.planeLanding(size: 18),
+                  child: DonyReplayMask(
+                    child: TextField(
+                      controller: _arrCtrl,
+                      decoration: InputDecoration(
+                        hintText: l.cityArrivalLabel,
+                        prefixIcon: const DonyEmoji.planeLanding(size: 18),
+                      ),
+                      onSubmitted: (_) => _applyFilters(),
                     ),
-                    onSubmitted: (_) => _applyFilters(),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.sm),

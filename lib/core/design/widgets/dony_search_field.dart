@@ -76,53 +76,55 @@ class _DonySearchFieldState extends State<DonySearchField> {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
 
-    return TextField(
-      controller: _controller,
-      autofocus: widget.autofocus,
-      enabled: widget.enabled,
-      onChanged: widget.onChanged,
-      onSubmitted: widget.onSubmitted,
-      textInputAction: TextInputAction.search,
-      // Toucher hors du champ ferme le clavier, comme DonyTextField
-      // (FLUTTER-A3). Sur iOS seule la touche « Rechercher » le fermait : un
-      // filtre sans résultat, qui ne défile pas, laissait le clavier ouvert
-      // sans issue (Sentry FLUTTER-CQ, écran Mes négociations).
-      onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
-      style: Theme.of(
-        context,
-      ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
-      decoration: InputDecoration(
-        hintText: widget.hint ?? l.dsSearchHint,
-        prefixIcon: Icon(
-          widget.prefixIcon,
-          size: 20,
-          color: cs.onSurfaceVariant,
-        ),
-        suffixIcon: _hasText
-            ? IconButton(
-                icon: const DonyIcon('x', size: 18),
-                color: cs.onSurfaceVariant,
-                onPressed: _clear,
-                tooltip: l.commonClear,
-              )
-            : null,
-        filled: true,
-        fillColor: cs.surfaceContainerHighest,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.sm + 2,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          borderSide: BorderSide(color: cs.primary, width: 1.5),
+    return DonyReplayMask(
+      child: TextField(
+        controller: _controller,
+        autofocus: widget.autofocus,
+        enabled: widget.enabled,
+        onChanged: widget.onChanged,
+        onSubmitted: widget.onSubmitted,
+        textInputAction: TextInputAction.search,
+        // Toucher hors du champ ferme le clavier, comme DonyTextField
+        // (FLUTTER-A3). Sur iOS seule la touche « Rechercher » le fermait : un
+        // filtre sans résultat, qui ne défile pas, laissait le clavier ouvert
+        // sans issue (Sentry FLUTTER-CQ, écran Mes négociations).
+        onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
+        decoration: InputDecoration(
+          hintText: widget.hint ?? l.dsSearchHint,
+          prefixIcon: Icon(
+            widget.prefixIcon,
+            size: 20,
+            color: cs.onSurfaceVariant,
+          ),
+          suffixIcon: _hasText
+              ? IconButton(
+                  icon: const DonyIcon('x', size: 18),
+                  color: cs.onSurfaceVariant,
+                  onPressed: _clear,
+                  tooltip: l.commonClear,
+                )
+              : null,
+          filled: true,
+          fillColor: cs.surfaceContainerHighest,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.sm + 2,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.full),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.full),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.full),
+            borderSide: BorderSide(color: cs.primary, width: 1.5),
+          ),
         ),
       ),
     );

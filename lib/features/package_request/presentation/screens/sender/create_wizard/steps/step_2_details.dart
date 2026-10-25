@@ -394,29 +394,31 @@ class _DescriptionInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return TextFormField(
-      key: const Key('description-input'),
-      controller: controller,
-      scrollPadding: kDonyKeyboardScrollPadding,
-      maxLines: 4,
-      maxLength: 500,
-      textCapitalization: TextCapitalization.sentences,
-      decoration: InputDecoration(
-        hintText: context.l10n.requestCreateDescriptionHint,
-        filled: true,
-        fillColor: cs.surface,
-        alignLabelWithHint: true,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.primary, width: 2),
+    return DonyReplayMask(
+      child: TextFormField(
+        key: const Key('description-input'),
+        controller: controller,
+        scrollPadding: kDonyKeyboardScrollPadding,
+        maxLines: 4,
+        maxLength: 500,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: InputDecoration(
+          hintText: context.l10n.requestCreateDescriptionHint,
+          filled: true,
+          fillColor: cs.surface,
+          alignLabelWithHint: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.md,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide(color: cs.outline),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide(color: cs.primary, width: 2),
+          ),
         ),
       ),
     );
@@ -449,49 +451,51 @@ class _WeightInput extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    return TextFormField(
-      controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
-      scrollPadding: kDonyKeyboardScrollPadding,
-      style: tt.headlineMedium?.copyWith(
-        fontWeight: FontWeight.w800,
-        fontSize: 26,
-        color: cs.onSurface,
-      ),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: cs.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md + 4,
-        ),
-        suffixText: 'kg',
-        suffixStyle: tt.titleSmall?.copyWith(
+    return DonyReplayMask(
+      child: TextFormField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
+        scrollPadding: kDonyKeyboardScrollPadding,
+        style: tt.headlineMedium?.copyWith(
           fontWeight: FontWeight.w800,
-          color: cs.onSurfaceVariant,
+          fontSize: 26,
+          color: cs.onSurface,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: cs.surface,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.md + 4,
+          ),
+          suffixText: 'kg',
+          suffixStyle: tt.titleSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: cs.onSurfaceVariant,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide(color: cs.outline),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide(color: cs.primary, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: const BorderSide(color: DonyColors.error, width: 1.5),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: const BorderSide(color: DonyColors.error, width: 1.5),
-        ),
+        validator: (v) {
+          final d = double.tryParse(v?.replaceAll(',', '.') ?? '');
+          if (d == null) return context.l10n.requestCreateWeightInvalid;
+          if (!PackageRequestLimits.isWeightValid(d)) {
+            return weightRangeLabel(context.l10n);
+          }
+          return null;
+        },
       ),
-      validator: (v) {
-        final d = double.tryParse(v?.replaceAll(',', '.') ?? '');
-        if (d == null) return context.l10n.requestCreateWeightInvalid;
-        if (!PackageRequestLimits.isWeightValid(d)) {
-          return weightRangeLabel(context.l10n);
-        }
-        return null;
-      },
     );
   }
 }

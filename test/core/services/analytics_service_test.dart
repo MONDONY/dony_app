@@ -122,6 +122,43 @@ void main() {
     });
   });
 
+  group('consentChanges (replay : pause sur écran sensible)', () {
+    test('émet après un accord', () async {
+      var emitted = 0;
+      final sub = service.consentChanges.listen((_) => emitted++);
+      addTearDown(sub.cancel);
+      await service.onConfigured();
+      await Future<void>.delayed(Duration.zero);
+      emitted = 0;
+      await service.setConsent(granted: true);
+      await Future<void>.delayed(Duration.zero);
+      expect(emitted, 1);
+    });
+
+    test('émet après un refus', () async {
+      var emitted = 0;
+      final sub = service.consentChanges.listen((_) => emitted++);
+      addTearDown(sub.cancel);
+      storedConsent = true;
+      await service.onConfigured();
+      await Future<void>.delayed(Duration.zero);
+      emitted = 0;
+      await service.setConsent(granted: false);
+      await Future<void>.delayed(Duration.zero);
+      expect(emitted, 1);
+    });
+
+    test('émet quand la configuration applique le consentement', () async {
+      var emitted = 0;
+      final sub = service.consentChanges.listen((_) => emitted++);
+      addTearDown(sub.cancel);
+      storedConsent = true;
+      await service.onConfigured();
+      await Future<void>.delayed(Duration.zero);
+      expect(emitted, 1);
+    });
+  });
+
   group('setConsent', () {
     test('stores the value', () async {
       await service.setConsent(granted: true);

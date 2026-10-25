@@ -703,33 +703,35 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
               Expanded(
                 child: Semantics(
                   label: l.walletTopupAmountLabel,
-                  child: TextField(
-                    key: const Key('wallet-topup-custom-amount-field'),
-                    controller: _customController,
-                    focusNode: _customFocus,
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: currency.minorUnit > 0,
-                    ),
-                    textInputAction: TextInputAction.done,
-                    inputFormatters: [_customAmountFormatter(currency)],
-                    onChanged: _onCustomAmountChanged,
-                    style: tt.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                    cursorColor: cs.primary,
-                    decoration: InputDecoration(
-                      hintText: '0',
-                      hintStyle: tt.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+                  child: DonyReplayMask(
+                    child: TextField(
+                      key: const Key('wallet-topup-custom-amount-field'),
+                      controller: _customController,
+                      focusNode: _customFocus,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: currency.minorUnit > 0,
                       ),
-                      filled: false,
-                      isCollapsed: true,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
+                      textInputAction: TextInputAction.done,
+                      inputFormatters: [_customAmountFormatter(currency)],
+                      onChanged: _onCustomAmountChanged,
+                      style: tt.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                      cursorColor: cs.primary,
+                      decoration: InputDecoration(
+                        hintText: '0',
+                        hintStyle: tt.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+                        ),
+                        filled: false,
+                        isCollapsed: true,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
                     ),
                   ),
                 ),

@@ -64,15 +64,17 @@ class _GpProSignupSectionState extends State<GpProSignupSection> {
               onChanged: cubit.selectFrequency,
             ),
             const SizedBox(height: DonySpacing.base),
-            TextField(
-              key: const Key('gp-pro-signup-name'),
-              controller: _name,
-              maxLength: GpProForm.maxCommercialName,
-              textCapitalization: TextCapitalization.words,
-              textInputAction: TextInputAction.done,
-              onChanged: cubit.setCommercialName,
-              decoration: InputDecoration(
-                labelText: l.gpProCommercialNameLabel,
+            DonyReplayMask(
+              child: TextField(
+                key: const Key('gp-pro-signup-name'),
+                controller: _name,
+                maxLength: GpProForm.maxCommercialName,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.done,
+                onChanged: cubit.setCommercialName,
+                decoration: InputDecoration(
+                  labelText: l.gpProCommercialNameLabel,
+                ),
               ),
             ),
             Text(

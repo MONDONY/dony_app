@@ -572,57 +572,64 @@ class _MessagesHeader extends StatelessWidget {
               horizontal: DonySpacing.lg,
               vertical: DonySpacing.sm,
             ),
-            child: TextField(
-              controller: searchController,
-              onChanged: (q) => context.read<ConversationListBloc>().add(
-                ConversationFilterChanged(filter: activeFilter, searchQuery: q),
-              ),
-              textInputAction: TextInputAction.search,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-              decoration: InputDecoration(
-                hintText: l.conversationListSearchHint,
-                hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                prefixIcon: DonyIcon(
-                  'search',
-                  size: 18,
-                  color: cs.onSurfaceVariant,
+            child: DonyReplayMask(
+              child: TextField(
+                controller: searchController,
+                onChanged: (q) => context.read<ConversationListBloc>().add(
+                  ConversationFilterChanged(
+                    filter: activeFilter,
+                    searchQuery: q,
+                  ),
                 ),
-                suffixIcon: isSearching
-                    ? IconButton(
-                        icon: DonyIcon(
-                          'x',
-                          size: 16,
-                          color: cs.onSurfaceVariant,
-                        ),
-                        onPressed: () {
-                          searchController.clear();
-                          context.read<ConversationListBloc>().add(
-                            ConversationFilterChanged(
-                              filter: activeFilter,
-                              searchQuery: '',
-                            ),
-                          );
-                        },
-                        tooltip: l.commonClear,
-                      )
-                    : null,
-                filled: true,
-                fillColor: cs.surfaceContainerHighest,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.md,
-                  vertical: 10,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  borderSide: BorderSide(color: cs.primary, width: 1.5),
+                textInputAction: TextInputAction.search,
+                style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                decoration: InputDecoration(
+                  hintText: l.conversationListSearchHint,
+                  hintStyle: tt.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                  prefixIcon: DonyIcon(
+                    'search',
+                    size: 18,
+                    color: cs.onSurfaceVariant,
+                  ),
+                  suffixIcon: isSearching
+                      ? IconButton(
+                          icon: DonyIcon(
+                            'x',
+                            size: 16,
+                            color: cs.onSurfaceVariant,
+                          ),
+                          onPressed: () {
+                            searchController.clear();
+                            context.read<ConversationListBloc>().add(
+                              ConversationFilterChanged(
+                                filter: activeFilter,
+                                searchQuery: '',
+                              ),
+                            );
+                          },
+                          tooltip: l.commonClear,
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: cs.surfaceContainerHighest,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.md,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    borderSide: BorderSide(color: cs.primary, width: 1.5),
+                  ),
                 ),
               ),
             ),

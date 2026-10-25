@@ -61,12 +61,14 @@ class _GpProFormState extends State<GpProForm> {
           ),
         ),
         const SizedBox(height: DonySpacing.lg),
-        TextField(
-          controller: _name,
-          maxLength: GpProForm.maxCommercialName,
-          textCapitalization: TextCapitalization.words,
-          textInputAction: TextInputAction.done,
-          decoration: InputDecoration(labelText: l.gpProCommercialNameLabel),
+        DonyReplayMask(
+          child: TextField(
+            controller: _name,
+            maxLength: GpProForm.maxCommercialName,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(labelText: l.gpProCommercialNameLabel),
+          ),
         ),
         const SizedBox(height: DonySpacing.base),
         const GpProPiecesSection(),
