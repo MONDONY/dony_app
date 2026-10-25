@@ -37,7 +37,6 @@ BidModel _bid(List<BidAmendment> amendments) => BidModel(
   announcementId: 'ann-1',
   senderId: 'sender-1',
   status: 'ACCEPTED',
-  paymentMethod: BidPaymentMethod.stripe,
   amendments: amendments,
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
