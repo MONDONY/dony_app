@@ -1841,7 +1841,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authConsentBody =>
-      'To improve Yadony, we\'d like to measure how the app is used. These statistics are linked to your account, never to your name, number or email. It\'s optional.';
+      'To improve Yadony, we\'d like to measure how the app is used and record the screen in an anonymised way: texts and images are hidden. These statistics are linked to your account, never to your name, number or email. It\'s optional.';
 
   @override
   String get authConsentFootnote =>
@@ -1852,7 +1852,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authConsentPointGestures =>
-      'Taps and swipes, to spot what gets in the way';
+      'Screen recording (texts and images hidden) and taps, to spot what gets in the way';
 
   @override
   String get authConsentPointNeverPersonal =>
