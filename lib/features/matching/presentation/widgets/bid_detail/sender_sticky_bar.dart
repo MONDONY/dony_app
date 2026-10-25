@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_pay_button.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/cancel_before_payment_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
@@ -75,6 +76,10 @@ class SenderStickyBar extends StatelessWidget {
     // Supplément de prix à payer (carte, mobile money) ou à accepter
     // (espèces) : « Payer » ou « Accepter » prend la barre.
     if (SupplementPayButton.canPay(bid)) return true;
+
+    // Modification de colis acceptée par le voyageur, à payer en mobile
+    // money : « Payer » prend la barre.
+    if (AmendmentPayButton.canPay(bid)) return true;
 
     final status = bid.status;
 
@@ -170,6 +175,16 @@ class SenderStickyBar extends StatelessWidget {
     if (SupplementPayButton.canPay(bid)) {
       return SupplementPayButton(
         key: ValueKey('supplement-pay-${bid.supplement!.id}'),
+        bid: bid,
+      );
+    }
+
+    // 1.3 Modification de colis acceptée, à payer en mobile money : même
+    //     priorité que le supplément (le voyageur attend le dépôt).
+    final amendmentToPay = AmendmentPayButton.payable(bid);
+    if (amendmentToPay != null) {
+      return AmendmentPayButton(
+        key: ValueKey('amendment-pay-${amendmentToPay.id}'),
         bid: bid,
       );
     }

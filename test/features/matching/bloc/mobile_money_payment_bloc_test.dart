@@ -2148,6 +2148,238 @@ void main() {
     );
   });
 
+  group('portée modification de colis (A8)', () {
+    const amendmentId = '880e8400-e29b-41d4-a716-446655440333';
+    const amendmentScope = MobileMoneyScope.amendment(
+      bidId: bidId,
+      amendmentId: amendmentId,
+    );
+    const pending = MobileMoneyPaymentStatus(
+      subjectId: bidId,
+      subjectStatus: 'ACCEPTED',
+      paymentStatus: 'PENDING',
+      amount: 1500,
+    );
+    const failedDeposit = MobileMoneyDeposit(
+      id: 'deposit-a',
+      status: MobileMoneyDepositStatus.failed,
+      providerLabel: 'Orange Money',
+      failureCode: 'PAYER_NOT_FOUND',
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'paymentSucceeded_contextBidAmendment : payment_succeeded une fois, '
+      'method mobile_money, context bid_amendment, sans PII',
+      build: () {
+        when(
+          () => repository.getStatus(amendmentScope),
+        ).thenAnswer((_) async => escrowedStatus);
+        return bloc();
+      },
+      seed: () => const MobileMoneyPaymentAwaitingConfirmation(pending),
+      act: (b) async {
+        b.add(const MobileMoneyStatusPolled(scope: amendmentScope));
+        await Future<void>.delayed(Duration.zero);
+        b.add(const MobileMoneyStatusPolled(scope: amendmentScope));
+      },
+      expect: () => [isA<MobileMoneyPaymentEscrowed>()],
+      verify: (_) {
+        final calls = verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.paymentSucceeded,
+            properties: captureAny(named: 'properties'),
+          ),
+        ).captured;
+        expect(calls, hasLength(1));
+        final p = calls.single as Map<String, Object?>;
+        expect(p['method'], 'mobile_money');
+        expect(p['context'], 'bid_amendment');
+        expect(p['currency'], 'XOF');
+        expect(p.containsKey('amount_bracket'), isTrue);
+        expect(p.keys, isNot(contains('phone')));
+        expect(p.keys, isNot(contains('msisdn')));
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyConfirmed,
+            properties: {'scope': 'bid_amendment'},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'paymentFailed_contextBidAmendment : dépôt refusé, payment_failed une '
+      'fois, context bid_amendment',
+      build: () {
+        when(() => repository.getStatus(amendmentScope)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            subjectStatus: 'ACCEPTED',
+            paymentStatus: 'PENDING',
+            amount: 1500,
+            deposit: failedDeposit,
+          ),
+        );
+        return bloc();
+      },
+      seed: () => const MobileMoneyPaymentAwaitingConfirmation(pending),
+      act: (b) async {
+        b.add(const MobileMoneyStatusPolled(scope: amendmentScope));
+        await Future<void>.delayed(Duration.zero);
+        b.add(const MobileMoneyStatusPolled(scope: amendmentScope));
+      },
+      expect: () => [isA<MobileMoneyPaymentDepositFailed>()],
+      verify: (_) {
+        final calls = verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.paymentFailed,
+            properties: captureAny(named: 'properties'),
+          ),
+        ).captured;
+        expect(calls, hasLength(1));
+        final p = calls.single as Map<String, Object?>;
+        expect(p['method'], 'mobile_money');
+        expect(p['context'], 'bid_amendment');
+        expect(p['reason'], 'declined');
+        expect(p['error_code'], 'PAYER_NOT_FOUND');
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'initiate_amendmentScope_analyticsScopeBidAmendment',
+      build: () {
+        when(
+          () => repository.initiate(
+            amendmentScope,
+            phoneNumber: null,
+            provider: 'ORANGE_CIV',
+          ),
+        ).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            paymentStatus: 'PENDING',
+            amount: 1500,
+            deposit: liveDeposit,
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(
+        const MobileMoneyPaymentInitiateRequested(
+          scope: amendmentScope,
+          provider: 'ORANGE_CIV',
+        ),
+      ),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
+      ],
+      verify: (_) {
+        final invocation =
+            verify(
+                  () => analytics.logEvent(
+                    AnalyticsEvents.mobileMoneyInitiated,
+                    properties: captureAny(named: 'properties'),
+                  ),
+                ).captured.single
+                as Map<String, Object?>;
+        expect(invocation['scope'], 'bid_amendment');
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'opened_noDeposit_amendment_readsAcceptedOperatorsOnScope',
+      build: () {
+        when(
+          () => repository.getStatus(amendmentScope),
+        ).thenAnswer((_) async => pending);
+        when(
+          () => repository.acceptedOperators(amendmentScope),
+        ).thenAnswer((_) async => accepted);
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: amendmentScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        const MobileMoneyPaymentChoosePayer(
+          status: pending,
+          accepted: accepted,
+        ),
+      ],
+      verify: (_) => verifyNoInitiate(),
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'opened_cancelledAmendment_isFinalExpired : ni choix du payeur ni '
+      'dépôt relancé',
+      build: () {
+        when(() => repository.getStatus(amendmentScope)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            subjectStatus: 'ACCEPTED',
+            paymentStatus: 'CANCELLED',
+            amount: 1500,
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: amendmentScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentExpired>(),
+      ],
+      verify: (_) {
+        verifyNoInitiate();
+        verifyNever(() => repository.acceptedOperators(any()));
+      },
+    );
+
+    for (final refunding in ['REFUND_PENDING', 'REFUNDED']) {
+      blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+        'opened_amendmentRefund_$refunding : fenêtre close, jamais un '
+        'choix du payeur',
+        build: () {
+          when(() => repository.getStatus(amendmentScope)).thenAnswer(
+            (_) async => MobileMoneyPaymentStatus(
+              subjectId: bidId,
+              paymentStatus: refunding,
+              deadlineAt: DateTime.now().add(const Duration(hours: 1)),
+              amount: 1500,
+            ),
+          );
+          return bloc();
+        },
+        act: (b) =>
+            b.add(const MobileMoneyPaymentOpened(scope: amendmentScope)),
+        expect: () => [
+          isA<MobileMoneyPaymentLoading>(),
+          isA<MobileMoneyPaymentExpired>(),
+        ],
+      );
+    }
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'opened_amendmentUnknownStatus_showsInProgress : statut inconnu, '
+      'échéance à venir',
+      build: () {
+        when(() => repository.getStatus(amendmentScope)).thenAnswer(
+          (_) async => MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            paymentStatus: 'SOMETHING_NEW',
+            deadlineAt: DateTime.now().add(const Duration(hours: 1)),
+            amount: 1500,
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: amendmentScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
+      ],
+    );
+  });
+
   group(
     'refus immédiat de l\'opérateur à l\'initiation (422 deposit-rejected)',
     () {

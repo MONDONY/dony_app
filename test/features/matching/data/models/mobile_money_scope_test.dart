@@ -38,6 +38,50 @@ void main() {
     expect(s.cancelledIsFinal, isTrue);
     expect(s.analyticsName, 'bid_supplement');
   });
+  test(
+    'amendmentScope_paths : chemins de la modification, repli sur le colis',
+    () {
+      const amendmentId = '33333333-3333-3333-3333-333333333333';
+      const s = MobileMoneyScope.amendment(bidId: id, amendmentId: amendmentId);
+      const base = '/bids/$id/amendments/$amendmentId';
+      expect(s, isA<AmendmentMobileMoneyScope>());
+      expect((s as AmendmentMobileMoneyScope).bidId, id);
+      expect(s.amendmentId, amendmentId);
+      expect(s.statusPath, '$base/mobile-money/status');
+      expect(s.initiatePath, '$base/mobile-money/initiate');
+      expect(s.awaitingRoute, '$base/mobile-money/awaiting');
+      // Les opérateurs acceptés sont ceux du colis, comme pour le supplément.
+      expect(
+        s.acceptedOperatorsPath,
+        '/bids/$id/mobile-money/accepted-operators',
+      );
+      expect(s.fallbackRoute, '/bids/$id');
+      expect(s.cancelledIsFinal, isTrue);
+      expect(s.analyticsName, 'bid_amendment');
+    },
+  );
+  test('amendmentScope_equality : colis et modification, distincte du bid', () {
+    const amendmentId = '33333333-3333-3333-3333-333333333333';
+    expect(
+      const MobileMoneyScope.amendment(bidId: id, amendmentId: amendmentId),
+      const MobileMoneyScope.amendment(bidId: id, amendmentId: amendmentId),
+    );
+    expect(
+      const MobileMoneyScope.amendment(bidId: id, amendmentId: amendmentId),
+      isNot(
+        const MobileMoneyScope.amendment(
+          bidId: supplementId,
+          amendmentId: amendmentId,
+        ),
+      ),
+    );
+    expect(
+      const MobileMoneyScope.amendment(bidId: id, amendmentId: amendmentId),
+      isNot(
+        const MobileMoneyScope.supplement(bidId: id, supplementId: amendmentId),
+      ),
+    );
+  });
   test('scope_acceptedOperatorsPath_perScope', () {
     expect(
       const MobileMoneyScope.bid(id).acceptedOperatorsPath,

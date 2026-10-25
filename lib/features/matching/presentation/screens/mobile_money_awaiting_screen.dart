@@ -38,7 +38,8 @@ import 'package:go_router/go_router.dart';
 /// `MM_PAYMENT_PENDING` ou le lien profond
 /// `yadony://bids/{uuid}/mobile-money/awaiting` (ou
 /// `yadony://negotiations/{uuid}/mobile-money/awaiting`, ou
-/// `yadony://bids/{uuid}/supplements/{uuid}/mobile-money/awaiting`).
+/// `yadony://bids/{uuid}/supplements/{uuid}/mobile-money/awaiting`,
+/// `yadony://bids/{uuid}/amendments/{uuid}/mobile-money/awaiting`).
 ///
 /// L'ouverture (`MobileMoneyPaymentOpened`) reprend un dépôt déjà en cours, ou
 /// affiche l'étape « Qui paie ? » sur le composant partagé « compte qui paie »
@@ -305,11 +306,12 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
           leadingIcon: Icons.close_rounded,
           onBack: () => _close(context, paid: false),
         ),
-        title: Text(
-          widget.scope is SupplementMobileMoneyScope
-              ? l.mobileMoneyPaySupplementTitle
-              : l.mobileMoneyPayParcelTitle,
-        ),
+        title: Text(switch (widget.scope) {
+          SupplementMobileMoneyScope() => l.mobileMoneyPaySupplementTitle,
+          AmendmentMobileMoneyScope() => l.mobileMoneyPayAmendmentTitle,
+          BidMobileMoneyScope() ||
+          NegotiationMobileMoneyScope() => l.mobileMoneyPayParcelTitle,
+        }),
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -336,9 +338,12 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
                 unawaited(context.read<PayerAccountCubit>().rememberSuccess());
                 DonySnackbar.show(
                   context,
-                  message: widget.scope is SupplementMobileMoneyScope
-                      ? l.supplementPaidSnackbar
-                      : l.mobileMoneyPaymentConfirmedSecured,
+                  message: switch (widget.scope) {
+                    SupplementMobileMoneyScope() => l.supplementPaidSnackbar,
+                    AmendmentMobileMoneyScope() => l.amendmentPaidSnackbar,
+                    BidMobileMoneyScope() || NegotiationMobileMoneyScope() =>
+                      l.mobileMoneyPaymentConfirmedSecured,
+                  },
                   type: DonySnackbarType.success,
                 );
                 _close(context, paid: true);
@@ -875,6 +880,11 @@ class _ExpiredBody extends StatelessWidget {
     SupplementMobileMoneyScope() when status.isRefundInProgress =>
       l.supplementSenderRefundPending,
     SupplementMobileMoneyScope() => l.mobileMoneyExpiredSupplement,
+    AmendmentMobileMoneyScope() when status.isRefunded =>
+      l.amendmentSenderRefundedStatus,
+    AmendmentMobileMoneyScope() when status.isRefundInProgress =>
+      l.amendmentSenderRefundPendingStatus,
+    AmendmentMobileMoneyScope() => l.mobileMoneyExpiredAmendment,
   };
 
   @override

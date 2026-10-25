@@ -8,8 +8,9 @@ final RegExp _uuidPattern = RegExp(
 );
 
 /// Résout `yadony://bids/{uuid}/mobile-money/awaiting`,
-/// `yadony://negotiations/{uuid}/mobile-money/awaiting` et
-/// `yadony://bids/{uuid}/supplements/{uuid}/mobile-money/awaiting` (retour
+/// `yadony://negotiations/{uuid}/mobile-money/awaiting`,
+/// `yadony://bids/{uuid}/supplements/{uuid}/mobile-money/awaiting` et
+/// `yadony://bids/{uuid}/amendments/{uuid}/mobile-money/awaiting` (retour
 /// Wave ou notification) vers l'écran d'attente de la bonne portée.
 ///
 /// Renvoie la route applicative correspondante, ou `null` si l'URI n'a pas
@@ -27,6 +28,14 @@ String? resolveMobileMoneyAwaitingDeepLink(Uri uri) {
       _uuidPattern.hasMatch(rest[1]) &&
       _isAwaitingTail(rest.sublist(2))) {
     return '/bids/${segments[0]}/supplements/${rest[1]}/mobile-money/awaiting';
+  }
+  // Modification d'un colis accepté : même forme, seulement sous `bids`.
+  if (uri.host == 'bids' &&
+      rest.length == 4 &&
+      rest[0] == 'amendments' &&
+      _uuidPattern.hasMatch(rest[1]) &&
+      _isAwaitingTail(rest.sublist(2))) {
+    return '/bids/${segments[0]}/amendments/${rest[1]}/mobile-money/awaiting';
   }
   if (!_isAwaitingTail(rest)) return null;
   return '/${uri.host}/${segments[0]}/mobile-money/awaiting';

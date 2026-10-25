@@ -86,6 +86,10 @@ void main() {
     bidId: bidId,
     supplementId: 'sup-1',
   );
+  const amendmentScope = MobileMoneyScope.amendment(
+    bidId: bidId,
+    amendmentId: 'amd-1',
+  );
 
   final countdownFinder = find.byWidgetPredicate(
     (w) =>
@@ -364,6 +368,10 @@ void main() {
           path: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
           builder: (_, _) => page(),
         ),
+        GoRoute(
+          path: '/bids/:bidId/amendments/:amendmentId/mobile-money/awaiting',
+          builder: (_, _) => page(),
+        ),
       ],
     );
     await tester.pumpWidget(
@@ -412,6 +420,7 @@ void main() {
       (const MobileMoneyScope.bid(bidId), 'bid'),
       (const MobileMoneyScope.negotiation(threadId), 'negotiation'),
       (supplementScope, 'bid_supplement'),
+      (amendmentScope, 'bid_amendment'),
     ]) {
       testWidgets('analytics_awaitingEvent_carriesScope_$name', (tester) async {
         stub(
@@ -437,6 +446,27 @@ void main() {
 
       expect(find.text('Payer le supplément'), findsOneWidget);
       expect(find.text('Payer le colis'), findsNothing);
+    });
+
+    testWidgets('awaitingScreen_amendmentTitle', (tester) async {
+      stub(const MobileMoneyPaymentChoosePayer(status: noDepositStatus));
+
+      await pumpScreen(tester, scope: amendmentScope);
+
+      expect(find.text('Payer la modification'), findsOneWidget);
+      expect(find.text('Payer le colis'), findsNothing);
+      expect(find.text('Payer le supplément'), findsNothing);
+    });
+
+    testWidgets('awaitingScreen_amendmentTitle_translatedInEnglish', (
+      tester,
+    ) async {
+      useEnglish();
+      stub(const MobileMoneyPaymentChoosePayer(status: noDepositStatus));
+
+      await pumpScreen(tester, scope: amendmentScope);
+
+      expect(find.text('Pay for the parcel edit'), findsOneWidget);
     });
 
     testWidgets('parcel_titleIsPayParcel', (tester) async {
@@ -1616,6 +1646,76 @@ void main() {
       });
     }
 
+    testWidgets('expired_amendment_requestClosed', (tester) async {
+      stub(
+        const MobileMoneyPaymentExpired(
+          MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            subjectStatus: 'ACCEPTED',
+            paymentStatus: 'CANCELLED',
+            amount: 1500,
+          ),
+        ),
+      );
+
+      await pumpScreen(tester, scope: amendmentScope);
+
+      expect(
+        find.text(
+          'Cette modification n\'est plus à payer : la demande a expiré ou a '
+          'été close. Le colis reste tel qu\'il était.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('refaites une offre'), findsNothing);
+      expect(find.textContaining('supplément'), findsNothing);
+    });
+
+    for (final (status, text) in [
+      ('REFUND_PENDING', 'Remboursement de la modification en cours'),
+      ('REFUNDED', 'Modification remboursée'),
+    ]) {
+      testWidgets('expired_amendment_refund_$status', (tester) async {
+        stub(
+          MobileMoneyPaymentExpired(
+            MobileMoneyPaymentStatus(
+              subjectId: bidId,
+              paymentStatus: status,
+              amount: 1500,
+            ),
+          ),
+        );
+
+        await pumpScreen(tester, scope: amendmentScope);
+
+        expect(find.text(text), findsOneWidget);
+        expect(find.textContaining('plus à payer'), findsNothing);
+      });
+    }
+
+    testWidgets('expired_amendment_translatedInEnglish', (tester) async {
+      useEnglish();
+      stub(
+        const MobileMoneyPaymentExpired(
+          MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            paymentStatus: 'CANCELLED',
+            amount: 1500,
+          ),
+        ),
+      );
+
+      await pumpScreen(tester, scope: amendmentScope);
+
+      expect(
+        find.text(
+          'This edit can no longer be paid: the request expired or was '
+          'closed. The parcel stays as it was.',
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('expired_bid_translatedInEnglish', (tester) async {
       useEnglish();
       stub(const MobileMoneyPaymentExpired(expiredStatus));
@@ -1680,6 +1780,30 @@ void main() {
         findsNothing,
       );
       expect(await poppedResult, isTrue);
+    });
+
+    testWidgets('escrowed_amendment_paidSnackbar', (tester) async {
+      stub(const MobileMoneyPaymentEscrowed(escrowedStatus));
+
+      await pumpScreen(tester, scope: amendmentScope);
+
+      expect(find.text('Modification payée'), findsOneWidget);
+      expect(find.text('Supplément payé'), findsNothing);
+      expect(
+        find.text('Paiement confirmé, votre envoi est sécurisé'),
+        findsNothing,
+      );
+      expect(await poppedResult, isTrue);
+    });
+
+    testWidgets('escrowed_deepLink_amendment_parcelDetail', (tester) async {
+      stub(const MobileMoneyPaymentEscrowed(escrowedStatus));
+
+      await pumpDeepLinked(tester, scope: amendmentScope);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('detail $bidId'), findsOneWidget);
     });
 
     testWidgets('escrowed_deepLink_parcelDetail_noNothingToPop', (

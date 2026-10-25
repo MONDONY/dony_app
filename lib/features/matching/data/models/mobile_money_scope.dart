@@ -1,14 +1,15 @@
 import 'package:equatable/equatable.dart';
 
 /// Ce que paie un dépôt mobile money : la demande d'un trajet (bid), le fil
-/// de négociation d'un colis, ou le supplément de prix demandé à la remise
-/// d'un colis. Les rails du back exposent le même contrat (`initiate` /
-/// `status`) sous des préfixes différents ; la portée choisit le préfixe, la
-/// route de l'écran d'attente et l'écran de repli quand la pile est vide.
+/// de négociation d'un colis, le supplément de prix demandé à la remise d'un
+/// colis, ou la modification d'un colis accepté. Les rails du back exposent le
+/// même contrat (`initiate` / `status`) sous des préfixes différents ; la
+/// portée choisit le préfixe, la route de l'écran d'attente et l'écran de
+/// repli quand la pile est vide.
 sealed class MobileMoneyScope extends Equatable {
   const MobileMoneyScope(this.id);
 
-  /// UUID du bid, du fil ou du supplément.
+  /// UUID du bid, du fil, du supplément ou de la modification.
   final String id;
 
   const factory MobileMoneyScope.bid(String bidId) = BidMobileMoneyScope;
@@ -18,6 +19,10 @@ sealed class MobileMoneyScope extends Equatable {
     required String bidId,
     required String supplementId,
   }) = SupplementMobileMoneyScope;
+  const factory MobileMoneyScope.amendment({
+    required String bidId,
+    required String amendmentId,
+  }) = AmendmentMobileMoneyScope;
 
   /// Préfixe REST et GoRouter de la portée (`/bids/{id}`, …).
   String get _basePath;
@@ -44,7 +49,7 @@ sealed class MobileMoneyScope extends Equatable {
   /// « à payer ».
   bool get cancelledIsFinal => false;
 
-  /// Libellé analytics (`bid` / `negotiation` / `bid_supplement`).
+  /// Libellé analytics (`bid` / `negotiation` / `bid_supplement` / `bid_amendment`).
   String get analyticsName;
 
   @override
@@ -93,6 +98,39 @@ final class SupplementMobileMoneyScope extends MobileMoneyScope {
   bool get cancelledIsFinal => true;
   @override
   String get analyticsName => 'bid_supplement';
+
+  @override
+  List<Object?> get props => [runtimeType, bidId, id];
+}
+
+/// Modification d'un colis accepté payée en mobile money. [id] est celui de
+/// la modification. Calque du supplément : mêmes routes de statut et
+/// d'initiation sous `/bids/{bidId}/amendments/{id}`, opérateurs acceptés du
+/// colis, détail du colis comme repli, `CANCELLED` définitif.
+final class AmendmentMobileMoneyScope extends MobileMoneyScope {
+  const AmendmentMobileMoneyScope({
+    required this.bidId,
+    required String amendmentId,
+  }) : super(amendmentId);
+
+  final String bidId;
+
+  String get amendmentId => id;
+
+  @override
+  String get _basePath => '/bids/$bidId/amendments/$id';
+
+  @override
+  String get acceptedOperatorsPath =>
+      '/bids/$bidId/mobile-money/accepted-operators';
+
+  /// Pas d'écran propre à la modification : le détail du colis.
+  @override
+  String get fallbackRoute => '/bids/$bidId';
+  @override
+  bool get cancelledIsFinal => true;
+  @override
+  String get analyticsName => 'bid_amendment';
 
   @override
   List<Object?> get props => [runtimeType, bidId, id];

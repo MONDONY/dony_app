@@ -75,4 +75,32 @@ void main() {
     expect(ordered[supplement].name, supplementPath);
     expect(supplement, lessThan(detail));
   });
+
+  test('écran d\'attente mobile money de la modification : nommé, et déclaré '
+      'avant /bids/:bidId', () {
+    const amendmentPath =
+        '/bids/:bidId/amendments/:amendmentId/mobile-money/awaiting';
+    final ordered = <GoRoute>[];
+    void flatten(List<RouteBase> routes) {
+      for (final route in routes) {
+        if (route is GoRoute) {
+          ordered.add(route);
+          flatten(route.routes);
+        } else if (route is StatefulShellRoute) {
+          for (final branch in route.branches) {
+            flatten(branch.routes);
+          }
+        } else if (route is ShellRoute) {
+          flatten(route.routes);
+        }
+      }
+    }
+
+    flatten(appRouter.configuration.routes);
+    final amendment = ordered.indexWhere((r) => r.path == amendmentPath);
+    final detail = ordered.indexWhere((r) => r.path == '/bids/:bidId');
+    expect(amendment, isNot(-1));
+    expect(ordered[amendment].name, amendmentPath);
+    expect(amendment, lessThan(detail));
+  });
 }

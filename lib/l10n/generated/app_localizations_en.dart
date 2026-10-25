@@ -21228,6 +21228,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mobileMoneyPaySupplementTitle => 'Pay the extra charge';
 
   @override
+  String get mobileMoneyPayAmendmentTitle => 'Pay for the parcel edit';
+
+  @override
+  String get mobileMoneyExpiredAmendment =>
+      'This edit can no longer be paid: the request expired or was closed. The parcel stays as it was.';
+
+  @override
+  String get amendmentPaidSnackbar => 'Edit paid';
+
+  @override
+  String amendmentPay(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
   String get mobileMoneyOverdueBody =>
       'If you still approve within the next few minutes, your payment will go through.';
 
