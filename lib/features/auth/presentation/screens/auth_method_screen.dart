@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AuthMethodScreen extends StatelessWidget {
   const AuthMethodScreen({super.key});
@@ -535,8 +536,7 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
           },
         ),
         if (widget.showAppleButton) ...[
-          _SocialCta(
-            iconAsset: 'apple',
+          _AppleCta(
             label: context.l10n.authMethodContinueWithApple,
             height: d.buttonHeight,
             isLoading: active == _PendingAuth.apple,
@@ -730,13 +730,11 @@ class _SocialCta extends StatelessWidget {
     required this.label,
     required this.onTap,
     required this.height,
-    this.isLoading = false,
   });
   final String iconAsset;
   final String label;
   final VoidCallback? onTap;
   final double height;
-  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -744,12 +742,8 @@ class _SocialCta extends StatelessWidget {
     return SizedBox(
       height: height,
       child: OutlinedButton.icon(
-        // Désactivé mais pas grisé pendant son propre chargement : le
-        // spinner doit rester lisible.
-        onPressed: isLoading ? () {} : onTap,
-        icon: isLoading
-            ? const _CtaSpinner()
-            : DonyIcon(iconAsset, size: 20, color: cs.onSurface),
+        onPressed: onTap,
+        icon: DonyIcon(iconAsset, size: 20, color: cs.onSurface),
         label: Text(label),
         style: OutlinedButton.styleFrom(
           backgroundColor: cs.surface,
@@ -758,6 +752,67 @@ class _SocialCta extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.lg),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bouton officiel Sign in with Apple (logo et typographie fournis par le
+/// package, conformes aux Apple Design Resources — guideline 4).
+class _AppleCta extends StatelessWidget {
+  const _AppleCta({
+    required this.label,
+    required this.onTap,
+    required this.height,
+    this.isLoading = false,
+  });
+  final String label;
+  final VoidCallback? onTap;
+  final double height;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final radius = BorderRadius.circular(DonyRadius.lg);
+    final background = isDark ? Colors.white : Colors.black;
+    final button = SignInWithAppleButton(
+      text: label,
+      height: height,
+      borderRadius: radius,
+      style: isDark
+          ? SignInWithAppleButtonStyle.white
+          : SignInWithAppleButtonStyle.black,
+      onPressed: isLoading ? () {} : (onTap ?? () {}),
+    );
+    return Opacity(
+      opacity: onTap == null && !isLoading ? 0.5 : 1,
+      child: IgnorePointer(
+        ignoring: onTap == null && !isLoading,
+        child: Stack(
+          children: [
+            button,
+            if (isLoading)
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: background,
+                    borderRadius: radius,
+                  ),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: isDark ? Colors.black : Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
