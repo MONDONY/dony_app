@@ -68,6 +68,17 @@ void main() {
       AnalyticsEvents.bidSupplementCashAccepted,
       AnalyticsEvents.bidSupplementCommissionResumed,
       AnalyticsEvents.handoverBlockedSupplement,
+      AnalyticsEvents.bidAmendmentSheetOpened,
+      AnalyticsEvents.bidAmendmentRequested,
+      AnalyticsEvents.bidAmendmentRequestFailed,
+      AnalyticsEvents.bidAmendmentViewed,
+      AnalyticsEvents.bidAmendmentCancelled,
+      AnalyticsEvents.bidAmendmentAccepted,
+      AnalyticsEvents.bidAmendmentDeclined,
+      AnalyticsEvents.bidAmendmentNotBrought,
+      AnalyticsEvents.bidAmendmentActionFailed,
+      AnalyticsEvents.bidAmendmentPaymentStarted,
+      AnalyticsEvents.handoverBlockedAmendment,
       AnalyticsEvents.blocError,
     ];
     for (final e in events) {
@@ -78,6 +89,35 @@ void main() {
       events.toSet().length,
       events.length,
       reason: 'Duplicate event name',
+    );
+  });
+
+  test('noms exacts des événements de la modification d\'un colis', () {
+    expect(
+      AnalyticsEvents.bidAmendmentSheetOpened,
+      'bid_amendment_sheet_opened',
+    );
+    expect(AnalyticsEvents.bidAmendmentRequested, 'bid_amendment_requested');
+    expect(
+      AnalyticsEvents.bidAmendmentRequestFailed,
+      'bid_amendment_request_failed',
+    );
+    expect(AnalyticsEvents.bidAmendmentViewed, 'bid_amendment_viewed');
+    expect(AnalyticsEvents.bidAmendmentCancelled, 'bid_amendment_cancelled');
+    expect(AnalyticsEvents.bidAmendmentAccepted, 'bid_amendment_accepted');
+    expect(AnalyticsEvents.bidAmendmentDeclined, 'bid_amendment_declined');
+    expect(AnalyticsEvents.bidAmendmentNotBrought, 'bid_amendment_not_brought');
+    expect(
+      AnalyticsEvents.bidAmendmentActionFailed,
+      'bid_amendment_action_failed',
+    );
+    expect(
+      AnalyticsEvents.bidAmendmentPaymentStarted,
+      'bid_amendment_payment_started',
+    );
+    expect(
+      AnalyticsEvents.handoverBlockedAmendment,
+      'handover_blocked_amendment',
     );
   });
 }

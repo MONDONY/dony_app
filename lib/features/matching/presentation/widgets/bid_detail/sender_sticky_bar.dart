@@ -122,7 +122,11 @@ class SenderStickyBar extends StatelessWidget {
         ? Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              EscrowBadge(payment: existingPayment!, bidStatus: bid.status),
+              EscrowBadge(
+                payment: existingPayment!,
+                bidStatus: bid.status,
+                onlineAmount: bid.moneyBreakdown?.onlineAmount,
+              ),
               if (action != null) ...[
                 const SizedBox(height: DonySpacing.sm),
                 action,

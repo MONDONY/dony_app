@@ -1,6 +1,8 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/bid_amendment.dart';
+import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
@@ -315,6 +317,28 @@ class BidModel {
   /// Net du voyageur, supplément payé compris. Toujours nul côté expéditeur.
   final double? totalNetAmountWithSupplementEur;
 
+  /// Modifications acquises, plus la dernière non acquise si elle est récente
+  /// (encart « refusée / expirée »). Vide sans modification ou sur un back
+  /// antérieur : rien ne s'affiche.
+  @JsonKey(defaultValue: <BidAmendment>[])
+  final List<BidAmendment> amendments;
+
+  /// L'expéditeur peut modifier son colis maintenant (colis accepté dans la
+  /// fenêtre, aucune demande ni supplément ouvert, plafond non atteint, un
+  /// moyen de paiement proposable). Seule source de vérité de l'entrée
+  /// « Modifier mon colis » ; `false` côté voyageur et sur un back antérieur.
+  @JsonKey(defaultValue: false)
+  final bool amendmentAllowed;
+
+  /// Poids du colis avec les kilos des modifications acquises. Nul sur un back
+  /// antérieur : l'app garde [weightKg].
+  final double? totalWeightKg;
+
+  /// Argent du colis ventilé par le serveur, nul sans modification acquise ou
+  /// ouverte : les cartes Paiement et gain restent alors celles d'avant. L'app
+  /// l'affiche sans jamais l'additionner.
+  final BidMoneyBreakdown? moneyBreakdown;
+
   const BidModel({
     required this.id,
     required this.announcementId,
@@ -398,6 +422,10 @@ class BidModel {
     this.supplementRequestAllowed = false,
     this.totalSenderAmountWithSupplementEur,
     this.totalNetAmountWithSupplementEur,
+    this.amendments = const [],
+    this.amendmentAllowed = false,
+    this.totalWeightKg,
+    this.moneyBreakdown,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>

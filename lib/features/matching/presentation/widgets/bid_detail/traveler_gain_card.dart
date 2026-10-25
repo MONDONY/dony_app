@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/money_breakdown_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -48,6 +49,10 @@ class TravelerGainCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Colis modifié : le serveur additionne les transactions.
+    if (bid.moneyBreakdown != null) {
+      return MoneyBreakdownCard(bid: bid, isSender: false);
+    }
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;

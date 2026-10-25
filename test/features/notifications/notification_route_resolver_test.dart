@@ -66,6 +66,46 @@ void main() {
     }
   });
 
+  group('resolveNotificationRoute — modification de colis', () {
+    for (final type in [
+      'BID_AMENDMENT_REQUESTED',
+      'BID_AMENDMENT_REMINDER',
+      'BID_AMENDMENT_ACCEPTED',
+    ]) {
+      test(
+        '$type ouvre la fiche sur la carte (amendmentRequested_routesWithAction)',
+        () {
+          expect(
+            resolveNotificationRoute(type, {'bidId': bidId}),
+            '/bids/$bidId?action=amendment',
+          );
+        },
+      );
+    }
+
+    for (final type in [
+      'BID_AMENDMENT_DECLINED',
+      'BID_AMENDMENT_CANCELLED',
+      'BID_AMENDMENT_EXPIRED',
+      'BID_AMENDMENT_NOT_BROUGHT',
+      'BID_AMENDMENT_REFUNDED',
+    ]) {
+      test('$type ouvre la fiche du colis (amendmentDeclined_routesToBid)', () {
+        expect(
+          resolveNotificationRoute(type, {'bidId': bidId}),
+          '/bids/$bidId',
+        );
+      });
+    }
+
+    for (final type in ['BID_AMENDMENT_REQUESTED', 'BID_AMENDMENT_DECLINED']) {
+      test('$type sans UUID valide → null (amendment_invalidUuid_null)', () {
+        expect(resolveNotificationRoute(type, {}), isNull);
+        expect(resolveNotificationRoute(type, {'bidId': '../admin'}), isNull);
+      });
+    }
+  });
+
   group('resolveNotificationRoute — BID_EXPIRED', () {
     test('avec bidId → la demande', () {
       expect(

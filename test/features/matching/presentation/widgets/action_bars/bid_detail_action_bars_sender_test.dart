@@ -1,13 +1,19 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_request_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
+import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -24,6 +30,10 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
+class _MockAmendmentRepository extends Mock implements BidAmendmentRepository {}
+
+class _MockAnalytics extends Mock implements AnalyticsService {}
+
 class _MockCancellationBloc
     extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
@@ -38,7 +48,10 @@ BidModel _bid({
   String status = 'PENDING',
   BidPaymentMethod method = BidPaymentMethod.stripe,
   String? trackingToken,
+  bool amendmentAllowed = false,
+  BidMoneyBreakdown? moneyBreakdown,
 }) => BidModel(
+  moneyBreakdown: moneyBreakdown,
   id: 'bid-42',
   announcementId: 'ann-1',
   senderId: 'sender-1',
@@ -46,6 +59,7 @@ BidModel _bid({
   status: status,
   paymentMethod: method,
   trackingToken: trackingToken,
+  amendmentAllowed: amendmentAllowed,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
 );
@@ -303,6 +317,84 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(_l.bidDetailEscrowSecuredLabel(amount)), findsOneWidget);
     });
+
+    testWidgets('senderActionBar_escrowBadge_usesBreakdownOnlineAmount', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          (_) => SenderActionBar(
+            bid: _bid(
+              status: 'ACCEPTED',
+              moneyBreakdown: const BidMoneyBreakdown(
+                lines: [],
+                total: 88,
+                onlineAmount: 61.2,
+                cashAmount: 26.8,
+              ),
+            ),
+            isLoading: false,
+            paymentLoaded: true,
+            existingPayment: _payment(PaymentStatus.escrow),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(_l.bidDetailEscrowSecuredLabel(formatPriceIn(61.2, 'EUR'))),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('escrowBadge_usesOnlineAmount', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          (_) => EscrowBadge(
+            payment: _payment(PaymentStatus.escrow),
+            bidStatus: 'ACCEPTED',
+            onlineAmount: 61.2,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(_l.bidDetailEscrowSecuredLabel(formatPriceIn(61.2, 'EUR'))),
+        findsOneWidget,
+      );
+      expect(find.text(_l.bidDetailEscrowSecuredLabel(amount)), findsNothing);
+    });
+
+    testWidgets('escrowBadge_onlineAmount_keepsFixedDecimals', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          (_) => EscrowBadge(
+            payment: _payment(PaymentStatus.escrow),
+            bidStatus: 'ACCEPTED',
+            onlineAmount: 61,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(_l.bidDetailEscrowSecuredLabel('61,00\u00a0€')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('escrowBadge_withoutOnlineAmount_usesPaymentAmount', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          (_) => EscrowBadge(
+            payment: _payment(PaymentStatus.escrow),
+            bidStatus: 'ACCEPTED',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(_l.bidDetailEscrowSecuredLabel(amount)), findsOneWidget);
+    });
   });
 
   group('showSenderOptionsSheet — entrées et actions', () {
@@ -351,6 +443,48 @@ void main() {
       expect(shares, hasLength(1));
       expect(shares.single.toString(), contains('tok-123'));
     });
+
+    testWidgets(
+      'Modifier mon colis : absent tant que le serveur ne l\'autorise pas',
+      (tester) async {
+        await openOptions(tester, _bid());
+        expect(find.text(_l.amendmentSheetTitle), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Modifier mon colis : ouvre la feuille quand le serveur l\'autorise',
+      (tester) async {
+        final repository = _MockAmendmentRepository();
+        final analytics = _MockAnalytics();
+        when(
+          () => analytics.logEvent(any(), properties: any(named: 'properties')),
+        ).thenAnswer((_) async {});
+        when(() => repository.options('bid-42')).thenAnswer(
+          (_) async => const AmendmentOptions(
+            currency: 'EUR',
+            availableKg: 6,
+            pricePerKgDisplay: 5.13,
+            paymentMethods: [BidPaymentMethod.cash],
+            minAmount: 1,
+            maxAmount: 300,
+          ),
+        );
+        getIt.registerFactory<AmendmentRequestCubit>(
+          () => AmendmentRequestCubit(repository, analytics),
+        );
+        addTearDown(getIt.reset);
+
+        await openOptions(tester, _bid(amendmentAllowed: true));
+        expect(find.text(_l.amendmentEntryButton), findsOneWidget);
+        await tester.tap(find.text(_l.amendmentSheetTitle));
+        await tester.pumpAndSettle();
+
+        expect(find.text(_l.bidDetailOptionsTitle), findsNothing);
+        expect(find.text(_l.amendmentSheetTitle), findsOneWidget);
+        verify(() => repository.options('bid-42')).called(1);
+      },
+    );
 
     testWidgets('sans jeton : pas d\'entrée de partage', (tester) async {
       await openOptions(tester, _bid());

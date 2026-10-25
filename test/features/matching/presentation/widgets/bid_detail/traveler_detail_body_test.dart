@@ -1,12 +1,19 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/bloc/delivery_noshow_procedure/delivery_noshow_procedure_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_accept_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_commission_flow.dart';
+import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
@@ -25,23 +32,32 @@ class _MockConvBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
 
+class _MockAmendmentRepo extends Mock implements BidAmendmentRepository {}
+
+class _MockAnalytics extends Mock implements AnalyticsService {}
+
 class _MockCancelBloc extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
 
-BidModel _bid(String status, {String? trackingToken, String? recipientPhone}) =>
-    BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: status,
-      weightKg: 5,
-      trackingToken: trackingToken,
-      totalAmountEur: 48,
-      senderName: 'Mariama D.',
-      recipientPhone: recipientPhone,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
+BidModel _bid(
+  String status, {
+  String? trackingToken,
+  String? recipientPhone,
+  List<BidAmendment> amendments = const [],
+}) => BidModel(
+  amendments: amendments,
+  id: 'b1',
+  announcementId: 'a1',
+  senderId: 's1',
+  status: status,
+  weightKg: 5,
+  trackingToken: trackingToken,
+  totalAmountEur: 48,
+  senderName: 'Mariama D.',
+  recipientPhone: recipientPhone,
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
+);
 
 Future<void> _pump(WidgetTester tester, BidModel bid) async {
   final conv = _MockConvBloc();
@@ -88,6 +104,74 @@ void main() {
     if (getIt.isRegistered<DeliveryNoShowProcedureCubit>()) {
       getIt.unregister<DeliveryNoShowProcedureCubit>();
     }
+  });
+
+  group('modification du colis', () {
+    setUp(() {
+      final analytics = _MockAnalytics();
+      final repo = _MockAmendmentRepo();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt
+        ..registerFactory<AmendmentActionCubit>(
+          () => AmendmentActionCubit(repo, analytics),
+        )
+        ..registerFactory<AmendmentAcceptCubit>(
+          () => AmendmentAcceptCubit(
+            repo,
+            analytics,
+            AmendmentCommissionFlow(repo, analytics),
+          ),
+        );
+    });
+    tearDown(() {
+      getIt
+        ..unregister<AmendmentActionCubit>()
+        ..unregister<AmendmentAcceptCubit>();
+    });
+
+    testWidgets('demande ouverte : carte sous le hero, avant le contact', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 4000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          amendments: const [
+            BidAmendment(
+              id: 'am-1',
+              status: BidAmendmentStatus.proposed,
+              rail: 'CASH',
+              addedWeightKg: 3,
+              grossAmount: 26.8,
+              netAmount: 23.5,
+              commissionAmount: 3.3,
+            ),
+          ],
+        ),
+      );
+
+      expect(find.byType(AmendmentTravelerCard), findsOneWidget);
+      final card = tester.getTopLeft(find.byType(AmendmentTravelerCard)).dy;
+      expect(
+        card,
+        greaterThan(tester.getTopLeft(find.byType(TravelerHeroCard)).dy),
+      );
+      expect(
+        card,
+        lessThan(tester.getTopLeft(find.byType(ExpediteurContactCard)).dy),
+      );
+    });
+
+    testWidgets('sans modification : aucune carte', (tester) async {
+      await _pump(tester, _bid('ACCEPTED'));
+
+      expect(find.byType(AmendmentTravelerCard), findsNothing);
+    });
   });
 
   testWidgets('ACCEPTED → hero + contact + gain présents', (tester) async {

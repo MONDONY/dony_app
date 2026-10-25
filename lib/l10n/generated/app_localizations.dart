@@ -35975,6 +35975,782 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Voir les avis'**
   String get profilePublicRatingTapSemantics;
+
+  /// ErrorCatalog amendment-disabled
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification indisponible'**
+  String get errorAmendmentDisabledTitle;
+
+  /// ErrorCatalog amendment-disabled
+  ///
+  /// In fr, this message translates to:
+  /// **'La modification des colis n\'est pas ouverte pour le moment.'**
+  String get errorAmendmentDisabledMessage;
+
+  /// ErrorCatalog amendment-not-eligible
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification impossible'**
+  String get errorAmendmentNotEligibleTitle;
+
+  /// ErrorCatalog amendment-not-eligible
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis ne peut plus être modifié.'**
+  String get errorAmendmentNotEligibleMessage;
+
+  /// ErrorCatalog amendment-already-open
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande déjà en cours'**
+  String get errorAmendmentAlreadyOpenTitle;
+
+  /// ErrorCatalog amendment-already-open
+  ///
+  /// In fr, this message translates to:
+  /// **'Une modification de ce colis attend déjà une réponse.'**
+  String get errorAmendmentAlreadyOpenMessage;
+
+  /// ErrorCatalog amendment-limit-reached
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus de modification possible'**
+  String get errorAmendmentLimitReachedTitle;
+
+  /// ErrorCatalog amendment-limit-reached
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis a atteint le nombre maximal de modifications.'**
+  String get errorAmendmentLimitReachedMessage;
+
+  /// ErrorCatalog amendment-rail-unavailable
+  ///
+  /// In fr, this message translates to:
+  /// **'Moyen de paiement indisponible'**
+  String get errorAmendmentRailUnavailableTitle;
+
+  /// ErrorCatalog amendment-rail-unavailable
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce moyen de paiement n\'est plus proposé pour cette modification. Choisissez-en un autre.'**
+  String get errorAmendmentRailUnavailableMessage;
+
+  /// ErrorCatalog amendment-amount-out-of-range
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant non accepté'**
+  String get errorAmendmentAmountOutOfRangeTitle;
+
+  /// ErrorCatalog amendment-amount-out-of-range
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant de cette modification n\'est pas accepté.'**
+  String get errorAmendmentAmountOutOfRangeMessage;
+
+  /// ErrorCatalog amendment-capacity-unavailable
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus assez de place'**
+  String get errorAmendmentCapacityUnavailableTitle;
+
+  /// ErrorCatalog amendment-capacity-unavailable
+  ///
+  /// In fr, this message translates to:
+  /// **'Le trajet n\'a plus assez de kilos libres pour cette modification.'**
+  String get errorAmendmentCapacityUnavailableMessage;
+
+  /// ErrorCatalog amendment-empty
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien à ajouter'**
+  String get errorAmendmentEmptyTitle;
+
+  /// ErrorCatalog amendment-empty
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez des kilos ou au moins un article avant d\'envoyer la demande.'**
+  String get errorAmendmentEmptyMessage;
+
+  /// ErrorCatalog amendment-item-unknown
+  ///
+  /// In fr, this message translates to:
+  /// **'Article introuvable'**
+  String get errorAmendmentItemUnknownTitle;
+
+  /// ErrorCatalog amendment-item-unknown
+  ///
+  /// In fr, this message translates to:
+  /// **'Un des articles choisis n\'existe plus dans la grille de prix.'**
+  String get errorAmendmentItemUnknownMessage;
+
+  /// ErrorCatalog amendment-expired
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande expirée'**
+  String get errorAmendmentExpiredTitle;
+
+  /// ErrorCatalog amendment-expired
+  ///
+  /// In fr, this message translates to:
+  /// **'Le délai de réponse à cette modification est passé.'**
+  String get errorAmendmentExpiredMessage;
+
+  /// ErrorCatalog amendment-payment-in-progress
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en cours'**
+  String get errorAmendmentPaymentInProgressTitle;
+
+  /// ErrorCatalog amendment-payment-in-progress
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement de cette modification est en cours de validation. Patientez un instant.'**
+  String get errorAmendmentPaymentInProgressMessage;
+
+  /// ErrorCatalog amendment-capture-failed
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement non encaissé'**
+  String get errorAmendmentCaptureFailedTitle;
+
+  /// ErrorCatalog amendment-capture-failed
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement n\'a pas pu être encaissé. Rien n\'est débité, la demande est annulée.'**
+  String get errorAmendmentCaptureFailedMessage;
+
+  /// ErrorCatalog amendment-commission-unfunded
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde insuffisant'**
+  String get errorAmendmentCommissionUnfundedTitle;
+
+  /// ErrorCatalog amendment-commission-unfunded
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre solde ne couvre pas la commission Yadony de cette modification. Rechargez-le pour accepter.'**
+  String get errorAmendmentCommissionUnfundedMessage;
+
+  /// ErrorCatalog amendment-not-found
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification introuvable'**
+  String get errorAmendmentNotFoundTitle;
+
+  /// ErrorCatalog amendment-not-found
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette modification n\'existe plus.'**
+  String get errorAmendmentNotFoundMessage;
+
+  /// ErrorCatalog handover-amendment-pending
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification en attente'**
+  String get errorHandoverAmendmentPendingTitle;
+
+  /// ErrorCatalog handover-amendment-pending
+  ///
+  /// In fr, this message translates to:
+  /// **'Une modification du colis attend la réponse du voyageur. Scannez le colis une fois qu\'il a répondu.'**
+  String get errorHandoverAmendmentPendingMessage;
+
+  /// Titre de la carte d'entrée de l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'MODIFIER MON COLIS'**
+  String get amendmentEntryTitle;
+
+  /// Bouton d'entrée de la modification
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter des kilos ou des articles'**
+  String get amendmentEntryButton;
+
+  /// Titre de la feuille de modification
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier mon colis'**
+  String get amendmentSheetTitle;
+
+  /// Titre du sélecteur de kilos. {price} : prix au kilo formaté, {free} : kilos libres
+  ///
+  /// In fr, this message translates to:
+  /// **'KILOS EN PLUS · {price}/KG · {free} KG LIBRES'**
+  String amendmentSheetKgLabel(String price, String free);
+
+  /// Valeur du sélecteur de kilos
+  ///
+  /// In fr, this message translates to:
+  /// **'+{kg} kg'**
+  String amendmentSheetKgValue(String kg);
+
+  /// Titre de la liste d'articles. {name} : prénom du voyageur (majuscules en français)
+  ///
+  /// In fr, this message translates to:
+  /// **'ARTICLES DE LA GRILLE DE {name}'**
+  String amendmentSheetItemsLabel(String name);
+
+  /// Titre du choix du moyen de paiement
+  ///
+  /// In fr, this message translates to:
+  /// **'PAYER LA DIFFÉRENCE PAR'**
+  String get amendmentSheetPayLabel;
+
+  /// Moyen de paiement : carte
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte'**
+  String get amendmentRailCard;
+
+  /// Moyen de paiement : mobile money
+  ///
+  /// In fr, this message translates to:
+  /// **'Mobile money'**
+  String get amendmentRailMobileMoney;
+
+  /// Moyen de paiement : espèces
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces'**
+  String get amendmentRailCash;
+
+  /// Note sous le choix espèces quand le colis est payé par carte
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis reste payé par carte. Seule la différence se règle en espèces, en main propre à la remise.'**
+  String get amendmentCashNoteCardParcel;
+
+  /// Libellé du total dans la barre du bas
+  ///
+  /// In fr, this message translates to:
+  /// **'À payer en plus'**
+  String get amendmentTotalLabel;
+
+  /// Bouton d'envoi quand le complément est payé par carte. {amount} : montant formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloquer {amount} et envoyer'**
+  String amendmentSubmitCard(String amount);
+
+  /// Bouton d'envoi. {name} : prénom du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer la demande à {name}'**
+  String amendmentSubmit(String name);
+
+  /// Titre de la carte de modification (expéditeur et voyageur)
+  ///
+  /// In fr, this message translates to:
+  /// **'MODIFICATION DU COLIS'**
+  String get amendmentSenderTitle;
+
+  /// Statut côté expéditeur. {name} : prénom du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de {name}'**
+  String amendmentSenderPendingStatus(String name);
+
+  /// Ligne de total côté expéditeur, espèces
+  ///
+  /// In fr, this message translates to:
+  /// **'En plus, en espèces à la remise'**
+  String get amendmentSenderPendingLine;
+
+  /// Délai côté expéditeur. {deadline} : date et heure formatées, {hours} : heures restantes, {kg} : poids actuel formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse attendue avant le {deadline} ({hours} h). Sans réponse, la demande est annulée et votre colis reste à {kg}.'**
+  String amendmentSenderPendingDeadline(
+    String deadline,
+    String hours,
+    String kg,
+  );
+
+  /// Bouton d'annulation de la demande par l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler ma demande'**
+  String get amendmentCancelButton;
+
+  /// Statut refusé côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} n\'a pas accepté la modification'**
+  String amendmentSenderRefusedStatus(String name);
+
+  /// Détail refus côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis reste à {kg}, au prix prévu. Rien ne vous est demandé en plus.'**
+  String amendmentSenderRefusedBody(String kg);
+
+  /// Statut accepté côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification acceptée par {name}'**
+  String amendmentSenderAcceptedStatus(String name);
+
+  /// Détail accepté. {summary} : nouveau contenu (ex. 15 kg + 1 téléphone)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis passe à {summary}.'**
+  String amendmentSenderAcceptedBody(String summary);
+
+  /// Titre de la carte Paiement
+  ///
+  /// In fr, this message translates to:
+  /// **'PAIEMENT'**
+  String get amendmentPaymentTitle;
+
+  /// Ligne du colis initial. {method} : moyen de paiement
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis initial · {method}'**
+  String amendmentPaymentInitial(String method);
+
+  /// Ligne de la modification. {method} : moyen de paiement
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification · {method}'**
+  String amendmentPaymentAmendment(String method);
+
+  /// Pastille d'une modification en attente
+  ///
+  /// In fr, this message translates to:
+  /// **'EN ATTENTE'**
+  String get amendmentPaymentPendingBadge;
+
+  /// Total du colis, modifications comprises
+  ///
+  /// In fr, this message translates to:
+  /// **'Total du colis'**
+  String get amendmentPaymentTotal;
+
+  /// Ligne : part payée par carte et séquestrée
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé par carte, gardé jusqu\'à la livraison'**
+  String get amendmentPaymentHeldByCard;
+
+  /// Ligne : part payée en ligne (mobile money) et séquestrée
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé en ligne, gardé jusqu\'à la livraison'**
+  String get amendmentPaymentHeldOnline;
+
+  /// Ligne du supplément de prix dans les cartes Paiement et gain. {method} : moyen de paiement
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément de prix · {method}'**
+  String amendmentLineSupplement(String method);
+
+  /// Ligne : espèces à remettre. {name} : prénom du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'À remettre en espèces à {name}'**
+  String amendmentPaymentCashToHand(String name);
+
+  /// Invitation côté voyageur. {name} : prénom de l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} veut agrandir son colis'**
+  String amendmentTravelerInviteStatus(String name);
+
+  /// Délai côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Répondez avant le {deadline} · {hours} h'**
+  String amendmentTravelerDeadline(String deadline, String hours);
+
+  /// Ligne : gain net du voyageur pour la modification
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour vous en plus'**
+  String get amendmentTravelerForYou;
+
+  /// Note côté voyageur, espèces
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé en espèces par {name} à la remise : {amount}. Si vous acceptez, la commission Yadony de {commission} est prélevée sur votre solde.'**
+  String amendmentTravelerCashNote(
+    String name,
+    String amount,
+    String commission,
+  );
+
+  /// Bouton d'acceptation côté voyageur. {amount} : gain net formaté avec signe
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter ({amount})'**
+  String amendmentAccept(String amount);
+
+  /// Bouton de refus côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser'**
+  String get amendmentDecline;
+
+  /// Action du voyageur : modification acceptée mais non apportée à la remise
+  ///
+  /// In fr, this message translates to:
+  /// **'Les kilos en plus ne sont pas là'**
+  String get amendmentNotBrought;
+
+  /// Titre de la carte gain du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'CE QUE VOUS RECEVEZ'**
+  String get amendmentGainTitle;
+
+  /// Ligne gain initial
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande initiale · {method}'**
+  String amendmentGainInitial(String method);
+
+  /// Ligne gain de la modification
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification · {method}'**
+  String amendmentGainAmendment(String method);
+
+  /// Total du gain du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Total pour vous'**
+  String get amendmentGainTotal;
+
+  /// Ligne : part versée
+  ///
+  /// In fr, this message translates to:
+  /// **'Versé sur votre compte après la livraison'**
+  String get amendmentGainPaidOut;
+
+  /// Ligne : espèces à récupérer. {elide} : yes si le prénom commence par une voyelle ou un h (d'Aïcha), sinon de (de Moussa)
+  ///
+  /// In fr, this message translates to:
+  /// **'À récupérer en espèces auprès {elide, select, yes{d\'} other{de }}{name}'**
+  String amendmentGainCashDue(String elide, String name);
+
+  /// Moyen dans une ligne des cartes Paiement et gain (minuscule, après un point médian)
+  ///
+  /// In fr, this message translates to:
+  /// **'carte'**
+  String get amendmentLineMethodCard;
+
+  /// Moyen dans une ligne des cartes Paiement et gain
+  ///
+  /// In fr, this message translates to:
+  /// **'mobile money'**
+  String get amendmentLineMethodMobileMoney;
+
+  /// Moyen dans une ligne des cartes Paiement et gain
+  ///
+  /// In fr, this message translates to:
+  /// **'espèces'**
+  String get amendmentLineMethodCash;
+
+  /// Moyen de paiement inconnu de l'app dans une ligne des cartes Paiement et gain
+  ///
+  /// In fr, this message translates to:
+  /// **'autre moyen'**
+  String get amendmentLineMethodUnknown;
+
+  /// Précision sous la ligne espèces
+  ///
+  /// In fr, this message translates to:
+  /// **'dont {amount} de commission Yadony, déjà prélevée sur votre solde'**
+  String amendmentGainCommissionNote(String amount);
+
+  /// Note de remise côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'À la remise, récupérez {amount} en espèces avant de scanner le QR du colis.'**
+  String amendmentGainHandoverNote(String amount);
+
+  /// Libellé de contexte de la feuille de paiement
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification du colis'**
+  String get amendmentPaymentContextLabel;
+
+  /// Texte de la carte d'entrée sans kilos libres. {name} : prénom du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez des kilos ou des articles : {name} a 48 h pour accepter.'**
+  String amendmentEntryBodyShort(String name);
+
+  /// Titre du sélecteur de kilos quand la capacité est libre. {price} : prix au kilo formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'KILOS EN PLUS · {price}/KG'**
+  String amendmentSheetKgLabelOpen(String price);
+
+  /// Options de modification introuvables
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les options de modification.'**
+  String get amendmentSheetLoadFailed;
+
+  /// Infobulle du bouton moins d'un sélecteur
+  ///
+  /// In fr, this message translates to:
+  /// **'Moins'**
+  String get amendmentQuantityLess;
+
+  /// Infobulle du bouton plus d'un sélecteur
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus'**
+  String get amendmentQuantityMore;
+
+  /// Confirmation d'envoi. {name} : prénom du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée à {name}'**
+  String amendmentSentSnackbar(String name);
+
+  /// Ligne du total côté expéditeur, rail carte
+  ///
+  /// In fr, this message translates to:
+  /// **'En plus, bloqué sur votre carte'**
+  String get amendmentSenderPendingLineCard;
+
+  /// Ligne du total côté expéditeur, rail mobile money
+  ///
+  /// In fr, this message translates to:
+  /// **'En plus, à payer en mobile money'**
+  String get amendmentSenderPendingLineMobileMoney;
+
+  /// Mobile money : le voyageur a accepté, le dépôt de l'expéditeur attend
+  ///
+  /// In fr, this message translates to:
+  /// **'Payez maintenant pour que la modification soit prise en compte.'**
+  String get amendmentSenderPayNow;
+
+  /// Statut expirée côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} n\'a pas répondu à temps'**
+  String amendmentSenderExpiredStatus(String name);
+
+  /// Statut annulée côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée'**
+  String get amendmentSenderCancelledStatus;
+
+  /// Statut capture échouée côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement de la modification a échoué'**
+  String get amendmentSenderCaptureFailedStatus;
+
+  /// Titre du dialogue d'annulation
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler votre demande ?'**
+  String get amendmentCancelConfirmTitle;
+
+  /// Message du dialogue d'annulation
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis reste tel qu\'il est. Un montant bloqué sur votre carte est libéré.'**
+  String get amendmentCancelConfirmMessage;
+
+  /// Confirmation d'annulation
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée'**
+  String get amendmentCancelledSnackbar;
+
+  /// Note rail carte côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé par carte par {name} : {amount}. Versé sur votre compte après la livraison.'**
+  String amendmentTravelerCardNote(String name, String amount);
+
+  /// Note rail mobile money côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} paiera {amount} en mobile money après votre acceptation.'**
+  String amendmentTravelerMobileMoneyNote(String name, String amount);
+
+  /// Statut paiement mobile money en attente côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du paiement de {name}'**
+  String amendmentTravelerWaitingPayment(String name);
+
+  /// Statut commission en attente côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission en cours de validation'**
+  String get amendmentTravelerCommissionPending;
+
+  /// Statut acceptée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification acceptée'**
+  String get amendmentTravelerAcceptedStatus;
+
+  /// Détail acceptée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Récupérez les kilos en plus à la remise. S\'ils ne sont pas là, dites-le avant de scanner le QR.'**
+  String get amendmentTravelerAcceptedBody;
+
+  /// Statut refusée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez refusé la modification'**
+  String get amendmentTravelerDeclinedStatus;
+
+  /// Statut expirée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification expirée'**
+  String get amendmentTravelerExpiredStatus;
+
+  /// Statut annulée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} a annulé sa demande'**
+  String amendmentTravelerCancelledStatus(String name);
+
+  /// Statut générique clos côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification non acquise'**
+  String get amendmentTravelerClosedStatus;
+
+  /// Libellé du poids avant/après
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids du colis'**
+  String get amendmentTravelerParcelWeight;
+
+  /// Poids avant → après
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} → {to} kg'**
+  String amendmentTravelerParcelWeightValue(String from, String to);
+
+  /// Confirmation d'acceptation
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification acceptée'**
+  String get amendmentAcceptedSnackbar;
+
+  /// Confirmation de refus
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification refusée'**
+  String get amendmentDeclinedSnackbar;
+
+  /// Titre du dialogue de refus
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser la modification ?'**
+  String get amendmentDeclineConfirmTitle;
+
+  /// Message du dialogue de refus
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis garde ses kilos d\'origine et son prix.'**
+  String get amendmentDeclineConfirmMessage;
+
+  /// Titre du dialogue « non apportée »
+  ///
+  /// In fr, this message translates to:
+  /// **'Les kilos en plus ne sont pas là ?'**
+  String get amendmentNotBroughtConfirmTitle;
+
+  /// Message du dialogue « non apportée »
+  ///
+  /// In fr, this message translates to:
+  /// **'La modification sera annulée et l\'expéditeur remboursé. Le colis reste à son poids d\'origine.'**
+  String get amendmentNotBroughtConfirmMessage;
+
+  /// Confirmation « non apportée »
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification annulée, l\'expéditeur est remboursé'**
+  String get amendmentNotBroughtSnackbar;
+
+  /// Scan de remise bloqué côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Une modification attend votre réponse : le scan est bloqué.'**
+  String get amendmentScanBlocked;
+
+  /// 3DS commission abandonnée
+  ///
+  /// In fr, this message translates to:
+  /// **'Validation interrompue, réessayez d\'accepter.'**
+  String get amendmentCommissionAuthInterrupted;
+
+  /// Statut côté expéditeur : le voyageur déclare que les kilos en plus n'étaient pas là
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} a signalé que les kilos en plus n\'étaient pas là'**
+  String amendmentSenderNotBroughtStatus(String name);
+
+  /// Corps de fin côté expéditeur, carte : le montant bloqué est libéré
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis reste à {kg}. Le montant bloqué sur votre carte est libéré.'**
+  String amendmentSenderBodyCardReleased(String kg);
+
+  /// Corps de fin côté expéditeur : remboursement
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis reste à {kg}. La modification vous est remboursée sur votre moyen de paiement.'**
+  String amendmentSenderRefundBody(String kg);
+
+  /// Statut remboursement en cours côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement de la modification en cours'**
+  String get amendmentSenderRefundPendingStatus;
+
+  /// Statut remboursée côté expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification remboursée'**
+  String get amendmentSenderRefundedStatus;
+
+  /// Aide 3DS abandonnée côté voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre acceptation n\'est pas encore finalisée : la commission Yadony doit être validée avant la fin du délai.'**
+  String get amendmentTravelerCommissionPendingHelp;
+
+  /// Bouton de reprise de la commission
+  ///
+  /// In fr, this message translates to:
+  /// **'Finaliser la commission'**
+  String get amendmentCommissionFinalize;
+
+  /// Commission encore en traitement chez Stripe
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission en cours de traitement, la modification sera confirmée dès sa validation.'**
+  String get amendmentCommissionProcessingSnackbar;
+
+  /// Note espèces sans montant de commission
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé en espèces par {name} à la remise : {amount}.'**
+  String amendmentTravelerCashNoteNoCommission(String name, String amount);
+
+  /// Échéance : date puis heure
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} à {time}'**
+  String amendmentDeadlineFormat(String date, String time);
 }
 
 class _AppLocalizationsDelegate

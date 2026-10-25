@@ -653,9 +653,6 @@ class SupplementCommissionSourcePicker extends StatelessWidget {
 
   final SupplementRequestState state;
 
-  static const _walletKey = 'wallet';
-  static const _cardKey = 'card';
-
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -663,10 +660,6 @@ class SupplementCommissionSourcePicker extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cubit = context.read<SupplementRequestCubit>();
     final unfunded = state.unfunded;
-    final selected = switch (state.commissionSource) {
-      SupplementCommissionSource.card => _cardKey,
-      SupplementCommissionSource.wallet => state.fundingCurrency ?? _walletKey,
-    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -691,7 +684,7 @@ class SupplementCommissionSourcePicker extends StatelessWidget {
             const SizedBox(height: DonySpacing.md),
             DonyStatusBanner(
               type: DonyStatusBannerType.warning,
-              message: _unfundedMessage(l, unfunded),
+              message: CommissionSourceRadios.unfundedMessage(l, unfunded),
             ),
           ],
           if (state.status == SupplementRequestStatus.cardMissing) ...[
@@ -702,56 +695,110 @@ class SupplementCommissionSourcePicker extends StatelessWidget {
             ),
           ],
           const SizedBox(height: DonySpacing.sm),
-          DonyRadioGroup<String>(
-            value: selected,
-            onChanged: (key) {
-              if (key == null || state.isLocked) return;
-              if (key == _cardKey) {
-                cubit.selectCommissionSource(SupplementCommissionSource.card);
-              } else {
-                cubit.selectCommissionSource(
-                  SupplementCommissionSource.wallet,
-                  fundingCurrency: key == _walletKey ? null : key,
-                );
-              }
-            },
-            options: [
-              DonyRadioOption(
-                value: _walletKey,
-                label: l.supplementCommissionSourceWallet,
-                subtitle: l.supplementCommissionSourceWalletHint,
-              ),
-              for (final alternative in unfunded?.alternatives ?? const [])
-                DonyRadioOption(
-                  value: alternative.currency,
-                  label: l.supplementCommissionSourceWalletCurrency(
-                    alternative.currency,
-                  ),
-                  subtitle: l.walletShortfallAlternativeApprox(
-                    formatPriceIn(
-                      alternative.requiredAmount,
-                      alternative.currency,
-                    ),
-                  ),
-                ),
-              DonyRadioOption(
-                value: _cardKey,
-                label: l.supplementCommissionSourceCard,
-                subtitle: l.supplementCommissionSourceCardHint,
-              ),
-            ],
+          CommissionSourceRadios(
+            source: state.commissionSource,
+            fundingCurrency: state.fundingCurrency,
+            unfunded: unfunded,
+            locked: state.isLocked,
+            onSelected: cubit.selectCommissionSource,
           ),
-          if (unfunded?.alternatives.isNotEmpty ?? false)
-            Text(
-              l.walletShortfallRateDisclaimer,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
         ],
       ],
     );
   }
+}
 
-  static String _unfundedMessage(
+/// Choix de la source de la commission (solde, autre portefeuille converti
+/// au taux du jour, carte), partagé par le supplément et la modification de
+/// colis. Sans état : l'appelant porte la sélection.
+class CommissionSourceRadios extends StatelessWidget {
+  const CommissionSourceRadios({
+    super.key,
+    required this.source,
+    required this.fundingCurrency,
+    required this.unfunded,
+    required this.locked,
+    required this.onSelected,
+  });
+
+  final SupplementCommissionSource source;
+  final String? fundingCurrency;
+
+  /// Dernier refus « solde insuffisant » : ses `alternatives` sont proposées.
+  final SupplementCommissionUnfunded? unfunded;
+  final bool locked;
+  final void Function(
+    SupplementCommissionSource source, {
+    String? fundingCurrency,
+  })
+  onSelected;
+
+  static const _walletKey = 'wallet';
+  static const _cardKey = 'card';
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final selected = switch (source) {
+      SupplementCommissionSource.card => _cardKey,
+      SupplementCommissionSource.wallet => fundingCurrency ?? _walletKey,
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DonyRadioGroup<String>(
+          value: selected,
+          onChanged: (key) {
+            if (key == null || locked) return;
+            if (key == _cardKey) {
+              onSelected(SupplementCommissionSource.card);
+            } else {
+              onSelected(
+                SupplementCommissionSource.wallet,
+                fundingCurrency: key == _walletKey ? null : key,
+              );
+            }
+          },
+          options: [
+            DonyRadioOption(
+              value: _walletKey,
+              label: l.supplementCommissionSourceWallet,
+              subtitle: l.supplementCommissionSourceWalletHint,
+            ),
+            for (final alternative in unfunded?.alternatives ?? const [])
+              DonyRadioOption(
+                value: alternative.currency,
+                label: l.supplementCommissionSourceWalletCurrency(
+                  alternative.currency,
+                ),
+                subtitle: l.walletShortfallAlternativeApprox(
+                  formatPriceIn(
+                    alternative.requiredAmount,
+                    alternative.currency,
+                  ),
+                ),
+              ),
+            DonyRadioOption(
+              value: _cardKey,
+              label: l.supplementCommissionSourceCard,
+              subtitle: l.supplementCommissionSourceCardHint,
+            ),
+          ],
+        ),
+        if (unfunded?.alternatives.isNotEmpty ?? false)
+          Text(
+            l.walletShortfallRateDisclaimer,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+      ],
+    );
+  }
+
+  /// Texte du bandeau « solde insuffisant » (ce qui manque, puis la marche à
+  /// suivre).
+  static String unfundedMessage(
     AppLocalizations l,
     SupplementCommissionUnfunded unfunded,
   ) => [

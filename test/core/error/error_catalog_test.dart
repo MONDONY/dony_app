@@ -1905,4 +1905,49 @@ void main() {
       }
     });
   });
+
+  group('ErrorCatalog — modification d\'un colis accepté', () {
+    const codes = {
+      'amendment-disabled': 'Modification indisponible',
+      'amendment-not-eligible': 'Modification impossible',
+      'amendment-already-open': 'Demande déjà en cours',
+      'amendment-limit-reached': 'Plus de modification possible',
+      'amendment-rail-unavailable': 'Moyen de paiement indisponible',
+      'amendment-amount-out-of-range': 'Montant non accepté',
+      'amendment-capacity-unavailable': 'Plus assez de place',
+      'amendment-empty': 'Rien à ajouter',
+      'amendment-item-unknown': 'Article introuvable',
+      'amendment-expired': 'Demande expirée',
+      'amendment-payment-in-progress': 'Paiement en cours',
+      'amendment-capture-failed': 'Paiement non encaissé',
+      'amendment-commission-unfunded': 'Solde insuffisant',
+      'amendment-not-found': 'Modification introuvable',
+      'handover-amendment-pending': 'Modification en attente',
+    };
+
+    test('chaque code de la modification a son titre français', () {
+      for (final entry in codes.entries) {
+        final error = ConflictException('d', code: entry.key);
+        expect(ErrorCatalog.isKnown(error), isTrue, reason: entry.key);
+        final p = ErrorCatalog.lookup(
+          error,
+          l10n: lookupAppLocalizations(AppL10n.fr),
+        );
+        expect(p.title, entry.value, reason: entry.key);
+        expect(p.message, isNotEmpty, reason: entry.key);
+      }
+    });
+
+    test('chaque code a aussi un titre anglais distinct du français', () {
+      for (final code in codes.keys) {
+        final error = ConflictException('d', code: code);
+        final en = ErrorCatalog.lookup(
+          error,
+          l10n: lookupAppLocalizations(AppL10n.en),
+        );
+        expect(en.title, isNotEmpty, reason: code);
+        expect(en.title, isNot(codes[code]), reason: code);
+      }
+    });
+  });
 }

@@ -22321,4 +22321,514 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profilePublicRatingTapSemantics => 'Voir les avis';
+
+  @override
+  String get errorAmendmentDisabledTitle => 'Modification indisponible';
+
+  @override
+  String get errorAmendmentDisabledMessage =>
+      'La modification des colis n\'est pas ouverte pour le moment.';
+
+  @override
+  String get errorAmendmentNotEligibleTitle => 'Modification impossible';
+
+  @override
+  String get errorAmendmentNotEligibleMessage =>
+      'Ce colis ne peut plus être modifié.';
+
+  @override
+  String get errorAmendmentAlreadyOpenTitle => 'Demande déjà en cours';
+
+  @override
+  String get errorAmendmentAlreadyOpenMessage =>
+      'Une modification de ce colis attend déjà une réponse.';
+
+  @override
+  String get errorAmendmentLimitReachedTitle => 'Plus de modification possible';
+
+  @override
+  String get errorAmendmentLimitReachedMessage =>
+      'Ce colis a atteint le nombre maximal de modifications.';
+
+  @override
+  String get errorAmendmentRailUnavailableTitle =>
+      'Moyen de paiement indisponible';
+
+  @override
+  String get errorAmendmentRailUnavailableMessage =>
+      'Ce moyen de paiement n\'est plus proposé pour cette modification. Choisissez-en un autre.';
+
+  @override
+  String get errorAmendmentAmountOutOfRangeTitle => 'Montant non accepté';
+
+  @override
+  String get errorAmendmentAmountOutOfRangeMessage =>
+      'Le montant de cette modification n\'est pas accepté.';
+
+  @override
+  String get errorAmendmentCapacityUnavailableTitle => 'Plus assez de place';
+
+  @override
+  String get errorAmendmentCapacityUnavailableMessage =>
+      'Le trajet n\'a plus assez de kilos libres pour cette modification.';
+
+  @override
+  String get errorAmendmentEmptyTitle => 'Rien à ajouter';
+
+  @override
+  String get errorAmendmentEmptyMessage =>
+      'Ajoutez des kilos ou au moins un article avant d\'envoyer la demande.';
+
+  @override
+  String get errorAmendmentItemUnknownTitle => 'Article introuvable';
+
+  @override
+  String get errorAmendmentItemUnknownMessage =>
+      'Un des articles choisis n\'existe plus dans la grille de prix.';
+
+  @override
+  String get errorAmendmentExpiredTitle => 'Demande expirée';
+
+  @override
+  String get errorAmendmentExpiredMessage =>
+      'Le délai de réponse à cette modification est passé.';
+
+  @override
+  String get errorAmendmentPaymentInProgressTitle => 'Paiement en cours';
+
+  @override
+  String get errorAmendmentPaymentInProgressMessage =>
+      'Le paiement de cette modification est en cours de validation. Patientez un instant.';
+
+  @override
+  String get errorAmendmentCaptureFailedTitle => 'Paiement non encaissé';
+
+  @override
+  String get errorAmendmentCaptureFailedMessage =>
+      'Le paiement n\'a pas pu être encaissé. Rien n\'est débité, la demande est annulée.';
+
+  @override
+  String get errorAmendmentCommissionUnfundedTitle => 'Solde insuffisant';
+
+  @override
+  String get errorAmendmentCommissionUnfundedMessage =>
+      'Votre solde ne couvre pas la commission Yadony de cette modification. Rechargez-le pour accepter.';
+
+  @override
+  String get errorAmendmentNotFoundTitle => 'Modification introuvable';
+
+  @override
+  String get errorAmendmentNotFoundMessage =>
+      'Cette modification n\'existe plus.';
+
+  @override
+  String get errorHandoverAmendmentPendingTitle => 'Modification en attente';
+
+  @override
+  String get errorHandoverAmendmentPendingMessage =>
+      'Une modification du colis attend la réponse du voyageur. Scannez le colis une fois qu\'il a répondu.';
+
+  @override
+  String get amendmentEntryTitle => 'MODIFIER MON COLIS';
+
+  @override
+  String get amendmentEntryButton => 'Ajouter des kilos ou des articles';
+
+  @override
+  String get amendmentSheetTitle => 'Modifier mon colis';
+
+  @override
+  String amendmentSheetKgLabel(String price, String free) {
+    return 'KILOS EN PLUS · $price/KG · $free KG LIBRES';
+  }
+
+  @override
+  String amendmentSheetKgValue(String kg) {
+    return '+$kg kg';
+  }
+
+  @override
+  String amendmentSheetItemsLabel(String name) {
+    return 'ARTICLES DE LA GRILLE DE $name';
+  }
+
+  @override
+  String get amendmentSheetPayLabel => 'PAYER LA DIFFÉRENCE PAR';
+
+  @override
+  String get amendmentRailCard => 'Carte';
+
+  @override
+  String get amendmentRailMobileMoney => 'Mobile money';
+
+  @override
+  String get amendmentRailCash => 'Espèces';
+
+  @override
+  String get amendmentCashNoteCardParcel =>
+      'Votre colis reste payé par carte. Seule la différence se règle en espèces, en main propre à la remise.';
+
+  @override
+  String get amendmentTotalLabel => 'À payer en plus';
+
+  @override
+  String amendmentSubmitCard(String amount) {
+    return 'Bloquer $amount et envoyer';
+  }
+
+  @override
+  String amendmentSubmit(String name) {
+    return 'Envoyer la demande à $name';
+  }
+
+  @override
+  String get amendmentSenderTitle => 'MODIFICATION DU COLIS';
+
+  @override
+  String amendmentSenderPendingStatus(String name) {
+    return 'En attente de $name';
+  }
+
+  @override
+  String get amendmentSenderPendingLine => 'En plus, en espèces à la remise';
+
+  @override
+  String amendmentSenderPendingDeadline(
+    String deadline,
+    String hours,
+    String kg,
+  ) {
+    return 'Réponse attendue avant le $deadline ($hours h). Sans réponse, la demande est annulée et votre colis reste à $kg.';
+  }
+
+  @override
+  String get amendmentCancelButton => 'Annuler ma demande';
+
+  @override
+  String amendmentSenderRefusedStatus(String name) {
+    return '$name n\'a pas accepté la modification';
+  }
+
+  @override
+  String amendmentSenderRefusedBody(String kg) {
+    return 'Votre colis reste à $kg, au prix prévu. Rien ne vous est demandé en plus.';
+  }
+
+  @override
+  String amendmentSenderAcceptedStatus(String name) {
+    return 'Modification acceptée par $name';
+  }
+
+  @override
+  String amendmentSenderAcceptedBody(String summary) {
+    return 'Votre colis passe à $summary.';
+  }
+
+  @override
+  String get amendmentPaymentTitle => 'PAIEMENT';
+
+  @override
+  String amendmentPaymentInitial(String method) {
+    return 'Colis initial · $method';
+  }
+
+  @override
+  String amendmentPaymentAmendment(String method) {
+    return 'Modification · $method';
+  }
+
+  @override
+  String get amendmentPaymentPendingBadge => 'EN ATTENTE';
+
+  @override
+  String get amendmentPaymentTotal => 'Total du colis';
+
+  @override
+  String get amendmentPaymentHeldByCard =>
+      'Payé par carte, gardé jusqu\'à la livraison';
+
+  @override
+  String get amendmentPaymentHeldOnline =>
+      'Payé en ligne, gardé jusqu\'à la livraison';
+
+  @override
+  String amendmentLineSupplement(String method) {
+    return 'Supplément de prix · $method';
+  }
+
+  @override
+  String amendmentPaymentCashToHand(String name) {
+    return 'À remettre en espèces à $name';
+  }
+
+  @override
+  String amendmentTravelerInviteStatus(String name) {
+    return '$name veut agrandir son colis';
+  }
+
+  @override
+  String amendmentTravelerDeadline(String deadline, String hours) {
+    return 'Répondez avant le $deadline · $hours h';
+  }
+
+  @override
+  String get amendmentTravelerForYou => 'Pour vous en plus';
+
+  @override
+  String amendmentTravelerCashNote(
+    String name,
+    String amount,
+    String commission,
+  ) {
+    return 'Payé en espèces par $name à la remise : $amount. Si vous acceptez, la commission Yadony de $commission est prélevée sur votre solde.';
+  }
+
+  @override
+  String amendmentAccept(String amount) {
+    return 'Accepter ($amount)';
+  }
+
+  @override
+  String get amendmentDecline => 'Refuser';
+
+  @override
+  String get amendmentNotBrought => 'Les kilos en plus ne sont pas là';
+
+  @override
+  String get amendmentGainTitle => 'CE QUE VOUS RECEVEZ';
+
+  @override
+  String amendmentGainInitial(String method) {
+    return 'Demande initiale · $method';
+  }
+
+  @override
+  String amendmentGainAmendment(String method) {
+    return 'Modification · $method';
+  }
+
+  @override
+  String get amendmentGainTotal => 'Total pour vous';
+
+  @override
+  String get amendmentGainPaidOut =>
+      'Versé sur votre compte après la livraison';
+
+  @override
+  String amendmentGainCashDue(String elide, String name) {
+    String _temp0 = intl.Intl.selectLogic(elide, {
+      'yes': 'd\'',
+      'other': 'de ',
+    });
+    return 'À récupérer en espèces auprès $_temp0$name';
+  }
+
+  @override
+  String get amendmentLineMethodCard => 'carte';
+
+  @override
+  String get amendmentLineMethodMobileMoney => 'mobile money';
+
+  @override
+  String get amendmentLineMethodCash => 'espèces';
+
+  @override
+  String get amendmentLineMethodUnknown => 'autre moyen';
+
+  @override
+  String amendmentGainCommissionNote(String amount) {
+    return 'dont $amount de commission Yadony, déjà prélevée sur votre solde';
+  }
+
+  @override
+  String amendmentGainHandoverNote(String amount) {
+    return 'À la remise, récupérez $amount en espèces avant de scanner le QR du colis.';
+  }
+
+  @override
+  String get amendmentPaymentContextLabel => 'Modification du colis';
+
+  @override
+  String amendmentEntryBodyShort(String name) {
+    return 'Ajoutez des kilos ou des articles : $name a 48 h pour accepter.';
+  }
+
+  @override
+  String amendmentSheetKgLabelOpen(String price) {
+    return 'KILOS EN PLUS · $price/KG';
+  }
+
+  @override
+  String get amendmentSheetLoadFailed =>
+      'Impossible de charger les options de modification.';
+
+  @override
+  String get amendmentQuantityLess => 'Moins';
+
+  @override
+  String get amendmentQuantityMore => 'Plus';
+
+  @override
+  String amendmentSentSnackbar(String name) {
+    return 'Demande envoyée à $name';
+  }
+
+  @override
+  String get amendmentSenderPendingLineCard =>
+      'En plus, bloqué sur votre carte';
+
+  @override
+  String get amendmentSenderPendingLineMobileMoney =>
+      'En plus, à payer en mobile money';
+
+  @override
+  String get amendmentSenderPayNow =>
+      'Payez maintenant pour que la modification soit prise en compte.';
+
+  @override
+  String amendmentSenderExpiredStatus(String name) {
+    return '$name n\'a pas répondu à temps';
+  }
+
+  @override
+  String get amendmentSenderCancelledStatus => 'Demande annulée';
+
+  @override
+  String get amendmentSenderCaptureFailedStatus =>
+      'Le paiement de la modification a échoué';
+
+  @override
+  String get amendmentCancelConfirmTitle => 'Annuler votre demande ?';
+
+  @override
+  String get amendmentCancelConfirmMessage =>
+      'Votre colis reste tel qu\'il est. Un montant bloqué sur votre carte est libéré.';
+
+  @override
+  String get amendmentCancelledSnackbar => 'Demande annulée';
+
+  @override
+  String amendmentTravelerCardNote(String name, String amount) {
+    return 'Payé par carte par $name : $amount. Versé sur votre compte après la livraison.';
+  }
+
+  @override
+  String amendmentTravelerMobileMoneyNote(String name, String amount) {
+    return '$name paiera $amount en mobile money après votre acceptation.';
+  }
+
+  @override
+  String amendmentTravelerWaitingPayment(String name) {
+    return 'En attente du paiement de $name';
+  }
+
+  @override
+  String get amendmentTravelerCommissionPending =>
+      'Commission en cours de validation';
+
+  @override
+  String get amendmentTravelerAcceptedStatus => 'Modification acceptée';
+
+  @override
+  String get amendmentTravelerAcceptedBody =>
+      'Récupérez les kilos en plus à la remise. S\'ils ne sont pas là, dites-le avant de scanner le QR.';
+
+  @override
+  String get amendmentTravelerDeclinedStatus =>
+      'Vous avez refusé la modification';
+
+  @override
+  String get amendmentTravelerExpiredStatus => 'Modification expirée';
+
+  @override
+  String amendmentTravelerCancelledStatus(String name) {
+    return '$name a annulé sa demande';
+  }
+
+  @override
+  String get amendmentTravelerClosedStatus => 'Modification non acquise';
+
+  @override
+  String get amendmentTravelerParcelWeight => 'Poids du colis';
+
+  @override
+  String amendmentTravelerParcelWeightValue(String from, String to) {
+    return '$from → $to kg';
+  }
+
+  @override
+  String get amendmentAcceptedSnackbar => 'Modification acceptée';
+
+  @override
+  String get amendmentDeclinedSnackbar => 'Modification refusée';
+
+  @override
+  String get amendmentDeclineConfirmTitle => 'Refuser la modification ?';
+
+  @override
+  String get amendmentDeclineConfirmMessage =>
+      'Le colis garde ses kilos d\'origine et son prix.';
+
+  @override
+  String get amendmentNotBroughtConfirmTitle =>
+      'Les kilos en plus ne sont pas là ?';
+
+  @override
+  String get amendmentNotBroughtConfirmMessage =>
+      'La modification sera annulée et l\'expéditeur remboursé. Le colis reste à son poids d\'origine.';
+
+  @override
+  String get amendmentNotBroughtSnackbar =>
+      'Modification annulée, l\'expéditeur est remboursé';
+
+  @override
+  String get amendmentScanBlocked =>
+      'Une modification attend votre réponse : le scan est bloqué.';
+
+  @override
+  String get amendmentCommissionAuthInterrupted =>
+      'Validation interrompue, réessayez d\'accepter.';
+
+  @override
+  String amendmentSenderNotBroughtStatus(String name) {
+    return '$name a signalé que les kilos en plus n\'étaient pas là';
+  }
+
+  @override
+  String amendmentSenderBodyCardReleased(String kg) {
+    return 'Votre colis reste à $kg. Le montant bloqué sur votre carte est libéré.';
+  }
+
+  @override
+  String amendmentSenderRefundBody(String kg) {
+    return 'Votre colis reste à $kg. La modification vous est remboursée sur votre moyen de paiement.';
+  }
+
+  @override
+  String get amendmentSenderRefundPendingStatus =>
+      'Remboursement de la modification en cours';
+
+  @override
+  String get amendmentSenderRefundedStatus => 'Modification remboursée';
+
+  @override
+  String get amendmentTravelerCommissionPendingHelp =>
+      'Votre acceptation n\'est pas encore finalisée : la commission Yadony doit être validée avant la fin du délai.';
+
+  @override
+  String get amendmentCommissionFinalize => 'Finaliser la commission';
+
+  @override
+  String get amendmentCommissionProcessingSnackbar =>
+      'Commission en cours de traitement, la modification sera confirmée dès sa validation.';
+
+  @override
+  String amendmentTravelerCashNoteNoCommission(String name, String amount) {
+    return 'Payé en espèces par $name à la remise : $amount.';
+  }
+
+  @override
+  String amendmentDeadlineFormat(String date, String time) {
+    return '$date à $time';
+  }
 }

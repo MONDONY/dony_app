@@ -65,6 +65,14 @@ abstract final class AnalyticsPaymentContext {
   /// Commission d'un supplément sur un colis payé en espèces, prélevée au
   /// voyageur à la demande (solde ou carte).
   static const bidSupplementCommission = 'bid_supplement_commission';
+
+  /// Modification d'un colis accepté (kilos ou articles en plus), payée par
+  /// l'expéditeur.
+  static const bidAmendment = 'bid_amendment';
+
+  /// Commission d'une modification payée en espèces, prélevée au voyageur à
+  /// l'acceptation (solde ou carte).
+  static const bidAmendmentCommission = 'bid_amendment_commission';
 }
 
 /// Moyen de retour d'un remboursement du solde, depuis le `rail` serveur :

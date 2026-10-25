@@ -7723,6 +7723,216 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'openListingsCollapseLabel': (l) => l.openListingsCollapseLabel,
   'openListingsExpandLabel': (l) => l.openListingsExpandLabel,
   'profilePublicRatingTapSemantics': (l) => l.profilePublicRatingTapSemantics,
+  'errorAmendmentDisabledTitle': (l) => l.errorAmendmentDisabledTitle,
+  'errorAmendmentDisabledMessage': (l) => l.errorAmendmentDisabledMessage,
+  'errorAmendmentNotEligibleTitle': (l) => l.errorAmendmentNotEligibleTitle,
+  'errorAmendmentNotEligibleMessage': (l) => l.errorAmendmentNotEligibleMessage,
+  'errorAmendmentAlreadyOpenTitle': (l) => l.errorAmendmentAlreadyOpenTitle,
+  'errorAmendmentAlreadyOpenMessage': (l) => l.errorAmendmentAlreadyOpenMessage,
+  'errorAmendmentLimitReachedTitle': (l) => l.errorAmendmentLimitReachedTitle,
+  'errorAmendmentLimitReachedMessage': (l) =>
+      l.errorAmendmentLimitReachedMessage,
+  'errorAmendmentRailUnavailableTitle': (l) =>
+      l.errorAmendmentRailUnavailableTitle,
+  'errorAmendmentRailUnavailableMessage': (l) =>
+      l.errorAmendmentRailUnavailableMessage,
+  'errorAmendmentAmountOutOfRangeTitle': (l) =>
+      l.errorAmendmentAmountOutOfRangeTitle,
+  'errorAmendmentAmountOutOfRangeMessage': (l) =>
+      l.errorAmendmentAmountOutOfRangeMessage,
+  'errorAmendmentCapacityUnavailableTitle': (l) =>
+      l.errorAmendmentCapacityUnavailableTitle,
+  'errorAmendmentCapacityUnavailableMessage': (l) =>
+      l.errorAmendmentCapacityUnavailableMessage,
+  'errorAmendmentEmptyTitle': (l) => l.errorAmendmentEmptyTitle,
+  'errorAmendmentEmptyMessage': (l) => l.errorAmendmentEmptyMessage,
+  'errorAmendmentItemUnknownTitle': (l) => l.errorAmendmentItemUnknownTitle,
+  'errorAmendmentItemUnknownMessage': (l) => l.errorAmendmentItemUnknownMessage,
+  'errorAmendmentExpiredTitle': (l) => l.errorAmendmentExpiredTitle,
+  'errorAmendmentExpiredMessage': (l) => l.errorAmendmentExpiredMessage,
+  'errorAmendmentPaymentInProgressTitle': (l) =>
+      l.errorAmendmentPaymentInProgressTitle,
+  'errorAmendmentPaymentInProgressMessage': (l) =>
+      l.errorAmendmentPaymentInProgressMessage,
+  'errorAmendmentCaptureFailedTitle': (l) => l.errorAmendmentCaptureFailedTitle,
+  'errorAmendmentCaptureFailedMessage': (l) =>
+      l.errorAmendmentCaptureFailedMessage,
+  'errorAmendmentCommissionUnfundedTitle': (l) =>
+      l.errorAmendmentCommissionUnfundedTitle,
+  'errorAmendmentCommissionUnfundedMessage': (l) =>
+      l.errorAmendmentCommissionUnfundedMessage,
+  'errorAmendmentNotFoundTitle': (l) => l.errorAmendmentNotFoundTitle,
+  'errorAmendmentNotFoundMessage': (l) => l.errorAmendmentNotFoundMessage,
+  'errorHandoverAmendmentPendingTitle': (l) =>
+      l.errorHandoverAmendmentPendingTitle,
+  'errorHandoverAmendmentPendingMessage': (l) =>
+      l.errorHandoverAmendmentPendingMessage,
+  'amendmentEntryTitle': (l) => l.amendmentEntryTitle,
+  'amendmentEntryButton': (l) => l.amendmentEntryButton,
+  'amendmentSheetTitle': (l) => l.amendmentSheetTitle,
+  'amendmentSheetKgLabel': (l) => l.amendmentSheetKgLabel(
+    placeholderMarker('price'),
+    placeholderMarker('free'),
+  ),
+  'amendmentSheetKgValue': (l) =>
+      l.amendmentSheetKgValue(placeholderMarker('kg')),
+  'amendmentSheetItemsLabel': (l) =>
+      l.amendmentSheetItemsLabel(placeholderMarker('name')),
+  'amendmentSheetPayLabel': (l) => l.amendmentSheetPayLabel,
+  'amendmentRailCard': (l) => l.amendmentRailCard,
+  'amendmentRailMobileMoney': (l) => l.amendmentRailMobileMoney,
+  'amendmentRailCash': (l) => l.amendmentRailCash,
+  'amendmentCashNoteCardParcel': (l) => l.amendmentCashNoteCardParcel,
+  'amendmentTotalLabel': (l) => l.amendmentTotalLabel,
+  'amendmentSubmitCard': (l) =>
+      l.amendmentSubmitCard(placeholderMarker('amount')),
+  'amendmentSubmit': (l) => l.amendmentSubmit(placeholderMarker('name')),
+  'amendmentSenderTitle': (l) => l.amendmentSenderTitle,
+  'amendmentSenderPendingStatus': (l) =>
+      l.amendmentSenderPendingStatus(placeholderMarker('name')),
+  'amendmentSenderPendingLine': (l) => l.amendmentSenderPendingLine,
+  'amendmentSenderPendingDeadline': (l) => l.amendmentSenderPendingDeadline(
+    placeholderMarker('deadline'),
+    placeholderMarker('hours'),
+    placeholderMarker('kg'),
+  ),
+  'amendmentCancelButton': (l) => l.amendmentCancelButton,
+  'amendmentSenderRefusedStatus': (l) =>
+      l.amendmentSenderRefusedStatus(placeholderMarker('name')),
+  'amendmentSenderRefusedBody': (l) =>
+      l.amendmentSenderRefusedBody(placeholderMarker('kg')),
+  'amendmentSenderAcceptedStatus': (l) =>
+      l.amendmentSenderAcceptedStatus(placeholderMarker('name')),
+  'amendmentSenderAcceptedBody': (l) =>
+      l.amendmentSenderAcceptedBody(placeholderMarker('summary')),
+  'amendmentPaymentTitle': (l) => l.amendmentPaymentTitle,
+  'amendmentPaymentInitial': (l) =>
+      l.amendmentPaymentInitial(placeholderMarker('method')),
+  'amendmentPaymentAmendment': (l) =>
+      l.amendmentPaymentAmendment(placeholderMarker('method')),
+  'amendmentPaymentPendingBadge': (l) => l.amendmentPaymentPendingBadge,
+  'amendmentPaymentTotal': (l) => l.amendmentPaymentTotal,
+  'amendmentPaymentHeldByCard': (l) => l.amendmentPaymentHeldByCard,
+  'amendmentPaymentHeldOnline': (l) => l.amendmentPaymentHeldOnline,
+  'amendmentLineSupplement': (l) =>
+      l.amendmentLineSupplement(placeholderMarker('method')),
+  'amendmentPaymentCashToHand': (l) =>
+      l.amendmentPaymentCashToHand(placeholderMarker('name')),
+  'amendmentTravelerInviteStatus': (l) =>
+      l.amendmentTravelerInviteStatus(placeholderMarker('name')),
+  'amendmentTravelerDeadline': (l) => l.amendmentTravelerDeadline(
+    placeholderMarker('deadline'),
+    placeholderMarker('hours'),
+  ),
+  'amendmentTravelerForYou': (l) => l.amendmentTravelerForYou,
+  'amendmentTravelerCashNote': (l) => l.amendmentTravelerCashNote(
+    placeholderMarker('name'),
+    placeholderMarker('amount'),
+    placeholderMarker('commission'),
+  ),
+  'amendmentAccept': (l) => l.amendmentAccept(placeholderMarker('amount')),
+  'amendmentDecline': (l) => l.amendmentDecline,
+  'amendmentNotBrought': (l) => l.amendmentNotBrought,
+  'amendmentGainTitle': (l) => l.amendmentGainTitle,
+  'amendmentGainInitial': (l) =>
+      l.amendmentGainInitial(placeholderMarker('method')),
+  'amendmentGainAmendment': (l) =>
+      l.amendmentGainAmendment(placeholderMarker('method')),
+  'amendmentGainTotal': (l) => l.amendmentGainTotal,
+  'amendmentGainPaidOut': (l) => l.amendmentGainPaidOut,
+  'amendmentGainCashDue': (l) => l.amendmentGainCashDue(
+    placeholderMarker('elide'),
+    placeholderMarker('name'),
+  ),
+  'amendmentLineMethodCard': (l) => l.amendmentLineMethodCard,
+  'amendmentLineMethodMobileMoney': (l) => l.amendmentLineMethodMobileMoney,
+  'amendmentLineMethodCash': (l) => l.amendmentLineMethodCash,
+  'amendmentLineMethodUnknown': (l) => l.amendmentLineMethodUnknown,
+  'amendmentGainCommissionNote': (l) =>
+      l.amendmentGainCommissionNote(placeholderMarker('amount')),
+  'amendmentGainHandoverNote': (l) =>
+      l.amendmentGainHandoverNote(placeholderMarker('amount')),
+  'amendmentPaymentContextLabel': (l) => l.amendmentPaymentContextLabel,
+  'amendmentEntryBodyShort': (l) =>
+      l.amendmentEntryBodyShort(placeholderMarker('name')),
+  'amendmentSheetKgLabelOpen': (l) =>
+      l.amendmentSheetKgLabelOpen(placeholderMarker('price')),
+  'amendmentSheetLoadFailed': (l) => l.amendmentSheetLoadFailed,
+  'amendmentQuantityLess': (l) => l.amendmentQuantityLess,
+  'amendmentQuantityMore': (l) => l.amendmentQuantityMore,
+  'amendmentSentSnackbar': (l) =>
+      l.amendmentSentSnackbar(placeholderMarker('name')),
+  'amendmentSenderPendingLineCard': (l) => l.amendmentSenderPendingLineCard,
+  'amendmentSenderPendingLineMobileMoney': (l) =>
+      l.amendmentSenderPendingLineMobileMoney,
+  'amendmentSenderPayNow': (l) => l.amendmentSenderPayNow,
+  'amendmentSenderExpiredStatus': (l) =>
+      l.amendmentSenderExpiredStatus(placeholderMarker('name')),
+  'amendmentSenderCancelledStatus': (l) => l.amendmentSenderCancelledStatus,
+  'amendmentSenderCaptureFailedStatus': (l) =>
+      l.amendmentSenderCaptureFailedStatus,
+  'amendmentCancelConfirmTitle': (l) => l.amendmentCancelConfirmTitle,
+  'amendmentCancelConfirmMessage': (l) => l.amendmentCancelConfirmMessage,
+  'amendmentCancelledSnackbar': (l) => l.amendmentCancelledSnackbar,
+  'amendmentTravelerCardNote': (l) => l.amendmentTravelerCardNote(
+    placeholderMarker('name'),
+    placeholderMarker('amount'),
+  ),
+  'amendmentTravelerMobileMoneyNote': (l) => l.amendmentTravelerMobileMoneyNote(
+    placeholderMarker('name'),
+    placeholderMarker('amount'),
+  ),
+  'amendmentTravelerWaitingPayment': (l) =>
+      l.amendmentTravelerWaitingPayment(placeholderMarker('name')),
+  'amendmentTravelerCommissionPending': (l) =>
+      l.amendmentTravelerCommissionPending,
+  'amendmentTravelerAcceptedStatus': (l) => l.amendmentTravelerAcceptedStatus,
+  'amendmentTravelerAcceptedBody': (l) => l.amendmentTravelerAcceptedBody,
+  'amendmentTravelerDeclinedStatus': (l) => l.amendmentTravelerDeclinedStatus,
+  'amendmentTravelerExpiredStatus': (l) => l.amendmentTravelerExpiredStatus,
+  'amendmentTravelerCancelledStatus': (l) =>
+      l.amendmentTravelerCancelledStatus(placeholderMarker('name')),
+  'amendmentTravelerClosedStatus': (l) => l.amendmentTravelerClosedStatus,
+  'amendmentTravelerParcelWeight': (l) => l.amendmentTravelerParcelWeight,
+  'amendmentTravelerParcelWeightValue': (l) =>
+      l.amendmentTravelerParcelWeightValue(
+        placeholderMarker('from'),
+        placeholderMarker('to'),
+      ),
+  'amendmentAcceptedSnackbar': (l) => l.amendmentAcceptedSnackbar,
+  'amendmentDeclinedSnackbar': (l) => l.amendmentDeclinedSnackbar,
+  'amendmentDeclineConfirmTitle': (l) => l.amendmentDeclineConfirmTitle,
+  'amendmentDeclineConfirmMessage': (l) => l.amendmentDeclineConfirmMessage,
+  'amendmentNotBroughtConfirmTitle': (l) => l.amendmentNotBroughtConfirmTitle,
+  'amendmentNotBroughtConfirmMessage': (l) =>
+      l.amendmentNotBroughtConfirmMessage,
+  'amendmentNotBroughtSnackbar': (l) => l.amendmentNotBroughtSnackbar,
+  'amendmentScanBlocked': (l) => l.amendmentScanBlocked,
+  'amendmentCommissionAuthInterrupted': (l) =>
+      l.amendmentCommissionAuthInterrupted,
+  'amendmentSenderNotBroughtStatus': (l) =>
+      l.amendmentSenderNotBroughtStatus(placeholderMarker('name')),
+  'amendmentSenderBodyCardReleased': (l) =>
+      l.amendmentSenderBodyCardReleased(placeholderMarker('kg')),
+  'amendmentSenderRefundBody': (l) =>
+      l.amendmentSenderRefundBody(placeholderMarker('kg')),
+  'amendmentSenderRefundPendingStatus': (l) =>
+      l.amendmentSenderRefundPendingStatus,
+  'amendmentSenderRefundedStatus': (l) => l.amendmentSenderRefundedStatus,
+  'amendmentTravelerCommissionPendingHelp': (l) =>
+      l.amendmentTravelerCommissionPendingHelp,
+  'amendmentCommissionFinalize': (l) => l.amendmentCommissionFinalize,
+  'amendmentCommissionProcessingSnackbar': (l) =>
+      l.amendmentCommissionProcessingSnackbar,
+  'amendmentTravelerCashNoteNoCommission': (l) =>
+      l.amendmentTravelerCashNoteNoCommission(
+        placeholderMarker('name'),
+        placeholderMarker('amount'),
+      ),
+  'amendmentDeadlineFormat': (l) => l.amendmentDeadlineFormat(
+    placeholderMarker('date'),
+    placeholderMarker('time'),
+  ),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8345,4 +8555,42 @@ const textParameters = <String, List<String>>{
   'unmetContentType': ['requested'],
   'unmetWeekend': ['actual'],
   'openListingsPostedAgo': ['when'],
+  'amendmentSheetKgLabel': ['price', 'free'],
+  'amendmentSheetKgValue': ['kg'],
+  'amendmentSheetItemsLabel': ['name'],
+  'amendmentSubmitCard': ['amount'],
+  'amendmentSubmit': ['name'],
+  'amendmentSenderPendingStatus': ['name'],
+  'amendmentSenderPendingDeadline': ['deadline', 'hours', 'kg'],
+  'amendmentSenderRefusedStatus': ['name'],
+  'amendmentSenderRefusedBody': ['kg'],
+  'amendmentSenderAcceptedStatus': ['name'],
+  'amendmentSenderAcceptedBody': ['summary'],
+  'amendmentPaymentInitial': ['method'],
+  'amendmentPaymentAmendment': ['method'],
+  'amendmentLineSupplement': ['method'],
+  'amendmentPaymentCashToHand': ['name'],
+  'amendmentTravelerInviteStatus': ['name'],
+  'amendmentTravelerDeadline': ['deadline', 'hours'],
+  'amendmentTravelerCashNote': ['name', 'amount', 'commission'],
+  'amendmentAccept': ['amount'],
+  'amendmentGainInitial': ['method'],
+  'amendmentGainAmendment': ['method'],
+  'amendmentGainCashDue': ['elide', 'name'],
+  'amendmentGainCommissionNote': ['amount'],
+  'amendmentGainHandoverNote': ['amount'],
+  'amendmentEntryBodyShort': ['name'],
+  'amendmentSheetKgLabelOpen': ['price'],
+  'amendmentSentSnackbar': ['name'],
+  'amendmentSenderExpiredStatus': ['name'],
+  'amendmentTravelerCardNote': ['name', 'amount'],
+  'amendmentTravelerMobileMoneyNote': ['name', 'amount'],
+  'amendmentTravelerWaitingPayment': ['name'],
+  'amendmentTravelerCancelledStatus': ['name'],
+  'amendmentTravelerParcelWeightValue': ['from', 'to'],
+  'amendmentSenderNotBroughtStatus': ['name'],
+  'amendmentSenderBodyCardReleased': ['kg'],
+  'amendmentSenderRefundBody': ['kg'],
+  'amendmentTravelerCashNoteNoCommission': ['name', 'amount'],
+  'amendmentDeadlineFormat': ['date', 'time'],
 };

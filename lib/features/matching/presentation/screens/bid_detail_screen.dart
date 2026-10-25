@@ -61,12 +61,17 @@ class BidDetailScreen extends StatelessWidget {
   /// à l'écran.
   final bool focusSupplement;
 
+  /// Ouvert depuis une notification de modification de colis
+  /// (`?action=amendment`) : la vue expéditeur amène la carte à l'écran.
+  final bool focusAmendment;
+
   const BidDetailScreen({
     super.key,
     required this.bid,
     this.fromPayment = false,
     this.openCodeRenewal = false,
     this.focusSupplement = false,
+    this.focusAmendment = false,
   });
 
   @override
@@ -86,6 +91,7 @@ class BidDetailScreen extends StatelessWidget {
         fromPayment: fromPayment,
         openCodeRenewal: openCodeRenewal,
         focusSupplement: focusSupplement,
+        focusAmendment: focusAmendment,
       ),
     );
   }
@@ -96,11 +102,13 @@ class _BidDetailView extends StatefulWidget {
   final bool fromPayment;
   final bool openCodeRenewal;
   final bool focusSupplement;
+  final bool focusAmendment;
   const _BidDetailView({
     required this.initialBid,
     this.fromPayment = false,
     this.openCodeRenewal = false,
     this.focusSupplement = false,
+    this.focusAmendment = false,
   });
 
   @override
@@ -741,6 +749,7 @@ class _BidDetailViewState extends State<_BidDetailView>
                       ? SenderDetailBody(
                           bid: _bid,
                           focusSupplement: widget.focusSupplement,
+                          focusAmendment: widget.focusAmendment,
                         )
                       : TravelerDetailBody(bid: _bid),
                   bottomNavigationBar: isSender

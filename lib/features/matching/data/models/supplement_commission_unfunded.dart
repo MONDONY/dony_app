@@ -21,6 +21,9 @@ class SupplementCommissionUnfunded extends Equatable {
 
   static const code = 'supplement-commission-unfunded';
 
+  /// Même refus, même corps, pour la commission d'une modification de colis.
+  static const amendmentCode = 'amendment-commission-unfunded';
+
   /// Solde du portefeuille de complément ([currency]).
   final double availableBalance;
 
@@ -48,7 +51,10 @@ class SupplementCommissionUnfunded extends Equatable {
   /// Lit le refus depuis l'erreur rendue par l'API ; `null` pour toute autre
   /// erreur. Tolérant : un champ absent ou mal formé prend une valeur neutre.
   static SupplementCommissionUnfunded? fromError(AppException error) {
-    if (error is! ValidationException || error.code != code) return null;
+    if (error is! ValidationException ||
+        (error.code != code && error.code != amendmentCode)) {
+      return null;
+    }
     final ext = error.extensions ?? const <String, Object?>{};
     double num0(String key) => (ext[key] as num?)?.toDouble() ?? 0;
     final rawBreakdown = ext['breakdown'];

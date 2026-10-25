@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/share_position.dart';
@@ -9,6 +11,8 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/money_breakdown_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
@@ -302,6 +306,7 @@ class SenderActionBar extends StatelessWidget {
                   ? EscrowBadge(
                       payment: existingPayment!,
                       bidStatus: bid.status,
+                      onlineAmount: bid.moneyBreakdown?.onlineAmount,
                     )
                   : FilledButton.icon(
                       onPressed: () =>
@@ -419,10 +424,14 @@ class EscrowBadge extends StatelessWidget {
   final PaymentModel payment;
   final String bidStatus;
 
+  /// Montant payé en ligne servi par le serveur pour un colis modifié.
+  final double? onlineAmount;
+
   const EscrowBadge({
     super.key,
     required this.payment,
     required this.bidStatus,
+    this.onlineAmount,
   });
 
   @override
@@ -457,7 +466,10 @@ class EscrowBadge extends StatelessWidget {
   }
 
   (String, Color, String) _resolve(AppLocalizations l, ColorScheme cs) {
-    final amount = formatPriceIn(payment.amount, payment.currency);
+    // Colis modifié : même format que la carte Paiement juste au-dessus.
+    final amount = onlineAmount != null
+        ? formatBreakdownAmount(onlineAmount!, payment.currency)
+        : formatPriceIn(payment.amount, payment.currency);
     return switch (payment.status) {
       PaymentStatus.released => (
         'circle-check',
@@ -658,6 +670,20 @@ class _SenderOptionsSheet extends StatelessWidget {
                 onTap: () {
                   context.pop();
                   openRecipientChangeSheet(outerContext, bid);
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+            if (AmendmentEntryCard.shouldShow(bid)) ...[
+              _OptionTile(
+                iconAsset: 'plus',
+                iconColor: cs.primary,
+                iconBg: cs.primaryContainer,
+                label: l.amendmentSheetTitle,
+                subtitle: l.amendmentEntryButton,
+                onTap: () {
+                  context.pop();
+                  unawaited(AmendmentEntryCard.openSheet(outerContext, bid));
                 },
               ),
               const SizedBox(height: DonySpacing.sm),

@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/ai_form_draft_injection.dart';
+import 'package:dony/core/di/amendment_injection.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/payer_account_injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
@@ -131,6 +132,7 @@ import 'package:dony/features/maintenance/data/repositories/maintenance_reposito
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_request_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
@@ -160,12 +162,14 @@ import 'package:dony/features/matching/bloc/trip_mobile_money_networks_cubit.dar
 import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
+import 'package:dony/features/matching/data/datasources/bid_amendment_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_negotiation_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_supplement_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/mobile_money_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
@@ -484,12 +488,19 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       commissionFlow: getIt<SupplementCommissionFlow>(),
     ),
   );
+  getIt.registerFactory<AmendmentRequestCubit>(
+    () => AmendmentRequestCubit(
+      getIt<BidAmendmentRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
   getIt.registerFactory<SupplementActionCubit>(
     () => SupplementActionCubit(
       getIt<BidSupplementRepository>(),
       getIt<AnalyticsService>(),
     ),
   );
+  registerAmendmentActionDependencies(getIt);
   registerSupplementPaymentDependencies(getIt);
   getIt.registerFactory<RecipientReplacementCubit>(
     () => RecipientReplacementCubit(
@@ -756,6 +767,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<BidSupplementRepository>(
     () => BidSupplementRepository(getIt<BidSupplementRemoteDatasource>()),
+  );
+
+  // Matching — modification d'un colis accepté
+  getIt.registerLazySingleton<BidAmendmentRemoteDatasource>(
+    () => BidAmendmentRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<BidAmendmentRepository>(
+    () => BidAmendmentRepository(getIt<BidAmendmentRemoteDatasource>()),
   );
 
   // Matching — Mobile Money
