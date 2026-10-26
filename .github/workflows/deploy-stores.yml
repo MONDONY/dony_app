@@ -1,10 +1,12 @@
 name: Deploy stores
 
-# Chaque merge sur main dont la CI est verte part vers :
+# Chaque merge sur main dont la CI est verte part vers, en environnement
+# STAGING :
 #   - TestFlight (iOS)
 #   - la piste de test INTERNE de Google Play (Android)
-# La mise en production dans les stores (review Apple, piste production Play)
-# reste un geste manuel du propriétaire.
+# Un build de PRODUCTION se lance uniquement à la main (Run workflow →
+# environment = production). La mise en production dans les stores (review
+# Apple, piste production Play) reste un geste du propriétaire dans les deux cas.
 on:
   workflow_run:
     workflows: ["Flutter CI"]
@@ -12,6 +14,11 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      environment:
+        description: Environnement du build
+        type: choice
+        options: [staging, production]
+        default: staging
       ios:
         description: Déployer iOS (TestFlight)
         type: boolean
@@ -47,31 +54,45 @@ jobs:
        github.event.workflow_run.head_repository.full_name == github.repository)
     outputs:
       sha: ${{ steps.v.outputs.sha }}
-      build_number: ${{ steps.v.outputs.build_number }}
+      target: ${{ steps.v.outputs.target }}
+      build_number: ${{ steps.bn.outputs.build_number }}
       skip: ${{ steps.diff.outputs.skip || 'false' }}
     steps:
       - id: v
         env:
-          EVENT: ${{ github.event_name }}
           RUN_SHA: ${{ github.event.workflow_run.head_sha }}
-          RUN_NUMBER: ${{ github.run_number }}
+          # Le déclenchement automatique est toujours staging.
+          TARGET: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'staging' }}
         run: |
-          SHA="${RUN_SHA:-$GITHUB_SHA}"
-          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-          # Numéro de build unique et croissant, commun à iOS et Android.
-          # Offset 1000 : les builds faits à la main (pubspec, 83 à 148 en
-          # octobre 2026) restent très en dessous. Ne jamais le baisser :
-          # App Store Connect et Play refusent un numéro déjà utilisé ou
-          # inférieur à l'existant.
-          echo "build_number=$((1000 + RUN_NUMBER))" >> "$GITHUB_OUTPUT"
+          echo "sha=${RUN_SHA:-$GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
 
-      # Un merge qui ne touche ni le code ni la config native ne mérite pas
-      # un build de 30 min (docs, plans, workflows).
       - uses: actions/checkout@v4
-        if: github.event_name == 'workflow_run'
         with:
           ref: ${{ steps.v.outputs.sha }}
           fetch-depth: 2
+
+      # Numéro de build commun à iOS et Android : le plus grand déjà envoyé à
+      # App Store Connect ou à Google Play (builds manuels compris) + 1.
+      # Le plancher couvre un build tout juste envoyé que l'API Apple ne liste
+      # pas encore (1008 = dernier numéro consommé avant ce mécanisme).
+      # Le job échoue si un store ne répond pas : jamais de numéro inventé.
+      - id: bn
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_APP_ID: "6797821239"
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          PLAY_PACKAGE_NAME: com.yadony.yadony
+          BUILD_NUMBER_FLOOR: "1008"
+        run: |
+          NUMBER=$(python3 -I tool/next_build_number.py)
+          echo "build_number=$NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Build $NUMBER"
+
+      # Un merge qui ne touche ni le code ni la config native ne mérite pas
+      # un build de 30 min (docs, plans, workflows).
       - name: Changement utile ?
         id: diff
         if: github.event_name == 'workflow_run'
@@ -84,6 +105,7 @@ jobs:
 
   android:
     name: Android → Play (piste interne)
+    environment: ${{ needs.prepare.outputs.target }}
     needs: prepare
     if: needs.prepare.outputs.skip != 'true' && (github.event_name != 'workflow_dispatch' || inputs.android)
     runs-on: ubuntu-latest
@@ -127,6 +149,7 @@ jobs:
       - uses: ./.github/actions/prod-env
         with:
           platform: android
+          environment: ${{ needs.prepare.outputs.target }}
           api-base-url: ${{ secrets.FLUTTER_API_BASE_URL }}
           firebase-project-id: ${{ secrets.FLUTTER_FIREBASE_PROJECT_ID }}
           firebase-messaging-sender-id: ${{ secrets.FLUTTER_FIREBASE_MESSAGING_SENDER_ID }}
@@ -164,6 +187,7 @@ jobs:
 
   ios:
     name: iOS → TestFlight
+    environment: ${{ needs.prepare.outputs.target }}
     needs: prepare
     if: needs.prepare.outputs.skip != 'true' && (github.event_name != 'workflow_dispatch' || inputs.ios)
     runs-on: macos-15
@@ -208,6 +232,7 @@ jobs:
       - uses: ./.github/actions/prod-env
         with:
           platform: ios
+          environment: ${{ needs.prepare.outputs.target }}
           api-base-url: ${{ secrets.FLUTTER_API_BASE_URL }}
           firebase-project-id: ${{ secrets.FLUTTER_FIREBASE_PROJECT_ID }}
           firebase-messaging-sender-id: ${{ secrets.FLUTTER_FIREBASE_MESSAGING_SENDER_ID }}
