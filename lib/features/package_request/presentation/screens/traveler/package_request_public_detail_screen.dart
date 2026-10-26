@@ -74,6 +74,10 @@ class _PackageRequestPublicDetailScreenState
     unawaited(
       getIt<AnalyticsService>().logEvent(
         AnalyticsEvents.packageRequestDetailOpened,
+        // Relie la consultation à l'offre qui suit sur la même demande
+        // (`negotiation_offer_made.request_id`), pour mesurer le délai de
+        // décision du voyageur.
+        properties: {'request_id': widget.requestId},
       ),
     );
     _ensureStripeStatusLoaded();
