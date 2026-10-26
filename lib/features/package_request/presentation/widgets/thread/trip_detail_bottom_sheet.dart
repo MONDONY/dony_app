@@ -104,33 +104,35 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
           ),
         ),
         const SizedBox(height: DonySpacing.sm),
-        TextField(
-          controller: _controller,
-          onChanged: (v) => widget.reasonNotifier.value = v,
-          maxLength: 280,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: l.negotiationRefusalReasonHint,
-            hintStyle: const TextStyle(
-              fontFamily: DonyTypography.fontBody,
-              fontSize: 14,
-              color: kTextHint,
-            ),
-            filled: true,
-            fillColor: cs.surfaceContainerHighest,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-              borderSide: BorderSide(color: cs.primary, width: 1.5),
-            ),
-            contentPadding: const EdgeInsets.all(DonySpacing.md),
-            counterStyle: const TextStyle(
-              fontFamily: DonyTypography.fontBody,
-              fontSize: 11,
-              color: kTextHint,
+        DonyReplayMask(
+          child: TextField(
+            controller: _controller,
+            onChanged: (v) => widget.reasonNotifier.value = v,
+            maxLength: 280,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: l.negotiationRefusalReasonHint,
+              hintStyle: const TextStyle(
+                fontFamily: DonyTypography.fontBody,
+                fontSize: 14,
+                color: kTextHint,
+              ),
+              filled: true,
+              fillColor: cs.surfaceContainerHighest,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                borderSide: BorderSide(color: cs.primary, width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.all(DonySpacing.md),
+              counterStyle: const TextStyle(
+                fontFamily: DonyTypography.fontBody,
+                fontSize: 11,
+                color: kTextHint,
+              ),
             ),
           ),
         ),

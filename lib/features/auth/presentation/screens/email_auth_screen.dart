@@ -142,55 +142,57 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                                     ),
                                     color: cs.surface,
                                   ),
-                                  child: TextFormField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    autocorrect: false,
-                                    scrollPadding: const EdgeInsets.only(
-                                      bottom: 120,
-                                    ),
-                                    style: tt.bodyLarge?.copyWith(
-                                      color: cs.onSurface,
-                                    ),
-                                    decoration: InputDecoration(
-                                      hintText: context.l10n.authEmailHint,
-                                      hintStyle: tt.bodyLarge?.copyWith(
-                                        color: cs.onSurfaceVariant,
+                                  child: DonyReplayMask(
+                                    child: TextFormField(
+                                      controller: _emailController,
+                                      keyboardType: TextInputType.emailAddress,
+                                      autocorrect: false,
+                                      scrollPadding: const EdgeInsets.only(
+                                        bottom: 120,
                                       ),
-                                      border: InputBorder.none,
-                                      enabledBorder: InputBorder.none,
-                                      focusedBorder: InputBorder.none,
-                                      errorBorder: InputBorder.none,
-                                      focusedErrorBorder: InputBorder.none,
-                                      prefixIcon: Padding(
-                                        padding: const EdgeInsets.all(
-                                          DonySpacing.md,
-                                        ),
-                                        child: DonyIcon(
-                                          'mail',
-                                          color: _isValid
-                                              ? cs.primary
-                                              : cs.onSurfaceVariant,
-                                          size: 20,
-                                        ),
+                                      style: tt.bodyLarge?.copyWith(
+                                        color: cs.onSurface,
                                       ),
-                                      suffixIcon: _isValid
-                                          ? Padding(
-                                              padding: const EdgeInsets.all(
-                                                DonySpacing.md,
-                                              ),
-                                              child: DonyIcon(
-                                                'circle-check',
-                                                color: cs.primary,
-                                                size: 20,
-                                              ),
-                                            )
-                                          : null,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: DonySpacing.base,
-                                            vertical: DonySpacing.md,
+                                      decoration: InputDecoration(
+                                        hintText: context.l10n.authEmailHint,
+                                        hintStyle: tt.bodyLarge?.copyWith(
+                                          color: cs.onSurfaceVariant,
+                                        ),
+                                        border: InputBorder.none,
+                                        enabledBorder: InputBorder.none,
+                                        focusedBorder: InputBorder.none,
+                                        errorBorder: InputBorder.none,
+                                        focusedErrorBorder: InputBorder.none,
+                                        prefixIcon: Padding(
+                                          padding: const EdgeInsets.all(
+                                            DonySpacing.md,
                                           ),
+                                          child: DonyIcon(
+                                            'mail',
+                                            color: _isValid
+                                                ? cs.primary
+                                                : cs.onSurfaceVariant,
+                                            size: 20,
+                                          ),
+                                        ),
+                                        suffixIcon: _isValid
+                                            ? Padding(
+                                                padding: const EdgeInsets.all(
+                                                  DonySpacing.md,
+                                                ),
+                                                child: DonyIcon(
+                                                  'circle-check',
+                                                  color: cs.primary,
+                                                  size: 20,
+                                                ),
+                                              )
+                                            : null,
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: DonySpacing.base,
+                                              vertical: DonySpacing.md,
+                                            ),
+                                      ),
                                     ),
                                   ),
                                 ),

@@ -1,5 +1,4 @@
-import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -89,12 +88,14 @@ class _RejectContentState extends State<_RejectContent> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: _reasonCtrl,
-      maxLines: 3,
-      maxLength: 280,
-      decoration: InputDecoration(
-        labelText: context.l10n.negotiationRejectReasonLabel,
+    return DonyReplayMask(
+      child: TextField(
+        controller: _reasonCtrl,
+        maxLines: 3,
+        maxLength: 280,
+        decoration: InputDecoration(
+          labelText: context.l10n.negotiationRejectReasonLabel,
+        ),
       ),
     );
   }

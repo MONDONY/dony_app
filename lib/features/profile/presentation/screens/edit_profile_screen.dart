@@ -436,16 +436,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           bodyStyle: true,
                         )
                       else
-                        TextFormField(
-                          controller: _bioCtrl,
-                          enabled: !isSaving,
-                          maxLines: 4,
-                          maxLength: 280,
-                          decoration: InputDecoration(
-                            labelText: l.profileEditBioFieldLabel,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: DonySpacing.base,
-                              vertical: DonySpacing.md,
+                        DonyReplayMask(
+                          child: TextFormField(
+                            controller: _bioCtrl,
+                            enabled: !isSaving,
+                            maxLines: 4,
+                            maxLength: 280,
+                            decoration: InputDecoration(
+                              labelText: l.profileEditBioFieldLabel,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: DonySpacing.base,
+                                vertical: DonySpacing.md,
+                              ),
                             ),
                           ),
                         ),

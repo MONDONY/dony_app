@@ -221,58 +221,62 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                           color: cs.outline,
                                         ),
                                         Expanded(
-                                          child: TextFormField(
-                                            controller: _phoneController,
-                                            keyboardType: TextInputType.phone,
-                                            scrollPadding:
-                                                const EdgeInsets.only(
-                                                  bottom: 120,
-                                                ),
-                                            inputFormatters: [
-                                              FilteringTextInputFormatter
-                                                  .digitsOnly,
-                                            ],
-                                            style: tt.titleLarge?.copyWith(
-                                              color: cs.onSurface,
-                                            ),
-                                            decoration: InputDecoration(
-                                              hintText: country.hint,
-                                              hintStyle: tt.bodyLarge?.copyWith(
-                                                color: cs.onSurfaceVariant,
-                                              ),
-                                              border: InputBorder.none,
-                                              enabledBorder: InputBorder.none,
-                                              focusedBorder: InputBorder.none,
-                                              errorBorder: InputBorder.none,
-                                              focusedErrorBorder:
-                                                  InputBorder.none,
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal:
-                                                        DonySpacing.base,
-                                                    vertical: DonySpacing.md,
+                                          child: DonyReplayMask(
+                                            child: TextFormField(
+                                              controller: _phoneController,
+                                              keyboardType: TextInputType.phone,
+                                              scrollPadding:
+                                                  const EdgeInsets.only(
+                                                    bottom: 120,
                                                   ),
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .digitsOnly,
+                                              ],
+                                              style: tt.titleLarge?.copyWith(
+                                                color: cs.onSurface,
+                                              ),
+                                              decoration: InputDecoration(
+                                                hintText: country.hint,
+                                                hintStyle: tt.bodyLarge
+                                                    ?.copyWith(
+                                                      color:
+                                                          cs.onSurfaceVariant,
+                                                    ),
+                                                border: InputBorder.none,
+                                                enabledBorder: InputBorder.none,
+                                                focusedBorder: InputBorder.none,
+                                                errorBorder: InputBorder.none,
+                                                focusedErrorBorder:
+                                                    InputBorder.none,
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal:
+                                                          DonySpacing.base,
+                                                      vertical: DonySpacing.md,
+                                                    ),
+                                              ),
+                                              validator: (v) {
+                                                if (v == null ||
+                                                    v.trim().isEmpty) {
+                                                  return context
+                                                      .l10n
+                                                      .authPhoneEnterNumber;
+                                                }
+                                                final digits = v
+                                                    .trim()
+                                                    .replaceAll(
+                                                      RegExp(r'[^0-9]'),
+                                                      '',
+                                                    );
+                                                if (digits.length < 6) {
+                                                  return context
+                                                      .l10n
+                                                      .authPhoneNumberTooShort;
+                                                }
+                                                return null;
+                                              },
                                             ),
-                                            validator: (v) {
-                                              if (v == null ||
-                                                  v.trim().isEmpty) {
-                                                return context
-                                                    .l10n
-                                                    .authPhoneEnterNumber;
-                                              }
-                                              final digits = v
-                                                  .trim()
-                                                  .replaceAll(
-                                                    RegExp(r'[^0-9]'),
-                                                    '',
-                                                  );
-                                              if (digits.length < 6) {
-                                                return context
-                                                    .l10n
-                                                    .authPhoneNumberTooShort;
-                                              }
-                                              return null;
-                                            },
                                           ),
                                         ),
                                       ],

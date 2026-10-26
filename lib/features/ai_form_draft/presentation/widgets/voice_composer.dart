@@ -110,23 +110,25 @@ class _AiVoiceComposerState extends State<AiVoiceComposer> {
         Row(
           children: [
             Expanded(
-              child: TextField(
-                key: const Key('ai-text-input'),
-                controller: _controller,
-                enabled: widget.enabled,
-                minLines: 1,
-                maxLines: 4,
-                maxLength: AiFormDraftBloc.maxMessageLength,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _sendText(),
-                decoration: InputDecoration(
-                  hintText: listening
-                      ? l.aiFormDraftListening
-                      : l.aiFormDraftInputHint,
-                  counterText: '',
-                  border: border(listening ? cs.primary : cs.outline),
-                  enabledBorder: border(listening ? cs.primary : cs.outline),
-                  focusedBorder: border(cs.primary),
+              child: DonyReplayMask(
+                child: TextField(
+                  key: const Key('ai-text-input'),
+                  controller: _controller,
+                  enabled: widget.enabled,
+                  minLines: 1,
+                  maxLines: 4,
+                  maxLength: AiFormDraftBloc.maxMessageLength,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _sendText(),
+                  decoration: InputDecoration(
+                    hintText: listening
+                        ? l.aiFormDraftListening
+                        : l.aiFormDraftInputHint,
+                    counterText: '',
+                    border: border(listening ? cs.primary : cs.outline),
+                    enabledBorder: border(listening ? cs.primary : cs.outline),
+                    focusedBorder: border(cs.primary),
+                  ),
                 ),
               ),
             ),

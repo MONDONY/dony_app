@@ -1725,30 +1725,33 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                         Row(
                           children: [
                             Expanded(
-                              child: TextFormField(
-                                controller: _promoCtrl,
-                                textCapitalization:
-                                    TextCapitalization.characters,
-                                decoration: InputDecoration(
-                                  hintText: context.l10n.bidCreatePromoCodeHint,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: DonySpacing.base,
-                                    vertical: DonySpacing.md,
-                                  ),
-                                  suffixIcon: isQuoteLoading
-                                      ? const Padding(
-                                          padding: EdgeInsets.all(12),
-                                          child: SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
+                              child: DonyReplayMask(
+                                child: TextFormField(
+                                  controller: _promoCtrl,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  decoration: InputDecoration(
+                                    hintText:
+                                        context.l10n.bidCreatePromoCodeHint,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: DonySpacing.base,
+                                      vertical: DonySpacing.md,
+                                    ),
+                                    suffixIcon: isQuoteLoading
+                                        ? const Padding(
+                                            padding: EdgeInsets.all(12),
+                                            child: SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
                                             ),
-                                          ),
-                                        )
-                                      : null,
+                                          )
+                                        : null,
+                                  ),
+                                  onFieldSubmitted: (_) => _applyPromoCode(),
                                 ),
-                                onFieldSubmitted: (_) => _applyPromoCode(),
                               ),
                             ),
                             const SizedBox(width: DonySpacing.sm),
@@ -2481,24 +2484,26 @@ class _WeightSectionState extends State<_WeightSection> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IntrinsicWidth(
-                    child: TextField(
-                      key: const Key('weight-field'),
-                      controller: _kgCtrl,
-                      focusNode: _kgFocus,
-                      onChanged: _onFieldChanged,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      inputFormatters: [_WeightInputFormatter()],
-                      textAlign: TextAlign.center,
-                      style: tt.displayLarge?.copyWith(color: cs.onSurface),
-                      cursorColor: cs.primary,
-                      decoration: const InputDecoration(
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
+                    child: DonyReplayMask(
+                      child: TextField(
+                        key: const Key('weight-field'),
+                        controller: _kgCtrl,
+                        focusNode: _kgFocus,
+                        onChanged: _onFieldChanged,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [_WeightInputFormatter()],
+                        textAlign: TextAlign.center,
+                        style: tt.displayLarge?.copyWith(color: cs.onSurface),
+                        cursorColor: cs.primary,
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                        ),
                       ),
                     ),
                   ),

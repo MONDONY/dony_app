@@ -454,75 +454,79 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
               border: Border.all(color: borderColor, width: borderWidth),
               color: cs.surface,
             ),
-            child: TextField(
-              controller: _ctrl,
-              focusNode: _focus,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-              // Assez d'espace bas pour que l'overlay et le clavier soient visibles ensemble
-              scrollPadding: const EdgeInsets.only(bottom: 280),
-              decoration: InputDecoration(
-                labelText: _w.fieldLabel,
-                labelStyle: tt.bodyMedium?.copyWith(
-                  color: isFocused ? cs.primary : cs.onSurfaceVariant,
-                ),
-                floatingLabelStyle: tt.bodySmall?.copyWith(
-                  color: isFocused
-                      ? cs.primary
-                      : confirmed
-                      ? cs.success
-                      : cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-                // Hint visible uniquement après que le label a flotté
-                hintText: isFocused ? l10n.addressFieldSearchHint : null,
-                hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.fromLTRB(
-                  DonySpacing.base,
-                  DonySpacing.lg,
-                  DonySpacing.base,
-                  DonySpacing.md,
-                ),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(
-                    left: DonySpacing.md,
-                    right: DonySpacing.xs,
+            child: DonyReplayMask(
+              child: TextField(
+                controller: _ctrl,
+                focusNode: _focus,
+                style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                // Assez d'espace bas pour que l'overlay et le clavier soient visibles ensemble
+                scrollPadding: const EdgeInsets.only(bottom: 280),
+                decoration: InputDecoration(
+                  labelText: _w.fieldLabel,
+                  labelStyle: tt.bodyMedium?.copyWith(
+                    color: isFocused ? cs.primary : cs.onSurfaceVariant,
                   ),
-                  child: DonyIcon(
-                    'map-pin',
-                    size: 18,
-                    color: confirmed
-                        ? cs.success
-                        : isFocused
+                  floatingLabelStyle: tt.bodySmall?.copyWith(
+                    color: isFocused
                         ? cs.primary
-                        : _w.prefixIconColor ?? cs.onSurfaceVariant,
+                        : confirmed
+                        ? cs.success
+                        : cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
                   ),
-                ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 40),
-                suffixIcon: isLoading
-                    ? Padding(
-                        padding: const EdgeInsets.all(DonySpacing.md),
-                        child: SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: cs.primary,
+                  // Hint visible uniquement après que le label a flotté
+                  hintText: isFocused ? l10n.addressFieldSearchHint : null,
+                  hintStyle: tt.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.fromLTRB(
+                    DonySpacing.base,
+                    DonySpacing.lg,
+                    DonySpacing.base,
+                    DonySpacing.md,
+                  ),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(
+                      left: DonySpacing.md,
+                      right: DonySpacing.xs,
+                    ),
+                    child: DonyIcon(
+                      'map-pin',
+                      size: 18,
+                      color: confirmed
+                          ? cs.success
+                          : isFocused
+                          ? cs.primary
+                          : _w.prefixIconColor ?? cs.onSurfaceVariant,
+                    ),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 40),
+                  suffixIcon: isLoading
+                      ? Padding(
+                          padding: const EdgeInsets.all(DonySpacing.md),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: cs.primary,
+                            ),
                           ),
-                        ),
-                      )
-                    : confirmed && !isFocused
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: DonySpacing.md),
-                        child: DonyIcon(
-                          'circle-check',
-                          color: cs.success,
-                          size: 20,
-                        ),
-                      )
-                    : null,
+                        )
+                      : confirmed && !isFocused
+                      ? Padding(
+                          padding: const EdgeInsets.only(right: DonySpacing.md),
+                          child: DonyIcon(
+                            'circle-check',
+                            color: cs.success,
+                            size: 20,
+                          ),
+                        )
+                      : null,
+                ),
               ),
             ),
           ),

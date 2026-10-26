@@ -317,23 +317,25 @@ class ActivitySearchField extends StatelessWidget {
       borderSide: BorderSide(color: color),
     );
 
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-        prefixIcon: DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: DonySpacing.md - 2,
+    return DonyReplayMask(
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          prefixIcon: DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: DonySpacing.md - 2,
+          ),
+          filled: true,
+          fillColor: cs.surface,
+          border: border(cs.outline),
+          enabledBorder: border(cs.outline),
+          focusedBorder: border(cs.primary),
         ),
-        filled: true,
-        fillColor: cs.surface,
-        border: border(cs.outline),
-        enabledBorder: border(cs.outline),
-        focusedBorder: border(cs.primary),
       ),
     );
   }

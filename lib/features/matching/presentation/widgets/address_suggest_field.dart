@@ -375,70 +375,74 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
               ),
               color: cs.surface,
             ),
-            child: TextField(
-              controller: widget.controller,
-              focusNode: _focus,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-              scrollPadding: const EdgeInsets.only(bottom: 280),
-              decoration: InputDecoration(
-                labelText: widget.label,
-                labelStyle: tt.bodyMedium?.copyWith(
-                  color: isFocused ? cs.primary : cs.onSurfaceVariant,
-                ),
-                floatingLabelStyle: tt.bodySmall?.copyWith(
-                  color: isFocused ? cs.primary : cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-                hintText: widget.hint,
-                hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.fromLTRB(
-                  DonySpacing.base,
-                  DonySpacing.lg,
-                  DonySpacing.base,
-                  DonySpacing.md,
-                ),
-                prefixIcon:
-                    (widget.prefixIcon == null &&
-                        widget.prefixIconAsset == null)
-                    ? null
-                    : Padding(
-                        padding: const EdgeInsets.only(
-                          left: DonySpacing.md,
-                          right: DonySpacing.xs,
-                        ),
-                        child: widget.prefixIconAsset != null
-                            ? DonyIcon(
-                                widget.prefixIconAsset!,
-                                size: 18,
-                                color: isFocused
-                                    ? cs.primary
-                                    : neutralIconColor,
-                              )
-                            : Icon(
-                                widget.prefixIcon,
-                                size: 18,
-                                color: isFocused
-                                    ? cs.primary
-                                    : neutralIconColor,
-                              ),
-                      ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 40),
-                suffixIcon: _loading
-                    ? Padding(
-                        padding: const EdgeInsets.all(DonySpacing.md),
-                        child: SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: cs.primary,
+            child: DonyReplayMask(
+              child: TextField(
+                controller: widget.controller,
+                focusNode: _focus,
+                style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                scrollPadding: const EdgeInsets.only(bottom: 280),
+                decoration: InputDecoration(
+                  labelText: widget.label,
+                  labelStyle: tt.bodyMedium?.copyWith(
+                    color: isFocused ? cs.primary : cs.onSurfaceVariant,
+                  ),
+                  floatingLabelStyle: tt.bodySmall?.copyWith(
+                    color: isFocused ? cs.primary : cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  hintText: widget.hint,
+                  hintStyle: tt.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.fromLTRB(
+                    DonySpacing.base,
+                    DonySpacing.lg,
+                    DonySpacing.base,
+                    DonySpacing.md,
+                  ),
+                  prefixIcon:
+                      (widget.prefixIcon == null &&
+                          widget.prefixIconAsset == null)
+                      ? null
+                      : Padding(
+                          padding: const EdgeInsets.only(
+                            left: DonySpacing.md,
+                            right: DonySpacing.xs,
                           ),
+                          child: widget.prefixIconAsset != null
+                              ? DonyIcon(
+                                  widget.prefixIconAsset!,
+                                  size: 18,
+                                  color: isFocused
+                                      ? cs.primary
+                                      : neutralIconColor,
+                                )
+                              : Icon(
+                                  widget.prefixIcon,
+                                  size: 18,
+                                  color: isFocused
+                                      ? cs.primary
+                                      : neutralIconColor,
+                                ),
                         ),
-                      )
-                    : null,
+                  prefixIconConstraints: const BoxConstraints(minWidth: 40),
+                  suffixIcon: _loading
+                      ? Padding(
+                          padding: const EdgeInsets.all(DonySpacing.md),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: cs.primary,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
               ),
             ),
           ),

@@ -835,32 +835,34 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 increaseTooltip: l.negotiationMakeOfferPriceIncrease,
                 onDecrease: () => _stepPrice(-1),
                 onIncrease: () => _stepPrice(1),
-                field: TextFormField(
-                  key: const Key('make-offer-price-field'),
-                  controller: _priceCtrl,
-                  // Prix ferme : non négociable → champ verrouillé.
-                  readOnly: widget.isFirmPrice,
-                  textAlign: TextAlign.center,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+                field: DonyReplayMask(
+                  child: TextFormField(
+                    key: const Key('make-offer-price-field'),
+                    controller: _priceCtrl,
+                    // Prix ferme : non négociable → champ verrouillé.
+                    readOnly: widget.isFirmPrice,
+                    textAlign: TextAlign.center,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
+                    ],
+                    style: _amountStyle(context),
+                    decoration: _amountDecoration(
+                      context,
+                      SupportedCurrency.symbolOf(widget.currency),
+                    ),
+                    validator: (v) {
+                      final d = _parse(v ?? '');
+                      // Aucun plafond métier : seul le garde-fou technique du
+                      // serveur (1 000 000) subsiste.
+                      if (d == null || d <= 0) {
+                        return l.negotiationMakeOfferInvalidPrice;
+                      }
+                      return null;
+                    },
                   ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
-                  ],
-                  style: _amountStyle(context),
-                  decoration: _amountDecoration(
-                    context,
-                    SupportedCurrency.symbolOf(widget.currency),
-                  ),
-                  validator: (v) {
-                    final d = _parse(v ?? '');
-                    // Aucun plafond métier : seul le garde-fou technique du
-                    // serveur (1 000 000) subsiste.
-                    if (d == null || d <= 0) {
-                      return l.negotiationMakeOfferInvalidPrice;
-                    }
-                    return null;
-                  },
                 ),
               ),
               if (!widget.isFirmPrice &&
@@ -900,23 +902,25 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 increaseTooltip: l.negotiationMakeOfferCapacityIncrease,
                 onDecrease: () => _stepKg(-1),
                 onIncrease: () => _stepKg(1),
-                field: TextFormField(
-                  key: const Key('make-offer-capacity-field'),
-                  controller: _kgCtrl,
-                  textAlign: TextAlign.center,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+                field: DonyReplayMask(
+                  child: TextFormField(
+                    key: const Key('make-offer-capacity-field'),
+                    controller: _kgCtrl,
+                    textAlign: TextAlign.center,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
+                    ],
+                    style: _amountStyle(context, size: 26),
+                    decoration: _amountDecoration(context, 'kg'),
+                    validator: (v) {
+                      final d = _parse(v ?? '');
+                      if (d == null || d <= 0) return '> 0 kg';
+                      return null;
+                    },
                   ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
-                  ],
-                  style: _amountStyle(context, size: 26),
-                  decoration: _amountDecoration(context, 'kg'),
-                  validator: (v) {
-                    final d = _parse(v ?? '');
-                    if (d == null || d <= 0) return '> 0 kg';
-                    return null;
-                  },
                 ),
               ),
             ],
@@ -1070,21 +1074,23 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
           ],
         ),
         const SizedBox(height: DonySpacing.sm),
-        TextFormField(
-          key: const Key('make-offer-message-field'),
-          controller: _bodyCtrl,
-          maxLines: 3,
-          maxLength: 280,
-          style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-          decoration: InputDecoration(
-            hintText: l.negotiationMakeOfferMessageHint,
-            filled: true,
-            fillColor: cs.surfaceContainerHighest,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-              borderSide: BorderSide.none,
+        DonyReplayMask(
+          child: TextFormField(
+            key: const Key('make-offer-message-field'),
+            controller: _bodyCtrl,
+            maxLines: 3,
+            maxLength: 280,
+            style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+            decoration: InputDecoration(
+              hintText: l.negotiationMakeOfferMessageHint,
+              filled: true,
+              fillColor: cs.surfaceContainerHighest,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DonyRadius.card),
+                borderSide: BorderSide.none,
+              ),
+              counterStyle: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
             ),
-            counterStyle: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ),
       ],

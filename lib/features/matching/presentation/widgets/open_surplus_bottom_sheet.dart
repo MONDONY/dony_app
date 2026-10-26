@@ -381,28 +381,32 @@ class _KgField extends StatelessWidget {
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
-      child: TextFormField(
-        key: const Key('surplus-kg-field'),
-        controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))],
-        validator: validator,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        style: tt.bodyLarge?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: cs.onSurface,
-        ),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 16),
-          hintText: context.l10n.tripOwnerSurplusKgHint,
-          suffixText: 'kg',
-          suffixStyle: tt.bodyMedium?.copyWith(
-            color: cs.onSurfaceVariant,
+      child: DonyReplayMask(
+        child: TextFormField(
+          key: const Key('surplus-kg-field'),
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
+          ],
+          validator: validator,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          style: tt.bodyLarge?.copyWith(
             fontWeight: FontWeight.w600,
+            color: cs.onSurface,
           ),
-          errorStyle: const TextStyle(fontSize: 11),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            hintText: context.l10n.tripOwnerSurplusKgHint,
+            suffixText: 'kg',
+            suffixStyle: tt.bodyMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+            errorStyle: const TextStyle(fontSize: 11),
+          ),
         ),
       ),
     );
@@ -424,34 +428,38 @@ class _CustomPriceField extends StatelessWidget {
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
-      child: TextFormField(
-        key: const Key('surplus-custom-price-field'),
-        controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))],
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        validator: (v) {
-          final d = double.tryParse((v ?? '').replaceAll(',', '.'));
-          if (d == null || d <= 0) {
-            return context.l10n.tripOwnerSurplusCustomPriceInvalid;
-          }
-          return null;
-        },
-        style: tt.bodyLarge?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: cs.onSurface,
-        ),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 16),
-          hintText: context.l10n.tripOwnerSurplusCustomPriceHint,
-          suffixText: '${SupportedCurrency.symbolOf(currency)}/kg',
-          suffixStyle: tt.bodyMedium?.copyWith(
-            color: cs.onSurfaceVariant,
+      child: DonyReplayMask(
+        child: TextFormField(
+          key: const Key('surplus-custom-price-field'),
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
+          ],
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          validator: (v) {
+            final d = double.tryParse((v ?? '').replaceAll(',', '.'));
+            if (d == null || d <= 0) {
+              return context.l10n.tripOwnerSurplusCustomPriceInvalid;
+            }
+            return null;
+          },
+          style: tt.bodyLarge?.copyWith(
             fontWeight: FontWeight.w600,
+            color: cs.onSurface,
           ),
-          errorStyle: const TextStyle(fontSize: 11),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            hintText: context.l10n.tripOwnerSurplusCustomPriceHint,
+            suffixText: '${SupportedCurrency.symbolOf(currency)}/kg',
+            suffixStyle: tt.bodyMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+            errorStyle: const TextStyle(fontSize: 11),
+          ),
         ),
       ),
     );

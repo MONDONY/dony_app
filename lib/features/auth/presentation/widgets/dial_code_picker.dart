@@ -87,21 +87,23 @@ class _DialCodePickerState extends State<DialCodePicker> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        TextField(
-          key: const Key('dial_code_search'),
-          controller: _searchController,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: context.l10n.authDialCodeSearchHint,
-            prefixIcon: Padding(
-              padding: const EdgeInsets.all(DonySpacing.md),
-              child: DonyIcon('search', color: cs.onSurfaceVariant, size: 18),
-            ),
-            filled: true,
-            fillColor: cs.surfaceContainerHighest,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-              borderSide: BorderSide.none,
+        DonyReplayMask(
+          child: TextField(
+            key: const Key('dial_code_search'),
+            controller: _searchController,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: context.l10n.authDialCodeSearchHint,
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(DonySpacing.md),
+                child: DonyIcon('search', color: cs.onSurfaceVariant, size: 18),
+              ),
+              filled: true,
+              fillColor: cs.surfaceContainerHighest,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
         ),

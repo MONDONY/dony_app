@@ -1857,7 +1857,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authConsentBody =>
-      'Pour améliorer Yadony, on aimerait mesurer comment l\'app est utilisée et enregistrer l\'écran de façon anonymisée : les textes et les images sont masqués. Ces statistiques sont liées à votre compte, jamais à votre nom, votre numéro ou votre e-mail. C\'est facultatif.';
+      'Pour améliorer Yadony, on aimerait mesurer comment l\'app est utilisée et enregistrer l\'écran de façon anonymisée. Les photos, les champs que vous remplissez et les écrans de paiement, d\'identité ou de messagerie ne sont jamais enregistrés. C\'est facultatif.';
 
   @override
   String get authConsentFootnote =>
@@ -1869,7 +1869,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authConsentPointGestures =>
-      'Enregistrement de l\'écran (textes et images masqués) et gestes, pour repérer ce qui bloque';
+      'Enregistrement de l\'écran, sans photos ni champs remplis, pour repérer ce qui bloque';
 
   @override
   String get authConsentPointNeverPersonal =>

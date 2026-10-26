@@ -8,6 +8,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_route_filter.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/core/services/replay_privacy.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
 import 'package:dony/features/activation/presentation/screens/intent_step_screen.dart';
@@ -352,7 +353,7 @@ ScanMethod? _scanMethodExtra(Map<String, dynamic> extra) =>
       _ => null,
     };
 
-final appRouter = GoRouter(
+final GoRouter appRouter = GoRouter(
   initialLocation: initialAppLocation,
   // PosthogObserver : auto-capture des vues d'écran ($screen) à chaque
   // changement de route (no-op tant que le consentement n'est pas accordé).
@@ -361,6 +362,12 @@ final appRouter = GoRouter(
   observers: [
     SentryNavigatorObserver(),
     PosthogObserver(routeFilter: posthogRouteFilter),
+    // Replay de session : pause sur les écrans sensibles (paiement, identité,
+    // messages, détail d'un colis…). Cf. `kReplaySensitivePathPrefixes`.
+    ReplayPrivacyObserver.forAnalytics(
+      currentPath: () => appRouter.routerDelegate.currentConfiguration.uri.path,
+      analytics: () => getIt<AnalyticsService>(),
+    ),
     assistantModalObserver,
   ],
   redirect: (context, state) {

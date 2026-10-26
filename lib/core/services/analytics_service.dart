@@ -109,6 +109,14 @@ class AnalyticsService {
 
   bool _configured = false;
 
+  final _consentChanges = StreamController<void>.broadcast();
+
+  /// Émet après chaque application d'un consentement (accord, refus,
+  /// réconciliation). Le replay s'en sert pour se remettre en pause sur un
+  /// écran sensible : un accord donné depuis les Réglages démarre
+  /// l'enregistrement.
+  Stream<void> get consentChanges => _consentChanges.stream;
+
   /// Réparation en cours, partagée entre les identify() concurrents (login +
   /// consentement) pour ne jamais faire deux reset().
   Future<void>? _identityRepair;
@@ -136,8 +144,10 @@ class AnalyticsService {
     await _applyConsent();
   }
 
-  Future<void> _applyConsent() =>
-      consent == true ? _backend.optIn() : _backend.optOut();
+  Future<void> _applyConsent() async {
+    await (consent == true ? _backend.optIn() : _backend.optOut());
+    _consentChanges.add(null);
+  }
 
   /// Écrit le consentement dans Hive en activant le SDK AVANT l'écriture.
   ///
@@ -150,6 +160,7 @@ class AnalyticsService {
     if (granted && _configured) await _backend.optIn();
     await _hive.userPrefs.put(HiveService.kAnalyticsConsent, granted);
     if (!granted && _configured) await _backend.optOut();
+    _consentChanges.add(null);
   }
 
   /// Pousse la décision vers le backend sans jamais lever : la persistance

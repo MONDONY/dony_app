@@ -355,29 +355,31 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                       AddressSectionLabel(
                         l.pickupAddressInstructionsSectionTitle,
                       ),
-                      TextFormField(
-                        controller: _instructionsCtrl,
-                        maxLines: 3,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                          hintText: l.pickupAddressInstructionsHint,
-                          prefixIcon: Padding(
-                            padding: const EdgeInsets.only(
-                              left: DonySpacing.md,
-                              right: DonySpacing.xs,
+                      DonyReplayMask(
+                        child: TextFormField(
+                          controller: _instructionsCtrl,
+                          maxLines: 3,
+                          onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
+                            hintText: l.pickupAddressInstructionsHint,
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.only(
+                                left: DonySpacing.md,
+                                right: DonySpacing.xs,
+                              ),
+                              child: DonyIcon(
+                                'message-circle',
+                                size: 18,
+                                color: cs.onSurfaceVariant,
+                              ),
                             ),
-                            child: DonyIcon(
-                              'message-circle',
-                              size: 18,
-                              color: cs.onSurfaceVariant,
+                            prefixIconConstraints: const BoxConstraints(
+                              minWidth: 40,
                             ),
-                          ),
-                          prefixIconConstraints: const BoxConstraints(
-                            minWidth: 40,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: DonySpacing.base,
-                            vertical: DonySpacing.md,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.base,
+                              vertical: DonySpacing.md,
+                            ),
                           ),
                         ),
                       ),

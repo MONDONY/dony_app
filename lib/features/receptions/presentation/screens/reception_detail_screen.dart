@@ -1408,16 +1408,18 @@ class _RateTravelerCardState extends State<_RateTravelerCard> {
                 ),
               ),
             const SizedBox(height: DonySpacing.base),
-            TextField(
-              key: const Key('reception-rate-comment'),
-              controller: _comment,
-              maxLines: 3,
-              maxLength: 200,
-              keyboardType: TextInputType.multiline,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(
-                labelText: l.ratingCommentLabel,
-                hintText: l.ratingCommentHint,
+            DonyReplayMask(
+              child: TextField(
+                key: const Key('reception-rate-comment'),
+                controller: _comment,
+                maxLines: 3,
+                maxLength: 200,
+                keyboardType: TextInputType.multiline,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  labelText: l.ratingCommentLabel,
+                  hintText: l.ratingCommentHint,
+                ),
               ),
             ),
             const SizedBox(height: DonySpacing.sm),

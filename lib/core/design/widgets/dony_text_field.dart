@@ -201,27 +201,29 @@ class DonyTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (_variant) {
       case _DonyTextFieldVariant.text:
-        return TextFormField(
-          controller: controller,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          onChanged: onChanged,
-          validator: validator,
-          enabled: enabled,
-          autofocus: autofocus,
-          maxLines: maxLines,
-          minLines: minLines,
-          focusNode: focusNode,
-          textInputAction: textInputAction,
-          onFieldSubmitted: onSubmitted,
-          inputFormatters: inputFormatters,
-          // Toucher hors du champ ferme le clavier (FLUTTER-A3). Flutter ne
-          // le fait que sur ordinateur : sur téléphone, le pavé numérique
-          // d'iOS n'a pas de touche « OK », et un formulaire court qui ne
-          // défile pas laissait le clavier ouvert sans moyen de le fermer.
-          onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
-          scrollPadding: kDonyKeyboardScrollPadding,
-          decoration: _decoration(context),
+        return DonyReplayMask(
+          child: TextFormField(
+            controller: controller,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            onChanged: onChanged,
+            validator: validator,
+            enabled: enabled,
+            autofocus: autofocus,
+            maxLines: maxLines,
+            minLines: minLines,
+            focusNode: focusNode,
+            textInputAction: textInputAction,
+            onFieldSubmitted: onSubmitted,
+            inputFormatters: inputFormatters,
+            // Toucher hors du champ ferme le clavier (FLUTTER-A3). Flutter ne
+            // le fait que sur ordinateur : sur téléphone, le pavé numérique
+            // d'iOS n'a pas de touche « OK », et un formulaire court qui ne
+            // défile pas laissait le clavier ouvert sans moyen de le fermer.
+            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+            scrollPadding: kDonyKeyboardScrollPadding,
+            decoration: _decoration(context),
+          ),
         );
 
       case _DonyTextFieldVariant.tappable:
@@ -229,20 +231,22 @@ class DonyTextField extends StatelessWidget {
         // Utilise InputDecorator (la couche visuelle interne de TextField)
         // pour éviter tout TextEditingController — aucune fuite de ressource.
         // Le Text enfant reflète toujours la valeur courante à chaque rebuild.
-        return InkWell(
-          onTap: _onTap,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          child: InputDecorator(
-            // isEmpty: true force le label en position hint/placeholder.
-            isEmpty: !hasValue,
-            decoration: _decoration(context, suffixOverride: _trailing),
-            child: hasValue
-                ? Text(
-                    _value,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                : const SizedBox.shrink(),
+        return DonyReplayMask(
+          child: InkWell(
+            onTap: _onTap,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            child: InputDecorator(
+              // isEmpty: true force le label en position hint/placeholder.
+              isEmpty: !hasValue,
+              decoration: _decoration(context, suffixOverride: _trailing),
+              child: hasValue
+                  ? Text(
+                      _value,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ),
         );
     }

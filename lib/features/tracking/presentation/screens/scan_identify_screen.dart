@@ -240,33 +240,35 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                 const SizedBox(height: DonySpacing.base),
 
                 // Number field
-                TextField(
-                  controller: _numberCtrl,
-                  focusNode: _numberFocus,
-                  enabled: !isLoading,
-                  textCapitalization: TextCapitalization.characters,
-                  keyboardType: TextInputType.visiblePassword,
-                  style: tt.titleLarge?.copyWith(letterSpacing: 1.5),
-                  decoration: InputDecoration(
-                    hintText: 'DON-XXXXXX', // i18n-ignore: format de numéro
-                    hintStyle: tt.titleLarge?.copyWith(
-                      letterSpacing: 1.5,
-                      color: cs.onSurfaceVariant,
-                    ),
-                    prefixIcon: const DonyEmoji.parcel(size: 24),
-                    filled: true,
-                    fillColor: cs.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                      borderSide: BorderSide(color: cs.outline),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                      borderSide: BorderSide(color: cs.outline),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                      borderSide: BorderSide(color: cs.primary, width: 2),
+                DonyReplayMask(
+                  child: TextField(
+                    controller: _numberCtrl,
+                    focusNode: _numberFocus,
+                    enabled: !isLoading,
+                    textCapitalization: TextCapitalization.characters,
+                    keyboardType: TextInputType.visiblePassword,
+                    style: tt.titleLarge?.copyWith(letterSpacing: 1.5),
+                    decoration: InputDecoration(
+                      hintText: 'DON-XXXXXX', // i18n-ignore: format de numéro
+                      hintStyle: tt.titleLarge?.copyWith(
+                        letterSpacing: 1.5,
+                        color: cs.onSurfaceVariant,
+                      ),
+                      prefixIcon: const DonyEmoji.parcel(size: 24),
+                      filled: true,
+                      fillColor: cs.surface,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        borderSide: BorderSide(color: cs.outline),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        borderSide: BorderSide(color: cs.outline),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        borderSide: BorderSide(color: cs.primary, width: 2),
+                      ),
                     ),
                   ),
                 ),

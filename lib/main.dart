@@ -138,7 +138,11 @@ Future<void> _bootstrap() async {
       // Opt-out par défaut : on bascule en opt-in uniquement après consentement.
       ..optOut = true
       ..sessionReplay = true
-      ..sessionReplayConfig.maskAllTexts = true
+      // Textes visibles : les champs de saisie sont masqués un à un
+      // (`DonyReplayMask`), les écrans sensibles mis en pause
+      // (`ReplayPrivacyObserver`). Images toujours masquées : visages, pièces
+      // d'identité, photos de colis.
+      ..sessionReplayConfig.maskAllTexts = false
       ..sessionReplayConfig.maskAllImages = true;
     await Posthog().setup(config);
     // Rétablit l'état opt-in/out selon le consentement déjà stocké dans Hive.

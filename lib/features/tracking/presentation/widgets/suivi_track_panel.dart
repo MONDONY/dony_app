@@ -160,36 +160,38 @@ class _TrackNumberFieldState extends State<_TrackNumberField> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: TextField(
-              key: const Key('suivi-number-field'),
-              controller: _controller,
-              focusNode: _focusNode,
-              textCapitalization: TextCapitalization.characters,
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _submit(),
-              // L'erreur d'une recherche précédente ne survit pas à la saisie.
-              onChanged: (_) => context.read<SuiviCubit>().clearSearchError(),
-              style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-              decoration: InputDecoration(
-                labelText: l.trackingSearchNumberLabel,
-                hintText: 'DON-XXXXXX', // i18n-ignore — format de numéro
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.all(DonySpacing.md),
-                  child: DonyIcon('qr-code', size: 18, color: cs.primary),
-                ),
-                filled: true,
-                fillColor: cs.surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.lg),
-                  borderSide: BorderSide(color: cs.outline),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.lg),
-                  borderSide: BorderSide(color: cs.outline),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.lg),
-                  borderSide: BorderSide(color: cs.primary, width: 2),
+            child: DonyReplayMask(
+              child: TextField(
+                key: const Key('suivi-number-field'),
+                controller: _controller,
+                focusNode: _focusNode,
+                textCapitalization: TextCapitalization.characters,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _submit(),
+                // L'erreur d'une recherche précédente ne survit pas à la saisie.
+                onChanged: (_) => context.read<SuiviCubit>().clearSearchError(),
+                style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                  labelText: l.trackingSearchNumberLabel,
+                  hintText: 'DON-XXXXXX', // i18n-ignore — format de numéro
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(DonySpacing.md),
+                    child: DonyIcon('qr-code', size: 18, color: cs.primary),
+                  ),
+                  filled: true,
+                  fillColor: cs.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.lg),
+                    borderSide: BorderSide(color: cs.outline),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.lg),
+                    borderSide: BorderSide(color: cs.outline),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.lg),
+                    borderSide: BorderSide(color: cs.primary, width: 2),
+                  ),
                 ),
               ),
             ),

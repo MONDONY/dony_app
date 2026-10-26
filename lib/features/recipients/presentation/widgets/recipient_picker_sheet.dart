@@ -516,43 +516,45 @@ class _SearchField extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    return TextField(
-      controller: controller,
-      style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-      textInputAction: TextInputAction.search,
-      decoration: InputDecoration(
-        hintText: l.recipientSearchHint,
-        hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-        filled: true,
-        fillColor: cs.surfaceContainerHighest,
-        prefixIcon: Padding(
-          padding: const EdgeInsets.only(
-            left: DonySpacing.md,
-            right: DonySpacing.sm,
+    return DonyReplayMask(
+      child: TextField(
+        controller: controller,
+        style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          hintText: l.recipientSearchHint,
+          hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          filled: true,
+          fillColor: cs.surfaceContainerHighest,
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(
+              left: DonySpacing.md,
+              right: DonySpacing.sm,
+            ),
+            child: DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
           ),
-          child: DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
+          prefixIconConstraints: const BoxConstraints(minWidth: 40),
+          suffixIcon: controller.text.isNotEmpty
+              ? IconButton(
+                  tooltip: l.recipientClearSearchTooltip,
+                  icon: const DonyIcon('x', size: 16),
+                  onPressed: () => controller.clear(),
+                )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide(color: cs.primary, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
         ),
-        prefixIconConstraints: const BoxConstraints(minWidth: 40),
-        suffixIcon: controller.text.isNotEmpty
-            ? IconButton(
-                tooltip: l.recipientClearSearchTooltip,
-                icon: const DonyIcon('x', size: 16),
-                onPressed: () => controller.clear(),
-              )
-            : null,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.primary, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
       ),
     );
   }

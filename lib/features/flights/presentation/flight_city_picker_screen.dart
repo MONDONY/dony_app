@@ -292,24 +292,26 @@ class _Field extends StatelessWidget {
     final text = tt.bodyLarge?.copyWith(fontSize: 15);
 
     final Widget content = active
-        ? TextField(
-            key: const Key('flight-city-field'),
-            controller: controller,
-            focusNode: focus,
-            textInputAction: TextInputAction.search,
-            cursorColor: cs.primary,
-            style: text?.copyWith(color: DonyColors.ink800),
-            onChanged: context.read<FlightPlacesCubit>().termChanged,
-            // Champ nu : le cadre blanc bordé de bleu est celui du conteneur.
-            decoration: InputDecoration(
-              isCollapsed: true,
-              contentPadding: EdgeInsets.zero,
-              filled: false,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              hintText: value ?? hint,
-              hintStyle: text?.copyWith(color: DonyColors.neutral500),
+        ? DonyReplayMask(
+            child: TextField(
+              key: const Key('flight-city-field'),
+              controller: controller,
+              focusNode: focus,
+              textInputAction: TextInputAction.search,
+              cursorColor: cs.primary,
+              style: text?.copyWith(color: DonyColors.ink800),
+              onChanged: context.read<FlightPlacesCubit>().termChanged,
+              // Champ nu : le cadre blanc bordé de bleu est celui du conteneur.
+              decoration: InputDecoration(
+                isCollapsed: true,
+                contentPadding: EdgeInsets.zero,
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                hintText: value ?? hint,
+                hintStyle: text?.copyWith(color: DonyColors.neutral500),
+              ),
             ),
           )
         : Text(

@@ -801,56 +801,58 @@ class _SearchField extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l10n = context.l10n;
-    return TextField(
-      controller: controller,
-      focusNode: focusNode,
-      style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-      textInputAction: TextInputAction.search,
-      decoration: InputDecoration(
-        hintText: l10n.addressSearchHint,
-        hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-        filled: true,
-        fillColor: cs.surfaceContainerHighest,
-        prefixIcon: Padding(
-          padding: const EdgeInsets.only(
-            left: DonySpacing.md,
-            right: DonySpacing.sm,
+    return DonyReplayMask(
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          hintText: l10n.addressSearchHint,
+          hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          filled: true,
+          fillColor: cs.surfaceContainerHighest,
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(
+              left: DonySpacing.md,
+              right: DonySpacing.sm,
+            ),
+            child: DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
           ),
-          child: DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
-        ),
-        prefixIconConstraints: const BoxConstraints(minWidth: 40),
-        suffixIcon: loading
-            ? Padding(
-                padding: const EdgeInsets.all(DonySpacing.md),
-                child: SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: cs.secondary,
+          prefixIconConstraints: const BoxConstraints(minWidth: 40),
+          suffixIcon: loading
+              ? Padding(
+                  padding: const EdgeInsets.all(DonySpacing.md),
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: cs.secondary,
+                    ),
                   ),
-                ),
-              )
-            : controller.text.isNotEmpty
-            ? IconButton(
-                tooltip: l10n.commonClose,
-                icon: const DonyIcon('x', size: 16),
-                onPressed: () => controller.clear(),
-              )
-            : null,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide.none,
+                )
+              : controller.text.isNotEmpty
+              ? IconButton(
+                  tooltip: l10n.commonClose,
+                  icon: const DonyIcon('x', size: 16),
+                  onPressed: () => controller.clear(),
+                )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide(color: cs.secondary, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.secondary, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
       ),
     );
   }

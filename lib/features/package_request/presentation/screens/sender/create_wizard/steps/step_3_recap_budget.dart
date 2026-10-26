@@ -480,32 +480,36 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                           Row(
                             children: [
                               Expanded(
-                                child: TextFormField(
-                                  key: const Key('promo-code-input'),
-                                  controller: _promoCtrl,
-                                  scrollPadding: kDonyKeyboardScrollPadding,
-                                  textCapitalization:
-                                      TextCapitalization.characters,
-                                  decoration: InputDecoration(
-                                    hintText: l10n.requestCreatePromoHint,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: DonySpacing.base,
-                                      vertical: DonySpacing.md,
-                                    ),
-                                    suffixIcon: loading
-                                        ? const Padding(
-                                            padding: EdgeInsets.all(12),
-                                            child: SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
+                                child: DonyReplayMask(
+                                  child: TextFormField(
+                                    key: const Key('promo-code-input'),
+                                    controller: _promoCtrl,
+                                    scrollPadding: kDonyKeyboardScrollPadding,
+                                    textCapitalization:
+                                        TextCapitalization.characters,
+                                    decoration: InputDecoration(
+                                      hintText: l10n.requestCreatePromoHint,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: DonySpacing.base,
+                                            vertical: DonySpacing.md,
+                                          ),
+                                      suffixIcon: loading
+                                          ? const Padding(
+                                              padding: EdgeInsets.all(12),
+                                              child: SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
                                               ),
-                                            ),
-                                          )
-                                        : null,
+                                            )
+                                          : null,
+                                    ),
+                                    onFieldSubmitted: (_) => _applyPromoCode(),
                                   ),
-                                  onFieldSubmitted: (_) => _applyPromoCode(),
                                 ),
                               ),
                               const SizedBox(width: DonySpacing.sm),
@@ -811,97 +815,99 @@ class _BudgetTotalInput extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    return TextFormField(
-      key: const Key('total-budget-input'),
-      controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
-      scrollPadding: kDonyKeyboardScrollPadding,
-      // Le « touched » natif : le message n'apparaît qu'après une première
-      // interaction, sans drapeau ni second afficheur d'erreur à tenir.
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      style: tt.headlineMedium?.copyWith(
-        fontWeight: FontWeight.w800,
-        fontSize: 22,
-        color: cs.onSurface,
-      ),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: cs.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md + 2,
-        ),
-        hintText: l10n.requestCreateBudgetInputHint,
-        hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-        suffixText: currency?.symbol,
-        suffixStyle: tt.titleSmall?.copyWith(
+    return DonyReplayMask(
+      child: TextFormField(
+        key: const Key('total-budget-input'),
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
+        scrollPadding: kDonyKeyboardScrollPadding,
+        // Le « touched » natif : le message n'apparaît qu'après une première
+        // interaction, sans drapeau ni second afficheur d'erreur à tenir.
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        style: tt.headlineMedium?.copyWith(
           fontWeight: FontWeight.w800,
-          color: cs.onSurfaceVariant,
+          fontSize: 22,
+          color: cs.onSurface,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: cs.surface,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.md + 2,
+          ),
+          hintText: l10n.requestCreateBudgetInputHint,
+          hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          suffixText: currency?.symbol,
+          suffixStyle: tt.titleSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: cs.onSurfaceVariant,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide(color: cs.outline),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide(color: cs.primary, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide(color: cs.error, width: 1.5),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            borderSide: BorderSide(color: cs.error, width: 2),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.error, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.error, width: 2),
-        ),
-      ),
-      onChanged: (text) {
-        final value = double.tryParse(text.replaceAll(',', '.'));
-        context.read<PackageRequestFormBloc>().add(
-          PackageRequestTotalBudgetChanged(value),
-        );
-        onBudgetChanged?.call();
-      },
-      validator: (v) {
-        if (v == null || v.trim().isEmpty) {
-          return l10n.requestCreateBudgetEmpty;
-        }
-        final d = double.tryParse(v.replaceAll(',', '.'));
-        final effectiveCurrency = currency ?? SupportedCurrency.eur;
-        if (!PackageRequestLimits.isBudgetValid(
-          d,
-          effectiveCurrency,
-          grid: grid,
-          legacy: legacy,
-        )) {
-          // Dans les bornes, mais sous les frais de service minimum de la
-          // grille : le back refuserait la demande (422).
-          final minimum = legacy
-              ? null
-              : grid?.minimumFor(effectiveCurrency.code);
-          if (minimum != null &&
-              PackageRequestLimits.isBelowCommissionMinimum(
-                d,
-                effectiveCurrency,
-                grid: grid,
-                legacy: legacy,
-              )) {
-            // Le minimum n'est jamais cité (YADONY-FLUTTER-PROD-1J).
-            return l10n.requestBudgetBelowServiceFee;
+        onChanged: (text) {
+          final value = double.tryParse(text.replaceAll(',', '.'));
+          context.read<PackageRequestFormBloc>().add(
+            PackageRequestTotalBudgetChanged(value),
+          );
+          onBudgetChanged?.call();
+        },
+        validator: (v) {
+          if (v == null || v.trim().isEmpty) {
+            return l10n.requestCreateBudgetEmpty;
           }
-          final min = CurrencyFormatter.formatOrPlain(
-            PackageRequestLimits.minBudgetFor(effectiveCurrency),
-            currency,
-          );
-          final max = CurrencyFormatter.formatOrPlain(
-            PackageRequestLimits.maxBudgetFor(effectiveCurrency),
-            currency,
-          );
-          return l10n.requestCreateBudgetRange(min, max);
-        }
-        return null;
-      },
+          final d = double.tryParse(v.replaceAll(',', '.'));
+          final effectiveCurrency = currency ?? SupportedCurrency.eur;
+          if (!PackageRequestLimits.isBudgetValid(
+            d,
+            effectiveCurrency,
+            grid: grid,
+            legacy: legacy,
+          )) {
+            // Dans les bornes, mais sous les frais de service minimum de la
+            // grille : le back refuserait la demande (422).
+            final minimum = legacy
+                ? null
+                : grid?.minimumFor(effectiveCurrency.code);
+            if (minimum != null &&
+                PackageRequestLimits.isBelowCommissionMinimum(
+                  d,
+                  effectiveCurrency,
+                  grid: grid,
+                  legacy: legacy,
+                )) {
+              // Le minimum n'est jamais cité (YADONY-FLUTTER-PROD-1J).
+              return l10n.requestBudgetBelowServiceFee;
+            }
+            final min = CurrencyFormatter.formatOrPlain(
+              PackageRequestLimits.minBudgetFor(effectiveCurrency),
+              currency,
+            );
+            final max = CurrencyFormatter.formatOrPlain(
+              PackageRequestLimits.maxBudgetFor(effectiveCurrency),
+              currency,
+            );
+            return l10n.requestCreateBudgetRange(min, max);
+          }
+          return null;
+        },
+      ),
     );
   }
 }

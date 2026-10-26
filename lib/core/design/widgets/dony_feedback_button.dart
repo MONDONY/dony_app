@@ -522,12 +522,14 @@ class _FeedbackFormBody extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         const _FeedbackAttachments(),
         const SizedBox(height: DonySpacing.base),
-        TextField(
-          controller: formState.controller,
-          minLines: 3,
-          maxLines: 4,
-          decoration: InputDecoration(hintText: l.feedbackHint),
-          textInputAction: TextInputAction.newline,
+        DonyReplayMask(
+          child: TextField(
+            controller: formState.controller,
+            minLines: 3,
+            maxLines: 4,
+            decoration: InputDecoration(hintText: l.feedbackHint),
+            textInputAction: TextInputAction.newline,
+          ),
         ),
       ],
     );
