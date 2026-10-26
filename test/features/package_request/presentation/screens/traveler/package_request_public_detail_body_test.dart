@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/repositories/announcement_repository
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +43,7 @@ PackageRequest _req({
   bool flexibleDate = false,
   String departureCity = 'Paris',
   String arrivalCity = 'Dakar',
+  Set<PaymentMethod> acceptedPaymentMethods = const {},
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
@@ -60,6 +62,7 @@ PackageRequest _req({
   grossPriceEur: grossPriceEur,
   photoUrls: photoUrls,
   viewerThreadId: viewerThreadId,
+  acceptedPaymentMethods: acceptedPaymentMethods,
 );
 
 void main() {
@@ -764,5 +767,167 @@ void main() {
     // Espace insécable (U+00A0) entre le montant et « € », posé par
     // NumberFormat.currency('fr_FR') — jamais une espace normale.
     expect(find.text('Take it for 40,00\u{a0}€ · Fixed price'), findsOneWidget);
+  });
+
+  // ── Réassurance sous le bouton fixe ───────────────────────────────────────
+  group('réassurance sous le bouton', () {
+    const secured = 'Paiement sécurisé : versé après la livraison';
+    const negotiable = "Vous proposez votre prix, l'expéditeur répond";
+    final reassurance = find.byKey(const Key('request-reassurance'));
+
+    // Le bouton de prix ferme résout son BLoC de négociation via GetIt.
+    setUp(() {
+      final negoBloc = _MockNegotiationBloc();
+      when(() => negoBloc.state).thenReturn(const NegotiationInitial());
+      whenListen(
+        negoBloc,
+        const Stream<NegotiationState>.empty(),
+        initialState: const NegotiationInitial(),
+      );
+      getIt.registerFactory<NegotiationBloc>(() => negoBloc);
+    });
+    tearDown(() {
+      if (getIt.isRegistered<NegotiationBloc>()) {
+        getIt.unregister<NegotiationBloc>();
+      }
+    });
+
+    testWidgets('négociable, carte acceptée : les deux lignes', (tester) async {
+      await tester.pumpWidget(
+        wrapLogged(_req(acceptedPaymentMethods: {PaymentMethod.stripe})),
+      );
+      await tester.pumpAndSettle();
+
+      expect(reassurance, findsOneWidget);
+      expect(find.text(secured), findsOneWidget);
+      expect(find.text(negotiable), findsOneWidget);
+    });
+
+    testWidgets('prix ferme, mobile money : seulement la première ligne', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapLogged(
+          _req(
+            negotiable: false,
+            acceptedPaymentMethods: {
+              PaymentMethod.stripe,
+              PaymentMethod.mobileMoney,
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(secured), findsOneWidget);
+      expect(find.text(negotiable), findsNothing);
+    });
+
+    testWidgets('négociable, espèces seules : seulement la seconde ligne', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapLogged(_req(acceptedPaymentMethods: {PaymentMethod.cash})),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(secured), findsNothing);
+      expect(find.text(negotiable), findsOneWidget);
+    });
+
+    testWidgets('espèces parmi les moyens acceptés : jamais « sécurisé »', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapLogged(
+          _req(
+            negotiable: false,
+            acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(reassurance, findsNothing);
+      expect(find.text(secured), findsNothing);
+    });
+
+    testWidgets('prix ferme sans moyen connu : rien n\'est promis', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrapLogged(_req(negotiable: false)));
+      await tester.pumpAndSettle();
+
+      expect(reassurance, findsNothing);
+    });
+
+    testWidgets('invité : aucune ligne', (tester) async {
+      await tester.pumpWidget(
+        wrap(_req(acceptedPaymentMethods: {PaymentMethod.stripe})),
+      );
+      await tester.pumpAndSettle();
+
+      expect(reassurance, findsNothing);
+    });
+
+    testWidgets('propriétaire : aucune ligne', (tester) async {
+      await tester.pumpWidget(
+        wrapOwner(_req(acceptedPaymentMethods: {PaymentMethod.stripe})),
+      );
+      await tester.pumpAndSettle();
+
+      expect(reassurance, findsNothing);
+    });
+
+    testWidgets('offre déjà en cours : aucune ligne', (tester) async {
+      await tester.pumpWidget(
+        wrapLogged(
+          _req(
+            viewerThreadId: 'thread-1',
+            acceptedPaymentMethods: {PaymentMethod.stripe},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(reassurance, findsNothing);
+      expect(find.text('Voir ma négociation'), findsOneWidget);
+    });
+
+    testWidgets('aucun montant dans les lignes, texte lisible', (tester) async {
+      await tester.pumpWidget(
+        wrapLogged(
+          _req(
+            grossPriceEur: 40,
+            acceptedPaymentMethods: {PaymentMethod.stripe},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(of: reassurance, matching: find.textContaining('€')),
+        findsNothing,
+      );
+      final text = tester.widget<Text>(find.text(secured));
+      expect(text.style?.fontSize, greaterThanOrEqualTo(12));
+    });
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrapLogged(_req(acceptedPaymentMethods: {PaymentMethod.stripe})),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Secure payment: paid out after delivery'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('You propose your price, the sender replies'),
+        findsOneWidget,
+      );
+    });
   });
 }

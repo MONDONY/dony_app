@@ -8049,6 +8049,18 @@ abstract class AppLocalizations {
   /// **'Proposer mon trajet'**
   String get requestPublicProposeTripCta;
 
+  /// Ligne de réassurance sous le bouton fixe de la fiche d'une demande, quand le colis ne se règle pas en espèces
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé : versé après la livraison'**
+  String get requestPublicReassureSecured;
+
+  /// Ligne de réassurance sous le bouton fixe de la fiche d'une demande négociable
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous proposez votre prix, l\'expéditeur répond'**
+  String get requestPublicReassureNegotiable;
+
   /// CTA quand le voyageur a déjà une offre en cours, négociable (package_request_public_detail_screen.dart)
   ///
   /// In fr, this message translates to:

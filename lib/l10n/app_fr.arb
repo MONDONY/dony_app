@@ -3930,6 +3930,14 @@
   "@requestPublicProposeTripCta": {
     "description": "CTA voyageur sur une demande négociable (package_request_public_detail_screen.dart)"
   },
+  "requestPublicReassureSecured": "Paiement sécurisé : versé après la livraison",
+  "@requestPublicReassureSecured": {
+    "description": "Ligne de réassurance sous le bouton fixe de la fiche d'une demande, quand le colis ne se règle pas en espèces"
+  },
+  "requestPublicReassureNegotiable": "Vous proposez votre prix, l'expéditeur répond",
+  "@requestPublicReassureNegotiable": {
+    "description": "Ligne de réassurance sous le bouton fixe de la fiche d'une demande négociable"
+  },
   "requestPublicViewNegotiationCta": "Voir ma négociation",
   "@requestPublicViewNegotiationCta": {
     "description": "CTA quand le voyageur a déjà une offre en cours, négociable (package_request_public_detail_screen.dart)"

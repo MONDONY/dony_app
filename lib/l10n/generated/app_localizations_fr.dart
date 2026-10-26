@@ -4812,6 +4812,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestPublicProposeTripCta => 'Proposer mon trajet';
 
   @override
+  String get requestPublicReassureSecured =>
+      'Paiement sécurisé : versé après la livraison';
+
+  @override
+  String get requestPublicReassureNegotiable =>
+      'Vous proposez votre prix, l\'expéditeur répond';
+
+  @override
   String get requestPublicViewNegotiationCta => 'Voir ma négociation';
 
   @override
