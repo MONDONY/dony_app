@@ -886,23 +886,25 @@ Avant de naviguer vers un écran fils, se poser ces questions :
 | `pinput` | Champ PIN/OTP |
 | `flutter_secure_storage` | Stockage PIN (Keystore/Keychain) |
 
-### Palette (source de vérité : `lib/app/theme.dart`)
+### Palette (source de vérité : `lib/core/design/tokens/color_tokens.dart`)
 
-```dart
-const kGreenPrimary  = Color(0xFF1A6B3C);  // CTA, actifs
-const kGreenDark     = Color(0xFF134F2D);  // headers
-const kGreenAccent   = Color(0xFF4CAF7D);  // accents secondaires
-const kGreenLight    = Color(0xFFE8F5EE);  // bg chips actifs
-const kBackground    = Color(0xFFF4F6F8);  // fond (jamais blanc pur)
-const kSurface       = Color(0xFFFFFFFF);  // cards, inputs, appbar
-const kTextPrimary   = Color(0xFF0D1B2A);
-const kTextSecondary = Color(0xFF6B7A8D);
-const kTextHint      = Color(0xFFADB5BD);
-const kBorder        = Color(0xFFE9ECEF);
-const kError         = Color(0xFFE53935);
-const kWarning       = Color(0xFFF59E0B);
-const kSuccess       = Color(0xFF16A34A);
-```
+Les couleurs vivent dans `DonyColors` (détail et usages : `lib/core/design/CLAUDE.md`). Dans un `build()`, lire le `ColorScheme` (`cs.primary`, `cs.onSurface`...) plutôt que `DonyColors` directement : seul le `ColorScheme` suit le mode sombre. Valeurs de référence (clair), contrastes mesurés :
+
+| Rôle | Token | Valeur | Contraste |
+|------|-------|--------|-----------|
+| CTA, liens, actifs | `primary` | `#0B5FFF` | 5,13:1 sur blanc |
+| Fond de puce active | `primarySoft` | `#EDF2FF` | `primary` dessus : 4,58:1 |
+| Accent chaud (CTA d'écran de succès) | `accent` | `#B95524` | blanc dessus : 4,79:1 |
+| Fond d'écran | `bgApp` | `#FAFAF8` | jamais blanc pur |
+| Cartes, champs, barre d'app | `surface` | `#FFFFFF` | |
+| Texte principal | `textPrimary` | `#0A2540` | 14,87:1 sur `bgApp` |
+| Texte secondaire | `textMuted` | `#54504A` | 7,66:1 sur `bgApp` |
+| Texte discret | `textSubtle` | `#797367` | 4,50:1 sur `bgApp`, 4,71:1 sur blanc : limite exacte |
+| Bordure de carte (décorative) | `borderDefault` | `#E8E5DF` | |
+| Contour de champ | `borderInput` | `#948E80` | 3,26:1 sur blanc |
+| Succès / alerte / erreur | `success` / `warning` / `error` | `#0C7A54` / `#96631A` / `#C42A22` | 5,35 / 5,13 / 5,67:1 sur blanc |
+
+Les anciens noms `kGreenPrimary`, `kTextSecondary`, `kBorder`... des exemples plus bas sont historiques : ils décrivaient une ancienne palette verte qui n'existe plus dans le code. Un nouvel écran n'y revient pas.
 
 ### Règles HIG obligatoires
 
