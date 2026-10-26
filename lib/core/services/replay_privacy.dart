@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:flutter/widgets.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 
 /// Écrans (préfixes de chemin) qui ne sont **jamais** enregistrés dans le
@@ -66,6 +67,23 @@ bool isReplaySensitivePath(String path) {
     if (path == prefix || path.startsWith('$prefix/')) return true;
   }
   return false;
+}
+
+/// Chemin de l'écran affiché, y compris dans un onglet ou une page poussée.
+///
+/// Les onglets (`StatefulShellBranch`) tournent sur leur propre navigateur :
+/// un changement d'onglet ne passe pas par les observateurs du routeur. On lit
+/// donc la configuration du routeur, et on garde le chemin sensible s'il y en
+/// a un entre l'adresse et la page la plus profonde.
+String replayPathOf(RouteMatchList config) {
+  final candidates = <String>[
+    config.uri.path,
+    if (config.isNotEmpty) config.last.matchedLocation,
+  ];
+  for (final path in candidates) {
+    if (isReplaySensitivePath(path)) return path;
+  }
+  return candidates.first;
 }
 
 /// Pilote l'enregistrement du replay (mockable dans les tests).
