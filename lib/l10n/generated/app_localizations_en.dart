@@ -8002,6 +8002,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailParcelLabel => 'Parcel';
 
   @override
+  String bidDetailParcelWeightWithAdded(String total, String added) {
+    return '$total ($added added)';
+  }
+
+  @override
   String get bidDetailRecipientLabel => 'Recipient';
 
   @override

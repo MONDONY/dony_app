@@ -13296,6 +13296,12 @@ abstract class AppLocalizations {
   /// **'Colis'**
   String get bidDetailParcelLabel;
 
+  /// Poids du colis après modification dans la carte Colis. {total} : poids final formaté avec son unité, {added} : kilos ajoutés par les modifications acquises, avec leur unité
+  ///
+  /// In fr, this message translates to:
+  /// **'{total} (dont {added} en plus)'**
+  String bidDetailParcelWeightWithAdded(String total, String added);
+
   /// Clé dédiée (Ruling R40) — remplace requestCreateRecipientSection dans colis_destinataire_card.dart
   ///
   /// In fr, this message translates to:

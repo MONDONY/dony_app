@@ -2063,6 +2063,28 @@ void main() {
       expect(find.text('Bloquer ce voyageur'), findsOneWidget);
     });
 
+    testWidgets(
+      'Signaler et Bloquer : deux boutons visibles côte à côte, cibles 44 pt',
+      (tester) async {
+        await tester.pumpWidget(_harness(announcement: _buildAnnouncement()));
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        final report = find.byKey(const Key('report-announcement-link'));
+        final block = find.byKey(const Key('block-traveler-link'));
+        await tester.ensureVisible(report);
+        await tester.pumpAndSettle();
+
+        expect(tester.getSize(report).height, greaterThanOrEqualTo(44));
+        expect(tester.getSize(block).height, greaterThanOrEqualTo(44));
+        expect(
+          tester.getTopLeft(block).dy,
+          tester.getTopLeft(report).dy,
+          reason: 'sur la même ligne',
+        );
+      },
+    );
+
     testWidgets('son propre trajet → aucune entrée de blocage', (tester) async {
       final a = _buildAnnouncement();
       // Le lecteur est le voyageur de l'annonce : on ne se bloque pas soi-même.

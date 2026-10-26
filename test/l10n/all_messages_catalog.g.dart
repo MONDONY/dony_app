@@ -2929,6 +2929,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailParcelRecipientTitle': (l) => l.bidDetailParcelRecipientTitle,
   'bidDetailCancelRequestLabel': (l) => l.bidDetailCancelRequestLabel,
   'bidDetailParcelLabel': (l) => l.bidDetailParcelLabel,
+  'bidDetailParcelWeightWithAdded': (l) => l.bidDetailParcelWeightWithAdded(
+    placeholderMarker('total'),
+    placeholderMarker('added'),
+  ),
   'bidDetailRecipientLabel': (l) => l.bidDetailRecipientLabel,
   'bidDetailPhoneLabel': (l) => l.bidDetailPhoneLabel,
   'bidDetailDescriptionLabel': (l) => l.bidDetailDescriptionLabel,
@@ -8126,6 +8130,7 @@ const textParameters = <String, List<String>>{
   'recipientNotifyMessageLink': ['route', 'url'],
   'recipientNotifyMessageCode': ['route', 'code', 'url'],
   'bidDetailTrackingShareSubject': ['number'],
+  'bidDetailParcelWeightWithAdded': ['total', 'added'],
   'ticketRegenerateAvailableInLabel': ['remaining'],
   'ticketRegenerateLimitReachedMessage': ['remaining'],
   'ticketShareTrackingMessage': ['trackingNumber'],

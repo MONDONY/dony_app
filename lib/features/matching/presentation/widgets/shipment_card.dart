@@ -119,7 +119,7 @@ class ShipmentCard extends StatelessWidget {
   /// Format weight at the effective language: '4,5 kg' in French, '4.5 kg'
   /// in English.
   String _weightLabel(AppLocalizations l) {
-    final kg = bid.weightKg;
+    final kg = bid.displayWeightKg;
     if (kg == null) {
       return '- kg';
     }

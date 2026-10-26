@@ -848,8 +848,8 @@ class _TravelerDecisionSummary extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
 
-    final weight = bid.weightKg != null
-        ? '${bid.weightKg!.toStringAsFixed(1)} kg'
+    final weight = bid.displayWeightKg != null
+        ? '${bid.displayWeightKg!.toStringAsFixed(1)} kg'
         : '-';
     final category = bid.contentCategory != null
         ? contentCategoriesDisplayName(l, bid.contentCategory!)

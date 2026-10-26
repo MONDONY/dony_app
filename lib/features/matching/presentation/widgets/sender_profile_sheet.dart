@@ -111,6 +111,7 @@ class _SenderProfileSheet extends StatelessWidget {
                       context,
                       userId: bid.senderId,
                       displayName: _abbreviatedName(context),
+                      onBlocked: () => closeAfterBlock(context),
                     ),
                   ),
                 ),

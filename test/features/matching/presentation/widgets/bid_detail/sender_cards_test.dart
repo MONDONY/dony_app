@@ -546,7 +546,7 @@ void main() {
 
       await tester.pumpWidget(_hostColis(bid));
 
-      expect(find.textContaining('5.0'), findsWidgets);
+      expect(find.textContaining('5 kg'), findsWidgets);
       expect(find.textContaining('Vêtements'), findsWidgets);
       expect(find.textContaining('Aminata'), findsWidgets);
       expect(find.textContaining('+221700000000'), findsWidgets);

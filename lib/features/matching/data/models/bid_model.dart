@@ -465,6 +465,19 @@ class BidModel {
 
   bool get isSkeleton => senderId.isEmpty;
 
+  /// Poids à afficher partout : celui du colis avec les kilos des modifications
+  /// acquises ([totalWeightKg]), sinon [weightKg] (back antérieur). Ne sert
+  /// jamais à un calcul d'argent : le serveur ventile les montants.
+  double? get displayWeightKg => totalWeightKg ?? weightKg;
+
+  /// Kilos ajoutés par les modifications acquises, 0 sans modification.
+  double get acquiredAddedWeightKg {
+    final total = totalWeightKg;
+    if (total == null) return 0;
+    final added = total - (weightKg ?? 0);
+    return added > 0 ? added : 0;
+  }
+
   /// Vue expéditeur : colis remis au voyageur mais sans code de retrait
   /// utilisable. Le serveur l'a effacé après trois essais faux, ou il a
   /// expiré (FLUTTER-G1, FLUTTER-G2). Seul l'expéditeur peut en générer un

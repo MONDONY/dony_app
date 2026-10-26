@@ -763,78 +763,114 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         ],
 
         const SizedBox(height: DonySpacing.lg),
-        Center(
-          child: InkWell(
-            key: const Key('report-announcement-link'),
-            borderRadius: BorderRadius.circular(DonyRadius.sm),
-            onTap: () {
-              const location = '/settings/report-incident';
-              final extra = {
-                'targetType': IncidentTargetType.announcement,
-                'targetId': announcement.id,
-              };
-              final navigator = Navigator.of(context, rootNavigator: true);
-              if (returnsNavigation) {
-                navigator.pop(TravelerSheetRoute(location, extra: extra));
-                return;
-              }
-              navigator.pop();
-              context.push(location, extra: extra);
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.sm,
-                vertical: DonySpacing.xs,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DonyIcon('flag', size: 14, color: cs.onSurfaceVariant),
-                  const SizedBox(width: DonySpacing.xs),
-                  Text(
-                    l.listingReportTripLink,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-
+        // Signaler et bloquer : deux boutons bordés côte à côte, pas deux
+        // liens gris de 14 px au pied de la feuille que personne ne trouve.
         // Le blocage vivait sur l'écran « Détail annonce », supprimé au profit
-        // de cette feuille. Sans ce report, un des points d'entrée du blocage
-        // disparaîtrait. Masqué sur son propre trajet : on ne se bloque pas.
-        if (_voyageurBloquable != null)
-          Center(
-            child: InkWell(
-              key: const Key('block-traveler-link'),
-              borderRadius: BorderRadius.circular(DonyRadius.sm),
-              onTap: () => showBlockMenu(
-                context,
-                userId: _voyageurBloquable!.id,
-                displayName: _voyageurBloquable!.travelerName(context.l10n),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.sm,
-                  vertical: DonySpacing.xs,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DonyIcon('ban', size: 14, color: cs.onSurfaceVariant),
-                    const SizedBox(width: DonySpacing.xs),
-                    Text(
-                      l.listingBlockTravelerLink,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ],
-                ),
+        // de cette feuille. Masqué sur son propre trajet : on ne se bloque pas.
+        Row(
+          children: [
+            Expanded(
+              child: _SafetyButton(
+                key: const Key('report-announcement-link'),
+                iconAsset: 'flag',
+                label: l.listingReportTripLink,
+                color: cs.onSurface,
+                onTap: () {
+                  const location = '/settings/report-incident';
+                  final extra = {
+                    'targetType': IncidentTargetType.announcement,
+                    'targetId': announcement.id,
+                  };
+                  final navigator = Navigator.of(context, rootNavigator: true);
+                  if (returnsNavigation) {
+                    navigator.pop(TravelerSheetRoute(location, extra: extra));
+                    return;
+                  }
+                  navigator.pop();
+                  context.push(location, extra: extra);
+                },
               ),
             ),
-          ),
+            if (_voyageurBloquable != null) ...[
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: _SafetyButton(
+                  key: const Key('block-traveler-link'),
+                  iconAsset: 'ban',
+                  label: l.listingBlockTravelerLink,
+                  color: cs.error,
+                  onTap: () => showBlockMenu(
+                    context,
+                    userId: _voyageurBloquable!.id,
+                    displayName: _voyageurBloquable!.travelerName(l),
+                    onBlocked: () => closeAfterBlock(context),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
         const SizedBox(height: DonySpacing.md),
       ],
+    );
+  }
+}
+
+/// Bouton bordé « Signaler » / « Bloquer » de la feuille du trajet : icône et
+/// libellé, cible d'au moins 44 pt.
+class _SafetyButton extends StatelessWidget {
+  const _SafetyButton({
+    super.key,
+    required this.iconAsset,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String iconAsset;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.md,
+            vertical: DonySpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            border: Border.all(color: cs.outline),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              DonyIcon(iconAsset, size: 18, color: color),
+              const SizedBox(width: DonySpacing.xs),
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

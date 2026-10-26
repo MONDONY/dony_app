@@ -109,6 +109,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                       context,
                       userId: traveler.id,
                       displayName: _abbreviatedName(context),
+                      onBlocked: () => closeAfterBlock(context),
                     ),
                   ),
                 ),

@@ -8125,6 +8125,8 @@
   "@bidDetailParcelLabel": {
     "description": "Clé dédiée (Ruling R40) — remplace requestCreateRecapPackage dans colis_destinataire_card.dart"
   },
+  "bidDetailParcelWeightWithAdded": "{total} (dont {added} en plus)",
+  "@bidDetailParcelWeightWithAdded": {"description": "Poids du colis après modification dans la carte Colis. {total} : poids final formaté avec son unité, {added} : kilos ajoutés par les modifications acquises, avec leur unité", "placeholders": {"total": {"type": "String"}, "added": {"type": "String"}}},
   "bidDetailRecipientLabel": "Destinataire",
   "@bidDetailRecipientLabel": {
     "description": "Clé dédiée (Ruling R40) — remplace requestCreateRecipientSection dans colis_destinataire_card.dart"
