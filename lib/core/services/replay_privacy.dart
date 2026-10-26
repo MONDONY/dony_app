@@ -93,27 +93,29 @@ class ReplayPrivacyObserver extends NavigatorObserver {
     required String? Function() currentPath,
     required bool Function() consentGranted,
     ReplayRecordingControl control = const PosthogReplayRecordingControl(),
-    Stream<void>? consentChanges,
+    Stream<void> Function()? consentChanges,
   }) : _currentPath = currentPath,
        _consentGranted = consentGranted,
-       _control = control {
-    _consentSub = consentChanges?.listen((_) => evaluate(force: true));
-  }
+       _control = control,
+       _consentChanges = consentChanges;
 
   /// Observateur branché sur [AnalyticsService] : lit le consentement au
-  /// moment de chaque changement d'écran.
+  /// moment de chaque changement d'écran. Le service n'est résolu qu'à la
+  /// demande : le routeur est créé avant que l'injection soit prête (et sans
+  /// elle dans les tests).
   factory ReplayPrivacyObserver.forAnalytics({
     required String? Function() currentPath,
     required AnalyticsService Function() analytics,
   }) => ReplayPrivacyObserver(
     currentPath: currentPath,
     consentGranted: () => analytics().isEnabled,
-    consentChanges: analytics().consentChanges,
+    consentChanges: () => analytics().consentChanges,
   );
 
   final String? Function() _currentPath;
   final bool Function() _consentGranted;
   final ReplayRecordingControl _control;
+  final Stream<void> Function()? _consentChanges;
 
   bool _paused = false;
   StreamSubscription<void>? _consentSub;
@@ -146,18 +148,37 @@ class ReplayPrivacyObserver extends NavigatorObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) => evaluate());
   }
 
+  /// Écoute les changements de consentement dès que le service est prêt.
+  /// Sans service (tests, démarrage), on réessaiera au prochain écran.
+  void _listenToConsent() {
+    if (_consentSub != null || _consentChanges == null) return;
+    try {
+      _consentSub = _consentChanges().listen((_) => evaluate(force: true));
+    } catch (_) {
+      // Service d'analytics pas encore enregistré.
+    }
+  }
+
   /// Recalcule l'état voulu. [force] renvoie l'ordre d'arrêt même si l'état
   /// est déjà « en pause » : un accord de consentement relance
   /// l'enregistrement sans que l'observateur le sache.
+  ///
+  /// N'échoue jamais : la vie privée du replay ne doit pas faire planter la
+  /// navigation.
   void evaluate({bool force = false}) {
-    final path = _currentPath();
-    final shouldPause = path != null && isReplaySensitivePath(path);
-    if (shouldPause && (force || !_paused)) {
-      _paused = true;
-      unawaited(_control.stop());
-    } else if (!shouldPause && _paused) {
-      _paused = false;
-      if (_consentGranted()) unawaited(_control.resume());
+    try {
+      _listenToConsent();
+      final path = _currentPath();
+      final shouldPause = path != null && isReplaySensitivePath(path);
+      if (shouldPause && (force || !_paused)) {
+        _paused = true;
+        unawaited(_control.stop());
+      } else if (!shouldPause && _paused) {
+        _paused = false;
+        if (_consentGranted()) unawaited(_control.resume());
+      }
+    } catch (_) {
+      // Chemin ou service indisponible : aucun changement d'état.
     }
   }
 }

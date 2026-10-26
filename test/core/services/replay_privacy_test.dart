@@ -135,7 +135,7 @@ void main() {
         currentPath: () => path,
         consentGranted: () => consent,
         control: control,
-        consentChanges: consentChanges.stream,
+        consentChanges: () => consentChanges.stream,
       );
     });
 
@@ -197,6 +197,47 @@ void main() {
       consentChanges.add(null);
       await Future<void>.delayed(Duration.zero);
       expect(control.stops, 0);
+    });
+
+    test('service d\'analytics indisponible : ne plante pas, réessaie', () {
+      var ready = false;
+      final lazy = ReplayPrivacyObserver(
+        currentPath: () => '/home',
+        consentGranted: () => throw StateError('no service'),
+        control: control,
+        consentChanges: () {
+          if (!ready) throw StateError('GetIt: not registered');
+          return consentChanges.stream;
+        },
+      );
+      expect(lazy.evaluate, returnsNormally);
+      ready = true;
+      expect(lazy.evaluate, returnsNormally);
+      addTearDown(lazy.dispose);
+    });
+
+    test('chemin illisible : aucune pause, aucune exception', () {
+      final broken = ReplayPrivacyObserver(
+        currentPath: () => throw StateError('router pas prêt'),
+        consentGranted: () => true,
+        control: control,
+      );
+      expect(broken.evaluate, returnsNormally);
+      expect(broken.isPaused, isFalse);
+      expect(control.stops, 0);
+    });
+
+    test('reprise : un service qui échoue ne bloque pas l\'état', () {
+      path = '/kyc/verify';
+      observer.evaluate();
+      final failing = ReplayPrivacyObserver(
+        currentPath: () => path,
+        consentGranted: () => throw StateError('boom'),
+        control: control,
+      );
+      failing.evaluate();
+      path = '/home';
+      expect(failing.evaluate, returnsNormally);
     });
 
     testWidgets('navigation : pause à l\'entrée, reprise à la sortie', (
