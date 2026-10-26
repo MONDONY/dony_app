@@ -253,14 +253,27 @@ jobs:
           flutter build ios --release --no-codesign \
             --dart-define-from-file=env.prod.json \
             --build-number=${{ needs.prepare.outputs.build_number }}
+          # Les réglages de signature ne doivent toucher que la cible Runner :
+          # passés en ligne de commande à xcodebuild, ils s'appliquent aussi à
+          # tous les Pods, qui refusent un profil de distribution
+          # ("does not support provisioning profiles").
+          gem list -i xcodeproj >/dev/null || sudo gem install xcodeproj --no-document
+          ruby -rxcodeproj -e '
+            proj = Xcodeproj::Project.open("ios/Runner.xcodeproj")
+            target = proj.targets.find { |t| t.name == "Runner" } or abort("cible Runner introuvable")
+            target.build_configurations.select { |c| c.name == "Release" }.each do |c|
+              s = c.build_settings
+              s["CODE_SIGN_STYLE"] = "Manual"
+              s["CODE_SIGN_IDENTITY"] = "Apple Distribution"
+              s["CODE_SIGN_IDENTITY[sdk=iphoneos*]"] = "Apple Distribution"
+              s["DEVELOPMENT_TEAM"] = "F5Q74US8XS"
+              s["PROVISIONING_PROFILE_SPECIFIER"] = ENV.fetch("PROFILE_NAME")
+            end
+            proj.save'
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace -scheme Runner \
             -configuration Release \
-            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            DEVELOPMENT_TEAM=F5Q74US8XS \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME"
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive"
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
             -exportOptionsPlist ios/ExportOptions.plist \
