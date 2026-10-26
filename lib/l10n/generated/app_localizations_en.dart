@@ -6503,6 +6503,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get negotiationNudgeButton => 'Send a reminder';
 
   @override
+  String negotiationAutoReminderSentTitle(String name) {
+    return 'Reminder sent to $name';
+  }
+
+  @override
+  String get negotiationAutoReminderSentAnonymousTitle => 'Reminder sent';
+
+  @override
+  String negotiationAutoReminderSentSubtitle(String date, String time) {
+    return 'Sent automatically on $date at $time, as there was no reply.';
+  }
+
+  @override
   String negotiationSenderAcceptButton(String amount) {
     return 'Accept: You pay $amount';
   }

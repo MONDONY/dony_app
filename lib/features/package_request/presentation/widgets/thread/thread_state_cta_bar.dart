@@ -19,6 +19,7 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 /// Barre de CTAs contextuels en bas du thread négociation.
 class ThreadStateCtaBar extends StatelessWidget {
@@ -34,6 +35,14 @@ class ThreadStateCtaBar extends StatelessWidget {
   final bool actionInProgress;
 
   bool get _isSender => thread.travelerId != viewerUserId;
+
+  /// Le serveur a rappelé l'autre partie à ma place : seul celui qui attend sa
+  /// réponse (dernier message de moi, fil ouvert) en est informé. Un nouveau
+  /// message efface le champ côté serveur, le bandeau disparaît avec.
+  bool get _showAutoReminder =>
+      thread.autoReminderSentAt != null &&
+      thread.status == NegotiationThreadStatus.open &&
+      _lastFromMe;
   bool get _lastFromMe =>
       thread.messages.isNotEmpty &&
       thread.messages.last.fromUserId == viewerUserId;
@@ -113,6 +122,10 @@ class ThreadStateCtaBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildContent(context),
+                if (_showAutoReminder) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  _AutoReminderBanner(thread: thread, isSender: _isSender),
+                ],
                 if (thread.canNudge) ...[
                   const SizedBox(height: DonySpacing.sm),
                   _NudgeButton(threadId: thread.id, disabled: actionInProgress),
@@ -333,6 +346,34 @@ Future<void> confirmEndNegotiation(
 /// « Mettre fin à la négociation » en bouton secondaire, jusque-là cachée
 /// dans le menu ⋯. Statuts couverts : `open` après mon dernier message,
 /// `awaitingTrip` côté expéditeur — avant tout paiement engagé.
+/// « Rappel envoyé à {nom} » : le serveur a prévenu l'autre partie faute de
+/// réponse. Jamais d'accord de genre : le nom seul, puis la date de l'envoi.
+class _AutoReminderBanner extends StatelessWidget {
+  const _AutoReminderBanner({required this.thread, required this.isSender});
+
+  final NegotiationThread thread;
+  final bool isSender;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final sentAt = thread.autoReminderSentAt!.toLocal();
+    final name = (isSender ? thread.travelerName : thread.senderName)?.trim();
+    return ThreadStateBanner(
+      key: const Key('thread-auto-reminder-banner'),
+      iconAsset: 'bell',
+      tint: Theme.of(context).colorScheme.primary,
+      message: name == null || name.isEmpty
+          ? l.negotiationAutoReminderSentAnonymousTitle
+          : l.negotiationAutoReminderSentTitle(name),
+      subtitle: l.negotiationAutoReminderSentSubtitle(
+        DateFormat.MMMd(l.localeName).format(sentAt),
+        DateFormat.Hm(l.localeName).format(sentAt),
+      ),
+    );
+  }
+}
+
 class _AwaitingOtherWithEnd extends StatelessWidget {
   const _AwaitingOtherWithEnd({
     required this.threadId,

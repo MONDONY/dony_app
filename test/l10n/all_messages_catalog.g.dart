@@ -2283,6 +2283,15 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'negotiationViewShipmentButton': (l) => l.negotiationViewShipmentButton,
   'negotiationEndedMessage': (l) => l.negotiationEndedMessage,
   'negotiationNudgeButton': (l) => l.negotiationNudgeButton,
+  'negotiationAutoReminderSentTitle': (l) =>
+      l.negotiationAutoReminderSentTitle(placeholderMarker('name')),
+  'negotiationAutoReminderSentAnonymousTitle': (l) =>
+      l.negotiationAutoReminderSentAnonymousTitle,
+  'negotiationAutoReminderSentSubtitle': (l) =>
+      l.negotiationAutoReminderSentSubtitle(
+        placeholderMarker('date'),
+        placeholderMarker('time'),
+      ),
   'negotiationSenderAcceptButton': (l) =>
       l.negotiationSenderAcceptButton(placeholderMarker('amount')),
   'negotiationDeclineButton': (l) => l.negotiationDeclineButton,
@@ -8076,6 +8085,8 @@ const textParameters = <String, List<String>>{
   'blockConfirmTitle': ['name'],
   'negotiationCompleteAndPayButton': ['amount'],
   'negotiationCommissionTravelerBannerSubtitle': ['amount'],
+  'negotiationAutoReminderSentTitle': ['name'],
+  'negotiationAutoReminderSentSubtitle': ['date', 'time'],
   'negotiationSenderAcceptButton': ['amount'],
   'negotiationTravelerAcceptButton': ['amount'],
   'negotiationCommissionCountdownHours': ['minutes'],

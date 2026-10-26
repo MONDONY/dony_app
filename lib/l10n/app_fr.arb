@@ -6129,6 +6129,31 @@
   "@negotiationNudgeButton": {
     "description": "Bouton secondaire de relance (thread_state_cta_bar.dart)"
   },
+  "negotiationAutoReminderSentTitle": "Rappel envoyé à {name}",
+  "@negotiationAutoReminderSentTitle": {
+    "description": "Bandeau du fil de négociation : le serveur a rappelé l'autre partie faute de réponse",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationAutoReminderSentAnonymousTitle": "Rappel envoyé",
+  "@negotiationAutoReminderSentAnonymousTitle": {
+    "description": "Même bandeau quand le nom de l'autre partie est inconnu"
+  },
+  "negotiationAutoReminderSentSubtitle": "Envoyé automatiquement le {date} à {time}, faute de réponse.",
+  "@negotiationAutoReminderSentSubtitle": {
+    "description": "Sous-titre du bandeau de rappel automatique : date et heure locales de l'envoi",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "negotiationSenderAcceptButton": "Accepter : Vous payez {amount}",
   "@negotiationSenderAcceptButton": {
     "description": "Bouton d'acceptation côté expéditeur, montant brut (thread_state_cta_bar.dart)",
