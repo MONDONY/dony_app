@@ -16,7 +16,6 @@ abstract final class GuestAccessGuard {
   static bool isPublicGuestPath(String path) =>
       path == '/home' ||
       path == '/recherche/composer' ||
-      path == '/package-requests/search' ||
       path == '/favoris' ||
       RegExp(r'^/package-requests/[^/]+/public$').hasMatch(path) ||
       RegExp(r'^/announcements/[^/]+/trip$').hasMatch(path);

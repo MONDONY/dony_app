@@ -19,35 +19,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-class MyPackageRequestsScreen extends StatefulWidget {
-  const MyPackageRequestsScreen({super.key});
-
-  @override
-  State<MyPackageRequestsScreen> createState() =>
-      _MyPackageRequestsScreenState();
-}
-
-class _MyPackageRequestsScreenState extends State<MyPackageRequestsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<PackageRequestBloc>().add(const FetchMyRequests());
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: DonyAppBar(title: context.l10n.requestListTitle),
-      body: const MyPackageRequestsBody(showFab: true),
-    );
-  }
-}
-
 class MyPackageRequestsBody extends StatelessWidget {
   const MyPackageRequestsBody({super.key, this.showFab = false});
   final bool showFab;

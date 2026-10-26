@@ -847,10 +847,6 @@ abstract final class AnalyticsEvents {
   static const tripParcelsViewed = 'trip_parcels_viewed';
   static const tripParcelsFiltered = 'trip_parcels_filtered';
 
-  // Onglet « Envoyer » — noms d'écran (logScreen par onglet)
-  static const envoyerEnvoisScreen = 'envoyer_envois';
-  static const envoyerDemandesScreen = 'envoyer_demandes';
-
   /// Bascule du sélecteur de mode de la recherche. Propriété `mode` : trips / parcels.
   static const homeSearchModeChanged = 'home_search_mode_changed';
 

@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/config/pro_flag.dart';
-import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_route_filter.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -131,7 +130,6 @@ import 'package:dony/features/notifications/presentation/inbox_screen.dart';
 import 'package:dony/features/notifications/presentation/notification_detail_screen.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
-import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_detail_cubit.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -139,8 +137,6 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/complete_details_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/negotiation_paid_success_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_poster_screen.dart';
@@ -149,7 +145,6 @@ import 'package:dony/features/package_request/presentation/screens/shared/negoti
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/negotiation_commission_settled_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/payer_account_cubit.dart';
@@ -289,7 +284,6 @@ const _publicRoutes = {
   '/auth/local',
   '/home',
   '/recherche/composer',
-  '/package-requests/search',
   // Consultables sans compte : la mention légale de l'écran de connexion y
   // renvoie, et les relecteurs des deux boutiques les ouvrent avant de
   // s'inscrire.
@@ -932,12 +926,6 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // ── Publier un colis (voyageur PRO, hors shell) ──────────────────────────
-    GoRoute(
-      path: '/announcements/send',
-      builder: (context, state) => const EnvoyerHubScreen(showBackButton: true),
-    ),
-
     // ── Modèles de trajet (hors shell) ───────────────────────────────────
     GoRoute(
       path: '/trip-templates',
@@ -1210,12 +1198,6 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-    GoRoute(
-      path: '/payment/confirm',
-      builder: (context, state) => _PlaceholderScreen(
-        title: context.l10n.shellPlaceholderConfirmPayment,
-      ),
-    ),
     // ── Stripe Connect deep-link return routes ───────────────────────────
     // Retour vers l'écran qui a ouvert le lien (voir StripeOnboardingReturn),
     // l'intro « devenir voyageur » restant le repli.
@@ -1359,12 +1341,6 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) =>
           DisputeDetailScreen(dispute: state.extra! as DisputeModel),
     ),
-    GoRoute(
-      path: '/admin',
-      builder: (context, state) =>
-          _PlaceholderScreen(title: context.l10n.shellPlaceholderAdmin),
-    ),
-
     // ── Messagerie — archives (hors shell) ───────────────────────────────
     GoRoute(
       path: '/messages/archives',
@@ -2174,17 +2150,6 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
     GoRoute(
-      path: '/package-requests/me',
-      builder: (_, _) => BlocProvider.value(
-        value: getIt<PackageRequestBloc>(),
-        child: const MyPackageRequestsScreen(),
-      ),
-    ),
-    GoRoute(
-      path: '/package-requests/search',
-      builder: (_, _) => const PackageRequestSearchScreen(),
-    ),
-    GoRoute(
       path: '/package-requests/:id',
       builder: (_, state) =>
           PackageRequestDetailScreen(requestId: state.pathParameters['id']!),
@@ -2379,17 +2344,5 @@ GoRoute buildHelpTutorialRoute({
       tutorialId: state.pathParameters['tutorialId']!,
       playerSessionFactory: playerSessionFactory,
     ),
-  );
-}
-
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title), actions: const [DonyFeedbackButton()]),
-    body: Center(child: Text(title)),
   );
 }

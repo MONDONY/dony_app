@@ -619,27 +619,6 @@ void main() {
     );
   });
 
-  group('MyPackageRequestsScreen (écran complet)', () {
-    testWidgets('rend le Scaffold avec appBar « Mes demandes »', (
-      tester,
-    ) async {
-      when(() => bloc.state).thenReturn(
-        PackageRequestState(status: PackageRequestListStatus.loading),
-      );
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light(),
-          home: BlocProvider<PackageRequestBloc>.value(
-            value: bloc,
-            child: const MyPackageRequestsScreen(),
-          ),
-        ),
-      );
-      await tester.pump();
-      expect(find.text('Mes demandes'), findsOneWidget);
-    });
-  });
-
   group('onRetry et CardAction snackbar', () {
     testWidgets('taper Réessayer dans _ErrorView déclenche FetchMyRequests', (
       tester,
@@ -753,18 +732,9 @@ void main() {
             requests: [_request()],
           ),
         );
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.light(),
-            home: BlocProvider<PackageRequestBloc>.value(
-              value: bloc,
-              child: const MyPackageRequestsScreen(),
-            ),
-          ),
-        );
+        await tester.pumpWidget(wrap());
         await tester.pumpAndSettle();
 
-        expect(find.text('My requests'), findsOneWidget);
         expect(find.text('City, category…'), findsOneWidget);
         expect(find.text('All (1)'), findsOneWidget);
         expect(find.text('Open (1)'), findsOneWidget);

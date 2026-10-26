@@ -35,7 +35,6 @@ void main() {
       '/payments/pay',
       '/payments/wallet',
       '/payments/wallet/topup/amount',
-      '/payment/confirm',
       '/kyc/verify',
       '/kyc/status',
       '/profile/edit',
@@ -56,7 +55,6 @@ void main() {
       '/auth/local',
       '/home',
       '/recherche/composer',
-      '/package-requests/search',
       // Consultables sans compte : la mention « En continuant vous acceptez nos
       // CGU » de l'écran de connexion y renvoie, et les relecteurs des deux
       // boutiques les ouvrent avant de s'inscrire. Sous `/settings/legal/…`,
@@ -172,7 +170,6 @@ void main() {
     const routes = [
       '/payments/pay',
       '/payments/wallet',
-      '/payment/confirm',
       '/kyc/verify',
       '/profile/edit',
       '/trips/create',

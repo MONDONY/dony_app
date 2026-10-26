@@ -260,7 +260,6 @@ class _DonyAppState extends State<DonyApp> {
   static const _allowedDeepLinkPaths = {
     '/stripe/onboarding/complete',
     '/stripe/onboarding/refresh',
-    '/payment/confirm',
     '/tracking/scan',
     // Alertes prix des billets (notification FLIGHT_PRICE_ALERT).
     '/flights/alerts',
