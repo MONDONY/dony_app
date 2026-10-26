@@ -32,7 +32,7 @@ Deux Environments GitHub, `staging` et `production`, portent chacun les valeurs
 propres à l'environnement sous les mêmes noms :
 `FLUTTER_*` (API, Firebase, Stripe, Sentry, Maps, PostHog), `GOOGLE_SERVICES_JSON`,
 `IOS_GOOGLE_SERVICE_INFO_PLIST`, `IOS_RELEASE_PROD_XCCONFIG`.
-Staging n'a pas de `FLUTTER_GOOGLE_MAPS_ANDROID_API_KEY` : Gradle replie sur la clé générale.
+`FLUTTER_GOOGLE_MAPS_ANDROID_API_KEY` est obligatoire dans les DEUX environnements (clé yadony-prod-android, restreinte au package com.yadony.yadony) : sans elle Gradle retombe sur la clé iOS et son garde-fou refuse le build. Staging réutilise la même clé Android.
 
 Ces noms ne doivent PAS exister au niveau du dépôt : un secret d'environnement
 manquant retomberait sinon sur une valeur de production.
