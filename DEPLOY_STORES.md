@@ -11,9 +11,20 @@ Un merge qui ne touche ni `lib/`, `assets/`, `ios/`, `android/` ni `pubspec.*` e
 
 ## Numéro de build
 
-`1000 + numéro d'exécution du workflow`, identique iOS et Android. Les builds
-manuels (pubspec, jusqu'à 148) restent en dessous. Ne jamais baisser l'offset.
+`tool/next_build_number.py` lit le plus grand numéro déjà envoyé à App Store
+Connect et à Google Play (builds manuels compris) et prend ce maximum + 1. iOS
+et Android reçoivent donc le même numéro, et un build fait à la main s'intègre
+dans la même suite. Si un store ne répond pas, le déploiement échoue : jamais
+de numéro inventé.
+
+`BUILD_NUMBER_FLOOR` (workflow, 1008) couvre un angle mort : l'API Apple ne
+liste un build qu'une fois son traitement commencé. Le plancher n'a plus à
+bouger tant que les stores contiennent des numéros plus grands.
+
+Build manuel : prendre un numéro au-dessus du dernier de la CI.
 Le numéro de version (`1.0.0`) vient toujours de `pubspec.yaml`.
+
+Test du script : `cd tool && python3 -m unittest next_build_number_test`.
 
 ## Secrets à créer (Settings → Secrets → Actions)
 
