@@ -1,3 +1,4 @@
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
@@ -21,6 +22,11 @@ void main() {
   late BlockEventsService blockEvents;
 
   setUp(() {
+    // DonySnackbar ignore un message identique affiché depuis moins de 5 s
+    // (cache statique, partagé entre les tests du fichier). Sans cette remise à
+    // zéro, « blocage réussi » dépendait de la vitesse d'exécution : le test
+    // précédent affiche déjà le même message de succès.
+    DonySnackbar.clearDedup();
     mockRepo = MockBlockedUsersRepository();
     mockAnalytics = MockAnalyticsService();
     blockEvents = BlockEventsService();
