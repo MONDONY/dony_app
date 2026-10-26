@@ -176,6 +176,11 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+      # Le projet iOS passe par CocoaPods. Avec Swift Package Manager actif,
+      # Flutter lance `xcodebuild -list` et Xcode plante sur le runner
+      # (NSInvalidArgumentException dans IDEGroup insertGroupSubitems).
+      - name: Désactiver Swift Package Manager
+        run: flutter config --no-enable-swift-package-manager
       - run: flutter pub get
 
       - name: Fichiers natifs iOS
