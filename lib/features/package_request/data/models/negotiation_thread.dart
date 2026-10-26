@@ -86,6 +86,7 @@ class NegotiationThread extends Equatable {
     this.commissionGridId,
     this.commissionRate,
     this.travelerCashCommissionEur,
+    this.autoReminderSentAt,
   });
 
   final String id;
@@ -172,6 +173,12 @@ class NegotiationThread extends Equatable {
   /// parse via [_parseUtc], sinon le compte à rebours du fil serait décalé du
   /// fuseau du téléphone.
   final DateTime? depositExpiresAt;
+
+  /// Rappel automatique envoyé à la partie qui doit répondre, tant qu'aucun
+  /// message n'est arrivé depuis (yadony-back, `autoReminderSentAt`). `null`
+  /// sans rappel ou sur un back antérieur. Le back sérialise un `LocalDateTime`
+  /// UTC sans suffixe de zone : forcé en UTC au parse.
+  final DateTime? autoReminderSentAt;
 
   /// Fil rangé dans les archives de l'appelant (yadony-back #423). Absent
   /// d'un backend antérieur : `false`, aucun fil n'y est alors archivé.
@@ -276,6 +283,7 @@ class NegotiationThread extends Equatable {
     commissionRate: (json['commissionRate'] as num?)?.toDouble(),
     travelerCashCommissionEur: (json['travelerCashCommissionEur'] as num?)
         ?.toDouble(),
+    autoReminderSentAt: _parseUtc(json['autoReminderSentAt'] as String?),
   );
 
   /// Force l'UTC sur un `LocalDateTime` back sans suffixe de zone (ex.
@@ -336,5 +344,6 @@ class NegotiationThread extends Equatable {
     commissionGridId,
     commissionRate,
     travelerCashCommissionEur,
+    autoReminderSentAt,
   ];
 }

@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/commission_grid_test_doubles.dart';
@@ -36,6 +37,9 @@ NegotiationThread _thread({
   double? grossPriceEur,
   String? commissionGridId,
   double? travelerCashCommissionEur,
+  DateTime? autoReminderSentAt,
+  String? travelerName,
+  String? senderName,
 }) {
   final messages = <NegotiationMessage>[
     NegotiationMessage(
@@ -68,6 +72,9 @@ NegotiationThread _thread({
     materializedBidId: materializedBidId,
     canNudge: canNudge,
     depositExpiresAt: depositExpiresAt,
+    autoReminderSentAt: autoReminderSentAt,
+    travelerName: travelerName,
+    senderName: senderName,
   );
 }
 
@@ -963,6 +970,157 @@ void main() {
         verify(() => bloc.add(const NegotiationNudgeRequested('t1'))).called(1);
       },
     );
+  });
+
+  group('Rappel automatique envoyé', () {
+    final sentAt = DateTime.utc(2026, 10, 25, 17, 30);
+    final banner = find.byKey(const Key('thread-auto-reminder-banner'));
+
+    testWidgets('expéditeur en attente : « Rappel envoyé à {voyageur} » avec '
+        'la date et l\'heure locales', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.open,
+            lastFromViewer: true,
+            autoReminderSentAt: sentAt,
+            travelerName: 'Awa D.',
+            senderName: 'Ibrahima S.',
+          ),
+          _viewerSender,
+        ),
+      );
+
+      final local = sentAt.toLocal();
+      expect(banner, findsOneWidget);
+      expect(find.text('Rappel envoyé à Awa D.'), findsOneWidget);
+      expect(
+        find.text(
+          'Envoyé automatiquement le ${DateFormat.MMMd('fr').format(local)} '
+          'à ${DateFormat.Hm('fr').format(local)}, faute de réponse.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('voyageur en attente : le nom affiché est celui de '
+        'l\'expéditeur', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.open,
+            lastFromViewer: true,
+            viewer: _viewerTraveler,
+            autoReminderSentAt: sentAt,
+            travelerName: 'Awa D.',
+            senderName: 'Ibrahima S.',
+          ),
+          _viewerTraveler,
+        ),
+      );
+
+      expect(find.text('Rappel envoyé à Ibrahima S.'), findsOneWidget);
+    });
+
+    testWidgets('nom inconnu : « Rappel envoyé » sans nom', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.open,
+            lastFromViewer: true,
+            autoReminderSentAt: sentAt,
+          ),
+          _viewerSender,
+        ),
+      );
+
+      expect(find.text('Rappel envoyé'), findsOneWidget);
+    });
+
+    testWidgets('côte à côte avec « Relancer » quand la relance manuelle est '
+        'possible', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.open,
+            lastFromViewer: true,
+            canNudge: true,
+            autoReminderSentAt: sentAt,
+            travelerName: 'Awa D.',
+          ),
+          _viewerSender,
+        ),
+      );
+
+      expect(banner, findsOneWidget);
+      expect(find.text('Relancer'), findsOneWidget);
+    });
+
+    testWidgets('c\'est à moi de répondre : pas de bandeau', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.open,
+            autoReminderSentAt: sentAt,
+            travelerName: 'Awa D.',
+          ),
+          _viewerSender,
+        ),
+      );
+
+      expect(banner, findsNothing);
+    });
+
+    testWidgets('aucun rappel : pas de bandeau', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.open, lastFromViewer: true),
+          _viewerSender,
+        ),
+      );
+
+      expect(banner, findsNothing);
+    });
+
+    testWidgets('fil qui n\'est plus ouvert : pas de bandeau', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingTrip,
+            lastFromViewer: true,
+            autoReminderSentAt: sentAt,
+          ),
+          _viewerSender,
+        ),
+      );
+
+      expect(banner, findsNothing);
+    });
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.open,
+            lastFromViewer: true,
+            autoReminderSentAt: sentAt,
+            travelerName: 'Awa D.',
+          ),
+          _viewerSender,
+        ),
+      );
+
+      final local = sentAt.toLocal();
+      expect(find.text('Reminder sent to Awa D.'), findsOneWidget);
+      expect(
+        find.text(
+          'Sent automatically on ${DateFormat.MMMd('en').format(local)} '
+          'at ${DateFormat.Hm('en').format(local)}, as there was no reply.',
+        ),
+        findsOneWidget,
+      );
+    });
   });
 
   group('en anglais — un état par rôle', () {

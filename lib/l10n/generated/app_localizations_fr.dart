@@ -6538,6 +6538,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get negotiationNudgeButton => 'Relancer';
 
   @override
+  String negotiationAutoReminderSentTitle(String name) {
+    return 'Rappel envoyé à $name';
+  }
+
+  @override
+  String get negotiationAutoReminderSentAnonymousTitle => 'Rappel envoyé';
+
+  @override
+  String negotiationAutoReminderSentSubtitle(String date, String time) {
+    return 'Envoyé automatiquement le $date à $time, faute de réponse.';
+  }
+
+  @override
   String negotiationSenderAcceptButton(String amount) {
     return 'Accepter : Vous payez $amount';
   }

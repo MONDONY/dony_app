@@ -10795,6 +10795,24 @@ abstract class AppLocalizations {
   /// **'Relancer'**
   String get negotiationNudgeButton;
 
+  /// Bandeau du fil de négociation : le serveur a rappelé l'autre partie faute de réponse
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappel envoyé à {name}'**
+  String negotiationAutoReminderSentTitle(String name);
+
+  /// Même bandeau quand le nom de l'autre partie est inconnu
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappel envoyé'**
+  String get negotiationAutoReminderSentAnonymousTitle;
+
+  /// Sous-titre du bandeau de rappel automatique : date et heure locales de l'envoi
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyé automatiquement le {date} à {time}, faute de réponse.'**
+  String negotiationAutoReminderSentSubtitle(String date, String time);
+
   /// Bouton d'acceptation côté expéditeur, montant brut (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:

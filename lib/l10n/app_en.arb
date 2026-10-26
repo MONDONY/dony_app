@@ -2687,6 +2687,9 @@
   "@negotiationNudgeButton": {
     "description": "Bouton secondaire de relance (thread_state_cta_bar.dart)"
   },
+  "negotiationAutoReminderSentTitle": "Reminder sent to {name}",
+  "negotiationAutoReminderSentAnonymousTitle": "Reminder sent",
+  "negotiationAutoReminderSentSubtitle": "Sent automatically on {date} at {time}, as there was no reply.",
   "negotiationSenderAcceptButton": "Accept: You pay {amount}",
   "@negotiationSenderAcceptButton": {
     "description": "Bouton d'acceptation côté expéditeur, montant brut (thread_state_cta_bar.dart)",

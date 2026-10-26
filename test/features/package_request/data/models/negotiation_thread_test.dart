@@ -36,6 +36,43 @@ Map<String, dynamic> _baseJson({Map<String, dynamic>? overrides}) {
 }
 
 void main() {
+  group('autoReminderSentAt', () {
+    test('lu en UTC même sans suffixe de zone (LocalDateTime du back)', () {
+      final t = NegotiationThread.fromJson(
+        _baseJson(overrides: {'autoReminderSentAt': '2026-05-11T10:30:00'}),
+      );
+
+      expect(t.autoReminderSentAt, DateTime.utc(2026, 5, 11, 10, 30));
+      expect(t.autoReminderSentAt!.isUtc, isTrue);
+    });
+
+    test('lu avec un suffixe de zone', () {
+      final t = NegotiationThread.fromJson(
+        _baseJson(overrides: {'autoReminderSentAt': '2026-05-11T10:30:00Z'}),
+      );
+
+      expect(t.autoReminderSentAt, DateTime.utc(2026, 5, 11, 10, 30));
+    });
+
+    test('absent (back antérieur ou aucun rappel) : null', () {
+      expect(
+        NegotiationThread.fromJson(_baseJson()).autoReminderSentAt,
+        isNull,
+      );
+    });
+
+    test('compte dans l\'égalité', () {
+      expect(
+        NegotiationThread.fromJson(_baseJson()),
+        isNot(
+          NegotiationThread.fromJson(
+            _baseJson(overrides: {'autoReminderSentAt': '2026-05-11T10:30:00'}),
+          ),
+        ),
+      );
+    });
+  });
+
   group('commissionRate et travelerCashCommissionEur', () {
     test('lus quand le back les sert', () {
       final t = NegotiationThread.fromJson(
