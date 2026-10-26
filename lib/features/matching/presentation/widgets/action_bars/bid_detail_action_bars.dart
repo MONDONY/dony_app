@@ -260,18 +260,25 @@ class SenderActionBar extends StatelessWidget {
           SizedBox(
             width: 52,
             height: 52,
-            child: OutlinedButton(
-              onPressed: () => _openOptions(context),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: cs.onSurfaceVariant,
-                side: BorderSide(color: cs.outline),
-                padding: EdgeInsets.zero,
-                minimumSize: Size.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+            child: Tooltip(
+              message: context.l10n.bidDetailMoreOptionsTooltip,
+              child: OutlinedButton(
+                onPressed: () => _openOptions(context),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: cs.onSurfaceVariant,
+                  side: BorderSide(color: cs.outline),
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.lg),
+                  ),
+                ),
+                child: DonyIcon(
+                  'ellipsis',
+                  size: 22,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
-              child: DonyIcon('ellipsis', size: 22, color: cs.onSurfaceVariant),
             ),
           ),
           if (bid.status == 'PENDING' || bid.status == 'ACCEPTED') ...[

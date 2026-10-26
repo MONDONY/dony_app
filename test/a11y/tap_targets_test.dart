@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
+import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -134,6 +135,44 @@ void main() {
         child: DonyListTile(label: 'Réglages', onTap: () {}),
       ),
       tappable: find.byType(InkWell),
+    );
+  });
+
+  testWidgets('une ligne de DonyCheckbox est visable au pouce', (tester) async {
+    // Sans sous-titre la ligne ne faisait que 40 px (8 + case de 24 + 8).
+    await expectTapTarget(
+      tester,
+      'DonyCheckbox',
+      // Dans un `Column` : la hauteur est libre comme dans une vraie liste,
+      // sinon la colonne interne s'étire à tout l'écran et masque la mesure.
+      Column(
+        children: [
+          SizedBox(
+            width: 360,
+            child: DonyCheckbox(label: 'Oui', value: false, onChanged: (_) {}),
+          ),
+        ],
+      ),
+      tappable: find.byType(InkWell),
+    );
+  });
+
+  testWidgets('« Annuler la suppression » est visable au pouce', (
+    tester,
+  ) async {
+    // Seul moyen de réactiver un compte en cours de suppression : la zone
+    // tappable faisait la hauteur du texte, une quinzaine de pixels.
+    await expectTapTarget(
+      tester,
+      'PendingDeletionBanner',
+      SizedBox(
+        width: 360,
+        child: PendingDeletionBanner(
+          deletionRequestedAt: DateTime(2026, 10),
+          onReactivate: () {},
+        ),
+      ),
+      tappable: find.byType(TextButton),
     );
   });
 

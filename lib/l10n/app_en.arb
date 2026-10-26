@@ -11238,5 +11238,6 @@
   "amendmentCommissionFinalize": "Finalize the commission",
   "amendmentCommissionProcessingSnackbar": "Commission being processed, the change will be confirmed once it clears.",
   "amendmentTravelerCashNoteNoCommission": "Paid in cash by {name} at handover: {amount}.",
-  "amendmentDeadlineFormat": "{date} at {time}"
+  "amendmentDeadlineFormat": "{date} at {time}",
+  "bidDetailMoreOptionsTooltip": "More options"
 }

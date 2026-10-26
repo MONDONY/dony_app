@@ -43,14 +43,26 @@ void main() {
       if (exemptions.containsKey(entity.path)) continue;
 
       final source = entity.readAsStringSync();
-      for (final mot in ['GestureDetector(', 'InkWell(']) {
+      // Les boutons Material à icône seule (`OutlinedButton`, `TextButton`...)
+      // n'ont pas non plus de nom : seul `IconButton` en reçoit un du
+      // `tooltip` exigé par `icon_button_labels_test`.
+      for (final mot in [
+        'GestureDetector(',
+        'InkWell(',
+        'OutlinedButton(',
+        'ElevatedButton(',
+        'FilledButton(',
+        'TextButton(',
+      ]) {
         for (final m in RegExp(RegExp.escape(mot)).allMatches(source)) {
           final corps = source.substring(
             m.start,
             fermeture(source, m.start + mot.length - 1),
           );
 
-          if (!corps.contains('onTap')) continue;
+          if (!corps.contains('onTap') && !corps.contains('onPressed')) {
+            continue;
+          }
           // Sans icône, ce n'est pas le motif visé.
           if (!corps.contains('DonyIcon(') && !corps.contains('Icon(')) {
             continue;
