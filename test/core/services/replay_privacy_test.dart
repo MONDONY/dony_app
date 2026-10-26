@@ -36,7 +36,6 @@ void main() {
         '/kyc/status',
         '/payments/wallet',
         '/payments/wallet/topup/amount',
-        '/payment/confirm',
         '/stripe/onboarding/complete',
         '/connect/onboarding/intro',
       ]) {
@@ -99,7 +98,6 @@ void main() {
         '/announcements',
         '/announcements/abc/trip',
         '/bids/new',
-        '/package-requests/search',
         '/package-requests/new',
         '/trips/create',
         '/flights',
