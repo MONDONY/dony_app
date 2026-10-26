@@ -5,6 +5,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -2391,86 +2392,112 @@ class _TripFormContentState extends State<_TripFormContent> {
             unawaited(
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (routeContext) => DonySuccessScreen(
-                    mascotteType: DonyMascotteType.succes,
-                    title: isEdit
-                        ? routeContext.l10n.tripPublishSuccessTitleEdit
-                        : routeContext.l10n.tripPublishSuccessTitleCreate,
-                    subtitle: state is AnnouncementTripCreated
-                        ? routeContext.l10n.tripLegsSuccessSubtitle(
-                            state.legs.length,
-                            [
-                              state.legs.first.departureCity,
-                              ...state.legs.map((leg) => leg.arrivalCity),
-                            ].join(' → '),
-                          )
-                        : routeContext.l10n.tripPublishSuccessSubtitle(
-                            announcement.departureCity,
-                            announcement.arrivalCity,
-                          ),
-                    ctaLabel: routeContext.l10n.tripPublishSuccessCta,
-                    ctaVariant: DonyButtonVariant.accent,
-                    onCta: () {
-                      // Le contexte de la route succès (routeContext) reste monté
-                      // sous le Navigator racine après les deux pops ci-dessous —
-                      // on capture donc le GoRouter AVANT de popper, pour éviter
-                      // « Looking up a deactivated widget's ancestor is unsafe »
-                      // (même classe de bug que le fix bid-payé, feb86b71).
+                  builder: (routeContext) {
+                    // Le contexte de la route succès (routeContext) reste monté
+                    // sous le Navigator racine après les deux pops ci-dessous —
+                    // on capture donc le GoRouter AVANT de popper, pour éviter
+                    // « Looking up a deactivated widget's ancestor is unsafe »
+                    // (même classe de bug que le fix bid-payé, feb86b71).
+                    // Chaque action referme l'écran de succès puis le formulaire
+                    // (contrat bool intact pour les 3 appelants) avant de
+                    // naviguer.
+                    void leaveTo(void Function(GoRouter router) navigate) {
                       final router = GoRouter.of(routeContext);
                       Navigator.of(
                         routeContext,
                       ).pop(); // ferme DonySuccessScreen
-                      Navigator.of(context).pop(
-                        true,
-                      ); // ferme create_trip_screen — contrat bool intact pour les 3 appelants
-                      router.push('/announcements/${announcement.id}/trip');
-                    },
-                    analyticsContext: 'trip_published',
-                    // Trajet récurrent : un trajet direct tout juste créé
-                    // peut être répété à d'autres dates (yadony-back #525).
-                    extra:
-                        !isEdit &&
-                            state is! AnnouncementTripCreated &&
-                            announcement.tripGroupId == null
-                        ? TripSeriesCard(announcement: announcement)
-                        : null,
-                    secondaryLabel: isEdit
-                        ? null
-                        : routeContext.l10n.tripPublishSuccessShareCta,
+                      Navigator.of(
+                        context,
+                      ).pop(true); // ferme create_trip_screen
+                      navigate(router);
+                    }
+
+                    void viewTrip() => leaveTo(
+                      (router) =>
+                          router.push('/announcements/${announcement.id}/trip'),
+                    );
                     // Le partage de texte seul ne convertit pas : sur Facebook,
                     // c'est le visuel qui arrête le regard, et le lien doit
                     // vivre dans la légende pour rester cliquable. On envoie
                     // donc vers l'affiche, qui fournit l'image, le lien et la
                     // légende en un seul écran.
-                    // Même précaution de contexte que le CTA ci-dessus : le
-                    // GoRouter est capturé AVANT les pops, routeContext étant
-                    // démonté ensuite.
-                    onSecondary: isEdit
-                        ? null
-                        : () {
-                            final router = GoRouter.of(routeContext);
-                            Navigator.of(routeContext).pop();
-                            Navigator.of(context).pop(true);
-                            router.push(
-                              '/announcements/${announcement.id}/affiche',
-                              extra: announcement,
-                            );
-                          },
+                    void sharePoster() => leaveTo(
+                      (router) => router.push(
+                        '/announcements/${announcement.id}/affiche',
+                        extra: announcement,
+                      ),
+                    );
                     // Guidage après KYC : les paiements ne sont plus demandés
                     // à l'inscription ; on les propose ici, une fois le premier
                     // trajet publié, si le compte Stripe reste à configurer.
-                    tertiaryLabel: needsPayouts
-                        ? routeContext.l10n.tripPublishSuccessPayoutsCta
-                        : null,
-                    onTertiary: needsPayouts
-                        ? () {
-                            final router = GoRouter.of(routeContext);
-                            Navigator.of(routeContext).pop();
-                            Navigator.of(context).pop(true);
-                            router.push('/connect/onboarding/intro');
-                          }
-                        : null,
-                  ),
+                    void setUpPayouts() => leaveTo(
+                      (router) => router.push('/connect/onboarding/intro'),
+                    );
+                    // Médiane de 2,7 jours entre la publication d'un trajet et
+                    // la première offre sur un colis : on emmène le voyageur
+                    // droit vers les colis compatibles avec ses trajets.
+                    void seeParcels() => leaveTo((router) {
+                      getIt<PendingSearchNotifier>()
+                          .setPendingParcelsForMyTrips();
+                      router.go('/home');
+                    });
+
+                    final l = routeContext.l10n;
+                    return DonySuccessScreen(
+                      mascotteType: DonyMascotteType.succes,
+                      title: isEdit
+                          ? l.tripPublishSuccessTitleEdit
+                          : l.tripPublishSuccessTitleCreate,
+                      subtitle: state is AnnouncementTripCreated
+                          ? l.tripLegsSuccessSubtitle(
+                              state.legs.length,
+                              [
+                                state.legs.first.departureCity,
+                                ...state.legs.map((leg) => leg.arrivalCity),
+                              ].join(' → '),
+                            )
+                          : l.tripPublishSuccessSubtitle(
+                              announcement.departureCity,
+                              announcement.arrivalCity,
+                            ),
+                      ctaVariant: DonyButtonVariant.accent,
+                      // Création : « Voir les colis pour ce trajet » d'abord,
+                      // « Voir mon trajet » en secondaire. Modification : le
+                      // trajet existait déjà, l'écran garde « Voir mon trajet »
+                      // en bouton principal. Le contexte change (`_v2`) pour ne
+                      // pas mélanger, dans PostHog, deux sens du même bouton.
+                      ctaLabel: isEdit
+                          ? l.tripPublishSuccessCta
+                          : l.tripPublishSuccessParcelsCta,
+                      onCta: isEdit ? viewTrip : seeParcels,
+                      analyticsContext: isEdit
+                          ? 'trip_published'
+                          : 'trip_published_v2',
+                      // Trajet récurrent : un trajet direct tout juste créé
+                      // peut être répété à d'autres dates (yadony-back #525).
+                      extra:
+                          !isEdit &&
+                              state is! AnnouncementTripCreated &&
+                              announcement.tripGroupId == null
+                          ? TripSeriesCard(announcement: announcement)
+                          : null,
+                      secondaryLabel: isEdit ? null : l.tripPublishSuccessCta,
+                      onSecondary: isEdit ? null : viewTrip,
+                      secondaryIconAsset: null,
+                      tertiaryLabel: isEdit
+                          ? null
+                          : l.tripPublishSuccessShareCta,
+                      onTertiary: isEdit ? null : sharePoster,
+                      extraActions: needsPayouts
+                          ? [
+                              DonySuccessAction(
+                                label: l.tripPublishSuccessPayoutsCta,
+                                onTap: setUpPayouts,
+                              ),
+                            ]
+                          : const [],
+                    );
+                  },
                 ),
               ),
             );

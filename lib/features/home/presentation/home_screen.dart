@@ -24,6 +24,7 @@ import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/home/data/home_matching_default_store.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_sheet_session.dart';
@@ -473,7 +474,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Si l'utilisateur arrive depuis Envoyer avec des params en attente,
       // les appliquer au lieu de la recherche par défaut.
-      if (_pendingSearchNotifier?.params != null) {
+      final pending = _pendingSearchNotifier;
+      if (pending != null &&
+          (pending.params != null || pending.hasParcelsForMyTrips)) {
         _consumePendingSearch();
       } else {
         _dispatchForMode();
@@ -492,9 +495,85 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _consumePendingSearch() {
     if (!mounted) return;
-    final pending = _pendingSearchNotifier?.consume();
-    if (pending == null) return;
-    _applySearchParams(pending);
+    final notifier = _pendingSearchNotifier;
+    if (notifier == null) return;
+    final pending = notifier.consume();
+    if (pending != null) {
+      _applySearchParams(pending);
+    }
+    if (notifier.consumeParcelsForMyTrips()) {
+      _openParcelsForMyTrips();
+    }
+  }
+
+  /// Écran de succès d'un trajet publié : l'accueil s'ouvre sur les colis
+  /// compatibles avec les trajets du voyageur, feuille de résultats à fond.
+  ///
+  /// Demande explicite de la personne, pas une valeur par défaut : on pose le
+  /// filtre même si elle l'avait retiré un jour, sans toucher à ce choix. Le
+  /// résumé des trajets est relu, le trajet vient d'être publié.
+  void _openParcelsForMyTrips() {
+    if (!mounted) return;
+    final summary = context.read<TripsSummaryCubit>();
+    final analytics = getIt<AnalyticsService>();
+    final modeChanged = !_mode.isParcels;
+    final filterAdded = !_filters.matchingMyTrips;
+    setState(() {
+      _mode = SearchMode.parcels;
+      _filters = _filters.copyWith(matchingMyTrips: true);
+      _otherModeCount = null;
+      _selectedAnnouncementId = null;
+    });
+    if (modeChanged) {
+      unawaited(
+        analytics.logEvent(
+          AnalyticsEvents.homeSearchModeChanged,
+          properties: {'mode': SearchMode.parcels.name},
+        ),
+      );
+    }
+    unawaited(
+      analytics.logEvent(
+        AnalyticsEvents.homeMatchingTripsFilterToggled,
+        properties: {'active': true, 'source': 'success_screen'},
+      ),
+    );
+    if (filterAdded) {
+      unawaited(
+        analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {
+            'filter': 'matching_my_trips',
+            'mode': SearchMode.parcels.name,
+          },
+        ),
+      );
+    }
+    unawaited(summary.load());
+    _dispatchForMode();
+    unawaited(_dispatchOtherModeCount());
+    _raiseSheetToList();
+  }
+
+  /// Monte la feuille de résultats à 100 %. Si elle n'est pas encore rattachée
+  /// (accueil construit à l'instant), on attend la frame suivante.
+  void _raiseSheetToList() {
+    void raise() {
+      if (!mounted || !_sheetController.isAttached) return;
+      unawaited(
+        _sheetController.animateTo(
+          1,
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+        ),
+      );
+    }
+
+    if (_sheetController.isAttached) {
+      raise();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => raise());
+    }
   }
 
   void _onSheetSizeChanged() {
@@ -802,23 +881,79 @@ class _MapSenderViewState extends State<_MapSenderView> {
   int? get _activeTrips =>
       context.read<TripsSummaryCubit>().state.knownActiveTrips;
 
+  /// Mémoire du refus de la valeur par défaut « Pour mes trajets ». Absente
+  /// (tests de rendu isolé) : aucun refus connu.
+  HomeMatchingDefaultStore? get _matchingDefaultStore =>
+      getIt.isRegistered<HomeMatchingDefaultStore>()
+      ? getIt<HomeMatchingDefaultStore>()
+      : null;
+
+  /// Un voyageur qui a au moins un trajet actif ouvre le mode Colis sur les
+  /// colis compatibles avec ses trajets, sauf s'il a déjà retiré ce filtre
+  /// lui-même. Nombre de trajets inconnu (résumé pas encore chargé) : on ne
+  /// devine pas, le filtre reste à poser à la main.
+  bool get _shouldDefaultToMatchingTrips {
+    if (_filters.matchingMyTrips) {
+      return false;
+    }
+    final trips = _activeTrips;
+    if (trips == null || trips <= 0) {
+      return false;
+    }
+    return !(_matchingDefaultStore?.optedOut ?? false);
+  }
+
+  /// Retient le choix explicite de la personne : filtre retiré = refus de la
+  /// valeur par défaut, filtre reposé = refus levé.
+  void _rememberMatchingChoice({required bool active}) {
+    final store = _matchingDefaultStore;
+    if (store == null) {
+      return;
+    }
+    unawaited(store.setOptedOut(value: !active));
+  }
+
   void _onModeChanged(SearchMode mode) {
     if (mode == _mode) {
       return;
     }
+    final defaultToMatching = mode.isParcels && _shouldDefaultToMatchingTrips;
+    final trips = _activeTrips;
     setState(() {
       _mode = mode;
+      if (defaultToMatching) {
+        _filters = _filters.copyWith(matchingMyTrips: true);
+      }
       // Le compteur affiché portait sur l'ancien « autre mode » : il devient
       // faux à l'instant de la bascule, on l'efface avant de le recalculer.
       _otherModeCount = null;
       _selectedAnnouncementId = null;
     });
+    final analytics = getIt<AnalyticsService>();
     unawaited(
-      getIt<AnalyticsService>().logEvent(
+      analytics.logEvent(
         AnalyticsEvents.homeSearchModeChanged,
         properties: {'mode': mode.name},
       ),
     );
+    if (defaultToMatching) {
+      unawaited(
+        analytics.logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: {
+            'active': true,
+            'active_trips': ?trips,
+            'source': 'default',
+          },
+        ),
+      );
+      unawaited(
+        analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'matching_my_trips', 'mode': mode.name},
+        ),
+      );
+    }
     _dispatchForMode();
     unawaited(_dispatchOtherModeCount());
   }
@@ -1202,9 +1337,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
             // Nombre inconnu : la propriété est absente plutôt que remplie
             // d'un zéro qui fausserait l'analyse.
             'active_trips': ?activeTrips,
+            'source': 'user',
           },
         ),
       );
+      _rememberMatchingChoice(active: result.matchingMyTrips);
     }
     _onFiltersChanged(result);
     // Seul point de sortie de `search_submitted` : c'est ici, et nulle part
@@ -2019,9 +2156,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
           // Nombre inconnu : propriété absente plutôt que remplie d'un zéro
           // que rien ne prouve.
           'active_trips': ?trips,
+          'source': 'user',
         },
       ),
     );
+    _rememberMatchingChoice(active: active);
     _onFiltersChanged(_filters.copyWith(matchingMyTrips: active));
   }
 

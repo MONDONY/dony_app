@@ -2754,6 +2754,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishSuccessCta => 'Voir mon trajet';
 
   @override
+  String get tripPublishSuccessParcelsCta => 'Voir les colis pour ce trajet';
+
+  @override
   String get tripPublishSuccessShareCta => 'Partager mon affiche';
 
   @override

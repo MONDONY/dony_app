@@ -4670,11 +4670,17 @@ abstract class AppLocalizations {
   /// **'Votre trajet {departureCity} → {arrivalCity} est en ligne.'**
   String tripPublishSuccessSubtitle(String departureCity, String arrivalCity);
 
-  /// CTA principal de l'écran de succès de publication d'un trajet
+  /// Bouton « Voir mon trajet » de l'écran de succès de publication (principal en modification, secondaire à la création)
   ///
   /// In fr, this message translates to:
   /// **'Voir mon trajet'**
   String get tripPublishSuccessCta;
+
+  /// CTA principal de l'écran de succès à la création d'un trajet : ouvre l'accueil sur les colis compatibles avec les trajets du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les colis pour ce trajet'**
+  String get tripPublishSuccessParcelsCta;
 
   /// CTA secondaire de l'écran de succès (partager l'affiche du trajet), absent en mode édition
   ///

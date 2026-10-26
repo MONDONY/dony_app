@@ -18,6 +18,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
+/// Action discrète supplémentaire d'un [DonySuccessScreen] (lien sous les
+/// boutons), au-delà de l'action tertiaire.
+class DonySuccessAction {
+  const DonySuccessAction({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+}
+
 /// Écran plein affiché après une action majeure réussie (paiement confirmé,
 /// trajet publié, livraison confirmée). Pas d'auto-navigation : l'utilisateur
 /// quitte l'écran uniquement via [onCta] — ou via le bouton fermer en haut à
@@ -37,6 +46,8 @@ class DonySuccessScreen extends StatefulWidget {
     this.onSecondary,
     this.tertiaryLabel,
     this.onTertiary,
+    this.extraActions = const [],
+    this.secondaryIconAsset = 'share-2',
     this.extra,
   });
 
@@ -68,6 +79,15 @@ class DonySuccessScreen extends StatefulWidget {
 
   /// Callback de l'action tertiaire.
   final VoidCallback? onTertiary;
+
+  /// Actions discrètes supplémentaires, affichées sous l'action tertiaire dans
+  /// l'ordre donné. Chacune compte comme un tap tertiaire dans l'analytics, avec
+  /// sa position (`position`, à partir de 2) pour la distinguer de la première.
+  final List<DonySuccessAction> extraActions;
+
+  /// Icône du bouton secondaire (partage par défaut, historique de l'écran).
+  /// `null` : bouton sans icône, pour une action qui n'est pas un partage.
+  final String? secondaryIconAsset;
 
   /// Contenu propre au contexte, sous le sous-titre et avant les boutons
   /// (ex. « Vous faites ce trajet souvent ? » après un trajet publié).
@@ -172,13 +192,13 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
   /// Envoie un event analytics best-effort — no-op silencieux si
   /// [DonySuccessScreen.analyticsContext] est `null` ou si `AnalyticsService`
   /// n'est pas enregistré dans `getIt` (tests widgets, previews).
-  void _trackEvent(String name) {
+  void _trackEvent(String name, [Map<String, Object> extra = const {}]) {
     final analyticsContext = widget.analyticsContext;
     if (analyticsContext == null) return;
     unawaited(
       getItSafe<AnalyticsService>()?.logEvent(
         name,
-        properties: {'context': analyticsContext},
+        properties: {'context': analyticsContext, ...extra},
       ),
     );
   }
@@ -196,6 +216,13 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
   void _handleTertiaryTap() {
     _trackEvent(AnalyticsEvents.successScreenTertiaryTapped);
     widget.onTertiary!();
+  }
+
+  void _handleExtraTap(int index) {
+    _trackEvent(AnalyticsEvents.successScreenTertiaryTapped, {
+      'position': index + 2,
+    });
+    widget.extraActions[index].onTap();
   }
 
   void _handleClose(BuildContext context) {
@@ -341,7 +368,7 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
                           DonyButton(
                             label: widget.secondaryLabel!,
                             variant: DonyButtonVariant.secondary,
-                            iconAsset: 'share-2',
+                            iconAsset: widget.secondaryIconAsset,
                             onPressed: _handleSecondaryTap,
                           ),
                         ],
@@ -355,6 +382,16 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
                             onPressed: _handleTertiaryTap,
                           ),
                         ],
+                        for (final (i, action) in widget.extraActions.indexed)
+                          Padding(
+                            padding: const EdgeInsets.only(top: DonySpacing.sm),
+                            child: DonyButton(
+                              key: Key('success-screen-extra-$i'),
+                              label: action.label,
+                              variant: DonyButtonVariant.ghost,
+                              onPressed: () => _handleExtraTap(i),
+                            ),
+                          ),
                       ],
                     )
                     .animate()

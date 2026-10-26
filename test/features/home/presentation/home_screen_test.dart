@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -23,6 +24,7 @@ import 'package:dony/features/content_categories/data/content_category_repositor
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
+import 'package:dony/features/home/data/home_matching_default_store.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
@@ -211,6 +213,18 @@ class _MockGeolocatorPlatform extends Mock
     speed: 0,
     speedAccuracy: 0,
   );
+}
+
+/// Mémoire en RAM du refus de la valeur par défaut « Pour mes trajets » : le
+/// vrai magasin lit une box Hive, ici factice et muette.
+class _FakeMatchingStore extends Fake implements HomeMatchingDefaultStore {
+  bool out = false;
+
+  @override
+  bool get optedOut => out;
+
+  @override
+  Future<void> setOptedOut({required bool value}) async => out = value;
 }
 
 class _FakeBox extends Fake implements Box<dynamic> {
@@ -760,6 +774,7 @@ Widget _buildHomeStubRoutes({
 
 void main() {
   late MockAnalyticsService analytics;
+  late _FakeMatchingStore matchingStore;
 
   /// Dernière instance de `PackageRequestSearchBloc` livrée par `getIt`.
   /// `HomeScreen` n'en résout qu'une (son `BlocProvider.create`), la capturer
@@ -785,6 +800,8 @@ void main() {
     // montée à mi-hauteur) : l'ouverture à 100 % se rallume dans les tests
     // qui la vérifient.
     HomeSheetSession.reset(enabled: false);
+    matchingStore = _FakeMatchingStore();
+    getIt.registerSingleton<HomeMatchingDefaultStore>(matchingStore);
     getIt.registerSingleton<FirebaseSessionProbe>(
       const _StubSessionProbe(true),
     );
@@ -2646,6 +2663,9 @@ void main() {
     testWidgets(
       '« Pour mes trajets » part au serveur, et rien quand la pastille est off',
       (tester) async {
+        // Le filtre s'active d'office pour qui a un trajet actif ; ici la
+        // personne l'avait déjà retiré, la pastille part donc éteinte.
+        matchingStore.out = true;
         await pumpHome(tester);
 
         await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
@@ -2831,7 +2851,7 @@ void main() {
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.homeMatchingTripsFilterToggled,
-            properties: {'active': true},
+            properties: {'active': true, 'source': 'user'},
           ),
         ).called(1);
       },
@@ -2857,6 +2877,7 @@ void main() {
     testWidgets(
       'activer la pastille trace la bascule et le nombre de trajets',
       (tester) async {
+        matchingStore.out = true;
         await pumpHome(tester, activeTrips: 3);
         await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
@@ -2870,7 +2891,7 @@ void main() {
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.homeMatchingTripsFilterToggled,
-            properties: {'active': true, 'active_trips': 3},
+            properties: {'active': true, 'active_trips': 3, 'source': 'user'},
           ),
         ).called(1);
       },
@@ -2879,6 +2900,7 @@ void main() {
     testWidgets('valider sans toucher la pastille ne trace rien', (
       tester,
     ) async {
+      matchingStore.out = true;
       await pumpHome(tester, activeTrips: 3);
       await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
@@ -2947,6 +2969,200 @@ void main() {
 
       expect(titreListe(tester), contains('colis à transporter'));
       expect(titreListe(tester), isNot(contains('compatible')));
+    });
+  });
+
+  // ─── « Pour mes trajets » actif d'office ────────────────────────────────────
+  group('« Pour mes trajets » par défaut', () {
+    Future<void> versColis(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> basculerPastilleDansLeComposeur(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('corridor-bar')));
+      await tester.pumpAndSettle();
+      await tester.dragUntilVisible(
+        find.byKey(const Key('chip-matching-my-trips')),
+        find.byType(Scrollable).first,
+        const Offset(0, -100),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rechercher'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets("trajet actif : le mode Colis s'ouvre filtré et trace "
+        'source « default »', (tester) async {
+      await pumpHome(tester, activeTrips: 3);
+      await versColis(tester);
+
+      verify(
+        () => prBloc.add(
+          any(
+            that: isA<SearchFiltersChanged>().having(
+              (e) => e.matchingMyTrips,
+              'matchingMyTrips',
+              isTrue,
+            ),
+          ),
+        ),
+      ).called(greaterThanOrEqualTo(1));
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: {'active': true, 'active_trips': 3, 'source': 'default'},
+        ),
+      ).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'matching_my_trips', 'mode': 'parcels'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets("aucun trajet actif : pas d'activation d'office", (
+      tester,
+    ) async {
+      await pumpHome(tester, activeTrips: 0);
+      await versColis(tester);
+
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    testWidgets("nombre de trajets inconnu : pas d'activation d'office", (
+      tester,
+    ) async {
+      await pumpHome(tester, summaryState: const TripsSummaryState.hidden());
+      await versColis(tester);
+
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    testWidgets("refus mémorisé : le mode Colis s'ouvre sans filtre", (
+      tester,
+    ) async {
+      matchingStore.out = true;
+      await pumpHome(tester, activeTrips: 3);
+      await versColis(tester);
+
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    testWidgets('retirer la pastille mémorise le refus', (tester) async {
+      await pumpHome(tester, activeTrips: 3);
+      await versColis(tester);
+      expect(matchingStore.out, isFalse);
+
+      // Le filtre est actif d'office : un tap le retire.
+      await basculerPastilleDansLeComposeur(tester);
+
+      expect(matchingStore.out, isTrue);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: {'active': false, 'active_trips': 3, 'source': 'user'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('reposer la pastille lève le refus', (tester) async {
+      matchingStore.out = true;
+      await pumpHome(tester, activeTrips: 3);
+      await versColis(tester);
+
+      await basculerPastilleDansLeComposeur(tester);
+
+      expect(matchingStore.out, isFalse);
+    });
+  });
+
+  // ─── Ouverture depuis l'écran de succès d'un trajet ─────────────────────────
+  group('intention « colis pour mes trajets »', () {
+    testWidgets("en attente à l'ouverture : mode Colis, filtre posé, "
+        'intention consommée', (tester) async {
+      // Un refus mémorisé n'empêche pas une demande explicite.
+      matchingStore.out = true;
+      final notifier = PendingSearchNotifier()..setPendingParcelsForMyTrips();
+      getIt.registerSingleton<PendingSearchNotifier>(notifier);
+
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+
+      verify(
+        () => prBloc.add(
+          any(
+            that: isA<SearchFiltersChanged>().having(
+              (e) => e.matchingMyTrips,
+              'matchingMyTrips',
+              isTrue,
+            ),
+          ),
+        ),
+      ).called(greaterThanOrEqualTo(1));
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: {'active': true, 'source': 'success_screen'},
+        ),
+      ).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeSearchModeChanged,
+          properties: {'mode': 'parcels'},
+        ),
+      ).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'matching_my_trips', 'mode': 'parcels'},
+        ),
+      ).called(1);
+      expect(notifier.hasParcelsForMyTrips, isFalse);
+      // La demande explicite ne touche pas au refus mémorisé.
+      expect(matchingStore.out, isTrue);
+    });
+
+    testWidgets("posée après l'ouverture : l'accueil déjà monté la prend en "
+        'compte', (tester) async {
+      final notifier = PendingSearchNotifier();
+      getIt.registerSingleton<PendingSearchNotifier>(notifier);
+      await pumpHome(tester);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: any(named: 'properties'),
+        ),
+      );
+
+      notifier.setPendingParcelsForMyTrips();
+      await tester.pumpAndSettle();
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: {'active': true, 'source': 'success_screen'},
+        ),
+      ).called(1);
+      expect(notifier.hasParcelsForMyTrips, isFalse);
     });
   });
 
