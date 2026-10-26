@@ -46,10 +46,10 @@ runs:
       run: |
         REQUIRED="API_BASE_URL FIREBASE_PROJECT_ID FIREBASE_MESSAGING_SENDER_ID FIREBASE_STORAGE_BUCKET STRIPE_PUBLISHABLE_KEY"
         if [ "$PLATFORM" = "android" ]; then
-          REQUIRED="$REQUIRED FIREBASE_ANDROID_API_KEY FIREBASE_ANDROID_APP_ID"
-          # Clé Maps Android dédiée : obligatoire en production seulement
-          # (Gradle replie sur la clé générale hors production).
-          [ "$TARGET" = "production" ] && REQUIRED="$REQUIRED GOOGLE_MAPS_ANDROID_API_KEY"
+          # Clé Maps Android dédiée : obligatoire dans les deux environnements.
+          # Sans elle Gradle replie sur la clé iOS et son garde-fou
+          # (verifyAndroidReleaseConfig) refuse le build après ~17 min.
+          REQUIRED="$REQUIRED FIREBASE_ANDROID_API_KEY FIREBASE_ANDROID_APP_ID GOOGLE_MAPS_ANDROID_API_KEY"
         else
           REQUIRED="$REQUIRED FIREBASE_IOS_API_KEY FIREBASE_IOS_APP_ID GOOGLE_MAPS_API_KEY"
         fi
@@ -63,7 +63,7 @@ runs:
         fi
         # Une clé iOS dans le manifest Android donne une carte vide
         # (YADONY-FLUTTER-PROD-1T, build 143).
-        if [ "$TARGET" = "production" ] && [ -n "$GOOGLE_MAPS_API_KEY" ] && [ "$GOOGLE_MAPS_ANDROID_API_KEY" = "$GOOGLE_MAPS_API_KEY" ]; then
+        if [ -n "$GOOGLE_MAPS_API_KEY" ] && [ "$GOOGLE_MAPS_ANDROID_API_KEY" = "$GOOGLE_MAPS_API_KEY" ]; then
           echo "::error::La clé Maps Android vaut la clé iOS : carte vide sur Android."
           exit 1
         fi
