@@ -1,10 +1,12 @@
 name: Deploy stores
 
-# Chaque merge sur main dont la CI est verte part vers :
+# Chaque merge sur main dont la CI est verte part vers, en environnement
+# STAGING :
 #   - TestFlight (iOS)
 #   - la piste de test INTERNE de Google Play (Android)
-# La mise en production dans les stores (review Apple, piste production Play)
-# reste un geste manuel du propriétaire.
+# Un build de PRODUCTION se lance uniquement à la main (Run workflow →
+# environment = production). La mise en production dans les stores (review
+# Apple, piste production Play) reste un geste du propriétaire dans les deux cas.
 on:
   workflow_run:
     workflows: ["Flutter CI"]
@@ -12,6 +14,11 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      environment:
+        description: Environnement du build
+        type: choice
+        options: [staging, production]
+        default: staging
       ios:
         description: Déployer iOS (TestFlight)
         type: boolean
@@ -47,13 +54,18 @@ jobs:
        github.event.workflow_run.head_repository.full_name == github.repository)
     outputs:
       sha: ${{ steps.v.outputs.sha }}
+      target: ${{ steps.v.outputs.target }}
       build_number: ${{ steps.bn.outputs.build_number }}
       skip: ${{ steps.diff.outputs.skip || 'false' }}
     steps:
       - id: v
         env:
           RUN_SHA: ${{ github.event.workflow_run.head_sha }}
-        run: echo "sha=${RUN_SHA:-$GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          # Le déclenchement automatique est toujours staging.
+          TARGET: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'staging' }}
+        run: |
+          echo "sha=${RUN_SHA:-$GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v4
         with:
@@ -93,6 +105,7 @@ jobs:
 
   android:
     name: Android → Play (piste interne)
+    environment: ${{ needs.prepare.outputs.target }}
     needs: prepare
     if: needs.prepare.outputs.skip != 'true' && (github.event_name != 'workflow_dispatch' || inputs.android)
     runs-on: ubuntu-latest
@@ -136,6 +149,7 @@ jobs:
       - uses: ./.github/actions/prod-env
         with:
           platform: android
+          environment: ${{ needs.prepare.outputs.target }}
           api-base-url: ${{ secrets.FLUTTER_API_BASE_URL }}
           firebase-project-id: ${{ secrets.FLUTTER_FIREBASE_PROJECT_ID }}
           firebase-messaging-sender-id: ${{ secrets.FLUTTER_FIREBASE_MESSAGING_SENDER_ID }}
@@ -173,6 +187,7 @@ jobs:
 
   ios:
     name: iOS → TestFlight
+    environment: ${{ needs.prepare.outputs.target }}
     needs: prepare
     if: needs.prepare.outputs.skip != 'true' && (github.event_name != 'workflow_dispatch' || inputs.ios)
     runs-on: macos-15
@@ -217,6 +232,7 @@ jobs:
       - uses: ./.github/actions/prod-env
         with:
           platform: ios
+          environment: ${{ needs.prepare.outputs.target }}
           api-base-url: ${{ secrets.FLUTTER_API_BASE_URL }}
           firebase-project-id: ${{ secrets.FLUTTER_FIREBASE_PROJECT_ID }}
           firebase-messaging-sender-id: ${{ secrets.FLUTTER_FIREBASE_MESSAGING_SENDER_ID }}

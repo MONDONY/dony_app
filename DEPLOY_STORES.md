@@ -26,37 +26,29 @@ Le numéro de version (`1.0.0`) vient toujours de `pubspec.yaml`.
 
 Test du script : `cd tool && python3 -m unittest next_build_number_test`.
 
-## Secrets à créer (Settings → Secrets → Actions)
+## Secrets
 
-Déjà utilisés par `build-release.yml` : `FLUTTER_API_BASE_URL`,
-`FLUTTER_FIREBASE_PROJECT_ID`, `FLUTTER_FIREBASE_MESSAGING_SENDER_ID`,
-`FLUTTER_FIREBASE_STORAGE_BUCKET`, `FLUTTER_FIREBASE_ANDROID_API_KEY`,
-`FLUTTER_FIREBASE_ANDROID_APP_ID`, `FLUTTER_FIREBASE_IOS_API_KEY`,
-`FLUTTER_FIREBASE_IOS_APP_ID`, `FLUTTER_STRIPE_PUBLISHABLE_KEY`,
-`FLUTTER_SENTRY_DSN`, `FLUTTER_GOOGLE_MAPS_API_KEY` (clé iOS),
-`FLUTTER_GOOGLE_MAPS_ANDROID_API_KEY`, `FLUTTER_POSTHOG_API_KEY`,
-`GOOGLE_SERVICES_JSON` (= `secrets/prod/google-services.json`).
-Valeurs prod : voir `env.prod.json` local.
+Deux Environments GitHub, `staging` et `production`, portent chacun les valeurs
+propres à l'environnement sous les mêmes noms :
+`FLUTTER_*` (API, Firebase, Stripe, Sentry, Maps, PostHog), `GOOGLE_SERVICES_JSON`,
+`IOS_GOOGLE_SERVICE_INFO_PLIST`, `IOS_RELEASE_PROD_XCCONFIG`.
+Staging n'a pas de `FLUTTER_GOOGLE_MAPS_ANDROID_API_KEY` : Gradle replie sur la clé générale.
 
-Nouveaux :
+Ces noms ne doivent PAS exister au niveau du dépôt : un secret d'environnement
+manquant retomberait sinon sur une valeur de production.
 
-| Secret | Contenu |
-|---|---|
-| `ANDROID_KEYSTORE_BASE64` | `base64 -i secrets/prod/yadony-upload.jks` |
-| `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_PASSWORD`, `ANDROID_KEY_ALIAS` | `android/key.properties` (alias `upload`) |
-| `PLAY_SERVICE_ACCOUNT_JSON` | `secrets/prod/yadony-prod-398bc07be442.json` (compte `play-upload-prod`) |
-| `IOS_GOOGLE_SERVICE_INFO_PLIST` | `secrets/prod/GoogleService-Info-4.plist` |
-| `IOS_RELEASE_PROD_XCCONFIG` | `secrets/prod/Release-prod.xcconfig` |
-| `IOS_DIST_CERT_P12_BASE64`, `IOS_DIST_CERT_PASSWORD` | certificat « Apple Distribution » exporté du Trousseau en .p12 |
-| `IOS_PROVISIONING_PROFILE_BASE64` | profil App Store `com.yadony.yadony` (`base64 -i profil.mobileprovision`) |
-| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` | clé API App Store Connect (App Manager), contenu du .p8 |
+Partagés (niveau dépôt, signature et accès aux stores) : `ANDROID_KEYSTORE_BASE64`,
+`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_PASSWORD`, `ANDROID_KEY_ALIAS`,
+`PLAY_SERVICE_ACCOUNT_JSON`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`,
+`IOS_DIST_CERT_P12_BASE64`, `IOS_DIST_CERT_PASSWORD`, `IOS_PROVISIONING_PROFILE_BASE64`.
 
-Exemple : `gh secret set ANDROID_KEYSTORE_BASE64 --repo MONDONY/dony_app < <(base64 -i secrets/prod/yadony-upload.jks)`
+Poser un secret d'environnement : `gh secret set NOM -R MONDONY/dony_app --env staging < fichier`.
 
 ## Pièges
 
 - Profil de distribution : il expire (le dernier, « Yadony AppStore 146 », au 2027-08-07). Régénérer et remplacer le secret avant.
-- Le build prod part vers TestFlight même si le back prod n'est pas déployé : vérifier la PR jumelle avant de promouvoir un build.
+- Un build de production lancé à la main part vers TestFlight / Play même si le back prod n'est pas déployé : vérifier la PR jumelle avant de promouvoir un build.
+- Staging et production partagent la même fiche (même bundle id) : un build staging apparaît dans les mêmes pistes de test. Le numéro de build dit lequel est lequel seulement par le journal Actions.
 - Le projet Xcode est en signature automatique ; la CI archive en signature manuelle par surcharge de réglages, rien à changer en local.
 
 ## Sécurité
