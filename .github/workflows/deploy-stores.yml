@@ -176,6 +176,12 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+      # connectivity_plus 7.x utilise NWPath.isUltraConstrained (SDK iOS 26) :
+      # le Xcode par défaut du runner ne compile pas. Même version qu'en local.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.x'
+
       # Le projet iOS passe par CocoaPods. Avec Swift Package Manager actif,
       # Flutter lance `xcodebuild -list` et Xcode plante sur le runner
       # (NSInvalidArgumentException dans IDEGroup insertGroupSubitems).
