@@ -353,6 +353,18 @@ ScanMethod? _scanMethodExtra(Map<String, dynamic> extra) =>
       _ => null,
     };
 
+/// Chemin de l'écran affiché (onglets compris), lu sur le routeur.
+String? replayCurrentPath() =>
+    replayPathOf(appRouter.routerDelegate.currentConfiguration);
+
+/// Met le replay en pause sur les écrans sensibles. Branché deux fois : sur
+/// les navigations du routeur racine (feuilles, pages poussées) et sur chaque
+/// changement de configuration du routeur (onglets), cf. `main.dart`.
+final replayPrivacyObserver = ReplayPrivacyObserver.forAnalytics(
+  currentPath: replayCurrentPath,
+  analytics: () => getIt<AnalyticsService>(),
+);
+
 final GoRouter appRouter = GoRouter(
   initialLocation: initialAppLocation,
   // PosthogObserver : auto-capture des vues d'écran ($screen) à chaque
@@ -364,10 +376,7 @@ final GoRouter appRouter = GoRouter(
     PosthogObserver(routeFilter: posthogRouteFilter),
     // Replay de session : pause sur les écrans sensibles (paiement, identité,
     // messages, détail d'un colis…). Cf. `kReplaySensitivePathPrefixes`.
-    ReplayPrivacyObserver.forAnalytics(
-      currentPath: () => appRouter.routerDelegate.currentConfiguration.uri.path,
-      analytics: () => getIt<AnalyticsService>(),
-    ),
+    replayPrivacyObserver,
     assistantModalObserver,
   ],
   redirect: (context, state) {
