@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -34,8 +35,17 @@ class ColisDestinataireCard extends StatelessWidget {
 
   String _colisLabel(AppLocalizations l) {
     final parts = <String>[];
-    if (bid.weightKg != null) {
-      parts.add('${bid.weightKg} kg');
+    final weight = bid.displayWeightKg;
+    if (weight != null) {
+      final added = bid.acquiredAddedWeightKg;
+      parts.add(
+        added > 0
+            ? l.bidDetailParcelWeightWithAdded(
+                formatWeightKg(l, weight),
+                formatWeightKg(l, added),
+              )
+            : formatWeightKg(l, weight),
+      );
     }
     if (bid.contentCategory != null && bid.contentCategory!.isNotEmpty) {
       parts.add(contentCategoriesDisplayName(l, bid.contentCategory!));

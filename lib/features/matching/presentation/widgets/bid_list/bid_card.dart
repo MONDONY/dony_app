@@ -154,8 +154,8 @@ class BidCard extends StatelessWidget {
                 children: [
                   _MetaPill(
                     iconAsset: 'scale',
-                    label: bid.weightKg != null
-                        ? '${bid.weightKg!.toStringAsFixed(0)} kg'
+                    label: bid.displayWeightKg != null
+                        ? '${bid.displayWeightKg!.toStringAsFixed(0)} kg'
                         : bid.pricingMode == BidPricingMode.grid
                         ? l.bidListCardFlatRateLabel
                         : '-',

@@ -79,4 +79,40 @@ void main() {
     expect(bid.moneyBreakdown!.cashAmount, 26.8);
     expect(bid.moneyBreakdown!.lines.single.kind, MoneyLineKind.amendment);
   });
+  group('poids affiché', () {
+    BidModel bidWith({double? weightKg, double? totalWeightKg}) =>
+        BidModel.fromJson({
+          ..._legacyJson(),
+          'weightKg': weightKg,
+          'totalWeightKg': totalWeightKg,
+        });
+
+    test('displayWeightKg garde le poids du colis sur un back antérieur', () {
+      final bid = bidWith(weightKg: 5);
+
+      expect(bid.displayWeightKg, 5);
+      expect(bid.acquiredAddedWeightKg, 0);
+    });
+
+    test('displayWeightKg prend le poids avec les modifications acquises', () {
+      final bid = bidWith(weightKg: 5, totalWeightKg: 7.5);
+
+      expect(bid.displayWeightKg, 7.5);
+      expect(bid.acquiredAddedWeightKg, 2.5);
+    });
+
+    test('colis en grille pure : les kilos acquis comptent quand même', () {
+      final bid = bidWith(totalWeightKg: 2);
+
+      expect(bid.displayWeightKg, 2);
+      expect(bid.acquiredAddedWeightKg, 2);
+    });
+
+    test('sans aucun poids, displayWeightKg est nul', () {
+      final bid = bidWith();
+
+      expect(bid.displayWeightKg, isNull);
+      expect(bid.acquiredAddedWeightKg, 0);
+    });
+  });
 }

@@ -91,6 +91,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
                   context,
                   userId: sender.id,
                   displayName: name,
+                  onBlocked: () => closeAfterBlock(context),
                 ),
               ),
             ),

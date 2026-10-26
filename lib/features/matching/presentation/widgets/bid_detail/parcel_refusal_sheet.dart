@@ -252,7 +252,7 @@ class _DeclaredCard extends StatelessWidget {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final weight = bid.weightKg;
+    final weight = bid.displayWeightKg;
     final category = bid.contentCategory?.trim();
     final description = bid.description?.trim();
     final lines = [

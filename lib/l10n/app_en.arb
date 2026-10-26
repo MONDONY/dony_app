@@ -4176,6 +4176,8 @@
   "bidDetailParcelRecipientTitle": "Parcel & recipient",
   "bidDetailCancelRequestLabel": "Cancel the request",
   "bidDetailParcelLabel": "Parcel",
+  "bidDetailParcelWeightWithAdded": "{total} ({added} added)",
+  "@bidDetailParcelWeightWithAdded": {"description": "Parcel weight after an amendment in the Parcel card. {total}: final weight with its unit, {added}: kilos added by the secured amendments, with their unit", "placeholders": {"total": {"type": "String"}, "added": {"type": "String"}}},
   "bidDetailRecipientLabel": "Recipient",
   "bidDetailPhoneLabel": "Phone",
   "bidDetailDescriptionLabel": "Description",

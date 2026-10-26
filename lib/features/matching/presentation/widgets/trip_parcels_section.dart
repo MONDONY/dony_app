@@ -294,7 +294,7 @@ class _ColisRow extends StatelessWidget {
   final BidModel bid;
 
   String? get _weightLabel {
-    final w = bid.weightKg;
+    final w = bid.displayWeightKg;
     if (w == null) {
       return null;
     }

@@ -177,7 +177,7 @@ class _NumberRecap extends StatelessWidget {
       if (progress.depart) trackingStepLabel(l, 'DEPART'),
       if (progress.transit) trackingStepLabel(l, 'TRANSIT'),
     ];
-    final weight = bid.weightKg;
+    final weight = bid.displayWeightKg;
     final details = [
       if (weight != null) formatWeightKg(l, weight),
       ?bid.trackingNumber,

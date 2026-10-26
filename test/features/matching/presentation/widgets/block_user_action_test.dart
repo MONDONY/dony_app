@@ -46,7 +46,7 @@ void main() {
   });
 
   /// Écran minimal dont le seul rôle est d'ouvrir le dialog au premier tap.
-  Widget host() => MaterialApp(
+  Widget host({VoidCallback? onBlocked}) => MaterialApp(
     home: Builder(
       builder: (context) => Scaffold(
         body: ElevatedButton(
@@ -54,6 +54,7 @@ void main() {
             context,
             userId: 'u1',
             displayName: 'Mamadou Diallo',
+            onBlocked: onBlocked,
           ),
           child: const Text('ouvrir'),
         ),
@@ -61,8 +62,11 @@ void main() {
     ),
   );
 
-  Future<void> openDialog(WidgetTester tester) async {
-    await tester.pumpWidget(host());
+  Future<void> openDialog(
+    WidgetTester tester, {
+    VoidCallback? onBlocked,
+  }) async {
+    await tester.pumpWidget(host(onBlocked: onBlocked));
     await tester.tap(find.text('ouvrir'));
     await tester.pumpAndSettle();
   }
@@ -136,5 +140,32 @@ void main() {
     await tester.pump();
 
     expect(find.text('Something went wrong. Try again later.'), findsOneWidget);
+  });
+
+  testWidgets('blocage réussi : message affiché puis onBlocked appelé', (
+    tester,
+  ) async {
+    when(() => mockRepo.blockUser('u1')).thenAnswer((_) async {});
+    var blocked = 0;
+
+    await openDialog(tester, onBlocked: () => blocked++);
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Bloquer'));
+    await tester.pumpAndSettle();
+
+    expect(blocked, 1);
+    expect(find.text('Bloquer Mamadou ?'), findsNothing);
+    expect(find.textContaining('Mamadou'), findsOneWidget);
+  });
+
+  testWidgets('échec serveur : onBlocked n\'est pas appelé', (tester) async {
+    when(() => mockRepo.blockUser('u1')).thenThrow(Exception('Server'));
+    var blocked = 0;
+
+    await openDialog(tester, onBlocked: () => blocked++);
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Bloquer'));
+    await tester.pump();
+    await tester.pump();
+
+    expect(blocked, 0);
   });
 }

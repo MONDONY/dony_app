@@ -8056,6 +8056,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailParcelLabel => 'Colis';
 
   @override
+  String bidDetailParcelWeightWithAdded(String total, String added) {
+    return '$total (dont $added en plus)';
+  }
+
+  @override
   String get bidDetailRecipientLabel => 'Destinataire';
 
   @override

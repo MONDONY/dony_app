@@ -15,10 +15,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// un menu contextuel avec une entrée « Bloquer » (le `PopupMenuButton` de
 /// `chat_screen.dart`) doit appeler [showBlockConfirmDialog] directement, pour
 /// ne pas ouvrir un menu dans un menu.
+///
+/// [onBlocked] est appelé une fois le blocage confirmé par le serveur, après
+/// la fermeture du dialog : une fiche profil s'en sert pour se refermer, sans
+/// quoi le message de confirmation resterait caché derrière elle.
 void showBlockMenu(
   BuildContext context, {
   required String userId,
   required String displayName,
+  VoidCallback? onBlocked,
 }) {
   showModalBottomSheet<void>(
     context: context,
@@ -56,6 +61,7 @@ void showBlockMenu(
                 context,
                 userId: userId,
                 displayName: displayName,
+                onBlocked: onBlocked,
               );
             },
           ),
@@ -64,6 +70,12 @@ void showBlockMenu(
       ),
     ),
   );
+}
+
+/// Referme la fiche qui a ouvert le blocage, une fois la personne bloquée :
+/// la fiche ne montre plus rien d'utile et cache le message de confirmation.
+void closeAfterBlock(BuildContext context) {
+  if (context.mounted) Navigator.of(context).maybePop();
 }
 
 /// Dialog de confirmation du blocage, réutilisable depuis tout point d'entrée
@@ -76,32 +88,49 @@ void showBlockConfirmDialog(
   BuildContext context, {
   required String userId,
   required String displayName,
+  VoidCallback? onBlocked,
 }) {
   showDialog<void>(
     context: context,
     builder: (_) => BlocProvider<BlockedUsersBloc>(
       create: (_) => getIt<BlockedUsersBloc>(),
-      child: _BlockConfirmDialog(userId: userId, displayName: displayName),
+      child: _BlockConfirmDialog(
+        userId: userId,
+        displayName: displayName,
+        anchorContext: context,
+        onBlocked: onBlocked,
+      ),
     ),
   );
 }
 
 class _BlockConfirmDialog extends StatelessWidget {
-  const _BlockConfirmDialog({required this.userId, required this.displayName});
+  const _BlockConfirmDialog({
+    required this.userId,
+    required this.displayName,
+    required this.anchorContext,
+    this.onBlocked,
+  });
 
   final String userId;
   final String displayName;
+
+  /// Contexte de l'écran appelant : le dialog est fermé quand le message
+  /// s'affiche, son propre contexte ne l'est plus.
+  final BuildContext anchorContext;
+  final VoidCallback? onBlocked;
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<BlockedUsersBloc, BlockedUsersState>(
       listener: (context, state) {
         if (state is BlockedUserBlockSuccess) {
+          final message = context.l10n.blockSuccessMessage(displayName);
           Navigator.of(context, rootNavigator: true).pop();
-          DonySnackbar.show(
-            context,
-            message: context.l10n.blockSuccessMessage(displayName),
-          );
+          if (anchorContext.mounted) {
+            DonySnackbar.show(anchorContext, message: message);
+          }
+          onBlocked?.call();
         }
       },
       builder: (context, state) => _BlockConfirmDialogView(
