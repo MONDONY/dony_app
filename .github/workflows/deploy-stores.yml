@@ -154,7 +154,7 @@ jobs:
           retention-days: 30
 
       - name: Upload Play (piste interne)
-        uses: r0adkll/upload-google-play@v1.1.3
+        uses: r0adkll/upload-google-play@935ef9c68bb393a8e6116b1575626a7f5be3a7fb # v1.1.3
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.yadony.yadony
@@ -176,6 +176,17 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+      # connectivity_plus 7.x utilise NWPath.isUltraConstrained (SDK iOS 26) :
+      # le Xcode par défaut du runner ne compile pas. Même version qu'en local.
+      # Sélection par xcode-select plutôt que par une action tierce : ce job
+      # manipule les secrets de signature.
+      - name: Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE" ]; then echo "::error::Aucun Xcode 26 sur ce runner"; ls -d /Applications/Xcode*; exit 1; fi
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
       # Le projet iOS passe par CocoaPods. Avec Swift Package Manager actif,
       # Flutter lance `xcodebuild -list` et Xcode plante sur le runner
       # (NSInvalidArgumentException dans IDEGroup insertGroupSubitems).
