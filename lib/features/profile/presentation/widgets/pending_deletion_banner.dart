@@ -54,8 +54,11 @@ class PendingDeletionBanner extends StatelessWidget {
                 TextButton(
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
+                    // Seul moyen de réactiver le compte : la zone tappable
+                    // doit atteindre le minimum, pas la hauteur du texte.
+                    minimumSize: const Size(0, kDonyMinTapTarget),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    alignment: Alignment.centerLeft,
                   ),
                   onPressed: onReactivate,
                   child: Text(

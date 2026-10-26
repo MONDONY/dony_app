@@ -7953,6 +7953,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('date'),
     placeholderMarker('time'),
   ),
+  'bidDetailMoreOptionsTooltip': (l) => l.bidDetailMoreOptionsTooltip,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

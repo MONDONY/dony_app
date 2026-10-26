@@ -22709,4 +22709,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String amendmentDeadlineFormat(String date, String time) {
     return '$date at $time';
   }
+
+  @override
+  String get bidDetailMoreOptionsTooltip => 'More options';
 }

@@ -36817,6 +36817,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{date} à {time}'**
   String amendmentDeadlineFormat(String date, String time);
+
+  /// Nom accessible et infobulle du bouton « ⋯ » de la barre d'actions du détail d'un envoi (bid_detail_action_bars.dart), qui ouvre la feuille d'options.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus d\'options'**
+  String get bidDetailMoreOptionsTooltip;
 }
 
 class _AppLocalizationsDelegate

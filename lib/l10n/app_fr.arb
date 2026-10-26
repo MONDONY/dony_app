@@ -22745,5 +22745,7 @@
   "amendmentTravelerCashNoteNoCommission": "Payé en espèces par {name} à la remise : {amount}.",
   "@amendmentTravelerCashNoteNoCommission": {"description": "Note espèces sans montant de commission", "placeholders": {"name": {"type": "String"}, "amount": {"type": "String"}}},
   "amendmentDeadlineFormat": "{date} à {time}",
-  "@amendmentDeadlineFormat": {"description": "Échéance : date puis heure", "placeholders": {"date": {"type": "String"}, "time": {"type": "String"}}}
+  "@amendmentDeadlineFormat": {"description": "Échéance : date puis heure", "placeholders": {"date": {"type": "String"}, "time": {"type": "String"}}},
+  "bidDetailMoreOptionsTooltip": "Plus d'options",
+  "@bidDetailMoreOptionsTooltip": {"description": "Nom accessible et infobulle du bouton « ⋯ » de la barre d'actions du détail d'un envoi (bid_detail_action_bars.dart), qui ouvre la feuille d'options."}
 }

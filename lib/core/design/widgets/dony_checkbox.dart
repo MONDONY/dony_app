@@ -51,61 +51,66 @@ class DonyCheckbox extends StatelessWidget {
             }
           : null,
       borderRadius: BorderRadius.circular(DonyRadius.sm),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: DonySpacing.sm,
-          horizontal: DonySpacing.xs,
-        ),
-        child: Row(
-          crossAxisAlignment: subtitle != null
-              ? CrossAxisAlignment.start
-              : CrossAxisAlignment.center,
-          children: [
-            Opacity(
-              opacity: enabled ? 1.0 : 0.4,
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: Checkbox(
-                  value: value,
-                  onChanged: enabled ? onChanged : null,
-                  tristate: tristate,
-                  activeColor: cs.primary,
-                  checkColor: cs.onPrimary,
-                  side: BorderSide(
-                    color: value == true ? cs.primary : cs.outline,
-                    width: 1.5,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: DonySpacing.sm,
+            horizontal: DonySpacing.xs,
+          ),
+          child: Row(
+            crossAxisAlignment: subtitle != null
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
+            children: [
+              Opacity(
+                opacity: enabled ? 1.0 : 0.4,
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: value,
+                    onChanged: enabled ? onChanged : null,
+                    tristate: tristate,
+                    activeColor: cs.primary,
+                    checkColor: cs.onPrimary,
+                    side: BorderSide(
+                      color: value == true ? cs.primary : cs.outline,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(DonyRadius.xs),
+                    ),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.xs),
-                  ),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
-            ),
-            const SizedBox(width: DonySpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: tt.bodyMedium?.copyWith(
-                      color: enabled ? cs.onSurface : cs.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: DonySpacing.xxs),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      subtitle!,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      label,
+                      style: tt.bodyMedium?.copyWith(
+                        color: enabled ? cs.onSurface : cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: DonySpacing.xxs),
+                      Text(
+                        subtitle!,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
