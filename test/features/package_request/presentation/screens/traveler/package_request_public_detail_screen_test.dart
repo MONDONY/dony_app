@@ -5,6 +5,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -277,6 +278,35 @@ void main() {
 
       expect(find.byType(PackageRequestPublicDetailScreen), findsOneWidget);
       expect(find.text('Demande d\'envoi'), findsOneWidget);
+    },
+  );
+
+  // ── Mesure : l'ouverture de la fiche porte l'identifiant de la demande ────
+  testWidgets(
+    'ouverture de la fiche → package_request_detail_opened avec request_id',
+    (tester) async {
+      const visitor = UserModel(
+        id: 'visitor-042',
+        roles: [],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(visitor));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(visitor),
+      );
+
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.packageRequestDetailOpened,
+          properties: {'request_id': 'pr-owner-test'},
+        ),
+      ).called(1);
     },
   );
 

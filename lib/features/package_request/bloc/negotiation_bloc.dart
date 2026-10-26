@@ -664,9 +664,9 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       emit(NegotiationLoaded(thread));
       if (e.isFirmPrice) {
-        _log(AnalyticsEvents.firmPriceTaken, {
-          'request_id': e.packageRequestId,
-        });
+        // Mêmes identifiants que l'offre négociée : `thread_id` relie la prise
+        // au fil, à son acceptation et à son paiement.
+        _log(AnalyticsEvents.firmPriceTaken, {..._threadProps(thread)});
       } else {
         // `context: 'start'` : c'est le voyageur qui ouvre le fil sur la
         // demande (l'ancien `sender` était trompeur). La devise est celle du
@@ -701,9 +701,9 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       emit(NegotiationLoaded(thread));
       if (e.isFirmPrice) {
-        _log(AnalyticsEvents.firmPriceTaken, {
-          'request_id': e.packageRequestId,
-        });
+        // Mêmes identifiants que l'offre négociée : `thread_id` relie la prise
+        // au fil, à son acceptation et à son paiement.
+        _log(AnalyticsEvents.firmPriceTaken, {..._threadProps(thread)});
       } else {
         // `context: 'start'` : c'est le voyageur qui ouvre le fil sur la
         // demande (l'ancien `sender` était trompeur). La devise est celle du

@@ -333,7 +333,10 @@ void main() {
         ).called(1);
         verify(
           () => backend.capture(AnalyticsEvents.firmPriceTaken, {
+            'thread_id': 't-1',
             'request_id': 'pr-1',
+            'round': 1,
+            'currency': 'EUR',
           }),
         ).called(1);
       },

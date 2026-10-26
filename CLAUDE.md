@@ -426,7 +426,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `package_request_duplicate_started` | PackageRequestDetailCubit.trackDuplicateStarted() — formulaire de création pré-rempli ouvert depuis une demande (propriété `source` : `duplicate` / `similar` / `republish`) |
 | `package_request_photo_added` | PackageRequestPhotosCubit.add() — photo colis uploadée au wizard |
 | `package_request_photo_removed` | PackageRequestPhotosCubit.remove() — photo retirée avant publication |
-| `package_request_detail_opened` | PackageRequestPublicDetailScreen.initState — ouverture du détail plein écran |
+| `package_request_detail_opened` | PackageRequestPublicDetailScreen.initState — ouverture du détail plein écran. Propriété `request_id` (UUID de la demande, la même que `negotiation_offer_made.request_id`) : permet de mesurer le délai entre la fiche et l'offre sur une même demande |
 | `package_request_photos_viewed` | `_PhotoCarouselState._openViewer` — photo du carrousel de la fiche publique d'une demande touchée : la galerie plein écran (`RequestPhotoViewer`) s'ouvre sur cette photo (propriétés `photo_count`, `index` : rang de la photo touchée, à partir de 0). Événement de vue émis depuis le widget (comme `bid_photos_viewed`) ; jamais d'URL |
 | `package_request_reported` | PackageRequestPublicDetailScreen._report() — signalement (propriété `reason`) |
 | `package_request_searched` | PackageRequestSearchBloc |
@@ -522,7 +522,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `residence_country_changed` | BusinessPrefsBloc._onCountry — pays de résidence changé depuis Réglages › Préférences et enregistré par le serveur (`PUT /users/me/business-preferences`). Propriété `reset_payout_setup` : le changement a annulé une activation des paiements par carte commencée mais pas terminée (`countryChangeResetsPayoutSetup`, yadony-back #530), après la feuille de confirmation. Non émis sur un refus (`country-locked`) ni quand le pays choisi est le même. Jamais le pays |
 | `trip_filter_applied` | TripFilterCubit.setFilter() — chips statut « Mes trajets » (Activités), propriété `status` |
 | `urgent_filter_toggled` | HomeScreen._onUrgentToggle — chip 🔥 Urgent (propriété `active`) |
-| `firm_price_taken` | NegotiationBloc._onStart() — voyageur prend un prix ferme |
+| `firm_price_taken` | NegotiationBloc._onStart() — voyageur prend un prix ferme. Mêmes propriétés que `negotiation_offer_made` (`thread_id`, `request_id`, `round`, `currency`) |
 | `payment_method_selected` | NegotiationBloc._onCheckout() — mode de paiement retenu par l'expéditeur au checkout final (le voyageur ne choisit plus au trip-linking : `paymentMethod` y est un placeholder, `acceptedPaymentMethods.first`) |
 | `trip_link_payment_blocked` | NegotiationBloc._onSubmitTrip()/_onCreateDedicatedTrip() — 422 `payment-method/*` : le voyageur ne peut honorer aucun mode accepté par l'expéditeur (propriété `reason` : `no_card`/`no_cash_funds`/`none`) |
 | `bid_qr_sheet_opened` | QrSheet ouverte depuis le détail d'envoi (propriété `status`) |
