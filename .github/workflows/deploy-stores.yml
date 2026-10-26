@@ -1,0 +1,278 @@
+name: Deploy stores
+
+# Chaque merge sur main dont la CI est verte part vers :
+#   - TestFlight (iOS)
+#   - la piste de test INTERNE de Google Play (Android)
+# La mise en production dans les stores (review Apple, piste production Play)
+# reste un geste manuel du propriétaire.
+on:
+  workflow_run:
+    workflows: ["Flutter CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ios:
+        description: Déployer iOS (TestFlight)
+        type: boolean
+        default: true
+      android:
+        description: Déployer Android (Play, piste interne)
+        type: boolean
+        default: true
+
+# Un seul déploiement à la fois, sans annuler celui en cours : un build
+# interrompu en plein upload laisserait un numéro à moitié consommé.
+concurrency:
+  group: deploy-stores
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: 3.44.x
+
+jobs:
+  prepare:
+    name: Préparer
+    runs-on: ubuntu-latest
+    # workflow_run se déclenche aussi sur CI rouge ou annulée.
+    # Le filtre `branches: [main]` ne regarde que le NOM de la branche : une PR
+    # d'un fork dont la branche s'appelle main le satisfait. On exige donc un
+    # push, dans CE dépôt, sur main, sinon du code externe tournerait avec les
+    # secrets de signature.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    outputs:
+      sha: ${{ steps.v.outputs.sha }}
+      build_number: ${{ steps.v.outputs.build_number }}
+      skip: ${{ steps.diff.outputs.skip || 'false' }}
+    steps:
+      - id: v
+        env:
+          EVENT: ${{ github.event_name }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          SHA="${RUN_SHA:-$GITHUB_SHA}"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          # Numéro de build unique et croissant, commun à iOS et Android.
+          # Offset 1000 : les builds faits à la main (pubspec, 83 à 148 en
+          # octobre 2026) restent très en dessous. Ne jamais le baisser :
+          # App Store Connect et Play refusent un numéro déjà utilisé ou
+          # inférieur à l'existant.
+          echo "build_number=$((1000 + RUN_NUMBER))" >> "$GITHUB_OUTPUT"
+
+      # Un merge qui ne touche ni le code ni la config native ne mérite pas
+      # un build de 30 min (docs, plans, workflows).
+      - uses: actions/checkout@v4
+        if: github.event_name == 'workflow_run'
+        with:
+          ref: ${{ steps.v.outputs.sha }}
+          fetch-depth: 2
+      - name: Changement utile ?
+        id: diff
+        if: github.event_name == 'workflow_run'
+        run: |
+          CHANGED=$(git diff --name-only HEAD^ HEAD || true)
+          if ! echo "$CHANGED" | grep -qE '^(lib/|assets/|ios/|android/|pubspec\.(yaml|lock)|l10n\.yaml)'; then
+            echo "Aucun fichier d'app modifié : déploiement ignoré."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  android:
+    name: Android → Play (piste interne)
+    needs: prepare
+    if: needs.prepare.outputs.skip != 'true' && (github.event_name != 'workflow_dispatch' || inputs.android)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+
+      - name: Fichiers natifs et signature
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          for V in GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_PASSWORD ANDROID_KEY_ALIAS; do
+            if [ -z "${!V}" ]; then echo "::error::Secret $V absent"; exit 1; fi
+          done
+          echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+          # Sans key.properties, Gradle signerait avec la clé debug : Play
+          # refuserait l'AAB, mais autant échouer avant.
+          cat > android/key.properties <<PROPS
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=$RUNNER_TEMP/upload.jks
+          PROPS
+
+      - uses: ./.github/actions/prod-env
+        with:
+          platform: android
+          api-base-url: ${{ secrets.FLUTTER_API_BASE_URL }}
+          firebase-project-id: ${{ secrets.FLUTTER_FIREBASE_PROJECT_ID }}
+          firebase-messaging-sender-id: ${{ secrets.FLUTTER_FIREBASE_MESSAGING_SENDER_ID }}
+          firebase-storage-bucket: ${{ secrets.FLUTTER_FIREBASE_STORAGE_BUCKET }}
+          firebase-android-api-key: ${{ secrets.FLUTTER_FIREBASE_ANDROID_API_KEY }}
+          firebase-android-app-id: ${{ secrets.FLUTTER_FIREBASE_ANDROID_APP_ID }}
+          stripe-publishable-key: ${{ secrets.FLUTTER_STRIPE_PUBLISHABLE_KEY }}
+          sentry-dsn: ${{ secrets.FLUTTER_SENTRY_DSN }}
+          google-maps-api-key: ${{ secrets.FLUTTER_GOOGLE_MAPS_API_KEY }}
+          google-maps-android-api-key: ${{ secrets.FLUTTER_GOOGLE_MAPS_ANDROID_API_KEY }}
+          posthog-api-key: ${{ secrets.FLUTTER_POSTHOG_API_KEY }}
+
+      - name: Build AAB
+        env:
+          GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.FLUTTER_GOOGLE_MAPS_ANDROID_API_KEY }}
+        run: |
+          flutter build appbundle --release \
+            --dart-define-from-file=env.prod.json \
+            --build-number=${{ needs.prepare.outputs.build_number }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aab-${{ needs.prepare.outputs.build_number }}
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - name: Upload Play (piste interne)
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.yadony.yadony
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
+
+  ios:
+    name: iOS → TestFlight
+    needs: prepare
+    if: needs.prepare.outputs.skip != 'true' && (github.event_name != 'workflow_dispatch' || inputs.ios)
+    runs-on: macos-15
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+
+      - name: Fichiers natifs iOS
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.IOS_GOOGLE_SERVICE_INFO_PLIST }}
+          RELEASE_PROD_XCCONFIG: ${{ secrets.IOS_RELEASE_PROD_XCCONFIG }}
+        run: |
+          for V in GOOGLE_SERVICE_INFO_PLIST RELEASE_PROD_XCCONFIG; do
+            if [ -z "${!V}" ]; then echo "::error::Secret IOS_$V absent"; exit 1; fi
+          done
+          echo "$GOOGLE_SERVICE_INFO_PLIST" > ios/Runner/GoogleService-Info.plist
+          echo "$RELEASE_PROD_XCCONFIG" > ios/Flutter/Release-prod.xcconfig
+
+      - uses: ./.github/actions/prod-env
+        with:
+          platform: ios
+          api-base-url: ${{ secrets.FLUTTER_API_BASE_URL }}
+          firebase-project-id: ${{ secrets.FLUTTER_FIREBASE_PROJECT_ID }}
+          firebase-messaging-sender-id: ${{ secrets.FLUTTER_FIREBASE_MESSAGING_SENDER_ID }}
+          firebase-storage-bucket: ${{ secrets.FLUTTER_FIREBASE_STORAGE_BUCKET }}
+          firebase-ios-api-key: ${{ secrets.FLUTTER_FIREBASE_IOS_API_KEY }}
+          firebase-ios-app-id: ${{ secrets.FLUTTER_FIREBASE_IOS_APP_ID }}
+          stripe-publishable-key: ${{ secrets.FLUTTER_STRIPE_PUBLISHABLE_KEY }}
+          sentry-dsn: ${{ secrets.FLUTTER_SENTRY_DSN }}
+          google-maps-api-key: ${{ secrets.FLUTTER_GOOGLE_MAPS_API_KEY }}
+          posthog-api-key: ${{ secrets.FLUTTER_POSTHOG_API_KEY }}
+
+      - name: Certificat et profil de distribution
+        env:
+          CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          for V in CERT_P12_BASE64 CERT_PASSWORD PROFILE_BASE64; do
+            if [ -z "${!V}" ]; then echo "::error::Secret iOS $V absent"; exit 1; fi
+          done
+          KC="$RUNNER_TEMP/build.keychain-db"
+          KCPW=$(uuidgen)
+          security create-keychain -p "$KCPW" "$KC"
+          security set-keychain-settings -lut 21600 "$KC"
+          security unlock-keychain -p "$KCPW" "$KC"
+          echo "$CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security import "$RUNNER_TEMP/dist.p12" -P "$CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KC"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KCPW" "$KC"
+          security list-keychains -d user -s "$KC" login.keychain-db
+          echo "$PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/profile.mobileprovision"
+          PROFILE_UUID=$(security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" | plutil -extract UUID raw -)
+          PROFILE_NAME=$(security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" | plutil -extract Name raw -)
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$RUNNER_TEMP/profile.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+          echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
+          sed -i '' "s/__PROFILE_NAME__/$PROFILE_NAME/" ios/ExportOptions.plist
+
+      - name: Build IPA
+        run: |
+          # Le projet est en signature automatique (développement local).
+          # En CI on génère la config Flutter sans signer, puis on archive en
+          # signature manuelle avec le profil de distribution.
+          flutter build ios --release --no-codesign \
+            --dart-define-from-file=env.prod.json \
+            --build-number=${{ needs.prepare.outputs.build_number }}
+          xcodebuild archive \
+            -workspace ios/Runner.xcworkspace -scheme Runner \
+            -configuration Release \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM=F5Q74US8XS \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME"
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -exportPath "$RUNNER_TEMP/ipa"
+          ls "$RUNNER_TEMP/ipa"
+
+      - name: Garde-fou projet Firebase de l'IPA
+        run: |
+          IPA=$(ls "$RUNNER_TEMP"/ipa/*.ipa | head -1)
+          YADONY_ENV_FILE=env.prod.json tool/verify_ios_release_config.sh "$IPA"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ipa-${{ needs.prepare.outputs.build_number }}
+          path: ${{ runner.temp }}/ipa/*.ipa
+          retention-days: 30
+
+      - name: Upload TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          for V in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+            if [ -z "${!V}" ]; then echo "::error::Secret $V absent"; exit 1; fi
+          done
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$ASC_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          IPA=$(ls "$RUNNER_TEMP"/ipa/*.ipa | head -1)
+          xcrun altool --upload-app --type ios -f "$IPA" \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
