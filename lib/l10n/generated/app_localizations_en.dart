@@ -2740,6 +2740,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishSuccessCta => 'View my trip';
 
   @override
+  String get tripPublishSuccessParcelsCta => 'See parcels for this trip';
+
+  @override
   String get tripPublishSuccessShareCta => 'Share my poster';
 
   @override

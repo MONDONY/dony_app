@@ -946,6 +946,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('arrivalCity'),
   ),
   'tripPublishSuccessCta': (l) => l.tripPublishSuccessCta,
+  'tripPublishSuccessParcelsCta': (l) => l.tripPublishSuccessParcelsCta,
   'tripPublishSuccessShareCta': (l) => l.tripPublishSuccessShareCta,
   'tripPublishMonthlyLimitTitle': (l) => l.tripPublishMonthlyLimitTitle,
   'tripPublishDraftLimitTitle': (l) => l.tripPublishDraftLimitTitle,

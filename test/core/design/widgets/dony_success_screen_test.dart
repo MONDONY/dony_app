@@ -27,6 +27,8 @@ void main() {
     VoidCallback? onSecondary,
     String? tertiaryLabel,
     VoidCallback? onTertiary,
+    List<DonySuccessAction> extraActions = const [],
+    String? secondaryIconAsset = 'share-2',
   }) => MaterialApp(
     theme: AppTheme.light(),
     home: DonySuccessScreen(
@@ -41,6 +43,8 @@ void main() {
       onSecondary: onSecondary,
       tertiaryLabel: tertiaryLabel,
       onTertiary: onTertiary,
+      extraActions: extraActions,
+      secondaryIconAsset: secondaryIconAsset,
     ),
   );
 
@@ -500,6 +504,107 @@ void main() {
       await tester.pumpWidget(host(onCta: () {}));
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.byKey(const Key('success-screen-tertiary')), findsNothing);
+    });
+  });
+
+  group('actions supplémentaires', () {
+    tearDown(getIt.reset);
+
+    testWidgets('affichées dans l\'ordre sous le tertiaire, chaque tap appelle '
+        'son callback et trace sa position', (tester) async {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerLazySingleton<AnalyticsService>(() => analytics);
+      final taps = <String>[];
+
+      await tester.pumpWidget(
+        host(
+          onCta: () {},
+          analyticsContext: 'trip_published_v2',
+          tertiaryLabel: 'Partager mon affiche',
+          onTertiary: () => taps.add('tertiaire'),
+          extraActions: [
+            DonySuccessAction(
+              label: 'Configurer mes paiements',
+              onTap: () => taps.add('premiere'),
+            ),
+            DonySuccessAction(
+              label: 'Autre lien',
+              onTap: () => taps.add('seconde'),
+            ),
+          ],
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('Configurer mes paiements'), findsOneWidget);
+      expect(find.text('Autre lien'), findsOneWidget);
+
+      await tester.ensureVisible(
+        find.byKey(const Key('success-screen-extra-1')),
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('success-screen-extra-0')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('success-screen-extra-1')));
+      await tester.pump();
+
+      expect(taps, ['premiere', 'seconde']);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.successScreenTertiaryTapped,
+          properties: {'context': 'trip_published_v2', 'position': 2},
+        ),
+      ).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.successScreenTertiaryTapped,
+          properties: {'context': 'trip_published_v2', 'position': 3},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('par défaut : aucune action supplémentaire', (tester) async {
+      await tester.pumpWidget(host(onCta: () {}));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byKey(const Key('success-screen-extra-0')), findsNothing);
+    });
+  });
+
+  group('icône du bouton secondaire', () {
+    testWidgets('par défaut : icône de partage', (tester) async {
+      await tester.pumpWidget(
+        host(
+          onCta: () {},
+          secondaryLabel: 'Partager mon trajet',
+          onSecondary: () {},
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      final secondary = tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, 'Partager mon trajet'),
+      );
+      expect(secondary.iconAsset, 'share-2');
+    });
+
+    testWidgets('null : bouton secondaire sans icône', (tester) async {
+      await tester.pumpWidget(
+        host(
+          onCta: () {},
+          secondaryLabel: 'Voir mon trajet',
+          onSecondary: () {},
+          secondaryIconAsset: null,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      final secondary = tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, 'Voir mon trajet'),
+      );
+      expect(secondary.iconAsset, isNull);
     });
   });
 }

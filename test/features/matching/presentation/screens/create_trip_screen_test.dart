@@ -5,6 +5,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -1637,8 +1638,11 @@ void main() {
         const ConnectAccountStatus(status: 'NOT_CREATED'),
       );
       expect(find.byType(DonySuccessScreen), findsOneWidget);
-      expect(find.byKey(const Key('success-screen-tertiary')), findsOneWidget);
+      expect(find.byKey(const Key('success-screen-extra-0')), findsOneWidget);
       expect(find.text('Configurer mes paiements'), findsOneWidget);
+      // Le partage de l'affiche garde sa place d'action tertiaire.
+      expect(find.byKey(const Key('success-screen-tertiary')), findsOneWidget);
+      expect(find.text('Partager mon affiche'), findsOneWidget);
     });
 
     testWidgets('création avec paiements déjà configurés : pas de bouton '
@@ -1648,7 +1652,18 @@ void main() {
         const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
       );
       expect(find.byType(DonySuccessScreen), findsOneWidget);
-      expect(find.byKey(const Key('success-screen-tertiary')), findsNothing);
+      expect(find.byKey(const Key('success-screen-extra-0')), findsNothing);
+      expect(find.text('Configurer mes paiements'), findsNothing);
+    });
+
+    testWidgets('création : « Voir les colis pour ce trajet » est le bouton '
+        'principal, « Voir mon trajet » le secondaire', (tester) async {
+      await emitCreated(
+        tester,
+        const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+      );
+      expect(find.text('Voir les colis pour ce trajet'), findsOneWidget);
+      expect(find.text('Voir mon trajet'), findsOneWidget);
     });
 
     /// Navigue jusqu'à l'étape 2 (mode édition, "Enregistrer") avec un
@@ -2573,6 +2588,84 @@ void main() {
         expect(pushCompleted, isTrue);
         expect(pushResult, isTrue);
         expect(find.text('trip-detail-ann-test-1'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'le CTA principal « Voir les colis pour ce trajet » ferme le formulaire '
+      'avec pop(true), pose l\'intention « colis pour mes trajets » et ouvre '
+      'l\'accueil',
+      (tester) async {
+        setupViewport(tester);
+        final notifier = PendingSearchNotifier();
+        getIt.registerSingleton<PendingSearchNotifier>(notifier);
+        addTearDown(() => getIt.unregister<PendingSearchNotifier>());
+        bool? pushResult;
+
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => Scaffold(
+                body: Builder(
+                  builder: (ctx) => ElevatedButton(
+                    onPressed: () async {
+                      pushResult = await ctx.push<bool>('/trips/create');
+                    },
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/trips/create',
+              builder: (_, _) => MultiBlocProvider(
+                providers: [
+                  BlocProvider<StripeAccountBloc>.value(
+                    value: _makeStripeBloc(),
+                  ),
+                  BlocProvider<HelpCenterBloc>(
+                    create: (_) => HelpCenterBloc(
+                      HelpCenterRepository(
+                        const _StaticHelpCenterSource(_emptyHelpConfigJson),
+                        fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                      ),
+                      makeDisabledAnalytics(MockAnalyticsBackend()),
+                    )..add(const HelpCenterLoadRequested()),
+                  ),
+                ],
+                child: const CreateTripScreen(),
+              ),
+            ),
+            GoRoute(
+              path: '/home',
+              builder: (_, _) => const Scaffold(body: Text('home-test')),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+        );
+        await tester.pump();
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        annStreamCtrl.add(AnnouncementCreated(_makeAnnouncement()));
+        await tester.pump();
+        await tester.pumpAndSettle();
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+        expect(notifier.hasParcelsForMyTrips, isFalse);
+
+        await tester.ensureVisible(find.text('Voir les colis pour ce trajet'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Voir les colis pour ce trajet'));
+        await tester.pumpAndSettle();
+
+        expect(pushResult, isTrue);
+        expect(notifier.hasParcelsForMyTrips, isTrue);
+        expect(find.text('home-test'), findsOneWidget);
       },
     );
 

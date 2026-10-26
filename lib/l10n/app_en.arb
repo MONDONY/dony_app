@@ -828,6 +828,7 @@
   "tripPublishSuccessTitleCreate": "Trip posted!",
   "tripPublishSuccessSubtitle": "Your trip {departureCity} → {arrivalCity} is live.",
   "tripPublishSuccessCta": "View my trip",
+  "tripPublishSuccessParcelsCta": "See parcels for this trip",
   "tripPublishSuccessShareCta": "Share my poster",
   "tripPublishMonthlyLimitTitle": "Monthly limit reached",
   "tripPublishDraftLimitTitle": "Draft limit reached",

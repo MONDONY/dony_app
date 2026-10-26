@@ -1328,7 +1328,11 @@
   },
   "tripPublishSuccessCta": "Voir mon trajet",
   "@tripPublishSuccessCta": {
-    "description": "CTA principal de l'écran de succès de publication d'un trajet"
+    "description": "Bouton « Voir mon trajet » de l'écran de succès de publication (principal en modification, secondaire à la création)"
+  },
+  "tripPublishSuccessParcelsCta": "Voir les colis pour ce trajet",
+  "@tripPublishSuccessParcelsCta": {
+    "description": "CTA principal de l'écran de succès à la création d'un trajet : ouvre l'accueil sur les colis compatibles avec les trajets du voyageur"
   },
   "tripPublishSuccessShareCta": "Partager mon affiche",
   "@tripPublishSuccessShareCta": {

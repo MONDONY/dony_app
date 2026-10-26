@@ -35,6 +35,11 @@ class HiveService {
   // Billets d'avion visibles dans Activités (bloc + alertes prix), propre à
   // l'appareil. Absente = visibles.
   static const String kFlightsVisible = 'flights_visible'; // bool
+  // L'utilisateur a retiré lui-même le filtre « Pour mes trajets » du mode
+  // Colis de l'accueil : on ne le réactive plus à sa place. Absente = pas de
+  // refus (le filtre s'active seul pour un voyageur qui a un trajet actif).
+  static const String kHomeMatchingTripsOptedOut =
+      'home_matching_trips_opted_out'; // bool
   // 'fav_destinations' (destinations favorites) n'est plus lue ni écrite
   // (FLUTTER-H5) : la clé peut subsister sur d'anciens appareils, sans effet.
 
