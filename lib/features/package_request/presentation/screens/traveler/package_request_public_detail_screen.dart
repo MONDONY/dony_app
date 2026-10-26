@@ -37,6 +37,7 @@ import 'package:dony/features/package_request/presentation/widgets/payment_metho
 import 'package:dony/features/package_request/presentation/widgets/request_corridor.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_photo_viewer.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_header_row.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_reassurance_notes.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_sender_row.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -437,11 +438,20 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
         currentUserId != r.senderId &&
         r.viewerThreadId == null &&
         _cardOnlyBlocked;
+    // Les lignes de réassurance sous le bouton agrandissent la barre du bas :
+    // le contenu défilant réserve leur place pour ne pas passer dessous.
+    final reassuranceLines =
+        !isGuest && currentUserId != r.senderId && r.viewerThreadId == null
+        ? RequestReassuranceNotes.lineCount(r)
+        : 0;
     return Stack(
       children: [
         SingleChildScrollView(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).padding.bottom + 110,
+            bottom:
+                MediaQuery.of(context).padding.bottom +
+                110 +
+                reassuranceLines * 28,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -590,19 +600,27 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                         : l.requestPublicViewProposalCta,
                     onPressed: () => _openThread(context, r.viewerThreadId!),
                   )
-                : r.negotiable
-                ? DonyButton(
-                    key: const Key('propose-trip'),
-                    label: l.requestPublicProposeTripCta,
-                    onPressed: () => cardBlocked
-                        ? showCardCapabilityRequiredSheet(context)
-                        : _makeOffer(context),
-                  )
-                : _FirmPriceCta(
-                    request: r,
-                    announcement: announcement,
-                    onChanged: onChanged,
-                    cardBlocked: cardBlocked,
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (r.negotiable)
+                        DonyButton(
+                          key: const Key('propose-trip'),
+                          label: l.requestPublicProposeTripCta,
+                          onPressed: () => cardBlocked
+                              ? showCardCapabilityRequiredSheet(context)
+                              : _makeOffer(context),
+                        )
+                      else
+                        _FirmPriceCta(
+                          request: r,
+                          announcement: announcement,
+                          onChanged: onChanged,
+                          cardBlocked: cardBlocked,
+                        ),
+                      RequestReassuranceNotes(request: r),
+                    ],
                   ),
           ),
         ),

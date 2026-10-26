@@ -1408,6 +1408,8 @@
   "requestPublicPaymentTitle": "Accepted payment methods",
   "requestPublicPaymentSubtitle": "The sender will pick one of these when paying: nothing to choose on your side",
   "requestPublicProposeTripCta": "Propose my trip",
+  "requestPublicReassureSecured": "Secure payment: paid out after delivery",
+  "requestPublicReassureNegotiable": "You propose your price, the sender replies",
   "requestPublicViewNegotiationCta": "View my negotiation",
   "requestPublicViewProposalCta": "View my proposal",
   "requestPublicTakePackageCta": "Take this parcel",
