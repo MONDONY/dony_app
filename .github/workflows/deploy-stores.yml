@@ -270,14 +270,27 @@ jobs:
           echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
           sed -i '' "s/__PROFILE_NAME__/$PROFILE_NAME/" ios/ExportOptions.plist
 
+      # Pods : 7 min à télécharger à froid. La clé suit les versions des
+      # plugins (pubspec.lock) et des Pods (Podfile.lock).
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ios/Pods
+            ~/Library/Caches/CocoaPods
+          key: pods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock', 'pubspec.lock') }}
+          restore-keys: pods-${{ runner.os }}-
+
       - name: Build IPA
         run: |
           # Le projet est en signature automatique (développement local).
-          # En CI on génère la config Flutter sans signer, puis on archive en
-          # signature manuelle avec le profil de distribution.
-          flutter build ios --release --no-codesign \
+          # En CI on génère la config Flutter (Generated.xcconfig, Pods) sans
+          # rien compiler, puis on archive en signature manuelle avec le profil
+          # de distribution. `flutter build ios` compilait toute l'app une
+          # première fois pour rien : l'archive la recompile (+20 min).
+          flutter build ios --config-only --release --no-codesign \
             --dart-define-from-file=env.prod.json \
             --build-number=${{ needs.prepare.outputs.build_number }}
+          [ -f ios/Pods/Manifest.lock ] || (cd ios && pod install)
           # Les réglages de signature ne doivent toucher que la cible Runner :
           # passés en ligne de commande à xcodebuild, ils s'appliquent aussi à
           # tous les Pods, qui refusent un profil de distribution
