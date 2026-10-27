@@ -237,6 +237,16 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
                                 context,
                                 userId: _effectiveUserId,
                                 displayName: viewedName,
+                                // Un compte bloqué disparaît : on quitte sa
+                                // page, où « S'abonner » resterait à portée.
+                                onBlocked: () {
+                                  if (!context.mounted) return;
+                                  if (context.canPop()) {
+                                    context.pop();
+                                  } else {
+                                    context.go('/home');
+                                  }
+                                },
                               );
                             }
                         }

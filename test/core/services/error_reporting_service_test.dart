@@ -140,6 +140,22 @@ void main() {
     expect(sink.error, isNull);
   });
 
+  test(
+    'ignores 410 Gone (photo du chat purgée, déjà affichée « expirée »)',
+    () async {
+      final sink = _RecordingSink();
+      final reporter = ErrorReportingService(sink);
+
+      await reporter.report(
+        StateError('gone'),
+        operation: 'http.GET',
+        statusCode: 410,
+      );
+
+      expect(sink.error, isNull);
+    },
+  );
+
   test('ignores rate limiting (RateLimitException and status 429)', () async {
     final sink = _RecordingSink();
     final reporter = ErrorReportingService(sink);

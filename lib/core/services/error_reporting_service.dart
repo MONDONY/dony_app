@@ -124,7 +124,9 @@ class ErrorReportingService {
 
   // 429 : réponse normale du rate-limiting nginx (5 req/min sur /auth et
   // /kyc) — un poll qui tombe dessus n'est pas un bug à remonter.
-  static const _expectedStatusCodes = {401, 403, 404, 409, 422, 429};
+  // 410 : ressource retirée pour de bon (photo du chat purgée après la
+  // livraison, FLUTTER-VJ). Le chat l'affiche déjà « Photo expirée ».
+  static const _expectedStatusCodes = {401, 403, 404, 409, 410, 422, 429};
   // OFFLINE / TIMEOUT : l'appareil n'a pas de réseau ou le perd en route. Ce
   // n'est pas un défaut de l'app, l'écran affiche déjà le message adapté, et
   // un utilisateur en 2G en produisait une salve à chaque parcours KYC.
