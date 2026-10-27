@@ -376,14 +376,13 @@ class AuthFlowActions extends StatelessWidget {
   final Widget? primary;
 
   /// `null` quand **aucune** étape n'est à passer sur cet écran (l'identité
-  /// ou les paiements ouverts depuis le profil, par exemple). La place reste
-  /// réservée pour que le bouton principal ne remonte pas, mais aucun libellé
-  /// n'est affiché : annoncer une action inexistante vaut moins que du vide.
+  /// ou les paiements ouverts depuis le profil, par exemple) : rien n'est
+  /// affiché et le bouton principal reste tout en bas.
   final VoidCallback? onSkip;
 
   /// Passer est-il possible **en ce moment** ? Distinct de [onSkip] `null` :
   /// pendant un enregistrement l'action existe toujours, elle est seulement
-  /// inerte — le libellé reste donc visible, grisé, plutôt que de disparaître
+  /// inerte — le bouton reste donc visible, grisé, plutôt que de disparaître
   /// et faire sauter la mise en page.
   final bool skipEnabled;
 
@@ -392,36 +391,26 @@ class AuthFlowActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
+    // « Passer » est un bouton bordé AU-DESSUS du bouton principal : le
+    // principal est tout en bas, à portée du pouce, et « Passer » ne se perd
+    // plus en petit lien gris sous lui (retours testeur FLUTTER-SA). Sans
+    // « Passer », le principal reste en bas, au même endroit.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (onSkip != null) ...[
+          const SizedBox(height: DonySpacing.sm),
+          DonyButton(
+            label: skipLabel ?? context.l10n.authFlowSkipForNow,
+            variant: DonyButtonVariant.secondary,
+            onPressed: skipEnabled ? onSkip : null,
+          ),
+        ],
         if (primary != null) ...[
           const SizedBox(height: DonySpacing.sm),
           primary!,
         ],
-        // Hauteur réservée dans tous les cas : la zone d'action garde la même
-        // taille d'un écran à l'autre, le pouce retrouve le bouton principal
-        // exactement au même endroit.
-        SizedBox(
-          height: kDonyMinTapTarget,
-          child: onSkip == null
-              ? null
-              : TextButton(
-                  onPressed: skipEnabled ? onSkip : null,
-                  child: Text(
-                    skipLabel ?? context.l10n.authFlowSkipForNow,
-                    style: tt.bodyMedium?.copyWith(
-                      color: skipEnabled
-                          ? cs.onSurfaceVariant
-                          : cs.onSurfaceVariant.withValues(alpha: 0.4),
-                    ),
-                  ),
-                ),
-        ),
       ],
     );
   }
