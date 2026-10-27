@@ -211,6 +211,10 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'zzzzzzz');
       await tester.pumpAndSettle();
+      // La carte « pas disponible » défile : sur un petit écran, le bouton
+      // est sous le pli, comme l'utilisateur le fait défiler.
+      await tester.ensureVisible(find.text('Supprimer mon compte'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Supprimer mon compte'));
       await tester.pumpAndSettle();
 

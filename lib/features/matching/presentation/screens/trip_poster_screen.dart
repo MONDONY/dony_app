@@ -424,6 +424,25 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
         ),
         centerTitle: false,
       ),
+      // « Partager l'affiche » est l'action principale : fixée en bas, elle ne
+      // se perd plus sous l'affiche (retour testeur FLUTTER-VH).
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(
+          DonySpacing.lg,
+          DonySpacing.sm,
+          DonySpacing.lg,
+          DonySpacing.md,
+        ),
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _busy,
+          builder: (context, busy, _) => DonyButton(
+            label: l.tripPosterShareButton,
+            icon: Icons.ios_share_rounded,
+            isLoading: busy,
+            onPressed: busy ? null : _sharePoster,
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           DonySpacing.lg,
@@ -464,12 +483,6 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
               builder: (context, busy, _) => Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  DonyButton(
-                    label: l.tripPosterShareButton,
-                    icon: Icons.ios_share_rounded,
-                    isLoading: busy,
-                    onPressed: busy ? null : _sharePoster,
-                  ),
                   // Masqué tant que la configuration distante ne fournit pas
                   // de groupe Facebook actif (ou hors HelpCenterBloc).
                   _GroupButton(
