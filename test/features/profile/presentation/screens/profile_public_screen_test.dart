@@ -2,6 +2,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -15,6 +17,8 @@ import 'package:dony/features/profile/data/models/open_listing.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
+import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
+import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
@@ -38,6 +42,11 @@ class MockProfilePublicBloc
 class MockTravelerSubscribeBloc
     extends MockBloc<TravelerSubscribeEvent, TravelerSubscribeState>
     implements TravelerSubscribeBloc {}
+
+class MockBlockedUsersRepository extends Mock
+    implements BlockedUsersRepository {}
+
+class MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
@@ -201,6 +210,10 @@ Widget _wrap(
           GoRoute(
             path: '/',
             builder: (_, _) => ProfilePublicScreen(userId: screenUserId),
+          ),
+          GoRoute(
+            path: '/home',
+            builder: (_, _) => const Scaffold(body: Text('Accueil')),
           ),
           GoRoute(
             path: '/profile/reviews',
@@ -1170,6 +1183,43 @@ void main() {
       expect(find.text('Bloquer Fatou Diallo'), findsOneWidget);
     },
   );
+
+  testWidgets('après un blocage réussi, on quitte la page du profil', (
+    tester,
+  ) async {
+    final repo = MockBlockedUsersRepository();
+    final analytics = MockAnalyticsService();
+    final blockEvents = BlockEventsService();
+    when(() => repo.blockUser(any())).thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    if (getIt.isRegistered<BlockedUsersBloc>()) {
+      getIt.unregister<BlockedUsersBloc>();
+    }
+    getIt.registerFactory<BlockedUsersBloc>(
+      () => BlockedUsersBloc(repo, analytics, blockEvents),
+    );
+    addTearDown(() async {
+      if (getIt.isRegistered<BlockedUsersBloc>()) {
+        getIt.unregister<BlockedUsersBloc>();
+      }
+      await blockEvents.dispose();
+    });
+
+    await tester.pumpWidget(_wrapLoaded(profile: _profile));
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.tap(find.byTooltip("Plus d'options"));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bloquer Fatou Diallo'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Bloquer'));
+    await tester.pumpAndSettle();
+
+    verify(() => repo.blockUser('user-1')).called(1);
+    expect(find.text('Accueil'), findsOneWidget);
+    expect(find.byType(ProfilePublicScreen), findsNothing);
+  });
 
   testWidgets('« Bloquer » est absent du menu ⋯ sur son propre profil', (
     tester,
