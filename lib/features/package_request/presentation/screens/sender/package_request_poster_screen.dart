@@ -303,6 +303,26 @@ class _PackageRequestPosterScreenState
         ),
         centerTitle: false,
       ),
+      // « Partager l'affiche » est l'action principale : fixée en bas, elle ne
+      // se perd plus sous l'affiche (retour testeur FLUTTER-VH).
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(
+          DonySpacing.lg,
+          DonySpacing.sm,
+          DonySpacing.lg,
+          DonySpacing.md,
+        ),
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _busy,
+          builder: (context, busy, _) => DonyButton(
+            key: const Key('request-poster-share'),
+            label: l.tripPosterShareButton,
+            icon: Icons.ios_share_rounded,
+            isLoading: busy,
+            onPressed: busy ? null : _sharePoster,
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           DonySpacing.lg,
@@ -342,14 +362,6 @@ class _PackageRequestPosterScreenState
               builder: (context, busy, _) => Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  DonyButton(
-                    key: const Key('request-poster-share'),
-                    label: l.tripPosterShareButton,
-                    icon: Icons.ios_share_rounded,
-                    isLoading: busy,
-                    onPressed: busy ? null : _sharePoster,
-                  ),
-                  const SizedBox(height: DonySpacing.sm),
                   DonyButton(
                     key: const Key('request-poster-copy-caption'),
                     label: l.tripPosterCopyCaptionButton,

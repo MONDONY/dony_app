@@ -123,6 +123,28 @@ void main() {
   });
 
   group('écran', () {
+    testWidgets(
+      '« Partager l\'affiche » est fixé en bas, visible sans défiler',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 700);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await _pumpScreen(tester);
+
+        final share = find.byKey(const Key('request-poster-share'));
+        expect(share, findsOneWidget);
+        expect(
+          find.ancestor(
+            of: share,
+            matching: find.byType(SingleChildScrollView),
+          ),
+          findsNothing,
+          reason: 'le bouton ne défile pas avec l\'affiche',
+        );
+        expect(tester.getRect(share).bottom, lessThanOrEqualTo(700));
+      },
+    );
+
     testWidgets('montre l\'affiche et les quatre actions', (tester) async {
       await _pumpScreen(tester);
 

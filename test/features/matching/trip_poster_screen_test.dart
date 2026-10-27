@@ -182,6 +182,25 @@ void main() {
     expect(find.text('Enregistrer dans la galerie'), findsOneWidget);
   });
 
+  testWidgets('« Partager l\'affiche » est fixé en bas, visible sans défiler', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await _pump(tester);
+
+    final share = find.widgetWithText(DonyButton, 'Partager l\'affiche');
+    expect(share, findsOneWidget);
+    expect(
+      find.ancestor(of: share, matching: find.byType(SingleChildScrollView)),
+      findsNothing,
+      reason: 'le bouton ne défile pas avec l\'affiche',
+    );
+    expect(tester.getRect(share).bottom, lessThanOrEqualTo(700));
+    expect(tester.getRect(share).top, greaterThan(0));
+  });
+
   testWidgets('copie l\'URL publique construite depuis la base fournie', (
     tester,
   ) async {
