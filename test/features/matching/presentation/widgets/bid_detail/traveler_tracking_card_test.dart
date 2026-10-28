@@ -354,6 +354,50 @@ void main() {
       expect(find.text('Maintenant'), findsNothing);
     });
 
+    testWidgets('staleMarkerWithoutLastUpdatedHasNoDanglingComma', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          TravelerTrackingModel(
+            status: TravelerTrackingStatus.stale,
+            history: [
+              TravelerTrackingPoint(
+                city: 'Lyon',
+                at: _nowUtc.subtract(const Duration(hours: 4)),
+              ),
+            ],
+          ),
+        ),
+      );
+      expect(find.text('Dernière position, il y a 4h'), findsOneWidget);
+      expect(find.textContaining('position,'), findsOneWidget);
+      expect(find.text('Dernière position,'), findsNothing);
+
+      await tester.pumpWidget(
+        host(
+          const TravelerTrackingModel(
+            status: TravelerTrackingStatus.stale,
+            history: [TravelerTrackingPoint(city: 'Lyon')],
+          ),
+        ),
+      );
+      expect(find.textContaining('position,'), findsNothing);
+    });
+
+    testWidgets('staleShowsAgeOnlyInBadgeAndMarker', (tester) async {
+      await tester.pumpWidget(
+        host(
+          _tracking(
+            status: TravelerTrackingStatus.stale,
+            age: const Duration(hours: 3),
+            history: [TravelerTrackingPoint(city: 'Lyon', at: _nowUtc)],
+          ),
+        ),
+      );
+      expect(find.textContaining('Mis à jour'), findsNothing);
+    });
+
     testWidgets('sans historique : pas de liste, le lien reste', (
       tester,
     ) async {

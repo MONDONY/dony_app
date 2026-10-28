@@ -91,6 +91,13 @@ class _CardBody extends StatelessWidget {
     final status = tracking.status;
     final updated = tracking.lastUpdatedAt?.toLocal();
     final age = updated == null ? null : travelerTrackingAge(l, updated, now);
+    // Âge du marqueur « Dernière position » : repli sur l'heure de la dernière
+    // ville quand le back ne sert pas lastUpdatedAt.
+    final markerTime =
+        (tracking.lastUpdatedAt ?? tracking.history.lastOrNull?.at)?.toLocal();
+    final markerAge = markerTime == null
+        ? null
+        : travelerTrackingAge(l, markerTime, now);
     final city = tracking.nearestCity;
     final pct = tracking.progressPct;
     final showPosition = status != TravelerTrackingStatus.notActivated;
@@ -165,7 +172,9 @@ class _CardBody extends StatelessWidget {
               ],
             ),
           ],
-          if (showPosition && age != null) ...[
+          if (showPosition &&
+              age != null &&
+              status != TravelerTrackingStatus.stale) ...[
             const SizedBox(height: DonySpacing.xxs),
             Text(
               l.travelerTrackingUpdated(age),
@@ -184,7 +193,9 @@ class _CardBody extends StatelessWidget {
                     ? switch (status) {
                         TravelerTrackingStatus.enRoute => l.travelerTrackingNow,
                         TravelerTrackingStatus.stale =>
-                          l.travelerTrackingLastPosition(age ?? '').trim(),
+                          markerAge == null
+                              ? null
+                              : l.travelerTrackingLastPosition(markerAge),
                         _ => null,
                       }
                     : null,

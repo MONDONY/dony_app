@@ -245,8 +245,8 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
       '/announcements/$announcementId/trip',
     // Voyageur → rappels de suivi (« Es-tu parti ? », « Es-tu arrivé ? ») :
     // même écran du trajet, d'où il confirme départ ou arrivée.
-    'TRIP_DEPARTURE_PROMPT' || 'TRIP_ARRIVAL_PROMPT'
-        when _isUuid(announcementId) =>
+    'TRIP_DEPARTURE_PROMPT' ||
+    'TRIP_ARRIVAL_PROMPT' when _isUuid(announcementId) =>
       '/announcements/$announcementId/trip',
 
     // Nouveau message → conversation précise ; repli sur la liste si l'id manque

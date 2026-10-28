@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
@@ -14,7 +13,6 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_act
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_pay_button.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
-import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -311,22 +309,7 @@ class SenderStickyBar extends StatelessWidget {
         iconAsset: 'package',
         onPressed: () {
           HapticFeedback.lightImpact();
-          showTrackingTimelineSheet(
-            context,
-            bidId: bid.id,
-            departureCity: bid.departureCity,
-            arrivalCity: bid.arrivalCity,
-            arrivalInstructions: bid.arrivalInstructions,
-            trackingNumber: bid.trackingNumber,
-            bidStatus: bid.status,
-            travelerTracking: bid.travelerTracking,
-            onShareTracking: bid.trackingToken != null
-                ? () => shareTrackingLink(
-                    bid,
-                    sharePositionOrigin: sharePositionOriginFor(context),
-                  )
-                : null,
-          );
+          openSenderTrackingTimeline(context, bid);
         },
       );
     }

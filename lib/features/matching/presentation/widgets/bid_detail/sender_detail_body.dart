@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
@@ -21,7 +20,6 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
-import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -103,28 +101,6 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     _entranceTimer = Timer(total, () {
       _playEntrance = false;
     });
-  }
-
-  /// Frise complète du colis avec les villes du voyageur, comme depuis
-  /// « Suivre le colis ».
-  void _openTimeline(BuildContext context) {
-    final bid = widget.bid;
-    showTrackingTimelineSheet(
-      context,
-      bidId: bid.id,
-      departureCity: bid.departureCity,
-      arrivalCity: bid.arrivalCity,
-      arrivalInstructions: bid.arrivalInstructions,
-      trackingNumber: bid.trackingNumber,
-      bidStatus: bid.status,
-      travelerTracking: bid.travelerTracking,
-      onShareTracking: bid.trackingToken != null
-          ? () => shareTrackingLink(
-              bid,
-              sharePositionOrigin: sharePositionOriginFor(context),
-            )
-          : null,
-    );
   }
 
   /// Encart du supplément, cible de [SenderDetailBody.focusSupplement].
@@ -211,7 +187,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
           tracking: widget.bid.travelerTracking!,
           departureCity: widget.bid.departureCity,
           arrivalCity: widget.bid.arrivalCity,
-          onOpenTimeline: () => _openTimeline(context),
+          onOpenTimeline: () => openSenderTrackingTimeline(context, widget.bid),
         ),
       // Lieu de remise puis lieu de récupération, ouvrables dans la carte
       // native ; la mini-carte suit l'étape du colis.
