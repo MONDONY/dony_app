@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/matching/data/models/commission_funding_detail.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/l10n/l10n.dart';
 
@@ -8,14 +9,19 @@ import 'package:dony/l10n/l10n.dart';
 /// suivantes : détails (bodySmall). Sans [breakdown] (ancien back ou même
 /// devise) : textes historiques en devise active. Avec : ce que le
 /// portefeuille de la devise du colis couvre et ce qui manque sur la devise
-/// active, le prélèvement étant fait dans cet ordre côté serveur.
+/// active, le prélèvement étant fait dans cet ordre côté serveur. Avec
+/// [fundingDetail] (back à jour), le manque est dit toutes devises confondues :
+/// ce que tous les portefeuilles réunis règlent, ce qui manque encore, et les
+/// portefeuilles écartés.
 List<String> commissionShortfallLines(
   AppLocalizations l, {
   required CommissionShortfall? breakdown,
   required double requiredCommission,
   required double availableBalance,
   required String? currency,
+  CommissionFundingDetail? fundingDetail,
 }) {
+  if (fundingDetail != null) return _fundingDetailLines(l, fundingDetail);
   if (breakdown == null) {
     return [
       l.walletShortfallRequired(formatPriceIn(requiredCommission, currency)),
@@ -67,5 +73,21 @@ List<String> commissionShortfallLines(
       formatPriceIn(breakdown.remainingInActive, breakdown.activeCurrency),
     ),
     l.walletShortfallTopUpHint(activeName, activeBalance, bidSymbol),
+  ];
+}
+
+List<String> _fundingDetailLines(
+  AppLocalizations l,
+  CommissionFundingDetail detail,
+) {
+  final bid = detail.bidCurrency;
+  return [
+    l.walletShortfallCommission(formatPriceIn(detail.commission, bid)),
+    l.walletShortfallAllWallets(formatPriceIn(detail.availableInBid, bid)),
+    l.walletShortfallStillMissing(formatPriceIn(detail.shortfallInBid, bid)),
+    for (final e in detail.excluded.entries)
+      e.value == CommissionFundingDetail.frozen
+          ? l.walletShortfallExcludedFrozen(e.key)
+          : l.walletShortfallExcludedRate(e.key),
   ];
 }

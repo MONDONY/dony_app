@@ -23,6 +23,13 @@ class WalletTransactionModel {
   /// l'envoie pas : la ligne reste alors non cliquable.
   final String? bidId;
 
+  /// Origine d'une ligne convertie : devise et montant de la part de
+  /// commission qu'elle règle (« pour 450 F CFA »). Absents pour une ligne non
+  /// convertie et avec un back antérieur au champ. Jamais le taux, qui paraîtrait
+  /// faux (il est recalculé sur des montants arrondis).
+  final String? sourceCurrency;
+  final double? sourceAmount;
+
   const WalletTransactionModel({
     required this.type,
     required this.amount,
@@ -32,6 +39,8 @@ class WalletTransactionModel {
     required this.createdAt,
     this.refundStatus,
     this.bidId,
+    this.sourceCurrency,
+    this.sourceAmount,
   });
 
   factory WalletTransactionModel.fromJson(Map<String, dynamic> json) =>
@@ -44,11 +53,21 @@ class WalletTransactionModel {
         createdAt: parseServerDateTime(json['createdAt'] as String).toLocal(),
         refundStatus: json['refundStatus'] as String?,
         bidId: _bidIdOf(json['bidId']),
+        sourceCurrency: _currencyOf(json['sourceCurrency']),
+        sourceAmount: (json['sourceAmount'] as num?)?.toDouble(),
       );
 
   /// Tolérant : absent, `null`, vide ou d'un autre type → pas de colis.
   static String? _bidIdOf(Object? raw) =>
       raw is String && raw.trim().isNotEmpty ? raw.trim() : null;
+
+  /// Tolérant : absent, `null`, vide ou d'un autre type → pas de devise.
+  static String? _currencyOf(Object? raw) =>
+      raw is String && raw.trim().isNotEmpty ? raw.trim().toUpperCase() : null;
+
+  /// La ligne vient d'une conversion : elle porte la devise et le montant
+  /// d'origine à afficher.
+  bool get hasSource => sourceCurrency != null && sourceAmount != null;
 
   bool get isCredit => amount > 0;
   bool get isRefundProcessing =>

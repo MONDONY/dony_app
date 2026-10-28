@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
+import 'package:dony/features/matching/data/models/commission_funding_detail.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 
 enum AcceptanceStatus { accepted, requires3ds, insufficientWallet, failed }
@@ -21,6 +22,10 @@ class AcceptanceResponse {
   /// avec un ancien back.
   final List<CommissionFundingAlternative> alternatives;
 
+  /// Détail par portefeuille d'un « solde insuffisant » (somme de toutes les
+  /// devises), absent avec un ancien back.
+  final CommissionFundingDetail? fundingDetail;
+
   const AcceptanceResponse({
     required this.status,
     this.clientSecret,
@@ -33,6 +38,7 @@ class AcceptanceResponse {
     this.breakdown,
     this.bidCurrency,
     this.alternatives = const [],
+    this.fundingDetail,
   });
 
   /// Vrai si [data] est bien une réponse d'acceptation (`status` texte :
@@ -68,6 +74,7 @@ class AcceptanceResponse {
       alternatives: CommissionFundingAlternative.listFromJson(
         json['alternatives'],
       ),
+      fundingDetail: CommissionFundingDetail.tryParse(json['fundingDetail']),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
+import 'package:dony/features/matching/data/models/commission_funding_detail.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 
 abstract class BidAcceptanceState {}
@@ -55,6 +56,10 @@ class BidWalletInsufficient extends BidAcceptanceState {
   /// Autres portefeuilles utilisables au taux du jour (FLUTTER-CG).
   final List<CommissionFundingAlternative> alternatives;
 
+  /// Détail par portefeuille (somme de toutes les devises), absent avec un
+  /// ancien back.
+  final CommissionFundingDetail? fundingDetail;
+
   BidWalletInsufficient({
     required this.availableBalance,
     required this.requiredCommission,
@@ -64,5 +69,6 @@ class BidWalletInsufficient extends BidAcceptanceState {
     this.breakdown,
     this.bidCurrency,
     this.alternatives = const [],
+    this.fundingDetail,
   });
 }

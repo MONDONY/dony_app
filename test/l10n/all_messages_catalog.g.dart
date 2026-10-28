@@ -3752,7 +3752,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'connectPendingNotReceived': (l) => l.connectPendingNotReceived,
   'connectPendingTitle': (l) => l.connectPendingTitle,
   'connectPendingSubtitle': (l) => l.connectPendingSubtitle,
-  'walletActiveCurrencyBadge': (l) => l.walletActiveCurrencyBadge,
   'chatPreviewPhoto': (l) => l.chatPreviewPhoto,
   'chatPreviewLocation': (l) => l.chatPreviewLocation,
   'chatBlockedLength': (l) => l.chatBlockedLength(intPlaceholderValue),
@@ -6206,19 +6205,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'chatPhotoRateLimited': (l) => l.chatPhotoRateLimited,
   'chatPhotoSendFailed': (l) => l.chatPhotoSendFailed,
   'chatReportMessageAction': (l) => l.chatReportMessageAction,
-  'walletActiveCurrencyCardLabel': (l) => l.walletActiveCurrencyCardLabel,
-  'walletActiveCurrencyCardHint': (l) => l.walletActiveCurrencyCardHint,
   'walletActiveCurrencyChange': (l) => l.walletActiveCurrencyChange,
-  'walletActiveCurrencySheetTitle': (l) => l.walletActiveCurrencySheetTitle,
-  'walletActiveCurrencySheetHint': (l) => l.walletActiveCurrencySheetHint,
   'walletActiveCurrencyHeldSection': (l) => l.walletActiveCurrencyHeldSection,
   'walletActiveCurrencyAddSection': (l) => l.walletActiveCurrencyAddSection,
   'walletActiveCurrencyAddTitle': (l) =>
       l.walletActiveCurrencyAddTitle(placeholderMarker('currency')),
   'walletActiveCurrencyAddDetail': (l) => l.walletActiveCurrencyAddDetail,
-  'walletActiveCurrencyHeldDetail': (l) =>
-      l.walletActiveCurrencyHeldDetail(placeholderMarker('currency')),
-  'walletActiveCurrencyConfirm': (l) => l.walletActiveCurrencyConfirm,
   'walletActiveCurrencySwitchedSnackbar': (l) =>
       l.walletActiveCurrencySwitchedSnackbar(placeholderMarker('currency')),
   'errorCurrencyLockedTitle': (l) => l.errorCurrencyLockedTitle,
@@ -7954,6 +7946,33 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('time'),
   ),
   'bidDetailMoreOptionsTooltip': (l) => l.bidDetailMoreOptionsTooltip,
+  'walletBalancesButtonTooltip': (l) => l.walletBalancesButtonTooltip,
+  'walletBalancesSheetTitle': (l) => l.walletBalancesSheetTitle,
+  'walletBalancesSheetHint': (l) => l.walletBalancesSheetHint,
+  'walletBalancesTotalBadge': (l) => l.walletBalancesTotalBadge,
+  'walletBalancesUseForTotal': (l) => l.walletBalancesUseForTotal,
+  'walletBalancesEquivalent': (l) =>
+      l.walletBalancesEquivalent(placeholderMarker('amount')),
+  'walletBalancesChangeWarning': (l) => l.walletBalancesChangeWarning(
+    placeholderMarker('currency'),
+    placeholderMarker('amount'),
+  ),
+  'walletBalancesChangeWarningNoAmount': (l) =>
+      l.walletBalancesChangeWarningNoAmount(placeholderMarker('currency')),
+  'walletBalancesConfirm': (l) =>
+      l.walletBalancesConfirm(placeholderMarker('currency')),
+  'walletHeroTotalInLabel': (l) =>
+      l.walletHeroTotalInLabel(placeholderMarker('code')),
+  'walletTxSourceNote': (l) =>
+      l.walletTxSourceNote(placeholderMarker('amount')),
+  'walletShortfallAllWallets': (l) =>
+      l.walletShortfallAllWallets(placeholderMarker('amount')),
+  'walletShortfallStillMissing': (l) =>
+      l.walletShortfallStillMissing(placeholderMarker('missing')),
+  'walletShortfallExcludedFrozen': (l) =>
+      l.walletShortfallExcludedFrozen(placeholderMarker('currency')),
+  'walletShortfallExcludedRate': (l) =>
+      l.walletShortfallExcludedRate(placeholderMarker('currency')),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8405,7 +8424,6 @@ const textParameters = <String, List<String>>{
   'deliveryLockedUntilDepartureDay': ['date'],
   'chatReplyingTo': ['name'],
   'walletActiveCurrencyAddTitle': ['currency'],
-  'walletActiveCurrencyHeldDetail': ['currency'],
   'walletActiveCurrencySwitchedSnackbar': ['currency'],
   'dnpStepWaitPending': ['minutes', 'time'],
   'dnpSheetBody': ['days'],
@@ -8618,4 +8636,14 @@ const textParameters = <String, List<String>>{
   'amendmentSenderRefundBody': ['kg'],
   'amendmentTravelerCashNoteNoCommission': ['name', 'amount'],
   'amendmentDeadlineFormat': ['date', 'time'],
+  'walletBalancesEquivalent': ['amount'],
+  'walletBalancesChangeWarning': ['currency', 'amount'],
+  'walletBalancesChangeWarningNoAmount': ['currency'],
+  'walletBalancesConfirm': ['currency'],
+  'walletHeroTotalInLabel': ['code'],
+  'walletTxSourceNote': ['amount'],
+  'walletShortfallAllWallets': ['amount'],
+  'walletShortfallStillMissing': ['missing'],
+  'walletShortfallExcludedFrozen': ['currency'],
+  'walletShortfallExcludedRate': ['currency'],
 };

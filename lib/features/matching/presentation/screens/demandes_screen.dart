@@ -387,6 +387,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
             requiredCommission: state.requiredCommission,
             availableBalance: state.availableBalance,
             currency: state.currency,
+            fundingDetail: state.fundingDetail,
           ).indexed) ...[
             if (i > 0) const SizedBox(height: 4),
             Text(

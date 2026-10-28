@@ -1170,6 +1170,7 @@ class _TravelerCashCommissionBar extends StatelessWidget {
           breakdown: state.breakdown,
           bidCurrency: state.bidCurrency,
           alternatives: state.alternatives,
+          fundingDetail: state.fundingDetail,
           onRetry: ({required useCard, fundingCurrency}) => unawaited(
             _settle(
               context,

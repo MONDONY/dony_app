@@ -111,6 +111,7 @@ class _ThreadViewState extends State<_ThreadView> {
             breakdown: state.breakdown,
             bidCurrency: state.bidCurrency,
             alternatives: state.alternatives,
+            fundingDetail: state.fundingDetail,
             onRetry: ({required useCard, fundingCurrency}) =>
                 ctx.read<NegotiationBloc>().add(
                   NegotiationSettleCommissionRequested(
