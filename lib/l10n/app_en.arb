@@ -3461,18 +3461,9 @@
   "@bidDetailDeliveryNoShowContestButton": {
     "description": "_DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)"
   },
-  "bidDetailSenderPendingTitle": "⏳ Waiting for the traveler",
-  "@bidDetailSenderPendingTitle": {
-    "description": "PENDING, titre (sender_hero_card.dart)"
-  },
-  "bidDetailSenderAwaitingCardPaymentTitle": "⏳ Waiting for your payment",
   "bidDetailSenderPendingSubtitle": "You'll be notified as soon as they reply.",
   "@bidDetailSenderPendingSubtitle": {
     "description": "PENDING, sous-titre (sender_hero_card.dart)"
-  },
-  "bidDetailSenderAwaitingPaymentTitle": "Pay to confirm the shipment",
-  "@bidDetailSenderAwaitingPaymentTitle": {
-    "description": "AWAITING_PAYMENT, titre (sender_hero_card.dart)"
   },
   "bidDetailSenderAwaitingPaymentSubtitle": "Your payment of {amount} will be held until delivery.",
   "@bidDetailSenderAwaitingPaymentSubtitle": {
@@ -3483,10 +3474,6 @@
       }
     }
   },
-  "bidDetailSenderEscrowedTitle": "🔒 Payment secured",
-  "@bidDetailSenderEscrowedTitle": {
-    "description": "PAYMENT_ESCROWED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderEscrowedSubtitle": "{amount} on hold. Waiting for the traveler's reply.",
   "@bidDetailSenderEscrowedSubtitle": {
     "description": "PAYMENT_ESCROWED (payé, le voyageur n'a pas encore accepté), sous-titre (sender_hero_card.dart)",
@@ -3496,10 +3483,6 @@
       }
     }
   },
-  "bidDetailSenderAcceptedTitle": "⚡ Parcel drop-off",
-  "@bidDetailSenderAcceptedTitle": {
-    "description": "ACCEPTED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderAcceptedInstructions": "Show the QR code, or stick it on the parcel.",
   "@bidDetailSenderAcceptedInstructions": {
     "description": "ACCEPTED, instruction commune avec ou sans fenetre/lieu (sender_hero_card.dart, _buildAcceptedSubtitle)"
@@ -3507,15 +3490,6 @@
   "bidDetailSenderTravelerFallback": "the traveler",
   "@bidDetailSenderTravelerFallback": {
     "description": "Repli quand bid.travelerName est vide (sender_hero_card.dart, HANDED_OVER)"
-  },
-  "bidDetailSenderHandedOverTitle": "✓ Parcel handed to {name}",
-  "@bidDetailSenderHandedOverTitle": {
-    "description": "HANDED_OVER, titre (sender_hero_card.dart)",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
   },
   "bidDetailSenderHandedOverSubtitleWithDate": "Boarding scheduled for {date}.",
   "@bidDetailSenderHandedOverSubtitleWithDate": {
@@ -3529,10 +3503,6 @@
   "bidDetailSenderHandedOverSubtitleDefault": "Parcel handed over.",
   "@bidDetailSenderHandedOverSubtitleDefault": {
     "description": "HANDED_OVER, sous-titre sans date de depart (sender_hero_card.dart)"
-  },
-  "bidDetailSenderInTransitTitle": "✈ Parcel in flight",
-  "@bidDetailSenderInTransitTitle": {
-    "description": "IN_TRANSIT, titre (sender_hero_card.dart)"
   },
   "bidDetailSenderInTransitEta": "Arrival expected {time} in {city}.",
   "@bidDetailSenderInTransitEta": {
@@ -3559,10 +3529,6 @@
   "@bidDetailSenderInTransitTicketNote": {
     "description": "IN_TRANSIT, complement quand confirmationCode existe (sender_hero_card.dart, _buildInTransitSubtitle)"
   },
-  "bidDetailSenderArrivedTitle": "📍 Parcel arrived at destination",
-  "@bidDetailSenderArrivedTitle": {
-    "description": "ARRIVED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderArrivedSubtitleDefault": "The traveler has arrived, pickup instructions are coming soon.",
   "@bidDetailSenderArrivedSubtitleDefault": {
     "description": "ARRIVED, sous-titre sans instructions saisies par le voyageur (sender_hero_card.dart)"
@@ -3570,19 +3536,6 @@
   "bidDetailSenderArrivedSubtitleSeeInstructions": "The traveler has arrived. Their pickup instructions are just below.",
   "@bidDetailSenderArrivedSubtitleSeeInstructions": {
     "description": "ARRIVED, sous-titre quand le voyageur a saisi ses instructions, affichées dans l'encart juste dessous (sender_hero_card.dart)"
-  },
-  "bidDetailSenderRecipientFallback": "your recipient",
-  "@bidDetailSenderRecipientFallback": {
-    "description": "Repli quand bid.recipientName est vide (sender_hero_card.dart, COMPLETED/DELIVERED)"
-  },
-  "bidDetailSenderDeliveredTitle": "✓ Delivered to {recipient}",
-  "@bidDetailSenderDeliveredTitle": {
-    "description": "COMPLETED/DELIVERED, titre (sender_hero_card.dart)",
-    "placeholders": {
-      "recipient": {
-        "type": "String"
-      }
-    }
   },
   "bidDetailSenderDeliveredSubtitle": "Payment released to the traveler.",
   "@bidDetailSenderDeliveredSubtitle": {
@@ -3954,6 +3907,27 @@
   "bidDetailCancelAfterHandoverBody": "The parcel is already with the traveler. You will be fully refunded and get your parcel back: the traveler will confirm the return by entering your return code.",
   "bidDetailDeleteConfirmBody": "This request will be permanently deleted from your history.",
   "bidDetailMoreDetails": "More details",
+  "bidDetailSectionTodo": "To do",
+  "bidDetailSectionShipment": "Your shipment",
+  "senderTileSuivi": "Tracking",
+  "senderTileLieux": "Places",
+  "senderTileColis": "Parcel and recipient",
+  "senderTileColisSubtitle": "{weight} · for {recipient}",
+  "@senderTileColisSubtitle": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "senderTileDetailsSubtitle": "Reference, drop-off, tracking link",
+  "senderTilePrevenirCode": "Send the pickup code",
+  "senderTilePrevenirLink": "Send the tracking link",
+  "senderTileBadgeCodeReady": "Code ready",
+  "senderTileBadgeCurrentStep": "Current step",
   "bidDetailSectionDropoff": "PARCEL DROP-OFF",
   "bidDetailLocationLabel": "Location",
   "bidDetailHandoverStatusLabel": "Drop-off",

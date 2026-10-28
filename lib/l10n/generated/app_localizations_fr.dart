@@ -7174,19 +7174,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailDeliveryNoShowContestButton => 'Contester ce signalement';
 
   @override
-  String get bidDetailSenderPendingTitle => '⏳ En attente du voyageur';
-
-  @override
-  String get bidDetailSenderAwaitingCardPaymentTitle =>
-      '⏳ En attente de votre paiement';
-
-  @override
   String get bidDetailSenderPendingSubtitle =>
       'Vous serez notifié dès sa réponse.';
-
-  @override
-  String get bidDetailSenderAwaitingPaymentTitle =>
-      'Payez pour confirmer l\'envoi';
 
   @override
   String bidDetailSenderAwaitingPaymentSubtitle(String amount) {
@@ -7194,15 +7183,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get bidDetailSenderEscrowedTitle => '🔒 Paiement sécurisé';
-
-  @override
   String bidDetailSenderEscrowedSubtitle(String amount) {
     return '$amount séquestrés. En attente de la réponse du voyageur.';
   }
-
-  @override
-  String get bidDetailSenderAcceptedTitle => '⚡ Remise du colis';
 
   @override
   String get bidDetailSenderAcceptedInstructions =>
@@ -7212,20 +7195,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailSenderTravelerFallback => 'le voyageur';
 
   @override
-  String bidDetailSenderHandedOverTitle(String name) {
-    return '✓ Colis remis à $name';
-  }
-
-  @override
   String bidDetailSenderHandedOverSubtitleWithDate(String date) {
     return 'Embarquement prévu le $date.';
   }
 
   @override
   String get bidDetailSenderHandedOverSubtitleDefault => 'Colis remis.';
-
-  @override
-  String get bidDetailSenderInTransitTitle => '✈ Colis en vol';
 
   @override
   String bidDetailSenderInTransitEta(String time, String city) {
@@ -7242,23 +7217,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le code de retrait figure sur votre billet.';
 
   @override
-  String get bidDetailSenderArrivedTitle => '📍 Colis arrivé à destination';
-
-  @override
   String get bidDetailSenderArrivedSubtitleDefault =>
       'Le voyageur est arrivé, les instructions de retrait arrivent bientôt.';
 
   @override
   String get bidDetailSenderArrivedSubtitleSeeInstructions =>
       'Le voyageur est arrivé. Ses instructions de retrait sont juste en dessous.';
-
-  @override
-  String get bidDetailSenderRecipientFallback => 'votre destinataire';
-
-  @override
-  String bidDetailSenderDeliveredTitle(String recipient) {
-    return '✓ Livré à $recipient';
-  }
 
   @override
   String get bidDetailSenderDeliveredSubtitle => 'Paiement libéré au voyageur.';
@@ -7700,6 +7664,41 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailMoreDetails => 'Plus de détails';
+
+  @override
+  String get bidDetailSectionTodo => 'À traiter';
+
+  @override
+  String get bidDetailSectionShipment => 'Votre envoi';
+
+  @override
+  String get senderTileSuivi => 'Suivi';
+
+  @override
+  String get senderTileLieux => 'Lieux';
+
+  @override
+  String get senderTileColis => 'Colis et destinataire';
+
+  @override
+  String senderTileColisSubtitle(String weight, String recipient) {
+    return '$weight · pour $recipient';
+  }
+
+  @override
+  String get senderTileDetailsSubtitle => 'Référence, dépôt, lien de suivi';
+
+  @override
+  String get senderTilePrevenirCode => 'Envoyer le code de retrait';
+
+  @override
+  String get senderTilePrevenirLink => 'Envoyer le lien de suivi';
+
+  @override
+  String get senderTileBadgeCodeReady => 'Code prêt';
+
+  @override
+  String get senderTileBadgeCurrentStep => 'Étape en cours';
 
   @override
   String get bidDetailSectionDropoff => 'DÉPÔT DU COLIS';

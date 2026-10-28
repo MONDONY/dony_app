@@ -11844,29 +11844,11 @@ abstract class AppLocalizations {
   /// **'Contester ce signalement'**
   String get bidDetailDeliveryNoShowContestButton;
 
-  /// PENDING, titre (sender_hero_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'⏳ En attente du voyageur'**
-  String get bidDetailSenderPendingTitle;
-
-  /// Titre de la carte prochaine étape (sender_hero_card.dart) pour un colis carte PENDING pas encore payé (FLUTTER-G7)
-  ///
-  /// In fr, this message translates to:
-  /// **'⏳ En attente de votre paiement'**
-  String get bidDetailSenderAwaitingCardPaymentTitle;
-
   /// PENDING, sous-titre (sender_hero_card.dart)
   ///
   /// In fr, this message translates to:
   /// **'Vous serez notifié dès sa réponse.'**
   String get bidDetailSenderPendingSubtitle;
-
-  /// AWAITING_PAYMENT, titre (sender_hero_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Payez pour confirmer l\'envoi'**
-  String get bidDetailSenderAwaitingPaymentTitle;
 
   /// AWAITING_PAYMENT, sous-titre (sender_hero_card.dart)
   ///
@@ -11874,23 +11856,11 @@ abstract class AppLocalizations {
   /// **'Votre paiement de {amount} sera séquestré jusqu\'à la livraison.'**
   String bidDetailSenderAwaitingPaymentSubtitle(String amount);
 
-  /// PAYMENT_ESCROWED, titre (sender_hero_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'🔒 Paiement sécurisé'**
-  String get bidDetailSenderEscrowedTitle;
-
   /// PAYMENT_ESCROWED (payé, le voyageur n'a pas encore accepté), sous-titre (sender_hero_card.dart)
   ///
   /// In fr, this message translates to:
   /// **'{amount} séquestrés. En attente de la réponse du voyageur.'**
   String bidDetailSenderEscrowedSubtitle(String amount);
-
-  /// ACCEPTED, titre (sender_hero_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'⚡ Remise du colis'**
-  String get bidDetailSenderAcceptedTitle;
 
   /// ACCEPTED, instruction commune avec ou sans fenetre/lieu (sender_hero_card.dart, _buildAcceptedSubtitle)
   ///
@@ -11904,12 +11874,6 @@ abstract class AppLocalizations {
   /// **'le voyageur'**
   String get bidDetailSenderTravelerFallback;
 
-  /// HANDED_OVER, titre (sender_hero_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'✓ Colis remis à {name}'**
-  String bidDetailSenderHandedOverTitle(String name);
-
   /// HANDED_OVER, sous-titre avec date de depart connue (sender_hero_card.dart)
   ///
   /// In fr, this message translates to:
@@ -11921,12 +11885,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Colis remis.'**
   String get bidDetailSenderHandedOverSubtitleDefault;
-
-  /// IN_TRANSIT, titre (sender_hero_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'✈ Colis en vol'**
-  String get bidDetailSenderInTransitTitle;
 
   /// IN_TRANSIT, sous-titre avec heure d'arrivee connue (sender_hero_card.dart, _buildInTransitSubtitle)
   ///
@@ -11946,12 +11904,6 @@ abstract class AppLocalizations {
   /// **'Le code de retrait figure sur votre billet.'**
   String get bidDetailSenderInTransitTicketNote;
 
-  /// ARRIVED, titre (sender_hero_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'📍 Colis arrivé à destination'**
-  String get bidDetailSenderArrivedTitle;
-
   /// ARRIVED, sous-titre sans instructions saisies par le voyageur (sender_hero_card.dart)
   ///
   /// In fr, this message translates to:
@@ -11963,18 +11915,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le voyageur est arrivé. Ses instructions de retrait sont juste en dessous.'**
   String get bidDetailSenderArrivedSubtitleSeeInstructions;
-
-  /// Repli quand bid.recipientName est vide (sender_hero_card.dart, COMPLETED/DELIVERED)
-  ///
-  /// In fr, this message translates to:
-  /// **'votre destinataire'**
-  String get bidDetailSenderRecipientFallback;
-
-  /// COMPLETED/DELIVERED, titre (sender_hero_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'✓ Livré à {recipient}'**
-  String bidDetailSenderDeliveredTitle(String recipient);
 
   /// COMPLETED/DELIVERED, sous-titre (sender_hero_card.dart)
   ///
@@ -12701,6 +12641,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Plus de détails'**
   String get bidDetailMoreDetails;
+
+  /// Titre de la section des actions en attente de la fiche colis expéditeur (sender_detail_body.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À traiter'**
+  String get bidDetailSectionTodo;
+
+  /// Titre de la grille de tuiles de la fiche colis expéditeur (sender_detail_body.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre envoi'**
+  String get bidDetailSectionShipment;
+
+  /// Tuile Suivi de la fiche colis expéditeur (sender_tiles.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi'**
+  String get senderTileSuivi;
+
+  /// Tuile Lieux (dépôt et retrait) de la fiche colis expéditeur avant la remise
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieux'**
+  String get senderTileLieux;
+
+  /// Tuile Colis et destinataire de la fiche colis expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis et destinataire'**
+  String get senderTileColis;
+
+  /// Sous-titre de la tuile Colis et destinataire : poids puis destinataire
+  ///
+  /// In fr, this message translates to:
+  /// **'{weight} · pour {recipient}'**
+  String senderTileColisSubtitle(String weight, String recipient);
+
+  /// Sous-titre de la tuile Plus de détails
+  ///
+  /// In fr, this message translates to:
+  /// **'Référence, dépôt, lien de suivi'**
+  String get senderTileDetailsSubtitle;
+
+  /// Sous-titre de la tuile Prévenir quand le code de retrait part dans le message
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le code de retrait'**
+  String get senderTilePrevenirCode;
+
+  /// Sous-titre de la tuile Prévenir quand seul le lien de suivi part (code absent, bloqué ou expiré)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le lien de suivi'**
+  String get senderTilePrevenirLink;
+
+  /// Pastille de la tuile Prévenir quand le code de retrait est prêt à être envoyé
+  ///
+  /// In fr, this message translates to:
+  /// **'Code prêt'**
+  String get senderTileBadgeCodeReady;
+
+  /// Pastille de la tuile Suivi ou Lieux : l'étape en cours du colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape en cours'**
+  String get senderTileBadgeCurrentStep;
 
   /// Titre de section 1 de l'accordéon (details_accordion.dart)
   ///

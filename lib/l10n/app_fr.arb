@@ -6969,21 +6969,9 @@
   "@bidDetailDeliveryNoShowContestButton": {
     "description": "_DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)"
   },
-  "bidDetailSenderPendingTitle": "⏳ En attente du voyageur",
-  "@bidDetailSenderPendingTitle": {
-    "description": "PENDING, titre (sender_hero_card.dart)"
-  },
-  "bidDetailSenderAwaitingCardPaymentTitle": "⏳ En attente de votre paiement",
-  "@bidDetailSenderAwaitingCardPaymentTitle": {
-    "description": "Titre de la carte prochaine étape (sender_hero_card.dart) pour un colis carte PENDING pas encore payé (FLUTTER-G7)"
-  },
   "bidDetailSenderPendingSubtitle": "Vous serez notifié dès sa réponse.",
   "@bidDetailSenderPendingSubtitle": {
     "description": "PENDING, sous-titre (sender_hero_card.dart)"
-  },
-  "bidDetailSenderAwaitingPaymentTitle": "Payez pour confirmer l'envoi",
-  "@bidDetailSenderAwaitingPaymentTitle": {
-    "description": "AWAITING_PAYMENT, titre (sender_hero_card.dart)"
   },
   "bidDetailSenderAwaitingPaymentSubtitle": "Votre paiement de {amount} sera séquestré jusqu'à la livraison.",
   "@bidDetailSenderAwaitingPaymentSubtitle": {
@@ -6994,10 +6982,6 @@
       }
     }
   },
-  "bidDetailSenderEscrowedTitle": "🔒 Paiement sécurisé",
-  "@bidDetailSenderEscrowedTitle": {
-    "description": "PAYMENT_ESCROWED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderEscrowedSubtitle": "{amount} séquestrés. En attente de la réponse du voyageur.",
   "@bidDetailSenderEscrowedSubtitle": {
     "description": "PAYMENT_ESCROWED (payé, le voyageur n'a pas encore accepté), sous-titre (sender_hero_card.dart)",
@@ -7007,10 +6991,6 @@
       }
     }
   },
-  "bidDetailSenderAcceptedTitle": "⚡ Remise du colis",
-  "@bidDetailSenderAcceptedTitle": {
-    "description": "ACCEPTED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderAcceptedInstructions": "Présentez le QR, ou collez-le sur le colis.",
   "@bidDetailSenderAcceptedInstructions": {
     "description": "ACCEPTED, instruction commune avec ou sans fenetre/lieu (sender_hero_card.dart, _buildAcceptedSubtitle)"
@@ -7018,15 +6998,6 @@
   "bidDetailSenderTravelerFallback": "le voyageur",
   "@bidDetailSenderTravelerFallback": {
     "description": "Repli quand bid.travelerName est vide (sender_hero_card.dart, HANDED_OVER)"
-  },
-  "bidDetailSenderHandedOverTitle": "✓ Colis remis à {name}",
-  "@bidDetailSenderHandedOverTitle": {
-    "description": "HANDED_OVER, titre (sender_hero_card.dart)",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
   },
   "bidDetailSenderHandedOverSubtitleWithDate": "Embarquement prévu le {date}.",
   "@bidDetailSenderHandedOverSubtitleWithDate": {
@@ -7040,10 +7011,6 @@
   "bidDetailSenderHandedOverSubtitleDefault": "Colis remis.",
   "@bidDetailSenderHandedOverSubtitleDefault": {
     "description": "HANDED_OVER, sous-titre sans date de depart (sender_hero_card.dart)"
-  },
-  "bidDetailSenderInTransitTitle": "✈ Colis en vol",
-  "@bidDetailSenderInTransitTitle": {
-    "description": "IN_TRANSIT, titre (sender_hero_card.dart)"
   },
   "bidDetailSenderInTransitEta": "Arrivée prévue {time} à {city}.",
   "@bidDetailSenderInTransitEta": {
@@ -7070,10 +7037,6 @@
   "@bidDetailSenderInTransitTicketNote": {
     "description": "IN_TRANSIT, complement quand confirmationCode existe (sender_hero_card.dart, _buildInTransitSubtitle)"
   },
-  "bidDetailSenderArrivedTitle": "📍 Colis arrivé à destination",
-  "@bidDetailSenderArrivedTitle": {
-    "description": "ARRIVED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderArrivedSubtitleDefault": "Le voyageur est arrivé, les instructions de retrait arrivent bientôt.",
   "@bidDetailSenderArrivedSubtitleDefault": {
     "description": "ARRIVED, sous-titre sans instructions saisies par le voyageur (sender_hero_card.dart)"
@@ -7081,19 +7044,6 @@
   "bidDetailSenderArrivedSubtitleSeeInstructions": "Le voyageur est arrivé. Ses instructions de retrait sont juste en dessous.",
   "@bidDetailSenderArrivedSubtitleSeeInstructions": {
     "description": "ARRIVED, sous-titre quand le voyageur a saisi ses instructions, affichées dans l'encart juste dessous (sender_hero_card.dart)"
-  },
-  "bidDetailSenderRecipientFallback": "votre destinataire",
-  "@bidDetailSenderRecipientFallback": {
-    "description": "Repli quand bid.recipientName est vide (sender_hero_card.dart, COMPLETED/DELIVERED)"
-  },
-  "bidDetailSenderDeliveredTitle": "✓ Livré à {recipient}",
-  "@bidDetailSenderDeliveredTitle": {
-    "description": "COMPLETED/DELIVERED, titre (sender_hero_card.dart)",
-    "placeholders": {
-      "recipient": {
-        "type": "String"
-      }
-    }
   },
   "bidDetailSenderDeliveredSubtitle": "Paiement libéré au voyageur.",
   "@bidDetailSenderDeliveredSubtitle": {
@@ -7646,6 +7596,58 @@
   "bidDetailMoreDetails": "Plus de détails",
   "@bidDetailMoreDetails": {
     "description": "En-tête de l'accordéon (details_accordion.dart)"
+  },
+  "bidDetailSectionTodo": "À traiter",
+  "@bidDetailSectionTodo": {
+    "description": "Titre de la section des actions en attente de la fiche colis expéditeur (sender_detail_body.dart)"
+  },
+  "bidDetailSectionShipment": "Votre envoi",
+  "@bidDetailSectionShipment": {
+    "description": "Titre de la grille de tuiles de la fiche colis expéditeur (sender_detail_body.dart)"
+  },
+  "senderTileSuivi": "Suivi",
+  "@senderTileSuivi": {
+    "description": "Tuile Suivi de la fiche colis expéditeur (sender_tiles.dart)"
+  },
+  "senderTileLieux": "Lieux",
+  "@senderTileLieux": {
+    "description": "Tuile Lieux (dépôt et retrait) de la fiche colis expéditeur avant la remise"
+  },
+  "senderTileColis": "Colis et destinataire",
+  "@senderTileColis": {
+    "description": "Tuile Colis et destinataire de la fiche colis expéditeur"
+  },
+  "senderTileColisSubtitle": "{weight} · pour {recipient}",
+  "@senderTileColisSubtitle": {
+    "description": "Sous-titre de la tuile Colis et destinataire : poids puis destinataire",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "senderTileDetailsSubtitle": "Référence, dépôt, lien de suivi",
+  "@senderTileDetailsSubtitle": {
+    "description": "Sous-titre de la tuile Plus de détails"
+  },
+  "senderTilePrevenirCode": "Envoyer le code de retrait",
+  "@senderTilePrevenirCode": {
+    "description": "Sous-titre de la tuile Prévenir quand le code de retrait part dans le message"
+  },
+  "senderTilePrevenirLink": "Envoyer le lien de suivi",
+  "@senderTilePrevenirLink": {
+    "description": "Sous-titre de la tuile Prévenir quand seul le lien de suivi part (code absent, bloqué ou expiré)"
+  },
+  "senderTileBadgeCodeReady": "Code prêt",
+  "@senderTileBadgeCodeReady": {
+    "description": "Pastille de la tuile Prévenir quand le code de retrait est prêt à être envoyé"
+  },
+  "senderTileBadgeCurrentStep": "Étape en cours",
+  "@senderTileBadgeCurrentStep": {
+    "description": "Pastille de la tuile Suivi ou Lieux : l'étape en cours du colis"
   },
   "bidDetailSectionDropoff": "DÉPÔT DU COLIS",
   "@bidDetailSectionDropoff": {

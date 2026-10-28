@@ -439,6 +439,113 @@ void main() {
       expect(PrevenirDestinataire.canNotify(declined), isFalse);
     });
 
+    test('canNotify is false when recipient declined even if change not '
+        'allowed', () {
+      for (final status in [
+        'ACCEPTED',
+        'HANDED_OVER',
+        'IN_TRANSIT',
+        'ARRIVED',
+      ]) {
+        expect(
+          PrevenirDestinataire.canNotify(
+            _bid(status: status, recipientAppStatus: 'DECLINED'),
+          ),
+          isFalse,
+          reason: status,
+        );
+      }
+      expect(
+        PrevenirDestinataire.canNotify(
+          _bid(status: 'COMPLETED', recipientAppStatus: 'DECLINED'),
+        ),
+        isFalse,
+      );
+    });
+
+    test(
+      'showsDeclined true for declined IN_TRANSIT, with or without token',
+      () {
+        expect(
+          PrevenirDestinataire.showsDeclined(
+            _bid(status: 'IN_TRANSIT', recipientAppStatus: 'DECLINED'),
+          ),
+          isTrue,
+        );
+        expect(
+          PrevenirDestinataire.showsDeclined(
+            _bid(
+              status: 'IN_TRANSIT',
+              trackingToken: null,
+              recipientAppStatus: 'DECLINED',
+            ),
+          ),
+          isTrue,
+        );
+      },
+    );
+
+    test('showsDeclined false for a declined delivered parcel', () {
+      expect(
+        PrevenirDestinataire.showsDeclined(
+          _bid(status: 'COMPLETED', recipientAppStatus: 'DECLINED'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('showsDeclined false when recipient not declined', () {
+      expect(PrevenirDestinataire.showsDeclined(_bid()), isFalse);
+      expect(
+        PrevenirDestinataire.showsDeclined(
+          _bid(recipientAppStatus: 'CONFIRMED'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('shouldShow garde le résultat d\'avant, quel que soit le bid', () {
+      // Règle d'origine : carte visible si canNotify (ancienne définition) ou
+      // refus modifiable.
+      bool before(BidModel b) {
+        final inWindow = const {
+          'ACCEPTED',
+          'HANDED_OVER',
+          'IN_TRANSIT',
+          'ARRIVED',
+        }.contains(b.status);
+        final declinedActionable =
+            b.recipientAppStatus == 'DECLINED' && inWindow;
+        return (b.trackingToken != null && inWindow && !declinedActionable) ||
+            declinedActionable;
+      }
+
+      for (final status in [
+        'PENDING',
+        'ACCEPTED',
+        'HANDED_OVER',
+        'IN_TRANSIT',
+        'ARRIVED',
+        'COMPLETED',
+        'CANCELLED',
+      ]) {
+        for (final token in [null, 'tok']) {
+          for (final app in [null, 'PENDING', 'CONFIRMED', 'DECLINED']) {
+            final b = _bid(
+              status: status,
+              trackingToken: token,
+              recipientAppStatus: app,
+            );
+            expect(
+              PrevenirDestinataireCard.shouldShow(b),
+              before(b),
+              reason: '$status / $token / $app',
+            );
+          }
+        }
+      }
+    });
+
     test('isDeclinedActionable : faux sans refus ou sur un colis livré', () {
       expect(PrevenirDestinataire.isDeclinedActionable(_bid()), isFalse);
       expect(

@@ -67,11 +67,21 @@ abstract final class PrevenirDestinataire {
   static const _codeStatuses = <String>{'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'};
 
   /// Le lien de suivi existe, le colis n'est pas encore remis et le
-  /// destinataire n'a pas à être remplacé : le message peut partir.
+  /// destinataire n'a pas refusé : le message peut partir. Un destinataire
+  /// qui a refusé ne reçoit rien, même si le colis n'est plus modifiable.
   static bool canNotify(BidModel bid) =>
       bid.trackingToken != null &&
       _statuses.contains(bid.status) &&
-      !isDeclinedActionable(bid);
+      !isDeclinedActionable(bid) &&
+      bid.recipientAppStatus != 'DECLINED';
+
+  /// Le destinataire a refusé et l'encart devient « Destinataire à remplacer »
+  /// ([RecipientDeclinedCard]) : refus encore modifiable, ou lien de suivi
+  /// présent sur un colis non remis.
+  static bool showsDeclined(BidModel bid) =>
+      bid.recipientAppStatus == 'DECLINED' &&
+      (isDeclinedActionable(bid) ||
+          (bid.trackingToken != null && _statuses.contains(bid.status)));
 
   /// Destinataire en refus ou retiré (FLUTTER-E8) et colis encore modifiable :
   /// renvoyer le message au même numéro n'aurait pas de sens, il faut en
@@ -219,7 +229,7 @@ class PrevenirDestinataireCard extends StatelessWidget {
   /// l'encart devient alors « Destinataire à remplacer ».
   static bool shouldShow(BidModel bid) =>
       PrevenirDestinataire.canNotify(bid) ||
-      PrevenirDestinataire.isDeclinedActionable(bid);
+      PrevenirDestinataire.showsDeclined(bid);
 
   @override
   Widget build(BuildContext context) {
