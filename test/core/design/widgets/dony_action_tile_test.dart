@@ -2,6 +2,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Contraint réellement la largeur (un `MediaQueryData(size:)` seul ne touche
+/// pas au layout : la surface de test garde ses 800 dp).
 Widget _wrap(
   Widget child, {
   double width = 360,
@@ -16,13 +18,23 @@ Widget _wrap(
       textScaler: TextScaler.linear(textScale),
     ),
     child: Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(DonySpacing.md),
-        child: child,
+      body: Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: width,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(DonySpacing.md),
+            child: child,
+          ),
+        ),
       ),
     ),
   ),
 );
+
+/// Demi-largeur d'une tuile à 360 dp : marge `md` de chaque côté et `md` entre
+/// les deux colonnes.
+const double _tileWidth = (360 - 3 * DonySpacing.md) / 2;
 
 DonyActionTile _tile({
   Key? key,
@@ -115,6 +127,8 @@ void main() {
       expect(t2.top, t1.top);
       expect(t3.top, greaterThan(t1.bottom));
       expect(t3.left, t1.left);
+      // Largeur réelle de 360 dp : deux colonnes séparées par `md`.
+      expect(t1.width, closeTo(_tileWidth, 0.5));
       // Demi-largeur : la dernière tuile ne s'étire pas.
       expect(t3.width, closeTo(t1.width, 0.5));
       expect(t2.left - t1.right, DonySpacing.md);
@@ -162,12 +176,13 @@ void main() {
           DonyActionTileGrid(
             tiles: [
               _tile(
+                key: const Key('long'),
                 label: longLabel,
                 subtitle: 'Tracking link and pickup code are ready to share',
                 badge: const Text('Code ready'),
                 dot: true,
               ),
-              _tile(label: 'Parcel and recipient details'),
+              _tile(key: const Key('neighbour'), label: 'Short'),
               _tile(label: 'More details'),
             ],
           ),
@@ -178,6 +193,21 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
+
+      // La tuile est bien à demi-largeur de 360 dp, pas de la surface de test.
+      final long = tester.getSize(find.byKey(const Key('long')));
+      expect(long.width, closeTo(_tileWidth, 0.5));
+      expect(
+        tester.getSize(find.byKey(const Key('neighbour'))).width,
+        long.width,
+      );
+
+      // Le libellé tient dans ses 2 lignes à taille normale (pas de
+      // rétrécissement) : sa hauteur ne dépasse pas deux lignes de `Short`.
+      final oneLine = tester.getSize(find.text('Short')).height;
+      final labelHeight = tester.getSize(find.text(longLabel)).height;
+      expect(labelHeight, greaterThan(oneLine));
+      expect(labelHeight, lessThanOrEqualTo(2 * oneLine + 0.5));
     });
   });
 }
