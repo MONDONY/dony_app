@@ -22922,4 +22922,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String travelerTrackingAgoDays(int days) {
     return '$days d ago';
   }
+
+  @override
+  String get errorWalletTopupAboveMaxTitle => 'Amount too high';
+
+  @override
+  String get errorWalletTopupAboveMaxMessage =>
+      'A card top-up is limited to €1,000, or the equivalent in your wallet currency. Choose a smaller amount.';
+
+  @override
+  String get errorWalletDisputeHoldTitle => 'Balance blocked';
+
+  @override
+  String get errorWalletDisputeHoldMessage =>
+      'A card top-up in this currency is being disputed with the bank. The balance stays blocked until the dispute ends. Contact support.';
+
+  @override
+  String get walletTxTypeTopupDisputed => 'Disputed top-up';
+
+  @override
+  String get walletTxTypeTopupDisputeReversed =>
+      'Dispute closed in your favour';
 }

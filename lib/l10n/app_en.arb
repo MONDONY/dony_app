@@ -11362,5 +11362,11 @@
         "type": "int"
       }
     }
-  }
+  },
+  "errorWalletTopupAboveMaxTitle": "Amount too high",
+  "errorWalletTopupAboveMaxMessage": "A card top-up is limited to €1,000, or the equivalent in your wallet currency. Choose a smaller amount.",
+  "errorWalletDisputeHoldTitle": "Balance blocked",
+  "errorWalletDisputeHoldMessage": "A card top-up in this currency is being disputed with the bank. The balance stays blocked until the dispute ends. Contact support.",
+  "walletTxTypeTopupDisputed": "Disputed top-up",
+  "walletTxTypeTopupDisputeReversed": "Dispute closed in your favour"
 }

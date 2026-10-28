@@ -8032,6 +8032,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'travelerTrackingOpenTimeline': (l) => l.travelerTrackingOpenTimeline,
   'travelerTrackingAgoDays': (l) =>
       l.travelerTrackingAgoDays(intPlaceholderValue),
+  'errorWalletTopupAboveMaxTitle': (l) => l.errorWalletTopupAboveMaxTitle,
+  'errorWalletTopupAboveMaxMessage': (l) => l.errorWalletTopupAboveMaxMessage,
+  'errorWalletDisputeHoldTitle': (l) => l.errorWalletDisputeHoldTitle,
+  'errorWalletDisputeHoldMessage': (l) => l.errorWalletDisputeHoldMessage,
+  'walletTxTypeTopupDisputed': (l) => l.walletTxTypeTopupDisputed,
+  'walletTxTypeTopupDisputeReversed': (l) => l.walletTxTypeTopupDisputeReversed,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
