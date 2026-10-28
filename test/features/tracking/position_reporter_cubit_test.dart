@@ -89,7 +89,12 @@ void main() {
     verify: (_) {
       verifyNever(() => tracking.sendPosition(any(), any(), any()));
       verifyNever(() => locator.captureCoordinatesIfGranted());
-      verifySkipped('no_active_trip');
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.tripPositionSkipped,
+          properties: any(named: 'properties'),
+        ),
+      );
     },
   );
 
@@ -169,7 +174,6 @@ void main() {
     clock = clock.add(const Duration(minutes: 14));
     await cubit.onResume();
     verify(() => tracking.sendPosition('a', any(), any())).called(1);
-    verifySkipped('throttled');
     clock = clock.add(const Duration(minutes: 2));
     await cubit.onResume();
     verify(() => tracking.sendPosition('a', any(), any())).called(1);
@@ -181,7 +185,6 @@ void main() {
     await build().onResume();
     verifyNever(() => announcements.getMyAnnouncements());
     verifyNever(() => tracking.sendPosition(any(), any(), any()));
-    verifySkipped('no_session');
   });
 
   test('capsAtThreeTrips', () async {
@@ -191,5 +194,53 @@ void main() {
     await build().onResume();
     verify(() => tracking.sendPosition(any(), any(), any())).called(3);
     verifyNever(() => tracking.sendPosition('d', any(), any()));
+  });
+
+  test('noActiveTripThenActiveTripAfterThreeMinutesSends', () async {
+    final cubit = build();
+    trips([_trip('a')]);
+    await cubit.onResume();
+    verifyNever(() => tracking.sendPosition(any(), any(), any()));
+    clock = clock.add(const Duration(minutes: 2));
+    trips([_trip('a', active: true)]);
+    await cubit.onResume();
+    verifyNever(() => tracking.sendPosition(any(), any(), any()));
+    clock = clock.add(const Duration(minutes: 1));
+    await cubit.onResume();
+    verify(() => tracking.sendPosition('a', any(), any())).called(1);
+  });
+
+  test('networkErrorOnTripsListDoesNotBlockFifteenMinutes', () async {
+    final cubit = build();
+    when(
+      () => announcements.getMyAnnouncements(),
+    ).thenThrow(DioException(requestOptions: RequestOptions(path: '/x')));
+    await cubit.onResume();
+    clock = clock.add(const Duration(minutes: 4));
+    trips([_trip('a', active: true)]);
+    await cubit.onResume();
+    verify(() => tracking.sendPosition('a', any(), any())).called(1);
+  });
+
+  test('successBlocksFifteenMinutes', () async {
+    trips([_trip('a', active: true)]);
+    final cubit = build();
+    await cubit.onResume();
+    clock = clock.add(const Duration(minutes: 10));
+    await cubit.onResume();
+    verify(() => tracking.sendPosition('a', any(), any())).called(1);
+    clock = clock.add(const Duration(minutes: 6));
+    await cubit.onResume();
+    verify(() => tracking.sendPosition('a', any(), any())).called(1);
+  });
+
+  test('skipsWithoutTravelerRole', () async {
+    trips([_trip('a', active: true)]);
+    final cubit = build()..updateRoles(['SENDER']);
+    await cubit.onResume();
+    verifyNever(() => announcements.getMyAnnouncements());
+    cubit.updateRoles(['SENDER', 'TRAVELER']);
+    await cubit.onResume();
+    verify(() => tracking.sendPosition('a', any(), any())).called(1);
   });
 }

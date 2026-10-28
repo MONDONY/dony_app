@@ -1287,7 +1287,6 @@ abstract final class AnalyticsEvents {
   static const tripPositionSent = 'trip_position_sent';
 
   /// Envoi silencieux de la position non fait (propriété `reason` :
-  /// `no_session`, `throttled`, `no_active_trip`, `no_permission`,
-  /// `no_position`).
+  /// `no_permission` ou `no_position` seulement).
   static const tripPositionSkipped = 'trip_position_skipped';
 }

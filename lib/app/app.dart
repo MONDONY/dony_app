@@ -481,6 +481,12 @@ class _DonyAppState extends State<DonyApp> {
               ],
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
+                  // Rôles connus pour l'envoi de position : sans appel réseau.
+                  getIt<PositionReporterCubit>().updateRoles(switch (state) {
+                    AuthAuthenticated(:final user) => user.roles,
+                    AuthProfileUpdated(:final user) => user.roles,
+                    _ => null,
+                  });
                   // Appels audio : client Stream connecté pour le compte
                   // courant, déconnecté à la sortie.
                   unawaited(

@@ -32,8 +32,13 @@ class PositionReporterCubit extends Cubit<PositionReporterState> {
        _now = now ?? DateTime.now,
        super(PositionReporterState.idle);
 
-  /// Délai minimal entre deux essais (en mémoire, rien de persisté).
+  /// Délai minimal après un envoi réussi (en mémoire, rien de persisté).
   static const throttle = Duration(minutes: 15);
+
+  /// Délai minimal après une tentative sans effet (aucun trajet suivi,
+  /// erreur réseau, pas de permission) : court, pour qu'un trajet devenu
+  /// actif quelques minutes plus tard ne soit pas manqué.
+  static const retryThrottle = Duration(minutes: 3);
 
   /// Nombre maximal de trajets renseignés par reprise.
   static const maxTrips = 3;
@@ -45,8 +50,14 @@ class PositionReporterCubit extends Cubit<PositionReporterState> {
   final bool Function() _hasRealSession;
   final DateTime Function() _now;
 
-  DateTime? _lastAttempt;
+  DateTime? _nextAllowed;
+  List<String>? _roles;
   bool _running = false;
+
+  /// Rôles du compte connecté, `null` si inconnus (profil pas chargé,
+  /// déconnexion). Alimenté par l'app depuis l'état d'authentification déjà
+  /// détenu : aucun appel réseau.
+  void updateRoles(List<String>? roles) => _roles = roles;
 
   /// À appeler à la reprise de l'app et au démarrage à froid.
   Future<void> onResume() async {
@@ -66,20 +77,21 @@ class PositionReporterCubit extends Cubit<PositionReporterState> {
   }
 
   Future<void> _run() async {
-    if (!_hasRealSession()) return _skip('no_session');
+    if (!_hasRealSession()) return;
     final now = _now();
-    final last = _lastAttempt;
-    if (last != null && now.difference(last) < throttle) {
-      return _skip('throttled');
-    }
-    _lastAttempt = now;
+    final next = _nextAllowed;
+    if (next != null && now.isBefore(next)) return;
+    final roles = _roles;
+    // Rôle voyageur clairement absent : rien à envoyer, rien à lire.
+    if (roles != null && !roles.contains('TRAVELER')) return;
+    _nextAllowed = now.add(retryThrottle);
 
     final result = await _announcements.getMyAnnouncements();
     final active = result.announcements
         .where((a) => a.trackingActive)
         .take(maxTrips)
         .toList();
-    if (active.isEmpty) return _skip('no_active_trip');
+    if (active.isEmpty) return;
 
     if (!await _locator.isPermissionGranted()) return _skip('no_permission');
     final position = await _locator.captureCoordinatesIfGranted();
@@ -98,6 +110,7 @@ class PositionReporterCubit extends Cubit<PositionReporterState> {
       }
     }
     if (sent) {
+      _nextAllowed = _now().add(throttle);
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.tripPositionSent,
@@ -107,6 +120,8 @@ class PositionReporterCubit extends Cubit<PositionReporterState> {
     }
   }
 
+  /// Seules les raisons utiles à diagnostiquer partent en analytics : les
+  /// autres (session, délai, aucun trajet suivi) inonderaient PostHog.
   void _skip(String reason) {
     unawaited(
       _analytics.logEvent(
