@@ -8,6 +8,7 @@ import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
+import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -59,6 +60,7 @@ Future<void> _openSheet(
   ThemeMode themeMode = ThemeMode.light,
   bool settle = true,
   String? bidStatus,
+  TravelerTrackingModel? travelerTracking,
 }) async {
   if (getIt.isRegistered<TrackingBloc>()) {
     getIt.unregister<TrackingBloc>();
@@ -89,6 +91,7 @@ Future<void> _openSheet(
               onShareTracking: onShare,
               onOpenParcel: onOpenParcel,
               bidStatus: bidStatus,
+              travelerTracking: travelerTracking,
             ),
             child: const Text('Ouvrir'),
           ),
@@ -491,5 +494,193 @@ void main() {
     expect(find.text('On the way to Dakar'), findsOneWidget);
     expect(find.text('Handed to the traveler'), findsOneWidget);
     expect(find.text('Handover to the recipient'), findsOneWidget);
+  });
+
+  group('villes approximatives du voyageur', () {
+    final t0 = DateTime(2026, 9, 22, 9, 12);
+    TravelerTrackingModel trackingOf(
+      List<TravelerTrackingPoint> points, {
+      TravelerTrackingStatus status = TravelerTrackingStatus.enRoute,
+      DateTime? lastUpdatedAt,
+    }) => TravelerTrackingModel(
+      status: status,
+      lastUpdatedAt: lastUpdatedAt,
+      history: points,
+    );
+
+    testWidgets('timelineMergesPhotosAndCitiesChronologically', (tester) async {
+      when(() => bloc.state).thenReturn(
+        TrackingEventsLoaded([
+          _event('TRANSIT', scannedAt: t0.add(const Duration(hours: 4))),
+          _event(
+            'DEPART',
+            scannedAt: t0,
+            photoUrl: 'https://example.com/depart.jpg',
+          ),
+        ]),
+      );
+      await _openSheet(
+        tester,
+        bloc,
+        travelerTracking: trackingOf([
+          TravelerTrackingPoint(
+            city: 'Marseille',
+            at: t0.add(const Duration(hours: 6)),
+          ),
+          TravelerTrackingPoint(
+            city: 'Lyon',
+            at: t0.add(const Duration(hours: 2)),
+          ),
+        ]),
+      );
+
+      double y(String text) =>
+          tester.getTopLeft(find.text(text, skipOffstage: false)).dy;
+      // Remis au voyageur (9 h 12), Lyon (11 h 12), Transit (13 h 12),
+      // Marseille (15 h 12), puis « En route » (étape en cours).
+      expect(y('Remis au voyageur'), lessThan(y('Près de Lyon')));
+      expect(y('Près de Lyon'), lessThan(y('Transit')));
+      expect(y('Transit'), lessThan(y('Près de Marseille')));
+      expect(find.textContaining('11:12'), findsOneWidget);
+    });
+
+    testWidgets('photoStepsKeepThumbnailAndPurgedMessage', (tester) async {
+      when(() => bloc.state).thenReturn(
+        TrackingEventsLoaded([
+          _event(
+            'DEPART',
+            scannedAt: t0,
+            photoUrl: 'https://example.com/depart.jpg',
+          ),
+          _event(
+            'TRANSIT',
+            scannedAt: t0.add(const Duration(hours: 4)),
+            photoPurged: true,
+          ),
+        ]),
+      );
+      await _openSheet(
+        tester,
+        bloc,
+        travelerTracking: trackingOf([
+          TravelerTrackingPoint(
+            city: 'Lyon',
+            at: t0.add(const Duration(hours: 2)),
+          ),
+        ]),
+      );
+
+      expect(find.byKey(const Key('tracking-step-photo')), findsOneWidget);
+      expect(
+        find.byKey(const Key('tracking-step-photo-purged')),
+        findsOneWidget,
+      );
+      expect(find.text('Photo supprimée après livraison'), findsOneWidget);
+      expect(find.text('Près de Lyon'), findsOneWidget);
+    });
+
+    testWidgets('event first when a city shares the same instant', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('DEPART', scannedAt: t0)]));
+      await _openSheet(
+        tester,
+        bloc,
+        travelerTracking: trackingOf([
+          TravelerTrackingPoint(city: 'Paris', at: t0),
+        ]),
+      );
+      final depart = tester.getTopLeft(find.text('Remis au voyageur')).dy;
+      final city = tester.getTopLeft(find.text('Près de Paris')).dy;
+      expect(depart, lessThan(city));
+    });
+
+    testWidgets('lastCityMarkedNowOrLastPosition: en route -> Maintenant', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('DEPART', scannedAt: t0)]));
+      await _openSheet(
+        tester,
+        bloc,
+        travelerTracking: trackingOf([
+          TravelerTrackingPoint(
+            city: 'Lyon',
+            at: t0.add(const Duration(hours: 1)),
+          ),
+          TravelerTrackingPoint(
+            city: 'Marseille',
+            at: t0.add(const Duration(hours: 3)),
+          ),
+        ]),
+      );
+
+      expect(find.text('Maintenant'), findsOneWidget);
+      final now = tester.getTopLeft(find.text('Maintenant')).dy;
+      expect(
+        now,
+        greaterThan(tester.getTopLeft(find.text('Près de Marseille')).dy),
+      );
+      expect(
+        now,
+        lessThan(tester.getTopLeft(find.text('Près de Marseille')).dy + 60),
+      );
+    });
+
+    testWidgets('lastCityMarkedNowOrLastPosition: stale -> Dernière position', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('DEPART', scannedAt: t0)]));
+      await _openSheet(
+        tester,
+        bloc,
+        travelerTracking: trackingOf(
+          [
+            TravelerTrackingPoint(
+              city: 'Lyon',
+              at: t0.add(const Duration(hours: 1)),
+            ),
+          ],
+          status: TravelerTrackingStatus.stale,
+          lastUpdatedAt: DateTime.now().subtract(const Duration(hours: 3)),
+        ),
+      );
+
+      expect(find.text('Dernière position, il y a 3h'), findsOneWidget);
+      expect(find.text('Maintenant'), findsNothing);
+    });
+
+    testWidgets('une ville sans heure n\'est pas affichée', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('DEPART', scannedAt: t0)]));
+      await _openSheet(
+        tester,
+        bloc,
+        travelerTracking: trackingOf([
+          const TravelerTrackingPoint(city: 'Lyon'),
+        ]),
+      );
+      expect(find.text('Près de Lyon'), findsNothing);
+    });
+
+    testWidgets('existingTimelineCallersUnchanged', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('DEPART', scannedAt: t0)]));
+      await _openSheet(tester, bloc);
+
+      expect(find.textContaining('Près de'), findsNothing);
+      expect(find.text('Maintenant'), findsNothing);
+      expect(steps('done'), findsOneWidget);
+      expect(steps('current'), findsOneWidget);
+      expect(steps('upcoming'), findsOneWidget);
+      expect(steps('position'), findsNothing);
+    });
   });
 }

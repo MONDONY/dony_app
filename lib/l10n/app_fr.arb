@@ -22815,5 +22815,96 @@
   "tripDepartButton": "Je pars",
   "@tripDepartButton": {"description": "Écran du trajet voyageur : confirme le départ (position approximative facultative)."},
   "tripDepartConfirmedSnackbar": "C'est noté, bon voyage !",
-  "@tripDepartConfirmedSnackbar": {"description": "Confirmation après le bouton « Je pars »."}
+  "@tripDepartConfirmedSnackbar": {"description": "Confirmation après le bouton « Je pars »."},
+  "travelerTrackingTitle": "Suivi du voyageur",
+  "@travelerTrackingTitle": {
+    "description": "Titre de la carte. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingBadgeEnRoute": "En route",
+  "@travelerTrackingBadgeEnRoute": {
+    "description": "Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingBadgeArrived": "Arrivé",
+  "@travelerTrackingBadgeArrived": {
+    "description": "Pastille : le voyageur est arrivé. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingBadgeNotActivated": "Suivi non activé par le voyageur",
+  "@travelerTrackingBadgeNotActivated": {
+    "description": "Pastille neutre grise : le voyageur n'a pas activé le suivi. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingBadgeStale": "Dernière position {age}",
+  "@travelerTrackingBadgeStale": {
+    "description": "Pastille neutre : la position est ancienne. {age} est une durée déjà traduite (« il y a 2h »). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTrackingNotActivatedHint": "Le voyageur n'a pas activé le partage de sa position approximative.",
+  "@travelerTrackingNotActivatedHint": {
+    "description": "Phrase neutre sous la pastille quand le suivi n'est pas activé. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingNearCity": "Près de {city}",
+  "@travelerTrackingNearCity": {
+    "description": "Ville la plus proche du voyageur (carte et frise). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTrackingUpdated": "Mis à jour {age}",
+  "@travelerTrackingUpdated": {
+    "description": "Ancienneté de la dernière position. {age} est une durée déjà traduite (« il y a 5 min »). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTrackingProgressPct": "{pct} %",
+  "@travelerTrackingProgressPct": {
+    "description": "Pourcentage d'avancement du trajet. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "travelerTrackingProgressSemantics": "Avancement du trajet : {pct} %",
+  "@travelerTrackingProgressSemantics": {
+    "description": "Libellé d'accessibilité de la barre d'avancement. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "travelerTrackingNow": "Maintenant",
+  "@travelerTrackingNow": {
+    "description": "Marque la dernière ville de l'historique quand le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingLastPosition": "Dernière position, {age}",
+  "@travelerTrackingLastPosition": {
+    "description": "Marque la dernière ville quand la position est ancienne. {age} est une durée déjà traduite. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTrackingOpenTimeline": "Voir toutes les étapes et photos",
+  "@travelerTrackingOpenTimeline": {
+    "description": "Lien de la carte vers la frise complète du colis. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingAgoDays": "il y a {days} j",
+  "@travelerTrackingAgoDays": {
+    "description": "Ancienneté en jours (24 h et plus) de la dernière position. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
 }

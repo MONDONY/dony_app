@@ -319,6 +319,7 @@ class SenderStickyBar extends StatelessWidget {
             arrivalInstructions: bid.arrivalInstructions,
             trackingNumber: bid.trackingNumber,
             bidStatus: bid.status,
+            travelerTracking: bid.travelerTracking,
             onShareTracking: bid.trackingToken != null
                 ? () => shareTrackingLink(
                     bid,

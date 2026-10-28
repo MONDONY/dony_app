@@ -388,6 +388,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `trip_position_sent` | PositionReporterCubit.onResume — position approximative envoyée en silence à la reprise de l'app (et au démarrage à froid) pour au moins un trajet dont la fenêtre de suivi est ouverte (propriété `source` : `resume`). Délai de 15 min après un envoi, 3 min après une tentative sans effet. Jamais de coordonnées |
 | `trip_departure_confirmed` | TripDepartCubit.depart — « Je pars » confirmé par le serveur depuis l'écran du trajet (`POST /announcements/{id}/depart`). Propriété `has_position` (bool : une position approximative a été jointe ; refus ou échec du relevé = faux, l'action passe quand même). Jamais de coordonnées |
 | `trip_position_skipped` | PositionReporterCubit.onResume — envoi non fait faute de permission ou de position (propriété `reason` : `no_permission`, `no_position`). Les autres cas (pas de session, délai, aucun trajet suivi, rôle voyageur absent) ne sont pas émis |
+| `traveler_tracking_card_viewed` | TravelerTrackingCardCubit — carte « Suivi du voyageur » de la fiche colis (vue expéditeur), une fois par instance de carte. Propriétés `status` (`not_activated`, `en_route`, `arrived`, `stale`) et `has_history` (bool). Jamais de ville ni de coordonnées |
+| `traveler_tracking_timeline_opened` | TravelerTrackingCardCubit.timelineOpened — lien « Voir toutes les étapes et photos » de la carte tapé (propriété `status`, mêmes valeurs) |
 | `trip_parcels_filtered` | TripParcelsSection — chip de filtre statut tapée dans « Colis dans le trajet » (propriété `status`, `all` si « Tous ») |
 | `surplus_opened` | AnnouncementBloc._onSurplusOpenRequested() |
 | `bid_submitted` | BidBloc._onCreateRequested() |

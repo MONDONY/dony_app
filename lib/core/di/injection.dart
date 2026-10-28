@@ -155,6 +155,7 @@ import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/tools_completion_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
+import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
@@ -1420,6 +1421,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       analytics: getIt<AnalyticsService>(),
       box: () => getIt<HiveService>().userPrefs,
     ),
+  );
+  // Mesure de la carte « Suivi du voyageur » : une instance par carte.
+  getIt.registerFactory<TravelerTrackingCardCubit>(
+    () => TravelerTrackingCardCubit(analytics: getIt<AnalyticsService>()),
   );
   // Cycle de vie de l'app (reprise, démarrage à froid) : une seule instance.
   getIt.registerLazySingleton<PositionReporterCubit>(

@@ -22864,4 +22864,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripDepartConfirmedSnackbar => 'Noted, have a safe trip!';
+
+  @override
+  String get travelerTrackingTitle => 'Traveler tracking';
+
+  @override
+  String get travelerTrackingBadgeEnRoute => 'On the way';
+
+  @override
+  String get travelerTrackingBadgeArrived => 'Arrived';
+
+  @override
+  String get travelerTrackingBadgeNotActivated =>
+      'Tracking not turned on by the traveler';
+
+  @override
+  String travelerTrackingBadgeStale(String age) {
+    return 'Last position $age';
+  }
+
+  @override
+  String get travelerTrackingNotActivatedHint =>
+      'The traveler has not turned on sharing of their approximate position.';
+
+  @override
+  String travelerTrackingNearCity(String city) {
+    return 'Near $city';
+  }
+
+  @override
+  String travelerTrackingUpdated(String age) {
+    return 'Updated $age';
+  }
+
+  @override
+  String travelerTrackingProgressPct(int pct) {
+    return '$pct%';
+  }
+
+  @override
+  String travelerTrackingProgressSemantics(int pct) {
+    return 'Trip progress: $pct%';
+  }
+
+  @override
+  String get travelerTrackingNow => 'Now';
+
+  @override
+  String travelerTrackingLastPosition(String age) {
+    return 'Last position, $age';
+  }
+
+  @override
+  String get travelerTrackingOpenTimeline => 'See all steps and photos';
+
+  @override
+  String travelerTrackingAgoDays(int days) {
+    return '$days d ago';
+  }
 }

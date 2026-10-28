@@ -37037,6 +37037,90 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'C\'est noté, bon voyage !'**
   String get tripDepartConfirmedSnackbar;
+
+  /// Titre de la carte. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi du voyageur'**
+  String get travelerTrackingTitle;
+
+  /// Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En route'**
+  String get travelerTrackingBadgeEnRoute;
+
+  /// Pastille : le voyageur est arrivé. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé'**
+  String get travelerTrackingBadgeArrived;
+
+  /// Pastille neutre grise : le voyageur n'a pas activé le suivi. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi non activé par le voyageur'**
+  String get travelerTrackingBadgeNotActivated;
+
+  /// Pastille neutre : la position est ancienne. {age} est une durée déjà traduite (« il y a 2h »). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière position {age}'**
+  String travelerTrackingBadgeStale(String age);
+
+  /// Phrase neutre sous la pastille quand le suivi n'est pas activé. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur n\'a pas activé le partage de sa position approximative.'**
+  String get travelerTrackingNotActivatedHint;
+
+  /// Ville la plus proche du voyageur (carte et frise). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Près de {city}'**
+  String travelerTrackingNearCity(String city);
+
+  /// Ancienneté de la dernière position. {age} est une durée déjà traduite (« il y a 5 min »). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mis à jour {age}'**
+  String travelerTrackingUpdated(String age);
+
+  /// Pourcentage d'avancement du trajet. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{pct} %'**
+  String travelerTrackingProgressPct(int pct);
+
+  /// Libellé d'accessibilité de la barre d'avancement. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avancement du trajet : {pct} %'**
+  String travelerTrackingProgressSemantics(int pct);
+
+  /// Marque la dernière ville de l'historique quand le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Maintenant'**
+  String get travelerTrackingNow;
+
+  /// Marque la dernière ville quand la position est ancienne. {age} est une durée déjà traduite. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière position, {age}'**
+  String travelerTrackingLastPosition(String age);
+
+  /// Lien de la carte vers la frise complète du colis. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir toutes les étapes et photos'**
+  String get travelerTrackingOpenTimeline;
+
+  /// Ancienneté en jours (24 h et plus) de la dernière position. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {days} j'**
+  String travelerTrackingAgoDays(int days);
 }
 
 class _AppLocalizationsDelegate

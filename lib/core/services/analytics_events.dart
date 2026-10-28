@@ -1290,6 +1290,17 @@ abstract final class AnalyticsEvents {
   /// `resume`). Jamais de coordonnées.
   static const tripPositionSent = 'trip_position_sent';
 
+  /// Carte « Suivi du voyageur » affichée à l'expéditeur, une fois par
+  /// instance de carte (propriétés `status` : `not_activated` / `en_route` /
+  /// `arrived` / `stale`, et `has_history` bool). Jamais de ville ni de
+  /// coordonnées.
+  static const travelerTrackingCardViewed = 'traveler_tracking_card_viewed';
+
+  /// Lien « Voir toutes les étapes et photos » de la carte ouvert (propriété
+  /// `status`, mêmes valeurs).
+  static const travelerTrackingTimelineOpened =
+      'traveler_tracking_timeline_opened';
+
   /// Envoi silencieux de la position non fait (propriété `reason` :
   /// `no_permission` ou `no_position` seulement).
   static const tripPositionSkipped = 'trip_position_skipped';

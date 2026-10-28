@@ -9,6 +9,7 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
+import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
@@ -33,6 +34,10 @@ import 'package:intl/intl.dart';
 /// [onOpenParcel] : bouton principal « Voir le colis », visible dès
 /// l'ouverture, pour un colis de l'utilisateur (« Mes envois » de l'onglet
 /// Suivi, FLUTTER-7Z). Avec [onShareTracking], les deux boutons s'empilent.
+/// [travelerTracking] : suivi approximatif du voyageur (fiche colis de
+/// l'expéditeur). Ses villes (« Près de Lyon ») s'insèrent dans la frise, dans
+/// l'ordre du temps, entre les étapes enregistrées ; absent, la frise est
+/// inchangée.
 Future<void> showTrackingTimelineSheet(
   BuildContext context, {
   required String bidId,
@@ -44,6 +49,7 @@ Future<void> showTrackingTimelineSheet(
   String? trackingNumber,
   String? bidStatus,
   VoidCallback? onOpenParcel,
+  TravelerTrackingModel? travelerTracking,
 }) {
   return DonyBottomSheet.show<void>(
     context,
@@ -65,6 +71,7 @@ Future<void> showTrackingTimelineSheet(
       transportMode: transportMode,
       trackingNumber: trackingNumber,
       arrivalInstructions: arrivalInstructions,
+      travelerTracking: travelerTracking,
     ),
   );
 }
@@ -133,6 +140,7 @@ class _TrackingTimelineContent extends StatefulWidget {
     this.transportMode,
     this.trackingNumber,
     this.arrivalInstructions,
+    this.travelerTracking,
   });
 
   final String bidId;
@@ -142,6 +150,7 @@ class _TrackingTimelineContent extends StatefulWidget {
   final TransportMode? transportMode;
   final String? trackingNumber;
   final String? arrivalInstructions;
+  final TravelerTrackingModel? travelerTracking;
 
   @override
   State<_TrackingTimelineContent> createState() =>
@@ -219,6 +228,7 @@ class _TrackingTimelineContentState extends State<_TrackingTimelineContent>
               transportMode: transportMode,
               trackingNumber: trackingNumber,
               arrivalInstructions: arrivalInstructions,
+              travelerTracking: widget.travelerTracking,
             ).animate().fadeIn(duration: 250.ms, curve: Curves.easeOutCubic),
             _ => const SizedBox.shrink(),
           },
@@ -258,14 +268,21 @@ class _ReadOnlyHeader extends StatelessWidget {
   }
 }
 
-enum _StepState { done, current, upcoming }
+/// [position] : une ville approximative du voyageur, entre deux étapes.
+enum _StepState { done, current, upcoming, position }
 
 /// Une ligne de la frise.
 class _JourneyStep {
-  const _JourneyStep(this.state, this.title, {this.event});
+  const _JourneyStep(this.state, this.title, {this.event, this.at, this.note});
 
   final _StepState state;
   final String title;
+
+  /// Heure d'une ville approximative ([_StepState.position]).
+  final DateTime? at;
+
+  /// Marque sous la ville : « Maintenant » ou « Dernière position, … ».
+  final String? note;
 
   /// Événement enregistré d'une étape faite : heure, lieu, provenance, photo.
   final TrackingEventModel? event;
@@ -278,10 +295,17 @@ class _JourneyStep {
 /// [arrived] : le voyageur a déclaré son arrivée (colis `ARRIVED`). Aucun
 /// scan ne la trace : l'étape est faite sans heure, et la remise au
 /// destinataire devient l'étape en cours.
+///
+/// [tracking] : les villes approximatives du voyageur sont fusionnées aux
+/// étapes faites par ordre d'heure ; à heure égale, l'étape enregistrée passe
+/// avant la ville. La dernière ville est marquée « Maintenant » (voyageur en
+/// route) ou « Dernière position, il y a X » (position ancienne).
 List<_JourneyStep> _journeySteps(
   AppLocalizations l,
   List<TrackingEventModel> events, {
   bool arrived = false,
+  TravelerTrackingModel? tracking,
+  DateTime? now,
 }) {
   final sorted = [...events]
     ..sort((a, b) => a.scannedAt.compareTo(b.scannedAt));
@@ -289,8 +313,7 @@ List<_JourneyStep> _journeySteps(
   final delivered = sorted.any((e) => e.eventType == 'ARRIVEE');
   final arrivedOnly = arrived && departed && !delivered;
   return [
-    for (final event in sorted)
-      _JourneyStep(_StepState.done, _doneTitle(l, event), event: event),
+    ..._mergedDoneSteps(l, sorted, tracking, now ?? DateTime.now()),
     if (!delivered && !departed) ...[
       _JourneyStep(_StepState.current, l.trackingStepHandoverToTraveler),
       _JourneyStep(_StepState.upcoming, l.trackingStepDeparture),
@@ -305,6 +328,65 @@ List<_JourneyStep> _journeySteps(
         _JourneyStep(_StepState.upcoming, l.trackingStepHandoverToRecipient),
     ],
   ];
+}
+
+/// Étapes faites ([sorted], par heure) et villes du voyageur, dans l'ordre du
+/// temps. Une ville sans heure ne peut pas être placée : elle est ignorée.
+List<_JourneyStep> _mergedDoneSteps(
+  AppLocalizations l,
+  List<TrackingEventModel> sorted,
+  TravelerTrackingModel? tracking,
+  DateTime now,
+) {
+  final entries = <(DateTime, int, _JourneyStep)>[
+    for (final event in sorted)
+      (
+        event.scannedAt,
+        0,
+        _JourneyStep(_StepState.done, _doneTitle(l, event), event: event),
+      ),
+  ];
+  if (tracking != null && tracking.history.isNotEmpty) {
+    final last = tracking.history.last;
+    for (final point in tracking.history) {
+      final at = point.at;
+      if (at == null) continue;
+      String? note;
+      if (identical(point, last)) {
+        note = switch (tracking.status) {
+          TravelerTrackingStatus.enRoute => l.travelerTrackingNow,
+          TravelerTrackingStatus.stale => l.travelerTrackingLastPosition(
+            travelerTrackingAge(
+              l,
+              (tracking.lastUpdatedAt ?? at).toLocal(),
+              now,
+            ),
+          ),
+          _ => null,
+        };
+      }
+      entries.add((
+        at,
+        1,
+        _JourneyStep(
+          _StepState.position,
+          l.travelerTrackingNearCity(point.city),
+          at: at,
+          note: note,
+        ),
+      ));
+    }
+  }
+  // Tri par heure, puis étape avant ville ; List.sort n'étant pas stable,
+  // l'ordre d'origine départage deux villes de même heure.
+  final indexed = [for (var i = 0; i < entries.length; i++) (i, entries[i])]
+    ..sort((a, b) {
+      final byTime = a.$2.$1.compareTo(b.$2.$1);
+      if (byTime != 0) return byTime;
+      final byKind = a.$2.$2.compareTo(b.$2.$2);
+      return byKind != 0 ? byKind : a.$1.compareTo(b.$1);
+    });
+  return [for (final e in indexed) e.$2.$3];
 }
 
 String _doneTitle(AppLocalizations l, TrackingEventModel event) =>
@@ -347,6 +429,7 @@ class _Journey extends StatelessWidget {
     this.transportMode,
     this.trackingNumber,
     this.arrivalInstructions,
+    this.travelerTracking,
   });
 
   final List<TrackingEventModel> events;
@@ -356,13 +439,19 @@ class _Journey extends StatelessWidget {
   final TransportMode? transportMode;
   final String? trackingNumber;
   final String? arrivalInstructions;
+  final TravelerTrackingModel? travelerTracking;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final steps = _journeySteps(l, events, arrived: arrived);
+    final steps = _journeySteps(
+      l,
+      events,
+      arrived: arrived,
+      tracking: travelerTracking,
+    );
     final number = trackingNumber?.trim() ?? '';
     final instructions = arrivalInstructions?.trim() ?? '';
     final from = departureCity?.trim() ?? '';
@@ -406,7 +495,8 @@ class _Journey extends StatelessWidget {
             // Trait bleu entre deux étapes faites, gris ensuite.
             connector: i == steps.length - 1
                 ? null
-                : steps[i + 1].state == _StepState.done
+                : steps[i + 1].state == _StepState.done ||
+                      steps[i + 1].state == _StepState.position
                 ? cs.primary
                 : cs.outline,
           ),
@@ -442,6 +532,7 @@ class _JourneyRow extends StatelessWidget {
     final l = context.l10n;
     final event = step.event;
     final line = connector;
+    final time = event?.scannedAt ?? step.at;
     final details = event == null
         ? ''
         : [?event.locationLabel(l), ?event.methodLabel(l)].join(' · ');
@@ -487,6 +578,21 @@ class _JourneyRow extends StatelessWidget {
           border: Border.all(color: cs.outline, width: 2),
         ),
       ),
+      // Ville approximative : simple point, moins lourd qu'une étape.
+      _StepState.position => SizedBox(
+        width: 22,
+        height: 22,
+        child: Center(
+          child: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: cs.primary,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
     };
 
     return IntrinsicHeight(
@@ -529,12 +635,12 @@ class _JourneyRow extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (event != null) ...[
+                      if (time != null) ...[
                         const SizedBox(width: DonySpacing.sm),
                         Text(
                           DateFormat.MMMd(
                             l.localeName,
-                          ).add_Hm().format(event.scannedAt.toLocal()),
+                          ).add_Hm().format(time.toLocal()),
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                             fontFeatures: const [FontFeature.tabularFigures()],
@@ -543,6 +649,17 @@ class _JourneyRow extends StatelessWidget {
                       ],
                     ],
                   ),
+                  if (step.note != null) ...[
+                    const SizedBox(height: DonySpacing.xxs),
+                    Text(
+                      step.note!,
+                      key: const Key('tracking-step-note'),
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                   if (details.isNotEmpty) ...[
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
