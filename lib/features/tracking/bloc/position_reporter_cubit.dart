@@ -23,12 +23,14 @@ class PositionReporterCubit extends Cubit<PositionReporterState> {
     required ScanLocator locator,
     required AnalyticsService analytics,
     required bool Function() hasRealSession,
+    required bool Function() sharingGranted,
     DateTime Function()? now,
   }) : _announcements = announcements,
        _tracking = tracking,
        _locator = locator,
        _analytics = analytics,
        _hasRealSession = hasRealSession,
+       _sharingGranted = sharingGranted,
        _now = now ?? DateTime.now,
        super(PositionReporterState.idle);
 
@@ -48,6 +50,9 @@ class PositionReporterCubit extends Cubit<PositionReporterState> {
   final ScanLocator _locator;
   final AnalyticsService _analytics;
   final bool Function() _hasRealSession;
+
+  /// Consentement mémorisé du voyageur (« Autoriser » seulement).
+  final bool Function() _sharingGranted;
   final DateTime Function() _now;
 
   DateTime? _nextAllowed;
@@ -58,6 +63,13 @@ class PositionReporterCubit extends Cubit<PositionReporterState> {
   /// déconnexion). Alimenté par l'app depuis l'état d'authentification déjà
   /// détenu : aucun appel réseau.
   void updateRoles(List<String>? roles) => _roles = roles;
+
+  /// Vraie déconnexion ou changement de compte : le délai et les rôles du
+  /// compte précédent ne doivent pas retenir l'envoi du suivant.
+  void onLoggedOut() {
+    _nextAllowed = null;
+    _roles = null;
+  }
 
   /// À appeler à la reprise de l'app et au démarrage à froid.
   Future<void> onResume() async {
@@ -81,9 +93,15 @@ class PositionReporterCubit extends Cubit<PositionReporterState> {
     final now = _now();
     final next = _nextAllowed;
     if (next != null && now.isBefore(next)) return;
+    // Sortie anticipée bon marché pour un compte qui n'aurait vraiment pas le
+    // rôle voyageur (le back donne SENDER et TRAVELER à tout compte, ce
+    // filtre n'écarte donc presque personne) : la vraie garde est le
+    // consentement ci-dessous.
     final roles = _roles;
-    // Rôle voyageur clairement absent : rien à envoyer, rien à lire.
     if (roles != null && !roles.contains('TRAVELER')) return;
+    // Consentement refusé ou jamais donné : aucun appel réseau, aucun envoi,
+    // même si l'autorisation du système est déjà accordée.
+    if (!_sharingGranted()) return;
     _nextAllowed = now.add(retryThrottle);
 
     final result = await _announcements.getMyAnnouncements();

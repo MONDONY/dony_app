@@ -42,10 +42,15 @@ void main() {
     ).thenAnswer((_) async => null);
   });
 
-  Future<AnnouncementBloc> build() async {
+  Future<AnnouncementBloc> build({bool granted = true}) async {
     final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
     await analytics.onConfigured();
-    return AnnouncementBloc(repo, analytics, locator: locator);
+    return AnnouncementBloc(
+      repo,
+      analytics,
+      locator: locator,
+      sharingGranted: () => granted,
+    );
   }
 
   Future<void> run(AnnouncementBloc bloc) async {
@@ -75,6 +80,26 @@ void main() {
         position: (lat: 14.7, lon: -17.4),
       ),
     ).called(1);
+  });
+
+  test('arrivalWithoutPositionWhenDeclined', () async {
+    when(
+      () => locator.lastKnownCoordinatesIfGranted(),
+    ).thenAnswer((_) async => const ScanPosition(lat: 1.5, lon: 2.5));
+    when(
+      () => locator.captureCoordinatesIfGranted(),
+    ).thenAnswer((_) async => const ScanPosition(lat: 1.5, lon: 2.5));
+    when(
+      () => repo.markTripArrived(
+        announcementId: 'a1',
+        arrivalInstructions: any(named: 'arrivalInstructions'),
+        position: any(named: 'position'),
+      ),
+    ).thenAnswer((_) async => _ann());
+    await run(await build(granted: false));
+    verify(() => repo.markTripArrived(announcementId: 'a1')).called(1);
+    verifyNever(() => locator.lastKnownCoordinatesIfGranted());
+    verifyNever(() => locator.captureCoordinatesIfGranted());
   });
 
   test('markArrivedWithoutPositionBodyUnchanged', () async {

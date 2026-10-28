@@ -203,4 +203,24 @@ void main() {
       verifyNever(() => locator.captureCoordinatesIfGranted());
     });
   });
+
+  testWidgets('departWithoutPositionWhenDeclined', (tester) async {
+    when(
+      () => consent.ensureAsked(any(), source: any(named: 'source')),
+    ).thenAnswer((_) async => false);
+    when(
+      () => locator.lastKnownCoordinatesIfGranted(),
+    ).thenAnswer((_) async => const ScanPosition(lat: 1, lon: 2));
+    when(
+      () => locator.captureCoordinatesIfGranted(),
+    ).thenAnswer((_) async => const ScanPosition(lat: 1, lon: 2));
+    await withContext(tester, () async {
+      final cubit = build();
+      await cubit.depart(ctx);
+      verify(() => tracking.depart('trip-1')).called(1);
+      verifyNever(() => locator.lastKnownCoordinatesIfGranted());
+      verifyNever(() => locator.captureCoordinatesIfGranted());
+      expect(cubit.state.departed, isTrue);
+    });
+  });
 }

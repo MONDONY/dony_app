@@ -27,13 +27,21 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   final TripArrivalEventsService? _tripArrivalEvents;
   final ScanLocator? _locator;
 
+  /// Consentement mémorisé du voyageur au partage de position. Par défaut
+  /// refusé : sans réponse explicite, aucune position n'est jointe.
+  final bool Function() _sharingGranted;
+
+  static bool _neverShared() => false;
+
   AnnouncementBloc(
     this._repository,
     this._analytics, {
     TripArrivalEventsService? tripArrivalEvents,
     ScanLocator? locator,
+    bool Function()? sharingGranted,
   }) : _tripArrivalEvents = tripArrivalEvents,
        _locator = locator,
+       _sharingGranted = sharingGranted ?? _neverShared,
        super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
     on<AnnouncementTripCreateRequested>(_onTripCreateRequested);
@@ -595,17 +603,14 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     }
   }
 
-  /// Position approximative jointe à « Arrivé » : jamais de demande de
-  /// permission, jamais bloquante (échec ou délai = pas de position).
+  /// Position approximative jointe à « Arrivé » : seulement si le voyageur a
+  /// consenti, jamais de demande de permission, jamais bloquante (la demande
+  /// d'arrivée part dans tous les cas, avec ou sans position).
   Future<({double lat, double lon})?> _arrivalPosition() async {
     final locator = _locator;
-    if (locator == null) return null;
-    try {
-      final p = await quickPositionIfGranted(locator);
-      return p == null ? null : (lat: p.lat, lon: p.lon);
-    } catch (_) {
-      return null;
-    }
+    if (locator == null || !_sharingGranted()) return null;
+    final p = await quickPositionIfGranted(locator);
+    return p == null ? null : (lat: p.lat, lon: p.lon);
   }
 
   Future<void> _onTripMarkArrivedRequested(

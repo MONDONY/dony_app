@@ -61,6 +61,15 @@ void main() {
     ).called(1);
   }
 
+  test('sharingGrantedReadsStoredAnswerSynchronously', () {
+    final cubit = build();
+    expect(cubit.sharingGranted, isFalse);
+    stored[HiveService.kTrackingConsent] = 'declined';
+    expect(cubit.sharingGranted, isFalse);
+    stored[HiveService.kTrackingConsent] = 'granted';
+    expect(cubit.sharingGranted, isTrue);
+  });
+
   test('consentSheetShownOnlyOnce', () async {
     final cubit = build();
     await cubit.ensureAsked(

@@ -41,7 +41,9 @@ class ScanLocator {
   /// Coordonnées seules, sans réseau : relevé frais borné par [fixTimeout],
   /// sinon dernière position connue, sinon `null`. Peut afficher la demande
   /// d'autorisation du système : à réserver aux gestes explicites de
-  /// l'utilisateur (« Je pars », « Je suis arrivé », scan).
+  /// l'utilisateur (le scan d'un colis et le parcours de consentement).
+  /// « Je pars » et « Je suis arrivé » passent par [quickPositionIfGranted],
+  /// qui ne demande jamais rien.
   Future<ScanPosition?> captureCoordinates() async {
     try {
       final permission = await Geolocator.requestPermission();

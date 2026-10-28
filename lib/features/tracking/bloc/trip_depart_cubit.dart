@@ -70,16 +70,23 @@ class TripDepartCubit extends Cubit<TripDepartState> {
   Future<void> depart(BuildContext context) async {
     if (state.loading || state.departed) return;
     emit(const TripDepartState(loading: true));
+    var allowed = false;
     try {
-      await _consent.ensureAsked(context, source: TrackingConsentSource.depart);
+      allowed = await _consent.ensureAsked(
+        context,
+        source: TrackingConsentSource.depart,
+      );
     } catch (_) {
       // La réponse au consentement ne bloque jamais le départ.
     }
+    // Sans consentement actif, le départ part sans position.
     ScanPosition? position;
-    try {
-      position = await quickPositionIfGranted(_locator);
-    } catch (_) {
-      position = null;
+    if (allowed) {
+      try {
+        position = await quickPositionIfGranted(_locator);
+      } catch (_) {
+        position = null;
+      }
     }
     try {
       await _tracking.depart(

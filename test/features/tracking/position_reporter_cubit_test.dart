@@ -2,13 +2,17 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/tracking/bloc/position_reporter_cubit.dart';
+import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/trip_tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../helpers/map_backed_box.dart';
 
 class _MockAnnouncements extends Mock implements AnnouncementRepository {}
 
@@ -39,6 +43,7 @@ void main() {
   late _MockAnalytics analytics;
   late DateTime clock;
   late bool session;
+  late bool consentGranted;
 
   PositionReporterCubit build() => PositionReporterCubit(
     announcements: announcements,
@@ -46,6 +51,7 @@ void main() {
     locator: locator,
     analytics: analytics,
     hasRealSession: () => session,
+    sharingGranted: () => consentGranted,
     now: () => clock,
   );
 
@@ -62,6 +68,7 @@ void main() {
     analytics = _MockAnalytics();
     clock = DateTime(2026, 11, 1, 10);
     session = true;
+    consentGranted = true;
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
@@ -240,6 +247,69 @@ void main() {
     await cubit.onResume();
     verifyNever(() => announcements.getMyAnnouncements());
     cubit.updateRoles(['SENDER', 'TRAVELER']);
+    await cubit.onResume();
+    verify(() => tracking.sendPosition('a', any(), any())).called(1);
+  });
+
+  test('declinedConsentNeverSendsEvenWithOsPermission', () async {
+    consentGranted = false;
+    trips([_trip('a', active: true)]);
+    await build().onResume();
+    verifyNever(() => announcements.getMyAnnouncements());
+    verifyNever(() => locator.captureCoordinatesIfGranted());
+    verifyNever(() => tracking.sendPosition(any(), any(), any()));
+    verifyNever(
+      () => analytics.logEvent(
+        AnalyticsEvents.tripPositionSkipped,
+        properties: any(named: 'properties'),
+      ),
+    );
+  });
+
+  test('unansweredConsentNeverSends', () async {
+    final box = <String, dynamic>{};
+    final consent = TrackingConsentCubit(
+      box: () => mapBackedBox(box),
+      locator: locator,
+      analytics: analytics,
+      showSheet: (_) async => null,
+    );
+    trips([_trip('a', active: true)]);
+    final cubit = PositionReporterCubit(
+      announcements: announcements,
+      tracking: tracking,
+      locator: locator,
+      analytics: analytics,
+      hasRealSession: () => true,
+      sharingGranted: () => consent.sharingGranted,
+      now: () => clock,
+    );
+    await cubit.onResume();
+    verifyNever(() => tracking.sendPosition(any(), any(), any()));
+    box[HiveService.kTrackingConsent] = 'declined';
+    clock = clock.add(const Duration(minutes: 4));
+    await cubit.onResume();
+    verifyNever(() => tracking.sendPosition(any(), any(), any()));
+    box[HiveService.kTrackingConsent] = 'granted';
+    clock = clock.add(const Duration(minutes: 4));
+    await cubit.onResume();
+    verify(() => tracking.sendPosition('a', any(), any())).called(1);
+  });
+
+  test('grantedConsentStillSends', () async {
+    trips([_trip('a', active: true)]);
+    await build().onResume();
+    verify(() => tracking.sendPosition('a', 48.85, 2.35)).called(1);
+  });
+
+  test('reporterResetsOnLogout', () async {
+    trips([_trip('a', active: true)]);
+    final cubit = build();
+    await cubit.onResume();
+    verify(() => tracking.sendPosition('a', any(), any())).called(1);
+    cubit.updateRoles(['SENDER']);
+    cubit.onLoggedOut();
+    // Ni délai de 15 min ni rôles du compte précédent ne retiennent l'envoi.
     await cubit.onResume();
     verify(() => tracking.sendPosition('a', any(), any())).called(1);
   });

@@ -628,6 +628,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
       tripArrivalEvents: getIt<TripArrivalEventsService>(),
       locator: const ScanLocator(),
+      sharingGranted: () => getIt<TrackingConsentCubit>().sharingGranted,
     ),
   );
   getIt.registerFactory<TripsSummaryCubit>(
@@ -1437,6 +1438,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
         final user = FirebaseAuth.instance.currentUser;
         return user != null && !user.isAnonymous;
       },
+      sharingGranted: () => getIt<TrackingConsentCubit>().sharingGranted,
     ),
   );
   getIt.registerLazySingleton<OfflineSyncService>(

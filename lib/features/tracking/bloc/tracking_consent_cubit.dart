@@ -117,6 +117,13 @@ class TrackingConsentCubit extends Cubit<TrackingConsentState> {
     }
   }
 
+  /// Lecture synchrone du consentement mémorisé : vrai seulement si le
+  /// voyageur a répondu « Autoriser ». C'est la seule porte avant tout envoi
+  /// de position : l'autorisation du système seule ne suffit jamais (elle est
+  /// souvent déjà accordée par le scan d'un colis), et un refus ou une absence
+  /// de réponse ne doivent rien laisser partir.
+  bool get sharingGranted => _stored() == TrackingConsentAnswer.granted;
+
   Future<void> _store(bool granted) async {
     try {
       await _box().put(
