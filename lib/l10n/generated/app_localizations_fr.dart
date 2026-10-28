@@ -10400,9 +10400,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Revenez ici après avoir complété le formulaire Stripe dans votre navigateur.';
 
   @override
-  String get walletActiveCurrencyBadge => 'active';
-
-  @override
   String get chatPreviewPhoto => '📷 Photo';
 
   @override
@@ -17729,21 +17726,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatReportMessageAction => 'Signaler';
 
   @override
-  String get walletActiveCurrencyCardLabel => 'Portefeuille actif';
-
-  @override
-  String get walletActiveCurrencyCardHint =>
-      'Recharges par carte et nouvelles annonces dans cette devise';
-
-  @override
   String get walletActiveCurrencyChange => 'Changer';
-
-  @override
-  String get walletActiveCurrencySheetTitle => 'Choisir le portefeuille actif';
-
-  @override
-  String get walletActiveCurrencySheetHint =>
-      'Chaque solde reste dans sa devise : rien n\'est converti. Le portefeuille actif reçoit vos recharges par carte, et vos nouvelles annonces sont publiées dans sa devise. Vos envois en cours ne changent pas.';
 
   @override
   String get walletActiveCurrencyHeldSection => 'Mes portefeuilles';
@@ -17759,14 +17742,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get walletActiveCurrencyAddDetail =>
       'Un portefeuille vide est créé dans cette devise. Vos autres soldes ne bougent pas.';
-
-  @override
-  String walletActiveCurrencyHeldDetail(String currency) {
-    return 'Ce solde reste en $currency. Il devient le portefeuille utilisé pour vos recharges par carte et vos nouvelles annonces.';
-  }
-
-  @override
-  String get walletActiveCurrencyConfirm => 'Utiliser ce portefeuille';
 
   @override
   String walletActiveCurrencySwitchedSnackbar(String currency) {
@@ -22879,4 +22854,70 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailMoreOptionsTooltip => 'Plus d\'options';
+
+  @override
+  String get walletBalancesButtonTooltip => 'Mes soldes';
+
+  @override
+  String get walletBalancesSheetTitle => 'Mes soldes';
+
+  @override
+  String get walletBalancesSheetHint =>
+      'Chaque solde reste dans sa devise : rien n\'est converti. La devise du total est aussi celle de vos recharges par carte et de vos nouvelles annonces. Vos envois en cours ne changent pas.';
+
+  @override
+  String get walletBalancesTotalBadge => 'devise du total';
+
+  @override
+  String get walletBalancesUseForTotal => 'Utiliser pour le total';
+
+  @override
+  String walletBalancesEquivalent(String amount) {
+    return '≈ $amount au taux du jour';
+  }
+
+  @override
+  String walletBalancesChangeWarning(String currency, String amount) {
+    return 'Le total sera calculé en $currency : environ $amount au taux du jour. Vos soldes ne changent pas. Les taux peuvent varier d\'un jour à l\'autre.';
+  }
+
+  @override
+  String walletBalancesChangeWarningNoAmount(String currency) {
+    return 'Le total sera calculé en $currency, au taux du jour. Vos soldes ne changent pas. Les taux peuvent varier d\'un jour à l\'autre.';
+  }
+
+  @override
+  String walletBalancesConfirm(String currency) {
+    return 'Calculer le total en $currency';
+  }
+
+  @override
+  String walletHeroTotalInLabel(String code) {
+    return 'Total estimé ($code)';
+  }
+
+  @override
+  String walletTxSourceNote(String amount) {
+    return 'pour $amount';
+  }
+
+  @override
+  String walletShortfallAllWallets(String amount) {
+    return 'Tous vos portefeuilles réunis en règlent $amount';
+  }
+
+  @override
+  String walletShortfallStillMissing(String missing) {
+    return 'Il manque encore $missing';
+  }
+
+  @override
+  String walletShortfallExcludedFrozen(String currency) {
+    return 'Le portefeuille $currency n\'est pas pris en compte : un remboursement est en cours';
+  }
+
+  @override
+  String walletShortfallExcludedRate(String currency) {
+    return 'Le portefeuille $currency n\'est pas pris en compte : taux du jour indisponible';
+  }
 }

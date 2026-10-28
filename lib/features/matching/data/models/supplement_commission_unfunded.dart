@@ -1,5 +1,6 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
+import 'package:dony/features/matching/data/models/commission_funding_detail.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:equatable/equatable.dart';
 
@@ -17,6 +18,7 @@ class SupplementCommissionUnfunded extends Equatable {
     this.breakdown,
     this.bidCurrency,
     this.alternatives = const [],
+    this.fundingDetail,
   });
 
   static const code = 'supplement-commission-unfunded';
@@ -47,6 +49,10 @@ class SupplementCommissionUnfunded extends Equatable {
 
   /// Autres portefeuilles capables de couvrir le reste au taux du jour.
   final List<CommissionFundingAlternative> alternatives;
+
+  /// Détail par portefeuille (somme de toutes les devises), absent avec un
+  /// ancien back.
+  final CommissionFundingDetail? fundingDetail;
 
   /// Lit le refus depuis l'erreur rendue par l'API ; `null` pour toute autre
   /// erreur. Tolérant : un champ absent ou mal formé prend une valeur neutre.
@@ -81,6 +87,7 @@ class SupplementCommissionUnfunded extends Equatable {
       alternatives: CommissionFundingAlternative.listFromJson(
         ext['alternatives'],
       ),
+      fundingDetail: CommissionFundingDetail.tryParse(ext['fundingDetail']),
     );
   }
 
@@ -94,5 +101,6 @@ class SupplementCommissionUnfunded extends Equatable {
     breakdown,
     bidCurrency,
     alternatives,
+    fundingDetail,
   ];
 }

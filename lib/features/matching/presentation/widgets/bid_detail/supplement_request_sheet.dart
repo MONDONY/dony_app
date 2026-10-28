@@ -808,6 +808,7 @@ class CommissionSourceRadios extends StatelessWidget {
       requiredCommission: unfunded.requiredCommission,
       availableBalance: unfunded.availableBalance,
       currency: unfunded.currency,
+      fundingDetail: unfunded.fundingDetail,
     ),
     l.supplementCommissionUnfundedHint,
   ].join('\n');

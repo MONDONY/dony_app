@@ -7,6 +7,7 @@ import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
+import 'package:dony/features/matching/data/models/commission_funding_detail.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -487,6 +488,7 @@ class NegotiationCommissionInsufficientWallet extends NegotiationState {
     this.breakdown,
     this.bidCurrency,
     this.alternatives = const [],
+    this.fundingDetail,
   });
   final double availableBalance;
   final double requiredCommission;
@@ -500,6 +502,9 @@ class NegotiationCommissionInsufficientWallet extends NegotiationState {
 
   /// Other wallets usable at today's rate (FLUTTER-CG).
   final List<CommissionFundingAlternative> alternatives;
+
+  /// Per-wallet detail (all currencies), absent with an old back.
+  final CommissionFundingDetail? fundingDetail;
   @override
   List<Object?> get props => [
     availableBalance,
@@ -510,6 +515,7 @@ class NegotiationCommissionInsufficientWallet extends NegotiationState {
     breakdown,
     bidCurrency,
     alternatives,
+    fundingDetail,
   ];
 }
 
@@ -1276,6 +1282,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
             breakdown: r.breakdown,
             bidCurrency: r.bidCurrency,
             alternatives: r.alternatives,
+            fundingDetail: r.fundingDetail,
           ),
         );
         return;

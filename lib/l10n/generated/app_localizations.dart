@@ -17127,12 +17127,6 @@ abstract class AppLocalizations {
   /// **'Revenez ici après avoir complété le formulaire Stripe dans votre navigateur.'**
   String get connectPendingSubtitle;
 
-  /// Badge de la devise active de l'utilisateur, dans la liste des soldes (wallet_screen.dart _CurrencyBalanceRow). Relevé en E3, corrigé en vague finale E.
-  ///
-  /// In fr, this message translates to:
-  /// **'active'**
-  String get walletActiveCurrencyBadge;
-
   /// Affichage traduit du marqueur d'aperçu kChatPreviewPhoto (chat_labels.dart), identique dans les deux langues (voir _sameInBothLanguages).
   ///
   /// In fr, this message translates to:
@@ -28975,35 +28969,11 @@ abstract class AppLocalizations {
   /// **'Signaler'**
   String get chatReportMessageAction;
 
-  /// Libellé de la carte du portefeuille actif (wallet_screen.dart, FLUTTER-8F).
-  ///
-  /// In fr, this message translates to:
-  /// **'Portefeuille actif'**
-  String get walletActiveCurrencyCardLabel;
-
-  /// Sous-titre de la carte du portefeuille actif : ce que la devise active pilote (FLUTTER-8F).
-  ///
-  /// In fr, this message translates to:
-  /// **'Recharges par carte et nouvelles annonces dans cette devise'**
-  String get walletActiveCurrencyCardHint;
-
   /// Action de la carte du portefeuille actif, ouvre le choix du portefeuille (FLUTTER-8F).
   ///
   /// In fr, this message translates to:
   /// **'Changer'**
   String get walletActiveCurrencyChange;
-
-  /// Titre de la sheet de choix du portefeuille actif (FLUTTER-8F).
-  ///
-  /// In fr, this message translates to:
-  /// **'Choisir le portefeuille actif'**
-  String get walletActiveCurrencySheetTitle;
-
-  /// Explication en tête de la sheet de choix du portefeuille actif (FLUTTER-8F).
-  ///
-  /// In fr, this message translates to:
-  /// **'Chaque solde reste dans sa devise : rien n\'est converti. Le portefeuille actif reçoit vos recharges par carte, et vos nouvelles annonces sont publiées dans sa devise. Vos envois en cours ne changent pas.'**
-  String get walletActiveCurrencySheetHint;
 
   /// Titre de section : portefeuilles déjà détenus, avec leur solde (FLUTTER-8F).
   ///
@@ -29028,18 +28998,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Un portefeuille vide est créé dans cette devise. Vos autres soldes ne bougent pas.'**
   String get walletActiveCurrencyAddDetail;
-
-  /// Détail déplié d'un portefeuille détenu (FLUTTER-8F).
-  ///
-  /// In fr, this message translates to:
-  /// **'Ce solde reste en {currency}. Il devient le portefeuille utilisé pour vos recharges par carte et vos nouvelles annonces.'**
-  String walletActiveCurrencyHeldDetail(String currency);
-
-  /// Bouton de confirmation (stickyBottom) de la sheet de choix du portefeuille actif (FLUTTER-8F).
-  ///
-  /// In fr, this message translates to:
-  /// **'Utiliser ce portefeuille'**
-  String get walletActiveCurrencyConfirm;
 
   /// Snackbar après un changement de portefeuille actif réussi (FLUTTER-8F).
   ///
@@ -36823,6 +36781,96 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Plus d\'options'**
   String get bidDetailMoreOptionsTooltip;
+
+  /// Infobulle du bouton de l'en-tête du portefeuille qui ouvre la feuille « Mes soldes » (wallet_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes soldes'**
+  String get walletBalancesButtonTooltip;
+
+  /// Titre de la feuille qui montre l'argent de chaque devise et permet de choisir la devise du total (wallet_balances_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes soldes'**
+  String get walletBalancesSheetTitle;
+
+  /// Phrase d'introduction de la feuille « Mes soldes » (wallet_balances_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque solde reste dans sa devise : rien n\'est converti. La devise du total est aussi celle de vos recharges par carte et de vos nouvelles annonces. Vos envois en cours ne changent pas.'**
+  String get walletBalancesSheetHint;
+
+  /// Pastille de la carte dont la devise sert au total estimé (wallet_balances_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'devise du total'**
+  String get walletBalancesTotalBadge;
+
+  /// Lien discret d'une carte de devise pour en faire la devise du total (wallet_balances_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Utiliser pour le total'**
+  String get walletBalancesUseForTotal;
+
+  /// Équivalent d'un solde dans la devise du total, sous son montant (wallet_balances_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'≈ {amount} au taux du jour'**
+  String walletBalancesEquivalent(String amount);
+
+  /// Avertissement quand une autre devise du total est choisie, avec le nouveau total estimé (wallet_balances_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le total sera calculé en {currency} : environ {amount} au taux du jour. Vos soldes ne changent pas. Les taux peuvent varier d\'un jour à l\'autre.'**
+  String walletBalancesChangeWarning(String currency, String amount);
+
+  /// Même avertissement quand le nouveau total ne peut pas être estimé, faute de taux (wallet_balances_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le total sera calculé en {currency}, au taux du jour. Vos soldes ne changent pas. Les taux peuvent varier d\'un jour à l\'autre.'**
+  String walletBalancesChangeWarningNoAmount(String currency);
+
+  /// Bouton plein de la feuille « Mes soldes » une fois une autre devise choisie (wallet_balances_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Calculer le total en {currency}'**
+  String walletBalancesConfirm(String currency);
+
+  /// Libellé du montant du hero avec la devise du total (wallet_screen.dart _HeroHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Total estimé ({code})'**
+  String walletHeroTotalInLabel(String code);
+
+  /// Sous-texte d'une ligne d'historique convertie : le montant d'origine de la part de commission réglée (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'pour {amount}'**
+  String walletTxSourceNote(String amount);
+
+  /// Ligne du sheet « Solde insuffisant » : total réglé par tous les portefeuilles au taux du jour (commission_shortfall_text.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous vos portefeuilles réunis en règlent {amount}'**
+  String walletShortfallAllWallets(String amount);
+
+  /// Ligne du sheet « Solde insuffisant » : reste à couvrir dans la devise du colis (commission_shortfall_text.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Il manque encore {missing}'**
+  String walletShortfallStillMissing(String missing);
+
+  /// Ligne du sheet « Solde insuffisant » : portefeuille gelé par une demande de remboursement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le portefeuille {currency} n\'est pas pris en compte : un remboursement est en cours'**
+  String walletShortfallExcludedFrozen(String currency);
+
+  /// Ligne du sheet « Solde insuffisant » : taux périmé ou absent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le portefeuille {currency} n\'est pas pris en compte : taux du jour indisponible'**
+  String walletShortfallExcludedRate(String currency);
 }
 
 class _AppLocalizationsDelegate

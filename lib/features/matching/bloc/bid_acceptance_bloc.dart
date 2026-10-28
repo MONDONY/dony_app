@@ -242,6 +242,7 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
             breakdown: r.breakdown,
             bidCurrency: r.bidCurrency,
             alternatives: r.alternatives,
+            fundingDetail: r.fundingDetail,
           ),
         );
         return;

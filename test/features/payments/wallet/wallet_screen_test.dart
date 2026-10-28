@@ -511,7 +511,7 @@ void main() {
   );
 
   testWidgets(
-    'nouveau contrat : total estimé en grand et une ligne par devise',
+    'nouveau contrat : total estimé en grand, lien Changer, plus de lignes de devises',
     (tester) async {
       whenListen(
         bloc,
@@ -522,13 +522,20 @@ void main() {
       await tester.pumpWidget(buildSubject(bloc, prefsBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Total estimé'), findsOneWidget);
+      // Le libellé nomme la devise du total.
+      expect(find.text('Total estimé (EUR)'), findsOneWidget);
       expect(find.text('Solde disponible'), findsNothing);
       expect(find.byKey(const Key('wallet-estimated-total')), findsOneWidget);
-      expect(find.byKey(const Key('wallet-currency-row-EUR')), findsOneWidget);
-      expect(find.byKey(const Key('wallet-currency-row-XOF')), findsOneWidget);
-      expect(find.text('active'), findsOneWidget);
-      expect(find.textContaining('≈'), findsOneWidget);
+      expect(find.byKey(const Key('wallet-change-link')), findsOneWidget);
+      expect(find.byKey(const Key('wallet-balances-button')), findsOneWidget);
+      // L'argent de chaque devise vit dans la feuille « Mes soldes » : ni
+      // ligne par devise ni carte « Portefeuille actif » sur l'écran.
+      expect(find.byKey(const Key('wallet-currency-row-EUR')), findsNothing);
+      expect(
+        find.byKey(const Key('wallet-active-currency-card')),
+        findsNothing,
+      );
+      expect(find.textContaining('≈'), findsNothing);
       expect(find.text('verrouillé'), findsNothing);
       expect(find.byKey(const Key('wallet-estimate-partial')), findsNothing);
     },
@@ -549,6 +556,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('wallet-estimate-partial')), findsOneWidget);
+    // La devise sans taux se lit dans « Mes soldes », pas sur l'écran.
+    expect(find.text('taux indisponible'), findsNothing);
+    await tester.tap(find.byKey(const Key('wallet-balances-button')));
+    await tester.pumpAndSettle();
     expect(find.text('taux indisponible'), findsOneWidget);
   });
 
@@ -1442,7 +1453,7 @@ void main() {
     });
 
     testWidgets(
-      'recharge mobile money confirmée : bandeau nommant le portefeuille et ligne surlignée',
+      'recharge mobile money confirmée : bandeau nommant le portefeuille',
       (tester) async {
         whenListen(
           bloc,
@@ -1467,7 +1478,6 @@ void main() {
           find.textContaining('sur votre portefeuille Franc CFA Ouest'),
           findsOneWidget,
         );
-        expect(find.byType(TweenAnimationBuilder<double>), findsOneWidget);
         await tester.pumpAndSettle();
       },
     );
@@ -1505,7 +1515,7 @@ void main() {
 
   // ── FLUTTER-8F : choisir le portefeuille actif ─────────────────────────────
 
-  group('portefeuille actif', () {
+  group('devise du total et feuille « Mes soldes »', () {
     const multi = WalletModel(
       balance: 50,
       currency: 'EUR',
@@ -1527,60 +1537,103 @@ void main() {
       initialState: WalletInitial(),
     );
 
-    testWidgets('la carte affiche la devise active', (tester) async {
+    Future<void> openSheet(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('wallet-balances-button')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('le bouton de l\'en-tête ouvre la feuille : une carte par '
+        'devise, solde en grand et dans son format', (tester) async {
       loaded(multi);
       await tester.pumpWidget(buildSubject(bloc, prefsBloc));
       await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('wallet-active-currency-card')),
-        findsOneWidget,
+      await openSheet(tester);
+
+      expect(find.text('Mes soldes'), findsOneWidget);
+      expect(find.text('Mes portefeuilles'), findsOneWidget);
+      for (final code in ['EUR', 'CAD', 'XOF']) {
+        expect(find.byKey(Key('wallet-balance-card-$code')), findsOneWidget);
+      }
+      // Chaque solde dans le format de SA devise.
+      final xof = tester.widget<Text>(
+        find.byKey(const Key('wallet-balance-amount-XOF')),
       );
-      expect(find.text('Portefeuille actif'), findsOneWidget);
-      expect(
-        find.byKey(const Key('wallet-active-currency-name')),
-        findsOneWidget,
-      );
-      expect(find.textContaining('(EUR)'), findsOneWidget);
+      expect(xof.data, CurrencyFormatter.format(10000, SupportedCurrency.xof));
+      expect(find.text('devise du total'), findsOneWidget);
+      expect(find.text('Utiliser pour le total'), findsNWidgets(2));
+      // Les devises sans portefeuille se proposent à l'ajout.
+      expect(find.text('Ajouter un portefeuille'), findsOneWidget);
+      for (final code in ['USD', 'GBP', 'CHF', 'XAF']) {
+        expect(find.byKey(Key('wallet-balances-add-$code')), findsOneWidget);
+      }
     });
 
-    testWidgets('la sheet liste les portefeuilles détenus et ceux à ajouter, '
-        'puis lance le changement', (tester) async {
+    testWidgets('au repos : Fermer dans le pied, aucun bouton plein ni '
+        'avertissement', (tester) async {
+      loaded(multi);
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      await openSheet(tester);
+
+      expect(find.byKey(const Key('wallet-balances-close')), findsOneWidget);
+      expect(find.byKey(const Key('wallet-balances-confirm')), findsNothing);
+      expect(
+        find.byKey(const Key('wallet-balances-change-warning')),
+        findsNothing,
+      );
+      await tester.tap(find.byKey(const Key('wallet-balances-close')));
+      await tester.pumpAndSettle();
+      expect(find.text('Mes soldes'), findsNothing);
+    });
+
+    testWidgets('choisir une autre devise : avertissement, bouton plein, puis '
+        'changement', (tester) async {
       final cubit = idleActiveCurrencyCubit();
       loaded(multi);
       await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, null, cubit));
       await tester.pumpAndSettle();
+      await openSheet(tester);
 
-      await tester.tap(find.byKey(const Key('wallet-active-currency-card')));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Choisir le portefeuille actif'), findsOneWidget);
-      expect(find.text('Mes portefeuilles'), findsOneWidget);
-      for (final code in ['EUR', 'CAD', 'XOF']) {
-        expect(find.byKey(Key('wallet-active-currency-$code')), findsOneWidget);
-      }
-      // Les devises sans portefeuille se proposent à l'ajout.
-      expect(find.text('Ajouter un portefeuille'), findsOneWidget);
-      for (final code in ['USD', 'GBP', 'CHF', 'XAF']) {
-        expect(
-          find.byKey(Key('wallet-active-currency-add-$code')),
-          findsOneWidget,
-        );
-      }
-
-      // Rien de choisi d'autre que l'actif : bouton inactif.
-      final confirm = find.byKey(const Key('wallet-active-currency-confirm'));
-      expect(tester.widget<DonyButton>(confirm).onPressed, isNull);
-
-      final cad = find.byKey(const Key('wallet-active-currency-CAD'));
+      final cad = find.byKey(const Key('wallet-balance-card-CAD'));
       await tester.ensureVisible(cad);
       await tester.tap(cad);
       await tester.pumpAndSettle();
-      expect(tester.widget<DonyButton>(confirm).onPressed, isNotNull);
+
+      // Pas de taux connu pour ce solde : l'avertissement n'invente pas de montant.
+      expect(
+        find.byKey(const Key('wallet-balances-change-warning')),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Le total sera calculé en Dollar canadien'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('wallet-balances-close')), findsNothing);
+      final confirm = find.byKey(const Key('wallet-balances-confirm'));
+      expect(find.text('Calculer le total en Dollar canadien'), findsOneWidget);
       await tester.tap(confirm);
       await tester.pumpAndSettle();
 
       verify(() => cubit.switchTo('CAD')).called(1);
+    });
+
+    testWidgets('l\'avertissement chiffre le nouveau total quand les taux '
+        'sont connus', (tester) async {
+      loaded(walletWithEstimate());
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+      await openSheet(tester);
+
+      final xof = find.byKey(const Key('wallet-balance-card-XOF'));
+      await tester.ensureVisible(xof);
+      await tester.tap(xof);
+      await tester.pumpAndSettle();
+
+      // 16,57 € au total ; 10 000 F CFA valent 15,24 € : environ 10 872 F CFA.
+      expect(find.textContaining('environ 10'), findsOneWidget);
+      expect(find.textContaining('au taux du jour'), findsWidgets);
     });
 
     testWidgets('ajouter une devise sans portefeuille', (tester) async {
@@ -1589,35 +1642,72 @@ void main() {
       await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, null, cubit));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('wallet-active-currency-card')));
-      await tester.pumpAndSettle();
-      final add = find.byKey(const Key('wallet-active-currency-add-USD'));
+      await openSheet(tester);
+      final add = find.byKey(const Key('wallet-balances-add-USD'));
       await tester.ensureVisible(add);
       await tester.tap(add);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wallet-active-currency-confirm')));
+      await tester.tap(find.byKey(const Key('wallet-balances-confirm')));
       await tester.pumpAndSettle();
 
       verify(() => cubit.switchTo('USD')).called(1);
     });
 
-    testWidgets('ancien contrat sans lignes par devise : la sheet s’ouvre '
+    testWidgets('un solde à zéro d\'une autre devise n\'a pas de carte, mais '
+        'se propose à l\'ajout', (tester) async {
+      loaded(
+        const WalletModel(
+          balance: 20,
+          currency: 'EUR',
+          transactions: [],
+          balances: [
+            WalletCurrencyBalanceModel(
+              currency: 'EUR',
+              balance: 20,
+              active: true,
+            ),
+            WalletCurrencyBalanceModel(
+              currency: 'CAD',
+              balance: 0,
+              active: false,
+            ),
+          ],
+        ),
+      );
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      await openSheet(tester);
+
+      expect(find.byKey(const Key('wallet-balance-card-EUR')), findsOneWidget);
+      expect(find.byKey(const Key('wallet-balance-card-CAD')), findsNothing);
+      expect(find.byKey(const Key('wallet-balances-add-CAD')), findsOneWidget);
+    });
+
+    testWidgets('ancien contrat sans lignes par devise : la feuille s’ouvre '
         'quand même', (tester) async {
       loaded(const WalletModel(balance: 0, currency: 'XOF', transactions: []));
       await tester.pumpWidget(buildSubject(bloc, prefsBloc));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('wallet-active-currency-card')));
+      await openSheet(tester);
+
+      expect(find.byKey(const Key('wallet-balance-card-XOF')), findsOneWidget);
+      expect(find.byKey(const Key('wallet-balances-add-EUR')), findsOneWidget);
+    });
+
+    testWidgets('le lien Changer sous le total ouvre la même feuille', (
+      tester,
+    ) async {
+      loaded(walletWithEstimate());
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
       await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('wallet-active-currency-XOF')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('wallet-active-currency-add-EUR')),
-        findsOneWidget,
-      );
+      await tester.tap(find.byKey(const Key('wallet-change-link')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mes soldes'), findsOneWidget);
+      expect(find.byKey(const Key('wallet-balances-total')), findsOneWidget);
     });
 
     testWidgets('succès : snackbar, resynchro des préférences et des soldes', (
@@ -1645,7 +1735,7 @@ void main() {
       ).called(1);
     });
 
-    testWidgets('pendant le changement : indicateur, carte inactive', (
+    testWidgets('pendant le changement : indicateur à la place du bouton', (
       tester,
     ) async {
       final cubit = MockWalletActiveCurrencyCubit();
@@ -1659,10 +1749,14 @@ void main() {
       await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, null, cubit));
       await tester.pump(const Duration(seconds: 1));
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      await tester.tap(find.byKey(const Key('wallet-active-currency-card')));
-      await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text('Choisir le portefeuille actif'), findsNothing);
+      expect(
+        find.byKey(const Key('wallet-balances-switching')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('wallet-balances-button')), findsNothing);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 1));
     });
 
     testWidgets('erreur currency-locked (ancien serveur) affichée', (
@@ -1691,6 +1785,76 @@ void main() {
         findsOneWidget,
       );
       verifyNever(() => prefsBloc.add(const BusinessPrefsSyncRequested()));
+    });
+  });
+
+  group('historique : origine d\'une ligne convertie', () {
+    WalletModel withLine(WalletTransactionModel tx) => WalletModel(
+      balance: 12.4,
+      currency: 'EUR',
+      transactions: [tx],
+      balances: const [
+        WalletCurrencyBalanceModel(
+          currency: 'EUR',
+          balance: 12.4,
+          active: true,
+        ),
+      ],
+    );
+
+    testWidgets('commission prélevée sur un autre portefeuille : « pour '
+        '450 F CFA » sous la ligne', (tester) async {
+      whenListen(
+        bloc,
+        Stream.value(
+          WalletLoaded(
+            withLine(
+              WalletTransactionModel(
+                type: 'COMMISSION_DEDUCTED',
+                amount: -0.69,
+                currency: 'EUR',
+                balanceAfter: 12.4,
+                createdAt: DateTime(2026, 10, 27, 9, 41),
+                sourceCurrency: 'XOF',
+                sourceAmount: 450,
+              ),
+            ),
+          ),
+        ),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('pour 450'), findsOneWidget);
+    });
+
+    testWidgets('ligne non convertie : aucune mention d\'origine', (
+      tester,
+    ) async {
+      whenListen(
+        bloc,
+        Stream.value(
+          WalletLoaded(
+            withLine(
+              WalletTransactionModel(
+                type: 'COMMISSION_DEDUCTED',
+                amount: -1.6,
+                currency: 'EUR',
+                balanceAfter: 10.8,
+                createdAt: DateTime(2026, 10, 27, 9, 41),
+              ),
+            ),
+          ),
+        ),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('pour '), findsNothing);
     });
   });
 }

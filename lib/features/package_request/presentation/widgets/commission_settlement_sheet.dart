@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
+import 'package:dony/features/matching/data/models/commission_funding_detail.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_funding_options.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
@@ -31,6 +32,7 @@ Future<void> showCommissionSettlementSheet(
   CommissionShortfall? breakdown,
   String? bidCurrency,
   List<CommissionFundingAlternative> alternatives = const [],
+  CommissionFundingDetail? fundingDetail,
 }) {
   final cs = Theme.of(context).colorScheme;
   final l = context.l10n;
@@ -47,6 +49,7 @@ Future<void> showCommissionSettlementSheet(
           requiredCommission: requiredCommission,
           availableBalance: availableBalance,
           currency: currency,
+          fundingDetail: fundingDetail,
         ).indexed) ...[
           if (i > 0) const SizedBox(height: 4),
           Text(

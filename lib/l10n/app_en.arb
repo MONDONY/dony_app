@@ -5669,10 +5669,6 @@
   "@connectPendingSubtitle": {
     "description": "Sous-titre de connect_pending_bottom_sheet.dart."
   },
-  "walletActiveCurrencyBadge": "active",
-  "@walletActiveCurrencyBadge": {
-    "description": "Badge de la devise active de l'utilisateur, dans la liste des soldes (wallet_screen.dart _CurrencyBalanceRow). Relevé en E3, corrigé en vague finale E."
-  },
   "chatPreviewPhoto": "📷 Photo",
   "@chatPreviewPhoto": {
     "description": "Affichage traduit du marqueur d'aperçu kChatPreviewPhoto (chat_labels.dart), identique dans les deux langues (voir _sameInBothLanguages)."
@@ -9519,17 +9515,11 @@
   "chatPhotoRateLimited": "You've sent a lot of photos. Please try again in a few minutes.",
   "chatPhotoSendFailed": "The photo couldn't be sent.",
   "chatReportMessageAction": "Report",
-  "walletActiveCurrencyCardLabel": "Active wallet",
-  "walletActiveCurrencyCardHint": "Card top-ups and new listings use this currency",
   "walletActiveCurrencyChange": "Change",
-  "walletActiveCurrencySheetTitle": "Choose the active wallet",
-  "walletActiveCurrencySheetHint": "Each balance stays in its own currency: nothing is converted. The active wallet receives your card top-ups, and your new listings are published in its currency. Shipments already in progress don't change.",
   "walletActiveCurrencyHeldSection": "My wallets",
   "walletActiveCurrencyAddSection": "Add a wallet",
   "walletActiveCurrencyAddTitle": "New {currency} wallet",
   "walletActiveCurrencyAddDetail": "An empty wallet is created in this currency. Your other balances don't move.",
-  "walletActiveCurrencyHeldDetail": "This balance stays in {currency}. It becomes the wallet used for your card top-ups and new listings.",
-  "walletActiveCurrencyConfirm": "Use this wallet",
   "walletActiveCurrencySwitchedSnackbar": "Active wallet: {currency}",
   "errorCurrencyLockedTitle": "Currency change unavailable",
   "errorCurrencyLockedMessage": "Switching the active wallet isn't available yet while your wallet holds money. Please try again a bit later.",
@@ -11239,5 +11229,20 @@
   "amendmentCommissionProcessingSnackbar": "Commission being processed, the change will be confirmed once it clears.",
   "amendmentTravelerCashNoteNoCommission": "Paid in cash by {name} at handover: {amount}.",
   "amendmentDeadlineFormat": "{date} at {time}",
-  "bidDetailMoreOptionsTooltip": "More options"
+  "bidDetailMoreOptionsTooltip": "More options",
+  "walletBalancesButtonTooltip": "My balances",
+  "walletBalancesSheetTitle": "My balances",
+  "walletBalancesSheetHint": "Each balance stays in its own currency: nothing is converted. The total's currency is also the one used for your card top-ups and your new listings. Your ongoing shipments do not change.",
+  "walletBalancesTotalBadge": "total currency",
+  "walletBalancesUseForTotal": "Use for the total",
+  "walletBalancesEquivalent": "≈ {amount} at today's rate",
+  "walletBalancesChangeWarning": "The total will be calculated in {currency}: about {amount} at today's rate. Your balances do not change. Rates can vary from one day to the next.",
+  "walletBalancesChangeWarningNoAmount": "The total will be calculated in {currency}, at today's rate. Your balances do not change. Rates can vary from one day to the next.",
+  "walletBalancesConfirm": "Calculate the total in {currency}",
+  "walletHeroTotalInLabel": "Estimated total ({code})",
+  "walletTxSourceNote": "for {amount}",
+  "walletShortfallAllWallets": "All your wallets together cover {amount}",
+  "walletShortfallStillMissing": "You're still short {missing}",
+  "walletShortfallExcludedFrozen": "The {currency} wallet is not counted: a refund is in progress",
+  "walletShortfallExcludedRate": "The {currency} wallet is not counted: today's rate is unavailable"
 }

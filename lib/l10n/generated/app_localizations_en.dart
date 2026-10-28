@@ -10331,9 +10331,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Come back here after completing the Stripe form in your browser.';
 
   @override
-  String get walletActiveCurrencyBadge => 'active';
-
-  @override
   String get chatPreviewPhoto => '📷 Photo';
 
   @override
@@ -17603,21 +17600,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatReportMessageAction => 'Report';
 
   @override
-  String get walletActiveCurrencyCardLabel => 'Active wallet';
-
-  @override
-  String get walletActiveCurrencyCardHint =>
-      'Card top-ups and new listings use this currency';
-
-  @override
   String get walletActiveCurrencyChange => 'Change';
-
-  @override
-  String get walletActiveCurrencySheetTitle => 'Choose the active wallet';
-
-  @override
-  String get walletActiveCurrencySheetHint =>
-      'Each balance stays in its own currency: nothing is converted. The active wallet receives your card top-ups, and your new listings are published in its currency. Shipments already in progress don\'t change.';
 
   @override
   String get walletActiveCurrencyHeldSection => 'My wallets';
@@ -17633,14 +17616,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get walletActiveCurrencyAddDetail =>
       'An empty wallet is created in this currency. Your other balances don\'t move.';
-
-  @override
-  String walletActiveCurrencyHeldDetail(String currency) {
-    return 'This balance stays in $currency. It becomes the wallet used for your card top-ups and new listings.';
-  }
-
-  @override
-  String get walletActiveCurrencyConfirm => 'Use this wallet';
 
   @override
   String walletActiveCurrencySwitchedSnackbar(String currency) {
@@ -22712,4 +22687,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailMoreOptionsTooltip => 'More options';
+
+  @override
+  String get walletBalancesButtonTooltip => 'My balances';
+
+  @override
+  String get walletBalancesSheetTitle => 'My balances';
+
+  @override
+  String get walletBalancesSheetHint =>
+      'Each balance stays in its own currency: nothing is converted. The total\'s currency is also the one used for your card top-ups and your new listings. Your ongoing shipments do not change.';
+
+  @override
+  String get walletBalancesTotalBadge => 'total currency';
+
+  @override
+  String get walletBalancesUseForTotal => 'Use for the total';
+
+  @override
+  String walletBalancesEquivalent(String amount) {
+    return '≈ $amount at today\'s rate';
+  }
+
+  @override
+  String walletBalancesChangeWarning(String currency, String amount) {
+    return 'The total will be calculated in $currency: about $amount at today\'s rate. Your balances do not change. Rates can vary from one day to the next.';
+  }
+
+  @override
+  String walletBalancesChangeWarningNoAmount(String currency) {
+    return 'The total will be calculated in $currency, at today\'s rate. Your balances do not change. Rates can vary from one day to the next.';
+  }
+
+  @override
+  String walletBalancesConfirm(String currency) {
+    return 'Calculate the total in $currency';
+  }
+
+  @override
+  String walletHeroTotalInLabel(String code) {
+    return 'Estimated total ($code)';
+  }
+
+  @override
+  String walletTxSourceNote(String amount) {
+    return 'for $amount';
+  }
+
+  @override
+  String walletShortfallAllWallets(String amount) {
+    return 'All your wallets together cover $amount';
+  }
+
+  @override
+  String walletShortfallStillMissing(String missing) {
+    return 'You\'re still short $missing';
+  }
+
+  @override
+  String walletShortfallExcludedFrozen(String currency) {
+    return 'The $currency wallet is not counted: a refund is in progress';
+  }
+
+  @override
+  String walletShortfallExcludedRate(String currency) {
+    return 'The $currency wallet is not counted: today\'s rate is unavailable';
+  }
 }

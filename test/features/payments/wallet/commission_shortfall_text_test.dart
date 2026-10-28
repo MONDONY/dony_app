@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/commission_funding_detail.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -98,5 +99,51 @@ void main() {
     for (final l in lines) {
       expect(l.contains('—'), isFalse);
     }
+  });
+
+  test('fundingDetail : total de tous les portefeuilles et manque restant', () {
+    final lines = commissionShortfallLines(
+      fr,
+      breakdown: null,
+      requiredCommission: 1.60,
+      availableBalance: 1.33,
+      currency: 'EUR',
+      fundingDetail: const CommissionFundingDetail(
+        bidCurrency: 'EUR',
+        commission: 10,
+        availableInBid: 7.5,
+        shortfallInBid: 2.5,
+        excluded: {'GBP': CommissionFundingDetail.frozen},
+      ),
+    );
+
+    expect(lines[0], contains('10'));
+    expect(lines[1], startsWith('Tous vos portefeuilles réunis en règlent'));
+    expect(lines[1], contains('7,50'));
+    expect(lines[2], startsWith('Il manque encore'));
+    expect(lines[2], contains('2,50'));
+    expect(lines[3], contains('GBP'));
+    expect(lines[3], contains('remboursement'));
+  });
+
+  test('fundingDetail : portefeuille écarté pour taux indisponible', () {
+    final lines = commissionShortfallLines(
+      fr,
+      breakdown: null,
+      requiredCommission: 1,
+      availableBalance: 0,
+      currency: 'EUR',
+      fundingDetail: const CommissionFundingDetail(
+        bidCurrency: 'EUR',
+        commission: 1,
+        availableInBid: 0,
+        shortfallInBid: 1,
+        excluded: {'USD': CommissionFundingDetail.rateStale},
+      ),
+    );
+
+    expect(lines, hasLength(4));
+    expect(lines[3], contains('USD'));
+    expect(lines[3], contains('taux'));
   });
 }

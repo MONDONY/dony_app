@@ -17,7 +17,7 @@ import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
 import 'package:dony/features/payments/wallet/presentation/wallet_tx_label.dart';
-import 'package:dony/features/payments/wallet/presentation/widgets/wallet_active_currency_sheet.dart';
+import 'package:dony/features/payments/wallet/presentation/widgets/wallet_balances_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_confirm_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_currency_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_selection_sheet.dart';
@@ -215,116 +215,134 @@ class _LoadedView extends StatelessWidget {
         .where((b) => !b.active && b.balance != 0)
         .toList();
 
-    return RefreshIndicator(
-      color: Theme.of(context).colorScheme.primary,
-      onRefresh: () async {
-        final bloc = context.read<WalletBloc>();
-        bloc.add(WalletRefreshRequested());
-        // Attend la fin du rafraîchissement (succès ou erreur) pour masquer
-        // l'indicateur de pull-to-refresh.
-        await bloc.stream.firstWhere(
-          (s) => s is WalletLoaded || s is WalletError,
-        );
-      },
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          // ── Hero SliverAppBar ──────────────────────────────────────────────
-          SliverAppBar(
-            expandedHeight: 236,
-            pinned: true,
-            surfaceTintColor: Colors.transparent,
-            backgroundColor: DonyColors.blue700,
-            leading: const DonyAppBarBackButton(),
-            title: Text(
-              l.walletTitle,
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: DonyColors.neutral0,
-                fontSize: 17,
-              ),
-            ),
-            actions: [
-              IconButton(
-                tooltip: l.walletInfoTooltip,
-                onPressed: () => DonyBottomSheet.show(
-                  context,
-                  title: l.walletInfoTitle,
-                  child: const _WalletInfoContent(),
-                ),
-                icon: const DonyIcon(
-                  'circle-alert',
+    return _ActiveCurrencyListener(
+      child: RefreshIndicator(
+        color: Theme.of(context).colorScheme.primary,
+        onRefresh: () async {
+          final bloc = context.read<WalletBloc>();
+          bloc.add(WalletRefreshRequested());
+          // Attend la fin du rafraîchissement (succès ou erreur) pour masquer
+          // l'indicateur de pull-to-refresh.
+          await bloc.stream.firstWhere(
+            (s) => s is WalletLoaded || s is WalletError,
+          );
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            // ── Hero SliverAppBar ──────────────────────────────────────────────
+            SliverAppBar(
+              expandedHeight: 236,
+              pinned: true,
+              surfaceTintColor: Colors.transparent,
+              backgroundColor: DonyColors.blue700,
+              leading: const DonyAppBarBackButton(),
+              title: Text(
+                l.walletTitle,
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                   color: DonyColors.neutral0,
-                  size: 22,
+                  fontSize: 17,
                 ),
               ),
-              const DonyFeedbackButton(),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.pin,
-              background: _HeroHeader(
-                balance: wallet.balance,
-                currency: activeCurrency,
-                refundEligible: wallet.refundEligible,
-                refundableAmount: wallet.activeBalance?.refundableAmount,
-                nonRefundableAmount: wallet.activeBalance?.nonRefundableAmount,
-                refundFeeAmount: wallet.activeBalance?.refundFeeAmount,
-                refundNetAmount: wallet.activeBalance?.refundNetAmount,
-                estimatedTotal: wallet.estimatedTotal,
-                estimateComplete: wallet.estimateComplete,
-                multiCurrency: wallet.heldBalances.length > 1,
-                eligibleBalances: wallet.eligibleBalances,
-              ),
-            ),
-          ),
-
-          // ── À quoi sert le solde ─────────────────────────────────────────────
-          // Une ligne, toujours visible : des expéditeurs rechargeaient pour
-          // payer un envoi, ce que le portefeuille ne fait pas (FLUTTER-DS).
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.lg,
-                DonySpacing.lg,
-                0,
-              ),
-              child: Text(
-                l.walletPurposeNote,
-                key: const Key('wallet-purpose-note'),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+              actions: [
+                _BalancesButton(wallet: wallet),
+                IconButton(
+                  tooltip: l.walletInfoTooltip,
+                  onPressed: () => DonyBottomSheet.show(
+                    context,
+                    title: l.walletInfoTitle,
+                    child: const _WalletInfoContent(),
+                  ),
+                  icon: const DonyIcon(
+                    'circle-alert',
+                    color: DonyColors.neutral0,
+                    size: 22,
+                  ),
+                ),
+                const DonyFeedbackButton(),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                collapseMode: CollapseMode.pin,
+                background: _HeroHeader(
+                  balance: wallet.balance,
+                  currency: activeCurrency,
+                  refundEligible: wallet.refundEligible,
+                  refundableAmount: wallet.activeBalance?.refundableAmount,
+                  nonRefundableAmount:
+                      wallet.activeBalance?.nonRefundableAmount,
+                  refundFeeAmount: wallet.activeBalance?.refundFeeAmount,
+                  refundNetAmount: wallet.activeBalance?.refundNetAmount,
+                  estimatedTotal: wallet.estimatedTotal,
+                  estimateComplete: wallet.estimateComplete,
+                  multiCurrency: wallet.heldBalances.length > 1,
+                  eligibleBalances: wallet.eligibleBalances,
+                  onChangeCurrency: () =>
+                      unawaited(_openWalletBalances(context, wallet)),
                 ),
               ),
             ),
-          ),
 
-          // ── Portefeuille actif (FLUTTER-8F) ──────────────────────────────────
-          // Passer d'un portefeuille à l'autre sans rien convertir : la devise
-          // active pilote les recharges par carte et les nouvelles annonces.
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.lg,
-                DonySpacing.lg,
-                0,
+            // ── À quoi sert le solde ─────────────────────────────────────────────
+            // Une ligne, toujours visible : des expéditeurs rechargeaient pour
+            // payer un envoi, ce que le portefeuille ne fait pas (FLUTTER-DS).
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  0,
+                ),
+                child: Text(
+                  l.walletPurposeNote,
+                  key: const Key('wallet-purpose-note'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
-              child: _ActiveCurrencyCard(wallet: wallet),
             ),
-          ),
 
-          // ── Bandeau de confirmation d'une recharge mobile money ──────────────
-          SliverToBoxAdapter(
-            child: ValueListenableBuilder<WalletTopupStatusModel?>(
-              valueListenable: topupBanner,
-              builder: (context, status, _) {
-                if (status == null) {
-                  return const SizedBox.shrink();
-                }
-                final topupCurrency = SupportedCurrency.fromCodeOrDefault(
-                  status.currency,
-                );
-                return Padding(
+            // ── Bandeau de confirmation d'une recharge mobile money ──────────────
+            SliverToBoxAdapter(
+              child: ValueListenableBuilder<WalletTopupStatusModel?>(
+                valueListenable: topupBanner,
+                builder: (context, status, _) {
+                  if (status == null) {
+                    return const SizedBox.shrink();
+                  }
+                  final topupCurrency = SupportedCurrency.fromCodeOrDefault(
+                    status.currency,
+                  );
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.lg,
+                      DonySpacing.lg,
+                      DonySpacing.lg,
+                      0,
+                    ),
+                    child: DonyStatusBanner(
+                      type: DonyStatusBannerType.success,
+                      iconAsset: 'circle-check',
+                      message: l.walletTopupConfirmed(
+                        CurrencyFormatter.format(status.amount, topupCurrency),
+                        topupCurrency.name(l),
+                        status.providerLabel,
+                      ),
+                      onDismiss: () => topupBanner.value = null,
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // ── Solde remboursable entièrement absorbé par les frais ────────────
+            // Le bouton « Rembourser » disparaît dans ce cas (net à 0) : sans
+            // un mot, l'utilisateur ne comprend pas pourquoi. On le dit,
+            // plutôt que de masquer en silence.
+            if (_refundFullyAbsorbedByFees(wallet))
+              SliverToBoxAdapter(
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(
                     DonySpacing.lg,
                     DonySpacing.lg,
@@ -332,142 +350,101 @@ class _LoadedView extends StatelessWidget {
                     0,
                   ),
                   child: DonyStatusBanner(
-                    type: DonyStatusBannerType.success,
-                    iconAsset: 'circle-check',
-                    message: l.walletTopupConfirmed(
-                      CurrencyFormatter.format(status.amount, topupCurrency),
-                      topupCurrency.name(l),
-                      status.providerLabel,
-                    ),
-                    onDismiss: () => topupBanner.value = null,
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // ── Solde remboursable entièrement absorbé par les frais ────────────
-          // Le bouton « Rembourser » disparaît dans ce cas (net à 0) : sans
-          // un mot, l'utilisateur ne comprend pas pourquoi. On le dit,
-          // plutôt que de masquer en silence.
-          if (_refundFullyAbsorbedByFees(wallet))
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.lg,
-                  DonySpacing.lg,
-                  DonySpacing.lg,
-                  0,
-                ),
-                child: DonyStatusBanner(
-                  key: const Key('wallet-refund-absorbed-by-fees'),
-                  type: DonyStatusBannerType.info,
-                  iconAsset: 'circle-alert',
-                  message: l.walletRefundAbsorbedByFees,
-                ),
-              ),
-            ),
-
-          // ── Soldes par devise ─────────────────────────────────────────────
-          // Nouveau contrat : toutes les devises détenues, chacune dans sa
-          // devise, avec son équivalent estimé. Ancien contrat : tuiles des
-          // devises non actives comme avant.
-          if (wallet.hasEstimate && wallet.heldBalances.length > 1)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.lg,
-                  DonySpacing.xl,
-                  DonySpacing.lg,
-                  0,
-                ),
-                child: ValueListenableBuilder<WalletTopupStatusModel?>(
-                  valueListenable: topupBanner,
-                  builder: (context, status, _) => _CurrencyBalancesCard(
-                    wallet: wallet,
-                    highlightCurrency: status?.currency,
+                    key: const Key('wallet-refund-absorbed-by-fees'),
+                    type: DonyStatusBannerType.info,
+                    iconAsset: 'circle-alert',
+                    message: l.walletRefundAbsorbedByFees,
                   ),
                 ),
               ),
-            )
-          else if (!wallet.hasEstimate && lockedBalances.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.lg,
-                  DonySpacing.xl,
-                  DonySpacing.lg,
-                  0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final locked in lockedBalances)
-                      _LockedBalanceTile(balance: locked),
-                  ],
-                ),
-              ),
-            ),
 
-          // ── Transactions list ──────────────────────────────────────────────
-          if (transactions.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
+            // ── Ancien contrat back : tuiles des devises non actives ───────────
+            // Avec le nouveau contrat, l'argent de chaque devise vit dans la feuille
+            // « Mes soldes » (bouton de l'en-tête).
+            if (!wallet.hasEstimate && lockedBalances.isNotEmpty)
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.lg,
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.xl,
+                    DonySpacing.lg,
+                    0,
                   ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const DonyMascotteAnimated(
-                        type: DonyMascotteType.assis,
-                        size: DonyMascotteSize.lg,
-                      ),
-                      const SizedBox(height: DonySpacing.base),
-                      Text(
-                        l.walletEmptyTransactions,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+                      for (final locked in lockedBalances)
+                        _LockedBalanceTile(balance: locked),
                     ],
                   ),
                 ),
               ),
-            )
-          else ...[
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.lg,
-                  DonySpacing.xl,
-                  DonySpacing.lg,
-                  DonySpacing.sm,
+
+            // ── Transactions list ──────────────────────────────────────────────
+            if (transactions.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.lg,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const DonyMascotteAnimated(
+                          type: DonyMascotteType.assis,
+                          size: DonyMascotteSize.lg,
+                        ),
+                        const SizedBox(height: DonySpacing.base),
+                        Text(
+                          l.walletEmptyTransactions,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: Text(
-                  l.walletHistorySectionTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    letterSpacing: 0.5,
+              )
+            else ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.xl,
+                    DonySpacing.lg,
+                    DonySpacing.sm,
+                  ),
+                  child: Text(
+                    l.walletHistorySectionTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),
-            ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (ctx, i) => _TxTile(
-                  tx: transactions[i],
-                  currency: activeCurrency,
-                  index: i,
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (ctx, i) => _TxTile(
+                    tx: transactions[i],
+                    currency: activeCurrency,
+                    index: i,
+                  ),
+                  childCount: transactions.length,
                 ),
-                childCount: transactions.length,
               ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: DonySpacing.huge)),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: DonySpacing.huge),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -488,6 +465,7 @@ class _HeroHeader extends StatelessWidget {
     this.estimateComplete = true,
     this.multiCurrency = false,
     required this.eligibleBalances,
+    required this.onChangeCurrency,
   });
 
   final double balance;
@@ -502,6 +480,9 @@ class _HeroHeader extends StatelessWidget {
   /// active ou non. Vide sur l'ancien contrat back : le reste des champs
   /// ci-dessus reprend alors seul.
   final List<WalletCurrencyBalanceModel> eligibleBalances;
+
+  /// Ouvre la feuille « Mes soldes » (lien « Changer » sous le total).
+  final VoidCallback onChangeCurrency;
 
   /// Somme estimée de tous les portefeuilles dans [currency], `null` sur
   /// l'ancien contrat (l'en-tête retombe alors sur « Solde disponible »).
@@ -555,7 +536,7 @@ class _HeroHeader extends StatelessWidget {
               children: [
                 Text(
                   estimatedTotal != null && multiCurrency
-                      ? l.walletEstimatedTotalLabel
+                      ? l.walletHeroTotalInLabel(currency.code)
                       : l.walletAvailableBalanceLabel,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: DonyColors.neutral0.withValues(alpha: 0.75),
@@ -581,10 +562,22 @@ class _HeroHeader extends StatelessWidget {
                     .slideY(begin: 0.1, curve: Curves.easeOutCubic),
                 if (estimatedTotal != null && multiCurrency) ...[
                   const SizedBox(height: 2),
-                  Text(
-                    estimateComplete
-                        ? l.walletEstimateCompleteNote
-                        : l.walletEstimatePartialNote,
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: estimateComplete
+                              ? l.walletEstimateCompleteNote
+                              : l.walletEstimatePartialNote,
+                        ),
+                        const TextSpan(text: ' '),
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.baseline,
+                          baseline: TextBaseline.alphabetic,
+                          child: _ChangeLink(onTap: onChangeCurrency),
+                        ),
+                      ],
+                    ),
                     key: estimateComplete
                         ? null
                         : const Key('wallet-estimate-partial'),
@@ -745,6 +738,145 @@ class _HeroHeader extends StatelessWidget {
   }
 }
 
+// ─── Lien « Changer » sous le total ────────────────────────────────────────────
+
+/// Lien discret sous le total estimé : ouvre « Mes soldes » pour choisir la
+/// devise du total. Zone de toucher agrandie sans gonfler la ligne.
+class _ChangeLink extends StatelessWidget {
+  const _ChangeLink({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = context.l10n.walletActiveCurrencyChange;
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        key: const Key('wallet-change-link'),
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: DonyColors.neutral0,
+            fontWeight: FontWeight.w700,
+            decoration: TextDecoration.underline,
+            decorationColor: DonyColors.neutral0,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bouton de l'en-tête qui ouvre « Mes soldes ». Pendant l'enregistrement d'un
+/// changement de devise du total, il laisse place à un indicateur : le geste
+/// n'est pas relançable (le cubit ignore d'ailleurs un second changement).
+class _BalancesButton extends StatelessWidget {
+  const _BalancesButton({required this.wallet});
+
+  final WalletModel wallet;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<
+      WalletActiveCurrencyCubit,
+      WalletActiveCurrencyState,
+      bool
+    >(
+      selector: (state) => state.isSwitching,
+      builder: (context, switching) {
+        if (switching) {
+          return const SizedBox(
+            key: Key('wallet-balances-switching'),
+            width: kDonyMinTapTarget,
+            height: kDonyMinTapTarget,
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: DonyColors.neutral0,
+                ),
+              ),
+            ),
+          );
+        }
+        return IconButton(
+          key: const Key('wallet-balances-button'),
+          tooltip: context.l10n.walletBalancesButtonTooltip,
+          onPressed: () => unawaited(_openWalletBalances(context, wallet)),
+          icon: const DonyIcon('wallet', color: DonyColors.neutral0, size: 22),
+        );
+      },
+    );
+  }
+}
+
+/// Ouvre « Mes soldes » puis, si une autre devise du total est choisie, la
+/// fait enregistrer : aucun solde n'est converti. Le retour (snackbar,
+/// resynchro des préférences et des soldes) vit dans [_ActiveCurrencyListener].
+Future<void> _openWalletBalances(
+  BuildContext context,
+  WalletModel wallet,
+) async {
+  final cubit = context.read<WalletActiveCurrencyCubit>();
+  if (cubit.state.isSwitching) return;
+  final chosen = await WalletBalancesSheet.show(
+    context,
+    activeCurrency: wallet.currency,
+    balances: wallet.balances,
+    estimatedTotal: wallet.estimatedTotal,
+  );
+  if (chosen == null || !context.mounted) return;
+  unawaited(cubit.switchTo(chosen));
+}
+
+/// Réagit au changement de devise du total : erreur, ou succès (préférences
+/// locales resynchronisées depuis le serveur, soldes rechargés, snackbar).
+class _ActiveCurrencyListener extends StatelessWidget {
+  const _ActiveCurrencyListener({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return BlocListener<WalletActiveCurrencyCubit, WalletActiveCurrencyState>(
+      listenWhen: (previous, current) =>
+          previous.switchCount != current.switchCount ||
+          (current.error != null && previous.error != current.error),
+      listener: (context, state) {
+        final error = state.error;
+        if (error != null) {
+          ErrorPresenter.show(context, error);
+          return;
+        }
+        final switched = SupportedCurrency.fromCodeOrDefault(state.switchedTo);
+        // Les préférences locales (Hive) portent la devise active lue par les
+        // recharges et les créations : on les resynchronise depuis le serveur,
+        // puis on recharge les soldes pour déplacer la pastille.
+        context.read<BusinessPrefsBloc>().add(
+          const BusinessPrefsSyncRequested(),
+        );
+        context.read<WalletBloc>().add(WalletRefreshRequested());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l.walletActiveCurrencySwitchedSnackbar(switched.name(l)),
+            ),
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
 // ─── Hero action button ────────────────────────────────────────────────────────
 
 class _HeroAction extends StatelessWidget {
@@ -887,10 +1019,24 @@ class _TxTile extends StatelessWidget {
                 Text(
                   isRefundProcessing
                       ? l.walletRefundProcessingNote
-                      : DateFormat(
-                          l.walletTxDateTimePattern,
-                          l.localeName,
-                        ).format(tx.createdAt),
+                      : [
+                          DateFormat(
+                            l.walletTxDateTimePattern,
+                            l.localeName,
+                          ).format(tx.createdAt),
+                          // Commission prélevée sur un autre portefeuille que
+                          // celui du colis : le montant d'origine (jamais le
+                          // taux, recalculé sur des montants arrondis).
+                          if (tx.hasSource)
+                            l.walletTxSourceNote(
+                              CurrencyFormatter.format(
+                                tx.sourceAmount!,
+                                SupportedCurrency.fromCodeOrDefault(
+                                  tx.sourceCurrency,
+                                ),
+                              ),
+                            ),
+                        ].join(' · '),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: isRefundProcessing
                         ? cs.warning
@@ -938,151 +1084,6 @@ class _TxTile extends StatelessWidget {
         .animate(delay: (60 * index).ms)
         .fadeIn(duration: 250.ms)
         .slideX(begin: 0.04, curve: Curves.easeOutCubic);
-  }
-}
-
-// ─── Soldes par devise (nouveau contrat) ──────────────────────────────────────
-
-class _CurrencyBalancesCard extends StatelessWidget {
-  const _CurrencyBalancesCard({
-    required this.wallet,
-    required this.highlightCurrency,
-  });
-
-  final WalletModel wallet;
-
-  /// Code devise à mettre en surbrillance brièvement (recharge qui vient
-  /// d'être confirmée), `null` sinon.
-  final String? highlightCurrency;
-
-  List<WalletCurrencyBalanceModel> get _rows {
-    final rows = wallet.heldBalances
-      ..sort((a, b) {
-        if (a.active != b.active) return a.active ? -1 : 1;
-        final byEstimate = (b.estimatedInActive ?? 0).compareTo(
-          a.estimatedInActive ?? 0,
-        );
-        // Tri secondaire par code : List.sort n'est pas stable.
-        return byEstimate != 0 ? byEstimate : a.currency.compareTo(b.currency);
-      });
-    return rows;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final active = SupportedCurrency.fromCodeOrDefault(wallet.currency);
-    return DonyCard(
-      child: Column(
-        children: [
-          for (final (i, row) in _rows.indexed) ...[
-            if (i > 0) const Divider(height: DonySpacing.lg),
-            _CurrencyBalanceRow(
-              key: Key('wallet-currency-row-${row.currency.toUpperCase()}'),
-              balance: row,
-              activeCurrency: active,
-              highlighted:
-                  highlightCurrency != null &&
-                  highlightCurrency!.toUpperCase() ==
-                      row.currency.toUpperCase(),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _CurrencyBalanceRow extends StatelessWidget {
-  const _CurrencyBalanceRow({
-    super.key,
-    required this.balance,
-    required this.activeCurrency,
-    required this.highlighted,
-  });
-
-  final WalletCurrencyBalanceModel balance;
-  final SupportedCurrency activeCurrency;
-  final bool highlighted;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final currency = SupportedCurrency.fromCodeOrDefault(balance.currency);
-    final estimate = balance.estimatedInActive;
-
-    final Widget trailing;
-    if (balance.active) {
-      trailing = Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.xs,
-          vertical: 2,
-        ),
-        decoration: BoxDecoration(
-          color: cs.primaryContainer,
-          borderRadius: BorderRadius.circular(DonyRadius.sm),
-        ),
-        child: Text(
-          context.l10n.walletActiveCurrencyBadge,
-          style: tt.labelSmall?.copyWith(color: cs.onPrimaryContainer),
-        ),
-      );
-    } else if (estimate == null) {
-      trailing = Text(
-        context.l10n.walletRateUnavailable,
-        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-      );
-    } else {
-      trailing = Text(
-        '≈ ${CurrencyFormatter.format(estimate, activeCurrency)}',
-        style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-      );
-    }
-
-    final row = Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                CurrencyFormatter.format(balance.balance, currency),
-                style: tt.titleLarge?.copyWith(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                currency.name(context.l10n),
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-            ],
-          ),
-        ),
-        trailing,
-      ],
-    );
-
-    if (!highlighted || MediaQuery.of(context).disableAnimations) {
-      return row;
-    }
-    // Surbrillance courte de la devise qui vient d'être créditée : le fond
-    // part de blue50 et s'estompe en 1,2 s. Rejouée à chaque nouvelle clé.
-    return TweenAnimationBuilder<double>(
-      key: ValueKey('highlight-${balance.currency}'),
-      tween: Tween(begin: 1, end: 0),
-      duration: 1200.ms,
-      curve: Curves.easeOut,
-      builder: (context, t, child) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: Color.lerp(Colors.transparent, DonyColors.blue50, t),
-          borderRadius: BorderRadius.circular(DonyRadius.sm),
-        ),
-        child: child,
-      ),
-      child: row,
-    );
   }
 }
 
@@ -1265,122 +1266,6 @@ class _WalletInfoRow extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ─── Portefeuille actif (FLUTTER-8F) ──────────────────────────────────────────
-
-class _ActiveCurrencyCard extends StatelessWidget {
-  const _ActiveCurrencyCard({required this.wallet});
-
-  final WalletModel wallet;
-
-  Future<void> _choose(BuildContext context) async {
-    final cubit = context.read<WalletActiveCurrencyCubit>();
-    final chosen = await WalletActiveCurrencySheet.show(
-      context,
-      activeCurrency: wallet.currency,
-      balances: wallet.balances,
-    );
-    if (chosen == null || !context.mounted) return;
-    unawaited(cubit.switchTo(chosen));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final active = SupportedCurrency.fromCodeOrDefault(wallet.currency);
-
-    return BlocConsumer<WalletActiveCurrencyCubit, WalletActiveCurrencyState>(
-      listenWhen: (previous, current) =>
-          previous.switchCount != current.switchCount ||
-          (current.error != null && previous.error != current.error),
-      listener: (context, state) {
-        final error = state.error;
-        if (error != null) {
-          ErrorPresenter.show(context, error);
-          return;
-        }
-        final switched = SupportedCurrency.fromCodeOrDefault(state.switchedTo);
-        // Les préférences locales (Hive) portent la devise active lue par
-        // les recharges et les créations : on les resynchronise depuis le
-        // serveur, puis on recharge les soldes pour déplacer la pastille.
-        context.read<BusinessPrefsBloc>().add(
-          const BusinessPrefsSyncRequested(),
-        );
-        context.read<WalletBloc>().add(WalletRefreshRequested());
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l.walletActiveCurrencySwitchedSnackbar(switched.name(l)),
-            ),
-          ),
-        );
-      },
-      builder: (context, state) => Semantics(
-        button: true,
-        label: '${l.walletActiveCurrencyCardLabel}, ${active.name(l)}',
-        child: DonyCard(
-          key: const Key('wallet-active-currency-card'),
-          onTap: state.isSwitching ? null : () => unawaited(_choose(context)),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                ),
-                child: DonyIcon('wallet', color: cs.primary, size: 20),
-              ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l.walletActiveCurrencyCardLabel,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${active.name(l)} (${active.code})',
-                      key: const Key('wallet-active-currency-name'),
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l.walletActiveCurrencyCardHint,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              if (state.isSwitching)
-                const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              else
-                Text(
-                  l.walletActiveCurrencyChange,
-                  style: tt.labelLarge?.copyWith(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }
