@@ -98,7 +98,7 @@ class PrivacySettingsScreen extends StatelessWidget {
                 SettingsSectionHeader(l.privacySectionWhoCanContact),
                 SettingsFlatGroup(
                   children: [
-                    SettingsToggleRow(
+                    _SettingsToggleRow(
                       emoji: '✅',
                       emojiBackground: const Color(0xFFE8F5EE),
                       title: l.privacyKycOnlyLabel,
@@ -113,7 +113,7 @@ class PrivacySettingsScreen extends StatelessWidget {
                           : (v) => _onContactKycOnlyChanged(context, v),
                     ),
                     const _SettingsRowDivider(),
-                    SettingsToggleRow(
+                    _SettingsToggleRow(
                       emoji: '📵',
                       emojiBackground: const Color(0xFFEAF1FF),
                       title: l.privacyHidePhoneLabel,
@@ -128,7 +128,7 @@ class PrivacySettingsScreen extends StatelessWidget {
                     const _SettingsRowDivider(),
                     // Pays choisi à l'onboarding (Préférences), affiché sur le
                     // profil public seulement si activé (FLUTTER-4H).
-                    SettingsToggleRow(
+                    _SettingsToggleRow(
                       key: const Key('privacy-show-residence-country'),
                       emoji: '🌍',
                       emojiBackground: const Color(0xFFEAF1FF),
@@ -144,7 +144,7 @@ class PrivacySettingsScreen extends StatelessWidget {
                     const _SettingsRowDivider(),
                     // Dernière connexion au jour près sur le profil public
                     // (FLUTTER-4H partie 2), visible par défaut.
-                    SettingsToggleRow(
+                    _SettingsToggleRow(
                       key: const Key('privacy-show-last-seen'),
                       emoji: '🕑',
                       emojiBackground: const Color(0xFFEAF1FF),
@@ -195,9 +195,7 @@ class PrivacySettingsScreen extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── 3 bis. Section "SUIVI DE TRAJET" ──────────────────────
-                SettingsSectionHeader(l.trackingConsentSettingsSection),
-                const TrackingConsentSettingsTile(),
-                const SizedBox(height: DonySpacing.xxl),
+                const TrackingConsentSettingsSection(),
 
                 // ── 4. Section "AMÉLIORATION DE L'APP" ────────────────────
                 SettingsSectionHeader(l.privacySectionAppImprovement),
@@ -327,8 +325,8 @@ class _UnverifiedExposureNotice extends StatelessWidget {
 /// Ligne « icône + titre + description + Switch » des listes groupées de
 /// Confidentialité. Un seul widget pour les trois réglages de l'écran : ils
 /// partageaient jusqu'ici une mise en page recopiée à l'identique.
-class SettingsToggleRow extends StatelessWidget {
-  const SettingsToggleRow({
+class _SettingsToggleRow extends StatelessWidget {
+  const _SettingsToggleRow({
     super.key,
     required this.emoji,
     required this.emojiBackground,
@@ -424,6 +422,31 @@ class _SettingsRowDivider extends StatelessWidget {
 
 // ── Partage de l'avancée du trajet (voyageur) ─────────────────────────────────
 
+/// Section « SUIVI DE TRAJET » : masquée pour un compte dont les rôles sont
+/// connus et sans `TRAVELER` (rôles inconnus : affichée).
+class TrackingConsentSettingsSection extends StatelessWidget {
+  const TrackingConsentSettingsSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TrackingConsentCubit, TrackingConsentState>(
+      bloc: getIt<TrackingConsentCubit>(),
+      buildWhen: (a, b) => a.relevant != b.relevant,
+      builder: (context, state) {
+        if (!state.relevant) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SettingsSectionHeader(context.l10n.trackingConsentSettingsSection),
+            const TrackingConsentSettingsTile(),
+            const SizedBox(height: DonySpacing.xxl),
+          ],
+        );
+      },
+    );
+  }
+}
+
 /// Interrupteur « Partager l'avancée de mes trajets » : reflète la réponse
 /// mémorisée ET l'autorisation de position du système. Activer relance le
 /// parcours de consentement ; désactiver mémorise un refus.
@@ -466,7 +489,7 @@ class _TrackingConsentSettingsTileState
       bloc: _cubit,
       builder: (context, state) => SettingsFlatGroup(
         children: [
-          SettingsToggleRow(
+          _SettingsToggleRow(
             key: const Key('privacy-tracking-consent'),
             emoji: '📍',
             emojiBackground: const Color(0xFFEAF1FF),
@@ -499,7 +522,7 @@ class _AnalyticsConsentCard extends StatelessWidget {
 
         return SettingsFlatGroup(
           children: [
-            SettingsToggleRow(
+            _SettingsToggleRow(
               emoji: '📊',
               emojiBackground: const Color(0xFFEAF1FF),
               title: context.l10n.privacyAnalyticsConsentLabel,

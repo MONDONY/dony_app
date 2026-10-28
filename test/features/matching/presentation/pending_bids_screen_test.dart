@@ -23,6 +23,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/tracking_consent_test_helpers.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -172,6 +173,7 @@ void main() {
   late _MockAnalyticsService analytics;
 
   setUp(() {
+    useTrackingConsent();
     bidBloc = MockBidBloc();
     acceptanceBloc = MockBidAcceptanceBloc();
     analytics = _MockAnalyticsService();

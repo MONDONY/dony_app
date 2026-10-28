@@ -41,6 +41,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/tracking_consent_test_helpers.dart';
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
@@ -110,6 +111,7 @@ void main() {
   late List<String> visited;
 
   setUp(() {
+    useTrackingConsent();
     DonySnackbar.clearDedup();
     bidBloc = _MockBidBloc();
     acceptance = _MockAcceptance();

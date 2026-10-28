@@ -27,6 +27,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
+import '../../../../helpers/tracking_consent_test_helpers.dart';
 
 class _MockTravelerBidsBloc
     extends MockBloc<TravelerBidsEvent, TravelerBidsState>
@@ -186,6 +187,7 @@ void main() {
   });
 
   setUp(() {
+    useTrackingConsent();
     if (!getIt.isRegistered<AnalyticsService>()) {
       final analytics = _MockAnalyticsService();
       when(

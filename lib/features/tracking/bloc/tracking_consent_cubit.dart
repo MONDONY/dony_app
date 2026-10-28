@@ -31,6 +31,7 @@ class TrackingConsentState extends Equatable {
   const TrackingConsentState({
     this.answer = TrackingConsentAnswer.none,
     this.osGranted = false,
+    this.relevant = true,
   });
 
   final TrackingConsentAnswer answer;
@@ -38,11 +39,15 @@ class TrackingConsentState extends Equatable {
   /// Autorisation de position accordée dans le système.
   final bool osGranted;
 
+  /// Faux seulement quand les rôles du compte sont connus et sans
+  /// `TRAVELER` : le réglage n'a alors aucun sens à l'écran.
+  final bool relevant;
+
   /// Partage actif : accepté dans l'app ET autorisé dans le système.
   bool get enabled => answer == TrackingConsentAnswer.granted && osGranted;
 
   @override
-  List<Object?> get props => [answer, osGranted];
+  List<Object?> get props => [answer, osGranted, relevant];
 }
 
 /// Consentement du voyageur au partage de l'avancée de son trajet.
@@ -74,7 +79,25 @@ class TrackingConsentCubit extends Cubit<TrackingConsentState> {
 
   /// Rôles du compte connecté, `null` si inconnus (alimenté par l'app depuis
   /// l'état d'authentification).
-  void updateRoles(List<String>? roles) => _roles = roles;
+  ///
+  /// `null` (déconnexion, profil pas chargé) remet à zéro l'état en mémoire :
+  /// un autre compte sur le même téléphone ne doit pas voir celui du
+  /// précédent (le Hive est vidé à la déconnexion, la tuile relit à l'ouverture).
+  void updateRoles(List<String>? roles) {
+    _roles = roles;
+    if (roles == null) {
+      _asking = false;
+      emit(const TrackingConsentState());
+      return;
+    }
+    emit(
+      TrackingConsentState(
+        answer: state.answer,
+        osGranted: state.osGranted,
+        relevant: roles.contains('TRAVELER'),
+      ),
+    );
+  }
 
   TrackingConsentAnswer _stored() {
     try {
@@ -102,7 +125,13 @@ class TrackingConsentCubit extends Cubit<TrackingConsentState> {
   /// Relit la réponse mémorisée et l'autorisation du système.
   Future<void> refresh() async {
     final os = await _locator.isPermissionGranted();
-    emit(TrackingConsentState(answer: _stored(), osGranted: os));
+    emit(
+      TrackingConsentState(
+        answer: _stored(),
+        osGranted: os,
+        relevant: state.relevant,
+      ),
+    );
   }
 
   /// Point d'entrée unique, appelable depuis l'acceptation d'un colis, le

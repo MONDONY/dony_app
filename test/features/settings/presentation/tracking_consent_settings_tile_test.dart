@@ -102,4 +102,28 @@ void main() {
     expect(sw(tester).value, isFalse);
     expect(find.textContaining('réglages de votre téléphone'), findsOneWidget);
   });
+
+  Future<void> pumpSection(WidgetTester tester) async {
+    await tester.pumpWidget(
+      localizedApp(const Scaffold(body: TrackingConsentSettingsSection())),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('trackingTileHiddenForSenderOnly', (tester) async {
+    getIt<TrackingConsentCubit>().updateRoles(['SENDER']);
+    await pumpSection(tester);
+    expect(find.byKey(const Key('privacy-tracking-consent')), findsNothing);
+  });
+
+  testWidgets('trackingTileShownForTraveler', (tester) async {
+    getIt<TrackingConsentCubit>().updateRoles(['SENDER', 'TRAVELER']);
+    await pumpSection(tester);
+    expect(find.byKey(const Key('privacy-tracking-consent')), findsOneWidget);
+  });
+
+  testWidgets('trackingTileShownWhenRolesUnknown', (tester) async {
+    await pumpSection(tester);
+    expect(find.byKey(const Key('privacy-tracking-consent')), findsOneWidget);
+  });
 }

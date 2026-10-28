@@ -8,6 +8,5 @@ import 'package:flutter/widgets.dart';
 /// bloque rien et n'attend rien : la feuille (au plus une par installation)
 /// s'ouvre par-dessus l'écran courant, et un refus ne change aucun parcours.
 void askTrackingConsentAfterAccept(BuildContext context) {
-  if (!getIt.isRegistered<TrackingConsentCubit>()) return;
   unawaited(getIt<TrackingConsentCubit>().onParcelAccepted(context));
 }

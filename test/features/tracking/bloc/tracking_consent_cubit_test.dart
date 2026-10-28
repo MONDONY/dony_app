@@ -175,4 +175,22 @@ void main() {
     expect(cubit.state.osGranted, isFalse);
     expect(cubit.state.enabled, isFalse);
   });
+
+  test('resetsOnLogout', () async {
+    final cubit = build()..updateRoles(['TRAVELER']);
+    await cubit.ensureAsked(context, source: TrackingConsentSource.depart);
+    expect(cubit.state.enabled, isTrue);
+
+    cubit.updateRoles(null);
+    expect(cubit.state, const TrackingConsentState());
+  });
+
+  test('relevantOnlyWhenRolesUnknownOrTraveler', () {
+    final cubit = build();
+    expect(cubit.state.relevant, isTrue);
+    cubit.updateRoles(['SENDER']);
+    expect(cubit.state.relevant, isFalse);
+    cubit.updateRoles(['SENDER', 'TRAVELER']);
+    expect(cubit.state.relevant, isTrue);
+  });
 }
