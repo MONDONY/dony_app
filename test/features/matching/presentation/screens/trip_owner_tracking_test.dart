@@ -311,6 +311,9 @@ void main() {
 
   group('je pars', () {
     testWidgets('departSendsPositionWhenGranted', (tester) async {
+      when(
+        () => consent.ensureAsked(any(), source: any(named: 'source')),
+      ).thenAnswer((_) async => true);
       await pump(tester, _ann(trackingActive: true, summary: _summary));
       await tester.ensureVisible(find.byKey(departKey));
       await tester.tap(find.byKey(departKey));
@@ -322,6 +325,9 @@ void main() {
     });
 
     testWidgets('departWithoutPositionStillCallsApi', (tester) async {
+      when(
+        () => consent.ensureAsked(any(), source: any(named: 'source')),
+      ).thenAnswer((_) async => true);
       when(
         () => locator.captureCoordinatesIfGranted(),
       ).thenAnswer((_) async => null);
