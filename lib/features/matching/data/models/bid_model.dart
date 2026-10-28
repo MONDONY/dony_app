@@ -6,6 +6,7 @@ import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
+import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'bid_model.g.dart';
@@ -339,6 +340,14 @@ class BidModel {
   /// l'affiche sans jamais l'additionner.
   final BidMoneyBreakdown? moneyBreakdown;
 
+  /// Suivi approximatif du voyageur, servi à l'expéditeur d'un colis porté.
+  /// `null` hors expéditeur, sans colis porté, ou sur un back antérieur.
+  @JsonKey(
+    fromJson: TravelerTrackingModel.fromJsonOrNull,
+    toJson: _travelerTrackingToJson,
+  )
+  final TravelerTrackingModel? travelerTracking;
+
   const BidModel({
     required this.id,
     required this.announcementId,
@@ -426,6 +435,7 @@ class BidModel {
     this.amendmentAllowed = false,
     this.totalWeightKg,
     this.moneyBreakdown,
+    this.travelerTracking,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>
@@ -592,3 +602,6 @@ class BidModel {
       deliveryNoShowStatus == null &&
       hasDeparted;
 }
+
+Map<String, dynamic>? _travelerTrackingToJson(TravelerTrackingModel? t) =>
+    t?.toJson();

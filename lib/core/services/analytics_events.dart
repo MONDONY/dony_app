@@ -1280,4 +1280,14 @@ abstract final class AnalyticsEvents {
 
   /// Entrée GP Pro du menu de l'onglet Moi.
   static const profileMenuGpProOpened = 'profile_menu_gp_pro_opened';
+
+  // ── Suivi approximatif du voyageur ─────────────────────────────────────
+  /// Position envoyée en silence à la reprise de l'app (propriété `source` :
+  /// `resume`). Jamais de coordonnées.
+  static const tripPositionSent = 'trip_position_sent';
+
+  /// Envoi silencieux de la position non fait (propriété `reason` :
+  /// `no_session`, `throttled`, `no_active_trip`, `no_permission`,
+  /// `no_position`).
+  static const tripPositionSkipped = 'trip_position_skipped';
 }

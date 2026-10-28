@@ -3,6 +3,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/mobile_money_network.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -281,6 +282,20 @@ class AnnouncementModel {
   /// l'app retombe alors sur l'heure de l'appareil.
   final String? departureTimezone;
 
+  /// La fenêtre de suivi du trajet est ouverte : l'app peut envoyer la
+  /// position du voyageur à la reprise. Servi par « Mes trajets » ; `false`
+  /// sur un back antérieur.
+  @JsonKey(defaultValue: false)
+  final bool trackingActive;
+
+  /// Colis portés (nombre, kilos, net estimé). Servi au seul voyageur par le
+  /// détail du trajet ; `null` sans colis ou sur un back antérieur.
+  @JsonKey(
+    fromJson: TripParcelsSummary.fromJsonOrNull,
+    toJson: _parcelsSummaryToJson,
+  )
+  final TripParcelsSummary? parcelsSummary;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -337,6 +352,8 @@ class AnnouncementModel {
     this.seriesId,
     this.currencyEditable,
     this.departureTimezone,
+    this.trackingActive = false,
+    this.parcelsSummary,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>
@@ -374,6 +391,9 @@ class AnnouncementModel {
   /// Étape d'un voyage à plusieurs étapes (FLUTTER-4D).
   bool get isTripLeg => tripGroupId != null;
 }
+
+Map<String, dynamic>? _parcelsSummaryToJson(TripParcelsSummary? s) =>
+    s?.toJson();
 
 String? _transportModeToWireOrNull(TransportMode? mode) =>
     mode == null ? null : transportModeToWire(mode);

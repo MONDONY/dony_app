@@ -155,6 +155,9 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
       : BidMoneyBreakdown.fromJson(
           json['moneyBreakdown'] as Map<String, dynamic>,
         ),
+  travelerTracking: TravelerTrackingModel.fromJsonOrNull(
+    json['travelerTracking'],
+  ),
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -250,6 +253,7 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'amendmentAllowed': instance.amendmentAllowed,
   'totalWeightKg': instance.totalWeightKg,
   'moneyBreakdown': instance.moneyBreakdown,
+  'travelerTracking': _travelerTrackingToJson(instance.travelerTracking),
 };
 
 const _$BidPaymentMethodEnumMap = {

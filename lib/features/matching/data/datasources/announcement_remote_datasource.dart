@@ -131,10 +131,15 @@ class AnnouncementRemoteDatasource {
   Future<AnnouncementModel> markTripArrived({
     required String announcementId,
     String? arrivalInstructions,
+    ({double lat, double lon})? position,
   }) async {
     final response = await _apiClient.dio.post(
       '/announcements/$announcementId/mark-arrived',
-      data: {'arrivalInstructions': arrivalInstructions},
+      data: {
+        'arrivalInstructions': arrivalInstructions,
+        if (position != null)
+          'position': {'lat': position.lat, 'lon': position.lon},
+      },
     );
     return AnnouncementModel.fromJson(response.data as Map<String, dynamic>);
   }

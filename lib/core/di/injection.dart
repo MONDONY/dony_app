@@ -316,6 +316,7 @@ import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/data/support_live_events.dart';
 import 'package:dony/features/support/data/support_repository.dart';
 import 'package:dony/features/tracking/bloc/pickup_code_request_cubit.dart';
+import 'package:dony/features/tracking/bloc/position_reporter_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
@@ -324,6 +325,7 @@ import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/tracking_queue_photo_store.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
+import 'package:dony/features/tracking/data/trip_tracking_repository.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/data/datasources/trip_recurrence_datasource.dart';
@@ -1390,6 +1392,22 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Tracking
   getIt.registerLazySingleton<TrackingRepository>(
     () => TrackingRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<TripTrackingRepository>(
+    () => TripTrackingRepository(getIt<ApiClient>()),
+  );
+  // Cycle de vie de l'app (reprise, démarrage à froid) : une seule instance.
+  getIt.registerLazySingleton<PositionReporterCubit>(
+    () => PositionReporterCubit(
+      announcements: getIt<AnnouncementRepository>(),
+      tracking: getIt<TripTrackingRepository>(),
+      locator: const ScanLocator(),
+      analytics: getIt<AnalyticsService>(),
+      hasRealSession: () {
+        final user = FirebaseAuth.instance.currentUser;
+        return user != null && !user.isAnonymous;
+      },
+    ),
   );
   getIt.registerLazySingleton<OfflineSyncService>(
     () => OfflineSyncService(

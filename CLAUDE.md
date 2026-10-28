@@ -383,6 +383,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `trip_owner_detail_opened` | TripOwnerDetailScreen._evaluateViewer — émis quand le viewer est confirmé propriétaire (annonce chargée + auth résolue), une fois par écran (propriété `status`). Un visiteur non propriétaire (deep link d'affiche partagée) est basculé vers la sheet expéditeur sans émettre l'événement |
 | `trip_audience_loaded` | TripAudienceCubit.load — audience du trajet chargée sur l'écran propriétaire (`GET /announcements/{id}/insights`), propriétés `unique_viewers` (personnes distinctes dans l'app) et `share_views` (vues de la page web de l'affiche). Non émis en cas d'échec ou sur un back sans la route |
 | `trip_parcels_viewed` | TripParcelsSection — chargement de la liste des colis embarqués (propriété `count`) |
+| `trip_position_sent` | PositionReporterCubit.onResume — position approximative envoyée en silence à la reprise de l'app (et au démarrage à froid) pour au moins un trajet dont la fenêtre de suivi est ouverte (propriété `source` : `resume`). Jamais de coordonnées |
+| `trip_position_skipped` | PositionReporterCubit.onResume — envoi non fait (propriété `reason` : `no_session`, `throttled`, `no_active_trip`, `no_permission`, `no_position`) |
 | `trip_parcels_filtered` | TripParcelsSection — chip de filtre statut tapée dans « Colis dans le trajet » (propriété `status`, `all` si « Tous ») |
 | `surplus_opened` | AnnouncementBloc._onSurplusOpenRequested() |
 | `bid_submitted` | BidBloc._onCreateRequested() |

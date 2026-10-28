@@ -101,6 +101,44 @@ void main() {
     });
   });
 
+  group('captureCoordinatesIfGranted', () {
+    test('permission non accordée : null, sans jamais la demander', () async {
+      geoAnswers['checkPermission'] = () => 0; // denied
+      expect(await const ScanLocator().captureCoordinatesIfGranted(), isNull);
+      expect(await const ScanLocator().isPermissionGranted(), isFalse);
+      expect(
+        geoCalls.map((c) => c.method),
+        isNot(contains('requestPermission')),
+      );
+    });
+
+    test('permission accordée : relevé frais, sans demande', () async {
+      geoAnswers['checkPermission'] = () => 2; // whileInUse
+      geoAnswers['getCurrentPosition'] = () => position(14.7, -17.4);
+      final p = await const ScanLocator().captureCoordinatesIfGranted();
+      expect(p!.lat, 14.7);
+      expect(await const ScanLocator().isPermissionGranted(), isTrue);
+      expect(
+        geoCalls.map((c) => c.method),
+        isNot(contains('requestPermission')),
+      );
+    });
+
+    test('relevé en échec : dernière position connue', () async {
+      geoAnswers['checkPermission'] = () => 3; // always
+      geoAnswers['getCurrentPosition'] = () =>
+          throw PlatformException(code: 'TIMEOUT');
+      geoAnswers['getLastKnownPosition'] = () => position(48.8, 2.3);
+      final p = await const ScanLocator().captureCoordinatesIfGranted();
+      expect(p!.lat, 48.8);
+    });
+
+    test('plugin absent : null, pas d\'erreur', () async {
+      expect(await const ScanLocator().captureCoordinatesIfGranted(), isNull);
+      expect(await const ScanLocator().isPermissionGranted(), isFalse);
+    });
+  });
+
   group('capture / resolveLabel', () {
     test('ajoute le lieu lisible issu du géocodage inverse', () async {
       geoAnswers['requestPermission'] = () => 2;

@@ -39,29 +39,58 @@ class ScanLocator {
   }
 
   /// Coordonnées seules, sans réseau : relevé frais borné par [fixTimeout],
-  /// sinon dernière position connue, sinon `null`.
+  /// sinon dernière position connue, sinon `null`. Peut afficher la demande
+  /// d'autorisation du système : à réserver aux gestes explicites de
+  /// l'utilisateur (« Je pars », « Je suis arrivé », scan).
   Future<ScanPosition?> captureCoordinates() async {
     try {
       final permission = await Geolocator.requestPermission();
-      if (permission != LocationPermission.always &&
-          permission != LocationPermission.whileInUse) {
-        return null;
-      }
-      Position? position;
-      try {
-        position = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-          ),
-        ).timeout(fixTimeout);
-      } catch (_) {
-        position = await Geolocator.getLastKnownPosition();
-      }
-      if (position == null) return null;
-      return ScanPosition(lat: position.latitude, lon: position.longitude);
+      return await _fix(permission);
     } catch (_) {
       return null;
     }
+  }
+
+  /// Comme [captureCoordinates], mais NE DEMANDE JAMAIS l'autorisation :
+  /// `null` tant qu'elle n'est pas déjà accordée (en cours d'utilisation ou
+  /// toujours). Pour l'envoi silencieux de la position à la reprise de l'app.
+  Future<ScanPosition?> captureCoordinatesIfGranted() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      return await _fix(permission);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// L'autorisation de localisation est-elle déjà accordée ? Ne demande rien.
+  Future<bool> isPermissionGranted() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      return permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<ScanPosition?> _fix(LocationPermission permission) async {
+    if (permission != LocationPermission.always &&
+        permission != LocationPermission.whileInUse) {
+      return null;
+    }
+    Position? position;
+    try {
+      position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      ).timeout(fixTimeout);
+    } catch (_) {
+      position = await Geolocator.getLastKnownPosition();
+    }
+    if (position == null) return null;
+    return ScanPosition(lat: position.latitude, lon: position.longitude);
   }
 
   /// [position] complétée de son lieu lisible ; inchangée si le géocodage
