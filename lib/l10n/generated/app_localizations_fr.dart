@@ -23090,4 +23090,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String travelerTrackingAgoDays(int days) {
     return 'il y a $days j';
   }
+
+  @override
+  String get errorWalletTopupAboveMaxTitle => 'Montant trop élevé';
+
+  @override
+  String get errorWalletTopupAboveMaxMessage =>
+      'Une recharge par carte est limitée à 1 000 €, ou l\'équivalent dans la devise de votre portefeuille. Choisissez un montant plus petit.';
+
+  @override
+  String get errorWalletDisputeHoldTitle => 'Solde bloqué';
+
+  @override
+  String get errorWalletDisputeHoldMessage =>
+      'Une recharge par carte de cette devise fait l\'objet d\'une contestation bancaire. Le solde reste bloqué jusqu\'à la fin de la contestation. Contactez le support.';
+
+  @override
+  String get walletTxTypeTopupDisputed => 'Recharge contestée';
+
+  @override
+  String get walletTxTypeTopupDisputeReversed =>
+      'Contestation close en votre faveur';
 }

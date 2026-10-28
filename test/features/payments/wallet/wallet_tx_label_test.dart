@@ -43,6 +43,19 @@ void main() {
     expect(walletTxLabel(fr, _tx('REFUND')), 'Remboursement');
   });
 
+  test('recharge contestée puis contestation close en notre faveur', () {
+    expect(walletTxLabel(fr, _tx('TOPUP_DISPUTED')), 'Recharge contestée');
+    expect(walletTxLabel(en, _tx('TOPUP_DISPUTED')), 'Disputed top-up');
+    expect(
+      walletTxLabel(fr, _tx('TOPUP_DISPUTE_REVERSED')),
+      'Contestation close en votre faveur',
+    );
+    expect(
+      walletTxLabel(en, _tx('TOPUP_DISPUTE_REVERSED')),
+      'Dispute closed in your favour',
+    );
+  });
+
   test('types connus inchangés', () {
     expect(walletTxLabel(fr, _tx('COMMISSION_DEDUCTED')), 'Frais de service');
     expect(walletTxLabel(fr, _tx('TOP_UP')), 'Recharge');

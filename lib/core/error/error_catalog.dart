@@ -1074,6 +1074,20 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_top_rounded,
     ),
+    // Plafond d'une recharge par carte (WalletTopupOrchestrator, 1 000 € convertis).
+    'wallet-topup-above-max': _Entry(
+      title: (l) => l.errorWalletTopupAboveMaxTitle,
+      message: (l) => l.errorWalletTopupAboveMaxMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.price_change_rounded,
+    ),
+    // Recharge par carte contestée auprès de la banque (WalletDisputeService) : devise gelée.
+    'wallet-dispute-hold': _Entry(
+      title: (l) => l.errorWalletDisputeHoldTitle,
+      message: (l) => l.errorWalletDisputeHoldMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_clock_rounded,
+    ),
     'code-expired': _Entry(
       title: (l) => l.errorCodeExpiredTitle,
       message: (l) => l.errorCodeExpiredMessage,

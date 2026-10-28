@@ -37121,6 +37121,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'il y a {days} j'**
   String travelerTrackingAgoDays(int days);
+
+  /// Titre d'erreur wallet-topup-above-max : recharge par carte au-delà du plafond (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant trop élevé'**
+  String get errorWalletTopupAboveMaxTitle;
+
+  /// Message d'erreur wallet-topup-above-max (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une recharge par carte est limitée à 1 000 €, ou l\'équivalent dans la devise de votre portefeuille. Choisissez un montant plus petit.'**
+  String get errorWalletTopupAboveMaxMessage;
+
+  /// Titre d'erreur wallet-dispute-hold : une recharge par carte de cette devise est contestée auprès de la banque (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde bloqué'**
+  String get errorWalletDisputeHoldTitle;
+
+  /// Message d'erreur wallet-dispute-hold (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une recharge par carte de cette devise fait l\'objet d\'une contestation bancaire. Le solde reste bloqué jusqu\'à la fin de la contestation. Contactez le support.'**
+  String get errorWalletDisputeHoldMessage;
+
+  /// Historique du solde : montant repris parce que la recharge par carte est contestée auprès de la banque (TOPUP_DISPUTED, wallet_tx_label.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharge contestée'**
+  String get walletTxTypeTopupDisputed;
+
+  /// Historique du solde : montant rendu quand la contestation bancaire d'une recharge est close en faveur de Yadony (TOPUP_DISPUTE_REVERSED, wallet_tx_label.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contestation close en votre faveur'**
+  String get walletTxTypeTopupDisputeReversed;
 }
 
 class _AppLocalizationsDelegate

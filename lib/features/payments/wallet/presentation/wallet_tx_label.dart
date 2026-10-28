@@ -28,5 +28,8 @@ String walletTxLabel(AppLocalizations l, WalletTransactionModel tx) =>
       'ADMIN_CREDIT' => l.walletTxTypeAdminCredit, // i18n-ignore
       'ADMIN_DEBIT' => l.walletTxTypeAdminDebit, // i18n-ignore
       'FORFEITED_ON_DELETION' => l.walletTxTypeForfeited, // i18n-ignore
+      'TOPUP_DISPUTED' => l.walletTxTypeTopupDisputed, // i18n-ignore
+      'TOPUP_DISPUTE_REVERSED' => // i18n-ignore
+      l.walletTxTypeTopupDisputeReversed,
       _ => l.walletTxTypeOther,
     };

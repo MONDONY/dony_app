@@ -1804,6 +1804,22 @@ void main() {
     );
   });
 
+  test('wallet-topup-above-max : plafond de la recharge par carte', () {
+    final p = ErrorCatalog.lookup(
+      const ValidationException('x', code: 'wallet-topup-above-max'),
+    );
+    expect(p.title, 'Montant trop élevé');
+    expect(p.message, contains('1 000 €'));
+  });
+
+  test('wallet-dispute-hold : solde bloqué par une contestation bancaire', () {
+    final p = ErrorCatalog.lookup(
+      const ValidationException('x', code: 'wallet-dispute-hold'),
+    );
+    expect(p.title, 'Solde bloqué');
+    expect(p.message, contains('contestation bancaire'));
+  });
+
   test('budget-below-commission-minimum a un titre et un message', () {
     final p = ErrorCatalog.lookup(
       const ValidationException('x', code: 'budget-below-commission-minimum'),
