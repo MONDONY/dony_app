@@ -36989,6 +36989,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.'**
   String get trackingConsentSettingsOpenSystemSnackbar;
+
+  /// Carte de résumé du trajet du voyageur (colis en sa possession).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résumé du trajet'**
+  String get tripSummaryTitle;
+
+  /// Résumé du trajet : nombre de colis scannés.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} colis en votre possession} other{{count} colis en votre possession}}'**
+  String tripSummaryParcels(int count);
+
+  /// Résumé du trajet : total des kilos transportés.
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg transportés'**
+  String tripSummaryWeight(String kg);
+
+  /// Résumé du trajet : net estimé du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gain estimé'**
+  String get tripSummaryEarningsLabel;
+
+  /// Résumé du trajet : précise que le gain est versé après la livraison.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement suit la livraison de chaque colis.'**
+  String get tripSummaryEarningsNote;
+
+  /// Résumé du trajet : ouvre la liste des colis du trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes colis'**
+  String get tripSummaryViewParcels;
+
+  /// Écran du trajet voyageur : confirme le départ (position approximative facultative).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je pars'**
+  String get tripDepartButton;
+
+  /// Confirmation après le bouton « Je pars ».
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est noté, bon voyage !'**
+  String get tripDepartConfirmedSnackbar;
 }
 
 class _AppLocalizationsDelegate

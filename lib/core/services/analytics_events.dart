@@ -1284,6 +1284,7 @@ abstract final class AnalyticsEvents {
   // ── Suivi approximatif du voyageur ─────────────────────────────────────
   /// Position envoyée en silence à la reprise de l'app (propriété `source` :
   /// `resume`). Jamais de coordonnées.
+  static const tripDepartureConfirmed = 'trip_departure_confirmed';
   static const tripPositionSent = 'trip_position_sent';
 
   /// Envoi silencieux de la position non fait (propriété `reason` :

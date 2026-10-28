@@ -14,6 +14,7 @@ import 'package:dony/features/matching/data/models/announcement_search_page.dart
 import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -24,12 +25,19 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   /// Prévient les écrans déjà ouverts qu'un trajet vient d'être marqué
   /// arrivé (FLUTTER-D6). Facultatif : absent dans les tests unitaires.
   final TripArrivalEventsService? _tripArrivalEvents;
+  final ScanLocator? _locator;
+
+  /// Garde-fou au-dessus du délai propre à [ScanLocator] : l'arrivée ne
+  /// attend jamais la position plus longtemps.
+  static const _arrivalCaptureTimeout = Duration(seconds: 10);
 
   AnnouncementBloc(
     this._repository,
     this._analytics, {
     TripArrivalEventsService? tripArrivalEvents,
+    ScanLocator? locator,
   }) : _tripArrivalEvents = tripArrivalEvents,
+       _locator = locator,
        super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
     on<AnnouncementTripCreateRequested>(_onTripCreateRequested);
@@ -591,14 +599,30 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     }
   }
 
+  /// Position approximative jointe à « Arrivé » : jamais de demande de
+  /// permission, jamais bloquante (échec ou délai = pas de position).
+  Future<({double lat, double lon})?> _arrivalPosition() async {
+    final locator = _locator;
+    if (locator == null) return null;
+    try {
+      final p = await locator.captureCoordinatesIfGranted().timeout(
+        _arrivalCaptureTimeout,
+      );
+      return p == null ? null : (lat: p.lat, lon: p.lon);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _onTripMarkArrivedRequested(
     AnnouncementTripMarkArrivedRequested event,
     Emitter<AnnouncementState> emit,
   ) => _runArrivalAction(
     emit,
-    action: () => _repository.markTripArrived(
+    action: () async => _repository.markTripArrived(
       announcementId: event.announcementId,
       arrivalInstructions: event.arrivalInstructions,
+      position: await _arrivalPosition(),
     ),
     onSuccess: (announcement) {
       _tripArrivalEvents?.notifyArrived(event.announcementId);

@@ -11263,5 +11263,13 @@
   "trackingConsentSettingsLabel": "Share my trip progress",
   "trackingConsentSettingsSubtitle": "The sender sees the nearest city and the progress, never the exact position.",
   "trackingConsentSettingsOffSnackbar": "Sharing turned off. Location permission can still be changed in your phone settings.",
-  "trackingConsentSettingsOpenSystemSnackbar": "Location is denied in your phone. Allow it in system settings to turn sharing on."
+  "trackingConsentSettingsOpenSystemSnackbar": "Location is denied in your phone. Allow it in system settings to turn sharing on.",
+  "tripSummaryTitle": "Trip summary",
+  "tripSummaryParcels": "{count, plural, =1{{count} parcel in your possession} other{{count} parcels in your possession}}",
+  "tripSummaryWeight": "{kg} kg carried",
+  "tripSummaryEarningsLabel": "Estimated earnings",
+  "tripSummaryEarningsNote": "Payment follows the delivery of each parcel.",
+  "tripSummaryViewParcels": "View my parcels",
+  "tripDepartButton": "I'm leaving",
+  "tripDepartConfirmedSnackbar": "Noted, have a safe trip!"
 }

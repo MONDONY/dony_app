@@ -22799,5 +22799,21 @@
   "trackingConsentSettingsOffSnackbar": "Partage désactivé. L'autorisation de position reste réglable dans les réglages de votre téléphone.",
   "@trackingConsentSettingsOffSnackbar": {"description": "Message après avoir coupé le partage de l'avancée du trajet."},
   "trackingConsentSettingsOpenSystemSnackbar": "La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.",
-  "@trackingConsentSettingsOpenSystemSnackbar": {"description": "Message avant d'ouvrir les réglages système quand l'autorisation est refusée définitivement."}
+  "@trackingConsentSettingsOpenSystemSnackbar": {"description": "Message avant d'ouvrir les réglages système quand l'autorisation est refusée définitivement."},
+  "tripSummaryTitle": "Résumé du trajet",
+  "@tripSummaryTitle": {"description": "Carte de résumé du trajet du voyageur (colis en sa possession)."},
+  "tripSummaryParcels": "{count, plural, =1{{count} colis en votre possession} other{{count} colis en votre possession}}",
+  "@tripSummaryParcels": {"description": "Résumé du trajet : nombre de colis scannés.", "placeholders": {"count": {"type": "int"}}},
+  "tripSummaryWeight": "{kg} kg transportés",
+  "@tripSummaryWeight": {"description": "Résumé du trajet : total des kilos transportés.", "placeholders": {"kg": {"type": "String"}}},
+  "tripSummaryEarningsLabel": "Gain estimé",
+  "@tripSummaryEarningsLabel": {"description": "Résumé du trajet : net estimé du voyageur."},
+  "tripSummaryEarningsNote": "Le paiement suit la livraison de chaque colis.",
+  "@tripSummaryEarningsNote": {"description": "Résumé du trajet : précise que le gain est versé après la livraison."},
+  "tripSummaryViewParcels": "Voir mes colis",
+  "@tripSummaryViewParcels": {"description": "Résumé du trajet : ouvre la liste des colis du trajet."},
+  "tripDepartButton": "Je pars",
+  "@tripDepartButton": {"description": "Écran du trajet voyageur : confirme le départ (position approximative facultative)."},
+  "tripDepartConfirmedSnackbar": "C'est noté, bon voyage !",
+  "@tripDepartConfirmedSnackbar": {"description": "Confirmation après le bouton « Je pars »."}
 }

@@ -22997,4 +22997,39 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get trackingConsentSettingsOpenSystemSnackbar =>
       'La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.';
+
+  @override
+  String get tripSummaryTitle => 'Résumé du trajet';
+
+  @override
+  String tripSummaryParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis en votre possession',
+      one: '$count colis en votre possession',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripSummaryWeight(String kg) {
+    return '$kg kg transportés';
+  }
+
+  @override
+  String get tripSummaryEarningsLabel => 'Gain estimé';
+
+  @override
+  String get tripSummaryEarningsNote =>
+      'Le paiement suit la livraison de chaque colis.';
+
+  @override
+  String get tripSummaryViewParcels => 'Voir mes colis';
+
+  @override
+  String get tripDepartButton => 'Je pars';
+
+  @override
+  String get tripDepartConfirmedSnackbar => 'C\'est noté, bon voyage !';
 }

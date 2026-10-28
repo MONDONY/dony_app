@@ -322,6 +322,7 @@ import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
+import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/tracking_queue_photo_store.dart';
@@ -625,6 +626,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnnouncementRepository>(),
       getIt<AnalyticsService>(),
       tripArrivalEvents: getIt<TripArrivalEventsService>(),
+      locator: const ScanLocator(),
     ),
   );
   getIt.registerFactory<TripsSummaryCubit>(
@@ -1406,6 +1408,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       locator: const ScanLocator(),
       analytics: getIt<AnalyticsService>(),
       showSheet: TrackingConsentSheet.show,
+    ),
+  );
+  // « Je pars » : un cubit par écran de trajet (paramètre : id du trajet).
+  getIt.registerFactoryParam<TripDepartCubit, String, void>(
+    (announcementId, _) => TripDepartCubit(
+      announcementId: announcementId,
+      tracking: getIt<TripTrackingRepository>(),
+      locator: const ScanLocator(),
+      consent: getIt<TrackingConsentCubit>(),
+      analytics: getIt<AnalyticsService>(),
+      box: () => getIt<HiveService>().userPrefs,
     ),
   );
   // Cycle de vie de l'app (reprise, démarrage à froid) : une seule instance.

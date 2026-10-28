@@ -124,6 +124,10 @@ class HiveService {
   // box à la déconnexion.
   static const String kTrackingConsent = 'tracking_consent'; // String?
 
+  // « Je pars » confirmé depuis cet appareil, par trajet : préfixe + id du
+  // trajet. Le back n'expose pas departedAt. Vidé avec la box à la déconnexion.
+  static const String kTripDepartedPrefix = 'trip_departed_'; // bool
+
   // ── Analytics (consentement RGPD opt-in) ─────────────────────────────────
   // null = pas encore demandé · true = accepté · false = refusé.
   static const String kAnalyticsConsent = 'analytics_consent'; // bool?

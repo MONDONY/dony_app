@@ -22829,4 +22829,39 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get trackingConsentSettingsOpenSystemSnackbar =>
       'Location is denied in your phone. Allow it in system settings to turn sharing on.';
+
+  @override
+  String get tripSummaryTitle => 'Trip summary';
+
+  @override
+  String tripSummaryParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels in your possession',
+      one: '$count parcel in your possession',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripSummaryWeight(String kg) {
+    return '$kg kg carried';
+  }
+
+  @override
+  String get tripSummaryEarningsLabel => 'Estimated earnings';
+
+  @override
+  String get tripSummaryEarningsNote =>
+      'Payment follows the delivery of each parcel.';
+
+  @override
+  String get tripSummaryViewParcels => 'View my parcels';
+
+  @override
+  String get tripDepartButton => 'I\'m leaving';
+
+  @override
+  String get tripDepartConfirmedSnackbar => 'Noted, have a safe trip!';
 }
