@@ -813,6 +813,8 @@ class _NotificationIcon extends StatelessWidget {
       // Même icône que la ligne épinglée « Support Yadony » des conversations.
       'SUPPORT_MESSAGE' => (cs.primary, 'circle-help'),
       'TRIP_IN_PROGRESS' => (cs.primary, 'plane-takeoff'),
+      'TRIP_DEPARTURE_PROMPT' => (cs.primary, 'plane-takeoff'),
+      'TRIP_ARRIVAL_PROMPT' => (cs.primary, 'plane-landing'),
       'RECIPIENT_PARCEL_DEPARTED' => (cs.primary, 'plane-takeoff'),
       'RECIPIENT_PARCEL_ARRIVED' => (cs.primary, 'plane-landing'),
       'RECIPIENT_PICKUP_UPDATED' => (cs.primary, 'map-pin'),

@@ -256,6 +256,17 @@ void main() {
       expect(await iconAssetFor(tester, 'RECIPIENT_PICKUP_UPDATED'), 'map-pin');
     });
 
+    testWidgets('rappels de suivi du voyageur', (tester) async {
+      expect(
+        await iconAssetFor(tester, 'TRIP_DEPARTURE_PROMPT'),
+        'plane-takeoff',
+      );
+      expect(
+        await iconAssetFor(tester, 'TRIP_ARRIVAL_PROMPT'),
+        'plane-landing',
+      );
+    });
+
     testWidgets('destinataire Yadony par invitation (lot 4)', (tester) async {
       expect(await iconAssetFor(tester, 'RECIPIENT_INVITATION'), 'user-plus');
       expect(
