@@ -63,6 +63,7 @@ import 'package:dony/features/settings/data/repositories/privacy_settings_reposi
 import 'package:dony/features/settings/presentation/widgets/language_sync_gate.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/position_reporter_cubit.dart';
+import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -482,11 +483,13 @@ class _DonyAppState extends State<DonyApp> {
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
                   // Rôles connus pour l'envoi de position : sans appel réseau.
-                  getIt<PositionReporterCubit>().updateRoles(switch (state) {
+                  final knownRoles = switch (state) {
                     AuthAuthenticated(:final user) => user.roles,
                     AuthProfileUpdated(:final user) => user.roles,
                     _ => null,
-                  });
+                  };
+                  getIt<PositionReporterCubit>().updateRoles(knownRoles);
+                  getIt<TrackingConsentCubit>().updateRoles(knownRoles);
                   // Appels audio : client Stream connecté pour le compte
                   // courant, déconnecté à la sortie.
                   unawaited(

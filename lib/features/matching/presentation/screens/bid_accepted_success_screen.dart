@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/tracking/presentation/tracking_consent_prompt.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -12,11 +13,27 @@ import 'package:go_router/go_router.dart';
 /// n'avait pas le temps de comprendre ce qui s'était passé (Sentry
 /// FLUTTER-7N). Le CTA ouvre la demande à la place de cet écran (le retour
 /// ramène alors à la liste) ; le bouton fermer revient à l'écran d'origine.
-class BidAcceptedSuccessScreen extends StatelessWidget {
+class BidAcceptedSuccessScreen extends StatefulWidget {
   const BidAcceptedSuccessScreen({super.key, required this.bidId});
 
   /// Demande acceptée, cible du CTA « Voir la demande ».
   final String bidId;
+
+  @override
+  State<BidAcceptedSuccessScreen> createState() =>
+      _BidAcceptedSuccessScreenState();
+}
+
+class _BidAcceptedSuccessScreenState extends State<BidAcceptedSuccessScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Consentement au suivi du trajet, une seule fois par installation : la
+    // feuille s'ouvre par-dessus cet écran, sans retarder ni bloquer rien.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) askTrackingConsentAfterAccept(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +43,7 @@ class BidAcceptedSuccessScreen extends StatelessWidget {
       title: l.bidAcceptedSuccessTitle,
       subtitle: l.bidAcceptedSuccessSubtitle,
       ctaLabel: l.bidAcceptedSuccessCta,
-      onCta: () => context.pushReplacement('/bids/$bidId'),
+      onCta: () => context.pushReplacement('/bids/${widget.bidId}'),
       onClose: () => context.canPop() ? context.pop() : context.go('/home'),
       analyticsContext: 'bid_accepted',
     );

@@ -5,7 +5,7 @@
 
 "NSFaceIDUsageDescription" = "Yadony uses Face ID to unlock the app and confirm your payments, if you turn this protection on.";
 
-"NSLocationWhenInUseUsageDescription" = "Yadony uses your location while you use the app to show trips and parcels near you, find the nearest airport and record where each parcel handover step takes place.";
+"NSLocationWhenInUseUsageDescription" = "Yadony uses your location while you use the app to show trips and parcels near you, find the nearest airport and record where each parcel handover step takes place, and share the approximate city and progress of your trip with the senders of the parcels you carry.";
 
 "NSMicrophoneUsageDescription" = "Yadony uses the microphone for audio calls with the sender, traveler or recipient of a parcel, and to dictate a trip or a parcel request to the AI assistant.";
 

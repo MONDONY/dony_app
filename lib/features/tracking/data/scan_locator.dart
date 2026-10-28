@@ -74,6 +74,37 @@ class ScanLocator {
     }
   }
 
+  /// Affiche la demande d'autorisation du système (une fois par installation
+  /// côté iOS) et rend `true` si la position est accordée. Ne relève aucune
+  /// position : pour le consentement au suivi.
+  Future<bool> requestPermission() async {
+    try {
+      final permission = await Geolocator.requestPermission();
+      return permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Refus définitif : le système n'affichera plus la demande, seuls les
+  /// réglages du téléphone peuvent la lever.
+  Future<bool> isPermanentlyDenied() async {
+    try {
+      return await Geolocator.checkPermission() ==
+          LocationPermission.deniedForever;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Ouvre les réglages de l'application dans le système.
+  Future<void> openSettings() async {
+    try {
+      await Geolocator.openAppSettings();
+    } catch (_) {}
+  }
+
   Future<ScanPosition?> _fix(LocationPermission permission) async {
     if (permission != LocationPermission.always &&
         permission != LocationPermission.whileInUse) {

@@ -36911,6 +36911,84 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Accepter et régler'**
   String get commissionAllocationConfirm;
+
+  /// Titre de la feuille de consentement au suivi de position du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager l\'avancée de votre trajet ?'**
+  String get trackingConsentTitle;
+
+  /// Introduction de la feuille de consentement au suivi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand vous transportez un colis, son expéditeur peut suivre l\'avancée de votre voyage.'**
+  String get trackingConsentIntro;
+
+  /// Point 1 : seule une position approximative est visible.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il voit la ville la plus proche et la progression du trajet, jamais votre position exacte.'**
+  String get trackingConsentPointApproximate;
+
+  /// Point 2 : le refus ne bloque rien.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est facultatif : si vous refusez, rien ne change pour vos colis.'**
+  String get trackingConsentPointOptional;
+
+  /// Point 3 : pas de suivi en arrière-plan.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony n\'utilise votre position que lorsque l\'application est ouverte.'**
+  String get trackingConsentPointWhileUsing;
+
+  /// Rappel : le choix se change dans Réglages, Confidentialité.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pouvez changer d\'avis à tout moment dans les réglages de confidentialité.'**
+  String get trackingConsentChangeLater;
+
+  /// Bouton principal de la feuille de consentement au suivi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autoriser'**
+  String get trackingConsentAccept;
+
+  /// Bouton secondaire de la feuille de consentement au suivi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas maintenant'**
+  String get trackingConsentDecline;
+
+  /// En-tête de la section du réglage de partage du trajet (Confidentialité).
+  ///
+  /// In fr, this message translates to:
+  /// **'SUIVI DE TRAJET'**
+  String get trackingConsentSettingsSection;
+
+  /// Titre de la ligne de réglage du partage de l'avancée du trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager l\'avancée de mes trajets'**
+  String get trackingConsentSettingsLabel;
+
+  /// Sous-titre de la ligne de réglage du partage de l'avancée du trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur voit la ville la plus proche et la progression, jamais la position exacte.'**
+  String get trackingConsentSettingsSubtitle;
+
+  /// Message après avoir coupé le partage de l'avancée du trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partage désactivé. L\'autorisation de position reste réglable dans les réglages de votre téléphone.'**
+  String get trackingConsentSettingsOffSnackbar;
+
+  /// Message avant d'ouvrir les réglages système quand l'autorisation est refusée définitivement.
+  ///
+  /// In fr, this message translates to:
+  /// **'La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.'**
+  String get trackingConsentSettingsOpenSystemSnackbar;
 }
 
 class _AppLocalizationsDelegate

@@ -22949,4 +22949,52 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get commissionAllocationConfirm => 'Accepter et régler';
+
+  @override
+  String get trackingConsentTitle => 'Partager l\'avancée de votre trajet ?';
+
+  @override
+  String get trackingConsentIntro =>
+      'Quand vous transportez un colis, son expéditeur peut suivre l\'avancée de votre voyage.';
+
+  @override
+  String get trackingConsentPointApproximate =>
+      'Il voit la ville la plus proche et la progression du trajet, jamais votre position exacte.';
+
+  @override
+  String get trackingConsentPointOptional =>
+      'C\'est facultatif : si vous refusez, rien ne change pour vos colis.';
+
+  @override
+  String get trackingConsentPointWhileUsing =>
+      'Yadony n\'utilise votre position que lorsque l\'application est ouverte.';
+
+  @override
+  String get trackingConsentChangeLater =>
+      'Vous pouvez changer d\'avis à tout moment dans les réglages de confidentialité.';
+
+  @override
+  String get trackingConsentAccept => 'Autoriser';
+
+  @override
+  String get trackingConsentDecline => 'Pas maintenant';
+
+  @override
+  String get trackingConsentSettingsSection => 'SUIVI DE TRAJET';
+
+  @override
+  String get trackingConsentSettingsLabel =>
+      'Partager l\'avancée de mes trajets';
+
+  @override
+  String get trackingConsentSettingsSubtitle =>
+      'L\'expéditeur voit la ville la plus proche et la progression, jamais la position exacte.';
+
+  @override
+  String get trackingConsentSettingsOffSnackbar =>
+      'Partage désactivé. L\'autorisation de position reste réglable dans les réglages de votre téléphone.';
+
+  @override
+  String get trackingConsentSettingsOpenSystemSnackbar =>
+      'La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.';
 }

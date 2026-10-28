@@ -11250,5 +11250,18 @@
   "commissionAllocationLine": "{wallet} wallet: {amount}",
   "commissionAllocationConverted": "For {covered}, at today's rate: {unit} = {rate}",
   "commissionAllocationNote": "Converted at today's rate, with no margin. Indicative: the actual charge may be lower, never higher.",
-  "commissionAllocationConfirm": "Accept and pay"
+  "commissionAllocationConfirm": "Accept and pay",
+  "trackingConsentTitle": "Share your trip progress?",
+  "trackingConsentIntro": "When you carry a parcel, its sender can follow the progress of your journey.",
+  "trackingConsentPointApproximate": "They see the nearest city and how far along the trip is, never your exact position.",
+  "trackingConsentPointOptional": "It is optional: if you decline, nothing changes for your parcels.",
+  "trackingConsentPointWhileUsing": "Yadony only uses your location while the app is open.",
+  "trackingConsentChangeLater": "You can change your mind at any time in the privacy settings.",
+  "trackingConsentAccept": "Allow",
+  "trackingConsentDecline": "Not now",
+  "trackingConsentSettingsSection": "TRIP TRACKING",
+  "trackingConsentSettingsLabel": "Share my trip progress",
+  "trackingConsentSettingsSubtitle": "The sender sees the nearest city and the progress, never the exact position.",
+  "trackingConsentSettingsOffSnackbar": "Sharing turned off. Location permission can still be changed in your phone settings.",
+  "trackingConsentSettingsOpenSystemSnackbar": "Location is denied in your phone. Allow it in system settings to turn sharing on."
 }

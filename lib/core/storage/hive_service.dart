@@ -119,6 +119,11 @@ class HiveService {
   // donne le sien.
   static const String kAiConsentGranted = 'ai_consent_granted'; // bool
 
+  // Réponse au partage de l'avancée du trajet avec l'expéditeur : 'granted' ou
+  // 'declined', absente tant que la feuille n'a pas été montrée. Vidée avec la
+  // box à la déconnexion.
+  static const String kTrackingConsent = 'tracking_consent'; // String?
+
   // ── Analytics (consentement RGPD opt-in) ─────────────────────────────────
   // null = pas encore demandé · true = accepté · false = refusé.
   static const String kAnalyticsConsent = 'analytics_consent'; // bool?

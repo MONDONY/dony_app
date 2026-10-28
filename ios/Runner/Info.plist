@@ -110,7 +110,7 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>Yadony utilise Face ID pour déverrouiller l'application et confirmer vos paiements, si vous activez cette protection.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Yadony utilise votre position pendant que vous utilisez l'application pour afficher les trajets et colis près de chez vous, trouver l'aéroport le plus proche et enregistrer le lieu de chaque étape de remise d'un colis.</string>
+	<string>Yadony utilise votre position pendant que vous utilisez l'application pour afficher les trajets et colis près de chez vous, trouver l'aéroport le plus proche et enregistrer le lieu de chaque étape de remise d'un colis, et partager la ville approximative et l'avancée de votre trajet avec les expéditeurs des colis que vous transportez.</string>
 	<!-- Appels audio Yadony (Stream Video). -->
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Yadony utilise le micro pour vos appels audio avec l'expéditeur, le voyageur ou le destinataire d'un colis, et pour dicter un trajet ou une demande d'envoi à l'assistant IA.</string>

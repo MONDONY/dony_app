@@ -22782,4 +22782,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commissionAllocationConfirm => 'Accept and pay';
+
+  @override
+  String get trackingConsentTitle => 'Share your trip progress?';
+
+  @override
+  String get trackingConsentIntro =>
+      'When you carry a parcel, its sender can follow the progress of your journey.';
+
+  @override
+  String get trackingConsentPointApproximate =>
+      'They see the nearest city and how far along the trip is, never your exact position.';
+
+  @override
+  String get trackingConsentPointOptional =>
+      'It is optional: if you decline, nothing changes for your parcels.';
+
+  @override
+  String get trackingConsentPointWhileUsing =>
+      'Yadony only uses your location while the app is open.';
+
+  @override
+  String get trackingConsentChangeLater =>
+      'You can change your mind at any time in the privacy settings.';
+
+  @override
+  String get trackingConsentAccept => 'Allow';
+
+  @override
+  String get trackingConsentDecline => 'Not now';
+
+  @override
+  String get trackingConsentSettingsSection => 'TRIP TRACKING';
+
+  @override
+  String get trackingConsentSettingsLabel => 'Share my trip progress';
+
+  @override
+  String get trackingConsentSettingsSubtitle =>
+      'The sender sees the nearest city and the progress, never the exact position.';
+
+  @override
+  String get trackingConsentSettingsOffSnackbar =>
+      'Sharing turned off. Location permission can still be changed in your phone settings.';
+
+  @override
+  String get trackingConsentSettingsOpenSystemSnackbar =>
+      'Location is denied in your phone. Allow it in system settings to turn sharing on.';
 }

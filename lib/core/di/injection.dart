@@ -321,11 +321,13 @@ import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/tracking_queue_photo_store.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/data/trip_tracking_repository.dart';
+import 'package:dony/features/tracking/presentation/widgets/tracking_consent_sheet.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/data/datasources/trip_recurrence_datasource.dart';
@@ -1395,6 +1397,16 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<TripTrackingRepository>(
     () => TripTrackingRepository(getIt<ApiClient>()),
+  );
+  // Consentement au partage de l'avancée du trajet : une seule instance, son
+  // état est lu par l'app et les réglages.
+  getIt.registerLazySingleton<TrackingConsentCubit>(
+    () => TrackingConsentCubit(
+      box: () => getIt<HiveService>().userPrefs,
+      locator: const ScanLocator(),
+      analytics: getIt<AnalyticsService>(),
+      showSheet: TrackingConsentSheet.show,
+    ),
   );
   // Cycle de vie de l'app (reprise, démarrage à froid) : une seule instance.
   getIt.registerLazySingleton<PositionReporterCubit>(

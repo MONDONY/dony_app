@@ -11,6 +11,8 @@ import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/data/models/blocked_user_model.dart';
 import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
 import 'package:dony/features/settings/presentation/screens/privacy_settings_screen.dart';
+import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
+import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,6 +45,8 @@ BlockedUserModel _blocked(String id) => BlockedUserModel(
   displayName: 'Bloqué $id',
   blockedAt: DateTime(2026, 5, 20),
 );
+
+class _MockLocator extends Mock implements ScanLocator {}
 
 class _MockBox extends Mock implements Box<dynamic> {}
 
@@ -88,6 +92,19 @@ void main() {
         final analytics = makeDisabledAnalytics(backend);
         analytics.onConfigured();
         getIt.registerSingleton<AnalyticsService>(analytics);
+      }
+      // Ligne « Partager l'avancée de mes trajets ».
+      if (!getIt.isRegistered<TrackingConsentCubit>()) {
+        final locator = _MockLocator();
+        when(locator.isPermissionGranted).thenAnswer((_) async => false);
+        getIt.registerSingleton<TrackingConsentCubit>(
+          TrackingConsentCubit(
+            box: () => getIt<HiveService>().userPrefs,
+            locator: locator,
+            analytics: getIt<AnalyticsService>(),
+            showSheet: (_) async => false,
+          ),
+        );
       }
       // Carte « Utilisateurs bloqués » : elle résout sa propre instance de BLoC
       // via GetIt, comme en production.

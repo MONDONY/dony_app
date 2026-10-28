@@ -1289,4 +1289,12 @@ abstract final class AnalyticsEvents {
   /// Envoi silencieux de la position non fait (propriété `reason` :
   /// `no_permission` ou `no_position` seulement).
   static const tripPositionSkipped = 'trip_position_skipped';
+
+  /// Feuille de consentement au suivi du trajet affichée (propriété `source` :
+  /// `accepted_parcel` / `trip_screen` / `depart` / `settings`).
+  static const trackingConsentSheetShown = 'tracking_consent_sheet_shown';
+
+  /// Réponse au partage de l'avancée du trajet (propriétés `granted` : bool,
+  /// vrai seulement si la position du système est accordée, et `source`).
+  static const trackingConsentAnswered = 'tracking_consent_answered';
 }
