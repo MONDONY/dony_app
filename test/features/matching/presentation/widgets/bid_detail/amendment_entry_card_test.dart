@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -167,5 +169,17 @@ void main() {
         ),
       ),
     ).called(1);
+  });
+
+  testWidgets('open opens the sheet like the button does', (
+    tester,
+  ) async {
+    await pump(tester, _bid());
+    final context = tester.element(find.byType(AmendmentEntryCard));
+    unawaited(AmendmentEntryCard.open(context, _bid()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Modifier mon colis'), findsOneWidget);
+    verifyNever(() => bidBloc.add(any()));
   });
 }

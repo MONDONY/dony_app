@@ -105,6 +105,7 @@ void main() {
     Locale locale = const Locale('fr'),
     DateTime? now,
     String? bidStatus,
+    bool framed = true,
   }) => MaterialApp(
     theme: AppTheme.light(),
     locale: locale,
@@ -120,6 +121,7 @@ void main() {
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           now: () => now ?? _nowUtc,
+          framed: framed,
         ),
       ),
     ),
@@ -568,6 +570,56 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Près de Lyon'), findsWidgets);
+    });
+  });
+
+  group('framed false', () {
+    testWidgets('framed false renders same content without card frame', (
+      tester,
+    ) async {
+      final tracking = _tracking(
+        history: [TravelerTrackingPoint(city: 'Lyon', at: _nowUtc)],
+      );
+      await tester.pumpWidget(host(tracking, framed: false));
+
+      expect(find.byKey(const Key('traveler-tracking-card')), findsNothing);
+      expect(find.text('Suivi du voyageur'), findsNothing);
+      expect(badge('En route'), findsOneWidget);
+      expect(find.text('Près de Marseille'), findsOneWidget);
+      expect(
+        find.byKey(const Key('traveler-tracking-history-row')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('framed true keeps the card frame and its title', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(_tracking()));
+
+      expect(find.byKey(const Key('traveler-tracking-card')), findsOneWidget);
+      expect(find.text('Suivi du voyageur'), findsOneWidget);
+    });
+
+    testWidgets('framed false hides the timeline text button', (tester) async {
+      await tester.pumpWidget(host(_tracking(), framed: false));
+
+      expect(
+        find.byKey(const Key('traveler-tracking-open-timeline')),
+        findsNothing,
+      );
+      expect(find.text('Voir toutes les étapes et photos'), findsNothing);
+    });
+
+    testWidgets('framed false still counts the card view', (tester) async {
+      await tester.pumpWidget(host(_tracking(), framed: false));
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.travelerTrackingCardViewed,
+          properties: {'status': 'en_route', 'has_history': false},
+        ),
+      ).called(1);
     });
   });
 

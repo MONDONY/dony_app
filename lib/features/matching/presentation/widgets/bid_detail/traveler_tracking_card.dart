@@ -31,9 +31,15 @@ class TravelerTrackingCard extends StatelessWidget {
     this.departureCity,
     this.arrivalCity,
     this.now,
+    this.framed = true,
   });
 
   final TravelerTrackingModel tracking;
+
+  /// `false` : contenu seul, posé dans un bottom sheet qui porte le titre et le
+  /// lien vers la frise (en `stickyBottom`). Pas de cadre, pas de titre de
+  /// carte, pas de bouton « Voir toutes les étapes et photos ».
+  final bool framed;
 
   /// Colis dont la carte lit les étapes (remise, arrivée, photos) pour les
   /// mêler aux villes. Sans elles (lecture impossible), seules les villes
@@ -77,6 +83,7 @@ class TravelerTrackingCard extends StatelessWidget {
       bidStatus: bidStatus,
       loadsEvents: loadsEvents,
       now: (now ?? DateTime.now)(),
+      framed: framed,
     );
     return BlocProvider<TravelerTrackingCardCubit>(
       // `lazy: false` : l'affichage est compté à la création, une seule fois.
@@ -99,6 +106,7 @@ class _CardBody extends StatelessWidget {
     required this.onOpenTimeline,
     required this.now,
     required this.loadsEvents,
+    required this.framed,
     this.bidStatus,
     this.departureCity,
     this.arrivalCity,
@@ -108,6 +116,7 @@ class _CardBody extends StatelessWidget {
   final VoidCallback onOpenTimeline;
   final DateTime now;
   final bool loadsEvents;
+  final bool framed;
   final String? bidStatus;
   final String? departureCity;
   final String? arrivalCity;
@@ -165,95 +174,90 @@ class _CardBody extends StatelessWidget {
       ),
     };
 
-    return Container(
-      key: const Key('traveler-tracking-card'),
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (framed) ...[
           Text(
             l.travelerTrackingTitle,
             style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: DonySpacing.sm),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: _StatusPill(label: badgeLabel, positive: positive),
+        ],
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: _StatusPill(label: badgeLabel, positive: positive),
+        ),
+        if (status == TravelerTrackingStatus.notActivated) ...[
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            l.travelerTrackingNotActivatedHint,
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
-          if (status == TravelerTrackingStatus.notActivated) ...[
-            const SizedBox(height: DonySpacing.sm),
-            Text(
-              l.travelerTrackingNotActivatedHint,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-          if (showPosition && pct != null) ...[
-            const SizedBox(height: DonySpacing.md),
-            _ProgressBar(
-              pct: pct,
-              muted: status == TravelerTrackingStatus.stale,
-              from: departureCity,
-              to: arrivalCity,
-            ),
-          ],
-          if (showPosition && city != null) ...[
-            const SizedBox(height: DonySpacing.md),
-            Row(
-              children: [
-                DonyIcon('map-pin', size: 16, color: cs.onSurfaceVariant),
-                const SizedBox(width: DonySpacing.xs),
-                Expanded(
-                  child: Text(
-                    l.travelerTrackingNearCity(city),
-                    style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                  ),
+        ],
+        if (showPosition && pct != null) ...[
+          const SizedBox(height: DonySpacing.md),
+          _ProgressBar(
+            pct: pct,
+            muted: status == TravelerTrackingStatus.stale,
+            from: departureCity,
+            to: arrivalCity,
+          ),
+        ],
+        if (showPosition && city != null) ...[
+          const SizedBox(height: DonySpacing.md),
+          Row(
+            children: [
+              DonyIcon('map-pin', size: 16, color: cs.onSurfaceVariant),
+              const SizedBox(width: DonySpacing.xs),
+              Expanded(
+                child: Text(
+                  l.travelerTrackingNearCity(city),
+                  style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
-              ],
+              ),
+            ],
+          ),
+        ],
+        if (showPosition &&
+            age != null &&
+            status != TravelerTrackingStatus.stale) ...[
+          const SizedBox(height: DonySpacing.xxs),
+          Text(
+            l.travelerTrackingUpdated(age),
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
-          ],
-          if (showPosition &&
-              age != null &&
-              status != TravelerTrackingStatus.stale) ...[
-            const SizedBox(height: DonySpacing.xxs),
-            Text(
-              l.travelerTrackingUpdated(age),
-              style: tt.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
+          ),
+        ],
+        if (steps != null) ...[
+          const SizedBox(height: DonySpacing.md),
+          for (var i = 0; i < steps.length; i++)
+            JourneyRow(
+              step: steps[i],
+              // Même trait que la frise complète : bleu vers une étape faite
+              // ou une ville, rien après la dernière ligne.
+              connector: i == steps.length - 1 ? null : cs.primary,
             ),
-          ],
-          if (steps != null) ...[
-            const SizedBox(height: DonySpacing.md),
-            for (var i = 0; i < steps.length; i++)
-              JourneyRow(
-                step: steps[i],
-                // Même trait que la frise complète : bleu vers une étape faite
-                // ou une ville, rien après la dernière ligne.
-                connector: i == steps.length - 1 ? null : cs.primary,
-              ),
-          ] else if (points.isNotEmpty) ...[
-            const SizedBox(height: DonySpacing.md),
-            for (var i = 0; i < points.length; i++)
-              _HistoryRow(
-                point: points[i],
-                marker: i == points.length - 1
-                    ? switch (status) {
-                        TravelerTrackingStatus.enRoute => l.travelerTrackingNow,
-                        TravelerTrackingStatus.stale =>
-                          markerAge == null
-                              ? null
-                              : l.travelerTrackingLastPosition(markerAge),
-                        _ => null,
-                      }
-                    : null,
-              ),
-          ],
+        ] else if (points.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.md),
+          for (var i = 0; i < points.length; i++)
+            _HistoryRow(
+              point: points[i],
+              marker: i == points.length - 1
+                  ? switch (status) {
+                      TravelerTrackingStatus.enRoute => l.travelerTrackingNow,
+                      TravelerTrackingStatus.stale =>
+                        markerAge == null
+                            ? null
+                            : l.travelerTrackingLastPosition(markerAge),
+                      _ => null,
+                    }
+                  : null,
+            ),
+        ],
+        if (framed) ...[
           const SizedBox(height: DonySpacing.xs),
           Align(
             alignment: AlignmentDirectional.centerStart,
@@ -274,7 +278,18 @@ class _CardBody extends StatelessWidget {
             ),
           ),
         ],
+      ],
+    );
+    if (!framed) return content;
+    return Container(
+      key: const Key('traveler-tracking-card'),
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
       ),
+      child: content,
     );
   }
 }

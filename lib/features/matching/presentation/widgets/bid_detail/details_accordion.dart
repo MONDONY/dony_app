@@ -44,71 +44,6 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
 
   BidModel get bid => widget.bid;
 
-  String _formatHandoverDate(BuildContext context, DateTime? d) {
-    if (d == null) {
-      return '-';
-    }
-    return DateFormat.yMd(context.l10n.localeName).format(d.toLocal());
-  }
-
-  // fr : garde le motif fixe d'origine ('EEE dd MMM yyyy') — le squelette
-  // yMMMEd rend « mar. 6 oct. 2026 » (sans le zéro de tête du jour) au lieu de
-  // « mar. 06 oct. 2026 ». en : squelette yMMMEd, seule langue concernée par
-  // ce motif jusqu'ici.
-  String _formatDepartureDate(BuildContext context, DateTime? d) {
-    if (d == null) {
-      return '-';
-    }
-    final locale = context.l10n.localeName;
-    if (locale == 'fr') {
-      return DateFormat('EEE dd MMM yyyy', locale).format(d.toLocal());
-    }
-    return DateFormat.yMMMEd(locale).format(d.toLocal());
-  }
-
-  String _formatDateTime(BuildContext context, DateTime d) {
-    final locale = context.l10n.localeName;
-    return '${DateFormat.yMd(locale).format(d.toLocal())} '
-        '${DateFormat.Hm(locale).format(d.toLocal())}';
-  }
-
-  /// Numéro de suivi quand il est servi (expéditeur, ou voyageur après la
-  /// remise), sinon le début de l'identifiant de la demande.
-  String get _reference =>
-      bid.trackingNumber ??
-      bid.id.substring(0, bid.id.length < 8 ? bid.id.length : 8).toUpperCase();
-
-  String get _route {
-    final from = bid.departureCity;
-    final to = bid.arrivalCity;
-    if (from == null && to == null) return '-';
-    return '${from ?? '-'} → ${to ?? '-'}';
-  }
-
-  /// Heure d'arrivée, précédée de sa date quand le trajet arrive un autre
-  /// jour que le départ (FLUTTER-4E).
-  String _arrivalValue(BuildContext context) {
-    final time = _hhmm(bid.arrivalTime!);
-    final date = bid.arrivalDate;
-    if (date == null ||
-        (bid.departureDate != null &&
-            DateUtils.isSameDay(date, bid.departureDate))) {
-      return time;
-    }
-    return context.l10n.tripArrivalOnDateAtTime(
-      DateFormat.MMMEd(context.l10n.localeName).format(date),
-      time,
-    );
-  }
-
-  bool get _hasInstructions =>
-      bid.arrivalInstructions != null &&
-      bid.arrivalInstructions!.trim().isNotEmpty;
-
-  /// « 14:30:00 » (LocalTime du back) → « 14:30 ».
-  static String _hhmm(String time) =>
-      time.length >= 5 ? time.substring(0, 5) : time;
-
   void _toggle() {
     HapticFeedback.lightImpact();
     setState(() => _open = !_open);
@@ -178,173 +113,249 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                       children: [
                         Divider(color: cs.outline, height: 1),
                         const SizedBox(height: DonySpacing.md),
-                        // Section — DEMANDE
-                        _SectionLabel(label: l.bidDetailSectionRequest),
-                        const SizedBox(height: DonySpacing.sm),
-                        InfoRow(
-                          // Numéro de suivi quand il est servi, jamais
-                          // « Référence » : vu des deux côtés, il passait pour
-                          // un code (FLUTTER-J2).
-                          label: bid.trackingNumber != null
-                              ? l.bidDetailTrackingNumberLabel
-                              : l.bidDetailReferenceLabel,
-                          value: _reference,
+                        BidDetailsContent(
+                          bid: bid,
+                          showTrackingLink: widget.showTrackingLink,
                         ),
-                        const SizedBox(height: DonySpacing.sm),
-                        InfoRow(
-                          label: l.bidDetailSentAtLabel,
-                          value: _formatDateTime(context, bid.createdAt),
-                        ),
-                        const SizedBox(height: DonySpacing.sm),
-                        InfoRow(
-                          label: l.bidDetailUpdatedAtLabel,
-                          value: _formatDateTime(context, bid.updatedAt),
-                        ),
-                        const SizedBox(height: DonySpacing.sm),
-                        InfoRow(
-                          label: l.bidDetailPaymentMethodLabel,
-                          value: l.bidDetailPaymentMethodValue(
-                            bid.paymentMethod.name,
-                          ),
-                        ),
-                        if (bid.promoCode != null &&
-                            bid.promoCode!.isNotEmpty) ...[
-                          const SizedBox(height: DonySpacing.sm),
-                          InfoRow(
-                            label: l.bidDetailPromoCodeLabel,
-                            value: bid.promoCode!,
-                          ),
-                        ],
-                        const SizedBox(height: DonySpacing.md),
-                        Divider(color: cs.outline, height: 1),
-                        const SizedBox(height: DonySpacing.md),
-                        // Section — DÉPÔT DU COLIS
-                        _SectionLabel(label: l.bidDetailSectionDropoff),
-                        const SizedBox(height: DonySpacing.sm),
-                        if (bid.handoverAddress != null)
-                          _AddressInfoRow(
-                            key: const Key('details-handover-address'),
-                            label: l.bidDetailLocationLabel,
-                            address: bid.handoverAddress!,
-                          )
-                        else
-                          InfoRow(
-                            label: l.bidDetailLocationLabel,
-                            value: bid.handoverLocation ?? '-',
-                          ),
-                        if (bid.handoverDeadline != null) ...[
-                          const SizedBox(height: DonySpacing.sm),
-                          InfoRow(
-                            label: l.listingDeadlineLabel,
-                            value: _formatHandoverDate(
-                              context,
-                              bid.handoverDeadline,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: DonySpacing.sm),
-                        // « Présence confirmée » n'est pertinent qu'avant la
-                        // remise (phase ACCEPTED). Une fois le colis remis, on
-                        // affiche l'état réel plutôt qu'un trompeur « Non encore ».
-                        InfoRow(
-                          label: kParcelHandedOverStatuses.contains(bid.status)
-                              ? l.bidDetailHandoverStatusLabel
-                              : l.bidDetailPresenceConfirmedLabel,
-                          value: kParcelHandedOverStatuses.contains(bid.status)
-                              ? l.bidDetailParcelHandedOverValue
-                              : (bid.voyageurConfirmed
-                                    ? l.bidDetailYesValue
-                                    : l.bidDetailNotYetValue),
-                        ),
-                        if (bid.deliveryAddress != null ||
-                            _hasInstructions) ...[
-                          const SizedBox(height: DonySpacing.md),
-                          Divider(color: cs.outline, height: 1),
-                          const SizedBox(height: DonySpacing.md),
-                          // Section — RÉCUPÉRATION À L'ARRIVÉE
-                          _SectionLabel(label: l.bidDetailSectionPickup),
-                          if (bid.deliveryAddress != null) ...[
-                            const SizedBox(height: DonySpacing.sm),
-                            _AddressInfoRow(
-                              key: const Key('details-delivery-address'),
-                              label: l.bidDetailLocationLabel,
-                              address: bid.deliveryAddress!,
-                            ),
-                          ],
-                          if (_hasInstructions) ...[
-                            const SizedBox(height: DonySpacing.sm),
-                            InfoRow(
-                              label: l.bidDetailPickupInstructionsLabel,
-                              value: bid.arrivalInstructions!.trim(),
-                            ),
-                          ],
-                        ],
-                        const SizedBox(height: DonySpacing.md),
-                        Divider(color: cs.outline, height: 1),
-                        const SizedBox(height: DonySpacing.md),
-                        // Section — TRAJET
-                        _SectionLabel(label: l.listingHeroTripLabelCaps),
-                        const SizedBox(height: DonySpacing.sm),
-                        InfoRow(label: l.bidDetailRouteLabel, value: _route),
-                        const SizedBox(height: DonySpacing.sm),
-                        InfoRow(
-                          label: l.tripPublishDepartureDateLabel,
-                          value: _formatDepartureDate(
-                            context,
-                            bid.departureDate,
-                          ),
-                        ),
-                        if (bid.departureTime != null &&
-                            bid.departureTime!.isNotEmpty) ...[
-                          const SizedBox(height: DonySpacing.sm),
-                          InfoRow(
-                            label: l.tripPublishDepartureTimeLabel,
-                            value: _hhmm(bid.departureTime!),
-                          ),
-                        ],
-                        if (bid.arrivalTime != null &&
-                            bid.arrivalTime!.isNotEmpty) ...[
-                          const SizedBox(height: DonySpacing.sm),
-                          InfoRow(
-                            label: l.bidDetailArrivalTimeLabel,
-                            value: _arrivalValue(context),
-                          ),
-                        ],
-                        if (bid.senderPricePerKg != null &&
-                            bid.senderPricePerKg! > 0) ...[
-                          const SizedBox(height: DonySpacing.sm),
-                          // Tarif BRUT affiché à l'expéditeur (jamais le net).
-                          InfoRow(
-                            label: l.bidDetailPricePerKgLabel,
-                            value: formatPriceIn(
-                              bid.senderPricePerKg!,
-                              bid.currency,
-                            ),
-                          ),
-                        ],
-                        // Section — LIEN DE SUIVI (conditionnel)
-                        if (widget.showTrackingLink &&
-                            bid.trackingToken != null) ...[
-                          const SizedBox(height: DonySpacing.md),
-                          Divider(color: cs.outline, height: 1),
-                          const SizedBox(height: DonySpacing.md),
-                          _SectionLabel(label: l.bidDetailSectionTrackingLink),
-                          const SizedBox(height: DonySpacing.sm),
-                          _TrackingUrlRow(bid: bid),
-                        ],
-                        const SizedBox(height: DonySpacing.md),
-                        Divider(color: cs.outline, height: 1),
-                        const SizedBox(height: DonySpacing.md),
-                        // Section — RESPONSABILITÉ LÉGALE
-                        _SectionLabel(label: l.bidDetailSectionLegal),
-                        const SizedBox(height: DonySpacing.sm),
-                        _DisclaimerRow(bid: bid),
                       ],
                     ),
                   ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Contenu de « Plus de détails » : tout ce que l'app sait de la demande
+/// (sections détaillées sur [DetailsAccordion]). Public pour être posé tel quel
+/// dans un bottom sheet de la fiche colis expéditeur ; l'accordéon de la vue
+/// voyageur l'utilise pour son corps.
+class BidDetailsContent extends StatelessWidget {
+  const BidDetailsContent({
+    super.key,
+    required this.bid,
+    this.showTrackingLink = true,
+  });
+
+  final BidModel bid;
+  final bool showTrackingLink;
+
+  String _formatHandoverDate(BuildContext context, DateTime? d) {
+    if (d == null) {
+      return '-';
+    }
+    return DateFormat.yMd(context.l10n.localeName).format(d.toLocal());
+  }
+
+  // fr : garde le motif fixe d'origine ('EEE dd MMM yyyy') — le squelette
+  // yMMMEd rend « mar. 6 oct. 2026 » (sans le zéro de tête du jour) au lieu de
+  // « mar. 06 oct. 2026 ». en : squelette yMMMEd, seule langue concernée par
+  // ce motif jusqu'ici.
+  String _formatDepartureDate(BuildContext context, DateTime? d) {
+    if (d == null) {
+      return '-';
+    }
+    final locale = context.l10n.localeName;
+    if (locale == 'fr') {
+      return DateFormat('EEE dd MMM yyyy', locale).format(d.toLocal());
+    }
+    return DateFormat.yMMMEd(locale).format(d.toLocal());
+  }
+
+  String _formatDateTime(BuildContext context, DateTime d) {
+    final locale = context.l10n.localeName;
+    return '${DateFormat.yMd(locale).format(d.toLocal())} '
+        '${DateFormat.Hm(locale).format(d.toLocal())}';
+  }
+
+  /// Numéro de suivi quand il est servi (expéditeur, ou voyageur après la
+  /// remise), sinon le début de l'identifiant de la demande.
+  String get _reference =>
+      bid.trackingNumber ??
+      bid.id.substring(0, bid.id.length < 8 ? bid.id.length : 8).toUpperCase();
+
+  String get _route {
+    final from = bid.departureCity;
+    final to = bid.arrivalCity;
+    if (from == null && to == null) return '-';
+    return '${from ?? '-'} → ${to ?? '-'}';
+  }
+
+  /// Heure d'arrivée, précédée de sa date quand le trajet arrive un autre
+  /// jour que le départ (FLUTTER-4E).
+  String _arrivalValue(BuildContext context) {
+    final time = _hhmm(bid.arrivalTime!);
+    final date = bid.arrivalDate;
+    if (date == null ||
+        (bid.departureDate != null &&
+            DateUtils.isSameDay(date, bid.departureDate))) {
+      return time;
+    }
+    return context.l10n.tripArrivalOnDateAtTime(
+      DateFormat.MMMEd(context.l10n.localeName).format(date),
+      time,
+    );
+  }
+
+  bool get _hasInstructions =>
+      bid.arrivalInstructions != null &&
+      bid.arrivalInstructions!.trim().isNotEmpty;
+
+  /// « 14:30:00 » (LocalTime du back) → « 14:30 ».
+  static String _hhmm(String time) =>
+      time.length >= 5 ? time.substring(0, 5) : time;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section — DEMANDE
+        _SectionLabel(label: l.bidDetailSectionRequest),
+        const SizedBox(height: DonySpacing.sm),
+        InfoRow(
+          // Numéro de suivi quand il est servi, jamais
+          // « Référence » : vu des deux côtés, il passait pour
+          // un code (FLUTTER-J2).
+          label: bid.trackingNumber != null
+              ? l.bidDetailTrackingNumberLabel
+              : l.bidDetailReferenceLabel,
+          value: _reference,
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        InfoRow(
+          label: l.bidDetailSentAtLabel,
+          value: _formatDateTime(context, bid.createdAt),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        InfoRow(
+          label: l.bidDetailUpdatedAtLabel,
+          value: _formatDateTime(context, bid.updatedAt),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        InfoRow(
+          label: l.bidDetailPaymentMethodLabel,
+          value: l.bidDetailPaymentMethodValue(bid.paymentMethod.name),
+        ),
+        if (bid.promoCode != null && bid.promoCode!.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.sm),
+          InfoRow(label: l.bidDetailPromoCodeLabel, value: bid.promoCode!),
+        ],
+        const SizedBox(height: DonySpacing.md),
+        Divider(color: cs.outline, height: 1),
+        const SizedBox(height: DonySpacing.md),
+        // Section — DÉPÔT DU COLIS
+        _SectionLabel(label: l.bidDetailSectionDropoff),
+        const SizedBox(height: DonySpacing.sm),
+        if (bid.handoverAddress != null)
+          _AddressInfoRow(
+            key: const Key('details-handover-address'),
+            label: l.bidDetailLocationLabel,
+            address: bid.handoverAddress!,
+          )
+        else
+          InfoRow(
+            label: l.bidDetailLocationLabel,
+            value: bid.handoverLocation ?? '-',
+          ),
+        if (bid.handoverDeadline != null) ...[
+          const SizedBox(height: DonySpacing.sm),
+          InfoRow(
+            label: l.listingDeadlineLabel,
+            value: _formatHandoverDate(context, bid.handoverDeadline),
+          ),
+        ],
+        const SizedBox(height: DonySpacing.sm),
+        // « Présence confirmée » n'est pertinent qu'avant la
+        // remise (phase ACCEPTED). Une fois le colis remis, on
+        // affiche l'état réel plutôt qu'un trompeur « Non encore ».
+        InfoRow(
+          label: kParcelHandedOverStatuses.contains(bid.status)
+              ? l.bidDetailHandoverStatusLabel
+              : l.bidDetailPresenceConfirmedLabel,
+          value: kParcelHandedOverStatuses.contains(bid.status)
+              ? l.bidDetailParcelHandedOverValue
+              : (bid.voyageurConfirmed
+                    ? l.bidDetailYesValue
+                    : l.bidDetailNotYetValue),
+        ),
+        if (bid.deliveryAddress != null || _hasInstructions) ...[
+          const SizedBox(height: DonySpacing.md),
+          Divider(color: cs.outline, height: 1),
+          const SizedBox(height: DonySpacing.md),
+          // Section — RÉCUPÉRATION À L'ARRIVÉE
+          _SectionLabel(label: l.bidDetailSectionPickup),
+          if (bid.deliveryAddress != null) ...[
+            const SizedBox(height: DonySpacing.sm),
+            _AddressInfoRow(
+              key: const Key('details-delivery-address'),
+              label: l.bidDetailLocationLabel,
+              address: bid.deliveryAddress!,
+            ),
+          ],
+          if (_hasInstructions) ...[
+            const SizedBox(height: DonySpacing.sm),
+            InfoRow(
+              label: l.bidDetailPickupInstructionsLabel,
+              value: bid.arrivalInstructions!.trim(),
+            ),
+          ],
+        ],
+        const SizedBox(height: DonySpacing.md),
+        Divider(color: cs.outline, height: 1),
+        const SizedBox(height: DonySpacing.md),
+        // Section — TRAJET
+        _SectionLabel(label: l.listingHeroTripLabelCaps),
+        const SizedBox(height: DonySpacing.sm),
+        InfoRow(label: l.bidDetailRouteLabel, value: _route),
+        const SizedBox(height: DonySpacing.sm),
+        InfoRow(
+          label: l.tripPublishDepartureDateLabel,
+          value: _formatDepartureDate(context, bid.departureDate),
+        ),
+        if (bid.departureTime != null && bid.departureTime!.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.sm),
+          InfoRow(
+            label: l.tripPublishDepartureTimeLabel,
+            value: _hhmm(bid.departureTime!),
+          ),
+        ],
+        if (bid.arrivalTime != null && bid.arrivalTime!.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.sm),
+          InfoRow(
+            label: l.bidDetailArrivalTimeLabel,
+            value: _arrivalValue(context),
+          ),
+        ],
+        if (bid.senderPricePerKg != null && bid.senderPricePerKg! > 0) ...[
+          const SizedBox(height: DonySpacing.sm),
+          // Tarif BRUT affiché à l'expéditeur (jamais le net).
+          InfoRow(
+            label: l.bidDetailPricePerKgLabel,
+            value: formatPriceIn(bid.senderPricePerKg!, bid.currency),
+          ),
+        ],
+        // Section — LIEN DE SUIVI (conditionnel)
+        if (showTrackingLink && bid.trackingToken != null) ...[
+          const SizedBox(height: DonySpacing.md),
+          Divider(color: cs.outline, height: 1),
+          const SizedBox(height: DonySpacing.md),
+          _SectionLabel(label: l.bidDetailSectionTrackingLink),
+          const SizedBox(height: DonySpacing.sm),
+          _TrackingUrlRow(bid: bid),
+        ],
+        const SizedBox(height: DonySpacing.md),
+        Divider(color: cs.outline, height: 1),
+        const SizedBox(height: DonySpacing.md),
+        // Section — RESPONSABILITÉ LÉGALE
+        _SectionLabel(label: l.bidDetailSectionLegal),
+        const SizedBox(height: DonySpacing.sm),
+        _DisclaimerRow(bid: bid),
+      ],
     );
   }
 }

@@ -23,7 +23,7 @@ class AmendmentEntryCard extends StatelessWidget {
   /// Ouvre la feuille puis relit le colis (`BidBloc` de l'écran, s'il est là)
   /// quand une demande a été envoyée ou n'est plus possible. Aussi appelée par
   /// l'entrée du menu d'options.
-  static Future<void> openSheet(BuildContext context, BidModel bid) async {
+  static Future<void> open(BuildContext context, BidModel bid) async {
     BidBloc? bidBloc;
     try {
       bidBloc = context.read<BidBloc>();
@@ -58,7 +58,7 @@ class AmendmentEntryCard extends StatelessWidget {
             label: l.amendmentEntryButton,
             iconAsset: 'plus',
             variant: DonyButtonVariant.secondary,
-            onPressed: () => unawaited(openSheet(context, bid)),
+            onPressed: () => unawaited(open(context, bid)),
           ),
         ],
       ),

@@ -209,4 +209,58 @@ void main() {
     await ouvrir(tester);
     expect(find.text('Référence'), findsOneWidget);
   });
+
+  testWidgets('BidDetailsContent shows reference and tracking link sections', (
+    tester,
+  ) async {
+    final bid = BidModel(
+      id: 'bid-001',
+      announcementId: 'ann-001',
+      senderId: 'sender-001',
+      status: 'ACCEPTED',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+      trackingNumber: 'DON-E69EDCSG',
+      trackingToken: 'tok-123',
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(child: BidDetailsContent(bid: bid)),
+        ),
+      ),
+    );
+
+    expect(find.text('DON-E69EDCSG'), findsOneWidget);
+    expect(find.text('Numéro de suivi'), findsOneWidget);
+    expect(find.text('LIEN DE SUIVI'), findsOneWidget);
+    expect(find.text('RESPONSABILITÉ LÉGALE'), findsOneWidget);
+    // Pas d'en-tête d'accordéon : le sheet porte le titre.
+    expect(find.text('Plus de détails'), findsNothing);
+  });
+
+  testWidgets('BidDetailsContent hides the tracking link when asked', (
+    tester,
+  ) async {
+    final bid = BidModel(
+      id: 'bid-001',
+      announcementId: 'ann-001',
+      senderId: 'sender-001',
+      status: 'ACCEPTED',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+      trackingToken: 'tok-123',
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: BidDetailsContent(bid: bid, showTrackingLink: false),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('LIEN DE SUIVI'), findsNothing);
+  });
 }

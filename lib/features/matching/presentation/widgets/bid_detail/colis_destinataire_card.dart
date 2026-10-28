@@ -27,10 +27,15 @@ class ColisDestinataireCard extends StatelessWidget {
   /// sert déjà le numéro à `ACCEPTED`.
   final bool isSender;
 
+  /// `false` : contenu seul, posé dans un bottom sheet qui porte le titre.
+  /// Pas de `DetailCard`, pas de titre de carte.
+  final bool framed;
+
   const ColisDestinataireCard({
     super.key,
     required this.bid,
     this.isSender = true,
+    this.framed = true,
   });
 
   String _colisLabel(AppLocalizations l) {
@@ -56,65 +61,61 @@ class ColisDestinataireCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    return DetailCard(
-      title: l.bidDetailParcelRecipientTitle,
-      child: Column(
-        children: [
-          if (bid.photos.isNotEmpty) ...[
-            _PhotoGallery(photos: bid.photos),
-            const SizedBox(height: DonySpacing.md),
-          ],
-          InfoRow(label: l.bidDetailParcelLabel, value: _colisLabel(l)),
-          if (bid.description != null && bid.description!.isNotEmpty) ...[
-            const SizedBox(height: DonySpacing.sm),
-            InfoRow(
-              label: l.bidDetailDescriptionLabel,
-              value: bid.description!,
-            ),
-          ],
+    final content = Column(
+      children: [
+        if (bid.photos.isNotEmpty) ...[
+          _PhotoGallery(photos: bid.photos),
+          const SizedBox(height: DonySpacing.md),
+        ],
+        InfoRow(label: l.bidDetailParcelLabel, value: _colisLabel(l)),
+        if (bid.description != null && bid.description!.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.sm),
-          // Vue voyageur, destinataire en refus (FLUTTER-E8) : ni nom ni
-          // numéro, l'encart propose d'en demander un autre à l'expéditeur.
-          if (!isSender && bid.recipientDeclined) ...[
-            const SizedBox(height: DonySpacing.xs),
-            RecipientDeclinedPanel(bid: bid),
-          ] else ...[
-            InfoRow(
-              label: l.bidDetailRecipientLabel,
-              value: bid.recipientName ?? '-',
-            ),
-          ],
-          if (isSender ||
-              (bidAllowsRecipientContact(bid.status) &&
-                  !bid.recipientDeclined)) ...[
-            const SizedBox(height: DonySpacing.sm),
-            InfoRow(
-              label: l.bidDetailPhoneLabel,
-              value: bid.recipientPhoneHidden
-                  ? l.recipientPhoneHiddenLabel
-                  : bid.recipientPhone ?? '-',
-            ),
-          ],
-          // Jusqu'à la remise, l'expéditeur peut changer de destinataire.
-          if (isSender && bid.canChangeRecipient)
-            Align(
-              alignment: Alignment.centerRight,
-              child: Tooltip(
-                message: l.recipientChangeEditTooltip,
-                child: TextButton.icon(
-                  onPressed: () => openRecipientChangeSheet(context, bid),
-                  icon: DonyIcon(
-                    'square-pen',
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  label: Text(l.commonEdit),
+          InfoRow(label: l.bidDetailDescriptionLabel, value: bid.description!),
+        ],
+        const SizedBox(height: DonySpacing.sm),
+        // Vue voyageur, destinataire en refus (FLUTTER-E8) : ni nom ni
+        // numéro, l'encart propose d'en demander un autre à l'expéditeur.
+        if (!isSender && bid.recipientDeclined) ...[
+          const SizedBox(height: DonySpacing.xs),
+          RecipientDeclinedPanel(bid: bid),
+        ] else ...[
+          InfoRow(
+            label: l.bidDetailRecipientLabel,
+            value: bid.recipientName ?? '-',
+          ),
+        ],
+        if (isSender ||
+            (bidAllowsRecipientContact(bid.status) &&
+                !bid.recipientDeclined)) ...[
+          const SizedBox(height: DonySpacing.sm),
+          InfoRow(
+            label: l.bidDetailPhoneLabel,
+            value: bid.recipientPhoneHidden
+                ? l.recipientPhoneHiddenLabel
+                : bid.recipientPhone ?? '-',
+          ),
+        ],
+        // Jusqu'à la remise, l'expéditeur peut changer de destinataire.
+        if (isSender && bid.canChangeRecipient)
+          Align(
+            alignment: Alignment.centerRight,
+            child: Tooltip(
+              message: l.recipientChangeEditTooltip,
+              child: TextButton.icon(
+                onPressed: () => openRecipientChangeSheet(context, bid),
+                icon: DonyIcon(
+                  'square-pen',
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
+                label: Text(l.commonEdit),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
+    if (!framed) return content;
+    return DetailCard(title: l.bidDetailParcelRecipientTitle, child: content);
   }
 }
 

@@ -37,9 +37,13 @@ const _kVisibleStatuses = <String>{
 /// le colis n'est pas chez le voyageur, puis le lieu où le destinataire le
 /// récupère.
 class ParcelLocationsCard extends StatelessWidget {
-  const ParcelLocationsCard({super.key, required this.bid});
+  const ParcelLocationsCard({super.key, required this.bid, this.framed = true});
 
   final BidModel bid;
+
+  /// `false` : contenu seul (carte et adresses), posé dans un bottom sheet qui
+  /// porte le titre. Pas de cadre.
+  final bool framed;
 
   static bool shouldShow(BidModel bid) =>
       _kVisibleStatuses.contains(bid.status) &&
@@ -65,6 +69,63 @@ class ParcelLocationsCard extends StatelessWidget {
       foreground: Colors.white,
     );
 
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (mapped != null)
+          AddressPointMiniMap(
+            address: mapped,
+            markerHue: showDelivery
+                ? BitmapDescriptor.hueOrange
+                : BitmapDescriptor.hueAzure,
+          ),
+        if (handover != null)
+          AddressLocationRow(
+            key: const Key('parcel-location-handover'),
+            iconAsset: handedOver ? 'check' : 'upload',
+            iconColor: handedOver ? cs.success : cs.primary,
+            iconBackground: handedOver
+                ? cs.success.withValues(alpha: 0.12)
+                : cs.primaryContainer,
+            title: l.listingPickupParcelTitle,
+            address: handover,
+            dimmed: handedOver,
+            pill: handedOver
+                ? AddressStepPill(
+                    label: l.parcelLocationsHandedOver,
+                    background: cs.success.withValues(alpha: 0.12),
+                    foreground: cs.success,
+                  )
+                : currentPill,
+          ),
+        if (handover != null && delivery != null)
+          Divider(height: 1, color: cs.surfaceContainerHighest),
+        if (delivery != null)
+          AddressLocationRow(
+            key: const Key('parcel-location-delivery'),
+            iconAsset: 'download',
+            iconColor: DonyColors.accent,
+            iconBackground: DonyColors.accentSoft,
+            title: l.listingDeliveryPickupTitle,
+            address: delivery,
+            dimmed: !showDelivery,
+            pill: delivered
+                ? AddressStepPill(
+                    label: l.parcelLocationsDelivered,
+                    background: cs.success.withValues(alpha: 0.12),
+                    foreground: cs.success,
+                  )
+                : showDelivery
+                ? currentPill
+                : AddressStepPill(
+                    label: l.parcelLocationsOnArrival,
+                    background: cs.surfaceContainerHighest,
+                    foreground: cs.onSurfaceVariant,
+                  ),
+          ),
+      ],
+    );
+    if (!framed) return content;
     return Container(
       key: const Key('parcel-locations-card'),
       decoration: BoxDecoration(
@@ -73,62 +134,7 @@ class ParcelLocationsCard extends StatelessWidget {
         border: Border.all(color: cs.outline),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (mapped != null)
-            AddressPointMiniMap(
-              address: mapped,
-              markerHue: showDelivery
-                  ? BitmapDescriptor.hueOrange
-                  : BitmapDescriptor.hueAzure,
-            ),
-          if (handover != null)
-            AddressLocationRow(
-              key: const Key('parcel-location-handover'),
-              iconAsset: handedOver ? 'check' : 'upload',
-              iconColor: handedOver ? cs.success : cs.primary,
-              iconBackground: handedOver
-                  ? cs.success.withValues(alpha: 0.12)
-                  : cs.primaryContainer,
-              title: l.listingPickupParcelTitle,
-              address: handover,
-              dimmed: handedOver,
-              pill: handedOver
-                  ? AddressStepPill(
-                      label: l.parcelLocationsHandedOver,
-                      background: cs.success.withValues(alpha: 0.12),
-                      foreground: cs.success,
-                    )
-                  : currentPill,
-            ),
-          if (handover != null && delivery != null)
-            Divider(height: 1, color: cs.surfaceContainerHighest),
-          if (delivery != null)
-            AddressLocationRow(
-              key: const Key('parcel-location-delivery'),
-              iconAsset: 'download',
-              iconColor: DonyColors.accent,
-              iconBackground: DonyColors.accentSoft,
-              title: l.listingDeliveryPickupTitle,
-              address: delivery,
-              dimmed: !showDelivery,
-              pill: delivered
-                  ? AddressStepPill(
-                      label: l.parcelLocationsDelivered,
-                      background: cs.success.withValues(alpha: 0.12),
-                      foreground: cs.success,
-                    )
-                  : showDelivery
-                  ? currentPill
-                  : AddressStepPill(
-                      label: l.parcelLocationsOnArrival,
-                      background: cs.surfaceContainerHighest,
-                      foreground: cs.onSurfaceVariant,
-                    ),
-            ),
-        ],
-      ),
+      child: content,
     );
   }
 }

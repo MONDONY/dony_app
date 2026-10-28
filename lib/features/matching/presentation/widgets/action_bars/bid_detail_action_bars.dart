@@ -699,7 +699,7 @@ class _SenderOptionsSheet extends StatelessWidget {
                 subtitle: l.amendmentEntryButton,
                 onTap: () {
                   context.pop();
-                  unawaited(AmendmentEntryCard.openSheet(outerContext, bid));
+                  unawaited(AmendmentEntryCard.open(outerContext, bid));
                 },
               ),
               const SizedBox(height: DonySpacing.sm),
