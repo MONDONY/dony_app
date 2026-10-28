@@ -136,6 +136,9 @@ void main() {
       () => consent.ensureAsked(any(), source: any(named: 'source')),
     ).thenAnswer((_) async => false);
     when(
+      () => locator.lastKnownCoordinatesIfGranted(),
+    ).thenAnswer((_) async => null);
+    when(
       () => locator.captureCoordinatesIfGranted(),
     ).thenAnswer((_) async => const ScanPosition(lat: 48.85, lon: 2.35));
     when(

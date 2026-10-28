@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -35,6 +37,9 @@ void main() {
   setUp(() {
     repo = _MockRepo();
     locator = _MockLocator();
+    when(
+      () => locator.lastKnownCoordinatesIfGranted(),
+    ).thenAnswer((_) async => null);
   });
 
   Future<AnnouncementBloc> build() async {
@@ -98,5 +103,53 @@ void main() {
     ).thenAnswer((_) async => _ann());
     await run(await build());
     verify(() => repo.markTripArrived(announcementId: 'a1')).called(1);
+  });
+
+  test('markArrivedUsesLastKnownPositionWhenAvailable', () async {
+    when(
+      () => locator.lastKnownCoordinatesIfGranted(),
+    ).thenAnswer((_) async => const ScanPosition(lat: 1.5, lon: 2.5));
+    when(
+      () => repo.markTripArrived(
+        announcementId: 'a1',
+        arrivalInstructions: any(named: 'arrivalInstructions'),
+        position: any(named: 'position'),
+      ),
+    ).thenAnswer((_) async => _ann());
+    await run(await build());
+    verify(
+      () => repo.markTripArrived(
+        announcementId: 'a1',
+        position: (lat: 1.5, lon: 2.5),
+      ),
+    ).called(1);
+    verifyNever(() => locator.captureCoordinatesIfGranted());
+  });
+
+  test('markArrivedSentWithinTwoSecondsWhenLocatorNeverAnswers', () async {
+    final never = Completer<ScanPosition?>();
+    when(
+      () => locator.lastKnownCoordinatesIfGranted(),
+    ).thenAnswer((_) => never.future);
+    when(
+      () => locator.captureCoordinatesIfGranted(),
+    ).thenAnswer((_) => never.future);
+    final sent = Completer<({double lat, double lon})?>();
+    when(
+      () => repo.markTripArrived(
+        announcementId: 'a1',
+        arrivalInstructions: any(named: 'arrivalInstructions'),
+        position: any(named: 'position'),
+      ),
+    ).thenAnswer((inv) async {
+      sent.complete(
+        inv.namedArguments[#position] as ({double lat, double lon})?,
+      );
+      return _ann();
+    });
+    final watch = Stopwatch()..start();
+    await run(await build());
+    expect(await sent.future, isNull);
+    expect(watch.elapsed, lessThan(const Duration(milliseconds: 3500)));
   });
 }

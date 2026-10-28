@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -41,6 +43,9 @@ void main() {
     consent = _MockConsent();
     analytics = _MockAnalytics();
     stored = <String, dynamic>{};
+    when(
+      () => locator.lastKnownCoordinatesIfGranted(),
+    ).thenAnswer((_) async => null);
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
@@ -169,5 +174,33 @@ void main() {
     stored['${HiveService.kTripDepartedPrefix}trip-1'] = true;
     expect(build().state.departed, isTrue);
     expect(build(id: 'other').state.departed, isFalse);
+  });
+
+  testWidgets('departNotBlockedWhenLocatorNeverAnswers', (tester) async {
+    final never = Completer<ScanPosition?>();
+    when(
+      () => locator.lastKnownCoordinatesIfGranted(),
+    ).thenAnswer((_) => never.future);
+    when(
+      () => locator.captureCoordinatesIfGranted(),
+    ).thenAnswer((_) => never.future);
+    await withContext(tester, () async {
+      final cubit = build();
+      await tester.runAsync(() => cubit.depart(ctx));
+      verify(() => tracking.depart('trip-1')).called(1);
+      expect(cubit.state.departed, isTrue);
+    });
+  });
+
+  testWidgets('departUsesLastKnownPositionFirst', (tester) async {
+    when(
+      () => locator.lastKnownCoordinatesIfGranted(),
+    ).thenAnswer((_) async => const ScanPosition(lat: 3, lon: 4));
+    await withContext(tester, () async {
+      final cubit = build();
+      await cubit.depart(ctx);
+      verify(() => tracking.depart('trip-1', lat: 3, lon: 4)).called(1);
+      verifyNever(() => locator.captureCoordinatesIfGranted());
+    });
   });
 }

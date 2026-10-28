@@ -77,7 +77,7 @@ class TripDepartCubit extends Cubit<TripDepartState> {
     }
     ScanPosition? position;
     try {
-      position = await _locator.captureCoordinatesIfGranted();
+      position = await quickPositionIfGranted(_locator);
     } catch (_) {
       position = null;
     }

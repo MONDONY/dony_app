@@ -40,7 +40,9 @@ void main() {
     osGranted = true;
     sheetShown = 0;
     locator = _MockLocator();
-    when(() => locator.isPermissionGranted()).thenAnswer((_) async => osGranted);
+    when(
+      () => locator.isPermissionGranted(),
+    ).thenAnswer((_) async => osGranted);
     when(() => locator.requestPermission()).thenAnswer((_) async => true);
     when(() => locator.isPermanentlyDenied()).thenAnswer((_) async => false);
     final analytics = _MockAnalytics();

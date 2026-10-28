@@ -63,6 +63,24 @@ class ScanLocator {
     }
   }
 
+  /// Dernière position connue du téléphone, instantanée : seulement
+  /// `checkPermission` puis `getLastKnownPosition`, jamais de demande ni de
+  /// relevé frais. `null` sans autorisation ou sans position mémorisée.
+  Future<ScanPosition?> lastKnownCoordinatesIfGranted() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.always &&
+          permission != LocationPermission.whileInUse) {
+        return null;
+      }
+      final position = await Geolocator.getLastKnownPosition();
+      if (position == null) return null;
+      return ScanPosition(lat: position.latitude, lon: position.longitude);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// L'autorisation de localisation est-elle déjà accordée ? Ne demande rien.
   Future<bool> isPermissionGranted() async {
     try {
@@ -183,5 +201,27 @@ class ScanLocator {
     final min = minFull.floor();
     final sec = ((minFull - min) * 60 * 100).round();
     return '$deg/1,$min/1,$sec/100';
+  }
+}
+
+/// Attente maximale ajoutée à une action du voyageur (« Je pars », « Arrivé »)
+/// par la prise de position.
+const quickPositionBudget = Duration(seconds: 2);
+
+/// Position pour une action centrale : la dernière position connue d'abord
+/// (la position est floutée côté serveur), sinon un relevé frais, le tout
+/// borné par [budget]. Ne demande jamais l'autorisation, ne lève jamais ;
+/// `null` si rien n'arrive à temps.
+Future<ScanPosition?> quickPositionIfGranted(
+  ScanLocator locator, {
+  Duration budget = quickPositionBudget,
+}) async {
+  try {
+    return await (() async {
+      return await locator.lastKnownCoordinatesIfGranted() ??
+          await locator.captureCoordinatesIfGranted();
+    })().timeout(budget);
+  } catch (_) {
+    return null;
   }
 }

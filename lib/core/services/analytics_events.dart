@@ -1282,9 +1282,12 @@ abstract final class AnalyticsEvents {
   static const profileMenuGpProOpened = 'profile_menu_gp_pro_opened';
 
   // ── Suivi approximatif du voyageur ─────────────────────────────────────
+  /// « Je pars » confirmé depuis l'écran du trajet (propriété `has_position`).
+  /// Jamais de coordonnées.
+  static const tripDepartureConfirmed = 'trip_departure_confirmed';
+
   /// Position envoyée en silence à la reprise de l'app (propriété `source` :
   /// `resume`). Jamais de coordonnées.
-  static const tripDepartureConfirmed = 'trip_departure_confirmed';
   static const tripPositionSent = 'trip_position_sent';
 
   /// Envoi silencieux de la position non fait (propriété `reason` :

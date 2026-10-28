@@ -27,10 +27,6 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   final TripArrivalEventsService? _tripArrivalEvents;
   final ScanLocator? _locator;
 
-  /// Garde-fou au-dessus du délai propre à [ScanLocator] : l'arrivée ne
-  /// attend jamais la position plus longtemps.
-  static const _arrivalCaptureTimeout = Duration(seconds: 10);
-
   AnnouncementBloc(
     this._repository,
     this._analytics, {
@@ -605,9 +601,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     final locator = _locator;
     if (locator == null) return null;
     try {
-      final p = await locator.captureCoordinatesIfGranted().timeout(
-        _arrivalCaptureTimeout,
-      );
+      final p = await quickPositionIfGranted(locator);
       return p == null ? null : (lat: p.lat, lon: p.lon);
     } catch (_) {
       return null;
