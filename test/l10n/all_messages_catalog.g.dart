@@ -2592,28 +2592,18 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDetailDeliveryNoShowAlertSubtitle,
   'bidDetailDeliveryNoShowContestButton': (l) =>
       l.bidDetailDeliveryNoShowContestButton,
-  'bidDetailSenderPendingTitle': (l) => l.bidDetailSenderPendingTitle,
-  'bidDetailSenderAwaitingCardPaymentTitle': (l) =>
-      l.bidDetailSenderAwaitingCardPaymentTitle,
   'bidDetailSenderPendingSubtitle': (l) => l.bidDetailSenderPendingSubtitle,
-  'bidDetailSenderAwaitingPaymentTitle': (l) =>
-      l.bidDetailSenderAwaitingPaymentTitle,
   'bidDetailSenderAwaitingPaymentSubtitle': (l) =>
       l.bidDetailSenderAwaitingPaymentSubtitle(placeholderMarker('amount')),
-  'bidDetailSenderEscrowedTitle': (l) => l.bidDetailSenderEscrowedTitle,
   'bidDetailSenderEscrowedSubtitle': (l) =>
       l.bidDetailSenderEscrowedSubtitle(placeholderMarker('amount')),
-  'bidDetailSenderAcceptedTitle': (l) => l.bidDetailSenderAcceptedTitle,
   'bidDetailSenderAcceptedInstructions': (l) =>
       l.bidDetailSenderAcceptedInstructions,
   'bidDetailSenderTravelerFallback': (l) => l.bidDetailSenderTravelerFallback,
-  'bidDetailSenderHandedOverTitle': (l) =>
-      l.bidDetailSenderHandedOverTitle(placeholderMarker('name')),
   'bidDetailSenderHandedOverSubtitleWithDate': (l) =>
       l.bidDetailSenderHandedOverSubtitleWithDate(placeholderMarker('date')),
   'bidDetailSenderHandedOverSubtitleDefault': (l) =>
       l.bidDetailSenderHandedOverSubtitleDefault,
-  'bidDetailSenderInTransitTitle': (l) => l.bidDetailSenderInTransitTitle,
   'bidDetailSenderInTransitEta': (l) => l.bidDetailSenderInTransitEta(
     placeholderMarker('time'),
     placeholderMarker('city'),
@@ -2622,14 +2612,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDetailSenderInTransitEnRoute(placeholderMarker('city')),
   'bidDetailSenderInTransitTicketNote': (l) =>
       l.bidDetailSenderInTransitTicketNote,
-  'bidDetailSenderArrivedTitle': (l) => l.bidDetailSenderArrivedTitle,
   'bidDetailSenderArrivedSubtitleDefault': (l) =>
       l.bidDetailSenderArrivedSubtitleDefault,
   'bidDetailSenderArrivedSubtitleSeeInstructions': (l) =>
       l.bidDetailSenderArrivedSubtitleSeeInstructions,
-  'bidDetailSenderRecipientFallback': (l) => l.bidDetailSenderRecipientFallback,
-  'bidDetailSenderDeliveredTitle': (l) =>
-      l.bidDetailSenderDeliveredTitle(placeholderMarker('recipient')),
   'bidDetailSenderDeliveredSubtitle': (l) => l.bidDetailSenderDeliveredSubtitle,
   'bidDetailSenderWindowExpiredTitle': (l) =>
       l.bidDetailSenderWindowExpiredTitle,
@@ -2802,6 +2788,20 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailCancelAfterHandoverBody': (l) => l.bidDetailCancelAfterHandoverBody,
   'bidDetailDeleteConfirmBody': (l) => l.bidDetailDeleteConfirmBody,
   'bidDetailMoreDetails': (l) => l.bidDetailMoreDetails,
+  'bidDetailSectionTodo': (l) => l.bidDetailSectionTodo,
+  'bidDetailSectionShipment': (l) => l.bidDetailSectionShipment,
+  'senderTileSuivi': (l) => l.senderTileSuivi,
+  'senderTileLieux': (l) => l.senderTileLieux,
+  'senderTileColis': (l) => l.senderTileColis,
+  'senderTileColisSubtitle': (l) => l.senderTileColisSubtitle(
+    placeholderMarker('weight'),
+    placeholderMarker('recipient'),
+  ),
+  'senderTileDetailsSubtitle': (l) => l.senderTileDetailsSubtitle,
+  'senderTilePrevenirCode': (l) => l.senderTilePrevenirCode,
+  'senderTilePrevenirLink': (l) => l.senderTilePrevenirLink,
+  'senderTileBadgeCodeReady': (l) => l.senderTileBadgeCodeReady,
+  'senderTileBadgeCurrentStep': (l) => l.senderTileBadgeCurrentStep,
   'bidDetailSectionDropoff': (l) => l.bidDetailSectionDropoff,
   'bidDetailLocationLabel': (l) => l.bidDetailLocationLabel,
   'bidDetailHandoverStatusLabel': (l) => l.bidDetailHandoverStatusLabel,
@@ -8196,11 +8196,9 @@ const textParameters = <String, List<String>>{
   'bidDetailUntil': ['date'],
   'bidDetailSenderAwaitingPaymentSubtitle': ['amount'],
   'bidDetailSenderEscrowedSubtitle': ['amount'],
-  'bidDetailSenderHandedOverTitle': ['name'],
   'bidDetailSenderHandedOverSubtitleWithDate': ['date'],
   'bidDetailSenderInTransitEta': ['time', 'city'],
   'bidDetailSenderInTransitEnRoute': ['city'],
-  'bidDetailSenderDeliveredTitle': ['recipient'],
   'bidDetailSenderWindowExpiredSubtitle': ['window'],
   'bidDetailSenderContestCountdown': ['timeLeft'],
   'bidDetailTravelerPendingSubtitle': ['amount'],
@@ -8213,6 +8211,7 @@ const textParameters = <String, List<String>>{
   'bidDetailEscrowReleasedLabel': ['amount'],
   'bidDetailEscrowRefundedLabel': ['amount'],
   'bidDetailEscrowSecuredLabel': ['amount'],
+  'senderTileColisSubtitle': ['weight', 'recipient'],
   'bidDetailDisclaimerSignedCompact': ['date', 'time'],
   'parcelRefusalDeclaredWeight': ['weight'],
   'bidDetailReturnDeadlineHint': ['date'],
