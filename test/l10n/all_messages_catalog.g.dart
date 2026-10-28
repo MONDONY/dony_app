@@ -7973,6 +7973,20 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.walletShortfallExcludedFrozen(placeholderMarker('currency')),
   'walletShortfallExcludedRate': (l) =>
       l.walletShortfallExcludedRate(placeholderMarker('currency')),
+  'commissionAllocationTitle': (l) => l.commissionAllocationTitle,
+  'commissionAllocationIntro': (l) =>
+      l.commissionAllocationIntro(placeholderMarker('amount')),
+  'commissionAllocationLine': (l) => l.commissionAllocationLine(
+    placeholderMarker('wallet'),
+    placeholderMarker('amount'),
+  ),
+  'commissionAllocationConverted': (l) => l.commissionAllocationConverted(
+    placeholderMarker('covered'),
+    placeholderMarker('unit'),
+    placeholderMarker('rate'),
+  ),
+  'commissionAllocationNote': (l) => l.commissionAllocationNote,
+  'commissionAllocationConfirm': (l) => l.commissionAllocationConfirm,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8646,4 +8660,7 @@ const textParameters = <String, List<String>>{
   'walletShortfallStillMissing': ['missing'],
   'walletShortfallExcludedFrozen': ['currency'],
   'walletShortfallExcludedRate': ['currency'],
+  'commissionAllocationIntro': ['amount'],
+  'commissionAllocationLine': ['wallet', 'amount'],
+  'commissionAllocationConverted': ['covered', 'unit', 'rate'],
 };

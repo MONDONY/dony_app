@@ -36871,6 +36871,46 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le portefeuille {currency} n\'est pas pris en compte : taux du jour indisponible'**
   String walletShortfallExcludedRate(String currency);
+
+  /// Titre de la feuille d'aperçu avant l'acceptation d'un colis payé en espèces (commission_allocation_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment vos frais seront réglés'**
+  String get commissionAllocationTitle;
+
+  /// Introduction de la feuille d'aperçu de la répartition de la commission entre portefeuilles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais de service : {amount}. Ils seront prélevés ainsi :'**
+  String commissionAllocationIntro(String amount);
+
+  /// Ligne de la feuille d'aperçu : portefeuille débité et montant dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'Portefeuille {wallet} : {amount}'**
+  String commissionAllocationLine(String wallet, String amount);
+
+  /// Sous-ligne d'un portefeuille converti : part réglée dans la devise du colis et taux du jour utilisé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour {covered}, au taux du jour : {unit} = {rate}'**
+  String commissionAllocationConverted(
+    String covered,
+    String unit,
+    String rate,
+  );
+
+  /// Mention sous les lignes de la feuille d'aperçu de la commission.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversion au taux du jour, sans marge. Indicatif : le prélèvement réel peut être inférieur, jamais supérieur.'**
+  String get commissionAllocationNote;
+
+  /// Bouton de la feuille d'aperçu : accepte le colis et prélève la commission.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter et régler'**
+  String get commissionAllocationConfirm;
 }
 
 class _AppLocalizationsDelegate

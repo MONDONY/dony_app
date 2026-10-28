@@ -22753,4 +22753,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String walletShortfallExcludedRate(String currency) {
     return 'The $currency wallet is not counted: today\'s rate is unavailable';
   }
+
+  @override
+  String get commissionAllocationTitle => 'How your fee will be paid';
+
+  @override
+  String commissionAllocationIntro(String amount) {
+    return 'Service fee: $amount. It will be taken as follows:';
+  }
+
+  @override
+  String commissionAllocationLine(String wallet, String amount) {
+    return '$wallet wallet: $amount';
+  }
+
+  @override
+  String commissionAllocationConverted(
+    String covered,
+    String unit,
+    String rate,
+  ) {
+    return 'For $covered, at today\'s rate: $unit = $rate';
+  }
+
+  @override
+  String get commissionAllocationNote =>
+      'Converted at today\'s rate, with no margin. Indicative: the actual charge may be lower, never higher.';
+
+  @override
+  String get commissionAllocationConfirm => 'Accept and pay';
 }

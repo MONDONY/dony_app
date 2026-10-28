@@ -11244,5 +11244,11 @@
   "walletShortfallAllWallets": "All your wallets together cover {amount}",
   "walletShortfallStillMissing": "You're still short {missing}",
   "walletShortfallExcludedFrozen": "The {currency} wallet is not counted: a refund is in progress",
-  "walletShortfallExcludedRate": "The {currency} wallet is not counted: today's rate is unavailable"
+  "walletShortfallExcludedRate": "The {currency} wallet is not counted: today's rate is unavailable",
+  "commissionAllocationTitle": "How your fee will be paid",
+  "commissionAllocationIntro": "Service fee: {amount}. It will be taken as follows:",
+  "commissionAllocationLine": "{wallet} wallet: {amount}",
+  "commissionAllocationConverted": "For {covered}, at today's rate: {unit} = {rate}",
+  "commissionAllocationNote": "Converted at today's rate, with no margin. Indicative: the actual charge may be lower, never higher.",
+  "commissionAllocationConfirm": "Accept and pay"
 }

@@ -24,6 +24,7 @@ import 'package:dony/features/matching/presentation/traveler_bids_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
+import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_funding_options.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
@@ -286,7 +287,11 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  void _onAccept(BidModel bid) {
+  Future<void> _onAccept(BidModel bid) async {
+    // Espèces répartis sur plusieurs portefeuilles ou convertis : le voyageur
+    // voit d'où partira la commission avant de s'engager.
+    if (!await confirmCashCommissionAllocation(context, bid)) return;
+    if (!mounted) return;
     setState(() => _processingBidIds.add(bid.id));
     // Pas d'event analytics ici : bid_accepted est tracé dans les blocs au
     // succès réel, pas au tap (un échec réseau ne doit pas compter).

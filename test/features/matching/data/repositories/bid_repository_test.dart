@@ -2,6 +2,7 @@ import 'package:dony/features/matching/data/datasources/bid_remote_datasource.da
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/commission_allocation_preview.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -254,6 +255,26 @@ void main() {
 
       final result = await repo.acceptBidWithCommission('bid-001');
       expect(result.status, AcceptanceStatus.accepted);
+    });
+
+    test('previewCommissionAllocation delegates correctly', () async {
+      const preview = CommissionAllocationPreview(
+        bidCurrency: 'EUR',
+        commission: 6,
+        covered: true,
+      );
+      when(
+        () => mockDs.previewCommissionAllocation(
+          'bid-001',
+          fundingCurrency: 'XOF',
+        ),
+      ).thenAnswer((_) async => preview);
+
+      final result = await repo.previewCommissionAllocation(
+        'bid-001',
+        fundingCurrency: 'XOF',
+      );
+      expect(result, preview);
     });
 
     test('changeRecipient delegates correctly', () async {

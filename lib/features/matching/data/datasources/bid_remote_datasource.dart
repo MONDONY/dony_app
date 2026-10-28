@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
+import 'package:dony/features/matching/data/models/commission_allocation_preview.dart';
 import 'package:dony/features/matching/data/models/traveler_bids_page.dart';
 
 class BidRemoteDatasource {
@@ -378,6 +379,21 @@ class BidRemoteDatasource {
       }
       rethrow;
     }
+  }
+
+  /// Aperçu de la répartition de la commission entre les portefeuilles, avant
+  /// l'acceptation d'un colis payé en espèces. Lecture seule.
+  Future<CommissionAllocationPreview> previewCommissionAllocation(
+    String bidId, {
+    String? fundingCurrency,
+  }) async {
+    final response = await _apiClient.dio.get(
+      '/bids/$bidId/commission-allocation',
+      queryParameters: {'fundingCurrency': ?fundingCurrency},
+    );
+    return CommissionAllocationPreview.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   Future<ConfirmResponse> confirmCommissionAcceptance(String bidId) async {
