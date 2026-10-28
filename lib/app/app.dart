@@ -62,6 +62,8 @@ import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
 import 'package:dony/features/settings/presentation/widgets/language_sync_gate.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/tracking/bloc/position_reporter_cubit.dart';
+import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -183,6 +185,9 @@ class _DonyAppState extends State<DonyApp> {
         unawaited(getIt<NotificationService>().onAppResumed());
         // Maintenance ouverte ou refermée pendant que l'app dormait.
         unawaited(getIt<MaintenanceCubit>().check());
+        // Suivi approximatif : position envoyée en silence si un trajet est
+        // en cours de suivi (jamais de demande de permission).
+        unawaited(getIt<PositionReporterCubit>().onResume());
       },
     );
     appRouter.routerDelegate.addListener(_onRouterChanged);
@@ -191,6 +196,8 @@ class _DonyAppState extends State<DonyApp> {
       // que le premier écran réel est peint. C'est le seul splash de l'app.
       FlutterNativeSplash.remove();
       _initDeepLinks();
+      // `onResume` ne se déclenche pas au premier lancement.
+      unawaited(getIt<PositionReporterCubit>().onResume());
     });
   }
 
@@ -475,12 +482,22 @@ class _DonyAppState extends State<DonyApp> {
               ],
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
+                  // Rôles connus pour l'envoi de position : sans appel réseau.
+                  final knownRoles = switch (state) {
+                    AuthAuthenticated(:final user) => user.roles,
+                    AuthProfileUpdated(:final user) => user.roles,
+                    _ => null,
+                  };
+                  getIt<PositionReporterCubit>().updateRoles(knownRoles);
+                  getIt<TrackingConsentCubit>().updateRoles(knownRoles);
                   // Appels audio : client Stream connecté pour le compte
                   // courant, déconnecté à la sortie.
                   unawaited(
                     syncCallSession(state, getIt<CallSessionService>()),
                   );
                   if (AccountResetGuard.shouldResetAccountScopedBlocs(state)) {
+                    getIt<TrackingConsentCubit>().onLoggedOut();
+                    getIt<PositionReporterCubit>().onLoggedOut();
                     // `BusinessPrefsBloc`/`StripeAccountBloc` sont des
                     // `lazySingleton` GetIt jamais recréés par `AuthBloc` —
                     // sans ce reset, ils continueraient de porter le pays /

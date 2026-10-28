@@ -28,6 +28,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mock_analytics_backend.dart';
+import '../../../../helpers/tracking_consent_test_helpers.dart';
 
 class _MockTravelerBidsBloc
     extends MockBloc<TravelerBidsEvent, TravelerBidsState>
@@ -101,6 +102,7 @@ void main() {
   Object? reloadError;
 
   setUp(() {
+    useTrackingConsent();
     DonySnackbar.clearDedup();
     travelerBids = _MockTravelerBidsBloc();
     bidBloc = _MockBidBloc();

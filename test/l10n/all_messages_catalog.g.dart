@@ -7987,6 +7987,51 @@ final allMessages = <String, String Function(AppLocalizations)>{
   ),
   'commissionAllocationNote': (l) => l.commissionAllocationNote,
   'commissionAllocationConfirm': (l) => l.commissionAllocationConfirm,
+  'trackingConsentTitle': (l) => l.trackingConsentTitle,
+  'trackingConsentIntro': (l) => l.trackingConsentIntro,
+  'trackingConsentPointApproximate': (l) => l.trackingConsentPointApproximate,
+  'trackingConsentPointOptional': (l) => l.trackingConsentPointOptional,
+  'trackingConsentPointWhileUsing': (l) => l.trackingConsentPointWhileUsing,
+  'trackingConsentChangeLater': (l) => l.trackingConsentChangeLater,
+  'trackingConsentAccept': (l) => l.trackingConsentAccept,
+  'trackingConsentDecline': (l) => l.trackingConsentDecline,
+  'trackingConsentSettingsSection': (l) => l.trackingConsentSettingsSection,
+  'trackingConsentSettingsLabel': (l) => l.trackingConsentSettingsLabel,
+  'trackingConsentSettingsSubtitle': (l) => l.trackingConsentSettingsSubtitle,
+  'trackingConsentSettingsOffSnackbar': (l) =>
+      l.trackingConsentSettingsOffSnackbar,
+  'trackingConsentSettingsOpenSystemSnackbar': (l) =>
+      l.trackingConsentSettingsOpenSystemSnackbar,
+  'tripSummaryTitle': (l) => l.tripSummaryTitle,
+  'tripSummaryParcels': (l) => l.tripSummaryParcels(intPlaceholderValue),
+  'tripSummaryWeight': (l) => l.tripSummaryWeight(placeholderMarker('kg')),
+  'tripSummaryEarningsLabel': (l) => l.tripSummaryEarningsLabel,
+  'tripSummaryEarningsNote': (l) => l.tripSummaryEarningsNote,
+  'tripSummaryViewParcels': (l) => l.tripSummaryViewParcels,
+  'tripDepartButton': (l) => l.tripDepartButton,
+  'tripDepartConfirmedSnackbar': (l) => l.tripDepartConfirmedSnackbar,
+  'travelerTrackingTitle': (l) => l.travelerTrackingTitle,
+  'travelerTrackingBadgeEnRoute': (l) => l.travelerTrackingBadgeEnRoute,
+  'travelerTrackingBadgeArrived': (l) => l.travelerTrackingBadgeArrived,
+  'travelerTrackingBadgeNotActivated': (l) =>
+      l.travelerTrackingBadgeNotActivated,
+  'travelerTrackingBadgeStale': (l) =>
+      l.travelerTrackingBadgeStale(placeholderMarker('age')),
+  'travelerTrackingNotActivatedHint': (l) => l.travelerTrackingNotActivatedHint,
+  'travelerTrackingNearCity': (l) =>
+      l.travelerTrackingNearCity(placeholderMarker('city')),
+  'travelerTrackingUpdated': (l) =>
+      l.travelerTrackingUpdated(placeholderMarker('age')),
+  'travelerTrackingProgressPct': (l) =>
+      l.travelerTrackingProgressPct(intPlaceholderValue),
+  'travelerTrackingProgressSemantics': (l) =>
+      l.travelerTrackingProgressSemantics(intPlaceholderValue),
+  'travelerTrackingNow': (l) => l.travelerTrackingNow,
+  'travelerTrackingLastPosition': (l) =>
+      l.travelerTrackingLastPosition(placeholderMarker('age')),
+  'travelerTrackingOpenTimeline': (l) => l.travelerTrackingOpenTimeline,
+  'travelerTrackingAgoDays': (l) =>
+      l.travelerTrackingAgoDays(intPlaceholderValue),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8663,4 +8708,9 @@ const textParameters = <String, List<String>>{
   'commissionAllocationIntro': ['amount'],
   'commissionAllocationLine': ['wallet', 'amount'],
   'commissionAllocationConverted': ['covered', 'unit', 'rate'],
+  'tripSummaryWeight': ['kg'],
+  'travelerTrackingBadgeStale': ['age'],
+  'travelerTrackingNearCity': ['city'],
+  'travelerTrackingUpdated': ['age'],
+  'travelerTrackingLastPosition': ['age'],
 };

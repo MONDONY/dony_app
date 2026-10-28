@@ -84,7 +84,10 @@
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
 		</dict>
-		<!-- Geolocator : choix d'une adresse de retrait ou de livraison. -->
+		<!-- Geolocator : choix d'une adresse de retrait ou de livraison, lieu de
+		     chaque étape de remise, et suivi approximatif du trajet : le
+		     voyageur consentant envoie sa position à Yadony, qui n'en garde et
+		     n'en montre à l'expéditeur que la ville proche et la progression. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypePreciseLocation</string>

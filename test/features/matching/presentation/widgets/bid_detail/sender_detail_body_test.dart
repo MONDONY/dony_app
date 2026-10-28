@@ -14,6 +14,8 @@ import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cub
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
+import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
@@ -24,11 +26,13 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -37,6 +41,7 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -107,7 +112,11 @@ BidModel _bid({
   BidSupplement? supplement,
   List<BidAmendment> amendments = const [],
   bool amendmentAllowed = false,
+  TravelerTrackingModel? travelerTracking,
+  AddressData? handoverAddress,
 }) => BidModel(
+  travelerTracking: travelerTracking,
+  handoverAddress: handoverAddress,
   supplement: supplement,
   amendments: amendments,
   amendmentAllowed: amendmentAllowed,
@@ -205,6 +214,66 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
   }
+
+  // ── Carte « Suivi du voyageur » : place dans la liste ──────────────────────
+  group('TravelerTrackingCard dans la liste', () {
+    setUp(() {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerFactory<TravelerTrackingCardCubit>(
+        () => TravelerTrackingCardCubit(analytics: analytics),
+      );
+    });
+    tearDown(() async => getIt.reset());
+
+    testWidgets('apparaît après le hero et avant la carte Lieux', (
+      tester,
+    ) async {
+      sizeView(tester);
+      final bid = _bid(
+        status: 'IN_TRANSIT',
+        travelerTracking: const TravelerTrackingModel(
+          status: TravelerTrackingStatus.enRoute,
+          nearestCity: 'Lyon',
+        ),
+        handoverAddress: const AddressData(
+          label: '1 rue A',
+          lat: 48.8,
+          lng: 2.3,
+        ),
+      );
+      await tester.pumpWidget(
+        _host(bid, cancellationBloc, conversationOpenBloc),
+      );
+      // Passes de 400 ms : le stagger de flutter_animate laisse des Timers.
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+
+      final hero = tester.getTopLeft(find.byType(SenderHeroCard)).dy;
+      final card = tester.getTopLeft(find.byType(TravelerTrackingCard)).dy;
+      final places = tester.getTopLeft(find.byType(ParcelLocationsCard)).dy;
+      expect(card, greaterThan(hero));
+      expect(card, lessThan(places));
+    });
+
+    testWidgets('absente quand le back ne sert pas le champ', (tester) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(status: 'IN_TRANSIT'),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+      expect(find.byType(TravelerTrackingCard), findsNothing);
+    });
+  });
 
   // ── Test 1: ACCEPTED → toutes les cartes présentes ─────────────────────────
   testWidgets(

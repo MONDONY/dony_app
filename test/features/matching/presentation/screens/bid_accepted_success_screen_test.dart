@@ -7,8 +7,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/tracking_consent_test_helpers.dart';
 
 void main() {
+  setUp(useTrackingConsent);
+
   Future<GoRouter> openOverList(WidgetTester tester) async {
     final router = GoRouter(
       initialLocation: '/pending',

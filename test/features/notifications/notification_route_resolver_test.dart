@@ -394,6 +394,27 @@ void main() {
     });
   });
 
+  group('resolveNotificationRoute — rappels de suivi du voyageur', () {
+    test('departureAndArrivalPromptsOpenTripScreen', () {
+      for (final type in ['TRIP_DEPARTURE_PROMPT', 'TRIP_ARRIVAL_PROMPT']) {
+        expect(
+          resolveNotificationRoute(type, {'announcementId': announcementId}),
+          '/announcements/$announcementId/trip',
+        );
+      }
+    });
+
+    test('promptsWithInvalidIdResolveToNull', () {
+      for (final type in ['TRIP_DEPARTURE_PROMPT', 'TRIP_ARRIVAL_PROMPT']) {
+        expect(resolveNotificationRoute(type, {}), isNull);
+        expect(
+          resolveNotificationRoute(type, {'announcementId': 'pas-un-uuid'}),
+          isNull,
+        );
+      }
+    });
+  });
+
   group('resolveNotificationRoute — NEW_MESSAGE', () {
     test(
       'with a valid conversationId deep-links to the exact conversation',

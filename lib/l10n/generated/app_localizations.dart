@@ -36911,6 +36911,216 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Accepter et régler'**
   String get commissionAllocationConfirm;
+
+  /// Titre de la feuille de consentement au suivi de position du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager l\'avancée de votre trajet ?'**
+  String get trackingConsentTitle;
+
+  /// Introduction de la feuille de consentement au suivi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand vous transportez un colis, son expéditeur peut suivre l\'avancée de votre voyage.'**
+  String get trackingConsentIntro;
+
+  /// Point 1 : seule une position approximative est visible.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il voit la ville la plus proche et la progression du trajet, jamais votre position exacte.'**
+  String get trackingConsentPointApproximate;
+
+  /// Point 2 : le refus ne bloque rien.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est facultatif : si vous refusez, rien ne change pour vos colis.'**
+  String get trackingConsentPointOptional;
+
+  /// Point 3 : pas de suivi en arrière-plan.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony n\'utilise votre position que lorsque l\'application est ouverte.'**
+  String get trackingConsentPointWhileUsing;
+
+  /// Rappel : le choix se change dans Réglages, Confidentialité.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pouvez changer d\'avis à tout moment dans les réglages de confidentialité.'**
+  String get trackingConsentChangeLater;
+
+  /// Bouton principal de la feuille de consentement au suivi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autoriser'**
+  String get trackingConsentAccept;
+
+  /// Bouton secondaire de la feuille de consentement au suivi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas maintenant'**
+  String get trackingConsentDecline;
+
+  /// En-tête de la section du réglage de partage du trajet (Confidentialité).
+  ///
+  /// In fr, this message translates to:
+  /// **'SUIVI DE TRAJET'**
+  String get trackingConsentSettingsSection;
+
+  /// Titre de la ligne de réglage du partage de l'avancée du trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager l\'avancée de mes trajets'**
+  String get trackingConsentSettingsLabel;
+
+  /// Sous-titre de la ligne de réglage du partage de l'avancée du trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur voit la ville la plus proche et la progression, jamais la position exacte.'**
+  String get trackingConsentSettingsSubtitle;
+
+  /// Message après avoir coupé le partage de l'avancée du trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partage désactivé. L\'autorisation de position reste réglable dans les réglages de votre téléphone.'**
+  String get trackingConsentSettingsOffSnackbar;
+
+  /// Message avant d'ouvrir les réglages système quand l'autorisation est refusée définitivement.
+  ///
+  /// In fr, this message translates to:
+  /// **'La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.'**
+  String get trackingConsentSettingsOpenSystemSnackbar;
+
+  /// Carte de résumé du trajet du voyageur (colis en sa possession).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résumé du trajet'**
+  String get tripSummaryTitle;
+
+  /// Résumé du trajet : nombre de colis scannés.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} colis en votre possession} other{{count} colis en votre possession}}'**
+  String tripSummaryParcels(int count);
+
+  /// Résumé du trajet : total des kilos transportés.
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg transportés'**
+  String tripSummaryWeight(String kg);
+
+  /// Résumé du trajet : net estimé du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gain estimé'**
+  String get tripSummaryEarningsLabel;
+
+  /// Résumé du trajet : précise que le gain est versé après la livraison.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement suit la livraison de chaque colis.'**
+  String get tripSummaryEarningsNote;
+
+  /// Résumé du trajet : ouvre la liste des colis du trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes colis'**
+  String get tripSummaryViewParcels;
+
+  /// Écran du trajet voyageur : confirme le départ (position approximative facultative).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je pars'**
+  String get tripDepartButton;
+
+  /// Confirmation après le bouton « Je pars ».
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est noté, bon voyage !'**
+  String get tripDepartConfirmedSnackbar;
+
+  /// Titre de la carte. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi du voyageur'**
+  String get travelerTrackingTitle;
+
+  /// Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En route'**
+  String get travelerTrackingBadgeEnRoute;
+
+  /// Pastille : le voyageur est arrivé. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé'**
+  String get travelerTrackingBadgeArrived;
+
+  /// Pastille neutre grise : le voyageur n'a pas activé le suivi. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi non activé par le voyageur'**
+  String get travelerTrackingBadgeNotActivated;
+
+  /// Pastille neutre : la position est ancienne. {age} est une durée déjà traduite (« il y a 2h »). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière position {age}'**
+  String travelerTrackingBadgeStale(String age);
+
+  /// Phrase neutre sous la pastille quand le suivi n'est pas activé. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur n\'a pas activé le partage de sa position approximative.'**
+  String get travelerTrackingNotActivatedHint;
+
+  /// Ville la plus proche du voyageur (carte et frise). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Près de {city}'**
+  String travelerTrackingNearCity(String city);
+
+  /// Ancienneté de la dernière position. {age} est une durée déjà traduite (« il y a 5 min »). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mis à jour {age}'**
+  String travelerTrackingUpdated(String age);
+
+  /// Pourcentage d'avancement du trajet. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{pct} %'**
+  String travelerTrackingProgressPct(int pct);
+
+  /// Libellé d'accessibilité de la barre d'avancement. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avancement du trajet : {pct} %'**
+  String travelerTrackingProgressSemantics(int pct);
+
+  /// Marque la dernière ville de l'historique quand le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Maintenant'**
+  String get travelerTrackingNow;
+
+  /// Marque la dernière ville quand la position est ancienne. {age} est une durée déjà traduite. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière position, {age}'**
+  String travelerTrackingLastPosition(String age);
+
+  /// Lien de la carte vers la frise complète du colis. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir toutes les étapes et photos'**
+  String get travelerTrackingOpenTimeline;
+
+  /// Ancienneté en jours (24 h et plus) de la dernière position. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {days} j'**
+  String travelerTrackingAgoDays(int days);
 }
 
 class _AppLocalizationsDelegate

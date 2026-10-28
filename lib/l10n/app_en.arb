@@ -11250,5 +11250,117 @@
   "commissionAllocationLine": "{wallet} wallet: {amount}",
   "commissionAllocationConverted": "For {covered}, at today's rate: {unit} = {rate}",
   "commissionAllocationNote": "Converted at today's rate, with no margin. Indicative: the actual charge may be lower, never higher.",
-  "commissionAllocationConfirm": "Accept and pay"
+  "commissionAllocationConfirm": "Accept and pay",
+  "trackingConsentTitle": "Share your trip progress?",
+  "trackingConsentIntro": "When you carry a parcel, its sender can follow the progress of your journey.",
+  "trackingConsentPointApproximate": "They see the nearest city and how far along the trip is, never your exact position.",
+  "trackingConsentPointOptional": "It is optional: if you decline, nothing changes for your parcels.",
+  "trackingConsentPointWhileUsing": "Yadony only uses your location while the app is open.",
+  "trackingConsentChangeLater": "You can change your mind at any time in the privacy settings.",
+  "trackingConsentAccept": "Allow",
+  "trackingConsentDecline": "Not now",
+  "trackingConsentSettingsSection": "TRIP TRACKING",
+  "trackingConsentSettingsLabel": "Share my trip progress",
+  "trackingConsentSettingsSubtitle": "The sender sees the nearest city and the progress, never the exact position.",
+  "trackingConsentSettingsOffSnackbar": "Sharing turned off. Location permission can still be changed in your phone settings.",
+  "trackingConsentSettingsOpenSystemSnackbar": "Location is denied in your phone. Allow it in system settings to turn sharing on.",
+  "tripSummaryTitle": "Trip summary",
+  "tripSummaryParcels": "{count, plural, =1{{count} parcel in your possession} other{{count} parcels in your possession}}",
+  "tripSummaryWeight": "{kg} kg carried",
+  "tripSummaryEarningsLabel": "Estimated earnings",
+  "tripSummaryEarningsNote": "Payment follows the delivery of each parcel.",
+  "tripSummaryViewParcels": "View my parcels",
+  "tripDepartButton": "I'm leaving",
+  "tripDepartConfirmedSnackbar": "Noted, have a safe trip!",
+  "travelerTrackingTitle": "Traveler tracking",
+  "@travelerTrackingTitle": {
+    "description": "Titre de la carte. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingBadgeEnRoute": "On the way",
+  "@travelerTrackingBadgeEnRoute": {
+    "description": "Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingBadgeArrived": "Arrived",
+  "@travelerTrackingBadgeArrived": {
+    "description": "Pastille : le voyageur est arrivé. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingBadgeNotActivated": "Tracking not turned on by the traveler",
+  "@travelerTrackingBadgeNotActivated": {
+    "description": "Pastille neutre grise : le voyageur n'a pas activé le suivi. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingBadgeStale": "Last position {age}",
+  "@travelerTrackingBadgeStale": {
+    "description": "Pastille neutre : la position est ancienne. {age} est une durée déjà traduite (« il y a 2h »). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTrackingNotActivatedHint": "The traveler has not turned on sharing of their approximate position.",
+  "@travelerTrackingNotActivatedHint": {
+    "description": "Phrase neutre sous la pastille quand le suivi n'est pas activé. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingNearCity": "Near {city}",
+  "@travelerTrackingNearCity": {
+    "description": "Ville la plus proche du voyageur (carte et frise). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTrackingUpdated": "Updated {age}",
+  "@travelerTrackingUpdated": {
+    "description": "Ancienneté de la dernière position. {age} est une durée déjà traduite (« il y a 5 min »). Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTrackingProgressPct": "{pct}%",
+  "@travelerTrackingProgressPct": {
+    "description": "Pourcentage d'avancement du trajet. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "travelerTrackingProgressSemantics": "Trip progress: {pct}%",
+  "@travelerTrackingProgressSemantics": {
+    "description": "Libellé d'accessibilité de la barre d'avancement. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "travelerTrackingNow": "Now",
+  "@travelerTrackingNow": {
+    "description": "Marque la dernière ville de l'historique quand le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingLastPosition": "Last position, {age}",
+  "@travelerTrackingLastPosition": {
+    "description": "Marque la dernière ville quand la position est ancienne. {age} est une durée déjà traduite. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTrackingOpenTimeline": "See all steps and photos",
+  "@travelerTrackingOpenTimeline": {
+    "description": "Lien de la carte vers la frise complète du colis. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
+  },
+  "travelerTrackingAgoDays": "{days} d ago",
+  "@travelerTrackingAgoDays": {
+    "description": "Ancienneté en jours (24 h et plus) de la dernière position. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
 }

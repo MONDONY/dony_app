@@ -113,6 +113,8 @@ AnnouncementModel _$AnnouncementModelFromJson(
   seriesId: json['seriesId'] as String?,
   currencyEditable: json['currencyEditable'] as bool?,
   departureTimezone: json['departureTimezone'] as String?,
+  trackingActive: json['trackingActive'] as bool? ?? false,
+  parcelsSummary: TripParcelsSummary.fromJsonOrNull(json['parcelsSummary']),
 );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -176,6 +178,8 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'seriesId': instance.seriesId,
       'currencyEditable': instance.currencyEditable,
       'departureTimezone': instance.departureTimezone,
+      'trackingActive': instance.trackingActive,
+      'parcelsSummary': _parcelsSummaryToJson(instance.parcelsSummary),
     };
 
 const _$BidPaymentMethodEnumMap = {

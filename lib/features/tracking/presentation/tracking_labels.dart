@@ -41,6 +41,17 @@ String scanRelativeTime(AppLocalizations l, Duration diff) {
   return l.scanAgoHours(diff.inHours);
 }
 
+/// Ancienneté lisible d'une position : « il y a 5 min », « il y a 3h »,
+/// « il y a 2 j ». Jamais négative (horloge du téléphone en retard).
+///
+/// [at] et [now] sont comparés comme deux instants : un horodatage UTC du back
+/// et une horloge locale donnent le même âge.
+String travelerTrackingAge(AppLocalizations l, DateTime at, DateTime now) {
+  final diff = now.difference(at);
+  if (diff.inHours >= 24) return l.travelerTrackingAgoDays(diff.inDays);
+  return scanRelativeTime(l, diff.isNegative ? Duration.zero : diff);
+}
+
 /// Libellés traduits d'un [TrackingEventModel] (frise de suivi,
 /// `tracking_timeline_bottom_sheet.dart`).
 ///

@@ -22949,4 +22949,145 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get commissionAllocationConfirm => 'Accepter et régler';
+
+  @override
+  String get trackingConsentTitle => 'Partager l\'avancée de votre trajet ?';
+
+  @override
+  String get trackingConsentIntro =>
+      'Quand vous transportez un colis, son expéditeur peut suivre l\'avancée de votre voyage.';
+
+  @override
+  String get trackingConsentPointApproximate =>
+      'Il voit la ville la plus proche et la progression du trajet, jamais votre position exacte.';
+
+  @override
+  String get trackingConsentPointOptional =>
+      'C\'est facultatif : si vous refusez, rien ne change pour vos colis.';
+
+  @override
+  String get trackingConsentPointWhileUsing =>
+      'Yadony n\'utilise votre position que lorsque l\'application est ouverte.';
+
+  @override
+  String get trackingConsentChangeLater =>
+      'Vous pouvez changer d\'avis à tout moment dans les réglages de confidentialité.';
+
+  @override
+  String get trackingConsentAccept => 'Autoriser';
+
+  @override
+  String get trackingConsentDecline => 'Pas maintenant';
+
+  @override
+  String get trackingConsentSettingsSection => 'SUIVI DE TRAJET';
+
+  @override
+  String get trackingConsentSettingsLabel =>
+      'Partager l\'avancée de mes trajets';
+
+  @override
+  String get trackingConsentSettingsSubtitle =>
+      'L\'expéditeur voit la ville la plus proche et la progression, jamais la position exacte.';
+
+  @override
+  String get trackingConsentSettingsOffSnackbar =>
+      'Partage désactivé. L\'autorisation de position reste réglable dans les réglages de votre téléphone.';
+
+  @override
+  String get trackingConsentSettingsOpenSystemSnackbar =>
+      'La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.';
+
+  @override
+  String get tripSummaryTitle => 'Résumé du trajet';
+
+  @override
+  String tripSummaryParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis en votre possession',
+      one: '$count colis en votre possession',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripSummaryWeight(String kg) {
+    return '$kg kg transportés';
+  }
+
+  @override
+  String get tripSummaryEarningsLabel => 'Gain estimé';
+
+  @override
+  String get tripSummaryEarningsNote =>
+      'Le paiement suit la livraison de chaque colis.';
+
+  @override
+  String get tripSummaryViewParcels => 'Voir mes colis';
+
+  @override
+  String get tripDepartButton => 'Je pars';
+
+  @override
+  String get tripDepartConfirmedSnackbar => 'C\'est noté, bon voyage !';
+
+  @override
+  String get travelerTrackingTitle => 'Suivi du voyageur';
+
+  @override
+  String get travelerTrackingBadgeEnRoute => 'En route';
+
+  @override
+  String get travelerTrackingBadgeArrived => 'Arrivé';
+
+  @override
+  String get travelerTrackingBadgeNotActivated =>
+      'Suivi non activé par le voyageur';
+
+  @override
+  String travelerTrackingBadgeStale(String age) {
+    return 'Dernière position $age';
+  }
+
+  @override
+  String get travelerTrackingNotActivatedHint =>
+      'Le voyageur n\'a pas activé le partage de sa position approximative.';
+
+  @override
+  String travelerTrackingNearCity(String city) {
+    return 'Près de $city';
+  }
+
+  @override
+  String travelerTrackingUpdated(String age) {
+    return 'Mis à jour $age';
+  }
+
+  @override
+  String travelerTrackingProgressPct(int pct) {
+    return '$pct %';
+  }
+
+  @override
+  String travelerTrackingProgressSemantics(int pct) {
+    return 'Avancement du trajet : $pct %';
+  }
+
+  @override
+  String get travelerTrackingNow => 'Maintenant';
+
+  @override
+  String travelerTrackingLastPosition(String age) {
+    return 'Dernière position, $age';
+  }
+
+  @override
+  String get travelerTrackingOpenTimeline => 'Voir toutes les étapes et photos';
+
+  @override
+  String travelerTrackingAgoDays(int days) {
+    return 'il y a $days j';
+  }
 }

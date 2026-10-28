@@ -31,8 +31,11 @@ import 'package:dony/features/matching/presentation/widgets/owner_action_grid.da
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_depart_button.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_summary_card.dart';
+import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -132,6 +135,9 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   /// s'ouvre d'elle-même. Mutée hors `setState`, elle ne pilote aucun rendu.
   bool _notifyAfterArrival = false;
 
+  /// Consentement au suivi demandé à l'ouverture (au plus une fois par écran).
+  bool _askedTrackingConsent = false;
+
   @override
   void initState() {
     super.initState();
@@ -141,6 +147,27 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
       if (mounted && a != null) {
         _evaluateViewer(context, a);
       }
+    });
+  }
+
+  /// Trajet ouvert par son propriétaire pendant la fenêtre de suivi : la
+  /// feuille de consentement se montre au plus une fois dans la vie du
+  /// compte (le cubit mémorise la réponse). Ne bloque rien.
+  void _askTrackingConsentOnce(AnnouncementModel a) {
+    if (_askedTrackingConsent || !a.trackingActive) {
+      return;
+    }
+    _askedTrackingConsent = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      unawaited(
+        getIt<TrackingConsentCubit>().ensureAsked(
+          context,
+          source: TrackingConsentSource.tripScreen,
+        ),
+      );
     });
   }
 
@@ -381,6 +408,11 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               return const DonyDetailSkeleton();
             }
             final isOwner = _isOwner(context, a);
+            if (isOwner) {
+              _askTrackingConsentOnce(a);
+            }
+            final summary = isOwner ? a.parcelsSummary : null;
+            final hasSummary = summary != null && summary.count > 0;
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 DonySpacing.lg,
@@ -413,6 +445,14 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                     onOpenLeg: (leg) =>
                         context.push('/announcements/${leg.id}/trip'),
                   ),
+                  if (hasSummary) ...[
+                    TripSummaryCard(announcementId: a.id, summary: summary),
+                    if (a.trackingActive) ...[
+                      const SizedBox(height: DonySpacing.md),
+                      TripDepartButton(announcementId: a.id),
+                    ],
+                    const SizedBox(height: DonySpacing.lg),
+                  ],
                   if (isOwner) TripAudienceSection(announcementId: a.id),
                   OwnerActionGrid(a: a, isOwner: isOwner),
                   const SizedBox(height: DonySpacing.lg),

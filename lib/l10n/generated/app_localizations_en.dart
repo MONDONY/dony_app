@@ -22782,4 +22782,144 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commissionAllocationConfirm => 'Accept and pay';
+
+  @override
+  String get trackingConsentTitle => 'Share your trip progress?';
+
+  @override
+  String get trackingConsentIntro =>
+      'When you carry a parcel, its sender can follow the progress of your journey.';
+
+  @override
+  String get trackingConsentPointApproximate =>
+      'They see the nearest city and how far along the trip is, never your exact position.';
+
+  @override
+  String get trackingConsentPointOptional =>
+      'It is optional: if you decline, nothing changes for your parcels.';
+
+  @override
+  String get trackingConsentPointWhileUsing =>
+      'Yadony only uses your location while the app is open.';
+
+  @override
+  String get trackingConsentChangeLater =>
+      'You can change your mind at any time in the privacy settings.';
+
+  @override
+  String get trackingConsentAccept => 'Allow';
+
+  @override
+  String get trackingConsentDecline => 'Not now';
+
+  @override
+  String get trackingConsentSettingsSection => 'TRIP TRACKING';
+
+  @override
+  String get trackingConsentSettingsLabel => 'Share my trip progress';
+
+  @override
+  String get trackingConsentSettingsSubtitle =>
+      'The sender sees the nearest city and the progress, never the exact position.';
+
+  @override
+  String get trackingConsentSettingsOffSnackbar =>
+      'Sharing turned off. Location permission can still be changed in your phone settings.';
+
+  @override
+  String get trackingConsentSettingsOpenSystemSnackbar =>
+      'Location is denied in your phone. Allow it in system settings to turn sharing on.';
+
+  @override
+  String get tripSummaryTitle => 'Trip summary';
+
+  @override
+  String tripSummaryParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels in your possession',
+      one: '$count parcel in your possession',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripSummaryWeight(String kg) {
+    return '$kg kg carried';
+  }
+
+  @override
+  String get tripSummaryEarningsLabel => 'Estimated earnings';
+
+  @override
+  String get tripSummaryEarningsNote =>
+      'Payment follows the delivery of each parcel.';
+
+  @override
+  String get tripSummaryViewParcels => 'View my parcels';
+
+  @override
+  String get tripDepartButton => 'I\'m leaving';
+
+  @override
+  String get tripDepartConfirmedSnackbar => 'Noted, have a safe trip!';
+
+  @override
+  String get travelerTrackingTitle => 'Traveler tracking';
+
+  @override
+  String get travelerTrackingBadgeEnRoute => 'On the way';
+
+  @override
+  String get travelerTrackingBadgeArrived => 'Arrived';
+
+  @override
+  String get travelerTrackingBadgeNotActivated =>
+      'Tracking not turned on by the traveler';
+
+  @override
+  String travelerTrackingBadgeStale(String age) {
+    return 'Last position $age';
+  }
+
+  @override
+  String get travelerTrackingNotActivatedHint =>
+      'The traveler has not turned on sharing of their approximate position.';
+
+  @override
+  String travelerTrackingNearCity(String city) {
+    return 'Near $city';
+  }
+
+  @override
+  String travelerTrackingUpdated(String age) {
+    return 'Updated $age';
+  }
+
+  @override
+  String travelerTrackingProgressPct(int pct) {
+    return '$pct%';
+  }
+
+  @override
+  String travelerTrackingProgressSemantics(int pct) {
+    return 'Trip progress: $pct%';
+  }
+
+  @override
+  String get travelerTrackingNow => 'Now';
+
+  @override
+  String travelerTrackingLastPosition(String age) {
+    return 'Last position, $age';
+  }
+
+  @override
+  String get travelerTrackingOpenTimeline => 'See all steps and photos';
+
+  @override
+  String travelerTrackingAgoDays(int days) {
+    return '$days d ago';
+  }
 }

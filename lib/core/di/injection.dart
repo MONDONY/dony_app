@@ -155,6 +155,7 @@ import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/tools_completion_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
+import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
@@ -316,14 +317,19 @@ import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/data/support_live_events.dart';
 import 'package:dony/features/support/data/support_repository.dart';
 import 'package:dony/features/tracking/bloc/pickup_code_request_cubit.dart';
+import 'package:dony/features/tracking/bloc/position_reporter_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
+import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/tracking_queue_photo_store.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
+import 'package:dony/features/tracking/data/trip_tracking_repository.dart';
+import 'package:dony/features/tracking/presentation/widgets/tracking_consent_sheet.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/data/datasources/trip_recurrence_datasource.dart';
@@ -621,6 +627,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnnouncementRepository>(),
       getIt<AnalyticsService>(),
       tripArrivalEvents: getIt<TripArrivalEventsService>(),
+      locator: const ScanLocator(),
+      sharingGranted: () => getIt<TrackingConsentCubit>().sharingGranted,
     ),
   );
   getIt.registerFactory<TripsSummaryCubit>(
@@ -1390,6 +1398,48 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Tracking
   getIt.registerLazySingleton<TrackingRepository>(
     () => TrackingRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<TripTrackingRepository>(
+    () => TripTrackingRepository(getIt<ApiClient>()),
+  );
+  // Consentement au partage de l'avancée du trajet : une seule instance, son
+  // état est lu par l'app et les réglages.
+  getIt.registerLazySingleton<TrackingConsentCubit>(
+    () => TrackingConsentCubit(
+      box: () => getIt<HiveService>().userPrefs,
+      locator: const ScanLocator(),
+      analytics: getIt<AnalyticsService>(),
+      showSheet: TrackingConsentSheet.show,
+    ),
+  );
+  // « Je pars » : un cubit par écran de trajet (paramètre : id du trajet).
+  getIt.registerFactoryParam<TripDepartCubit, String, void>(
+    (announcementId, _) => TripDepartCubit(
+      announcementId: announcementId,
+      tracking: getIt<TripTrackingRepository>(),
+      locator: const ScanLocator(),
+      consent: getIt<TrackingConsentCubit>(),
+      analytics: getIt<AnalyticsService>(),
+      box: () => getIt<HiveService>().userPrefs,
+    ),
+  );
+  // Mesure de la carte « Suivi du voyageur » : une instance par carte.
+  getIt.registerFactory<TravelerTrackingCardCubit>(
+    () => TravelerTrackingCardCubit(analytics: getIt<AnalyticsService>()),
+  );
+  // Cycle de vie de l'app (reprise, démarrage à froid) : une seule instance.
+  getIt.registerLazySingleton<PositionReporterCubit>(
+    () => PositionReporterCubit(
+      announcements: getIt<AnnouncementRepository>(),
+      tracking: getIt<TripTrackingRepository>(),
+      locator: const ScanLocator(),
+      analytics: getIt<AnalyticsService>(),
+      hasRealSession: () {
+        final user = FirebaseAuth.instance.currentUser;
+        return user != null && !user.isAnonymous;
+      },
+      sharingGranted: () => getIt<TrackingConsentCubit>().sharingGranted,
+    ),
   );
   getIt.registerLazySingleton<OfflineSyncService>(
     () => OfflineSyncService(

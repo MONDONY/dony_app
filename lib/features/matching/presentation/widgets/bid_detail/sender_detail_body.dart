@@ -16,6 +16,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
@@ -177,6 +178,19 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
         AmendmentEntryCard(bid: widget.bid),
       if (TripRescheduleCard.shouldShow(widget.bid))
         TripRescheduleCard(bid: widget.bid, isSender: true),
+      // Où en est le voyageur (ville approximative, avancement, villes
+      // traversées) : juste après les cartes d'action qui restent en tête
+      // (supplément, modification, report), avant les lieux, car c'est la
+      // première question de l'expéditeur une fois le colis remis.
+      if (TravelerTrackingCard.shouldShow(widget.bid))
+        TravelerTrackingCard(
+          tracking: widget.bid.travelerTracking!,
+          bidId: widget.bid.id,
+          bidStatus: widget.bid.status,
+          departureCity: widget.bid.departureCity,
+          arrivalCity: widget.bid.arrivalCity,
+          onOpenTimeline: () => openSenderTrackingTimeline(context, widget.bid),
+        ),
       // Lieu de remise puis lieu de récupération, ouvrables dans la carte
       // native ; la mini-carte suit l'étape du colis.
       if (ParcelLocationsCard.shouldShow(widget.bid))

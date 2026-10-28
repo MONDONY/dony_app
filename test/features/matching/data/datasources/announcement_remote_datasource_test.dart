@@ -387,6 +387,28 @@ void main() {
 
       expect(result.id, 'ann-001');
     });
+
+    test('adds the position to the body when provided', () async {
+      when(
+        () => mockDio.post(
+          '/announcements/ann-001/mark-arrived',
+          data: {
+            'arrivalInstructions': null,
+            'position': {'lat': 14.7, 'lon': -17.4},
+          },
+        ),
+      ).thenAnswer(
+        (_) async =>
+            _ok(_announcementJson, '/announcements/ann-001/mark-arrived'),
+      );
+
+      final result = await datasource.markTripArrived(
+        announcementId: 'ann-001',
+        position: (lat: 14.7, lon: -17.4),
+      );
+
+      expect(result.id, 'ann-001');
+    });
   });
 
   // ── updateArrivalInstructions ────────────────────────────────────────────────

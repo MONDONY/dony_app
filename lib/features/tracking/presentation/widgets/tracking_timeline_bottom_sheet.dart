@@ -4,19 +4,18 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:dony/features/package_request/presentation/widgets/request_detail/request_photo_viewer.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
-import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
+import 'package:dony/features/tracking/presentation/widgets/journey_timeline.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 /// Parcours d'un colis en lecture seule (maquette B3, « Résultat du
 /// suivi ») : numéro, phrase d'état, trajet, puis frise des étapes faites,
@@ -33,6 +32,10 @@ import 'package:intl/intl.dart';
 /// [onOpenParcel] : bouton principal « Voir le colis », visible dès
 /// l'ouverture, pour un colis de l'utilisateur (« Mes envois » de l'onglet
 /// Suivi, FLUTTER-7Z). Avec [onShareTracking], les deux boutons s'empilent.
+/// [travelerTracking] : suivi approximatif du voyageur (fiche colis de
+/// l'expéditeur). Ses villes (« Près de Lyon ») s'insèrent dans la frise, dans
+/// l'ordre du temps, entre les étapes enregistrées ; absent, la frise est
+/// inchangée.
 Future<void> showTrackingTimelineSheet(
   BuildContext context, {
   required String bidId,
@@ -44,6 +47,7 @@ Future<void> showTrackingTimelineSheet(
   String? trackingNumber,
   String? bidStatus,
   VoidCallback? onOpenParcel,
+  TravelerTrackingModel? travelerTracking,
 }) {
   return DonyBottomSheet.show<void>(
     context,
@@ -65,6 +69,7 @@ Future<void> showTrackingTimelineSheet(
       transportMode: transportMode,
       trackingNumber: trackingNumber,
       arrivalInstructions: arrivalInstructions,
+      travelerTracking: travelerTracking,
     ),
   );
 }
@@ -133,6 +138,7 @@ class _TrackingTimelineContent extends StatefulWidget {
     this.transportMode,
     this.trackingNumber,
     this.arrivalInstructions,
+    this.travelerTracking,
   });
 
   final String bidId;
@@ -142,6 +148,7 @@ class _TrackingTimelineContent extends StatefulWidget {
   final TransportMode? transportMode;
   final String? trackingNumber;
   final String? arrivalInstructions;
+  final TravelerTrackingModel? travelerTracking;
 
   @override
   State<_TrackingTimelineContent> createState() =>
@@ -219,6 +226,7 @@ class _TrackingTimelineContentState extends State<_TrackingTimelineContent>
               transportMode: transportMode,
               trackingNumber: trackingNumber,
               arrivalInstructions: arrivalInstructions,
+              travelerTracking: widget.travelerTracking,
             ).animate().fadeIn(duration: 250.ms, curve: Curves.easeOutCubic),
             _ => const SizedBox.shrink(),
           },
@@ -258,19 +266,6 @@ class _ReadOnlyHeader extends StatelessWidget {
   }
 }
 
-enum _StepState { done, current, upcoming }
-
-/// Une ligne de la frise.
-class _JourneyStep {
-  const _JourneyStep(this.state, this.title, {this.event});
-
-  final _StepState state;
-  final String title;
-
-  /// Événement enregistré d'une étape faite : heure, lieu, provenance, photo.
-  final TrackingEventModel? event;
-}
-
 /// Étapes du parcours, dans l'ordre : faites (événements enregistrés), en
 /// cours, puis à venir. Le transit, facultatif, n'apparaît que s'il a été
 /// scanné.
@@ -278,10 +273,17 @@ class _JourneyStep {
 /// [arrived] : le voyageur a déclaré son arrivée (colis `ARRIVED`). Aucun
 /// scan ne la trace : l'étape est faite sans heure, et la remise au
 /// destinataire devient l'étape en cours.
-List<_JourneyStep> _journeySteps(
+///
+/// [tracking] : les villes approximatives du voyageur sont fusionnées aux
+/// étapes faites par ordre d'heure ; à heure égale, l'étape enregistrée passe
+/// avant la ville. La dernière ville est marquée « Maintenant » (voyageur en
+/// route) ou « Dernière position, il y a X » (position ancienne).
+List<JourneyStep> _journeySteps(
   AppLocalizations l,
   List<TrackingEventModel> events, {
   bool arrived = false,
+  TravelerTrackingModel? tracking,
+  DateTime? now,
 }) {
   final sorted = [...events]
     ..sort((a, b) => a.scannedAt.compareTo(b.scannedAt));
@@ -289,30 +291,25 @@ List<_JourneyStep> _journeySteps(
   final delivered = sorted.any((e) => e.eventType == 'ARRIVEE');
   final arrivedOnly = arrived && departed && !delivered;
   return [
-    for (final event in sorted)
-      _JourneyStep(_StepState.done, _doneTitle(l, event), event: event),
+    ...mergedDoneSteps(l, sorted, tracking, now ?? DateTime.now()),
     if (!delivered && !departed) ...[
-      _JourneyStep(_StepState.current, l.trackingStepHandoverToTraveler),
-      _JourneyStep(_StepState.upcoming, l.trackingStepDeparture),
+      JourneyStep(JourneyStepState.current, l.trackingStepHandoverToTraveler),
+      JourneyStep(JourneyStepState.upcoming, l.trackingStepDeparture),
     ],
     if (arrivedOnly) ...[
-      _JourneyStep(_StepState.done, l.trackingStepArrivedAtDestination),
-      _JourneyStep(_StepState.current, l.trackingStepHandoverToRecipient),
+      JourneyStep(JourneyStepState.done, l.trackingStepArrivedAtDestination),
+      JourneyStep(JourneyStepState.current, l.trackingStepHandoverToRecipient),
     ] else ...[
       if (!delivered && departed)
-        _JourneyStep(_StepState.current, l.trackingHeadlineOnTheWay),
+        JourneyStep(JourneyStepState.current, l.trackingHeadlineOnTheWay),
       if (!delivered)
-        _JourneyStep(_StepState.upcoming, l.trackingStepHandoverToRecipient),
+        JourneyStep(
+          JourneyStepState.upcoming,
+          l.trackingStepHandoverToRecipient,
+        ),
     ],
   ];
 }
-
-String _doneTitle(AppLocalizations l, TrackingEventModel event) =>
-    switch (event.eventType) {
-      'DEPART' => l.trackingStepHandedToTraveler,
-      'ARRIVEE' => l.trackingStepHandedToRecipient,
-      _ => trackingStepLabel(l, event.eventType),
-    };
 
 /// Phrase d'état du colis, en titre.
 String _headline(
@@ -347,6 +344,7 @@ class _Journey extends StatelessWidget {
     this.transportMode,
     this.trackingNumber,
     this.arrivalInstructions,
+    this.travelerTracking,
   });
 
   final List<TrackingEventModel> events;
@@ -356,13 +354,19 @@ class _Journey extends StatelessWidget {
   final TransportMode? transportMode;
   final String? trackingNumber;
   final String? arrivalInstructions;
+  final TravelerTrackingModel? travelerTracking;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final steps = _journeySteps(l, events, arrived: arrived);
+    final steps = _journeySteps(
+      l,
+      events,
+      arrived: arrived,
+      tracking: travelerTracking,
+    );
     final number = trackingNumber?.trim() ?? '';
     final instructions = arrivalInstructions?.trim() ?? '';
     final from = departureCity?.trim() ?? '';
@@ -401,12 +405,13 @@ class _Journey extends StatelessWidget {
         ],
         const SizedBox(height: DonySpacing.xl),
         for (var i = 0; i < steps.length; i++)
-          _JourneyRow(
+          JourneyRow(
             step: steps[i],
             // Trait bleu entre deux étapes faites, gris ensuite.
             connector: i == steps.length - 1
                 ? null
-                : steps[i + 1].state == _StepState.done
+                : steps[i + 1].state == JourneyStepState.done ||
+                      steps[i + 1].state == JourneyStepState.position
                 ? cs.primary
                 : cs.outline,
           ),
@@ -423,216 +428,6 @@ class _Journey extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _JourneyRow extends StatelessWidget {
-  const _JourneyRow({required this.step, required this.connector});
-
-  final _JourneyStep step;
-
-  /// Couleur du trait vers l'étape suivante, `null` pour la dernière.
-  final Color? connector;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
-    final event = step.event;
-    final line = connector;
-    final details = event == null
-        ? ''
-        : [?event.locationLabel(l), ?event.methodLabel(l)].join(' · ');
-    final photo = event?.photoUrl;
-    final photoPurged = event?.photoPurged ?? false;
-
-    final Widget marker = switch (step.state) {
-      _StepState.done => Container(
-        width: 22,
-        height: 22,
-        decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
-        child: DonyIcon('check', size: 12, color: cs.onPrimary),
-      ),
-      _StepState.current => Container(
-        width: 22,
-        height: 22,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: cs.surface,
-          shape: BoxShape.circle,
-          border: Border.all(color: cs.secondary, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: cs.secondary.withValues(alpha: 0.15),
-              spreadRadius: 5,
-            ),
-          ],
-        ),
-        child: Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: cs.secondary,
-            shape: BoxShape.circle,
-          ),
-        ),
-      ),
-      _StepState.upcoming => Container(
-        width: 22,
-        height: 22,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: cs.outline, width: 2),
-        ),
-      ),
-    };
-
-    return IntrinsicHeight(
-      key: Key('tracking-step-${step.state.name}'),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            width: 22,
-            child: Column(
-              children: [
-                ExcludeSemantics(child: marker),
-                if (line != null)
-                  Expanded(child: Container(width: 2, color: line)),
-              ],
-            ),
-          ),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: line == null ? 0 : DonySpacing.lg,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          step.title,
-                          style: tt.bodyLarge?.copyWith(
-                            fontWeight: step.state == _StepState.current
-                                ? FontWeight.w700
-                                : null,
-                            color: step.state == _StepState.upcoming
-                                ? cs.onSurfaceVariant
-                                : cs.onSurface,
-                          ),
-                        ),
-                      ),
-                      if (event != null) ...[
-                        const SizedBox(width: DonySpacing.sm),
-                        Text(
-                          DateFormat.MMMd(
-                            l.localeName,
-                          ).add_Hm().format(event.scannedAt.toLocal()),
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (details.isNotEmpty) ...[
-                    const SizedBox(height: DonySpacing.xxs),
-                    Text(
-                      details,
-                      key: event?.scanMethod != null
-                          ? const Key('tracking-step-method')
-                          : null,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ],
-                  if (photoPurged) ...[
-                    const SizedBox(height: DonySpacing.sm),
-                    // Photo supprimée par le serveur après la livraison :
-                    // vignette neutre explicative, rien à ouvrir.
-                    Container(
-                      key: const Key('tracking-step-photo-purged'),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                        vertical: DonySpacing.sm,
-                      ),
-                      decoration: BoxDecoration(
-                        color: cs.surfaceWarm,
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.image_not_supported_outlined,
-                            size: 18,
-                            color: cs.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: DonySpacing.sm),
-                          Flexible(
-                            child: Text(
-                              l.trackingPhotoPurged,
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ] else if (photo != null) ...[
-                    const SizedBox(height: DonySpacing.sm),
-                    // Miniature touchable : la photo s'ouvre en plein écran,
-                    // zoomable (FLUTTER-82, elle ne s'agrandissait pas).
-                    Semantics(
-                      image: true,
-                      button: true,
-                      label: l.trackingStepPhotoLabel,
-                      hint: l.trackingStepPhotoOpen,
-                      child: GestureDetector(
-                        key: const Key('tracking-step-photo'),
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () =>
-                            RequestPhotoViewer.show(context, urls: [photo]),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(DonyRadius.md),
-                          child: DonyImage(
-                            url: photo,
-                            width: 64,
-                            height: 64,
-                            placeholder: (_) => ColoredBox(
-                              color: cs.surfaceWarm,
-                              child: const SizedBox(width: 64, height: 64),
-                            ),
-                            errorWidget: (_) => Container(
-                              width: 64,
-                              height: 64,
-                              color: cs.surfaceWarm,
-                              alignment: Alignment.center,
-                              child: DonyIcon(
-                                'image-off',
-                                size: 18,
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

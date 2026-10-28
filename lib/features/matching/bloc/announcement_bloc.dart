@@ -14,6 +14,7 @@ import 'package:dony/features/matching/data/models/announcement_search_page.dart
 import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -24,12 +25,23 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   /// Prévient les écrans déjà ouverts qu'un trajet vient d'être marqué
   /// arrivé (FLUTTER-D6). Facultatif : absent dans les tests unitaires.
   final TripArrivalEventsService? _tripArrivalEvents;
+  final ScanLocator? _locator;
+
+  /// Consentement mémorisé du voyageur au partage de position. Par défaut
+  /// refusé : sans réponse explicite, aucune position n'est jointe.
+  final bool Function() _sharingGranted;
+
+  static bool _neverShared() => false;
 
   AnnouncementBloc(
     this._repository,
     this._analytics, {
     TripArrivalEventsService? tripArrivalEvents,
+    ScanLocator? locator,
+    bool Function()? sharingGranted,
   }) : _tripArrivalEvents = tripArrivalEvents,
+       _locator = locator,
+       _sharingGranted = sharingGranted ?? _neverShared,
        super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
     on<AnnouncementTripCreateRequested>(_onTripCreateRequested);
@@ -591,14 +603,25 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     }
   }
 
+  /// Position approximative jointe à « Arrivé » : seulement si le voyageur a
+  /// consenti, jamais de demande de permission, jamais bloquante (la demande
+  /// d'arrivée part dans tous les cas, avec ou sans position).
+  Future<({double lat, double lon})?> _arrivalPosition() async {
+    final locator = _locator;
+    if (locator == null || !_sharingGranted()) return null;
+    final p = await quickPositionIfGranted(locator);
+    return p == null ? null : (lat: p.lat, lon: p.lon);
+  }
+
   Future<void> _onTripMarkArrivedRequested(
     AnnouncementTripMarkArrivedRequested event,
     Emitter<AnnouncementState> emit,
   ) => _runArrivalAction(
     emit,
-    action: () => _repository.markTripArrived(
+    action: () async => _repository.markTripArrived(
       announcementId: event.announcementId,
       arrivalInstructions: event.arrivalInstructions,
+      position: await _arrivalPosition(),
     ),
     onSuccess: (announcement) {
       _tripArrivalEvents?.notifyArrived(event.announcementId);

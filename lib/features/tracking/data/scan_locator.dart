@@ -39,29 +39,109 @@ class ScanLocator {
   }
 
   /// Coordonnées seules, sans réseau : relevé frais borné par [fixTimeout],
-  /// sinon dernière position connue, sinon `null`.
+  /// sinon dernière position connue, sinon `null`. Peut afficher la demande
+  /// d'autorisation du système : à réserver aux gestes explicites de
+  /// l'utilisateur (le scan d'un colis et le parcours de consentement).
+  /// « Je pars » et « Je suis arrivé » passent par [quickPositionIfGranted],
+  /// qui ne demande jamais rien.
   Future<ScanPosition?> captureCoordinates() async {
     try {
       final permission = await Geolocator.requestPermission();
+      return await _fix(permission);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Comme [captureCoordinates], mais NE DEMANDE JAMAIS l'autorisation :
+  /// `null` tant qu'elle n'est pas déjà accordée (en cours d'utilisation ou
+  /// toujours). Pour l'envoi silencieux de la position à la reprise de l'app.
+  Future<ScanPosition?> captureCoordinatesIfGranted() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      return await _fix(permission);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Dernière position connue du téléphone, instantanée : seulement
+  /// `checkPermission` puis `getLastKnownPosition`, jamais de demande ni de
+  /// relevé frais. `null` sans autorisation ou sans position mémorisée.
+  Future<ScanPosition?> lastKnownCoordinatesIfGranted() async {
+    try {
+      final permission = await Geolocator.checkPermission();
       if (permission != LocationPermission.always &&
           permission != LocationPermission.whileInUse) {
         return null;
       }
-      Position? position;
-      try {
-        position = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-          ),
-        ).timeout(fixTimeout);
-      } catch (_) {
-        position = await Geolocator.getLastKnownPosition();
-      }
+      final position = await Geolocator.getLastKnownPosition();
       if (position == null) return null;
       return ScanPosition(lat: position.latitude, lon: position.longitude);
     } catch (_) {
       return null;
     }
+  }
+
+  /// L'autorisation de localisation est-elle déjà accordée ? Ne demande rien.
+  Future<bool> isPermissionGranted() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      return permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Affiche la demande d'autorisation du système (une fois par installation
+  /// côté iOS) et rend `true` si la position est accordée. Ne relève aucune
+  /// position : pour le consentement au suivi.
+  Future<bool> requestPermission() async {
+    try {
+      final permission = await Geolocator.requestPermission();
+      return permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Refus définitif : le système n'affichera plus la demande, seuls les
+  /// réglages du téléphone peuvent la lever.
+  Future<bool> isPermanentlyDenied() async {
+    try {
+      return await Geolocator.checkPermission() ==
+          LocationPermission.deniedForever;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Ouvre les réglages de l'application dans le système.
+  Future<void> openSettings() async {
+    try {
+      await Geolocator.openAppSettings();
+    } catch (_) {}
+  }
+
+  Future<ScanPosition?> _fix(LocationPermission permission) async {
+    if (permission != LocationPermission.always &&
+        permission != LocationPermission.whileInUse) {
+      return null;
+    }
+    Position? position;
+    try {
+      position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      ).timeout(fixTimeout);
+    } catch (_) {
+      position = await Geolocator.getLastKnownPosition();
+    }
+    if (position == null) return null;
+    return ScanPosition(lat: position.latitude, lon: position.longitude);
   }
 
   /// [position] complétée de son lieu lisible ; inchangée si le géocodage
@@ -123,5 +203,27 @@ class ScanLocator {
     final min = minFull.floor();
     final sec = ((minFull - min) * 60 * 100).round();
     return '$deg/1,$min/1,$sec/100';
+  }
+}
+
+/// Attente maximale ajoutée à une action du voyageur (« Je pars », « Arrivé »)
+/// par la prise de position.
+const quickPositionBudget = Duration(seconds: 2);
+
+/// Position pour une action centrale : la dernière position connue d'abord
+/// (la position est floutée côté serveur), sinon un relevé frais, le tout
+/// borné par [budget]. Ne demande jamais l'autorisation, ne lève jamais ;
+/// `null` si rien n'arrive à temps.
+Future<ScanPosition?> quickPositionIfGranted(
+  ScanLocator locator, {
+  Duration budget = quickPositionBudget,
+}) async {
+  try {
+    return await (() async {
+      return await locator.lastKnownCoordinatesIfGranted() ??
+          await locator.captureCoordinatesIfGranted();
+    })().timeout(budget);
+  } catch (_) {
+    return null;
   }
 }

@@ -21,6 +21,27 @@ String trackingPublicUrl(String token) {
   return '$base/$token';
 }
 
+/// Ouvre la frise du colis pour l'expéditeur, avec les villes approximatives
+/// du voyageur et le partage du lien de suivi quand il existe.
+void openSenderTrackingTimeline(BuildContext context, BidModel bid) {
+  showTrackingTimelineSheet(
+    context,
+    bidId: bid.id,
+    departureCity: bid.departureCity,
+    arrivalCity: bid.arrivalCity,
+    arrivalInstructions: bid.arrivalInstructions,
+    trackingNumber: bid.trackingNumber,
+    bidStatus: bid.status,
+    travelerTracking: bid.travelerTracking,
+    onShareTracking: bid.trackingToken != null
+        ? () => shareTrackingLink(
+            bid,
+            sharePositionOrigin: sharePositionOriginFor(context),
+          )
+        : null,
+  );
+}
+
 /// Partage le lien de suivi du colis via le système natif.
 ///
 /// No-op si [bid.trackingToken] est null.
@@ -68,21 +89,7 @@ class QuickActionsRow extends StatelessWidget {
             label: l.bidDetailTrackParcel,
             cs: cs,
             tt: tt,
-            onTap: () => showTrackingTimelineSheet(
-              context,
-              bidId: bid.id,
-              departureCity: bid.departureCity,
-              arrivalCity: bid.arrivalCity,
-              arrivalInstructions: bid.arrivalInstructions,
-              trackingNumber: bid.trackingNumber,
-              bidStatus: bid.status,
-              onShareTracking: hasToken
-                  ? () => shareTrackingLink(
-                      bid,
-                      sharePositionOrigin: sharePositionOriginFor(context),
-                    )
-                  : null,
-            ),
+            onTap: () => openSenderTrackingTimeline(context, bid),
           ),
         ),
         if (hasToken) ...[

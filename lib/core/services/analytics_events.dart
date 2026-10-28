@@ -1280,4 +1280,36 @@ abstract final class AnalyticsEvents {
 
   /// Entrée GP Pro du menu de l'onglet Moi.
   static const profileMenuGpProOpened = 'profile_menu_gp_pro_opened';
+
+  // ── Suivi approximatif du voyageur ─────────────────────────────────────
+  /// « Je pars » confirmé depuis l'écran du trajet (propriété `has_position`).
+  /// Jamais de coordonnées.
+  static const tripDepartureConfirmed = 'trip_departure_confirmed';
+
+  /// Position envoyée en silence à la reprise de l'app (propriété `source` :
+  /// `resume`). Jamais de coordonnées.
+  static const tripPositionSent = 'trip_position_sent';
+
+  /// Carte « Suivi du voyageur » affichée à l'expéditeur, une fois par
+  /// instance de carte (propriétés `status` : `not_activated` / `en_route` /
+  /// `arrived` / `stale`, et `has_history` bool). Jamais de ville ni de
+  /// coordonnées.
+  static const travelerTrackingCardViewed = 'traveler_tracking_card_viewed';
+
+  /// Lien « Voir toutes les étapes et photos » de la carte ouvert (propriété
+  /// `status`, mêmes valeurs).
+  static const travelerTrackingTimelineOpened =
+      'traveler_tracking_timeline_opened';
+
+  /// Envoi silencieux de la position non fait (propriété `reason` :
+  /// `no_permission` ou `no_position` seulement).
+  static const tripPositionSkipped = 'trip_position_skipped';
+
+  /// Feuille de consentement au suivi du trajet affichée (propriété `source` :
+  /// `accepted_parcel` / `trip_screen` / `depart` / `settings`).
+  static const trackingConsentSheetShown = 'tracking_consent_sheet_shown';
+
+  /// Réponse au partage de l'avancée du trajet (propriétés `granted` : bool,
+  /// vrai seulement si la position du système est accordée, et `source`).
+  static const trackingConsentAnswered = 'tracking_consent_answered';
 }

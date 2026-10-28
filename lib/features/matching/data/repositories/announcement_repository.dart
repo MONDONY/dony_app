@@ -344,9 +344,11 @@ class AnnouncementRepository {
   Future<AnnouncementModel> markTripArrived({
     required String announcementId,
     String? arrivalInstructions,
+    ({double lat, double lon})? position,
   }) => _remoteDatasource.markTripArrived(
     announcementId: announcementId,
     arrivalInstructions: arrivalInstructions,
+    position: position,
   );
 
   Future<AnnouncementModel> updateArrivalInstructions({

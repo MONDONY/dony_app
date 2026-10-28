@@ -38,6 +38,7 @@ import 'package:dony/features/payments/wallet/presentation/commission_shortfall_
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/presentation/tracking_consent_prompt.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -467,6 +468,7 @@ class _BidDetailViewState extends State<_BidDetailView>
             message: l.bidDetailAcceptedSetHandoverWindow,
             type: DonySnackbarType.success,
           );
+          askTrackingConsentAfterAccept(context);
           context.read<BidBloc>().add(BidDetailRequested(_bid.id));
         } else if (state is acs.BidWalletInsufficient) {
           _showWalletInsufficientSheet(context, state);
@@ -582,6 +584,7 @@ class _BidDetailViewState extends State<_BidDetailView>
                     message: l.bidDetailAcceptedSnackbar,
                     type: DonySnackbarType.success,
                   );
+                  askTrackingConsentAfterAccept(context);
                 } else if (state is BidRejected) {
                   _bid = state.bid;
                   DonySnackbar.show(
