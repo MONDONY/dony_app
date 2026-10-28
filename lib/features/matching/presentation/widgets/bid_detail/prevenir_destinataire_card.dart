@@ -43,35 +43,20 @@ String recipientNotifyMessage(
 typedef RecipientShareFallback =
     Future<void> Function(String text, Rect? sharePositionOrigin);
 
-/// Encart « Prévenir le destinataire » (vue expéditeur).
+/// Règles et action « Prévenir le destinataire » (vue expéditeur).
 ///
 /// Le destinataire ne reçoit rien de Yadony : aucun SMS (trop cher vers
 /// l'Afrique), et il n'a pas forcément l'app. C'est donc l'expéditeur qui le
 /// prévient, depuis son propre WhatsApp, avec un message déjà rédigé.
 ///
-/// Deux temps, sur la même carte :
+/// Deux temps :
 /// - demande acceptée : lien de suivi public + invitation à installer l'app ;
 /// - code de retrait généré (scan DEPART) : le code s'ajoute au message, pour
 ///   que le destinataire l'ait en main à la remise.
 ///
 /// Sans numéro international ou si WhatsApp ne s'ouvre pas, on retombe sur la
 /// feuille de partage du système avec le même texte.
-class PrevenirDestinataireCard extends StatelessWidget {
-  const PrevenirDestinataireCard({
-    super.key,
-    required this.bid,
-    this.launcher,
-    this.shareFallback,
-  });
-
-  final BidModel bid;
-
-  /// Injecté en test ; sinon l'instance du conteneur.
-  final ExternalUrlLauncher? launcher;
-
-  /// Injecté en test ; sinon `Share.share`.
-  final RecipientShareFallback? shareFallback;
-
+abstract final class PrevenirDestinataire {
   static const _statuses = <String>{
     'ACCEPTED',
     'HANDED_OVER',
@@ -81,15 +66,17 @@ class PrevenirDestinataireCard extends StatelessWidget {
 
   static const _codeStatuses = <String>{'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'};
 
-  /// Visible tant que le colis n'est pas remis et que le lien de suivi existe,
-  /// ou dès que le destinataire a refusé alors qu'il peut encore être changé :
-  /// l'encart devient alors « Destinataire à remplacer ».
-  static bool shouldShow(BidModel bid) =>
-      (bid.trackingToken != null && _statuses.contains(bid.status)) ||
-      _declinedActionable(bid);
+  /// Le lien de suivi existe, le colis n'est pas encore remis et le
+  /// destinataire n'a pas à être remplacé : le message peut partir.
+  static bool canNotify(BidModel bid) =>
+      bid.trackingToken != null &&
+      _statuses.contains(bid.status) &&
+      !isDeclinedActionable(bid);
 
-  /// Destinataire en refus ou retiré (FLUTTER-E8) et colis encore modifiable.
-  static bool _declinedActionable(BidModel bid) =>
+  /// Destinataire en refus ou retiré (FLUTTER-E8) et colis encore modifiable :
+  /// renvoyer le message au même numéro n'aurait pas de sens, il faut en
+  /// désigner un autre.
+  static bool isDeclinedActionable(BidModel bid) =>
       bid.isRecipientDeclinedForSender && bid.canChangeRecipient;
 
   /// Le code ne part qu'une fois le colis confié au voyageur, et jamais
@@ -99,7 +86,16 @@ class PrevenirDestinataireCard extends StatelessWidget {
       !bid.isPickupCodeExpired &&
       _codeStatuses.contains(bid.status);
 
-  Future<void> _notify(BuildContext context) async {
+  /// Ouvre WhatsApp avec le message rédigé, sinon la feuille de partage.
+  ///
+  /// [launcher] et [shareFallback] sont injectés en test ; sinon l'instance du
+  /// conteneur et `Share.share`.
+  static Future<void> notify(
+    BuildContext context,
+    BidModel bid, {
+    ExternalUrlLauncher? launcher,
+    RecipientShareFallback? shareFallback,
+  }) async {
     final l = context.l10n;
     final hasCode = withCode(bid);
     final text = recipientNotifyMessage(l, bid, withCode: hasCode);
@@ -130,6 +126,21 @@ class PrevenirDestinataireCard extends StatelessWidget {
     await share(text, origin);
   }
 
+  /// Libellé du bouton d'envoi : le code ne figure dans le message que s'il
+  /// part vraiment.
+  static String buttonLabel(AppLocalizations l, BidModel bid) =>
+      withCode(bid) ? l.recipientNotifyButtonCode : l.recipientNotifyButtonLink;
+}
+
+/// Contenu de « Prévenir {prénom} » : pastille « suit le colis dans Yadony »,
+/// explication du message, note quand le code de retrait est bloqué ou
+/// expiré. Sans cadre ni bouton : l'appelant pose le bouton d'envoi
+/// ([PrevenirDestinataire.notify]) là où il le veut.
+class PrevenirDestinataireBody extends StatelessWidget {
+  const PrevenirDestinataireBody({super.key, required this.bid});
+
+  final BidModel bid;
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -139,14 +150,90 @@ class PrevenirDestinataireCard extends StatelessWidget {
     final name = (rawName == null || rawName.isEmpty)
         ? l.recipientNotifyFallbackName
         : rawName;
-    final hasCode = withCode(bid);
-    final appStatus = bid.recipientAppStatus;
+    final hasCode = PrevenirDestinataire.withCode(bid);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (bid.recipientAppStatus == 'CONFIRMED') ...[
+          _RecipientAppNotice(
+            key: const Key('recipient-app-confirmed'),
+            iconAsset: 'badge-check',
+            color: cs.success,
+            text: (rawName == null || rawName.isEmpty)
+                ? l.recipientAppConfirmedAnonymous
+                : l.recipientAppConfirmed(rawName),
+          ),
+          const SizedBox(height: DonySpacing.md),
+        ],
+        Text(
+          hasCode
+              ? l.recipientNotifyBodyCode(name)
+              : l.recipientNotifyBodyLink(name),
+          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        // FLUTTER-G1 : code bloqué, le message ne partirait qu'avec le lien.
+        // FLUTTER-G2 : code expiré, même conséquence, autre explication.
+        if (bid.needsNewPickupCode) ...[
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            bid.isPickupCodeExpired
+                ? l.recipientNotifyCodeExpiredHint
+                : l.recipientNotifyCodeBlockedHint,
+            key: const Key('recipient-notify-code-blocked'),
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Encart « Prévenir le destinataire » dans son cadre d'origine : contenu
+/// ([PrevenirDestinataireBody]) + bouton d'envoi, ou « Destinataire à
+/// remplacer » ([RecipientDeclinedCard]) quand il a refusé.
+///
+/// Transitoire : la fiche en tuiles ouvre ce contenu dans un bottom sheet,
+/// bouton dans la zone fixe du bas, et ce widget disparaît avec elle.
+class PrevenirDestinataireCard extends StatelessWidget {
+  const PrevenirDestinataireCard({
+    super.key,
+    required this.bid,
+    this.launcher,
+    this.shareFallback,
+  });
+
+  final BidModel bid;
+
+  /// Injecté en test ; sinon l'instance du conteneur.
+  final ExternalUrlLauncher? launcher;
+
+  /// Injecté en test ; sinon `Share.share`.
+  final RecipientShareFallback? shareFallback;
+
+  /// Visible tant que le colis n'est pas remis et que le lien de suivi existe,
+  /// ou dès que le destinataire a refusé alors qu'il peut encore être changé :
+  /// l'encart devient alors « Destinataire à remplacer ».
+  static bool shouldShow(BidModel bid) =>
+      PrevenirDestinataire.canNotify(bid) ||
+      PrevenirDestinataire.isDeclinedActionable(bid);
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final rawName = bid.recipientName?.trim();
+    final name = (rawName == null || rawName.isEmpty)
+        ? l.recipientNotifyFallbackName
+        : rawName;
 
     // Le destinataire a refusé le colis ou s'en est retiré (FLUTTER-E8) :
     // renvoyer le lien et le code au même numéro n'aurait pas de sens. Le
     // bouton WhatsApp cède la place à « Désigner un autre destinataire ».
-    if (appStatus == 'DECLINED') {
-      return _DeclinedRecipientCard(bid: bid);
+    if (bid.recipientAppStatus == 'DECLINED') {
+      return RecipientDeclinedCard(bid: bid);
     }
 
     return DetailCard(
@@ -154,46 +241,18 @@ class PrevenirDestinataireCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (appStatus == 'CONFIRMED') ...[
-            _RecipientAppNotice(
-              key: const Key('recipient-app-confirmed'),
-              iconAsset: 'badge-check',
-              color: cs.success,
-              text: (rawName == null || rawName.isEmpty)
-                  ? l.recipientAppConfirmedAnonymous
-                  : l.recipientAppConfirmed(rawName),
-            ),
-            const SizedBox(height: DonySpacing.md),
-          ],
-          Text(
-            hasCode
-                ? l.recipientNotifyBodyCode(name)
-                : l.recipientNotifyBodyLink(name),
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          // FLUTTER-G1 : code bloqué, le message ne partirait qu'avec le lien.
-          // FLUTTER-G2 : code expiré, même conséquence, autre explication.
-          if (bid.needsNewPickupCode) ...[
-            const SizedBox(height: DonySpacing.sm),
-            Text(
-              bid.isPickupCodeExpired
-                  ? l.recipientNotifyCodeExpiredHint
-                  : l.recipientNotifyCodeBlockedHint,
-              key: const Key('recipient-notify-code-blocked'),
-              style: tt.bodySmall?.copyWith(
-                color: cs.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+          PrevenirDestinataireBody(bid: bid),
           const SizedBox(height: DonySpacing.md),
           DonyButton(
-            label: hasCode
-                ? l.recipientNotifyButtonCode
-                : l.recipientNotifyButtonLink,
+            label: PrevenirDestinataire.buttonLabel(l, bid),
             iconAsset: 'message-circle',
             variant: DonyButtonVariant.secondary,
-            onPressed: () => _notify(context),
+            onPressed: () => PrevenirDestinataire.notify(
+              context,
+              bid,
+              launcher: launcher,
+              shareFallback: shareFallback,
+            ),
           ),
         ],
       ),
@@ -208,8 +267,8 @@ class PrevenirDestinataireCard extends StatelessWidget {
 /// (`recipientReplacementRequestedAt`), et l'action principale ouvre la
 /// feuille « Modifier le destinataire », comme le bouton « Modifier » de la
 /// carte « Colis & destinataire ».
-class _DeclinedRecipientCard extends StatelessWidget {
-  const _DeclinedRecipientCard({required this.bid});
+class RecipientDeclinedCard extends StatelessWidget {
+  const RecipientDeclinedCard({super.key, required this.bid});
 
   final BidModel bid;
 
@@ -256,7 +315,7 @@ class _DeclinedRecipientCard extends StatelessWidget {
 
 /// Ligne d'état du destinataire dans Yadony (lot 2) : il suit le colis
 /// (`CONFIRMED`), ou il a refusé le colis ou s'en est retiré (`DECLINED`,
-/// [_DeclinedRecipientCard], avec la demande du voyageur en [detail]).
+/// [RecipientDeclinedCard], avec la demande du voyageur en [detail]).
 class _RecipientAppNotice extends StatelessWidget {
   const _RecipientAppNotice({
     super.key,
