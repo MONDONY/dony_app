@@ -1,13 +1,19 @@
 // Carte « Suivi du voyageur » de la fiche colis (vue expéditeur) : pastille
 // d'état, avancement, ville la plus proche, historique des villes et lien vers
 // la frise complète. Neutre quand le suivi n'est pas activé ou ancien.
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -18,6 +24,24 @@ import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
+
+class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
+    implements TrackingBloc {}
+
+TrackingEventModel _event(
+  String type,
+  DateTime at, {
+  String? photoUrl,
+  bool photoPurged = false,
+}) => TrackingEventModel(
+  id: 'e-$type',
+  bidId: 'bid-1',
+  eventType: type,
+  scannedAt: at,
+  photoUrl: photoUrl,
+  photoPurged: photoPurged,
+  createdAt: at,
+);
 
 final _nowUtc = DateTime.utc(2026, 10, 28, 12);
 
@@ -67,6 +91,9 @@ void main() {
   });
 
   tearDown(() {
+    if (getIt.isRegistered<TrackingBloc>()) {
+      getIt.unregister<TrackingBloc>();
+    }
     if (getIt.isRegistered<TravelerTrackingCardCubit>()) {
       getIt.unregister<TravelerTrackingCardCubit>();
     }
@@ -77,6 +104,7 @@ void main() {
     VoidCallback? onOpen,
     Locale locale = const Locale('fr'),
     DateTime? now,
+    String? bidStatus,
   }) => MaterialApp(
     theme: AppTheme.light(),
     locale: locale,
@@ -87,6 +115,8 @@ void main() {
         child: TravelerTrackingCard(
           tracking: tracking,
           onOpenTimeline: onOpen ?? () {},
+          bidId: 'bid-1',
+          bidStatus: bidStatus,
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           now: () => now ?? _nowUtc,
@@ -425,6 +455,119 @@ void main() {
           properties: {'status': 'en_route'},
         ),
       ).called(1);
+    });
+  });
+
+  group('étapes et photos dans la carte', () {
+    void withEvents(List<TrackingEventModel> events) {
+      final bloc = _MockTrackingBloc();
+      whenListen(
+        bloc,
+        const Stream<TrackingState>.empty(),
+        initialState: TrackingEventsLoaded(events),
+      );
+      getIt.registerFactory<TrackingBloc>(() => bloc);
+    }
+
+    final handed = _nowUtc.subtract(const Duration(hours: 6));
+
+    testWidgets('cardShowsHandedOverStepWithPhotoThumbnail', (tester) async {
+      withEvents([
+        _event('DEPART', handed, photoUrl: 'https://example.com/depart.jpg'),
+      ]);
+      await tester.pumpWidget(host(_tracking()));
+
+      expect(find.text('Remis au voyageur'), findsOneWidget);
+      expect(find.byKey(const Key('tracking-step-photo')), findsOneWidget);
+      expect(find.text('Voir toutes les étapes et photos'), findsOneWidget);
+    });
+
+    testWidgets('cardShowsDeliveredStepWithPhoto', (tester) async {
+      withEvents([
+        _event('DEPART', handed),
+        _event(
+          'ARRIVEE',
+          _nowUtc.subtract(const Duration(hours: 1)),
+          photoUrl: 'https://example.com/arrivee.jpg',
+        ),
+      ]);
+      await tester.pumpWidget(
+        host(_tracking(status: TravelerTrackingStatus.arrived)),
+      );
+
+      expect(find.text('Remis au destinataire'), findsOneWidget);
+      expect(find.byKey(const Key('tracking-step-photo')), findsOneWidget);
+    });
+
+    testWidgets('cardShowsPurgedPhotoMessage', (tester) async {
+      withEvents([_event('DEPART', handed, photoPurged: true)]);
+      await tester.pumpWidget(host(_tracking()));
+
+      expect(
+        find.byKey(const Key('tracking-step-photo-purged')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('tracking-step-photo')), findsNothing);
+    });
+
+    testWidgets('cardShowsArrivedStepWhenParcelArrived', (tester) async {
+      withEvents([_event('DEPART', handed)]);
+      await tester.pumpWidget(
+        host(
+          _tracking(status: TravelerTrackingStatus.arrived),
+          bidStatus: 'ARRIVED',
+        ),
+      );
+
+      expect(find.text('Arrivé à destination'), findsOneWidget);
+    });
+
+    testWidgets('cardMergesCitiesAndStepsChronologically', (tester) async {
+      withEvents([_event('DEPART', handed)]);
+      // Cinq villes : seules les trois dernières restent, l'étape de remise
+      // (plus ancienne que toutes) passe en premier.
+      final cities = [
+        for (var i = 0; i < 5; i++)
+          TravelerTrackingPoint(
+            city: 'Ville$i',
+            at: handed.add(Duration(hours: i + 1)),
+          ),
+      ];
+      await tester.pumpWidget(host(_tracking(history: cities)));
+
+      expect(find.text('Près de Ville0'), findsNothing);
+      expect(find.text('Près de Ville1'), findsNothing);
+      final handedY = tester.getTopLeft(find.text('Remis au voyageur')).dy;
+      final y2 = tester.getTopLeft(find.text('Près de Ville2')).dy;
+      final y3 = tester.getTopLeft(find.text('Près de Ville3')).dy;
+      final y4 = tester.getTopLeft(find.text('Près de Ville4')).dy;
+      expect(handedY, lessThan(y2));
+      expect(y2, lessThan(y3));
+      expect(y3, lessThan(y4));
+      expect(find.text('Maintenant'), findsOneWidget);
+    });
+
+    testWidgets('fallsBackToCitiesOnlyWhenEventsUnavailable', (tester) async {
+      final bloc = _MockTrackingBloc();
+      whenListen(
+        bloc,
+        const Stream<TrackingState>.empty(),
+        initialState: TrackingEventsError(const NetworkException('x')),
+      );
+      getIt.registerFactory<TrackingBloc>(() => bloc);
+      await tester.pumpWidget(
+        host(
+          _tracking(
+            history: [TravelerTrackingPoint(city: 'Lyon', at: handed)],
+          ),
+        ),
+      );
+
+      expect(
+        find.byKey(const Key('traveler-tracking-history-row')),
+        findsOneWidget,
+      );
+      expect(find.text('Près de Lyon'), findsWidgets);
     });
   });
 

@@ -4,20 +4,18 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:dony/features/package_request/presentation/widgets/request_detail/request_photo_viewer.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
-import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/features/tracking/presentation/widgets/journey_timeline.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 /// Parcours d'un colis en lecture seule (maquette B3, « Résultat du
 /// suivi ») : numéro, phrase d'état, trajet, puis frise des étapes faites,
@@ -268,26 +266,6 @@ class _ReadOnlyHeader extends StatelessWidget {
   }
 }
 
-/// [position] : une ville approximative du voyageur, entre deux étapes.
-enum _StepState { done, current, upcoming, position }
-
-/// Une ligne de la frise.
-class _JourneyStep {
-  const _JourneyStep(this.state, this.title, {this.event, this.at, this.note});
-
-  final _StepState state;
-  final String title;
-
-  /// Heure d'une ville approximative ([_StepState.position]).
-  final DateTime? at;
-
-  /// Marque sous la ville : « Maintenant » ou « Dernière position, … ».
-  final String? note;
-
-  /// Événement enregistré d'une étape faite : heure, lieu, provenance, photo.
-  final TrackingEventModel? event;
-}
-
 /// Étapes du parcours, dans l'ordre : faites (événements enregistrés), en
 /// cours, puis à venir. Le transit, facultatif, n'apparaît que s'il a été
 /// scanné.
@@ -300,7 +278,7 @@ class _JourneyStep {
 /// étapes faites par ordre d'heure ; à heure égale, l'étape enregistrée passe
 /// avant la ville. La dernière ville est marquée « Maintenant » (voyageur en
 /// route) ou « Dernière position, il y a X » (position ancienne).
-List<_JourneyStep> _journeySteps(
+List<JourneyStep> _journeySteps(
   AppLocalizations l,
   List<TrackingEventModel> events, {
   bool arrived = false,
@@ -313,88 +291,25 @@ List<_JourneyStep> _journeySteps(
   final delivered = sorted.any((e) => e.eventType == 'ARRIVEE');
   final arrivedOnly = arrived && departed && !delivered;
   return [
-    ..._mergedDoneSteps(l, sorted, tracking, now ?? DateTime.now()),
+    ...mergedDoneSteps(l, sorted, tracking, now ?? DateTime.now()),
     if (!delivered && !departed) ...[
-      _JourneyStep(_StepState.current, l.trackingStepHandoverToTraveler),
-      _JourneyStep(_StepState.upcoming, l.trackingStepDeparture),
+      JourneyStep(JourneyStepState.current, l.trackingStepHandoverToTraveler),
+      JourneyStep(JourneyStepState.upcoming, l.trackingStepDeparture),
     ],
     if (arrivedOnly) ...[
-      _JourneyStep(_StepState.done, l.trackingStepArrivedAtDestination),
-      _JourneyStep(_StepState.current, l.trackingStepHandoverToRecipient),
+      JourneyStep(JourneyStepState.done, l.trackingStepArrivedAtDestination),
+      JourneyStep(JourneyStepState.current, l.trackingStepHandoverToRecipient),
     ] else ...[
       if (!delivered && departed)
-        _JourneyStep(_StepState.current, l.trackingHeadlineOnTheWay),
+        JourneyStep(JourneyStepState.current, l.trackingHeadlineOnTheWay),
       if (!delivered)
-        _JourneyStep(_StepState.upcoming, l.trackingStepHandoverToRecipient),
+        JourneyStep(
+          JourneyStepState.upcoming,
+          l.trackingStepHandoverToRecipient,
+        ),
     ],
   ];
 }
-
-/// Étapes faites ([sorted], par heure) et villes du voyageur, dans l'ordre du
-/// temps. Une ville sans heure ne peut pas être placée : elle est ignorée.
-List<_JourneyStep> _mergedDoneSteps(
-  AppLocalizations l,
-  List<TrackingEventModel> sorted,
-  TravelerTrackingModel? tracking,
-  DateTime now,
-) {
-  final entries = <(DateTime, int, _JourneyStep)>[
-    for (final event in sorted)
-      (
-        event.scannedAt,
-        0,
-        _JourneyStep(_StepState.done, _doneTitle(l, event), event: event),
-      ),
-  ];
-  if (tracking != null && tracking.history.isNotEmpty) {
-    final last = tracking.history.last;
-    for (final point in tracking.history) {
-      final at = point.at;
-      if (at == null) continue;
-      String? note;
-      if (identical(point, last)) {
-        note = switch (tracking.status) {
-          TravelerTrackingStatus.enRoute => l.travelerTrackingNow,
-          TravelerTrackingStatus.stale => l.travelerTrackingLastPosition(
-            travelerTrackingAge(
-              l,
-              (tracking.lastUpdatedAt ?? at).toLocal(),
-              now,
-            ),
-          ),
-          _ => null,
-        };
-      }
-      entries.add((
-        at,
-        1,
-        _JourneyStep(
-          _StepState.position,
-          l.travelerTrackingNearCity(point.city),
-          at: at,
-          note: note,
-        ),
-      ));
-    }
-  }
-  // Tri par heure, puis étape avant ville ; List.sort n'étant pas stable,
-  // l'ordre d'origine départage deux villes de même heure.
-  final indexed = [for (var i = 0; i < entries.length; i++) (i, entries[i])]
-    ..sort((a, b) {
-      final byTime = a.$2.$1.compareTo(b.$2.$1);
-      if (byTime != 0) return byTime;
-      final byKind = a.$2.$2.compareTo(b.$2.$2);
-      return byKind != 0 ? byKind : a.$1.compareTo(b.$1);
-    });
-  return [for (final e in indexed) e.$2.$3];
-}
-
-String _doneTitle(AppLocalizations l, TrackingEventModel event) =>
-    switch (event.eventType) {
-      'DEPART' => l.trackingStepHandedToTraveler,
-      'ARRIVEE' => l.trackingStepHandedToRecipient,
-      _ => trackingStepLabel(l, event.eventType),
-    };
 
 /// Phrase d'état du colis, en titre.
 String _headline(
@@ -490,13 +405,13 @@ class _Journey extends StatelessWidget {
         ],
         const SizedBox(height: DonySpacing.xl),
         for (var i = 0; i < steps.length; i++)
-          _JourneyRow(
+          JourneyRow(
             step: steps[i],
             // Trait bleu entre deux étapes faites, gris ensuite.
             connector: i == steps.length - 1
                 ? null
-                : steps[i + 1].state == _StepState.done ||
-                      steps[i + 1].state == _StepState.position
+                : steps[i + 1].state == JourneyStepState.done ||
+                      steps[i + 1].state == JourneyStepState.position
                 ? cs.primary
                 : cs.outline,
           ),
@@ -513,243 +428,6 @@ class _Journey extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _JourneyRow extends StatelessWidget {
-  const _JourneyRow({required this.step, required this.connector});
-
-  final _JourneyStep step;
-
-  /// Couleur du trait vers l'étape suivante, `null` pour la dernière.
-  final Color? connector;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
-    final event = step.event;
-    final line = connector;
-    final time = event?.scannedAt ?? step.at;
-    final details = event == null
-        ? ''
-        : [?event.locationLabel(l), ?event.methodLabel(l)].join(' · ');
-    final photo = event?.photoUrl;
-    final photoPurged = event?.photoPurged ?? false;
-
-    final Widget marker = switch (step.state) {
-      _StepState.done => Container(
-        width: 22,
-        height: 22,
-        decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
-        child: DonyIcon('check', size: 12, color: cs.onPrimary),
-      ),
-      _StepState.current => Container(
-        width: 22,
-        height: 22,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: cs.surface,
-          shape: BoxShape.circle,
-          border: Border.all(color: cs.secondary, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: cs.secondary.withValues(alpha: 0.15),
-              spreadRadius: 5,
-            ),
-          ],
-        ),
-        child: Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: cs.secondary,
-            shape: BoxShape.circle,
-          ),
-        ),
-      ),
-      _StepState.upcoming => Container(
-        width: 22,
-        height: 22,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: cs.outline, width: 2),
-        ),
-      ),
-      // Ville approximative : simple point, moins lourd qu'une étape.
-      _StepState.position => SizedBox(
-        width: 22,
-        height: 22,
-        child: Center(
-          child: Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: cs.primary,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      ),
-    };
-
-    return IntrinsicHeight(
-      key: Key('tracking-step-${step.state.name}'),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            width: 22,
-            child: Column(
-              children: [
-                ExcludeSemantics(child: marker),
-                if (line != null)
-                  Expanded(child: Container(width: 2, color: line)),
-              ],
-            ),
-          ),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: line == null ? 0 : DonySpacing.lg,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          step.title,
-                          style: tt.bodyLarge?.copyWith(
-                            fontWeight: step.state == _StepState.current
-                                ? FontWeight.w700
-                                : null,
-                            color: step.state == _StepState.upcoming
-                                ? cs.onSurfaceVariant
-                                : cs.onSurface,
-                          ),
-                        ),
-                      ),
-                      if (time != null) ...[
-                        const SizedBox(width: DonySpacing.sm),
-                        Text(
-                          DateFormat.MMMd(
-                            l.localeName,
-                          ).add_Hm().format(time.toLocal()),
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (step.note != null) ...[
-                    const SizedBox(height: DonySpacing.xxs),
-                    Text(
-                      step.note!,
-                      key: const Key('tracking-step-note'),
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                  if (details.isNotEmpty) ...[
-                    const SizedBox(height: DonySpacing.xxs),
-                    Text(
-                      details,
-                      key: event?.scanMethod != null
-                          ? const Key('tracking-step-method')
-                          : null,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ],
-                  if (photoPurged) ...[
-                    const SizedBox(height: DonySpacing.sm),
-                    // Photo supprimée par le serveur après la livraison :
-                    // vignette neutre explicative, rien à ouvrir.
-                    Container(
-                      key: const Key('tracking-step-photo-purged'),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                        vertical: DonySpacing.sm,
-                      ),
-                      decoration: BoxDecoration(
-                        color: cs.surfaceWarm,
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.image_not_supported_outlined,
-                            size: 18,
-                            color: cs.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: DonySpacing.sm),
-                          Flexible(
-                            child: Text(
-                              l.trackingPhotoPurged,
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ] else if (photo != null) ...[
-                    const SizedBox(height: DonySpacing.sm),
-                    // Miniature touchable : la photo s'ouvre en plein écran,
-                    // zoomable (FLUTTER-82, elle ne s'agrandissait pas).
-                    Semantics(
-                      image: true,
-                      button: true,
-                      label: l.trackingStepPhotoLabel,
-                      hint: l.trackingStepPhotoOpen,
-                      child: GestureDetector(
-                        key: const Key('tracking-step-photo'),
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () =>
-                            RequestPhotoViewer.show(context, urls: [photo]),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(DonyRadius.md),
-                          child: DonyImage(
-                            url: photo,
-                            width: 64,
-                            height: 64,
-                            placeholder: (_) => ColoredBox(
-                              color: cs.surfaceWarm,
-                              child: const SizedBox(width: 64, height: 64),
-                            ),
-                            errorWidget: (_) => Container(
-                              width: 64,
-                              height: 64,
-                              color: cs.surfaceWarm,
-                              alignment: Alignment.center,
-                              child: DonyIcon(
-                                'image-off',
-                                size: 18,
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

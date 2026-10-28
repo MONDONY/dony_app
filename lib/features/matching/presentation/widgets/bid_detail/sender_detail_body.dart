@@ -185,6 +185,8 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       if (TravelerTrackingCard.shouldShow(widget.bid))
         TravelerTrackingCard(
           tracking: widget.bid.travelerTracking!,
+          bidId: widget.bid.id,
+          bidStatus: widget.bid.status,
           departureCity: widget.bid.departureCity,
           arrivalCity: widget.bid.arrivalCity,
           onOpenTimeline: () => openSenderTrackingTimeline(context, widget.bid),

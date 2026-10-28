@@ -3,8 +3,12 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/features/tracking/presentation/widgets/journey_timeline.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,7 +16,8 @@ import 'package:intl/intl.dart';
 
 /// Carte « Suivi du voyageur » de la fiche colis (vue expéditeur) : où en est
 /// le voyageur, de façon approximative (ville la plus proche, avancement), et
-/// les dernières villes traversées. Pas de carte géographique.
+/// les étapes faites (avec leurs photos) et les dernières villes traversées,
+/// dans l'ordre du temps. Pas de carte géographique.
 ///
 /// Neutre quand le suivi n'est pas activé ou que la position est ancienne :
 /// aucune couleur d'alerte, l'expéditeur n'a rien à faire.
@@ -21,12 +26,20 @@ class TravelerTrackingCard extends StatelessWidget {
     super.key,
     required this.tracking,
     required this.onOpenTimeline,
+    required this.bidId,
+    this.bidStatus,
     this.departureCity,
     this.arrivalCity,
     this.now,
   });
 
   final TravelerTrackingModel tracking;
+
+  /// Colis dont la carte lit les étapes (remise, arrivée, photos) pour les
+  /// mêler aux villes. Sans elles (lecture impossible), seules les villes
+  /// s'affichent.
+  final String bidId;
+  final String? bidStatus;
 
   /// Ouvre la frise complète du colis (étapes, photos, villes).
   final VoidCallback onOpenTimeline;
@@ -53,17 +66,29 @@ class TravelerTrackingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Même lecture que la frise complète (étapes et photos du colis), faite
+    // une fois à l'affichage de la carte. Un échec laisse les villes seules.
+    final loadsEvents = getIt.isRegistered<TrackingBloc>();
+    final body = _CardBody(
+      tracking: tracking,
+      onOpenTimeline: onOpenTimeline,
+      departureCity: departureCity,
+      arrivalCity: arrivalCity,
+      bidStatus: bidStatus,
+      loadsEvents: loadsEvents,
+      now: (now ?? DateTime.now)(),
+    );
     return BlocProvider<TravelerTrackingCardCubit>(
       // `lazy: false` : l'affichage est compté à la création, une seule fois.
       lazy: false,
       create: (_) => getIt<TravelerTrackingCardCubit>()..viewed(tracking),
-      child: _CardBody(
-        tracking: tracking,
-        onOpenTimeline: onOpenTimeline,
-        departureCity: departureCity,
-        arrivalCity: arrivalCity,
-        now: (now ?? DateTime.now)(),
-      ),
+      child: loadsEvents
+          ? BlocProvider<TrackingBloc>(
+              create: (_) =>
+                  getIt<TrackingBloc>()..add(TrackingEventsRequested(bidId)),
+              child: body,
+            )
+          : body,
     );
   }
 }
@@ -73,6 +98,8 @@ class _CardBody extends StatelessWidget {
     required this.tracking,
     required this.onOpenTimeline,
     required this.now,
+    required this.loadsEvents,
+    this.bidStatus,
     this.departureCity,
     this.arrivalCity,
   });
@@ -80,6 +107,8 @@ class _CardBody extends StatelessWidget {
   final TravelerTrackingModel tracking;
   final VoidCallback onOpenTimeline;
   final DateTime now;
+  final bool loadsEvents;
+  final String? bidStatus;
   final String? departureCity;
   final String? arrivalCity;
 
@@ -101,6 +130,21 @@ class _CardBody extends StatelessWidget {
     final city = tracking.nearestCity;
     final pct = tracking.progressPct;
     final showPosition = status != TravelerTrackingStatus.notActivated;
+    final trackingState = loadsEvents
+        ? context.watch<TrackingBloc>().state
+        : null;
+    final events = trackingState is TrackingEventsLoaded
+        ? trackingState.events
+        : null;
+    final steps = events == null || events.isEmpty
+        ? null
+        : compactJourneySteps(
+            l,
+            events,
+            tracking: tracking,
+            now: now,
+            arrived: bidStatus == 'ARRIVED',
+          );
     final points =
         tracking.history.length > TravelerTrackingCard._maxHistoryRows
         ? tracking.history.sublist(
@@ -184,7 +228,16 @@ class _CardBody extends StatelessWidget {
               ),
             ),
           ],
-          if (points.isNotEmpty) ...[
+          if (steps != null) ...[
+            const SizedBox(height: DonySpacing.md),
+            for (var i = 0; i < steps.length; i++)
+              JourneyRow(
+                step: steps[i],
+                // Même trait que la frise complète : bleu vers une étape faite
+                // ou une ville, rien après la dernière ligne.
+                connector: i == steps.length - 1 ? null : cs.primary,
+              ),
+          ] else if (points.isNotEmpty) ...[
             const SizedBox(height: DonySpacing.md),
             for (var i = 0; i < points.length; i++)
               _HistoryRow(
