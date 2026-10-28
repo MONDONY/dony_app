@@ -496,6 +496,7 @@ class _DonyAppState extends State<DonyApp> {
                     syncCallSession(state, getIt<CallSessionService>()),
                   );
                   if (AccountResetGuard.shouldResetAccountScopedBlocs(state)) {
+                    getIt<TrackingConsentCubit>().onLoggedOut();
                     // `BusinessPrefsBloc`/`StripeAccountBloc` sont des
                     // `lazySingleton` GetIt jamais recréés par `AuthBloc` —
                     // sans ce reset, ils continueraient de porter le pays /

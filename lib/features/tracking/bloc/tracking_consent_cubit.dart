@@ -80,23 +80,29 @@ class TrackingConsentCubit extends Cubit<TrackingConsentState> {
   /// Rôles du compte connecté, `null` si inconnus (alimenté par l'app depuis
   /// l'état d'authentification).
   ///
-  /// `null` (déconnexion, profil pas chargé) remet à zéro l'état en mémoire :
-  /// un autre compte sur le même téléphone ne doit pas voir celui du
-  /// précédent (le Hive est vidé à la déconnexion, la tuile relit à l'ouverture).
+  /// `null` veut dire « rôles inconnus » (état d'authentification transitoire :
+  /// chargement, erreur) : le réglage reste affiché, ni la réponse, ni
+  /// l'autorisation système, ni la garde de la feuille ne sont touchées.
   void updateRoles(List<String>? roles) {
     _roles = roles;
-    if (roles == null) {
-      _asking = false;
-      emit(const TrackingConsentState());
-      return;
-    }
+    final relevant = roles == null || roles.contains('TRAVELER');
+    if (relevant == state.relevant) return;
     emit(
       TrackingConsentState(
         answer: state.answer,
         osGranted: state.osGranted,
-        relevant: roles.contains('TRAVELER'),
+        relevant: relevant,
       ),
     );
+  }
+
+  /// Vraie déconnexion ou changement de compte (le Hive est vidé): l'état en
+  /// mémoire du compte précédent est remis à zéro. Une seule feuille ne peut
+  /// plus être ouverte de toute façon: la garde est relâchée.
+  void onLoggedOut() {
+    _roles = null;
+    _asking = false;
+    emit(const TrackingConsentState());
   }
 
   TrackingConsentAnswer _stored() {

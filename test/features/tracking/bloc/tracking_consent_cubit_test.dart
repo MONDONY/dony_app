@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -176,13 +178,57 @@ void main() {
     expect(cubit.state.enabled, isFalse);
   });
 
-  test('resetsOnLogout', () async {
+  test('logoutResetsState', () async {
+    final cubit = build()..updateRoles(['SENDER']);
+    cubit.updateRoles(['TRAVELER']);
+    await cubit.ensureAsked(context, source: TrackingConsentSource.depart);
+    expect(cubit.state.enabled, isTrue);
+
+    cubit.onLoggedOut();
+    expect(cubit.state, const TrackingConsentState());
+  });
+
+  test('transientNullRolesDoesNotResetAnswer', () async {
     final cubit = build()..updateRoles(['TRAVELER']);
     await cubit.ensureAsked(context, source: TrackingConsentSource.depart);
     expect(cubit.state.enabled, isTrue);
 
     cubit.updateRoles(null);
-    expect(cubit.state, const TrackingConsentState());
+    expect(cubit.state.answer, TrackingConsentAnswer.granted);
+    expect(cubit.state.osGranted, isTrue);
+    expect(cubit.state.enabled, isTrue);
+
+    cubit.updateRoles(['TRAVELER']);
+    expect(cubit.state.answer, TrackingConsentAnswer.granted);
+  });
+
+  test('transientNullRolesDoesNotResetAskingGuard', () async {
+    final gate = Completer<bool?>();
+    final cubit = TrackingConsentCubit(
+      box: () => mapBackedBox(stored),
+      locator: locator,
+      analytics: analytics,
+      showSheet: (_) {
+        sheetShown++;
+        return gate.future;
+      },
+    )..updateRoles(['TRAVELER']);
+    final first = cubit.ensureAsked(
+      context,
+      source: TrackingConsentSource.depart,
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    cubit.updateRoles(null);
+    final second = await cubit.ensureAsked(
+      context,
+      source: TrackingConsentSource.tripScreen,
+    );
+    expect(second, isFalse);
+    expect(sheetShown, 1);
+
+    gate.complete(true);
+    expect(await first, isTrue);
   });
 
   test('relevantOnlyWhenRolesUnknownOrTraveler', () {
@@ -190,6 +236,8 @@ void main() {
     expect(cubit.state.relevant, isTrue);
     cubit.updateRoles(['SENDER']);
     expect(cubit.state.relevant, isFalse);
+    cubit.updateRoles(null);
+    expect(cubit.state.relevant, isTrue);
     cubit.updateRoles(['SENDER', 'TRAVELER']);
     expect(cubit.state.relevant, isTrue);
   });
