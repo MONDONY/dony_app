@@ -22761,5 +22761,17 @@
   "walletShortfallExcludedFrozen": "Le portefeuille {currency} n'est pas pris en compte : un remboursement est en cours",
   "@walletShortfallExcludedFrozen": {"description": "Ligne du sheet « Solde insuffisant » : portefeuille gelé par une demande de remboursement.", "placeholders": {"currency": {"type": "String"}}},
   "walletShortfallExcludedRate": "Le portefeuille {currency} n'est pas pris en compte : taux du jour indisponible",
-  "@walletShortfallExcludedRate": {"description": "Ligne du sheet « Solde insuffisant » : taux périmé ou absent.", "placeholders": {"currency": {"type": "String"}}}
+  "@walletShortfallExcludedRate": {"description": "Ligne du sheet « Solde insuffisant » : taux périmé ou absent.", "placeholders": {"currency": {"type": "String"}}},
+  "commissionAllocationTitle": "Comment vos frais seront réglés",
+  "@commissionAllocationTitle": {"description": "Titre de la feuille d'aperçu avant l'acceptation d'un colis payé en espèces (commission_allocation_sheet.dart)."},
+  "commissionAllocationIntro": "Frais de service : {amount}. Ils seront prélevés ainsi :",
+  "@commissionAllocationIntro": {"description": "Introduction de la feuille d'aperçu de la répartition de la commission entre portefeuilles.", "placeholders": {"amount": {"type": "String"}}},
+  "commissionAllocationLine": "Portefeuille {wallet} : {amount}",
+  "@commissionAllocationLine": {"description": "Ligne de la feuille d'aperçu : portefeuille débité et montant dans sa devise.", "placeholders": {"wallet": {"type": "String"}, "amount": {"type": "String"}}},
+  "commissionAllocationConverted": "Pour {covered}, au taux du jour : {unit} = {rate}",
+  "@commissionAllocationConverted": {"description": "Sous-ligne d'un portefeuille converti : part réglée dans la devise du colis et taux du jour utilisé.", "placeholders": {"covered": {"type": "String"}, "unit": {"type": "String"}, "rate": {"type": "String"}}},
+  "commissionAllocationNote": "Conversion au taux du jour, sans marge. Indicatif : le prélèvement réel peut être inférieur, jamais supérieur.",
+  "@commissionAllocationNote": {"description": "Mention sous les lignes de la feuille d'aperçu de la commission."},
+  "commissionAllocationConfirm": "Accepter et régler",
+  "@commissionAllocationConfirm": {"description": "Bouton de la feuille d'aperçu : accepte le colis et prélève la commission."}
 }

@@ -16,6 +16,7 @@ import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
+import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_funding_options.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
@@ -362,13 +363,17 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
     return confirmed == true;
   }
 
-  void _onAccept(
+  Future<void> _onAccept(
     BuildContext context,
     List<BidModel> pendingBids,
     String bidId,
-  ) {
-    _addProcessing(bidId);
+  ) async {
     final bid = pendingBids.firstWhere((b) => b.id == bidId);
+    // Espèces répartis sur plusieurs portefeuilles ou convertis : le voyageur
+    // voit d'où partira la commission avant de s'engager.
+    if (!await confirmCashCommissionAllocation(context, bid)) return;
+    if (!context.mounted) return;
+    _addProcessing(bidId);
     if (bid.paymentMethod == BidPaymentMethod.cash) {
       _lastCashAcceptBidId = bidId;
     }

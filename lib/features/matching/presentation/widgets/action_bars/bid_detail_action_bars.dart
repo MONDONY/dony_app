@@ -15,6 +15,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment
 import 'package:dony/features/matching/presentation/widgets/bid_detail/money_breakdown_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -137,7 +138,15 @@ class TravelerPendingBar extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: isLoading
                   ? null
-                  : () => dispatchBidAccept(context, bid),
+                  : () async {
+                      if (!await confirmCashCommissionAllocation(
+                        context,
+                        bid,
+                      )) {
+                        return;
+                      }
+                      if (context.mounted) dispatchBidAccept(context, bid);
+                    },
               icon: isLoading
                   ? const SizedBox(
                       width: 16,

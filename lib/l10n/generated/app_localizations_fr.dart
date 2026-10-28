@@ -22920,4 +22920,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String walletShortfallExcludedRate(String currency) {
     return 'Le portefeuille $currency n\'est pas pris en compte : taux du jour indisponible';
   }
+
+  @override
+  String get commissionAllocationTitle => 'Comment vos frais seront réglés';
+
+  @override
+  String commissionAllocationIntro(String amount) {
+    return 'Frais de service : $amount. Ils seront prélevés ainsi :';
+  }
+
+  @override
+  String commissionAllocationLine(String wallet, String amount) {
+    return 'Portefeuille $wallet : $amount';
+  }
+
+  @override
+  String commissionAllocationConverted(
+    String covered,
+    String unit,
+    String rate,
+  ) {
+    return 'Pour $covered, au taux du jour : $unit = $rate';
+  }
+
+  @override
+  String get commissionAllocationNote =>
+      'Conversion au taux du jour, sans marge. Indicatif : le prélèvement réel peut être inférieur, jamais supérieur.';
+
+  @override
+  String get commissionAllocationConfirm => 'Accepter et régler';
 }
