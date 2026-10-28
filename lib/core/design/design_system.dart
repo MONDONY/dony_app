@@ -14,6 +14,7 @@ export 'package:dony/core/design/tokens/typography_tokens.dart';
 // Utils
 export 'package:dony/core/design/utils/dony_layout.dart';
 // Navigation & layout
+export 'package:dony/core/design/widgets/dony_action_tile.dart';
 export 'package:dony/core/design/widgets/dony_app_bar.dart';
 export 'package:dony/core/design/widgets/dony_archived_row.dart';
 // Glassmorphism

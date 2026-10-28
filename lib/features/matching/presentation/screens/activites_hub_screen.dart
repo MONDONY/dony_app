@@ -308,7 +308,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
           : l.activityAlertsSubtitleDefault;
     }
 
-    return _OtherTile(
+    return DonyActionTile(
       key: const Key('hub-tool-alerts'),
       iconName: 'bell',
       label: title,
@@ -439,7 +439,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                     ],
                     _TileRow(
                       left: _alertsTile(cs, toolsState, alertsSummary),
-                      right: _OtherTile(
+                      right: DonyActionTile(
                         iconName: 'bookmark',
                         label: l.activityToolTitleTemplates,
                         subtitle: l.activityToolSubtitleTemplates,
@@ -463,7 +463,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                       // « ARGENT » dans le profil, entre le solde et les
                       // virements, alors qu'elle ne parle pas d'argent reçu
                       // mais de tarifs proposés.
-                      left: _OtherTile(
+                      left: DonyActionTile(
                         iconName: 'layout-grid',
                         label: l.activityToolTitlePriceGrid,
                         subtitle: l.activityToolSubtitlePriceGrid,
@@ -478,7 +478,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           '/profile/price-grid',
                         ),
                       ),
-                      right: _OtherTile(
+                      right: DonyActionTile(
                         iconName: 'map-pin',
                         label: l.activityToolTitleAddresses,
                         subtitle: l.activityToolSubtitleAddresses,
@@ -496,7 +496,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                     ),
                     const SizedBox(height: DonySpacing.md),
                     _TileRow(
-                      left: _OtherTile(
+                      left: DonyActionTile(
                         iconName: 'contact',
                         label: l.activityToolTitleRecipients,
                         subtitle: l.activityToolSubtitleRecipients,
@@ -511,7 +511,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           '/profile/recipients',
                         ),
                       ),
-                      right: _OtherTile(
+                      right: DonyActionTile(
                         iconName: 'chart-line',
                         label: l.activityHistoryTitle,
                         subtitle: l.activityHistorySubtitle,
@@ -524,7 +524,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                     ),
                     const SizedBox(height: DonySpacing.md),
                     _TileRow(
-                      left: _OtherTile(
+                      left: DonyActionTile(
                         iconName: 'circle-help',
                         label: l.activityHelpTitleHub,
                         subtitle: l.activityHelpSubtitle,
@@ -857,112 +857,6 @@ class _TileRow extends StatelessWidget {
           Expanded(child: left),
           const SizedBox(width: DonySpacing.md),
           Expanded(child: right ?? const SizedBox.shrink()),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Outils ───────────────────────────────────────────────────────────────────
-
-class _OtherTile extends StatelessWidget {
-  const _OtherTile({
-    super.key,
-    required this.iconName,
-    required this.label,
-    required this.color,
-    required this.onTap,
-    this.subtitle,
-    this.badge,
-    this.showNotificationDot = false,
-  });
-
-  final String iconName;
-  final String label;
-
-  /// Couleur de la catégorie, bleu ou terracotta : teinte l'icône et son
-  /// fond, sans aplat plein, pour ne pas concurrencer la grille d'activité.
-  final Color color;
-  final String? subtitle;
-
-  /// Pastille d'état de l'outil, sur sa propre ligne sous l'icône. `null` pour
-  /// les tuiles sans rien à remplir (Historique, Aide) ou tant que l'état est
-  /// inconnu.
-  final Widget? badge;
-
-  /// Point ambre sur l'icône : l'outil a du nouveau depuis la dernière
-  /// visite (aujourd'hui, seules les alertes s'en servent).
-  final bool showNotificationDot;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return DonyCard(
-      onTap: onTap,
-      elevated: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  DonyIconContainer(
-                    iconAsset: iconName,
-                    size: DonyIconContainerSize.sm,
-                    backgroundColor: color.withValues(alpha: 0.12),
-                    iconColor: color,
-                    borderRadius: DonyRadius.iconBtn,
-                  ),
-                  if (showNotificationDot)
-                    Positioned(
-                      top: -3,
-                      right: -3,
-                      child: Container(
-                        key: const Key('tool-tile-dot'),
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: DonyColors.amberDark,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: cs.surface, width: 2),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-          // La pastille prend sa propre ligne plutôt que la place restante à
-          // droite de l'icône : sur un écran de 360 dp une tuile ne fait que
-          // 154 px, il ne restait qu'une cinquantaine de pixels et « 4
-          // destinataires » se coupait en « 4 desti… ».
-          if (badge != null) ...[
-            const SizedBox(height: DonySpacing.sm),
-            badge!,
-          ],
-          const SizedBox(height: DonySpacing.xl),
-          Text(
-            label,
-            style: tt.titleSmall,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: DonySpacing.xxs),
-            Text(
-              subtitle!,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
         ],
       ),
     );
