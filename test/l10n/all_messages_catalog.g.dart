@@ -2975,6 +2975,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'ticketTravelerAwaitingPayment': (l) => l.ticketTravelerAwaitingPayment,
   'ticketParcelDeliveredLabel': (l) => l.ticketParcelDeliveredLabel,
   'ticketRequestClosedMessage': (l) => l.ticketRequestClosedMessage,
+  'ticketClosedNoShowReason': (l) => l.ticketClosedNoShowReason,
+  'ticketClosedParcelRefusedReason': (l) => l.ticketClosedParcelRefusedReason,
+  'ticketClosedExpiredReason': (l) => l.ticketClosedExpiredReason,
   'ticketHandoverDeadlineExpiredTitle': (l) =>
       l.ticketHandoverDeadlineExpiredTitle,
   'ticketHandoverDeadlineExpiredSender': (l) =>

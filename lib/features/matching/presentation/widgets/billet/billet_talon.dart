@@ -163,6 +163,11 @@ class BilletTalon extends StatelessWidget {
       'REJECTED' => _RejectedBlock(bid: bid, isSender: false),
       'EXPIRED' when bid.isExpiredAtHandoverDeadline =>
         const _HandoverDeadlineExpiredBlock(isSender: false),
+      // Statuts terminaux sans bloc dédié : sans cela la zone du talon restait
+      // vide et rien n'expliquait pourquoi la demande ne bouge plus.
+      'NO_SHOW' ||
+      'PARCEL_REFUSED' ||
+      'EXPIRED' => _TravelerClosedBlock(status: status),
       _ => const SizedBox.shrink(),
     };
   }
@@ -790,7 +795,8 @@ class _DoneBlock extends StatelessWidget {
   }
 }
 
-/// any / REJECTED or CANCELLED — muted terminal message.
+/// any / REJECTED or CANCELLED (et NO_SHOW / PARCEL_REFUSED / EXPIRED côté
+/// voyageur, sous leur motif) — muted terminal message.
 class _TerminalBlock extends StatelessWidget {
   const _TerminalBlock();
 
@@ -805,6 +811,45 @@ class _TerminalBlock extends StatelessWidget {
         textAlign: TextAlign.center,
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
       ),
+    );
+  }
+}
+
+/// traveler / NO_SHOW, PARCEL_REFUSED, EXPIRED (hors date limite de dépôt) :
+/// le motif, avec le vocabulaire du tampon, puis le message terminal commun.
+/// Côté expéditeur la zone du talon reste vide pour ces statuts.
+class _TravelerClosedBlock extends StatelessWidget {
+  final String status;
+
+  const _TravelerClosedBlock({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final reason = switch (status) {
+      'NO_SHOW' => l.ticketClosedNoShowReason,
+      'PARCEL_REFUSED' => l.ticketClosedParcelRefusedReason,
+      _ => l.ticketClosedExpiredReason,
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: DonySpacing.sm),
+          child: Text(
+            reason,
+            key: const Key('billet-closed-reason'),
+            textAlign: TextAlign.center,
+            style: tt.bodyMedium?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const _TerminalBlock(),
+      ],
     );
   }
 }

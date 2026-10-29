@@ -402,7 +402,8 @@ void main() {
       title: '#BID-00',
       sections: ['billet', 'expediteur', 'gain', 'transport'],
       gain: 'PAIEMENT',
-      noTalonText: true,
+      talon: 'Cette demande est terminée.',
+      talonReason: 'Absence constatée',
     ),
     'PARCEL_REFUSED': _Scenario(
       bid: _bid('PARCEL_REFUSED'),
@@ -410,7 +411,8 @@ void main() {
       title: '#BID-00',
       sections: ['billet', 'expediteur', 'gain', 'transport'],
       gain: 'PAIEMENT',
-      noTalonText: true,
+      talon: 'Cette demande est terminée.',
+      talonReason: 'Colis refusé à la remise',
     ),
     'EXPIRED (sans motif)': _Scenario(
       bid: _bid('EXPIRED'),
@@ -418,7 +420,8 @@ void main() {
       title: '#BID-00',
       sections: ['billet', 'expediteur', 'gain', 'transport'],
       gain: 'PAIEMENT',
-      noTalonText: true,
+      talon: 'Cette demande est terminée.',
+      talonReason: 'Demande expirée',
     ),
     'EXPIRED (date limite de dépôt passée)': _Scenario(
       bid: _bid('EXPIRED', rejectionReason: 'HANDOVER_DEADLINE_PASSED'),
@@ -447,10 +450,8 @@ void main() {
         if (s.talon != null) {
           expect(_in('billet', find.text(s.talon!)), findsWidgets);
         }
-        if (s.noTalonText) {
-          expect(find.text('Cette demande est terminée.'), findsNothing);
-          expect(find.text('Date limite de dépôt passée'), findsNothing);
-          expect(find.text('Colis livré'), findsNothing);
+        if (s.talonReason != null) {
+          expect(_in('billet', find.text(s.talonReason!)), findsOneWidget);
         }
 
         // Sections du corps, dans l'ordre.
@@ -590,7 +591,7 @@ class _Scenario {
     this.footer = const [],
     this.talon,
     this.hero,
-    this.noTalonText = false,
+    this.talonReason,
   });
 
   final BidModel bid;
@@ -608,7 +609,7 @@ class _Scenario {
   /// Fragment du titre du hero.
   final String? hero;
 
-  /// La zone du talon ne montre aucun message (NO_SHOW, PARCEL_REFUSED, EXPIRED
-  /// hors date limite).
-  final bool noTalonText;
+  /// Motif affiché au-dessus du message terminal (NO_SHOW, PARCEL_REFUSED,
+  /// EXPIRED hors date limite).
+  final String? talonReason;
 }

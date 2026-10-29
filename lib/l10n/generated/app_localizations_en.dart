@@ -8109,6 +8109,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ticketRequestClosedMessage => 'This request is closed.';
 
   @override
+  String get ticketClosedNoShowReason => 'No-show recorded';
+
+  @override
+  String get ticketClosedParcelRefusedReason => 'Parcel refused at handover';
+
+  @override
+  String get ticketClosedExpiredReason => 'Request expired';
+
+  @override
   String get ticketHandoverDeadlineExpiredTitle => 'Drop-off deadline passed';
 
   @override

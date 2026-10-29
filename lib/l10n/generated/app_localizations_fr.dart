@@ -8164,6 +8164,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ticketRequestClosedMessage => 'Cette demande est terminée.';
 
   @override
+  String get ticketClosedNoShowReason => 'Absence constatée';
+
+  @override
+  String get ticketClosedParcelRefusedReason => 'Colis refusé à la remise';
+
+  @override
+  String get ticketClosedExpiredReason => 'Demande expirée';
+
+  @override
   String get ticketHandoverDeadlineExpiredTitle =>
       'Date limite de dépôt passée';
 
