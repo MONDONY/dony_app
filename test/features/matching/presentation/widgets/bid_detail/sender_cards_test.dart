@@ -973,80 +973,56 @@ void main() {
     );
   });
 
-  // ── QuickActionsRow ───────────────────────────────────────────────────────
-  group('QuickActionsRow', () {
-    Widget hostQuickActions(BidModel bid) => MaterialApp(
+  // ── openSenderTrackingTimeline ────────────────────────────────────────────
+  group('openSenderTrackingTimeline', () {
+    Widget hostTimelineOpener(BidModel bid) => MaterialApp(
       theme: AppTheme.light(),
-      home: Scaffold(body: QuickActionsRow(bid: bid)),
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => openSenderTrackingTimeline(context, bid),
+            child: const Text('open-timeline'),
+          ),
+        ),
+      ),
     );
 
-    testWidgets('trackingToken null → only "Suivi du colis" tile', (
+    testWidgets('ouvre le timeline sheet (TrackingBloc via GetIt mocké)', (
       tester,
     ) async {
-      final bid = _bid();
+      // Enregistre un TrackingBloc mock dans GetIt pour que
+      // showTrackingTimelineSheet puisse l'instancier.
+      final trackingBloc = _MockTrackingBloc();
+      when(() => trackingBloc.state).thenReturn(TrackingInitial());
+      when(
+        () => trackingBloc.stream,
+      ).thenAnswer((_) => const Stream<TrackingState>.empty());
 
-      await tester.pumpWidget(hostQuickActions(bid));
-
-      expect(find.text('Suivi du colis'), findsOneWidget);
-      expect(find.text('Partager le suivi'), findsNothing);
-    });
-
-    testWidgets('trackingToken present → both tiles visible', (tester) async {
-      final bid = _bid(trackingToken: 'tok-abc123');
-
-      await tester.pumpWidget(hostQuickActions(bid));
-
-      expect(find.text('Suivi du colis'), findsOneWidget);
-      expect(find.text('Partager le suivi'), findsOneWidget);
-    });
-
-    testWidgets('corridor shows "Suivi du colis" when cities are both empty', (
-      tester,
-    ) async {
-      final bid = _bid(trackingToken: 'tok-xyz');
-
-      await tester.pumpWidget(hostQuickActions(bid));
-
-      expect(find.text('Suivi du colis'), findsWidgets);
-    });
-
-    testWidgets(
-      'tap "Suivi du colis" ouvre le timeline sheet (TrackingBloc via GetIt mocké)',
-      (tester) async {
-        // Enregistre un TrackingBloc mock dans GetIt pour que
-        // showTrackingTimelineSheet puisse l'instancier.
-        final trackingBloc = _MockTrackingBloc();
-        when(() => trackingBloc.state).thenReturn(TrackingInitial());
-        when(
-          () => trackingBloc.stream,
-        ).thenAnswer((_) => const Stream<TrackingState>.empty());
-
+      if (getIt.isRegistered<TrackingBloc>()) {
+        getIt.unregister<TrackingBloc>();
+      }
+      getIt.registerFactory<TrackingBloc>(() => trackingBloc);
+      addTearDown(() {
         if (getIt.isRegistered<TrackingBloc>()) {
           getIt.unregister<TrackingBloc>();
         }
-        getIt.registerFactory<TrackingBloc>(() => trackingBloc);
-        addTearDown(() {
-          if (getIt.isRegistered<TrackingBloc>()) {
-            getIt.unregister<TrackingBloc>();
-          }
-        });
+      });
 
-        final bid = _bid(
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          trackingToken: 'tok-abc',
-        );
+      final bid = _bid(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        trackingToken: 'tok-abc',
+      );
 
-        await tester.pumpWidget(hostQuickActions(bid));
+      await tester.pumpWidget(hostTimelineOpener(bid));
 
-        // Tap the "Suivi du colis" tile — triggers _corridor getter + sheet.
-        await tester.tap(find.text('Suivi du colis'));
-        await tester.pumpAndSettle();
+      // Ouvre la feuille de suivi en lecture seule.
+      await tester.tap(find.text('open-timeline'));
+      await tester.pumpAndSettle();
 
-        // La feuille de suivi en lecture seule est ouverte.
-        expect(find.text('Suivi en lecture seule'), findsOneWidget);
-      },
-    );
+      // La feuille de suivi en lecture seule est ouverte.
+      expect(find.text('Suivi en lecture seule'), findsOneWidget);
+    });
 
     testWidgets(
       'timeline sheet chargée avec token → bouton Partager le suivi, pas de placeholder',
@@ -1082,57 +1058,15 @@ void main() {
           trackingToken: 'tok-share-sheet',
         );
 
-        await tester.pumpWidget(hostQuickActions(bid));
+        await tester.pumpWidget(hostTimelineOpener(bid));
 
-        await tester.tap(find.text('Suivi du colis'));
+        await tester.tap(find.text('open-timeline'));
         await tester.pumpAndSettle();
 
         expect(find.text("J'ouvre la confirmation"), findsNothing);
         expect(find.text('Partager le suivi'), findsWidgets);
       },
     );
-
-    testWidgets(
-      'tap "Partager le suivi" appelle shareTrackingLink (Share canal + TrackingBloc mockés)',
-      (tester) async {
-        // Mock du canal share_plus pour éviter l'invocation native.
-        const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(shareChannel, (call) async => null);
-
-        addTearDown(() {
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-              .setMockMethodCallHandler(shareChannel, null);
-        });
-
-        final bid = _bid(
-          trackingToken: 'tok-share',
-          departureCity: 'Lyon',
-          arrivalCity: 'Abidjan',
-        );
-
-        await tester.pumpWidget(hostQuickActions(bid));
-
-        // Tap the "Partager le suivi" tile — appelle shareTrackingLink(bid).
-        await tester.tap(find.text('Partager le suivi'));
-        await tester.pumpAndSettle();
-
-        // La tuile est toujours présente après le partage.
-        expect(find.text('Partager le suivi'), findsOneWidget);
-      },
-    );
-
-    testWidgets('anglais — tuiles Track parcel / Share tracking traduites', (
-      tester,
-    ) async {
-      useEnglish();
-      final bid = _bid(trackingToken: 'tok-en');
-
-      await tester.pumpWidget(hostQuickActions(bid));
-
-      expect(find.text('Track my parcel'), findsOneWidget);
-      expect(find.text('Share tracking'), findsOneWidget);
-    });
   });
 
   // ── shareTrackingLink ─────────────────────────────────────────────────────

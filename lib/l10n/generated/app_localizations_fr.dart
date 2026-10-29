@@ -22448,9 +22448,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une modification du colis attend la réponse du voyageur. Scannez le colis une fois qu\'il a répondu.';
 
   @override
-  String get amendmentEntryTitle => 'MODIFIER MON COLIS';
-
-  @override
   String get amendmentEntryButton => 'Ajouter des kilos ou des articles';
 
   @override
@@ -22666,11 +22663,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get amendmentPaymentContextLabel => 'Modification du colis';
-
-  @override
-  String amendmentEntryBodyShort(String name) {
-    return 'Ajoutez des kilos ou des articles : $name a 48 h pour accepter.';
-  }
 
   @override
   String amendmentSheetKgLabelOpen(String price) {
@@ -23031,9 +23023,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripDepartConfirmedSnackbar => 'C\'est noté, bon voyage !';
-
-  @override
-  String get travelerTrackingTitle => 'Suivi du voyageur';
 
   @override
   String get travelerTrackingBadgeEnRoute => 'En route';

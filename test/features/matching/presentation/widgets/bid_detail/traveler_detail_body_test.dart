@@ -15,7 +15,6 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
@@ -182,7 +181,7 @@ void main() {
   });
 
   // Régression : ARRIVED absent de _activeStatuses faisait disparaître la carte
-  // expéditeur et les actions rapides dès le marquage d'arrivée.
+  // expéditeur et les actions de suivi dès le marquage d'arrivée.
   testWidgets('ARRIVED → carte contact toujours là, mais aucune action suivi', (
     tester,
   ) async {
@@ -191,7 +190,8 @@ void main() {
     // Le suivi appartient à l'expéditeur : le voyageur détient le colis mais
     // n'en est pas propriétaire, il n'a donc jamais accès aux actions de suivi,
     // y compris une fois arrivé à destination.
-    expect(find.byType(QuickActionsRow), findsNothing);
+    expect(find.text('Suivi du colis'), findsNothing);
+    expect(find.text('Partager le suivi'), findsNothing);
   });
 
   testWidgets(

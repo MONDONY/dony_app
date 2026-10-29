@@ -1,22 +1,15 @@
-import 'dart:async';
-
-import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_request_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
-import 'package:dony/l10n/l10n.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Encart d'entrée de la modification d'un colis accepté, dans le détail
-/// d'envoi de l'expéditeur : ouvre la feuille « Modifier mon colis ».
-class AmendmentEntryCard extends StatelessWidget {
-  const AmendmentEntryCard({super.key, required this.bid});
-
-  final BidModel bid;
-
+/// Entrée de la modification d'un colis accepté, dans le détail d'envoi de
+/// l'expéditeur : règle d'affichage et ouverture de la feuille « Modifier mon
+/// colis ». Le bouton vit dans le sheet de la tuile Colis et dans le menu
+/// d'options.
+abstract final class AmendmentEntryCard {
   /// Le serveur décide (éligibilité, drapeau, fenêtre) : l'app ne recalcule rien.
   static bool shouldShow(BidModel bid) => bid.amendmentAllowed;
 
@@ -32,36 +25,5 @@ class AmendmentEntryCard extends StatelessWidget {
     }
     final changed = await AmendmentRequestSheet.show(context, bid: bid);
     if (changed) bidBloc?.add(BidDetailRequested(bid.id));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return DetailCard(
-      title: l.amendmentEntryTitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l.amendmentEntryBodyShort(
-              bid.travelerName ?? l.bidDetailSenderTravelerFallback,
-            ),
-            style: tt.bodySmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: DonySpacing.md),
-          DonyButton(
-            label: l.amendmentEntryButton,
-            iconAsset: 'plus',
-            variant: DonyButtonVariant.secondary,
-            onPressed: () => unawaited(open(context, bid)),
-          ),
-        ],
-      ),
-    );
   }
 }

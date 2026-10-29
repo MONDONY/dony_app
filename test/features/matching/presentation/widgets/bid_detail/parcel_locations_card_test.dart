@@ -41,11 +41,9 @@ BidModel _bid(
   deliveryAddress: delivery,
 );
 
-Widget _host(BidModel bid, {bool framed = true}) => MaterialApp(
+Widget _host(BidModel bid) => MaterialApp(
   home: Scaffold(
-    body: SingleChildScrollView(
-      child: ParcelLocationsCard(bid: bid, framed: framed),
-    ),
+    body: SingleChildScrollView(child: ParcelLocationsCard(bid: bid)),
   ),
 );
 
@@ -131,21 +129,13 @@ void main() {
     expect(uri.query, contains('12.6362'));
   });
 
-  testWidgets('framed false renders same content without card frame', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_host(_bid('ACCEPTED'), framed: false));
+  testWidgets('contenu seul : pas de cadre de carte', (tester) async {
+    await tester.pumpWidget(_host(_bid('ACCEPTED')));
 
     expect(find.byKey(const Key('parcel-locations-card')), findsNothing);
     expect(_mapped(tester), _handover);
     expect(find.text(_handover.label), findsOneWidget);
     expect(find.text(_delivery.label), findsOneWidget);
     expect(find.text('Étape en cours'), findsOneWidget);
-  });
-
-  testWidgets('framed true keeps the card frame', (tester) async {
-    await tester.pumpWidget(_host(_bid('ACCEPTED')));
-
-    expect(find.byKey(const Key('parcel-locations-card')), findsOneWidget);
   });
 }

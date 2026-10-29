@@ -25,21 +25,14 @@ class TravelerTrackingCard extends StatelessWidget {
   const TravelerTrackingCard({
     super.key,
     required this.tracking,
-    required this.onOpenTimeline,
     required this.bidId,
     this.bidStatus,
     this.departureCity,
     this.arrivalCity,
     this.now,
-    this.framed = true,
   });
 
   final TravelerTrackingModel tracking;
-
-  /// `false` : contenu seul, posé dans un bottom sheet qui porte le titre et le
-  /// lien vers la frise (en `stickyBottom`). Pas de cadre, pas de titre de
-  /// carte, pas de bouton « Voir toutes les étapes et photos ».
-  final bool framed;
 
   /// Colis dont la carte lit les étapes (remise, arrivée, photos) pour les
   /// mêler aux villes. Sans elles (lecture impossible), seules les villes
@@ -47,8 +40,6 @@ class TravelerTrackingCard extends StatelessWidget {
   final String bidId;
   final String? bidStatus;
 
-  /// Ouvre la frise complète du colis (étapes, photos, villes).
-  final VoidCallback onOpenTimeline;
   final String? departureCity;
   final String? arrivalCity;
 
@@ -77,13 +68,11 @@ class TravelerTrackingCard extends StatelessWidget {
     final loadsEvents = getIt.isRegistered<TrackingBloc>();
     final body = _CardBody(
       tracking: tracking,
-      onOpenTimeline: onOpenTimeline,
       departureCity: departureCity,
       arrivalCity: arrivalCity,
       bidStatus: bidStatus,
       loadsEvents: loadsEvents,
       now: (now ?? DateTime.now)(),
-      framed: framed,
     );
     return BlocProvider<TravelerTrackingCardCubit>(
       // `lazy: false` : l'affichage est compté à la création, une seule fois.
@@ -103,20 +92,16 @@ class TravelerTrackingCard extends StatelessWidget {
 class _CardBody extends StatelessWidget {
   const _CardBody({
     required this.tracking,
-    required this.onOpenTimeline,
     required this.now,
     required this.loadsEvents,
-    required this.framed,
     this.bidStatus,
     this.departureCity,
     this.arrivalCity,
   });
 
   final TravelerTrackingModel tracking;
-  final VoidCallback onOpenTimeline;
   final DateTime now;
   final bool loadsEvents;
-  final bool framed;
   final String? bidStatus;
   final String? departureCity;
   final String? arrivalCity;
@@ -174,16 +159,9 @@ class _CardBody extends StatelessWidget {
       ),
     };
 
-    final content = Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (framed) ...[
-          Text(
-            l.travelerTrackingTitle,
-            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: DonySpacing.sm),
-        ],
         Align(
           alignment: AlignmentDirectional.centerStart,
           child: _StatusPill(label: badgeLabel, positive: positive),
@@ -257,39 +235,7 @@ class _CardBody extends StatelessWidget {
                   : null,
             ),
         ],
-        if (framed) ...[
-          const SizedBox(height: DonySpacing.xs),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: TextButton(
-              key: const Key('traveler-tracking-open-timeline'),
-              style: TextButton.styleFrom(
-                minimumSize: const Size(44, 44),
-                padding: EdgeInsets.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () {
-                context.read<TravelerTrackingCardCubit>().timelineOpened(
-                  tracking,
-                );
-                onOpenTimeline();
-              },
-              child: Text(l.travelerTrackingOpenTimeline),
-            ),
-          ),
-        ],
       ],
-    );
-    if (!framed) return content;
-    return Container(
-      key: const Key('traveler-tracking-card'),
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: content,
     );
   }
 }

@@ -7779,7 +7779,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorHandoverAmendmentPendingTitle,
   'errorHandoverAmendmentPendingMessage': (l) =>
       l.errorHandoverAmendmentPendingMessage,
-  'amendmentEntryTitle': (l) => l.amendmentEntryTitle,
   'amendmentEntryButton': (l) => l.amendmentEntryButton,
   'amendmentSheetTitle': (l) => l.amendmentSheetTitle,
   'amendmentSheetKgLabel': (l) => l.amendmentSheetKgLabel(
@@ -7865,8 +7864,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'amendmentGainHandoverNote': (l) =>
       l.amendmentGainHandoverNote(placeholderMarker('amount')),
   'amendmentPaymentContextLabel': (l) => l.amendmentPaymentContextLabel,
-  'amendmentEntryBodyShort': (l) =>
-      l.amendmentEntryBodyShort(placeholderMarker('name')),
   'amendmentSheetKgLabelOpen': (l) =>
       l.amendmentSheetKgLabelOpen(placeholderMarker('price')),
   'amendmentSheetLoadFailed': (l) => l.amendmentSheetLoadFailed,
@@ -8010,7 +8007,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripSummaryViewParcels': (l) => l.tripSummaryViewParcels,
   'tripDepartButton': (l) => l.tripDepartButton,
   'tripDepartConfirmedSnackbar': (l) => l.tripDepartConfirmedSnackbar,
-  'travelerTrackingTitle': (l) => l.travelerTrackingTitle,
   'travelerTrackingBadgeEnRoute': (l) => l.travelerTrackingBadgeEnRoute,
   'travelerTrackingBadgeArrived': (l) => l.travelerTrackingBadgeArrived,
   'travelerTrackingBadgeNotActivated': (l) =>
@@ -8686,7 +8682,6 @@ const textParameters = <String, List<String>>{
   'amendmentGainCashDue': ['elide', 'name'],
   'amendmentGainCommissionNote': ['amount'],
   'amendmentGainHandoverNote': ['amount'],
-  'amendmentEntryBodyShort': ['name'],
   'amendmentSheetKgLabelOpen': ['price'],
   'amendmentSentSnackbar': ['name'],
   'amendmentSenderExpiredStatus': ['name'],

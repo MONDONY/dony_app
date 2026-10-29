@@ -6,8 +6,9 @@ import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart'
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Mesure de la carte « Suivi du voyageur » : affichage (une fois par
-/// instance de carte) et ouverture de la frise. Aucune donnée affichée n'en
-/// dépend, l'état dit seulement si l'affichage a déjà été compté.
+/// instance de carte). Aucune donnée affichée n'en dépend, l'état dit seulement
+/// si l'affichage a déjà été compté. L'ouverture de la frise est comptée par
+/// `openSenderTileSheet`, qui réutilise [statusName].
 class TravelerTrackingCardCubit extends Cubit<bool> {
   TravelerTrackingCardCubit({required AnalyticsService analytics})
     : _analytics = analytics,
@@ -34,15 +35,6 @@ class TravelerTrackingCardCubit extends Cubit<bool> {
           'status': statusName(tracking.status),
           'has_history': tracking.history.isNotEmpty,
         },
-      ),
-    );
-  }
-
-  void timelineOpened(TravelerTrackingModel tracking) {
-    unawaited(
-      _analytics.logEvent(
-        AnalyticsEvents.travelerTrackingTimelineOpened,
-        properties: {'status': statusName(tracking.status)},
       ),
     );
   }

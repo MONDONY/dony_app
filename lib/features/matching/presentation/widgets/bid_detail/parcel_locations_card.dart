@@ -29,21 +29,19 @@ const _kVisibleStatuses = <String>{
   ...kParcelHandedOverStatuses,
 };
 
-/// Carte « Lieux » de la fiche colis (vue expéditeur), sur le modèle de celle
+/// Contenu « Lieux » de la fiche colis (vue expéditeur), sur le modèle de celui
 /// du détail d'un trajet : une mini-carte puis les deux adresses, « Remise du
 /// colis » et « Récupération », chacune ouvrable dans l'app de carte native.
+/// Sans cadre ni titre : il se pose dans les sheets des tuiles Suivi et Lieux,
+/// qui portent le titre et arrondissent la mini-carte.
 ///
 /// La mini-carte ne montre que l'étape du moment : le lieu de remise tant que
 /// le colis n'est pas chez le voyageur, puis le lieu où le destinataire le
 /// récupère.
 class ParcelLocationsCard extends StatelessWidget {
-  const ParcelLocationsCard({super.key, required this.bid, this.framed = true});
+  const ParcelLocationsCard({super.key, required this.bid});
 
   final BidModel bid;
-
-  /// `false` : contenu seul (carte et adresses), posé dans un bottom sheet qui
-  /// porte le titre. Pas de cadre.
-  final bool framed;
 
   static bool shouldShow(BidModel bid) =>
       _kVisibleStatuses.contains(bid.status) &&
@@ -69,7 +67,7 @@ class ParcelLocationsCard extends StatelessWidget {
       foreground: Colors.white,
     );
 
-    final content = Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (mapped != null)
@@ -124,17 +122,6 @@ class ParcelLocationsCard extends StatelessWidget {
                   ),
           ),
       ],
-    );
-    if (!framed) return content;
-    return Container(
-      key: const Key('parcel-locations-card'),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: content,
     );
   }
 }

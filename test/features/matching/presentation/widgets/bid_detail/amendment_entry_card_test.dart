@@ -80,47 +80,39 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: BlocProvider<BidBloc>.value(
           value: bidBloc,
-          child: Scaffold(body: AmendmentEntryCard(bid: bid)),
+          // L'entrée n'a plus de rendu propre : le bouton vit dans le sheet de
+          // la tuile Colis et dans le menu d'options, qui appellent `open`.
+          child: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () =>
+                    unawaited(AmendmentEntryCard.open(context, bid)),
+                child: const Text('open-amendment'),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  test('entryCard_hiddenWhenNotAllowed', () {
+  test('shouldShow_hiddenWhenNotAllowed', () {
     expect(AmendmentEntryCard.shouldShow(_bid(allowed: false)), isFalse);
     expect(AmendmentEntryCard.shouldShow(_bid()), isTrue);
   });
 
-  testWidgets('entryCard_showsTitleBodyAndButton', (tester) async {
-    await pump(tester, _bid());
-
-    expect(find.text('MODIFIER MON COLIS'), findsOneWidget);
-    expect(
-      find.text(
-        'Ajoutez des kilos ou des articles : Moussa a 48 h pour accepter.',
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.widgetWithText(DonyButton, 'Ajouter des kilos ou des articles'),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('entryCard_tapOpensSheet_closingWithoutRequestDoesNotReload', (
+  testWidgets('open_opensSheet_closingWithoutRequestDoesNotReload', (
     tester,
   ) async {
     await pump(tester, _bid());
-    await tester.tap(
-      find.widgetWithText(DonyButton, 'Ajouter des kilos ou des articles'),
-    );
+    await tester.tap(find.text('open-amendment'));
     await tester.pumpAndSettle();
 
     expect(find.text('Modifier mon colis'), findsOneWidget);
     verifyNever(() => bidBloc.add(any()));
   });
 
-  testWidgets('entryCard_requestSent_reloadsBid', (tester) async {
+  testWidgets('open_requestSent_reloadsBid', (tester) async {
     when(
       () => repository.quote(
         'bid-1',
@@ -146,9 +138,7 @@ void main() {
       ),
     );
     await pump(tester, _bid());
-    await tester.tap(
-      find.widgetWithText(DonyButton, 'Ajouter des kilos ou des articles'),
-    );
+    await tester.tap(find.text('open-amendment'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Plus').first);
     await tester.pump(const Duration(milliseconds: 600));
@@ -169,17 +159,5 @@ void main() {
         ),
       ),
     ).called(1);
-  });
-
-  testWidgets('open opens the sheet like the button does', (
-    tester,
-  ) async {
-    await pump(tester, _bid());
-    final context = tester.element(find.byType(AmendmentEntryCard));
-    unawaited(AmendmentEntryCard.open(context, _bid()));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Modifier mon colis'), findsOneWidget);
-    verifyNever(() => bidBloc.add(any()));
   });
 }

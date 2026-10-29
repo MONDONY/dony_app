@@ -1,11 +1,9 @@
 import 'dart:async';
 
-import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/share_position.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -65,107 +63,4 @@ Future<void> shareTrackingLink(
     subject: l.bidDetailTrackingShareSubject(bid.trackingNumber ?? ''),
     sharePositionOrigin: sharePositionOrigin,
   );
-}
-
-/// Ligne d'actions rapides (vue expéditeur) — tuiles « Suivi du colis » et
-/// « Partager le suivi » (visible uniquement si [BidModel.trackingToken] est non-null).
-class QuickActionsRow extends StatelessWidget {
-  final BidModel bid;
-
-  const QuickActionsRow({super.key, required this.bid});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
-    final hasToken = bid.trackingToken != null;
-
-    return Row(
-      children: [
-        Expanded(
-          child: _ActionTile(
-            iconAsset: 'package',
-            label: l.bidDetailTrackParcel,
-            cs: cs,
-            tt: tt,
-            onTap: () => openSenderTrackingTimeline(context, bid),
-          ),
-        ),
-        if (hasToken) ...[
-          const SizedBox(width: DonySpacing.sm),
-          Expanded(
-            child: _ActionTile(
-              iconAsset: 'share-2',
-              label: l.bidDetailShareTracking,
-              cs: cs,
-              tt: tt,
-              onTap: () => shareTrackingLink(
-                bid,
-                sharePositionOrigin: sharePositionOriginFor(context),
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-// ── Tuile d'action ────────────────────────────────────────────────────────────
-
-class _ActionTile extends StatelessWidget {
-  final IconData? icon;
-  final String? iconAsset;
-  final String label;
-  final ColorScheme cs;
-  final TextTheme tt;
-  final VoidCallback onTap;
-
-  const _ActionTile({
-    this.icon,
-    this.iconAsset,
-    required this.label,
-    required this.cs,
-    required this.tt,
-    required this.onTap,
-  }) : assert(icon != null || iconAsset != null);
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: cs.primaryContainer,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            iconAsset != null
-                ? DonyIcon(iconAsset!, color: cs.primary, size: 18)
-                : Icon(icon, color: cs.primary, size: 18),
-            const SizedBox(width: DonySpacing.sm),
-            Flexible(
-              child: Text(
-                label,
-                style: tt.labelMedium?.copyWith(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

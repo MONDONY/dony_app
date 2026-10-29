@@ -84,7 +84,7 @@ Future<void> openSenderTileSheet(
         SenderTile.prevenir => PrevenirDestinataireBody(bid: current),
         SenderTile.suivi => _SuiviContent(bid: current),
         SenderTile.lieux => _RoundedMiniMap(
-          child: ParcelLocationsCard(bid: current, framed: false),
+          child: ParcelLocationsCard(bid: current),
         ),
         SenderTile.colis => ColisDestinataireCard(bid: current, framed: false),
         SenderTile.details => BidDetailsContent(bid: current),
@@ -185,10 +185,9 @@ void _closeThen(
   if (screenContext.mounted) action();
 }
 
-/// Ouverture de la frise depuis le sheet Suivi : même événement et même
-/// propriété `status` que le lien de [TravelerTrackingCard], qui est masqué
-/// ici (`framed: false`). Sans carte de suivi, il n'y a pas de statut à
-/// mesurer : seule la frise s'ouvre.
+/// Ouverture de la frise depuis le sheet Suivi : `traveler_tracking_timeline_opened`
+/// avec le `status` de la carte de suivi. Sans carte de suivi, il n'y a pas de
+/// statut à mesurer : seule la frise s'ouvre.
 void _logTimelineOpened(BidModel bid) {
   final tracking = bid.travelerTracking;
   if (tracking == null || !TravelerTrackingCard.shouldShow(bid)) return;
@@ -222,15 +221,11 @@ class _SuiviContent extends StatelessWidget {
             bidStatus: bid.status,
             departureCity: bid.departureCity,
             arrivalCity: bid.arrivalCity,
-            // Sans cadre, la carte n'affiche pas son lien vers la frise : le
-            // bouton du bas du sheet s'en charge.
-            onOpenTimeline: () {},
-            framed: false,
           ),
         if (showTracking && showLocations)
           const SizedBox(height: DonySpacing.base),
         if (showLocations)
-          _RoundedMiniMap(child: ParcelLocationsCard(bid: bid, framed: false)),
+          _RoundedMiniMap(child: ParcelLocationsCard(bid: bid)),
       ],
     );
   }

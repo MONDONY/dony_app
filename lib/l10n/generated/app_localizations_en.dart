@@ -22292,9 +22292,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'An edit to the parcel is awaiting the traveler\'s reply. Scan the parcel once they\'ve replied.';
 
   @override
-  String get amendmentEntryTitle => 'EDIT MY PARCEL';
-
-  @override
   String get amendmentEntryButton => 'Add kilos or items';
 
   @override
@@ -22504,11 +22501,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get amendmentPaymentContextLabel => 'Parcel edit';
-
-  @override
-  String amendmentEntryBodyShort(String name) {
-    return 'Add kilos or items: $name has 48 h to accept.';
-  }
 
   @override
   String amendmentSheetKgLabelOpen(String price) {
@@ -22863,9 +22855,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripDepartConfirmedSnackbar => 'Noted, have a safe trip!';
-
-  @override
-  String get travelerTrackingTitle => 'Traveler tracking';
 
   @override
   String get travelerTrackingBadgeEnRoute => 'On the way';

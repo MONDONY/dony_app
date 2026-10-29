@@ -355,7 +355,7 @@ void main() {
             value: bidBloc,
             child: Scaffold(
               body: SingleChildScrollView(
-                child: PrevenirDestinataireCard(bid: declined),
+                child: RecipientDeclinedCard(bid: declined),
               ),
             ),
           ),

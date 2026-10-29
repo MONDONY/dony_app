@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_action_tile.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -19,9 +21,25 @@ import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
+import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
@@ -34,6 +52,7 @@ import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -70,6 +89,14 @@ class _MockRatingRepository extends Mock implements RatingRepository {}
 
 class _MockNotificationService extends Mock implements NotificationService {}
 
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
+class _MockSupplementPaymentCubit extends MockCubit<SupplementPaymentState>
+    implements SupplementPaymentCubit {}
+
+class _MockSupplementRepository extends Mock
+    implements BidSupplementRepository {}
+
 class _MockBidAcceptanceBloc
     extends MockBloc<BidAcceptanceEvent, acs.BidAcceptanceState>
     implements BidAcceptanceBloc {}
@@ -85,6 +112,12 @@ BidModel _makeBid({
   String? cancellationNoShowStatus,
   String? confirmationCode,
   bool pickupCodeRenewalNeeded = false,
+  String? trackingToken,
+  TravelerTrackingModel? travelerTracking,
+  AddressData? handoverAddress,
+  AddressData? deliveryAddress,
+  String? recipientName,
+  BidSupplement? supplement,
 }) => BidModel(
   id: 'bid-001',
   announcementId: 'ann-001',
@@ -98,6 +131,14 @@ BidModel _makeBid({
   cancellationNoShowStatus: cancellationNoShowStatus,
   confirmationCode: confirmationCode,
   pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
+  trackingToken: trackingToken,
+  travelerTracking: travelerTracking,
+  handoverAddress: handoverAddress,
+  deliveryAddress: deliveryAddress,
+  recipientName: recipientName,
+  supplement: supplement,
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
 );
 
 UserModel _user(String id) => UserModel(
@@ -115,9 +156,10 @@ Future<GoRouter> _pump(
   required _MockAuthBloc authBloc,
   bool openCodeRenewal = false,
   bool focusSupplement = false,
+  Size size = const Size(800, 3000),
 }) async {
   await initializeDateFormatting('fr_FR');
-  tester.view.physicalSize = const Size(800, 3000);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
 
@@ -602,6 +644,267 @@ void main() {
           .focusSupplement,
       isTrue,
     );
+  });
+
+  // ── Fiche expéditeur en tuiles : vrai écran ───────────────────────────────
+  // Les sheets des tuiles s'ouvrent sur le navigateur racine : chaque tuile
+  // doit fonctionner avec les seuls BLoCs que l'écran fournit.
+  group('fiche expéditeur en tuiles', () {
+    const handover = AddressData(label: '1 rue A, Paris', lat: 48.8, lng: 2.3);
+    const delivery = AddressData(
+      label: 'ACI 2000, Dakar',
+      lat: 14.7,
+      lng: -17.4,
+    );
+    const tracking = TravelerTrackingModel(
+      status: TravelerTrackingStatus.enRoute,
+      nearestCity: 'Lyon',
+      progressPct: 40,
+    );
+    late StreamController<BidState> states;
+
+    BidModel acceptedBid({String? confirmationCode}) => _makeBid(
+      paymentMethod: BidPaymentMethod.stripe,
+      trackingToken: 'tok-abc',
+      handoverAddress: handover,
+      deliveryAddress: delivery,
+      recipientName: 'Awa',
+      confirmationCode: confirmationCode,
+    );
+
+    BidModel inTransitBid({String? confirmationCode}) => _makeBid(
+      paymentMethod: BidPaymentMethod.stripe,
+      status: 'IN_TRANSIT',
+      trackingToken: 'tok-abc',
+      travelerTracking: tracking,
+      handoverAddress: handover,
+      deliveryAddress: delivery,
+      recipientName: 'Awa',
+      confirmationCode: confirmationCode,
+    );
+
+    setUp(() {
+      states = StreamController<BidState>.broadcast();
+      when(() => bidBloc.stream).thenAnswer((_) => states.stream);
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerFactory<TravelerTrackingCardCubit>(
+        () => TravelerTrackingCardCubit(analytics: analytics),
+      );
+      getIt.registerFactory<SupplementActionCubit>(
+        () => SupplementActionCubit(_MockSupplementRepository(), analytics),
+      );
+      // Le bouton « Payer » de la barre du bas crée son propre cubit.
+      final payment = _MockSupplementPaymentCubit();
+      when(() => payment.state).thenReturn(const SupplementPaymentState());
+      getIt.registerFactory<SupplementPaymentCubit>(() => payment);
+    });
+
+    tearDown(() async {
+      await states.close();
+      if (getIt.isRegistered<TravelerTrackingCardCubit>()) {
+        getIt.unregister<TravelerTrackingCardCubit>();
+      }
+      if (getIt.isRegistered<SupplementActionCubit>()) {
+        getIt.unregister<SupplementActionCubit>();
+      }
+      if (getIt.isRegistered<SupplementPaymentCubit>()) {
+        getIt.unregister<SupplementPaymentCubit>();
+      }
+    });
+
+    Finder tile(String label) => find.widgetWithText(DonyActionTile, label);
+
+    Future<void> closeSheet(WidgetTester tester) async {
+      Navigator.of(
+        tester.element(find.byType(DonyActionTile).first),
+        rootNavigator: true,
+      ).pop();
+      await tester.pumpAndSettle();
+    }
+
+    for (final (name, makeBid, tiles)
+        in <(String, BidModel Function(), List<(String, Finder)>)>[
+          (
+            'ACCEPTED',
+            () => acceptedBid(),
+            [
+              ('Prévenir Awa', find.byType(PrevenirDestinataireBody)),
+              ('Lieux', find.byType(ParcelLocationsCard)),
+              ('Colis et destinataire', find.byType(ColisDestinataireCard)),
+              ('Plus de détails', find.byType(BidDetailsContent)),
+            ],
+          ),
+          (
+            'IN_TRANSIT',
+            () => inTransitBid(),
+            [
+              ('Prévenir Awa', find.byType(PrevenirDestinataireBody)),
+              ('Suivi', find.byType(TravelerTrackingCard)),
+              ('Colis et destinataire', find.byType(ColisDestinataireCard)),
+              ('Plus de détails', find.byType(BidDetailsContent)),
+            ],
+          ),
+        ]) {
+      testWidgets('$name : tapping each tile opens its sheet without '
+          'ProviderNotFoundException', (tester) async {
+        await _pump(tester, bid: makeBid(), authBloc: senderAuth());
+        for (final (label, content) in tiles) {
+          expect(content, findsNothing, reason: '$label : pas encore ouvert');
+          await tester.tap(tile(label));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: label);
+          expect(content, findsOneWidget, reason: label);
+          await closeSheet(tester);
+          expect(content, findsNothing, reason: '$label : refermé');
+        }
+      });
+    }
+
+    testWidgets('IN_TRANSIT shows billet, voyageur, paiement then 4 tiles, '
+        'no hero, no quick actions', (tester) async {
+      await _pump(tester, bid: inTransitBid(), authBloc: senderAuth());
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(SenderHeroCard), findsNothing);
+      // Ni rangée « Suivi du colis / Partager le suivi » dans le corps (le
+      // bouton de la barre du bas, lui, reste).
+      final body = find.byType(SenderDetailBody);
+      expect(
+        find.descendant(of: body, matching: find.text('Suivi du colis')),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: body, matching: find.text('Partager le suivi')),
+        findsNothing,
+      );
+      expect(find.byType(TravelerTrackingCard), findsNothing);
+      expect(find.byType(DetailsAccordion), findsNothing);
+      expect(find.byType(DonyActionTile), findsNWidgets(4));
+
+      double top(Finder f) => tester.getTopLeft(f).dy;
+      final billet = top(find.byType(ColisBillet));
+      final voyageur = top(find.byType(VoyageurContactCard));
+      final paiement = top(find.byType(PaiementCard));
+      final title = top(find.text('Votre envoi'));
+      final firstTile = top(find.byType(DonyActionTile).first);
+      expect(billet, lessThan(voyageur));
+      expect(voyageur, lessThan(paiement));
+      expect(paiement, lessThan(title));
+      expect(title, lessThan(firstTile));
+    });
+
+    testWidgets('À traiter header only when an action card shows', (
+      tester,
+    ) async {
+      await _pump(tester, bid: inTransitBid(), authBloc: senderAuth());
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('À traiter'), findsNothing);
+    });
+
+    testWidgets('À traiter header shows above the action card', (tester) async {
+      final overdue = _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        handoverDeadline: DateTime.now().subtract(const Duration(days: 1)),
+        trackingToken: 'tok-abc',
+        recipientName: 'Awa',
+      );
+      await _pump(tester, bid: overdue, authBloc: senderAuth());
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(SenderHeroCard), findsOneWidget);
+      expect(find.text('À traiter'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byType(SenderHeroCard)).dy,
+        greaterThan(tester.getTopLeft(find.text('À traiter')).dy),
+      );
+      expect(
+        tester.getTopLeft(find.text('À traiter')).dy,
+        greaterThan(tester.getTopLeft(find.byType(ColisBillet)).dy),
+      );
+      expect(
+        tester.getTopLeft(find.byType(VoyageurContactCard)).dy,
+        greaterThan(tester.getTopLeft(find.byType(SenderHeroCard)).dy),
+      );
+    });
+
+    testWidgets('supplement focus still scrolls to the supplement card', (
+      tester,
+    ) async {
+      final bid = _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        supplement: const BidSupplement(
+          id: 'sup-1',
+          status: BidSupplementStatus.proposed,
+          grossAmount: 17,
+          blocksHandover: true,
+        ),
+      );
+      await _pump(
+        tester,
+        bid: bid,
+        authBloc: senderAuth(),
+        focusSupplement: true,
+        size: const Size(800, 700),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(SupplementSenderCard), findsOneWidget);
+      final offset = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .pixels;
+      expect(offset, greaterThan(0));
+    });
+
+    testWidgets('tiles recompute after a polling refresh from ACCEPTED to '
+        'HANDED_OVER', (tester) async {
+      await _pump(tester, bid: acceptedBid(), authBloc: senderAuth());
+      expect(tile('Lieux'), findsOneWidget);
+      expect(tile('Suivi'), findsNothing);
+
+      states.add(
+        BidDetailLoaded(
+          _makeBid(
+            paymentMethod: BidPaymentMethod.stripe,
+            status: 'HANDED_OVER',
+            trackingToken: 'tok-abc',
+            travelerTracking: tracking,
+            handoverAddress: handover,
+            deliveryAddress: delivery,
+            recipientName: 'Awa',
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(tile('Suivi'), findsOneWidget);
+      expect(tile('Lieux'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('opening a tile then receiving a refresh throws nothing', (
+      tester,
+    ) async {
+      await _pump(tester, bid: acceptedBid(), authBloc: senderAuth());
+      await tester.tap(tile('Prévenir Awa'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PrevenirDestinataireBody), findsOneWidget);
+
+      // Le colis est remis pendant que le sheet est ouvert : la liste des
+      // tuiles change (Lieux devient Suivi), le sheet reste debout.
+      states.add(BidDetailLoaded(inTransitBid(confirmationCode: '482913')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(PrevenirDestinataireBody), findsOneWidget);
+      expect(find.text('Envoyer le code sur WhatsApp'), findsOneWidget);
+    });
   });
 
   group('FLUTTER-HQ — note envoyée depuis une autre instance de RatingBloc', () {

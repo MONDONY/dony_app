@@ -1,6 +1,7 @@
-// Carte « Suivi du voyageur » de la fiche colis (vue expéditeur) : pastille
-// d'état, avancement, ville la plus proche, historique des villes et lien vers
-// la frise complète. Neutre quand le suivi n'est pas activé ou ancien.
+// Contenu « Suivi du voyageur » de la fiche colis (vue expéditeur), posé dans
+// le sheet de la tuile Suivi : pastille d'état, avancement, ville la plus
+// proche, historique des villes. Neutre quand le suivi n'est pas activé ou
+// ancien. Le bouton vers la frise vit dans le pied du sheet.
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -101,11 +102,9 @@ void main() {
 
   Widget host(
     TravelerTrackingModel tracking, {
-    VoidCallback? onOpen,
     Locale locale = const Locale('fr'),
     DateTime? now,
     String? bidStatus,
-    bool framed = true,
   }) => MaterialApp(
     theme: AppTheme.light(),
     locale: locale,
@@ -115,13 +114,11 @@ void main() {
       body: SingleChildScrollView(
         child: TravelerTrackingCard(
           tracking: tracking,
-          onOpenTimeline: onOpen ?? () {},
           bidId: 'bid-1',
           bidStatus: bidStatus,
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           now: () => now ?? _nowUtc,
-          framed: framed,
         ),
       ),
     ),
@@ -254,7 +251,6 @@ void main() {
       expect(badge('On the way'), findsOneWidget);
       expect(find.text('Near Marseille'), findsOneWidget);
       expect(find.text('Updated 5 min ago'), findsOneWidget);
-      expect(find.text('See all steps and photos'), findsOneWidget);
     });
   });
 
@@ -430,33 +426,12 @@ void main() {
       expect(find.textContaining('Mis à jour'), findsNothing);
     });
 
-    testWidgets('sans historique : pas de liste, le lien reste', (
-      tester,
-    ) async {
+    testWidgets('sans historique : pas de liste', (tester) async {
       await tester.pumpWidget(host(_tracking()));
       expect(
         find.byKey(const Key('traveler-tracking-history-row')),
         findsNothing,
       );
-      expect(find.text('Voir toutes les étapes et photos'), findsOneWidget);
-    });
-
-    testWidgets('le lien ouvre la frise et mesure l\'ouverture', (
-      tester,
-    ) async {
-      var opened = 0;
-      await tester.pumpWidget(host(_tracking(), onOpen: () => opened++));
-
-      await tester.tap(find.text('Voir toutes les étapes et photos'));
-      await tester.pump();
-
-      expect(opened, 1);
-      verify(
-        () => analytics.logEvent(
-          AnalyticsEvents.travelerTrackingTimelineOpened,
-          properties: {'status': 'en_route'},
-        ),
-      ).called(1);
     });
   });
 
@@ -481,7 +456,6 @@ void main() {
 
       expect(find.text('Remis au voyageur'), findsOneWidget);
       expect(find.byKey(const Key('tracking-step-photo')), findsOneWidget);
-      expect(find.text('Voir toutes les étapes et photos'), findsOneWidget);
     });
 
     testWidgets('cardShowsDeliveredStepWithPhoto', (tester) async {
@@ -573,53 +547,28 @@ void main() {
     });
   });
 
-  group('framed false', () {
-    testWidgets('framed false renders same content without card frame', (
+  group('sans cadre', () {
+    testWidgets('contenu seul : ni cadre, ni titre, ni lien vers la frise', (
       tester,
     ) async {
       final tracking = _tracking(
         history: [TravelerTrackingPoint(city: 'Lyon', at: _nowUtc)],
       );
-      await tester.pumpWidget(host(tracking, framed: false));
+      await tester.pumpWidget(host(tracking));
 
       expect(find.byKey(const Key('traveler-tracking-card')), findsNothing);
       expect(find.text('Suivi du voyageur'), findsNothing);
+      expect(
+        find.byKey(const Key('traveler-tracking-open-timeline')),
+        findsNothing,
+      );
+      expect(find.text('Voir toutes les étapes et photos'), findsNothing);
       expect(badge('En route'), findsOneWidget);
       expect(find.text('Près de Marseille'), findsOneWidget);
       expect(
         find.byKey(const Key('traveler-tracking-history-row')),
         findsOneWidget,
       );
-    });
-
-    testWidgets('framed true keeps the card frame and its title', (
-      tester,
-    ) async {
-      await tester.pumpWidget(host(_tracking()));
-
-      expect(find.byKey(const Key('traveler-tracking-card')), findsOneWidget);
-      expect(find.text('Suivi du voyageur'), findsOneWidget);
-    });
-
-    testWidgets('framed false hides the timeline text button', (tester) async {
-      await tester.pumpWidget(host(_tracking(), framed: false));
-
-      expect(
-        find.byKey(const Key('traveler-tracking-open-timeline')),
-        findsNothing,
-      );
-      expect(find.text('Voir toutes les étapes et photos'), findsNothing);
-    });
-
-    testWidgets('framed false still counts the card view', (tester) async {
-      await tester.pumpWidget(host(_tracking(), framed: false));
-
-      verify(
-        () => analytics.logEvent(
-          AnalyticsEvents.travelerTrackingCardViewed,
-          properties: {'status': 'en_route', 'has_history': false},
-        ),
-      ).called(1);
     });
   });
 

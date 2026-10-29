@@ -1,11 +1,12 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -28,7 +29,6 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/details_a
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
@@ -114,7 +114,15 @@ BidModel _bid({
   bool amendmentAllowed = false,
   TravelerTrackingModel? travelerTracking,
   AddressData? handoverAddress,
+  String? recipientAppStatus,
+  String? confirmationCode,
+  bool pickupCodeRenewalNeeded = false,
+  DateTime? departureAt,
 }) => BidModel(
+  recipientAppStatus: recipientAppStatus,
+  confirmationCode: confirmationCode,
+  pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
+  departureAt: departureAt,
   travelerTracking: travelerTracking,
   handoverAddress: handoverAddress,
   supplement: supplement,
@@ -215,8 +223,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
   }
 
-  // ── Carte « Suivi du voyageur » : place dans la liste ──────────────────────
-  group('TravelerTrackingCard dans la liste', () {
+  // ── Tuile Suivi : le suivi du voyageur n'est plus dans le corps ────────────
+  group('Suivi du voyageur dans la liste', () {
     setUp(() {
       final analytics = _MockAnalyticsService();
       when(
@@ -228,7 +236,7 @@ void main() {
     });
     tearDown(() async => getIt.reset());
 
-    testWidgets('apparaît après le hero et avant la carte Lieux', (
+    testWidgets('la carte vit dans le sheet de la tuile Suivi, pas au corps', (
       tester,
     ) async {
       sizeView(tester);
@@ -252,14 +260,22 @@ void main() {
         await tester.pump(const Duration(milliseconds: 400));
       }
 
-      final hero = tester.getTopLeft(find.byType(SenderHeroCard)).dy;
-      final card = tester.getTopLeft(find.byType(TravelerTrackingCard)).dy;
-      final places = tester.getTopLeft(find.byType(ParcelLocationsCard)).dy;
-      expect(card, greaterThan(hero));
-      expect(card, lessThan(places));
+      expect(find.byType(TravelerTrackingCard), findsNothing);
+      expect(find.byType(ParcelLocationsCard), findsNothing);
+      expect(_tile('Suivi'), findsOneWidget);
+      expect(_tile('Lieux'), findsNothing);
+      // Résumé : « Étape en cours » en pastille.
+      expect(
+        find.descendant(
+          of: _tile('Suivi'),
+          matching: find.text('Étape en cours'),
+        ),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('absente quand le back ne sert pas le champ', (tester) async {
+    testWidgets('sans champ servi par le back et sans adresse : pas de tuile '
+        'Suivi', (tester) async {
       sizeView(tester);
       await tester.pumpWidget(
         _host(
@@ -272,37 +288,226 @@ void main() {
         await tester.pump(const Duration(milliseconds: 400));
       }
       expect(find.byType(TravelerTrackingCard), findsNothing);
+      expect(_tile('Suivi'), findsNothing);
     });
   });
 
-  // ── Test 1: ACCEPTED → toutes les cartes présentes ─────────────────────────
+  // ── Test 1: ACCEPTED → billet, voyageur, paiement, tuiles ───────────────────
+  testWidgets('1 · ACCEPTED → ColisBillet, VoyageurContactCard, PaiementCard '
+      'puis les tuiles, sans bannière ni cartes retirées', (tester) async {
+    sizeView(tester);
+    final bid = _bid();
+
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    // Laisse les staggers (60ms × index + 300ms fadeIn) se terminer.
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.byType(ColisBillet), findsOneWidget);
+    expect(find.byType(VoyageurContactCard), findsOneWidget);
+    expect(find.byType(PaiementCard), findsOneWidget);
+    expect(find.text('Votre envoi'), findsOneWidget);
+    expect(find.text('À traiter'), findsNothing);
+    expect(find.byType(SenderHeroCard), findsNothing);
+    expect(find.byType(ColisDestinataireCard), findsNothing);
+    expect(find.byType(DetailsAccordion), findsNothing);
+    expect(find.byType(PrevenirDestinataireBody), findsNothing);
+    expect(find.text('Suivi du colis'), findsNothing);
+    // ACCEPTED avec lien de suivi : Prévenir, Colis et Plus de détails (pas
+    // d'adresse ici, donc pas de tuile Lieux).
+    expect(_tile('Prévenir Fatou'), findsOneWidget);
+    expect(_tile('Colis et destinataire'), findsOneWidget);
+    expect(_tile('Plus de détails'), findsOneWidget);
+    expect(find.byType(DonyActionTile), findsNWidgets(3));
+  });
+
+  // ── Ordre : billet, À traiter, voyageur, paiement, tuiles ───────────────────
   testWidgets(
-    '1 · ACCEPTED → ColisBillet, SenderHeroCard, VoyageurContactCard, '
-    'ColisDestinataireCard, PaiementCard, QuickActionsRow, DetailsAccordion',
+    'l\'ordre est billet, À traiter, voyageur, paiement, Votre envoi, '
+    'tuiles',
     (tester) async {
       sizeView(tester);
-      final bid = _bid();
+      final bid = _bid(
+        arrivalInstructions: 'Gare routière, quai 4',
+        handoverAddress: const AddressData(
+          label: '1 rue A',
+          lat: 48.8,
+          lng: 2.3,
+        ),
+      );
 
       await tester.pumpWidget(
         _host(bid, cancellationBloc, conversationOpenBloc),
       );
-      // Laisse les staggers (60ms × index + 300ms fadeIn) se terminer.
       await tester.pump(const Duration(seconds: 1));
 
-      expect(find.byType(ColisBillet), findsOneWidget);
-      expect(find.byType(SenderHeroCard), findsOneWidget);
-      expect(find.byType(VoyageurContactCard), findsOneWidget);
-      expect(find.byType(ColisDestinataireCard), findsOneWidget);
-      expect(find.byType(PaiementCard), findsOneWidget);
-      expect(find.byType(QuickActionsRow), findsOneWidget);
-      expect(find.byType(PrevenirDestinataireCard), findsOneWidget);
-      expect(find.byType(DetailsAccordion), findsOneWidget);
+      double top(Finder f) => tester.getTopLeft(f).dy;
+      final ys = [
+        top(find.byType(ColisBillet)),
+        top(find.text('À traiter')),
+        top(find.byKey(const Key('arrival-instructions-card'))),
+        top(find.byType(VoyageurContactCard)),
+        top(find.byType(PaiementCard)),
+        top(find.text('Votre envoi')),
+        top(find.byType(DonyActionTile).first),
+      ];
+      expect([...ys]..sort(), ys);
+      expect(ys.toSet(), hasLength(ys.length));
     },
   );
 
+  // ── Teintes, pastilles et résumés des tuiles ──────────────────────────────
+  group('tuiles', () {
+    Future<void> pumpBody(WidgetTester tester, BidModel bid) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(bid, cancellationBloc, conversationOpenBloc),
+      );
+      await tester.pump(const Duration(seconds: 1));
+    }
+
+    Color tint(WidgetTester tester, String label) {
+      final tile = tester.widget<DonyActionTile>(_tile(label));
+      return tile.color;
+    }
+
+    testWidgets('bleu pour Prévenir, Colis et Détails, terracotta pour '
+        'Lieux', (tester) async {
+      await pumpBody(
+        tester,
+        _bid(
+          handoverAddress: const AddressData(
+            label: '1 rue A',
+            lat: 48.8,
+            lng: 2.3,
+          ),
+        ),
+      );
+      final cs = Theme.of(tester.element(find.byType(ColisBillet))).colorScheme;
+      expect(tint(tester, 'Prévenir Fatou'), cs.primary);
+      expect(tint(tester, 'Colis et destinataire'), cs.primary);
+      expect(tint(tester, 'Plus de détails'), cs.primary);
+      expect(tint(tester, 'Lieux'), cs.secondary);
+    });
+
+    testWidgets('Prévenir : lien de suivi sans code, pas de pastille', (
+      tester,
+    ) async {
+      await pumpBody(tester, _bid());
+      final tile = tester.widget<DonyActionTile>(_tile('Prévenir Fatou'));
+      expect(tile.subtitle, 'Envoyer le lien de suivi');
+      expect(tile.badge, isNull);
+    });
+
+    testWidgets('Prévenir : code prêt et pastille « Code prêt »', (
+      tester,
+    ) async {
+      await pumpBody(
+        tester,
+        _bid(status: 'IN_TRANSIT', confirmationCode: '482913'),
+      );
+      final tile = tester.widget<DonyActionTile>(_tile('Prévenir Fatou'));
+      expect(tile.subtitle, 'Envoyer le code de retrait');
+      expect(
+        find.descendant(
+          of: _tile('Prévenir Fatou'),
+          matching: find.text('Code prêt'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Prévenir : code expiré, lien et pas de pastille', (
+      tester,
+    ) async {
+      await pumpBody(
+        tester,
+        _bid(
+          status: 'IN_TRANSIT',
+          confirmationCode: '482913',
+          pickupCodeRenewalNeeded: true,
+        ),
+      );
+      final tile = tester.widget<DonyActionTile>(_tile('Prévenir Fatou'));
+      expect(tile.subtitle, 'Envoyer le lien de suivi');
+      expect(tile.badge, isNull);
+    });
+
+    testWidgets('Colis : poids et destinataire en sous-titre', (tester) async {
+      await pumpBody(tester, _bid());
+      final tile = tester.widget<DonyActionTile>(
+        _tile('Colis et destinataire'),
+      );
+      expect(tile.subtitle, '5 kg · pour Fatou');
+    });
+
+    testWidgets('Colis : sans destinataire, le poids seul', (tester) async {
+      await pumpBody(tester, _bid(recipientName: null));
+      final tile = tester.widget<DonyActionTile>(
+        _tile('Colis et destinataire'),
+      );
+      expect(tile.subtitle, '5 kg');
+    });
+
+    testWidgets('Suivi : terracotta et résumé du hero', (tester) async {
+      await pumpBody(
+        tester,
+        _bid(
+          status: 'ARRIVED',
+          arrivalInstructions: 'Gare routière, quai 4',
+          handoverAddress: const AddressData(
+            label: '1 rue A',
+            lat: 48.8,
+            lng: 2.3,
+          ),
+        ),
+      );
+      final cs = Theme.of(tester.element(find.byType(ColisBillet))).colorScheme;
+      expect(tint(tester, 'Suivi'), cs.secondary);
+      final tile = tester.widget<DonyActionTile>(_tile('Suivi'));
+      final summary = SenderHeroCard.statusLine(
+        tester.element(find.byType(ColisBillet)),
+        _bid(
+          status: 'ARRIVED',
+          arrivalInstructions: 'Gare routière, quai 4',
+          handoverAddress: const AddressData(
+            label: '1 rue A',
+            lat: 48.8,
+            lng: 2.3,
+          ),
+        ),
+      );
+      expect(tile.subtitle, summary);
+      expect(tile.badge, isNotNull);
+    });
+
+    testWidgets('pas de pastille « Étape en cours » avant la remise', (
+      tester,
+    ) async {
+      await pumpBody(
+        tester,
+        _bid(
+          handoverAddress: const AddressData(
+            label: '1 rue A',
+            lat: 48.8,
+            lng: 2.3,
+          ),
+        ),
+      );
+      expect(tester.widget<DonyActionTile>(_tile('Lieux')).badge, isNull);
+    });
+
+    testWidgets('tuile Plus de détails : sous-titre fixe', (tester) async {
+      await pumpBody(tester, _bid());
+      expect(
+        tester.widget<DonyActionTile>(_tile('Plus de détails')).subtitle,
+        'Référence, dépôt, lien de suivi',
+      );
+    });
+  });
+
   // ── Test 2: PENDING → pas de voyageur ni d'actions de suivi ─────────────────
   testWidgets('2 · PENDING → profil du voyageur sans bouton de contact, '
-      'QuickActionsRow absent, ColisDestinataireCard présent', (tester) async {
+      'tuiles Colis et Détails seulement', (tester) async {
     sizeView(tester);
     final bid = _bid(status: 'PENDING');
 
@@ -313,31 +518,29 @@ void main() {
     expect(find.byType(VoyageurContactCard), findsOneWidget);
     expect(_contactIcon(VoyageurContactCard, 'message-circle'), findsNothing);
     expect(_contactIcon(VoyageurContactCard, 'phone'), findsNothing);
-    expect(find.byType(QuickActionsRow), findsNothing);
-    expect(find.byType(PrevenirDestinataireCard), findsNothing);
-    expect(find.byType(ColisDestinataireCard), findsOneWidget);
-    // L'expéditeur voit toujours le téléphone du destinataire.
-    expect(find.text('Téléphone'), findsOneWidget);
+    expect(_tile('Prévenir Fatou'), findsNothing);
+    expect(_tile('Colis et destinataire'), findsOneWidget);
+    expect(_tile('Plus de détails'), findsOneWidget);
+    expect(find.byType(DonyActionTile), findsNWidgets(2));
   });
 
-  // ── Test 2 bis: ARRIVED → voyageur + actions rapides toujours visibles ──────
-  testWidgets(
-    '2 bis · ARRIVED → VoyageurContactCard et QuickActionsRow restent affichés',
-    (tester) async {
-      sizeView(tester);
-      final bid = _bid(status: 'ARRIVED');
+  // ── Test 2 bis: ARRIVED → voyageur et tuile Suivi toujours visibles ─────────
+  testWidgets('2 bis · ARRIVED → VoyageurContactCard et tuile Suivi restent '
+      'affichés', (tester) async {
+    sizeView(tester);
+    final bid = _bid(
+      status: 'ARRIVED',
+      handoverAddress: const AddressData(label: '1 rue A', lat: 48.8, lng: 2.3),
+    );
 
-      await tester.pumpWidget(
-        _host(bid, cancellationBloc, conversationOpenBloc),
-      );
-      await tester.pump(const Duration(seconds: 1));
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
 
-      expect(find.byType(VoyageurContactCard), findsOneWidget);
-      expect(find.byType(QuickActionsRow), findsOneWidget);
-    },
-  );
+    expect(find.byType(VoyageurContactCard), findsOneWidget);
+    expect(_tile('Suivi'), findsOneWidget);
+  });
 
-  // ── Test 3: CANCELLED → voyageur absent, hero shrink ────────────────────────
+  // ── Test 3: CANCELLED → voyageur sans contact, tuiles Colis et Détails ──────
   testWidgets('3 · CANCELLED → profil du voyageur sans bouton de contact', (
     tester,
   ) async {
@@ -349,9 +552,58 @@ void main() {
 
     expect(find.byType(VoyageurContactCard), findsOneWidget);
     expect(_contactIcon(VoyageurContactCard, 'message-circle'), findsNothing);
-    // Le billet et la carte colis restent toujours présents.
+    // Le billet et la tuile Colis restent toujours présents.
     expect(find.byType(ColisBillet), findsOneWidget);
-    expect(find.byType(ColisDestinataireCard), findsOneWidget);
+    expect(_tile('Colis et destinataire'), findsOneWidget);
+  });
+
+  // ── Destinataire qui a refusé : « À traiter », pas de tuile Prévenir ────────
+  testWidgets('destinataire en refus → carte « Destinataire à remplacer » sous '
+      'À traiter, sans tuile Prévenir', (tester) async {
+    sizeView(tester);
+    final bid = _bid(status: 'IN_TRANSIT', recipientAppStatus: 'DECLINED');
+
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('À traiter'), findsOneWidget);
+    expect(find.byType(RecipientDeclinedCard), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byType(RecipientDeclinedCard)).dy,
+      greaterThan(tester.getTopLeft(find.text('À traiter')).dy),
+    );
+    expect(_tile('Prévenir Fatou'), findsNothing);
+  });
+
+  // ── Absence à la livraison : cellule sous les tuiles ────────────────────────
+  testWidgets('colis parti → cellule « Le voyageur ne livre pas » sous les '
+      'tuiles', (tester) async {
+    sizeView(tester);
+    final bid = _bid(
+      status: 'IN_TRANSIT',
+      departureAt: DateTime.now().subtract(const Duration(days: 1)),
+    );
+
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(DeliveryNoShowCtaCell.shouldShow(bid), isTrue);
+    expect(find.byType(DeliveryNoShowCtaCell), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byType(DeliveryNoShowCtaCell)).dy,
+      greaterThan(tester.getBottomLeft(find.byType(DonyActionTileGrid)).dy),
+    );
+  });
+
+  testWidgets('pas de cellule d\'absence tant que le signalement est '
+      'impossible', (tester) async {
+    sizeView(tester);
+    await tester.pumpWidget(
+      _host(_bid(status: 'PENDING'), cancellationBloc, conversationOpenBloc),
+    );
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.byType(DeliveryNoShowCtaCell), findsNothing);
   });
 
   // ── Instructions de retrait : encart hors du hero ──────────────────────────
@@ -429,7 +681,7 @@ void main() {
 
     // Le corps doit toujours rendre ses widgets normalement.
     expect(find.byType(ColisBillet), findsOneWidget);
-    expect(find.byType(SenderHeroCard), findsOneWidget);
+    expect(find.byType(PaiementCard), findsOneWidget);
   });
 
   testWidgets(
@@ -603,9 +855,8 @@ void main() {
       expect(scrollOffset(tester), greaterThan(0));
     });
 
-    testWidgets('modification autorisée sans demande : encart d\'entrée', (
-      tester,
-    ) async {
+    testWidgets('modification autorisée sans demande : pas de carte, le '
+        'bouton vit dans le sheet Colis', (tester) async {
       sizeView(tester);
       await tester.pumpWidget(
         _host(
@@ -616,8 +867,13 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 1));
 
-      expect(find.byType(AmendmentEntryCard), findsOneWidget);
+      expect(
+        AmendmentEntryCard.shouldShow(_bid(amendmentAllowed: true)),
+        isTrue,
+      );
       expect(find.byType(AmendmentSenderCard), findsNothing);
+      expect(find.text('À traiter'), findsNothing);
+      expect(find.text('Ajouter des kilos ou des articles'), findsNothing);
     });
 
     testWidgets('sans modification : aucune carte', (tester) async {
@@ -628,10 +884,12 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.byType(AmendmentSenderCard), findsNothing);
-      expect(find.byType(AmendmentEntryCard), findsNothing);
     });
   });
 }
+
+/// Tuile de la grille « Votre envoi » portant [label].
+Finder _tile(String label) => find.widgetWithText(DonyActionTile, label);
 
 /// Bouton d'une carte de profil (appel ou message), repéré par son icône.
 Finder _contactIcon(Type card, String icon) => find.descendant(

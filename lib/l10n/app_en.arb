@@ -11105,7 +11105,6 @@
   "errorAmendmentNotFoundMessage": "This edit no longer exists.",
   "errorHandoverAmendmentPendingTitle": "Edit pending",
   "errorHandoverAmendmentPendingMessage": "An edit to the parcel is awaiting the traveler's reply. Scan the parcel once they've replied.",
-  "amendmentEntryTitle": "EDIT MY PARCEL",
   "amendmentEntryButton": "Add kilos or items",
   "amendmentSheetTitle": "Edit my parcel",
   "amendmentSheetKgLabel": "EXTRA KILOS · {price}/KG · {free} KG FREE",
@@ -11157,7 +11156,6 @@
   "amendmentGainCommissionNote": "including {amount} Yadony commission, already taken from your balance",
   "amendmentGainHandoverNote": "At handover, collect {amount} in cash before scanning the parcel QR code.",
   "amendmentPaymentContextLabel": "Parcel edit",
-  "amendmentEntryBodyShort": "Add kilos or items: {name} has 48 h to accept.",
   "amendmentSheetKgLabelOpen": "EXTRA KILOS · {price}/KG",
   "amendmentSheetLoadFailed": "Couldn't load the edit options.",
   "amendmentQuantityLess": "Fewer",
@@ -11246,10 +11244,6 @@
   "tripSummaryViewParcels": "View my parcels",
   "tripDepartButton": "I'm leaving",
   "tripDepartConfirmedSnackbar": "Noted, have a safe trip!",
-  "travelerTrackingTitle": "Traveler tracking",
-  "@travelerTrackingTitle": {
-    "description": "Titre de la carte. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
-  },
   "travelerTrackingBadgeEnRoute": "On the way",
   "@travelerTrackingBadgeEnRoute": {
     "description": "Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."

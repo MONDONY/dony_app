@@ -36186,12 +36186,6 @@ abstract class AppLocalizations {
   /// **'Une modification du colis attend la réponse du voyageur. Scannez le colis une fois qu\'il a répondu.'**
   String get errorHandoverAmendmentPendingMessage;
 
-  /// Titre de la carte d'entrée de l'expéditeur
-  ///
-  /// In fr, this message translates to:
-  /// **'MODIFIER MON COLIS'**
-  String get amendmentEntryTitle;
-
   /// Bouton d'entrée de la modification
   ///
   /// In fr, this message translates to:
@@ -36505,12 +36499,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Modification du colis'**
   String get amendmentPaymentContextLabel;
-
-  /// Texte de la carte d'entrée sans kilos libres. {name} : prénom du voyageur
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajoutez des kilos ou des articles : {name} a 48 h pour accepter.'**
-  String amendmentEntryBodyShort(String name);
 
   /// Titre du sélecteur de kilos quand la capacité est libre. {price} : prix au kilo formaté
   ///
@@ -37043,12 +37031,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'C\'est noté, bon voyage !'**
   String get tripDepartConfirmedSnackbar;
-
-  /// Titre de la carte. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Suivi du voyageur'**
-  String get travelerTrackingTitle;
 
   /// Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
   ///

@@ -120,26 +120,6 @@ void main() {
   });
 
   group('règles d\'affichage', () {
-    test('shouldShow : lien de suivi requis, colis pas encore remis', () {
-      expect(PrevenirDestinataireCard.shouldShow(_bid()), isTrue);
-      expect(
-        PrevenirDestinataireCard.shouldShow(_bid(status: 'ARRIVED')),
-        isTrue,
-      );
-      expect(
-        PrevenirDestinataireCard.shouldShow(_bid(trackingToken: null)),
-        isFalse,
-      );
-      expect(
-        PrevenirDestinataireCard.shouldShow(_bid(status: 'COMPLETED')),
-        isFalse,
-      );
-      expect(
-        PrevenirDestinataireCard.shouldShow(_bid(status: 'PENDING')),
-        isFalse,
-      );
-    });
-
     test('withCode : seulement une fois le colis confié', () {
       expect(
         PrevenirDestinataire.withCode(
@@ -158,208 +138,18 @@ void main() {
     });
   });
 
-  group('PrevenirDestinataireCard.shouldShow — refus (FLUTTER-E8)', () {
-    test('refus sans lien de suivi mais modifiable : visible', () {
-      expect(
-        PrevenirDestinataireCard.shouldShow(
-          _bid(trackingToken: null, recipientAppStatus: 'DECLINED'),
-        ),
-        isTrue,
-      );
-    });
-
-    test('refus sur un colis livré : masqué', () {
-      expect(
-        PrevenirDestinataireCard.shouldShow(
-          _bid(status: 'COMPLETED', recipientAppStatus: 'DECLINED'),
-        ),
-        isFalse,
-      );
-    });
-
-    test('sans refus ni lien : masqué', () {
-      expect(
-        PrevenirDestinataireCard.shouldShow(_bid(trackingToken: null)),
-        isFalse,
-      );
-    });
-  });
-
-  group('PrevenirDestinataireCard', () {
-    late _MockLauncher launcher;
-    late List<String> shared;
-
-    setUp(() {
-      launcher = _MockLauncher();
-      shared = [];
-    });
-
+  group('RecipientDeclinedCard', () {
     Future<void> pump(WidgetTester tester, BidModel bid) => tester.pumpWidget(
       localizedApp(
         Scaffold(
-          body: SingleChildScrollView(
-            child: PrevenirDestinataireCard(
-              bid: bid,
-              launcher: launcher,
-              shareFallback: (text, _) async => shared.add(text),
-            ),
-          ),
+          body: SingleChildScrollView(child: RecipientDeclinedCard(bid: bid)),
         ),
       ),
     );
 
-    testWidgets('demande acceptée : ouvre WhatsApp avec le lien', (
-      tester,
-    ) async {
-      when(() => launcher.open(any())).thenAnswer((_) async => true);
-      await pump(tester, _bid());
-
-      expect(find.text('Prévenir Fatou'), findsOneWidget);
-      await tester.tap(find.text('Prévenir sur WhatsApp'));
-      await tester.pumpAndSettle();
-
-      final uri =
-          verify(() => launcher.open(captureAny())).captured.single as Uri;
-      expect(uri.host, 'wa.me');
-      expect(uri.path, '/221700000000');
-      expect(uri.queryParameters['text'], contains('/tok-abc123'));
-      expect(shared, isEmpty);
-    });
-
-    testWidgets('code prêt : bouton et message portent le code', (
-      tester,
-    ) async {
-      when(() => launcher.open(any())).thenAnswer((_) async => true);
-      await pump(
-        tester,
-        _bid(status: 'IN_TRANSIT', confirmationCode: '482913'),
-      );
-
-      await tester.tap(find.text('Envoyer le code sur WhatsApp'));
-      await tester.pumpAndSettle();
-
-      final uri =
-          verify(() => launcher.open(captureAny())).captured.single as Uri;
-      expect(uri.queryParameters['text'], contains('482913'));
-    });
-
-    // FLUTTER-G1 : code bloqué → le message ne part qu'avec le lien, on le dit.
     testWidgets(
-      'code bloqué : message avec le lien et invitation à régénérer',
-      (tester) async {
-        when(() => launcher.open(any())).thenAnswer((_) async => true);
-        await pump(tester, _bid(status: 'IN_TRANSIT'));
-
-        expect(
-          find.byKey(const Key('recipient-notify-code-blocked')),
-          findsOneWidget,
-        );
-        expect(find.text('Prévenir sur WhatsApp'), findsOneWidget);
-      },
-    );
-
-    // FLUTTER-G2 : code expiré → jamais dans le message, explication dédiée.
-    testWidgets('code expiré : lien seul et « a expiré »', (tester) async {
-      when(() => launcher.open(any())).thenAnswer((_) async => true);
-      await pump(
-        tester,
-        _bid(
-          status: 'IN_TRANSIT',
-          confirmationCode: '482913',
-          pickupCodeRenewalNeeded: true,
-        ),
-      );
-
-      expect(
-        find.text(
-          "Le code de retrait a expiré : générez-en un nouveau pour l'ajouter au message.",
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('Prévenir sur WhatsApp'), findsOneWidget);
-      await tester.tap(find.text('Prévenir sur WhatsApp'));
-      await tester.pumpAndSettle();
-      final uri =
-          verify(() => launcher.open(captureAny())).captured.single as Uri;
-      expect(uri.queryParameters['text'], isNot(contains('482913')));
-    });
-
-    testWidgets('code effacé : texte « bloqué » inchangé', (tester) async {
-      await pump(tester, _bid(status: 'IN_TRANSIT'));
-      expect(
-        find.text(
-          "Générez d'abord un nouveau code de retrait pour l'ajouter au message.",
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('code présent : aucune invitation à régénérer', (tester) async {
-      await pump(
-        tester,
-        _bid(status: 'IN_TRANSIT', confirmationCode: '482913'),
-      );
-      expect(
-        find.byKey(const Key('recipient-notify-code-blocked')),
-        findsNothing,
-      );
-    });
-
-    testWidgets('WhatsApp ne s\'ouvre pas : repli sur le partage', (
-      tester,
-    ) async {
-      when(() => launcher.open(any())).thenAnswer((_) async => false);
-      await pump(tester, _bid());
-
-      await tester.tap(find.text('Prévenir sur WhatsApp'));
-      await tester.pumpAndSettle();
-
-      expect(shared, hasLength(1));
-      expect(shared.single, contains('/tok-abc123'));
-    });
-
-    testWidgets('numéro sans indicatif : partage direct, sans WhatsApp', (
-      tester,
-    ) async {
-      await pump(
-        tester,
-        _bid(recipientPhone: '0612345678', recipientName: null),
-      );
-
-      expect(find.text('Prévenir le destinataire'), findsOneWidget);
-      await tester.tap(find.text('Prévenir sur WhatsApp'));
-      await tester.pumpAndSettle();
-
-      verifyNever(() => launcher.open(any()));
-      expect(shared, hasLength(1));
-    });
-
-    testWidgets('destinataire dans Yadony : pastille en tête, WhatsApp reste', (
-      tester,
-    ) async {
-      await pump(tester, _bid(recipientAppStatus: 'CONFIRMED'));
-
-      expect(find.byKey(const Key('recipient-app-confirmed')), findsOneWidget);
-      expect(find.text('Fatou suit le colis dans Yadony'), findsOneWidget);
-      expect(find.byKey(const Key('recipient-app-declined')), findsNothing);
-      expect(find.text('Prévenir sur WhatsApp'), findsOneWidget);
-    });
-
-    testWidgets('destinataire sans nom : pastille générique', (tester) async {
-      await pump(
-        tester,
-        _bid(recipientName: null, recipientAppStatus: 'CONFIRMED'),
-      );
-
-      expect(
-        find.text('Le destinataire suit le colis dans Yadony'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets(
-      'destinataire en refus : bandeau neutre, « Prévenir » neutralisé, '
-      'action « Désigner un autre destinataire » (FLUTTER-E8)',
+      'destinataire en refus : bandeau neutre et action « Désigner un autre '
+      'destinataire » (FLUTTER-E8)',
       (tester) async {
         await pump(
           tester,
@@ -388,7 +178,6 @@ void main() {
           find.byKey(const Key('recipient-replacement-requested')),
           findsNothing,
         );
-        verifyNever(() => launcher.open(any()));
       },
     );
 
@@ -420,15 +209,6 @@ void main() {
         find.text('Le voyageur vous demande d\'en désigner un autre.'),
         findsOneWidget,
       );
-    });
-
-    testWidgets('lien en attente ou absent : encart inchangé', (tester) async {
-      for (final status in [null, 'PENDING']) {
-        await pump(tester, _bid(recipientAppStatus: status));
-
-        expect(find.byKey(const Key('recipient-app-confirmed')), findsNothing);
-        expect(find.byKey(const Key('recipient-app-declined')), findsNothing);
-      }
     });
   });
 
@@ -524,8 +304,8 @@ void main() {
       );
     });
 
-    test('shouldShow garde le résultat d\'avant, quel que soit le bid', () {
-      // Règle d'origine : carte visible si canNotify (ancienne définition) ou
+    test('canNotify ou showsDeclined garde le résultat d\'avant', () {
+      // Règle d'origine : encart visible si canNotify (ancienne définition) ou
       // refus modifiable.
       bool before(BidModel b) {
         final inWindow = const {
@@ -557,7 +337,8 @@ void main() {
               recipientAppStatus: app,
             );
             expect(
-              PrevenirDestinataireCard.shouldShow(b),
+              PrevenirDestinataire.canNotify(b) ||
+                  PrevenirDestinataire.showsDeclined(b),
               before(b),
               reason: '$status / $token / $app',
             );
@@ -724,6 +505,35 @@ void main() {
       expect(find.byType(DetailCard), findsNothing);
       expect(find.byType(DonyButton), findsNothing);
       expect(find.textContaining('Fatou'), findsWidgets);
+    });
+
+    testWidgets('destinataire dans Yadony : pastille en tête', (tester) async {
+      await pumpBody(tester, _bid(recipientAppStatus: 'CONFIRMED'));
+
+      expect(find.byKey(const Key('recipient-app-confirmed')), findsOneWidget);
+      expect(find.text('Fatou suit le colis dans Yadony'), findsOneWidget);
+      expect(find.byKey(const Key('recipient-app-declined')), findsNothing);
+    });
+
+    testWidgets('destinataire sans nom : pastille générique', (tester) async {
+      await pumpBody(
+        tester,
+        _bid(recipientName: null, recipientAppStatus: 'CONFIRMED'),
+      );
+
+      expect(
+        find.text('Le destinataire suit le colis dans Yadony'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('lien en attente ou absent : aucune pastille', (tester) async {
+      for (final status in [null, 'PENDING']) {
+        await pumpBody(tester, _bid(recipientAppStatus: status));
+
+        expect(find.byKey(const Key('recipient-app-confirmed')), findsNothing);
+        expect(find.byKey(const Key('recipient-app-declined')), findsNothing);
+      }
     });
 
     testWidgets('body shows code blocked note when needsNewPickupCode', (
