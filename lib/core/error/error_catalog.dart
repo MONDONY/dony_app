@@ -1088,6 +1088,14 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.lock_clock_rounded,
     ),
+    // Une recharge de cette devise a déjà été remboursée sur la carte en dehors de l'app :
+    // le back gèle la devise jusqu'à ce que l'équipe régularise le solde.
+    'wallet-external-refund-hold': _Entry(
+      title: (l) => l.errorWalletExternalRefundHoldTitle,
+      message: (l) => l.errorWalletExternalRefundHoldMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_clock_rounded,
+    ),
     'code-expired': _Entry(
       title: (l) => l.errorCodeExpiredTitle,
       message: (l) => l.errorCodeExpiredMessage,

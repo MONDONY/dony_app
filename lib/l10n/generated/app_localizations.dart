@@ -37146,6 +37146,18 @@ abstract class AppLocalizations {
   /// **'Une recharge par carte de cette devise fait l\'objet d\'une contestation bancaire. Le solde reste bloqué jusqu\'à la fin de la contestation. Contactez le support.'**
   String get errorWalletDisputeHoldMessage;
 
+  /// Titre d'erreur wallet-external-refund-hold : une recharge de cette devise a déjà été remboursée sur la carte hors de l'app (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde bloqué'**
+  String get errorWalletExternalRefundHoldTitle;
+
+  /// Message d'erreur wallet-external-refund-hold (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une recharge de cette devise vous a déjà été remboursée sur votre carte. Le solde reste bloqué le temps que l\'équipe le régularise. Contactez le support.'**
+  String get errorWalletExternalRefundHoldMessage;
+
   /// Historique du solde : montant repris parce que la recharge par carte est contestée auprès de la banque (TOPUP_DISPUTED, wallet_tx_label.dart).
   ///
   /// In fr, this message translates to:

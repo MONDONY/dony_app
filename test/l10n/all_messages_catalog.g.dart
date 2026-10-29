@@ -8036,6 +8036,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorWalletTopupAboveMaxMessage': (l) => l.errorWalletTopupAboveMaxMessage,
   'errorWalletDisputeHoldTitle': (l) => l.errorWalletDisputeHoldTitle,
   'errorWalletDisputeHoldMessage': (l) => l.errorWalletDisputeHoldMessage,
+  'errorWalletExternalRefundHoldTitle': (l) =>
+      l.errorWalletExternalRefundHoldTitle,
+  'errorWalletExternalRefundHoldMessage': (l) =>
+      l.errorWalletExternalRefundHoldMessage,
   'walletTxTypeTopupDisputed': (l) => l.walletTxTypeTopupDisputed,
   'walletTxTypeTopupDisputeReversed': (l) => l.walletTxTypeTopupDisputeReversed,
 };
