@@ -6300,6 +6300,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voyageurCardCallSemanticLabel => 'Call';
 
   @override
+  String get voyageurCardContactChat => 'Send a message';
+
+  @override
   String get voyageurCardOpenChatSemanticLabel => 'Open the conversation';
 
   @override

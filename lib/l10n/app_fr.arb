@@ -5874,6 +5874,10 @@
   "@voyageurCardCallSemanticLabel": {
     "description": "Libellé d'accessibilité du bouton d'appel (voyageur_card.dart)"
   },
+  "voyageurCardContactChat": "Écrire un message",
+  "@voyageurCardContactChat": {
+    "description": "Ligne « écrire » de la feuille Contacter le voyageur (voyageur_contact_card.dart)"
+  },
   "voyageurCardOpenChatSemanticLabel": "Ouvrir la discussion",
   "@voyageurCardOpenChatSemanticLabel": {
     "description": "Libellé d'accessibilité du bouton de messagerie (voyageur_card.dart)"

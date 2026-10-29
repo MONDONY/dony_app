@@ -10447,6 +10447,12 @@ abstract class AppLocalizations {
   /// **'Appeler'**
   String get voyageurCardCallSemanticLabel;
 
+  /// Ligne « écrire » de la feuille Contacter le voyageur (voyageur_contact_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Écrire un message'**
+  String get voyageurCardContactChat;
+
   /// Libellé d'accessibilité du bouton de messagerie (voyageur_card.dart)
   ///
   /// In fr, this message translates to:

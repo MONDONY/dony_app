@@ -23,7 +23,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Carte profil voyageur (vue expéditeur) — bouton 📞 conditionnel + 💬 chat.
+/// Carte profil voyageur (vue expéditeur) — un bouton « Contacter » (icône
+/// conversation) : discussion directe, ou feuille appel / message quand
+/// l'appel est possible.
 ///
 /// Affichée à tous les statuts : tant que la demande est en attente, seul le
 /// profil est visible, sans bouton d'appel ni de message
@@ -65,6 +67,66 @@ class VoyageurContactCard extends StatelessWidget {
     context.read<ContactRevealBloc>().add(ContactRevealRequested(bid.id));
   }
 
+  /// Bouton rond « Contacter » (icône conversation) : il porte l'idée qu'on
+  /// peut parler au voyageur, sans choisir le moyen à la place de l'utilisateur.
+  Widget _contactButton(
+    BuildContext context, {
+    required bool canCall,
+    bool isRevealing = false,
+  }) {
+    return BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
+      builder: (context, openState) {
+        final busy = isRevealing || openState is ConversationOpenLoading;
+        return _IconActionButton(
+          iconAsset: 'messages-square',
+          semanticLabel: context.l10n.bidDetailContactTravelerLabel,
+          isLoading: busy,
+          onTap: busy
+              ? null
+              : () => canCall ? _showContactSheet(context) : _openChat(context),
+        );
+      },
+    );
+  }
+
+  void _openChat(BuildContext context) => context
+      .read<ConversationOpenBloc>()
+      .add(ConversationOpenRequested(bid.id));
+
+  /// Feuille « Contacter le voyageur » : écrire ou appeler. Les deux blocs
+  /// sont lus ici, avant l'ouverture : la feuille vit sur le navigateur racine,
+  /// hors des fournisseurs de l'écran.
+  void _showContactSheet(BuildContext context) {
+    final l = context.l10n;
+    DonyBottomSheet.show<void>(
+      context,
+      title: l.bidDetailContactTravelerLabel,
+      child: Builder(
+        builder: (sheetContext) => Column(
+          children: [
+            _ContactOption(
+              iconAsset: 'message-circle',
+              label: l.voyageurCardContactChat,
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                _openChat(context);
+              },
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            _ContactOption(
+              iconAsset: 'phone',
+              label: l.travelerContactCall,
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                _requestCall(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -77,6 +139,7 @@ class VoyageurContactCard extends StatelessWidget {
     final cancelledWindow = bidCancelledContactOpen(bid);
     final contactAllowed = bidAllowsContactFor(bid);
     final canOpenProfile = bid.travelerId != null;
+    final canCall = _showPhoneButton && contactAllowed;
 
     final ratingLabel = bid.travelerAverageRating != null
         ? '★ ${bid.travelerAverageRating!.toStringAsFixed(1)}'
@@ -168,45 +231,28 @@ class VoyageurContactCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Bouton 📞 — conditionnel
-                if (_showPhoneButton && contactAllowed) ...[
-                  BlocConsumer<ContactRevealBloc, ContactRevealState>(
-                    listener: (context, state) {
-                      if (state is ContactRevealSuccess) {
-                        unawaited(dialPhoneNumber(context, state.phoneNumber));
-                      } else if (state is ContactRevealError) {
-                        ErrorPresenter.show(context, state.error);
-                      }
-                    },
-                    builder: (context, state) {
-                      final isRevealing = state is ContactRevealLoading;
-                      return _IconActionButton(
-                        iconAsset: 'phone',
-                        semanticLabel: l.voyageurCardCallSemanticLabel,
-                        isLoading: isRevealing,
-                        onTap: isRevealing ? null : () => _requestCall(context),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                ],
-                // Bouton 💬 chat
+                // Un seul bouton « Contacter » : le détail du moyen (appel ou
+                // message) vient ensuite, dans une feuille. Sans appel possible,
+                // il ouvre directement la discussion.
                 if (contactAllowed)
-                  BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
-                    builder: (context, openState) {
-                      final isOpening = openState is ConversationOpenLoading;
-                      return _IconActionButton(
-                        iconAsset: 'message-circle',
-                        semanticLabel: l.voyageurCardOpenChatSemanticLabel,
-                        isLoading: isOpening,
-                        onTap: isOpening
-                            ? null
-                            : () => context.read<ConversationOpenBloc>().add(
-                                ConversationOpenRequested(bid.id),
-                              ),
-                      );
-                    },
-                  ),
+                  canCall
+                      ? BlocConsumer<ContactRevealBloc, ContactRevealState>(
+                          listener: (context, state) {
+                            if (state is ContactRevealSuccess) {
+                              unawaited(
+                                dialPhoneNumber(context, state.phoneNumber),
+                              );
+                            } else if (state is ContactRevealError) {
+                              ErrorPresenter.show(context, state.error);
+                            }
+                          },
+                          builder: (context, revealState) => _contactButton(
+                            context,
+                            canCall: true,
+                            isRevealing: revealState is ContactRevealLoading,
+                          ),
+                        )
+                      : _contactButton(context, canCall: false),
                 if (canOpenProfile) ...[
                   const SizedBox(width: DonySpacing.xs),
                   DonyIcon(
@@ -322,6 +368,59 @@ class _IconActionButton extends StatelessWidget {
                   ),
                 )
               : DonyIcon(iconAsset, color: cs.primary, size: 18),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Ligne de la feuille « Contacter » ─────────────────────────────────────────
+
+class _ContactOption extends StatelessWidget {
+  final String iconAsset;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ContactOption({
+    required this.iconAsset,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(DonyRadius.lg),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
+        padding: const EdgeInsets.all(DonySpacing.md),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(DonyRadius.lg),
+          border: Border.all(color: cs.outline),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(DonySpacing.sm),
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                borderRadius: BorderRadius.circular(DonyRadius.sm),
+              ),
+              child: DonyIcon(iconAsset, color: cs.primary, size: 18),
+            ),
+            const SizedBox(width: DonySpacing.md),
+            Expanded(
+              child: Text(
+                label,
+                style: tt.titleSmall?.copyWith(color: cs.onSurface),
+              ),
+            ),
+            DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 18),
+          ],
         ),
       ),
     );

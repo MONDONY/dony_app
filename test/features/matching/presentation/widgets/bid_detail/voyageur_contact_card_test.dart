@@ -48,10 +48,16 @@ BidModel _bid({
   updatedAt: DateTime(2026, 10),
 );
 
-Finder get _phoneIcon =>
-    find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone');
-Finder get _chatIcon =>
-    find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle');
+/// Un seul bouton « Contacter » ; l'appel et le message sont dans la feuille.
+Finder get _contactIcon =>
+    find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'messages-square');
+
+/// Ouvre la feuille « Contacter » et dit si l'appel y est proposé.
+Future<bool> _callOffered(WidgetTester tester) async {
+  await tester.tap(_contactIcon);
+  await tester.pumpAndSettle();
+  return find.text('Appeler').evaluate().isNotEmpty;
+}
 
 Future<_MockConvBloc> _pump(WidgetTester tester, BidModel bid) async {
   final conv = _MockConvBloc();
@@ -84,8 +90,9 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'ACCEPTED', contactWindowOpen: true));
-    expect(_chatIcon, findsOneWidget);
-    expect(_phoneIcon, findsOneWidget);
+    expect(_contactIcon, findsOneWidget);
+    expect(await _callOffered(tester), isTrue);
+    expect(find.text('Écrire un message'), findsOneWidget);
     expect(
       find.byKey(const Key('contact-return-in-progress-hint')),
       findsNothing,
@@ -99,8 +106,9 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'CANCELLED', contactWindowOpen: true));
-    expect(_chatIcon, findsOneWidget);
-    expect(_phoneIcon, findsOneWidget);
+    expect(_contactIcon, findsOneWidget);
+    expect(await _callOffered(tester), isTrue);
+    expect(find.text('Écrire un message'), findsOneWidget);
     expect(
       find.byKey(const Key('contact-cancelled-window-hint')),
       findsOneWidget,
@@ -111,8 +119,7 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'CANCELLED', contactWindowOpen: false));
-    expect(_chatIcon, findsNothing);
-    expect(_phoneIcon, findsNothing);
+    expect(_contactIcon, findsNothing);
     expect(
       find.byKey(const Key('contact-cancelled-window-hint')),
       findsNothing,
@@ -130,8 +137,9 @@ void main() {
         returnDeadline: DateTime.now().add(const Duration(days: 2)),
       ),
     );
-    expect(_chatIcon, findsOneWidget);
-    expect(_phoneIcon, findsOneWidget);
+    expect(_contactIcon, findsOneWidget);
+    expect(await _callOffered(tester), isTrue);
+    expect(find.text('Écrire un message'), findsOneWidget);
     expect(
       find.text(
         'Retour en cours : contactez le voyageur pour récupérer votre colis.',
@@ -139,7 +147,9 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(_chatIcon);
+    // La feuille est déjà ouverte par `_callOffered` : on choisit « écrire ».
+    await tester.tap(find.text('Écrire un message'));
+    await tester.pumpAndSettle();
     verify(
       () => conv.add(any(that: isA<ConversationOpenRequested>())),
     ).called(1);
@@ -173,8 +183,7 @@ void main() {
         returnedAt: DateTime.now(),
       ),
     );
-    expect(_chatIcon, findsNothing);
-    expect(_phoneIcon, findsNothing);
+    expect(_contactIcon, findsNothing);
   });
 
   testWidgets('délai de retour écoulé (serveur) : plus aucun bouton', (
@@ -188,7 +197,6 @@ void main() {
         returnDeadline: DateTime.now().subtract(const Duration(hours: 1)),
       ),
     );
-    expect(_chatIcon, findsNothing);
-    expect(_phoneIcon, findsNothing);
+    expect(_contactIcon, findsNothing);
   });
 }

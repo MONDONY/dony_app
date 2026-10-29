@@ -201,6 +201,18 @@ void main() {
     });
     tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
 
+    // Un seul bouton « Contacter » : l'appel n'est proposé que dans la
+    // feuille qu'il ouvre. Sans appel possible, il ouvre la discussion.
+    Finder contactIcon() => find.byWidgetPredicate(
+      (w) => w is DonyIcon && w.name == 'messages-square',
+    );
+    Future<bool> callOffered(WidgetTester tester) async {
+      if (contactIcon().evaluate().isEmpty) return false;
+      await tester.tap(contactIcon());
+      await tester.pumpAndSettle();
+      return find.text('Appeler').evaluate().isNotEmpty;
+    }
+
     testWidgets('shows traveler name, rating and chat button', (tester) async {
       final bid = _bid(
         travelerName: 'Oumar Diallo',
@@ -212,11 +224,15 @@ void main() {
 
       expect(find.text('Oumar Diallo'), findsOneWidget);
       expect(find.text('★ 4.8 · 12 trajets'), findsOneWidget);
+      expect(contactIcon(), findsOneWidget);
+      // Plus d'icônes d'appel et de message séparées sur la carte.
       expect(
         find.byWidgetPredicate(
-          (w) => w is DonyIcon && w.name == 'message-circle',
+          (w) =>
+              w is DonyIcon &&
+              (w.name == 'message-circle' || w.name == 'phone'),
         ),
-        findsOneWidget,
+        findsNothing,
       );
     });
 
@@ -227,10 +243,8 @@ void main() {
 
         await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-        expect(
-          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
-          findsOneWidget,
-        );
+        expect(await callOffered(tester), isTrue);
+        expect(find.text('Écrire un message'), findsOneWidget);
       },
     );
 
@@ -239,10 +253,7 @@ void main() {
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
-        findsNothing,
-      );
+      expect(await callOffered(tester), isFalse);
     });
 
     testWidgets(
@@ -253,10 +264,7 @@ void main() {
 
         await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-        expect(
-          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
-          findsNothing,
-        );
+        expect(await callOffered(tester), isFalse);
       },
     );
 
@@ -267,10 +275,7 @@ void main() {
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
-        findsNothing,
-      );
+      expect(await callOffered(tester), isFalse);
     });
 
     testWidgets('hides phone button when status is DELIVERED even with phone', (
@@ -280,15 +285,10 @@ void main() {
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
-        findsNothing,
-      );
+      expect(await callOffered(tester), isFalse);
     });
 
     // ── Fenêtre de contact servie par le back (yadony-back #414, FLUTTER-DK) ──
-    Finder phoneIcon() =>
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone');
 
     testWidgets('COMPLETED + fenêtre ouverte (J+3) → 📞 visible', (
       tester,
@@ -299,7 +299,7 @@ void main() {
         contactWindowOpen: true,
       );
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(phoneIcon(), findsOneWidget);
+      expect(await callOffered(tester), isTrue);
     });
 
     testWidgets('COMPLETED + fenêtre fermée → 📞 masqué', (tester) async {
@@ -309,7 +309,7 @@ void main() {
         contactWindowOpen: false,
       );
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(phoneIcon(), findsNothing);
+      expect(await callOffered(tester), isFalse);
     });
 
     testWidgets('COMPLETED sans le champ (ancien back) → repli, 📞 masqué', (
@@ -318,7 +318,7 @@ void main() {
       final bid = _bid(travelerPhoneAvailable: true, status: 'COMPLETED');
       expect(bid.contactWindowOpen, isNull);
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(phoneIcon(), findsNothing);
+      expect(await callOffered(tester), isFalse);
     });
 
     testWidgets('IN_TRANSIT + fenêtre ouverte → 📞 visible', (tester) async {
@@ -328,7 +328,7 @@ void main() {
         contactWindowOpen: true,
       );
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(phoneIcon(), findsOneWidget);
+      expect(await callOffered(tester), isTrue);
     });
 
     testWidgets('fenêtre ouverte mais voyageur non joignable → 📞 masqué', (
@@ -336,7 +336,7 @@ void main() {
     ) async {
       final bid = _bid(status: 'IN_TRANSIT', contactWindowOpen: true);
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(phoneIcon(), findsNothing);
+      expect(await callOffered(tester), isFalse);
     });
 
     testWidgets('tap chat button fires ConversationOpenRequested once', (
@@ -346,11 +346,7 @@ void main() {
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      await tester.tap(
-        find.byWidgetPredicate(
-          (w) => w is DonyIcon && w.name == 'message-circle',
-        ),
-      );
+      await tester.tap(contactIcon());
       await tester.pump();
 
       final captured = verify(() => bloc.add(captureAny())).captured;
@@ -441,8 +437,12 @@ void main() {
         await tester.pumpAndSettle();
 
         await tester.tap(
-          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
+          find.byWidgetPredicate(
+            (w) => w is DonyIcon && w.name == 'messages-square',
+          ),
         );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Appeler'));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
 
@@ -964,7 +964,7 @@ void main() {
           find.byWidgetPredicate(
             (w) =>
                 w is Semantics &&
-                w.properties.label == 'Call' &&
+                w.properties.label == 'Contact the traveler' &&
                 w.properties.button == true,
           ),
           findsOneWidget,
