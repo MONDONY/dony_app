@@ -123,6 +123,9 @@ class BilletTalon extends StatelessWidget {
         'REJECTED' => _RejectedBlock(bid: bid, isSender: true),
         'EXPIRED' when bid.isExpiredAtHandoverDeadline =>
           const _HandoverDeadlineExpiredBlock(isSender: true),
+        'NO_SHOW' ||
+        'PARCEL_REFUSED' ||
+        'EXPIRED' => _ClosedBlock(status: status, isSender: true),
         _ => const SizedBox.shrink(),
       };
     }
@@ -167,7 +170,7 @@ class BilletTalon extends StatelessWidget {
       // vide et rien n'expliquait pourquoi la demande ne bouge plus.
       'NO_SHOW' ||
       'PARCEL_REFUSED' ||
-      'EXPIRED' => _TravelerClosedBlock(status: status),
+      'EXPIRED' => _ClosedBlock(status: status, isSender: false),
       _ => const SizedBox.shrink(),
     };
   }
@@ -795,8 +798,8 @@ class _DoneBlock extends StatelessWidget {
   }
 }
 
-/// any / REJECTED or CANCELLED (et NO_SHOW / PARCEL_REFUSED / EXPIRED côté
-/// voyageur, sous leur motif) — muted terminal message.
+/// any / REJECTED or CANCELLED (et NO_SHOW / PARCEL_REFUSED / EXPIRED, sous
+/// leur motif) — muted terminal message.
 class _TerminalBlock extends StatelessWidget {
   const _TerminalBlock();
 
@@ -815,13 +818,16 @@ class _TerminalBlock extends StatelessWidget {
   }
 }
 
-/// traveler / NO_SHOW, PARCEL_REFUSED, EXPIRED (hors date limite de dépôt) :
+/// any / NO_SHOW, PARCEL_REFUSED, EXPIRED (hors date limite de dépôt) :
 /// le motif, avec le vocabulaire du tampon, puis le message terminal commun.
-/// Côté expéditeur la zone du talon reste vide pour ces statuts.
-class _TravelerClosedBlock extends StatelessWidget {
+/// Seul le refus du colis change de point de vue : l'expéditeur lit que c'est
+/// le voyageur qui l'a refusé. Aucune ligne de remboursement : l'app ne sait
+/// pas ce que ces statuts ont remboursé.
+class _ClosedBlock extends StatelessWidget {
   final String status;
+  final bool isSender;
 
-  const _TravelerClosedBlock({required this.status});
+  const _ClosedBlock({required this.status, required this.isSender});
 
   @override
   Widget build(BuildContext context) {
@@ -830,7 +836,10 @@ class _TravelerClosedBlock extends StatelessWidget {
     final l = context.l10n;
     final reason = switch (status) {
       'NO_SHOW' => l.ticketClosedNoShowReason,
-      'PARCEL_REFUSED' => l.ticketClosedParcelRefusedReason,
+      'PARCEL_REFUSED' =>
+        isSender
+            ? l.ticketClosedParcelRefusedReasonSender
+            : l.ticketClosedParcelRefusedReason,
       _ => l.ticketClosedExpiredReason,
     };
     return Column(

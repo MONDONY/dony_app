@@ -8115,6 +8115,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ticketClosedParcelRefusedReason => 'Parcel refused at handover';
 
   @override
+  String get ticketClosedParcelRefusedReasonSender =>
+      'The traveler refused the parcel at handover';
+
+  @override
   String get ticketClosedExpiredReason => 'Request expired';
 
   @override

@@ -8170,6 +8170,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ticketClosedParcelRefusedReason => 'Colis refusé à la remise';
 
   @override
+  String get ticketClosedParcelRefusedReasonSender =>
+      'Le voyageur a refusé le colis à la remise';
+
+  @override
   String get ticketClosedExpiredReason => 'Demande expirée';
 
   @override

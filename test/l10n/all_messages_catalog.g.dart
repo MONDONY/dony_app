@@ -2977,6 +2977,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'ticketRequestClosedMessage': (l) => l.ticketRequestClosedMessage,
   'ticketClosedNoShowReason': (l) => l.ticketClosedNoShowReason,
   'ticketClosedParcelRefusedReason': (l) => l.ticketClosedParcelRefusedReason,
+  'ticketClosedParcelRefusedReasonSender': (l) =>
+      l.ticketClosedParcelRefusedReasonSender,
   'ticketClosedExpiredReason': (l) => l.ticketClosedExpiredReason,
   'ticketHandoverDeadlineExpiredTitle': (l) =>
       l.ticketHandoverDeadlineExpiredTitle,

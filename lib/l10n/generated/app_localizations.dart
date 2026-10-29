@@ -13488,13 +13488,13 @@ abstract class AppLocalizations {
   /// **'Colis livré'**
   String get ticketParcelDeliveredLabel;
 
-  /// Message terminal REJECTED/CANCELLED du talon, et NO_SHOW / PARCEL_REFUSED / EXPIRED côté voyageur (billet_talon.dart)
+  /// Message terminal REJECTED/CANCELLED du talon, et NO_SHOW / PARCEL_REFUSED / EXPIRED, pour les deux rôles (billet_talon.dart)
   ///
   /// In fr, this message translates to:
   /// **'Cette demande est terminée.'**
   String get ticketRequestClosedMessage;
 
-  /// Motif au-dessus de « Cette demande est terminée. » dans le talon du billet voyageur, statut NO_SHOW (billet_talon.dart). Reprend le vocabulaire du tampon « Absent »
+  /// Motif au-dessus de « Cette demande est terminée. » dans le talon du billet (voyageur et expéditeur), statut NO_SHOW (billet_talon.dart). Reprend le vocabulaire du tampon « Absent »
   ///
   /// In fr, this message translates to:
   /// **'Absence constatée'**
@@ -13506,7 +13506,13 @@ abstract class AppLocalizations {
   /// **'Colis refusé à la remise'**
   String get ticketClosedParcelRefusedReason;
 
-  /// Motif au-dessus de « Cette demande est terminée. » dans le talon du billet voyageur, statut EXPIRED hors date limite de dépôt (billet_talon.dart). Reprend le vocabulaire du tampon « Expiré »
+  /// Motif au-dessus de « Cette demande est terminée. » dans le talon du billet EXPÉDITEUR, statut PARCEL_REFUSED : le voyageur a refusé le colis à la remise (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur a refusé le colis à la remise'**
+  String get ticketClosedParcelRefusedReasonSender;
+
+  /// Motif au-dessus de « Cette demande est terminée. » dans le talon du billet (voyageur et expéditeur), statut EXPIRED hors date limite de dépôt (billet_talon.dart). Reprend le vocabulaire du tampon « Expiré »
   ///
   /// In fr, this message translates to:
   /// **'Demande expirée'**

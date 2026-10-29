@@ -1254,22 +1254,38 @@ void main() {
   });
 
   // NO_SHOW, PARCEL_REFUSED et EXPIRED (hors date limite de dépôt) : le talon
-  // voyageur était vide, l'écran n'expliquait rien. Il dit maintenant que la
-  // demande est terminée et pourquoi, avec le vocabulaire du tampon.
-  group('demande terminée sans bloc dédié (voyageur)', () {
+  // était vide, l'écran n'expliquait rien. Il dit maintenant que la demande
+  // est terminée et pourquoi, avec le vocabulaire du tampon, pour le voyageur
+  // comme pour l'expéditeur.
+  group('demande terminée sans bloc dédié (voyageur et expéditeur)', () {
     const closed = 'Cette demande est terminée.';
     const closedEn = 'This request is closed.';
-    final cases = <(String, String, String)>[
-      ('NO_SHOW', 'Absence constatée', 'No-show recorded'),
+    // (statut, motif voyageur FR/EN, motif expéditeur FR/EN)
+    final cases = <(String, String, String, String, String)>[
+      (
+        'NO_SHOW',
+        'Absence constatée',
+        'No-show recorded',
+        'Absence constatée',
+        'No-show recorded',
+      ),
       (
         'PARCEL_REFUSED',
         'Colis refusé à la remise',
         'Parcel refused at handover',
+        'Le voyageur a refusé le colis à la remise',
+        'The traveler refused the parcel at handover',
       ),
-      ('EXPIRED', 'Demande expirée', 'Request expired'),
+      (
+        'EXPIRED',
+        'Demande expirée',
+        'Request expired',
+        'Demande expirée',
+        'Request expired',
+      ),
     ];
 
-    for (final (status, fr, en) in cases) {
+    for (final (status, fr, en, senderFr, senderEn) in cases) {
       testWidgets('voyageur · $status : motif + « demande terminée »', (
         tester,
       ) async {
@@ -1299,15 +1315,47 @@ void main() {
         expect(find.text(closedEn), findsOneWidget);
       });
 
-      testWidgets('expéditeur · $status : talon inchangé (vide)', (
+      testWidgets('expéditeur · $status : motif + « demande terminée »', (
         tester,
       ) async {
         await _pump(tester, _bid(status: status), true);
-        expect(find.byKey(const Key('billet-closed-reason')), findsNothing);
-        expect(find.text(closed), findsNothing);
-        expect(find.text(fr), findsNothing);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('billet-closed-reason')))
+              .data,
+          senderFr,
+        );
+        expect(find.text(closed), findsOneWidget);
+        expect(find.byType(OutlinedButton), findsNothing);
+        expect(find.byType(FilledButton), findsNothing);
+      });
+
+      testWidgets('expéditeur · $status, en anglais', (tester) async {
+        useEnglish();
+        await _pump(tester, _bid(status: status), true);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('billet-closed-reason')))
+              .data,
+          senderEn,
+        );
+        expect(find.text(closedEn), findsOneWidget);
       });
     }
+
+    testWidgets('expéditeur · EXPIRED à la date limite de dépôt : son bloc, '
+        'sans le motif générique', (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'EXPIRED', rejectionReason: 'HANDOVER_DEADLINE_PASSED'),
+        true,
+      );
+      expect(
+        find.byKey(const Key('billet-handover-deadline-expired')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('billet-closed-reason')), findsNothing);
+    });
 
     testWidgets('voyageur · EXPIRED à la date limite de dépôt : son bloc, '
         'sans le motif générique', (tester) async {

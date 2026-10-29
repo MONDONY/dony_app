@@ -4208,6 +4208,7 @@
   "ticketRequestClosedMessage": "This request is closed.",
   "ticketClosedNoShowReason": "No-show recorded",
   "ticketClosedParcelRefusedReason": "Parcel refused at handover",
+  "ticketClosedParcelRefusedReasonSender": "The traveler refused the parcel at handover",
   "ticketClosedExpiredReason": "Request expired",
   "ticketHandoverDeadlineExpiredTitle": "Drop-off deadline passed",
   "ticketHandoverDeadlineExpiredSender": "The drop-off deadline has passed: request cancelled. Any payment is refunded to you in full.",

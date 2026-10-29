@@ -8272,19 +8272,23 @@
   },
   "ticketRequestClosedMessage": "Cette demande est terminée.",
   "@ticketRequestClosedMessage": {
-    "description": "Message terminal REJECTED/CANCELLED du talon, et NO_SHOW / PARCEL_REFUSED / EXPIRED côté voyageur (billet_talon.dart)"
+    "description": "Message terminal REJECTED/CANCELLED du talon, et NO_SHOW / PARCEL_REFUSED / EXPIRED, pour les deux rôles (billet_talon.dart)"
   },
   "ticketClosedNoShowReason": "Absence constatée",
   "@ticketClosedNoShowReason": {
-    "description": "Motif au-dessus de « Cette demande est terminée. » dans le talon du billet voyageur, statut NO_SHOW (billet_talon.dart). Reprend le vocabulaire du tampon « Absent »"
+    "description": "Motif au-dessus de « Cette demande est terminée. » dans le talon du billet (voyageur et expéditeur), statut NO_SHOW (billet_talon.dart). Reprend le vocabulaire du tampon « Absent »"
   },
   "ticketClosedParcelRefusedReason": "Colis refusé à la remise",
   "@ticketClosedParcelRefusedReason": {
     "description": "Motif au-dessus de « Cette demande est terminée. » dans le talon du billet voyageur, statut PARCEL_REFUSED (billet_talon.dart). Reprend le vocabulaire du tampon « Colis refusé »"
   },
+  "ticketClosedParcelRefusedReasonSender": "Le voyageur a refusé le colis à la remise",
+  "@ticketClosedParcelRefusedReasonSender": {
+    "description": "Motif au-dessus de « Cette demande est terminée. » dans le talon du billet EXPÉDITEUR, statut PARCEL_REFUSED : le voyageur a refusé le colis à la remise (billet_talon.dart)"
+  },
   "ticketClosedExpiredReason": "Demande expirée",
   "@ticketClosedExpiredReason": {
-    "description": "Motif au-dessus de « Cette demande est terminée. » dans le talon du billet voyageur, statut EXPIRED hors date limite de dépôt (billet_talon.dart). Reprend le vocabulaire du tampon « Expiré »"
+    "description": "Motif au-dessus de « Cette demande est terminée. » dans le talon du billet (voyageur et expéditeur), statut EXPIRED hors date limite de dépôt (billet_talon.dart). Reprend le vocabulaire du tampon « Expiré »"
   },
   "ticketHandoverDeadlineExpiredTitle": "Date limite de dépôt passée",
   "@ticketHandoverDeadlineExpiredTitle": {
