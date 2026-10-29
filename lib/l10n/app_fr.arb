@@ -7548,11 +7548,11 @@
   },
   "bidDetailMoreDetails": "Plus de détails",
   "@bidDetailMoreDetails": {
-    "description": "En-tête de l'accordéon (details_accordion.dart)"
+    "description": "Titre de la tuile Plus de détails et de son bottom sheet, vues expéditeur et voyageur (sender_tile_sheets.dart, traveler_tile_sheets.dart)"
   },
   "bidDetailSectionTodo": "À traiter",
   "@bidDetailSectionTodo": {
-    "description": "Titre de la section des actions en attente de la fiche colis expéditeur (sender_detail_body.dart)"
+    "description": "Titre de la section des actions en attente de la fiche colis, vues expéditeur et voyageur (sender_detail_body.dart, traveler_detail_body.dart)"
   },
   "bidDetailSectionShipment": "Votre envoi",
   "@bidDetailSectionShipment": {
@@ -7605,6 +7605,10 @@
   "bidDetailSectionTransport": "Votre transport",
   "@bidDetailSectionTransport": {
     "description": "Titre de la grille de tuiles de la fiche colis voyageur (traveler_transport_section.dart)"
+  },
+  "travelerTileBadgeTodo": "À traiter",
+  "@travelerTileBadgeTodo": {
+    "description": "Pastille de la tuile Colis et destinataire de la fiche colis voyageur quand le destinataire a refusé et qu'un autre peut être demandé (traveler_transport_section.dart)"
   },
   "travelerTileLieux": "Lieux",
   "@travelerTileLieux": {

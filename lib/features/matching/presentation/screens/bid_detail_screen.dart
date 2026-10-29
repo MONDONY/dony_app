@@ -57,13 +57,15 @@ class BidDetailScreen extends StatelessWidget {
   /// nouveau code, la feuille de régénération s'ouvre dès le chargement.
   final bool openCodeRenewal;
 
-  /// Ouvert depuis la notification `BID_SUPPLEMENT_REQUESTED`
-  /// (`?action=supplement`) : la vue expéditeur amène l'encart du supplément
-  /// à l'écran.
+  /// Ouvert depuis une notification de supplément (`?action=supplement`) :
+  /// la vue expéditeur comme la vue voyageur amènent l'encart du supplément à
+  /// l'écran.
   final bool focusSupplement;
 
   /// Ouvert depuis une notification de modification de colis
-  /// (`?action=amendment`) : la vue expéditeur amène la carte à l'écran.
+  /// (`?action=amendment`, envoyée aussi au voyageur pour
+  /// `BID_AMENDMENT_REQUESTED|REMINDER|ACCEPTED`) : les deux vues amènent la
+  /// carte à l'écran.
   final bool focusAmendment;
 
   const BidDetailScreen({
@@ -761,7 +763,11 @@ class _BidDetailViewState extends State<_BidDetailView>
                             existingPayment: payment,
                           ),
                         )
-                      : TravelerDetailBody(bid: _bid),
+                      : TravelerDetailBody(
+                          bid: _bid,
+                          focusSupplement: widget.focusSupplement,
+                          focusAmendment: widget.focusAmendment,
+                        ),
                   bottomNavigationBar: isSender
                       ? (SenderStickyBar.hasAction(_bid)
                             ? ListenableBuilder(

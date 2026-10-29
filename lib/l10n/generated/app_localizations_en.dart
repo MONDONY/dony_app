@@ -7625,6 +7625,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailSectionTransport => 'Your trip';
 
   @override
+  String get travelerTileBadgeTodo => 'To do';
+
+  @override
   String get travelerTileLieux => 'Places';
 
   @override

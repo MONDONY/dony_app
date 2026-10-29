@@ -12588,13 +12588,13 @@ abstract class AppLocalizations {
   /// **'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.'**
   String get bidDetailCancelAfterHandoverBody;
 
-  /// En-tête de l'accordéon (details_accordion.dart)
+  /// Titre de la tuile Plus de détails et de son bottom sheet, vues expéditeur et voyageur (sender_tile_sheets.dart, traveler_tile_sheets.dart)
   ///
   /// In fr, this message translates to:
   /// **'Plus de détails'**
   String get bidDetailMoreDetails;
 
-  /// Titre de la section des actions en attente de la fiche colis expéditeur (sender_detail_body.dart)
+  /// Titre de la section des actions en attente de la fiche colis, vues expéditeur et voyageur (sender_detail_body.dart, traveler_detail_body.dart)
   ///
   /// In fr, this message translates to:
   /// **'À traiter'**
@@ -12665,6 +12665,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Votre transport'**
   String get bidDetailSectionTransport;
+
+  /// Pastille de la tuile Colis et destinataire de la fiche colis voyageur quand le destinataire a refusé et qu'un autre peut être demandé (traveler_transport_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À traiter'**
+  String get travelerTileBadgeTodo;
 
   /// Tuile Lieux (dépôt et récupération) de la fiche colis voyageur
   ///

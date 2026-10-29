@@ -2791,6 +2791,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'senderTileBadgeCodeReady': (l) => l.senderTileBadgeCodeReady,
   'senderTileBadgeCurrentStep': (l) => l.senderTileBadgeCurrentStep,
   'bidDetailSectionTransport': (l) => l.bidDetailSectionTransport,
+  'travelerTileBadgeTodo': (l) => l.travelerTileBadgeTodo,
   'travelerTileLieux': (l) => l.travelerTileLieux,
   'travelerTileLieuxDropoff': (l) =>
       l.travelerTileLieuxDropoff(placeholderMarker('place')),

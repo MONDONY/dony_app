@@ -37,6 +37,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
@@ -158,6 +159,7 @@ Future<GoRouter> _pump(
   required _MockAuthBloc authBloc,
   bool openCodeRenewal = false,
   bool focusSupplement = false,
+  bool focusAmendment = false,
   Size size = const Size(800, 3000),
 }) async {
   await initializeDateFormatting('fr_FR');
@@ -176,6 +178,7 @@ Future<GoRouter> _pump(
             bid: bid,
             openCodeRenewal: openCodeRenewal,
             focusSupplement: focusSupplement,
+            focusAmendment: focusAmendment,
           ),
         ),
       ),
@@ -686,6 +689,93 @@ void main() {
           .focusSupplement,
       isTrue,
     );
+  });
+
+  // Le résolveur de notifications envoie aussi le voyageur sur
+  // `?action=amendment` (BID_AMENDMENT_REQUESTED|REMINDER|ACCEPTED) et
+  // `?action=supplement` : la vue voyageur reçoit les deux paramètres.
+  group('?action= côté voyageur', () {
+    setUp(() {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerFactory<SupplementActionCubit>(
+        () => SupplementActionCubit(_MockSupplementRepository(), analytics),
+      );
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<SupplementActionCubit>()) {
+        getIt.unregister<SupplementActionCubit>();
+      }
+    });
+
+    _MockAuthBloc travelerViewer() {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user('traveler-001')));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+      return authBloc;
+    }
+
+    for (final (supplement, amendment) in [(true, false), (false, true)]) {
+      testWidgets(
+        'supplement=$supplement amendment=$amendment : transmis à la vue '
+        'voyageur',
+        (tester) async {
+          await _pump(
+            tester,
+            bid: _makeBid(paymentMethod: BidPaymentMethod.stripe),
+            authBloc: travelerViewer(),
+            focusSupplement: supplement,
+            focusAmendment: amendment,
+          );
+          await tester.pump(const Duration(milliseconds: 500));
+
+          final body = tester.widget<TravelerDetailBody>(
+            find.byType(TravelerDetailBody),
+          );
+          expect(body.focusSupplement, supplement);
+          expect(body.focusAmendment, amendment);
+          expect(find.byType(SenderDetailBody), findsNothing);
+        },
+      );
+    }
+
+    testWidgets('?action=supplement : la carte du supplément est amenée à '
+        'l\'écran', (tester) async {
+      final bid = _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        supplement: const BidSupplement(
+          id: 'sup-1',
+          status: BidSupplementStatus.proposed,
+          netAmount: 15,
+          commissionAmount: 2,
+          grossAmount: 17,
+          blocksHandover: true,
+        ),
+      );
+      await _pump(
+        tester,
+        bid: bid,
+        authBloc: travelerViewer(),
+        focusSupplement: true,
+        size: const Size(800, 700),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(SupplementTravelerCard), findsOneWidget);
+      final offset = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .pixels;
+      expect(offset, greaterThan(0));
+    });
   });
 
   // ── Fiche expéditeur en tuiles : vrai écran ───────────────────────────────

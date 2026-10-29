@@ -12,6 +12,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_transport_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -39,7 +40,9 @@ BidModel _bid({
   String? departureCity = 'Paris',
   String? arrivalCity = 'Bamako',
   String? handoverLocation,
+  DateTime? recipientReplacementRequestedAt,
 }) => BidModel(
+  recipientReplacementRequestedAt: recipientReplacementRequestedAt,
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: 'sender-001',
@@ -209,6 +212,97 @@ void main() {
     });
   });
 
+  // Destinataire refusé (FLUTTER-E8) : « Demander un autre destinataire » vit
+  // dans le sheet Colis ; la tuile porte une pastille pour qu'il ne reste pas
+  // invisible.
+  group('tuile Colis : pastille du destinataire à remplacer', () {
+    Finder badge() => find.descendant(
+      of: tile(TravelerTile.colis),
+      matching: find.byKey(const Key('tool-status-badge')),
+    );
+
+    for (final status in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+      testWidgets('$status, destinataire refusé : pastille « À traiter »', (
+        tester,
+      ) async {
+        await pump(tester, _bid(status: status, recipientDeclined: true));
+
+        expect(badge(), findsOneWidget);
+        expect(textIn(TravelerTile.colis, 'À traiter'), findsOneWidget);
+        // Les autres tuiles n'en portent pas.
+        expect(find.byKey(const Key('tool-status-badge')), findsOneWidget);
+      });
+    }
+
+    testWidgets('lecteur d\'écran : la pastille dit pourquoi', (tester) async {
+      await pump(tester, _bid(recipientDeclined: true));
+
+      // La tuile fusionne ses libellés en un seul bouton (MergeSemantics).
+      expect(
+        find.bySemanticsLabel(RegExp('Destinataire à redésigner')),
+        findsWidgets,
+      );
+    });
+
+    testWidgets('EN : « To do »', (tester) async {
+      await pump(
+        tester,
+        _bid(recipientDeclined: true),
+        locale: const Locale('en'),
+      );
+
+      expect(textIn(TravelerTile.colis, 'To do'), findsOneWidget);
+    });
+
+    testWidgets('destinataire présent : pas de pastille', (tester) async {
+      await pump(tester, _bid());
+
+      expect(find.byKey(const Key('tool-status-badge')), findsNothing);
+    });
+
+    for (final status in ['COMPLETED', 'CANCELLED', 'PENDING']) {
+      testWidgets('$status : plus de remplacement possible, pas de pastille', (
+        tester,
+      ) async {
+        await pump(tester, _bid(status: status, recipientDeclined: true));
+
+        expect(find.byKey(const Key('tool-status-badge')), findsNothing);
+      });
+    }
+
+    testWidgets('demande envoyée il y a moins de 12 h : pas de pastille', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        _bid(
+          recipientDeclined: true,
+          recipientReplacementRequestedAt: DateTime.now().subtract(
+            const Duration(hours: 2),
+          ),
+        ),
+      );
+
+      expect(find.byKey(const Key('tool-status-badge')), findsNothing);
+    });
+
+    testWidgets('demande envoyée il y a plus de 12 h : la pastille revient', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        _bid(
+          recipientDeclined: true,
+          recipientReplacementRequestedAt: DateTime.now().subtract(
+            const Duration(hours: 13),
+          ),
+        ),
+      );
+
+      expect(badge(), findsOneWidget);
+    });
+  });
+
   group('tuile Lieux : résumé', () {
     testWidgets('avant la remise : la ville de dépôt', (tester) async {
       await pump(tester, _bid());
@@ -330,6 +424,8 @@ void main() {
       // qu'une ville.
       'sans ville de départ': _bid(departureCity: null),
       'sans ville d\'arrivée': _bid(status: 'IN_TRANSIT', arrivalCity: null),
+      // Pastille « À traiter » sur la tuile Colis.
+      'destinataire refusé': _bid(recipientDeclined: true),
     };
     for (final locale in const [Locale('fr'), Locale('en')]) {
       for (final scale in const [1.0, 1.3]) {
@@ -350,6 +446,15 @@ void main() {
               final box = tester.getRect(tile(t));
               expect(box.left, greaterThanOrEqualTo(0), reason: t.name);
               expect(box.right, lessThanOrEqualTo(360), reason: t.name);
+            }
+            // La pastille tient entière, sans points de suspension.
+            final badgeText = find.descendant(
+              of: find.byKey(const Key('tool-status-badge')),
+              matching: find.byType(RichText),
+            );
+            for (final element in badgeText.evaluate()) {
+              final paragraph = element.renderObject! as RenderParagraph;
+              expect(paragraph.didExceedMaxLines, isFalse);
             }
           });
         }

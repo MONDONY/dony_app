@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tile_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tiles.dart';
+import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -58,6 +60,17 @@ class TravelerTransportSection extends StatelessWidget {
     return l.travelerTileColisSubtitle(formatWeightKg(l, weight), recipient);
   }
 
+  /// Le destinataire a refusé (ou s'est retiré, FLUTTER-E8) et le voyageur
+  /// peut demander un autre destinataire : colis en cours de transport, et
+  /// pas de demande envoyée depuis moins de 12 h. Le geste vit dans le sheet
+  /// Colis (`RecipientDeclinedPanel`) : la tuile porte alors une pastille,
+  /// sinon il resterait invisible.
+  static bool recipientNeedsReplacement(BidModel bid) {
+    if (!bid.recipientDeclined || !bid.canChangeRecipient) return false;
+    final next = bid.nextRecipientReplacementAllowedAt;
+    return next == null || !next.isAfter(DateTime.now());
+  }
+
   Widget _tileFor(BuildContext context, TravelerTile tile) {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
@@ -79,19 +92,23 @@ class TravelerTransportSection extends StatelessWidget {
       label: label,
       subtitle: subtitle,
       color: color,
+      badge: tile == TravelerTile.colis && recipientNeedsReplacement(bid)
+          ? ToolStatusBadge(
+              ready: false,
+              tone: ToolStatusTone.news,
+              label: l.travelerTileBadgeTodo,
+              semanticsLabel: l.recipientDeclinedTravelerTitle,
+            )
+          : null,
       onTap: () => unawaited(openTravelerTileSheet(context, bid, tile)),
     );
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget build(BuildContext context) => BidDetailSection(
+    title: context.l10n.bidDetailSectionTransport,
+    spacing: DonySpacing.md,
     children: [
-      Text(
-        context.l10n.bidDetailSectionTransport,
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      const SizedBox(height: DonySpacing.md),
       DonyActionTileGrid(
         tiles: [
           for (final tile in travelerTilesFor(bid)) _tileFor(context, tile),

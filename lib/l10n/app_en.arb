@@ -3900,6 +3900,7 @@
   "senderTileBadgeCodeReady": "Code ready",
   "senderTileBadgeCurrentStep": "Current step",
   "bidDetailSectionTransport": "Your trip",
+  "travelerTileBadgeTodo": "To do",
   "travelerTileLieux": "Places",
   "travelerTileLieuxDropoff": "Drop-off in {place}",
   "@travelerTileLieuxDropoff": {

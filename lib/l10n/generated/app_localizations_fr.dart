@@ -7672,6 +7672,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailSectionTransport => 'Votre transport';
 
   @override
+  String get travelerTileBadgeTodo => 'À traiter';
+
+  @override
   String get travelerTileLieux => 'Lieux';
 
   @override

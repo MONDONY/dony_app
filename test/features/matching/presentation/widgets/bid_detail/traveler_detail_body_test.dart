@@ -1,35 +1,61 @@
+// Corps de la fiche colis, vue voyageur : billet, hero (sous le billet ou dans
+// « À traiter »), « À traiter », informations sans titre, expéditeur, gain,
+// « Votre transport » et badge d'évaluation. Chaque section porte une clé
+// (KeyedSubtree) : les tests lisent l'ordre des sections présentes.
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/bloc/delivery_noshow_procedure/delivery_noshow_procedure_cubit.dart';
+import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
+import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_accept_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_commission_flow.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_flow.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart'
+    show RatingDoneBadge;
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_info_cards.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_transport_section.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/recipient_contact.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockConvBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
@@ -44,6 +70,12 @@ class _MockAnalytics extends Mock implements AnalyticsService {}
 class _MockCancelBloc extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
 
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
+
+class _MockProcedureCubit extends MockCubit<DeliveryNoShowProcedureState>
+    implements DeliveryNoShowProcedureCubit {}
+
 BidModel _bid(
   String status, {
   String? trackingToken,
@@ -53,12 +85,26 @@ BidModel _bid(
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   bool voyageurConfirmed = false,
   DateTime? departureAt,
+  DateTime? handoverDeadline,
+  String? cancellationNoShowStatus,
+  String? deliveryNoShowStatus,
+  bool? deliveryNoShowReportedByTraveler,
+  TripRescheduleInfo? reschedule,
+  bool recipientDeclined = false,
+  bool travelerHasRated = false,
 }) => BidModel(
   amendments: amendments,
   supplement: supplement,
   paymentMethod: paymentMethod,
   voyageurConfirmed: voyageurConfirmed,
   departureAt: departureAt,
+  handoverDeadline: handoverDeadline,
+  cancellationNoShowStatus: cancellationNoShowStatus,
+  deliveryNoShowStatus: deliveryNoShowStatus,
+  deliveryNoShowReportedByTraveler: deliveryNoShowReportedByTraveler,
+  reschedule: reschedule,
+  recipientDeclined: recipientDeclined,
+  travelerHasRated: travelerHasRated,
   id: 'b1',
   announcementId: 'a1',
   senderId: 's1',
@@ -67,157 +113,694 @@ BidModel _bid(
   trackingToken: trackingToken,
   totalAmountEur: 48,
   senderName: 'Mariama D.',
+  recipientName: 'Awa',
   recipientPhone: recipientPhone,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
 
-Future<void> _pump(WidgetTester tester, BidModel bid) async {
+final _past = DateTime.now().subtract(const Duration(days: 1));
+final _future = DateTime.now().add(const Duration(days: 2));
+
+TripRescheduleInfo _reschedule({required bool pending}) => TripRescheduleInfo(
+  id: 'r1',
+  reason: 'FLIGHT_CANCELLED',
+  previousDepartureDate: DateTime(2026, 10, 9),
+  newDepartureDate: DateTime(2026, 10, 13),
+  decisionPending: pending,
+  decisionDeadline: DateTime(2026, 10, 12, 18),
+);
+
+BidSupplement _supplement(BidSupplementStatus status, {bool cash = false}) =>
+    BidSupplement(
+      id: 'sup-1',
+      status: status,
+      rail: cash ? 'CASH' : 'STRIPE',
+      netAmount: 15,
+      commissionAmount: 2,
+      grossAmount: 17,
+      blocksHandover: status.isOpen,
+      // Retirée en espèces : la carte ne parle que d'une commission prélevée.
+      commissionStatus: cash ? SupplementCommissionStatus.charged : null,
+    );
+
+BidAmendment _amendment(BidAmendmentStatus status, {String id = 'am-1'}) =>
+    BidAmendment(
+      id: id,
+      status: status,
+      rail: 'CASH',
+      addedWeightKg: 3,
+      grossAmount: 26.8,
+      netAmount: 23.5,
+      commissionAmount: 3.3,
+      blocksHandover: status.isOpen,
+    );
+
+/// Noms des sections du corps, dans l'ordre du code.
+const _sectionNames = [
+  'billet',
+  'hero',
+  'todo',
+  'info-awaiting-payment',
+  'info-scan-blocked',
+  'info-locked',
+  'info-supplement',
+  'info-amendment',
+  'info-reschedule',
+  'info-noshow',
+  'expediteur',
+  'gain',
+  'transport',
+  'rating',
+];
+
+Finder _section(String name) => find.byKey(ValueKey<String>(name));
+
+/// Sections présentes, triées de haut en bas.
+List<String> _sections(WidgetTester tester) {
+  final present = [
+    for (final name in _sectionNames)
+      if (_section(name).evaluate().isNotEmpty) name,
+  ];
+  double top(String name) => tester.getTopLeft(_section(name)).dy;
+  return present..sort((a, b) => top(a).compareTo(top(b)));
+}
+
+/// [child] est-il dans la section [name] ?
+Finder _inSection(String name, Finder child) =>
+    find.descendant(of: _section(name), matching: child);
+
+Future<void> _pump(
+  WidgetTester tester,
+  BidModel bid, {
+  bool focusSupplement = false,
+  bool focusAmendment = false,
+  AuthBloc? authBloc,
+  Size size = const Size(800, 4000),
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
   final conv = _MockConvBloc();
   final cancel = _MockCancelBloc();
   when(() => conv.state).thenReturn(const ConversationOpenInitial());
   when(() => cancel.state).thenReturn(CancellationInitial());
+  Widget body = MultiBlocProvider(
+    providers: [
+      BlocProvider<ConversationOpenBloc>.value(value: conv),
+      BlocProvider<CancellationBloc>.value(value: cancel),
+    ],
+    child: TravelerDetailBody(
+      bid: bid,
+      focusSupplement: focusSupplement,
+      focusAmendment: focusAmendment,
+    ),
+  );
+  if (authBloc != null) {
+    body = BlocProvider<AuthBloc>.value(value: authBloc, child: body);
+  }
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.light(),
-      home: Scaffold(
-        body: MultiBlocProvider(
-          providers: [
-            BlocProvider<ConversationOpenBloc>.value(value: conv),
-            BlocProvider<CancellationBloc>.value(value: cancel),
-          ],
-          child: TravelerDetailBody(bid: bid),
-        ),
-      ),
+      home: Scaffold(body: body),
     ),
   );
-  await tester.pump(const Duration(seconds: 1));
+  // Stagger d'entrée (flutter_animate) : laisse ses timers se terminer.
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump(const Duration(milliseconds: 400));
 }
 
-class _MockProcedureCubit extends MockCubit<DeliveryNoShowProcedureState>
-    implements DeliveryNoShowProcedureCubit {}
-
 void main() {
-  // Carte « destinataire absent » (FLUTTER-E2) d'un colis ARRIVED : procédure
-  // indisponible, l'écran garde l'ancien signalement.
-  setUp(() {
-    final cubit = _MockProcedureCubit();
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
+  });
+
+  late _MockProcedureCubit procedure;
+
+  setUp(() async {
+    DonySnackbar.clearDedup();
+    // Carte « destinataire absent » (FLUTTER-E2) d'un colis ARRIVED : procédure
+    // indisponible, l'écran garde l'ancien signalement.
+    procedure = _MockProcedureCubit();
     whenListen(
-      cubit,
+      procedure,
       const Stream<DeliveryNoShowProcedureState>.empty(),
       initialState: const DeliveryNoShowProcedureUnavailable(),
     );
-    when(() => cubit.load(any())).thenAnswer((_) async {});
-    if (getIt.isRegistered<DeliveryNoShowProcedureCubit>()) {
-      getIt.unregister<DeliveryNoShowProcedureCubit>();
-    }
-    getIt.registerFactory<DeliveryNoShowProcedureCubit>(() => cubit);
-  });
-  tearDown(() {
-    if (getIt.isRegistered<DeliveryNoShowProcedureCubit>()) {
-      getIt.unregister<DeliveryNoShowProcedureCubit>();
-    }
+    when(() => procedure.load(any())).thenAnswer((_) async {});
+
+    final analytics = _MockAnalytics();
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    final amendmentRepo = _MockAmendmentRepo();
+    final supplementRepo = _MockSupplementRepo();
+    final tileAnalytics = makeEnabledAnalytics(MockAnalyticsBackend());
+    await tileAnalytics.onConfigured();
+
+    await getIt.reset();
+    getIt
+      ..registerFactory<DeliveryNoShowProcedureCubit>(() => procedure)
+      ..registerSingleton<AnalyticsService>(tileAnalytics)
+      ..registerFactory<SupplementActionCubit>(
+        () => SupplementActionCubit(supplementRepo, analytics),
+      )
+      ..registerFactory<SupplementCommissionCubit>(
+        () => SupplementCommissionCubit(
+          SupplementCommissionFlow(supplementRepo, analytics),
+          analytics,
+        ),
+      )
+      ..registerFactory<AmendmentActionCubit>(
+        () => AmendmentActionCubit(amendmentRepo, analytics),
+      )
+      ..registerFactory<AmendmentAcceptCubit>(
+        () => AmendmentAcceptCubit(
+          amendmentRepo,
+          analytics,
+          AmendmentCommissionFlow(amendmentRepo, analytics),
+        ),
+      );
   });
 
-  group('modification du colis', () {
-    setUp(() {
-      final analytics = _MockAnalytics();
-      final repo = _MockAmendmentRepo();
-      when(
-        () => analytics.logEvent(any(), properties: any(named: 'properties')),
-      ).thenAnswer((_) async {});
-      getIt
-        ..registerFactory<AmendmentActionCubit>(
-          () => AmendmentActionCubit(repo, analytics),
-        )
-        ..registerFactory<AmendmentAcceptCubit>(
-          () => AmendmentAcceptCubit(
-            repo,
-            analytics,
-            AmendmentCommissionFlow(repo, analytics),
-          ),
-        );
-    });
-    tearDown(() {
-      getIt
-        ..unregister<AmendmentActionCubit>()
-        ..unregister<AmendmentAcceptCubit>();
-    });
+  tearDown(() async => getIt.reset());
 
-    testWidgets('demande ouverte : carte sous le hero, avant le contact', (
+  // ── Ordre global, un scénario par statut ──────────────────────────────────
+  group('ordre des sections par statut', () {
+    const base = ['expediteur', 'gain', 'transport'];
+    final cases = <String, (BidModel, List<String>)>{
+      'PENDING': (_bid('PENDING'), ['billet', 'hero', ...base]),
+      'PAYMENT_ESCROWED': (
+        _bid('PAYMENT_ESCROWED'),
+        ['billet', 'hero', ...base],
+      ),
+      'AWAITING_PAYMENT carte': (
+        _bid('AWAITING_PAYMENT'),
+        ['billet', 'hero', ...base],
+      ),
+      'AWAITING_PAYMENT mobile money': (
+        _bid('AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.mobileMoney),
+        ['billet', 'hero', 'info-awaiting-payment', ...base],
+      ),
+      'ACCEPTED présence non confirmée': (
+        _bid('ACCEPTED', handoverDeadline: _future),
+        ['billet', 'hero', ...base],
+      ),
+      'ACCEPTED présence confirmée': (
+        _bid('ACCEPTED', voyageurConfirmed: true, handoverDeadline: _future),
+        ['billet', 'hero', ...base],
+      ),
+      'ACCEPTED date limite dépassée': (
+        _bid('ACCEPTED', handoverDeadline: _past),
+        ['billet', 'todo', ...base],
+      ),
+      'ACCEPTED date limite dépassée, présence confirmée': (
+        _bid('ACCEPTED', voyageurConfirmed: true, handoverDeadline: _past),
+        ['billet', 'todo', ...base],
+      ),
+      'HANDED_OVER avant le départ': (
+        _bid('HANDED_OVER', departureAt: _future),
+        ['billet', 'hero', 'info-locked', ...base],
+      ),
+      'HANDED_OVER départ passé': (
+        _bid('HANDED_OVER', departureAt: _past),
+        ['billet', 'hero', 'todo', ...base],
+      ),
+      'IN_TRANSIT avant le départ': (
+        _bid('IN_TRANSIT', departureAt: _future),
+        ['billet', 'hero', 'info-locked', ...base],
+      ),
+      'IN_TRANSIT départ passé': (
+        _bid('IN_TRANSIT', departureAt: _past),
+        ['billet', 'hero', 'todo', ...base],
+      ),
+      'ARRIVED': (
+        _bid('ARRIVED', departureAt: _past),
+        ['billet', 'hero', 'todo', ...base],
+      ),
+      'COMPLETED noté': (
+        _bid('COMPLETED', travelerHasRated: true),
+        ['billet', 'hero', ...base, 'rating'],
+      ),
+      'COMPLETED non noté': (_bid('COMPLETED'), ['billet', 'hero', ...base]),
+      // DELIVERED (alias hérité) : pas de badge, il exige COMPLETED.
+      'DELIVERED noté': (
+        _bid('DELIVERED', travelerHasRated: true),
+        ['billet', 'hero', ...base],
+      ),
+      'CANCELLED': (_bid('CANCELLED'), ['billet', ...base]),
+      'REJECTED': (_bid('REJECTED'), ['billet', ...base]),
+      'NO_SHOW': (_bid('NO_SHOW'), ['billet', ...base]),
+      'EXPIRED': (_bid('EXPIRED'), ['billet', ...base]),
+      'PARCEL_REFUSED': (_bid('PARCEL_REFUSED'), ['billet', ...base]),
+    };
+    for (final MapEntry(key: name, value: (bid, expected)) in cases.entries) {
+      testWidgets(name, (tester) async {
+        await _pump(tester, bid);
+
+        expect(_sections(tester), expected);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('« À traiter » : titre seulement quand la section existe', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(1200, 4000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
+      await _pump(tester, _bid('ACCEPTED'));
+      expect(find.text('À traiter'), findsNothing);
+
+      await _pump(tester, _bid('ACCEPTED', handoverDeadline: _past));
+      expect(_inSection('todo', find.text('À traiter')), findsOneWidget);
+    });
+
+    testWidgets('« Votre transport » : la grille de la Tâche 1', (
+      tester,
+    ) async {
+      await _pump(tester, _bid('ACCEPTED'));
+      expect(
+        _inSection('transport', find.byType(TravelerTransportSection)),
+        findsOneWidget,
+      );
+      expect(find.text('Votre transport'), findsOneWidget);
+    });
+
+    testWidgets('chaque section a sa carte', (tester) async {
+      await _pump(tester, _bid('COMPLETED', travelerHasRated: true));
+      expect(_inSection('billet', find.byType(ColisBillet)), findsOneWidget);
+      expect(_inSection('hero', find.byType(TravelerHeroCard)), findsOneWidget);
+      expect(
+        _inSection('expediteur', find.byType(ExpediteurContactCard)),
+        findsOneWidget,
+      );
+      expect(_inSection('gain', find.byType(TravelerGainCard)), findsOneWidget);
+      expect(
+        _inSection('rating', find.byType(RatingDoneBadge)),
+        findsOneWidget,
+      );
+    });
+  });
+
+  // ── Hero : sous le billet, ou dans « À traiter » s'il attend le voyageur ──
+  group('hero', () {
+    testWidgets('sans action : sous le billet, sans titre', (tester) async {
+      await _pump(tester, _bid('IN_TRANSIT'));
+      expect(_inSection('hero', find.byType(TravelerHeroCard)), findsOneWidget);
+      expect(find.text('À traiter'), findsNothing);
+    });
+
+    testWidgets('date limite dépassée : dans « À traiter », avec son bouton', (
+      tester,
+    ) async {
+      await _pump(tester, _bid('ACCEPTED', handoverDeadline: _past));
+      expect(_inSection('todo', find.byType(TravelerHeroCard)), findsOneWidget);
+      expect(
+        _inSection(
+          'todo',
+          find.textContaining("Signaler l'absence de l'expéditeur"),
+        ),
+        findsOneWidget,
+      );
+      expect(_section('hero'), findsNothing);
+    });
+
+    for (final ns in ['PENDING_CONFIRMATION', 'CONTESTED']) {
+      testWidgets("absence de l'expéditeur $ns : sous le billet, même date "
+          'limite passée', (tester) async {
+        await _pump(
+          tester,
+          _bid(
+            'ACCEPTED',
+            handoverDeadline: _past,
+            cancellationNoShowStatus: ns,
+          ),
+        );
+        expect(
+          _inSection('hero', find.byType(TravelerHeroCard)),
+          findsOneWidget,
+        );
+        expect(_section('todo'), findsNothing);
+      });
+    }
+
+    testWidgets('absence à la livraison signalée contre le voyageur : '
+        '« Contester ce signalement » dans « À traiter »', (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          'IN_TRANSIT',
+          deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+          deliveryNoShowReportedByTraveler: false,
+        ),
+      );
+      expect(_inSection('todo', find.byType(TravelerHeroCard)), findsOneWidget);
+      expect(
+        _inSection('todo', find.text('Contester ce signalement')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('contestation envoyée : l\'alerte reste dans « À traiter »', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          'IN_TRANSIT',
+          deliveryNoShowStatus: 'CONTESTED',
+          deliveryNoShowReportedByTraveler: false,
+        ),
+      );
+      expect(_inSection('todo', find.byType(TravelerHeroCard)), findsOneWidget);
+      expect(find.text('Contester ce signalement'), findsNothing);
+    });
+
+    for (final dns in ['PENDING_CONFIRMATION', 'CONTESTED']) {
+      testWidgets('absence à la livraison signalée par le voyageur ($dns) : '
+          'hero sous le billet, procédure en information', (tester) async {
+        await _pump(
+          tester,
+          _bid(
+            'ARRIVED',
+            departureAt: _past,
+            deliveryNoShowStatus: dns,
+            deliveryNoShowReportedByTraveler: true,
+          ),
+        );
+        expect(_sections(tester), [
+          'billet',
+          'hero',
+          'info-noshow',
+          'expediteur',
+          'gain',
+          'transport',
+        ]);
+        expect(
+          _inSection('info-noshow', find.byType(DeliveryNoShowProcedureCard)),
+          findsOneWidget,
+        );
+      });
+    }
+  });
+
+  // ── Destinataire absent à la livraison (FLUTTER-E2) ────────────────────────
+  group('procédure « destinataire absent »', () {
+    testWidgets('ARRIVED : la procédure est dans « À traiter »', (
+      tester,
+    ) async {
+      await _pump(tester, _bid('ARRIVED', departureAt: _past));
+      expect(
+        _inSection('todo', find.byType(DeliveryNoShowProcedureCard)),
+        findsOneWidget,
+      );
+      // Procédure indisponible (back ancien) : l'ancien signalement.
+      expect(
+        _inSection('todo', find.byType(DeliveryNoShowCtaCell)),
+        findsOneWidget,
+      );
+    });
+
+    for (final status in ['HANDED_OVER', 'IN_TRANSIT']) {
+      testWidgets('$status départ passé : cellule de signalement dans « À '
+          'traiter »', (tester) async {
+        await _pump(tester, _bid(status, departureAt: _past));
+        expect(
+          _inSection('todo', find.byType(DeliveryNoShowCtaCell)),
+          findsOneWidget,
+        );
+        expect(
+          _inSection('todo', find.text('Signaler l\'absence du destinataire')),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('$status avant le départ : pas de cellule, pas de « À '
+          'traiter »', (tester) async {
+        await _pump(tester, _bid(status, departureAt: _future));
+        expect(find.byType(DeliveryNoShowCtaCell), findsNothing);
+        expect(_section('todo'), findsNothing);
+      });
+    }
+
+    testWidgets('signalement déjà en cours : plus de cellule', (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          'IN_TRANSIT',
+          departureAt: _past,
+          deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+          deliveryNoShowReportedByTraveler: true,
+        ),
+      );
+      // La procédure indisponible remonte la cellule, qui ne rend plus rien.
+      expect(find.text("Signaler l'absence du destinataire"), findsNothing);
+      expect(_section('todo'), findsNothing);
+    });
+  });
+
+  // ── Supplément de prix, chaque statut ─────────────────────────────────────
+  group('supplément de prix', () {
+    testWidgets('commission à valider : dans « À traiter »', (tester) async {
       await _pump(
         tester,
         _bid(
           'ACCEPTED',
-          amendments: const [
-            BidAmendment(
-              id: 'am-1',
-              status: BidAmendmentStatus.proposed,
-              rail: 'CASH',
-              addedWeightKg: 3,
-              grossAmount: 26.8,
-              netAmount: 23.5,
-              commissionAmount: 3.3,
-            ),
-          ],
+          paymentMethod: BidPaymentMethod.cash,
+          supplement: _supplement(
+            BidSupplementStatus.commissionPending,
+            cash: true,
+          ),
         ),
       );
-
-      expect(find.byType(AmendmentTravelerCard), findsOneWidget);
-      final card = tester.getTopLeft(find.byType(AmendmentTravelerCard)).dy;
       expect(
-        card,
-        greaterThan(tester.getTopLeft(find.byType(TravelerHeroCard)).dy),
+        _inSection('todo', find.byType(SupplementTravelerCard)),
+        findsOneWidget,
       );
+      expect(_section('info-supplement'), findsNothing);
+    });
+
+    for (final s in [
+      BidSupplementStatus.proposed,
+      BidSupplementStatus.paymentPending,
+      BidSupplementStatus.paid,
+      BidSupplementStatus.payoutPending,
+      BidSupplementStatus.paidOut,
+      BidSupplementStatus.declined,
+      BidSupplementStatus.expired,
+      BidSupplementStatus.refundPending,
+      BidSupplementStatus.refunded,
+    ]) {
+      testWidgets('${s.name} : information sans titre', (tester) async {
+        await _pump(tester, _bid('ACCEPTED', supplement: _supplement(s)));
+        expect(
+          _inSection('info-supplement', find.byType(SupplementTravelerCard)),
+          findsOneWidget,
+        );
+        expect(find.text('À traiter'), findsNothing);
+      });
+    }
+
+    for (final s in [
+      BidSupplementStatus.withdrawn,
+      BidSupplementStatus.cancelled,
+    ]) {
+      testWidgets('${s.name} en espèces : information sans titre', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          _bid(
+            'ACCEPTED',
+            paymentMethod: BidPaymentMethod.cash,
+            supplement: _supplement(s, cash: true),
+          ),
+        );
+        expect(
+          _inSection('info-supplement', find.byType(SupplementTravelerCard)),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('${s.name} en ligne : aucune carte', (tester) async {
+        await _pump(tester, _bid('ACCEPTED', supplement: _supplement(s)));
+        expect(find.byType(SupplementTravelerCard), findsNothing);
+      });
+    }
+
+    testWidgets('supplément bloquant, présence confirmée : scan bloqué puis '
+        'supplément, en informations', (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          voyageurConfirmed: true,
+          supplement: _supplement(BidSupplementStatus.proposed),
+        ),
+      );
+      expect(_sections(tester), [
+        'billet',
+        'hero',
+        'info-scan-blocked',
+        'info-supplement',
+        'expediteur',
+        'gain',
+        'transport',
+      ]);
+    });
+  });
+
+  // ── Modification du colis, chaque statut ──────────────────────────────────
+  group('modification du colis', () {
+    for (final s in [
+      BidAmendmentStatus.proposed,
+      BidAmendmentStatus.commissionPending,
+      BidAmendmentStatus.accepted,
+      BidAmendmentStatus.payoutPending,
+      BidAmendmentStatus.paidOut,
+    ]) {
+      testWidgets('${s.name} (ACCEPTED) : dans « À traiter »', (tester) async {
+        await _pump(tester, _bid('ACCEPTED', amendments: [_amendment(s)]));
+        expect(
+          _inSection('todo', find.byType(AmendmentTravelerCard)),
+          findsOneWidget,
+        );
+        expect(_section('info-amendment'), findsNothing);
+      });
+    }
+
+    for (final s in [
+      BidAmendmentStatus.authorizationPending,
+      BidAmendmentStatus.paymentPending,
+      BidAmendmentStatus.declined,
+      BidAmendmentStatus.expired,
+      BidAmendmentStatus.cancelled,
+      BidAmendmentStatus.refundPending,
+      BidAmendmentStatus.refunded,
+    ]) {
+      testWidgets('${s.name} : information sans titre', (tester) async {
+        await _pump(tester, _bid('ACCEPTED', amendments: [_amendment(s)]));
+        expect(
+          _inSection('info-amendment', find.byType(AmendmentTravelerCard)),
+          findsOneWidget,
+        );
+        expect(find.text('À traiter'), findsNothing);
+      });
+    }
+
+    testWidgets('acquise après la remise : plus de carte', (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          'HANDED_OVER',
+          amendments: [_amendment(BidAmendmentStatus.accepted)],
+        ),
+      );
+      expect(find.byType(AmendmentTravelerCard), findsNothing);
+    });
+
+    testWidgets(
+      'demande ouverte : la carte reste entre le hero et le contact',
+      (tester) async {
+        await _pump(
+          tester,
+          _bid(
+            'ACCEPTED',
+            amendments: [_amendment(BidAmendmentStatus.proposed)],
+          ),
+        );
+        final card = tester.getTopLeft(find.byType(AmendmentTravelerCard)).dy;
+        expect(
+          card,
+          greaterThan(tester.getTopLeft(find.byType(TravelerHeroCard)).dy),
+        );
+        expect(
+          card,
+          lessThan(tester.getTopLeft(find.byType(ExpediteurContactCard)).dy),
+        );
+      },
+    );
+
+    testWidgets('supplément à valider et modification proposée : les deux '
+        'dans « À traiter », supplément d\'abord', (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          paymentMethod: BidPaymentMethod.cash,
+          supplement: _supplement(
+            BidSupplementStatus.commissionPending,
+            cash: true,
+          ),
+          amendments: [_amendment(BidAmendmentStatus.proposed)],
+        ),
+      );
+      final supplement = _inSection(
+        'todo',
+        find.byType(SupplementTravelerCard),
+      );
+      final amendment = _inSection('todo', find.byType(AmendmentTravelerCard));
+      expect(supplement, findsOneWidget);
+      expect(amendment, findsOneWidget);
       expect(
-        card,
-        lessThan(tester.getTopLeft(find.byType(ExpediteurContactCard)).dy),
+        tester.getTopLeft(supplement).dy,
+        lessThan(tester.getTopLeft(amendment).dy),
       );
     });
 
     testWidgets('sans modification : aucune carte', (tester) async {
       await _pump(tester, _bid('ACCEPTED'));
-
       expect(find.byType(AmendmentTravelerCard), findsNothing);
     });
+  });
+
+  // ── Trajet reporté : jamais une action pour le voyageur ───────────────────
+  group('trajet reporté', () {
+    for (final pending in [true, false]) {
+      testWidgets(
+        '${pending ? 'décision en attente' : 'déjà décidé'} : information',
+        (tester) async {
+          await _pump(
+            tester,
+            _bid('ACCEPTED', reschedule: _reschedule(pending: pending)),
+          );
+          expect(
+            _inSection('info-reschedule', find.byType(TripRescheduleCard)),
+            findsOneWidget,
+          );
+          expect(find.text('À traiter'), findsNothing);
+        },
+      );
+    }
+
+    for (final status in ['PENDING', 'COMPLETED', 'CANCELLED']) {
+      testWidgets('$status : la carte reste affichée', (tester) async {
+        await _pump(
+          tester,
+          _bid(status, reschedule: _reschedule(pending: false)),
+        );
+        expect(find.byType(TripRescheduleCard), findsOneWidget);
+      });
+    }
+  });
+
+  // ── Destinataire refusé : pastille sur la tuile Colis (FLUTTER-E8) ────────
+  testWidgets('destinataire refusé : pastille sur la tuile Colis, pas de '
+      '« À traiter »', (tester) async {
+    await _pump(tester, _bid('ACCEPTED', recipientDeclined: true));
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('traveler-tile-colis')),
+        matching: find.byKey(const Key('tool-status-badge')),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('À traiter'), findsOneWidget); // pastille seule
+    expect(_section('todo'), findsNothing);
   });
 
   // Phrases d'aide sorties du footer : elles vivent dans des cartes
   // d'information du corps, juste sous le hero.
   group("cartes d'information (phrases sorties du footer)", () {
-    setUp(() {
-      final analytics = _MockAnalytics();
-      final amendmentRepo = _MockAmendmentRepo();
-      when(
-        () => analytics.logEvent(any(), properties: any(named: 'properties')),
-      ).thenAnswer((_) async {});
-      getIt
-        ..registerFactory<SupplementActionCubit>(
-          () => SupplementActionCubit(_MockSupplementRepo(), analytics),
-        )
-        ..registerFactory<AmendmentActionCubit>(
-          () => AmendmentActionCubit(amendmentRepo, analytics),
-        )
-        ..registerFactory<AmendmentAcceptCubit>(
-          () => AmendmentAcceptCubit(
-            amendmentRepo,
-            analytics,
-            AmendmentCommissionFlow(amendmentRepo, analytics),
-          ),
-        );
-    });
-    tearDown(() {
-      getIt
-        ..unregister<SupplementActionCubit>()
-        ..unregister<AmendmentActionCubit>()
-        ..unregister<AmendmentAcceptCubit>();
-    });
-
     const awaiting = "En attente du paiement de l'expéditeur (mobile money).";
     const supplementBlocked =
         "Un supplément attend la réponse de l'expéditeur : le scan est bloqué.";
@@ -231,7 +814,10 @@ void main() {
           tester,
           _bid('AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.mobileMoney),
         );
-        expect(find.text(awaiting), findsOneWidget);
+        expect(
+          _inSection('info-awaiting-payment', find.text(awaiting)),
+          findsOneWidget,
+        );
         expect(
           tester.getTopLeft(find.text(awaiting)).dy,
           greaterThan(tester.getTopLeft(find.byType(TravelerHeroCard)).dy),
@@ -255,50 +841,47 @@ void main() {
     });
 
     testWidgets('supplément bloquant : phrase du scan bloqué', (tester) async {
-      tester.view.physicalSize = const Size(1200, 4000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
       await _pump(
         tester,
         _bid(
           'ACCEPTED',
           voyageurConfirmed: true,
-          supplement: const BidSupplement(
-            id: 'sup-1',
-            status: BidSupplementStatus.proposed,
-            grossAmount: 16.8,
-            blocksHandover: true,
-          ),
+          supplement: _supplement(BidSupplementStatus.proposed),
         ),
       );
-      expect(find.text(supplementBlocked), findsOneWidget);
+      expect(
+        _inSection('info-scan-blocked', find.text(supplementBlocked)),
+        findsOneWidget,
+      );
       expect(find.text(amendmentBlocked), findsNothing);
     });
 
     testWidgets('modification bloquante : phrase du scan bloqué', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(1200, 4000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
       await _pump(
         tester,
         _bid(
           'ACCEPTED',
           voyageurConfirmed: true,
-          amendments: const [
-            BidAmendment(
-              id: 'am-1',
-              status: BidAmendmentStatus.proposed,
-              rail: 'CASH',
-              grossAmount: 26.8,
-              blocksHandover: true,
-            ),
-          ],
+          amendments: [_amendment(BidAmendmentStatus.proposed)],
         ),
       );
-      expect(find.text(amendmentBlocked), findsOneWidget);
+      expect(
+        _inSection('info-scan-blocked', find.text(amendmentBlocked)),
+        findsOneWidget,
+      );
       expect(find.text(supplementBlocked), findsNothing);
+      // Information sous le hero, puis la modification sous « À traiter ».
+      expect(_sections(tester), [
+        'billet',
+        'hero',
+        'todo',
+        'info-scan-blocked',
+        'expediteur',
+        'gain',
+        'transport',
+      ]);
     });
 
     testWidgets('rien ne bloque : aucune phrase de scan bloqué', (
@@ -314,33 +897,19 @@ void main() {
     ) async {
       await _pump(
         tester,
-        _bid(
-          'ACCEPTED',
-          amendments: const [
-            BidAmendment(
-              id: 'am-1',
-              status: BidAmendmentStatus.proposed,
-              rail: 'CASH',
-              grossAmount: 26.8,
-              blocksHandover: true,
-            ),
-          ],
-        ),
+        _bid('ACCEPTED', amendments: [_amendment(BidAmendmentStatus.proposed)]),
       );
       expect(find.text(amendmentBlocked), findsNothing);
     });
 
     testWidgets('remise verrouillée avant le départ : carte avec la date et '
         'le code de retrait', (tester) async {
-      await _pump(
-        tester,
-        _bid(
-          'HANDED_OVER',
-          departureAt: DateTime.now().add(const Duration(days: 2)),
-        ),
-      );
+      await _pump(tester, _bid('HANDED_OVER', departureAt: _future));
       expect(
-        find.textContaining('Disponible après le départ du trajet (le'),
+        _inSection(
+          'info-locked',
+          find.textContaining('Disponible après le départ du trajet (le'),
+        ),
         findsOneWidget,
       );
       expect(
@@ -353,19 +922,36 @@ void main() {
 
     for (final status in ['IN_TRANSIT', 'ARRIVED']) {
       testWidgets('$status verrouillé : même carte', (tester) async {
-        await _pump(
-          tester,
-          _bid(
-            status,
-            departureAt: DateTime.now().add(const Duration(days: 2)),
-          ),
-        );
+        await _pump(tester, _bid(status, departureAt: _future));
         expect(
           find.textContaining('Disponible après le départ du trajet (le'),
           findsOneWidget,
         );
       });
     }
+
+    // Mode recette (FLUTTER-FA) : le verrou est levé pour un testeur.
+    testWidgets('mode recette : pas de carte de verrou', (tester) async {
+      final auth = _MockAuthBloc();
+      when(() => auth.state).thenReturn(
+        const AuthAuthenticated(
+          UserModel(
+            id: 'u1',
+            roles: [],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+            recetteMode: true,
+          ),
+        ),
+      );
+      await _pump(
+        tester,
+        _bid('HANDED_OVER', departureAt: _future),
+        authBloc: auth,
+      );
+      expect(find.byType(TravelerHandoverLockedCard), findsNothing);
+      expect(_section('info-locked'), findsNothing);
+    });
 
     testWidgets('départ passé : pas de carte de verrou', (tester) async {
       await _pump(
@@ -390,13 +976,7 @@ void main() {
     testWidgets('le départ passe : la carte du verrou disparaît', (
       tester,
     ) async {
-      await _pump(
-        tester,
-        _bid(
-          'HANDED_OVER',
-          departureAt: DateTime.now().add(const Duration(days: 2)),
-        ),
-      );
+      await _pump(tester, _bid('HANDED_OVER', departureAt: _future));
       expect(
         find.textContaining('Disponible après le départ du trajet (le'),
         findsOneWidget,
@@ -418,9 +998,7 @@ void main() {
 
     // La porte enveloppe TOUJOURS le corps (sans fenêtre elle ne verrouille
     // jamais) : le passage de ACCEPTED à HANDED_OVER garde la même porte et le
-    // même State, sans remonter la racine du corps. (Les enfants i > 0 perdent
-    // leur enveloppe d'animation d'entrée au rebuild suivant, comportement
-    // existant : on ne compare donc pas leurs éléments.)
+    // même State, sans remonter la racine du corps.
     testWidgets('ACCEPTED -> HANDED_OVER : même porte, même State', (
       tester,
     ) async {
@@ -443,12 +1021,11 @@ void main() {
       'ACCEPTED sans verrou -> HANDED_OVER avant le départ : la carte '
       'apparaît dans la même porte',
       (tester) async {
-        final departure = DateTime.now().add(const Duration(days: 2));
-        await _pump(tester, _bid('ACCEPTED', departureAt: departure));
+        await _pump(tester, _bid('ACCEPTED', departureAt: _future));
         final gateBefore = tester.state(find.byType(DeliveryDepartureGate));
         expect(find.textContaining('Disponible après le départ'), findsNothing);
 
-        await _pump(tester, _bid('HANDED_OVER', departureAt: departure));
+        await _pump(tester, _bid('HANDED_OVER', departureAt: _future));
 
         expect(
           tester.state(find.byType(DeliveryDepartureGate)),
@@ -464,14 +1041,90 @@ void main() {
     testWidgets('statut sans remise (ACCEPTED) : pas de carte de verrou', (
       tester,
     ) async {
-      await _pump(
-        tester,
-        _bid(
-          'ACCEPTED',
-          departureAt: DateTime.now().add(const Duration(days: 2)),
-        ),
-      );
+      await _pump(tester, _bid('ACCEPTED', departureAt: _future));
       expect(find.textContaining('Disponible après le départ'), findsNothing);
+    });
+  });
+
+  // ── Sections stables : une apparition ne remonte pas les suivantes ────────
+  testWidgets('« À traiter » qui apparaît ne remonte ni l\'expéditeur, ni le '
+      'gain, ni la grille', (tester) async {
+    await _pump(tester, _bid('ACCEPTED', handoverDeadline: _future));
+    // Le stagger d'entrée est fini : un premier rebuild retire ses enveloppes.
+    await _pump(tester, _bid('ACCEPTED', handoverDeadline: _future));
+    final contact = tester.element(find.byType(ExpediteurContactCard));
+    final gain = tester.element(find.byType(TravelerGainCard));
+    final grid = tester.element(find.byType(TravelerTransportSection));
+
+    await _pump(
+      tester,
+      _bid(
+        'ACCEPTED',
+        handoverDeadline: _future,
+        supplement: _supplement(
+          BidSupplementStatus.commissionPending,
+          cash: true,
+        ),
+      ),
+    );
+
+    expect(_section('todo'), findsOneWidget);
+    expect(tester.element(find.byType(ExpediteurContactCard)), same(contact));
+    expect(tester.element(find.byType(TravelerGainCard)), same(gain));
+    expect(tester.element(find.byType(TravelerTransportSection)), same(grid));
+  });
+
+  testWidgets('stagger joué une seule fois : le rebuild suivant rend les '
+      'cartes sans animation', (tester) async {
+    await _pump(tester, _bid('ACCEPTED'));
+    await tester.pump(const Duration(seconds: 1));
+    await _pump(tester, _bid('ACCEPTED'));
+    expect(
+      find.ancestor(
+        of: find.byType(ExpediteurContactCard),
+        matching: find.byType(Animate),
+      ),
+      findsNothing,
+    );
+  });
+
+  // ── Pas de double apparition corps / sheets ───────────────────────────────
+  group('cartes portées par les sheets « Votre transport »', () {
+    for (final status in ['PENDING', 'ACCEPTED', 'HANDED_OVER', 'COMPLETED']) {
+      testWidgets('$status : ni carte colis, ni contact, ni détails au corps', (
+        tester,
+      ) async {
+        await _pump(tester, _bid(status, recipientPhone: '+221700000000'));
+        expect(find.byType(ColisDestinataireCard), findsNothing);
+        expect(find.byType(TravelerRecipientContactCard), findsNothing);
+        expect(find.byType(TravelerRecipientContactPendingNote), findsNothing);
+        expect(find.byType(BidDetailsContent), findsNothing);
+        expect(find.byType(DetailsAccordion), findsNothing);
+      });
+    }
+
+    testWidgets('HANDED_OVER : le contact du destinataire vit dans le sheet '
+        'Colis, une seule fois', (tester) async {
+      await _pump(tester, _bid('HANDED_OVER', recipientPhone: '+221700000000'));
+
+      await tester.tap(find.byKey(const Key('traveler-tile-colis')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ColisDestinataireCard), findsOneWidget);
+      expect(find.byType(TravelerRecipientContactCard), findsOneWidget);
+      expect(find.byKey(const Key('recipient-contact-sms-b1')), findsOneWidget);
+    });
+
+    testWidgets('ACCEPTED : la ligne d\'attente du contact vit dans le sheet', (
+      tester,
+    ) async {
+      await _pump(tester, _bid('ACCEPTED', recipientPhone: '+221700000000'));
+
+      await tester.tap(find.byKey(const Key('traveler-tile-colis')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TravelerRecipientContactPendingNote), findsOneWidget);
+      expect(find.text('+221700000000'), findsNothing);
     });
   });
 
@@ -518,68 +1171,6 @@ void main() {
     },
   );
 
-  group('contact du destinataire (lot 3B)', () {
-    for (final status in ['HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
-      testWidgets('$status + téléphone → rangée WhatsApp / SMS / Appeler', (
-        tester,
-      ) async {
-        await _pump(tester, _bid(status, recipientPhone: '+221700000000'));
-        expect(find.byType(TravelerRecipientContactCard), findsOneWidget);
-        expect(find.text('Contacter le destinataire'), findsOneWidget);
-        expect(
-          find.byKey(const Key('recipient-contact-sms-b1')),
-          findsOneWidget,
-        );
-      });
-    }
-
-    // FLUTTER-JT : le voyageur ne joint le destinataire qu'après le retrait.
-    // Même si un ancien serveur sert encore le numéro à ACCEPTED, ni carte, ni
-    // boutons, ni numéro : une ligne discrète annonce que le contact viendra.
-    testWidgets('ACCEPTED + téléphone (ancien serveur) → ligne discrète seule', (
-      tester,
-    ) async {
-      await _pump(tester, _bid('ACCEPTED', recipientPhone: '+221700000000'));
-      expect(find.byType(TravelerRecipientContactCard), findsNothing);
-      expect(find.text('Contacter le destinataire'), findsNothing);
-      expect(find.byKey(const Key('recipient-contact-sms-b1')), findsNothing);
-      expect(find.text('+221700000000'), findsNothing);
-      expect(find.byType(TravelerRecipientContactPendingNote), findsOneWidget);
-      expect(
-        find.text(
-          'Le contact du destinataire sera disponible après la récupération du colis.',
-        ),
-        findsOneWidget,
-      );
-      // Le contact de l'expéditeur, lui, reste ouvert dès l'acceptation.
-      expect(
-        _contactIcon(ExpediteurContactCard, 'message-circle'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('HANDED_OVER → numéro affiché, plus de ligne discrète', (
-      tester,
-    ) async {
-      await _pump(tester, _bid('HANDED_OVER', recipientPhone: '+221700000000'));
-      expect(find.text('+221700000000'), findsWidgets);
-      expect(find.byType(TravelerRecipientContactCard), findsOneWidget);
-      expect(find.byType(TravelerRecipientContactPendingNote), findsNothing);
-    });
-
-    testWidgets('demande pas encore acceptée → rangée masquée', (tester) async {
-      await _pump(tester, _bid('PENDING', recipientPhone: '+221700000000'));
-      expect(find.byType(TravelerRecipientContactCard), findsNothing);
-    });
-
-    testWidgets('sans téléphone du destinataire → rangée masquée', (
-      tester,
-    ) async {
-      await _pump(tester, _bid('ARRIVED'));
-      expect(find.byType(TravelerRecipientContactCard), findsNothing);
-    });
-  });
-
   testWidgets('trackingToken présent → pas de lien ni action suivi voyageur', (
     tester,
   ) async {
@@ -588,16 +1179,138 @@ void main() {
     expect(find.text('Suivi du colis'), findsNothing);
     expect(find.text('Partager le suivi'), findsNothing);
 
-    await tester.scrollUntilVisible(
-      find.text('Plus de détails'),
-      300,
-      scrollable: find.byType(Scrollable),
-    );
-    await tester.tap(find.text('Plus de détails'));
+    await tester.tap(find.byKey(const Key('traveler-tile-details')));
     await tester.pumpAndSettle();
 
+    expect(find.byType(BidDetailsContent), findsOneWidget);
     expect(find.text('LIEN DE SUIVI'), findsNothing);
     expect(find.textContaining('public-token'), findsNothing);
+  });
+
+  // ── Points d'entrée : ?action=supplement et ?action=amendment ─────────────
+  group('défilement vers la carte (notification)', () {
+    double offset(WidgetTester tester) => tester
+        .state<ScrollableState>(find.byType(Scrollable).first)
+        .position
+        .pixels;
+
+    Future<void> settleScroll(WidgetTester tester) async {
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('?action=supplement : la carte en « À traiter » est amenée à '
+        'l\'écran', (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          paymentMethod: BidPaymentMethod.cash,
+          supplement: _supplement(
+            BidSupplementStatus.commissionPending,
+            cash: true,
+          ),
+        ),
+        focusSupplement: true,
+        size: const Size(800, 700),
+      );
+      await settleScroll(tester);
+      expect(offset(tester), greaterThan(0));
+    });
+
+    testWidgets('?action=supplement : supplément payé (information), la carte '
+        'est amenée à l\'écran', (tester) async {
+      await _pump(
+        tester,
+        _bid('ACCEPTED', supplement: _supplement(BidSupplementStatus.paid)),
+        focusSupplement: true,
+        size: const Size(800, 700),
+      );
+      await settleScroll(tester);
+      expect(offset(tester), greaterThan(0));
+    });
+
+    testWidgets('?action=amendment : la carte de la modification est amenée '
+        'à l\'écran', (tester) async {
+      await _pump(
+        tester,
+        _bid('ACCEPTED', amendments: [_amendment(BidAmendmentStatus.proposed)]),
+        focusAmendment: true,
+        size: const Size(800, 700),
+      );
+      await settleScroll(tester);
+      expect(offset(tester), greaterThan(0));
+    });
+
+    testWidgets('?action=amendment : modification close (information), la '
+        'carte est amenée à l\'écran', (tester) async {
+      await _pump(
+        tester,
+        _bid('ACCEPTED', amendments: [_amendment(BidAmendmentStatus.declined)]),
+        focusAmendment: true,
+        size: const Size(800, 700),
+      );
+      await settleScroll(tester);
+      expect(offset(tester), greaterThan(0));
+    });
+
+    testWidgets('sans carte : pas de défilement', (tester) async {
+      await _pump(
+        tester,
+        _bid('ACCEPTED'),
+        focusSupplement: true,
+        focusAmendment: true,
+        size: const Size(800, 700),
+      );
+      await settleScroll(tester);
+      expect(offset(tester), 0);
+    });
+
+    testWidgets('sans paramètre : pas de défilement', (tester) async {
+      await _pump(
+        tester,
+        _bid('ACCEPTED', amendments: [_amendment(BidAmendmentStatus.proposed)]),
+        size: const Size(800, 700),
+      );
+      await settleScroll(tester);
+      expect(offset(tester), 0);
+    });
+
+    testWidgets('carte arrivée après le premier affichage (lien profond) : '
+        'défilement une seule fois', (tester) async {
+      await _pump(
+        tester,
+        _bid('ACCEPTED'),
+        focusAmendment: true,
+        size: const Size(800, 700),
+      );
+      await settleScroll(tester);
+      expect(offset(tester), 0);
+
+      await _pump(
+        tester,
+        _bid('ACCEPTED', amendments: [_amendment(BidAmendmentStatus.proposed)]),
+        focusAmendment: true,
+        size: const Size(800, 700),
+      );
+      await settleScroll(tester);
+      final first = offset(tester);
+      expect(first, greaterThan(0));
+
+      // Remonte à la main : un rafraîchissement ne redéfile pas.
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .jumpTo(0);
+      await _pump(
+        tester,
+        _bid('ACCEPTED', amendments: [_amendment(BidAmendmentStatus.proposed)]),
+        focusAmendment: true,
+        size: const Size(800, 700),
+      );
+      await settleScroll(tester);
+      expect(offset(tester), 0);
+    });
   });
 }
 

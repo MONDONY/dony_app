@@ -8,6 +8,7 @@ import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
@@ -307,7 +308,10 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // pour éviter une double animation (fade × fade + slide × slide).
       ('billet', ColisBillet(bid: bid, isSender: true)),
       if (actions.isNotEmpty)
-        ('todo', _Section(title: l.bidDetailSectionTodo, children: actions)),
+        (
+          'todo',
+          BidDetailSection(title: l.bidDetailSectionTodo, children: actions),
+        ),
       ...infos,
       // Profil du voyageur à tous les statuts ; les boutons de contact
       // n'apparaissent qu'une fois la demande acceptée.
@@ -318,7 +322,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       ),
       (
         'shipment',
-        _Section(
+        BidDetailSection(
           title: l.bidDetailSectionShipment,
           spacing: DonySpacing.md,
           children: [
@@ -365,32 +369,6 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       ),
     );
   }
-}
-
-/// Section de la fiche : un titre puis ses contenus, séparés de [spacing].
-class _Section extends StatelessWidget {
-  const _Section({
-    required this.title,
-    required this.children,
-    this.spacing = DonySpacing.base,
-  });
-
-  final String title;
-  final List<Widget> children;
-  final double spacing;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Text(title, style: Theme.of(context).textTheme.titleMedium),
-      const SizedBox(height: DonySpacing.md),
-      for (var i = 0; i < children.length; i++) ...[
-        if (i > 0) SizedBox(height: spacing),
-        children[i],
-      ],
-    ],
-  );
 }
 
 // ── Badge « Évaluation envoyée » ───────────────────────────────────────────────
