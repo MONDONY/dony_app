@@ -75,14 +75,22 @@ class TravelerStickyBar extends StatelessWidget {
       // n'ont plus de footer : la phrase d'attente est une carte du corps
       // ([awaitingMobileMoneyPayment]) et « Supprimer cette demande » une
       // entrée du menu ⋮.
+      // ACCEPTED : « Confirmer ma présence » tant qu'elle a un sens, puis
+      // « Lire le QR du colis ». Le back n'expire jamais un colis accepté
+      // (seuls PENDING, PAYMENT_ESCROWED, AWAITING_PAYMENT et NEGOTIATING le
+      // sont, `HandoverDeadlineRules`) et n'exige pas la présence confirmée
+      // pour le départ : passé la date limite, ou une fois l'absence de
+      // l'expéditeur signalée, la présence n'est plus à confirmer mais le
+      // colis peut encore être remis. Le héros d'alerte (« Signaler
+      // l'absence », absence signalée) reste dans « À traiter ».
       case 'ACCEPTED':
-        if (bid.voyageurConfirmed) {
-          return _TravelerAction.scan;
-        }
         final deadline = bid.handoverDeadline;
-        // Date limite dépassée sans confirmation du voyageur → le hero prend le relais
-        if (deadline != null && now.isAfter(deadline)) {
-          return null;
+        final deadlinePassed = deadline != null && now.isAfter(deadline);
+        final senderNoShowOpen =
+            bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION' ||
+            bid.cancellationNoShowStatus == 'CONTESTED';
+        if (bid.voyageurConfirmed || deadlinePassed || senderNoShowOpen) {
+          return _TravelerAction.scan;
         }
         return _TravelerAction.confirmPresence;
       // Colis récupéré (départ scanné) : la seule étape obligatoire restante

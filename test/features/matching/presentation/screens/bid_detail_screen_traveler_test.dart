@@ -93,6 +93,8 @@ BidModel _bid(
   String status, {
   bool voyageurConfirmed = false,
   DateTime? departureAt,
+  DateTime? handoverDeadline,
+  String? cancellationNoShowStatus,
   String? trackingNumber,
   String? rejectionReason,
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
@@ -107,6 +109,8 @@ BidModel _bid(
   status: status,
   voyageurConfirmed: voyageurConfirmed,
   departureAt: departureAt,
+  handoverDeadline: handoverDeadline,
+  cancellationNoShowStatus: cancellationNoShowStatus,
   trackingNumber: trackingNumber,
   rejectionReason: rejectionReason,
   paymentMethod: paymentMethod,
@@ -316,6 +320,32 @@ void main() {
       sections: ['billet', 'expediteur', 'gain', 'transport'],
       footer: ['Lire le QR du colis'],
       gain: 'VOUS RECEVEZ',
+    ),
+    // Date limite dépassée, présence non confirmée : le héros d'alerte va
+    // dans « À traiter », le footer garde le scan du départ (le back
+    // n'expire pas un colis accepté).
+    'ACCEPTED (date limite dépassée)': _Scenario(
+      bid: _bid('ACCEPTED', handoverDeadline: _past),
+      stamp: 'Confirmé',
+      title: '#BID-00',
+      sections: ['billet', 'todo', 'expediteur', 'gain', 'transport'],
+      footer: ['Lire le QR du colis'],
+      gain: 'VOUS RECEVEZ',
+    ),
+    // Absence de l'expéditeur signalée : héros d'information sous le billet,
+    // scan du départ toujours possible.
+    'ACCEPTED (absence de l\'expéditeur signalée)': _Scenario(
+      bid: _bid(
+        'ACCEPTED',
+        handoverDeadline: _past,
+        cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+      ),
+      stamp: 'Confirmé',
+      title: '#BID-00',
+      sections: ['billet', 'hero', 'expediteur', 'gain', 'transport'],
+      footer: ['Lire le QR du colis'],
+      gain: 'VOUS RECEVEZ',
+      hero: 'Absence signalée',
     ),
     'HANDED_OVER': _Scenario(
       bid: _bid('HANDED_OVER', departureAt: _past, trackingNumber: 'YAD-0042'),
@@ -548,6 +578,21 @@ void main() {
       expect(find.text('Expired'), findsOneWidget);
       expect(find.text('Drop-off deadline passed'), findsOneWidget);
       expect(find.byType(TravelerStickyBar), findsNothing);
+    });
+
+    testWidgets('ACCEPTED, date limite dépassée : « Scan the parcel QR »', (
+      tester,
+    ) async {
+      useEnglish();
+      await pumpScreen(tester, _bid('ACCEPTED', handoverDeadline: _past));
+      expect(
+        find.descendant(
+          of: find.byType(TravelerStickyBar),
+          matching: find.text('Scan the parcel QR'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Confirm my presence'), findsNothing);
     });
 
     testWidgets('COMPLETED : colis livré', (tester) async {
