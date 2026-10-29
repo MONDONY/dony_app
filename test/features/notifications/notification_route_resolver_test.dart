@@ -31,6 +31,74 @@ void main() {
     }
   });
 
+  // Notifications qui ouvrent la fiche colis du voyageur : sans bidId valide,
+  // aucune cible (jamais une fiche vide).
+  group('resolveNotificationRoute — fiche colis voyageur', () {
+    for (final type in [
+      'BID_ACCEPTED',
+      'DELIVERY_CONFIRMED',
+      'PAYMENT_RELEASED',
+      'DISPUTE_OPENED',
+      'BID_EXPIRED',
+      'MOBILE_MONEY_PAYMENT_CONFIRMED',
+      'HANDOVER_REMINDER_H2',
+      'TRIP_RESCHEDULED',
+      'TRIP_RESCHEDULE_KEPT',
+      'TRIP_RESCHEDULE_WITHDRAWN',
+      'RECIPIENT_CHANGED',
+      'PARCEL_RETURNED',
+      'PARCEL_RETURN_TO_SENDER',
+      'RETURN_DEADLINE_WARNING',
+      'RETURN_DEADLINE_EXPIRED',
+    ]) {
+      test('$type ouvre /bids/{bidId}, sans paramètre de focus', () {
+        final route = resolveNotificationRoute(type, {'bidId': bidId});
+        expect(route, '/bids/$bidId');
+        expect(route, isNot(contains('?')));
+      });
+
+      test('$type avec un bidId invalide n\'ouvre pas la fiche', () {
+        expect(
+          resolveNotificationRoute(type, {'bidId': '../x'}),
+          isNot(startsWith('/bids/')),
+        );
+      });
+    }
+
+    test('BID_REJECTED : le rematch passe avant la fiche, sinon la fiche', () {
+      expect(
+        resolveNotificationRoute('BID_REJECTED', {
+          'bidId': bidId,
+          'cancellationId': cancellationId,
+        }),
+        '/cancellations/$cancellationId/rematch',
+      );
+      expect(
+        resolveNotificationRoute('BID_REJECTED', {'bidId': bidId}),
+        '/bids/$bidId',
+      );
+      expect(resolveNotificationRoute('BID_REJECTED', {}), isNull);
+    });
+
+    test('seules les trois notifications de modification amènent la carte '
+        '(?action=amendment), les autres ouvrent la fiche', () {
+      for (final type in [
+        'BID_AMENDMENT_REQUESTED',
+        'BID_AMENDMENT_REMINDER',
+        'BID_AMENDMENT_ACCEPTED',
+      ]) {
+        expect(
+          resolveNotificationRoute(type, {'bidId': bidId}),
+          '/bids/$bidId?action=amendment',
+        );
+      }
+      expect(
+        resolveNotificationRoute('BID_SUPPLEMENT_PAID', {'bidId': bidId}),
+        '/bids/$bidId',
+      );
+    });
+  });
+
   group('resolveNotificationRoute — supplément de prix', () {
     test('BID_SUPPLEMENT_REQUESTED ouvre la fiche sur l\'encart', () {
       expect(

@@ -546,6 +546,50 @@ void main() {
     });
   });
 
+  // L'autorisation carte est celle de l'EXPÉDITEUR (blocage du montant) : la
+  // modification est ouverte et bloque la remise, mais le voyageur n'a rien à
+  // faire. La carte n'a aucun bouton. Elle tombe aujourd'hui sur la ligne grise
+  // générique « Modification non acquise » (anomalie connue de l'inventaire B6,
+  // texte non corrigé : logique de carte hors du périmètre de la refonte).
+  group('voyageur : autorisation carte en attente', () {
+    final pending = _am(
+      status: BidAmendmentStatus.authorizationPending,
+      rail: BidAmendment.railStripe,
+    );
+
+    testWidgets('aucun bouton, aucune action possible', (tester) async {
+      await pump(tester, traveler(_bid(pending)));
+
+      expect(find.byType(AmendmentTravelerCard), findsOneWidget);
+      expect(find.textContaining('Accepter'), findsNothing);
+      expect(find.text('Refuser'), findsNothing);
+      expect(find.textContaining('Finaliser'), findsNothing);
+      expect(find.text('Les kilos en plus ne sont pas là'), findsNothing);
+      expect(find.byType(FilledButton), findsNothing);
+      expect(find.byType(OutlinedButton), findsNothing);
+      expect(find.byType(TextButton), findsNothing);
+    });
+
+    testWidgets('ligne grise générique (comportement actuel épinglé)', (
+      tester,
+    ) async {
+      await pump(tester, traveler(_bid(pending)));
+      expect(find.text('Modification non acquise'), findsOneWidget);
+    });
+
+    test('affichée, ouverte (bloque la remise), mais sans réponse attendue', () {
+      final bid = _bid(pending);
+      expect(AmendmentTravelerCard.shouldShow(bid), isTrue);
+      expect(pending.blocksHandover, isTrue);
+      expect(AmendmentTravelerCard.needsReply(bid), isFalse);
+      // Hors ACCEPTED (ici IN_TRANSIT), une modification ouverte reste visible.
+      expect(
+        AmendmentTravelerCard.shouldShow(_bid(pending, status: 'IN_TRANSIT')),
+        isTrue,
+      );
+    });
+  });
+
   group('plusieurs modifications', () {
     final declined = _am(status: BidAmendmentStatus.declined);
     final accepted = _am(id: 'am-2', status: BidAmendmentStatus.accepted);

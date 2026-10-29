@@ -323,6 +323,23 @@ void main() {
   );
 
   group('TravelerStickyBar.hasAction — cas supplémentaires', () {
+    // Régression : un colis payé par carte (séquestré) expose aussi la barre
+    // Accepter / Refuser, comme la carte de la liste (repris de l'ancien
+    // fichier presentation/traveler_sticky_bar_test.dart).
+    test('PAYMENT_ESCROWED → true (carte séquestrée, décision)', () {
+      expect(
+        TravelerStickyBar.hasAction(_bid(status: 'PAYMENT_ESCROWED')),
+        isTrue,
+      );
+    });
+    test('ARRIVED → true (remise)', () {
+      expect(TravelerStickyBar.hasAction(_bid(status: 'ARRIVED')), isTrue);
+    });
+    for (final status in ['NO_SHOW', 'PARCEL_REFUSED']) {
+      test('$status → false', () {
+        expect(TravelerStickyBar.hasAction(_bid(status: status)), isFalse);
+      });
+    }
     test('DELIVERED → false', () {
       expect(TravelerStickyBar.hasAction(_bid(status: 'DELIVERED')), isFalse);
     });

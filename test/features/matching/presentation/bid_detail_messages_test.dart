@@ -197,5 +197,30 @@ void main() {
       expect(find.text('YOU RECEIVE'), findsOneWidget);
       expect(find.textContaining('on hold'), findsOneWidget);
     });
+
+    testWidgets('traveler_gain_card.dart — espèces en anglais : en cours puis '
+        'colis clos', (tester) async {
+      useEnglish();
+      Future<void> pumpGain(String status) => tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: TravelerGainCard(
+              bid: _bid(status: status, paymentMethod: BidPaymentMethod.cash),
+            ),
+          ),
+        ),
+      );
+
+      await pumpGain('ACCEPTED');
+      expect(find.text('YOU COLLECT'), findsOneWidget);
+
+      for (final status in ['CANCELLED', 'REJECTED', 'PARCEL_REFUSED']) {
+        await pumpGain(status);
+        expect(find.text('PAYMENT'), findsOneWidget, reason: status);
+        expect(find.text('Payment canceled.'), findsOneWidget);
+        expect(find.text('YOU COLLECT'), findsNothing);
+      }
+    });
   });
 }
