@@ -130,6 +130,53 @@ void main() {
     },
   );
 
+  // Décision du propriétaire : plus de bouton « QR du colis » dans le talon de
+  // l'expéditeur avant la remise, le footer porte « Afficher le QR de
+  // remise ». Il ne reste que la bande du numéro de suivi, ou pas de talon.
+  testWidgets(
+    'sender + ACCEPTED avec numéro → bande du numéro de suivi seule',
+    (tester) async {
+      final bid = _bid(status: 'ACCEPTED', trackingNumber: 'DON-1');
+      expect(BilletTalon.isShown(bid, isSender: true), isTrue);
+      await _pump(tester, bid, true);
+      expect(find.byType(TalonTrackingStrip), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'),
+        findsNothing,
+      );
+      expect(find.textContaining('QR du colis'), findsNothing);
+      expect(find.byType(OutlinedButton), findsNothing);
+      // Sans zone d'action, la bande n'est pas décalée par un espace vide.
+      expect(
+        tester.getTopLeft(find.byType(TalonTrackingStrip)).dy -
+            tester.getTopLeft(find.byType(BilletTalon)).dy,
+        DonySpacing.base,
+      );
+    },
+  );
+
+  testWidgets('sender + ACCEPTED sans numéro → talon non affiché', (
+    tester,
+  ) async {
+    final bid = _bid(status: 'ACCEPTED');
+    expect(BilletTalon.isShown(bid, isSender: true), isFalse);
+    await _pump(tester, bid, true);
+    expect(tester.getSize(find.byType(BilletTalon)).height, 0);
+  });
+
+  testWidgets('sender + ACCEPTED en anglais : plus de « Parcel QR »', (
+    tester,
+  ) async {
+    useEnglish();
+    await _pump(
+      tester,
+      _bid(status: 'ACCEPTED', trackingNumber: 'DON-1'),
+      true,
+    );
+    expect(find.textContaining('Parcel QR'), findsNothing);
+    expect(find.text('TRACKING NUMBER'), findsOneWidget);
+  });
+
   testWidgets(
     'sender + HANDED_OVER sans confirmationCode → QR + « Générer un nouveau code »',
     (tester) async {
@@ -1478,14 +1525,25 @@ void main() {
       }
     }
 
-    test('expéditeur : toujours affiché (inchangé)', () {
-      for (final status in statuses) {
-        expect(
-          BilletTalon.isShown(_bid(status: status), isSender: true),
-          isTrue,
-          reason: status,
-        );
+    for (final status in statuses) {
+      for (final tracking in [null, 'DON-1']) {
+        testWidgets('expéditeur, $status, numéro ${tracking ?? 'absent'}', (
+          tester,
+        ) async {
+          final bid = _bid(status: status, trackingNumber: tracking);
+          await _pump(tester, bid, true);
+          // Seul un colis accepté sans numéro n'a plus de talon côté
+          // expéditeur ; les autres statuts sont inchangés.
+          expect(
+            BilletTalon.isShown(bid, isSender: true),
+            !(status == 'ACCEPTED' && tracking == null),
+          );
+          expect(
+            BilletTalon.isShown(bid, isSender: true),
+            tester.getSize(find.byType(BilletTalon)).height > 0,
+          );
+        });
       }
-    });
+    }
   });
 }

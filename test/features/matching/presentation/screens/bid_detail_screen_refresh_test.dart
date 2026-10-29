@@ -1229,6 +1229,30 @@ void main() {
       });
     }
 
+    // Décision du propriétaire : avant la remise, le QR s'ouvre depuis le
+    // footer « Afficher le QR de remise », plus depuis le talon.
+    testWidgets('ACCEPTED : QR dans le footer seulement, plus dans le talon', (
+      tester,
+    ) async {
+      // Colis payé en espèces : rien à payer, le footer porte le QR.
+      await _pump(
+        tester,
+        bid: _makeBid(recipientName: 'Awa', handoverAddress: handover),
+        authBloc: senderAuth(),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('Afficher le QR de remise'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ColisBillet),
+          matching: find.textContaining('QR du colis'),
+        ),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('IN_TRANSIT shows billet, voyageur, paiement then 4 tiles, '
         'no hero, no quick actions', (tester) async {
       await _pump(tester, bid: inTransitBid(), authBloc: senderAuth());

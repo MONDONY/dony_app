@@ -8084,9 +8084,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ticketQrButtonCompact => 'Parcel QR';
 
   @override
-  String get ticketQrButtonFull => 'Parcel QR (to show or stick on the parcel)';
-
-  @override
   String get ticketAwaitingTravelerConfirmation =>
       'Waiting for the traveler\'s confirmation';
 

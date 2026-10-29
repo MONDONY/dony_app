@@ -8279,11 +8279,7 @@
   },
   "ticketQrButtonCompact": "QR du colis",
   "@ticketQrButtonCompact": {
-    "description": "Bouton QR du talon, variante compacte (billet_talon.dart)"
-  },
-  "ticketQrButtonFull": "QR du colis (à présenter ou coller sur le colis)",
-  "@ticketQrButtonFull": {
-    "description": "Bouton QR du talon, variante pleine largeur (billet_talon.dart)"
+    "description": "Bouton QR du talon de l'expéditeur, à partir de la remise, à côté du code de retrait (billet_talon.dart)"
   },
   "ticketAwaitingTravelerConfirmation": "En attente de confirmation du voyageur",
   "@ticketAwaitingTravelerConfirmation": {

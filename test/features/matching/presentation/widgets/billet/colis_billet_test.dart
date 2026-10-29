@@ -15,6 +15,7 @@ BidModel _bid({
   String status = 'ACCEPTED',
   DateTime? departureDate,
   String? departureTime,
+  String? trackingNumber = 'DON-3TSTR9VH',
 }) => BidModel(
   id: 'bid-1',
   announcementId: 'a-1',
@@ -23,7 +24,7 @@ BidModel _bid({
   status: status,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
-  trackingNumber: 'DON-3TSTR9VH',
+  trackingNumber: trackingNumber,
   departureCity: 'Paris',
   arrivalCity: 'Abidjan',
   departureDate: departureDate,
@@ -48,8 +49,6 @@ void main() {
   ) async {
     // isSender: false → talon voyageur, sans bloc : la bande du numéro de
     // suivi seule à partir de la remise.
-    // isSender: true + ACCEPTED rendrait QrCodeCard, qui exige un
-    // TrackingBloc ambiant — hors périmètre d'un widget test isolé.
     await _pump(tester, _bid(status: 'HANDED_OVER'), false);
     expect(find.byType(BilletStatusStamp), findsOneWidget);
     expect(find.byType(BilletTalon), findsOneWidget);
@@ -78,6 +77,33 @@ void main() {
     );
     final dates = tester.getRect(find.byType(BilletDates));
     expect(billet.bottom, dates.bottom);
+  });
+
+  // Décision du propriétaire : plus de « QR du colis » dans le talon de
+  // l'expéditeur avant la remise (le footer porte « Afficher le QR de
+  // remise ») ; le talon garde le numéro de suivi, ou disparaît.
+  testWidgets('expéditeur + ACCEPTED avec numéro → bande de suivi seule', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(), true);
+    expect(find.byType(BilletTalon), findsOneWidget);
+    expect(find.byType(BilletPerforation), findsOneWidget);
+    expect(find.text('NUMÉRO DE SUIVI'), findsOneWidget);
+    expect(find.textContaining('QR du colis'), findsNothing);
+  });
+
+  testWidgets('expéditeur + ACCEPTED sans numéro → ni talon ni perforation', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(trackingNumber: null), true);
+    expect(find.byType(BilletTalon), findsNothing);
+    expect(find.byType(BilletPerforation), findsNothing);
+    final billet = tester.getRect(
+      find
+          .ancestor(of: find.byType(BilletRoute), matching: find.byType(Column))
+          .first,
+    );
+    expect(billet.bottom, tester.getRect(find.byType(BilletDates)).bottom);
   });
 
   testWidgets('sender + PENDING → placeholder hourglass visible', (

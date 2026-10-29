@@ -13434,17 +13434,11 @@ abstract class AppLocalizations {
   /// **'Voir les trajets alternatifs'**
   String get ticketViewAlternativeTripsButton;
 
-  /// Bouton QR du talon, variante compacte (billet_talon.dart)
+  /// Bouton QR du talon de l'expéditeur, à partir de la remise, à côté du code de retrait (billet_talon.dart)
   ///
   /// In fr, this message translates to:
   /// **'QR du colis'**
   String get ticketQrButtonCompact;
-
-  /// Bouton QR du talon, variante pleine largeur (billet_talon.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'QR du colis (à présenter ou coller sur le colis)'**
-  String get ticketQrButtonFull;
 
   /// Placeholder sender / PENDING du talon (billet_talon.dart)
   ///
