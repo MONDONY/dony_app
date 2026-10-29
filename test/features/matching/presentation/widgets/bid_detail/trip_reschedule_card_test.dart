@@ -194,13 +194,24 @@ void main() {
     expect(withdraw.onPressed, isNull);
   });
 
-  testWidgets('voyageur : délai laissé à l\'expéditeur, aucun bouton', (
+  // La carte n'a plus de bouton (ils vivent dans le pied du sheet de la
+  // tuile) : ce qui distingue le voyageur, c'est la consigne affichée.
+  testWidgets('voyageur : délai laissé à l\'expéditeur, pas sa consigne', (
     tester,
   ) async {
     await tester.pumpWidget(host(_bid(), isSender: false));
 
     expect(find.textContaining("L'expéditeur a jusqu'au"), findsOneWidget);
-    expect(find.byKey(const Key('reschedule-keep')), findsNothing);
+    expect(find.textContaining('Répondez avant'), findsNothing);
+  });
+
+  testWidgets('expéditeur : sa consigne, pas celle du voyageur', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(_bid()));
+
+    expect(find.textContaining('Répondez avant'), findsOneWidget);
+    expect(find.textContaining("L'expéditeur a jusqu'au"), findsNothing);
   });
 
   testWidgets('décision close : information seule', (tester) async {

@@ -1452,6 +1452,68 @@ void main() {
       expect(sheetCancel(), findsOneWidget);
     });
 
+    const commission = BidAmendment(
+      id: 'am-3',
+      status: BidAmendmentStatus.commissionPending,
+      rail: 'CASH',
+      addedWeightKg: 3,
+      grossAmount: 26.8,
+    );
+
+    testWidgets('commission chez le voyageur : l\'expéditeur attend, carte '
+        'd\'information hors de « À traiter », mesurée au montage', (
+      tester,
+    ) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(amendments: const [commission]),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(AmendmentSenderCard), findsOneWidget);
+      expect(find.text('MODIFICATION DU COLIS'), findsOneWidget);
+      expect(find.text('À traiter'), findsNothing);
+      expect(_tile('Modification du colis'), findsNothing);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidAmendmentViewed,
+          properties: {'role': 'sender', 'status': 'COMMISSION_PENDING'},
+        ),
+      ).called(1);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidDetailTodoTileShown,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    testWidgets('?action=amendment, commission chez le voyageur : défilement '
+        'vers la carte, sans sheet', (tester) async {
+      tester.view.physicalSize = const Size(800, 700);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _host(
+          _bid(amendments: const [commission]),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusAmendment: true,
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(scrollOffset(tester), greaterThan(0));
+      expect(find.byKey(const Key('donyBottomSheetFooter')), findsNothing);
+    });
+
     testWidgets('?action=amendment, demande close : la carte d\'information '
         'est amenée à l\'écran, sans sheet', (tester) async {
       tester.view.physicalSize = const Size(800, 700);

@@ -26,10 +26,11 @@ BidAmendment _amendment({
   BidAmendmentStatus status = BidAmendmentStatus.proposed,
   double addedWeightKg = 3,
   List<BidAmendmentItem> items = const [],
+  String rail = BidAmendment.railCash,
 }) => BidAmendment(
   id: id,
   status: status,
-  rail: BidAmendment.railCash,
+  rail: rail,
   addedWeightKg: addedWeightKg,
   items: items,
   grossAmount: 26.8,
@@ -114,26 +115,37 @@ void main() {
       );
     });
 
-    // Modification : tuile tant que la demande est ouverte (l'expéditeur peut
-    // l'annuler, la payer, ou attend la commission du voyageur).
-    for (final status in [
-      BidAmendmentStatus.authorizationPending,
-      BidAmendmentStatus.proposed,
-      BidAmendmentStatus.commissionPending,
-      BidAmendmentStatus.paymentPending,
+    // Modification : tuile tant que l'expéditeur a un geste à faire (annuler
+    // la demande, la payer en mobile money).
+    for (final a in [
+      _amendment(status: BidAmendmentStatus.authorizationPending),
+      _amendment(),
+      _amendment(
+        status: BidAmendmentStatus.paymentPending,
+        rail: BidAmendment.railPawapay,
+      ),
     ]) {
-      test('modification ${status.name} → amendment', () {
-        expect(
-          senderTodoTilesFor(
-            _bid(
-              status: 'ACCEPTED',
-              amendments: [_amendment(status: status)],
-            ),
-          ),
-          [SenderTodoTile.amendment],
-        );
+      test('modification ${a.status.name} → amendment', () {
+        expect(senderTodoTilesFor(_bid(status: 'ACCEPTED', amendments: [a])), [
+          SenderTodoTile.amendment,
+        ]);
       });
     }
+
+    test('modification en commission chez le voyageur → pas de tuile '
+        '(l\'expéditeur attend, la carte informe)', () {
+      expect(
+        senderTodoTilesFor(
+          _bid(
+            status: 'ACCEPTED',
+            amendments: [
+              _amendment(status: BidAmendmentStatus.commissionPending),
+            ],
+          ),
+        ),
+        isEmpty,
+      );
+    });
 
     for (final status in [
       BidAmendmentStatus.declined,
@@ -310,26 +322,76 @@ void main() {
 
   group('mesure d\'affichage', () {
     test('événement de tuile affichée, statut du colis', () {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        recipientAppStatus: 'DECLINED',
+        reschedule: _reschedule(),
+        amendments: [_amendment()],
+      );
       for (final tile in SenderTodoTile.values) {
-        final shown = senderTodoShown(
-          tile,
-          _bid(status: 'ARRIVED', recipientAppStatus: 'DECLINED'),
-        );
+        final shown = senderTodoShown(tile, bid);
         expect(shown.event, AnalyticsEvents.bidDetailTodoTileShown);
         expect(shown.properties, {
           'tile': tile.name,
           'role': 'sender',
-          'status': 'ARRIVED',
+          'status': 'ACCEPTED',
         });
-        expect(shown.status, 'ARRIVED');
+        expect(shown.status, startsWith('ACCEPTED'));
       }
+    });
+
+    // Clé de dédoublonnage : un nouveau report, ou un refus d'un autre
+    // destinataire, sur un colis au même statut, est de nouveau mesuré.
+    test('report : la clé suit l\'identifiant du report', () {
+      String key(String id) => senderTodoShown(
+        SenderTodoTile.reschedule,
+        _bid(
+          reschedule: TripRescheduleInfo(
+            id: id,
+            reason: 'FLIGHT_CANCELLED',
+            previousDepartureDate: DateTime(2026, 10, 9),
+            newDepartureDate: DateTime(2026, 10, 13),
+            decisionPending: true,
+          ),
+        ),
+      ).status;
+      expect(key('r1'), isNot(key('r2')));
+      expect(key('r1'), key('r1'));
+    });
+
+    test('destinataire : la clé suit le destinataire refusé', () {
+      String key(String name, String phone) => senderTodoShown(
+        SenderTodoTile.recipient,
+        BidModel(
+          id: 'bid-001',
+          announcementId: 'ann-001',
+          senderId: 'sender-001',
+          status: 'IN_TRANSIT',
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+          recipientAppStatus: 'DECLINED',
+          recipientName: name,
+          recipientPhone: phone,
+        ),
+      ).status;
+      expect(key('Awa', '+221700000000'), key('Awa', '+221700000000'));
+      expect(key('Awa', '+221700000000'), isNot(key('Awa', '+221711111111')));
+      expect(key('Awa', '+221700000000'), isNot(key('Fatou', '+221700000000')));
+      // Jamais le nom ni le numéro en clair dans la clé.
+      expect(key('Awa', '+221700000000'), isNot(contains('Awa')));
+      expect(key('Awa', '+221700000000'), isNot(contains('221700000000')));
     });
 
     test('modification : bid_amendment_viewed en plus, surface tuile, '
         'dédoublonné par demande et statut', () {
       final bid = _bid(
         status: 'ACCEPTED',
-        amendments: [_amendment(status: BidAmendmentStatus.paymentPending)],
+        amendments: [
+          _amendment(
+            status: BidAmendmentStatus.paymentPending,
+            rail: BidAmendment.railPawapay,
+          ),
+        ],
       );
       final viewed = senderTodoViewed(SenderTodoTile.amendment, bid)!;
       expect(viewed.event, AnalyticsEvents.bidAmendmentViewed);

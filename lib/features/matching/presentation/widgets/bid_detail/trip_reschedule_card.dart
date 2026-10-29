@@ -141,6 +141,10 @@ class TripRescheduleDecisionButtons extends StatelessWidget {
       cancelLabel: l.commonCancel,
       variant: DonyDialogVariant.destructive,
     );
+    // Décision prise ailleurs pendant la confirmation : le pied a retiré les
+    // boutons (démontés), rien à envoyer. Le sheet se referme de lui-même en
+    // revenant au premier plan.
+    if (!context.mounted) return;
     if (confirmed ?? false) {
       bloc.add(RescheduleDecisionRequested(bid.id, keep: false));
     }

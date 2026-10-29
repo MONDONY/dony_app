@@ -569,7 +569,13 @@ class _BidDetailViewState extends State<_BidDetailView>
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is CancellationError) {
-            ErrorPresenter.show(context, state.error);
+            // Une feuille ouverte par-dessus la fiche (tuile « À traiter »,
+            // code de retour) affiche elle-même l'erreur, au-dessus d'elle :
+            // le snackbar de l'écran resterait caché dessous, et doublé il
+            // éteindrait le sien (déduplication de DonySnackbar).
+            if (ModalRoute.of(context)?.isCurrent ?? true) {
+              ErrorPresenter.show(context, state.error);
+            }
           }
         },
         child: BlocListener<RatingBloc, RatingState>(

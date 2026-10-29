@@ -36,10 +36,11 @@ List<BidAmendment> _securedOf(BidModel bid) =>
 /// échoué). Jamais le net ni la commission du voyageur. Une modification
 /// acceptée se lit dans la carte Paiement.
 ///
-/// Une demande ouverte relève de la tuile « À traiter » : la carte y est
-/// montrée sans cadre ([framed] faux) dans le sheet de la tuile, dont le pied
-/// porte « Annuler ma demande » ([AmendmentSenderCancelButton]) ou « Payer ».
-/// Une demande close reste une carte d'information du corps.
+/// Une demande où l'expéditeur a un geste à faire ([needsReply]) relève de la
+/// tuile « À traiter » : la carte y est montrée sans cadre ([framed] faux)
+/// dans le sheet de la tuile, dont le pied porte « Annuler ma demande »
+/// ([AmendmentSenderCancelButton]) ou « Payer ». Une demande en commission
+/// chez le voyageur ou close reste une carte d'information du corps.
 class AmendmentSenderCard extends StatelessWidget {
   const AmendmentSenderCard({super.key, required this.bid, this.framed = true});
 
@@ -62,13 +63,21 @@ class AmendmentSenderCard extends StatelessWidget {
 
   static bool shouldShow(BidModel bid) => _current(bid) != null;
 
-  /// Une demande est encore ouverte (l'expéditeur peut l'annuler ou la régler) :
-  /// seul cas où la carte relève de « À traiter ». Une demande close (refusée,
-  /// expirée, annulée, paiement échoué) ne fait que renseigner.
-  static bool needsReply(BidModel bid) => _openOf(bid) != null;
+  /// L'expéditeur a un geste à faire sur la demande ouverte : l'annuler
+  /// (proposée, autorisation carte en attente) ou la payer (acceptée, dépôt
+  /// mobile money attendu). Seul cas où elle relève de « À traiter » : son
+  /// sheet porte alors un bouton. En commission chez le voyageur, l'expéditeur
+  /// attend ; close, elle ne fait que renseigner (carte d'information).
+  static bool needsReply(BidModel bid) {
+    final open = _openOf(bid);
+    if (open == null) return false;
+    return AmendmentSenderCancelButton.canCancel(open) ||
+        (open.status == BidAmendmentStatus.paymentPending &&
+            open.rail == BidAmendment.railPawapay);
+  }
 
-  /// La demande ouverte de [bid] (tuile « À traiter », pied de son sheet),
-  /// `null` sans demande ouverte.
+  /// La demande ouverte de [bid] (tuile « À traiter », pied de son sheet,
+  /// mesure de la tuile), `null` sans demande ouverte.
   static BidAmendment? openRequest(BidModel bid) => _openOf(bid);
 
   @override

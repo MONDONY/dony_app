@@ -41,7 +41,8 @@ Future<void> openSenderTileSheet(
   unawaited(
     getItSafe<AnalyticsService>()?.logEvent(
       AnalyticsEvents.bidDetailTileOpened,
-      properties: {'tile': tile.name, 'role': 'sender'},
+      // `source` comme les tuiles « À traiter » (`openSenderTodoSheet`).
+      properties: {'tile': tile.name, 'role': 'sender', 'source': 'tile'},
     ),
   );
 

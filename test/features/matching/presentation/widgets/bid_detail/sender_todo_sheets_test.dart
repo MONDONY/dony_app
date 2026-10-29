@@ -9,6 +9,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
@@ -403,6 +404,53 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.text('Trajet reporté'), findsNothing);
+
+      // L'écran relit ensuite le colis, sans décision en attente : aucun
+      // second `pop`, l'écran sous la feuille reste là.
+      bidStates.add(
+        BidDetailLoaded(
+          _bid(
+            recipientAppStatus: null,
+            reschedule: _reschedule(pending: false),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('open-todo'), findsOneWidget);
+    });
+
+    // L'écran affiche aussi ses erreurs dans son Scaffold, sous la feuille :
+    // la feuille montre la sienne par-dessus, et reste ouverte pour réessayer.
+    testWidgets('décision refusée (échéance passée) : l\'erreur est visible '
+        'par-dessus la feuille, qui reste ouverte et réessayable', (
+      tester,
+    ) async {
+      await openTodo(tester, pending(), SenderTodoTile.reschedule);
+      await tester.tap(find.byKey(const Key('reschedule-keep')));
+      await tester.pump();
+
+      const error = ConflictException(
+        'trop tard',
+        code: 'reschedule-decision-closed',
+      );
+      cancellationStates
+        ..add(CancellationLoading())
+        ..add(CancellationError(error));
+      await tester.pumpAndSettle();
+
+      final message = ErrorPresenter.resolve(
+        error,
+        l10n: lookupAppLocalizations(const Locale('fr')),
+      ).message;
+      expect(tester.takeException(), isNull);
+      expect(find.text(message).hitTestable(), findsOneWidget);
+      expect(find.text('Trajet reporté'), findsOneWidget);
+      final keep = tester.widget<DonyButton>(
+        find.byKey(const Key('reschedule-keep')),
+      );
+      expect(keep.onPressed, isNotNull);
     });
 
     testWidgets('« Annuler sans frais » confirme, envoie, puis se ferme', (
@@ -492,6 +540,63 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('Annuler votre envoi ?'), findsOneWidget);
     });
+
+    testWidgets('décision prise ailleurs pendant la confirmation : confirmer '
+        'n\'envoie rien et la feuille se referme', (tester) async {
+      await openTodo(tester, pending(), SenderTodoTile.reschedule);
+      await tester.tap(find.byKey(const Key('reschedule-withdraw')));
+      await tester.pumpAndSettle();
+
+      bidStates.add(
+        BidDetailLoaded(
+          _bid(
+            recipientAppStatus: null,
+            reschedule: _reschedule(pending: false),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.widgetWithText(FilledButton, 'Annuler sans frais'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verifyNever(() => cancellationBloc.add(any()));
+      expect(find.text('Annuler votre envoi ?'), findsNothing);
+      expect(find.text('Trajet reporté'), findsNothing);
+      expect(find.text('open-todo'), findsOneWidget);
+    });
+
+    testWidgets('décision prise ailleurs pendant la confirmation : la refuser '
+        'referme aussi la feuille', (tester) async {
+      await openTodo(tester, pending(), SenderTodoTile.reschedule);
+      await tester.tap(find.byKey(const Key('reschedule-withdraw')));
+      await tester.pumpAndSettle();
+
+      bidStates.add(
+        BidDetailLoaded(
+          _bid(
+            recipientAppStatus: null,
+            reschedule: _reschedule(pending: false),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.widgetWithText(OutlinedButton, 'Annuler'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Trajet reporté'), findsNothing);
+      expect(find.text('open-todo'), findsOneWidget);
+    });
   });
 
   group('modification du colis', () {
@@ -541,18 +646,26 @@ void main() {
       });
     }
 
-    testWidgets('commission du voyageur en attente : aucun bouton', (
-      tester,
-    ) async {
+    testWidgets('colis rechargé en commission chez le voyageur : plus rien à '
+        'faire, la feuille se ferme', (tester) async {
       await openTodo(
         tester,
-        withAmendment(_amendment(status: BidAmendmentStatus.commissionPending)),
+        withAmendment(_amendment()),
         SenderTodoTile.amendment,
       );
 
+      bidStates.add(
+        BidDetailLoaded(
+          withAmendment(
+            _amendment(status: BidAmendmentStatus.commissionPending),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
       expect(tester.takeException(), isNull);
-      expect(find.text('Modification du colis'), findsOneWidget);
-      expect(find.byType(DonyButton), findsNothing);
+      expect(find.text('Modification du colis'), findsNothing);
+      expect(find.text('open-todo'), findsOneWidget);
     });
 
     testWidgets('acceptée, mobile money : « Payer » seul dans le pied', (
@@ -683,6 +796,15 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('Modification du colis'), findsOneWidget);
       expect(find.text('Demande annulée'), findsNothing);
+      // Visible malgré la feuille : affichée par-dessus, une seule fois.
+      final message = ErrorPresenter.resolve(
+        const ConflictException(
+          'déjà traitée',
+          code: 'amendment-not-cancellable',
+        ),
+        l10n: lookupAppLocalizations(const Locale('fr')),
+      ).message;
+      expect(find.text(message).hitTestable(), findsOneWidget);
       verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
       verify(
         () => backend.capture(AnalyticsEvents.bidAmendmentActionFailed, {

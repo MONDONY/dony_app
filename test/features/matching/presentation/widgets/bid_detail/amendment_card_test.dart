@@ -160,24 +160,45 @@ void main() {
       expect(AmendmentSenderCard.shouldShow(_bid(null)), isFalse);
     });
 
-    test('sender_needsReply_onlyWhileTheRequestIsOpen', () {
-      for (final s in [
-        BidAmendmentStatus.authorizationPending,
-        BidAmendmentStatus.proposed,
-        BidAmendmentStatus.commissionPending,
-        BidAmendmentStatus.paymentPending,
+    // « À traiter » côté expéditeur : seulement quand il a un geste à faire
+    // (annuler, payer). En commission chez le voyageur, il attend : la carte
+    // reste une information.
+    test('sender_needsReply_onlyWhenTheSenderCanAct', () {
+      for (final a in [
+        _am(status: BidAmendmentStatus.authorizationPending),
+        _am(),
+        _am(
+          status: BidAmendmentStatus.paymentPending,
+          rail: BidAmendment.railPawapay,
+        ),
       ]) {
-        expect(AmendmentSenderCard.needsReply(_bid(_am(status: s))), isTrue);
+        expect(
+          AmendmentSenderCard.needsReply(_bid(a)),
+          isTrue,
+          reason: '${a.status}',
+        );
       }
-      for (final s in [
-        BidAmendmentStatus.declined,
-        BidAmendmentStatus.expired,
-        BidAmendmentStatus.cancelled,
-        BidAmendmentStatus.accepted,
+      for (final a in [
+        _am(status: BidAmendmentStatus.commissionPending),
+        _am(status: BidAmendmentStatus.paymentPending),
+        _am(status: BidAmendmentStatus.declined),
+        _am(status: BidAmendmentStatus.expired),
+        _am(status: BidAmendmentStatus.cancelled),
+        _am(status: BidAmendmentStatus.accepted),
       ]) {
-        expect(AmendmentSenderCard.needsReply(_bid(_am(status: s))), isFalse);
+        expect(
+          AmendmentSenderCard.needsReply(_bid(a)),
+          isFalse,
+          reason: '${a.status} ${a.rail}',
+        );
       }
       expect(AmendmentSenderCard.needsReply(_bid(null)), isFalse);
+    });
+
+    test('sender_commissionPending_shownAsInformation', () {
+      final bid = _bid(_am(status: BidAmendmentStatus.commissionPending));
+      expect(AmendmentSenderCard.shouldShow(bid), isTrue);
+      expect(AmendmentSenderCard.openRequest(bid)?.id, 'am-1');
     });
 
     test('traveler_accepted_shownOnlyWhileAcceptedBid', () {

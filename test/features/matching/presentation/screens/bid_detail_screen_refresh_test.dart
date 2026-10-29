@@ -5,6 +5,7 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_action_tile.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/trip_arrival_events_service.dart';
@@ -31,6 +32,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
@@ -130,7 +132,9 @@ BidModel _makeBid({
   String? recipientName,
   BidSupplement? supplement,
   List<BidAmendment> amendments = const [],
+  TripRescheduleInfo? reschedule,
 }) => BidModel(
+  reschedule: reschedule,
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: _kSenderId,
@@ -1314,6 +1318,96 @@ void main() {
       await closeSheet(tester);
       expect(cancel, findsNothing);
       expect(tile('Modification du colis'), findsOneWidget);
+    });
+
+    group('trajet reporté depuis la tuile', () {
+      late StreamController<CancellationState> cancellation;
+
+      TripRescheduleInfo reschedule({required bool pending}) =>
+          TripRescheduleInfo(
+            id: 'r1',
+            reason: 'FLIGHT_CANCELLED',
+            previousDepartureDate: DateTime(2026, 10, 9),
+            newDepartureDate: DateTime(2026, 10, 13),
+            decisionPending: pending,
+            decisionDeadline: DateTime.utc(2026, 10, 12, 16),
+          );
+
+      BidModel rescheduled({required bool pending}) => _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        reschedule: reschedule(pending: pending),
+      );
+
+      setUp(() {
+        cancellation = StreamController<CancellationState>.broadcast();
+        when(
+          () => cancellationBloc.stream,
+        ).thenAnswer((_) => cancellation.stream);
+      });
+
+      tearDown(() => cancellation.close());
+
+      Future<void> openRescheduleSheet(WidgetTester tester) async {
+        await _pump(
+          tester,
+          bid: rescheduled(pending: true),
+          authBloc: senderAuth(),
+        );
+        await tester.pump(const Duration(seconds: 1));
+        await tester.tap(tile('Trajet reporté'));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('reschedule-keep')), findsOneWidget);
+      }
+
+      testWidgets('« Garder mon colis » : la feuille se ferme, la confirmation '
+          'de l\'écran est visible, et la relecture ne referme rien de plus', (
+        tester,
+      ) async {
+        await openRescheduleSheet(tester);
+
+        await tester.tap(find.byKey(const Key('reschedule-keep')));
+        await tester.pump();
+        cancellation.add(RescheduleKept());
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.byKey(const Key('reschedule-keep')), findsNothing);
+        expect(
+          find
+              .text("C'est noté : votre colis part à la nouvelle date.")
+              .hitTestable(),
+          findsOneWidget,
+        );
+
+        states.add(BidDetailLoaded(rescheduled(pending: false)));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.byType(SenderDetailBody), findsOneWidget);
+        expect(tile('Trajet reporté'), findsNothing);
+      });
+
+      testWidgets('décision refusée : l\'erreur est visible par-dessus la '
+          'feuille, une seule fois, et la feuille reste ouverte', (
+        tester,
+      ) async {
+        await openRescheduleSheet(tester);
+
+        await tester.tap(find.byKey(const Key('reschedule-keep')));
+        await tester.pump();
+        const error = ConflictException(
+          'trop tard',
+          code: 'reschedule-decision-closed',
+        );
+        cancellation.add(CancellationError(error));
+        await tester.pumpAndSettle();
+
+        final message = ErrorPresenter.resolve(error).message;
+        expect(tester.takeException(), isNull);
+        expect(find.text(message), findsOneWidget);
+        expect(find.text(message).hitTestable(), findsOneWidget);
+        expect(find.byKey(const Key('reschedule-keep')), findsOneWidget);
+      });
     });
 
     testWidgets('tiles recompute after a polling refresh from ACCEPTED to '

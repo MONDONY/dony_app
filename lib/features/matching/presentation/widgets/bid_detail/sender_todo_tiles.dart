@@ -83,12 +83,25 @@ String _amendmentSummary(AppLocalizations l, BidModel bid) {
 /// Mesure d'affichage de la tuile [tile] pour [bid], dédoublonnée par le
 /// statut du colis. Une tuile dont la carte émettait un `*_viewed` à son
 /// montage a en plus sa mesure de carte ([senderTodoViewed]).
+///
+/// La clé de dédoublonnage précise la demande quand le statut du colis ne
+/// suffit pas : l'identifiant du report (un nouveau report sur un colis au
+/// même statut est remesuré), une empreinte du destinataire refusé (le modèle
+/// n'a pas d'horodatage du refus : un même destinataire qui refuse deux fois
+/// au même statut n'est mesuré qu'une fois). Jamais le nom ni le numéro en
+/// clair : la clé reste en mémoire, hors des propriétés.
 TodoTileShown senderTodoShown(SenderTodoTile tile, BidModel bid) =>
-    TodoTileShown(AnalyticsEvents.bidDetailTodoTileShown, {
-      'tile': tile.name,
-      'role': 'sender',
-      'status': bid.status,
-    }, status: bid.status);
+    TodoTileShown(
+      AnalyticsEvents.bidDetailTodoTileShown,
+      {'tile': tile.name, 'role': 'sender', 'status': bid.status},
+      status: switch (tile) {
+        SenderTodoTile.amendment => bid.status,
+        SenderTodoTile.reschedule => '${bid.status}|${bid.reschedule?.id}',
+        SenderTodoTile.recipient =>
+          '${bid.status}|'
+              '${Object.hash(bid.recipientName, bid.recipientPhone)}',
+      },
+    );
 
 /// Mesure de la carte reprise par la tuile [tile], émise à l'affichage de la
 /// tuile en plus de [senderTodoShown] : la carte n'est plus montée tant que la

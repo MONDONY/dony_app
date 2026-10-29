@@ -242,17 +242,7 @@ class _SenderTodoSheetContent extends StatelessWidget {
     );
 
     if (live) {
-      content = BlocListener<BidBloc, BidState>(
-        listenWhen: (_, state) =>
-            state is BidDetailLoaded && state.bid.id == bid.id,
-        listener: (context, state) {
-          final current = (state as BidDetailLoaded).bid;
-          if (!senderTodoTilesFor(current).contains(tile)) {
-            _closeIfOnTop(context);
-          }
-        },
-        child: content,
-      );
+      content = _CloseWhenResolved(bid: bid, tile: tile, child: content);
     }
 
     if (tile == SenderTodoTile.amendment) {
@@ -266,8 +256,19 @@ class _SenderTodoSheetContent extends StatelessWidget {
     if (tile == SenderTodoTile.reschedule && closesOnDecision) {
       content = BlocListener<CancellationBloc, CancellationState>(
         listenWhen: (_, state) =>
-            state is RescheduleKept || state is RescheduleWithdrawn,
-        listener: (context, _) => _closeIfOnTop(context),
+            state is RescheduleKept ||
+            state is RescheduleWithdrawn ||
+            state is CancellationError,
+        listener: (context, state) {
+          if (state is CancellationError) {
+            // Échéance passée, réseau : l'écran n'affiche pas l'erreur tant
+            // que le sheet le couvre ; le sheet la montre par-dessus lui et
+            // reste ouvert, boutons actifs, pour réessayer.
+            unawaited(ErrorPresenter.show(context, state.error));
+          } else {
+            _closeIfOnTop(context);
+          }
+        },
         child: content,
       );
     }
@@ -301,5 +302,41 @@ class _SenderTodoSheetContent extends StatelessWidget {
 
   void _reload(BuildContext context) {
     if (live) context.read<BidBloc>().add(BidDetailRequested(bid.id));
+  }
+}
+
+/// Ferme le sheet dès que le colis courant ne justifie plus [tile]
+/// ([senderTodoTilesFor]) et que le sheet est au premier plan.
+///
+/// Reconstruit à chaque colis relu et à chaque retour du sheet au premier
+/// plan (`ModalRoute.isCurrentOf`) : un rechargement arrivé pendant qu'une
+/// confirmation couvrait le sheet (retrait du report) le referme donc dès que
+/// la confirmation se ferme, sans jamais la refermer à sa place.
+class _CloseWhenResolved extends StatelessWidget {
+  const _CloseWhenResolved({
+    required this.bid,
+    required this.tile,
+    required this.child,
+  });
+
+  final BidModel bid;
+  final SenderTodoTile tile;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final onTop = ModalRoute.isCurrentOf(context) ?? false;
+    final state = context.watch<BidBloc>().state;
+    if (onTop &&
+        state is BidDetailLoaded &&
+        state.bid.id == bid.id &&
+        !senderTodoTilesFor(state.bid).contains(tile)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          _SenderTodoSheetContent._closeIfOnTop(context);
+        }
+      });
+    }
+    return child;
   }
 }
