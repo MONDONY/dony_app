@@ -6997,7 +6997,7 @@
   },
   "bidDetailSenderTravelerFallback": "le voyageur",
   "@bidDetailSenderTravelerFallback": {
-    "description": "Repli quand bid.travelerName est vide (sender_hero_card.dart, HANDED_OVER)"
+    "description": "Repli quand bid.travelerName est vide (money_breakdown_card.dart, sender_sticky_bar.dart, amendment_request_sheet.dart, amendment_card.dart)"
   },
   "bidDetailSenderHandedOverSubtitleWithDate": "Embarquement prévu le {date}.",
   "@bidDetailSenderHandedOverSubtitleWithDate": {
@@ -7431,7 +7431,7 @@
   },
   "bidDetailShareTracking": "Partager le suivi",
   "@bidDetailShareTracking": {
-    "description": "Tooltip et libellé de tuile pour partager le lien de suivi (bid_detail_screen.dart, bid_detail_action_bars.dart, quick_actions_row.dart)"
+    "description": "Tooltip et libellé de tuile pour partager le lien de suivi (bid_detail_screen.dart, bid_detail_action_bars.dart, tracking_actions.dart)"
   },
   "bidDetailOptionsTitle": "Options",
   "@bidDetailOptionsTitle": {
@@ -7647,7 +7647,7 @@
   },
   "senderTileBadgeCurrentStep": "Étape en cours",
   "@senderTileBadgeCurrentStep": {
-    "description": "Pastille de la tuile Suivi ou Lieux : l'étape en cours du colis"
+    "description": "Pastille de la tuile Suivi (colis remis, en route ou arrivé) : une étape est en cours"
   },
   "bidDetailSectionDropoff": "DÉPÔT DU COLIS",
   "@bidDetailSectionDropoff": {
@@ -7864,7 +7864,7 @@
   },
   "bidDetailTrackParcel": "Suivi du colis",
   "@bidDetailTrackParcel": {
-    "description": "Bouton/tuile/corridor de repli de suivi (sender_sticky_bar.dart, quick_actions_row.dart)"
+    "description": "Bouton/tuile/corridor de repli de suivi (sender_sticky_bar.dart, tracking_actions.dart)"
   },
   "bidDetailRateTraveler": "Noter le voyageur",
   "@bidDetailRateTraveler": {
@@ -8033,7 +8033,7 @@
   },
   "bidDetailShareTrackingMessage": "Suivez votre colis Yadony en temps réel :\n{url}",
   "@bidDetailShareTrackingMessage": {
-    "description": "Texte du partage natif du lien de suivi (quick_actions_row.dart)",
+    "description": "Texte du partage natif du lien de suivi (tracking_actions.dart)",
     "placeholders": {
       "url": {
         "type": "String"
@@ -8137,7 +8137,7 @@
   },
   "bidDetailTrackingShareSubject": "Suivi de colis Yadony · {number}",
   "@bidDetailTrackingShareSubject": {
-    "description": "Sujet du partage natif du lien de suivi (quick_actions_row.dart)",
+    "description": "Sujet du partage natif du lien de suivi (tracking_actions.dart)",
     "placeholders": {
       "number": {
         "type": "String"

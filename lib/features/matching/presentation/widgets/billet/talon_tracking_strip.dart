@@ -1,7 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

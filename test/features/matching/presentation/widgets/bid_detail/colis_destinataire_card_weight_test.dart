@@ -73,5 +73,6 @@ void main() {
     await _pump(tester, _bid(weightKg: 5));
 
     expect(find.byType(DetailCard), findsOneWidget);
+    expect(find.text('Colis & destinataire'), findsOneWidget);
   });
 }

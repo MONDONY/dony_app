@@ -11,10 +11,10 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/money_breakdown_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -690,7 +690,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.sm),
             ],
-            if (AmendmentEntryCard.shouldShow(bid)) ...[
+            if (AmendmentEntry.shouldShow(bid)) ...[
               _OptionTile(
                 iconAsset: 'plus',
                 iconColor: cs.primary,
@@ -699,7 +699,7 @@ class _SenderOptionsSheet extends StatelessWidget {
                 subtitle: l.amendmentEntryButton,
                 onTap: () {
                   context.pop();
-                  unawaited(AmendmentEntryCard.open(outerContext, bid));
+                  unawaited(AmendmentEntry.open(outerContext, bid));
                 },
               ),
               const SizedBox(height: DonySpacing.sm),

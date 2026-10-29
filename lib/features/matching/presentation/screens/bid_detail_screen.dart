@@ -21,9 +21,9 @@ import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.d
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_sticky_bar.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_options_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';

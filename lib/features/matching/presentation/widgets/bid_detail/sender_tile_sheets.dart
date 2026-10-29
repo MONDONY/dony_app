@@ -8,13 +8,14 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tiles.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -83,9 +84,7 @@ Future<void> openSenderTileSheet(
       builder: (_, current) => switch (tile) {
         SenderTile.prevenir => PrevenirDestinataireBody(bid: current),
         SenderTile.suivi => _SuiviContent(bid: current),
-        SenderTile.lieux => _RoundedMiniMap(
-          child: ParcelLocationsCard(bid: current),
-        ),
+        SenderTile.lieux => _LieuxContent(bid: current),
         SenderTile.colis => ColisDestinataireCard(bid: current, framed: false),
         SenderTile.details => BidDetailsContent(bid: current),
       },
@@ -125,9 +124,9 @@ Widget? _stickyBottomFor(
       ),
     ),
     SenderTile.colis =>
-      AmendmentEntryCard.shouldShow(bid)
+      AmendmentEntry.shouldShow(bid)
           ? liveBid(
-              (sheetContext, current) => AmendmentEntryCard.shouldShow(current)
+              (sheetContext, current) => AmendmentEntry.shouldShow(current)
                   ? DonyButton(
                       label: l.amendmentEntryButton,
                       iconAsset: 'plus',
@@ -136,7 +135,7 @@ Widget? _stickyBottomFor(
                         sheetContext,
                         screenContext,
                         () => unawaited(
-                          AmendmentEntryCard.open(screenContext, current),
+                          AmendmentEntry.open(screenContext, current),
                         ),
                       ),
                     )
@@ -201,7 +200,49 @@ void _logTimelineOpened(BidModel bid) {
   );
 }
 
-/// Contenu du sheet Suivi : où en est le voyageur, puis les lieux.
+/// Résumé d'état complet du colis (`SenderHeroCard.statusLine`), en tête des
+/// sheets Suivi et Lieux : la tuile n'en montre que deux lignes. Rien à
+/// afficher quand le colis n'a pas de résumé.
+class _StatusLine extends StatelessWidget {
+  const _StatusLine({required this.bid});
+
+  final BidModel bid;
+
+  @override
+  Widget build(BuildContext context) {
+    final line = SenderHeroCard.statusLine(context, bid);
+    if (line == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.base),
+      child: Text(
+        line,
+        key: const Key('sender-tile-status-line'),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+/// Contenu du sheet Lieux : le résumé d'état, puis la carte et les adresses.
+class _LieuxContent extends StatelessWidget {
+  const _LieuxContent({required this.bid});
+
+  final BidModel bid;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      _StatusLine(bid: bid),
+      _RoundedMiniMap(child: ParcelLocationsCard(bid: bid)),
+    ],
+  );
+}
+
+/// Contenu du sheet Suivi : le résumé d'état, où en est le voyageur, puis les
+/// lieux.
 class _SuiviContent extends StatelessWidget {
   const _SuiviContent({required this.bid});
 
@@ -214,6 +255,7 @@ class _SuiviContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _StatusLine(bid: bid),
         if (showTracking)
           TravelerTrackingCard(
             tracking: bid.travelerTracking!,
@@ -240,7 +282,7 @@ class _RoundedMiniMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(DonyRadius.md),
+    borderRadius: BorderRadius.circular(DonyRadius.card),
     child: child,
   );
 }

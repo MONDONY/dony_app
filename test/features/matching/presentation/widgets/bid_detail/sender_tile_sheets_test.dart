@@ -109,7 +109,9 @@ BidModel _bid({
   TravelerTrackingModel? travelerTracking,
   String? recipientName = 'Awa',
   String? recipientPhone = '+221700000000',
+  String? handoverLocation,
 }) => BidModel(
+  handoverLocation: handoverLocation,
   id: id,
   announcementId: 'ann-001',
   senderId: 'sender-001',
@@ -316,6 +318,64 @@ void main() {
     });
   });
 
+  group('résumé d\'état complet', () {
+    testWidgets('Suivi : la note du code bloqué est entière en tête du sheet', (
+      tester,
+    ) async {
+      await openTile(
+        tester,
+        _bid(travelerTracking: _tracking()),
+        SenderTile.suivi,
+        size: const Size(360, 1200),
+      );
+
+      final line = find.byKey(const Key('sender-tile-status-line'));
+      expect(line, findsOneWidget);
+      expect(
+        tester.widget<Text>(line).data,
+        contains(
+          'Le code de retrait a été bloqué : générez-en un nouveau sur votre '
+          'billet.',
+        ),
+      );
+      expect(tester.widget<Text>(line).maxLines, isNull);
+      // En tête : avant la pastille d'état du suivi.
+      expect(
+        tester.getTopLeft(line).dy,
+        lessThan(
+          tester
+              .getTopLeft(find.byKey(const Key('traveler-tracking-badge')))
+              .dy,
+        ),
+      );
+    });
+
+    testWidgets('Lieux : la consigne de dépôt est entière en tête du sheet', (
+      tester,
+    ) async {
+      await openTile(
+        tester,
+        _bid(status: 'ACCEPTED', handoverLocation: 'Gare de Lyon, hall 2'),
+        SenderTile.lieux,
+        size: const Size(360, 1200),
+      );
+
+      final line = find.byKey(const Key('sender-tile-status-line'));
+      expect(line, findsOneWidget);
+      final text = tester.widget<Text>(line).data!;
+      expect(text, contains('Gare de Lyon, hall 2'));
+      expect(text, contains('Présentez le QR, ou collez-le sur le colis.'));
+      expect(tester.widget<Text>(line).maxLines, isNull);
+    });
+
+    testWidgets('statut terminal sans résumé : rien en tête', (tester) async {
+      await openTile(tester, _bid(status: 'CANCELLED'), SenderTile.lieux);
+
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('sender-tile-status-line')), findsNothing);
+    });
+  });
+
   group('prevenir', () {
     testWidgets('sticky button label is the code label when withCode', (
       tester,
@@ -393,7 +453,7 @@ void main() {
           matching: find.byWidgetPredicate(
             (w) =>
                 w is ClipRRect &&
-                w.borderRadius == BorderRadius.circular(DonyRadius.md),
+                w.borderRadius == BorderRadius.circular(DonyRadius.card),
           ),
         ),
         findsOneWidget,

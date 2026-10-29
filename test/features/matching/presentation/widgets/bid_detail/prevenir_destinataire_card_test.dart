@@ -357,6 +357,22 @@ void main() {
       );
     });
 
+    test('withCode is false for an empty code, and the message has none', () {
+      final empty = _bid(status: 'IN_TRANSIT', confirmationCode: '');
+      expect(empty.needsNewPickupCode, isTrue);
+      expect(PrevenirDestinataire.withCode(empty), isFalse);
+      expect(
+        PrevenirDestinataire.buttonLabel(fr, empty),
+        fr.recipientNotifyButtonLink,
+      );
+      final text = recipientNotifyMessage(
+        fr,
+        empty,
+        withCode: PrevenirDestinataire.withCode(empty),
+      );
+      expect(text, isNot(contains('code')));
+    });
+
     test('withCode is false when pickup code expired', () {
       expect(
         PrevenirDestinataire.withCode(

@@ -1,5 +1,5 @@
 import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

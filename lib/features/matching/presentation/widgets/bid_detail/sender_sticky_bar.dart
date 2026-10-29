@@ -9,8 +9,8 @@ import 'package:dony/features/matching/presentation/widgets/action_bars/bid_deta
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_pay_button.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/cancel_before_payment_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_pay_button.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';

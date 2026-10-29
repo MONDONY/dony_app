@@ -9,8 +9,8 @@ import 'package:dony/core/utils/contact_links.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -90,10 +90,11 @@ abstract final class PrevenirDestinataire {
       bid.isRecipientDeclinedForSender && bid.canChangeRecipient;
 
   /// Le code ne part qu'une fois le colis confié au voyageur, et jamais
-  /// périmé : le destinataire ne pourrait pas s'en servir (FLUTTER-G2).
+  /// périmé, bloqué ou vide : le destinataire ne pourrait pas s'en servir
+  /// (FLUTTER-G1, FLUTTER-G2).
   static bool withCode(BidModel bid) =>
       bid.confirmationCode != null &&
-      !bid.isPickupCodeExpired &&
+      !bid.needsNewPickupCode &&
       _codeStatuses.contains(bid.status);
 
   /// Ouvre WhatsApp avec le message rédigé, sinon la feuille de partage.

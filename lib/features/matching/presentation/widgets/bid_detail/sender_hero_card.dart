@@ -285,7 +285,7 @@ class _HeroShell extends StatelessWidget {
   /// Aplat uni de la carte et couleur de son texte. Les variantes bleues
   /// suivent le thème ; les autres restent sombres dans les deux thèmes,
   /// sous un texte blanc (≥ 4.5:1), comme les boutons `_HeroButton`.
-  (Color, Color) _colors(BuildContext context) {
+  (Color, Color) _colors() {
     const white = Color(0xFFFFFFFF);
     switch (variant) {
       case SenderHeroVariant.wait:
@@ -298,7 +298,7 @@ class _HeroShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final (background, foreground) = _colors(context);
+    final (background, foreground) = _colors();
 
     return Container(
       width: double.infinity,

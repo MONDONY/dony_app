@@ -11,7 +11,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -85,8 +85,7 @@ void main() {
           child: Scaffold(
             body: Builder(
               builder: (context) => TextButton(
-                onPressed: () =>
-                    unawaited(AmendmentEntryCard.open(context, bid)),
+                onPressed: () => unawaited(AmendmentEntry.open(context, bid)),
                 child: const Text('open-amendment'),
               ),
             ),
@@ -97,8 +96,8 @@ void main() {
   }
 
   test('shouldShow_hiddenWhenNotAllowed', () {
-    expect(AmendmentEntryCard.shouldShow(_bid(allowed: false)), isFalse);
-    expect(AmendmentEntryCard.shouldShow(_bid()), isTrue);
+    expect(AmendmentEntry.shouldShow(_bid(allowed: false)), isFalse);
+    expect(AmendmentEntry.shouldShow(_bid()), isTrue);
   });
 
   testWidgets('open_opensSheet_closingWithoutRequestDoesNotReload', (

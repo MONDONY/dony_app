@@ -251,13 +251,18 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     final amendmentReply =
         amendment != null && AmendmentSenderCard.needsReply(bid);
 
+    final reschedule = TripRescheduleCard.shouldShow(bid)
+        ? TripRescheduleCard(bid: bid, isSender: true)
+        : null;
+    final rescheduleReply =
+        reschedule != null && TripRescheduleCard.needsReply(bid);
+
     // « À traiter » ne réunit que ce qui attend une réponse ou une action.
     final actions = <Widget>[
       if (SenderHeroCard.hasAction(bid)) SenderHeroCard(bid: bid),
       if (supplementReply) supplement,
       if (amendmentReply) amendment,
-      if (TripRescheduleCard.shouldShow(bid))
-        TripRescheduleCard(bid: bid, isSender: true),
+      if (rescheduleReply) reschedule,
       // Le destinataire a refusé : renvoyer le message n'aurait pas de sens,
       // il faut en désigner un autre.
       if (PrevenirDestinataire.showsDeclined(bid))
@@ -272,6 +277,8 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       if (supplement != null && !supplementReply)
         ('info-supplement', supplement),
       if (amendment != null && !amendmentReply) ('info-amendment', amendment),
+      if (reschedule != null && !rescheduleReply)
+        ('info-reschedule', reschedule),
       // Consignes de retrait : hors du hero, qui les masquait dès qu'une
       // contestation, une absence ou la livraison prenait la place.
       if (_activeStatuses.contains(status) &&

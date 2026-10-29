@@ -3489,7 +3489,7 @@
   },
   "bidDetailSenderTravelerFallback": "the traveler",
   "@bidDetailSenderTravelerFallback": {
-    "description": "Repli quand bid.travelerName est vide (sender_hero_card.dart, HANDED_OVER)"
+    "description": "Repli quand bid.travelerName est vide (money_breakdown_card.dart, sender_sticky_bar.dart, amendment_request_sheet.dart, amendment_card.dart)"
   },
   "bidDetailSenderHandedOverSubtitleWithDate": "Boarding scheduled for {date}.",
   "@bidDetailSenderHandedOverSubtitleWithDate": {

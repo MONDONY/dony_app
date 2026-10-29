@@ -352,6 +352,29 @@ DonyOperatorTile(
 )
 ```
 
+### `DonyActionTile` / `DonyActionTileGrid`
+
+Tuile d'action façon « Outils » d'Activités : icône teintée, pastille d'état facultative, titre (2 lignes max) et description (2 lignes max). Un tap ouvre l'écran ou la feuille annoncée. Lue par le lecteur d'écran comme un seul bouton (titre, pastille et description fusionnés). Utilisée par le hub Activités et par la grille « Votre envoi » de la fiche colis expéditeur.
+
+```dart
+DonyActionTileGrid(
+  tiles: [
+    DonyActionTile(
+      iconName: 'bell',               // nom d'icône `DonyIcon`
+      label: 'Alertes',
+      subtitle: 'Paris → Dakar',      // optionnel
+      color: cs.primary,              // bleu ou terracotta (cs.secondary) : teinte l'icône et son fond, jamais d'aplat plein
+      badge: ToolStatusBadge(...),    // optionnel, sur sa propre ligne sous l'icône
+      showNotificationDot: true,      // point ambre : du nouveau depuis la dernière visite (alertes seulement)
+      onTap: () {},
+    ),
+    ...
+  ],
+)
+```
+
+La grille place deux tuiles par ligne (`DonySpacing.md` entre elles), lignes de hauteur égale (`IntrinsicHeight`). Une dernière tuile en nombre impair reste sur sa demi-largeur : elle ne s'étire jamais, sinon elle se lit comme une section à part. `ToolStatusBadge` (`ToolStatusTone` : `ready`, `todo`, `news`, `inProgress`) est la pastille habituelle.
+
 ---
 
 ## Règles obligatoires

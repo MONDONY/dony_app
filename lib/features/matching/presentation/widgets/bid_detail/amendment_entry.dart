@@ -9,7 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// l'expéditeur : règle d'affichage et ouverture de la feuille « Modifier mon
 /// colis ». Le bouton vit dans le sheet de la tuile Colis et dans le menu
 /// d'options.
-abstract final class AmendmentEntryCard {
+abstract final class AmendmentEntry {
   /// Le serveur décide (éligibilité, drapeau, fenêtre) : l'app ne recalcule rien.
   static bool shouldShow(BidModel bid) => bid.amendmentAllowed;
 

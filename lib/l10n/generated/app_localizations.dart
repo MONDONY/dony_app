@@ -11868,7 +11868,7 @@ abstract class AppLocalizations {
   /// **'Présentez le QR, ou collez-le sur le colis.'**
   String get bidDetailSenderAcceptedInstructions;
 
-  /// Repli quand bid.travelerName est vide (sender_hero_card.dart, HANDED_OVER)
+  /// Repli quand bid.travelerName est vide (money_breakdown_card.dart, sender_sticky_bar.dart, amendment_request_sheet.dart, amendment_card.dart)
   ///
   /// In fr, this message translates to:
   /// **'le voyageur'**
@@ -12420,7 +12420,7 @@ abstract class AppLocalizations {
   /// **'Voir mes envois'**
   String get bidDetailGoneAction;
 
-  /// Tooltip et libellé de tuile pour partager le lien de suivi (bid_detail_screen.dart, bid_detail_action_bars.dart, quick_actions_row.dart)
+  /// Tooltip et libellé de tuile pour partager le lien de suivi (bid_detail_screen.dart, bid_detail_action_bars.dart, tracking_actions.dart)
   ///
   /// In fr, this message translates to:
   /// **'Partager le suivi'**
@@ -12702,7 +12702,7 @@ abstract class AppLocalizations {
   /// **'Code prêt'**
   String get senderTileBadgeCodeReady;
 
-  /// Pastille de la tuile Suivi ou Lieux : l'étape en cours du colis
+  /// Pastille de la tuile Suivi (colis remis, en route ou arrivé) : une étape est en cours
   ///
   /// In fr, this message translates to:
   /// **'Étape en cours'**
@@ -13008,7 +13008,7 @@ abstract class AppLocalizations {
   /// **'Afficher le QR de remise'**
   String get bidDetailShowPickupQr;
 
-  /// Bouton/tuile/corridor de repli de suivi (sender_sticky_bar.dart, quick_actions_row.dart)
+  /// Bouton/tuile/corridor de repli de suivi (sender_sticky_bar.dart, tracking_actions.dart)
   ///
   /// In fr, this message translates to:
   /// **'Suivi du colis'**
@@ -13224,7 +13224,7 @@ abstract class AppLocalizations {
   /// **'{amount} séquestré : libéré à la livraison'**
   String bidDetailEscrowedUntilDeliveryLabel(String amount);
 
-  /// Texte du partage natif du lien de suivi (quick_actions_row.dart)
+  /// Texte du partage natif du lien de suivi (tracking_actions.dart)
   ///
   /// In fr, this message translates to:
   /// **'Suivez votre colis Yadony en temps réel :\n{url}'**
@@ -13302,7 +13302,7 @@ abstract class AppLocalizations {
   /// **'Téléchargez Yadony pour suivre vos colis et en envoyer à votre tour : https://yadony.com'**
   String get recipientNotifyMessageInvite;
 
-  /// Sujet du partage natif du lien de suivi (quick_actions_row.dart)
+  /// Sujet du partage natif du lien de suivi (tracking_actions.dart)
   ///
   /// In fr, this message translates to:
   /// **'Suivi de colis Yadony · {number}'**

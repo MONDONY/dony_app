@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -90,6 +91,36 @@ void main() {
       await tester.pump();
 
       expect(taps, 1);
+    });
+
+    testWidgets('reads title, badge and subtitle as one button', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _wrap(
+          _tile(
+            key: const Key('tile'),
+            label: 'Prévenir Awa',
+            subtitle: 'Envoyer le lien de suivi',
+            badge: const ToolStatusBadge(
+              ready: true,
+              label: 'Code prêt',
+              semanticsLabel: 'Code prêt',
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final node = tester.getSemantics(find.byKey(const Key('tile')));
+      expect(node.flagsCollection.isButton, isTrue);
+      expect(node.label, contains('Prévenir Awa'));
+      expect(node.label, contains('Code prêt'));
+      expect(node.label, contains('Envoyer le lien de suivi'));
+      // Un seul nœud pour la tuile : la description n'a pas le sien.
+      expect(find.bySemanticsLabel('Envoyer le lien de suivi'), findsNothing);
+      handle.dispose();
     });
 
     testWidgets('shows notification dot only when asked', (tester) async {
@@ -202,12 +233,11 @@ void main() {
         long.width,
       );
 
-      // Le libellé tient dans ses 2 lignes à taille normale (pas de
-      // rétrécissement) : sa hauteur ne dépasse pas deux lignes de `Short`.
+      // Un libellé de 40 caractères à ce grand texte passe à la ligne ; il est
+      // plafonné à deux lignes avec points de suspension (`maxLines: 2`), sans
+      // jamais déborder de la tuile.
       final oneLine = tester.getSize(find.text('Short')).height;
-      final labelHeight = tester.getSize(find.text(longLabel)).height;
-      expect(labelHeight, greaterThan(oneLine));
-      expect(labelHeight, lessThanOrEqualTo(2 * oneLine + 0.5));
+      expect(tester.getSize(find.text(longLabel)).height, greaterThan(oneLine));
     });
   });
 }

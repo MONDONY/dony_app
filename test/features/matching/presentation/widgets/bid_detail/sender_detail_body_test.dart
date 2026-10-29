@@ -20,10 +20,11 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
@@ -33,6 +34,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_de
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -118,7 +120,9 @@ BidModel _bid({
   String? confirmationCode,
   bool pickupCodeRenewalNeeded = false,
   DateTime? departureAt,
+  TripRescheduleInfo? reschedule,
 }) => BidModel(
+  reschedule: reschedule,
   recipientAppStatus: recipientAppStatus,
   confirmationCode: confirmationCode,
   pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
@@ -369,6 +373,47 @@ void main() {
     );
   });
 
+  testWidgets('report en attente → carte sous le titre « À traiter »', (
+    tester,
+  ) async {
+    sizeView(tester);
+    await tester.pumpWidget(
+      _host(
+        _bid(reschedule: _reschedule(pending: true)),
+        cancellationBloc,
+        conversationOpenBloc,
+      ),
+    );
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('À traiter'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byType(TripRescheduleCard)).dy,
+      greaterThan(tester.getTopLeft(find.text('À traiter')).dy),
+    );
+  });
+
+  testWidgets('report déjà décidé → carte affichée, pas de titre', (
+    tester,
+  ) async {
+    sizeView(tester);
+    await tester.pumpWidget(
+      _host(
+        _bid(reschedule: _reschedule(pending: false)),
+        cancellationBloc,
+        conversationOpenBloc,
+      ),
+    );
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.byType(TripRescheduleCard), findsOneWidget);
+    expect(find.text('À traiter'), findsNothing);
+    expect(
+      tester.getTopLeft(find.byType(TripRescheduleCard)).dy,
+      lessThan(tester.getTopLeft(find.byType(VoyageurContactCard)).dy),
+    );
+  });
+
   testWidgets('une section ne démonte pas les suivantes quand « À traiter » '
       'apparaît', (tester) async {
     sizeView(tester);
@@ -474,6 +519,14 @@ void main() {
           pickupCodeRenewalNeeded: true,
         ),
       );
+      final tile = tester.widget<DonyActionTile>(_tile('Prévenir Fatou'));
+      expect(tile.subtitle, 'Envoyer le lien de suivi');
+      expect(tile.badge, isNull);
+    });
+
+    testWidgets('Prévenir : code vide, ni « Code prêt » ni code dans le '
+        'sous-titre', (tester) async {
+      await pumpBody(tester, _bid(status: 'IN_TRANSIT', confirmationCode: ''));
       final tile = tester.widget<DonyActionTile>(_tile('Prévenir Fatou'));
       expect(tile.subtitle, 'Envoyer le lien de suivi');
       expect(tile.badge, isNull);
@@ -1020,10 +1073,7 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 1));
 
-      expect(
-        AmendmentEntryCard.shouldShow(_bid(amendmentAllowed: true)),
-        isTrue,
-      );
+      expect(AmendmentEntry.shouldShow(_bid(amendmentAllowed: true)), isTrue);
       expect(find.byType(AmendmentSenderCard), findsNothing);
       expect(find.text('À traiter'), findsNothing);
       expect(find.text('Ajouter des kilos ou des articles'), findsNothing);
@@ -1040,6 +1090,15 @@ void main() {
     });
   });
 }
+
+TripRescheduleInfo _reschedule({required bool pending}) => TripRescheduleInfo(
+  id: 'r1',
+  reason: 'FLIGHT_CANCELLED',
+  previousDepartureDate: DateTime(2026, 10, 9),
+  newDepartureDate: DateTime(2026, 10, 13),
+  decisionPending: pending,
+  decisionDeadline: DateTime(2026, 10, 12, 18),
+);
 
 /// Tuile de la grille « Votre envoi » portant [label].
 Finder _tile(String label) => find.widgetWithText(DonyActionTile, label);

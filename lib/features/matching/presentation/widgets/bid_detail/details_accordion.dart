@@ -7,7 +7,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
