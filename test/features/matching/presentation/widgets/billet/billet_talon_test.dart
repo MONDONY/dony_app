@@ -1,5 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
 import 'package:dony/features/tracking/bloc/pickup_code_request_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -63,6 +64,11 @@ BidModel _bid({
   tripCancellationRematchStatus: tripCancellationRematchStatus,
   rejectionReason: rejectionReason,
   pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
+);
+
+/// Icône de l'ancien bouton « Lire les QR des étapes » du voyageur.
+final _scanStepsIcon = find.byWidgetPredicate(
+  (w) => w is DonyIcon && w.name == 'scan-line',
 );
 
 Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
@@ -826,20 +832,16 @@ void main() {
 
   // ── Traveler dispatch ───────────────────────────────────────────────────────
 
-  testWidgets('voyageur + ACCEPTED → lien "Scanner les étapes" (Suivi)', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      _bid(status: 'ACCEPTED', trackingNumber: 'DON-1'),
-      false,
-    );
-    // Accès au scan depuis le détail → redirige vers les étapes du Suivi.
-    expect(find.text('Lire les QR des étapes'), findsOneWidget);
-    expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'),
-      findsOneWidget,
-    );
+  // Plus de bouton « Lire les QR des étapes » côté voyageur (décision du
+  // propriétaire) : le footer porte « Lire le QR du colis » puis « Valider la
+  // remise ». Avant la remise, le talon n'a donc plus rien à montrer.
+  testWidgets('voyageur + ACCEPTED → talon vide, non affiché', (tester) async {
+    final bid = _bid(status: 'ACCEPTED', trackingNumber: 'DON-1');
+    expect(BilletTalon.isShown(bid, isSender: false), isFalse);
+    await _pump(tester, bid, false);
+    expect(tester.getSize(find.byType(BilletTalon)).height, 0);
+    expect(find.byType(OutlinedButton), findsNothing);
+    expect(_scanStepsIcon, findsNothing);
     // Le numéro de suivi n'est pas visible du voyageur avant la remise.
     expect(find.text('NUMÉRO DE SUIVI'), findsNothing);
   });
@@ -857,7 +859,7 @@ void main() {
         find.textContaining("En attente du paiement de l'expéditeur"),
         findsOneWidget,
       );
-      expect(find.text('Lire les QR des étapes'), findsNothing);
+      expect(_scanStepsIcon, findsNothing);
     },
   );
 
@@ -875,85 +877,34 @@ void main() {
     expect(find.text('Vêtements'), findsOneWidget);
   });
 
-  testWidgets('voyageur + HANDED_OVER → lien "Scanner les étapes" (Suivi)', (
-    tester,
-  ) async {
-    await _pump(tester, _bid(status: 'HANDED_OVER'), false);
-    // Redirige vers l'onglet Suivi, mode « Valider une étape ».
-    expect(find.text('Lire les QR des étapes'), findsOneWidget);
-    expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets(
-    'voyageur : le lien ouvre le Suivi sur le trajet du colis, retour au colis',
-    (tester) async {
-      final t = _MockTrackingBloc();
-      final b = _MockBidBloc();
-      when(() => t.state).thenReturn(TrackingInitial());
-      when(() => b.state).thenReturn(BidInitial());
-      when(() => b.isClosed).thenReturn(false);
-      registerFallbackValue(BidDetailRequested('fallback'));
-      final visited = <String>[];
-      final router = GoRouter(
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, _) => Scaffold(
-              body: MultiBlocProvider(
-                providers: [
-                  BlocProvider<TrackingBloc>.value(value: t),
-                  BlocProvider<BidBloc>.value(value: b),
-                ],
-                child: BilletTalon(
-                  bid: _bid(status: 'HANDED_OVER'),
-                  isSender: false,
-                ),
-              ),
-            ),
-          ),
-          GoRoute(
-            path: '/tracking/validate',
-            builder: (_, state) {
-              visited.add(state.uri.toString());
-              return const Scaffold(body: Text('suivi'));
-            },
-          ),
-        ],
+  // À partir de la remise, le talon ne garde que la bande du numéro de suivi.
+  for (final status in ['HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+    testWidgets('voyageur + $status → bande du numéro de suivi seule', (
+      tester,
+    ) async {
+      final bid = _bid(status: status, trackingNumber: 'DON-1');
+      expect(BilletTalon.isShown(bid, isSender: false), isTrue);
+      await _pump(tester, bid, false);
+      expect(find.byType(TalonTrackingStrip), findsOneWidget);
+      expect(find.text('NUMÉRO DE SUIVI'), findsOneWidget);
+      expect(_scanStepsIcon, findsNothing);
+      // Sans zone d'action, la bande n'est pas décalée par un espace vide.
+      expect(
+        tester.getTopLeft(find.byType(TalonTrackingStrip)).dy -
+            tester.getTopLeft(find.byType(BilletTalon)).dy,
+        DonySpacing.base,
       );
-      addTearDown(router.dispose);
-      await tester.pumpWidget(
-        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
-      );
-      await tester.pump(const Duration(milliseconds: 400));
+    });
 
-      await tester.tap(find.text('Lire les QR des étapes'));
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(visited, ['/tracking/validate?trip=a-1']);
-
-      // Poussé (FLUTTER-9N) : le retour ramène au colis, rechargé.
-      router.pop();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(find.text('Lire les QR des étapes'), findsOneWidget);
-      verify(() => b.add(any(that: isA<BidDetailRequested>()))).called(1);
-    },
-  );
-
-  testWidgets('voyageur + IN_TRANSIT → lien "Scanner les étapes" (Suivi)', (
-    tester,
-  ) async {
-    await _pump(tester, _bid(status: 'IN_TRANSIT'), false);
-    expect(find.text('Lire les QR des étapes'), findsOneWidget);
-  });
-
-  testWidgets('voyageur + ARRIVED → lien "Scanner les étapes" (Suivi)', (
-    tester,
-  ) async {
-    await _pump(tester, _bid(status: 'ARRIVED'), false);
-    expect(find.text('Lire les QR des étapes'), findsOneWidget);
-  });
+    testWidgets('voyageur + $status sans numéro servi → talon non affiché', (
+      tester,
+    ) async {
+      final bid = _bid(status: status);
+      expect(BilletTalon.isShown(bid, isSender: false), isFalse);
+      await _pump(tester, bid, false);
+      expect(tester.getSize(find.byType(BilletTalon)).height, 0);
+    });
+  }
 
   testWidgets('voyageur + COMPLETED → bloc vert "Colis livré"', (tester) async {
     await _pump(tester, _bid(status: 'COMPLETED'), false);
@@ -1181,7 +1132,8 @@ void main() {
     );
 
     testWidgets(
-      'en anglais : voyageur + IN_TRANSIT → "Scan the step QR codes" et "TRACKING NUMBER"',
+      'en anglais : voyageur + IN_TRANSIT → "TRACKING NUMBER", sans bouton '
+      'des étapes',
       (tester) async {
         useEnglish();
         await _pump(
@@ -1189,8 +1141,8 @@ void main() {
           _bid(status: 'IN_TRANSIT', trackingNumber: 'DON-1'),
           false,
         );
-        expect(find.text('Scan the step QR codes'), findsOneWidget);
         expect(find.text('TRACKING NUMBER'), findsOneWidget);
+        expect(_scanStepsIcon, findsNothing);
       },
     );
   });
@@ -1404,8 +1356,30 @@ void main() {
           findsOneWidget,
         );
         expect(find.text('Demander un nouveau code'), findsOneWidget);
+        // Le bloc reste à sa place, sans le bouton des étapes.
+        expect(_scanStepsIcon, findsNothing);
       });
     }
+
+    testWidgets('voyageur : le bloc précède la bande du numéro de suivi', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'IN_TRANSIT',
+          trackingNumber: 'DON-1',
+          pickupCodeRenewalNeeded: true,
+        ),
+        false,
+      );
+      expect(
+        tester
+            .getTopLeft(find.byKey(const Key('talon-code-renewal-request')))
+            .dy,
+        lessThan(tester.getTopLeft(find.byType(TalonTrackingStrip)).dy),
+      );
+    });
 
     testWidgets('voyageur : l\'appui envoie la demande', (tester) async {
       when(() => repository.requestNewCode('bid-1')).thenAnswer(
@@ -1468,6 +1442,50 @@ void main() {
       expect(find.text('Code de retrait bloqué'), findsOneWidget);
       expect(find.textContaining("trop d'essais"), findsOneWidget);
       expect(find.text('Code de retrait expiré'), findsNothing);
+    });
+  });
+  // `isShown` suit ce que le talon rend vraiment : sans contenu (voyageur
+  // avant la remise), ni bloc vide ni perforation dans le billet.
+  group('isShown = le talon rend quelque chose', () {
+    const statuses = [
+      'PENDING',
+      'PAYMENT_ESCROWED',
+      'AWAITING_PAYMENT',
+      'ACCEPTED',
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'COMPLETED',
+      'REJECTED',
+      'CANCELLED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+      'UNKNOWN',
+    ];
+    for (final status in statuses) {
+      for (final tracking in [null, 'DON-1']) {
+        testWidgets('voyageur, $status, numéro ${tracking ?? 'absent'}', (
+          tester,
+        ) async {
+          final bid = _bid(status: status, trackingNumber: tracking);
+          await _pump(tester, bid, false);
+          expect(
+            BilletTalon.isShown(bid, isSender: false),
+            tester.getSize(find.byType(BilletTalon)).height > 0,
+          );
+        });
+      }
+    }
+
+    test('expéditeur : toujours affiché (inchangé)', () {
+      for (final status in statuses) {
+        expect(
+          BilletTalon.isShown(_bid(status: status), isSender: true),
+          isTrue,
+          reason: status,
+        );
+      }
     });
   });
 }

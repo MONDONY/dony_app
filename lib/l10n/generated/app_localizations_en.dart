@@ -8071,9 +8071,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ticketQrButtonFull => 'Parcel QR (to show or stick on the parcel)';
 
   @override
-  String get ticketScanStepsButton => 'Scan the step QR codes';
-
-  @override
   String get ticketAwaitingTravelerConfirmation =>
       'Waiting for the traveler\'s confirmation';
 

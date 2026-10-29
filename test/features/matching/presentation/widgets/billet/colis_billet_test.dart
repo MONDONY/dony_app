@@ -1,8 +1,10 @@
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/billet_route.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_status_stamp.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
+import 'package:dony/features/matching/presentation/widgets/billet_perforation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -44,14 +46,38 @@ void main() {
   testWidgets('le billet montre le tampon de statut et le talon', (
     tester,
   ) async {
-    // isSender: false → talon voyageur (TalonTravelerActionView), sans bloc.
+    // isSender: false → talon voyageur, sans bloc : la bande du numéro de
+    // suivi seule à partir de la remise.
     // isSender: true + ACCEPTED rendrait QrCodeCard, qui exige un
     // TrackingBloc ambiant — hors périmètre d'un widget test isolé.
-    await _pump(tester, _bid(), false);
+    await _pump(tester, _bid(status: 'HANDED_OVER'), false);
     expect(find.byType(BilletStatusStamp), findsOneWidget);
     expect(find.byType(BilletTalon), findsOneWidget);
+    expect(find.byType(BilletPerforation), findsOneWidget);
+    expect(find.text('En route'), findsOneWidget);
+    expect(find.text('NUMÉRO DE SUIVI'), findsOneWidget);
+    expect(find.textContaining('Paris'), findsWidgets);
+  });
+
+  // Voyageur, colis accepté : numéro de suivi masqué avant la remise et plus
+  // de bouton « Lire les QR des étapes » ; le talon n'a rien à montrer.
+  testWidgets('voyageur + ACCEPTED → ni talon ni perforation, billet arrondi', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(), false);
     expect(find.text('Confirmé'), findsOneWidget);
     expect(find.textContaining('Paris'), findsWidgets);
+    expect(find.byType(BilletTalon), findsNothing);
+    expect(find.byType(BilletPerforation), findsNothing);
+    // Rien sous les dates : le bas du billet est celui de la carte (bords
+    // arrondis), sans bloc vide.
+    final billet = tester.getRect(
+      find
+          .ancestor(of: find.byType(BilletRoute), matching: find.byType(Column))
+          .first,
+    );
+    final dates = tester.getRect(find.byType(BilletDates));
+    expect(billet.bottom, dates.bottom);
   });
 
   testWidgets('sender + PENDING → placeholder hourglass visible', (

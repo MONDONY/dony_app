@@ -8125,9 +8125,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'QR du colis (à présenter ou coller sur le colis)';
 
   @override
-  String get ticketScanStepsButton => 'Lire les QR des étapes';
-
-  @override
   String get ticketAwaitingTravelerConfirmation =>
       'En attente de confirmation du voyageur';
 

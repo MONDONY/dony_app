@@ -2965,7 +2965,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'ticketViewAlternativeTripsButton': (l) => l.ticketViewAlternativeTripsButton,
   'ticketQrButtonCompact': (l) => l.ticketQrButtonCompact,
   'ticketQrButtonFull': (l) => l.ticketQrButtonFull,
-  'ticketScanStepsButton': (l) => l.ticketScanStepsButton,
   'ticketAwaitingTravelerConfirmation': (l) =>
       l.ticketAwaitingTravelerConfirmation,
   'ticketAwaitingSenderCardPayment': (l) => l.ticketAwaitingSenderCardPayment,

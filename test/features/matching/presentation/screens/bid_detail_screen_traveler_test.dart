@@ -27,6 +27,7 @@ import 'package:dony/features/matching/presentation/screens/bid_detail_screen.da
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_status_stamp.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
@@ -306,7 +307,6 @@ void main() {
       title: '#BID-00',
       sections: ['billet', 'expediteur', 'gain', 'transport'],
       footer: ['Confirmer ma présence'],
-      talon: 'Lire les QR des étapes',
       gain: 'VOUS RECEVEZ',
     ),
     'ACCEPTED (présence confirmée)': _Scenario(
@@ -315,7 +315,6 @@ void main() {
       title: '#BID-00',
       sections: ['billet', 'expediteur', 'gain', 'transport'],
       footer: ['Lire le QR du colis'],
-      talon: 'Lire les QR des étapes',
       gain: 'VOUS RECEVEZ',
     ),
     'HANDED_OVER': _Scenario(
@@ -324,7 +323,7 @@ void main() {
       title: '#YAD-0042',
       sections: ['billet', 'info-noshow', 'expediteur', 'gain', 'transport'],
       footer: ['Valider la remise'],
-      talon: 'Lire les QR des étapes',
+      talon: 'NUMÉRO DE SUIVI',
       gain: 'VOUS RECEVEZ',
     ),
     'IN_TRANSIT': _Scenario(
@@ -333,7 +332,7 @@ void main() {
       title: '#YAD-0042',
       sections: ['billet', 'info-noshow', 'expediteur', 'gain', 'transport'],
       footer: ['Valider la remise'],
-      talon: 'Lire les QR des étapes',
+      talon: 'NUMÉRO DE SUIVI',
       gain: 'VOUS RECEVEZ',
     ),
     'ARRIVED': _Scenario(
@@ -342,7 +341,7 @@ void main() {
       title: '#YAD-0042',
       sections: ['billet', 'info-noshow', 'expediteur', 'gain', 'transport'],
       footer: ['Valider la remise'],
-      talon: 'Lire les QR des étapes',
+      talon: 'NUMÉRO DE SUIVI',
       gain: 'VOUS RECEVEZ',
     ),
     'COMPLETED': _Scenario(
@@ -425,6 +424,12 @@ void main() {
         }
         if (s.talonReason != null) {
           expect(_in('billet', find.text(s.talonReason!)), findsOneWidget);
+        }
+        // Plus de bouton « Lire les QR des étapes » dans le talon du voyageur
+        // (le footer porte le scan) ; avant la remise, plus de talon du tout.
+        expect(find.text('Lire les QR des étapes'), findsNothing);
+        if (s.bid.status == 'ACCEPTED') {
+          expect(find.byType(BilletTalon), findsNothing);
         }
 
         // Sections du corps, dans l'ordre.

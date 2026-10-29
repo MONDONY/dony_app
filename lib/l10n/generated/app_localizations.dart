@@ -13422,12 +13422,6 @@ abstract class AppLocalizations {
   /// **'QR du colis (à présenter ou coller sur le colis)'**
   String get ticketQrButtonFull;
 
-  /// Bouton voyageur vers les étapes de scan du talon (billet_talon.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Lire les QR des étapes'**
-  String get ticketScanStepsButton;
-
   /// Placeholder sender / PENDING du talon (billet_talon.dart)
   ///
   /// In fr, this message translates to:

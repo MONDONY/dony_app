@@ -8253,10 +8253,6 @@
   "@ticketQrButtonFull": {
     "description": "Bouton QR du talon, variante pleine largeur (billet_talon.dart)"
   },
-  "ticketScanStepsButton": "Lire les QR des étapes",
-  "@ticketScanStepsButton": {
-    "description": "Bouton voyageur vers les étapes de scan du talon (billet_talon.dart)"
-  },
   "ticketAwaitingTravelerConfirmation": "En attente de confirmation du voyageur",
   "@ticketAwaitingTravelerConfirmation": {
     "description": "Placeholder sender / PENDING du talon (billet_talon.dart)"
