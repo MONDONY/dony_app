@@ -667,14 +667,14 @@ void main() {
 
   group('mesure', () {
     for (final tile in SenderTile.values) {
-      testWidgets('logs bid_detail_tile_opened with tile name (${tile.name})', (
-        tester,
-      ) async {
+      testWidgets('logs bid_detail_tile_opened with tile name and role sender '
+          '(${tile.name})', (tester) async {
         await openTile(tester, _bid(travelerTracking: _tracking()), tile);
 
         verify(
           () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
             'tile': tile.name,
+            'role': 'sender',
           }),
         ).called(1);
       });
