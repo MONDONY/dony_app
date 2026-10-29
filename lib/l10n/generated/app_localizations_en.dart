@@ -7622,6 +7622,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get senderTileBadgeCurrentStep => 'Current step';
 
   @override
+  String get bidDetailSectionTransport => 'Your trip';
+
+  @override
+  String get travelerTileLieux => 'Places';
+
+  @override
+  String travelerTileLieuxDropoff(String place) {
+    return 'Drop-off in $place';
+  }
+
+  @override
+  String travelerTileLieuxPickup(String place) {
+    return 'Pickup in $place';
+  }
+
+  @override
+  String get travelerTileColis => 'Parcel and recipient';
+
+  @override
+  String travelerTileColisSubtitle(String weight, String recipient) {
+    return '$weight · for $recipient';
+  }
+
+  @override
+  String get travelerTileDetailsSubtitle => 'Reference, drop-off, trip';
+
+  @override
   String get bidDetailSectionDropoff => 'PARCEL DROP-OFF';
 
   @override

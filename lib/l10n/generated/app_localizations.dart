@@ -12660,6 +12660,48 @@ abstract class AppLocalizations {
   /// **'Étape en cours'**
   String get senderTileBadgeCurrentStep;
 
+  /// Titre de la grille de tuiles de la fiche colis voyageur (traveler_transport_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre transport'**
+  String get bidDetailSectionTransport;
+
+  /// Tuile Lieux (dépôt et récupération) de la fiche colis voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieux'**
+  String get travelerTileLieux;
+
+  /// Sous-titre de la tuile Lieux avant la remise du colis : où le voyageur le récupère (ville, à défaut l'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise à {place}'**
+  String travelerTileLieuxDropoff(String place);
+
+  /// Sous-titre de la tuile Lieux une fois le colis remis : où le destinataire le récupère (ville, à défaut l'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récupération à {place}'**
+  String travelerTileLieuxPickup(String place);
+
+  /// Tuile Colis et destinataire de la fiche colis voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis et destinataire'**
+  String get travelerTileColis;
+
+  /// Sous-titre de la tuile Colis et destinataire (voyageur) : poids puis destinataire
+  ///
+  /// In fr, this message translates to:
+  /// **'{weight} · pour {recipient}'**
+  String travelerTileColisSubtitle(String weight, String recipient);
+
+  /// Sous-titre de la tuile Plus de détails de la fiche colis voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Référence, dépôt, trajet'**
+  String get travelerTileDetailsSubtitle;
+
   /// Titre de section 1 de l'accordéon (details_accordion.dart)
   ///
   /// In fr, this message translates to:

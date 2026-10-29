@@ -2790,6 +2790,18 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'senderTilePrevenirLink': (l) => l.senderTilePrevenirLink,
   'senderTileBadgeCodeReady': (l) => l.senderTileBadgeCodeReady,
   'senderTileBadgeCurrentStep': (l) => l.senderTileBadgeCurrentStep,
+  'bidDetailSectionTransport': (l) => l.bidDetailSectionTransport,
+  'travelerTileLieux': (l) => l.travelerTileLieux,
+  'travelerTileLieuxDropoff': (l) =>
+      l.travelerTileLieuxDropoff(placeholderMarker('place')),
+  'travelerTileLieuxPickup': (l) =>
+      l.travelerTileLieuxPickup(placeholderMarker('place')),
+  'travelerTileColis': (l) => l.travelerTileColis,
+  'travelerTileColisSubtitle': (l) => l.travelerTileColisSubtitle(
+    placeholderMarker('weight'),
+    placeholderMarker('recipient'),
+  ),
+  'travelerTileDetailsSubtitle': (l) => l.travelerTileDetailsSubtitle,
   'bidDetailSectionDropoff': (l) => l.bidDetailSectionDropoff,
   'bidDetailLocationLabel': (l) => l.bidDetailLocationLabel,
   'bidDetailHandoverStatusLabel': (l) => l.bidDetailHandoverStatusLabel,
@@ -8198,6 +8210,9 @@ const textParameters = <String, List<String>>{
   'bidDetailGainCashGrossDetail': ['commission', 'net'],
   'bidRejectionReasonShown': ['reason'],
   'senderTileColisSubtitle': ['weight', 'recipient'],
+  'travelerTileLieuxDropoff': ['place'],
+  'travelerTileLieuxPickup': ['place'],
+  'travelerTileColisSubtitle': ['weight', 'recipient'],
   'bidDetailDisclaimerSignedCompact': ['date', 'time'],
   'parcelRefusalDeclaredWeight': ['weight'],
   'bidDetailReturnDeadlineHint': ['date'],

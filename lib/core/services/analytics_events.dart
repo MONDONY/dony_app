@@ -1300,9 +1300,11 @@ abstract final class AnalyticsEvents {
   static const travelerTrackingTimelineOpened =
       'traveler_tracking_timeline_opened';
 
-  /// Tuile de la grille « Votre envoi » de la fiche colis (vue expéditeur)
-  /// touchée : son bottom sheet s'ouvre (propriété `tile` : `prevenir` /
-  /// `suivi` / `lieux` / `colis` / `details`). Ni identifiant ni nom.
+  /// Tuile de la grille « Votre envoi » (vue expéditeur) ou « Votre transport »
+  /// (vue voyageur) de la fiche colis touchée : son bottom sheet s'ouvre
+  /// (propriété `tile` : `prevenir` / `suivi` / `lieux` / `colis` / `details`
+  /// côté expéditeur, `lieux` / `colis` / `details` côté voyageur ; propriété
+  /// `role` : `sender` / `traveler`). Ni identifiant ni nom.
   static const bidDetailTileOpened = 'bid_detail_tile_opened';
 
   /// Envoi silencieux de la position non fait (propriété `reason` :

@@ -3899,6 +3899,37 @@
   "senderTilePrevenirLink": "Send the tracking link",
   "senderTileBadgeCodeReady": "Code ready",
   "senderTileBadgeCurrentStep": "Current step",
+  "bidDetailSectionTransport": "Your trip",
+  "travelerTileLieux": "Places",
+  "travelerTileLieuxDropoff": "Drop-off in {place}",
+  "@travelerTileLieuxDropoff": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileLieuxPickup": "Pickup in {place}",
+  "@travelerTileLieuxPickup": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileColis": "Parcel and recipient",
+  "travelerTileColisSubtitle": "{weight} · for {recipient}",
+  "@travelerTileColisSubtitle": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileDetailsSubtitle": "Reference, drop-off, trip",
   "bidDetailSectionDropoff": "PARCEL DROP-OFF",
   "bidDetailLocationLabel": "Location",
   "bidDetailHandoverStatusLabel": "Drop-off",

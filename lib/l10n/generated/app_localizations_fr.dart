@@ -7669,6 +7669,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String get senderTileBadgeCurrentStep => 'Étape en cours';
 
   @override
+  String get bidDetailSectionTransport => 'Votre transport';
+
+  @override
+  String get travelerTileLieux => 'Lieux';
+
+  @override
+  String travelerTileLieuxDropoff(String place) {
+    return 'Remise à $place';
+  }
+
+  @override
+  String travelerTileLieuxPickup(String place) {
+    return 'Récupération à $place';
+  }
+
+  @override
+  String get travelerTileColis => 'Colis et destinataire';
+
+  @override
+  String travelerTileColisSubtitle(String weight, String recipient) {
+    return '$weight · pour $recipient';
+  }
+
+  @override
+  String get travelerTileDetailsSubtitle => 'Référence, dépôt, trajet';
+
+  @override
   String get bidDetailSectionDropoff => 'DÉPÔT DU COLIS';
 
   @override

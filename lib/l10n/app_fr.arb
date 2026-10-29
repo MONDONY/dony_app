@@ -7602,6 +7602,52 @@
   "@senderTileBadgeCurrentStep": {
     "description": "Pastille de la tuile Suivi (colis remis, en route ou arrivé) : une étape est en cours"
   },
+  "bidDetailSectionTransport": "Votre transport",
+  "@bidDetailSectionTransport": {
+    "description": "Titre de la grille de tuiles de la fiche colis voyageur (traveler_transport_section.dart)"
+  },
+  "travelerTileLieux": "Lieux",
+  "@travelerTileLieux": {
+    "description": "Tuile Lieux (dépôt et récupération) de la fiche colis voyageur"
+  },
+  "travelerTileLieuxDropoff": "Remise à {place}",
+  "@travelerTileLieuxDropoff": {
+    "description": "Sous-titre de la tuile Lieux avant la remise du colis : où le voyageur le récupère (ville, à défaut l'adresse)",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileLieuxPickup": "Récupération à {place}",
+  "@travelerTileLieuxPickup": {
+    "description": "Sous-titre de la tuile Lieux une fois le colis remis : où le destinataire le récupère (ville, à défaut l'adresse)",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileColis": "Colis et destinataire",
+  "@travelerTileColis": {
+    "description": "Tuile Colis et destinataire de la fiche colis voyageur"
+  },
+  "travelerTileColisSubtitle": "{weight} · pour {recipient}",
+  "@travelerTileColisSubtitle": {
+    "description": "Sous-titre de la tuile Colis et destinataire (voyageur) : poids puis destinataire",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileDetailsSubtitle": "Référence, dépôt, trajet",
+  "@travelerTileDetailsSubtitle": {
+    "description": "Sous-titre de la tuile Plus de détails de la fiche colis voyageur"
+  },
   "bidDetailSectionDropoff": "DÉPÔT DU COLIS",
   "@bidDetailSectionDropoff": {
     "description": "Titre de section 1 de l'accordéon (details_accordion.dart)"

@@ -1,0 +1,102 @@
+import 'dart:async';
+
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tile_sheets.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tiles.dart';
+import 'package:dony/l10n/l10n.dart';
+import 'package:flutter/material.dart';
+
+/// Section « Votre transport » de la fiche colis (vue voyageur) : un titre puis
+/// la grille des tuiles de [travelerTilesFor], chacune ouvrant son bottom sheet
+/// ([openTravelerTileSheet]).
+///
+/// Le tap ouvre le sheet avec le contexte de ce widget (jamais celui de la
+/// tuile) : la liste des tuiles change au rafraîchissement du colis et le
+/// sheet ne doit pas dépendre d'une tuile qui disparaît.
+class TravelerTransportSection extends StatelessWidget {
+  const TravelerTransportSection({super.key, required this.bid});
+
+  final BidModel bid;
+
+  /// Première valeur non blanche de [values], `null` si aucune.
+  static String? _firstText(List<String?> values) {
+    for (final value in values) {
+      final text = value?.trim() ?? '';
+      if (text.isNotEmpty) return text;
+    }
+    return null;
+  }
+
+  /// Résumé de la tuile Lieux : où remettre le colis tant qu'il n'est pas chez
+  /// le voyageur, où le destinataire le récupère ensuite. La ville d'abord, à
+  /// défaut le libellé de l'adresse ; `null` quand l'étape n'a rien de connu.
+  String? _placesSubtitle(AppLocalizations l) {
+    if (!kParcelHandedOverStatuses.contains(bid.status)) {
+      final place = _firstText([
+        bid.departureCity,
+        bid.handoverAddress?.label,
+        bid.handoverLocation,
+      ]);
+      return place == null ? null : l.travelerTileLieuxDropoff(place);
+    }
+    final place = _firstText([bid.arrivalCity, bid.deliveryAddress?.label]);
+    return place == null ? null : l.travelerTileLieuxPickup(place);
+  }
+
+  /// Résumé de la tuile Colis : poids puis destinataire. Un destinataire qui a
+  /// refusé n'est pas nommé : la carte du sheet cache aussi son nom.
+  String? _parcelSubtitle(AppLocalizations l) {
+    final weight = bid.displayWeightKg;
+    if (weight == null) return null;
+    final recipient = bid.recipientName?.trim() ?? '';
+    if (recipient.isEmpty || bid.recipientDeclined) {
+      return formatWeightKg(l, weight);
+    }
+    return l.travelerTileColisSubtitle(formatWeightKg(l, weight), recipient);
+  }
+
+  Widget _tileFor(BuildContext context, TravelerTile tile) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+
+    final (iconName, label, color) = switch (tile) {
+      TravelerTile.lieux => ('map-pin', l.travelerTileLieux, cs.secondary),
+      TravelerTile.colis => ('package', l.travelerTileColis, cs.primary),
+      TravelerTile.details => ('file-text', l.bidDetailMoreDetails, cs.primary),
+    };
+    final subtitle = switch (tile) {
+      TravelerTile.lieux => _placesSubtitle(l),
+      TravelerTile.colis => _parcelSubtitle(l),
+      TravelerTile.details => l.travelerTileDetailsSubtitle,
+    };
+
+    return DonyActionTile(
+      key: Key('traveler-tile-${tile.name}'),
+      iconName: iconName,
+      label: label,
+      subtitle: subtitle,
+      color: color,
+      onTap: () => unawaited(openTravelerTileSheet(context, bid, tile)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(
+        context.l10n.bidDetailSectionTransport,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      const SizedBox(height: DonySpacing.md),
+      DonyActionTileGrid(
+        tiles: [
+          for (final tile in travelerTilesFor(bid)) _tileFor(context, tile),
+        ],
+      ),
+    ],
+  );
+}
