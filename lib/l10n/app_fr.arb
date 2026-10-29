@@ -7484,7 +7484,7 @@
   },
   "bidDetailPayMyShipment": "Payer mon envoi",
   "@bidDetailPayMyShipment": {
-    "description": "Bouton de paiement expéditeur (bid_detail_action_bars.dart, sender_sticky_bar.dart)"
+    "description": "Bouton de paiement expéditeur (sender_sticky_bar.dart)"
   },
   "bidDetailDeleteRequest": "Supprimer cette demande",
   "@bidDetailDeleteRequest": {
@@ -7493,49 +7493,6 @@
   "bidDetailDeleteRejectedBody": "Cette demande refusée sera retirée définitivement de votre liste.",
   "@bidDetailDeleteRejectedBody": {
     "description": "Corps du dialog de suppression, vue voyageur d'une demande refusée (bid_detail_action_bars.dart)"
-  },
-  "bidDetailEscrowReleasedLabel": "Voyageur payé · {amount}",
-  "@bidDetailEscrowReleasedLabel": {
-    "description": "EscrowBadge, paiement libéré (bid_detail_action_bars.dart)",
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailEscrowRefundedLabel": "Remboursé · {amount}",
-  "@bidDetailEscrowRefundedLabel": {
-    "description": "EscrowBadge, paiement remboursé (bid_detail_action_bars.dart)",
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailEscrowFailedLabel": "Paiement échoué",
-  "@bidDetailEscrowFailedLabel": {
-    "description": "EscrowBadge, paiement échoué (bid_detail_action_bars.dart)"
-  },
-  "bidDetailEscrowSecuredPendingLabel": "Paiement sécurisé · En attente du voyageur",
-  "@bidDetailEscrowSecuredPendingLabel": {
-    "description": "EscrowBadge, statut PENDING (bid_detail_action_bars.dart)"
-  },
-  "bidDetailEscrowSecuredLabel": "Paiement sécurisé · {amount}",
-  "@bidDetailEscrowSecuredLabel": {
-    "description": "EscrowBadge, statut ACCEPTED ou défaut (bid_detail_action_bars.dart)",
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailCashAtDropoffLabel": "Paiement en espèces à la remise",
-  "@bidDetailCashAtDropoffLabel": {
-    "description": "_CashBadge (bid_detail_action_bars.dart)"
-  },
-  "bidDetailMobileMoneyPaymentLabel": "Paiement mobile money",
-  "@bidDetailMobileMoneyPaymentLabel": {
-    "description": "_MobileMoneyBadge (bid_detail_action_bars.dart)"
   },
   "bidDetailReportTripLabel": "Signaler ce trajet",
   "@bidDetailReportTripLabel": {
@@ -7588,10 +7545,6 @@
   "bidDetailCancelAfterHandoverBody": "Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.",
   "@bidDetailCancelAfterHandoverBody": {
     "description": "Corps du dialog d'annulation après remise (bid_detail_action_bars.dart)"
-  },
-  "bidDetailDeleteConfirmBody": "Cette demande sera définitivement supprimée de votre historique.",
-  "@bidDetailDeleteConfirmBody": {
-    "description": "Corps du dialog de suppression, vue expéditeur (bid_detail_action_bars.dart)"
   },
   "bidDetailMoreDetails": "Plus de détails",
   "@bidDetailMoreDetails": {
@@ -22728,8 +22681,6 @@
   "@amendmentTravelerCashNoteNoCommission": {"description": "Note espèces sans montant de commission", "placeholders": {"name": {"type": "String"}, "amount": {"type": "String"}}},
   "amendmentDeadlineFormat": "{date} à {time}",
   "@amendmentDeadlineFormat": {"description": "Échéance : date puis heure", "placeholders": {"date": {"type": "String"}, "time": {"type": "String"}}},
-  "bidDetailMoreOptionsTooltip": "Plus d'options",
-  "@bidDetailMoreOptionsTooltip": {"description": "Nom accessible et infobulle du bouton « ⋯ » de la barre d'actions du détail d'un envoi (bid_detail_action_bars.dart), qui ouvre la feuille d'options."},
   "walletBalancesButtonTooltip": "Mes soldes",
   "@walletBalancesButtonTooltip": {"description": "Infobulle du bouton de l'en-tête du portefeuille qui ouvre la feuille « Mes soldes » (wallet_screen.dart)."},
   "walletBalancesSheetTitle": "Mes soldes",

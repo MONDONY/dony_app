@@ -2758,17 +2758,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailPayMyShipment': (l) => l.bidDetailPayMyShipment,
   'bidDetailDeleteRequest': (l) => l.bidDetailDeleteRequest,
   'bidDetailDeleteRejectedBody': (l) => l.bidDetailDeleteRejectedBody,
-  'bidDetailEscrowReleasedLabel': (l) =>
-      l.bidDetailEscrowReleasedLabel(placeholderMarker('amount')),
-  'bidDetailEscrowRefundedLabel': (l) =>
-      l.bidDetailEscrowRefundedLabel(placeholderMarker('amount')),
-  'bidDetailEscrowFailedLabel': (l) => l.bidDetailEscrowFailedLabel,
-  'bidDetailEscrowSecuredPendingLabel': (l) =>
-      l.bidDetailEscrowSecuredPendingLabel,
-  'bidDetailEscrowSecuredLabel': (l) =>
-      l.bidDetailEscrowSecuredLabel(placeholderMarker('amount')),
-  'bidDetailCashAtDropoffLabel': (l) => l.bidDetailCashAtDropoffLabel,
-  'bidDetailMobileMoneyPaymentLabel': (l) => l.bidDetailMobileMoneyPaymentLabel,
   'bidDetailReportTripLabel': (l) => l.bidDetailReportTripLabel,
   'bidDetailReportSubtitle': (l) => l.bidDetailReportSubtitle,
   'bidDetailContactTravelerLabel': (l) => l.bidDetailContactTravelerLabel,
@@ -2786,7 +2775,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailCancelAfterHandoverTitle': (l) =>
       l.bidDetailCancelAfterHandoverTitle,
   'bidDetailCancelAfterHandoverBody': (l) => l.bidDetailCancelAfterHandoverBody,
-  'bidDetailDeleteConfirmBody': (l) => l.bidDetailDeleteConfirmBody,
   'bidDetailMoreDetails': (l) => l.bidDetailMoreDetails,
   'bidDetailSectionTodo': (l) => l.bidDetailSectionTodo,
   'bidDetailSectionShipment': (l) => l.bidDetailSectionShipment,
@@ -7942,7 +7930,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('date'),
     placeholderMarker('time'),
   ),
-  'bidDetailMoreOptionsTooltip': (l) => l.bidDetailMoreOptionsTooltip,
   'walletBalancesButtonTooltip': (l) => l.walletBalancesButtonTooltip,
   'walletBalancesSheetTitle': (l) => l.walletBalancesSheetTitle,
   'walletBalancesSheetHint': (l) => l.walletBalancesSheetHint,
@@ -8204,9 +8191,6 @@ const textParameters = <String, List<String>>{
   'bidDetailGainCashAmount': ['amount'],
   'bidDetailGainCashGrossDetail': ['commission', 'net'],
   'bidRejectionReasonShown': ['reason'],
-  'bidDetailEscrowReleasedLabel': ['amount'],
-  'bidDetailEscrowRefundedLabel': ['amount'],
-  'bidDetailEscrowSecuredLabel': ['amount'],
   'senderTileColisSubtitle': ['weight', 'recipient'],
   'bidDetailDisclaimerSignedCompact': ['date', 'time'],
   'parcelRefusalDeclaredWeight': ['weight'],

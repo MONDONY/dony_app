@@ -7584,34 +7584,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette demande refusée sera retirée définitivement de votre liste.';
 
   @override
-  String bidDetailEscrowReleasedLabel(String amount) {
-    return 'Voyageur payé · $amount';
-  }
-
-  @override
-  String bidDetailEscrowRefundedLabel(String amount) {
-    return 'Remboursé · $amount';
-  }
-
-  @override
-  String get bidDetailEscrowFailedLabel => 'Paiement échoué';
-
-  @override
-  String get bidDetailEscrowSecuredPendingLabel =>
-      'Paiement sécurisé · En attente du voyageur';
-
-  @override
-  String bidDetailEscrowSecuredLabel(String amount) {
-    return 'Paiement sécurisé · $amount';
-  }
-
-  @override
-  String get bidDetailCashAtDropoffLabel => 'Paiement en espèces à la remise';
-
-  @override
-  String get bidDetailMobileMoneyPaymentLabel => 'Paiement mobile money';
-
-  @override
   String get bidDetailReportTripLabel => 'Signaler ce trajet';
 
   @override
@@ -7657,10 +7629,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidDetailCancelAfterHandoverBody =>
       'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.';
-
-  @override
-  String get bidDetailDeleteConfirmBody =>
-      'Cette demande sera définitivement supprimée de votre historique.';
 
   @override
   String get bidDetailMoreDetails => 'Plus de détails';
@@ -22842,9 +22810,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String amendmentDeadlineFormat(String date, String time) {
     return '$date à $time';
   }
-
-  @override
-  String get bidDetailMoreOptionsTooltip => 'Plus d\'options';
 
   @override
   String get walletBalancesButtonTooltip => 'Mes soldes';

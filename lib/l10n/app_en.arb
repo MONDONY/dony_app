@@ -3864,34 +3864,6 @@
   "bidDetailPayMyShipment": "Pay for my shipment",
   "bidDetailDeleteRequest": "Delete this request",
   "bidDetailDeleteRejectedBody": "This declined request will be permanently removed from your list.",
-  "bidDetailEscrowReleasedLabel": "Traveler paid · {amount}",
-  "@bidDetailEscrowReleasedLabel": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailEscrowRefundedLabel": "Refunded · {amount}",
-  "@bidDetailEscrowRefundedLabel": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailEscrowFailedLabel": "Payment failed",
-  "bidDetailEscrowSecuredPendingLabel": "Payment secured · Awaiting the traveler",
-  "bidDetailEscrowSecuredLabel": "Payment secured · {amount}",
-  "@bidDetailEscrowSecuredLabel": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailCashAtDropoffLabel": "Cash payment at drop-off",
-  "bidDetailMobileMoneyPaymentLabel": "Mobile money payment",
   "bidDetailReportTripLabel": "Report this trip",
   "bidDetailReportSubtitle": "Report a problem to Yadony support",
   "bidDetailContactTravelerLabel": "Contact the traveler",
@@ -3905,7 +3877,6 @@
   "bidDetailConfirmCancelButton": "Yes, cancel",
   "bidDetailCancelAfterHandoverTitle": "Cancel after drop-off?",
   "bidDetailCancelAfterHandoverBody": "The parcel is already with the traveler. You will be fully refunded and get your parcel back: the traveler will confirm the return by entering your return code.",
-  "bidDetailDeleteConfirmBody": "This request will be permanently deleted from your history.",
   "bidDetailMoreDetails": "More details",
   "bidDetailSectionTodo": "To do",
   "bidDetailSectionShipment": "Your shipment",
@@ -11201,7 +11172,6 @@
   "amendmentCommissionProcessingSnackbar": "Commission being processed, the change will be confirmed once it clears.",
   "amendmentTravelerCashNoteNoCommission": "Paid in cash by {name} at handover: {amount}.",
   "amendmentDeadlineFormat": "{date} at {time}",
-  "bidDetailMoreOptionsTooltip": "More options",
   "walletBalancesButtonTooltip": "My balances",
   "walletBalancesSheetTitle": "My balances",
   "walletBalancesSheetHint": "Each balance stays in its own currency: nothing is converted. The total's currency is also the one used for your card top-ups and your new listings. Your ongoing shipments do not change.",

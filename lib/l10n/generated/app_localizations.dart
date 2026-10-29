@@ -12492,7 +12492,7 @@ abstract class AppLocalizations {
   /// **'Confirmer ma présence'**
   String get bidDetailConfirmPresence;
 
-  /// Bouton de paiement expéditeur (bid_detail_action_bars.dart, sender_sticky_bar.dart)
+  /// Bouton de paiement expéditeur (sender_sticky_bar.dart)
   ///
   /// In fr, this message translates to:
   /// **'Payer mon envoi'**
@@ -12509,48 +12509,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Cette demande refusée sera retirée définitivement de votre liste.'**
   String get bidDetailDeleteRejectedBody;
-
-  /// EscrowBadge, paiement libéré (bid_detail_action_bars.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Voyageur payé · {amount}'**
-  String bidDetailEscrowReleasedLabel(String amount);
-
-  /// EscrowBadge, paiement remboursé (bid_detail_action_bars.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Remboursé · {amount}'**
-  String bidDetailEscrowRefundedLabel(String amount);
-
-  /// EscrowBadge, paiement échoué (bid_detail_action_bars.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Paiement échoué'**
-  String get bidDetailEscrowFailedLabel;
-
-  /// EscrowBadge, statut PENDING (bid_detail_action_bars.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Paiement sécurisé · En attente du voyageur'**
-  String get bidDetailEscrowSecuredPendingLabel;
-
-  /// EscrowBadge, statut ACCEPTED ou défaut (bid_detail_action_bars.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Paiement sécurisé · {amount}'**
-  String bidDetailEscrowSecuredLabel(String amount);
-
-  /// _CashBadge (bid_detail_action_bars.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Paiement en espèces à la remise'**
-  String get bidDetailCashAtDropoffLabel;
-
-  /// _MobileMoneyBadge (bid_detail_action_bars.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Paiement mobile money'**
-  String get bidDetailMobileMoneyPaymentLabel;
 
   /// Tuile d'options expéditeur : signaler le trajet (bid_detail_action_bars.dart)
   ///
@@ -12629,12 +12587,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.'**
   String get bidDetailCancelAfterHandoverBody;
-
-  /// Corps du dialog de suppression, vue expéditeur (bid_detail_action_bars.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Cette demande sera définitivement supprimée de votre historique.'**
-  String get bidDetailDeleteConfirmBody;
 
   /// En-tête de l'accordéon (details_accordion.dart)
   ///
@@ -36769,12 +36721,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{date} à {time}'**
   String amendmentDeadlineFormat(String date, String time);
-
-  /// Nom accessible et infobulle du bouton « ⋯ » de la barre d'actions du détail d'un envoi (bid_detail_action_bars.dart), qui ouvre la feuille d'options.
-  ///
-  /// In fr, this message translates to:
-  /// **'Plus d\'options'**
-  String get bidDetailMoreOptionsTooltip;
 
   /// Infobulle du bouton de l'en-tête du portefeuille qui ouvre la feuille « Mes soldes » (wallet_screen.dart).
   ///
