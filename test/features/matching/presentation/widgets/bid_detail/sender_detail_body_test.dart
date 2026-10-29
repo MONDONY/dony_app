@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
@@ -34,6 +35,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
+import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
@@ -359,12 +361,12 @@ void main() {
     final ys = [
       top(find.byType(ColisBillet)),
       top(find.text('À traiter')),
-      top(find.byType(RecipientDeclinedCard)),
+      top(_tile('Destinataire à remplacer')),
       top(find.byKey(const Key('arrival-instructions-card'))),
       top(find.byType(VoyageurContactCard)),
       top(find.byType(PaiementCard)),
       top(find.text('Votre envoi')),
-      top(find.byType(DonyActionTile).first),
+      top(_tile('Colis et destinataire')),
     ];
     expect([...ys]..sort(), ys);
     expect(ys.toSet(), hasLength(ys.length));
@@ -391,9 +393,8 @@ void main() {
     );
   });
 
-  testWidgets('report en attente → carte sous le titre « À traiter »', (
-    tester,
-  ) async {
+  testWidgets('report en attente → tuile sous le titre « À traiter », la '
+      'carte n\'est plus dans le corps', (tester) async {
     sizeView(tester);
     await tester.pumpWidget(
       _host(
@@ -405,9 +406,14 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('À traiter'), findsOneWidget);
+    expect(find.byType(TripRescheduleCard), findsNothing);
     expect(
-      tester.getTopLeft(find.byType(TripRescheduleCard)).dy,
+      tester.getTopLeft(_tile('Trajet reporté')).dy,
       greaterThan(tester.getTopLeft(find.text('À traiter')).dy),
+    );
+    expect(
+      tester.getTopLeft(_tile('Trajet reporté')).dy,
+      lessThan(tester.getTopLeft(find.byType(VoyageurContactCard)).dy),
     );
   });
 
@@ -463,6 +469,182 @@ void main() {
     expect(find.text('À traiter'), findsOneWidget);
     expect(find.byType(DeliveryNoShowCtaCell), findsOneWidget);
     expect(tester.element(find.byType(PaiementCard)), same(before));
+  });
+
+  // ── « À traiter » : cartes d'alerte puis tuiles ───────────────────────────
+  group('« À traiter » en tuiles', () {
+    late _MockAnalyticsService analytics;
+
+    setUp(() {
+      analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerSingleton<AnalyticsService>(analytics);
+    });
+    tearDown(() async => getIt.reset());
+
+    BidModel declined({String status = 'IN_TRANSIT'}) =>
+        _bid(status: status, recipientAppStatus: 'DECLINED');
+
+    testWidgets('cartes d\'alerte d\'abord, puis la grille des tuiles, le tout '
+        'avant le voyageur et hors de « Votre envoi »', (tester) async {
+      sizeView(tester);
+      final bid = _bid(
+        status: 'IN_TRANSIT',
+        recipientAppStatus: 'DECLINED',
+        reschedule: _reschedule(pending: true),
+        departureAt: DateTime.now().subtract(const Duration(days: 1)),
+      );
+
+      await tester.pumpWidget(
+        _host(bid, cancellationBloc, conversationOpenBloc),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      double top(Finder f) => tester.getTopLeft(f).dy;
+      expect(find.text('À traiter'), findsOneWidget);
+      final ys = [
+        top(find.text('À traiter')),
+        top(find.byType(DeliveryNoShowCtaCell)),
+        top(_tile('Trajet reporté')),
+        top(find.byType(VoyageurContactCard)),
+        top(find.text('Votre envoi')),
+      ];
+      expect([...ys]..sort(), ys);
+      // Report puis destinataire, sur la même ligne de la grille.
+      expect(
+        top(_tile('Destinataire à remplacer')),
+        top(_tile('Trajet reporté')),
+      );
+      expect(
+        tester.getTopLeft(_tile('Destinataire à remplacer')).dx,
+        greaterThan(tester.getTopLeft(_tile('Trajet reporté')).dx),
+      );
+    });
+
+    testWidgets('tuile : pastille ambre « Réponse attendue » et résumé court', (
+      tester,
+    ) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(declined(), cancellationBloc, conversationOpenBloc),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      final badge = tester.widget<ToolStatusBadge>(
+        find.descendant(
+          of: _tile('Destinataire à remplacer'),
+          matching: find.byType(ToolStatusBadge),
+        ),
+      );
+      expect(badge.tone, ToolStatusTone.news);
+      expect(badge.label, 'Réponse attendue');
+      expect(
+        find.descendant(
+          of: _tile('Destinataire à remplacer'),
+          matching: find.text('A refusé le colis'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('toucher la tuile ouvre son sheet et le compte', (
+      tester,
+    ) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(reschedule: _reschedule(pending: true)),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      await tester.tap(_tile('Trajet reporté'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('donyBottomSheetFooter')),
+          matching: find.byKey(const Key('reschedule-keep')),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(TripRescheduleCard), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidDetailTileOpened,
+          properties: {
+            'tile': 'reschedule',
+            'role': 'sender',
+            'source': 'tile',
+          },
+        ),
+      ).called(1);
+    });
+
+    testWidgets('mesure d\'affichage : une fois par colis et statut, malgré '
+        'les relevés', (tester) async {
+      sizeView(tester);
+      for (var i = 0; i < 3; i++) {
+        await tester.pumpWidget(
+          _host(declined(), cancellationBloc, conversationOpenBloc),
+        );
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+      await tester.pump(const Duration(seconds: 1));
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidDetailTodoTileShown,
+          properties: {
+            'tile': 'recipient',
+            'role': 'sender',
+            'status': 'IN_TRANSIT',
+          },
+        ),
+      ).called(1);
+
+      // Le colis change de statut : la tuile est de nouveau mesurée.
+      await tester.pumpWidget(
+        _host(
+          declined(status: 'ARRIVED'),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidDetailTodoTileShown,
+          properties: {
+            'tile': 'recipient',
+            'role': 'sender',
+            'status': 'ARRIVED',
+          },
+        ),
+      ).called(1);
+    });
+
+    testWidgets('sans demande à traiter : aucune mesure de tuile', (
+      tester,
+    ) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(_bid(), cancellationBloc, conversationOpenBloc),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidDetailTodoTileShown,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
   });
 
   // ── Teintes, pastilles et résumés des tuiles ──────────────────────────────
@@ -676,7 +858,7 @@ void main() {
   });
 
   // ── Destinataire qui a refusé : « À traiter », pas de tuile Prévenir ────────
-  testWidgets('destinataire en refus → carte « Destinataire à remplacer » sous '
+  testWidgets('destinataire en refus → tuile « Destinataire à remplacer » sous '
       'À traiter, sans tuile Prévenir', (tester) async {
     sizeView(tester);
     final bid = _bid(status: 'IN_TRANSIT', recipientAppStatus: 'DECLINED');
@@ -685,9 +867,9 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('À traiter'), findsOneWidget);
-    expect(find.byType(RecipientDeclinedCard), findsOneWidget);
+    expect(find.byType(RecipientDeclinedBody), findsNothing);
     expect(
-      tester.getTopLeft(find.byType(RecipientDeclinedCard)).dy,
+      tester.getTopLeft(_tile('Destinataire à remplacer')).dy,
       greaterThan(tester.getTopLeft(find.text('À traiter')).dy),
     );
     expect(_tile('Prévenir Fatou'), findsNothing);

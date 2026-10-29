@@ -117,7 +117,7 @@ Widget? _stickyBottomFor(
       (sheetContext, current) => DonyButton(
         label: l.travelerTrackingOpenTimeline,
         variant: DonyButtonVariant.secondary,
-        onPressed: () => _closeThen(sheetContext, screenContext, () {
+        onPressed: () => closeTileSheetThen(sheetContext, screenContext, () {
           _logTimelineOpened(current);
           openSenderTrackingTimeline(screenContext, current);
         }),
@@ -131,7 +131,7 @@ Widget? _stickyBottomFor(
                       label: l.amendmentEntryButton,
                       iconAsset: 'plus',
                       variant: DonyButtonVariant.secondary,
-                      onPressed: () => _closeThen(
+                      onPressed: () => closeTileSheetThen(
                         sheetContext,
                         screenContext,
                         () => unawaited(
@@ -146,8 +146,9 @@ Widget? _stickyBottomFor(
   };
 }
 
-/// Ferme le sheet, puis lance [action] si l'écran est toujours là.
-void _closeThen(
+/// Ferme le sheet, puis lance [action] si l'écran est toujours là. Sert aussi
+/// aux sheets des tuiles « À traiter » (`openSenderTodoSheet`).
+void closeTileSheetThen(
   BuildContext sheetContext,
   BuildContext screenContext,
   VoidCallback action,

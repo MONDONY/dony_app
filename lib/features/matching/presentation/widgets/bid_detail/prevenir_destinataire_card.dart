@@ -9,9 +9,7 @@ import 'package:dony/core/utils/contact_links.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
-import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
@@ -76,7 +74,7 @@ abstract final class PrevenirDestinataire {
       bid.recipientAppStatus != 'DECLINED';
 
   /// Le destinataire a refusé et l'encart devient « Destinataire à remplacer »
-  /// ([RecipientDeclinedCard]) : refus encore modifiable, ou lien de suivi
+  /// ([RecipientDeclinedBody]) : refus encore modifiable, ou lien de suivi
   /// présent sur un colis non remis.
   static bool showsDeclined(BidModel bid) =>
       bid.recipientAppStatus == 'DECLINED' &&
@@ -210,15 +208,16 @@ class PrevenirDestinataireBody extends StatelessWidget {
   }
 }
 
-/// Encart « Destinataire à remplacer » (vue expéditeur) : le destinataire a
-/// refusé le colis ou s'en est retiré (`recipientAppStatus == DECLINED`). Le
-/// bandeau orange reste neutre (« Ce destinataire a refusé le colis. »), dit
-/// si le voyageur demande un autre destinataire
-/// (`recipientReplacementRequestedAt`), et l'action principale ouvre la
-/// feuille « Modifier le destinataire », comme le bouton « Modifier » de la
-/// carte « Colis & destinataire ».
-class RecipientDeclinedCard extends StatelessWidget {
-  const RecipientDeclinedCard({super.key, required this.bid});
+/// Contenu de « Destinataire à remplacer » (vue expéditeur), posé dans le
+/// sheet de la tuile « À traiter » : le destinataire a refusé le colis ou s'en
+/// est retiré (`recipientAppStatus == DECLINED`). Le bandeau orange reste
+/// neutre (« Ce destinataire a refusé le colis. ») et dit si le voyageur
+/// demande un autre destinataire (`recipientReplacementRequestedAt`). Sans
+/// cadre ni bouton : « Désigner un autre destinataire » vit dans le pied du
+/// sheet et ouvre la feuille « Modifier le destinataire », comme le bouton
+/// « Modifier » de la carte « Colis & destinataire ».
+class RecipientDeclinedBody extends StatelessWidget {
+  const RecipientDeclinedBody({super.key, required this.bid});
 
   final BidModel bid;
 
@@ -229,43 +228,33 @@ class RecipientDeclinedCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final requested = bid.recipientReplacementRequestedAt != null;
 
-    return DetailCard(
+    return Column(
       key: const Key('recipient-declined-sender'),
-      title: l.recipientDeclinedSenderTitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _RecipientAppNotice(
-            key: const Key('recipient-app-declined'),
-            iconAsset: 'triangle-alert',
-            color: cs.warning,
-            text: l.recipientAppDeclined,
-            detail: requested ? l.recipientReplacementRequestedSender : null,
-            detailKey: const Key('recipient-replacement-requested'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _RecipientAppNotice(
+          key: const Key('recipient-app-declined'),
+          iconAsset: 'triangle-alert',
+          color: cs.warning,
+          text: l.recipientAppDeclined,
+          detail: requested ? l.recipientReplacementRequestedSender : null,
+          detailKey: const Key('recipient-replacement-requested'),
+        ),
+        if (bid.canChangeRecipient) ...[
+          const SizedBox(height: DonySpacing.md),
+          Text(
+            l.recipientDeclinedSenderBody,
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
-          if (bid.canChangeRecipient) ...[
-            const SizedBox(height: DonySpacing.md),
-            Text(
-              l.recipientDeclinedSenderBody,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: DonySpacing.md),
-            DonyButton(
-              key: const Key('recipient-declined-change'),
-              label: l.recipientDeclinedSenderButton,
-              iconAsset: 'user-plus',
-              onPressed: () => openRecipientChangeSheet(context, bid),
-            ),
-          ],
         ],
-      ),
+      ],
     );
   }
 }
 
 /// Ligne d'état du destinataire dans Yadony (lot 2) : il suit le colis
 /// (`CONFIRMED`), ou il a refusé le colis ou s'en est retiré (`DECLINED`,
-/// [RecipientDeclinedCard], avec la demande du voyageur en [detail]).
+/// [RecipientDeclinedBody], avec la demande du voyageur en [detail]).
 class _RecipientAppNotice extends StatelessWidget {
   const _RecipientAppNotice({
     super.key,

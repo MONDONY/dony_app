@@ -1,0 +1,208 @@
+import 'dart:async';
+
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/live_bid.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tile_sheets.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_todo_tiles.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
+import 'package:dony/l10n/l10n.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+/// Ouvre le bottom sheet de la tuile « À traiter » [tile] pour [bid] (fiche
+/// colis, vue expéditeur) et compte l'ouverture (`bid_detail_tile_opened`).
+///
+/// Comme [openSenderTileSheet] : le sheet s'ouvre sur le navigateur racine, les
+/// BLoCs de l'écran y sont reposés par le `wrapper` (`BidBloc` pour suivre le
+/// colis, `CancellationBloc` pour répondre au report), contenu et pied suivent
+/// le colis courant ([LiveBid]). Les boutons vivent dans le `stickyBottom`.
+///
+/// Le sheet se ferme seul une fois la demande traitée : dès que le colis
+/// rechargé ne justifie plus [tile] ([senderTodoTilesFor]), ou au succès de
+/// l'action (report gardé ou retiré). L'écran affiche alors sa confirmation,
+/// sans sheet par-dessus. Une confirmation ouverte au-dessus du sheet n'est
+/// jamais refermée à sa place.
+///
+/// Points d'extension pour une nouvelle tuile : son contenu sans cadre dans
+/// [_SenderTodoSheetContent], son pied dans [_stickyBottomFor], ses BLoCs ou
+/// cubits d'action dans le `wrapper` (un cubit créé par `BlocProvider(create:)`
+/// y est fermé au démontage de la route, après l'animation de sortie), et sa
+/// fermeture au succès dans [_SenderTodoSheetContent] si l'action ne recharge
+/// pas le colis.
+Future<void> openSenderTodoSheet(
+  BuildContext context,
+  BidModel bid,
+  SenderTodoTile tile,
+) {
+  unawaited(
+    getItSafe<AnalyticsService>()?.logEvent(
+      AnalyticsEvents.bidDetailTileOpened,
+      properties: {'tile': tile.name, 'role': 'sender', 'source': 'tile'},
+    ),
+  );
+
+  final bidBloc = _maybeRead<BidBloc>(context);
+  final cancellationBloc = _maybeRead<CancellationBloc>(context);
+  final live = bidBloc != null;
+
+  return DonyBottomSheet.show<void>(
+    context,
+    title: senderTodoTitle(context.l10n, tile),
+    analyticsName: 'bid-detail/todo-${tile.name}',
+    wrapper: (bidBloc == null && cancellationBloc == null)
+        ? null
+        : (content) => MultiBlocProvider(
+            providers: [
+              if (bidBloc != null) BlocProvider<BidBloc>.value(value: bidBloc),
+              if (cancellationBloc != null)
+                BlocProvider<CancellationBloc>.value(value: cancellationBloc),
+            ],
+            child: content,
+          ),
+    stickyBottom: _stickyBottomFor(
+      tile,
+      context,
+      bid,
+      live: live,
+      canDecide: cancellationBloc != null,
+    ),
+    child: _SenderTodoSheetContent(
+      bid: bid,
+      tile: tile,
+      live: live,
+      closesOnDecision: cancellationBloc != null,
+    ),
+  );
+}
+
+T? _maybeRead<T>(BuildContext context) {
+  try {
+    return context.read<T>();
+  } on ProviderNotFoundException {
+    return null;
+  }
+}
+
+/// Pied du sheet de [tile] : les boutons de la carte, qui suivent le colis
+/// courant et disparaissent quand la demande ne réclame plus de réponse.
+/// `null` quand l'action est impossible faute de BLoC à l'écran.
+Widget? _stickyBottomFor(
+  SenderTodoTile tile,
+  BuildContext screenContext,
+  BidModel bid, {
+  required bool live,
+  required bool canDecide,
+}) {
+  final l = screenContext.l10n;
+  return switch (tile) {
+    // Bouton simple : ferme ce sheet, puis ouvre « Modifier le destinataire »
+    // avec le contexte de l'écran (rechargement et confirmation y vivent).
+    SenderTodoTile.recipient => LiveBid(
+      bid: bid,
+      live: live,
+      builder: (sheetContext, current) => current.canChangeRecipient
+          ? DonyButton(
+              key: const Key('recipient-declined-change'),
+              // Sans icône : « Désigner un autre destinataire » rétrécissait
+              // en français à 360 dp et grand texte (× 1,3).
+              label: l.recipientDeclinedSenderButton,
+              onPressed: () => closeTileSheetThen(
+                sheetContext,
+                screenContext,
+                () =>
+                    unawaited(openRecipientChangeSheet(screenContext, current)),
+              ),
+            )
+          : const SizedBox.shrink(),
+    ),
+    SenderTodoTile.reschedule =>
+      canDecide
+          ? LiveBid(
+              bid: bid,
+              live: live,
+              builder: (_, current) => TripRescheduleCard.needsReply(current)
+                  ? TripRescheduleDecisionButtons(bid: current)
+                  : const SizedBox.shrink(),
+            )
+          : null,
+  };
+}
+
+/// Contenu du sheet : la carte sans cadre, sur le colis courant, et les
+/// écouteurs qui referment le sheet une fois la demande traitée.
+class _SenderTodoSheetContent extends StatelessWidget {
+  const _SenderTodoSheetContent({
+    required this.bid,
+    required this.tile,
+    required this.live,
+    required this.closesOnDecision,
+  });
+
+  final BidModel bid;
+  final SenderTodoTile tile;
+  final bool live;
+
+  /// Le `CancellationBloc` de l'écran est là : le report gardé ou retiré
+  /// referme le sheet sans attendre le rechargement du colis.
+  final bool closesOnDecision;
+
+  /// Ferme le sheet s'il est au premier plan : une confirmation ouverte
+  /// par-dessus (retrait du report) n'est jamais refermée à sa place.
+  static void _closeIfOnTop(BuildContext context) {
+    final route = ModalRoute.of(context);
+    if (route != null && route.isCurrent) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget content = LiveBid(
+      bid: bid,
+      live: live,
+      builder: (_, current) => switch (tile) {
+        SenderTodoTile.recipient => RecipientDeclinedBody(bid: current),
+        // Le colis rechargé peut perdre son report pendant l'animation de
+        // sortie : la carte garde alors le dernier report connu.
+        SenderTodoTile.reschedule => TripRescheduleCard(
+          bid: TripRescheduleCard.shouldShow(current) ? current : bid,
+          isSender: true,
+          framed: false,
+        ),
+      },
+    );
+
+    if (live) {
+      content = BlocListener<BidBloc, BidState>(
+        listenWhen: (_, state) =>
+            state is BidDetailLoaded && state.bid.id == bid.id,
+        listener: (context, state) {
+          final current = (state as BidDetailLoaded).bid;
+          if (!senderTodoTilesFor(current).contains(tile)) {
+            _closeIfOnTop(context);
+          }
+        },
+        child: content,
+      );
+    }
+
+    if (tile == SenderTodoTile.reschedule && closesOnDecision) {
+      content = BlocListener<CancellationBloc, CancellationState>(
+        listenWhen: (_, state) =>
+            state is RescheduleKept || state is RescheduleWithdrawn,
+        listener: (context, _) => _closeIfOnTop(context),
+        child: content,
+      );
+    }
+
+    return content;
+  }
+}

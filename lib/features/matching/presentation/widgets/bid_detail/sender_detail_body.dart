@@ -14,7 +14,10 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tile_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tiles.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_todo_sheets.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_todo_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
@@ -26,8 +29,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 /// Corps de l'écran « Détail d'envoi » (vue expéditeur).
 ///
-/// Ordre : billet de colis ; « À traiter » (cartes qui attendent une réponse,
-/// seulement s'il y en a) ; carte voyageur ; carte paiement ; grille de tuiles
+/// Ordre : billet de colis ; « À traiter » (seulement s'il y a quelque chose :
+/// cartes d'alerte, puis grille des tuiles des demandes qui attendent une
+/// réponse, chacune ouvrant son bottom sheet par [openSenderTodoSheet]) ;
+/// informations (supplément, modification ou report sans réponse attendue,
+/// consignes de retrait) ; carte voyageur ; carte paiement ; grille de tuiles
 /// « Votre envoi » (Prévenir, Suivi ou Lieux, Colis et destinataire, Plus de
 /// détails), chacune ouvrant un bottom sheet ([openSenderTileSheet]) ; cellule
 /// « le voyageur ne livre pas » ; badge d'évaluation si déjà notée.
@@ -122,6 +128,10 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
   /// Encart de la modification, cible de [SenderDetailBody.focusAmendment].
   final _amendmentKey = GlobalKey();
   bool _amendmentFocused = false;
+
+  /// Mesure d'affichage des tuiles « À traiter », une fois par colis, tuile
+  /// et statut pour cet écran.
+  final _todoViews = TodoTileViewLog();
 
   @override
   void dispose() {
@@ -227,6 +237,45 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     );
   }
 
+  /// Tuile de la section « À traiter » : pastille ambre, résumé de ce qui est
+  /// attendu. Le tap ouvre le sheet avec le contexte de ce `State`, comme
+  /// [_tileFor] : la tuile disparaît dès que la demande est traitée.
+  Widget _todoTileFor(SenderTodoTile tile) {
+    final bid = widget.bid;
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final iconName = switch (tile) {
+      SenderTodoTile.reschedule => 'calendar-sync',
+      SenderTodoTile.recipient => 'user-plus',
+    };
+    return DonyActionTile(
+      key: Key('sender-todo-${tile.name}'),
+      iconName: iconName,
+      label: senderTodoTitle(l, tile),
+      subtitle: senderTodoSummary(l, bid, tile),
+      color: cs.primary,
+      badge: _badge(l.senderTodoBadge, ToolStatusTone.news),
+      onTap: () => unawaited(openSenderTodoSheet(context, bid, tile)),
+    );
+  }
+
+  /// Compte l'affichage des tuiles « À traiter » après l'image, une seule fois
+  /// par colis, tuile et statut ([TodoTileViewLog]).
+  void _logTodoShown(List<SenderTodoTile> tiles) {
+    if (tiles.isEmpty) return;
+    final bid = widget.bid;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      for (final tile in tiles) {
+        _todoViews.logOnce(
+          bidId: bid.id,
+          tile: tile.name,
+          shown: senderTodoShown(tile, bid),
+        );
+      }
+    });
+  }
+
   Widget _badge(String label, ToolStatusTone tone) => ToolStatusBadge(
     ready: tone == ToolStatusTone.ready,
     tone: tone,
@@ -258,22 +307,25 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     final amendmentReply =
         amendment != null && AmendmentSenderCard.needsReply(bid);
 
-    final reschedule = TripRescheduleCard.shouldShow(bid)
+    // Report : tuile « À traiter » tant que la décision est ouverte, sinon
+    // carte d'information sans titre.
+    final reschedule =
+        TripRescheduleCard.shouldShow(bid) &&
+            !TripRescheduleCard.needsReply(bid)
         ? TripRescheduleCard(bid: bid, isSender: true)
         : null;
-    final rescheduleReply =
-        reschedule != null && TripRescheduleCard.needsReply(bid);
 
-    // « À traiter » ne réunit que ce qui attend une réponse ou une action.
+    // Demandes qui attendent une réponse : une tuile chacune (report,
+    // destinataire à remplacer), sous les cartes d'alerte.
+    final todoTiles = senderTodoTilesFor(bid);
+    _logTodoShown(todoTiles);
+
+    // « À traiter » ne réunit que ce qui attend une réponse ou une action :
+    // les cartes d'alerte, puis la grille des tuiles.
     final actions = <Widget>[
       if (SenderHeroCard.hasAction(bid)) SenderHeroCard(bid: bid),
       if (supplementReply) supplement,
       if (amendmentReply) amendment,
-      if (rescheduleReply) reschedule,
-      // Le destinataire a refusé : renvoyer le message n'aurait pas de sens,
-      // il faut en désigner un autre.
-      if (PrevenirDestinataire.showsDeclined(bid))
-        RecipientDeclinedCard(bid: bid),
       // Destinataire absent signalé par le voyageur (FLUTTER-E2) : nouveau
       // rendez-vous, changement de destinataire, garde, colis non réclamé.
       if (DeliveryNoShowProcedureCard.shouldShow(bid, isSender: true))
@@ -282,14 +334,18 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // l'expéditeur, donc avant le voyageur et pas en bas de page.
       if (DeliveryNoShowCtaCell.shouldShow(bid))
         DeliveryNoShowCtaCell(bid: bid, isSender: true),
+      if (todoTiles.isNotEmpty)
+        DonyActionTileGrid(
+          key: const ValueKey('todo-tiles'),
+          tiles: [for (final tile in todoTiles) _todoTileFor(tile)],
+        ),
     ];
 
     final infos = <(String, Widget)>[
       if (supplement != null && !supplementReply)
         ('info-supplement', supplement),
       if (amendment != null && !amendmentReply) ('info-amendment', amendment),
-      if (reschedule != null && !rescheduleReply)
-        ('info-reschedule', reschedule),
+      if (reschedule != null) ('info-reschedule', reschedule),
       // Consignes de retrait : hors du hero, qui les masquait dès qu'une
       // contestation, une absence ou la livraison prenait la place.
       if (_activeStatuses.contains(status) &&
