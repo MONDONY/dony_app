@@ -817,4 +817,33 @@ void main() {
       expect(find.text('End it'), findsOneWidget);
     });
   });
+
+  // FLUTTER-WK : le clavier ouvert par la sheet de contre-offre rétrécissait
+  // le body de l'écran posé dessous, et la colonne fixe débordait de 77 px
+  // sur un Redmi en 360 dp.
+  testWidgets('clavier ouvert à 360 dp : aucun débordement derrière la sheet', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.reset);
+
+    when(
+      () => bloc.state,
+    ).thenReturn(NegotiationLoaded(_thread(linkedTrip: _sampleLinkedTrip)));
+    await tester.pumpWidget(wrap());
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    final scaffold = tester.widget<Scaffold>(
+      find
+          .descendant(
+            of: find.byType(NegotiationThreadScreen),
+            matching: find.byType(Scaffold),
+          )
+          .first,
+    );
+    expect(scaffold.resizeToAvoidBottomInset, isFalse);
+  });
 }

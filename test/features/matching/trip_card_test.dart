@@ -507,4 +507,49 @@ void main() {
       findsOneWidget,
     );
   });
+
+  // FLUTTER-WM : à 360 dp, « X kg vendus · Y gagnés » posé dans une Row de
+  // Text débordait de 14 px à côté du badge de statut.
+  for (final locale in const [Locale('fr'), Locale('en')]) {
+    testWidgets(
+      'terminé à 360 dp (${locale.languageCode}) : footer sur une ligne sans débordement',
+      (tester) async {
+        if (locale.languageCode == 'en') enableEnglish();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(
+          localizedApp(
+            Scaffold(
+              body: TripCard(
+                announcement: _announcement(
+                  status: 'COMPLETED',
+                  departureCity: 'Clermont-Ferrand',
+                  arrivalCity: 'Ouagadougou',
+                  totalKg: 23,
+                  availableKg: 0,
+                  pricePerKg: 9999,
+                  currency: 'XOF',
+                ),
+                onTap: () {},
+                index: 0,
+              ),
+            ),
+            locale: locale,
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(tester.takeException(), isNull);
+        final footer = find.textContaining(
+          locale.languageCode == 'en' ? 'sold · ' : 'vendus · ',
+        );
+        expect(footer, findsOneWidget);
+        final text = tester.widget<Text>(footer);
+        expect(text.maxLines, 1);
+        expect(text.overflow, TextOverflow.ellipsis);
+      },
+    );
+  }
 }

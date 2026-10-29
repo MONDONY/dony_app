@@ -581,37 +581,27 @@ class _PastCardContent extends StatelessWidget {
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: DonySpacing.xs),
-                // Condensed footer
-                Row(
-                  children: [
-                    Text(
-                      announcement.isKgFree
-                          ? l.tripKgFree
-                          : l.listingSoldLabel(kg(soldKg)),
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                // Condensed footer : un seul texte, coupé par des points de
+                // suspension. Une Row de Text débordait à 360 dp à côté du
+                // badge de statut (FLUTTER-WM).
+                Text(
+                  [
+                    if (announcement.isKgFree)
+                      l.tripKgFree
+                    else
+                      l.listingSoldLabel(kg(soldKg)),
                     if (!announcement.isKgFree &&
                         isCompleted &&
                         soldKg > 0 &&
-                        earned != null) ...[
-                      Text(
-                        ' · ',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                      Text(
-                        l.listingEarnedLabel(price(earned)),
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ],
+                        earned != null)
+                      l.listingEarnedLabel(price(earned)),
+                  ].join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
