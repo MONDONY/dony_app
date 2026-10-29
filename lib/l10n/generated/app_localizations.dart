@@ -11838,6 +11838,12 @@ abstract class AppLocalizations {
   /// **'Une absence à la livraison a été signalée sur cet envoi. Vous pouvez contester si ce signalement est erroné.'**
   String get bidDetailDeliveryNoShowAlertSubtitle;
 
+  /// _DeliveryNoShowHero, sous-titre côté adversaire quand le signalement est encore ouvert et que le serveur renvoie l'échéance de contestation (bid.deliveryNoShowContestationDeadline, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une absence à la livraison a été signalée sur cet envoi. Vous pouvez contester jusqu\'au {date} à {time} si ce signalement est erroné.'**
+  String bidDetailDeliveryNoShowAlertSubtitleUntil(String date, String time);
+
   /// _DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)
   ///
   /// In fr, this message translates to:

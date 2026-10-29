@@ -6965,6 +6965,20 @@
   "@bidDetailDeliveryNoShowAlertSubtitle": {
     "description": "_DeliveryNoShowHero, sous-titre cote adversaire quand le signalement est encore ouvert (sender_hero_card.dart, traveler_hero_card.dart)"
   },
+  "bidDetailDeliveryNoShowAlertSubtitleUntil": "Une absence à la livraison a été signalée sur cet envoi. Vous pouvez contester jusqu'au {date} à {time} si ce signalement est erroné.",
+  "@bidDetailDeliveryNoShowAlertSubtitleUntil": {
+    "description": "_DeliveryNoShowHero, sous-titre côté adversaire quand le signalement est encore ouvert et que le serveur renvoie l'échéance de contestation (bid.deliveryNoShowContestationDeadline, traveler_hero_card.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "lun. 28 sept."
+      },
+      "time": {
+        "type": "String",
+        "example": "14:30"
+      }
+    }
+  },
   "bidDetailDeliveryNoShowContestButton": "Contester ce signalement",
   "@bidDetailDeliveryNoShowContestButton": {
     "description": "_DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)"

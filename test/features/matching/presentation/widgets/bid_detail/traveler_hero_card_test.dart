@@ -5,9 +5,11 @@ import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockCancelBloc extends MockBloc<CancellationEvent, CancellationState>
@@ -570,6 +572,102 @@ void main() {
       expect(find.text('Contester ce signalement'), findsNothing);
     },
   );
+
+  // Délai de contestation de l'absence à la livraison : quand le serveur le
+  // sert, le héros « Une absence est signalée » le dit ; sinon texte d'avant.
+  group('absence à la livraison : délai de contestation', () {
+    BidModel deliveryBid({
+      DateTime? deadline,
+      String status = 'PENDING_CONFIRMATION',
+      bool reportedByTraveler = false,
+    }) => BidModel(
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      weightKg: 5,
+      status: 'IN_TRANSIT',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+      deliveryNoShowStatus: status,
+      deliveryNoShowReportedByTraveler: reportedByTraveler,
+      deliveryNoShowContestationDeadline: deadline,
+    );
+
+    testWidgets('adversaire + échéance → « contester jusqu\'au … à … »', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        deliveryBid(deadline: DateTime.now().add(const Duration(hours: 20))),
+      );
+      expect(find.textContaining('Une absence est signalée'), findsOneWidget);
+      expect(find.textContaining('Vous pouvez contester jusqu\'au '), findsOne);
+      expect(find.textContaining(' à '), findsWidgets);
+      expect(find.textContaining('si ce signalement est erroné'), findsOne);
+      expect(find.text('Contester ce signalement'), findsOneWidget);
+    });
+
+    testWidgets('adversaire sans échéance → texte d\'avant', (tester) async {
+      await _pump(tester, deliveryBid());
+      expect(
+        find.textContaining('Vous pouvez contester si ce signalement est'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('jusqu\'au'), findsNothing);
+    });
+
+    testWidgets('contestation déjà envoyée : pas de délai', (tester) async {
+      await _pump(
+        tester,
+        deliveryBid(
+          status: 'CONTESTED',
+          deadline: DateTime.now().add(const Duration(hours: 20)),
+        ),
+      );
+      expect(find.textContaining('Contestation envoyée'), findsOneWidget);
+      expect(find.textContaining('jusqu\'au'), findsNothing);
+    });
+
+    testWidgets('auteur du signalement : texte inchangé', (tester) async {
+      await _pump(
+        tester,
+        deliveryBid(
+          reportedByTraveler: true,
+          deadline: DateTime.now().add(const Duration(hours: 20)),
+        ),
+      );
+      expect(find.textContaining('Absence signalée'), findsOneWidget);
+      expect(find.textContaining('jusqu\'au'), findsNothing);
+    });
+
+    testWidgets('en anglais : « contest until … at … »', (tester) async {
+      final cancel = _MockCancelBloc();
+      when(() => cancel.state).thenReturn(CancellationInitial());
+      await initializeDateFormatting('en');
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          locale: AppL10n.en,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: BlocProvider<CancellationBloc>.value(
+              value: cancel,
+              child: TravelerHeroCard(
+                bid: deliveryBid(
+                  deadline: DateTime.now().add(const Duration(hours: 20)),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.textContaining('You can contest it until '), findsOneWidget);
+      expect(find.textContaining(' at '), findsWidgets);
+      expect(find.text('Contest this report'), findsOneWidget);
+    });
+  });
 
   testWidgets(
     'tap "Contester ce signalement" → DeliveryNoShowContestRequested émis',

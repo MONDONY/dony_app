@@ -2590,6 +2590,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDetailDeliveryNoShowContestSentSubtitle,
   'bidDetailDeliveryNoShowAlertSubtitle': (l) =>
       l.bidDetailDeliveryNoShowAlertSubtitle,
+  'bidDetailDeliveryNoShowAlertSubtitleUntil': (l) =>
+      l.bidDetailDeliveryNoShowAlertSubtitleUntil(
+        placeholderMarker('date'),
+        placeholderMarker('time'),
+      ),
   'bidDetailDeliveryNoShowContestButton': (l) =>
       l.bidDetailDeliveryNoShowContestButton,
   'bidDetailSenderPendingSubtitle': (l) => l.bidDetailSenderPendingSubtitle,
@@ -8201,6 +8206,7 @@ const textParameters = <String, List<String>>{
   'requestPublicCardOnlyWarningResidenceCountry': ['country'],
   'negotiationCardRoundShortLabel': ['timeAgo'],
   'bidDetailUntil': ['date'],
+  'bidDetailDeliveryNoShowAlertSubtitleUntil': ['date', 'time'],
   'bidDetailSenderAwaitingPaymentSubtitle': ['amount'],
   'bidDetailSenderEscrowedSubtitle': ['amount'],
   'bidDetailSenderHandedOverSubtitleWithDate': ['date'],

@@ -3457,6 +3457,7 @@
   "@bidDetailDeliveryNoShowAlertSubtitle": {
     "description": "_DeliveryNoShowHero, sous-titre cote adversaire quand le signalement est encore ouvert (sender_hero_card.dart, traveler_hero_card.dart)"
   },
+  "bidDetailDeliveryNoShowAlertSubtitleUntil": "A delivery no-show has been reported on this shipment. You can contest it until {date} at {time} if this report is wrong.",
   "bidDetailDeliveryNoShowContestButton": "Contest this report",
   "@bidDetailDeliveryNoShowContestButton": {
     "description": "_DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)"

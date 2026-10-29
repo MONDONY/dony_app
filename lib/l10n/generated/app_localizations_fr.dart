@@ -7171,6 +7171,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une absence à la livraison a été signalée sur cet envoi. Vous pouvez contester si ce signalement est erroné.';
 
   @override
+  String bidDetailDeliveryNoShowAlertSubtitleUntil(String date, String time) {
+    return 'Une absence à la livraison a été signalée sur cet envoi. Vous pouvez contester jusqu\'au $date à $time si ce signalement est erroné.';
+  }
+
+  @override
   String get bidDetailDeliveryNoShowContestButton => 'Contester ce signalement';
 
   @override

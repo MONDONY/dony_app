@@ -7128,6 +7128,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'A delivery no-show has been reported on this shipment. You can contest it if this report is wrong.';
 
   @override
+  String bidDetailDeliveryNoShowAlertSubtitleUntil(String date, String time) {
+    return 'A delivery no-show has been reported on this shipment. You can contest it until $date at $time if this report is wrong.';
+  }
+
+  @override
   String get bidDetailDeliveryNoShowContestButton => 'Contest this report';
 
   @override
