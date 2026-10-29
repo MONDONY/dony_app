@@ -7710,7 +7710,7 @@
   },
   "bidDetailContactSenderLabel": "Contacter l'expéditeur",
   "@bidDetailContactSenderLabel": {
-    "description": "Tuile d'options voyageur : contacter l'expéditeur (traveler_options_sheet.dart)"
+    "description": "Contacter l'expéditeur : tuile d'options voyageur (traveler_options_sheet.dart) et nom annoncé du bouton rond de la carte Expéditeur (expediteur_contact_card.dart)"
   },
   "bidDetailContactSenderSubtitle": "Envoyer un message à l'expéditeur",
   "@bidDetailContactSenderSubtitle": {
@@ -8205,14 +8205,6 @@
   "bidDetailDescriptionLabel": "Description",
   "@bidDetailDescriptionLabel": {
     "description": "Clé dédiée (Ruling R40) — remplace requestDescriptionLabel dans colis_destinataire_card.dart - identique en anglais"
-  },
-  "bidDetailSenderCallSemanticLabel": "Appeler",
-  "@bidDetailSenderCallSemanticLabel": {
-    "description": "Clé dédiée (Ruling R40) — remplace voyageurCardCallSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)"
-  },
-  "bidDetailSenderOpenChatSemanticLabel": "Ouvrir la discussion",
-  "@bidDetailSenderOpenChatSemanticLabel": {
-    "description": "Clé dédiée (Ruling R40) — remplace voyageurCardOpenChatSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)"
   },
   "bidDetailCopyTrackingLinkButton": "Copier le lien",
   "@bidDetailCopyTrackingLinkButton": {

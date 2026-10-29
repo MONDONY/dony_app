@@ -4189,8 +4189,6 @@
   "bidDetailRecipientLabel": "Recipient",
   "bidDetailPhoneLabel": "Phone",
   "bidDetailDescriptionLabel": "Description",
-  "bidDetailSenderCallSemanticLabel": "Call",
-  "bidDetailSenderOpenChatSemanticLabel": "Open the conversation",
   "bidDetailCopyTrackingLinkButton": "Copy the link",
   "bidDetailTrackingLinkCopiedMessage": "Link copied",
   "bidDetailAcceptRequestButton": "Accept",

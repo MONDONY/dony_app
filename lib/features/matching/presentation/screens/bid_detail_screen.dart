@@ -17,7 +17,6 @@ import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
@@ -85,7 +84,6 @@ class BidDetailScreen extends StatelessWidget {
         BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
         BlocProvider(create: (_) => getIt<TrackingBloc>()),
         BlocProvider(create: (_) => getIt<ConversationOpenBloc>()),
-        BlocProvider(create: (_) => getIt<ContactRevealBloc>()),
         BlocProvider(create: (_) => getIt<RatingBloc>()),
         BlocProvider(create: (_) => getIt<CancellationBloc>()),
       ],

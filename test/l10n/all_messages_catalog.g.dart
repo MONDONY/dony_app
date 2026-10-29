@@ -2955,9 +2955,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailRecipientLabel': (l) => l.bidDetailRecipientLabel,
   'bidDetailPhoneLabel': (l) => l.bidDetailPhoneLabel,
   'bidDetailDescriptionLabel': (l) => l.bidDetailDescriptionLabel,
-  'bidDetailSenderCallSemanticLabel': (l) => l.bidDetailSenderCallSemanticLabel,
-  'bidDetailSenderOpenChatSemanticLabel': (l) =>
-      l.bidDetailSenderOpenChatSemanticLabel,
   'bidDetailCopyTrackingLinkButton': (l) => l.bidDetailCopyTrackingLinkButton,
   'bidDetailTrackingLinkCopiedMessage': (l) =>
       l.bidDetailTrackingLinkCopiedMessage,

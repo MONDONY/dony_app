@@ -12780,7 +12780,7 @@ abstract class AppLocalizations {
   /// **'Disclaimer signé le {date} {time}'**
   String bidDetailDisclaimerSignedCompact(String date, String time);
 
-  /// Tuile d'options voyageur : contacter l'expéditeur (traveler_options_sheet.dart)
+  /// Contacter l'expéditeur : tuile d'options voyageur (traveler_options_sheet.dart) et nom annoncé du bouton rond de la carte Expéditeur (expediteur_contact_card.dart)
   ///
   /// In fr, this message translates to:
   /// **'Contacter l\'expéditeur'**
@@ -13391,18 +13391,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Description'**
   String get bidDetailDescriptionLabel;
-
-  /// Clé dédiée (Ruling R40) — remplace voyageurCardCallSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Appeler'**
-  String get bidDetailSenderCallSemanticLabel;
-
-  /// Clé dédiée (Ruling R40) — remplace voyageurCardOpenChatSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Ouvrir la discussion'**
-  String get bidDetailSenderOpenChatSemanticLabel;
 
   /// Clé dédiée (Ruling R40) — remplace tripPosterCopyLinkButton dans bid_details_content.dart (lien de suivi)
   ///

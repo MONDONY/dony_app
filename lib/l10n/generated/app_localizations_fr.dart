@@ -8109,12 +8109,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailDescriptionLabel => 'Description';
 
   @override
-  String get bidDetailSenderCallSemanticLabel => 'Appeler';
-
-  @override
-  String get bidDetailSenderOpenChatSemanticLabel => 'Ouvrir la discussion';
-
-  @override
   String get bidDetailCopyTrackingLinkButton => 'Copier le lien';
 
   @override

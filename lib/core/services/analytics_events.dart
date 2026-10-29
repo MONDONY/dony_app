@@ -1009,7 +1009,6 @@ abstract final class AnalyticsEvents {
   /// Le voyageur demande un nouveau code de retrait à l'expéditeur
   /// (FLUTTER-G2). Propriétés : `source` (écran) et `outcome` seulement.
   static const pickupCodeRequested = 'pickup_code_requested';
-  static const senderCallInitiated = 'sender_call_initiated';
   static const trackingLinkShared = 'tracking_link_shared';
   static const recipientNotified = 'recipient_notified';
   static const bidRecipientChanged = 'bid_recipient_changed';
