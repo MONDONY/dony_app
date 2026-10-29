@@ -7674,6 +7674,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get senderTileBadgeCurrentStep => 'Étape en cours';
 
   @override
+  String get senderTodoBadge => 'Réponse attendue';
+
+  @override
+  String get senderTodoRecipientSummary => 'A refusé le colis';
+
+  @override
+  String get senderTodoRecipientRequested => 'Le voyageur en demande un autre';
+
+  @override
+  String senderTodoRescheduleSummary(String deadline) {
+    return 'Répondre avant le $deadline';
+  }
+
+  @override
+  String get senderTodoRescheduleChoice => 'Garder ou annuler sans frais';
+
+  @override
   String get bidDetailSectionTransport => 'Votre transport';
 
   @override

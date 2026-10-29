@@ -7616,6 +7616,32 @@
   "@senderTileBadgeCurrentStep": {
     "description": "Pastille de la tuile Suivi (colis remis, en route ou arrivé) : une étape est en cours"
   },
+  "senderTodoBadge": "Réponse attendue",
+  "@senderTodoBadge": {
+    "description": "Pastille ambre des tuiles de la section « À traiter » de la fiche colis expéditeur (sender_detail_body.dart) : une réponse est attendue"
+  },
+  "senderTodoRecipientSummary": "A refusé le colis",
+  "@senderTodoRecipientSummary": {
+    "description": "Résumé court de la tuile « Destinataire à remplacer » (fiche colis expéditeur) : le destinataire a refusé le colis ou s'en est retiré"
+  },
+  "senderTodoRecipientRequested": "Le voyageur en demande un autre",
+  "@senderTodoRecipientRequested": {
+    "description": "Résumé court de la tuile « Destinataire à remplacer » quand le voyageur a demandé un autre destinataire"
+  },
+  "senderTodoRescheduleSummary": "Répondre avant le {deadline}",
+  "@senderTodoRescheduleSummary": {
+    "description": "Résumé court de la tuile « Trajet reporté » (fiche colis expéditeur) : échéance de la réponse, jour et heure de l'appareil",
+    "placeholders": {
+      "deadline": {
+        "type": "String",
+        "example": "12 oct. 18:00"
+      }
+    }
+  },
+  "senderTodoRescheduleChoice": "Garder ou annuler sans frais",
+  "@senderTodoRescheduleChoice": {
+    "description": "Résumé court de la tuile « Trajet reporté » quand l'échéance de la réponse est inconnue : les deux choix de l'expéditeur"
+  },
   "bidDetailSectionTransport": "Votre transport",
   "@bidDetailSectionTransport": {
     "description": "Titre de la grille de tuiles de la fiche colis voyageur (traveler_transport_section.dart)"

@@ -12666,6 +12666,36 @@ abstract class AppLocalizations {
   /// **'Étape en cours'**
   String get senderTileBadgeCurrentStep;
 
+  /// Pastille ambre des tuiles de la section « À traiter » de la fiche colis expéditeur (sender_detail_body.dart) : une réponse est attendue
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse attendue'**
+  String get senderTodoBadge;
+
+  /// Résumé court de la tuile « Destinataire à remplacer » (fiche colis expéditeur) : le destinataire a refusé le colis ou s'en est retiré
+  ///
+  /// In fr, this message translates to:
+  /// **'A refusé le colis'**
+  String get senderTodoRecipientSummary;
+
+  /// Résumé court de la tuile « Destinataire à remplacer » quand le voyageur a demandé un autre destinataire
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur en demande un autre'**
+  String get senderTodoRecipientRequested;
+
+  /// Résumé court de la tuile « Trajet reporté » (fiche colis expéditeur) : échéance de la réponse, jour et heure de l'appareil
+  ///
+  /// In fr, this message translates to:
+  /// **'Répondre avant le {deadline}'**
+  String senderTodoRescheduleSummary(String deadline);
+
+  /// Résumé court de la tuile « Trajet reporté » quand l'échéance de la réponse est inconnue : les deux choix de l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder ou annuler sans frais'**
+  String get senderTodoRescheduleChoice;
+
   /// Titre de la grille de tuiles de la fiche colis voyageur (traveler_transport_section.dart)
   ///
   /// In fr, this message translates to:

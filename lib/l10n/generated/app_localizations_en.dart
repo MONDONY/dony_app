@@ -7627,6 +7627,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get senderTileBadgeCurrentStep => 'Current step';
 
   @override
+  String get senderTodoBadge => 'Reply needed';
+
+  @override
+  String get senderTodoRecipientSummary => 'Declined the parcel';
+
+  @override
+  String get senderTodoRecipientRequested =>
+      'The traveler asks for another one';
+
+  @override
+  String senderTodoRescheduleSummary(String deadline) {
+    return 'Reply by $deadline';
+  }
+
+  @override
+  String get senderTodoRescheduleChoice => 'Keep it or cancel at no cost';
+
+  @override
   String get bidDetailSectionTransport => 'Your trip';
 
   @override

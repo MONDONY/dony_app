@@ -3900,6 +3900,18 @@
   "senderTilePrevenirLink": "Send the tracking link",
   "senderTileBadgeCodeReady": "Code ready",
   "senderTileBadgeCurrentStep": "Current step",
+  "senderTodoBadge": "Reply needed",
+  "senderTodoRecipientSummary": "Declined the parcel",
+  "senderTodoRecipientRequested": "The traveler asks for another one",
+  "senderTodoRescheduleSummary": "Reply by {deadline}",
+  "@senderTodoRescheduleSummary": {
+    "placeholders": {
+      "deadline": {
+        "type": "String"
+      }
+    }
+  },
+  "senderTodoRescheduleChoice": "Keep it or cancel at no cost",
   "bidDetailSectionTransport": "Your trip",
   "travelerTileBadgeTodo": "To do",
   "travelerTileLieux": "Places",

@@ -1307,8 +1307,17 @@ abstract final class AnalyticsEvents {
   /// `tile` (tuile de la grille) ou `menu`). Ni identifiant ni nom. Côté
   /// voyageur, l'entrée « Détails du colis » du menu Options ouvre la même
   /// feuille que la tuile `colis` et émet le même événement, avec la source
-  /// `menu`.
+  /// `menu`. Les tuiles « À traiter » de la vue expéditeur
+  /// (`openSenderTodoSheet`) émettent le même événement avec `tile` :
+  /// `recipient` / `reschedule`, `role: sender` et `source: tile`.
   static const bidDetailTileOpened = 'bid_detail_tile_opened';
+
+  /// Tuile de la section « À traiter » de la fiche colis affichée (une
+  /// demande attend une réponse), une fois par colis, tuile et statut du colis
+  /// pour une même instance d'écran (`TodoTileViewLog`). Propriétés `tile`
+  /// (`recipient` / `reschedule`), `role` (`sender`), `status` (statut du
+  /// colis). Ni identifiant ni nom.
+  static const bidDetailTodoTileShown = 'bid_detail_todo_tile_shown';
 
   /// Envoi silencieux de la position non fait (propriété `reason` :
   /// `no_permission` ou `no_position` seulement).
