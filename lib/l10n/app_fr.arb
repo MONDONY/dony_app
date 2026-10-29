@@ -18348,7 +18348,7 @@
   },
   "bidRescheduleTitle": "Trajet reporté",
   "@bidRescheduleTitle": {
-    "description": "Carte de report dans le suivi du colis (trip_reschedule_card.dart)"
+    "description": "Titre de la carte de report (trip_reschedule_card.dart) ; aussi titre de la tuile « À traiter » du report et de son sheet, vue expéditeur (sender_todo_tiles.dart)"
   },
   "bidRescheduleBody": "Le voyageur a reporté son trajet du {previous} au {next} ({reason}).",
   "@bidRescheduleBody": {
@@ -18394,11 +18394,11 @@
   },
   "bidRescheduleKeep": "Garder mon colis",
   "@bidRescheduleKeep": {
-    "description": "Bouton de la carte de report"
+    "description": "Bouton du pied du sheet de la tuile « Trajet reporté » de « À traiter », vue expéditeur (TripRescheduleDecisionButtons, sender_todo_sheets.dart)"
   },
   "bidRescheduleWithdraw": "Annuler sans frais",
   "@bidRescheduleWithdraw": {
-    "description": "Bouton de la carte de report"
+    "description": "Bouton du pied du sheet de la tuile « Trajet reporté » de « À traiter », vue expéditeur (TripRescheduleDecisionButtons, sender_todo_sheets.dart)"
   },
   "bidRescheduleWithdrawConfirmTitle": "Annuler votre envoi ?",
   "@bidRescheduleWithdrawConfirmTitle": {
@@ -19921,7 +19921,7 @@
   },
   "recipientDeclinedSenderTitle": "Destinataire à remplacer",
   "@recipientDeclinedSenderTitle": {
-    "description": "Vue expéditeur : titre de l'encart quand le destinataire a refusé le colis ou s'en est retiré (prevenir_destinataire_card.dart)."
+    "description": "Vue expéditeur : titre de la tuile « À traiter » et de son sheet quand le destinataire a refusé le colis ou s'en est retiré (sender_todo_tiles.dart, sender_todo_sheets.dart)."
   },
   "recipientDeclinedSenderBody": "Désignez un autre destinataire : il pourra suivre le colis et recevoir le code de retrait.",
   "@recipientDeclinedSenderBody": {
@@ -19929,7 +19929,7 @@
   },
   "recipientDeclinedSenderButton": "Désigner un autre destinataire",
   "@recipientDeclinedSenderButton": {
-    "description": "Vue expéditeur : bouton qui ouvre la feuille de changement de destinataire après un refus (prevenir_destinataire_card.dart)."
+    "description": "Vue expéditeur : bouton du pied du sheet de la tuile « Destinataire à remplacer » de « À traiter » (sender_todo_sheets.dart), qui ferme ce sheet et ouvre la feuille de changement de destinataire après un refus."
   },
   "recipientReplacementRequestedSender": "Le voyageur vous demande d'en désigner un autre.",
   "@recipientReplacementRequestedSender": {
@@ -22206,7 +22206,7 @@
   "supplementRequestSent": "Demande envoyée à l'expéditeur",
   "@supplementRequestSent": {"description": "Snackbar après une demande de supplément"},
   "supplementCardTitle": "Supplément de prix",
-  "@supplementCardTitle": {"description": "Titre de l'encart du supplément (détail d'envoi)"},
+  "@supplementCardTitle": {"description": "Titre de l'encart du supplément (détail d'envoi) ; aussi titre de la tuile « À traiter » du voyageur (frais à valider) et de son sheet (traveler_todo_tiles.dart)"},
   "supplementDeadline": "Réponse attendue avant {time}",
   "@supplementDeadline": {"description": "Échéance de réponse de l'expéditeur. {time} : heure locale", "placeholders": {"time": {"type": "String"}}},
   "supplementReasonWithItem": "Article : {label}",
@@ -22218,7 +22218,7 @@
   "supplementTravelerPaymentPending": "L'expéditeur est en train de payer",
   "@supplementTravelerPaymentPending": {"description": "Encart voyageur : paiement en cours"},
   "supplementWithdraw": "Retirer la demande",
-  "@supplementWithdraw": {"description": "Bouton secondaire de l'encart voyageur"},
+  "@supplementWithdraw": {"description": "Bouton secondaire de l'encart voyageur (demande proposée) ; aussi bouton du pied du sheet de la tuile « Supplément de prix » de « À traiter » (commission à valider) et de la confirmation du retrait"},
   "supplementWithdrawConfirmTitle": "Retirer la demande ?",
   "@supplementWithdrawConfirmTitle": {"description": "Dialogue de confirmation du retrait"},
   "supplementWithdrawConfirmMessage": "L'expéditeur est prévenu et vous pourrez scanner le colis au prix prévu.",
@@ -22374,11 +22374,11 @@
   "supplementRecapGrossCash": "Remis en espèces par l'expéditeur",
   "@supplementRecapGrossCash": {"description": "Récapitulatif voyageur, espèces : total remis par l'expéditeur"},
   "supplementTravelerCommissionPending": "Frais de service à valider",
-  "@supplementTravelerCommissionPending": {"description": "Encart voyageur : demande en attente du paiement de sa commission (espèces)"},
+  "@supplementTravelerCommissionPending": {"description": "Contenu du sheet de la tuile « Supplément de prix » (vue voyageur) : demande en attente du paiement de sa commission (espèces) ; aussi résumé de repli de la tuile quand le montant des frais est inconnu (traveler_todo_tiles.dart)"},
   "supplementTravelerCommissionPendingHelp": "Validez le paiement des frais de service pour envoyer la demande à l'expéditeur. Sans validation sous 30 minutes, elle est annulée sans frais.",
   "@supplementTravelerCommissionPendingHelp": {"description": "Encart voyageur : aide de la commission à valider"},
   "supplementCommissionConfirm": "Valider le paiement",
-  "@supplementCommissionConfirm": {"description": "Bouton de l'encart voyageur : valider la commission du supplément"},
+  "@supplementCommissionConfirm": {"description": "Bouton du pied du sheet de la tuile « Supplément de prix » de « À traiter », vue voyageur (SupplementCommissionButtons) : valider la commission du supplément"},
   "supplementCommissionConfirmedSnackbar": "Frais de service payés : demande envoyée à l'expéditeur",
   "@supplementCommissionConfirmedSnackbar": {"description": "Snackbar : commission du supplément prélevée après reprise"},
   "supplementTravelerCashCommissionHelp": "Frais de service prélevés. Ils vous sont rendus si la demande n'aboutit pas.",
@@ -22710,7 +22710,7 @@
   "amendmentGainHandoverNote": "À la remise, récupérez {amount} en espèces avant de scanner le QR du colis.",
   "@amendmentGainHandoverNote": {"description": "Note de remise côté voyageur", "placeholders": {"amount": {"type": "String"}}},
   "amendmentPaymentContextLabel": "Modification du colis",
-  "@amendmentPaymentContextLabel": {"description": "Libellé de contexte de la feuille de paiement"},
+  "@amendmentPaymentContextLabel": {"description": "Libellé de contexte de la feuille de paiement ; aussi titre de la tuile « Modification du colis » de « À traiter » (vue expéditeur) et de son sheet (sender_todo_tiles.dart)"},
   "amendmentSheetKgLabelOpen": "KILOS EN PLUS · {price}/KG",
   "@amendmentSheetKgLabelOpen": {"description": "Titre du sélecteur de kilos quand la capacité est libre. {price} : prix au kilo formaté", "placeholders": {"price": {"type": "String"}}},
   "amendmentSheetLoadFailed": "Impossible de charger les options de modification.",

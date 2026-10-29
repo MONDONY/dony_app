@@ -26581,7 +26581,7 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{Trajet reporté. Les expéditeurs sont prévenus.} =1{Trajet reporté. 1 expéditeur va confirmer son colis.} other{Trajet reporté. {count} expéditeurs vont confirmer leur colis.}}'**
   String tripRescheduledSnackbar(int count);
 
-  /// Carte de report dans le suivi du colis (trip_reschedule_card.dart)
+  /// Titre de la carte de report (trip_reschedule_card.dart) ; aussi titre de la tuile « À traiter » du report et de son sheet, vue expéditeur (sender_todo_tiles.dart)
   ///
   /// In fr, this message translates to:
   /// **'Trajet reporté'**
@@ -26611,13 +26611,13 @@ abstract class AppLocalizations {
   /// **'L\'expéditeur a jusqu\'au {deadline} pour garder ou retirer son colis.'**
   String bidRescheduleTravelerHint(String deadline);
 
-  /// Bouton de la carte de report
+  /// Bouton du pied du sheet de la tuile « Trajet reporté » de « À traiter », vue expéditeur (TripRescheduleDecisionButtons, sender_todo_sheets.dart)
   ///
   /// In fr, this message translates to:
   /// **'Garder mon colis'**
   String get bidRescheduleKeep;
 
-  /// Bouton de la carte de report
+  /// Bouton du pied du sheet de la tuile « Trajet reporté » de « À traiter », vue expéditeur (TripRescheduleDecisionButtons, sender_todo_sheets.dart)
   ///
   /// In fr, this message translates to:
   /// **'Annuler sans frais'**
@@ -28657,7 +28657,7 @@ abstract class AppLocalizations {
   /// **'Le destinataire a déjà changé ou le colis n\'est plus en cours. Le détail est mis à jour.'**
   String get recipientReplacementConflictSnackbar;
 
-  /// Vue expéditeur : titre de l'encart quand le destinataire a refusé le colis ou s'en est retiré (prevenir_destinataire_card.dart).
+  /// Vue expéditeur : titre de la tuile « À traiter » et de son sheet quand le destinataire a refusé le colis ou s'en est retiré (sender_todo_tiles.dart, sender_todo_sheets.dart).
   ///
   /// In fr, this message translates to:
   /// **'Destinataire à remplacer'**
@@ -28669,7 +28669,7 @@ abstract class AppLocalizations {
   /// **'Désignez un autre destinataire : il pourra suivre le colis et recevoir le code de retrait.'**
   String get recipientDeclinedSenderBody;
 
-  /// Vue expéditeur : bouton qui ouvre la feuille de changement de destinataire après un refus (prevenir_destinataire_card.dart).
+  /// Vue expéditeur : bouton du pied du sheet de la tuile « Destinataire à remplacer » de « À traiter » (sender_todo_sheets.dart), qui ferme ce sheet et ouvre la feuille de changement de destinataire après un refus.
   ///
   /// In fr, this message translates to:
   /// **'Désigner un autre destinataire'**
@@ -35007,7 +35007,7 @@ abstract class AppLocalizations {
   /// **'Demande envoyée à l\'expéditeur'**
   String get supplementRequestSent;
 
-  /// Titre de l'encart du supplément (détail d'envoi)
+  /// Titre de l'encart du supplément (détail d'envoi) ; aussi titre de la tuile « À traiter » du voyageur (frais à valider) et de son sheet (traveler_todo_tiles.dart)
   ///
   /// In fr, this message translates to:
   /// **'Supplément de prix'**
@@ -35043,7 +35043,7 @@ abstract class AppLocalizations {
   /// **'L\'expéditeur est en train de payer'**
   String get supplementTravelerPaymentPending;
 
-  /// Bouton secondaire de l'encart voyageur
+  /// Bouton secondaire de l'encart voyageur (demande proposée) ; aussi bouton du pied du sheet de la tuile « Supplément de prix » de « À traiter » (commission à valider) et de la confirmation du retrait
   ///
   /// In fr, this message translates to:
   /// **'Retirer la demande'**
@@ -35511,7 +35511,7 @@ abstract class AppLocalizations {
   /// **'Remis en espèces par l\'expéditeur'**
   String get supplementRecapGrossCash;
 
-  /// Encart voyageur : demande en attente du paiement de sa commission (espèces)
+  /// Contenu du sheet de la tuile « Supplément de prix » (vue voyageur) : demande en attente du paiement de sa commission (espèces) ; aussi résumé de repli de la tuile quand le montant des frais est inconnu (traveler_todo_tiles.dart)
   ///
   /// In fr, this message translates to:
   /// **'Frais de service à valider'**
@@ -35523,7 +35523,7 @@ abstract class AppLocalizations {
   /// **'Validez le paiement des frais de service pour envoyer la demande à l\'expéditeur. Sans validation sous 30 minutes, elle est annulée sans frais.'**
   String get supplementTravelerCommissionPendingHelp;
 
-  /// Bouton de l'encart voyageur : valider la commission du supplément
+  /// Bouton du pied du sheet de la tuile « Supplément de prix » de « À traiter », vue voyageur (SupplementCommissionButtons) : valider la commission du supplément
   ///
   /// In fr, this message translates to:
   /// **'Valider le paiement'**
@@ -36530,7 +36530,7 @@ abstract class AppLocalizations {
   /// **'À la remise, récupérez {amount} en espèces avant de scanner le QR du colis.'**
   String amendmentGainHandoverNote(String amount);
 
-  /// Libellé de contexte de la feuille de paiement
+  /// Libellé de contexte de la feuille de paiement ; aussi titre de la tuile « Modification du colis » de « À traiter » (vue expéditeur) et de son sheet (sender_todo_tiles.dart)
   ///
   /// In fr, this message translates to:
   /// **'Modification du colis'**
