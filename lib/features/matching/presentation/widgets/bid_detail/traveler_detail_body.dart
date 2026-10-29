@@ -39,9 +39,14 @@ import 'package:flutter_animate/flutter_animate.dart';
 /// modification portent une `GlobalKey` (cible du défilement `?action=`), qui
 /// les déplace de « À traiter » à l'information (ou l'inverse) SANS les
 /// remonter. Leur `State` est gardé, leurs cubits ne sont pas recréés et les
-/// événements `*_viewed` ne repartent pas. Seul le hero, sans clé, est remonté
-/// quand il gagne ou perd son bouton (choix assumé). Les autres sections ne
-/// bougent pas.
+/// événements `*_viewed` ne repartent pas. Le hero, sans clé, est remonté
+/// quand il gagne ou perd son bouton (choix assumé).
+///
+/// Une exception, la fin du stagger d'entrée : quand l'animation est retirée
+/// (voir plus bas), toutes les sections sauf le billet et les deux cartes à
+/// `GlobalKey` sont remontées UNE fois (le `Animate` qui les enveloppait
+/// disparaît). Sans conséquence à ce moment (cartes juste affichées, rien
+/// n'est encore saisi), et identique à la vue expéditeur.
 ///
 /// Requiert les BLoCs ambiants suivants (fournis par l'écran parent) :
 ///   - [CancellationBloc] (via [TravelerHeroCard] et la procédure
@@ -240,7 +245,8 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
 
     // Chaque section porte une clé : l'apparition ou la disparition de
     // « À traiter » ou d'une information ne remonte ni l'expéditeur, ni le
-    // gain, ni la grille.
+    // gain, ni la grille. Hors du retrait de l'animation d'entrée (une fois,
+    // voir plus bas), qui remonte les sections sans `GlobalKey`.
     final children = <(String, Widget)>[
       // index 0 — ColisBillet possède déjà son propre .animate().fadeIn().slideY()
       // en interne (colis_billet.dart). On ne lui applique PAS le stagger ici

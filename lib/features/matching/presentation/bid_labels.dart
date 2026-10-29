@@ -115,7 +115,7 @@ bool bidAllowsRecipientContact(String status) =>
 /// le voit nulle part. Même ensemble que [bidRecipientContactStatuses], mais
 /// c'est une autre règle (visibilité du numéro, décision du propriétaire) :
 /// elle reste nommée à part.
-const bidTrackingNumberTravelerStatuses = <String>{
+const _bidTrackingNumberTravelerStatuses = <String>{
   'HANDED_OVER',
   'IN_TRANSIT',
   'ARRIVED',
@@ -124,18 +124,25 @@ const bidTrackingNumberTravelerStatuses = <String>{
 };
 
 /// Numéro de suivi du colis tel que le VOYAGEUR a le droit de le voir : le
-/// numéro à partir de la remise ([bidTrackingNumberTravelerStatuses]), `null`
+/// numéro à partir de la remise ([_bidTrackingNumberTravelerStatuses]), `null`
 /// avant (demande en attente, acceptée, refusée, annulée...), et `null` si le
 /// serveur n'en a pas servi.
 ///
 /// Le back ne l'envoie déjà qu'à partir de la remise ; l'app le garantit
-/// elle-même (défense en profondeur) aux trois emplacements voyageur : bande
+/// elle-même (défense en profondeur) aux quatre emplacements voyageur : bande
 /// du talon, titre de l'écran, ligne « Numéro de suivi » de « Plus de
-/// détails ». Côté expéditeur, on lit `bid.trackingNumber` directement.
+/// détails », sujet du ticket support du bloc « annulé par l'équipe ». Côté
+/// expéditeur, on lit `bid.trackingNumber` directement.
+///
+/// Hors périmètre, protégés par le back seulement : `bid_card.dart` (liste des
+/// demandes), `suivi_track_panel.dart` (onglet Suivi) et `money_parcel_line.dart`
+/// (Mon argent) lisent encore `trackingNumber` brut.
 String? travelerVisibleTrackingNumber(BidModel bid) {
   final number = bid.trackingNumber;
   if (number == null || number.trim().isEmpty) return null;
-  return bidTrackingNumberTravelerStatuses.contains(bid.status) ? number : null;
+  return _bidTrackingNumberTravelerStatuses.contains(bid.status)
+      ? number
+      : null;
 }
 
 /// Retour en cours d'un colis annulé alors que le voyageur l'avait déjà
