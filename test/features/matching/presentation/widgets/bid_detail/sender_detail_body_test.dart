@@ -675,9 +675,9 @@ void main() {
     expect(_tile('Prévenir Fatou'), findsNothing);
   });
 
-  // ── Absence à la livraison : cellule sous les tuiles ────────────────────────
-  testWidgets('colis parti → cellule « Le voyageur ne livre pas » sous les '
-      'tuiles', (tester) async {
+  // ── Absence à la livraison : un geste attendu, avant le voyageur ──────────
+  testWidgets('colis parti → cellule « Le voyageur ne livre pas » sous « À '
+      'traiter », avant le voyageur', (tester) async {
     sizeView(tester);
     final bid = _bid(
       status: 'IN_TRANSIT',
@@ -689,9 +689,19 @@ void main() {
 
     expect(DeliveryNoShowCtaCell.shouldShow(bid), isTrue);
     expect(find.byType(DeliveryNoShowCtaCell), findsOneWidget);
+    expect(find.text('À traiter'), findsOneWidget);
+    final cellTop = tester.getTopLeft(find.byType(DeliveryNoShowCtaCell)).dy;
     expect(
-      tester.getTopLeft(find.byType(DeliveryNoShowCtaCell)).dy,
-      greaterThan(tester.getBottomLeft(find.byType(DonyActionTileGrid)).dy),
+      cellTop,
+      greaterThan(tester.getBottomLeft(find.text('À traiter')).dy),
+    );
+    expect(
+      cellTop,
+      lessThan(tester.getTopLeft(find.byType(VoyageurContactCard)).dy),
+    );
+    expect(
+      cellTop,
+      lessThan(tester.getTopLeft(find.byType(DonyActionTileGrid)).dy),
     );
   });
 

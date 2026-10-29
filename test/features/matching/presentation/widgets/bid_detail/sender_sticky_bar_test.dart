@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
@@ -53,8 +54,12 @@ BidModel _bid({
   String? cancellationNoShowStatus,
   BidMoneyBreakdown? moneyBreakdown,
   List<BidAmendment> amendments = const [],
+  AddressData? handoverAddress,
+  AddressData? deliveryAddress,
 }) {
   return BidModel(
+    handoverAddress: handoverAddress,
+    deliveryAddress: deliveryAddress,
     moneyBreakdown: moneyBreakdown,
     amendments: amendments,
     id: 'bid-test-1',
@@ -1008,6 +1013,49 @@ void main() {
       await tester.tap(find.text('Suivi du colis'));
       await tester.pump();
     });
+
+    // Le bouton du bas fait le même geste que la tuile « Suivi » de « Votre
+    // envoi » : la fenêtre du suivi, pas la frise seule.
+    testWidgets(
+      '18 bis. HANDED_OVER avec adresses → "Suivi du colis" ouvre la fenêtre '
+      '« Suivi » (comme la tuile)',
+      (tester) async {
+        final bloc = _MockBidBloc();
+        whenListen<BidState>(
+          bloc,
+          const Stream.empty(),
+          initialState: BidInitial(),
+        );
+
+        await tester.pumpWidget(
+          _host(
+            bloc,
+            _bid(
+              status: 'HANDED_OVER',
+              handoverAddress: const AddressData(
+                label: '22 Rue du Séminaire, 94550 Chevilly-Larue, France',
+                lat: 48.7667,
+                lng: 2.3508,
+              ),
+              deliveryAddress: const AddressData(
+                label: 'ACI 2000, Bamako, Mali',
+                lat: 12.6362,
+                lng: -8.0121,
+              ),
+            ),
+            paymentLoaded: true,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Suivi du colis'));
+        await tester.pumpAndSettle();
+
+        // Contenu propre à la fenêtre : son bouton de pied et ses adresses.
+        expect(find.text('Voir toutes les étapes et photos'), findsOneWidget);
+        expect(find.textContaining('Chevilly-Larue'), findsWidgets);
+      },
+    );
 
     // ── COMPLETED non noté → tap "Noter le voyageur" → onPressed called (lines 214-218)
 

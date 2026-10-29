@@ -271,6 +271,10 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // rendez-vous, changement de destinataire, garde, colis non réclamé.
       if (DeliveryNoShowProcedureCard.shouldShow(bid, isSender: true))
         DeliveryNoShowProcedureCard(bid: bid, isSender: true),
+      // Signaler l'absence (voyageur ou destinataire) : un geste attendu de
+      // l'expéditeur, donc avant le voyageur et pas en bas de page.
+      if (DeliveryNoShowCtaCell.shouldShow(bid))
+        DeliveryNoShowCtaCell(bid: bid, isSender: true),
     ];
 
     final infos = <(String, Widget)>[
@@ -315,8 +319,6 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
           ],
         ),
       ),
-      if (DeliveryNoShowCtaCell.shouldShow(bid))
-        ('noshow-cta', DeliveryNoShowCtaCell(bid: bid, isSender: true)),
       if (status == 'COMPLETED' && bid.senderHasRated)
         ('rating', const RatingDoneBadge()),
     ];

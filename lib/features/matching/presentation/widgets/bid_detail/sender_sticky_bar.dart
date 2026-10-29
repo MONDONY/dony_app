@@ -9,6 +9,8 @@ import 'package:dony/features/matching/presentation/widgets/action_bars/bid_deta
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_pay_button.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/cancel_before_payment_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tile_sheets.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_pay_button.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
@@ -309,7 +311,13 @@ class SenderStickyBar extends StatelessWidget {
         iconAsset: 'package',
         onPressed: () {
           HapticFeedback.lightImpact();
-          openSenderTrackingTimeline(context, bid);
+          // Même geste que la tuile « Suivi » de « Votre envoi » : la fenêtre
+          // du suivi. Sans tuile (ni suivi du voyageur ni adresse), la frise.
+          if (senderTilesFor(bid).contains(SenderTile.suivi)) {
+            openSenderTileSheet(context, bid, SenderTile.suivi);
+          } else {
+            openSenderTrackingTimeline(context, bid);
+          }
         },
       );
     }
