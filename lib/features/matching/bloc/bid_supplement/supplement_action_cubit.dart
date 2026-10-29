@@ -77,22 +77,24 @@ class SupplementActionCubit extends Cubit<SupplementActionState> {
     emit(const SupplementActionState(status: SupplementActionStatus.busy));
     try {
       await call();
+      // Mesuré même si l'encart s'est fermé pendant l'appel (sheet de la
+      // tuile refermé de force) : l'action est confirmée par le serveur.
+      onDone();
       if (isClosed) return;
       emit(const SupplementActionState(status: SupplementActionStatus.done));
-      onDone();
     } catch (e) {
-      if (isClosed) return;
       final error = unwrapDioError(e);
-      emit(
-        SupplementActionState(
-          status: SupplementActionStatus.failure,
-          error: error,
-        ),
-      );
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.bidSupplementActionFailed,
           properties: {'action': action, 'error_code': error.code ?? 'unknown'},
+        ),
+      );
+      if (isClosed) return;
+      emit(
+        SupplementActionState(
+          status: SupplementActionStatus.failure,
+          error: error,
         ),
       );
     }

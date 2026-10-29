@@ -464,6 +464,136 @@ void main() {
     });
   });
 
+  // Sheet refermé de force pendant l'appel (glissement) : ses cubits sont
+  // fermés avec la route, son écouteur n'est plus là. L'issue reste mesurée
+  // et le bouton relit le colis à la réponse, pour que la tuile se mette à
+  // jour sans attendre le relevé suivant.
+  group('sheet fermé pendant l\'appel', () {
+    Future<void> forceClose(WidgetTester tester) async {
+      Navigator.of(
+        tester.element(find.text('open-todo')),
+        rootNavigator: true,
+      ).pop();
+      await tester.pumpAndSettle();
+      expect(sheetTitle(), findsNothing);
+    }
+
+    testWidgets('« Valider le paiement » : issue mesurée et colis relu à la '
+        'réponse', (tester) async {
+      final pending = Completer<BidSupplement>();
+      when(
+        () => repository.confirmCommission('bid-1', 'sup-1'),
+      ).thenAnswer((_) => pending.future);
+      await openTodo(tester);
+
+      await tester.tap(confirmButton());
+      await tester.pump();
+      await forceClose(tester);
+      verifyNever(() => bidBloc.add(any()));
+
+      pending.complete(
+        _supplement(
+          BidSupplementStatus.proposed,
+          commissionStatus: SupplementCommissionStatus.charged,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.bidSupplementCommissionResumed, {
+          'outcome': 'proposed',
+        }),
+      ).called(1);
+    });
+
+    testWidgets('3DS abandonnée après fermeture : échec mesuré, colis relu', (
+      tester,
+    ) async {
+      failAuth = true;
+      final pending = Completer<BidSupplement>();
+      when(
+        () => repository.confirmCommission('bid-1', 'sup-1'),
+      ).thenAnswer((_) => pending.future);
+      await openTodo(tester);
+
+      await tester.tap(confirmButton());
+      await tester.pump();
+      await forceClose(tester);
+      pending.complete(
+        _supplement(
+          BidSupplementStatus.commissionPending,
+          clientSecret: 'pi_secret',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.bidSupplementCommissionResumed, {
+          'outcome': 'failed',
+        }),
+      ).called(1);
+    });
+
+    testWidgets('« Retirer la demande » : retrait mesuré et colis relu à la '
+        'réponse', (tester) async {
+      final pending = Completer<BidSupplement>();
+      when(
+        () => repository.withdraw('bid-1', 'sup-1'),
+      ).thenAnswer((_) => pending.future);
+      await openTodo(tester);
+
+      await tester.tap(withdrawButton());
+      await tester.pumpAndSettle();
+      await tester.tap(dialogWithdraw());
+      await tester.pump();
+      await forceClose(tester);
+      verifyNever(() => bidBloc.add(any()));
+
+      pending.complete(_supplement(BidSupplementStatus.withdrawn));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.bidSupplementWithdrawn, any()),
+      ).called(1);
+    });
+
+    testWidgets('pendant l\'appel, le retour système ne ferme pas le sheet ; '
+        'une fois la réponse arrivée, il le ferme', (tester) async {
+      final pending = Completer<BidSupplement>();
+      when(
+        () => repository.confirmCommission('bid-1', 'sup-1'),
+      ).thenAnswer((_) => pending.future);
+      await openTodo(tester);
+
+      await tester.tap(confirmButton());
+      await tester.pump();
+      // Le chargement tourne : pas de pumpAndSettle tant que l'appel dure.
+      await tester.binding.handlePopRoute();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(sheetTitle(), findsOneWidget);
+
+      // 3DS abandonnée : plus d'appel en cours, le retour ferme de nouveau.
+      failAuth = true;
+      pending.complete(
+        _supplement(
+          BidSupplementStatus.commissionPending,
+          clientSecret: 'pi_secret',
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(sheetTitle(), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(sheetTitle(), findsNothing);
+    });
+  });
+
   group('« Retirer la demande »', () {
     testWidgets('confirme, retire, puis la feuille se ferme, confirme et '
         'relit le colis', (tester) async {

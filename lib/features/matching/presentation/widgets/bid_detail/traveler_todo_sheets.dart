@@ -158,6 +158,22 @@ class _TravelerTodoSheetContent extends StatelessWidget {
       content = _CloseWhenResolved(bid: bid, tile: tile, child: content);
     }
 
+    // Pendant un appel (frais, 3DS, retrait), le retour système et le
+    // toucher du fond ne ferment pas le sheet (la réponse y est attendue) ;
+    // une fermeture forcée (glissement) reste possible, le bouton relit
+    // alors le colis à la réponse.
+    if (tile == TravelerTodoTile.supplement) {
+      final inner = content;
+      content = Builder(
+        builder: (context) {
+          final busy =
+              context.watch<SupplementCommissionCubit>().state.isBusy ||
+              context.watch<SupplementActionCubit>().state.isBusy;
+          return PopScope(canPop: !busy, child: inner);
+        },
+      );
+    }
+
     return switch (tile) {
       TravelerTodoTile.supplement => MultiBlocListener(
         listeners: [

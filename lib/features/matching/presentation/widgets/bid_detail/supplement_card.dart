@@ -168,13 +168,9 @@ class _SupplementCard extends StatelessWidget {
   void _reloadBid(BuildContext context) => _reloadBidOf(context, bid.id);
 }
 
-void _reloadBidOf(BuildContext context, String bidId) {
-  try {
-    context.read<BidBloc>().add(BidDetailRequested(bidId));
-  } on ProviderNotFoundException {
-    // Encart hors de l'écran de détail (tests) : rien à relire.
-  }
-}
+/// Encart hors de l'écran de détail (tests) : rien à relire.
+void _reloadBidOf(BuildContext context, String bidId) =>
+    _bidBlocOf(context)?.add(BidDetailRequested(bidId));
 
 class _TravelerContent extends StatelessWidget {
   const _TravelerContent({
@@ -364,7 +360,9 @@ class _TravelerContent extends StatelessWidget {
 /// « Retirer la demande » : confirmation destructive, puis
 /// [SupplementActionCubit.withdraw] (le cubit de la carte, ou celui du sheet
 /// de la tuile). Rien n'est envoyé si le bouton a disparu pendant la
-/// confirmation (colis relu entre-temps, demande déjà traitée).
+/// confirmation (colis relu entre-temps, demande déjà traitée). Bouton
+/// démonté pendant l'appel (sheet refermé de force) : son écouteur n'est plus
+/// là, le colis est relu ici à la réponse.
 Future<void> _confirmWithdraw(
   BuildContext context,
   BidModel bid,
@@ -372,6 +370,7 @@ Future<void> _confirmWithdraw(
 ) async {
   final l = context.l10n;
   final cubit = context.read<SupplementActionCubit>();
+  final bidBloc = _bidBlocOf(context);
   final confirmed = await DonyDialog.show(
     context,
     title: l.supplementWithdrawConfirmTitle,
@@ -382,6 +381,15 @@ Future<void> _confirmWithdraw(
   );
   if (confirmed != true || !context.mounted) return;
   await cubit.withdraw(bid, supplement);
+  if (!context.mounted) bidBloc?.add(BidDetailRequested(bid.id));
+}
+
+BidBloc? _bidBlocOf(BuildContext context) {
+  try {
+    return context.read<BidBloc>();
+  } on ProviderNotFoundException {
+    return null;
+  }
 }
 
 /// Espèces, demande close : ce qu'il advient de la commission du
@@ -461,6 +469,7 @@ class SupplementCommissionButtons extends StatelessWidget {
 
   Future<void> _confirm(BuildContext context) async {
     final cubit = context.read<SupplementCommissionCubit>();
+    final bidBloc = _bidBlocOf(context);
     if (!cubit.beginAuthorization()) return;
     final authenticated = await (authorize ?? defaultSupplementAuthorize)(
       context,
@@ -479,6 +488,9 @@ class SupplementCommissionButtons extends StatelessWidget {
       return;
     }
     await cubit.resume(bid, supplement);
+    // Sheet refermé de force pendant l'appel ou la 3DS : son écouteur n'est
+    // plus là pour relire le colis, la tuile resterait jusqu'au relevé.
+    if (!context.mounted) bidBloc?.add(BidDetailRequested(bid.id));
   }
 }
 
