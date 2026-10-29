@@ -330,8 +330,16 @@ void main() {
     });
 
     // « Supprimer cette demande » a quitté le footer : le menu ⋮ la propose
-    // pour tous les statuts de kEnvoisPasses.
-    for (final status in kEnvoisPasses) {
+    // pour ces six statuts. Liste explicite : le test échoue si la constante
+    // kEnvoisPasses change sans qu'on l'ait décidé.
+    for (final status in const [
+      'COMPLETED',
+      'REJECTED',
+      'CANCELLED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+    ]) {
       testWidgets('$status : Supprimer puis confirmer → BidDeleteRequested', (
         tester,
       ) async {

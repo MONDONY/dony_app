@@ -12972,13 +12972,13 @@ abstract class AppLocalizations {
   /// **'Noter le voyageur'**
   String get bidDetailRateTraveler;
 
-  /// Titre par défaut du dialog de suppression (sender_sticky_bar.dart)
+  /// Titre par défaut du dialog de suppression (confirm_delete_bid.dart)
   ///
   /// In fr, this message translates to:
   /// **'Supprimer cette demande ?'**
   String get bidDetailDeleteRequestQuestionTitle;
 
-  /// Corps par défaut du dialog de suppression (sender_sticky_bar.dart)
+  /// Corps par défaut du dialog de suppression (confirm_delete_bid.dart)
   ///
   /// In fr, this message translates to:
   /// **'Elle sera retirée définitivement de votre historique.'**
@@ -13296,7 +13296,7 @@ abstract class AppLocalizations {
   /// **'Colis & destinataire'**
   String get bidDetailParcelRecipientTitle;
 
-  /// Clé dédiée (Ruling R40, correction relecture D2) — remplace la réutilisation de requestDetailMenuCancelLabel (feature package_request) dans bid_detail_action_bars.dart et sender_sticky_bar.dart
+  /// Clé dédiée (Ruling R40, correction relecture D2) — remplace la réutilisation de requestDetailMenuCancelLabel (feature package_request) dans bid_detail_action_bars.dart (menu ⋮ et dialog) et sender_hero_card.dart
   ///
   /// In fr, this message translates to:
   /// **'Annuler la demande'**

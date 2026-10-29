@@ -7825,11 +7825,11 @@
   },
   "bidDetailDeleteRequestQuestionTitle": "Supprimer cette demande ?",
   "@bidDetailDeleteRequestQuestionTitle": {
-    "description": "Titre par défaut du dialog de suppression (sender_sticky_bar.dart)"
+    "description": "Titre par défaut du dialog de suppression (confirm_delete_bid.dart)"
   },
   "bidDetailDeleteRequestDefaultBody": "Elle sera retirée définitivement de votre historique.",
   "@bidDetailDeleteRequestDefaultBody": {
-    "description": "Corps par défaut du dialog de suppression (sender_sticky_bar.dart)"
+    "description": "Corps par défaut du dialog de suppression (confirm_delete_bid.dart)"
   },
   "bidDetailAwaitingSenderMobileMoneyPayment": "En attente du paiement de l'expéditeur (mobile money).",
   "@bidDetailAwaitingSenderMobileMoneyPayment": {
@@ -8123,7 +8123,7 @@
   },
   "bidDetailCancelRequestLabel": "Annuler la demande",
   "@bidDetailCancelRequestLabel": {
-    "description": "Clé dédiée (Ruling R40, correction relecture D2) — remplace la réutilisation de requestDetailMenuCancelLabel (feature package_request) dans bid_detail_action_bars.dart et sender_sticky_bar.dart"
+    "description": "Clé dédiée (Ruling R40, correction relecture D2) — remplace la réutilisation de requestDetailMenuCancelLabel (feature package_request) dans bid_detail_action_bars.dart (menu ⋮ et dialog) et sender_hero_card.dart"
   },
   "bidDetailParcelLabel": "Colis",
   "@bidDetailParcelLabel": {
