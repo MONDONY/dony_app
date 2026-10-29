@@ -382,6 +382,50 @@ void main() {
       expect(find.text('Valider la remise'), findsNothing);
     });
 
+    // Le verrou tombe seul à l'heure du départ : même State de la porte
+    // (didUpdateWidget), la porte lit DateTime.now(), donc on rejoue le même
+    // colis avec un départ désormais passé.
+    testWidgets('le départ passe : « Disponible au départ » devient « Valider '
+        'la remise » actif', (tester) async {
+      final bid = ValueNotifier<BidModel>(
+        _bid(status: 'HANDED_OVER', departureAt: future),
+      );
+      addTearDown(bid.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('fr'),
+          home: Scaffold(
+            bottomNavigationBar: ValueListenableBuilder<BidModel>(
+              valueListenable: bid,
+              builder: (_, value, _) =>
+                  TravelerStickyBar(bid: value, isLoading: false),
+            ),
+          ),
+        ),
+      );
+      final locked = button(
+        tester,
+        find.byKey(const Key('traveler-deliver-btn')),
+      );
+      expect(locked.label, 'Disponible au départ');
+      expect(locked.onPressed, isNull);
+
+      bid.value = _bid(status: 'HANDED_OVER', departureAt: past);
+      await tester.pump();
+
+      final open = button(
+        tester,
+        find.byKey(const Key('traveler-deliver-btn')),
+      );
+      expect(open.label, 'Valider la remise');
+      expect(open.iconAsset, 'badge-check');
+      expect(open.onPressed, isNotNull);
+      expect(find.text('Disponible au départ'), findsNothing);
+    });
+
     testWidgets('anglais : « Available at departure »', (tester) async {
       await pumpBar(
         tester,
@@ -479,10 +523,11 @@ void main() {
         );
       });
 
-      // ×1,3 (très grand texte) : LIMITE ACCEPTÉE, pas la règle. Garde-fou
-      // seulement : le libellé ne devient pas illisible.
+      // ×1,3 (très grand texte) : mesuré à 360 dp avec les vraies polices,
+      // Refuser / Decline (sans icône), Accepter / Accept et « Disponible au
+      // départ » tiennent encore à taille nominale.
       testWidgets('${locale.languageCode} x1.3 : libellés de la ligne et du '
-          'verrou lisibles (réduction bornée)', (tester) async {
+          'verrou à taille nominale', (tester) async {
         await pumpBar(tester, _bid(), locale: locale, textScale: 1.3);
         expect(tester.takeException(), isNull);
         for (final label in [
@@ -491,7 +536,7 @@ void main() {
         ]) {
           expect(
             labelScale(tester, find.widgetWithText(DonyButton, label), label),
-            greaterThan(0.75),
+            closeTo(1, 0.001),
             reason: label,
           );
         }
@@ -511,7 +556,7 @@ void main() {
             find.byKey(const Key('traveler-deliver-btn')),
             l.bidDetailHandoverLockedLabel,
           ),
-          greaterThan(0.75),
+          closeTo(1, 0.001),
         );
       });
     }

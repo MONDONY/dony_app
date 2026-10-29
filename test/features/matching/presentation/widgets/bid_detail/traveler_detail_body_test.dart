@@ -25,6 +25,7 @@ import 'package:dony/features/matching/presentation/widgets/recipient_contact/re
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -382,6 +383,83 @@ void main() {
       await _pump(tester, _bid('HANDED_OVER'));
       expect(find.textContaining('Disponible après le départ'), findsNothing);
     });
+
+    // Le verrou tombe seul à l'heure du départ (même State, didUpdateWidget de
+    // DeliveryDepartureGate) : la porte lit DateTime.now(), pas d'horloge à
+    // avancer, on rejoue donc le même colis avec un départ désormais passé.
+    testWidgets('le départ passe : la carte du verrou disparaît', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          'HANDED_OVER',
+          departureAt: DateTime.now().add(const Duration(days: 2)),
+        ),
+      );
+      expect(
+        find.textContaining('Disponible après le départ du trajet (le'),
+        findsOneWidget,
+      );
+      final stateBefore = tester.state(find.byType(TravelerDetailBody));
+
+      await _pump(
+        tester,
+        _bid(
+          'HANDED_OVER',
+          departureAt: DateTime.now().subtract(const Duration(hours: 1)),
+        ),
+      );
+
+      expect(tester.state(find.byType(TravelerDetailBody)), same(stateBefore));
+      expect(find.textContaining('Disponible après le départ'), findsNothing);
+      expect(find.textContaining('code de retrait à 6 chiffres'), findsNothing);
+    });
+
+    // La porte enveloppe TOUJOURS le corps (sans fenêtre elle ne verrouille
+    // jamais) : le passage de ACCEPTED à HANDED_OVER garde la même porte et le
+    // même State, sans remonter la racine du corps. (Les enfants i > 0 perdent
+    // leur enveloppe d'animation d'entrée au rebuild suivant, comportement
+    // existant : on ne compare donc pas leurs éléments.)
+    testWidgets('ACCEPTED -> HANDED_OVER : même porte, même State', (
+      tester,
+    ) async {
+      final departure = DateTime.now().subtract(const Duration(hours: 1));
+      await _pump(tester, _bid('ACCEPTED', departureAt: departure));
+      final gateBefore = tester.state(find.byType(DeliveryDepartureGate));
+      final bodyBefore = tester.state(find.byType(TravelerDetailBody));
+
+      await _pump(tester, _bid('HANDED_OVER', departureAt: departure));
+
+      expect(
+        tester.state(find.byType(DeliveryDepartureGate)),
+        same(gateBefore),
+      );
+      expect(tester.state(find.byType(TravelerDetailBody)), same(bodyBefore));
+      expect(find.textContaining('Disponible après le départ'), findsNothing);
+    });
+
+    testWidgets(
+      'ACCEPTED sans verrou -> HANDED_OVER avant le départ : la carte '
+      'apparaît dans la même porte',
+      (tester) async {
+        final departure = DateTime.now().add(const Duration(days: 2));
+        await _pump(tester, _bid('ACCEPTED', departureAt: departure));
+        final gateBefore = tester.state(find.byType(DeliveryDepartureGate));
+        expect(find.textContaining('Disponible après le départ'), findsNothing);
+
+        await _pump(tester, _bid('HANDED_OVER', departureAt: departure));
+
+        expect(
+          tester.state(find.byType(DeliveryDepartureGate)),
+          same(gateBefore),
+        );
+        expect(
+          find.textContaining('Disponible après le départ du trajet (le'),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('statut sans remise (ACCEPTED) : pas de carte de verrou', (
       tester,

@@ -7488,7 +7488,7 @@
   },
   "bidDetailDeleteRequest": "Supprimer cette demande",
   "@bidDetailDeleteRequest": {
-    "description": "Libellé/titre partagé pour supprimer une demande (bid_detail_action_bars.dart, traveler_options_sheet.dart, traveler_sticky_bar.dart)"
+    "description": "Libellé/titre partagé pour supprimer une demande (bid_detail_action_bars.dart, traveler_options_sheet.dart, confirm_delete_bid.dart)"
   },
   "bidDetailDeleteRejectedBody": "Cette demande refusée sera retirée définitivement de votre liste.",
   "@bidDetailDeleteRejectedBody": {
@@ -20355,7 +20355,7 @@
   "bidDetailTrackingNumberLabel": "Numéro de suivi",
   "@bidDetailTrackingNumberLabel": {"description": "Libellé de la ligne du numéro de suivi dans le détail d'un colis (details_accordion.dart, FLUTTER-J2)."},
   "deliveryLockedHelp": "À la remise, demandez au destinataire son code de retrait à 6 chiffres.",
-  "@deliveryLockedHelp": {"description": "Aide sous le bouton de remise grisé avant le départ du trajet (delivery_departure_gate.dart, FLUTTER-J2)."},
+  "@deliveryLockedHelp": {"description": "Aide de la carte du verrou avant le départ du trajet, vue voyageur (traveler_info_cards.dart), et sous le bouton de l'écran de confirmation (delivery_departure_gate.dart, FLUTTER-J2)."},
   "moneyUpcomingLabel": "À venir · {count, plural, =1{1 colis} other{{count} colis}}",
   "@moneyUpcomingLabel": {"description": "Titre de la carte de tête : argent des colis encore attendu par le voyageur (money_upcoming_card.dart, FLUTTER-HV).", "placeholders": {"count": {"type": "int"}}},
   "moneySenderHeroLabel": "Payé, en séquestre · {count, plural, =1{1 colis} other{{count} colis}}",
@@ -22044,7 +22044,7 @@
   "bidDetailRequestSupplementSubtitle": "Le colis vaut plus que prévu : l'expéditeur paie la différence",
   "@bidDetailRequestSupplementSubtitle": {"description": "Sous-titre de la tuile supplément (traveler_options_sheet.dart)"},
   "bidDetailScanBlockedSupplement": "Un supplément attend la réponse de l'expéditeur : le scan est bloqué.",
-  "@bidDetailScanBlockedSupplement": {"description": "Sous le bouton de scan désactivé de la vue voyageur (traveler_sticky_bar.dart)"},
+  "@bidDetailScanBlockedSupplement": {"description": "Carte d'information du corps de la vue voyageur, quand le bouton de scan du footer est désactivé (traveler_info_cards.dart)"},
   "supplementRequestTitle": "Demander un supplément",
   "@supplementRequestTitle": {"description": "Titre de la feuille de demande de supplément (supplement_request_sheet.dart)"},
   "supplementRequestIntro": "Le colis ne correspond pas à la déclaration ? Demandez la différence à l'expéditeur. Il paie par le même moyen que le colis, ou refuse.",

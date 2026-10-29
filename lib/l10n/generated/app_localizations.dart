@@ -12498,7 +12498,7 @@ abstract class AppLocalizations {
   /// **'Payer mon envoi'**
   String get bidDetailPayMyShipment;
 
-  /// Libellé/titre partagé pour supprimer une demande (bid_detail_action_bars.dart, traveler_options_sheet.dart, traveler_sticky_bar.dart)
+  /// Libellé/titre partagé pour supprimer une demande (bid_detail_action_bars.dart, traveler_options_sheet.dart, confirm_delete_bid.dart)
   ///
   /// In fr, this message translates to:
   /// **'Supprimer cette demande'**
@@ -30151,7 +30151,7 @@ abstract class AppLocalizations {
   /// **'Numéro de suivi'**
   String get bidDetailTrackingNumberLabel;
 
-  /// Aide sous le bouton de remise grisé avant le départ du trajet (delivery_departure_gate.dart, FLUTTER-J2).
+  /// Aide de la carte du verrou avant le départ du trajet, vue voyageur (traveler_info_cards.dart), et sous le bouton de l'écran de confirmation (delivery_departure_gate.dart, FLUTTER-J2).
   ///
   /// In fr, this message translates to:
   /// **'À la remise, demandez au destinataire son code de retrait à 6 chiffres.'**
@@ -34779,7 +34779,7 @@ abstract class AppLocalizations {
   /// **'Le colis vaut plus que prévu : l\'expéditeur paie la différence'**
   String get bidDetailRequestSupplementSubtitle;
 
-  /// Sous le bouton de scan désactivé de la vue voyageur (traveler_sticky_bar.dart)
+  /// Carte d'information du corps de la vue voyageur, quand le bouton de scan du footer est désactivé (traveler_info_cards.dart)
   ///
   /// In fr, this message translates to:
   /// **'Un supplément attend la réponse de l\'expéditeur : le scan est bloqué.'**

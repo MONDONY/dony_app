@@ -270,6 +270,30 @@ void main() {
     expect(find.text('Annuler ce transport'), findsNothing);
   });
 
+  // CANCELLED reste supprimable par le voyageur (existant) : corps générique,
+  // pas celui d'une « demande refusée », même événement.
+  testWidgets('CANCELLED : corps générique puis BidTravelerDismissRequested', (
+    tester,
+  ) async {
+    final bidBloc = await _open(tester, _bid(status: 'CANCELLED', token: null));
+    await tester.ensureVisible(find.text('Supprimer cette demande'));
+    await tester.tap(find.text('Supprimer cette demande'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Elle sera retirée définitivement de votre historique.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('demande refusée'), findsNothing);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Supprimer'));
+    await tester.pumpAndSettle();
+
+    final event = verify(() => bidBloc.add(captureAny())).captured.single;
+    expect(event, isA<BidTravelerDismissRequested>());
+    expect((event as BidTravelerDismissRequested).bidId, 'b1');
+  });
+
   testWidgets('IN_TRANSIT → annulation impossible (D3), pas supprimer', (
     tester,
   ) async {

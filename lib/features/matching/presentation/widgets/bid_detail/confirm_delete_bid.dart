@@ -15,47 +15,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// au-dessus du provider.
 void confirmDeleteBid(BuildContext context, BidModel bid) {
   final l = context.l10n;
-  final tt = Theme.of(context).textTheme;
-  final cs = Theme.of(context).colorScheme;
-  final bloc = context.read<BidBloc>();
-  showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(DonyRadius.sheet),
-      ),
-      title: Text(
-        l.bidDetailDeleteRequestQuestionTitle,
-        style: tt.headlineMedium,
-      ),
-      content: Text(
-        l.bidDetailDeleteRequestDefaultBody,
-        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(false),
-          child: Text(
-            l.commonCancel,
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(ctx).pop(true),
-          style: FilledButton.styleFrom(
-            backgroundColor: cs.error,
-            foregroundColor: DonyColors.white,
-            elevation: 0,
-          ),
-          child: Text(l.commonDelete, style: tt.labelLarge),
-        ),
-      ],
-    ),
-  ).then((confirmed) {
-    if (confirmed ?? false) {
-      bloc.add(BidDeleteRequested(bid.id));
-    }
-  });
+  _confirmRemoval(
+    context,
+    title: l.bidDetailDeleteRequestQuestionTitle,
+    body: l.bidDetailDeleteRequestDefaultBody,
+    buildEvent: () => BidDeleteRequested(bid.id),
+  );
 }
 
 /// Confirmation « Supprimer cette demande » côté voyageur (demande refusée ou
@@ -63,10 +28,31 @@ void confirmDeleteBid(BuildContext context, BidModel bid) {
 /// jamais de suppression physique côté serveur.
 ///
 /// Appelée par l'entrée « Supprimer cette demande » du menu ⋮ voyageur
-/// (`showTravelerOptionsSheet`). Même lecture du [BidBloc] avant d'ouvrir la
-/// boîte que [confirmDeleteBid]. Le corps parle d'une « demande refusée » pour
-/// REJECTED seulement ; une demande annulée reçoit le corps générique.
+/// (`showTravelerOptionsSheet`). Même contrainte sur [context] que
+/// [confirmDeleteBid]. Le corps parle d'une « demande refusée » pour REJECTED
+/// seulement ; une demande annulée reçoit le corps générique.
 void confirmTravelerDismissBid(BuildContext context, BidModel bid) {
+  final l = context.l10n;
+  _confirmRemoval(
+    context,
+    title: l.bidDetailDeleteRequest,
+    body: bid.status == 'REJECTED'
+        ? l.bidDetailDeleteRejectedBody
+        : l.bidDetailDeleteRequestDefaultBody,
+    buildEvent: () => BidTravelerDismissRequested(bid.id),
+  );
+}
+
+/// Boîte de confirmation de retrait d'une demande de la liste : Annuler /
+/// Supprimer. Le [BidBloc] est lu avant `showDialog` (la route de la boîte se
+/// pose au-dessus du provider) et [buildEvent] n'est appelé qu'après
+/// confirmation.
+void _confirmRemoval(
+  BuildContext context, {
+  required String title,
+  required String body,
+  required BidEvent Function() buildEvent,
+}) {
   final l = context.l10n;
   final tt = Theme.of(context).textTheme;
   final cs = Theme.of(context).colorScheme;
@@ -77,11 +63,9 @@ void confirmTravelerDismissBid(BuildContext context, BidModel bid) {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DonyRadius.sheet),
       ),
-      title: Text(l.bidDetailDeleteRequest, style: tt.headlineMedium),
+      title: Text(title, style: tt.headlineMedium),
       content: Text(
-        bid.status == 'REJECTED'
-            ? l.bidDetailDeleteRejectedBody
-            : l.bidDetailDeleteRequestDefaultBody,
+        body,
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
       ),
       actions: [
@@ -105,7 +89,7 @@ void confirmTravelerDismissBid(BuildContext context, BidModel bid) {
     ),
   ).then((confirmed) {
     if (confirmed ?? false) {
-      bloc.add(BidTravelerDismissRequested(bid.id));
+      bloc.add(buildEvent());
     }
   });
 }

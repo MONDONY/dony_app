@@ -84,14 +84,16 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
   Widget build(BuildContext context) {
     // Le verrou de la remise avant le départ vient du même
     // [DeliveryDepartureGate] que le bouton du footer : il tombe seul à l'heure
-    // du départ et la carte disparaît avec lui.
-    if (TravelerStickyBar.hasDeliveryStep(widget.bid)) {
-      return DeliveryDepartureGate(
-        window: DeliveryWindow.fromBid(widget.bid),
-        builder: (context, lockedHint) => _content(context, lockedHint),
-      );
-    }
-    return _content(context, null);
+    // du départ et la carte disparaît avec lui. La porte enveloppe TOUJOURS le
+    // corps (sans fenêtre elle ne verrouille jamais) : l'arbre reste stable
+    // quand le statut passe de ACCEPTED à HANDED_OVER, les cartes ne sont pas
+    // remontées.
+    return DeliveryDepartureGate(
+      window: TravelerStickyBar.hasDeliveryStep(widget.bid)
+          ? DeliveryWindow.fromBid(widget.bid)
+          : null,
+      builder: (context, lockedHint) => _content(context, lockedHint),
+    );
   }
 
   Widget _content(BuildContext context, String? lockedHint) {
