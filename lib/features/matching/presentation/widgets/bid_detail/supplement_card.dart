@@ -428,10 +428,15 @@ class SupplementCommissionButtons extends StatelessWidget {
     required this.bid,
     required this.supplement,
     this.authorize,
+    this.enabled = true,
   });
 
   final BidModel bid;
   final BidSupplement supplement;
+
+  /// `false` : derniers boutons connus, désactivés, gardés le temps que le
+  /// sheet se referme quand la demande n'attend plus le voyageur.
+  final bool enabled;
 
   /// Vérification locale ; `null` en usage réel (`requirePaymentAuth`).
   final SupplementRequestAuthorizer? authorize;
@@ -441,7 +446,7 @@ class SupplementCommissionButtons extends StatelessWidget {
     final l = context.l10n;
     final commission = context.watch<SupplementCommissionCubit>().state;
     final action = context.watch<SupplementActionCubit>().state;
-    final busy = commission.isBusy || action.isBusy;
+    final busy = !enabled || commission.isBusy || action.isBusy;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,

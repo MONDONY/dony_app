@@ -676,6 +676,41 @@ void main() {
       expect(sheetTitle(), findsNothing);
     });
 
+    // Le pied ne se vide pas pendant que le sheet se referme : il garde les
+    // derniers boutons, désactivés (comme le contenu garde la dernière
+    // demande connue), plutôt qu'une bande vide avec bordure et ombre.
+    testWidgets('demande traitée ailleurs : le pied garde les boutons, '
+        'désactivés, le temps de la fermeture', (tester) async {
+      await openTodo(tester);
+
+      bidStates.add(BidDetailLoaded(_bid(BidSupplementStatus.proposed)));
+      // Colis relu, puis début de l'animation de sortie du sheet.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(footerButtons(), findsNWidgets(2));
+      expect(tester.widget<DonyButton>(confirmButton()).onPressed, isNull);
+      expect(tester.widget<DonyButton>(withdrawButton()).onPressed, isNull);
+      expect(find.text('Frais de service à valider'), findsOneWidget);
+
+      await tester.pumpAndSettle();
+      expect(sheetTitle(), findsNothing);
+    });
+
+    testWidgets('confirmation ouverte quand la demande est traitée : les '
+        'boutons du pied restent visibles, désactivés', (tester) async {
+      await openTodo(tester);
+
+      await tester.tap(withdrawButton());
+      await tester.pumpAndSettle();
+      bidStates.add(BidDetailLoaded(_bid(BidSupplementStatus.proposed)));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Retirer la demande ?'), findsOneWidget);
+      expect(footerButtons(), findsNWidgets(2));
+      expect(tester.widget<DonyButton>(confirmButton()).onPressed, isNull);
+    });
+
     testWidgets('le colis rechargé d\'un autre envoi ne ferme rien', (
       tester,
     ) async {

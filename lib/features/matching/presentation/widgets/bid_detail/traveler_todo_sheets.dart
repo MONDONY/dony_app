@@ -101,8 +101,11 @@ Future<void> openTravelerTodoSheet(
       child: content,
     ),
     stickyBottom: switch (tile) {
-      // Les deux boutons tant que les frais attendent le voyageur ; rien dès
-      // que le colis relu ne les attend plus (le sheet se ferme alors).
+      // Les deux boutons tant que les frais attendent le voyageur. Dès que le
+      // colis relu ne les attend plus (le sheet se ferme alors, ou une
+      // confirmation le couvre), les derniers boutons connus restent,
+      // désactivés : pas de pied vide. Clé distincte : le bouton d'avant est
+      // démonté, une confirmation ouverte depuis lui n'envoie plus rien.
       TravelerTodoTile.supplement => LiveBid(
         bid: bid,
         live: live,
@@ -112,7 +115,12 @@ Future<void> openTravelerTodoSheet(
                 supplement: current.supplement!,
                 authorize: authorize,
               )
-            : const SizedBox.shrink(),
+            : SupplementCommissionButtons(
+                key: const ValueKey('supplement-buttons-resolved'),
+                bid: bid,
+                supplement: bid.supplement!,
+                enabled: false,
+              ),
       ),
     },
     child: _TravelerTodoSheetContent(bid: bid, tile: tile, live: live),
