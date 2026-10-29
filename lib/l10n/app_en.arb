@@ -3895,6 +3895,17 @@
       }
     }
   },
+  "travelerTileLieuxDeadline": "Drop-off before {date} at {time}",
+  "@travelerTileLieuxDeadline": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "travelerTileLieuxPickup": "Pickup in {place}",
   "@travelerTileLieuxPickup": {
     "placeholders": {

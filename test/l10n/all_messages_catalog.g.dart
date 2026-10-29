@@ -2799,6 +2799,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'travelerTileLieux': (l) => l.travelerTileLieux,
   'travelerTileLieuxDropoff': (l) =>
       l.travelerTileLieuxDropoff(placeholderMarker('place')),
+  'travelerTileLieuxDeadline': (l) => l.travelerTileLieuxDeadline(
+    placeholderMarker('date'),
+    placeholderMarker('time'),
+  ),
   'travelerTileLieuxPickup': (l) =>
       l.travelerTileLieuxPickup(placeholderMarker('place')),
   'travelerTileColis': (l) => l.travelerTileColis,
@@ -8228,6 +8232,7 @@ const textParameters = <String, List<String>>{
   'senderTodoAmendmentSummary': ['weight', 'amount'],
   'senderTodoAmendmentAmount': ['amount'],
   'travelerTileLieuxDropoff': ['place'],
+  'travelerTileLieuxDeadline': ['date', 'time'],
   'travelerTileLieuxPickup': ['place'],
   'travelerTileColisSubtitle': ['weight', 'recipient'],
   'bidDetailDisclaimerSignedCompact': ['date', 'time'],

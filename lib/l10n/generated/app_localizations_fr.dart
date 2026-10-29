@@ -7679,6 +7679,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String travelerTileLieuxDeadline(String date, String time) {
+    return 'Dépôt avant le $date à $time';
+  }
+
+  @override
   String travelerTileLieuxPickup(String place) {
     return 'Récupération à $place';
   }

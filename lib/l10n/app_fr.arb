@@ -7648,6 +7648,20 @@
       }
     }
   },
+  "travelerTileLieuxDeadline": "Dépôt avant le {date} à {time}",
+  "@travelerTileLieuxDeadline": {
+    "description": "Sous-titre de la tuile Lieux de la fiche colis voyageur quand le colis est accepté (pas encore remis) et que la date limite de dépôt est connue : jusqu'à quand l'expéditeur peut remettre le colis, en heure locale (date courte avec le jour, heure)",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "mar. 3 nov."
+      },
+      "time": {
+        "type": "String",
+        "example": "14:30"
+      }
+    }
+  },
   "travelerTileLieuxPickup": "Récupération à {place}",
   "@travelerTileLieuxPickup": {
     "description": "Sous-titre de la tuile Lieux une fois le colis remis : où le destinataire le récupère (ville, à défaut l'adresse)",

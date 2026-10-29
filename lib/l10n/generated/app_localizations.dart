@@ -12672,6 +12672,12 @@ abstract class AppLocalizations {
   /// **'Remise à {place}'**
   String travelerTileLieuxDropoff(String place);
 
+  /// Sous-titre de la tuile Lieux de la fiche colis voyageur quand le colis est accepté (pas encore remis) et que la date limite de dépôt est connue : jusqu'à quand l'expéditeur peut remettre le colis, en heure locale (date courte avec le jour, heure)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt avant le {date} à {time}'**
+  String travelerTileLieuxDeadline(String date, String time);
+
   /// Sous-titre de la tuile Lieux une fois le colis remis : où le destinataire le récupère (ville, à défaut l'adresse)
   ///
   /// In fr, this message translates to:

@@ -57,6 +57,41 @@ DonyActionTile _tile({
 
 void main() {
   group('DonyActionTile', () {
+    // Sous-titre limité à 2 lignes par défaut ; une tuile qui porte une
+    // échéance (date et heure) peut en demander 3 pour qu'elle reste entière.
+    testWidgets('subtitleMaxLines : 2 par défaut, 3 sur demande', (
+      tester,
+    ) async {
+      const long =
+          'Drop-off before Tue, Nov 3 at 1:30 PM, then more words to wrap';
+      await tester.pumpWidget(
+        _wrap(
+          SizedBox(
+            width: _tileWidth,
+            child: _tile(subtitle: long),
+          ),
+        ),
+      );
+      expect(tester.widget<Text>(find.text(long)).maxLines, 2);
+
+      await tester.pumpWidget(
+        _wrap(
+          SizedBox(
+            width: _tileWidth,
+            child: DonyActionTile(
+              iconName: 'bell',
+              label: 'Lieux',
+              subtitle: long,
+              subtitleMaxLines: 3,
+              color: const Color(0xFF0B5FFF),
+              onTap: () {},
+            ),
+          ),
+        ),
+      );
+      expect(tester.widget<Text>(find.text(long)).maxLines, 3);
+    });
+
     testWidgets('renders label, subtitle and badge', (tester) async {
       await tester.pumpWidget(
         _wrap(

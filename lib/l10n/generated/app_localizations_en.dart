@@ -7633,6 +7633,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String travelerTileLieuxDeadline(String date, String time) {
+    return 'Drop-off before $date at $time';
+  }
+
+  @override
   String travelerTileLieuxPickup(String place) {
     return 'Pickup in $place';
   }
