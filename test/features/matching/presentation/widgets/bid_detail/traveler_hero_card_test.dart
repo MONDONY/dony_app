@@ -642,4 +642,185 @@ void main() {
     await tester.pumpAndSettle();
     verify(() => cancel.add(any(that: isA<NoShowReportRequested>()))).called(1);
   });
+
+  // ── Place du hero dans le corps : sous le billet ou dans « À traiter » ────
+  group('hasAction / isShown', () {
+    BidModel heroBid(
+      String status, {
+      DateTime? windowEnd,
+      String? cancellationNoShowStatus,
+      String? deliveryNoShowStatus,
+      bool? reportedByTraveler,
+    }) => BidModel(
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      status: status,
+      handoverDeadline: windowEnd,
+      cancellationNoShowStatus: cancellationNoShowStatus,
+      deliveryNoShowStatus: deliveryNoShowStatus,
+      deliveryNoShowReportedByTraveler: reportedByTraveler,
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
+    );
+
+    final past = DateTime.now().subtract(const Duration(hours: 2));
+    final future = DateTime.now().add(const Duration(days: 1));
+
+    test('date limite de dépôt dépassée (ACCEPTED) : action', () {
+      expect(
+        TravelerHeroCard.hasAction(heroBid('ACCEPTED', windowEnd: past)),
+        isTrue,
+      );
+      expect(
+        TravelerHeroCard.hasAction(heroBid('ACCEPTED', windowEnd: future)),
+        isFalse,
+      );
+      // Hors ACCEPTED, la date limite ne fait rien au hero.
+      expect(
+        TravelerHeroCard.hasAction(heroBid('HANDED_OVER', windowEnd: past)),
+        isFalse,
+      );
+    });
+
+    test('absence à la livraison signalée contre le voyageur : alerte', () {
+      for (final dns in ['PENDING_CONFIRMATION', 'CONTESTED']) {
+        for (final reported in [false, null]) {
+          expect(
+            TravelerHeroCard.hasAction(
+              heroBid(
+                'ARRIVED',
+                deliveryNoShowStatus: dns,
+                reportedByTraveler: reported,
+              ),
+            ),
+            isTrue,
+            reason: '$dns / $reported',
+          );
+        }
+      }
+    });
+
+    test('absence à la livraison signalée par le voyageur : information', () {
+      for (final dns in ['PENDING_CONFIRMATION', 'CONTESTED']) {
+        expect(
+          TravelerHeroCard.hasAction(
+            heroBid(
+              'ARRIVED',
+              deliveryNoShowStatus: dns,
+              reportedByTraveler: true,
+            ),
+          ),
+          isFalse,
+          reason: dns,
+        );
+      }
+    });
+
+    test("absence de l'expéditeur déjà signalée : information, même date "
+        'limite passée (priorité 1)', () {
+      for (final ns in ['PENDING_CONFIRMATION', 'CONTESTED']) {
+        expect(
+          TravelerHeroCard.hasAction(
+            heroBid('ACCEPTED', windowEnd: past, cancellationNoShowStatus: ns),
+          ),
+          isFalse,
+          reason: ns,
+        );
+        // La priorité 1 passe aussi devant un signalement à la livraison.
+        expect(
+          TravelerHeroCard.hasAction(
+            heroBid(
+              'ARRIVED',
+              cancellationNoShowStatus: ns,
+              deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+              reportedByTraveler: false,
+            ),
+          ),
+          isFalse,
+          reason: ns,
+        );
+      }
+    });
+
+    test('statut seul : jamais une action', () {
+      for (final status in [
+        'PENDING',
+        'PAYMENT_ESCROWED',
+        'AWAITING_PAYMENT',
+        'ACCEPTED',
+        'HANDED_OVER',
+        'IN_TRANSIT',
+        'ARRIVED',
+        'COMPLETED',
+        'DELIVERED',
+        'REJECTED',
+        'CANCELLED',
+        'NO_SHOW',
+        'EXPIRED',
+        'PARCEL_REFUSED',
+      ]) {
+        expect(
+          TravelerHeroCard.hasAction(heroBid(status)),
+          isFalse,
+          reason: status,
+        );
+      }
+    });
+
+    test('isShown : un hero pour les statuts en cours, rien pour les clos', () {
+      for (final status in [
+        'PENDING',
+        'PAYMENT_ESCROWED',
+        'AWAITING_PAYMENT',
+        'ACCEPTED',
+        'HANDED_OVER',
+        'IN_TRANSIT',
+        'ARRIVED',
+        'COMPLETED',
+        'DELIVERED',
+      ]) {
+        expect(
+          TravelerHeroCard.isShown(heroBid(status)),
+          isTrue,
+          reason: status,
+        );
+      }
+      for (final status in [
+        'REJECTED',
+        'CANCELLED',
+        'NO_SHOW',
+        'EXPIRED',
+        'PARCEL_REFUSED',
+        'NEGOTIATING',
+        '',
+      ]) {
+        expect(
+          TravelerHeroCard.isShown(heroBid(status)),
+          isFalse,
+          reason: status,
+        );
+      }
+      // Un signalement en cours montre le hero quel que soit le statut.
+      expect(
+        TravelerHeroCard.isShown(
+          heroBid('CANCELLED', cancellationNoShowStatus: 'CONTESTED'),
+        ),
+        isTrue,
+      );
+      expect(
+        TravelerHeroCard.isShown(
+          heroBid('NO_SHOW', deliveryNoShowStatus: 'PENDING_CONFIRMATION'),
+        ),
+        isTrue,
+      );
+    });
+
+    testWidgets('isShown faux : la carte ne rend rien', (tester) async {
+      for (final status in ['REJECTED', 'PARCEL_REFUSED']) {
+        await _pump(tester, heroBid(status));
+        expect(find.byType(Text), findsNothing, reason: status);
+      }
+    });
+  });
 }

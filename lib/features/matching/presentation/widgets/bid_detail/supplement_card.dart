@@ -48,6 +48,14 @@ class SupplementTravelerCard extends StatelessWidget {
     };
   }
 
+  /// La commission espèces attend la validation du voyageur (« Valider le
+  /// paiement », 3DS possible) : seul cas où la carte relève de « À traiter ».
+  /// Une demande proposée attend l'expéditeur (« Retirer la demande » reste un
+  /// geste facultatif) ; refusée ou expirée, le colis part au prix prévu et
+  /// « Le colis ne correspond pas » reste un choix, pas une réponse attendue.
+  static bool needsReply(BidModel bid) =>
+      bid.supplement?.status == BidSupplementStatus.commissionPending;
+
   @override
   Widget build(BuildContext context) => _SupplementCard(
     bid: bid,

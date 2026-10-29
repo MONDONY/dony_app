@@ -189,6 +189,68 @@ void main() {
       expect(AmendmentTravelerCard.shouldShow(_bid(_am())), isTrue);
       expect(AmendmentTravelerCard.shouldShow(_bid(null)), isFalse);
     });
+
+    // « À traiter » côté voyageur : la carte porte un bouton qui attend son
+    // geste (Accepter / Refuser, Finaliser la commission, « Les kilos en plus
+    // ne sont pas là »).
+    test('traveler_needsReply_whenACardButtonAwaitsTheTraveler', () {
+      for (final s in [
+        BidAmendmentStatus.proposed,
+        BidAmendmentStatus.commissionPending,
+        BidAmendmentStatus.accepted,
+        BidAmendmentStatus.payoutPending,
+        BidAmendmentStatus.paidOut,
+      ]) {
+        expect(
+          AmendmentTravelerCard.needsReply(_bid(_am(status: s))),
+          isTrue,
+          reason: '$s',
+        );
+      }
+      // L'autorisation carte est celle de l'expéditeur, le paiement aussi : la
+      // carte n'a aucun bouton. Une demande close ne fait que renseigner.
+      for (final s in [
+        BidAmendmentStatus.authorizationPending,
+        BidAmendmentStatus.paymentPending,
+        BidAmendmentStatus.declined,
+        BidAmendmentStatus.expired,
+        BidAmendmentStatus.cancelled,
+        BidAmendmentStatus.refundPending,
+        BidAmendmentStatus.refunded,
+        BidAmendmentStatus.unknown,
+      ]) {
+        expect(
+          AmendmentTravelerCard.needsReply(_bid(_am(status: s))),
+          isFalse,
+          reason: '$s',
+        );
+      }
+      expect(AmendmentTravelerCard.needsReply(_bid(null)), isFalse);
+    });
+
+    test('traveler_needsReply_acceptedOnlyBeforeHandover', () {
+      final accepted = _am(status: BidAmendmentStatus.accepted);
+      for (final status in ['HANDED_OVER', 'IN_TRANSIT', 'COMPLETED']) {
+        expect(
+          AmendmentTravelerCard.needsReply(_bid(accepted, status: status)),
+          isFalse,
+          reason: status,
+        );
+      }
+    });
+
+    test('traveler_needsReply_anySectionAwaitingTheTraveler', () {
+      // Paiement de l'expéditeur attendu, et une modification acquise avant :
+      // le bouton « Les kilos en plus ne sont pas là » de la seconde suffit.
+      final bid = _bid(
+        null,
+        all: [
+          _am(id: 'am-0', status: BidAmendmentStatus.accepted),
+          _am(status: BidAmendmentStatus.paymentPending),
+        ],
+      );
+      expect(AmendmentTravelerCard.needsReply(bid), isTrue);
+    });
   });
 
   group('expéditeur', () {
