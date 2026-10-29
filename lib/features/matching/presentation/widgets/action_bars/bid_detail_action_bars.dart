@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
@@ -9,18 +8,17 @@ import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/money_breakdown_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/confirm_delete_bid.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
-import 'package:dony/features/payments/data/models/payment_model.dart';
-import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -226,139 +224,6 @@ class ConfirmPresenceBar extends StatelessWidget {
   }
 }
 
-// ── Sender action bar ─────────────────────────────────────────────────────────
-
-class SenderActionBar extends StatelessWidget {
-  final BidModel bid;
-  final bool isLoading;
-  final PaymentModel? existingPayment;
-  final bool paymentLoaded;
-
-  const SenderActionBar({
-    super.key,
-    required this.bid,
-    required this.isLoading,
-    this.existingPayment,
-    this.paymentLoaded = false,
-  });
-
-  void _openOptions(BuildContext context) =>
-      showSenderOptionsSheet(context, bid);
-
-  /// Whether the sender pays Yadony online (escrow). Only [BidPaymentMethod.stripe]
-  /// involves an in-app sender payment. Cash / Wave / Orange Money are settled in
-  /// person with the traveler — Yadony already collects its commission from the
-  /// traveler server-side — so the sender must NOT see "Payer mon envoi".
-  bool get _hasOnlineSenderPayment =>
-      bid.paymentMethod == BidPaymentMethod.stripe;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final h = DonyLayout.hPadding(context);
-    return Container(
-      color: cs.surface,
-      padding: EdgeInsets.fromLTRB(
-        h,
-        DonySpacing.base,
-        h,
-        MediaQuery.of(context).padding.bottom + DonySpacing.base,
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 52,
-            height: 52,
-            child: Tooltip(
-              message: context.l10n.bidDetailMoreOptionsTooltip,
-              child: OutlinedButton(
-                onPressed: () => _openOptions(context),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: cs.onSurfaceVariant,
-                  side: BorderSide(color: cs.outline),
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.lg),
-                  ),
-                ),
-                child: DonyIcon(
-                  'ellipsis',
-                  size: 22,
-                  color: cs.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
-          if (bid.status == 'PENDING' || bid.status == 'ACCEPTED') ...[
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              // Cash / Wave / Orange Money: paid in person, Yadony's commission
-              // is collected from the traveler server-side — never show an
-              // online sender payment button or its loading placeholder.
-              child: bid.paymentMethod == BidPaymentMethod.mobileMoney
-                  ? const _MobileMoneyBadge()
-                  : !_hasOnlineSenderPayment
-                  ? const _CashBadge()
-                  : !paymentLoaded
-                  ? Container(
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: cs.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(DonyRadius.lg),
-                      ),
-                      child: Center(
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    )
-                  : existingPayment != null
-                  ? EscrowBadge(
-                      payment: existingPayment!,
-                      bidStatus: bid.status,
-                      onlineAmount: bid.moneyBreakdown?.onlineAmount,
-                    )
-                  : FilledButton.icon(
-                      onPressed: () =>
-                          context.push('/payments/pay', extra: bid),
-                      icon: const DonyIcon(
-                        'lock',
-                        size: 18,
-                        color: DonyColors.white,
-                      ),
-                      label: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          context.l10n.bidDetailPayMyShipment,
-                          maxLines: 1,
-                        ),
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: cs.primary,
-                        foregroundColor: DonyColors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: DonySpacing.md,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(DonyRadius.lg),
-                        ),
-                      ),
-                    ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 // ── Traveler REJECTED bar ─────────────────────────────────────────────────────
 
 class TravelerRejectedBar extends StatelessWidget {
@@ -435,165 +300,6 @@ class TravelerRejectedBar extends StatelessWidget {
 }
 
 // ── Private helpers ───────────────────────────────────────────────────────────
-
-class EscrowBadge extends StatelessWidget {
-  final PaymentModel payment;
-  final String bidStatus;
-
-  /// Montant payé en ligne servi par le serveur pour un colis modifié.
-  final double? onlineAmount;
-
-  const EscrowBadge({
-    super.key,
-    required this.payment,
-    required this.bidStatus,
-    this.onlineAmount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final (String icon, Color color, String label) = _resolve(context.l10n, cs);
-
-    return Container(
-      height: 52,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(DonyRadius.lg),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          DonyIcon(icon, color: color, size: 18),
-          const SizedBox(width: DonySpacing.sm),
-          Flexible(
-            child: Text(
-              label,
-              style: tt.titleSmall?.copyWith(color: color),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  (String, Color, String) _resolve(AppLocalizations l, ColorScheme cs) {
-    // Colis modifié : même format que la carte Paiement juste au-dessus.
-    final amount = onlineAmount != null
-        ? formatBreakdownAmount(onlineAmount!, payment.currency)
-        : formatPriceIn(payment.amount, payment.currency);
-    return switch (payment.status) {
-      PaymentStatus.released => (
-        'circle-check',
-        cs.success,
-        l.bidDetailEscrowReleasedLabel(amount),
-      ),
-      PaymentStatus.refunded => (
-        'refresh-cw',
-        cs.onSurfaceVariant,
-        l.bidDetailEscrowRefundedLabel(amount),
-      ),
-      PaymentStatus.failed => (
-        'circle-alert',
-        cs.error,
-        l.bidDetailEscrowFailedLabel,
-      ),
-      _ when bidStatus == 'PENDING' => (
-        'clock',
-        cs.warning,
-        l.bidDetailEscrowSecuredPendingLabel,
-      ),
-      _ when bidStatus == 'ACCEPTED' => (
-        'lock',
-        cs.success,
-        l.bidDetailEscrowSecuredLabel(amount),
-      ),
-      _ => ('lock', cs.success, l.bidDetailEscrowSecuredLabel(amount)),
-    };
-  }
-}
-
-/// Informational pill shown to the sender when the deal is settled in person
-/// (cash / Wave / Orange Money). There is no online sender payment: Yadony's
-/// commission is collected from the traveler server-side. Styled like
-/// [EscrowBadge] but with a warning tone.
-class _CashBadge extends StatelessWidget {
-  const _CashBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final color = cs.warning;
-
-    return Container(
-      height: 52,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(DonyRadius.lg),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          DonyIcon('banknote', color: color, size: 18),
-          const SizedBox(width: DonySpacing.sm),
-          Flexible(
-            child: Text(
-              context.l10n.bidDetailCashAtDropoffLabel,
-              style: tt.titleSmall?.copyWith(color: color),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Informational pill shown to the sender when the deal is settled via
-/// mobile money (pawaPay). Same shape as [_CashBadge], but with the primary
-/// accent to signal an online (escrowed) settlement rather than a plain
-/// in-person cash exchange.
-class _MobileMoneyBadge extends StatelessWidget {
-  const _MobileMoneyBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final color = cs.primary;
-
-    return Container(
-      height: 52,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(DonyRadius.lg),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          DonyIcon('smartphone', color: color, size: 18),
-          const SizedBox(width: DonySpacing.sm),
-          Flexible(
-            child: Text(
-              context.l10n.bidDetailMobileMoneyPaymentLabel,
-              style: tt.titleSmall?.copyWith(color: color),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _SenderOptionsSheet extends StatelessWidget {
   final BidModel bid;
@@ -734,9 +440,10 @@ class _SenderOptionsSheet extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.sm),
             ],
-            if (bid.status == 'COMPLETED' ||
-                bid.status == 'REJECTED' ||
-                bid.status == 'CANCELLED') ...[
+            // « Supprimer cette demande » a quitté le footer : le menu la
+            // propose pour tous les envois clos (COMPLETED, REJECTED,
+            // CANCELLED, NO_SHOW, EXPIRED, PARCEL_REFUSED).
+            if (kEnvoisPasses.contains(bid.status)) ...[
               _OptionTile(
                 iconAsset: 'trash-2',
                 iconColor: cs.error,
@@ -745,7 +452,7 @@ class _SenderOptionsSheet extends StatelessWidget {
                 subtitle: l.bidDetailRemoveFromHistorySubtitle,
                 onTap: () {
                   context.pop();
-                  _showDeleteDialog(outerContext);
+                  confirmDeleteBid(outerContext, bid);
                 },
               ),
               const SizedBox(height: DonySpacing.sm),
@@ -806,46 +513,6 @@ class _SenderOptionsSheet extends StatelessWidget {
               elevation: 0,
             ),
             child: Text(l.bidDetailConfirmCancelButton, style: tt.labelLarge),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteDialog(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.sheet),
-        ),
-        title: Text(l.bidDetailDeleteRequest, style: tt.headlineMedium),
-        content: Text(
-          l.bidDetailDeleteConfirmBody,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => ctx.pop(),
-            child: Text(
-              l.commonCancel,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ),
-          FilledButton(
-            onPressed: () {
-              ctx.pop();
-              context.read<BidBloc>().add(BidDeleteRequested(bid.id));
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: cs.error,
-              foregroundColor: DonyColors.white,
-              elevation: 0,
-            ),
-            child: Text(l.commonDelete, style: tt.labelLarge),
           ),
         ],
       ),

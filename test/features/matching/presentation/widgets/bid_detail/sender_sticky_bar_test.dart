@@ -1,5 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -12,7 +12,6 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
-import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_pay_button.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
@@ -278,9 +277,10 @@ void main() {
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
-  // Test 8: PENDING stripe paymentLoaded=false → placeholder loading, aucun DonyButton
+  // Test 8: PENDING stripe paymentLoaded=false → « Payer mon envoi » désactivé
+  // en chargement (même hauteur que le bouton réel : aucun saut de mise en page)
   testWidgets(
-    '8. PENDING stripe paymentLoaded=false → CircularProgressIndicator, aucun DonyButton',
+    '8. PENDING stripe paymentLoaded=false → DonyButton désactivé en chargement, 52 px',
     (tester) async {
       final bloc = _MockBidBloc();
       whenListen<BidState>(
@@ -290,15 +290,17 @@ void main() {
       );
 
       await tester.pumpWidget(_host(bloc, _bid()));
-      // Use pump() instead of pumpAndSettle() — CircularProgressIndicator
-      // animates indefinitely and would cause pumpAndSettle to time out.
+      // pump() : le spinner du bouton anime en boucle.
       await tester.pump();
 
-      // Placeholder must be visible
+      final button = tester.widget<DonyButton>(find.byType(DonyButton));
+      expect(button.label, 'Payer mon envoi');
+      expect(button.isLoading, isTrue);
+      expect(button.onPressed, isNull);
+      expect(tester.getSize(find.byType(DonyButton)).height, 52);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-      // No action button should be rendered
-      expect(find.text('Payer mon envoi'), findsNothing);
+      // Aucun autre bouton d'action
       expect(find.text('Afficher le QR de remise'), findsNothing);
       expect(find.text('Suivi du colis'), findsNothing);
       expect(find.text('Noter le voyageur'), findsNothing);
@@ -306,43 +308,40 @@ void main() {
     },
   );
 
-  // Test 7: CANCELLED → 'Supprimer cette demande', tap → dialog → 'Supprimer' → BidDeleteRequested
+  // Test 7 : « Supprimer cette demande » a quitté le footer (entrée du menu ⋮)
+  for (final status in [
+    'REJECTED',
+    'CANCELLED',
+    'NO_SHOW',
+    'EXPIRED',
+    'PARCEL_REFUSED',
+  ]) {
+    testWidgets(
+      '7. $status → aucun footer, aucun bouton « Supprimer cette demande »',
+      (tester) async {
+        final bloc = _MockBidBloc();
+        whenListen<BidState>(
+          bloc,
+          const Stream.empty(),
+          initialState: BidInitial(),
+        );
+
+        await tester.pumpWidget(
+          _host(bloc, _bid(status: status), paymentLoaded: true),
+        );
+        await tester.pumpAndSettle();
+
+        expect(SenderStickyBar.hasAction(_bid(status: status)), isFalse);
+        expect(find.text('Supprimer cette demande'), findsNothing);
+        expect(find.byType(DonyButton), findsNothing);
+        expect(tester.getSize(find.byType(SenderStickyBar)).height, 0);
+      },
+    );
+  }
+
+  // Test 9: ACCEPTED + stripe + payé → pas de badge, bouton QR seul
   testWidgets(
-    '7. CANCELLED → "Supprimer cette demande", tap → dialog → "Supprimer" → BidDeleteRequested dispatched once',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(
-        bloc,
-        const Stream.empty(),
-        initialState: BidInitial(),
-      );
-
-      await tester.pumpWidget(
-        _host(bloc, _bid(status: 'CANCELLED'), paymentLoaded: true),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Supprimer cette demande'), findsOneWidget);
-
-      // Tap the delete button
-      await tester.tap(find.text('Supprimer cette demande'));
-      await tester.pumpAndSettle();
-
-      // Dialog should appear
-      expect(find.byType(AlertDialog), findsOneWidget);
-
-      // Tap 'Supprimer' in the dialog
-      await tester.tap(find.text('Supprimer'));
-      await tester.pumpAndSettle();
-
-      // Verify BidDeleteRequested was dispatched exactly once
-      verify(() => bloc.add(any(that: isA<BidDeleteRequested>()))).called(1);
-    },
-  );
-
-  // Test 9: ACCEPTED + stripe + payé → EscrowBadge présent ET bouton QR présent (composition Column)
-  testWidgets(
-    '9. ACCEPTED stripe paymentLoaded=true existingPayment≠null → EscrowBadge + "Afficher le QR de remise"',
+    '9. ACCEPTED stripe paymentLoaded=true existingPayment≠null → pas de badge, "Afficher le QR de remise"',
     (tester) async {
       final bloc = _MockBidBloc();
       whenListen<BidState>(
@@ -361,48 +360,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // EscrowBadge must be present
-      expect(find.byType(EscrowBadge), findsOneWidget);
-      // QR button must be present (ACCEPTED + paid → Column layout)
+      // Le badge « Paiement sécurisé » a quitté le footer (la carte Paiement du
+      // corps dit déjà l'état) : seul le bouton reste.
+      expect(find.textContaining('Paiement sécurisé'), findsNothing);
       expect(find.text('Afficher le QR de remise'), findsOneWidget);
+      expect(find.byType(DonyButton), findsOneWidget);
     },
   );
 
-  testWidgets('stickyBar_escrowBadge_receivesOnlineAmountOfBreakdown', (
-    tester,
-  ) async {
-    final bloc = _MockBidBloc();
-    whenListen<BidState>(
-      bloc,
-      const Stream.empty(),
-      initialState: BidInitial(),
-    );
-    await tester.pumpWidget(
-      _host(
-        bloc,
-        _bid(
-          status: 'ACCEPTED',
-          moneyBreakdown: const BidMoneyBreakdown(
-            lines: [],
-            total: 88,
-            onlineAmount: 61.2,
-            cashAmount: 26.8,
-          ),
-        ),
-        paymentLoaded: true,
-        existingPayment: _payment(),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(
-      tester.widget<EscrowBadge>(find.byType(EscrowBadge)).onlineAmount,
-      61.2,
-    );
-  });
-
-  // Test 10: PENDING + stripe + payé → EscrowBadge présent, AUCUN DonyButton (badge seul)
+  // Test 10: PENDING + stripe + payé → rien à faire : aucun badge, aucun footer
   testWidgets(
-    '10. PENDING stripe paymentLoaded=true existingPayment≠null → EscrowBadge présent, aucun DonyButton',
+    '10. PENDING stripe paymentLoaded=true existingPayment≠null → aucun footer',
     (tester) async {
       final bloc = _MockBidBloc();
       whenListen<BidState>(
@@ -416,15 +384,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // EscrowBadge must be present
-      expect(find.byType(EscrowBadge), findsOneWidget);
-
-      // No action button should be rendered (badge alone, no _buildAction output for PENDING+paid)
-      expect(find.text('Payer mon envoi'), findsNothing);
-      expect(find.text('Afficher le QR de remise'), findsNothing);
-      expect(find.text('Suivi du colis'), findsNothing);
-      expect(find.text('Noter le voyageur'), findsNothing);
-      expect(find.text('Supprimer cette demande'), findsNothing);
+      expect(find.textContaining('Paiement sécurisé'), findsNothing);
+      expect(find.byType(DonyButton), findsNothing);
+      expect(tester.getSize(find.byType(SenderStickyBar)).height, 0);
     },
   );
 
@@ -518,17 +480,18 @@ void main() {
       expect(SenderStickyBar.hasAction(_bid(status: 'DELIVERED')), isTrue);
     });
 
-    test('REJECTED → true (kEnvoisPasses)', () {
-      expect(SenderStickyBar.hasAction(_bid(status: 'REJECTED')), isTrue);
-    });
-
-    test('NO_SHOW → true (kEnvoisPasses)', () {
-      expect(SenderStickyBar.hasAction(_bid(status: 'NO_SHOW')), isTrue);
-    });
-
-    test('EXPIRED → true (kEnvoisPasses)', () {
-      expect(SenderStickyBar.hasAction(_bid(status: 'EXPIRED')), isTrue);
-    });
+    // « Supprimer cette demande » vit dans le menu ⋮ : plus de footer.
+    for (final status in [
+      'REJECTED',
+      'CANCELLED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+    ]) {
+      test('$status → false (suppression dans le menu ⋮)', () {
+        expect(SenderStickyBar.hasAction(_bid(status: status)), isFalse);
+      });
+    }
 
     test('PAYMENT_ESCROWED → false (not in any branch)', () {
       expect(
@@ -638,74 +601,6 @@ void main() {
     expect(find.text('Noter le voyageur'), findsOneWidget);
   });
 
-  // ── delete dialog → 'Annuler' → no event dispatched ──────────────────────────
-
-  testWidgets(
-    '14. CANCELLED → dialog "Supprimer cette demande ?" → "Annuler" → aucun BidDeleteRequested',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(
-        bloc,
-        const Stream.empty(),
-        initialState: BidInitial(),
-      );
-
-      await tester.pumpWidget(
-        _host(bloc, _bid(status: 'CANCELLED'), paymentLoaded: true),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Supprimer cette demande'));
-      await tester.pumpAndSettle();
-
-      // Dialog visible
-      expect(find.byType(AlertDialog), findsOneWidget);
-
-      // Tap 'Annuler'
-      await tester.tap(find.text('Annuler'));
-      await tester.pumpAndSettle();
-
-      // BidDeleteRequested must NOT have been dispatched
-      verifyNever(() => bloc.add(any(that: isA<BidDeleteRequested>())));
-    },
-  );
-
-  // ── REJECTED → "Supprimer cette demande" ─────────────────────────────────────
-
-  testWidgets('15. REJECTED → "Supprimer cette demande"', (tester) async {
-    final bloc = _MockBidBloc();
-    whenListen<BidState>(
-      bloc,
-      const Stream.empty(),
-      initialState: BidInitial(),
-    );
-
-    await tester.pumpWidget(
-      _host(bloc, _bid(status: 'REJECTED'), paymentLoaded: true),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Supprimer cette demande'), findsOneWidget);
-  });
-
-  // ── NO_SHOW → "Supprimer cette demande" ──────────────────────────────────────
-
-  testWidgets('16. NO_SHOW → "Supprimer cette demande"', (tester) async {
-    final bloc = _MockBidBloc();
-    whenListen<BidState>(
-      bloc,
-      const Stream.empty(),
-      initialState: BidInitial(),
-    );
-
-    await tester.pumpWidget(
-      _host(bloc, _bid(status: 'NO_SHOW'), paymentLoaded: true),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Supprimer cette demande'), findsOneWidget);
-  });
-
   // Test 20: AWAITING_PAYMENT stripe → "Payer mon envoi" (reprise paiement)
   testWidgets('20. AWAITING_PAYMENT stripe → "Payer mon envoi"', (
     tester,
@@ -723,7 +618,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Payer mon envoi'), findsOneWidget);
-    expect(find.text('Annuler la demande'), findsOneWidget);
+    expect(
+      find.byKey(const Key('sender-cancel-before-payment')),
+      findsOneWidget,
+    );
+    expect(find.text('Annuler'), findsOneWidget);
   });
 
   // Test 21: AWAITING_PAYMENT stripe + paiement PENDING obsolète → bouton présent
@@ -749,7 +648,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Payer mon envoi'), findsOneWidget);
-      expect(find.byType(EscrowBadge), findsNothing);
+      expect(find.textContaining('Paiement sécurisé'), findsNothing);
     },
   );
 
@@ -794,7 +693,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Annuler la demande'));
+      await tester.tap(find.byKey(const Key('sender-cancel-before-payment')));
       await tester.pumpAndSettle();
 
       expect(find.text('Annuler la demande ?'), findsOneWidget);
@@ -840,7 +739,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Annuler la demande'));
+    await tester.tap(find.byKey(const Key('sender-cancel-before-payment')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Garder la demande'));
     await tester.pumpAndSettle();
@@ -871,7 +770,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Annuler la demande'));
+      await tester.tap(find.byKey(const Key('sender-cancel-before-payment')));
       await tester.pumpAndSettle();
 
       expect(
@@ -896,9 +795,9 @@ void main() {
   );
 
   // Test 24: AWAITING_PAYMENT mobile money → boutons "Payer par mobile
-  // money" et "Annuler la demande" (jamais le bloc stripe en parallèle)
+  // money" et "Annuler" (jamais le bloc stripe en parallèle)
   testWidgets('24. AWAITING_PAYMENT mobile money → "Payer par mobile money" et '
-      '"Annuler la demande"', (tester) async {
+      '"Annuler"', (tester) async {
     final bloc = _MockBidBloc();
     whenListen<BidState>(
       bloc,
@@ -919,7 +818,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Payer par mobile money'), findsOneWidget);
-    expect(find.text('Annuler la demande'), findsOneWidget);
+    expect(
+      find.byKey(const Key('sender-cancel-before-payment')),
+      findsOneWidget,
+    );
+    expect(find.text('Annuler'), findsOneWidget);
     expect(find.text('Payer mon envoi'), findsNothing);
   });
 
