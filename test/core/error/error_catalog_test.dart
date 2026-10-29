@@ -1820,6 +1820,17 @@ void main() {
     expect(p.message, contains('contestation bancaire'));
   });
 
+  test(
+    'wallet-external-refund-hold : recharge déjà remboursée sur la carte',
+    () {
+      final p = ErrorCatalog.lookup(
+        const ValidationException('x', code: 'wallet-external-refund-hold'),
+      );
+      expect(p.title, 'Solde bloqué');
+      expect(p.message, contains('déjà été remboursée sur votre carte'));
+    },
+  );
+
   test('budget-below-commission-minimum a un titre et un message', () {
     final p = ErrorCatalog.lookup(
       const ValidationException('x', code: 'budget-below-commission-minimum'),

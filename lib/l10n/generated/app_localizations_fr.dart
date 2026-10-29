@@ -23127,6 +23127,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une recharge par carte de cette devise fait l\'objet d\'une contestation bancaire. Le solde reste bloqué jusqu\'à la fin de la contestation. Contactez le support.';
 
   @override
+  String get errorWalletExternalRefundHoldTitle => 'Solde bloqué';
+
+  @override
+  String get errorWalletExternalRefundHoldMessage =>
+      'Une recharge de cette devise vous a déjà été remboursée sur votre carte. Le solde reste bloqué le temps que l\'équipe le régularise. Contactez le support.';
+
+  @override
   String get walletTxTypeTopupDisputed => 'Recharge contestée';
 
   @override
