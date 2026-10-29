@@ -1,16 +1,6 @@
-import 'dart:async';
 
-import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/get_it_safe.dart';
-import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/services/analytics_events.dart';
-import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
@@ -24,19 +14,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Carte profil voyageur (vue expéditeur) — un bouton « Contacter » (icône
-/// conversation) : discussion directe, ou feuille appel / message quand
-/// l'appel est possible.
+/// conversation) qui ouvre la discussion. L'appel se lance depuis la
+/// messagerie, pas depuis cette carte.
 ///
 /// Affichée à tous les statuts : tant que la demande est en attente, seul le
 /// profil est visible, sans bouton d'appel ni de message
 /// ([bidAllowsContact]).
 ///
-/// Le bouton téléphone est affiché uniquement si :
-///   - `bid.travelerPhoneAvailable` est vrai (le serveur autorise la révélation),
-///   - ET la fenêtre de contact est ouverte : `bid.contactWindowOpen` du
-///     serveur (ACCEPTED → ARRIVED, puis COMPLETED jusqu'à J+3 après la
-///     livraison, même règle que l'appel in-app). Back antérieur sans ce
-///     champ : repli sur le statut, ni COMPLETED ni DELIVERED.
+/// Le bouton n'apparaît qu'une fois la demande acceptée ([bidAllowsContact]) ou
+/// pendant la fenêtre de contact d'un colis annulé ou en retour.
 ///
 /// Requiert un [ConversationOpenBloc] dans le contexte.
 class VoyageurContactCard extends StatelessWidget {
@@ -44,46 +30,17 @@ class VoyageurContactCard extends StatelessWidget {
 
   const VoyageurContactCard({super.key, required this.bid});
 
-  /// Le serveur dit si le voyageur est joignable ; le numéro lui-même est
-  /// demandé au tap. La fenêtre de contact vient du serveur ; à défaut (ancien
-  /// back), on masque le bouton en fin de course.
-  bool get _showPhoneButton {
-    if (!bid.travelerPhoneAvailable || !smsAuthEnabledListenable.value) {
-      return false;
-    }
-    final open = bid.contactWindowOpen;
-    if (open != null) return open;
-    final s = bid.status;
-    return s != 'COMPLETED' && s != 'DELIVERED';
-  }
-
-  void _requestCall(BuildContext context) {
-    unawaited(
-      getItSafe<AnalyticsService>()?.logEvent(
-        AnalyticsEvents.travelerCallInitiated,
-        properties: {'status': bid.status},
-      ),
-    );
-    context.read<ContactRevealBloc>().add(ContactRevealRequested(bid.id));
-  }
-
-  /// Bouton rond « Contacter » (icône conversation) : il porte l'idée qu'on
-  /// peut parler au voyageur, sans choisir le moyen à la place de l'utilisateur.
-  Widget _contactButton(
-    BuildContext context, {
-    required bool canCall,
-    bool isRevealing = false,
-  }) {
+  /// Bouton rond « Contacter » (icône conversation) : il dit qu'on peut parler
+  /// au voyageur et ouvre la discussion.
+  Widget _contactButton(BuildContext context) {
     return BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
       builder: (context, openState) {
-        final busy = isRevealing || openState is ConversationOpenLoading;
+        final busy = openState is ConversationOpenLoading;
         return _IconActionButton(
           iconAsset: 'messages-square',
           semanticLabel: context.l10n.bidDetailContactTravelerLabel,
           isLoading: busy,
-          onTap: busy
-              ? null
-              : () => canCall ? _showContactSheet(context) : _openChat(context),
+          onTap: busy ? null : () => _openChat(context),
         );
       },
     );
@@ -92,40 +49,6 @@ class VoyageurContactCard extends StatelessWidget {
   void _openChat(BuildContext context) => context
       .read<ConversationOpenBloc>()
       .add(ConversationOpenRequested(bid.id));
-
-  /// Feuille « Contacter le voyageur » : écrire ou appeler. Les deux blocs
-  /// sont lus ici, avant l'ouverture : la feuille vit sur le navigateur racine,
-  /// hors des fournisseurs de l'écran.
-  void _showContactSheet(BuildContext context) {
-    final l = context.l10n;
-    DonyBottomSheet.show<void>(
-      context,
-      title: l.bidDetailContactTravelerLabel,
-      child: Builder(
-        builder: (sheetContext) => Column(
-          children: [
-            _ContactOption(
-              iconAsset: 'message-circle',
-              label: l.voyageurCardContactChat,
-              onTap: () {
-                Navigator.of(sheetContext).pop();
-                _openChat(context);
-              },
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            _ContactOption(
-              iconAsset: 'phone',
-              label: l.travelerContactCall,
-              onTap: () {
-                Navigator.of(sheetContext).pop();
-                _requestCall(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +62,6 @@ class VoyageurContactCard extends StatelessWidget {
     final cancelledWindow = bidCancelledContactOpen(bid);
     final contactAllowed = bidAllowsContactFor(bid);
     final canOpenProfile = bid.travelerId != null;
-    final canCall = _showPhoneButton && contactAllowed;
 
     final ratingLabel = bid.travelerAverageRating != null
         ? '★ ${bid.travelerAverageRating!.toStringAsFixed(1)}'
@@ -231,28 +153,7 @@ class VoyageurContactCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Un seul bouton « Contacter » : le détail du moyen (appel ou
-                // message) vient ensuite, dans une feuille. Sans appel possible,
-                // il ouvre directement la discussion.
-                if (contactAllowed)
-                  canCall
-                      ? BlocConsumer<ContactRevealBloc, ContactRevealState>(
-                          listener: (context, state) {
-                            if (state is ContactRevealSuccess) {
-                              unawaited(
-                                dialPhoneNumber(context, state.phoneNumber),
-                              );
-                            } else if (state is ContactRevealError) {
-                              ErrorPresenter.show(context, state.error);
-                            }
-                          },
-                          builder: (context, revealState) => _contactButton(
-                            context,
-                            canCall: true,
-                            isRevealing: revealState is ContactRevealLoading,
-                          ),
-                        )
-                      : _contactButton(context, canCall: false),
+                if (contactAllowed) _contactButton(context),
                 if (canOpenProfile) ...[
                   const SizedBox(width: DonySpacing.xs),
                   DonyIcon(
@@ -368,59 +269,6 @@ class _IconActionButton extends StatelessWidget {
                   ),
                 )
               : DonyIcon(iconAsset, color: cs.primary, size: 18),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Ligne de la feuille « Contacter » ─────────────────────────────────────────
-
-class _ContactOption extends StatelessWidget {
-  final String iconAsset;
-  final String label;
-  final VoidCallback onTap;
-
-  const _ContactOption({
-    required this.iconAsset,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(DonyRadius.lg),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
-        padding: const EdgeInsets.all(DonySpacing.md),
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(DonyRadius.lg),
-          border: Border.all(color: cs.outline),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(DonySpacing.sm),
-              decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                borderRadius: BorderRadius.circular(DonyRadius.sm),
-              ),
-              child: DonyIcon(iconAsset, color: cs.primary, size: 18),
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Text(
-                label,
-                style: tt.titleSmall?.copyWith(color: cs.onSurface),
-              ),
-            ),
-            DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 18),
-          ],
         ),
       ),
     );

@@ -2,9 +2,6 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -20,9 +17,6 @@ import '../../../../../helpers/l10n_test_helpers.dart';
 class _MockConvBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
-
-class _MockRevealBloc extends MockBloc<ContactRevealEvent, ContactRevealState>
-    implements ContactRevealBloc {}
 
 class _FakeConversationOpenEvent extends Fake
     implements ConversationOpenEvent {}
@@ -48,31 +42,23 @@ BidModel _bid({
   updatedAt: DateTime(2026, 10),
 );
 
-/// Un seul bouton « Contacter » ; l'appel et le message sont dans la feuille.
+/// Un seul bouton « Contacter » : il ouvre la discussion. L'appel se lance
+/// depuis la messagerie, plus depuis cette carte.
 Finder get _contactIcon =>
     find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'messages-square');
-
-/// Ouvre la feuille « Contacter » et dit si l'appel y est proposé.
-Future<bool> _callOffered(WidgetTester tester) async {
-  await tester.tap(_contactIcon);
-  await tester.pumpAndSettle();
-  return find.text('Appeler').evaluate().isNotEmpty;
-}
+Finder get _oldIcons => find.byWidgetPredicate(
+  (w) => w is DonyIcon && (w.name == 'phone' || w.name == 'message-circle'),
+);
 
 Future<_MockConvBloc> _pump(WidgetTester tester, BidModel bid) async {
   final conv = _MockConvBloc();
   when(() => conv.state).thenReturn(const ConversationOpenInitial());
-  final reveal = _MockRevealBloc();
-  when(() => reveal.state).thenReturn(const ContactRevealInitial());
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.light(),
       home: Scaffold(
         body: MultiBlocProvider(
-          providers: [
-            BlocProvider<ConversationOpenBloc>.value(value: conv),
-            BlocProvider<ContactRevealBloc>.value(value: reveal),
-          ],
+          providers: [BlocProvider<ConversationOpenBloc>.value(value: conv)],
           child: VoyageurContactCard(bid: bid),
         ),
       ),
@@ -91,8 +77,7 @@ void main() {
   ) async {
     await _pump(tester, _bid(status: 'ACCEPTED', contactWindowOpen: true));
     expect(_contactIcon, findsOneWidget);
-    expect(await _callOffered(tester), isTrue);
-    expect(find.text('Écrire un message'), findsOneWidget);
+    expect(_oldIcons, findsNothing);
     expect(
       find.byKey(const Key('contact-return-in-progress-hint')),
       findsNothing,
@@ -107,8 +92,7 @@ void main() {
   ) async {
     await _pump(tester, _bid(status: 'CANCELLED', contactWindowOpen: true));
     expect(_contactIcon, findsOneWidget);
-    expect(await _callOffered(tester), isTrue);
-    expect(find.text('Écrire un message'), findsOneWidget);
+    expect(_oldIcons, findsNothing);
     expect(
       find.byKey(const Key('contact-cancelled-window-hint')),
       findsOneWidget,
@@ -138,8 +122,7 @@ void main() {
       ),
     );
     expect(_contactIcon, findsOneWidget);
-    expect(await _callOffered(tester), isTrue);
-    expect(find.text('Écrire un message'), findsOneWidget);
+    expect(_oldIcons, findsNothing);
     expect(
       find.text(
         'Retour en cours : contactez le voyageur pour récupérer votre colis.',
@@ -147,8 +130,7 @@ void main() {
       findsOneWidget,
     );
 
-    // La feuille est déjà ouverte par `_callOffered` : on choisit « écrire ».
-    await tester.tap(find.text('Écrire un message'));
+    await tester.tap(_contactIcon);
     await tester.pumpAndSettle();
     verify(
       () => conv.add(any(that: isA<ConversationOpenRequested>())),

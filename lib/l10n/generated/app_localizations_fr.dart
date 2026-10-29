@@ -6336,9 +6336,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get voyageurCardCallSemanticLabel => 'Appeler';
 
   @override
-  String get voyageurCardContactChat => 'Écrire un message';
-
-  @override
   String get voyageurCardOpenChatSemanticLabel => 'Ouvrir la discussion';
 
   @override

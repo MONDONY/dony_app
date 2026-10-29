@@ -2186,7 +2186,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'blockConfirmButton': (l) => l.blockConfirmButton,
   'bidTravelerRoleTag': (l) => l.bidTravelerRoleTag,
   'voyageurCardCallSemanticLabel': (l) => l.voyageurCardCallSemanticLabel,
-  'voyageurCardContactChat': (l) => l.voyageurCardContactChat,
   'voyageurCardOpenChatSemanticLabel': (l) =>
       l.voyageurCardOpenChatSemanticLabel,
   'negotiationStatusBadgeOpen': (l) => l.negotiationStatusBadgeOpen,

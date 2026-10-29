@@ -2432,10 +2432,6 @@
   "@voyageurCardCallSemanticLabel": {
     "description": "Libellé d'accessibilité du bouton d'appel (voyageur_card.dart)"
   },
-  "voyageurCardContactChat": "Send a message",
-  "@voyageurCardContactChat": {
-    "description": "Ligne « écrire » de la feuille Contacter le voyageur (voyageur_contact_card.dart)"
-  },
   "voyageurCardOpenChatSemanticLabel": "Open the conversation",
   "@voyageurCardOpenChatSemanticLabel": {
     "description": "Libellé d'accessibilité du bouton de messagerie (voyageur_card.dart)"

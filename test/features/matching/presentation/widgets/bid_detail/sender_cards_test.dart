@@ -2,7 +2,6 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
@@ -201,17 +200,11 @@ void main() {
     });
     tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
 
-    // Un seul bouton « Contacter » : l'appel n'est proposé que dans la
-    // feuille qu'il ouvre. Sans appel possible, il ouvre la discussion.
+    // Un seul bouton « Contacter » : il ouvre la discussion. L'appel se lance
+    // depuis la messagerie, plus depuis cette carte.
     Finder contactIcon() => find.byWidgetPredicate(
       (w) => w is DonyIcon && w.name == 'messages-square',
     );
-    Future<bool> callOffered(WidgetTester tester) async {
-      if (contactIcon().evaluate().isEmpty) return false;
-      await tester.tap(contactIcon());
-      await tester.pumpAndSettle();
-      return find.text('Appeler').evaluate().isNotEmpty;
-    }
 
     testWidgets('shows traveler name, rating and chat button', (tester) async {
       final bid = _bid(
@@ -236,107 +229,22 @@ void main() {
       );
     });
 
-    testWidgets(
-      'shows phone button when phone is present and status is ACCEPTED',
-      (tester) async {
-        final bid = _bid(travelerPhoneAvailable: true);
-
-        await tester.pumpWidget(_hostVoyageur(bid, bloc));
-
-        expect(await callOffered(tester), isTrue);
-        expect(find.text('Écrire un message'), findsOneWidget);
-      },
-    );
-
-    testWidgets('hides phone button when phone is null', (tester) async {
-      final bid = _bid();
+    testWidgets('plus de bouton d\'appel sur la carte, même joignable', (
+      tester,
+    ) async {
+      final bid = _bid(travelerPhoneAvailable: true);
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(await callOffered(tester), isFalse);
-    });
-
-    testWidgets(
-      'hides phone button tant que le SMS OTP backend n\'est pas confirmé, même joignable',
-      (tester) async {
-        setSmsAuthEnabled(false);
-        final bid = _bid(travelerPhoneAvailable: true);
-
-        await tester.pumpWidget(_hostVoyageur(bid, bloc));
-
-        expect(await callOffered(tester), isFalse);
-      },
-    );
-
-    testWidgets('hides phone button when status is COMPLETED even with phone', (
-      tester,
-    ) async {
-      final bid = _bid(travelerPhoneAvailable: true, status: 'COMPLETED');
-
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-
-      expect(await callOffered(tester), isFalse);
-    });
-
-    testWidgets('hides phone button when status is DELIVERED even with phone', (
-      tester,
-    ) async {
-      final bid = _bid(travelerPhoneAvailable: true, status: 'DELIVERED');
-
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-
-      expect(await callOffered(tester), isFalse);
-    });
-
-    // ── Fenêtre de contact servie par le back (yadony-back #414, FLUTTER-DK) ──
-
-    testWidgets('COMPLETED + fenêtre ouverte (J+3) → 📞 visible', (
-      tester,
-    ) async {
-      final bid = _bid(
-        travelerPhoneAvailable: true,
-        status: 'COMPLETED',
-        contactWindowOpen: true,
+      expect(contactIcon(), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is DonyIcon &&
+              (w.name == 'phone' || w.name == 'message-circle'),
+        ),
+        findsNothing,
       );
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(await callOffered(tester), isTrue);
-    });
-
-    testWidgets('COMPLETED + fenêtre fermée → 📞 masqué', (tester) async {
-      final bid = _bid(
-        travelerPhoneAvailable: true,
-        status: 'COMPLETED',
-        contactWindowOpen: false,
-      );
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(await callOffered(tester), isFalse);
-    });
-
-    testWidgets('COMPLETED sans le champ (ancien back) → repli, 📞 masqué', (
-      tester,
-    ) async {
-      final bid = _bid(travelerPhoneAvailable: true, status: 'COMPLETED');
-      expect(bid.contactWindowOpen, isNull);
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(await callOffered(tester), isFalse);
-    });
-
-    testWidgets('IN_TRANSIT + fenêtre ouverte → 📞 visible', (tester) async {
-      final bid = _bid(
-        travelerPhoneAvailable: true,
-        status: 'IN_TRANSIT',
-        contactWindowOpen: true,
-      );
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(await callOffered(tester), isTrue);
-    });
-
-    testWidgets('fenêtre ouverte mais voyageur non joignable → 📞 masqué', (
-      tester,
-    ) async {
-      final bid = _bid(status: 'IN_TRANSIT', contactWindowOpen: true);
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(await callOffered(tester), isFalse);
     });
 
     testWidgets('tap chat button fires ConversationOpenRequested once', (
@@ -415,41 +323,6 @@ void main() {
         findsNothing,
       );
     });
-
-    testWidgets(
-      '_call canLaunchUrl=true et launchUrl=true → aucun snackbar erreur',
-      (tester) async {
-        const channel = MethodChannel('plugins.flutter.io/url_launcher');
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(channel, (call) async {
-              if (call.method == 'canLaunch') return true;
-              if (call.method == 'launch') return true;
-              return null;
-            });
-
-        addTearDown(() {
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-              .setMockMethodCallHandler(channel, null);
-        });
-
-        final bid = _bid(travelerPhoneAvailable: true);
-        await tester.pumpWidget(_hostVoyageur(bid, bloc));
-        await tester.pumpAndSettle();
-
-        await tester.tap(
-          find.byWidgetPredicate(
-            (w) => w is DonyIcon && w.name == 'messages-square',
-          ),
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Appeler'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
-
-        // Le tap ne fait que demander le numéro : aucun repli ne s'affiche.
-        expect(find.text('Copier'), findsNothing);
-      },
-    );
   });
 
   // ── ColisDestinataireCard ──────────────────────────────────────────────────
@@ -806,86 +679,6 @@ void main() {
         equals('https://yadony.com/tracking/tok/2026/xyz'),
       );
     });
-  });
-
-  // ── VoyageurContactCard._call error path ─────────────────────────────────
-  group('VoyageurContactCard._call', () {
-    late _MockConversationOpenBloc bloc;
-
-    setUp(() {
-      bloc = _MockConversationOpenBloc();
-      when(() => bloc.state).thenReturn(const ConversationOpenInitial());
-      setSmsAuthEnabled(true);
-    });
-    tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
-
-    testWidgets(
-      'canLaunchUrl returns false → le numéro est affiché et proposé à la copie',
-      (tester) async {
-        // Mock the url_launcher platform channel so canLaunchUrl returns false.
-        const channel = MethodChannel('plugins.flutter.io/url_launcher');
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(channel, (call) async {
-              if (call.method == 'canLaunch') return false;
-              if (call.method == 'launch') return false;
-              return null;
-            });
-
-        addTearDown(() {
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-              .setMockMethodCallHandler(channel, null);
-        });
-
-        final bid = _bid(travelerPhoneAvailable: true);
-
-        // Le tap ne compose plus directement : il demande le numéro. On simule le
-        // bloc qui le renvoie, ce qui déclenche l'ouverture du composeur.
-        final reveal = _MockContactRevealBloc();
-        whenListen(
-          reveal,
-          Stream<ContactRevealState>.fromIterable([
-            const ContactRevealSuccess('+33600000000'),
-          ]),
-          initialState: const ContactRevealInitial(),
-        );
-
-        await tester.pumpWidget(_hostVoyageur(bid, bloc, reveal: reveal));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-
-        expect(find.textContaining('+33600000000'), findsOneWidget);
-        expect(find.text('Copier'), findsOneWidget);
-      },
-    );
-
-    // K3 : `state.error.message` (detail brut du serveur) remplacé par
-    // ErrorPresenter.show, qui résout via ErrorCatalog selon la langue.
-    testWidgets(
-      'en anglais : échec serveur affiche le texte anglais du catalogue',
-      (tester) async {
-        useEnglish();
-        DonySnackbar.clearDedup();
-        final bid = _bid(travelerPhoneAvailable: true);
-        final reveal = _MockContactRevealBloc();
-        whenListen(
-          reveal,
-          Stream<ContactRevealState>.fromIterable([
-            const ContactRevealError(ForbiddenException('Numéro indisponible')),
-          ]),
-          initialState: const ContactRevealInitial(),
-        );
-
-        await tester.pumpWidget(_hostVoyageur(bid, bloc, reveal: reveal));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-
-        expect(find.textContaining('Numéro indisponible'), findsNothing);
-        expect(
-          find.textContaining('You don\'t have permission to do this.'),
-          findsOneWidget,
-        );
-      },
-    );
   });
 
   // ── VoyageurContactCard — badges KYC / GP Pro ───────────────────────────
