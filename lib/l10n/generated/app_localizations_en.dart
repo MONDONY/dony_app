@@ -22938,6 +22938,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'A card top-up in this currency is being disputed with the bank. The balance stays blocked until the dispute ends. Contact support.';
 
   @override
+  String get errorWalletExternalRefundHoldTitle => 'Balance blocked';
+
+  @override
+  String get errorWalletExternalRefundHoldMessage =>
+      'A top-up in this currency was already refunded to your card. The balance stays blocked while the team settles it. Contact support.';
+
+  @override
   String get walletTxTypeTopupDisputed => 'Disputed top-up';
 
   @override
