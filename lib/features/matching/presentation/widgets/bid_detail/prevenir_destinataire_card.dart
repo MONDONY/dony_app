@@ -136,6 +136,15 @@ abstract final class PrevenirDestinataire {
     await share(text, origin);
   }
 
+  /// Prénom (ou nom saisi) du destinataire pour les titres et textes de
+  /// « Prévenir … », « le destinataire » à défaut.
+  static String displayName(AppLocalizations l, BidModel bid) {
+    final name = bid.recipientName?.trim();
+    return (name == null || name.isEmpty)
+        ? l.recipientNotifyFallbackName
+        : name;
+  }
+
   /// Libellé du bouton d'envoi : le code ne figure dans le message que s'il
   /// part vraiment.
   static String buttonLabel(AppLocalizations l, BidModel bid) =>
@@ -157,9 +166,7 @@ class PrevenirDestinataireBody extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final rawName = bid.recipientName?.trim();
-    final name = (rawName == null || rawName.isEmpty)
-        ? l.recipientNotifyFallbackName
-        : rawName;
+    final name = PrevenirDestinataire.displayName(l, bid);
     final hasCode = PrevenirDestinataire.withCode(bid);
 
     return Column(
@@ -234,10 +241,7 @@ class PrevenirDestinataireCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final rawName = bid.recipientName?.trim();
-    final name = (rawName == null || rawName.isEmpty)
-        ? l.recipientNotifyFallbackName
-        : rawName;
+    final name = PrevenirDestinataire.displayName(l, bid);
 
     // Le destinataire a refusé le colis ou s'en est retiré (FLUTTER-E8) :
     // renvoyer le lien et le code au même numéro n'aurait pas de sens. Le

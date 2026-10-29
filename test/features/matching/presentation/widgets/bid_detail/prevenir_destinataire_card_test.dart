@@ -99,6 +99,26 @@ void main() {
     });
   });
 
+  group('displayName', () {
+    test('nom saisi, sans les espaces autour', () {
+      expect(
+        PrevenirDestinataire.displayName(fr, _bid(recipientName: ' Awa ')),
+        'Awa',
+      );
+    });
+
+    test('repli quand le nom est absent ou vide', () {
+      expect(
+        PrevenirDestinataire.displayName(fr, _bid(recipientName: null)),
+        fr.recipientNotifyFallbackName,
+      );
+      expect(
+        PrevenirDestinataire.displayName(fr, _bid(recipientName: '  ')),
+        fr.recipientNotifyFallbackName,
+      );
+    });
+  });
+
   group('règles d\'affichage', () {
     test('shouldShow : lien de suivi requis, colis pas encore remis', () {
       expect(PrevenirDestinataireCard.shouldShow(_bid()), isTrue);
