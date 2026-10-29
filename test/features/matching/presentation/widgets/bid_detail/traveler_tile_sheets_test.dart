@@ -76,6 +76,7 @@ BidModel _bid({
   String? handoverLocation,
   String? arrivalInstructions,
   List<BidPhoto> photos = const [],
+  String? trackingNumber,
 }) => BidModel(
   id: id,
   announcementId: 'ann-001',
@@ -90,6 +91,7 @@ BidModel _bid({
   recipientDeclined: recipientDeclined,
   recipientAppStatus: recipientAppStatus,
   trackingToken: 'tok-abc123',
+  trackingNumber: trackingNumber,
   departureCity: 'Paris',
   arrivalCity: 'Bamako',
   handoverAddress: handoverAddress,
@@ -519,6 +521,47 @@ void main() {
       expect(find.text('Référence'), findsOneWidget);
       expect(find.text('BID-001'), findsOneWidget);
     });
+
+    // Le voyageur ne voit le numéro de suivi qu'à partir de la remise.
+    for (final status in [
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'COMPLETED',
+    ]) {
+      testWidgets('$status + numéro servi → « Numéro de suivi »', (
+        tester,
+      ) async {
+        await openTile(
+          tester,
+          _bid(status: status, trackingNumber: 'DON-1'),
+          TravelerTile.details,
+        );
+        expect(find.text('Numéro de suivi'), findsOneWidget);
+        expect(find.text('DON-1'), findsOneWidget);
+        expect(find.text('Référence'), findsNothing);
+      });
+    }
+
+    for (final status in [
+      'PENDING',
+      'ACCEPTED',
+      'CANCELLED',
+      'PARCEL_REFUSED',
+    ]) {
+      testWidgets('$status + numéro servi quand même → « Référence »', (
+        tester,
+      ) async {
+        await openTile(
+          tester,
+          _bid(status: status, trackingNumber: 'DON-1'),
+          TravelerTile.details,
+        );
+        expect(find.text('Numéro de suivi'), findsNothing);
+        expect(find.text('DON-1'), findsNothing);
+        expect(find.text('Référence'), findsOneWidget);
+      });
+    }
   });
 
   group('colis courant', () {

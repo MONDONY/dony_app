@@ -110,6 +110,34 @@ const bidRecipientContactStatuses = <String>{
 bool bidAllowsRecipientContact(String status) =>
     bidRecipientContactStatuses.contains(status);
 
+/// Statuts où le VOYAGEUR voit le numéro de suivi du colis : à partir de la
+/// remise (départ scanné). Avant, ou sur une demande close sans remise, il ne
+/// le voit nulle part. Même ensemble que [bidRecipientContactStatuses], mais
+/// c'est une autre règle (visibilité du numéro, décision du propriétaire) :
+/// elle reste nommée à part.
+const bidTrackingNumberTravelerStatuses = <String>{
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'ARRIVED',
+  'COMPLETED',
+  'DELIVERED',
+};
+
+/// Numéro de suivi du colis tel que le VOYAGEUR a le droit de le voir : le
+/// numéro à partir de la remise ([bidTrackingNumberTravelerStatuses]), `null`
+/// avant (demande en attente, acceptée, refusée, annulée...), et `null` si le
+/// serveur n'en a pas servi.
+///
+/// Le back ne l'envoie déjà qu'à partir de la remise ; l'app le garantit
+/// elle-même (défense en profondeur) aux trois emplacements voyageur : bande
+/// du talon, titre de l'écran, ligne « Numéro de suivi » de « Plus de
+/// détails ». Côté expéditeur, on lit `bid.trackingNumber` directement.
+String? travelerVisibleTrackingNumber(BidModel bid) {
+  final number = bid.trackingNumber;
+  if (number == null || number.trim().isEmpty) return null;
+  return bidTrackingNumberTravelerStatuses.contains(bid.status) ? number : null;
+}
+
 /// Retour en cours d'un colis annulé alors que le voyageur l'avait déjà
 /// (FLUTTER-FM) : expéditeur et voyageur doivent pouvoir s'écrire et
 /// s'appeler pour organiser la restitution, jusqu'à ce qu'elle soit confirmée

@@ -5,6 +5,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
@@ -30,10 +31,15 @@ class BidDetailsContent extends StatelessWidget {
     super.key,
     required this.bid,
     this.showTrackingLink = true,
+    this.isSender = true,
   });
 
   final BidModel bid;
   final bool showTrackingLink;
+
+  /// Lecteur expéditeur (défaut) ou voyageur. Le voyageur ne voit le numéro de
+  /// suivi qu'à partir de la remise ([travelerVisibleTrackingNumber]).
+  final bool isSender;
 
   String _formatHandoverDate(BuildContext context, DateTime? d) {
     if (d == null) {
@@ -63,10 +69,15 @@ class BidDetailsContent extends StatelessWidget {
         '${DateFormat.Hm(locale).format(d.toLocal())}';
   }
 
-  /// Numéro de suivi quand il est servi (expéditeur, ou voyageur après la
-  /// remise), sinon le début de l'identifiant de la demande.
+  /// Numéro de suivi visible par le lecteur : celui de l'expéditeur dès qu'il
+  /// existe, celui du voyageur après la remise seulement.
+  String? get _trackingNumber =>
+      isSender ? bid.trackingNumber : travelerVisibleTrackingNumber(bid);
+
+  /// Numéro de suivi quand il est visible, sinon le début de l'identifiant de
+  /// la demande.
   String get _reference =>
-      bid.trackingNumber ??
+      _trackingNumber ??
       bid.id.substring(0, bid.id.length < 8 ? bid.id.length : 8).toUpperCase();
 
   String get _route {
@@ -115,7 +126,7 @@ class BidDetailsContent extends StatelessWidget {
           // Numéro de suivi quand il est servi, jamais
           // « Référence » : vu des deux côtés, il passait pour
           // un code (FLUTTER-J2).
-          label: bid.trackingNumber != null
+          label: _trackingNumber != null
               ? l.bidDetailTrackingNumberLabel
               : l.bidDetailReferenceLabel,
           value: _reference,

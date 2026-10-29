@@ -3,6 +3,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_rejection_reason.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip_validation.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
@@ -20,8 +21,10 @@ import 'package:go_router/go_router.dart';
 ///
 /// Dispatcher : selon [bid.status] × [isSender], affiche le bon contenu
 /// d'action (QR, code retrait, scan, confirmation, placeholder, done…).
-/// Si [bid.trackingNumber] est non-null, la [TalonTrackingStrip] est
-/// toujours ajoutée en bas, quelle que soit l'action.
+/// Si le numéro de suivi est visible, la [TalonTrackingStrip] est toujours
+/// ajoutée en bas, quelle que soit l'action. L'expéditeur le voit dès qu'il
+/// existe ; le voyageur seulement à partir de la remise
+/// ([travelerVisibleTrackingNumber]).
 ///
 /// NOTE : les boutons [_QrTalonButton] et [_RetraitTalonButton] ouvrent
 /// respectivement la [QrSheet] et la [RetraitCodeSheet] ; les BLoCs ambiants
@@ -36,6 +39,10 @@ class BilletTalon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Le voyageur ne voit le numéro de suivi qu'à partir de la remise.
+    final trackingNumber = isSender
+        ? bid.trackingNumber
+        : travelerVisibleTrackingNumber(bid);
 
     return Container(
       decoration: BoxDecoration(
@@ -50,10 +57,10 @@ class BilletTalon extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildActionZone(context),
-          if (bid.trackingNumber != null) ...[
+          if (trackingNumber != null) ...[
             const SizedBox(height: DonySpacing.md),
             TalonTrackingStrip(
-              trackingNumber: bid.trackingNumber!,
+              trackingNumber: trackingNumber,
               trackingToken: bid.trackingToken,
             ),
           ],

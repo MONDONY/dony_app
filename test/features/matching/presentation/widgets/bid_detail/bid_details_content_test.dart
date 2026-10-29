@@ -16,11 +16,12 @@ BidModel _bid({
   DateTime? handoverDeadline,
   DateTime? departureDate,
   String? trackingNumber,
+  String status = 'ACCEPTED',
 }) => BidModel(
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: 'sender-001',
-  status: 'ACCEPTED',
+  status: status,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
   handoverDeadline: handoverDeadline,
@@ -28,10 +29,12 @@ BidModel _bid({
   trackingNumber: trackingNumber,
 );
 
-Widget _host(BidModel bid) => MaterialApp(
+Widget _host(BidModel bid, {bool isSender = true}) => MaterialApp(
   // Défilant comme le sheet réel : le contenu dépasse la hauteur du test.
   home: Scaffold(
-    body: SingleChildScrollView(child: BidDetailsContent(bid: bid)),
+    body: SingleChildScrollView(
+      child: BidDetailsContent(bid: bid, isSender: isSender),
+    ),
   ),
 );
 
@@ -186,6 +189,112 @@ void main() {
     expect(find.text('Numéro de suivi'), findsOneWidget);
     expect(find.text('Référence'), findsNothing);
     expect(find.text('DON-E69EDCSG'), findsOneWidget);
+  });
+
+  // Règle du propriétaire : le voyageur ne voit pas le numéro de suivi tant que
+  // le colis n'a pas été remis (défense en profondeur, le back le garantit).
+  group('numéro de suivi : visibilité par rôle et par statut', () {
+    const handedOver = [
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'COMPLETED',
+      'DELIVERED',
+    ];
+    const beforeOrWithoutHandover = [
+      'PENDING',
+      'PAYMENT_ESCROWED',
+      'AWAITING_PAYMENT',
+      'ACCEPTED',
+      'REJECTED',
+      'CANCELLED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+    ];
+
+    for (final status in handedOver) {
+      testWidgets('voyageur · $status + numéro → « Numéro de suivi »', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _host(_bid(status: status, trackingNumber: 'DON-1'), isSender: false),
+        );
+        expect(find.text('Numéro de suivi'), findsOneWidget);
+        expect(find.text('DON-1'), findsOneWidget);
+        expect(find.text('Référence'), findsNothing);
+      });
+
+      testWidgets('voyageur · $status sans numéro → « Référence »', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_host(_bid(status: status), isSender: false));
+        expect(find.text('Numéro de suivi'), findsNothing);
+        expect(find.text('Référence'), findsOneWidget);
+        expect(find.text('BID-001'), findsOneWidget);
+      });
+    }
+
+    for (final status in beforeOrWithoutHandover) {
+      testWidgets(
+        'voyageur · $status + numéro servi quand même → « Référence », '
+        'numéro jamais affiché',
+        (tester) async {
+          await tester.pumpWidget(
+            _host(
+              _bid(status: status, trackingNumber: 'DON-1'),
+              isSender: false,
+            ),
+          );
+          expect(find.text('Numéro de suivi'), findsNothing);
+          expect(find.text('DON-1'), findsNothing);
+          expect(find.text('Référence'), findsOneWidget);
+          expect(find.text('BID-001'), findsOneWidget);
+        },
+      );
+
+      testWidgets('voyageur · $status sans numéro → « Référence »', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_host(_bid(status: status), isSender: false));
+        expect(find.text('Numéro de suivi'), findsNothing);
+        expect(find.text('Référence'), findsOneWidget);
+      });
+    }
+
+    // Expéditeur : inchangé, le numéro est montré dès qu'il existe.
+    for (final status in [...handedOver, ...beforeOrWithoutHandover]) {
+      testWidgets('expéditeur · $status + numéro → « Numéro de suivi »', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _host(_bid(status: status, trackingNumber: 'DON-1')),
+        );
+        expect(find.text('Numéro de suivi'), findsOneWidget);
+        expect(find.text('DON-1'), findsOneWidget);
+        expect(find.text('Référence'), findsNothing);
+      });
+
+      testWidgets('expéditeur · $status sans numéro → « Référence »', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_host(_bid(status: status)));
+        expect(find.text('Numéro de suivi'), findsNothing);
+        expect(find.text('Référence'), findsOneWidget);
+      });
+    }
+
+    testWidgets('voyageur · numéro en anglais après la remise', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _host(
+          _bid(status: 'ARRIVED', trackingNumber: 'DON-1'),
+          isSender: false,
+        ),
+      );
+      expect(find.text('Tracking number'), findsOneWidget);
+      expect(find.text('DON-1'), findsOneWidget);
+    });
   });
 
   testWidgets('sans numéro de suivi : « Référence » de la demande', (

@@ -12,6 +12,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/bloc/delivery_noshow_procedure/delivery_noshow_procedure_cubit.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
@@ -62,6 +63,9 @@ class _MockConversationOpen
 class _MockRating extends MockBloc<RatingEvent, RatingState>
     implements RatingBloc {}
 
+class _MockProcedureCubit extends MockCubit<DeliveryNoShowProcedureState>
+    implements DeliveryNoShowProcedureCubit {}
+
 class _MockAuth extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 class _MockPaymentRepository extends Mock implements PaymentRepository {}
@@ -77,6 +81,7 @@ BidModel _bid({
   String senderId = _senderId,
   BidPaymentMethod method = BidPaymentMethod.cash,
   String? trackingToken,
+  String? trackingNumber,
   bool isSkeleton = false,
 }) => BidModel(
   id: 'bid-001',
@@ -86,6 +91,7 @@ BidModel _bid({
   status: status,
   paymentMethod: method,
   trackingToken: trackingToken,
+  trackingNumber: trackingNumber,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
@@ -681,5 +687,104 @@ void main() {
       await pump(tester, _bid(method: BidPaymentMethod.stripe));
       expect(find.byType(DonyAppBar), findsOneWidget);
     });
+  });
+
+  // Titre de l'écran : le voyageur ne voit le numéro de suivi qu'à partir de la
+  // remise ; avant, `#` + 6 premiers caractères de l'identifiant (ce n'est pas
+  // le numéro de suivi). L'expéditeur voit toujours le numéro quand il existe.
+  group('titre de l\'écran : numéro de suivi par rôle et par statut', () {
+    const otherSender = 'someone-else';
+
+    // La vue voyageur d'un colis ARRIVED monte la procédure « destinataire
+    // absent » : procédure indisponible, la cellule historique s'affiche.
+    setUp(() {
+      final procedure = _MockProcedureCubit();
+      whenListen(
+        procedure,
+        const Stream<DeliveryNoShowProcedureState>.empty(),
+        initialState: const DeliveryNoShowProcedureUnavailable(),
+      );
+      when(() => procedure.load(any())).thenAnswer((_) async {});
+      getIt.registerFactory<DeliveryNoShowProcedureCubit>(() => procedure);
+    });
+
+    const uuidTitle = '#BID-00'; // 'bid-001'.substring(0, 6) → « BID-00 »
+
+    const handedOver = [
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'COMPLETED',
+      'DELIVERED',
+    ];
+    const beforeOrWithoutHandover = [
+      'PENDING',
+      'PAYMENT_ESCROWED',
+      'AWAITING_PAYMENT',
+      'ACCEPTED',
+      'REJECTED',
+      'CANCELLED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+    ];
+
+    for (final status in handedOver) {
+      testWidgets('voyageur · $status + numéro → #numéro', (tester) async {
+        await pump(
+          tester,
+          _bid(status: status, senderId: otherSender, trackingNumber: 'DON-1'),
+        );
+        expect(find.text('#DON-1'), findsOneWidget);
+      });
+
+      testWidgets('voyageur · $status sans numéro → #début de l\'id', (
+        tester,
+      ) async {
+        await pump(tester, _bid(status: status, senderId: otherSender));
+        expect(find.text(uuidTitle), findsOneWidget);
+      });
+    }
+
+    for (final status in beforeOrWithoutHandover) {
+      testWidgets(
+        'voyageur · $status + numéro servi quand même → #début de l\'id',
+        (tester) async {
+          await pump(
+            tester,
+            _bid(
+              status: status,
+              senderId: otherSender,
+              trackingNumber: 'DON-1',
+            ),
+          );
+          expect(find.text('#DON-1'), findsNothing);
+          expect(find.text(uuidTitle), findsOneWidget);
+        },
+      );
+
+      testWidgets('voyageur · $status sans numéro → #début de l\'id', (
+        tester,
+      ) async {
+        await pump(tester, _bid(status: status, senderId: otherSender));
+        expect(find.text(uuidTitle), findsOneWidget);
+      });
+    }
+
+    for (final status in [...handedOver, ...beforeOrWithoutHandover]) {
+      testWidgets('expéditeur · $status + numéro → #numéro (inchangé)', (
+        tester,
+      ) async {
+        await pump(tester, _bid(status: status, trackingNumber: 'DON-1'));
+        expect(find.text('#DON-1'), findsOneWidget);
+      });
+
+      testWidgets('expéditeur · $status sans numéro → #début de l\'id', (
+        tester,
+      ) async {
+        await pump(tester, _bid(status: status));
+        expect(find.text(uuidTitle), findsOneWidget);
+      });
+    }
   });
 }

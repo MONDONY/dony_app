@@ -74,6 +74,7 @@ Future<void> openTravelerTileSheet(
         TravelerTile.details => BidDetailsContent(
           bid: current,
           showTrackingLink: false,
+          isSender: false,
         ),
       },
     ),

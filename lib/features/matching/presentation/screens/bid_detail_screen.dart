@@ -695,9 +695,13 @@ class _BidDetailViewState extends State<_BidDetailView>
                 );
                 final isSender = viewerId != null && viewerId == _bid.senderId;
 
-                // Derive bid code from tracking number or id
+                // Code du titre : numéro de suivi quand le lecteur peut le voir
+                // (le voyageur, à partir de la remise seulement), sinon début
+                // de l'identifiant (ce n'est pas le numéro de suivi).
                 final bidCode =
-                    _bid.trackingNumber ??
+                    (isSender
+                        ? _bid.trackingNumber
+                        : travelerVisibleTrackingNumber(_bid)) ??
                     _bid.id.substring(0, 6).toUpperCase();
 
                 return Scaffold(
