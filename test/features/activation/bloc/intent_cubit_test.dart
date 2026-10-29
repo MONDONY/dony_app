@@ -37,14 +37,34 @@ void main() {
     ),
   ).thenAnswer((_) async {});
 
-  test('valide seulement avec intention et destination', () {
+  test('isValid est vrai avec une intention et sans destination', () {
     final c = IntentCubit(repo, analytics);
     expect(c.state.isValid, isFalse);
     c.selectIntent(UserIntent.sender);
-    expect(c.state.isValid, isFalse);
+    expect(c.state.isValid, isTrue);
+    expect(c.state.destinationForApi, isNull);
     c.selectDestination('CI');
     expect(c.state.isValid, isTrue);
   });
+
+  blocTest<IntentCubit, IntentFormState>(
+    'submit envoie destinationCountry null quand aucune destination n\'est choisie',
+    build: () {
+      stubDeclare();
+      return IntentCubit(repo, analytics, initialIntent: UserIntent.sender);
+    },
+    act: (c) => c.submit(IntentSource.signup),
+    verify: (c) {
+      expect(c.state.status, IntentFormStatus.saved);
+      verify(
+        () => repo.declareIntent(
+          intent: UserIntent.sender,
+          destinationCountry: null,
+          source: IntentSource.signup,
+        ),
+      ).called(1);
+    },
+  );
 
   test('« Autre » envoie une destination nulle', () {
     final c = IntentCubit(repo, analytics)
@@ -173,7 +193,7 @@ void main() {
   );
 
   blocTest<IntentCubit, IntentFormState>(
-    'submit ignoré si formulaire invalide',
+    'submit reste inactif sans intention',
     build: () => IntentCubit(repo, analytics),
     act: (c) => c.submit(IntentSource.signup),
     expect: () => <IntentFormState>[],

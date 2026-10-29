@@ -23,7 +23,7 @@ class IntentFormState extends Equatable {
   final String? destination;
   final IntentFormStatus status;
 
-  bool get isValid => intent != null && destination != null;
+  bool get isValid => intent != null;
 
   String? get destinationForApi =>
       destination == kIntentOtherDestination ? null : destination;

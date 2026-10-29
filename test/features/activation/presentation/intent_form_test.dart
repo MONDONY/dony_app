@@ -63,7 +63,7 @@ void main() {
     tester,
   ) async {
     await pump(tester);
-    expect(find.text('Votre destination principale'), findsOneWidget);
+    expect(find.text('Votre destination principale (facultatif)'), findsOneWidget);
     expect(
       find.text(
         'Pour personnaliser votre accueil. Vous pouvez envoyer et voyager '
@@ -88,7 +88,7 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Your main destination'), findsOneWidget);
+    expect(find.text('Your main destination (optional)'), findsOneWidget);
     expect(
       find.text(
         'Used to personalise your home screen. You can still send and travel '

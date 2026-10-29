@@ -17169,7 +17169,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get intentBothHint => 'J\'envoie et je voyage';
 
   @override
-  String get intentDestinationTitle => 'Votre destination principale';
+  String get intentDestinationTitle =>
+      'Votre destination principale (facultatif)';
 
   @override
   String get intentDestinationHint =>
@@ -17201,7 +17202,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsIntentLabel => 'Ce que je fais sur Yadony';
 
   @override
-  String get settingsIntentSubtitle => 'Envoyer, voyager ou les deux';
+  String get settingsIntentSubtitle => 'Choisit aussi l\'écran d\'accueil.';
 
   @override
   String get firstStepsVerified => 'Identité vérifiée';

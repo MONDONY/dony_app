@@ -28090,7 +28090,7 @@ abstract class AppLocalizations {
   /// Titre du choix du pays de destination principal (intent_form.dart). Formulé pour ne pas laisser croire que le choix limite les envois ou trajets à ce pays.
   ///
   /// In fr, this message translates to:
-  /// **'Votre destination principale'**
+  /// **'Votre destination principale (facultatif)'**
   String get intentDestinationTitle;
 
   /// Aide sous le titre « Votre destination principale » (intent_form.dart) : le pays choisi ne sert qu'à personnaliser l'accueil.
@@ -28150,7 +28150,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la ligne intention des réglages
   ///
   /// In fr, this message translates to:
-  /// **'Envoyer, voyager ou les deux'**
+  /// **'Choisit aussi l\'écran d\'accueil.'**
   String get settingsIntentSubtitle;
 
   /// Badge en tête des premiers pas personnalisés

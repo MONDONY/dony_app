@@ -19424,7 +19424,7 @@
   "@intentBothHint": {
     "description": "Précision du choix les deux"
   },
-  "intentDestinationTitle": "Votre destination principale",
+  "intentDestinationTitle": "Votre destination principale (facultatif)",
   "@intentDestinationTitle": {
     "description": "Titre du choix du pays de destination principal (intent_form.dart). Formulé pour ne pas laisser croire que le choix limite les envois ou trajets à ce pays."
   },
@@ -19464,7 +19464,7 @@
   "@settingsIntentLabel": {
     "description": "Ligne des réglages pour modifier l'intention"
   },
-  "settingsIntentSubtitle": "Envoyer, voyager ou les deux",
+  "settingsIntentSubtitle": "Choisit aussi l'écran d'accueil.",
   "@settingsIntentSubtitle": {
     "description": "Sous-titre de la ligne intention des réglages"
   },
