@@ -750,10 +750,16 @@ class _BidDetailViewState extends State<_BidDetailView>
                   body: _skeletonLoading
                       ? const DonyDetailSkeleton()
                       : isSender
-                      ? SenderDetailBody(
-                          bid: _bid,
-                          focusSupplement: widget.focusSupplement,
-                          focusAmendment: widget.focusAmendment,
+                      // Seule la lecture du paiement reconstruit le corps : la
+                      // carte Paiement dit « échoué » plutôt que « séquestré ».
+                      ? ValueListenableBuilder<PaymentModel?>(
+                          valueListenable: _existingPaymentNotifier,
+                          builder: (context, payment, _) => SenderDetailBody(
+                            bid: _bid,
+                            focusSupplement: widget.focusSupplement,
+                            focusAmendment: widget.focusAmendment,
+                            existingPayment: payment,
+                          ),
                         )
                       : TravelerDetailBody(bid: _bid),
                   bottomNavigationBar: isSender

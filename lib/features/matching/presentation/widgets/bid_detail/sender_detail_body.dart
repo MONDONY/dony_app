@@ -18,6 +18,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_resc
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
+import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -53,11 +54,16 @@ class SenderDetailBody extends StatefulWidget {
   /// (`?action=amendment`).
   final bool focusAmendment;
 
+  /// Paiement lu par l'écran (null tant qu'il n'est pas lu) : la carte
+  /// Paiement dit ainsi un paiement échoué plutôt qu'un séquestre.
+  final PaymentModel? existingPayment;
+
   const SenderDetailBody({
     super.key,
     required this.bid,
     this.focusSupplement = false,
     this.focusAmendment = false,
+    this.existingPayment,
   });
 
   @override
@@ -306,7 +312,10 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // Profil du voyageur à tous les statuts ; les boutons de contact
       // n'apparaissent qu'une fois la demande acceptée.
       ('voyageur', VoyageurContactCard(bid: bid)),
-      ('paiement', PaiementCard(bid: bid)),
+      (
+        'paiement',
+        PaiementCard(bid: bid, existingPayment: widget.existingPayment),
+      ),
       (
         'shipment',
         _Section(

@@ -7927,6 +7927,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get bidDetailPaymentFailedLabel => 'Payment failed';
+
+  @override
+  String bidDetailPaymentToPayLabel(String amount) {
+    return '$amount to pay';
+  }
+
+  @override
   String bidDetailShareTrackingMessage(String url) {
     return 'Track your Yadony parcel in real time:\n$url';
   }

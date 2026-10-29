@@ -2897,6 +2897,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDetailAmountRefundedLabel(placeholderMarker('amount')),
   'bidDetailEscrowedUntilDeliveryLabel': (l) =>
       l.bidDetailEscrowedUntilDeliveryLabel(placeholderMarker('amount')),
+  'bidDetailPaymentFailedLabel': (l) => l.bidDetailPaymentFailedLabel,
+  'bidDetailPaymentToPayLabel': (l) =>
+      l.bidDetailPaymentToPayLabel(placeholderMarker('amount')),
   'bidDetailShareTrackingMessage': (l) =>
       l.bidDetailShareTrackingMessage(placeholderMarker('url')),
   'recipientNotifyTitle': (l) =>
@@ -8202,6 +8205,7 @@ const textParameters = <String, List<String>>{
   'bidDetailCashAtDropoffAmountLabel': ['amount'],
   'bidDetailAmountRefundedLabel': ['amount'],
   'bidDetailEscrowedUntilDeliveryLabel': ['amount'],
+  'bidDetailPaymentToPayLabel': ['amount'],
   'bidDetailShareTrackingMessage': ['url'],
   'recipientNotifyTitle': ['name'],
   'recipientNotifyBodyLink': ['name'],

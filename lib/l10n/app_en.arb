@@ -4045,6 +4045,19 @@
       }
     }
   },
+  "bidDetailPaymentFailedLabel": "Payment failed",
+  "@bidDetailPaymentFailedLabel": {
+    "description": "Payment card body, Stripe: the payment failed and the parcel is not finished (paiement_card.dart)"
+  },
+  "bidDetailPaymentToPayLabel": "{amount} to pay",
+  "@bidDetailPaymentToPayLabel": {
+    "description": "Payment card body, parcel awaiting payment (AWAITING_PAYMENT): nothing is paid yet (paiement_card.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "bidDetailShareTrackingMessage": "Track your Yadony parcel in real time:\n{url}",
   "@bidDetailShareTrackingMessage": {
     "placeholders": {

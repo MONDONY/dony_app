@@ -44,6 +44,8 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/payments/data/models/payment_model.dart';
+import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
@@ -326,6 +328,46 @@ void main() {
 
   int detailRequests() =>
       verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).callCount;
+
+  group('Carte Paiement — état réel du paiement', () {
+    testWidgets(
+      'le paiement lu après coup (null puis échoué) met la carte à jour',
+      (tester) async {
+        final payment = Completer<PaymentModel?>();
+        when(
+          () => paymentRepository.getPaymentForBid(any()),
+        ).thenAnswer((_) => payment.future);
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            status: 'PENDING',
+            paymentMethod: BidPaymentMethod.stripe,
+          ),
+          authBloc: senderAuth(),
+        );
+
+        // Paiement pas encore lu : état par défaut de la carte, sans spinner.
+        expect(find.text('Paiement échoué'), findsNothing);
+        expect(find.textContaining('séquestré'), findsOneWidget);
+
+        payment.complete(
+          const PaymentModel(
+            id: 'pay-1',
+            bidId: 'bid-001',
+            amount: 30,
+            commissionAmount: 3,
+            status: PaymentStatus.failed,
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.text('Paiement échoué'), findsOneWidget);
+        expect(find.textContaining('séquestré'), findsNothing);
+      },
+    );
+  });
 
   group('Annulation avant paiement', () {
     testWidgets(

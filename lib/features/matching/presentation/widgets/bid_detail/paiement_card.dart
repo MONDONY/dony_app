@@ -4,6 +4,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/money_breakdown_card.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
+import 'package:dony/features/payments/data/models/payment_model.dart';
+import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -12,19 +14,26 @@ import 'package:flutter/material.dart';
 /// Affiche l'état du paiement selon la méthode ([BidPaymentMethod]) et le
 /// statut du bid.
 ///
-/// — Stripe :
+/// — Stripe (le statut du colis prime sur celui du paiement) :
 ///   • COMPLETED / DELIVERED → montant libéré au voyageur (check vert)
-///   • CANCELLED / REJECTED / NO_SHOW / EXPIRED → remboursé
+///   • CANCELLED / REJECTED / NO_SHOW / EXPIRED / PARCEL_REFUSED → remboursé
+///   • paiement [PaymentStatus.failed] → « Paiement échoué » (rouge)
+///   • AWAITING_PAYMENT → montant à régler (rien n'est encore payé)
 ///   • sinon → séquestré, libéré à la livraison (lock)
 ///
 /// — Mobile Money (pawaPay) : séquestré par Yadony jusqu'à la livraison,
-///   comme Stripe, mais avec un badge dédié (pas de détail par statut).
+///   comme Stripe, mais avec un badge dédié (pas de détail par statut) ;
+///   « à régler » tant que le colis est en AWAITING_PAYMENT.
+///
+/// [existingPayment] : paiement lu par l'écran (null tant qu'il n'est pas lu
+/// ou absent) ; sans lui, la carte se fonde sur le seul statut du colis.
 ///
 /// — Cash / Wave / Orange Money : paiement en personne à la remise.
 class PaiementCard extends StatelessWidget {
   final BidModel bid;
+  final PaymentModel? existingPayment;
 
-  const PaiementCard({super.key, required this.bid});
+  const PaiementCard({super.key, required this.bid, this.existingPayment});
 
   static const _terminalStatuses = {'COMPLETED', 'DELIVERED'};
 
@@ -33,7 +42,10 @@ class PaiementCard extends StatelessWidget {
     'REJECTED',
     'NO_SHOW',
     'EXPIRED',
+    'PARCEL_REFUSED',
   };
+
+  static const _awaitingPaymentStatus = 'AWAITING_PAYMENT';
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +79,9 @@ class PaiementCard extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              l.bidDetailMobileMoneySecuredLabel(senderLabel),
+              bid.status == _awaitingPaymentStatus
+                  ? l.bidDetailPaymentToPayLabel(senderLabel)
+                  : l.bidDetailMobileMoneySecuredLabel(senderLabel),
               style: tt.bodySmall?.copyWith(color: cs.onSurface),
             ),
           ),
@@ -138,14 +152,33 @@ class PaiementCard extends StatelessWidget {
       );
     }
 
-    // Default — en séquestre : montant payé par l'expéditeur (net + commission).
+    // Colis encore en cours mais paiement refusé : on ne rassure pas à tort.
+    if (existingPayment?.status == PaymentStatus.failed) {
+      return Row(
+        children: [
+          DonyIcon('circle-alert', color: cs.error, size: 20),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text(
+              l.bidDetailPaymentFailedLabel,
+              style: tt.bodySmall?.copyWith(color: cs.error),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Rien n'est payé : le montant est à régler, pas séquestré.
+    // Sinon — en séquestre : montant payé par l'expéditeur (net + commission).
     return Row(
       children: [
         DonyIcon('lock', color: cs.primary, size: 20),
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(
-            l.bidDetailEscrowedUntilDeliveryLabel(senderLabel),
+            status == _awaitingPaymentStatus
+                ? l.bidDetailPaymentToPayLabel(senderLabel)
+                : l.bidDetailEscrowedUntilDeliveryLabel(senderLabel),
             style: tt.bodySmall?.copyWith(color: cs.onSurface),
           ),
         ),

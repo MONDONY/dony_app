@@ -7981,6 +7981,14 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get bidDetailPaymentFailedLabel => 'Paiement échoué';
+
+  @override
+  String bidDetailPaymentToPayLabel(String amount) {
+    return '$amount à régler';
+  }
+
+  @override
   String bidDetailShareTrackingMessage(String url) {
     return 'Suivez votre colis Yadony en temps réel :\n$url';
   }

@@ -13194,6 +13194,18 @@ abstract class AppLocalizations {
   /// **'{amount} séquestré : libéré à la livraison'**
   String bidDetailEscrowedUntilDeliveryLabel(String amount);
 
+  /// Corps de la carte paiement, stripe : le paiement a échoué et le colis n'est pas terminé (paiement_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement échoué'**
+  String get bidDetailPaymentFailedLabel;
+
+  /// Corps de la carte paiement, colis en attente de paiement (AWAITING_PAYMENT) : rien n'est encore payé (paiement_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} à régler'**
+  String bidDetailPaymentToPayLabel(String amount);
+
   /// Texte du partage natif du lien de suivi (tracking_actions.dart)
   ///
   /// In fr, this message translates to:

@@ -40,6 +40,8 @@ import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/features/payments/data/models/payment_model.dart';
+import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -171,6 +173,7 @@ Widget _host(
   _MockConversationOpenBloc conversationOpenBloc, {
   bool focusSupplement = false,
   bool focusAmendment = false,
+  PaymentModel? existingPayment,
 }) {
   return MaterialApp(
     theme: AppTheme.light(),
@@ -188,6 +191,7 @@ Widget _host(
           bid: bid,
           focusSupplement: focusSupplement,
           focusAmendment: focusAmendment,
+          existingPayment: existingPayment,
         ),
       ),
     ),
@@ -294,6 +298,36 @@ void main() {
       expect(find.byType(TravelerTrackingCard), findsNothing);
       expect(_tile('Suivi'), findsNothing);
     });
+  });
+
+  // ── Le paiement lu par l'écran arrive à la carte Paiement ──────────────────
+  testWidgets('le paiement transmis arrive à PaiementCard', (tester) async {
+    sizeView(tester);
+    final bid = _bid(status: 'PENDING');
+
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Paiement échoué'), findsNothing);
+
+    await tester.pumpWidget(
+      _host(
+        bid,
+        cancellationBloc,
+        conversationOpenBloc,
+        existingPayment: const PaymentModel(
+          id: 'pay-1',
+          bidId: 'bid-001',
+          amount: 56,
+          commissionAmount: 5,
+          status: PaymentStatus.failed,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 1));
+
+    final card = tester.widget<PaiementCard>(find.byType(PaiementCard));
+    expect(card.existingPayment?.status, PaymentStatus.failed);
+    expect(find.text('Paiement échoué'), findsOneWidget);
   });
 
   // ── Test 1: ACCEPTED → billet, voyageur, paiement, tuiles ───────────────────
