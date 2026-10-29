@@ -250,6 +250,10 @@ class _IconActionButton extends StatelessWidget {
       excludeSemantics: true,
       enabled: onTap != null,
       label: semanticLabel,
+      // `excludeSemantics` retire l'action du `GestureDetector` enfant : sans
+      // `onTap` ici, un lecteur d'écran annonce « bouton » sans pouvoir
+      // l'activer.
+      onTap: onTap,
       child: GestureDetector(
         onTap: onTap,
         child: Container(

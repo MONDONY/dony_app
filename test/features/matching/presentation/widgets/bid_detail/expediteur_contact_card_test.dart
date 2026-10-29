@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsAction, Tristate;
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -168,6 +170,55 @@ void main() {
         findsOneWidget,
       );
       verifyNever(() => conv.add(any()));
+    });
+
+    // `Semantics(excludeSemantics: true)` autour d'un `GestureDetector` sans
+    // `onTap` sur le nœud retirait l'action d'activation : un lecteur d'écran
+    // annonçait « bouton » sans pouvoir l'activer.
+    testWidgets('lecteur d\'écran : le bouton expose l\'action « toucher »', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final conv = _convBloc();
+      await _pump(tester, _bid(), conv: conv);
+      final node = tester.getSemantics(
+        find.bySemanticsLabel("Contacter l'expéditeur"),
+      );
+      expect(node.label, "Contacter l'expéditeur");
+      expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+      expect(node.flagsCollection.isButton, isTrue);
+      expect(node.flagsCollection.isEnabled, isNot(Tristate.none));
+      expect(node.flagsCollection.isEnabled, Tristate.isTrue);
+      tester.semantics.tap(find.semantics.byLabel("Contacter l'expéditeur"));
+      await tester.pump();
+      final captured = verify(() => conv.add(captureAny())).captured;
+      expect(captured.single, isA<ConversationOpenRequested>());
+      handle.dispose();
+    });
+
+    testWidgets('lecteur d\'écran, ouverture en cours : bouton désactivé, '
+        'sans action « toucher »', (tester) async {
+      final handle = tester.ensureSemantics();
+      final conv = _convBloc(const ConversationOpenLoading());
+      await _pump(tester, _bid(), conv: conv);
+      final node = tester.getSemantics(
+        find.bySemanticsLabel("Contacter l'expéditeur"),
+      );
+      expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isFalse);
+      expect(node.flagsCollection.isEnabled, Tristate.isFalse);
+      handle.dispose();
+    });
+
+    testWidgets('lecteur d\'écran, en anglais : « Contact the sender » '
+        'activable', (tester) async {
+      useEnglish();
+      final handle = tester.ensureSemantics();
+      await _pump(tester, _bid());
+      final node = tester.getSemantics(
+        find.bySemanticsLabel('Contact the sender'),
+      );
+      expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+      handle.dispose();
     });
 
     testWidgets('tap sur la carte → profil public de l\'expéditeur', (
