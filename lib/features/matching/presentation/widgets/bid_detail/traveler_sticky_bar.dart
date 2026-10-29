@@ -75,24 +75,37 @@ class TravelerStickyBar extends StatelessWidget {
       // n'ont plus de footer : la phrase d'attente est une carte du corps
       // ([awaitingMobileMoneyPayment]) et « Supprimer cette demande » une
       // entrée du menu ⋮.
-      // ACCEPTED : « Confirmer ma présence » tant qu'elle a un sens, puis
-      // « Lire le QR du colis ». Le back n'expire jamais un colis accepté
-      // (seuls PENDING, PAYMENT_ESCROWED, AWAITING_PAYMENT et NEGOTIATING le
-      // sont, `HandoverDeadlineRules`) et n'exige pas la présence confirmée
-      // pour le départ : passé la date limite, ou une fois l'absence de
-      // l'expéditeur signalée, la présence n'est plus à confirmer mais le
-      // colis peut encore être remis. Le héros d'alerte (« Signaler
-      // l'absence », absence signalée) reste dans « À traiter ».
+      // ACCEPTED : « Confirmer ma présence » avant la date limite, puis
+      // « Lire le QR du colis ». Le back n'exige pas la présence confirmée
+      // pour le scan de départ, et ne passe un colis accepté en NO_SHOW
+      // qu'une heure après la date limite, sans scan de départ ni
+      // signalement (`BidRepository.findNoShowBids`) : passé la date limite,
+      // la présence n'est plus à confirmer mais le colis peut encore être
+      // remis. Le héros d'alerte (« Signaler l'absence ») reste dans
+      // « À traiter ».
+      //
+      // Déclaration d'absence de l'expéditeur ouverte (en attente ou
+      // contestée), présence non confirmée : pas de scan. Le back ne regarde
+      // pas la déclaration au scan de départ et ne la clôt pas : sans réponse
+      // sous 24 h, `NoShowContestationTimeoutJob` confirmerait l'absence, le
+      // séquestre serait remboursé et l'expéditeur pénalisé alors que le
+      // colis voyage. Même règle qu'avant la date limite dépassée : pas de
+      // footer après elle, « Confirmer ma présence » avant.
+      //
+      // Risque connu, à traiter par une PR back : présence confirmée et
+      // déclaration ouverte, le scan reste proposé (comportement antérieur,
+      // gardé tel quel).
       case 'ACCEPTED':
+        if (bid.voyageurConfirmed) {
+          return _TravelerAction.scan;
+        }
         final deadline = bid.handoverDeadline;
         final deadlinePassed = deadline != null && now.isAfter(deadline);
         final senderNoShowOpen =
             bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION' ||
             bid.cancellationNoShowStatus == 'CONTESTED';
-        if (bid.voyageurConfirmed || deadlinePassed || senderNoShowOpen) {
-          return _TravelerAction.scan;
-        }
-        return _TravelerAction.confirmPresence;
+        if (!deadlinePassed) return _TravelerAction.confirmPresence;
+        return senderNoShowOpen ? null : _TravelerAction.scan;
       // Colis récupéré (départ scanné) : la seule étape obligatoire restante
       // est la remise au destinataire. Le scan Transit est facultatif : entrée
       // du menu ⋮ tant qu'il n'a pas été fait (HANDED_OVER).

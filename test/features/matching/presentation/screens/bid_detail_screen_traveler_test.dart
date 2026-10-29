@@ -332,8 +332,11 @@ void main() {
       footer: ['Lire le QR du colis'],
       gain: 'VOUS RECEVEZ',
     ),
-    // Absence de l'expéditeur signalée : héros d'information sous le billet,
-    // scan du départ toujours possible.
+    // Absence de l'expéditeur signalée, présence non confirmée : héros
+    // d'information sous le billet, pas de footer. Pas de scan du départ
+    // tant que la déclaration est ouverte : le back ne la clôt pas au scan,
+    // et la confirmerait 24 h plus tard (remboursement, pénalité) alors que
+    // le colis voyage.
     'ACCEPTED (absence de l\'expéditeur signalée)': _Scenario(
       bid: _bid(
         'ACCEPTED',
@@ -343,7 +346,6 @@ void main() {
       stamp: 'Confirmé',
       title: '#BID-00',
       sections: ['billet', 'hero', 'expediteur', 'gain', 'transport'],
-      footer: ['Lire le QR du colis'],
       gain: 'VOUS RECEVEZ',
       hero: 'Absence signalée',
     ),

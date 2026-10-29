@@ -299,71 +299,55 @@ void main() {
   group('ACCEPTED : présence, date limite, absence signalée', () {
     final past = DateTime.now().subtract(const Duration(hours: 1));
     final future = DateTime.now().add(const Duration(hours: 2));
+    // (confirmé / non confirmé) × (avant / après la date limite) ×
+    // (déclaration d'absence de l'expéditeur ouverte / aucune).
+    // Déclaration ouverte, présence non confirmée : jamais de scan. Le back ne
+    // regarde pas la déclaration au scan de départ et ne la clôt pas : sans
+    // réponse sous 24 h, l'absence serait confirmée, le séquestre remboursé et
+    // l'expéditeur pénalisé alors que le colis voyage.
+    // Déclaration ouverte, présence confirmée : scan proposé, comme avant la
+    // branche (risque connu, à traiter côté back).
     final cases = <String, (BidModel, String)>{
-      'non confirmé, avant la date limite': (
-        _bid(status: 'ACCEPTED', windowEnd: future),
-        'presence',
-      ),
       'non confirmé, sans date limite': (_bid(status: 'ACCEPTED'), 'presence'),
-      'confirmé, avant la date limite': (
-        _bid(status: 'ACCEPTED', voyageurConfirmed: true, windowEnd: future),
-        'scan',
-      ),
-      'non confirmé, date limite dépassée': (
-        _bid(status: 'ACCEPTED', windowEnd: past),
-        'scan',
-      ),
-      'confirmé, date limite dépassée': (
-        _bid(status: 'ACCEPTED', voyageurConfirmed: true, windowEnd: past),
-        'scan',
-      ),
-      for (final ns in ['PENDING_CONFIRMATION', 'CONTESTED']) ...{
-        'non confirmé, absence $ns, date limite dépassée': (
-          _bid(
-            status: 'ACCEPTED',
-            windowEnd: past,
-            cancellationNoShowStatus: ns,
-          ),
-          'scan',
-        ),
-        'non confirmé, absence $ns, avant la date limite': (
-          _bid(
-            status: 'ACCEPTED',
-            windowEnd: future,
-            cancellationNoShowStatus: ns,
-          ),
-          'scan',
-        ),
-        'confirmé, absence $ns': (
-          _bid(
-            status: 'ACCEPTED',
-            voyageurConfirmed: true,
-            windowEnd: past,
-            cancellationNoShowStatus: ns,
-          ),
-          'scan',
-        ),
-      },
+      for (final confirmed in [false, true])
+        for (final (moment, deadline) in [('avant', future), ('après', past)])
+          for (final ns in [null, 'PENDING_CONFIRMATION', 'CONTESTED'])
+            '${confirmed ? 'confirmé' : 'non confirmé'}, $moment la date '
+                'limite, ${ns == null ? 'aucune déclaration' : 'absence $ns'}': (
+              _bid(
+                status: 'ACCEPTED',
+                voyageurConfirmed: confirmed,
+                windowEnd: deadline,
+                cancellationNoShowStatus: ns,
+              ),
+              switch ((confirmed, deadline == past, ns != null)) {
+                (true, _, _) => 'scan',
+                (false, false, _) => 'presence',
+                (false, true, false) => 'scan',
+                (false, true, true) => 'none',
+              },
+            ),
     };
     for (final MapEntry(key: name, value: (bid, expected)) in cases.entries) {
-      testWidgets(
-        '$name → ${expected == 'scan' ? 'Lire le QR du colis' : 'Confirmer ma présence'}',
-        (tester) async {
-          expect(TravelerStickyBar.hasAction(bid), isTrue);
-          await _pump(tester, bid);
-          if (expected == 'scan') {
+      testWidgets('$name → $expected', (tester) async {
+        expect(TravelerStickyBar.hasAction(bid), expected != 'none');
+        await _pump(tester, bid);
+        switch (expected) {
+          case 'scan':
             expect(find.text('Lire le QR du colis'), findsOneWidget);
             expect(find.text('Confirmer ma présence'), findsNothing);
             final button = tester.widget<DonyButton>(
               find.byKey(const Key('traveler-scan-btn')),
             );
             expect(button.onPressed, isNotNull);
-          } else {
+          case 'presence':
             expect(find.text('Confirmer ma présence'), findsOneWidget);
             expect(find.text('Lire le QR du colis'), findsNothing);
-          }
-        },
-      );
+          default:
+            expect(find.text('Lire le QR du colis'), findsNothing);
+            expect(find.text('Confirmer ma présence'), findsNothing);
+        }
+      });
     }
 
     testWidgets('en anglais : date limite dépassée → « Scan the parcel QR »', (
