@@ -382,6 +382,61 @@ void main() {
     );
   });
 
+  // La lecture du paiement (`GET /payments/bid`) ne nourrit que la vue
+  // expéditeur (carte Paiement, barre collante) : le voyageur ne la déclenche
+  // pas. Rôle non résolu (aucun utilisateur connu) : comportement d'avant.
+  group('lecture du paiement selon le rôle', () {
+    _MockAuthBloc viewer(String id) {
+      final authBloc = _MockAuthBloc();
+      when(() => authBloc.state).thenReturn(AuthAuthenticated(_user(id)));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+      return authBloc;
+    }
+
+    for (final status in ['PENDING', 'ACCEPTED', 'HANDED_OVER']) {
+      testWidgets('voyageur · $status : aucun GET du paiement', (tester) async {
+        await _pump(
+          tester,
+          bid: _makeBid(status: status, paymentMethod: BidPaymentMethod.stripe),
+          authBloc: viewer('traveler-001'),
+        );
+        verifyNever(() => paymentRepository.getPaymentForBid(any()));
+        // Le relevé suivant ne la lit pas non plus.
+        await tester.pump(const Duration(seconds: 31));
+        verifyNever(() => paymentRepository.getPaymentForBid(any()));
+      });
+    }
+
+    for (final status in ['PENDING', 'ACCEPTED', 'HANDED_OVER']) {
+      testWidgets('expéditeur · $status : le paiement est lu', (tester) async {
+        await _pump(
+          tester,
+          bid: _makeBid(status: status, paymentMethod: BidPaymentMethod.stripe),
+          authBloc: senderAuth(),
+        );
+        verify(() => paymentRepository.getPaymentForBid('bid-001')).called(1);
+      });
+    }
+
+    testWidgets('rôle non résolu (aucun utilisateur) : le paiement est lu', (
+      tester,
+    ) async {
+      final authBloc = _MockAuthBloc();
+      when(() => authBloc.state).thenReturn(const AuthInitial());
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+      await _pump(
+        tester,
+        bid: _makeBid(paymentMethod: BidPaymentMethod.stripe),
+        authBloc: authBloc,
+      );
+      verify(() => paymentRepository.getPaymentForBid('bid-001')).called(1);
+    });
+  });
+
   group('Annulation avant paiement', () {
     testWidgets(
       'BidCancelledBeforePayment → snackbar « Demande annulée » et sortie de la fiche',

@@ -1200,9 +1200,31 @@ void main() {
       verifyNever(() => paymentRepository.getPaymentForBid(any()));
     });
 
-    testWidgets('colis carte en attente : lu une seule fois à l\'ouverture', (
-      tester,
-    ) async {
+    testWidgets(
+      'colis carte en attente, expéditeur : lu une seule fois à l\'ouverture',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            paymentMethod: BidPaymentMethod.stripe,
+            status: 'PENDING',
+          ),
+          authBloc: authBloc,
+        );
+
+        verify(() => paymentRepository.getPaymentForBid('bid-001')).called(1);
+      },
+    );
+
+    testWidgets('colis carte en attente, voyageur : jamais lu', (tester) async {
       final authBloc = _MockAuthBloc();
       when(
         () => authBloc.state,
@@ -1220,7 +1242,7 @@ void main() {
         authBloc: authBloc,
       );
 
-      verify(() => paymentRepository.getPaymentForBid('bid-001')).called(1);
+      verifyNever(() => paymentRepository.getPaymentForBid(any()));
     });
   });
 }

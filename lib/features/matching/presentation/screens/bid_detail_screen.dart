@@ -260,6 +260,11 @@ class _BidDetailViewState extends State<_BidDetailView>
     if (_bid.status == 'REJECTED' || _bid.status == 'CANCELLED') {
       return;
     }
+    // Cette lecture ne nourrit que la vue expéditeur (carte Paiement, barre
+    // collante) : le voyageur, rôle résolu, ne la déclenche pas. Rôle non
+    // résolu (aucun utilisateur connu, colis squelette sans expéditeur) :
+    // comportement d'avant, on lit.
+    if (_viewerIsTraveler(context)) return;
     // Colis en espèces : aucun paiement en ligne n'existe, la lecture rendait
     // 404 à chaque ouverture (staging 10/10). Rien à attendre.
     if (_bid.paymentMethod == BidPaymentMethod.cash) {
@@ -440,6 +445,14 @@ class _BidDetailViewState extends State<_BidDetailView>
       if (!mounted) return;
       showPickupCodeRenewalSheet(this.context, bidId: bid.id);
     });
+  }
+
+  /// `true` seulement quand le lecteur est connu ET n'est pas l'expéditeur du
+  /// colis. Un colis squelette n'a pas encore d'expéditeur : rôle non résolu.
+  bool _viewerIsTraveler(BuildContext context) {
+    if (_bid.isSkeleton) return false;
+    final viewerId = _resolveViewerId(context.read<AuthBloc>().state);
+    return viewerId != null && viewerId != _bid.senderId;
   }
 
   String? _resolveViewerId(AuthState authState) {
