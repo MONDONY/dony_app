@@ -161,7 +161,9 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     final bid = widget.bid;
     // Consommé dès le premier colis chargé, qu'il y ait une demande ou non :
     // une demande créée plus tard (relevé) n'ouvre pas de sheet toute seule.
-    if (!widget.focusAmendment || _amendmentFocused || bid.isSkeleton) return;
+    // Le corps ne reçoit jamais de squelette : l'écran affiche le sien
+    // (`DonyDetailSkeleton`) tant que le colis n'est pas chargé.
+    if (!widget.focusAmendment || _amendmentFocused) return;
     _amendmentFocused = true;
     if (!AmendmentSenderCard.needsReply(bid)) {
       if (AmendmentSenderCard.shouldShow(bid)) _scrollTo(_amendmentKey);

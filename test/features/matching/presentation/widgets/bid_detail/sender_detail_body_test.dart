@@ -1426,46 +1426,12 @@ void main() {
       expect(sheetCancel(), findsNothing);
     });
 
-    testWidgets('?action=amendment : colis encore squelette, le sheet '
-        's\'ouvre au chargement de la demande', (tester) async {
-      sizeView(tester);
-      await tester.pumpWidget(
-        _host(
-          BidModel.skeleton('bid-001'),
-          cancellationBloc,
-          conversationOpenBloc,
-          focusAmendment: true,
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(sheetCancel(), findsNothing);
-
-      await tester.pumpWidget(
-        _host(
-          _bid(amendments: const [open]),
-          cancellationBloc,
-          conversationOpenBloc,
-          focusAmendment: true,
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(sheetCancel(), findsOneWidget);
-    });
-
-    // Le lien est consommé au premier colis chargé : une demande créée plus
-    // tard (relevé périodique) n'ouvre pas de sheet tout seule.
+    // Le lien est consommé au premier colis chargé (le corps ne reçoit jamais
+    // de squelette : l'écran affiche le sien) : une demande créée plus tard
+    // (relevé périodique) n'ouvre pas de sheet toute seule.
     testWidgets('?action=amendment : pas de demande au chargement, demande '
         'créée ensuite, aucun sheet ne s\'ouvre', (tester) async {
       sizeView(tester);
-      await tester.pumpWidget(
-        _host(
-          BidModel.skeleton('bid-001'),
-          cancellationBloc,
-          conversationOpenBloc,
-          focusAmendment: true,
-        ),
-      );
-      await tester.pumpAndSettle();
       await tester.pumpWidget(
         _host(
           _bid(),
