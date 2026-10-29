@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -16,9 +17,11 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/recipient_replacement/recipient_replacement_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_photo_viewer_modal.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
@@ -72,6 +75,7 @@ BidModel _bid({
   AddressData? deliveryAddress = _delivery,
   String? handoverLocation,
   String? arrivalInstructions,
+  List<BidPhoto> photos = const [],
 }) => BidModel(
   id: id,
   announcementId: 'ann-001',
@@ -92,6 +96,7 @@ BidModel _bid({
   deliveryAddress: deliveryAddress,
   handoverLocation: handoverLocation,
   arrivalInstructions: arrivalInstructions,
+  photos: photos,
 );
 
 void main() {
@@ -241,7 +246,16 @@ void main() {
                 () => getIt<ExternalUrlLauncher>().open(captureAny()),
               ).captured.single
               as Uri;
-      expect(uri.toString(), isNotEmpty);
+      // Selon la plateforme : Plans (`ll` + libellé `q`) ou Google Maps
+      // (`query`). Dans les deux cas, les coordonnées de l'adresse de
+      // récupération, jamais celles du dépôt.
+      final coords = '${_delivery.lat},${_delivery.lng}';
+      expect(uri.scheme, 'https');
+      expect(uri.host, anyOf('maps.apple.com', 'www.google.com'));
+      expect(uri.queryParameters['ll'] ?? uri.queryParameters['query'], coords);
+      if (uri.host == 'maps.apple.com') {
+        expect(uri.queryParameters['q'], _delivery.label);
+      }
     });
 
     testWidgets('consignes de retrait : affichées quand elles existent', (
@@ -378,6 +392,14 @@ void main() {
         expect(tester.takeException(), isNull);
         expect(find.byType(TravelerRecipientContactCard), findsOneWidget);
         expect(
+          find.byKey(const Key('recipient-contact-in-app-only-bid-001')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('recipient-contact-message-bid-001')),
+          findsOneWidget,
+        );
+        expect(
           find.byKey(const Key('recipient-contact-whatsapp-bid-001')),
           findsNothing,
         );
@@ -419,6 +441,50 @@ void main() {
 
       expect(find.byType(TravelerRecipientContactPendingNote), findsNothing);
       expect(find.text('Destinataire à redésigner'), findsOneWidget);
+    });
+
+    for (final status in ['CANCELLED', 'REJECTED']) {
+      testWidgets('$status (colis clos) : le sheet se rend sans exception', (
+        tester,
+      ) async {
+        await openTile(
+          tester,
+          _bid(status: status),
+          TravelerTile.colis,
+          size: const Size(360, 800),
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(find.byType(ColisDestinataireCard), findsOneWidget);
+        expect(find.text('Awa'), findsOneWidget);
+        expect(find.byType(TravelerRecipientContactCard), findsNothing);
+        expect(find.byType(TravelerRecipientContactPendingNote), findsNothing);
+      });
+    }
+
+    testWidgets('photos : la visionneuse s\'ouvre par-dessus le sheet', (
+      tester,
+    ) async {
+      await openTile(
+        tester,
+        _bid(
+          photos: const [
+            BidPhoto(id: '1', url: 'https://x/1.jpg'),
+            BidPhoto(id: '2', url: 'https://x/2.jpg'),
+          ],
+        ),
+        TravelerTile.colis,
+      );
+      expect(find.byType(CachedNetworkImage), findsNWidgets(2));
+      expect(find.byType(BidPhotoViewerModal), findsNothing);
+
+      await tester.tap(find.byType(CachedNetworkImage).first);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(BidPhotoViewerModal), findsOneWidget);
+      // Le sheet reste dessous.
+      expect(find.byType(ColisDestinataireCard), findsOneWidget);
     });
 
     testWidgets('le panneau lit le BidBloc de l\'écran', (tester) async {

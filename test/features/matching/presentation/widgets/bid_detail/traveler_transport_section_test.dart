@@ -320,28 +320,39 @@ void main() {
   });
 
   group('sans débordement', () {
+    final bids = {
+      'noms longs': _bid(
+        status: 'IN_TRANSIT',
+        recipientName: 'Aminata Diakité-Konaté',
+        arrivalCity: 'Ouagadougou-Centre',
+      ),
+      // Repli du résumé Lieux sur le libellé de l'adresse, bien plus long
+      // qu'une ville.
+      'sans ville de départ': _bid(departureCity: null),
+      'sans ville d\'arrivée': _bid(status: 'IN_TRANSIT', arrivalCity: null),
+    };
     for (final locale in const [Locale('fr'), Locale('en')]) {
       for (final scale in const [1.0, 1.3]) {
-        testWidgets('${locale.languageCode}, 360 dp, ×$scale', (tester) async {
-          await pump(
+        for (final MapEntry(key: name, value: bid) in bids.entries) {
+          testWidgets('${locale.languageCode}, 360 dp, ×$scale, $name', (
             tester,
-            _bid(
-              status: 'IN_TRANSIT',
-              recipientName: 'Aminata Diakité-Konaté',
-              arrivalCity: 'Ouagadougou-Centre',
-            ),
-            locale: locale,
-            textScale: scale,
-            size: const Size(360, 800),
-          );
+          ) async {
+            await pump(
+              tester,
+              bid,
+              locale: locale,
+              textScale: scale,
+              size: const Size(360, 800),
+            );
 
-          expect(tester.takeException(), isNull);
-          for (final t in TravelerTile.values) {
-            final box = tester.getRect(tile(t));
-            expect(box.left, greaterThanOrEqualTo(0), reason: t.name);
-            expect(box.right, lessThanOrEqualTo(360), reason: t.name);
-          }
-        });
+            expect(tester.takeException(), isNull);
+            for (final t in TravelerTile.values) {
+              final box = tester.getRect(tile(t));
+              expect(box.left, greaterThanOrEqualTo(0), reason: t.name);
+              expect(box.right, lessThanOrEqualTo(360), reason: t.name);
+            }
+          });
+        }
       }
     }
   });
