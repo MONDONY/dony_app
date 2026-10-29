@@ -366,6 +366,80 @@ void main() {
     });
   });
 
+  // Le résumé ne promet que ce que la feuille Lieux montre : une ville de
+  // départ sans ligne de dépôt dans la feuille ne doit pas dire « Remise à… ».
+  group('tuile Lieux : résumé aligné sur les lignes de la feuille', () {
+    testWidgets('avant la remise, seule l\'adresse d\'arrivée existe : '
+        'pas de « Remise à »', (tester) async {
+      await pump(tester, _bid(handoverAddress: null));
+
+      expect(find.textContaining('Remise à'), findsNothing);
+      expect(find.textContaining('Récupération à'), findsNothing);
+    });
+
+    testWidgets('après la remise, seule l\'adresse de dépôt existe : '
+        'pas de « Récupération à »', (tester) async {
+      await pump(tester, _bid(status: 'IN_TRANSIT', deliveryAddress: null));
+
+      expect(find.textContaining('Récupération à'), findsNothing);
+      expect(find.textContaining('Remise à'), findsNothing);
+    });
+
+    testWidgets('même chose en anglais', (tester) async {
+      await pump(
+        tester,
+        _bid(handoverAddress: null),
+        locale: const Locale('en'),
+      );
+      expect(find.textContaining('Drop-off in'), findsNothing);
+
+      await pump(
+        tester,
+        _bid(status: 'ARRIVED', deliveryAddress: null),
+        locale: const Locale('en'),
+      );
+      expect(find.textContaining('Pickup in'), findsNothing);
+    });
+
+    testWidgets('avant la remise, lieu de dépôt en texte libre seulement : la '
+        'ville de départ reste annoncée', (tester) async {
+      await pump(
+        tester,
+        _bid(handoverAddress: null, handoverLocation: 'Gare de Lyon'),
+      );
+
+      expect(textIn(TravelerTile.lieux, 'Remise à Paris'), findsOneWidget);
+    });
+
+    testWidgets('avant la remise, texte libre sans ville : le texte libre', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        _bid(
+          handoverAddress: null,
+          departureCity: null,
+          handoverLocation: 'Gare de Lyon',
+        ),
+      );
+
+      expect(
+        textIn(TravelerTile.lieux, 'Remise à Gare de Lyon'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('après la remise, adresse d\'arrivée sans ville : le libellé '
+        'de l\'adresse', (tester) async {
+      await pump(tester, _bid(status: 'IN_TRANSIT', arrivalCity: null));
+
+      expect(
+        textIn(TravelerTile.lieux, 'Récupération à ${_delivery.label}'),
+        findsOneWidget,
+      );
+    });
+  });
+
   testWidgets('tuile Détails : résumé de ce que montre le sheet', (
     tester,
   ) async {

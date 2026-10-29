@@ -35,8 +35,17 @@ class TravelerTransportSection extends StatelessWidget {
   /// Résumé de la tuile Lieux : où remettre le colis tant qu'il n'est pas chez
   /// le voyageur, où le destinataire le récupère ensuite. La ville d'abord, à
   /// défaut le libellé de l'adresse ; `null` quand l'étape n'a rien de connu.
+  ///
+  /// Il ne parle que d'une ligne que la feuille Lieux montre (le dépôt si une
+  /// adresse ou un texte de dépôt existe, la récupération si une adresse
+  /// d'arrivée existe) : une ville sans cette ligne promettrait un lieu que
+  /// la feuille n'affiche pas.
   String? _placesSubtitle(AppLocalizations l) {
     if (!kParcelHandedOverStatuses.contains(bid.status)) {
+      final hasHandoverRow =
+          bid.handoverAddress != null ||
+          (bid.handoverLocation?.trim().isNotEmpty ?? false);
+      if (!hasHandoverRow) return null;
       final place = _firstText([
         bid.departureCity,
         bid.handoverAddress?.label,
@@ -44,6 +53,7 @@ class TravelerTransportSection extends StatelessWidget {
       ]);
       return place == null ? null : l.travelerTileLieuxDropoff(place);
     }
+    if (bid.deliveryAddress == null) return null;
     final place = _firstText([bid.arrivalCity, bid.deliveryAddress?.label]);
     return place == null ? null : l.travelerTileLieuxPickup(place);
   }
