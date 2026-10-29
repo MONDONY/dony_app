@@ -7923,6 +7923,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.amendmentNotBroughtConfirmMessage,
   'amendmentNotBroughtSnackbar': (l) => l.amendmentNotBroughtSnackbar,
   'amendmentScanBlocked': (l) => l.amendmentScanBlocked,
+  'amendmentScanBlockedSender': (l) => l.amendmentScanBlockedSender,
   'amendmentCommissionAuthInterrupted': (l) =>
       l.amendmentCommissionAuthInterrupted,
   'amendmentSenderNotBroughtStatus': (l) =>

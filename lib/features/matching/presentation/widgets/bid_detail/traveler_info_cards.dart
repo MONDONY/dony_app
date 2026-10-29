@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -32,8 +33,11 @@ class TravelerAwaitingPaymentCard extends StatelessWidget {
 
 /// Pourquoi le bouton de scan du footer est éteint : un supplément attend la
 /// réponse de l'expéditeur (ou, en espèces, la validation de la commission du
-/// voyageur, que « À traiter » lui demande), ou une modification attend celle
-/// du voyageur.
+/// voyageur, que « À traiter » lui demande), ou une modification est en
+/// cours. `blocksHandover` reste vrai tant que la modification attend une
+/// autorisation, une réponse ou un paiement : la phrase dit de qui elle
+/// attend quelque chose (le voyageur si [AmendmentTravelerCard.needsReply],
+/// l'expéditeur sinon).
 class TravelerScanBlockedCard extends StatelessWidget {
   const TravelerScanBlockedCard({super.key, required this.bid});
 
@@ -52,11 +56,16 @@ class TravelerScanBlockedCard extends StatelessWidget {
   );
 
   /// Quand c'est au voyageur de valider sa commission, « À traiter » le lui
-  /// demande : la carte ne doit pas dire que l'expéditeur doit répondre.
+  /// demande : la carte ne doit pas dire que l'expéditeur doit répondre. Même
+  /// règle pour une modification : elle n'attend le voyageur que si
+  /// `AmendmentTravelerCard.needsReply`, sinon (autorisation carte, dépôt
+  /// mobile money) elle attend l'expéditeur.
   String _message(BuildContext context) {
     final l = context.l10n;
     if (!TravelerStickyBar.scanBlockedBySupplement(bid)) {
-      return l.amendmentScanBlocked;
+      return AmendmentTravelerCard.needsReply(bid)
+          ? l.amendmentScanBlocked
+          : l.amendmentScanBlockedSender;
     }
     return SupplementTravelerCard.needsReply(bid)
         ? l.bidDetailScanBlockedSupplementCommission

@@ -1042,6 +1042,8 @@ void main() {
         "Un supplément attend la réponse de l'expéditeur : le scan est bloqué.";
     const amendmentBlocked =
         'Une modification attend votre réponse : le scan est bloqué.';
+    const amendmentBlockedSender =
+        "Une modification attend l'expéditeur : le scan est bloqué.";
 
     testWidgets(
       'AWAITING_PAYMENT mobile money : carte d\'attente sous le hero',
@@ -1212,6 +1214,93 @@ void main() {
         'gain',
         'transport',
       ]);
+    });
+
+    // La modification attend l'expéditeur (autorisation carte, dépôt mobile
+    // money) : la carte ne doit pas dire que c'est au voyageur de répondre.
+    for (final status in [
+      BidAmendmentStatus.paymentPending,
+      BidAmendmentStatus.authorizationPending,
+    ]) {
+      testWidgets('modification ${status.name} (attend l\'expéditeur) : '
+          'phrase « expéditeur », FR', (tester) async {
+        await _pump(
+          tester,
+          _bid(
+            'ACCEPTED',
+            voyageurConfirmed: true,
+            amendments: [_amendment(status)],
+          ),
+        );
+        expect(
+          _inSection('info-scan-blocked', find.text(amendmentBlockedSender)),
+          findsOneWidget,
+        );
+        expect(find.text(amendmentBlocked), findsNothing);
+      });
+
+      testWidgets('modification ${status.name} (attend l\'expéditeur) : '
+          'phrase « expéditeur », EN', (tester) async {
+        useEnglish();
+        await _pump(
+          tester,
+          _bid(
+            'ACCEPTED',
+            voyageurConfirmed: true,
+            amendments: [_amendment(status)],
+          ),
+        );
+        expect(
+          _inSection(
+            'info-scan-blocked',
+            find.text(
+              'A change is waiting on the sender: scanning is on hold.',
+            ),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text('A change is waiting for your reply: scanning is blocked.'),
+          findsNothing,
+        );
+      });
+    }
+
+    testWidgets('modification proposée, en anglais : texte « votre réponse »', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          voyageurConfirmed: true,
+          amendments: [_amendment(BidAmendmentStatus.proposed)],
+        ),
+      );
+      expect(
+        _inSection(
+          'info-scan-blocked',
+          find.text('A change is waiting for your reply: scanning is blocked.'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('commission de la modification à finaliser : texte « votre '
+        'réponse » (le voyageur doit agir)', (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          voyageurConfirmed: true,
+          amendments: [_amendment(BidAmendmentStatus.commissionPending)],
+        ),
+      );
+      expect(
+        _inSection('info-scan-blocked', find.text(amendmentBlocked)),
+        findsOneWidget,
+      );
     });
 
     testWidgets('rien ne bloque : aucune phrase de scan bloqué', (

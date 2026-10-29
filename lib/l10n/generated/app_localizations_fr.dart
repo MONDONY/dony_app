@@ -22811,6 +22811,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une modification attend votre réponse : le scan est bloqué.';
 
   @override
+  String get amendmentScanBlockedSender =>
+      'Une modification attend l\'expéditeur : le scan est bloqué.';
+
+  @override
   String get amendmentCommissionAuthInterrupted =>
       'Validation interrompue, réessayez d\'accepter.';
 

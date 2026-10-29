@@ -11217,6 +11217,7 @@
   "amendmentNotBroughtConfirmMessage": "The change will be cancelled and the sender refunded. The parcel stays at its original weight.",
   "amendmentNotBroughtSnackbar": "Change cancelled, the sender is refunded",
   "amendmentScanBlocked": "A change is waiting for your reply: scanning is blocked.",
+  "amendmentScanBlockedSender": "A change is waiting on the sender: scanning is on hold.",
   "amendmentCommissionAuthInterrupted": "Confirmation interrupted, try accepting again.",
   "amendmentSenderNotBroughtStatus": "{name} reported the extra kilos weren't there",
   "amendmentSenderBodyCardReleased": "Your parcel stays at {kg}. The amount held on your card is released.",

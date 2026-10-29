@@ -36722,11 +36722,17 @@ abstract class AppLocalizations {
   /// **'Modification annulée, l\'expéditeur est remboursé'**
   String get amendmentNotBroughtSnackbar;
 
-  /// Scan de remise bloqué côté voyageur
+  /// Scan de remise bloqué côté voyageur, quand la modification attend SA réponse (carte d'information de la fiche colis voyageur, traveler_info_cards.dart)
   ///
   /// In fr, this message translates to:
   /// **'Une modification attend votre réponse : le scan est bloqué.'**
   String get amendmentScanBlocked;
+
+  /// Scan de remise bloqué côté voyageur, quand la modification attend l'expéditeur (autorisation de la carte ou dépôt mobile money). Carte d'information de la fiche colis voyageur, traveler_info_cards.dart
+  ///
+  /// In fr, this message translates to:
+  /// **'Une modification attend l\'expéditeur : le scan est bloqué.'**
+  String get amendmentScanBlockedSender;
 
   /// 3DS commission abandonnée
   ///

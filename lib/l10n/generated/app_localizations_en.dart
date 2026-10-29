@@ -22644,6 +22644,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'A change is waiting for your reply: scanning is blocked.';
 
   @override
+  String get amendmentScanBlockedSender =>
+      'A change is waiting on the sender: scanning is on hold.';
+
+  @override
   String get amendmentCommissionAuthInterrupted =>
       'Confirmation interrupted, try accepting again.';
 
