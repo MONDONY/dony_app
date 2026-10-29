@@ -19,9 +19,6 @@ import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -62,10 +59,6 @@ class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
 class _MockConversationOpenBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
-
-class _MockContactRevealBloc
-    extends MockBloc<ContactRevealEvent, ContactRevealState>
-    implements ContactRevealBloc {}
 
 class _MockRatingBloc extends MockBloc<RatingEvent, RatingState>
     implements RatingBloc {}
@@ -253,9 +246,6 @@ void main() {
             BlocProvider<TrackingBloc>.value(value: trackingBloc),
             BlocProvider<ConversationOpenBloc>.value(
               value: _MockConversationOpenBloc(),
-            ),
-            BlocProvider<ContactRevealBloc>.value(
-              value: _MockContactRevealBloc(),
             ),
             BlocProvider<RatingBloc>.value(value: _MockRatingBloc()),
             BlocProvider<CancellationBloc>.value(

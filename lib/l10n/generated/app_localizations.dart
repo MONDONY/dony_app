@@ -8775,7 +8775,7 @@ abstract class AppLocalizations {
   /// **'Remise colis'**
   String get listingPickupParcelTitleShort;
 
-  /// Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart)
+  /// Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)
   ///
   /// In fr, this message translates to:
   /// **'Récupération'**
@@ -8883,7 +8883,7 @@ abstract class AppLocalizations {
   /// **'Voir tous les tarifs ({count})'**
   String listingSeeAllPricesButton(int count);
 
-  /// Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart)
+  /// Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)
   ///
   /// In fr, this message translates to:
   /// **'Remise du colis'**

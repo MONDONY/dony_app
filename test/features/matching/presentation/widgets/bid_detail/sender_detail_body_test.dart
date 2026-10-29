@@ -12,9 +12,6 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cubit.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
@@ -80,10 +77,6 @@ BidBloc _bidBloc() {
 class _MockCancellationBloc
     extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
-
-class _MockContactRevealBloc
-    extends MockBloc<ContactRevealEvent, ContactRevealState>
-    implements ContactRevealBloc {}
 
 class _MockSupplementRepository extends Mock
     implements BidSupplementRepository {}
@@ -160,13 +153,6 @@ BidModel _bid({
 
 // ── Host widget ───────────────────────────────────────────────────────────────
 
-/// Bloc de révélation au repos : ces tests ne testent pas l'appel téléphonique.
-_MockContactRevealBloc _revealBloc() {
-  final bloc = _MockContactRevealBloc();
-  when(() => bloc.state).thenReturn(const ContactRevealInitial());
-  return bloc;
-}
-
 Widget _host(
   BidModel bid,
   _MockCancellationBloc cancellationBloc,
@@ -184,8 +170,6 @@ Widget _host(
           BlocProvider<BidBloc>.value(value: _bidBloc()),
           BlocProvider<CancellationBloc>.value(value: cancellationBloc),
           BlocProvider<ConversationOpenBloc>.value(value: conversationOpenBloc),
-          // Le numéro n'est plus dans le bid : la carte de contact lit ce bloc.
-          BlocProvider<ContactRevealBloc>.value(value: _revealBloc()),
         ],
         child: SenderDetailBody(
           bid: bid,

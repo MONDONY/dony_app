@@ -4493,7 +4493,7 @@
   },
   "listingDeliveryPickupTitle": "Récupération",
   "@listingDeliveryPickupTitle": {
-    "description": "Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart)"
+    "description": "Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)"
   },
   "listingAlreadyHasParcelMessage": "Vous avez déjà un colis sur ce trajet",
   "@listingAlreadyHasParcelMessage": {
@@ -4585,7 +4585,7 @@
   },
   "listingPickupParcelTitle": "Remise du colis",
   "@listingPickupParcelTitle": {
-    "description": "Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart)"
+    "description": "Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)"
   },
   "listingReportTripLink": "Signaler ce trajet",
   "@listingReportTripLink": {

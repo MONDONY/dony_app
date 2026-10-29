@@ -3,9 +3,6 @@ import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
@@ -34,12 +31,6 @@ import '../../../../../helpers/l10n_test_helpers.dart';
 class _MockConversationOpenBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
-
-class _MockContactRevealBloc
-    extends MockBloc<ContactRevealEvent, ContactRevealState>
-    implements ContactRevealBloc {}
-
-class _FakeContactRevealEvent extends Fake implements ContactRevealEvent {}
 
 class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
@@ -114,13 +105,7 @@ Widget _hostVoyageur(
   BidModel bid,
   _MockConversationOpenBloc bloc, {
   List<String>? pushedRoutes,
-  ContactRevealBloc? reveal,
 }) {
-  // Le numéro n'est plus dans le bid : la carte lit ContactRevealBloc au tap.
-  final revealBloc = reveal ?? _MockContactRevealBloc();
-  if (reveal == null) {
-    when(() => revealBloc.state).thenReturn(const ContactRevealInitial());
-  }
   final router = GoRouter(
     initialLocation: '/',
     observers: pushedRoutes == null ? null : [_RecordingObserver(pushedRoutes)],
@@ -129,10 +114,7 @@ Widget _hostVoyageur(
         path: '/',
         builder: (ctx, _) => Scaffold(
           body: MultiBlocProvider(
-            providers: [
-              BlocProvider<ConversationOpenBloc>.value(value: bloc),
-              BlocProvider<ContactRevealBloc>.value(value: revealBloc),
-            ],
+            providers: [BlocProvider<ConversationOpenBloc>.value(value: bloc)],
             child: VoyageurContactCard(bid: bid),
           ),
         ),
@@ -183,7 +165,6 @@ void main() {
     await initializeDateFormatting('fr');
     await initializeDateFormatting('en');
     registerFallbackValue(const ConversationOpenRequested('bid-test'));
-    registerFallbackValue(_FakeContactRevealEvent());
   });
 
   // ── VoyageurContactCard ────────────────────────────────────────────────────
