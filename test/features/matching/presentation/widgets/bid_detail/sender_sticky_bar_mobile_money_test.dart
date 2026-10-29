@@ -138,7 +138,7 @@ void main() {
   );
 
   testWidgets('isLoading=true → "Payer par mobile money" en chargement, '
-      '"Annuler la demande" désactivé', (tester) async {
+      '"Annuler" désactivé', (tester) async {
     await tester.pumpWidget(_wrap(bloc, _bid(), isLoading: true));
     // Pas de pumpAndSettle : le CircularProgressIndicator du bouton en
     // chargement anime en boucle et ferait échouer pumpAndSettle (timeout).
@@ -148,7 +148,7 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     final cancelBtn = tester.widget<DonyButton>(
-      find.widgetWithText(DonyButton, 'Annuler la demande'),
+      find.byKey(const Key('sender-cancel-before-payment')),
     );
     expect(cancelBtn.onPressed, isNull);
   });

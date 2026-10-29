@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/confirm_delete_bid.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_refusal_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
@@ -176,6 +177,30 @@ class _TravelerOptionsSheet extends StatelessWidget {
               const SizedBox(height: DonySpacing.sm),
             ],
 
+            // ── Scanner le transit (HANDED_OVER seulement) ──────────────────
+            // Étape facultative, sortie du footer : la remise reste l'action
+            // principale du colis récupéré.
+            if (bid.status == 'HANDED_OVER') ...[
+              _OptionTile(
+                iconAsset: 'arrow-left-right',
+                iconColor: cs.primary,
+                iconBg: cs.primaryContainer,
+                label: l.bidDetailScanTransitLabel,
+                subtitle: l.bidDetailScanTransitSubtitle,
+                onTap: () {
+                  context.pop();
+                  outerContext.push<void>(
+                    '/tracking/scan/identify',
+                    extra: <String, dynamic>{
+                      'etape': 'TRANSIT',
+                      'focusNumber': false,
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+
             // ── Supprimer cette demande (REJECTED / CANCELLED) ──────────────
             if (_dismissableStatuses.contains(bid.status)) ...[
               _OptionTile(
@@ -186,9 +211,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
                 subtitle: l.bidDetailRemoveFromHistorySubtitle,
                 onTap: () {
                   context.pop();
-                  outerContext.read<BidBloc>().add(
-                    BidTravelerDismissRequested(bid.id),
-                  );
+                  confirmTravelerDismissBid(outerContext, bid);
                 },
               ),
               const SizedBox(height: DonySpacing.sm),

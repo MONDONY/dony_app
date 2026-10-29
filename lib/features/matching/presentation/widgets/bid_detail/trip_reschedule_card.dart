@@ -28,6 +28,11 @@ class TripRescheduleCard extends StatelessWidget {
   /// La carte n'a de sens que si le trajet a été reporté.
   static bool shouldShow(BidModel bid) => bid.reschedule != null;
 
+  /// La décision est encore ouverte : l'expéditeur garde son colis ou se retire
+  /// (boutons de la carte). Une fois décidé, la carte ne fait que renseigner.
+  static bool needsReply(BidModel bid) =>
+      bid.reschedule?.decisionPending ?? false;
+
   static String reasonLabel(BuildContext context, String reason) {
     final l = context.l10n;
     return switch (TripRescheduleReason.fromWire(reason)) {

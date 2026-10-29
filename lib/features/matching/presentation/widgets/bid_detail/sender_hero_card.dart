@@ -14,18 +14,36 @@ import 'package:intl/intl.dart';
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
-enum SenderHeroVariant { wait, pay, info, alert, done }
+enum SenderHeroVariant { wait, alert }
 
 // ── Public widget ─────────────────────────────────────────────────────────────
 
-/// Carte "prochaine étape" contextuelle au statut du bid (vue expéditeur).
+/// Carte d'action contextuelle au statut du bid (vue expéditeur).
 ///
-/// Absorbe les flux no-show / contestation de la bannière précédente.
+/// Absorbe les flux no-show / contestation de la bannière précédente. Elle ne
+/// s'affiche que s'il y a quelque chose à faire ([hasAction]) ; le reste de
+/// l'information d'état passe par [statusLine], reprise par les tuiles.
 /// Le feedback snackbar / refresh reste géré par le BlocListener parent.
 class SenderHeroCard extends StatelessWidget {
   const SenderHeroCard({super.key, required this.bid});
 
   final BidModel bid;
+
+  /// Le colis demande une réponse de l'expéditeur : contestation d'une absence
+  /// du voyageur (priorité 1), absence à la livraison signalée ou contestée
+  /// (1b), fenêtre de dépôt dépassée (2).
+  static bool hasAction(BidModel bid) =>
+      bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION' ||
+      _isDeliveryNoShowOpen(bid.deliveryNoShowStatus) ||
+      _isWindowExpired(bid);
+
+  /// Résumé d'état du colis : fenêtre et lieu de dépôt en ACCEPTED, embarquement
+  /// ou arrivée prévus, renvoi vers les instructions de retrait, note du code
+  /// bloqué ou expiré. `null` sans résumé (statuts terminaux). Reprise par les
+  /// tuiles Suivi et Lieux, pour qu'aucune information de l'ancienne bannière
+  /// ne se perde.
+  static String? statusLine(BuildContext context, BidModel bid) =>
+      _buildSubtitle(context, bid);
 
   @override
   Widget build(BuildContext context) {
@@ -47,8 +65,7 @@ class SenderHeroCard extends StatelessWidget {
     // savoir qui doit voir "Absence signalée" (auteur) vs "Une absence est
     // signalée" (adversaire).
     final deliveryStatus = bid.deliveryNoShowStatus;
-    if (deliveryStatus == 'PENDING_CONFIRMATION' ||
-        deliveryStatus == 'CONTESTED') {
+    if (_isDeliveryNoShowOpen(deliveryStatus)) {
       final iAmReporter = bid.deliveryNoShowReportedByTraveler == false;
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
@@ -62,10 +79,7 @@ class SenderHeroCard extends StatelessWidget {
     }
 
     // ── Priorité 2 : date limite de dépôt dépassée ────────────────────────
-    final deadline = bid.handoverDeadline;
-    if (bid.status == 'ACCEPTED' &&
-        deadline != null &&
-        DateTime.now().isAfter(deadline)) {
+    if (_isWindowExpired(bid)) {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
         child: _WindowExpiredHero(
@@ -75,36 +89,19 @@ class SenderHeroCard extends StatelessWidget {
       );
     }
 
-    // ── Priorité 3 : mapping par statut ────────────────────────────────────
-    final content = _buildContent(context, bid);
-    if (content == null) {
-      return const SizedBox.shrink();
-    }
-
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
-      child: _HeroShell(
-        key: ValueKey('${bid.status}${content.title}'),
-        variant: content.variant,
-        title: content.title,
-        subtitle: content.subtitle,
-      ),
-    );
+    // Plus de bannière d'information : voir [statusLine].
+    return const SizedBox.shrink();
   }
 }
 
-// ── Internal data class ────────────────────────────────────────────────────────
+bool _isDeliveryNoShowOpen(String? status) =>
+    status == 'PENDING_CONFIRMATION' || status == 'CONTESTED';
 
-class _HeroContent {
-  const _HeroContent({
-    required this.variant,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final SenderHeroVariant variant;
-  final String title;
-  final String subtitle;
+bool _isWindowExpired(BidModel bid) {
+  final deadline = bid.handoverDeadline;
+  return bid.status == 'ACCEPTED' &&
+      deadline != null &&
+      DateTime.now().isAfter(deadline);
 }
 
 // ── Status mapping ────────────────────────────────────────────────────────────
@@ -119,101 +116,57 @@ String _senderAmountLabel(BidModel bid) {
   return value != null ? formatPriceIn(value, bid.currency) : '–';
 }
 
-_HeroContent? _buildContent(BuildContext context, BidModel bid) {
+String? _buildSubtitle(BuildContext context, BidModel bid) {
   final l = context.l10n;
   switch (bid.status) {
     // Colis carte pas encore payé : l'expéditeur doit payer, le voyageur ne
     // peut encore rien faire (FLUTTER-G7, cohérent avec le talon du billet).
     case 'PENDING' when bid.isAwaitingSenderCardPayment:
-      return _HeroContent(
-        variant: SenderHeroVariant.pay,
-        title: l.bidDetailSenderAwaitingCardPaymentTitle,
-        subtitle: l.bidDetailSenderAwaitingPaymentSubtitle(
-          _senderAmountLabel(bid),
-        ),
-      );
+      return l.bidDetailSenderAwaitingPaymentSubtitle(_senderAmountLabel(bid));
 
     case 'PENDING':
-      return _HeroContent(
-        variant: SenderHeroVariant.wait,
-        title: l.bidDetailSenderPendingTitle,
-        subtitle: l.bidDetailSenderPendingSubtitle,
-      );
+      return l.bidDetailSenderPendingSubtitle;
 
     case 'AWAITING_PAYMENT':
-      final amount = _senderAmountLabel(bid);
-      return _HeroContent(
-        variant: SenderHeroVariant.pay,
-        title: l.bidDetailSenderAwaitingPaymentTitle,
-        subtitle: l.bidDetailSenderAwaitingPaymentSubtitle(amount),
-      );
+      return l.bidDetailSenderAwaitingPaymentSubtitle(_senderAmountLabel(bid));
 
     case 'PAYMENT_ESCROWED':
-      final amount = _senderAmountLabel(bid);
-      return _HeroContent(
-        variant: SenderHeroVariant.wait,
-        title: l.bidDetailSenderEscrowedTitle,
-        subtitle: l.bidDetailSenderEscrowedSubtitle(amount),
-      );
+      return l.bidDetailSenderEscrowedSubtitle(_senderAmountLabel(bid));
 
     case 'ACCEPTED':
-      final subtitle = _buildAcceptedSubtitle(context, bid);
-      return _HeroContent(
-        variant: SenderHeroVariant.info,
-        title: l.bidDetailSenderAcceptedTitle,
-        subtitle: subtitle,
-      );
+      return _buildAcceptedSubtitle(context, bid);
 
     // Transit facultatif : une fois le trajet parti, un colis récupéré est en
     // route même sans scan Transit, « Embarquement prévu » serait faux.
     case 'HANDED_OVER' when !bid.hasDeparted:
-      final name = bid.travelerName ?? l.bidDetailSenderTravelerFallback;
       final dateStr = _formatDepartureDate(context, bid.departureDate);
-      return _HeroContent(
-        variant: SenderHeroVariant.info,
-        title: l.bidDetailSenderHandedOverTitle(name),
-        subtitle: dateStr.isNotEmpty
-            ? l.bidDetailSenderHandedOverSubtitleWithDate(dateStr)
-            : l.bidDetailSenderHandedOverSubtitleDefault,
-      );
+      return dateStr.isNotEmpty
+          ? l.bidDetailSenderHandedOverSubtitleWithDate(dateStr)
+          : l.bidDetailSenderHandedOverSubtitleDefault;
 
     case 'HANDED_OVER':
     case 'IN_TRANSIT':
-      final subtitle = _buildInTransitSubtitle(context, bid);
-      return _HeroContent(
-        variant: SenderHeroVariant.info,
-        title: l.bidDetailSenderInTransitTitle,
-        subtitle: subtitle,
-      );
+      return _buildInTransitSubtitle(context, bid);
 
     case 'ARRIVED':
       final hasInstructions = (bid.arrivalInstructions ?? '').trim().isNotEmpty;
-      return _HeroContent(
-        variant: SenderHeroVariant.info,
-        title: l.bidDetailSenderArrivedTitle,
-        // Le texte lui-même vit dans ArrivalInstructionsCard, juste dessous :
-        // le répéter ici le dédoublait.
-        subtitle: bid.needsNewPickupCode
-            // FLUTTER-G1 : sans code, le destinataire ne peut pas retirer le
-            // colis ; c'est l'information qui prime à l'arrivée.
-            ? (bid.isPickupCodeExpired
-                  ? l.bidDetailSenderCodeExpiredNote
-                  : l.bidDetailSenderCodeBlockedNote)
-            : hasInstructions
-            ? l.bidDetailSenderArrivedSubtitleSeeInstructions
-            : l.bidDetailSenderArrivedSubtitleDefault,
-      );
+      // Le texte lui-même vit dans ArrivalInstructionsCard : le répéter ici le
+      // dédoublait.
+      return bid.needsNewPickupCode
+          // FLUTTER-G1 : sans code, le destinataire ne peut pas retirer le
+          // colis ; c'est l'information qui prime à l'arrivée.
+          ? (bid.isPickupCodeExpired
+                ? l.bidDetailSenderCodeExpiredNote
+                : l.bidDetailSenderCodeBlockedNote)
+          : hasInstructions
+          ? l.bidDetailSenderArrivedSubtitleSeeInstructions
+          : l.bidDetailSenderArrivedSubtitleDefault;
 
     case 'COMPLETED':
     case 'DELIVERED':
-      final recipient = bid.recipientName ?? l.bidDetailSenderRecipientFallback;
-      return _HeroContent(
-        variant: SenderHeroVariant.done,
-        title: l.bidDetailSenderDeliveredTitle(recipient),
-        subtitle: l.bidDetailSenderDeliveredSubtitle,
-      );
+      return l.bidDetailSenderDeliveredSubtitle;
 
-    // Terminal or unknown statuses → shrink
+    // Terminal or unknown statuses → pas de résumé
     case 'REJECTED':
     case 'CANCELLED':
     case 'NO_SHOW':
@@ -311,7 +264,6 @@ String _buildInTransitSubtitle(BuildContext context, BidModel bid) {
 
 class _HeroShell extends StatelessWidget {
   const _HeroShell({
-    super.key,
     required this.variant,
     required this.title,
     required this.subtitle,
@@ -333,17 +285,11 @@ class _HeroShell extends StatelessWidget {
   /// Aplat uni de la carte et couleur de son texte. Les variantes bleues
   /// suivent le thème ; les autres restent sombres dans les deux thèmes,
   /// sous un texte blanc (≥ 4.5:1), comme les boutons `_HeroButton`.
-  (Color, Color) _colors(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  (Color, Color) _colors() {
     const white = Color(0xFFFFFFFF);
     switch (variant) {
       case SenderHeroVariant.wait:
         return (DonyColors.ink700, white);
-      case SenderHeroVariant.pay:
-        return (DonyColors.terra700, white);
-      case SenderHeroVariant.info:
-      case SenderHeroVariant.done:
-        return (cs.primary, cs.onPrimary);
       case SenderHeroVariant.alert:
         return (DonyColors.danger700, white);
     }
@@ -352,7 +298,7 @@ class _HeroShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final (background, foreground) = _colors(context);
+    final (background, foreground) = _colors();
 
     return Container(
       width: double.infinity,

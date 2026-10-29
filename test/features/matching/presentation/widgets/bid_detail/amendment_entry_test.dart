@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -9,7 +11,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -78,47 +80,38 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: BlocProvider<BidBloc>.value(
           value: bidBloc,
-          child: Scaffold(body: AmendmentEntryCard(bid: bid)),
+          // L'entrée n'a plus de rendu propre : le bouton vit dans le sheet de
+          // la tuile Colis et dans le menu d'options, qui appellent `open`.
+          child: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => unawaited(AmendmentEntry.open(context, bid)),
+                child: const Text('open-amendment'),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  test('entryCard_hiddenWhenNotAllowed', () {
-    expect(AmendmentEntryCard.shouldShow(_bid(allowed: false)), isFalse);
-    expect(AmendmentEntryCard.shouldShow(_bid()), isTrue);
+  test('shouldShow_hiddenWhenNotAllowed', () {
+    expect(AmendmentEntry.shouldShow(_bid(allowed: false)), isFalse);
+    expect(AmendmentEntry.shouldShow(_bid()), isTrue);
   });
 
-  testWidgets('entryCard_showsTitleBodyAndButton', (tester) async {
-    await pump(tester, _bid());
-
-    expect(find.text('MODIFIER MON COLIS'), findsOneWidget);
-    expect(
-      find.text(
-        'Ajoutez des kilos ou des articles : Moussa a 48 h pour accepter.',
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.widgetWithText(DonyButton, 'Ajouter des kilos ou des articles'),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('entryCard_tapOpensSheet_closingWithoutRequestDoesNotReload', (
+  testWidgets('open_opensSheet_closingWithoutRequestDoesNotReload', (
     tester,
   ) async {
     await pump(tester, _bid());
-    await tester.tap(
-      find.widgetWithText(DonyButton, 'Ajouter des kilos ou des articles'),
-    );
+    await tester.tap(find.text('open-amendment'));
     await tester.pumpAndSettle();
 
     expect(find.text('Modifier mon colis'), findsOneWidget);
     verifyNever(() => bidBloc.add(any()));
   });
 
-  testWidgets('entryCard_requestSent_reloadsBid', (tester) async {
+  testWidgets('open_requestSent_reloadsBid', (tester) async {
     when(
       () => repository.quote(
         'bid-1',
@@ -144,9 +137,7 @@ void main() {
       ),
     );
     await pump(tester, _bid());
-    await tester.tap(
-      find.widgetWithText(DonyButton, 'Ajouter des kilos ou des articles'),
-    );
+    await tester.tap(find.text('open-amendment'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Plus').first);
     await tester.pump(const Duration(milliseconds: 600));

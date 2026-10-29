@@ -2,7 +2,6 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
@@ -11,7 +10,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -201,6 +200,12 @@ void main() {
     });
     tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
 
+    // Un seul bouton « Contacter » : il ouvre la discussion. L'appel se lance
+    // depuis la messagerie, plus depuis cette carte.
+    Finder contactIcon() => find.byWidgetPredicate(
+      (w) => w is DonyIcon && w.name == 'messages-square',
+    );
+
     testWidgets('shows traveler name, rating and chat button', (tester) async {
       final bid = _bid(
         travelerName: 'Oumar Diallo',
@@ -212,131 +217,34 @@ void main() {
 
       expect(find.text('Oumar Diallo'), findsOneWidget);
       expect(find.text('★ 4.8 · 12 trajets'), findsOneWidget);
+      expect(contactIcon(), findsOneWidget);
+      // Plus d'icônes d'appel et de message séparées sur la carte.
       expect(
         find.byWidgetPredicate(
-          (w) => w is DonyIcon && w.name == 'message-circle',
+          (w) =>
+              w is DonyIcon &&
+              (w.name == 'message-circle' || w.name == 'phone'),
         ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets(
-      'shows phone button when phone is present and status is ACCEPTED',
-      (tester) async {
-        final bid = _bid(travelerPhoneAvailable: true);
-
-        await tester.pumpWidget(_hostVoyageur(bid, bloc));
-
-        expect(
-          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
-          findsOneWidget,
-        );
-      },
-    );
-
-    testWidgets('hides phone button when phone is null', (tester) async {
-      final bid = _bid();
-
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-
-      expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
         findsNothing,
       );
     });
 
-    testWidgets(
-      'hides phone button tant que le SMS OTP backend n\'est pas confirmé, même joignable',
-      (tester) async {
-        setSmsAuthEnabled(false);
-        final bid = _bid(travelerPhoneAvailable: true);
-
-        await tester.pumpWidget(_hostVoyageur(bid, bloc));
-
-        expect(
-          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
-          findsNothing,
-        );
-      },
-    );
-
-    testWidgets('hides phone button when status is COMPLETED even with phone', (
+    testWidgets('plus de bouton d\'appel sur la carte, même joignable', (
       tester,
     ) async {
-      final bid = _bid(travelerPhoneAvailable: true, status: 'COMPLETED');
+      final bid = _bid(travelerPhoneAvailable: true);
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
+      expect(contactIcon(), findsOneWidget);
       expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
+        find.byWidgetPredicate(
+          (w) =>
+              w is DonyIcon &&
+              (w.name == 'phone' || w.name == 'message-circle'),
+        ),
         findsNothing,
       );
-    });
-
-    testWidgets('hides phone button when status is DELIVERED even with phone', (
-      tester,
-    ) async {
-      final bid = _bid(travelerPhoneAvailable: true, status: 'DELIVERED');
-
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-
-      expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
-        findsNothing,
-      );
-    });
-
-    // ── Fenêtre de contact servie par le back (yadony-back #414, FLUTTER-DK) ──
-    Finder phoneIcon() =>
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone');
-
-    testWidgets('COMPLETED + fenêtre ouverte (J+3) → 📞 visible', (
-      tester,
-    ) async {
-      final bid = _bid(
-        travelerPhoneAvailable: true,
-        status: 'COMPLETED',
-        contactWindowOpen: true,
-      );
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(phoneIcon(), findsOneWidget);
-    });
-
-    testWidgets('COMPLETED + fenêtre fermée → 📞 masqué', (tester) async {
-      final bid = _bid(
-        travelerPhoneAvailable: true,
-        status: 'COMPLETED',
-        contactWindowOpen: false,
-      );
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(phoneIcon(), findsNothing);
-    });
-
-    testWidgets('COMPLETED sans le champ (ancien back) → repli, 📞 masqué', (
-      tester,
-    ) async {
-      final bid = _bid(travelerPhoneAvailable: true, status: 'COMPLETED');
-      expect(bid.contactWindowOpen, isNull);
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(phoneIcon(), findsNothing);
-    });
-
-    testWidgets('IN_TRANSIT + fenêtre ouverte → 📞 visible', (tester) async {
-      final bid = _bid(
-        travelerPhoneAvailable: true,
-        status: 'IN_TRANSIT',
-        contactWindowOpen: true,
-      );
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(phoneIcon(), findsOneWidget);
-    });
-
-    testWidgets('fenêtre ouverte mais voyageur non joignable → 📞 masqué', (
-      tester,
-    ) async {
-      final bid = _bid(status: 'IN_TRANSIT', contactWindowOpen: true);
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      expect(phoneIcon(), findsNothing);
     });
 
     testWidgets('tap chat button fires ConversationOpenRequested once', (
@@ -346,11 +254,7 @@ void main() {
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      await tester.tap(
-        find.byWidgetPredicate(
-          (w) => w is DonyIcon && w.name == 'message-circle',
-        ),
-      );
+      await tester.tap(contactIcon());
       await tester.pump();
 
       final captured = verify(() => bloc.add(captureAny())).captured;
@@ -419,37 +323,6 @@ void main() {
         findsNothing,
       );
     });
-
-    testWidgets(
-      '_call canLaunchUrl=true et launchUrl=true → aucun snackbar erreur',
-      (tester) async {
-        const channel = MethodChannel('plugins.flutter.io/url_launcher');
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(channel, (call) async {
-              if (call.method == 'canLaunch') return true;
-              if (call.method == 'launch') return true;
-              return null;
-            });
-
-        addTearDown(() {
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-              .setMockMethodCallHandler(channel, null);
-        });
-
-        final bid = _bid(travelerPhoneAvailable: true);
-        await tester.pumpWidget(_hostVoyageur(bid, bloc));
-        await tester.pumpAndSettle();
-
-        await tester.tap(
-          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
-        );
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
-
-        // Le tap ne fait que demander le numéro : aucun repli ne s'affiche.
-        expect(find.text('Copier'), findsNothing);
-      },
-    );
   });
 
   // ── ColisDestinataireCard ──────────────────────────────────────────────────
@@ -808,86 +681,6 @@ void main() {
     });
   });
 
-  // ── VoyageurContactCard._call error path ─────────────────────────────────
-  group('VoyageurContactCard._call', () {
-    late _MockConversationOpenBloc bloc;
-
-    setUp(() {
-      bloc = _MockConversationOpenBloc();
-      when(() => bloc.state).thenReturn(const ConversationOpenInitial());
-      setSmsAuthEnabled(true);
-    });
-    tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
-
-    testWidgets(
-      'canLaunchUrl returns false → le numéro est affiché et proposé à la copie',
-      (tester) async {
-        // Mock the url_launcher platform channel so canLaunchUrl returns false.
-        const channel = MethodChannel('plugins.flutter.io/url_launcher');
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(channel, (call) async {
-              if (call.method == 'canLaunch') return false;
-              if (call.method == 'launch') return false;
-              return null;
-            });
-
-        addTearDown(() {
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-              .setMockMethodCallHandler(channel, null);
-        });
-
-        final bid = _bid(travelerPhoneAvailable: true);
-
-        // Le tap ne compose plus directement : il demande le numéro. On simule le
-        // bloc qui le renvoie, ce qui déclenche l'ouverture du composeur.
-        final reveal = _MockContactRevealBloc();
-        whenListen(
-          reveal,
-          Stream<ContactRevealState>.fromIterable([
-            const ContactRevealSuccess('+33600000000'),
-          ]),
-          initialState: const ContactRevealInitial(),
-        );
-
-        await tester.pumpWidget(_hostVoyageur(bid, bloc, reveal: reveal));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-
-        expect(find.textContaining('+33600000000'), findsOneWidget);
-        expect(find.text('Copier'), findsOneWidget);
-      },
-    );
-
-    // K3 : `state.error.message` (detail brut du serveur) remplacé par
-    // ErrorPresenter.show, qui résout via ErrorCatalog selon la langue.
-    testWidgets(
-      'en anglais : échec serveur affiche le texte anglais du catalogue',
-      (tester) async {
-        useEnglish();
-        DonySnackbar.clearDedup();
-        final bid = _bid(travelerPhoneAvailable: true);
-        final reveal = _MockContactRevealBloc();
-        whenListen(
-          reveal,
-          Stream<ContactRevealState>.fromIterable([
-            const ContactRevealError(ForbiddenException('Numéro indisponible')),
-          ]),
-          initialState: const ContactRevealInitial(),
-        );
-
-        await tester.pumpWidget(_hostVoyageur(bid, bloc, reveal: reveal));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-
-        expect(find.textContaining('Numéro indisponible'), findsNothing);
-        expect(
-          find.textContaining('You don\'t have permission to do this.'),
-          findsOneWidget,
-        );
-      },
-    );
-  });
-
   // ── VoyageurContactCard — badges KYC / GP Pro ───────────────────────────
   group('VoyageurContactCard badges', () {
     late _MockConversationOpenBloc bloc;
@@ -964,7 +757,7 @@ void main() {
           find.byWidgetPredicate(
             (w) =>
                 w is Semantics &&
-                w.properties.label == 'Call' &&
+                w.properties.label == 'Contact the traveler' &&
                 w.properties.button == true,
           ),
           findsOneWidget,
@@ -973,80 +766,56 @@ void main() {
     );
   });
 
-  // ── QuickActionsRow ───────────────────────────────────────────────────────
-  group('QuickActionsRow', () {
-    Widget hostQuickActions(BidModel bid) => MaterialApp(
+  // ── openSenderTrackingTimeline ────────────────────────────────────────────
+  group('openSenderTrackingTimeline', () {
+    Widget hostTimelineOpener(BidModel bid) => MaterialApp(
       theme: AppTheme.light(),
-      home: Scaffold(body: QuickActionsRow(bid: bid)),
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => openSenderTrackingTimeline(context, bid),
+            child: const Text('open-timeline'),
+          ),
+        ),
+      ),
     );
 
-    testWidgets('trackingToken null → only "Suivi du colis" tile', (
+    testWidgets('ouvre le timeline sheet (TrackingBloc via GetIt mocké)', (
       tester,
     ) async {
-      final bid = _bid();
+      // Enregistre un TrackingBloc mock dans GetIt pour que
+      // showTrackingTimelineSheet puisse l'instancier.
+      final trackingBloc = _MockTrackingBloc();
+      when(() => trackingBloc.state).thenReturn(TrackingInitial());
+      when(
+        () => trackingBloc.stream,
+      ).thenAnswer((_) => const Stream<TrackingState>.empty());
 
-      await tester.pumpWidget(hostQuickActions(bid));
-
-      expect(find.text('Suivi du colis'), findsOneWidget);
-      expect(find.text('Partager le suivi'), findsNothing);
-    });
-
-    testWidgets('trackingToken present → both tiles visible', (tester) async {
-      final bid = _bid(trackingToken: 'tok-abc123');
-
-      await tester.pumpWidget(hostQuickActions(bid));
-
-      expect(find.text('Suivi du colis'), findsOneWidget);
-      expect(find.text('Partager le suivi'), findsOneWidget);
-    });
-
-    testWidgets('corridor shows "Suivi du colis" when cities are both empty', (
-      tester,
-    ) async {
-      final bid = _bid(trackingToken: 'tok-xyz');
-
-      await tester.pumpWidget(hostQuickActions(bid));
-
-      expect(find.text('Suivi du colis'), findsWidgets);
-    });
-
-    testWidgets(
-      'tap "Suivi du colis" ouvre le timeline sheet (TrackingBloc via GetIt mocké)',
-      (tester) async {
-        // Enregistre un TrackingBloc mock dans GetIt pour que
-        // showTrackingTimelineSheet puisse l'instancier.
-        final trackingBloc = _MockTrackingBloc();
-        when(() => trackingBloc.state).thenReturn(TrackingInitial());
-        when(
-          () => trackingBloc.stream,
-        ).thenAnswer((_) => const Stream<TrackingState>.empty());
-
+      if (getIt.isRegistered<TrackingBloc>()) {
+        getIt.unregister<TrackingBloc>();
+      }
+      getIt.registerFactory<TrackingBloc>(() => trackingBloc);
+      addTearDown(() {
         if (getIt.isRegistered<TrackingBloc>()) {
           getIt.unregister<TrackingBloc>();
         }
-        getIt.registerFactory<TrackingBloc>(() => trackingBloc);
-        addTearDown(() {
-          if (getIt.isRegistered<TrackingBloc>()) {
-            getIt.unregister<TrackingBloc>();
-          }
-        });
+      });
 
-        final bid = _bid(
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          trackingToken: 'tok-abc',
-        );
+      final bid = _bid(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        trackingToken: 'tok-abc',
+      );
 
-        await tester.pumpWidget(hostQuickActions(bid));
+      await tester.pumpWidget(hostTimelineOpener(bid));
 
-        // Tap the "Suivi du colis" tile — triggers _corridor getter + sheet.
-        await tester.tap(find.text('Suivi du colis'));
-        await tester.pumpAndSettle();
+      // Ouvre la feuille de suivi en lecture seule.
+      await tester.tap(find.text('open-timeline'));
+      await tester.pumpAndSettle();
 
-        // La feuille de suivi en lecture seule est ouverte.
-        expect(find.text('Suivi en lecture seule'), findsOneWidget);
-      },
-    );
+      // La feuille de suivi en lecture seule est ouverte.
+      expect(find.text('Suivi en lecture seule'), findsOneWidget);
+    });
 
     testWidgets(
       'timeline sheet chargée avec token → bouton Partager le suivi, pas de placeholder',
@@ -1082,57 +851,15 @@ void main() {
           trackingToken: 'tok-share-sheet',
         );
 
-        await tester.pumpWidget(hostQuickActions(bid));
+        await tester.pumpWidget(hostTimelineOpener(bid));
 
-        await tester.tap(find.text('Suivi du colis'));
+        await tester.tap(find.text('open-timeline'));
         await tester.pumpAndSettle();
 
         expect(find.text("J'ouvre la confirmation"), findsNothing);
         expect(find.text('Partager le suivi'), findsWidgets);
       },
     );
-
-    testWidgets(
-      'tap "Partager le suivi" appelle shareTrackingLink (Share canal + TrackingBloc mockés)',
-      (tester) async {
-        // Mock du canal share_plus pour éviter l'invocation native.
-        const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(shareChannel, (call) async => null);
-
-        addTearDown(() {
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-              .setMockMethodCallHandler(shareChannel, null);
-        });
-
-        final bid = _bid(
-          trackingToken: 'tok-share',
-          departureCity: 'Lyon',
-          arrivalCity: 'Abidjan',
-        );
-
-        await tester.pumpWidget(hostQuickActions(bid));
-
-        // Tap the "Partager le suivi" tile — appelle shareTrackingLink(bid).
-        await tester.tap(find.text('Partager le suivi'));
-        await tester.pumpAndSettle();
-
-        // La tuile est toujours présente après le partage.
-        expect(find.text('Partager le suivi'), findsOneWidget);
-      },
-    );
-
-    testWidgets('anglais — tuiles Track parcel / Share tracking traduites', (
-      tester,
-    ) async {
-      useEnglish();
-      final bid = _bid(trackingToken: 'tok-en');
-
-      await tester.pumpWidget(hostQuickActions(bid));
-
-      expect(find.text('Track my parcel'), findsOneWidget);
-      expect(find.text('Share tracking'), findsOneWidget);
-    });
   });
 
   // ── shareTrackingLink ─────────────────────────────────────────────────────

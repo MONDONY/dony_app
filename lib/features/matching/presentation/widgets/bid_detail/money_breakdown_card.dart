@@ -198,8 +198,7 @@ class MoneyBreakdownCard extends StatelessWidget {
 }
 
 /// Montant d'une carte d'argent : décimales fixes (« 61,00 € »), sans
-/// compactage, pour que les colonnes restent alignées. Partagé avec le badge
-/// du bas (`EscrowBadge`) pour un même format sur un même écran.
+/// compactage, pour que les colonnes restent alignées.
 String formatBreakdownAmount(double v, String? currency) =>
     CurrencyFormatter.format(v, SupportedCurrency.fromCodeOrDefault(currency));
 

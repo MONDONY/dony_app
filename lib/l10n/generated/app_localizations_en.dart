@@ -7131,19 +7131,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailDeliveryNoShowContestButton => 'Contest this report';
 
   @override
-  String get bidDetailSenderPendingTitle => '⏳ Waiting for the traveler';
-
-  @override
-  String get bidDetailSenderAwaitingCardPaymentTitle =>
-      '⏳ Waiting for your payment';
-
-  @override
   String get bidDetailSenderPendingSubtitle =>
       'You\'ll be notified as soon as they reply.';
-
-  @override
-  String get bidDetailSenderAwaitingPaymentTitle =>
-      'Pay to confirm the shipment';
 
   @override
   String bidDetailSenderAwaitingPaymentSubtitle(String amount) {
@@ -7151,15 +7140,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get bidDetailSenderEscrowedTitle => '🔒 Payment secured';
-
-  @override
   String bidDetailSenderEscrowedSubtitle(String amount) {
     return '$amount on hold. Waiting for the traveler\'s reply.';
   }
-
-  @override
-  String get bidDetailSenderAcceptedTitle => '⚡ Parcel drop-off';
 
   @override
   String get bidDetailSenderAcceptedInstructions =>
@@ -7169,20 +7152,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailSenderTravelerFallback => 'the traveler';
 
   @override
-  String bidDetailSenderHandedOverTitle(String name) {
-    return '✓ Parcel handed to $name';
-  }
-
-  @override
   String bidDetailSenderHandedOverSubtitleWithDate(String date) {
     return 'Boarding scheduled for $date.';
   }
 
   @override
   String get bidDetailSenderHandedOverSubtitleDefault => 'Parcel handed over.';
-
-  @override
-  String get bidDetailSenderInTransitTitle => '✈ Parcel in flight';
 
   @override
   String bidDetailSenderInTransitEta(String time, String city) {
@@ -7199,23 +7174,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'The pickup code is on your ticket.';
 
   @override
-  String get bidDetailSenderArrivedTitle => '📍 Parcel arrived at destination';
-
-  @override
   String get bidDetailSenderArrivedSubtitleDefault =>
       'The traveler has arrived, pickup instructions are coming soon.';
 
   @override
   String get bidDetailSenderArrivedSubtitleSeeInstructions =>
       'The traveler has arrived. Their pickup instructions are just below.';
-
-  @override
-  String get bidDetailSenderRecipientFallback => 'your recipient';
-
-  @override
-  String bidDetailSenderDeliveredTitle(String recipient) {
-    return '✓ Delivered to $recipient';
-  }
 
   @override
   String get bidDetailSenderDeliveredSubtitle =>
@@ -7574,34 +7538,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This declined request will be permanently removed from your list.';
 
   @override
-  String bidDetailEscrowReleasedLabel(String amount) {
-    return 'Traveler paid · $amount';
-  }
-
-  @override
-  String bidDetailEscrowRefundedLabel(String amount) {
-    return 'Refunded · $amount';
-  }
-
-  @override
-  String get bidDetailEscrowFailedLabel => 'Payment failed';
-
-  @override
-  String get bidDetailEscrowSecuredPendingLabel =>
-      'Payment secured · Awaiting the traveler';
-
-  @override
-  String bidDetailEscrowSecuredLabel(String amount) {
-    return 'Payment secured · $amount';
-  }
-
-  @override
-  String get bidDetailCashAtDropoffLabel => 'Cash payment at drop-off';
-
-  @override
-  String get bidDetailMobileMoneyPaymentLabel => 'Mobile money payment';
-
-  @override
   String get bidDetailReportTripLabel => 'Report this trip';
 
   @override
@@ -7648,11 +7584,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'The parcel is already with the traveler. You will be fully refunded and get your parcel back: the traveler will confirm the return by entering your return code.';
 
   @override
-  String get bidDetailDeleteConfirmBody =>
-      'This request will be permanently deleted from your history.';
+  String get bidDetailMoreDetails => 'More details';
 
   @override
-  String get bidDetailMoreDetails => 'More details';
+  String get bidDetailSectionTodo => 'To do';
+
+  @override
+  String get bidDetailSectionShipment => 'Your shipment';
+
+  @override
+  String get senderTileSuivi => 'Tracking';
+
+  @override
+  String get senderTileLieux => 'Places';
+
+  @override
+  String get senderTileColis => 'Parcel and recipient';
+
+  @override
+  String senderTileColisSubtitle(String weight, String recipient) {
+    return '$weight · for $recipient';
+  }
+
+  @override
+  String get senderTileDetailsSubtitle => 'Reference, drop-off, tracking link';
+
+  @override
+  String get senderTilePrevenirCode => 'Send the pickup code';
+
+  @override
+  String get senderTilePrevenirLink => 'Send the tracking link';
+
+  @override
+  String get senderTileBadgeCodeReady => 'Code ready';
+
+  @override
+  String get senderTileBadgeCurrentStep => 'Current step';
 
   @override
   String get bidDetailSectionDropoff => 'PARCEL DROP-OFF';
@@ -7844,7 +7811,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailScanParcelQr => 'Scan the parcel QR';
 
   @override
-  String get bidDetailScanTransitOptional => 'Scan transit (optional)';
+  String get bidDetailScanTransitLabel => 'Scan the transit';
+
+  @override
+  String get bidDetailScanTransitSubtitle =>
+      'Optional step: record the parcel\'s passage.';
+
+  @override
+  String get bidDetailScanPending => 'Scan on hold';
+
+  @override
+  String get bidDetailHandoverLockedLabel => 'Available at departure';
 
   @override
   String get bidDetailConfirmHandover => 'Confirm the drop-off';
@@ -7947,6 +7924,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String bidDetailEscrowedUntilDeliveryLabel(String amount) {
     return '$amount on hold: released at delivery';
+  }
+
+  @override
+  String get bidDetailPaymentFailedLabel => 'Payment failed';
+
+  @override
+  String bidDetailPaymentToPayLabel(String amount) {
+    return '$amount to pay';
   }
 
   @override
@@ -22293,9 +22278,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'An edit to the parcel is awaiting the traveler\'s reply. Scan the parcel once they\'ve replied.';
 
   @override
-  String get amendmentEntryTitle => 'EDIT MY PARCEL';
-
-  @override
   String get amendmentEntryButton => 'Add kilos or items';
 
   @override
@@ -22507,11 +22489,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amendmentPaymentContextLabel => 'Parcel edit';
 
   @override
-  String amendmentEntryBodyShort(String name) {
-    return 'Add kilos or items: $name has 48 h to accept.';
-  }
-
-  @override
   String amendmentSheetKgLabelOpen(String price) {
     return 'EXTRA KILOS · $price/KG';
   }
@@ -22684,9 +22661,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String amendmentDeadlineFormat(String date, String time) {
     return '$date at $time';
   }
-
-  @override
-  String get bidDetailMoreOptionsTooltip => 'More options';
 
   @override
   String get walletBalancesButtonTooltip => 'My balances';
@@ -22864,9 +22838,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripDepartConfirmedSnackbar => 'Noted, have a safe trip!';
-
-  @override
-  String get travelerTrackingTitle => 'Traveler tracking';
 
   @override
   String get travelerTrackingBadgeEnRoute => 'On the way';

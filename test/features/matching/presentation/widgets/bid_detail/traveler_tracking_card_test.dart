@@ -1,6 +1,7 @@
-// Carte « Suivi du voyageur » de la fiche colis (vue expéditeur) : pastille
-// d'état, avancement, ville la plus proche, historique des villes et lien vers
-// la frise complète. Neutre quand le suivi n'est pas activé ou ancien.
+// Contenu « Suivi du voyageur » de la fiche colis (vue expéditeur), posé dans
+// le sheet de la tuile Suivi : pastille d'état, avancement, ville la plus
+// proche, historique des villes. Neutre quand le suivi n'est pas activé ou
+// ancien. Le bouton vers la frise vit dans le pied du sheet.
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -101,7 +102,6 @@ void main() {
 
   Widget host(
     TravelerTrackingModel tracking, {
-    VoidCallback? onOpen,
     Locale locale = const Locale('fr'),
     DateTime? now,
     String? bidStatus,
@@ -114,7 +114,6 @@ void main() {
       body: SingleChildScrollView(
         child: TravelerTrackingCard(
           tracking: tracking,
-          onOpenTimeline: onOpen ?? () {},
           bidId: 'bid-1',
           bidStatus: bidStatus,
           departureCity: 'Paris',
@@ -252,7 +251,6 @@ void main() {
       expect(badge('On the way'), findsOneWidget);
       expect(find.text('Near Marseille'), findsOneWidget);
       expect(find.text('Updated 5 min ago'), findsOneWidget);
-      expect(find.text('See all steps and photos'), findsOneWidget);
     });
   });
 
@@ -428,33 +426,12 @@ void main() {
       expect(find.textContaining('Mis à jour'), findsNothing);
     });
 
-    testWidgets('sans historique : pas de liste, le lien reste', (
-      tester,
-    ) async {
+    testWidgets('sans historique : pas de liste', (tester) async {
       await tester.pumpWidget(host(_tracking()));
       expect(
         find.byKey(const Key('traveler-tracking-history-row')),
         findsNothing,
       );
-      expect(find.text('Voir toutes les étapes et photos'), findsOneWidget);
-    });
-
-    testWidgets('le lien ouvre la frise et mesure l\'ouverture', (
-      tester,
-    ) async {
-      var opened = 0;
-      await tester.pumpWidget(host(_tracking(), onOpen: () => opened++));
-
-      await tester.tap(find.text('Voir toutes les étapes et photos'));
-      await tester.pump();
-
-      expect(opened, 1);
-      verify(
-        () => analytics.logEvent(
-          AnalyticsEvents.travelerTrackingTimelineOpened,
-          properties: {'status': 'en_route'},
-        ),
-      ).called(1);
     });
   });
 
@@ -479,7 +456,6 @@ void main() {
 
       expect(find.text('Remis au voyageur'), findsOneWidget);
       expect(find.byKey(const Key('tracking-step-photo')), findsOneWidget);
-      expect(find.text('Voir toutes les étapes et photos'), findsOneWidget);
     });
 
     testWidgets('cardShowsDeliveredStepWithPhoto', (tester) async {
@@ -568,6 +544,26 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Près de Lyon'), findsWidgets);
+    });
+  });
+
+  group('sans cadre', () {
+    testWidgets('contenu seul : ni titre ni lien vers la frise', (
+      tester,
+    ) async {
+      final tracking = _tracking(
+        history: [TravelerTrackingPoint(city: 'Lyon', at: _nowUtc)],
+      );
+      await tester.pumpWidget(host(tracking));
+
+      expect(find.text('Suivi du voyageur'), findsNothing);
+      expect(find.text('Voir toutes les étapes et photos'), findsNothing);
+      expect(badge('En route'), findsOneWidget);
+      expect(find.text('Près de Marseille'), findsOneWidget);
+      expect(
+        find.byKey(const Key('traveler-tracking-history-row')),
+        findsOneWidget,
+      );
     });
   });
 

@@ -54,6 +54,24 @@ void main() {
     );
   });
 
+  test('needsReply : seulement tant que la décision est ouverte', () {
+    expect(TripRescheduleCard.needsReply(_bid()), isTrue);
+    expect(TripRescheduleCard.needsReply(_bid(pending: false)), isFalse);
+    expect(
+      TripRescheduleCard.needsReply(
+        BidModel(
+          id: 'b2',
+          announcementId: 'a1',
+          senderId: 's1',
+          status: 'ACCEPTED',
+          createdAt: DateTime(2026, 10),
+          updatedAt: DateTime(2026, 10),
+        ),
+      ),
+      isFalse,
+    );
+  });
+
   Widget host(BidModel bid, {bool isSender = true}) => MaterialApp(
     theme: AppTheme.light(),
     locale: AppL10n.fr,

@@ -2592,28 +2592,18 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDetailDeliveryNoShowAlertSubtitle,
   'bidDetailDeliveryNoShowContestButton': (l) =>
       l.bidDetailDeliveryNoShowContestButton,
-  'bidDetailSenderPendingTitle': (l) => l.bidDetailSenderPendingTitle,
-  'bidDetailSenderAwaitingCardPaymentTitle': (l) =>
-      l.bidDetailSenderAwaitingCardPaymentTitle,
   'bidDetailSenderPendingSubtitle': (l) => l.bidDetailSenderPendingSubtitle,
-  'bidDetailSenderAwaitingPaymentTitle': (l) =>
-      l.bidDetailSenderAwaitingPaymentTitle,
   'bidDetailSenderAwaitingPaymentSubtitle': (l) =>
       l.bidDetailSenderAwaitingPaymentSubtitle(placeholderMarker('amount')),
-  'bidDetailSenderEscrowedTitle': (l) => l.bidDetailSenderEscrowedTitle,
   'bidDetailSenderEscrowedSubtitle': (l) =>
       l.bidDetailSenderEscrowedSubtitle(placeholderMarker('amount')),
-  'bidDetailSenderAcceptedTitle': (l) => l.bidDetailSenderAcceptedTitle,
   'bidDetailSenderAcceptedInstructions': (l) =>
       l.bidDetailSenderAcceptedInstructions,
   'bidDetailSenderTravelerFallback': (l) => l.bidDetailSenderTravelerFallback,
-  'bidDetailSenderHandedOverTitle': (l) =>
-      l.bidDetailSenderHandedOverTitle(placeholderMarker('name')),
   'bidDetailSenderHandedOverSubtitleWithDate': (l) =>
       l.bidDetailSenderHandedOverSubtitleWithDate(placeholderMarker('date')),
   'bidDetailSenderHandedOverSubtitleDefault': (l) =>
       l.bidDetailSenderHandedOverSubtitleDefault,
-  'bidDetailSenderInTransitTitle': (l) => l.bidDetailSenderInTransitTitle,
   'bidDetailSenderInTransitEta': (l) => l.bidDetailSenderInTransitEta(
     placeholderMarker('time'),
     placeholderMarker('city'),
@@ -2622,14 +2612,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDetailSenderInTransitEnRoute(placeholderMarker('city')),
   'bidDetailSenderInTransitTicketNote': (l) =>
       l.bidDetailSenderInTransitTicketNote,
-  'bidDetailSenderArrivedTitle': (l) => l.bidDetailSenderArrivedTitle,
   'bidDetailSenderArrivedSubtitleDefault': (l) =>
       l.bidDetailSenderArrivedSubtitleDefault,
   'bidDetailSenderArrivedSubtitleSeeInstructions': (l) =>
       l.bidDetailSenderArrivedSubtitleSeeInstructions,
-  'bidDetailSenderRecipientFallback': (l) => l.bidDetailSenderRecipientFallback,
-  'bidDetailSenderDeliveredTitle': (l) =>
-      l.bidDetailSenderDeliveredTitle(placeholderMarker('recipient')),
   'bidDetailSenderDeliveredSubtitle': (l) => l.bidDetailSenderDeliveredSubtitle,
   'bidDetailSenderWindowExpiredTitle': (l) =>
       l.bidDetailSenderWindowExpiredTitle,
@@ -2772,17 +2758,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailPayMyShipment': (l) => l.bidDetailPayMyShipment,
   'bidDetailDeleteRequest': (l) => l.bidDetailDeleteRequest,
   'bidDetailDeleteRejectedBody': (l) => l.bidDetailDeleteRejectedBody,
-  'bidDetailEscrowReleasedLabel': (l) =>
-      l.bidDetailEscrowReleasedLabel(placeholderMarker('amount')),
-  'bidDetailEscrowRefundedLabel': (l) =>
-      l.bidDetailEscrowRefundedLabel(placeholderMarker('amount')),
-  'bidDetailEscrowFailedLabel': (l) => l.bidDetailEscrowFailedLabel,
-  'bidDetailEscrowSecuredPendingLabel': (l) =>
-      l.bidDetailEscrowSecuredPendingLabel,
-  'bidDetailEscrowSecuredLabel': (l) =>
-      l.bidDetailEscrowSecuredLabel(placeholderMarker('amount')),
-  'bidDetailCashAtDropoffLabel': (l) => l.bidDetailCashAtDropoffLabel,
-  'bidDetailMobileMoneyPaymentLabel': (l) => l.bidDetailMobileMoneyPaymentLabel,
   'bidDetailReportTripLabel': (l) => l.bidDetailReportTripLabel,
   'bidDetailReportSubtitle': (l) => l.bidDetailReportSubtitle,
   'bidDetailContactTravelerLabel': (l) => l.bidDetailContactTravelerLabel,
@@ -2800,8 +2775,21 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailCancelAfterHandoverTitle': (l) =>
       l.bidDetailCancelAfterHandoverTitle,
   'bidDetailCancelAfterHandoverBody': (l) => l.bidDetailCancelAfterHandoverBody,
-  'bidDetailDeleteConfirmBody': (l) => l.bidDetailDeleteConfirmBody,
   'bidDetailMoreDetails': (l) => l.bidDetailMoreDetails,
+  'bidDetailSectionTodo': (l) => l.bidDetailSectionTodo,
+  'bidDetailSectionShipment': (l) => l.bidDetailSectionShipment,
+  'senderTileSuivi': (l) => l.senderTileSuivi,
+  'senderTileLieux': (l) => l.senderTileLieux,
+  'senderTileColis': (l) => l.senderTileColis,
+  'senderTileColisSubtitle': (l) => l.senderTileColisSubtitle(
+    placeholderMarker('weight'),
+    placeholderMarker('recipient'),
+  ),
+  'senderTileDetailsSubtitle': (l) => l.senderTileDetailsSubtitle,
+  'senderTilePrevenirCode': (l) => l.senderTilePrevenirCode,
+  'senderTilePrevenirLink': (l) => l.senderTilePrevenirLink,
+  'senderTileBadgeCodeReady': (l) => l.senderTileBadgeCodeReady,
+  'senderTileBadgeCurrentStep': (l) => l.senderTileBadgeCurrentStep,
   'bidDetailSectionDropoff': (l) => l.bidDetailSectionDropoff,
   'bidDetailLocationLabel': (l) => l.bidDetailLocationLabel,
   'bidDetailHandoverStatusLabel': (l) => l.bidDetailHandoverStatusLabel,
@@ -2870,7 +2858,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailAwaitingSenderMobileMoneyPayment': (l) =>
       l.bidDetailAwaitingSenderMobileMoneyPayment,
   'bidDetailScanParcelQr': (l) => l.bidDetailScanParcelQr,
-  'bidDetailScanTransitOptional': (l) => l.bidDetailScanTransitOptional,
+  'bidDetailScanTransitLabel': (l) => l.bidDetailScanTransitLabel,
+  'bidDetailScanTransitSubtitle': (l) => l.bidDetailScanTransitSubtitle,
+  'bidDetailScanPending': (l) => l.bidDetailScanPending,
+  'bidDetailHandoverLockedLabel': (l) => l.bidDetailHandoverLockedLabel,
   'bidDetailConfirmHandover': (l) => l.bidDetailConfirmHandover,
   'bidDetailQrSheetTitle': (l) => l.bidDetailQrSheetTitle,
   'bidDetailQrSaveErrorSnackbar': (l) => l.bidDetailQrSaveErrorSnackbar,
@@ -2906,6 +2897,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDetailAmountRefundedLabel(placeholderMarker('amount')),
   'bidDetailEscrowedUntilDeliveryLabel': (l) =>
       l.bidDetailEscrowedUntilDeliveryLabel(placeholderMarker('amount')),
+  'bidDetailPaymentFailedLabel': (l) => l.bidDetailPaymentFailedLabel,
+  'bidDetailPaymentToPayLabel': (l) =>
+      l.bidDetailPaymentToPayLabel(placeholderMarker('amount')),
   'bidDetailShareTrackingMessage': (l) =>
       l.bidDetailShareTrackingMessage(placeholderMarker('url')),
   'recipientNotifyTitle': (l) =>
@@ -7779,7 +7773,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorHandoverAmendmentPendingTitle,
   'errorHandoverAmendmentPendingMessage': (l) =>
       l.errorHandoverAmendmentPendingMessage,
-  'amendmentEntryTitle': (l) => l.amendmentEntryTitle,
   'amendmentEntryButton': (l) => l.amendmentEntryButton,
   'amendmentSheetTitle': (l) => l.amendmentSheetTitle,
   'amendmentSheetKgLabel': (l) => l.amendmentSheetKgLabel(
@@ -7865,8 +7858,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'amendmentGainHandoverNote': (l) =>
       l.amendmentGainHandoverNote(placeholderMarker('amount')),
   'amendmentPaymentContextLabel': (l) => l.amendmentPaymentContextLabel,
-  'amendmentEntryBodyShort': (l) =>
-      l.amendmentEntryBodyShort(placeholderMarker('name')),
   'amendmentSheetKgLabelOpen': (l) =>
       l.amendmentSheetKgLabelOpen(placeholderMarker('price')),
   'amendmentSheetLoadFailed': (l) => l.amendmentSheetLoadFailed,
@@ -7945,7 +7936,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('date'),
     placeholderMarker('time'),
   ),
-  'bidDetailMoreOptionsTooltip': (l) => l.bidDetailMoreOptionsTooltip,
   'walletBalancesButtonTooltip': (l) => l.walletBalancesButtonTooltip,
   'walletBalancesSheetTitle': (l) => l.walletBalancesSheetTitle,
   'walletBalancesSheetHint': (l) => l.walletBalancesSheetHint,
@@ -8010,7 +8000,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripSummaryViewParcels': (l) => l.tripSummaryViewParcels,
   'tripDepartButton': (l) => l.tripDepartButton,
   'tripDepartConfirmedSnackbar': (l) => l.tripDepartConfirmedSnackbar,
-  'travelerTrackingTitle': (l) => l.travelerTrackingTitle,
   'travelerTrackingBadgeEnRoute': (l) => l.travelerTrackingBadgeEnRoute,
   'travelerTrackingBadgeArrived': (l) => l.travelerTrackingBadgeArrived,
   'travelerTrackingBadgeNotActivated': (l) =>
@@ -8200,11 +8189,9 @@ const textParameters = <String, List<String>>{
   'bidDetailUntil': ['date'],
   'bidDetailSenderAwaitingPaymentSubtitle': ['amount'],
   'bidDetailSenderEscrowedSubtitle': ['amount'],
-  'bidDetailSenderHandedOverTitle': ['name'],
   'bidDetailSenderHandedOverSubtitleWithDate': ['date'],
   'bidDetailSenderInTransitEta': ['time', 'city'],
   'bidDetailSenderInTransitEnRoute': ['city'],
-  'bidDetailSenderDeliveredTitle': ['recipient'],
   'bidDetailSenderWindowExpiredSubtitle': ['window'],
   'bidDetailSenderContestCountdown': ['timeLeft'],
   'bidDetailTravelerPendingSubtitle': ['amount'],
@@ -8214,9 +8201,7 @@ const textParameters = <String, List<String>>{
   'bidDetailGainCashAmount': ['amount'],
   'bidDetailGainCashGrossDetail': ['commission', 'net'],
   'bidRejectionReasonShown': ['reason'],
-  'bidDetailEscrowReleasedLabel': ['amount'],
-  'bidDetailEscrowRefundedLabel': ['amount'],
-  'bidDetailEscrowSecuredLabel': ['amount'],
+  'senderTileColisSubtitle': ['weight', 'recipient'],
   'bidDetailDisclaimerSignedCompact': ['date', 'time'],
   'parcelRefusalDeclaredWeight': ['weight'],
   'bidDetailReturnDeadlineHint': ['date'],
@@ -8224,6 +8209,7 @@ const textParameters = <String, List<String>>{
   'bidDetailCashAtDropoffAmountLabel': ['amount'],
   'bidDetailAmountRefundedLabel': ['amount'],
   'bidDetailEscrowedUntilDeliveryLabel': ['amount'],
+  'bidDetailPaymentToPayLabel': ['amount'],
   'bidDetailShareTrackingMessage': ['url'],
   'recipientNotifyTitle': ['name'],
   'recipientNotifyBodyLink': ['name'],
@@ -8691,7 +8677,6 @@ const textParameters = <String, List<String>>{
   'amendmentGainCashDue': ['elide', 'name'],
   'amendmentGainCommissionNote': ['amount'],
   'amendmentGainHandoverNote': ['amount'],
-  'amendmentEntryBodyShort': ['name'],
   'amendmentSheetKgLabelOpen': ['price'],
   'amendmentSentSnackbar': ['name'],
   'amendmentSenderExpiredStatus': ['name'],

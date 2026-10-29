@@ -2,9 +2,6 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -20,9 +17,6 @@ import '../../../../../helpers/l10n_test_helpers.dart';
 class _MockConvBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
-
-class _MockRevealBloc extends MockBloc<ContactRevealEvent, ContactRevealState>
-    implements ContactRevealBloc {}
 
 class _FakeConversationOpenEvent extends Fake
     implements ConversationOpenEvent {}
@@ -48,25 +42,23 @@ BidModel _bid({
   updatedAt: DateTime(2026, 10),
 );
 
-Finder get _phoneIcon =>
-    find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone');
-Finder get _chatIcon =>
-    find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle');
+/// Un seul bouton « Contacter » : il ouvre la discussion. L'appel se lance
+/// depuis la messagerie, plus depuis cette carte.
+Finder get _contactIcon =>
+    find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'messages-square');
+Finder get _oldIcons => find.byWidgetPredicate(
+  (w) => w is DonyIcon && (w.name == 'phone' || w.name == 'message-circle'),
+);
 
 Future<_MockConvBloc> _pump(WidgetTester tester, BidModel bid) async {
   final conv = _MockConvBloc();
   when(() => conv.state).thenReturn(const ConversationOpenInitial());
-  final reveal = _MockRevealBloc();
-  when(() => reveal.state).thenReturn(const ContactRevealInitial());
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.light(),
       home: Scaffold(
         body: MultiBlocProvider(
-          providers: [
-            BlocProvider<ConversationOpenBloc>.value(value: conv),
-            BlocProvider<ContactRevealBloc>.value(value: reveal),
-          ],
+          providers: [BlocProvider<ConversationOpenBloc>.value(value: conv)],
           child: VoyageurContactCard(bid: bid),
         ),
       ),
@@ -84,8 +76,8 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'ACCEPTED', contactWindowOpen: true));
-    expect(_chatIcon, findsOneWidget);
-    expect(_phoneIcon, findsOneWidget);
+    expect(_contactIcon, findsOneWidget);
+    expect(_oldIcons, findsNothing);
     expect(
       find.byKey(const Key('contact-return-in-progress-hint')),
       findsNothing,
@@ -99,8 +91,8 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'CANCELLED', contactWindowOpen: true));
-    expect(_chatIcon, findsOneWidget);
-    expect(_phoneIcon, findsOneWidget);
+    expect(_contactIcon, findsOneWidget);
+    expect(_oldIcons, findsNothing);
     expect(
       find.byKey(const Key('contact-cancelled-window-hint')),
       findsOneWidget,
@@ -111,8 +103,7 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'CANCELLED', contactWindowOpen: false));
-    expect(_chatIcon, findsNothing);
-    expect(_phoneIcon, findsNothing);
+    expect(_contactIcon, findsNothing);
     expect(
       find.byKey(const Key('contact-cancelled-window-hint')),
       findsNothing,
@@ -130,8 +121,8 @@ void main() {
         returnDeadline: DateTime.now().add(const Duration(days: 2)),
       ),
     );
-    expect(_chatIcon, findsOneWidget);
-    expect(_phoneIcon, findsOneWidget);
+    expect(_contactIcon, findsOneWidget);
+    expect(_oldIcons, findsNothing);
     expect(
       find.text(
         'Retour en cours : contactez le voyageur pour récupérer votre colis.',
@@ -139,7 +130,8 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(_chatIcon);
+    await tester.tap(_contactIcon);
+    await tester.pumpAndSettle();
     verify(
       () => conv.add(any(that: isA<ConversationOpenRequested>())),
     ).called(1);
@@ -173,8 +165,7 @@ void main() {
         returnedAt: DateTime.now(),
       ),
     );
-    expect(_chatIcon, findsNothing);
-    expect(_phoneIcon, findsNothing);
+    expect(_contactIcon, findsNothing);
   });
 
   testWidgets('délai de retour écoulé (serveur) : plus aucun bouton', (
@@ -188,7 +179,6 @@ void main() {
         returnDeadline: DateTime.now().subtract(const Duration(hours: 1)),
       ),
     );
-    expect(_chatIcon, findsNothing);
-    expect(_phoneIcon, findsNothing);
+    expect(_contactIcon, findsNothing);
   });
 }

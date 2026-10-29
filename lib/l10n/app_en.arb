@@ -3461,18 +3461,9 @@
   "@bidDetailDeliveryNoShowContestButton": {
     "description": "_DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)"
   },
-  "bidDetailSenderPendingTitle": "⏳ Waiting for the traveler",
-  "@bidDetailSenderPendingTitle": {
-    "description": "PENDING, titre (sender_hero_card.dart)"
-  },
-  "bidDetailSenderAwaitingCardPaymentTitle": "⏳ Waiting for your payment",
   "bidDetailSenderPendingSubtitle": "You'll be notified as soon as they reply.",
   "@bidDetailSenderPendingSubtitle": {
     "description": "PENDING, sous-titre (sender_hero_card.dart)"
-  },
-  "bidDetailSenderAwaitingPaymentTitle": "Pay to confirm the shipment",
-  "@bidDetailSenderAwaitingPaymentTitle": {
-    "description": "AWAITING_PAYMENT, titre (sender_hero_card.dart)"
   },
   "bidDetailSenderAwaitingPaymentSubtitle": "Your payment of {amount} will be held until delivery.",
   "@bidDetailSenderAwaitingPaymentSubtitle": {
@@ -3483,10 +3474,6 @@
       }
     }
   },
-  "bidDetailSenderEscrowedTitle": "🔒 Payment secured",
-  "@bidDetailSenderEscrowedTitle": {
-    "description": "PAYMENT_ESCROWED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderEscrowedSubtitle": "{amount} on hold. Waiting for the traveler's reply.",
   "@bidDetailSenderEscrowedSubtitle": {
     "description": "PAYMENT_ESCROWED (payé, le voyageur n'a pas encore accepté), sous-titre (sender_hero_card.dart)",
@@ -3496,26 +3483,13 @@
       }
     }
   },
-  "bidDetailSenderAcceptedTitle": "⚡ Parcel drop-off",
-  "@bidDetailSenderAcceptedTitle": {
-    "description": "ACCEPTED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderAcceptedInstructions": "Show the QR code, or stick it on the parcel.",
   "@bidDetailSenderAcceptedInstructions": {
     "description": "ACCEPTED, instruction commune avec ou sans fenetre/lieu (sender_hero_card.dart, _buildAcceptedSubtitle)"
   },
   "bidDetailSenderTravelerFallback": "the traveler",
   "@bidDetailSenderTravelerFallback": {
-    "description": "Repli quand bid.travelerName est vide (sender_hero_card.dart, HANDED_OVER)"
-  },
-  "bidDetailSenderHandedOverTitle": "✓ Parcel handed to {name}",
-  "@bidDetailSenderHandedOverTitle": {
-    "description": "HANDED_OVER, titre (sender_hero_card.dart)",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
+    "description": "Repli quand bid.travelerName est vide (money_breakdown_card.dart, sender_sticky_bar.dart, amendment_request_sheet.dart, amendment_card.dart)"
   },
   "bidDetailSenderHandedOverSubtitleWithDate": "Boarding scheduled for {date}.",
   "@bidDetailSenderHandedOverSubtitleWithDate": {
@@ -3529,10 +3503,6 @@
   "bidDetailSenderHandedOverSubtitleDefault": "Parcel handed over.",
   "@bidDetailSenderHandedOverSubtitleDefault": {
     "description": "HANDED_OVER, sous-titre sans date de depart (sender_hero_card.dart)"
-  },
-  "bidDetailSenderInTransitTitle": "✈ Parcel in flight",
-  "@bidDetailSenderInTransitTitle": {
-    "description": "IN_TRANSIT, titre (sender_hero_card.dart)"
   },
   "bidDetailSenderInTransitEta": "Arrival expected {time} in {city}.",
   "@bidDetailSenderInTransitEta": {
@@ -3559,10 +3529,6 @@
   "@bidDetailSenderInTransitTicketNote": {
     "description": "IN_TRANSIT, complement quand confirmationCode existe (sender_hero_card.dart, _buildInTransitSubtitle)"
   },
-  "bidDetailSenderArrivedTitle": "📍 Parcel arrived at destination",
-  "@bidDetailSenderArrivedTitle": {
-    "description": "ARRIVED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderArrivedSubtitleDefault": "The traveler has arrived, pickup instructions are coming soon.",
   "@bidDetailSenderArrivedSubtitleDefault": {
     "description": "ARRIVED, sous-titre sans instructions saisies par le voyageur (sender_hero_card.dart)"
@@ -3570,19 +3536,6 @@
   "bidDetailSenderArrivedSubtitleSeeInstructions": "The traveler has arrived. Their pickup instructions are just below.",
   "@bidDetailSenderArrivedSubtitleSeeInstructions": {
     "description": "ARRIVED, sous-titre quand le voyageur a saisi ses instructions, affichées dans l'encart juste dessous (sender_hero_card.dart)"
-  },
-  "bidDetailSenderRecipientFallback": "your recipient",
-  "@bidDetailSenderRecipientFallback": {
-    "description": "Repli quand bid.recipientName est vide (sender_hero_card.dart, COMPLETED/DELIVERED)"
-  },
-  "bidDetailSenderDeliveredTitle": "✓ Delivered to {recipient}",
-  "@bidDetailSenderDeliveredTitle": {
-    "description": "COMPLETED/DELIVERED, titre (sender_hero_card.dart)",
-    "placeholders": {
-      "recipient": {
-        "type": "String"
-      }
-    }
   },
   "bidDetailSenderDeliveredSubtitle": "Payment released to the traveler.",
   "@bidDetailSenderDeliveredSubtitle": {
@@ -3911,34 +3864,6 @@
   "bidDetailPayMyShipment": "Pay for my shipment",
   "bidDetailDeleteRequest": "Delete this request",
   "bidDetailDeleteRejectedBody": "This declined request will be permanently removed from your list.",
-  "bidDetailEscrowReleasedLabel": "Traveler paid · {amount}",
-  "@bidDetailEscrowReleasedLabel": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailEscrowRefundedLabel": "Refunded · {amount}",
-  "@bidDetailEscrowRefundedLabel": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailEscrowFailedLabel": "Payment failed",
-  "bidDetailEscrowSecuredPendingLabel": "Payment secured · Awaiting the traveler",
-  "bidDetailEscrowSecuredLabel": "Payment secured · {amount}",
-  "@bidDetailEscrowSecuredLabel": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailCashAtDropoffLabel": "Cash payment at drop-off",
-  "bidDetailMobileMoneyPaymentLabel": "Mobile money payment",
   "bidDetailReportTripLabel": "Report this trip",
   "bidDetailReportSubtitle": "Report a problem to Yadony support",
   "bidDetailContactTravelerLabel": "Contact the traveler",
@@ -3952,8 +3877,28 @@
   "bidDetailConfirmCancelButton": "Yes, cancel",
   "bidDetailCancelAfterHandoverTitle": "Cancel after drop-off?",
   "bidDetailCancelAfterHandoverBody": "The parcel is already with the traveler. You will be fully refunded and get your parcel back: the traveler will confirm the return by entering your return code.",
-  "bidDetailDeleteConfirmBody": "This request will be permanently deleted from your history.",
   "bidDetailMoreDetails": "More details",
+  "bidDetailSectionTodo": "To do",
+  "bidDetailSectionShipment": "Your shipment",
+  "senderTileSuivi": "Tracking",
+  "senderTileLieux": "Places",
+  "senderTileColis": "Parcel and recipient",
+  "senderTileColisSubtitle": "{weight} · for {recipient}",
+  "@senderTileColisSubtitle": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "senderTileDetailsSubtitle": "Reference, drop-off, tracking link",
+  "senderTilePrevenirCode": "Send the pickup code",
+  "senderTilePrevenirLink": "Send the tracking link",
+  "senderTileBadgeCodeReady": "Code ready",
+  "senderTileBadgeCurrentStep": "Current step",
   "bidDetailSectionDropoff": "PARCEL DROP-OFF",
   "bidDetailLocationLabel": "Location",
   "bidDetailHandoverStatusLabel": "Drop-off",
@@ -4020,9 +3965,21 @@
   "bidDetailDeleteRequestDefaultBody": "It will be permanently removed from your history.",
   "bidDetailAwaitingSenderMobileMoneyPayment": "Awaiting the sender's payment (mobile money).",
   "bidDetailScanParcelQr": "Scan the parcel QR",
-  "bidDetailScanTransitOptional": "Scan transit (optional)",
-  "@bidDetailScanTransitOptional": {
-    "description": "Action secondaire du voyageur sur un colis récupéré : le scan Transit est facultatif (traveler_sticky_bar.dart)"
+  "bidDetailScanTransitLabel": "Scan the transit",
+  "@bidDetailScanTransitLabel": {
+    "description": "Entrée du menu ⋮ voyageur sur un colis récupéré (HANDED_OVER) : scan Transit, étape facultative (traveler_options_sheet.dart)"
+  },
+  "bidDetailScanTransitSubtitle": "Optional step: record the parcel's passage.",
+  "@bidDetailScanTransitSubtitle": {
+    "description": "Sous-titre de l'entrée « Scanner le transit » du menu ⋮ voyageur (traveler_options_sheet.dart)"
+  },
+  "bidDetailScanPending": "Scan on hold",
+  "@bidDetailScanPending": {
+    "description": "Libellé court du bouton de scan désactivé quand un supplément ou une modification attend une réponse ; la phrase complète est dans une carte du corps (traveler_sticky_bar.dart, traveler_info_cards.dart)"
+  },
+  "bidDetailHandoverLockedLabel": "Available at departure",
+  "@bidDetailHandoverLockedLabel": {
+    "description": "Libellé du bouton de remise désactivé tant que le trajet n'est pas parti ; les phrases du verrou sont dans une carte du corps (traveler_sticky_bar.dart, traveler_info_cards.dart)"
   },
   "bidDetailConfirmHandover": "Confirm the drop-off",
   "bidDetailQrSheetTitle": "Parcel QR",
@@ -4082,6 +4039,19 @@
   },
   "bidDetailEscrowedUntilDeliveryLabel": "{amount} on hold: released at delivery",
   "@bidDetailEscrowedUntilDeliveryLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailPaymentFailedLabel": "Payment failed",
+  "@bidDetailPaymentFailedLabel": {
+    "description": "Payment card body, Stripe: the payment failed and the parcel is not finished (paiement_card.dart)"
+  },
+  "bidDetailPaymentToPayLabel": "{amount} to pay",
+  "@bidDetailPaymentToPayLabel": {
+    "description": "Payment card body, parcel awaiting payment (AWAITING_PAYMENT): nothing is paid yet (paiement_card.dart)",
     "placeholders": {
       "amount": {
         "type": "String"
@@ -11131,7 +11101,6 @@
   "errorAmendmentNotFoundMessage": "This edit no longer exists.",
   "errorHandoverAmendmentPendingTitle": "Edit pending",
   "errorHandoverAmendmentPendingMessage": "An edit to the parcel is awaiting the traveler's reply. Scan the parcel once they've replied.",
-  "amendmentEntryTitle": "EDIT MY PARCEL",
   "amendmentEntryButton": "Add kilos or items",
   "amendmentSheetTitle": "Edit my parcel",
   "amendmentSheetKgLabel": "EXTRA KILOS · {price}/KG · {free} KG FREE",
@@ -11183,7 +11152,6 @@
   "amendmentGainCommissionNote": "including {amount} Yadony commission, already taken from your balance",
   "amendmentGainHandoverNote": "At handover, collect {amount} in cash before scanning the parcel QR code.",
   "amendmentPaymentContextLabel": "Parcel edit",
-  "amendmentEntryBodyShort": "Add kilos or items: {name} has 48 h to accept.",
   "amendmentSheetKgLabelOpen": "EXTRA KILOS · {price}/KG",
   "amendmentSheetLoadFailed": "Couldn't load the edit options.",
   "amendmentQuantityLess": "Fewer",
@@ -11229,7 +11197,6 @@
   "amendmentCommissionProcessingSnackbar": "Commission being processed, the change will be confirmed once it clears.",
   "amendmentTravelerCashNoteNoCommission": "Paid in cash by {name} at handover: {amount}.",
   "amendmentDeadlineFormat": "{date} at {time}",
-  "bidDetailMoreOptionsTooltip": "More options",
   "walletBalancesButtonTooltip": "My balances",
   "walletBalancesSheetTitle": "My balances",
   "walletBalancesSheetHint": "Each balance stays in its own currency: nothing is converted. The total's currency is also the one used for your card top-ups and your new listings. Your ongoing shipments do not change.",
@@ -11272,10 +11239,6 @@
   "tripSummaryViewParcels": "View my parcels",
   "tripDepartButton": "I'm leaving",
   "tripDepartConfirmedSnackbar": "Noted, have a safe trip!",
-  "travelerTrackingTitle": "Traveler tracking",
-  "@travelerTrackingTitle": {
-    "description": "Titre de la carte. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
-  },
   "travelerTrackingBadgeEnRoute": "On the way",
   "@travelerTrackingBadgeEnRoute": {
     "description": "Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."

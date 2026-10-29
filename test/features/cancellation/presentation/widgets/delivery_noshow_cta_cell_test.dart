@@ -49,6 +49,25 @@ void main() {
     );
   });
 
+  test('shouldShow suit canReportDeliveryNoShow', () {
+    final bid = _inTransitBid();
+    expect(bid.canReportDeliveryNoShow, isTrue);
+    expect(DeliveryNoShowCtaCell.shouldShow(bid), isTrue);
+    expect(
+      DeliveryNoShowCtaCell.shouldShow(
+        BidModel(
+          id: 'b2',
+          announcementId: 'a1',
+          senderId: 's1',
+          status: 'PENDING',
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+        ),
+      ),
+      isFalse,
+    );
+  });
+
   testWidgets('voyageur : cellule visible si canReportDeliveryNoShow', (
     tester,
   ) async {

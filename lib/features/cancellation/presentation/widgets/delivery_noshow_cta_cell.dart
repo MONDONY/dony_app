@@ -19,9 +19,13 @@ class DeliveryNoShowCtaCell extends StatelessWidget {
   final BidModel bid;
   final bool isSender;
 
+  /// La cellule n'existe que tant que le signalement est possible : colis
+  /// parti, aucun signalement déjà fait.
+  static bool shouldShow(BidModel bid) => bid.canReportDeliveryNoShow;
+
   @override
   Widget build(BuildContext context) {
-    if (!bid.canReportDeliveryNoShow) {
+    if (!shouldShow(bid)) {
       return const SizedBox.shrink();
     }
     final l = context.l10n;

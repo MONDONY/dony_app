@@ -6969,21 +6969,9 @@
   "@bidDetailDeliveryNoShowContestButton": {
     "description": "_DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)"
   },
-  "bidDetailSenderPendingTitle": "⏳ En attente du voyageur",
-  "@bidDetailSenderPendingTitle": {
-    "description": "PENDING, titre (sender_hero_card.dart)"
-  },
-  "bidDetailSenderAwaitingCardPaymentTitle": "⏳ En attente de votre paiement",
-  "@bidDetailSenderAwaitingCardPaymentTitle": {
-    "description": "Titre de la carte prochaine étape (sender_hero_card.dart) pour un colis carte PENDING pas encore payé (FLUTTER-G7)"
-  },
   "bidDetailSenderPendingSubtitle": "Vous serez notifié dès sa réponse.",
   "@bidDetailSenderPendingSubtitle": {
     "description": "PENDING, sous-titre (sender_hero_card.dart)"
-  },
-  "bidDetailSenderAwaitingPaymentTitle": "Payez pour confirmer l'envoi",
-  "@bidDetailSenderAwaitingPaymentTitle": {
-    "description": "AWAITING_PAYMENT, titre (sender_hero_card.dart)"
   },
   "bidDetailSenderAwaitingPaymentSubtitle": "Votre paiement de {amount} sera séquestré jusqu'à la livraison.",
   "@bidDetailSenderAwaitingPaymentSubtitle": {
@@ -6994,10 +6982,6 @@
       }
     }
   },
-  "bidDetailSenderEscrowedTitle": "🔒 Paiement sécurisé",
-  "@bidDetailSenderEscrowedTitle": {
-    "description": "PAYMENT_ESCROWED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderEscrowedSubtitle": "{amount} séquestrés. En attente de la réponse du voyageur.",
   "@bidDetailSenderEscrowedSubtitle": {
     "description": "PAYMENT_ESCROWED (payé, le voyageur n'a pas encore accepté), sous-titre (sender_hero_card.dart)",
@@ -7007,26 +6991,13 @@
       }
     }
   },
-  "bidDetailSenderAcceptedTitle": "⚡ Remise du colis",
-  "@bidDetailSenderAcceptedTitle": {
-    "description": "ACCEPTED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderAcceptedInstructions": "Présentez le QR, ou collez-le sur le colis.",
   "@bidDetailSenderAcceptedInstructions": {
     "description": "ACCEPTED, instruction commune avec ou sans fenetre/lieu (sender_hero_card.dart, _buildAcceptedSubtitle)"
   },
   "bidDetailSenderTravelerFallback": "le voyageur",
   "@bidDetailSenderTravelerFallback": {
-    "description": "Repli quand bid.travelerName est vide (sender_hero_card.dart, HANDED_OVER)"
-  },
-  "bidDetailSenderHandedOverTitle": "✓ Colis remis à {name}",
-  "@bidDetailSenderHandedOverTitle": {
-    "description": "HANDED_OVER, titre (sender_hero_card.dart)",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
+    "description": "Repli quand bid.travelerName est vide (money_breakdown_card.dart, sender_sticky_bar.dart, amendment_request_sheet.dart, amendment_card.dart)"
   },
   "bidDetailSenderHandedOverSubtitleWithDate": "Embarquement prévu le {date}.",
   "@bidDetailSenderHandedOverSubtitleWithDate": {
@@ -7040,10 +7011,6 @@
   "bidDetailSenderHandedOverSubtitleDefault": "Colis remis.",
   "@bidDetailSenderHandedOverSubtitleDefault": {
     "description": "HANDED_OVER, sous-titre sans date de depart (sender_hero_card.dart)"
-  },
-  "bidDetailSenderInTransitTitle": "✈ Colis en vol",
-  "@bidDetailSenderInTransitTitle": {
-    "description": "IN_TRANSIT, titre (sender_hero_card.dart)"
   },
   "bidDetailSenderInTransitEta": "Arrivée prévue {time} à {city}.",
   "@bidDetailSenderInTransitEta": {
@@ -7070,10 +7037,6 @@
   "@bidDetailSenderInTransitTicketNote": {
     "description": "IN_TRANSIT, complement quand confirmationCode existe (sender_hero_card.dart, _buildInTransitSubtitle)"
   },
-  "bidDetailSenderArrivedTitle": "📍 Colis arrivé à destination",
-  "@bidDetailSenderArrivedTitle": {
-    "description": "ARRIVED, titre (sender_hero_card.dart)"
-  },
   "bidDetailSenderArrivedSubtitleDefault": "Le voyageur est arrivé, les instructions de retrait arrivent bientôt.",
   "@bidDetailSenderArrivedSubtitleDefault": {
     "description": "ARRIVED, sous-titre sans instructions saisies par le voyageur (sender_hero_card.dart)"
@@ -7081,19 +7044,6 @@
   "bidDetailSenderArrivedSubtitleSeeInstructions": "Le voyageur est arrivé. Ses instructions de retrait sont juste en dessous.",
   "@bidDetailSenderArrivedSubtitleSeeInstructions": {
     "description": "ARRIVED, sous-titre quand le voyageur a saisi ses instructions, affichées dans l'encart juste dessous (sender_hero_card.dart)"
-  },
-  "bidDetailSenderRecipientFallback": "votre destinataire",
-  "@bidDetailSenderRecipientFallback": {
-    "description": "Repli quand bid.recipientName est vide (sender_hero_card.dart, COMPLETED/DELIVERED)"
-  },
-  "bidDetailSenderDeliveredTitle": "✓ Livré à {recipient}",
-  "@bidDetailSenderDeliveredTitle": {
-    "description": "COMPLETED/DELIVERED, titre (sender_hero_card.dart)",
-    "placeholders": {
-      "recipient": {
-        "type": "String"
-      }
-    }
   },
   "bidDetailSenderDeliveredSubtitle": "Paiement libéré au voyageur.",
   "@bidDetailSenderDeliveredSubtitle": {
@@ -7481,7 +7431,7 @@
   },
   "bidDetailShareTracking": "Partager le suivi",
   "@bidDetailShareTracking": {
-    "description": "Tooltip et libellé de tuile pour partager le lien de suivi (bid_detail_screen.dart, bid_detail_action_bars.dart, quick_actions_row.dart)"
+    "description": "Tooltip et libellé de tuile pour partager le lien de suivi (bid_detail_screen.dart, bid_detail_action_bars.dart, tracking_actions.dart)"
   },
   "bidDetailOptionsTitle": "Options",
   "@bidDetailOptionsTitle": {
@@ -7534,58 +7484,15 @@
   },
   "bidDetailPayMyShipment": "Payer mon envoi",
   "@bidDetailPayMyShipment": {
-    "description": "Bouton de paiement expéditeur (bid_detail_action_bars.dart, sender_sticky_bar.dart)"
+    "description": "Bouton de paiement expéditeur (sender_sticky_bar.dart)"
   },
   "bidDetailDeleteRequest": "Supprimer cette demande",
   "@bidDetailDeleteRequest": {
-    "description": "Libellé/titre partagé pour supprimer une demande (bid_detail_action_bars.dart, traveler_options_sheet.dart, traveler_sticky_bar.dart)"
+    "description": "Libellé/titre partagé pour supprimer une demande (bid_detail_action_bars.dart, traveler_options_sheet.dart, confirm_delete_bid.dart)"
   },
   "bidDetailDeleteRejectedBody": "Cette demande refusée sera retirée définitivement de votre liste.",
   "@bidDetailDeleteRejectedBody": {
-    "description": "Corps du dialog de suppression, vue voyageur d'une demande refusée (bid_detail_action_bars.dart)"
-  },
-  "bidDetailEscrowReleasedLabel": "Voyageur payé · {amount}",
-  "@bidDetailEscrowReleasedLabel": {
-    "description": "EscrowBadge, paiement libéré (bid_detail_action_bars.dart)",
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailEscrowRefundedLabel": "Remboursé · {amount}",
-  "@bidDetailEscrowRefundedLabel": {
-    "description": "EscrowBadge, paiement remboursé (bid_detail_action_bars.dart)",
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailEscrowFailedLabel": "Paiement échoué",
-  "@bidDetailEscrowFailedLabel": {
-    "description": "EscrowBadge, paiement échoué (bid_detail_action_bars.dart)"
-  },
-  "bidDetailEscrowSecuredPendingLabel": "Paiement sécurisé · En attente du voyageur",
-  "@bidDetailEscrowSecuredPendingLabel": {
-    "description": "EscrowBadge, statut PENDING (bid_detail_action_bars.dart)"
-  },
-  "bidDetailEscrowSecuredLabel": "Paiement sécurisé · {amount}",
-  "@bidDetailEscrowSecuredLabel": {
-    "description": "EscrowBadge, statut ACCEPTED ou défaut (bid_detail_action_bars.dart)",
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailCashAtDropoffLabel": "Paiement en espèces à la remise",
-  "@bidDetailCashAtDropoffLabel": {
-    "description": "_CashBadge (bid_detail_action_bars.dart)"
-  },
-  "bidDetailMobileMoneyPaymentLabel": "Paiement mobile money",
-  "@bidDetailMobileMoneyPaymentLabel": {
-    "description": "_MobileMoneyBadge (bid_detail_action_bars.dart)"
+    "description": "Corps du dialog de suppression, vue voyageur d'une demande refusée (confirm_delete_bid.dart)"
   },
   "bidDetailReportTripLabel": "Signaler ce trajet",
   "@bidDetailReportTripLabel": {
@@ -7639,13 +7546,61 @@
   "@bidDetailCancelAfterHandoverBody": {
     "description": "Corps du dialog d'annulation après remise (bid_detail_action_bars.dart)"
   },
-  "bidDetailDeleteConfirmBody": "Cette demande sera définitivement supprimée de votre historique.",
-  "@bidDetailDeleteConfirmBody": {
-    "description": "Corps du dialog de suppression, vue expéditeur (bid_detail_action_bars.dart)"
-  },
   "bidDetailMoreDetails": "Plus de détails",
   "@bidDetailMoreDetails": {
     "description": "En-tête de l'accordéon (details_accordion.dart)"
+  },
+  "bidDetailSectionTodo": "À traiter",
+  "@bidDetailSectionTodo": {
+    "description": "Titre de la section des actions en attente de la fiche colis expéditeur (sender_detail_body.dart)"
+  },
+  "bidDetailSectionShipment": "Votre envoi",
+  "@bidDetailSectionShipment": {
+    "description": "Titre de la grille de tuiles de la fiche colis expéditeur (sender_detail_body.dart)"
+  },
+  "senderTileSuivi": "Suivi",
+  "@senderTileSuivi": {
+    "description": "Tuile Suivi de la fiche colis expéditeur (sender_tiles.dart)"
+  },
+  "senderTileLieux": "Lieux",
+  "@senderTileLieux": {
+    "description": "Tuile Lieux (dépôt et retrait) de la fiche colis expéditeur avant la remise"
+  },
+  "senderTileColis": "Colis et destinataire",
+  "@senderTileColis": {
+    "description": "Tuile Colis et destinataire de la fiche colis expéditeur"
+  },
+  "senderTileColisSubtitle": "{weight} · pour {recipient}",
+  "@senderTileColisSubtitle": {
+    "description": "Sous-titre de la tuile Colis et destinataire : poids puis destinataire",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "senderTileDetailsSubtitle": "Référence, dépôt, lien de suivi",
+  "@senderTileDetailsSubtitle": {
+    "description": "Sous-titre de la tuile Plus de détails"
+  },
+  "senderTilePrevenirCode": "Envoyer le code de retrait",
+  "@senderTilePrevenirCode": {
+    "description": "Sous-titre de la tuile Prévenir quand le code de retrait part dans le message"
+  },
+  "senderTilePrevenirLink": "Envoyer le lien de suivi",
+  "@senderTilePrevenirLink": {
+    "description": "Sous-titre de la tuile Prévenir quand seul le lien de suivi part (code absent, bloqué ou expiré)"
+  },
+  "senderTileBadgeCodeReady": "Code prêt",
+  "@senderTileBadgeCodeReady": {
+    "description": "Pastille de la tuile Prévenir quand le code de retrait est prêt à être envoyé"
+  },
+  "senderTileBadgeCurrentStep": "Étape en cours",
+  "@senderTileBadgeCurrentStep": {
+    "description": "Pastille de la tuile Suivi (colis remis, en route ou arrivé) : une étape est en cours"
   },
   "bidDetailSectionDropoff": "DÉPÔT DU COLIS",
   "@bidDetailSectionDropoff": {
@@ -7862,7 +7817,7 @@
   },
   "bidDetailTrackParcel": "Suivi du colis",
   "@bidDetailTrackParcel": {
-    "description": "Bouton/tuile/corridor de repli de suivi (sender_sticky_bar.dart, quick_actions_row.dart)"
+    "description": "Bouton/tuile/corridor de repli de suivi (sender_sticky_bar.dart, tracking_actions.dart)"
   },
   "bidDetailRateTraveler": "Noter le voyageur",
   "@bidDetailRateTraveler": {
@@ -7870,23 +7825,35 @@
   },
   "bidDetailDeleteRequestQuestionTitle": "Supprimer cette demande ?",
   "@bidDetailDeleteRequestQuestionTitle": {
-    "description": "Titre par défaut du dialog de suppression (sender_sticky_bar.dart)"
+    "description": "Titre par défaut du dialog de suppression (confirm_delete_bid.dart)"
   },
   "bidDetailDeleteRequestDefaultBody": "Elle sera retirée définitivement de votre historique.",
   "@bidDetailDeleteRequestDefaultBody": {
-    "description": "Corps par défaut du dialog de suppression (sender_sticky_bar.dart)"
+    "description": "Corps par défaut du dialog de suppression (confirm_delete_bid.dart)"
   },
   "bidDetailAwaitingSenderMobileMoneyPayment": "En attente du paiement de l'expéditeur (mobile money).",
   "@bidDetailAwaitingSenderMobileMoneyPayment": {
-    "description": "Ligne d'information AWAITING_PAYMENT mobile money, vue voyageur (traveler_sticky_bar.dart)"
+    "description": "Carte d'information du corps, AWAITING_PAYMENT mobile money, vue voyageur (traveler_info_cards.dart)"
   },
   "bidDetailScanParcelQr": "Lire le QR du colis",
   "@bidDetailScanParcelQr": {
     "description": "Bouton étape Départ (traveler_sticky_bar.dart)"
   },
-  "bidDetailScanTransitOptional": "Scanner le transit (facultatif)",
-  "@bidDetailScanTransitOptional": {
-    "description": "Action secondaire du voyageur sur un colis récupéré : le scan Transit est facultatif (traveler_sticky_bar.dart)"
+  "bidDetailScanTransitLabel": "Scanner le transit",
+  "@bidDetailScanTransitLabel": {
+    "description": "Entrée du menu ⋮ voyageur sur un colis récupéré (HANDED_OVER) : scan Transit, étape facultative (traveler_options_sheet.dart)"
+  },
+  "bidDetailScanTransitSubtitle": "Étape facultative : enregistrer le passage du colis.",
+  "@bidDetailScanTransitSubtitle": {
+    "description": "Sous-titre de l'entrée « Scanner le transit » du menu ⋮ voyageur (traveler_options_sheet.dart)"
+  },
+  "bidDetailScanPending": "Scan en attente",
+  "@bidDetailScanPending": {
+    "description": "Libellé court du bouton de scan désactivé quand un supplément ou une modification attend une réponse ; la phrase complète est dans une carte du corps (traveler_sticky_bar.dart, traveler_info_cards.dart)"
+  },
+  "bidDetailHandoverLockedLabel": "Disponible au départ",
+  "@bidDetailHandoverLockedLabel": {
+    "description": "Libellé du bouton de remise désactivé tant que le trajet n'est pas parti ; les phrases du verrou sont dans une carte du corps (traveler_sticky_bar.dart, traveler_info_cards.dart)"
   },
   "bidDetailConfirmHandover": "Valider la remise",
   "@bidDetailConfirmHandover": {
@@ -8029,9 +7996,22 @@
       }
     }
   },
+  "bidDetailPaymentFailedLabel": "Paiement échoué",
+  "@bidDetailPaymentFailedLabel": {
+    "description": "Corps de la carte paiement, stripe : le paiement a échoué et le colis n'est pas terminé (paiement_card.dart)"
+  },
+  "bidDetailPaymentToPayLabel": "{amount} à régler",
+  "@bidDetailPaymentToPayLabel": {
+    "description": "Corps de la carte paiement, colis en attente de paiement (AWAITING_PAYMENT) : rien n'est encore payé (paiement_card.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "bidDetailShareTrackingMessage": "Suivez votre colis Yadony en temps réel :\n{url}",
   "@bidDetailShareTrackingMessage": {
-    "description": "Texte du partage natif du lien de suivi (quick_actions_row.dart)",
+    "description": "Texte du partage natif du lien de suivi (tracking_actions.dart)",
     "placeholders": {
       "url": {
         "type": "String"
@@ -8135,7 +8115,7 @@
   },
   "bidDetailTrackingShareSubject": "Suivi de colis Yadony · {number}",
   "@bidDetailTrackingShareSubject": {
-    "description": "Sujet du partage natif du lien de suivi (quick_actions_row.dart)",
+    "description": "Sujet du partage natif du lien de suivi (tracking_actions.dart)",
     "placeholders": {
       "number": {
         "type": "String"
@@ -8156,7 +8136,7 @@
   },
   "bidDetailCancelRequestLabel": "Annuler la demande",
   "@bidDetailCancelRequestLabel": {
-    "description": "Clé dédiée (Ruling R40, correction relecture D2) — remplace la réutilisation de requestDetailMenuCancelLabel (feature package_request) dans bid_detail_action_bars.dart et sender_sticky_bar.dart"
+    "description": "Clé dédiée (Ruling R40, correction relecture D2) — remplace la réutilisation de requestDetailMenuCancelLabel (feature package_request) dans bid_detail_action_bars.dart (menu ⋮ et dialog) et sender_hero_card.dart"
   },
   "bidDetailParcelLabel": "Colis",
   "@bidDetailParcelLabel": {
@@ -20388,7 +20368,7 @@
   "bidDetailTrackingNumberLabel": "Numéro de suivi",
   "@bidDetailTrackingNumberLabel": {"description": "Libellé de la ligne du numéro de suivi dans le détail d'un colis (details_accordion.dart, FLUTTER-J2)."},
   "deliveryLockedHelp": "À la remise, demandez au destinataire son code de retrait à 6 chiffres.",
-  "@deliveryLockedHelp": {"description": "Aide sous le bouton de remise grisé avant le départ du trajet (delivery_departure_gate.dart, FLUTTER-J2)."},
+  "@deliveryLockedHelp": {"description": "Aide de la carte du verrou avant le départ du trajet, vue voyageur (traveler_info_cards.dart), et sous le bouton de l'écran de confirmation (delivery_departure_gate.dart, FLUTTER-J2)."},
   "moneyUpcomingLabel": "À venir · {count, plural, =1{1 colis} other{{count} colis}}",
   "@moneyUpcomingLabel": {"description": "Titre de la carte de tête : argent des colis encore attendu par le voyageur (money_upcoming_card.dart, FLUTTER-HV).", "placeholders": {"count": {"type": "int"}}},
   "moneySenderHeroLabel": "Payé, en séquestre · {count, plural, =1{1 colis} other{{count} colis}}",
@@ -22077,7 +22057,7 @@
   "bidDetailRequestSupplementSubtitle": "Le colis vaut plus que prévu : l'expéditeur paie la différence",
   "@bidDetailRequestSupplementSubtitle": {"description": "Sous-titre de la tuile supplément (traveler_options_sheet.dart)"},
   "bidDetailScanBlockedSupplement": "Un supplément attend la réponse de l'expéditeur : le scan est bloqué.",
-  "@bidDetailScanBlockedSupplement": {"description": "Sous le bouton de scan désactivé de la vue voyageur (traveler_sticky_bar.dart)"},
+  "@bidDetailScanBlockedSupplement": {"description": "Carte d'information du corps de la vue voyageur, quand le bouton de scan du footer est désactivé (traveler_info_cards.dart)"},
   "supplementRequestTitle": "Demander un supplément",
   "@supplementRequestTitle": {"description": "Titre de la feuille de demande de supplément (supplement_request_sheet.dart)"},
   "supplementRequestIntro": "Le colis ne correspond pas à la déclaration ? Demandez la différence à l'expéditeur. Il paie par le même moyen que le colis, ou refuse.",
@@ -22534,8 +22514,6 @@
   "@errorHandoverAmendmentPendingTitle": {"description": "ErrorCatalog handover-amendment-pending"},
   "errorHandoverAmendmentPendingMessage": "Une modification du colis attend la réponse du voyageur. Scannez le colis une fois qu'il a répondu.",
   "@errorHandoverAmendmentPendingMessage": {"description": "ErrorCatalog handover-amendment-pending"},
-  "amendmentEntryTitle": "MODIFIER MON COLIS",
-  "@amendmentEntryTitle": {"description": "Titre de la carte d'entrée de l'expéditeur"},
   "amendmentEntryButton": "Ajouter des kilos ou des articles",
   "@amendmentEntryButton": {"description": "Bouton d'entrée de la modification"},
   "amendmentSheetTitle": "Modifier mon colis",
@@ -22638,8 +22616,6 @@
   "@amendmentGainHandoverNote": {"description": "Note de remise côté voyageur", "placeholders": {"amount": {"type": "String"}}},
   "amendmentPaymentContextLabel": "Modification du colis",
   "@amendmentPaymentContextLabel": {"description": "Libellé de contexte de la feuille de paiement"},
-  "amendmentEntryBodyShort": "Ajoutez des kilos ou des articles : {name} a 48 h pour accepter.",
-  "@amendmentEntryBodyShort": {"description": "Texte de la carte d'entrée sans kilos libres. {name} : prénom du voyageur", "placeholders": {"name": {"type": "String"}}},
   "amendmentSheetKgLabelOpen": "KILOS EN PLUS · {price}/KG",
   "@amendmentSheetKgLabelOpen": {"description": "Titre du sélecteur de kilos quand la capacité est libre. {price} : prix au kilo formaté", "placeholders": {"price": {"type": "String"}}},
   "amendmentSheetLoadFailed": "Impossible de charger les options de modification.",
@@ -22730,8 +22706,6 @@
   "@amendmentTravelerCashNoteNoCommission": {"description": "Note espèces sans montant de commission", "placeholders": {"name": {"type": "String"}, "amount": {"type": "String"}}},
   "amendmentDeadlineFormat": "{date} à {time}",
   "@amendmentDeadlineFormat": {"description": "Échéance : date puis heure", "placeholders": {"date": {"type": "String"}, "time": {"type": "String"}}},
-  "bidDetailMoreOptionsTooltip": "Plus d'options",
-  "@bidDetailMoreOptionsTooltip": {"description": "Nom accessible et infobulle du bouton « ⋯ » de la barre d'actions du détail d'un envoi (bid_detail_action_bars.dart), qui ouvre la feuille d'options."},
   "walletBalancesButtonTooltip": "Mes soldes",
   "@walletBalancesButtonTooltip": {"description": "Infobulle du bouton de l'en-tête du portefeuille qui ouvre la feuille « Mes soldes » (wallet_screen.dart)."},
   "walletBalancesSheetTitle": "Mes soldes",
@@ -22816,10 +22790,6 @@
   "@tripDepartButton": {"description": "Écran du trajet voyageur : confirme le départ (position approximative facultative)."},
   "tripDepartConfirmedSnackbar": "C'est noté, bon voyage !",
   "@tripDepartConfirmedSnackbar": {"description": "Confirmation après le bouton « Je pars »."},
-  "travelerTrackingTitle": "Suivi du voyageur",
-  "@travelerTrackingTitle": {
-    "description": "Titre de la carte. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
-  },
   "travelerTrackingBadgeEnRoute": "En route",
   "@travelerTrackingBadgeEnRoute": {
     "description": "Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."

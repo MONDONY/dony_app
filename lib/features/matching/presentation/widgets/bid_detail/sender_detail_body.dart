@@ -1,47 +1,47 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tile_sheets.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
+import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
+import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 /// Corps de l'écran « Détail d'envoi » (vue expéditeur).
 ///
-/// Compose la nouvelle vue redesignée : billet de colis, hero contextuel,
-/// carte voyageur (si le voyageur est connu), carte colis & destinataire,
-/// carte paiement, actions rapides de suivi, accordéon de détails, et badge
-/// d'évaluation si déjà notée.
+/// Ordre : billet de colis ; « À traiter » (cartes qui attendent une réponse,
+/// seulement s'il y en a) ; carte voyageur ; carte paiement ; grille de tuiles
+/// « Votre envoi » (Prévenir, Suivi ou Lieux, Colis et destinataire, Plus de
+/// détails), chacune ouvrant un bottom sheet ([openSenderTileSheet]) ; cellule
+/// « le voyageur ne livre pas » ; badge d'évaluation si déjà notée.
 ///
 /// Requiert les BLoCs ambiants suivants (fournis par l'écran parent) :
 ///   - [CancellationBloc] (via [SenderHeroCard]),
 ///   - [ConversationOpenBloc] (via [VoyageurContactCard]),
-///   - [TrackingBloc] / [BidBloc] (via le talon QR du billet).
+///   - [TrackingBloc] / [BidBloc] (via le talon QR du billet et les sheets).
 ///
 /// ## Animations
 /// Le stagger d'entrée (fadeIn + slideY décalé de 60 ms × index) est joué
 /// **une seule fois** grâce au flag [_SenderDetailBodyState._playEntrance].
-/// Les rebuilds suivants (polling toutes les 10 s du parent) rendent les
-/// cartes sans re-déclencher l'animation — flag passé à `false` après la
-/// durée totale du stagger, sans `setState` (pas de rebuild superflu).
+/// Les rebuilds suivants (polling du parent) rendent les cartes sans
+/// re-déclencher l'animation — flag passé à `false` après la durée totale du
+/// stagger, sans `setState` (pas de rebuild superflu).
 class SenderDetailBody extends StatefulWidget {
   final BidModel bid;
 
@@ -54,11 +54,16 @@ class SenderDetailBody extends StatefulWidget {
   /// (`?action=amendment`).
   final bool focusAmendment;
 
+  /// Paiement lu par l'écran (null tant qu'il n'est pas lu) : la carte
+  /// Paiement dit ainsi un paiement échoué plutôt qu'un séquestre.
+  final PaymentModel? existingPayment;
+
   const SenderDetailBody({
     super.key,
     required this.bid,
     this.focusSupplement = false,
     this.focusAmendment = false,
+    this.existingPayment,
   });
 
   @override
@@ -78,8 +83,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
   /// Annulé dans [dispose] pour éviter les timers pendants en test.
   Timer? _entranceTimer;
 
-  /// Statuts où le voyageur est connu (carte voyageur affichée)
-  /// et où le suivi est disponible (actions rapides affichées).
+  /// Statuts où les instructions de retrait s'affichent.
   static const _activeStatuses = <String>{
     'ACCEPTED',
     'HANDED_OVER',
@@ -89,11 +93,18 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     'DELIVERED',
   };
 
+  /// Statuts où la tuile Suivi porte la pastille « Étape en cours ».
+  static const _inProgressStatuses = <String>{
+    'HANDED_OVER',
+    'IN_TRANSIT',
+    'ARRIVED',
+  };
+
   @override
   void initState() {
     super.initState();
-    // Durée totale = délai max (60 ms × 7 pour 8 enfants, index 0–7)
-    // + durée fadeIn (300 ms) + marge (50 ms).
+    // Durée totale = délai max (60 ms × 7, index plafonné) + durée fadeIn
+    // (300 ms) + marge (50 ms).
     // Après ce délai, le flag est mis à false SANS setState : on ne veut pas
     // déclencher un rebuild ici, juste que le prochain rebuild (polling parent)
     // saute le stagger.
@@ -153,70 +164,172 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     });
   }
 
+  /// Tuile de la grille « Votre envoi ». Le tap ouvre le sheet avec le contexte
+  /// de ce `State` (jamais celui de la tuile) : la liste des tuiles change au
+  /// rafraîchissement du colis, et le sheet ne doit pas dépendre d'une tuile
+  /// qui disparaît (frise, modification du colis ouvertes après la fermeture).
+  Widget _tileFor(SenderTile tile) {
+    final bid = widget.bid;
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final summary = SenderHeroCard.statusLine(context, bid);
+    final weight = bid.displayWeightKg;
+    final recipient = bid.recipientName?.trim();
+
+    final (iconName, label, color) = switch (tile) {
+      SenderTile.prevenir => (
+        'message-circle',
+        l.recipientNotifyTitle(PrevenirDestinataire.displayName(l, bid)),
+        cs.primary,
+      ),
+      SenderTile.suivi => ('route', l.senderTileSuivi, cs.secondary),
+      SenderTile.lieux => ('map-pin', l.senderTileLieux, cs.secondary),
+      SenderTile.colis => ('package', l.senderTileColis, cs.primary),
+      SenderTile.details => ('file-text', l.bidDetailMoreDetails, cs.primary),
+    };
+
+    final subtitle = switch (tile) {
+      SenderTile.prevenir =>
+        PrevenirDestinataire.withCode(bid)
+            ? l.senderTilePrevenirCode
+            : l.senderTilePrevenirLink,
+      SenderTile.suivi || SenderTile.lieux => summary,
+      SenderTile.colis =>
+        weight == null
+            ? null
+            : (recipient == null || recipient.isEmpty)
+            ? formatWeightKg(l, weight)
+            : l.senderTileColisSubtitle(formatWeightKg(l, weight), recipient),
+      SenderTile.details => l.senderTileDetailsSubtitle,
+    };
+
+    final badge = switch (tile) {
+      SenderTile.prevenir when PrevenirDestinataire.withCode(bid) => _badge(
+        l.senderTileBadgeCodeReady,
+        ToolStatusTone.ready,
+      ),
+      SenderTile.suivi when _inProgressStatuses.contains(bid.status) => _badge(
+        l.senderTileBadgeCurrentStep,
+        ToolStatusTone.inProgress,
+      ),
+      _ => null,
+    };
+
+    return DonyActionTile(
+      key: Key('sender-tile-${tile.name}'),
+      iconName: iconName,
+      label: label,
+      subtitle: subtitle,
+      color: color,
+      badge: badge,
+      onTap: () => unawaited(openSenderTileSheet(context, bid, tile)),
+    );
+  }
+
+  Widget _badge(String label, ToolStatusTone tone) => ToolStatusBadge(
+    ready: tone == ToolStatusTone.ready,
+    tone: tone,
+    label: label,
+    semanticsLabel: label,
+  );
+
   @override
   Widget build(BuildContext context) {
     final h = DonyLayout.hPadding(context);
     final status = widget.bid.status;
+    final l = context.l10n;
     _maybeFocusSupplement();
     _maybeFocusAmendment();
 
-    final children = <Widget>[
+    final bid = widget.bid;
+
+    // Supplément et modification : sous « À traiter » tant qu'ils attendent
+    // une réponse, sinon simples informations juste après, sans titre. La clé
+    // de focus suit la carte d'un côté comme de l'autre.
+    final supplement = SupplementSenderCard.shouldShow(bid)
+        ? SupplementSenderCard(key: _supplementKey, bid: bid)
+        : null;
+    final supplementReply =
+        supplement != null && SupplementSenderCard.needsReply(bid);
+    final amendment = AmendmentSenderCard.shouldShow(bid)
+        ? AmendmentSenderCard(key: _amendmentKey, bid: bid)
+        : null;
+    final amendmentReply =
+        amendment != null && AmendmentSenderCard.needsReply(bid);
+
+    final reschedule = TripRescheduleCard.shouldShow(bid)
+        ? TripRescheduleCard(bid: bid, isSender: true)
+        : null;
+    final rescheduleReply =
+        reschedule != null && TripRescheduleCard.needsReply(bid);
+
+    // « À traiter » ne réunit que ce qui attend une réponse ou une action.
+    final actions = <Widget>[
+      if (SenderHeroCard.hasAction(bid)) SenderHeroCard(bid: bid),
+      if (supplementReply) supplement,
+      if (amendmentReply) amendment,
+      if (rescheduleReply) reschedule,
+      // Le destinataire a refusé : renvoyer le message n'aurait pas de sens,
+      // il faut en désigner un autre.
+      if (PrevenirDestinataire.showsDeclined(bid))
+        RecipientDeclinedCard(bid: bid),
+      // Destinataire absent signalé par le voyageur (FLUTTER-E2) : nouveau
+      // rendez-vous, changement de destinataire, garde, colis non réclamé.
+      if (DeliveryNoShowProcedureCard.shouldShow(bid, isSender: true))
+        DeliveryNoShowProcedureCard(bid: bid, isSender: true),
+      // Signaler l'absence (voyageur ou destinataire) : un geste attendu de
+      // l'expéditeur, donc avant le voyageur et pas en bas de page.
+      if (DeliveryNoShowCtaCell.shouldShow(bid))
+        DeliveryNoShowCtaCell(bid: bid, isSender: true),
+    ];
+
+    final infos = <(String, Widget)>[
+      if (supplement != null && !supplementReply)
+        ('info-supplement', supplement),
+      if (amendment != null && !amendmentReply) ('info-amendment', amendment),
+      if (reschedule != null && !rescheduleReply)
+        ('info-reschedule', reschedule),
+      // Consignes de retrait : hors du hero, qui les masquait dès qu'une
+      // contestation, une absence ou la livraison prenait la place.
+      if (_activeStatuses.contains(status) &&
+          ArrivalInstructionsCard.hasText(bid.arrivalInstructions))
+        (
+          'info-arrival',
+          ArrivalInstructionsCard(instructions: bid.arrivalInstructions!),
+        ),
+    ];
+
+    // Chaque section porte une clé : l'apparition ou la disparition de
+    // « À traiter » ne remonte ni le voyageur, ni le paiement, ni la grille.
+    final children = <(String, Widget)>[
       // index 0 — ColisBillet possède déjà son propre .animate().fadeIn().slideY()
       // en interne (colis_billet.dart:53). On ne lui applique PAS le stagger ici
       // pour éviter une double animation (fade × fade + slide × slide).
-      ColisBillet(bid: widget.bid, isSender: true),
-      SenderHeroCard(bid: widget.bid),
-      // Supplément de prix demandé par le voyageur : réponse attendue avant
-      // la remise, juste sous le hero.
-      if (SupplementSenderCard.shouldShow(widget.bid))
-        SupplementSenderCard(key: _supplementKey, bid: widget.bid),
-      // Modification du colis : la demande en attente ou sa fin, sinon
-      // l'entrée « Modifier mon colis » quand le serveur l'autorise.
-      if (AmendmentSenderCard.shouldShow(widget.bid))
-        AmendmentSenderCard(key: _amendmentKey, bid: widget.bid)
-      else if (AmendmentEntryCard.shouldShow(widget.bid))
-        AmendmentEntryCard(bid: widget.bid),
-      if (TripRescheduleCard.shouldShow(widget.bid))
-        TripRescheduleCard(bid: widget.bid, isSender: true),
-      // Où en est le voyageur (ville approximative, avancement, villes
-      // traversées) : juste après les cartes d'action qui restent en tête
-      // (supplément, modification, report), avant les lieux, car c'est la
-      // première question de l'expéditeur une fois le colis remis.
-      if (TravelerTrackingCard.shouldShow(widget.bid))
-        TravelerTrackingCard(
-          tracking: widget.bid.travelerTracking!,
-          bidId: widget.bid.id,
-          bidStatus: widget.bid.status,
-          departureCity: widget.bid.departureCity,
-          arrivalCity: widget.bid.arrivalCity,
-          onOpenTimeline: () => openSenderTrackingTimeline(context, widget.bid),
-        ),
-      // Lieu de remise puis lieu de récupération, ouvrables dans la carte
-      // native ; la mini-carte suit l'étape du colis.
-      if (ParcelLocationsCard.shouldShow(widget.bid))
-        ParcelLocationsCard(bid: widget.bid),
-      // Hors du hero, qui les masquait dès qu'une contestation, une absence
-      // ou la livraison prenait la place.
-      if (_activeStatuses.contains(status) &&
-          ArrivalInstructionsCard.hasText(widget.bid.arrivalInstructions))
-        ArrivalInstructionsCard(instructions: widget.bid.arrivalInstructions!),
-      DeliveryNoShowCtaCell(bid: widget.bid, isSender: true),
-      // Destinataire absent signalé par le voyageur (FLUTTER-E2) : nouveau
-      // rendez-vous, changement de destinataire, garde, colis non réclamé.
-      DeliveryNoShowProcedureCard(bid: widget.bid, isSender: true),
-      // Le destinataire ne reçoit rien de Yadony : l'expéditeur le prévient
-      // lui-même sur WhatsApp, au moment où le lien puis le code existent.
-      if (PrevenirDestinataireCard.shouldShow(widget.bid))
-        PrevenirDestinataireCard(bid: widget.bid),
+      ('billet', ColisBillet(bid: bid, isSender: true)),
+      if (actions.isNotEmpty)
+        ('todo', _Section(title: l.bidDetailSectionTodo, children: actions)),
+      ...infos,
       // Profil du voyageur à tous les statuts ; les boutons de contact
       // n'apparaissent qu'une fois la demande acceptée.
-      VoyageurContactCard(bid: widget.bid),
-      ColisDestinataireCard(bid: widget.bid),
-      PaiementCard(bid: widget.bid),
-      if (_activeStatuses.contains(status)) QuickActionsRow(bid: widget.bid),
-      DetailsAccordion(bid: widget.bid),
-      if (status == 'COMPLETED' && widget.bid.senderHasRated)
-        const RatingDoneBadge(),
+      ('voyageur', VoyageurContactCard(bid: bid)),
+      (
+        'paiement',
+        PaiementCard(bid: bid, existingPayment: widget.existingPayment),
+      ),
+      (
+        'shipment',
+        _Section(
+          title: l.bidDetailSectionShipment,
+          spacing: DonySpacing.md,
+          children: [
+            DonyActionTileGrid(
+              tiles: [for (final tile in senderTilesFor(bid)) _tileFor(tile)],
+            ),
+          ],
+        ),
+      ),
+      if (status == 'COMPLETED' && bid.senderHasRated)
+        ('rating', const RatingDoneBadge()),
     ];
 
     // Stagger d'entrée : joué une seule fois (flag _playEntrance).
@@ -224,26 +337,20 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     // Les autres enfants entrent en fondu + glissement, décalés de 60 ms × i.
     final staggered = <Widget>[];
     for (var i = 0; i < children.length; i++) {
-      if (i > 0) {
-        staggered.add(const SizedBox(height: DonySpacing.base));
-      }
-
-      // ColisBillet (index 0) : pas de stagger — son animation interne suffit.
-      // Autres cartes : stagger uniquement lors du premier affichage.
-      final child = children[i];
+      final (name, child) = children[i];
+      final Widget shown;
       if (_playEntrance && i > 0) {
         // Délai plafonné à l'index 7 : la durée totale du timer ci-dessus
         // reste vraie quel que soit le nombre de cartes.
         final delay = (60 * (i > 7 ? 7 : i)).ms;
-        staggered.add(
-          child
-              .animate()
-              .fadeIn(duration: 300.ms, delay: delay)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic, delay: delay),
-        );
+        shown = child
+            .animate()
+            .fadeIn(duration: 300.ms, delay: delay)
+            .slideY(begin: 0.04, curve: Curves.easeOutCubic, delay: delay);
       } else {
-        staggered.add(child);
+        shown = child;
       }
+      staggered.add(KeyedSubtree(key: ValueKey(name), child: shown));
     }
 
     return SingleChildScrollView(
@@ -252,11 +359,38 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
         context,
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: DonySpacing.base,
           children: staggered,
         ),
       ),
     );
   }
+}
+
+/// Section de la fiche : un titre puis ses contenus, séparés de [spacing].
+class _Section extends StatelessWidget {
+  const _Section({
+    required this.title,
+    required this.children,
+    this.spacing = DonySpacing.base,
+  });
+
+  final String title;
+  final List<Widget> children;
+  final double spacing;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(title, style: Theme.of(context).textTheme.titleMedium),
+      const SizedBox(height: DonySpacing.md),
+      for (var i = 0; i < children.length; i++) ...[
+        if (i > 0) SizedBox(height: spacing),
+        children[i],
+      ],
+    ],
+  );
 }
 
 // ── Badge « Évaluation envoyée » ───────────────────────────────────────────────

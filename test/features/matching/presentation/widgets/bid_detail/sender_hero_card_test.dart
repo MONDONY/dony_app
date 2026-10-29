@@ -87,6 +87,25 @@ Widget _host(BidModel bid, _MockCancellationBloc cancellationBloc) {
   );
 }
 
+// ── statusLine ────────────────────────────────────────────────────────────────
+
+/// Lit `SenderHeroCard.statusLine` dans un vrai contexte (traductions).
+Future<String?> _statusLine(WidgetTester tester, BidModel bid) async {
+  String? line;
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: AppTheme.light(),
+      home: Builder(
+        builder: (context) {
+          line = SenderHeroCard.statusLine(context, bid);
+          return const SizedBox.shrink();
+        },
+      ),
+    ),
+  );
+  return line;
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 void main() {
@@ -109,51 +128,41 @@ void main() {
     );
   });
 
-  // ── Test 1: PENDING ──────────────────────────────────────────────────────────
+  // ── Priorité 3 : la bannière d'information n'existe plus ────────────────────
+  // Les anciens tests de rendu (statuts PENDING à DELIVERED) deviennent des
+  // tests de `statusLine`, le sous-titre repris par les tuiles Suivi et Lieux.
 
-  testWidgets('1 · PENDING cash → "En attente du voyageur" + "notifié"', (
-    tester,
-  ) async {
+  testWidgets('1 · PENDING cash → statusLine "notifié"', (tester) async {
     final bid = _bid(paymentMethod: BidPaymentMethod.cash);
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+    final line = await _statusLine(tester, bid);
 
-    expect(find.textContaining('En attente du voyageur'), findsOneWidget);
-    expect(find.textContaining('notifié'), findsOneWidget);
+    expect(line, contains('notifié'));
   });
 
   testWidgets(
-    '1b · PENDING carte non payé → "En attente de votre paiement", pas du '
-    'voyageur (FLUTTER-G7)',
+    '1b · PENDING carte non payé → statusLine du paiement séquestré, pas '
+    'd\'attente du voyageur (FLUTTER-G7)',
     (tester) async {
       final bid = _bid(totalAmountEur: 45.0);
-      await tester.pumpWidget(_host(bid, cancellationBloc));
-      await tester.pump();
+      final line = await _statusLine(tester, bid);
 
-      expect(
-        find.textContaining('En attente de votre paiement'),
-        findsOneWidget,
-      );
-      expect(find.textContaining('séquestré'), findsOneWidget);
-      expect(find.textContaining('En attente du voyageur'), findsNothing);
+      expect(line, contains('séquestré'));
+      expect(line, isNot(contains('notifié')));
     },
   );
 
   // ── Test 2: PAYMENT_ESCROWED ─────────────────────────────────────────────────
 
-  testWidgets('2 · PAYMENT_ESCROWED → "Paiement sécurisé"', (tester) async {
+  testWidgets('2 · PAYMENT_ESCROWED → statusLine "réponse du voyageur"', (
+    tester,
+  ) async {
     final bid = _bid(status: 'PAYMENT_ESCROWED', totalAmountEur: 45.0);
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+    final line = await _statusLine(tester, bid);
 
-    expect(find.textContaining('Paiement sécurisé'), findsOneWidget);
     // FLUTTER-E5 : payé mais pas encore accepté, on attend le voyageur et
     // non la remise (qui n'a de sens qu'après acceptation, statut ACCEPTED).
-    expect(
-      find.textContaining('En attente de la réponse du voyageur'),
-      findsOneWidget,
-    );
-    expect(find.textContaining('En attente de remise'), findsNothing);
+    expect(line, contains('En attente de la réponse du voyageur'));
+    expect(line, isNot(contains('En attente de remise')));
   });
 
   testWidgets('2 bis · montant payé : supplément payé compris', (tester) async {
@@ -168,16 +177,15 @@ void main() {
       createdAt: DateTime(2026),
       updatedAt: DateTime(2026),
     );
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+    final line = await _statusLine(tester, bid);
 
-    expect(find.textContaining(formatPriceIn(66.8, 'EUR')), findsOneWidget);
-    expect(find.textContaining(formatPriceIn(50, 'EUR')), findsNothing);
+    expect(line, contains(formatPriceIn(66.8, 'EUR')));
+    expect(line, isNot(contains(formatPriceIn(50, 'EUR'))));
   });
 
   // ── Test 3: ACCEPTED fenêtre future ─────────────────────────────────────────
 
-  testWidgets('3 · ACCEPTED fenêtre future → "Remise du colis" + location', (
+  testWidgets('3 · statusLine for ACCEPTED contains the handover location', (
     tester,
   ) async {
     final now = DateTime.now();
@@ -186,11 +194,19 @@ void main() {
       handoverDeadline: now.add(const Duration(days: 1, hours: 2)),
       handoverLocation: 'Gare de Lyon, Paris',
     );
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+    final line = await _statusLine(tester, bid);
 
-    expect(find.textContaining('Remise du colis'), findsOneWidget);
-    expect(find.textContaining('Gare de Lyon'), findsOneWidget);
+    expect(line, contains('Gare de Lyon'));
+    expect(line, contains("jusqu'au"));
+    expect(line, contains('Présentez le QR'));
+  });
+
+  testWidgets('3 bis · ACCEPTED sans fenêtre ni lieu → consigne seule', (
+    tester,
+  ) async {
+    final line = await _statusLine(tester, _bid(status: 'ACCEPTED'));
+
+    expect(line, 'Présentez le QR, ou collez-le sur le colis.');
   });
 
   // ── Test 4: ACCEPTED fenêtre passée ─────────────────────────────────────────
@@ -403,17 +419,17 @@ void main() {
 
   // ── Test 7: HANDED_OVER ──────────────────────────────────────────────────────
 
-  testWidgets('7 · HANDED_OVER → "Colis remis"', (tester) async {
+  testWidgets('7 · HANDED_OVER avant le départ → "Embarquement prévu"', (
+    tester,
+  ) async {
     final bid = _bid(
       status: 'HANDED_OVER',
       travelerName: 'Mamadou',
       departureDate: DateTime.now().add(const Duration(days: 2)),
     );
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+    final line = await _statusLine(tester, bid);
 
-    expect(find.textContaining('Colis remis'), findsOneWidget);
-    expect(find.textContaining('Embarquement prévu'), findsOneWidget);
+    expect(line, contains('Embarquement prévu'));
   });
 
   testWidgets(
@@ -426,19 +442,17 @@ void main() {
         arrivalCity: 'Dakar',
         departureDate: DateTime.now().subtract(const Duration(days: 2)),
       );
-      await tester.pumpWidget(_host(bid, cancellationBloc));
-      await tester.pump();
+      final line = await _statusLine(tester, bid);
 
-      expect(find.textContaining('Colis en vol'), findsOneWidget);
-      expect(find.textContaining('En route vers Dakar'), findsOneWidget);
-      expect(find.textContaining('Embarquement prévu'), findsNothing);
+      expect(line, contains('En route vers Dakar'));
+      expect(line, isNot(contains('Embarquement prévu')));
     },
   );
 
   // ── Test 8: IN_TRANSIT with confirmationCode ─────────────────────────────────
 
   testWidgets(
-    '8 · IN_TRANSIT avec confirmationCode → "Colis en vol" + renvoi au billet',
+    '8 · IN_TRANSIT avec confirmationCode → arrivée prévue + renvoi au billet',
     (tester) async {
       final bid = _bid(
         status: 'IN_TRANSIT',
@@ -447,14 +461,13 @@ void main() {
         arrivalCity: 'Dakar',
         recipientName: 'Fatou',
       );
-      await tester.pumpWidget(_host(bid, cancellationBloc));
-      await tester.pump();
+      final line = await _statusLine(tester, bid);
 
-      expect(find.textContaining('Colis en vol'), findsOneWidget);
-      // La hero renvoie au talon (« CODE DE RETRAIT ») sans dire « à qui » —
+      expect(line, contains('Arrivée prévue 14:30 à Dakar'));
+      // La ligne renvoie au talon (« CODE DE RETRAIT ») sans dire « à qui » —
       // l'instruction de transmission fait autorité sur le talon.
-      expect(find.textContaining('code de retrait'), findsOneWidget);
-      expect(find.textContaining('billet'), findsOneWidget);
+      expect(line, contains('code de retrait'));
+      expect(line, contains('billet'));
     },
   );
 
@@ -469,18 +482,15 @@ void main() {
         arrivalInstructions: 'Métro Châtelet',
         confirmationCode: '482913',
       );
-      await tester.pumpWidget(_host(bid, cancellationBloc));
-      await tester.pump();
+      final line = await _statusLine(tester, bid);
 
-      // Le texte vit dans ArrivalInstructionsCard (sender_detail_body), juste
-      // sous le hero : le hero n'y renvoie plus que par une phrase.
-      expect(find.textContaining('Métro Châtelet'), findsNothing);
+      // Le texte vit dans ArrivalInstructionsCard : la ligne n'y renvoie que
+      // par une phrase.
+      expect(line, isNot(contains('Métro Châtelet')));
       expect(
-        find.text(
-          'Le voyageur est arrivé. Ses instructions de retrait sont juste en '
-          'dessous.',
-        ),
-        findsOneWidget,
+        line,
+        'Le voyageur est arrivé. Ses instructions de retrait sont juste en '
+        'dessous.',
       );
     },
   );
@@ -491,61 +501,38 @@ void main() {
     '8c · ARRIVED sans arrivalInstructions → message d\'attente générique',
     (tester) async {
       final bid = _bid(status: 'ARRIVED', confirmationCode: '482913');
-      await tester.pumpWidget(_host(bid, cancellationBloc));
-      await tester.pump();
+      final line = await _statusLine(tester, bid);
 
-      expect(find.textContaining('Colis arrivé à destination'), findsOneWidget);
-      expect(
-        find.textContaining('instructions de retrait arrivent bientôt'),
-        findsOneWidget,
-      );
+      expect(line, contains('instructions de retrait arrivent bientôt'));
     },
   );
 
-  // ── Test 9: COMPLETED with recipientName ────────────────────────────────────
+  // ── Test 9: COMPLETED ────────────────────────────────────────────────────────
 
-  testWidgets(
-    '9 · COMPLETED (recipientName "Drissa") → "Livré à Drissa" + "libéré"',
-    (tester) async {
-      final bid = _bid(status: 'COMPLETED', recipientName: 'Drissa');
-      await tester.pumpWidget(_host(bid, cancellationBloc));
-      await tester.pump();
+  testWidgets('9 · COMPLETED → statusLine "Paiement libéré"', (tester) async {
+    final bid = _bid(status: 'COMPLETED', recipientName: 'Drissa');
+    final line = await _statusLine(tester, bid);
 
-      expect(find.textContaining('Livré à Drissa'), findsOneWidget);
-      expect(find.textContaining('libéré'), findsOneWidget);
-    },
-  );
+    expect(line, contains('libéré'));
+  });
 
-  // ── Test 10: CANCELLED → SizedBox.shrink (no hero text) ─────────────────────
+  testWidgets('14 · DELIVERED → statusLine "Paiement libéré"', (tester) async {
+    final bid = _bid(status: 'DELIVERED', recipientName: 'Karim');
+    final line = await _statusLine(tester, bid);
 
-  testWidgets('10 · CANCELLED → aucun texte de hero (widget shrink)', (
-    tester,
-  ) async {
-    final bid = _bid(status: 'CANCELLED');
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
-
-    // None of the hero titles should appear
-    expect(find.textContaining('En attente'), findsNothing);
-    expect(find.textContaining('Paiement'), findsNothing);
-    expect(find.textContaining('Remise'), findsNothing);
-    expect(find.textContaining('Colis'), findsNothing);
-    expect(find.textContaining('Livré'), findsNothing);
-    expect(find.textContaining('Absence signalée'), findsNothing);
-    expect(find.textContaining('Fenêtre de remise'), findsNothing);
+    expect(line, contains('libéré'));
   });
 
   // ── Test 11: AWAITING_PAYMENT ────────────────────────────────────────────────
 
-  testWidgets('11 · AWAITING_PAYMENT → "Payez pour confirmer" + amount', (
+  testWidgets('11 · AWAITING_PAYMENT → statusLine avec le montant', (
     tester,
   ) async {
     final bid = _bid(status: 'AWAITING_PAYMENT', totalAmountEur: 120.50);
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+    final line = await _statusLine(tester, bid);
 
-    expect(find.textContaining('Payez pour confirmer'), findsOneWidget);
-    expect(find.textContaining('120,50'), findsOneWidget);
+    expect(line, contains('120,50'));
+    expect(line, contains('séquestré'));
   });
 
   // ── Test 12: IN_TRANSIT sans confirmationCode ─────────────────────────────────
@@ -558,13 +545,11 @@ void main() {
       arrivalCity: 'Dakar',
       arrivalTime: '',
     );
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+    final line = await _statusLine(tester, bid);
 
-    expect(find.textContaining('Colis en vol'), findsOneWidget);
-    expect(find.textContaining('En route vers Dakar'), findsOneWidget);
+    expect(line, contains('En route vers Dakar'));
     // FLUTTER-G1 : colis remis sans code → le code a été bloqué.
-    expect(find.textContaining('code de retrait a été bloqué'), findsOneWidget);
+    expect(line, contains('code de retrait a été bloqué'));
   });
 
   // FLUTTER-G2 : code encore présent mais expiré → on parle d'expiration.
@@ -578,11 +563,10 @@ void main() {
       confirmationCode: '123456',
       pickupCodeRenewalNeeded: true,
     );
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+    final line = await _statusLine(tester, bid);
 
-    expect(find.textContaining('Le code de retrait a expiré'), findsOneWidget);
-    expect(find.textContaining('a été bloqué'), findsNothing);
+    expect(line, contains('Le code de retrait a expiré'));
+    expect(line, isNot(contains('a été bloqué')));
   });
 
   testWidgets('12d · ARRIVED, code expiré → « a expiré » en priorité', (
@@ -594,21 +578,19 @@ void main() {
       pickupCodeRenewalNeeded: true,
       arrivalInstructions: 'Gare routière',
     );
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+    final line = await _statusLine(tester, bid);
 
-    expect(find.textContaining('Le code de retrait a expiré'), findsOneWidget);
-    expect(find.textContaining('a été bloqué'), findsNothing);
+    expect(line, contains('Le code de retrait a expiré'));
+    expect(line, isNot(contains('a été bloqué')));
   });
 
   testWidgets('12b · ARRIVED sans confirmationCode → code bloqué en priorité', (
     tester,
   ) async {
     final bid = _bid(status: 'ARRIVED', arrivalCity: 'Dakar');
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+    final line = await _statusLine(tester, bid);
 
-    expect(find.textContaining('code de retrait a été bloqué'), findsOneWidget);
+    expect(line, contains('code de retrait a été bloqué'));
   });
 
   // ── Test 13: HANDED_OVER departureDate null → "Colis remis." ──────────────────
@@ -617,76 +599,131 @@ void main() {
     tester,
   ) async {
     final bid = _bid(status: 'HANDED_OVER', travelerName: 'Amadou');
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+    final line = await _statusLine(tester, bid);
 
-    expect(find.textContaining('Colis remis.'), findsOneWidget);
+    expect(line, contains('Colis remis.'));
   });
 
-  // ── Test 14: DELIVERED → "Livré à" ───────────────────────────────────────────
+  // ── Test 10 / 15 : statuts terminaux → pas de ligne ─────────────────────────
 
-  testWidgets('14 · DELIVERED → "Livré à"', (tester) async {
-    final bid = _bid(status: 'DELIVERED', recipientName: 'Karim');
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
-
-    expect(find.textContaining('Livré à Karim'), findsOneWidget);
+  testWidgets('10/15 · statuts terminaux → statusLine null', (tester) async {
+    for (final status in [
+      'CANCELLED',
+      'REJECTED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+    ]) {
+      final line = await _statusLine(tester, _bid(status: status));
+      expect(line, isNull, reason: status);
+    }
   });
 
-  // ── Test 15a: REJECTED → shrink (no hero text) ───────────────────────────────
+  // ── hasAction : seules les variantes d'action restent ────────────────────────
 
-  testWidgets('15a · REJECTED → shrink (no hero text)', (tester) async {
-    final bid = _bid(status: 'REJECTED');
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
+  group('SenderHeroCard.hasAction', () {
+    test('true pour la contestation d\'une absence du voyageur', () {
+      expect(
+        SenderHeroCard.hasAction(
+          _bid(
+            status: 'ACCEPTED',
+            cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+          ),
+        ),
+        isTrue,
+      );
+    });
 
-    expect(find.textContaining('En attente'), findsNothing);
-    expect(find.textContaining('Paiement'), findsNothing);
-    expect(find.textContaining('Remise'), findsNothing);
-    expect(find.textContaining('Colis'), findsNothing);
-    expect(find.textContaining('Livré'), findsNothing);
+    test('true pour une absence à la livraison en attente ou contestée', () {
+      for (final status in ['PENDING_CONFIRMATION', 'CONTESTED']) {
+        expect(
+          SenderHeroCard.hasAction(
+            _bid(status: 'IN_TRANSIT', deliveryNoShowStatus: status),
+          ),
+          isTrue,
+          reason: status,
+        );
+      }
+    });
+
+    test('true pour une fenêtre de dépôt dépassée', () {
+      expect(
+        SenderHeroCard.hasAction(
+          _bid(
+            status: 'ACCEPTED',
+            handoverDeadline: DateTime.now().subtract(const Duration(hours: 2)),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('false pour une fenêtre de dépôt à venir', () {
+      expect(
+        SenderHeroCard.hasAction(
+          _bid(
+            status: 'ACCEPTED',
+            handoverDeadline: DateTime.now().add(const Duration(hours: 2)),
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('false pour une fenêtre dépassée hors ACCEPTED', () {
+      expect(
+        SenderHeroCard.hasAction(
+          _bid(
+            status: 'IN_TRANSIT',
+            handoverDeadline: DateTime.now().subtract(const Duration(hours: 2)),
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('false pour un IN_TRANSIT ordinaire et pour une absence résolue', () {
+      expect(SenderHeroCard.hasAction(_bid(status: 'IN_TRANSIT')), isFalse);
+      expect(
+        SenderHeroCard.hasAction(
+          _bid(status: 'IN_TRANSIT', deliveryNoShowStatus: 'RESOLVED'),
+        ),
+        isFalse,
+      );
+    });
   });
 
-  // ── Test 15b: NO_SHOW → shrink (no hero text) ────────────────────────────────
-
-  testWidgets('15b · NO_SHOW → shrink (no hero text)', (tester) async {
-    final bid = _bid(status: 'NO_SHOW');
+  testWidgets('hero renders nothing for plain IN_TRANSIT', (tester) async {
+    final bid = _bid(
+      status: 'IN_TRANSIT',
+      confirmationCode: '4829',
+      arrivalCity: 'Dakar',
+    );
     await tester.pumpWidget(_host(bid, cancellationBloc));
     await tester.pump();
 
-    expect(find.textContaining('En attente'), findsNothing);
-    expect(find.textContaining('Paiement'), findsNothing);
-    expect(find.textContaining('Remise'), findsNothing);
-    expect(find.textContaining('Colis'), findsNothing);
-    expect(find.textContaining('Livré'), findsNothing);
+    expect(find.byType(Text), findsNothing);
+    expect(tester.getSize(find.byType(SenderHeroCard)), Size.zero);
   });
 
-  // ── Test 15c: EXPIRED → shrink (no hero text) ────────────────────────────────
-
-  testWidgets('15c · EXPIRED → shrink (no hero text)', (tester) async {
-    final bid = _bid(status: 'EXPIRED');
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
-
-    expect(find.textContaining('En attente'), findsNothing);
-    expect(find.textContaining('Paiement'), findsNothing);
-    expect(find.textContaining('Remise'), findsNothing);
-    expect(find.textContaining('Colis'), findsNothing);
-    expect(find.textContaining('Livré'), findsNothing);
-  });
-
-  // ── Test 15d: PARCEL_REFUSED → shrink (no hero text) ─────────────────────────
-
-  testWidgets('15d · PARCEL_REFUSED → shrink (no hero text)', (tester) async {
-    final bid = _bid(status: 'PARCEL_REFUSED');
-    await tester.pumpWidget(_host(bid, cancellationBloc));
-    await tester.pump();
-
-    expect(find.textContaining('En attente'), findsNothing);
-    expect(find.textContaining('Paiement'), findsNothing);
-    expect(find.textContaining('Remise'), findsNothing);
-    expect(find.textContaining('Colis'), findsNothing);
-    expect(find.textContaining('Livré'), findsNothing);
+  testWidgets('hero renders nothing for every status without action', (
+    tester,
+  ) async {
+    for (final status in [
+      'PENDING',
+      'AWAITING_PAYMENT',
+      'PAYMENT_ESCROWED',
+      'ACCEPTED',
+      'HANDED_OVER',
+      'ARRIVED',
+      'COMPLETED',
+      'DELIVERED',
+      'CANCELLED',
+    ]) {
+      await tester.pumpWidget(_host(_bid(status: status), cancellationBloc));
+      await tester.pump();
+      expect(find.byType(Text), findsNothing, reason: status);
+    }
   });
 
   // ── Test 16: PENDING_CONFIRMATION deadline null → pas de countdown ────────────

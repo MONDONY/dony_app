@@ -1009,7 +1009,6 @@ abstract final class AnalyticsEvents {
   /// Le voyageur demande un nouveau code de retrait à l'expéditeur
   /// (FLUTTER-G2). Propriétés : `source` (écran) et `outcome` seulement.
   static const pickupCodeRequested = 'pickup_code_requested';
-  static const travelerCallInitiated = 'traveler_call_initiated';
   static const senderCallInitiated = 'sender_call_initiated';
   static const trackingLinkShared = 'tracking_link_shared';
   static const recipientNotified = 'recipient_notified';
@@ -1300,6 +1299,11 @@ abstract final class AnalyticsEvents {
   /// `status`, mêmes valeurs).
   static const travelerTrackingTimelineOpened =
       'traveler_tracking_timeline_opened';
+
+  /// Tuile de la grille « Votre envoi » de la fiche colis (vue expéditeur)
+  /// touchée : son bottom sheet s'ouvre (propriété `tile` : `prevenir` /
+  /// `suivi` / `lieux` / `colis` / `details`). Ni identifiant ni nom.
+  static const bidDetailTileOpened = 'bid_detail_tile_opened';
 
   /// Envoi silencieux de la position non fait (propriété `reason` :
   /// `no_permission` ou `no_position` seulement).

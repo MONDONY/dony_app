@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
-import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_pay_button.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/cancel_before_payment_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tile_sheets.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_pay_button.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -19,15 +19,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Height shared by [EscrowBadge], [DonyButton], and the loading placeholder —
-/// keeps the bar at a fixed size to avoid layout shifts when the payment state
-/// resolves.
-const double _kBarItemHeight = 52.0;
-
-/// Barre sticky bas d'écran portant l'action primaire du statut (vue expéditeur).
+/// Barre sticky bas d'écran portant l'action du statut (vue expéditeur).
 ///
-/// Remplacera [SenderActionBar] côté sender au branchement (task 7).
-/// Le menu options ⋮ n'est PAS dans cette barre (déplacé en app bar, task 7).
+/// Règle du footer : UN bouton, ou DEUX boutons sur la même ligne (secondaire
+/// à gauche = 1/3, principal à droite = 2/3), toujours des [DonyButton] de
+/// 52 px. Jamais de badge, de phrase d'aide ni de bouton destructif plein :
+/// l'état du paiement est dit par la carte Paiement du corps, et « Supprimer
+/// cette demande » vit dans le menu ⋮ (`showSenderOptionsSheet`).
+/// Sans bouton à montrer, la barre rend [SizedBox.shrink] (aucun padding).
 class SenderStickyBar extends StatelessWidget {
   final BidModel bid;
   final bool isLoading;
@@ -59,10 +58,11 @@ class SenderStickyBar extends StatelessWidget {
   ///
   /// **Contract — superset gate:**
   /// This method is intentionally based on [bid] alone and ignores
-  /// [paymentLoaded]/[existingPayment]. The bar can render without a primary
-  /// action button in two valid cases:
-  ///   1. PENDING/ACCEPTED + stripe + paid → [EscrowBadge] only (no button).
-  ///   2. PENDING/ACCEPTED + stripe + loading → placeholder skeleton (no button yet).
+  /// [paymentLoaded]/[existingPayment]. The bar can render nothing (a
+  /// [SizedBox.shrink], no padding) in one valid case: PENDING/ACCEPTED +
+  /// stripe + paid — nothing left to do, the Paiement card says the state.
+  /// While the payment is being fetched the bar shows « Payer mon envoi » as a
+  /// disabled, loading [DonyButton] (same 52 px, no layout shift).
   ///
   /// Do NOT "synchronise" this gate with [_buildAction]: it is a *superset*
   /// of what [_buildAction] ultimately renders, and that is by design.
@@ -104,7 +104,10 @@ class SenderStickyBar extends StatelessWidget {
       return !bid.senderHasRated;
     }
 
-    return kEnvoisPasses.contains(status);
+    // Envois clos sans livraison (REJECTED, CANCELLED, NO_SHOW, EXPIRED,
+    // PARCEL_REFUSED) : « Supprimer cette demande » est dans le menu ⋮, plus
+    // de footer.
+    return false;
   }
 
   // ── Build ────────────────────────────────────────────────────────────────────
@@ -115,30 +118,7 @@ class SenderStickyBar extends StatelessWidget {
     final h = DonyLayout.hPadding(context);
 
     final action = _buildAction(context);
-
-    // Determine whether to show the escrow badge
-    final showBadge =
-        (bid.status == 'PENDING' || bid.status == 'ACCEPTED') &&
-        existingPayment != null;
-
-    final content = showBadge
-        ? Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              EscrowBadge(
-                payment: existingPayment!,
-                bidStatus: bid.status,
-                onlineAmount: bid.moneyBreakdown?.onlineAmount,
-              ),
-              if (action != null) ...[
-                const SizedBox(height: DonySpacing.sm),
-                action,
-              ],
-            ],
-          )
-        : action;
-
-    if (content == null) {
+    if (action == null) {
       return const SizedBox.shrink();
     }
 
@@ -150,7 +130,7 @@ class SenderStickyBar extends StatelessWidget {
         h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
-      child: content,
+      child: action,
     );
   }
 
@@ -194,27 +174,22 @@ class SenderStickyBar extends StatelessWidget {
     //     signifier que le bid a expiré ou a été annulé entre-temps.
     if (status == 'AWAITING_PAYMENT' &&
         bid.paymentMethod == BidPaymentMethod.mobileMoney) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DonyButton(
-            label: context.l10n.bidDetailPayByMobileMoney,
-            iconAsset: 'smartphone',
-            isLoading: isLoading,
-            onPressed: isLoading
-                ? null
-                : () async {
-                    await context.push<bool>(
-                      '/bids/${bid.id}/mobile-money/awaiting',
-                    );
-                    if (context.mounted) {
-                      onPaymentReturned?.call();
-                    }
-                  },
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          _cancelRequestButton(context),
-        ],
+      return _cancelAndPayRow(
+        context,
+        pay: DonyButton(
+          label: context.l10n.bidDetailPayByMobileMoney,
+          isLoading: isLoading,
+          onPressed: isLoading
+              ? null
+              : () async {
+                  await context.push<bool>(
+                    '/bids/${bid.id}/mobile-money/awaiting',
+                  );
+                  if (context.mounted) {
+                    onPaymentReturned?.call();
+                  }
+                },
+        ),
       );
     }
 
@@ -225,47 +200,30 @@ class SenderStickyBar extends StatelessWidget {
     //     de checkout abandonné porte un PaymentEntity PENDING obsolète.
     if (status == 'AWAITING_PAYMENT' &&
         bid.paymentMethod == BidPaymentMethod.stripe) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DonyButton(
-            label: context.l10n.bidDetailPayMyShipment,
-            iconAsset: 'lock',
-            isLoading: isLoading,
-            onPressed: isLoading
-                ? null
-                : () => context.push('/payments/pay', extra: bid),
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          _cancelRequestButton(context),
-        ],
+      return _cancelAndPayRow(
+        context,
+        pay: DonyButton(
+          label: context.l10n.bidDetailPayMyShipment,
+          isLoading: isLoading,
+          onPressed: isLoading
+              ? null
+              : () => context.push('/payments/pay', extra: bid),
+        ),
       );
     }
 
-    // 2. Stripe payment loading placeholder: show a skeleton while the payment
-    //    status is being fetched so there is no layout shift when it resolves.
-    //    Only applies to stripe (cash has no online sender payment).
+    // 2. Paiement stripe en cours de lecture : le bouton réel « Payer mon
+    //    envoi » s'affiche désactivé en chargement (même hauteur de 52 px, donc
+    //    aucun saut de mise en page quand l'état se résout). Seulement stripe
+    //    (le cash n'a pas de paiement expéditeur en ligne).
     if ((status == 'PENDING' || status == 'ACCEPTED') &&
         bid.paymentMethod == BidPaymentMethod.stripe &&
         !paymentLoaded) {
-      final cs = Theme.of(context).colorScheme;
-      return Container(
-        // _kBarItemHeight — évite tout layout shift au resolve
-        height: _kBarItemHeight,
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(DonyRadius.lg),
-        ),
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: cs.onSurfaceVariant,
-            ),
-          ),
-        ),
+      return DonyButton(
+        label: context.l10n.bidDetailPayMyShipment,
+        iconAsset: 'lock',
+        isLoading: true,
+        onPressed: null,
       );
     }
 
@@ -309,7 +267,13 @@ class SenderStickyBar extends StatelessWidget {
         iconAsset: 'package',
         onPressed: () {
           HapticFeedback.lightImpact();
-          openSenderTrackingTimeline(context, bid);
+          // Même geste que la tuile « Suivi » de « Votre envoi » : la fenêtre
+          // du suivi. Sans tuile (ni suivi du voyageur ni adresse), la frise.
+          if (senderTilesFor(bid).contains(SenderTile.suivi)) {
+            openSenderTileSheet(context, bid, SenderTile.suivi);
+          } else {
+            openSenderTrackingTimeline(context, bid);
+          }
         },
       );
     }
@@ -333,36 +297,36 @@ class SenderStickyBar extends StatelessWidget {
       );
     }
 
-    // Statuts ∈ kEnvoisPasses (hors COMPLETED/DELIVERED déjà traités ci-dessus)
-    if (kEnvoisPasses.contains(status)) {
-      return DonyButton(
-        label: context.l10n.bidDetailDeleteRequest,
-        iconAsset: 'trash-2',
-        variant: DonyButtonVariant.destructive,
-        onPressed: () {
-          HapticFeedback.mediumImpact();
-          _showDeleteDialog(context);
-        },
-      );
-    }
-
     return null;
   }
 
-  // ── Cancel request button ────────────────────────────────────────────────────
+  // ── Annuler + Payer ──────────────────────────────────────────────────────────
 
-  /// Bouton « Annuler la demande » partagé par les blocs AWAITING_PAYMENT
-  /// mobile money et stripe : vraie annulation (autorisation carte ou paiement
-  /// en attente libéré, voyageur prévenu) après une feuille de confirmation.
-  /// Le BLoC retombe sur le masquage d'avant si le back ne connaît pas encore
-  /// l'endpoint.
-  Widget _cancelRequestButton(BuildContext context) {
-    final l = context.l10n;
-    return DonyButton(
-      key: const Key('sender-cancel-before-payment'),
-      label: l.bidDetailCancelRequestLabel,
-      variant: DonyButtonVariant.ghost,
-      onPressed: isLoading ? null : () => _confirmCancelBeforePayment(context),
+  /// Ligne [Annuler 1/3 | principal 2/3] partagée par les blocs
+  /// AWAITING_PAYMENT mobile money et stripe. « Annuler » ouvre la feuille de
+  /// confirmation : vraie annulation (autorisation carte ou paiement en
+  /// attente libéré, voyageur prévenu). Le BLoC retombe sur le masquage d'avant
+  /// si le back ne connaît pas l'endpoint.
+  ///
+  /// Le bouton principal de la ligne n'a pas d'icône : sans elle, « Payer par
+  /// mobile money » tient à taille nominale dans 2/3 de 360 dp. Les boutons
+  /// seuls (E1 à E4, E8…) gardent la leur.
+  Widget _cancelAndPayRow(BuildContext context, {required Widget pay}) {
+    return Row(
+      children: [
+        Expanded(
+          child: DonyButton(
+            key: const Key('sender-cancel-before-payment'),
+            label: context.l10n.commonCancel,
+            variant: DonyButtonVariant.secondary,
+            onPressed: isLoading
+                ? null
+                : () => _confirmCancelBeforePayment(context),
+          ),
+        ),
+        const SizedBox(width: DonySpacing.md),
+        Expanded(flex: 2, child: pay),
+      ],
     );
   }
 
@@ -380,55 +344,5 @@ class SenderStickyBar extends StatelessWidget {
             : 'stripe',
       ),
     );
-  }
-
-  // ── Delete dialog ────────────────────────────────────────────────────────────
-
-  void _showDeleteDialog(BuildContext context) {
-    final l = context.l10n;
-    final resolvedTitle = l.bidDetailDeleteRequestQuestionTitle;
-    final resolvedBody = l.bidDetailDeleteRequestDefaultBody;
-    final resolvedConfirmLabel = l.commonDelete;
-    final resolvedDismissLabel = l.commonCancel;
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    // Capture the bloc before opening the dialog so the reference stays valid
-    // even after the dialog route pushes a new layer above the BlocProvider.
-    final bloc = context.read<BidBloc>();
-    showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.sheet),
-        ),
-        title: Text(resolvedTitle, style: tt.headlineMedium),
-        content: Text(
-          resolvedBody,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              resolvedDismissLabel,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: cs.error,
-              foregroundColor: DonyColors.white,
-              elevation: 0,
-            ),
-            child: Text(resolvedConfirmLabel, style: tt.labelLarge),
-          ),
-        ],
-      ),
-    ).then((confirmed) {
-      if (confirmed ?? false) {
-        bloc.add(BidDeleteRequested(bid.id));
-      }
-    });
   }
 }

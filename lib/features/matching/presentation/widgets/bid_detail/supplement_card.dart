@@ -84,6 +84,14 @@ class SupplementSenderCard extends StatelessWidget {
     _ => true,
   };
 
+  /// Le supplément attend une réponse de l'expéditeur (accepter et payer, ou
+  /// refuser) : seul cas où la carte relève de « À traiter ». Payé, versé,
+  /// refusé ou expiré, elle ne fait que renseigner.
+  static bool needsReply(BidModel bid) => switch (bid.supplement?.status) {
+    BidSupplementStatus.proposed || BidSupplementStatus.paymentPending => true,
+    _ => false,
+  };
+
   @override
   Widget build(BuildContext context) =>
       _SupplementCard(bid: bid, isSender: true);

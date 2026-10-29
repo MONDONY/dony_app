@@ -10,12 +10,14 @@ import 'package:dony/features/cancellation/bloc/delivery_noshow_procedure/delive
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_accept_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_commission_flow.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
+import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
@@ -23,6 +25,7 @@ import 'package:dony/features/matching/presentation/widgets/recipient_contact/re
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -34,6 +37,8 @@ class _MockConvBloc
 
 class _MockAmendmentRepo extends Mock implements BidAmendmentRepository {}
 
+class _MockSupplementRepo extends Mock implements BidSupplementRepository {}
+
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
 class _MockCancelBloc extends MockBloc<CancellationEvent, CancellationState>
@@ -44,8 +49,16 @@ BidModel _bid(
   String? trackingToken,
   String? recipientPhone,
   List<BidAmendment> amendments = const [],
+  BidSupplement? supplement,
+  BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+  bool voyageurConfirmed = false,
+  DateTime? departureAt,
 }) => BidModel(
   amendments: amendments,
+  supplement: supplement,
+  paymentMethod: paymentMethod,
+  voyageurConfirmed: voyageurConfirmed,
+  departureAt: departureAt,
   id: 'b1',
   announcementId: 'a1',
   senderId: 's1',
@@ -174,6 +187,294 @@ void main() {
     });
   });
 
+  // Phrases d'aide sorties du footer : elles vivent dans des cartes
+  // d'information du corps, juste sous le hero.
+  group("cartes d'information (phrases sorties du footer)", () {
+    setUp(() {
+      final analytics = _MockAnalytics();
+      final amendmentRepo = _MockAmendmentRepo();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt
+        ..registerFactory<SupplementActionCubit>(
+          () => SupplementActionCubit(_MockSupplementRepo(), analytics),
+        )
+        ..registerFactory<AmendmentActionCubit>(
+          () => AmendmentActionCubit(amendmentRepo, analytics),
+        )
+        ..registerFactory<AmendmentAcceptCubit>(
+          () => AmendmentAcceptCubit(
+            amendmentRepo,
+            analytics,
+            AmendmentCommissionFlow(amendmentRepo, analytics),
+          ),
+        );
+    });
+    tearDown(() {
+      getIt
+        ..unregister<SupplementActionCubit>()
+        ..unregister<AmendmentActionCubit>()
+        ..unregister<AmendmentAcceptCubit>();
+    });
+
+    const awaiting = "En attente du paiement de l'expéditeur (mobile money).";
+    const supplementBlocked =
+        "Un supplément attend la réponse de l'expéditeur : le scan est bloqué.";
+    const amendmentBlocked =
+        'Une modification attend votre réponse : le scan est bloqué.';
+
+    testWidgets(
+      'AWAITING_PAYMENT mobile money : carte d\'attente sous le hero',
+      (tester) async {
+        await _pump(
+          tester,
+          _bid('AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.mobileMoney),
+        );
+        expect(find.text(awaiting), findsOneWidget);
+        expect(
+          tester.getTopLeft(find.text(awaiting)).dy,
+          greaterThan(tester.getTopLeft(find.byType(TravelerHeroCard)).dy),
+        );
+      },
+    );
+
+    testWidgets('AWAITING_PAYMENT hors mobile money : pas de carte', (
+      tester,
+    ) async {
+      await _pump(tester, _bid('AWAITING_PAYMENT'));
+      expect(find.text(awaiting), findsNothing);
+    });
+
+    testWidgets('autre statut : pas de carte d\'attente', (tester) async {
+      await _pump(
+        tester,
+        _bid('ACCEPTED', paymentMethod: BidPaymentMethod.mobileMoney),
+      );
+      expect(find.text(awaiting), findsNothing);
+    });
+
+    testWidgets('supplément bloquant : phrase du scan bloqué', (tester) async {
+      tester.view.physicalSize = const Size(1200, 4000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          voyageurConfirmed: true,
+          supplement: const BidSupplement(
+            id: 'sup-1',
+            status: BidSupplementStatus.proposed,
+            grossAmount: 16.8,
+            blocksHandover: true,
+          ),
+        ),
+      );
+      expect(find.text(supplementBlocked), findsOneWidget);
+      expect(find.text(amendmentBlocked), findsNothing);
+    });
+
+    testWidgets('modification bloquante : phrase du scan bloqué', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 4000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          voyageurConfirmed: true,
+          amendments: const [
+            BidAmendment(
+              id: 'am-1',
+              status: BidAmendmentStatus.proposed,
+              rail: 'CASH',
+              grossAmount: 26.8,
+              blocksHandover: true,
+            ),
+          ],
+        ),
+      );
+      expect(find.text(amendmentBlocked), findsOneWidget);
+      expect(find.text(supplementBlocked), findsNothing);
+    });
+
+    testWidgets('rien ne bloque : aucune phrase de scan bloqué', (
+      tester,
+    ) async {
+      await _pump(tester, _bid('ACCEPTED', voyageurConfirmed: true));
+      expect(find.text(supplementBlocked), findsNothing);
+      expect(find.text(amendmentBlocked), findsNothing);
+    });
+
+    testWidgets('présence non confirmée : pas de phrase de scan bloqué', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          amendments: const [
+            BidAmendment(
+              id: 'am-1',
+              status: BidAmendmentStatus.proposed,
+              rail: 'CASH',
+              grossAmount: 26.8,
+              blocksHandover: true,
+            ),
+          ],
+        ),
+      );
+      expect(find.text(amendmentBlocked), findsNothing);
+    });
+
+    testWidgets('remise verrouillée avant le départ : carte avec la date et '
+        'le code de retrait', (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          'HANDED_OVER',
+          departureAt: DateTime.now().add(const Duration(days: 2)),
+        ),
+      );
+      expect(
+        find.textContaining('Disponible après le départ du trajet (le'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining(
+          'demandez au destinataire son code de retrait à 6 chiffres',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    for (final status in ['IN_TRANSIT', 'ARRIVED']) {
+      testWidgets('$status verrouillé : même carte', (tester) async {
+        await _pump(
+          tester,
+          _bid(
+            status,
+            departureAt: DateTime.now().add(const Duration(days: 2)),
+          ),
+        );
+        expect(
+          find.textContaining('Disponible après le départ du trajet (le'),
+          findsOneWidget,
+        );
+      });
+    }
+
+    testWidgets('départ passé : pas de carte de verrou', (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          'HANDED_OVER',
+          departureAt: DateTime.now().subtract(const Duration(hours: 2)),
+        ),
+      );
+      expect(find.textContaining('Disponible après le départ'), findsNothing);
+      expect(find.textContaining('code de retrait à 6 chiffres'), findsNothing);
+    });
+
+    testWidgets('départ inconnu : pas de carte de verrou', (tester) async {
+      await _pump(tester, _bid('HANDED_OVER'));
+      expect(find.textContaining('Disponible après le départ'), findsNothing);
+    });
+
+    // Le verrou tombe seul à l'heure du départ (même State, didUpdateWidget de
+    // DeliveryDepartureGate) : la porte lit DateTime.now(), pas d'horloge à
+    // avancer, on rejoue donc le même colis avec un départ désormais passé.
+    testWidgets('le départ passe : la carte du verrou disparaît', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          'HANDED_OVER',
+          departureAt: DateTime.now().add(const Duration(days: 2)),
+        ),
+      );
+      expect(
+        find.textContaining('Disponible après le départ du trajet (le'),
+        findsOneWidget,
+      );
+      final stateBefore = tester.state(find.byType(TravelerDetailBody));
+
+      await _pump(
+        tester,
+        _bid(
+          'HANDED_OVER',
+          departureAt: DateTime.now().subtract(const Duration(hours: 1)),
+        ),
+      );
+
+      expect(tester.state(find.byType(TravelerDetailBody)), same(stateBefore));
+      expect(find.textContaining('Disponible après le départ'), findsNothing);
+      expect(find.textContaining('code de retrait à 6 chiffres'), findsNothing);
+    });
+
+    // La porte enveloppe TOUJOURS le corps (sans fenêtre elle ne verrouille
+    // jamais) : le passage de ACCEPTED à HANDED_OVER garde la même porte et le
+    // même State, sans remonter la racine du corps. (Les enfants i > 0 perdent
+    // leur enveloppe d'animation d'entrée au rebuild suivant, comportement
+    // existant : on ne compare donc pas leurs éléments.)
+    testWidgets('ACCEPTED -> HANDED_OVER : même porte, même State', (
+      tester,
+    ) async {
+      final departure = DateTime.now().subtract(const Duration(hours: 1));
+      await _pump(tester, _bid('ACCEPTED', departureAt: departure));
+      final gateBefore = tester.state(find.byType(DeliveryDepartureGate));
+      final bodyBefore = tester.state(find.byType(TravelerDetailBody));
+
+      await _pump(tester, _bid('HANDED_OVER', departureAt: departure));
+
+      expect(
+        tester.state(find.byType(DeliveryDepartureGate)),
+        same(gateBefore),
+      );
+      expect(tester.state(find.byType(TravelerDetailBody)), same(bodyBefore));
+      expect(find.textContaining('Disponible après le départ'), findsNothing);
+    });
+
+    testWidgets(
+      'ACCEPTED sans verrou -> HANDED_OVER avant le départ : la carte '
+      'apparaît dans la même porte',
+      (tester) async {
+        final departure = DateTime.now().add(const Duration(days: 2));
+        await _pump(tester, _bid('ACCEPTED', departureAt: departure));
+        final gateBefore = tester.state(find.byType(DeliveryDepartureGate));
+        expect(find.textContaining('Disponible après le départ'), findsNothing);
+
+        await _pump(tester, _bid('HANDED_OVER', departureAt: departure));
+
+        expect(
+          tester.state(find.byType(DeliveryDepartureGate)),
+          same(gateBefore),
+        );
+        expect(
+          find.textContaining('Disponible après le départ du trajet (le'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('statut sans remise (ACCEPTED) : pas de carte de verrou', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          departureAt: DateTime.now().add(const Duration(days: 2)),
+        ),
+      );
+      expect(find.textContaining('Disponible après le départ'), findsNothing);
+    });
+  });
+
   testWidgets('ACCEPTED → hero + contact + gain présents', (tester) async {
     await _pump(tester, _bid('ACCEPTED'));
     expect(find.byType(TravelerHeroCard), findsOneWidget);
@@ -182,7 +483,7 @@ void main() {
   });
 
   // Régression : ARRIVED absent de _activeStatuses faisait disparaître la carte
-  // expéditeur et les actions rapides dès le marquage d'arrivée.
+  // expéditeur et les actions de suivi dès le marquage d'arrivée.
   testWidgets('ARRIVED → carte contact toujours là, mais aucune action suivi', (
     tester,
   ) async {
@@ -191,7 +492,8 @@ void main() {
     // Le suivi appartient à l'expéditeur : le voyageur détient le colis mais
     // n'en est pas propriétaire, il n'a donc jamais accès aux actions de suivi,
     // y compris une fois arrivé à destination.
-    expect(find.byType(QuickActionsRow), findsNothing);
+    expect(find.text('Suivi du colis'), findsNothing);
+    expect(find.text('Partager le suivi'), findsNothing);
   });
 
   testWidgets(

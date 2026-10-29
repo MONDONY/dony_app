@@ -51,16 +51,16 @@ BidModel _bid({
   updatedAt: DateTime(2026),
 );
 
+/// La bannière d'information du hero a disparu : son résumé d'état est
+/// `SenderHeroCard.statusLine`, affiché ici tel quel.
 Future<void> _pumpSender(WidgetTester tester, BidModel bid) async {
-  final cancel = _MockCancelBloc();
-  when(() => cancel.state).thenReturn(CancellationInitial());
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.light(),
       home: Scaffold(
-        body: BlocProvider<CancellationBloc>.value(
-          value: cancel,
-          child: SenderHeroCard(bid: bid),
+        body: Builder(
+          builder: (context) =>
+              Text(SenderHeroCard.statusLine(context, bid) ?? ''),
         ),
       ),
     ),
@@ -147,8 +147,11 @@ void main() {
         useEnglish();
         await _pumpSender(tester, _bid(status: 'PENDING'));
 
-        expect(find.textContaining('Waiting for your payment'), findsOneWidget);
-        expect(find.textContaining('Waiting for the traveler'), findsNothing);
+        expect(
+          find.textContaining('will be held until delivery'),
+          findsOneWidget,
+        );
+        expect(find.textContaining("You'll be notified"), findsNothing);
       },
     );
 
@@ -159,11 +162,11 @@ void main() {
         _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.cash),
       );
 
-      expect(find.textContaining('Waiting for the traveler'), findsOneWidget);
       expect(
         find.textContaining("You'll be notified as soon as they reply."),
         findsOneWidget,
       );
+      expect(find.textContaining('held until delivery'), findsNothing);
     });
 
     testWidgets('traveler_hero_card.dart — PENDING en anglais', (tester) async {

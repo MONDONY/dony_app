@@ -25,7 +25,6 @@ class TravelerTrackingCard extends StatelessWidget {
   const TravelerTrackingCard({
     super.key,
     required this.tracking,
-    required this.onOpenTimeline,
     required this.bidId,
     this.bidStatus,
     this.departureCity,
@@ -41,8 +40,6 @@ class TravelerTrackingCard extends StatelessWidget {
   final String bidId;
   final String? bidStatus;
 
-  /// Ouvre la frise complète du colis (étapes, photos, villes).
-  final VoidCallback onOpenTimeline;
   final String? departureCity;
   final String? arrivalCity;
 
@@ -71,7 +68,6 @@ class TravelerTrackingCard extends StatelessWidget {
     final loadsEvents = getIt.isRegistered<TrackingBloc>();
     final body = _CardBody(
       tracking: tracking,
-      onOpenTimeline: onOpenTimeline,
       departureCity: departureCity,
       arrivalCity: arrivalCity,
       bidStatus: bidStatus,
@@ -96,7 +92,6 @@ class TravelerTrackingCard extends StatelessWidget {
 class _CardBody extends StatelessWidget {
   const _CardBody({
     required this.tracking,
-    required this.onOpenTimeline,
     required this.now,
     required this.loadsEvents,
     this.bidStatus,
@@ -105,7 +100,6 @@ class _CardBody extends StatelessWidget {
   });
 
   final TravelerTrackingModel tracking;
-  final VoidCallback onOpenTimeline;
   final DateTime now;
   final bool loadsEvents;
   final String? bidStatus;
@@ -165,116 +159,83 @@ class _CardBody extends StatelessWidget {
       ),
     };
 
-    return Container(
-      key: const Key('traveler-tracking-card'),
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l.travelerTrackingTitle,
-            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: _StatusPill(label: badgeLabel, positive: positive),
+        ),
+        if (status == TravelerTrackingStatus.notActivated) ...[
           const SizedBox(height: DonySpacing.sm),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: _StatusPill(label: badgeLabel, positive: positive),
+          Text(
+            l.travelerTrackingNotActivatedHint,
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
-          if (status == TravelerTrackingStatus.notActivated) ...[
-            const SizedBox(height: DonySpacing.sm),
-            Text(
-              l.travelerTrackingNotActivatedHint,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-          if (showPosition && pct != null) ...[
-            const SizedBox(height: DonySpacing.md),
-            _ProgressBar(
-              pct: pct,
-              muted: status == TravelerTrackingStatus.stale,
-              from: departureCity,
-              to: arrivalCity,
-            ),
-          ],
-          if (showPosition && city != null) ...[
-            const SizedBox(height: DonySpacing.md),
-            Row(
-              children: [
-                DonyIcon('map-pin', size: 16, color: cs.onSurfaceVariant),
-                const SizedBox(width: DonySpacing.xs),
-                Expanded(
-                  child: Text(
-                    l.travelerTrackingNearCity(city),
-                    style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                  ),
+        ],
+        if (showPosition && pct != null) ...[
+          const SizedBox(height: DonySpacing.md),
+          _ProgressBar(
+            pct: pct,
+            muted: status == TravelerTrackingStatus.stale,
+            from: departureCity,
+            to: arrivalCity,
+          ),
+        ],
+        if (showPosition && city != null) ...[
+          const SizedBox(height: DonySpacing.md),
+          Row(
+            children: [
+              DonyIcon('map-pin', size: 16, color: cs.onSurfaceVariant),
+              const SizedBox(width: DonySpacing.xs),
+              Expanded(
+                child: Text(
+                  l.travelerTrackingNearCity(city),
+                  style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
-              ],
-            ),
-          ],
-          if (showPosition &&
-              age != null &&
-              status != TravelerTrackingStatus.stale) ...[
-            const SizedBox(height: DonySpacing.xxs),
-            Text(
-              l.travelerTrackingUpdated(age),
-              style: tt.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                fontFeatures: const [FontFeature.tabularFigures()],
               ),
-            ),
-          ],
-          if (steps != null) ...[
-            const SizedBox(height: DonySpacing.md),
-            for (var i = 0; i < steps.length; i++)
-              JourneyRow(
-                step: steps[i],
-                // Même trait que la frise complète : bleu vers une étape faite
-                // ou une ville, rien après la dernière ligne.
-                connector: i == steps.length - 1 ? null : cs.primary,
-              ),
-          ] else if (points.isNotEmpty) ...[
-            const SizedBox(height: DonySpacing.md),
-            for (var i = 0; i < points.length; i++)
-              _HistoryRow(
-                point: points[i],
-                marker: i == points.length - 1
-                    ? switch (status) {
-                        TravelerTrackingStatus.enRoute => l.travelerTrackingNow,
-                        TravelerTrackingStatus.stale =>
-                          markerAge == null
-                              ? null
-                              : l.travelerTrackingLastPosition(markerAge),
-                        _ => null,
-                      }
-                    : null,
-              ),
-          ],
-          const SizedBox(height: DonySpacing.xs),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: TextButton(
-              key: const Key('traveler-tracking-open-timeline'),
-              style: TextButton.styleFrom(
-                minimumSize: const Size(44, 44),
-                padding: EdgeInsets.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () {
-                context.read<TravelerTrackingCardCubit>().timelineOpened(
-                  tracking,
-                );
-                onOpenTimeline();
-              },
-              child: Text(l.travelerTrackingOpenTimeline),
+            ],
+          ),
+        ],
+        if (showPosition &&
+            age != null &&
+            status != TravelerTrackingStatus.stale) ...[
+          const SizedBox(height: DonySpacing.xxs),
+          Text(
+            l.travelerTrackingUpdated(age),
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ],
-      ),
+        if (steps != null) ...[
+          const SizedBox(height: DonySpacing.md),
+          for (var i = 0; i < steps.length; i++)
+            JourneyRow(
+              step: steps[i],
+              // Même trait que la frise complète : bleu vers une étape faite
+              // ou une ville, rien après la dernière ligne.
+              connector: i == steps.length - 1 ? null : cs.primary,
+            ),
+        ] else if (points.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.md),
+          for (var i = 0; i < points.length; i++)
+            _HistoryRow(
+              point: points[i],
+              marker: i == points.length - 1
+                  ? switch (status) {
+                      TravelerTrackingStatus.enRoute => l.travelerTrackingNow,
+                      TravelerTrackingStatus.stale =>
+                        markerAge == null
+                            ? null
+                            : l.travelerTrackingLastPosition(markerAge),
+                      _ => null,
+                    }
+                  : null,
+            ),
+        ],
+      ],
     );
   }
 }

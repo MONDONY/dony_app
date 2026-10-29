@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
+import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,9 +17,14 @@ BidModel _bid({double? weightKg, double? totalWeightKg}) => BidModel(
   totalWeightKg: totalWeightKg,
 );
 
-Future<void> _pump(WidgetTester tester, BidModel bid) => tester.pumpWidget(
-  localizedApp(Scaffold(body: ColisDestinataireCard(bid: bid))),
-);
+Future<void> _pump(WidgetTester tester, BidModel bid, {bool framed = true}) =>
+    tester.pumpWidget(
+      localizedApp(
+        Scaffold(
+          body: ColisDestinataireCard(bid: bid, framed: framed),
+        ),
+      ),
+    );
 
 void main() {
   testWidgets('colis sans modification : poids du colis avec son unité', (
@@ -36,5 +42,37 @@ void main() {
 
     expect(find.text('17 kg (dont 2 kg en plus)'), findsOneWidget);
     expect(find.textContaining('15 kg'), findsNothing);
+  });
+
+  testWidgets('framed false renders same content without card frame', (
+    tester,
+  ) async {
+    final bid = BidModel(
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      status: 'ACCEPTED',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+      weightKg: 5,
+      description: 'Vêtements',
+      recipientName: 'Awa',
+      recipientPhone: '+221770000000',
+    );
+    await _pump(tester, bid, framed: false);
+
+    expect(find.byType(DetailCard), findsNothing);
+    expect(find.text('Colis & destinataire'), findsNothing);
+    expect(find.text('5 kg'), findsOneWidget);
+    expect(find.text('Vêtements'), findsOneWidget);
+    expect(find.text('Awa'), findsOneWidget);
+    expect(find.text('+221770000000'), findsOneWidget);
+  });
+
+  testWidgets('framed true keeps the DetailCard and its title', (tester) async {
+    await _pump(tester, _bid(weightKg: 5));
+
+    expect(find.byType(DetailCard), findsOneWidget);
+    expect(find.text('Colis & destinataire'), findsOneWidget);
   });
 }

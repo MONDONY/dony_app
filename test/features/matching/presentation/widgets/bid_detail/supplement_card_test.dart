@@ -165,6 +165,29 @@ void main() {
     });
   });
 
+  group('needsReply', () {
+    test('expéditeur : seulement proposé ou en attente de paiement', () {
+      for (final s in [
+        BidSupplementStatus.proposed,
+        BidSupplementStatus.paymentPending,
+      ]) {
+        expect(SupplementSenderCard.needsReply(_bid(_supplement(s))), isTrue);
+      }
+      for (final s in [
+        BidSupplementStatus.commissionPending,
+        BidSupplementStatus.paid,
+        BidSupplementStatus.payoutPending,
+        BidSupplementStatus.paidOut,
+        BidSupplementStatus.withdrawn,
+        BidSupplementStatus.cancelled,
+        BidSupplementStatus.unknown,
+      ]) {
+        expect(SupplementSenderCard.needsReply(_bid(_supplement(s))), isFalse);
+      }
+      expect(SupplementSenderCard.needsReply(_bid(null)), isFalse);
+    });
+  });
+
   group('encart expéditeur', () {
     testWidgets('en attente : brut seulement, motif, échéance, refuser', (
       tester,

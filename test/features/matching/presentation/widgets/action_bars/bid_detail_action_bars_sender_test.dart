@@ -1,7 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
@@ -18,8 +17,6 @@ import 'package:dony/features/matching/presentation/widgets/action_bars/bid_deta
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
-import 'package:dony/features/payments/data/models/payment_model.dart';
-import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -64,14 +61,6 @@ BidModel _bid({
   updatedAt: DateTime(2026),
 );
 
-PaymentModel _payment(PaymentStatus status) => PaymentModel(
-  id: 'pay-1',
-  bidId: 'bid-42',
-  amount: 40,
-  commissionAmount: 4.8,
-  status: status,
-);
-
 void main() {
   setUpAll(() {
     registerFallbackValue(BidCancelRequested('x', actor: 'sender'));
@@ -82,13 +71,11 @@ void main() {
   late _MockBidBloc bidBloc;
   late _MockCancellationBloc cancellationBloc;
   late _MockConversationOpenBloc openBloc;
-  late List<String> pushed;
 
   setUp(() {
     bidBloc = _MockBidBloc();
     cancellationBloc = _MockCancellationBloc();
     openBloc = _MockConversationOpenBloc();
-    pushed = [];
     when(() => bidBloc.state).thenReturn(BidInitial());
     when(() => cancellationBloc.state).thenReturn(CancellationInitial());
     when(() => openBloc.state).thenReturn(const ConversationOpenInitial());
@@ -117,20 +104,15 @@ void main() {
             ),
           ),
         ),
-        GoRoute(
-          path: '/payments/pay',
-          builder: (_, state) {
-            pushed.add('/payments/pay:${(state.extra! as BidModel).id}');
-            return const Scaffold(body: Text('PAY'));
-          },
-        ),
       ],
     ),
   );
 
   Widget optionsHost(BidModel bid) => wrap(
-    (context) =>
-        SenderActionBar(bid: bid, isLoading: false, paymentLoaded: true),
+    (context) => TextButton(
+      onPressed: () => showSenderOptionsSheet(context, bid),
+      child: const Text('open-options'),
+    ),
   );
 
   Future<void> openOptions(WidgetTester tester, BidModel bid) async {
@@ -139,7 +121,7 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(optionsHost(bid));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(OutlinedButton));
+    await tester.tap(find.text('open-options'));
     await tester.pumpAndSettle();
     expect(find.text(_l.bidDetailOptionsTitle), findsOneWidget);
   }
@@ -176,224 +158,6 @@ void main() {
       await tester.tap(find.byType(DonyButton), warnIfMissed: false);
       await tester.pump();
       verifyNever(() => bidBloc.add(any()));
-    });
-  });
-
-  group('TravelerRejectedBar', () {
-    testWidgets(
-      'Supprimer puis confirmer dispatch BidTravelerDismissRequested',
-      (tester) async {
-        await tester.pumpWidget(
-          wrap(
-            (_) => TravelerRejectedBar(
-              bid: _bid(status: 'REJECTED'),
-              isLoading: false,
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byType(DonyButton));
-        await tester.pumpAndSettle();
-        expect(find.text(_l.bidDetailDeleteRejectedBody), findsOneWidget);
-
-        await tester.tap(find.widgetWithText(FilledButton, _l.commonDelete));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(AlertDialog), findsNothing);
-        verify(
-          () => bidBloc.add(any(that: isA<BidTravelerDismissRequested>())),
-        ).called(1);
-      },
-    );
-
-    testWidgets('Annuler ferme la boîte sans événement', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          (_) => TravelerRejectedBar(
-            bid: _bid(status: 'REJECTED'),
-            isLoading: false,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(DonyButton));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.widgetWithText(TextButton, _l.commonCancel));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(AlertDialog), findsNothing);
-      verifyNever(() => bidBloc.add(any()));
-    });
-  });
-
-  group('SenderActionBar — zone de paiement', () {
-    testWidgets('carte, paiement pas encore chargé : indicateur', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap((_) => SenderActionBar(bid: _bid(), isLoading: false)),
-      );
-      await tester.pump();
-
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text(_l.bidDetailPayMyShipment), findsNothing);
-    });
-
-    testWidgets(
-      'carte, aucun paiement : « Payer mon envoi » pousse /payments/pay',
-      (tester) async {
-        await tester.pumpWidget(
-          wrap(
-            (_) => SenderActionBar(
-              bid: _bid(status: 'ACCEPTED'),
-              isLoading: false,
-              paymentLoaded: true,
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text(_l.bidDetailPayMyShipment));
-        await tester.pumpAndSettle();
-
-        expect(find.text('PAY'), findsOneWidget);
-        expect(pushed, ['/payments/pay:bid-42']);
-      },
-    );
-
-    final amount = formatPriceIn(40, 'EUR');
-    final cases = <(PaymentStatus, String, String)>[
-      (
-        PaymentStatus.released,
-        'ACCEPTED',
-        _l.bidDetailEscrowReleasedLabel(amount),
-      ),
-      (
-        PaymentStatus.refunded,
-        'ACCEPTED',
-        _l.bidDetailEscrowRefundedLabel(amount),
-      ),
-      (PaymentStatus.failed, 'ACCEPTED', _l.bidDetailEscrowFailedLabel),
-      (PaymentStatus.escrow, 'PENDING', _l.bidDetailEscrowSecuredPendingLabel),
-      (
-        PaymentStatus.escrow,
-        'ACCEPTED',
-        _l.bidDetailEscrowSecuredLabel(amount),
-      ),
-    ];
-    for (final (status, bidStatus, label) in cases) {
-      testWidgets('paiement $status sur bid $bidStatus : $label', (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          wrap(
-            (_) => SenderActionBar(
-              bid: _bid(status: bidStatus),
-              isLoading: false,
-              paymentLoaded: true,
-              existingPayment: _payment(status),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-        expect(find.byType(EscrowBadge), findsOneWidget);
-        expect(find.text(label), findsOneWidget);
-      });
-    }
-
-    testWidgets('EscrowBadge hors PENDING/ACCEPTED : libellé « sécurisé »', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap(
-          (_) => EscrowBadge(
-            payment: _payment(PaymentStatus.escrow),
-            bidStatus: 'HANDED_OVER',
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text(_l.bidDetailEscrowSecuredLabel(amount)), findsOneWidget);
-    });
-
-    testWidgets('senderActionBar_escrowBadge_usesBreakdownOnlineAmount', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap(
-          (_) => SenderActionBar(
-            bid: _bid(
-              status: 'ACCEPTED',
-              moneyBreakdown: const BidMoneyBreakdown(
-                lines: [],
-                total: 88,
-                onlineAmount: 61.2,
-                cashAmount: 26.8,
-              ),
-            ),
-            isLoading: false,
-            paymentLoaded: true,
-            existingPayment: _payment(PaymentStatus.escrow),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(
-        find.text(_l.bidDetailEscrowSecuredLabel(formatPriceIn(61.2, 'EUR'))),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('escrowBadge_usesOnlineAmount', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          (_) => EscrowBadge(
-            payment: _payment(PaymentStatus.escrow),
-            bidStatus: 'ACCEPTED',
-            onlineAmount: 61.2,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(
-        find.text(_l.bidDetailEscrowSecuredLabel(formatPriceIn(61.2, 'EUR'))),
-        findsOneWidget,
-      );
-      expect(find.text(_l.bidDetailEscrowSecuredLabel(amount)), findsNothing);
-    });
-
-    testWidgets('escrowBadge_onlineAmount_keepsFixedDecimals', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          (_) => EscrowBadge(
-            payment: _payment(PaymentStatus.escrow),
-            bidStatus: 'ACCEPTED',
-            onlineAmount: 61,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(
-        find.text(_l.bidDetailEscrowSecuredLabel('61,00\u00a0€')),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('escrowBadge_withoutOnlineAmount_usesPaymentAmount', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap(
-          (_) => EscrowBadge(
-            payment: _payment(PaymentStatus.escrow),
-            bidStatus: 'ACCEPTED',
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text(_l.bidDetailEscrowSecuredLabel(amount)), findsOneWidget);
     });
   });
 
@@ -565,7 +329,17 @@ void main() {
       verifyNever(() => cancellationBloc.add(any()));
     });
 
-    for (final status in ['COMPLETED', 'REJECTED', 'CANCELLED']) {
+    // « Supprimer cette demande » a quitté le footer : le menu ⋮ la propose
+    // pour ces six statuts. Liste explicite : le test échoue si la constante
+    // kEnvoisPasses change sans qu'on l'ait décidé.
+    for (final status in const [
+      'COMPLETED',
+      'REJECTED',
+      'CANCELLED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+    ]) {
       testWidgets('$status : Supprimer puis confirmer → BidDeleteRequested', (
         tester,
       ) async {
@@ -573,13 +347,25 @@ void main() {
         await tester.tap(find.text(_l.bidDetailRemoveFromHistorySubtitle));
         await tester.pumpAndSettle();
 
-        expect(find.text(_l.bidDetailDeleteConfirmBody), findsOneWidget);
+        expect(find.text(_l.bidDetailDeleteRequestDefaultBody), findsOneWidget);
         await tester.tap(find.widgetWithText(FilledButton, _l.commonDelete));
         await tester.pumpAndSettle();
 
         verify(
           () => bidBloc.add(any(that: isA<BidDeleteRequested>())),
         ).called(1);
+      });
+    }
+
+    for (final status in [
+      'PENDING',
+      'AWAITING_PAYMENT',
+      'ACCEPTED',
+      'IN_TRANSIT',
+    ]) {
+      testWidgets('$status : pas d\'entrée Supprimer', (tester) async {
+        await openOptions(tester, _bid(status: status));
+        expect(find.text(_l.bidDetailRemoveFromHistorySubtitle), findsNothing);
       });
     }
 

@@ -7174,19 +7174,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailDeliveryNoShowContestButton => 'Contester ce signalement';
 
   @override
-  String get bidDetailSenderPendingTitle => '⏳ En attente du voyageur';
-
-  @override
-  String get bidDetailSenderAwaitingCardPaymentTitle =>
-      '⏳ En attente de votre paiement';
-
-  @override
   String get bidDetailSenderPendingSubtitle =>
       'Vous serez notifié dès sa réponse.';
-
-  @override
-  String get bidDetailSenderAwaitingPaymentTitle =>
-      'Payez pour confirmer l\'envoi';
 
   @override
   String bidDetailSenderAwaitingPaymentSubtitle(String amount) {
@@ -7194,15 +7183,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get bidDetailSenderEscrowedTitle => '🔒 Paiement sécurisé';
-
-  @override
   String bidDetailSenderEscrowedSubtitle(String amount) {
     return '$amount séquestrés. En attente de la réponse du voyageur.';
   }
-
-  @override
-  String get bidDetailSenderAcceptedTitle => '⚡ Remise du colis';
 
   @override
   String get bidDetailSenderAcceptedInstructions =>
@@ -7212,20 +7195,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailSenderTravelerFallback => 'le voyageur';
 
   @override
-  String bidDetailSenderHandedOverTitle(String name) {
-    return '✓ Colis remis à $name';
-  }
-
-  @override
   String bidDetailSenderHandedOverSubtitleWithDate(String date) {
     return 'Embarquement prévu le $date.';
   }
 
   @override
   String get bidDetailSenderHandedOverSubtitleDefault => 'Colis remis.';
-
-  @override
-  String get bidDetailSenderInTransitTitle => '✈ Colis en vol';
 
   @override
   String bidDetailSenderInTransitEta(String time, String city) {
@@ -7242,23 +7217,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le code de retrait figure sur votre billet.';
 
   @override
-  String get bidDetailSenderArrivedTitle => '📍 Colis arrivé à destination';
-
-  @override
   String get bidDetailSenderArrivedSubtitleDefault =>
       'Le voyageur est arrivé, les instructions de retrait arrivent bientôt.';
 
   @override
   String get bidDetailSenderArrivedSubtitleSeeInstructions =>
       'Le voyageur est arrivé. Ses instructions de retrait sont juste en dessous.';
-
-  @override
-  String get bidDetailSenderRecipientFallback => 'votre destinataire';
-
-  @override
-  String bidDetailSenderDeliveredTitle(String recipient) {
-    return '✓ Livré à $recipient';
-  }
 
   @override
   String get bidDetailSenderDeliveredSubtitle => 'Paiement libéré au voyageur.';
@@ -7620,34 +7584,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette demande refusée sera retirée définitivement de votre liste.';
 
   @override
-  String bidDetailEscrowReleasedLabel(String amount) {
-    return 'Voyageur payé · $amount';
-  }
-
-  @override
-  String bidDetailEscrowRefundedLabel(String amount) {
-    return 'Remboursé · $amount';
-  }
-
-  @override
-  String get bidDetailEscrowFailedLabel => 'Paiement échoué';
-
-  @override
-  String get bidDetailEscrowSecuredPendingLabel =>
-      'Paiement sécurisé · En attente du voyageur';
-
-  @override
-  String bidDetailEscrowSecuredLabel(String amount) {
-    return 'Paiement sécurisé · $amount';
-  }
-
-  @override
-  String get bidDetailCashAtDropoffLabel => 'Paiement en espèces à la remise';
-
-  @override
-  String get bidDetailMobileMoneyPaymentLabel => 'Paiement mobile money';
-
-  @override
   String get bidDetailReportTripLabel => 'Signaler ce trajet';
 
   @override
@@ -7695,11 +7631,42 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.';
 
   @override
-  String get bidDetailDeleteConfirmBody =>
-      'Cette demande sera définitivement supprimée de votre historique.';
+  String get bidDetailMoreDetails => 'Plus de détails';
 
   @override
-  String get bidDetailMoreDetails => 'Plus de détails';
+  String get bidDetailSectionTodo => 'À traiter';
+
+  @override
+  String get bidDetailSectionShipment => 'Votre envoi';
+
+  @override
+  String get senderTileSuivi => 'Suivi';
+
+  @override
+  String get senderTileLieux => 'Lieux';
+
+  @override
+  String get senderTileColis => 'Colis et destinataire';
+
+  @override
+  String senderTileColisSubtitle(String weight, String recipient) {
+    return '$weight · pour $recipient';
+  }
+
+  @override
+  String get senderTileDetailsSubtitle => 'Référence, dépôt, lien de suivi';
+
+  @override
+  String get senderTilePrevenirCode => 'Envoyer le code de retrait';
+
+  @override
+  String get senderTilePrevenirLink => 'Envoyer le lien de suivi';
+
+  @override
+  String get senderTileBadgeCodeReady => 'Code prêt';
+
+  @override
+  String get senderTileBadgeCurrentStep => 'Étape en cours';
 
   @override
   String get bidDetailSectionDropoff => 'DÉPÔT DU COLIS';
@@ -7895,7 +7862,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailScanParcelQr => 'Lire le QR du colis';
 
   @override
-  String get bidDetailScanTransitOptional => 'Scanner le transit (facultatif)';
+  String get bidDetailScanTransitLabel => 'Scanner le transit';
+
+  @override
+  String get bidDetailScanTransitSubtitle =>
+      'Étape facultative : enregistrer le passage du colis.';
+
+  @override
+  String get bidDetailScanPending => 'Scan en attente';
+
+  @override
+  String get bidDetailHandoverLockedLabel => 'Disponible au départ';
 
   @override
   String get bidDetailConfirmHandover => 'Valider la remise';
@@ -8001,6 +7978,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String bidDetailEscrowedUntilDeliveryLabel(String amount) {
     return '$amount séquestré : libéré à la livraison';
+  }
+
+  @override
+  String get bidDetailPaymentFailedLabel => 'Paiement échoué';
+
+  @override
+  String bidDetailPaymentToPayLabel(String amount) {
+    return '$amount à régler';
   }
 
   @override
@@ -22449,9 +22434,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une modification du colis attend la réponse du voyageur. Scannez le colis une fois qu\'il a répondu.';
 
   @override
-  String get amendmentEntryTitle => 'MODIFIER MON COLIS';
-
-  @override
   String get amendmentEntryButton => 'Ajouter des kilos ou des articles';
 
   @override
@@ -22669,11 +22651,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get amendmentPaymentContextLabel => 'Modification du colis';
 
   @override
-  String amendmentEntryBodyShort(String name) {
-    return 'Ajoutez des kilos ou des articles : $name a 48 h pour accepter.';
-  }
-
-  @override
   String amendmentSheetKgLabelOpen(String price) {
     return 'KILOS EN PLUS · $price/KG';
   }
@@ -22853,9 +22830,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get bidDetailMoreOptionsTooltip => 'Plus d\'options';
-
-  @override
   String get walletBalancesButtonTooltip => 'Mes soldes';
 
   @override
@@ -23032,9 +23006,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripDepartConfirmedSnackbar => 'C\'est noté, bon voyage !';
-
-  @override
-  String get travelerTrackingTitle => 'Suivi du voyageur';
 
   @override
   String get travelerTrackingBadgeEnRoute => 'En route';

@@ -14,6 +14,10 @@ enum ToolStatusTone {
   /// Ambre, comme la tuile « Demandes reçues » : une opportunité, pas une
   /// erreur.
   news,
+
+  /// « Étape en cours » : un état actif, ni une réussite ni une nouveauté.
+  /// Couleurs `warning` du thème, qui suivent le mode sombre.
+  inProgress,
 }
 
 /// Pastille d'état d'une tuile-outil du hub Activités (spec § 4.4) :
@@ -48,6 +52,7 @@ class ToolStatusBadge extends StatelessWidget {
       ToolStatusTone.ready => (cs.successLight, cs.success),
       ToolStatusTone.todo => (cs.surfaceContainerHighest, cs.onSurfaceVariant),
       ToolStatusTone.news => (DonyColors.amberLight, DonyColors.amberDark),
+      ToolStatusTone.inProgress => (cs.warningLight, cs.warning),
     };
 
     return Semantics(
