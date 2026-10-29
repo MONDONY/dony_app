@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-/// Accordéon « Plus de détails » — tout ce que l'app sait de la demande :
+/// Contenu de « Plus de détails » : tout ce que l'app sait de la demande.
 ///   1. DEMANDE (référence, dates d'envoi et de mise à jour, paiement, promo)
 ///   2. DÉPÔT DU COLIS (lieu ouvrable dans la carte, date limite, remise)
 ///   3. RÉCUPÉRATION À L'ARRIVÉE (lieu ouvrable dans la carte, instructions)
@@ -22,115 +22,9 @@ import 'package:intl/intl.dart';
 ///   5. LIEN DE SUIVI (si autorisé et trackingToken != null)
 ///   6. RESPONSABILITÉ LÉGALE
 ///
-/// NOTE : ce widget est un [StatefulWidget] pour gérer l'état UI `_open`
-/// (pattern AnimatedSize standard). Ce setState local ne gère que l'ouverture/
-/// fermeture de l'accordéon — aucun état métier.
-class DetailsAccordion extends StatefulWidget {
-  final BidModel bid;
-  final bool showTrackingLink;
-
-  const DetailsAccordion({
-    super.key,
-    required this.bid,
-    this.showTrackingLink = true,
-  });
-
-  @override
-  State<DetailsAccordion> createState() => _DetailsAccordionState();
-}
-
-class _DetailsAccordionState extends State<DetailsAccordion> {
-  bool _open = false;
-
-  BidModel get bid => widget.bid;
-
-  void _toggle() {
-    HapticFeedback.lightImpact();
-    setState(() => _open = !_open);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Header ─────────────────────────────────────────────────────────
-          InkWell(
-            onTap: _toggle,
-            borderRadius: _open
-                ? const BorderRadius.vertical(
-                    top: Radius.circular(DonyRadius.card),
-                  )
-                : BorderRadius.circular(DonyRadius.card),
-            child: Padding(
-              padding: const EdgeInsets.all(DonySpacing.base),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l.bidDetailMoreDetails,
-                      style: tt.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  AnimatedRotation(
-                    turns: _open ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOutCubic,
-                    child: DonyIcon('chevron-down', color: cs.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // ── Body ───────────────────────────────────────────────────────────
-          AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: !_open
-                ? const SizedBox(width: double.infinity, height: 0)
-                : Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.base,
-                      0,
-                      DonySpacing.base,
-                      DonySpacing.base,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Divider(color: cs.outline, height: 1),
-                        const SizedBox(height: DonySpacing.md),
-                        BidDetailsContent(
-                          bid: bid,
-                          showTrackingLink: widget.showTrackingLink,
-                        ),
-                      ],
-                    ),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Contenu de « Plus de détails » : tout ce que l'app sait de la demande
-/// (sections détaillées sur [DetailsAccordion]). Public pour être posé tel quel
-/// dans un bottom sheet de la fiche colis expéditeur ; l'accordéon de la vue
-/// voyageur l'utilise pour son corps.
+/// Posé tel quel dans le bottom sheet de la tuile « Plus de détails » de la
+/// fiche colis, vue expéditeur (`openSenderTileSheet`) comme vue voyageur
+/// (`openTravelerTileSheet`, sans le lien de suivi) : le sheet porte le titre.
 class BidDetailsContent extends StatelessWidget {
   const BidDetailsContent({
     super.key,

@@ -25,8 +25,8 @@ import 'package:dony/features/matching/data/repositories/bid_amendment_repositor
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
@@ -347,7 +347,7 @@ void main() {
     expect(find.text('À traiter'), findsNothing);
     expect(find.byType(SenderHeroCard), findsNothing);
     expect(find.byType(ColisDestinataireCard), findsNothing);
-    expect(find.byType(DetailsAccordion), findsNothing);
+    expect(find.byType(BidDetailsContent), findsNothing);
     expect(find.byType(PrevenirDestinataireBody), findsNothing);
     expect(find.text('Suivi du colis'), findsNothing);
     // ACCEPTED avec lien de suivi : Prévenir, Colis et Plus de détails (pas

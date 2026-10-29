@@ -30,8 +30,8 @@ import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart'
     show RatingDoneBadge;
@@ -1099,7 +1099,6 @@ void main() {
         expect(find.byType(TravelerRecipientContactCard), findsNothing);
         expect(find.byType(TravelerRecipientContactPendingNote), findsNothing);
         expect(find.byType(BidDetailsContent), findsNothing);
-        expect(find.byType(DetailsAccordion), findsNothing);
       });
     }
 

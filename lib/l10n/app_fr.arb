@@ -5488,7 +5488,7 @@
   },
   "bidCreateDisclaimerSigned": "Disclaimer signé le {dateTime}",
   "@bidCreateDisclaimerSigned": {
-    "description": "Statut du disclaimer avec sa date de signature (details_accordion, tâche D2)",
+    "description": "Statut du disclaimer avec sa date de signature (bid_details_content, tâche D2)",
     "placeholders": {
       "dateTime": {
         "type": "String"
@@ -7654,51 +7654,51 @@
   },
   "bidDetailSectionDropoff": "DÉPÔT DU COLIS",
   "@bidDetailSectionDropoff": {
-    "description": "Titre de section 1 de l'accordéon (details_accordion.dart)"
+    "description": "Titre de section 1 de « Plus de détails » (bid_details_content.dart)"
   },
   "bidDetailLocationLabel": "Lieu",
   "@bidDetailLocationLabel": {
-    "description": "InfoRow lieu de remise (details_accordion.dart)"
+    "description": "InfoRow lieu de remise (bid_details_content.dart)"
   },
   "bidDetailHandoverStatusLabel": "Remise",
   "@bidDetailHandoverStatusLabel": {
-    "description": "Libellé InfoRow quand le colis a déjà été remis (details_accordion.dart)"
+    "description": "Libellé InfoRow quand le colis a déjà été remis (bid_details_content.dart)"
   },
   "bidDetailPresenceConfirmedLabel": "Présence confirmée",
   "@bidDetailPresenceConfirmedLabel": {
-    "description": "Libellé InfoRow avant remise (details_accordion.dart)"
+    "description": "Libellé InfoRow avant remise (bid_details_content.dart)"
   },
   "bidDetailParcelHandedOverValue": "Colis remis ✓",
   "@bidDetailParcelHandedOverValue": {
-    "description": "Valeur InfoRow quand le colis a déjà été remis (details_accordion.dart)"
+    "description": "Valeur InfoRow quand le colis a déjà été remis (bid_details_content.dart)"
   },
   "bidDetailYesValue": "Oui ✓",
   "@bidDetailYesValue": {
-    "description": "Valeur InfoRow, présence confirmée (details_accordion.dart)"
+    "description": "Valeur InfoRow, présence confirmée (bid_details_content.dart)"
   },
   "bidDetailNotYetValue": "Non encore",
   "@bidDetailNotYetValue": {
-    "description": "Valeur InfoRow, présence non confirmée (details_accordion.dart)"
+    "description": "Valeur InfoRow, présence non confirmée (bid_details_content.dart)"
   },
   "bidDetailPricePerKgLabel": "Tarif par kg",
   "@bidDetailPricePerKgLabel": {
-    "description": "InfoRow tarif brut par kg (details_accordion.dart)"
+    "description": "InfoRow tarif brut par kg (bid_details_content.dart)"
   },
   "bidDetailSectionTrackingLink": "LIEN DE SUIVI",
   "@bidDetailSectionTrackingLink": {
-    "description": "Titre de section 3 de l'accordéon (details_accordion.dart)"
+    "description": "Titre de section 3 de « Plus de détails » (bid_details_content.dart)"
   },
   "bidDetailSectionLegal": "RESPONSABILITÉ LÉGALE",
   "@bidDetailSectionLegal": {
-    "description": "Titre de section 4 de l'accordéon (details_accordion.dart)"
+    "description": "Titre de section 4 de « Plus de détails » (bid_details_content.dart)"
   },
   "bidDetailDisclaimerSignedNoDate": "Disclaimer signé",
   "@bidDetailDisclaimerSignedNoDate": {
-    "description": "Disclaimer sans date de signature (details_accordion.dart)"
+    "description": "Disclaimer sans date de signature (bid_details_content.dart)"
   },
   "bidDetailDisclaimerSignedCompact": "Disclaimer signé le {date} {time}",
   "@bidDetailDisclaimerSignedCompact": {
-    "description": "Repli du disclaimer sans locale, sans « à » entre date et heure (details_accordion.dart)",
+    "description": "Repli du disclaimer sans locale, sans « à » entre date et heure (bid_details_content.dart)",
     "placeholders": {
       "date": {
         "type": "String"
@@ -8216,11 +8216,11 @@
   },
   "bidDetailCopyTrackingLinkButton": "Copier le lien",
   "@bidDetailCopyTrackingLinkButton": {
-    "description": "Clé dédiée (Ruling R40) — remplace tripPosterCopyLinkButton dans details_accordion.dart (lien de suivi)"
+    "description": "Clé dédiée (Ruling R40) — remplace tripPosterCopyLinkButton dans bid_details_content.dart (lien de suivi)"
   },
   "bidDetailTrackingLinkCopiedMessage": "Lien copié",
   "@bidDetailTrackingLinkCopiedMessage": {
-    "description": "Clé dédiée (Ruling R40) — remplace tripPosterLinkCopiedMessage dans details_accordion.dart (lien de suivi)"
+    "description": "Clé dédiée (Ruling R40) — remplace tripPosterLinkCopiedMessage dans bid_details_content.dart (lien de suivi)"
   },
   "bidDetailAcceptRequestButton": "Accepter",
   "@bidDetailAcceptRequestButton": {
@@ -17959,27 +17959,27 @@
   },
   "bidDetailSectionRequest": "DEMANDE",
   "@bidDetailSectionRequest": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailReferenceLabel": "Référence",
   "@bidDetailReferenceLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailSentAtLabel": "Envoyée le",
   "@bidDetailSentAtLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailUpdatedAtLabel": "Mise à jour",
   "@bidDetailUpdatedAtLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailPaymentMethodLabel": "Paiement",
   "@bidDetailPaymentMethodLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailPaymentMethodValue": "{method, select, stripe{Carte bancaire} cash{Espèces à la remise} wave{Wave} orangeMoney{Orange Money} mobileMoney{Mobile money} other{-}}",
   "@bidDetailPaymentMethodValue": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)",
+    "description": "Plus de détails d'une demande (bid_details_content.dart)",
     "placeholders": {
       "method": {
         "type": "String"
@@ -17988,19 +17988,19 @@
   },
   "bidDetailPromoCodeLabel": "Code promo",
   "@bidDetailPromoCodeLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailRouteLabel": "Itinéraire",
   "@bidDetailRouteLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailArrivalTimeLabel": "Heure d'arrivée",
   "@bidDetailArrivalTimeLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailPickupInstructionsLabel": "Retrait à l'arrivée",
   "@bidDetailPickupInstructionsLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "negotiationMakeOfferStepProgress": "Étape {step} sur 3 · {name}",
   "@negotiationMakeOfferStepProgress": {
@@ -19711,7 +19711,7 @@
   },
   "bidDetailSectionPickup": "RÉCUPÉRATION À L'ARRIVÉE",
   "@bidDetailSectionPickup": {
-    "description": "Section de l'adresse de récupération du destinataire, Plus de détails (details_accordion.dart)"
+    "description": "Section de l'adresse de récupération du destinataire, Plus de détails (bid_details_content.dart)"
   },
   "payoutContactEmailLabel": "E-mail de contact : {email}",
   "@payoutContactEmailLabel": {
@@ -20416,7 +20416,7 @@
   "ticketPickupCodeSecretHint": "Secret, à donner au voyageur seulement au moment de la remise.",
   "@ticketPickupCodeSecretHint": {"description": "Aide sous l'étiquette du code de retrait de l'expéditeur (talon_retrait_code_view.dart, FLUTTER-J2)."},
   "bidDetailTrackingNumberLabel": "Numéro de suivi",
-  "@bidDetailTrackingNumberLabel": {"description": "Libellé de la ligne du numéro de suivi dans le détail d'un colis (details_accordion.dart, FLUTTER-J2)."},
+  "@bidDetailTrackingNumberLabel": {"description": "Libellé de la ligne du numéro de suivi dans le détail d'un colis (bid_details_content.dart, FLUTTER-J2)."},
   "deliveryLockedHelp": "À la remise, demandez au destinataire son code de retrait à 6 chiffres.",
   "@deliveryLockedHelp": {"description": "Aide de la carte du verrou avant le départ du trajet, vue voyageur (traveler_info_cards.dart), et sous le bouton de l'écran de confirmation (delivery_departure_gate.dart, FLUTTER-J2)."},
   "moneyUpcomingLabel": "À venir · {count, plural, =1{1 colis} other{{count} colis}}",

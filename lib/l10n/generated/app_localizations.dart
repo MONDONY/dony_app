@@ -9961,7 +9961,7 @@ abstract class AppLocalizations {
   /// **' · Votre prix est compétitif.'**
   String get bidCreateCompetitivePriceSuffix;
 
-  /// Statut du disclaimer avec sa date de signature (details_accordion, tâche D2)
+  /// Statut du disclaimer avec sa date de signature (bid_details_content, tâche D2)
   ///
   /// In fr, this message translates to:
   /// **'Disclaimer signé le {dateTime}'**
@@ -12708,73 +12708,73 @@ abstract class AppLocalizations {
   /// **'Référence, dépôt, trajet'**
   String get travelerTileDetailsSubtitle;
 
-  /// Titre de section 1 de l'accordéon (details_accordion.dart)
+  /// Titre de section 1 de « Plus de détails » (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'DÉPÔT DU COLIS'**
   String get bidDetailSectionDropoff;
 
-  /// InfoRow lieu de remise (details_accordion.dart)
+  /// InfoRow lieu de remise (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Lieu'**
   String get bidDetailLocationLabel;
 
-  /// Libellé InfoRow quand le colis a déjà été remis (details_accordion.dart)
+  /// Libellé InfoRow quand le colis a déjà été remis (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Remise'**
   String get bidDetailHandoverStatusLabel;
 
-  /// Libellé InfoRow avant remise (details_accordion.dart)
+  /// Libellé InfoRow avant remise (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Présence confirmée'**
   String get bidDetailPresenceConfirmedLabel;
 
-  /// Valeur InfoRow quand le colis a déjà été remis (details_accordion.dart)
+  /// Valeur InfoRow quand le colis a déjà été remis (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Colis remis ✓'**
   String get bidDetailParcelHandedOverValue;
 
-  /// Valeur InfoRow, présence confirmée (details_accordion.dart)
+  /// Valeur InfoRow, présence confirmée (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Oui ✓'**
   String get bidDetailYesValue;
 
-  /// Valeur InfoRow, présence non confirmée (details_accordion.dart)
+  /// Valeur InfoRow, présence non confirmée (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Non encore'**
   String get bidDetailNotYetValue;
 
-  /// InfoRow tarif brut par kg (details_accordion.dart)
+  /// InfoRow tarif brut par kg (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Tarif par kg'**
   String get bidDetailPricePerKgLabel;
 
-  /// Titre de section 3 de l'accordéon (details_accordion.dart)
+  /// Titre de section 3 de « Plus de détails » (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'LIEN DE SUIVI'**
   String get bidDetailSectionTrackingLink;
 
-  /// Titre de section 4 de l'accordéon (details_accordion.dart)
+  /// Titre de section 4 de « Plus de détails » (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'RESPONSABILITÉ LÉGALE'**
   String get bidDetailSectionLegal;
 
-  /// Disclaimer sans date de signature (details_accordion.dart)
+  /// Disclaimer sans date de signature (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Disclaimer signé'**
   String get bidDetailDisclaimerSignedNoDate;
 
-  /// Repli du disclaimer sans locale, sans « à » entre date et heure (details_accordion.dart)
+  /// Repli du disclaimer sans locale, sans « à » entre date et heure (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Disclaimer signé le {date} {time}'**
@@ -13404,13 +13404,13 @@ abstract class AppLocalizations {
   /// **'Ouvrir la discussion'**
   String get bidDetailSenderOpenChatSemanticLabel;
 
-  /// Clé dédiée (Ruling R40) — remplace tripPosterCopyLinkButton dans details_accordion.dart (lien de suivi)
+  /// Clé dédiée (Ruling R40) — remplace tripPosterCopyLinkButton dans bid_details_content.dart (lien de suivi)
   ///
   /// In fr, this message translates to:
   /// **'Copier le lien'**
   String get bidDetailCopyTrackingLinkButton;
 
-  /// Clé dédiée (Ruling R40) — remplace tripPosterLinkCopiedMessage dans details_accordion.dart (lien de suivi)
+  /// Clé dédiée (Ruling R40) — remplace tripPosterLinkCopiedMessage dans bid_details_content.dart (lien de suivi)
   ///
   /// In fr, this message translates to:
   /// **'Lien copié'**
@@ -26143,61 +26143,61 @@ abstract class AppLocalizations {
   /// **'La date limite de remise des colis de ce trajet est passée. La demande ne peut plus être acceptée, payée ni renégociée.'**
   String get errorHandoverDeadlinePassedMessage;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'DEMANDE'**
   String get bidDetailSectionRequest;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Référence'**
   String get bidDetailReferenceLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Envoyée le'**
   String get bidDetailSentAtLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Mise à jour'**
   String get bidDetailUpdatedAtLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Paiement'**
   String get bidDetailPaymentMethodLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'{method, select, stripe{Carte bancaire} cash{Espèces à la remise} wave{Wave} orangeMoney{Orange Money} mobileMoney{Mobile money} other{-}}'**
   String bidDetailPaymentMethodValue(String method);
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Code promo'**
   String get bidDetailPromoCodeLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Itinéraire'**
   String get bidDetailRouteLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Heure d\'arrivée'**
   String get bidDetailArrivalTimeLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Retrait à l\'arrivée'**
@@ -28471,7 +28471,7 @@ abstract class AppLocalizations {
   /// **'À l\'arrivée'**
   String get parcelLocationsOnArrival;
 
-  /// Section de l'adresse de récupération du destinataire, Plus de détails (details_accordion.dart)
+  /// Section de l'adresse de récupération du destinataire, Plus de détails (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'RÉCUPÉRATION À L\'ARRIVÉE'**
@@ -30205,7 +30205,7 @@ abstract class AppLocalizations {
   /// **'Secret, à donner au voyageur seulement au moment de la remise.'**
   String get ticketPickupCodeSecretHint;
 
-  /// Libellé de la ligne du numéro de suivi dans le détail d'un colis (details_accordion.dart, FLUTTER-J2).
+  /// Libellé de la ligne du numéro de suivi dans le détail d'un colis (bid_details_content.dart, FLUTTER-J2).
   ///
   /// In fr, this message translates to:
   /// **'Numéro de suivi'**

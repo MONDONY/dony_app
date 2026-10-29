@@ -7,8 +7,8 @@ import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.d
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
@@ -169,10 +169,10 @@ Widget _hostPaiement(BidModel bid) => MaterialApp(
   home: Scaffold(body: PaiementCard(bid: bid)),
 );
 
-Widget _hostAccordion(BidModel bid) => MaterialApp(
+Widget _hostDetails(BidModel bid) => MaterialApp(
   theme: AppTheme.light(),
   home: Scaffold(
-    body: SingleChildScrollView(child: DetailsAccordion(bid: bid)),
+    body: SingleChildScrollView(child: BidDetailsContent(bid: bid)),
   ),
 );
 
@@ -492,25 +492,9 @@ void main() {
     });
   });
 
-  // ── DetailsAccordion ──────────────────────────────────────────────────────
-  group('DetailsAccordion', () {
-    testWidgets('is collapsed by default — content not visible', (
-      tester,
-    ) async {
-      final bid = _bid(
-        handoverLocation: 'CDG Terminal 2F',
-        trackingToken: 'tok-abc123',
-      );
-
-      await tester.pumpWidget(_hostAccordion(bid));
-
-      // Header is visible
-      expect(find.textContaining('Plus de détails'), findsOneWidget);
-      // Content not visible
-      expect(find.textContaining('CDG Terminal'), findsNothing);
-    });
-
-    testWidgets('tap opens accordion and shows all sections', (tester) async {
+  // ── BidDetailsContent (sheet « Plus de détails ») ─────────────────────────
+  group('BidDetailsContent', () {
+    testWidgets('shows all sections', (tester) async {
       final bid = _bid(
         handoverLocation: 'Aéroport Roissy',
         handoverDeadline: DateTime(2026, 3, 10, 16),
@@ -522,13 +506,8 @@ void main() {
         disclaimerSignedAt: DateTime(2026, 1, 15, 9),
       );
 
-      await tester.pumpWidget(_hostAccordion(bid));
+      await tester.pumpWidget(_hostDetails(bid));
       await tester.pump();
-
-      // Tap the header
-      await tester.tap(find.textContaining('Plus de détails'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
 
       // Fenêtre de remise
       expect(find.textContaining('Aéroport Roissy'), findsOneWidget);
@@ -550,10 +529,7 @@ void main() {
       tester,
     ) async {
       final bid = _bid(handoverLocation: 'CDG');
-      await tester.pumpWidget(_hostAccordion(bid));
-      await tester.tap(find.textContaining('Plus de détails'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpWidget(_hostDetails(bid));
 
       expect(find.text('Présence confirmée'), findsOneWidget);
       expect(find.text('Non encore'), findsOneWidget);
@@ -563,10 +539,7 @@ void main() {
       'HANDED_OVER → "Colis remis ✓" (pas de "Non encore" trompeur)',
       (tester) async {
         final bid = _bid(status: 'HANDED_OVER', handoverLocation: 'CDG');
-        await tester.pumpWidget(_hostAccordion(bid));
-        await tester.tap(find.textContaining('Plus de détails'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpWidget(_hostDetails(bid));
 
         expect(find.text('Colis remis ✓'), findsOneWidget);
         expect(find.text('Non encore'), findsNothing);
@@ -579,10 +552,7 @@ void main() {
       tester,
     ) async {
       final bid = _bid(status: 'ARRIVED', handoverLocation: 'CDG');
-      await tester.pumpWidget(_hostAccordion(bid));
-      await tester.tap(find.textContaining('Plus de détails'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpWidget(_hostDetails(bid));
 
       expect(find.text('Colis remis ✓'), findsOneWidget);
       expect(find.text('Non encore'), findsNothing);
@@ -597,10 +567,7 @@ void main() {
           handoverDeadline: DateTime(2026, 3, 5, 16),
         );
 
-        await tester.pumpWidget(_hostAccordion(bid));
-        await tester.tap(find.textContaining('Plus de détails'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpWidget(_hostDetails(bid));
 
         // Ancien motif : DateFormat('dd/MM/yyyy').format(d) == '05/03/2026'.
         // Locale explicite ('fr') dans l'assertion : un DateFormat sans locale
@@ -623,10 +590,7 @@ void main() {
           handoverDeadline: DateTime(2026, 3, 5, 16),
         );
 
-        await tester.pumpWidget(_hostAccordion(bid));
-        await tester.tap(find.textContaining('More details'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpWidget(_hostDetails(bid));
 
         expect(
           find.text(DateFormat.yMd('en').format(DateTime(2026, 3, 5, 16))),
@@ -644,12 +608,8 @@ void main() {
           departureDate: DateTime(2026, 10, 6),
         );
 
-        await tester.pumpWidget(_hostAccordion(bid));
-        await tester.tap(find.textContaining('More details'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpWidget(_hostDetails(bid));
 
-        expect(find.text('More details'), findsOneWidget);
         expect(find.text('PARCEL DROP-OFF'), findsOneWidget);
         expect(find.text('Location'), findsOneWidget);
         expect(

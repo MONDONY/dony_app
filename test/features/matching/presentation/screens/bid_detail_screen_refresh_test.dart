@@ -29,8 +29,8 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
@@ -913,7 +913,7 @@ void main() {
         findsNothing,
       );
       expect(find.byType(TravelerTrackingCard), findsNothing);
-      expect(find.byType(DetailsAccordion), findsNothing);
+      expect(find.byType(BidDetailsContent), findsNothing);
       expect(find.byType(DonyActionTile), findsNWidgets(4));
 
       double top(Finder f) => tester.getTopLeft(f).dy;

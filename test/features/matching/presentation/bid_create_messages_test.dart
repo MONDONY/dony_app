@@ -7,7 +7,7 @@
 // `bidCreateDisclaimerSigned` n'a plus de widget appelant dans ce lot :
 // `DisclaimerCard` (`disclaimer_card.dart`) était du code mort (aucun
 // appelant en production) et a été supprimé au tour de correction 1. La clé
-// reste — réservée à la tâche D2 (`details_accordion`) — donc seul son
+// reste — réservée à la tâche D2 (`bid_details_content`) — donc seul son
 // rendu au niveau message est vérifié ici, sans widget.
 
 import 'dart:async';
