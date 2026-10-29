@@ -117,4 +117,35 @@ void main() {
     final text = tester.widget<Text>(find.text('2 nouveaux'));
     expect(text.style?.color, DonyColors.amberDark);
   });
+
+  for (final (name, theme) in [
+    ('clair', AppTheme.light()),
+    ('sombre', AppTheme.dark()),
+  ]) {
+    testWidgets('en cours ($name) : couleurs warning du thème, sans icône', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          const ToolStatusBadge(
+            ready: false,
+            tone: ToolStatusTone.inProgress,
+            label: 'Étape en cours',
+            semanticsLabel: 'Étape en cours',
+          ),
+          theme: theme,
+        ),
+      );
+
+      final cs = theme.colorScheme;
+      final box = tester.widget<Container>(
+        find.byKey(const Key('tool-status-badge')),
+      );
+      expect((box.decoration! as BoxDecoration).color, cs.warningLight);
+      final text = tester.widget<Text>(find.text('Étape en cours'));
+      expect(text.style?.color, cs.warning);
+      expect(find.byType(DonyIcon), findsNothing);
+      expect(find.byKey(const Key('tool-status-badge-dot')), findsNothing);
+    });
+  }
 }

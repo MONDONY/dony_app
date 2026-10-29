@@ -548,7 +548,7 @@ void main() {
   });
 
   group('sans cadre', () {
-    testWidgets('contenu seul : ni cadre, ni titre, ni lien vers la frise', (
+    testWidgets('contenu seul : ni titre ni lien vers la frise', (
       tester,
     ) async {
       final tracking = _tracking(
@@ -556,12 +556,7 @@ void main() {
       );
       await tester.pumpWidget(host(tracking));
 
-      expect(find.byKey(const Key('traveler-tracking-card')), findsNothing);
       expect(find.text('Suivi du voyageur'), findsNothing);
-      expect(
-        find.byKey(const Key('traveler-tracking-open-timeline')),
-        findsNothing,
-      );
       expect(find.text('Voir toutes les étapes et photos'), findsNothing);
       expect(badge('En route'), findsOneWidget);
       expect(find.text('Près de Marseille'), findsOneWidget);

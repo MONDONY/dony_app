@@ -320,40 +320,87 @@ void main() {
     expect(find.byType(DonyActionTile), findsNWidgets(3));
   });
 
-  // ── Ordre : billet, À traiter, voyageur, paiement, tuiles ───────────────────
-  testWidgets(
-    'l\'ordre est billet, À traiter, voyageur, paiement, Votre envoi, '
-    'tuiles',
-    (tester) async {
-      sizeView(tester);
-      final bid = _bid(
-        arrivalInstructions: 'Gare routière, quai 4',
-        handoverAddress: const AddressData(
-          label: '1 rue A',
-          lat: 48.8,
-          lng: 2.3,
+  // ── Ordre : billet, À traiter, consignes, voyageur, paiement, tuiles ───────
+  testWidgets('l\'ordre est billet, À traiter, consignes, voyageur, paiement, '
+      'Votre envoi, tuiles', (tester) async {
+    sizeView(tester);
+    final bid = _bid(
+      status: 'IN_TRANSIT',
+      recipientAppStatus: 'DECLINED',
+      arrivalInstructions: 'Gare routière, quai 4',
+    );
+
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
+
+    double top(Finder f) => tester.getTopLeft(f).dy;
+    final ys = [
+      top(find.byType(ColisBillet)),
+      top(find.text('À traiter')),
+      top(find.byType(RecipientDeclinedCard)),
+      top(find.byKey(const Key('arrival-instructions-card'))),
+      top(find.byType(VoyageurContactCard)),
+      top(find.byType(PaiementCard)),
+      top(find.text('Votre envoi')),
+      top(find.byType(DonyActionTile).first),
+    ];
+    expect([...ys]..sort(), ys);
+    expect(ys.toSet(), hasLength(ys.length));
+  });
+
+  // ── « À traiter » ne coiffe que ce qui attend une réponse ──────────────────
+  testWidgets('COMPLETED + consignes de retrait → carte affichée, pas de titre '
+      '« À traiter »', (tester) async {
+    sizeView(tester);
+    final bid = _bid(
+      status: 'COMPLETED',
+      arrivalInstructions: 'Gare routière, quai 4',
+    );
+
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.byKey(const Key('arrival-instructions-card')), findsOneWidget);
+    expect(find.text('À traiter'), findsNothing);
+    // Les consignes restent juste avant le voyageur.
+    expect(
+      tester.getTopLeft(find.byKey(const Key('arrival-instructions-card'))).dy,
+      lessThan(tester.getTopLeft(find.byType(VoyageurContactCard)).dy),
+    );
+  });
+
+  testWidgets('une section ne démonte pas les suivantes quand « À traiter » '
+      'apparaît', (tester) async {
+    sizeView(tester);
+    await tester.pumpWidget(
+      _host(_bid(status: 'IN_TRANSIT'), cancellationBloc, conversationOpenBloc),
+    );
+    await tester.pump(const Duration(seconds: 1));
+    // Le stagger d'entrée est fini : un premier rebuild retire ses enveloppes.
+    await tester.pumpWidget(
+      _host(_bid(status: 'IN_TRANSIT'), cancellationBloc, conversationOpenBloc),
+    );
+    await tester.pump();
+    final before = tester.element(find.byType(PaiementCard));
+
+    await tester.pumpWidget(
+      _host(
+        _bid(
+          status: 'IN_TRANSIT',
+          recipientAppStatus: 'DECLINED',
+          // La cellule d'absence apparaît aussi, sous la grille.
+          departureAt: DateTime.now().subtract(const Duration(days: 1)),
         ),
-      );
+        cancellationBloc,
+        conversationOpenBloc,
+      ),
+    );
+    await tester.pump();
 
-      await tester.pumpWidget(
-        _host(bid, cancellationBloc, conversationOpenBloc),
-      );
-      await tester.pump(const Duration(seconds: 1));
-
-      double top(Finder f) => tester.getTopLeft(f).dy;
-      final ys = [
-        top(find.byType(ColisBillet)),
-        top(find.text('À traiter')),
-        top(find.byKey(const Key('arrival-instructions-card'))),
-        top(find.byType(VoyageurContactCard)),
-        top(find.byType(PaiementCard)),
-        top(find.text('Votre envoi')),
-        top(find.byType(DonyActionTile).first),
-      ];
-      expect([...ys]..sort(), ys);
-      expect(ys.toSet(), hasLength(ys.length));
-    },
-  );
+    expect(find.text('À traiter'), findsOneWidget);
+    expect(find.byType(DeliveryNoShowCtaCell), findsOneWidget);
+    expect(tester.element(find.byType(PaiementCard)), same(before));
+  });
 
   // ── Teintes, pastilles et résumés des tuiles ──────────────────────────────
   group('tuiles', () {
@@ -708,6 +755,12 @@ void main() {
       blocksHandover: true,
     );
 
+    const paid = BidSupplement(
+      id: 'sup-2',
+      status: BidSupplementStatus.paid,
+      grossAmount: 17,
+    );
+
     setUp(() {
       final analytics = _MockAnalyticsService();
       when(
@@ -743,6 +796,61 @@ void main() {
 
       expect(find.byType(SupplementSenderCard), findsOneWidget);
       expect(scrollOffset(tester), 0);
+    });
+
+    testWidgets('supplément proposé → sous le titre « À traiter »', (
+      tester,
+    ) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(supplement: proposed),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('À traiter'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byType(SupplementSenderCard)).dy,
+        greaterThan(tester.getTopLeft(find.text('À traiter')).dy),
+      );
+    });
+
+    testWidgets('supplément payé → carte affichée, pas de titre', (
+      tester,
+    ) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(_bid(supplement: paid), cancellationBloc, conversationOpenBloc),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(SupplementSenderCard), findsOneWidget);
+      expect(find.text('À traiter'), findsNothing);
+    });
+
+    testWidgets('?action=supplement avec un supplément payé : la carte est '
+        'amenée à l\'écran', (tester) async {
+      tester.view.physicalSize = const Size(800, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _host(
+          _bid(supplement: paid),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusSupplement: true,
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('À traiter'), findsNothing);
+      expect(scrollOffset(tester), greaterThan(0));
     });
 
     testWidgets('?action=supplement : l\'encart est amené à l\'écran', (
@@ -796,6 +904,14 @@ void main() {
       grossAmount: 26.8,
     );
 
+    const declined = BidAmendment(
+      id: 'am-2',
+      status: BidAmendmentStatus.declined,
+      rail: 'CASH',
+      addedWeightKg: 3,
+      grossAmount: 26.8,
+    );
+
     setUp(() {
       final analytics = _MockAnalyticsService();
       when(
@@ -831,6 +947,43 @@ void main() {
 
       expect(find.byType(AmendmentSenderCard), findsOneWidget);
       expect(scrollOffset(tester), 0);
+    });
+
+    testWidgets('demande ouverte → sous le titre « À traiter »', (
+      tester,
+    ) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(amendments: const [open]),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('À traiter'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byType(AmendmentSenderCard)).dy,
+        greaterThan(tester.getTopLeft(find.text('À traiter')).dy),
+      );
+    });
+
+    testWidgets('demande close non acceptée → carte affichée, pas de titre', (
+      tester,
+    ) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(amendments: const [declined]),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(AmendmentSenderCard), findsOneWidget);
+      expect(find.text('À traiter'), findsNothing);
     });
 
     testWidgets('?action=amendment : la carte est amenée à l\'écran', (

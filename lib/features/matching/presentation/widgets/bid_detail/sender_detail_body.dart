@@ -204,7 +204,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       ),
       SenderTile.suivi when _inProgressStatuses.contains(bid.status) => _badge(
         l.senderTileBadgeCurrentStep,
-        ToolStatusTone.news,
+        ToolStatusTone.inProgress,
       ),
       _ => null,
     };
@@ -235,58 +235,83 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     _maybeFocusSupplement();
     _maybeFocusAmendment();
 
-    // Cartes qui attendent une réponse de l'expéditeur, sous « À traiter ».
-    final todo = <Widget>[
-      if (SenderHeroCard.hasAction(widget.bid)) SenderHeroCard(bid: widget.bid),
-      // Supplément de prix demandé par le voyageur : réponse attendue avant
-      // la remise.
-      if (SupplementSenderCard.shouldShow(widget.bid))
-        SupplementSenderCard(key: _supplementKey, bid: widget.bid),
-      // Modification du colis : la demande en attente ou sa fin. L'entrée
-      // « Modifier mon colis » vit dans le sheet de la tuile Colis.
-      if (AmendmentSenderCard.shouldShow(widget.bid))
-        AmendmentSenderCard(key: _amendmentKey, bid: widget.bid),
-      if (TripRescheduleCard.shouldShow(widget.bid))
-        TripRescheduleCard(bid: widget.bid, isSender: true),
+    final bid = widget.bid;
+
+    // Supplément et modification : sous « À traiter » tant qu'ils attendent
+    // une réponse, sinon simples informations juste après, sans titre. La clé
+    // de focus suit la carte d'un côté comme de l'autre.
+    final supplement = SupplementSenderCard.shouldShow(bid)
+        ? SupplementSenderCard(key: _supplementKey, bid: bid)
+        : null;
+    final supplementReply =
+        supplement != null && SupplementSenderCard.needsReply(bid);
+    final amendment = AmendmentSenderCard.shouldShow(bid)
+        ? AmendmentSenderCard(key: _amendmentKey, bid: bid)
+        : null;
+    final amendmentReply =
+        amendment != null && AmendmentSenderCard.needsReply(bid);
+
+    // « À traiter » ne réunit que ce qui attend une réponse ou une action.
+    final actions = <Widget>[
+      if (SenderHeroCard.hasAction(bid)) SenderHeroCard(bid: bid),
+      if (supplementReply) supplement,
+      if (amendmentReply) amendment,
+      if (TripRescheduleCard.shouldShow(bid))
+        TripRescheduleCard(bid: bid, isSender: true),
       // Le destinataire a refusé : renvoyer le message n'aurait pas de sens,
       // il faut en désigner un autre.
-      if (PrevenirDestinataire.showsDeclined(widget.bid))
-        RecipientDeclinedCard(bid: widget.bid),
-      // Hors du hero, qui les masquait dès qu'une contestation, une absence
-      // ou la livraison prenait la place.
-      if (_activeStatuses.contains(status) &&
-          ArrivalInstructionsCard.hasText(widget.bid.arrivalInstructions))
-        ArrivalInstructionsCard(instructions: widget.bid.arrivalInstructions!),
+      if (PrevenirDestinataire.showsDeclined(bid))
+        RecipientDeclinedCard(bid: bid),
       // Destinataire absent signalé par le voyageur (FLUTTER-E2) : nouveau
       // rendez-vous, changement de destinataire, garde, colis non réclamé.
-      if (DeliveryNoShowProcedureCard.shouldShow(widget.bid, isSender: true))
-        DeliveryNoShowProcedureCard(bid: widget.bid, isSender: true),
+      if (DeliveryNoShowProcedureCard.shouldShow(bid, isSender: true))
+        DeliveryNoShowProcedureCard(bid: bid, isSender: true),
     ];
 
-    final tiles = senderTilesFor(widget.bid);
+    final infos = <(String, Widget)>[
+      if (supplement != null && !supplementReply)
+        ('info-supplement', supplement),
+      if (amendment != null && !amendmentReply) ('info-amendment', amendment),
+      // Consignes de retrait : hors du hero, qui les masquait dès qu'une
+      // contestation, une absence ou la livraison prenait la place.
+      if (_activeStatuses.contains(status) &&
+          ArrivalInstructionsCard.hasText(bid.arrivalInstructions))
+        (
+          'info-arrival',
+          ArrivalInstructionsCard(instructions: bid.arrivalInstructions!),
+        ),
+    ];
 
-    final children = <Widget>[
+    // Chaque section porte une clé : l'apparition ou la disparition de
+    // « À traiter » ne remonte ni le voyageur, ni le paiement, ni la grille.
+    final children = <(String, Widget)>[
       // index 0 — ColisBillet possède déjà son propre .animate().fadeIn().slideY()
       // en interne (colis_billet.dart:53). On ne lui applique PAS le stagger ici
       // pour éviter une double animation (fade × fade + slide × slide).
-      ColisBillet(bid: widget.bid, isSender: true),
-      if (todo.isNotEmpty)
-        _Section(title: l.bidDetailSectionTodo, children: todo),
+      ('billet', ColisBillet(bid: bid, isSender: true)),
+      if (actions.isNotEmpty)
+        ('todo', _Section(title: l.bidDetailSectionTodo, children: actions)),
+      ...infos,
       // Profil du voyageur à tous les statuts ; les boutons de contact
       // n'apparaissent qu'une fois la demande acceptée.
-      VoyageurContactCard(bid: widget.bid),
-      PaiementCard(bid: widget.bid),
-      _Section(
-        title: l.bidDetailSectionShipment,
-        spacing: DonySpacing.md,
-        children: [
-          DonyActionTileGrid(tiles: [for (final tile in tiles) _tileFor(tile)]),
-        ],
+      ('voyageur', VoyageurContactCard(bid: bid)),
+      ('paiement', PaiementCard(bid: bid)),
+      (
+        'shipment',
+        _Section(
+          title: l.bidDetailSectionShipment,
+          spacing: DonySpacing.md,
+          children: [
+            DonyActionTileGrid(
+              tiles: [for (final tile in senderTilesFor(bid)) _tileFor(tile)],
+            ),
+          ],
+        ),
       ),
-      if (DeliveryNoShowCtaCell.shouldShow(widget.bid))
-        DeliveryNoShowCtaCell(bid: widget.bid, isSender: true),
-      if (status == 'COMPLETED' && widget.bid.senderHasRated)
-        const RatingDoneBadge(),
+      if (DeliveryNoShowCtaCell.shouldShow(bid))
+        ('noshow-cta', DeliveryNoShowCtaCell(bid: bid, isSender: true)),
+      if (status == 'COMPLETED' && bid.senderHasRated)
+        ('rating', const RatingDoneBadge()),
     ];
 
     // Stagger d'entrée : joué une seule fois (flag _playEntrance).
@@ -294,26 +319,20 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     // Les autres enfants entrent en fondu + glissement, décalés de 60 ms × i.
     final staggered = <Widget>[];
     for (var i = 0; i < children.length; i++) {
-      if (i > 0) {
-        staggered.add(const SizedBox(height: DonySpacing.base));
-      }
-
-      // ColisBillet (index 0) : pas de stagger — son animation interne suffit.
-      // Autres cartes : stagger uniquement lors du premier affichage.
-      final child = children[i];
+      final (name, child) = children[i];
+      final Widget shown;
       if (_playEntrance && i > 0) {
         // Délai plafonné à l'index 7 : la durée totale du timer ci-dessus
         // reste vraie quel que soit le nombre de cartes.
         final delay = (60 * (i > 7 ? 7 : i)).ms;
-        staggered.add(
-          child
-              .animate()
-              .fadeIn(duration: 300.ms, delay: delay)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic, delay: delay),
-        );
+        shown = child
+            .animate()
+            .fadeIn(duration: 300.ms, delay: delay)
+            .slideY(begin: 0.04, curve: Curves.easeOutCubic, delay: delay);
       } else {
-        staggered.add(child);
+        shown = child;
       }
+      staggered.add(KeyedSubtree(key: ValueKey(name), child: shown));
     }
 
     return SingleChildScrollView(
@@ -322,6 +341,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
         context,
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: DonySpacing.base,
           children: staggered,
         ),
       ),

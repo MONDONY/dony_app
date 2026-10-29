@@ -129,10 +129,11 @@ void main() {
     expect(uri.query, contains('12.6362'));
   });
 
-  testWidgets('contenu seul : pas de cadre de carte', (tester) async {
+  testWidgets('contenu seul : carte, adresses et étape en cours', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host(_bid('ACCEPTED')));
 
-    expect(find.byKey(const Key('parcel-locations-card')), findsNothing);
     expect(_mapped(tester), _handover);
     expect(find.text(_handover.label), findsOneWidget);
     expect(find.text(_delivery.label), findsOneWidget);

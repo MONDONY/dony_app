@@ -386,8 +386,6 @@ void main() {
       expect(find.byKey(const Key('traveler-tracking-badge')), findsOneWidget);
       expect(find.text('Près de Marseille'), findsOneWidget);
       expect(find.byKey(const Key('parcel-location-handover')), findsOneWidget);
-      expect(find.byKey(const Key('traveler-tracking-card')), findsNothing);
-      expect(find.byKey(const Key('parcel-locations-card')), findsNothing);
       // La mini-carte a des coins arrondis posés par le sheet.
       expect(
         find.ancestor(

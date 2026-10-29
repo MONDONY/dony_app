@@ -52,6 +52,11 @@ class AmendmentSenderCard extends StatelessWidget {
 
   static bool shouldShow(BidModel bid) => _current(bid) != null;
 
+  /// Une demande est encore ouverte (l'expéditeur peut l'annuler ou la régler) :
+  /// seul cas où la carte relève de « À traiter ». Une demande close (refusée,
+  /// expirée, annulée, paiement échoué) ne fait que renseigner.
+  static bool needsReply(BidModel bid) => _openOf(bid) != null;
+
   @override
   Widget build(BuildContext context) {
     final amendment = _current(bid);

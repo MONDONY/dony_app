@@ -159,6 +159,26 @@ void main() {
       expect(AmendmentSenderCard.shouldShow(_bid(null)), isFalse);
     });
 
+    test('sender_needsReply_onlyWhileTheRequestIsOpen', () {
+      for (final s in [
+        BidAmendmentStatus.authorizationPending,
+        BidAmendmentStatus.proposed,
+        BidAmendmentStatus.commissionPending,
+        BidAmendmentStatus.paymentPending,
+      ]) {
+        expect(AmendmentSenderCard.needsReply(_bid(_am(status: s))), isTrue);
+      }
+      for (final s in [
+        BidAmendmentStatus.declined,
+        BidAmendmentStatus.expired,
+        BidAmendmentStatus.cancelled,
+        BidAmendmentStatus.accepted,
+      ]) {
+        expect(AmendmentSenderCard.needsReply(_bid(_am(status: s))), isFalse);
+      }
+      expect(AmendmentSenderCard.needsReply(_bid(null)), isFalse);
+    });
+
     test('traveler_accepted_shownOnlyWhileAcceptedBid', () {
       final accepted = _am(status: BidAmendmentStatus.accepted);
       expect(AmendmentTravelerCard.shouldShow(_bid(accepted)), isTrue);
