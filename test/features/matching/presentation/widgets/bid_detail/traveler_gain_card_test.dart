@@ -387,9 +387,11 @@ void main() {
       });
     }
 
-    // Espèces : le moyen prime sur le statut (comportement historique, la
-    // commission est prélevée à part quel que soit l'état du colis).
-    for (final status in allStatuses) {
+    // Espèces : le moyen prime sur le statut tant que le colis vit ou est
+    // livré (la commission est prélevée à part). Un colis clos sans livraison
+    // n'encaisse rien : le statut prime, même rendu que pour une carte.
+    final cashLive = [...inProgress, ...done];
+    for (final status in cashLive) {
       testWidgets('espèces · $status → « VOUS ENCAISSEZ »', (tester) async {
         await _pump(
           tester,
@@ -407,6 +409,28 @@ void main() {
         );
         expect(find.text('PAIEMENT'), findsNothing);
         expect(find.text('🔒 séquestré'), findsNothing);
+      });
+    }
+
+    for (final status in notCompleted) {
+      testWidgets('espèces · $status → « PAIEMENT » / « Paiement annulé. »', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          _bid(
+            status: status,
+            method: BidPaymentMethod.cash,
+            senderTotal: 50.4,
+          ),
+        );
+        expect(find.text('PAIEMENT'), findsOneWidget);
+        expect(find.text('Paiement annulé.'), findsOneWidget);
+        expect(find.text('VOUS ENCAISSEZ'), findsNothing);
+        expect(find.text('ESPÈCES'), findsNothing);
+        expect(find.textContaining('en espèces'), findsNothing);
+        expect(find.text('VOUS RECEVEZ'), findsNothing);
+        expect(find.textContaining('séquestré'), findsNothing);
       });
     }
   });
@@ -522,6 +546,50 @@ void main() {
           _bid(status: status, total: 20000, currency: 'XOF'),
         );
         expect(find.text(formatPriceIn(20000, 'XOF')), findsOneWidget);
+        expect(find.textContaining('€'), findsNothing);
+      });
+    }
+
+    for (final status in [
+      'CANCELLED',
+      'REJECTED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+    ]) {
+      testWidgets('XOF espèces · $status → paiement annulé, aucun « € »', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          _bid(
+            status: status,
+            method: BidPaymentMethod.cash,
+            total: 20000,
+            currency: 'XOF',
+          ),
+        );
+        expect(find.text('PAIEMENT'), findsOneWidget);
+        expect(find.text('Paiement annulé.'), findsOneWidget);
+        expect(find.text('VOUS ENCAISSEZ'), findsNothing);
+        expect(find.textContaining('€'), findsNothing);
+      });
+    }
+
+    for (final status in ['ACCEPTED', 'COMPLETED']) {
+      testWidgets('XOF espèces · $status → « VOUS ENCAISSEZ » en francs CFA', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          _bid(
+            status: status,
+            method: BidPaymentMethod.cash,
+            total: 20000,
+            currency: 'XOF',
+          ),
+        );
+        expect(find.text('VOUS ENCAISSEZ'), findsOneWidget);
         expect(find.textContaining('€'), findsNothing);
       });
     }

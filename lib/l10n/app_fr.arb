@@ -22100,6 +22100,8 @@
   "@bidDetailRequestSupplementSubtitle": {"description": "Sous-titre de la tuile supplément (traveler_options_sheet.dart)"},
   "bidDetailScanBlockedSupplement": "Un supplément attend la réponse de l'expéditeur : le scan est bloqué.",
   "@bidDetailScanBlockedSupplement": {"description": "Carte d'information du corps de la vue voyageur, quand le bouton de scan du footer est désactivé (traveler_info_cards.dart)"},
+  "bidDetailScanBlockedSupplementCommission": "Le scan est bloqué tant que vous n'avez pas validé le paiement de votre commission.",
+  "@bidDetailScanBlockedSupplementCommission": {"description": "Carte d'information du corps de la vue voyageur, à la place de bidDetailScanBlockedSupplement quand le supplément attend la validation de la commission espèces du voyageur lui-même (SupplementTravelerCard.needsReply) : « Valider le paiement » est dans « À traiter » (traveler_info_cards.dart)"},
   "supplementRequestTitle": "Demander un supplément",
   "@supplementRequestTitle": {"description": "Titre de la feuille de demande de supplément (supplement_request_sheet.dart)"},
   "supplementRequestIntro": "Le colis ne correspond pas à la déclaration ? Demandez la différence à l'expéditeur. Il paie par le même moyen que le colis, ou refuse.",

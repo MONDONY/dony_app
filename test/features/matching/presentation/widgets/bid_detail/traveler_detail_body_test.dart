@@ -57,6 +57,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockConvBloc
@@ -325,6 +326,30 @@ void main() {
       'ACCEPTED présence confirmée': (
         _bid('ACCEPTED', voyageurConfirmed: true, handoverDeadline: _future),
         ['billet', 'hero', ...base],
+      ),
+      // « À traiter » ET informations dans le même scénario : la commission
+      // à valider va sous « À traiter », le scan bloqué et le report décidé
+      // restent des informations, dans cet ordre.
+      'ACCEPTED confirmée, commission à valider, report décidé': (
+        _bid(
+          'ACCEPTED',
+          voyageurConfirmed: true,
+          handoverDeadline: _future,
+          paymentMethod: BidPaymentMethod.cash,
+          supplement: _supplement(
+            BidSupplementStatus.commissionPending,
+            cash: true,
+          ),
+          reschedule: _reschedule(pending: false),
+        ),
+        [
+          'billet',
+          'hero',
+          'todo',
+          'info-scan-blocked',
+          'info-reschedule',
+          ...base,
+        ],
       ),
       'ACCEPTED date limite dépassée': (
         _bid('ACCEPTED', handoverDeadline: _past),
@@ -750,6 +775,114 @@ void main() {
     });
   });
 
+  // ── Une carte qui change de section garde son état (GlobalKey) ────────────
+  group('une carte qui change de section n\'est pas remontée', () {
+    Element innerStateful(WidgetTester tester, Type card) => tester.element(
+      find
+          .descendant(
+            of: find.byType(card),
+            matching: find.byWidgetPredicate((w) => w is StatefulWidget),
+          )
+          .first,
+    );
+
+    testWidgets('supplément : « À traiter » → information, même élément', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          paymentMethod: BidPaymentMethod.cash,
+          supplement: _supplement(
+            BidSupplementStatus.commissionPending,
+            cash: true,
+          ),
+        ),
+      );
+      expect(
+        _inSection('todo', find.byType(SupplementTravelerCard)),
+        findsOneWidget,
+      );
+      final card = tester.element(find.byType(SupplementTravelerCard));
+      final inner = innerStateful(tester, SupplementTravelerCard);
+
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          paymentMethod: BidPaymentMethod.cash,
+          supplement: _supplement(BidSupplementStatus.paid, cash: true),
+        ),
+      );
+      expect(_section('todo'), findsNothing);
+      expect(
+        _inSection('info-supplement', find.byType(SupplementTravelerCard)),
+        findsOneWidget,
+      );
+      expect(tester.element(find.byType(SupplementTravelerCard)), same(card));
+      expect(innerStateful(tester, SupplementTravelerCard), same(inner));
+    });
+
+    testWidgets('supplément : information → « À traiter », même élément', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          paymentMethod: BidPaymentMethod.cash,
+          supplement: _supplement(BidSupplementStatus.paid, cash: true),
+        ),
+      );
+      final card = tester.element(find.byType(SupplementTravelerCard));
+
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          paymentMethod: BidPaymentMethod.cash,
+          supplement: _supplement(
+            BidSupplementStatus.commissionPending,
+            cash: true,
+          ),
+        ),
+      );
+      expect(
+        _inSection('todo', find.byType(SupplementTravelerCard)),
+        findsOneWidget,
+      );
+      expect(tester.element(find.byType(SupplementTravelerCard)), same(card));
+    });
+
+    testWidgets('modification : « À traiter » → information, même élément', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid('ACCEPTED', amendments: [_amendment(BidAmendmentStatus.proposed)]),
+      );
+      expect(
+        _inSection('todo', find.byType(AmendmentTravelerCard)),
+        findsOneWidget,
+      );
+      final card = tester.element(find.byType(AmendmentTravelerCard));
+      final inner = innerStateful(tester, AmendmentTravelerCard);
+
+      await _pump(
+        tester,
+        _bid('ACCEPTED', amendments: [_amendment(BidAmendmentStatus.accepted)]),
+      );
+      expect(_section('todo'), findsNothing);
+      expect(
+        _inSection('info-amendment', find.byType(AmendmentTravelerCard)),
+        findsOneWidget,
+      );
+      expect(tester.element(find.byType(AmendmentTravelerCard)), same(card));
+      expect(innerStateful(tester, AmendmentTravelerCard), same(inner));
+    });
+  });
+
   // ── Modification du colis, chaque statut ──────────────────────────────────
   group('modification du colis', () {
     for (final s in [
@@ -957,6 +1090,100 @@ void main() {
         findsOneWidget,
       );
       expect(find.text(amendmentBlocked), findsNothing);
+    });
+
+    const commissionBlocked =
+        "Le scan est bloqué tant que vous n'avez pas validé le paiement de "
+        'votre commission.';
+    final commissionPendingBid = _bid(
+      'ACCEPTED',
+      voyageurConfirmed: true,
+      paymentMethod: BidPaymentMethod.cash,
+      supplement: _supplement(
+        BidSupplementStatus.commissionPending,
+        cash: true,
+      ),
+    );
+
+    testWidgets(
+      'commission à valider : le scan bloqué parle de la commission, pas de '
+      "l'expéditeur",
+      (tester) async {
+        await _pump(tester, commissionPendingBid);
+        expect(
+          _inSection('info-scan-blocked', find.text(commissionBlocked)),
+          findsOneWidget,
+        );
+        expect(find.text(supplementBlocked), findsNothing);
+        // « À traiter » demande bien de valider le paiement.
+        expect(
+          _inSection('todo', find.byType(SupplementTravelerCard)),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('commission à valider, en anglais', (tester) async {
+      useEnglish();
+      await _pump(tester, commissionPendingBid);
+      expect(
+        _inSection(
+          'info-scan-blocked',
+          find.text(
+            'Scanning is blocked until you confirm payment of your commission.',
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          "An extra charge is awaiting the sender's reply: scanning is "
+          'blocked.',
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('supplément proposé (attend l\'expéditeur), en anglais', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          voyageurConfirmed: true,
+          supplement: _supplement(BidSupplementStatus.proposed),
+        ),
+      );
+      expect(
+        _inSection(
+          'info-scan-blocked',
+          find.text(
+            "An extra charge is awaiting the sender's reply: scanning is "
+            'blocked.',
+          ),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('supplément paymentPending : texte « expéditeur » conservé', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          voyageurConfirmed: true,
+          supplement: _supplement(BidSupplementStatus.paymentPending),
+        ),
+      );
+      expect(
+        _inSection('info-scan-blocked', find.text(supplementBlocked)),
+        findsOneWidget,
+      );
+      expect(find.text(commissionBlocked), findsNothing);
     });
 
     testWidgets('modification bloquante : phrase du scan bloqué', (
@@ -1301,6 +1528,14 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
     }
 
+    // Le haut de la carte visée est dans la fenêtre visible (écran de test de
+    // 700 px de haut), pas seulement « ça a défilé ».
+    void expectOnScreen(WidgetTester tester, Type card) {
+      final top = tester.getTopLeft(find.byType(card)).dy;
+      expect(top, greaterThanOrEqualTo(0));
+      expect(top, lessThan(700));
+    }
+
     testWidgets('?action=supplement : la carte en « À traiter » est amenée à '
         'l\'écran', (tester) async {
       await _pump(
@@ -1318,6 +1553,7 @@ void main() {
       );
       await settleScroll(tester);
       expect(offset(tester), greaterThan(0));
+      expectOnScreen(tester, SupplementTravelerCard);
     });
 
     testWidgets('?action=supplement : supplément payé (information), la carte '
@@ -1330,6 +1566,7 @@ void main() {
       );
       await settleScroll(tester);
       expect(offset(tester), greaterThan(0));
+      expectOnScreen(tester, SupplementTravelerCard);
     });
 
     testWidgets('?action=amendment : la carte de la modification est amenée '
@@ -1342,6 +1579,7 @@ void main() {
       );
       await settleScroll(tester);
       expect(offset(tester), greaterThan(0));
+      expectOnScreen(tester, AmendmentTravelerCard);
     });
 
     testWidgets('?action=amendment : modification close (information), la '
@@ -1354,6 +1592,7 @@ void main() {
       );
       await settleScroll(tester);
       expect(offset(tester), greaterThan(0));
+      expectOnScreen(tester, AmendmentTravelerCard);
     });
 
     testWidgets('sans carte : pas de défilement', (tester) async {
@@ -1398,6 +1637,7 @@ void main() {
       await settleScroll(tester);
       final first = offset(tester);
       expect(first, greaterThan(0));
+      expectOnScreen(tester, AmendmentTravelerCard);
 
       // Remonte à la main : un rafraîchissement ne redéfile pas.
       tester

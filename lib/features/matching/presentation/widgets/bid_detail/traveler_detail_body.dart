@@ -35,11 +35,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 /// ouvrant un bottom sheet ([TravelerTransportSection]) ; badge d'évaluation
 /// si déjà notée.
 ///
-/// Une carte qui change de section (supplément ou modification qui n'attend
-/// plus le voyageur, hero qui gagne ou perd son bouton) change de
-/// `KeyedSubtree` : elle est remontée et ses cubits sont recréés (les
-/// événements `*_viewed` peuvent repartir). Choix assumé : les autres sections
-/// ne bougent pas.
+/// Une carte qui change de section ne perd pas son état : le supplément et la
+/// modification portent une `GlobalKey` (cible du défilement `?action=`), qui
+/// les déplace de « À traiter » à l'information (ou l'inverse) SANS les
+/// remonter. Leur `State` est gardé, leurs cubits ne sont pas recréés et les
+/// événements `*_viewed` ne repartent pas. Seul le hero, sans clé, est remonté
+/// quand il gagne ou perd son bouton (choix assumé). Les autres sections ne
+/// bougent pas.
 ///
 /// Requiert les BLoCs ambiants suivants (fournis par l'écran parent) :
 ///   - [CancellationBloc] (via [TravelerHeroCard] et la procédure

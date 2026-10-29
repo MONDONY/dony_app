@@ -21593,6 +21593,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Un supplément attend la réponse de l\'expéditeur : le scan est bloqué.';
 
   @override
+  String get bidDetailScanBlockedSupplementCommission =>
+      'Le scan est bloqué tant que vous n\'avez pas validé le paiement de votre commission.';
+
+  @override
   String get supplementRequestTitle => 'Demander un supplément';
 
   @override

@@ -667,6 +667,75 @@ void main() {
     final past = DateTime.now().subtract(const Duration(hours: 2));
     final future = DateTime.now().add(const Duration(days: 1));
 
+    // `isShown` recopie à la main la liste des statuts du mapping : ce test la
+    // compare, pour chaque statut de l'inventaire et chaque signalement, à ce
+    // que la carte rend réellement (hauteur nulle = SizedBox.shrink).
+    const everyStatus = [
+      'PENDING',
+      'PAYMENT_ESCROWED',
+      'AWAITING_PAYMENT',
+      'ACCEPTED',
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'COMPLETED',
+      'DELIVERED',
+      'REJECTED',
+      'CANCELLED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+      'NEGOTIATING',
+      'NEGOTIATION_CLOSED',
+      'UNKNOWN_FUTURE_STATUS',
+      '',
+    ];
+    final variants = <String, BidModel Function(String)>{
+      'sans signalement': (status) => heroBid(status),
+      'date limite dépassée': (status) => heroBid(status, windowEnd: past),
+      'date limite à venir': (status) => heroBid(status, windowEnd: future),
+      'absence de l\'expéditeur signalée': (status) =>
+          heroBid(status, cancellationNoShowStatus: 'PENDING_CONFIRMATION'),
+      'absence de l\'expéditeur contestée': (status) =>
+          heroBid(status, cancellationNoShowStatus: 'CONTESTED'),
+      'absence de l\'expéditeur confirmée (non lue)': (status) =>
+          heroBid(status, cancellationNoShowStatus: 'CONFIRMED'),
+      'absence à la livraison signalée par le voyageur': (status) => heroBid(
+        status,
+        deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+        reportedByTraveler: true,
+      ),
+      'absence à la livraison signalée contre le voyageur': (status) => heroBid(
+        status,
+        deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+        reportedByTraveler: false,
+      ),
+      'absence à la livraison contestée': (status) => heroBid(
+        status,
+        deliveryNoShowStatus: 'CONTESTED',
+        reportedByTraveler: false,
+      ),
+    };
+    for (final MapEntry(key: variant, value: make) in variants.entries) {
+      for (final status in everyStatus) {
+        testWidgets('isShown = la carte rend quelque chose : $status, '
+            '$variant', (tester) async {
+          final bid = make(status);
+          await _pump(tester, bid);
+          final rendered = tester.getSize(find.byType(TravelerHeroCard));
+          expect(
+            TravelerHeroCard.isShown(bid),
+            rendered.height > 0,
+            reason: 'isShown et le rendu de la carte divergent',
+          );
+          // Une carte à bouton est forcément une carte affichée.
+          if (TravelerHeroCard.hasAction(bid)) {
+            expect(TravelerHeroCard.isShown(bid), isTrue);
+          }
+        });
+      }
+    }
+
     test('date limite de dépôt dépassée (ACCEPTED) : action', () {
       expect(
         TravelerHeroCard.hasAction(heroBid('ACCEPTED', windowEnd: past)),

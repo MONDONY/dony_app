@@ -34833,6 +34833,12 @@ abstract class AppLocalizations {
   /// **'Un supplément attend la réponse de l\'expéditeur : le scan est bloqué.'**
   String get bidDetailScanBlockedSupplement;
 
+  /// Carte d'information du corps de la vue voyageur, à la place de bidDetailScanBlockedSupplement quand le supplément attend la validation de la commission espèces du voyageur lui-même (SupplementTravelerCard.needsReply) : « Valider le paiement » est dans « À traiter » (traveler_info_cards.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le scan est bloqué tant que vous n\'avez pas validé le paiement de votre commission.'**
+  String get bidDetailScanBlockedSupplementCommission;
+
   /// Titre de la feuille de demande de supplément (supplement_request_sheet.dart)
   ///
   /// In fr, this message translates to:

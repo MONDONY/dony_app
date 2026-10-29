@@ -21447,6 +21447,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'An extra charge is awaiting the sender\'s reply: scanning is blocked.';
 
   @override
+  String get bidDetailScanBlockedSupplementCommission =>
+      'Scanning is blocked until you confirm payment of your commission.';
+
+  @override
   String get supplementRequestTitle => 'Request an extra charge';
 
   @override

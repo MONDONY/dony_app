@@ -76,7 +76,10 @@ class TravelerGainCard extends StatelessWidget {
     String? note;
     _Pill? pill;
 
-    if (isCash) {
+    // Le statut du colis prime sur l'espèces pour un colis clos sans livraison
+    // (refusé, annulé, absent, expiré, colis refusé) : rien ne sera encaissé.
+    // COMPLETED / DELIVERED restent « VOUS ENCAISSEZ ».
+    if (isCash && !_cancelled.contains(bid.status)) {
       topLabel = l.bidDetailGainCashTopLabel;
       final net = travelerNetAmount(bid);
       final gross = travelerCashGrossAmount(bid);

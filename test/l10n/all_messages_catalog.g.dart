@@ -7452,6 +7452,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailRequestSupplementSubtitle': (l) =>
       l.bidDetailRequestSupplementSubtitle,
   'bidDetailScanBlockedSupplement': (l) => l.bidDetailScanBlockedSupplement,
+  'bidDetailScanBlockedSupplementCommission': (l) =>
+      l.bidDetailScanBlockedSupplementCommission,
   'supplementRequestTitle': (l) => l.supplementRequestTitle,
   'supplementRequestIntro': (l) => l.supplementRequestIntro,
   'supplementRequestSuggestionsLabel': (l) =>

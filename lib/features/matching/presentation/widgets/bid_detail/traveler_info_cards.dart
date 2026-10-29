@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,9 @@ class TravelerAwaitingPaymentCard extends StatelessWidget {
 }
 
 /// Pourquoi le bouton de scan du footer est éteint : un supplément attend la
-/// réponse de l'expéditeur, ou une modification attend celle du voyageur.
+/// réponse de l'expéditeur (ou, en espèces, la validation de la commission du
+/// voyageur, que « À traiter » lui demande), ou une modification attend celle
+/// du voyageur.
 class TravelerScanBlockedCard extends StatelessWidget {
   const TravelerScanBlockedCard({super.key, required this.bid});
 
@@ -45,10 +48,20 @@ class TravelerScanBlockedCard extends StatelessWidget {
     key: const Key('traveler-scan-blocked-card'),
     type: DonyStatusBannerType.info,
     iconAsset: 'scan-line',
-    message: TravelerStickyBar.scanBlockedBySupplement(bid)
-        ? context.l10n.bidDetailScanBlockedSupplement
-        : context.l10n.amendmentScanBlocked,
+    message: _message(context),
   );
+
+  /// Quand c'est au voyageur de valider sa commission, « À traiter » le lui
+  /// demande : la carte ne doit pas dire que l'expéditeur doit répondre.
+  String _message(BuildContext context) {
+    final l = context.l10n;
+    if (!TravelerStickyBar.scanBlockedBySupplement(bid)) {
+      return l.amendmentScanBlocked;
+    }
+    return SupplementTravelerCard.needsReply(bid)
+        ? l.bidDetailScanBlockedSupplementCommission
+        : l.bidDetailScanBlockedSupplement;
+  }
 }
 
 /// Pourquoi le bouton de remise du footer est éteint avant le départ du

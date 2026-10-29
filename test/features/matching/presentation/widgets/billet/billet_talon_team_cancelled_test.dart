@@ -237,14 +237,15 @@ void main() {
   group('« Contacter le support »', () {
     Future<List<GoRouterState>> pumpRouter(
       WidgetTester tester,
-      BidModel bid,
-    ) async {
+      BidModel bid, {
+      bool isSender = true,
+    }) async {
       final visited = <GoRouterState>[];
       final router = GoRouter(
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, _) => Scaffold(body: _talon(bid, true)),
+            builder: (_, _) => Scaffold(body: _talon(bid, isSender)),
           ),
           GoRoute(
             path: '/support',
@@ -298,6 +299,36 @@ void main() {
       final visited = await pumpRouter(
         tester,
         _bid(id: 'abcdef12-3456-7890', rejectionReason: 'TEAM_CANCELLED'),
+      );
+      final draft = visited.single.extra! as SupportTicketDraft;
+      expect(draft.subject, "Colis ABCDEF12 annulé par l'équipe");
+    });
+
+    // Le voyageur ne reçoit pas le numéro de suivi d'un colis annulé : le
+    // sujet du ticket ne le contient pas, même si le champ est présent.
+    testWidgets('voyageur : jamais le numéro de suivi, début de '
+        'l’identifiant', (tester) async {
+      final visited = await pumpRouter(
+        tester,
+        _bid(
+          id: 'abcdef12-3456-7890',
+          rejectionReason: 'TEAM_TRAVELER_UNAVAILABLE',
+          trackingNumber: 'YAD-0042',
+        ),
+        isSender: false,
+      );
+      final draft = visited.single.extra! as SupportTicketDraft;
+      expect(draft.subject, "Colis ABCDEF12 annulé par l'équipe");
+      expect(draft.subject, isNot(contains('YAD-0042')));
+    });
+
+    testWidgets('voyageur sans numéro : début de l’identifiant', (
+      tester,
+    ) async {
+      final visited = await pumpRouter(
+        tester,
+        _bid(id: 'abcdef12-3456-7890', rejectionReason: 'TEAM_CANCELLED'),
+        isSender: false,
       );
       final draft = visited.single.extra! as SupportTicketDraft;
       expect(draft.subject, "Colis ABCDEF12 annulé par l'équipe");

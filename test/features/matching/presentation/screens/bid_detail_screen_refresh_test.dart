@@ -18,6 +18,9 @@ import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_accept_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_commission_flow.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -25,10 +28,13 @@ import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cub
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
@@ -100,6 +106,8 @@ class _MockSupplementPaymentCubit extends MockCubit<SupplementPaymentState>
 class _MockSupplementRepository extends Mock
     implements BidSupplementRepository {}
 
+class _MockAmendmentRepository extends Mock implements BidAmendmentRepository {}
+
 class _MockBidAcceptanceBloc
     extends MockBloc<BidAcceptanceEvent, acs.BidAcceptanceState>
     implements BidAcceptanceBloc {}
@@ -121,6 +129,7 @@ BidModel _makeBid({
   AddressData? deliveryAddress,
   String? recipientName,
   BidSupplement? supplement,
+  List<BidAmendment> amendments = const [],
 }) => BidModel(
   id: 'bid-001',
   announcementId: 'ann-001',
@@ -140,6 +149,7 @@ BidModel _makeBid({
   deliveryAddress: deliveryAddress,
   recipientName: recipientName,
   supplement: supplement,
+  amendments: amendments,
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
 );
@@ -703,11 +713,29 @@ void main() {
       getIt.registerFactory<SupplementActionCubit>(
         () => SupplementActionCubit(_MockSupplementRepository(), analytics),
       );
+      final amendmentRepo = _MockAmendmentRepository();
+      getIt
+        ..registerFactory<AmendmentActionCubit>(
+          () => AmendmentActionCubit(amendmentRepo, analytics),
+        )
+        ..registerFactory<AmendmentAcceptCubit>(
+          () => AmendmentAcceptCubit(
+            amendmentRepo,
+            analytics,
+            AmendmentCommissionFlow(amendmentRepo, analytics),
+          ),
+        );
     });
 
     tearDown(() {
       if (getIt.isRegistered<SupplementActionCubit>()) {
         getIt.unregister<SupplementActionCubit>();
+      }
+      if (getIt.isRegistered<AmendmentActionCubit>()) {
+        getIt.unregister<AmendmentActionCubit>();
+      }
+      if (getIt.isRegistered<AmendmentAcceptCubit>()) {
+        getIt.unregister<AmendmentAcceptCubit>();
       }
     });
 
@@ -775,6 +803,87 @@ void main() {
           .position
           .pixels;
       expect(offset, greaterThan(0));
+      // Le haut de la carte est dans la fenêtre visible, pas seulement
+      // « ça a défilé ».
+      final top = tester.getTopLeft(find.byType(SupplementTravelerCard)).dy;
+      expect(top, greaterThanOrEqualTo(0));
+      expect(top, lessThan(700));
+    });
+
+    for (final status in [
+      BidAmendmentStatus.proposed,
+      BidAmendmentStatus.declined,
+    ]) {
+      testWidgets('?action=amendment (${status.name}) : la carte de la '
+          'modification est amenée à l\'écran', (tester) async {
+        final bid = _makeBid(
+          paymentMethod: BidPaymentMethod.stripe,
+          amendments: [
+            BidAmendment(
+              id: 'am-1',
+              status: status,
+              rail: 'CASH',
+              addedWeightKg: 3,
+              grossAmount: 26.8,
+              netAmount: 23.5,
+              commissionAmount: 3.3,
+              blocksHandover: status.isOpen,
+            ),
+          ],
+        );
+        await _pump(
+          tester,
+          bid: bid,
+          authBloc: travelerViewer(),
+          focusAmendment: true,
+          size: const Size(800, 700),
+        );
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byType(AmendmentTravelerCard), findsOneWidget);
+        final offset = tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position
+            .pixels;
+        expect(offset, greaterThan(0));
+        final top = tester.getTopLeft(find.byType(AmendmentTravelerCard)).dy;
+        expect(top, greaterThanOrEqualTo(0));
+        expect(top, lessThan(700));
+      });
+    }
+
+    testWidgets('sans paramètre : pas de défilement vers la modification', (
+      tester,
+    ) async {
+      final bid = _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        amendments: [
+          const BidAmendment(
+            id: 'am-1',
+            status: BidAmendmentStatus.proposed,
+            rail: 'CASH',
+            addedWeightKg: 3,
+            grossAmount: 26.8,
+            netAmount: 23.5,
+            commissionAmount: 3.3,
+            blocksHandover: true,
+          ),
+        ],
+      );
+      await _pump(
+        tester,
+        bid: bid,
+        authBloc: travelerViewer(),
+        size: const Size(800, 700),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+      final offset = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .pixels;
+      expect(offset, 0);
     });
   });
 

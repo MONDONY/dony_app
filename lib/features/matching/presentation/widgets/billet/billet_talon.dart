@@ -427,7 +427,7 @@ class _TeamCancelledBlock extends StatelessWidget {
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
-        _TeamSupportCta(bid: bid),
+        _TeamSupportCta(bid: bid, isSender: isSender),
       ],
     );
   }
@@ -439,12 +439,18 @@ class _TeamCancelledBlock extends StatelessWidget {
 /// sans qu'il touche « Envoyer ».
 class _TeamSupportCta extends StatelessWidget {
   final BidModel bid;
+  final bool isSender;
 
-  const _TeamSupportCta({required this.bid});
+  const _TeamSupportCta({required this.bid, required this.isSender});
 
   /// Numéro de suivi, sinon le début de l'identifiant (lisible par l'équipe).
+  /// Le voyageur ne voit le numéro qu'à partir de la remise
+  /// ([travelerVisibleTrackingNumber]) : sur un colis annulé, il n'y a droit
+  /// qu'à l'identifiant.
   String get _parcelNumber {
-    final tracking = bid.trackingNumber?.trim();
+    final tracking =
+        (isSender ? bid.trackingNumber : travelerVisibleTrackingNumber(bid))
+            ?.trim();
     if (tracking != null && tracking.isNotEmpty) return tracking;
     final id = bid.id;
     return (id.length > 8 ? id.substring(0, 8) : id).toUpperCase();

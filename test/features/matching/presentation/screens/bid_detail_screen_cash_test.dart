@@ -260,12 +260,34 @@ void main() {
 
       await _pump(
         tester,
-        bid: _makeBid(status: 'REJECTED'),
+        bid: _makeBid(status: 'ACCEPTED'),
         authBloc: authBloc,
       );
 
       // Dans le redesign, TravelerGainCard affiche 'ESPÈCES' pour les paiements cash.
       expect(find.text('ESPÈCES'), findsOneWidget);
+      expect(find.text('VOUS ENCAISSEZ'), findsOneWidget);
+    });
+
+    testWidgets('cash + colis refusé (REJECTED) → paiement annulé, pas '
+        'd\'encaissement', (tester) async {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+      await _pump(
+        tester,
+        bid: _makeBid(status: 'REJECTED'),
+        authBloc: authBloc,
+      );
+
+      expect(find.text('ESPÈCES'), findsNothing);
+      expect(find.text('VOUS ENCAISSEZ'), findsNothing);
+      expect(find.text('Paiement annulé.'), findsOneWidget);
     });
 
     testWidgets('paymentMethod=stripe → label ESPÈCES absent', (tester) async {
