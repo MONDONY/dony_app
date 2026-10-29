@@ -53,8 +53,12 @@ BidModel _bid({
   DateTime? departureAt,
   bool supplementRequestAllowed = false,
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+  bool? contactWindowOpen,
+  DateTime? returnDeadline,
 }) => BidModel(
   id: 'b1',
+  contactWindowOpen: contactWindowOpen,
+  returnDeadline: returnDeadline,
   supplementRequestAllowed: supplementRequestAllowed,
   paymentMethod: paymentMethod,
   announcementId: 'a1',
@@ -581,14 +585,18 @@ void main() {
       transit,
       delete,
     ];
+    // Le contact suit la même condition que la carte « Expéditeur » du corps
+    // (`bidAllowsContactFor`) : proposer « Contacter » là où la carte ne
+    // montre pas le bouton menait à une ouverture de discussion refusée.
     const base = [contact, details, report];
+    const noContact = [details, report];
     final soon = DateTime.now().add(const Duration(days: 2));
     final gone = DateTime.now().subtract(const Duration(hours: 2));
 
     final cases = <String, (BidModel, List<String>)>{
-      'PENDING': (_bid(status: 'PENDING'), base),
-      'PAYMENT_ESCROWED': (_bid(status: 'PAYMENT_ESCROWED'), base),
-      'AWAITING_PAYMENT': (_bid(status: 'AWAITING_PAYMENT'), base),
+      'PENDING': (_bid(status: 'PENDING'), noContact),
+      'PAYMENT_ESCROWED': (_bid(status: 'PAYMENT_ESCROWED'), noContact),
+      'AWAITING_PAYMENT': (_bid(status: 'AWAITING_PAYMENT'), noContact),
       'ACCEPTED': (_bid(), [...base, refuse, cancel]),
       'HANDED_OVER avant le départ': (
         _bid(status: 'HANDED_OVER', departureAt: soon),
@@ -602,13 +610,42 @@ void main() {
       'ARRIVED': (_bid(status: 'ARRIVED'), base),
       'COMPLETED': (_bid(status: 'COMPLETED'), base),
       'DELIVERED': (_bid(status: 'DELIVERED'), base),
-      'REJECTED': (_bid(status: 'REJECTED'), [...base, delete]),
-      'CANCELLED': (_bid(status: 'CANCELLED'), [...base, delete]),
+      'REJECTED': (_bid(status: 'REJECTED'), [...noContact, delete]),
+      // Annulé : le contact n'existe que pendant la fenêtre de 48 h ou un
+      // retour de colis en cours, décidés par le serveur (`contactWindowOpen`).
+      'CANCELLED fenêtre fermée': (
+        _bid(status: 'CANCELLED', contactWindowOpen: false),
+        [...noContact, delete],
+      ),
+      'CANCELLED sans le champ (ancien back)': (
+        _bid(status: 'CANCELLED'),
+        [...noContact, delete],
+      ),
+      'CANCELLED fenêtre de 48 h ouverte': (
+        _bid(status: 'CANCELLED', contactWindowOpen: true),
+        [...base, delete],
+      ),
+      'CANCELLED retour du colis en cours': (
+        _bid(
+          status: 'CANCELLED',
+          contactWindowOpen: true,
+          returnDeadline: soon,
+        ),
+        [...base, delete],
+      ),
+      'CANCELLED délai de retour écoulé (serveur)': (
+        _bid(
+          status: 'CANCELLED',
+          contactWindowOpen: false,
+          returnDeadline: gone,
+        ),
+        [...noContact, delete],
+      ),
       // Le serveur ne laisse masquer que REJECTED et CANCELLED (409
       // invalid-bid-status sinon) : pas d'entrée pour les trois autres.
-      'NO_SHOW': (_bid(status: 'NO_SHOW'), base),
-      'EXPIRED': (_bid(status: 'EXPIRED'), base),
-      'PARCEL_REFUSED': (_bid(status: 'PARCEL_REFUSED'), base),
+      'NO_SHOW': (_bid(status: 'NO_SHOW'), noContact),
+      'EXPIRED': (_bid(status: 'EXPIRED'), noContact),
+      'PARCEL_REFUSED': (_bid(status: 'PARCEL_REFUSED'), noContact),
     };
 
     for (final MapEntry(key: name, value: (bid, expected)) in cases.entries) {
@@ -623,6 +660,16 @@ void main() {
         expect(find.text('Partager le suivi'), findsNothing);
       });
     }
+
+    testWidgets('PENDING en anglais : pas de « Contact the sender »', (
+      tester,
+    ) async {
+      useEnglish();
+      await _open(tester, _bid(status: 'PENDING'));
+      expect(find.text('Contact the sender'), findsNothing);
+      expect(find.text('Parcel details'), findsOneWidget);
+      expect(find.text('Report the sender'), findsOneWidget);
+    });
 
     testWidgets('supplément autorisé par le serveur : il s\'ajoute, quel que '
         'soit le statut', (tester) async {

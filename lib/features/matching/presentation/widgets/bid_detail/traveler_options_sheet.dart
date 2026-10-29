@@ -8,6 +8,7 @@ import 'package:dony/features/incident_report/data/repositories/incident_report_
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/confirm_delete_bid.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_refusal_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
@@ -88,21 +89,26 @@ class _TravelerOptionsSheet extends StatelessWidget {
             Text(l.bidDetailOptionsTitle, style: tt.headlineMedium),
             const SizedBox(height: DonySpacing.base),
 
-            // ── Contacter l'expéditeur (always) ────────────────────────────
-            _OptionTile(
-              iconAsset: 'message-circle',
-              iconColor: cs.primary,
-              iconBg: cs.primaryContainer,
-              label: l.bidDetailContactSenderLabel,
-              subtitle: l.bidDetailContactSenderSubtitle,
-              onTap: () {
-                context.pop();
-                outerContext.read<ConversationOpenBloc>().add(
-                  ConversationOpenRequested(bid.id),
-                );
-              },
-            ),
-            const SizedBox(height: DonySpacing.sm),
+            // ── Contacter l'expéditeur ──────────────────────────────────────
+            // Même condition que la carte « Expéditeur » du corps de la
+            // fiche : avant l'acceptation (ou une fois le contact refermé),
+            // la carte n'a pas de bouton et le menu n'en propose pas non plus.
+            if (bidAllowsContactFor(bid)) ...[
+              _OptionTile(
+                iconAsset: 'message-circle',
+                iconColor: cs.primary,
+                iconBg: cs.primaryContainer,
+                label: l.bidDetailContactSenderLabel,
+                subtitle: l.bidDetailContactSenderSubtitle,
+                onTap: () {
+                  context.pop();
+                  outerContext.read<ConversationOpenBloc>().add(
+                    ConversationOpenRequested(bid.id),
+                  );
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
 
             // ── Détails du colis (always) ───────────────────────────────────
             _OptionTile(
