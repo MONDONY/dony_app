@@ -1,6 +1,9 @@
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -13,6 +16,10 @@ import 'package:intl/intl.dart';
 /// Le nom sert de valeur `tile` aux mesures (`bid_detail_tile_opened`,
 /// `bid_detail_todo_tile_shown`) : ne pas le renommer sans migrer PostHog.
 enum SenderTodoTile {
+  /// Modification du colis encore ouverte ([AmendmentSenderCard.needsReply]) :
+  /// l'expéditeur peut l'annuler, la payer, ou attend le voyageur.
+  amendment,
+
   /// Trajet reporté, décision ouverte ([TripRescheduleCard.needsReply]).
   reschedule,
 
@@ -28,6 +35,7 @@ enum SenderTodoTile {
 /// « À traiter » ; hors de ces cas, la carte reste une information du corps
 /// (report déjà décidé) ou n'existe pas.
 List<SenderTodoTile> senderTodoTilesFor(BidModel bid) => [
+  if (AmendmentSenderCard.needsReply(bid)) SenderTodoTile.amendment,
   if (TripRescheduleCard.needsReply(bid)) SenderTodoTile.reschedule,
   if (PrevenirDestinataire.showsDeclined(bid)) SenderTodoTile.recipient,
 ];
@@ -35,6 +43,8 @@ List<SenderTodoTile> senderTodoTilesFor(BidModel bid) => [
 /// Titre de la tuile et de son sheet, repris de la carte.
 String senderTodoTitle(AppLocalizations l, SenderTodoTile tile) =>
     switch (tile) {
+      // « Modification du colis » : le titre de la carte est en capitales.
+      SenderTodoTile.amendment => l.amendmentPaymentContextLabel,
       SenderTodoTile.reschedule => l.bidRescheduleTitle,
       SenderTodoTile.recipient => l.recipientDeclinedSenderTitle,
     };
@@ -45,6 +55,7 @@ String senderTodoSummary(
   BidModel bid,
   SenderTodoTile tile,
 ) => switch (tile) {
+  SenderTodoTile.amendment => _amendmentSummary(l, bid),
   SenderTodoTile.reschedule => switch (bid.reschedule?.decisionDeadline) {
     // Envoyée en UTC (yadony-back #627) : heure de l'appareil, comme la carte.
     final deadline? => l.senderTodoRescheduleSummary(
@@ -58,16 +69,41 @@ String senderTodoSummary(
         : l.senderTodoRecipientSummary,
 };
 
+/// Kilos ajoutés et montant brut de la demande ouverte ; le montant seul
+/// quand elle n'ajoute que des articles.
+String _amendmentSummary(AppLocalizations l, BidModel bid) {
+  final a = AmendmentSenderCard.openRequest(bid);
+  if (a == null) return '';
+  final amount = formatSupplementAmount(a.grossAmount, a.currency);
+  return a.addedWeightKg > 0
+      ? l.senderTodoAmendmentSummary(formatWeightKg(l, a.addedWeightKg), amount)
+      : l.senderTodoAmendmentAmount(amount);
+}
+
 /// Mesure d'affichage de la tuile [tile] pour [bid], dédoublonnée par le
-/// statut du colis.
-///
-/// Point d'extension : une tuile dont la carte émettait un `*_viewed` à son
-/// montage (modification, supplément) rend ici cet événement, avec
-/// `surface: tile` et le statut de la demande, au lieu de
-/// `bid_detail_todo_tile_shown`.
+/// statut du colis. Une tuile dont la carte émettait un `*_viewed` à son
+/// montage a en plus sa mesure de carte ([senderTodoViewed]).
 TodoTileShown senderTodoShown(SenderTodoTile tile, BidModel bid) =>
     TodoTileShown(AnalyticsEvents.bidDetailTodoTileShown, {
       'tile': tile.name,
       'role': 'sender',
       'status': bid.status,
     }, status: bid.status);
+
+/// Mesure de la carte reprise par la tuile [tile], émise à l'affichage de la
+/// tuile en plus de [senderTodoShown] : la carte n'est plus montée tant que la
+/// demande attend une réponse, et son sheet ne la réémet pas à chaque
+/// ouverture. `null` pour une tuile dont la carte n'avait pas de mesure.
+///
+/// Modification : `bid_amendment_viewed` avec `surface: tile`, une fois par
+/// demande et par statut de la demande.
+TodoTileShown? senderTodoViewed(SenderTodoTile tile, BidModel bid) {
+  if (tile != SenderTodoTile.amendment) return null;
+  final a = AmendmentSenderCard.openRequest(bid);
+  if (a == null) return null;
+  return TodoTileShown(AnalyticsEvents.bidAmendmentViewed, {
+    'role': 'sender',
+    'status': a.status.wire,
+    'surface': 'tile',
+  }, status: '${a.id}|${a.status.wire}');
+}

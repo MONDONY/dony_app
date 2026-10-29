@@ -8,21 +8,27 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/recipient_change/recipient_change_cubit.dart';
+import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
+import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_todo_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_todo_tiles.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -30,6 +36,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -42,6 +49,22 @@ class _MockCancellationBloc
     implements CancellationBloc {}
 
 class _MockBidRepository extends Mock implements BidRepository {}
+
+class _MockAmendmentRepository extends Mock implements BidAmendmentRepository {}
+
+BidAmendment _amendment({
+  String id = 'am-1',
+  BidAmendmentStatus status = BidAmendmentStatus.proposed,
+  String rail = BidAmendment.railCash,
+}) => BidAmendment(
+  id: id,
+  status: status,
+  rail: rail,
+  addedWeightKg: 3,
+  grossAmount: 26.8,
+  expiresAt: DateTime.now().toUtc().add(const Duration(hours: 40)),
+  blocksHandover: status.isOpen,
+);
 
 TripRescheduleInfo _reschedule({bool pending = true}) => TripRescheduleInfo(
   id: 'r1',
@@ -57,7 +80,10 @@ BidModel _bid({
   String? recipientAppStatus = 'DECLINED',
   DateTime? replacementRequestedAt,
   TripRescheduleInfo? reschedule,
+  List<BidAmendment> amendments = const [],
 }) => BidModel(
+  amendments: amendments,
+  travelerName: 'Moussa',
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: 'sender-001',
@@ -107,6 +133,7 @@ void main() {
   late _MockCancellationBloc cancellationBloc;
   late StreamController<BidState> bidStates;
   late StreamController<CancellationState> cancellationStates;
+  late _MockAmendmentRepository amendmentRepository;
 
   setUpAll(() async {
     registerFallbackValue(BidDetailRequested('fallback'));
@@ -140,6 +167,11 @@ void main() {
     getIt.registerFactory<RecipientChangeCubit>(
       () => RecipientChangeCubit(_MockBidRepository(), analytics),
     );
+    amendmentRepository = _MockAmendmentRepository();
+    getIt.registerFactory<AmendmentActionCubit>(
+      () => AmendmentActionCubit(amendmentRepository, analytics),
+    );
+    DonySnackbar.clearDedup();
   });
 
   tearDown(() async => getIt.reset());
@@ -154,6 +186,7 @@ void main() {
     double textScale = 1,
     Size? size,
     bool withBlocs = true,
+    SenderTodoSource source = SenderTodoSource.tile,
   }) async {
     if (size != null) {
       tester.view.physicalSize = size;
@@ -163,7 +196,8 @@ void main() {
     final opener = Scaffold(
       body: Builder(
         builder: (context) => TextButton(
-          onPressed: () => openSenderTodoSheet(context, bid, tile),
+          onPressed: () =>
+              openSenderTodoSheet(context, bid, tile, source: source),
           child: const Text('open-todo'),
         ),
       ),
@@ -460,6 +494,384 @@ void main() {
     });
   });
 
+  group('modification du colis', () {
+    BidModel withAmendment(BidAmendment a) =>
+        _bid(status: 'ACCEPTED', recipientAppStatus: null, amendments: [a]);
+
+    Finder cancelButton() => find.byKey(const Key('amendment-cancel-btn'));
+    Finder payButton() => find.descendant(
+      of: footer(),
+      matching: find.byKey(const Key('amendment-pay-btn')),
+    );
+
+    for (final status in [
+      BidAmendmentStatus.proposed,
+      BidAmendmentStatus.authorizationPending,
+    ]) {
+      testWidgets('${status.name} : titre, contenu sans cadre, « Annuler ma '
+          'demande » seul dans le pied', (tester) async {
+        await openTodo(
+          tester,
+          // L'autorisation en attente n'existe que pour la carte.
+          withAmendment(
+            _amendment(
+              status: status,
+              rail: status == BidAmendmentStatus.authorizationPending
+                  ? BidAmendment.railStripe
+                  : BidAmendment.railCash,
+            ),
+          ),
+          SenderTodoTile.amendment,
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('Modification du colis'), findsOneWidget);
+        expect(find.text('MODIFICATION DU COLIS'), findsNothing);
+        expect(find.byType(DetailCard), findsNothing);
+        final card = tester.widget<AmendmentSenderCard>(
+          find.byType(AmendmentSenderCard),
+        );
+        expect(card.framed, isFalse);
+        expect(find.text('En attente de Moussa'), findsOneWidget);
+        expect(
+          find.descendant(of: footer(), matching: cancelButton()),
+          findsOneWidget,
+        );
+        expect(find.byType(DonyButton), findsOneWidget);
+      });
+    }
+
+    testWidgets('commission du voyageur en attente : aucun bouton', (
+      tester,
+    ) async {
+      await openTodo(
+        tester,
+        withAmendment(_amendment(status: BidAmendmentStatus.commissionPending)),
+        SenderTodoTile.amendment,
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Modification du colis'), findsOneWidget);
+      expect(find.byType(DonyButton), findsNothing);
+    });
+
+    testWidgets('acceptée, mobile money : « Payer » seul dans le pied', (
+      tester,
+    ) async {
+      await openTodo(
+        tester,
+        withAmendment(
+          _amendment(
+            status: BidAmendmentStatus.paymentPending,
+            rail: BidAmendment.railPawapay,
+          ),
+        ),
+        SenderTodoTile.amendment,
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Modification acceptée par Moussa'), findsOneWidget);
+      expect(payButton(), findsOneWidget);
+      expect(find.byType(DonyButton), findsOneWidget);
+      expect(cancelButton(), findsNothing);
+    });
+
+    testWidgets('le pied lit le cubit d\'action du wrapper et le BidBloc', (
+      tester,
+    ) async {
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+      );
+
+      final inFooter = tester.element(cancelButton());
+      expect(inFooter.read<AmendmentActionCubit>(), isNotNull);
+      expect(inFooter.read<BidBloc>(), same(bidBloc));
+    });
+
+    testWidgets('« Annuler ma demande » confirme, annule, puis la feuille se '
+        'ferme, confirme et relit le colis', (tester) async {
+      when(() => amendmentRepository.cancel('bid-001', 'am-1')).thenAnswer(
+        (_) async => _amendment(status: BidAmendmentStatus.cancelled),
+      );
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+      );
+
+      await tester.tap(cancelButton());
+      await tester.pumpAndSettle();
+      expect(find.text('Annuler votre demande ?'), findsOneWidget);
+      verifyNever(() => amendmentRepository.cancel(any(), any()));
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.widgetWithText(FilledButton, 'Annuler ma demande'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verify(() => amendmentRepository.cancel('bid-001', 'am-1')).called(1);
+      expect(find.text('Modification du colis'), findsNothing);
+      expect(find.text('Demande annulée'), findsOneWidget);
+      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.bidAmendmentCancelled, any()),
+      ).called(1);
+    });
+
+    testWidgets('pendant l\'annulation : bouton en chargement', (tester) async {
+      final pending = Completer<BidAmendment>();
+      when(
+        () => amendmentRepository.cancel(any(), any()),
+      ).thenAnswer((_) => pending.future);
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+      );
+
+      await tester.tap(cancelButton());
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.widgetWithText(FilledButton, 'Annuler ma demande'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final button = tester.widget<DonyButton>(cancelButton());
+      expect(button.isLoading, isTrue);
+      expect(button.onPressed, isNull);
+      expect(find.text('Modification du colis'), findsOneWidget);
+
+      pending.complete(_amendment(status: BidAmendmentStatus.cancelled));
+      await tester.pumpAndSettle();
+      expect(find.text('Modification du colis'), findsNothing);
+    });
+
+    testWidgets('annulation refusée : la feuille reste, l\'erreur s\'affiche '
+        'et le colis est relu', (tester) async {
+      when(() => amendmentRepository.cancel(any(), any())).thenThrow(
+        const ConflictException(
+          'déjà traitée',
+          code: 'amendment-not-cancellable',
+        ),
+      );
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+      );
+
+      await tester.tap(cancelButton());
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.widgetWithText(FilledButton, 'Annuler ma demande'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Modification du colis'), findsOneWidget);
+      expect(find.text('Demande annulée'), findsNothing);
+      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.bidAmendmentActionFailed, {
+          'action': 'cancel',
+          'error_code': 'amendment-not-cancellable',
+        }),
+      ).called(1);
+    });
+
+    testWidgets('suit le colis rechargé : proposée puis acceptée en mobile '
+        'money, le pied passe d\'« Annuler » à « Payer »', (tester) async {
+      await openTodo(
+        tester,
+        withAmendment(_amendment(rail: BidAmendment.railPawapay)),
+        SenderTodoTile.amendment,
+      );
+      expect(cancelButton(), findsOneWidget);
+
+      bidStates.add(
+        BidDetailLoaded(
+          withAmendment(
+            _amendment(
+              status: BidAmendmentStatus.paymentPending,
+              rail: BidAmendment.railPawapay,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Modification du colis'), findsOneWidget);
+      expect(cancelButton(), findsNothing);
+      expect(payButton(), findsOneWidget);
+    });
+
+    testWidgets('se ferme quand le colis rechargé n\'a plus de demande '
+        'ouverte', (tester) async {
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+      );
+
+      bidStates.add(
+        BidDetailLoaded(
+          withAmendment(_amendment(status: BidAmendmentStatus.declined)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Modification du colis'), findsNothing);
+    });
+
+    testWidgets('l\'ouverture de la feuille ne réémet pas bid_amendment_viewed '
+        '(mesuré à l\'affichage de la tuile)', (tester) async {
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+      );
+      Navigator.of(tester.element(cancelButton())).pop();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('open-todo'));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.bidAmendmentViewed, any()),
+      );
+      verify(
+        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'amendment',
+          'role': 'sender',
+          'source': 'tile',
+        }),
+      ).called(2);
+    });
+
+    testWidgets('ouverte par un lien : source link', (tester) async {
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+        source: SenderTodoSource.link,
+      );
+
+      verify(
+        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'amendment',
+          'role': 'sender',
+          'source': 'link',
+        }),
+      ).called(1);
+    });
+
+    testWidgets('sans BLoC à l\'écran : contenu et bouton de l\'ouverture', (
+      tester,
+    ) async {
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+        withBlocs: false,
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(AmendmentSenderCard), findsOneWidget);
+      expect(cancelButton(), findsOneWidget);
+    });
+
+    // « Payer » pousse un écran : la feuille se ferme d'abord, l'écran
+    // d'attente s'ouvre avec le contexte de l'écran, puis le colis est relu
+    // au retour.
+    testWidgets('« Payer » ferme la feuille, ouvre l\'écran d\'attente puis '
+        'relit le colis au retour', (tester) async {
+      final bid = withAmendment(
+        _amendment(
+          status: BidAmendmentStatus.paymentPending,
+          rail: BidAmendment.railPawapay,
+        ),
+      );
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => BlocProvider<BidBloc>.value(
+              value: bidBloc,
+              child: Scaffold(
+                body: Builder(
+                  builder: (context) => TextButton(
+                    onPressed: () => openSenderTodoSheet(
+                      context,
+                      bid,
+                      SenderTodoTile.amendment,
+                    ),
+                    child: const Text('open-todo'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/bids/:bidId/amendments/:id/mobile-money/awaiting',
+            builder: (context, _) => Scaffold(
+              body: TextButton(
+                onPressed: () => context.pop(true),
+                child: const Text('awaiting-screen'),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          theme: AppTheme.light(),
+          locale: const Locale('fr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      );
+      await tester.tap(find.text('open-todo'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(payButton());
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Modification du colis'), findsNothing);
+      expect(find.text('awaiting-screen'), findsOneWidget);
+      verify(
+        () => backend.capture(AnalyticsEvents.bidAmendmentPaymentStarted, {
+          'method': 'mobile_money',
+        }),
+      ).called(1);
+      verifyNever(() => bidBloc.add(any()));
+
+      await tester.tap(find.text('awaiting-screen'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('open-todo'), findsOneWidget);
+      final event =
+          verify(() => bidBloc.add(captureAny())).captured.single
+              as BidDetailRequested;
+      expect(event.bidId, 'bid-001');
+    });
+  });
+
   group('mesure', () {
     for (final (tile, bid) in [
       (SenderTodoTile.recipient, _bid()),
@@ -516,6 +928,35 @@ void main() {
           {
             const Key('reschedule-keep'): l.bidRescheduleKeep,
             const Key('reschedule-withdraw'): l.bidRescheduleWithdraw,
+          },
+        ),
+        (
+          'amendment-cancel',
+          _bid(
+            status: 'ACCEPTED',
+            recipientAppStatus: null,
+            amendments: [_amendment()],
+          ),
+          SenderTodoTile.amendment,
+          {const Key('amendment-cancel-btn'): l.amendmentCancelButton},
+        ),
+        (
+          'amendment-pay',
+          _bid(
+            status: 'ACCEPTED',
+            recipientAppStatus: null,
+            amendments: [
+              _amendment(
+                status: BidAmendmentStatus.paymentPending,
+                rail: BidAmendment.railPawapay,
+              ),
+            ],
+          ),
+          SenderTodoTile.amendment,
+          {
+            const Key('amendment-pay-btn'): l.amendmentPay(
+              formatSupplementAmount(26.8, 'EUR'),
+            ),
           },
         ),
       ]) {

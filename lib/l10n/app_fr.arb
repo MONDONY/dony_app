@@ -7642,6 +7642,30 @@
   "@senderTodoRescheduleChoice": {
     "description": "Résumé court de la tuile « Trajet reporté » quand l'échéance de la réponse est inconnue : les deux choix de l'expéditeur"
   },
+  "senderTodoAmendmentSummary": "{weight} en plus · {amount}",
+  "@senderTodoAmendmentSummary": {
+    "description": "Résumé court de la tuile « Modification du colis » (section « À traiter » de la fiche colis expéditeur) : kilos ajoutés par la demande ouverte et son montant brut",
+    "placeholders": {
+      "weight": {
+        "type": "String",
+        "example": "3 kg"
+      },
+      "amount": {
+        "type": "String",
+        "example": "26,80 €"
+      }
+    }
+  },
+  "senderTodoAmendmentAmount": "{amount} en plus",
+  "@senderTodoAmendmentAmount": {
+    "description": "Résumé court de la tuile « Modification du colis » quand la demande n'ajoute que des articles (aucun kilo) : son montant brut",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "26,80 €"
+      }
+    }
+  },
   "bidDetailSectionTransport": "Votre transport",
   "@bidDetailSectionTransport": {
     "description": "Titre de la grille de tuiles de la fiche colis voyageur (traveler_transport_section.dart)"

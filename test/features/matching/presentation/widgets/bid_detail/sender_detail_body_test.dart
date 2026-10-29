@@ -1175,14 +1175,18 @@ void main() {
       grossAmount: 26.8,
     );
 
+    late _MockAnalyticsService analytics;
+
     setUp(() {
-      final analytics = _MockAnalyticsService();
+      analytics = _MockAnalyticsService();
       when(
         () => analytics.logEvent(any(), properties: any(named: 'properties')),
       ).thenAnswer((_) async {});
-      getIt.registerFactory<AmendmentActionCubit>(
-        () => AmendmentActionCubit(_MockAmendmentRepository(), analytics),
-      );
+      getIt
+        ..registerSingleton<AnalyticsService>(analytics)
+        ..registerFactory<AmendmentActionCubit>(
+          () => AmendmentActionCubit(_MockAmendmentRepository(), analytics),
+        );
     });
 
     tearDown(() async => getIt.reset());
@@ -1192,13 +1196,14 @@ void main() {
         .position
         .pixels;
 
-    testWidgets('demande ouverte : carte affichée sous le hero', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(800, 900);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
+    Finder sheetCancel() => find.descendant(
+      of: find.byKey(const Key('donyBottomSheetFooter')),
+      matching: find.byKey(const Key('amendment-cancel-btn')),
+    );
 
+    testWidgets('demande ouverte → tuile « Modification du colis » sous « À '
+        'traiter », pas de carte au corps, pas de défilement', (tester) async {
+      sizeView(tester);
       await tester.pumpWidget(
         _host(
           _bid(amendments: const [open]),
@@ -1208,11 +1213,55 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 1));
 
-      expect(find.byType(AmendmentSenderCard), findsOneWidget);
+      expect(find.byType(AmendmentSenderCard), findsNothing);
+      expect(find.text('À traiter'), findsOneWidget);
+      final tile = _tile('Modification du colis');
+      expect(tile, findsOneWidget);
+      expect(
+        tester.getTopLeft(tile).dy,
+        greaterThan(tester.getTopLeft(find.text('À traiter')).dy),
+      );
+      expect(
+        find.descendant(
+          of: tile,
+          matching: find.textContaining('3 kg en plus'),
+        ),
+        findsOneWidget,
+      );
+      final badge = tester.widget<ToolStatusBadge>(
+        find.descendant(of: tile, matching: find.byType(ToolStatusBadge)),
+      );
+      expect(badge.tone, ToolStatusTone.news);
       expect(scrollOffset(tester), 0);
     });
 
-    testWidgets('demande ouverte → sous le titre « À traiter »', (
+    testWidgets('modification, report et destinataire : trois tuiles dans '
+        'l\'ordre des anciennes cartes', (tester) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(
+            amendments: const [open],
+            reschedule: _reschedule(pending: true),
+            recipientAppStatus: 'DECLINED',
+          ),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      final grid = tester.widget<DonyActionTileGrid>(
+        find.byKey(const ValueKey('todo-tiles')),
+      );
+      expect(grid.tiles.map((t) => t.key), const [
+        Key('sender-todo-amendment'),
+        Key('sender-todo-reschedule'),
+        Key('sender-todo-recipient'),
+      ]);
+    });
+
+    testWidgets('toucher la tuile ouvre le sheet de la modification', (
       tester,
     ) async {
       sizeView(tester);
@@ -1225,10 +1274,93 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 1));
 
-      expect(find.text('À traiter'), findsOneWidget);
-      expect(
-        tester.getTopLeft(find.byType(AmendmentSenderCard)).dy,
-        greaterThan(tester.getTopLeft(find.text('À traiter')).dy),
+      await tester.tap(_tile('Modification du colis'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(AmendmentSenderCard), findsOneWidget);
+      expect(sheetCancel(), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidDetailTileOpened,
+          properties: {'tile': 'amendment', 'role': 'sender', 'source': 'tile'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('mesure à l\'affichage de la tuile : bid_amendment_viewed '
+        '(surface tuile) et bid_detail_todo_tile_shown, une fois par statut '
+        'de la demande malgré les relevés', (tester) async {
+      sizeView(tester);
+      for (var i = 0; i < 3; i++) {
+        await tester.pumpWidget(
+          _host(
+            _bid(amendments: const [open]),
+            cancellationBloc,
+            conversationOpenBloc,
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+      await tester.pump(const Duration(seconds: 1));
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidAmendmentViewed,
+          properties: {
+            'role': 'sender',
+            'status': 'PROPOSED',
+            'surface': 'tile',
+          },
+        ),
+      ).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidDetailTodoTileShown,
+          properties: {
+            'tile': 'amendment',
+            'role': 'sender',
+            'status': 'ACCEPTED',
+          },
+        ),
+      ).called(1);
+
+      // Acceptée par le voyageur (mobile money) : nouveau statut, nouvelle
+      // mesure de la demande ; le colis, lui, n'a pas changé de statut.
+      await tester.pumpWidget(
+        _host(
+          _bid(
+            amendments: const [
+              BidAmendment(
+                id: 'am-1',
+                status: BidAmendmentStatus.paymentPending,
+                rail: 'PAWAPAY',
+                addedWeightKg: 3,
+                grossAmount: 26.8,
+              ),
+            ],
+          ),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidAmendmentViewed,
+          properties: {
+            'role': 'sender',
+            'status': 'PAYMENT_PENDING',
+            'surface': 'tile',
+          },
+        ),
+      ).called(1);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidDetailTodoTileShown,
+          properties: any(named: 'properties'),
+        ),
       );
     });
 
@@ -1247,18 +1379,88 @@ void main() {
 
       expect(find.byType(AmendmentSenderCard), findsOneWidget);
       expect(find.text('À traiter'), findsNothing);
+      expect(_tile('Modification du colis'), findsNothing);
+      // La carte d'information garde sa mesure au montage, sans surface.
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidAmendmentViewed,
+          properties: {'role': 'sender', 'status': 'DECLINED'},
+        ),
+      ).called(1);
     });
 
-    testWidgets('?action=amendment : la carte est amenée à l\'écran', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(800, 900);
+    testWidgets('?action=amendment, réponse attendue : le sheet s\'ouvre '
+        'directement, une seule fois, source link', (tester) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(amendments: const [open]),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusAmendment: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(sheetCancel(), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidDetailTileOpened,
+          properties: {'tile': 'amendment', 'role': 'sender', 'source': 'link'},
+        ),
+      ).called(1);
+
+      // Fermé puis relevé du colis : pas de réouverture.
+      Navigator.of(tester.element(sheetCancel())).pop();
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _host(
+          _bid(amendments: const [open]),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusAmendment: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(sheetCancel(), findsNothing);
+    });
+
+    testWidgets('?action=amendment : colis encore squelette, le sheet '
+        's\'ouvre à l\'arrivée de la demande', (tester) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusAmendment: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(sheetCancel(), findsNothing);
+
+      await tester.pumpWidget(
+        _host(
+          _bid(amendments: const [open]),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusAmendment: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(sheetCancel(), findsOneWidget);
+    });
+
+    testWidgets('?action=amendment, demande close : la carte d\'information '
+        'est amenée à l\'écran, sans sheet', (tester) async {
+      tester.view.physicalSize = const Size(800, 700);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
       await tester.pumpWidget(
         _host(
-          _bid(amendments: const [open]),
+          _bid(amendments: const [declined]),
           cancellationBloc,
           conversationOpenBloc,
           focusAmendment: true,
@@ -1269,6 +1471,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(scrollOffset(tester), greaterThan(0));
+      expect(find.byKey(const Key('donyBottomSheetFooter')), findsNothing);
     });
 
     testWidgets('modification autorisée sans demande : pas de carte, le '

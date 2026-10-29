@@ -7645,6 +7645,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get senderTodoRescheduleChoice => 'Keep it or cancel at no cost';
 
   @override
+  String senderTodoAmendmentSummary(String weight, String amount) {
+    return '$weight extra · $amount';
+  }
+
+  @override
+  String senderTodoAmendmentAmount(String amount) {
+    return '$amount extra';
+  }
+
+  @override
   String get bidDetailSectionTransport => 'Your trip';
 
   @override

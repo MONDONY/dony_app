@@ -58,7 +58,9 @@ class SenderDetailBody extends StatefulWidget {
   final bool focusSupplement;
 
   /// Ouvert depuis une notification de modification
-  /// (`?action=amendment`).
+  /// (`?action=amendment`) : le sheet de la tuile « Modification du colis »
+  /// s'ouvre de lui-même si la demande attend l'expéditeur, sinon la carte
+  /// d'information est amenée à l'écran.
   final bool focusAmendment;
 
   /// Paiement lu par l'écran (null tant qu'il n'est pas lu) : la carte
@@ -151,15 +153,33 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     _scrollTo(_supplementKey);
   }
 
-  /// Même chose pour la carte de la modification (`?action=amendment`).
+  /// `?action=amendment`, une seule fois dès que la modification est connue :
+  /// demande ouverte → le sheet de sa tuile s'ouvre (comme `?action=new-code`),
+  /// demande close → la carte d'information est amenée à l'écran.
   void _maybeFocusAmendment() {
+    final bid = widget.bid;
     if (!widget.focusAmendment ||
         _amendmentFocused ||
-        !AmendmentSenderCard.shouldShow(widget.bid)) {
+        !AmendmentSenderCard.shouldShow(bid)) {
       return;
     }
     _amendmentFocused = true;
-    _scrollTo(_amendmentKey);
+    if (!AmendmentSenderCard.needsReply(bid)) {
+      _scrollTo(_amendmentKey);
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Une autre feuille déjà ouverte par-dessus la fiche : on n'empile pas.
+      if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? true)) return;
+      unawaited(
+        openSenderTodoSheet(
+          context,
+          bid,
+          SenderTodoTile.amendment,
+          source: SenderTodoSource.link,
+        ),
+      );
+    });
   }
 
   void _scrollTo(GlobalKey key) {
@@ -245,6 +265,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final iconName = switch (tile) {
+      SenderTodoTile.amendment => 'scale',
       SenderTodoTile.reschedule => 'calendar-sync',
       SenderTodoTile.recipient => 'user-plus',
     };
@@ -260,7 +281,9 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
   }
 
   /// Compte l'affichage des tuiles « À traiter » après l'image, une seule fois
-  /// par colis, tuile et statut ([TodoTileViewLog]).
+  /// par colis, tuile et statut ([TodoTileViewLog]) ; plus la mesure de la
+  /// carte reprise par la tuile ([senderTodoViewed]), une fois par statut de
+  /// la demande.
   void _logTodoShown(List<SenderTodoTile> tiles) {
     if (tiles.isEmpty) return;
     final bid = widget.bid;
@@ -272,6 +295,14 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
           tile: tile.name,
           shown: senderTodoShown(tile, bid),
         );
+        final viewed = senderTodoViewed(tile, bid);
+        if (viewed != null) {
+          _todoViews.logOnce(
+            bidId: bid.id,
+            tile: '${tile.name}|card',
+            shown: viewed,
+          );
+        }
       }
     });
   }
@@ -293,19 +324,21 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
 
     final bid = widget.bid;
 
-    // Supplément et modification : sous « À traiter » tant qu'ils attendent
-    // une réponse, sinon simples informations juste après, sans titre. La clé
-    // de focus suit la carte d'un côté comme de l'autre.
+    // Supplément : sous « À traiter » tant qu'il attend une réponse, sinon
+    // simple information juste après, sans titre. La clé de focus suit la
+    // carte d'un côté comme de l'autre.
     final supplement = SupplementSenderCard.shouldShow(bid)
         ? SupplementSenderCard(key: _supplementKey, bid: bid)
         : null;
     final supplementReply =
         supplement != null && SupplementSenderCard.needsReply(bid);
-    final amendment = AmendmentSenderCard.shouldShow(bid)
+    // Modification : tuile « À traiter » tant que la demande est ouverte,
+    // sinon carte d'information (cible du défilement `?action=amendment`).
+    final amendment =
+        AmendmentSenderCard.shouldShow(bid) &&
+            !AmendmentSenderCard.needsReply(bid)
         ? AmendmentSenderCard(key: _amendmentKey, bid: bid)
         : null;
-    final amendmentReply =
-        amendment != null && AmendmentSenderCard.needsReply(bid);
 
     // Report : tuile « À traiter » tant que la décision est ouverte, sinon
     // carte d'information sans titre.
@@ -315,8 +348,8 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
         ? TripRescheduleCard(bid: bid, isSender: true)
         : null;
 
-    // Demandes qui attendent une réponse : une tuile chacune (report,
-    // destinataire à remplacer), sous les cartes d'alerte.
+    // Demandes qui attendent une réponse : une tuile chacune (modification,
+    // report, destinataire à remplacer), sous les cartes d'alerte.
     final todoTiles = senderTodoTilesFor(bid);
     _logTodoShown(todoTiles);
 
@@ -325,7 +358,6 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     final actions = <Widget>[
       if (SenderHeroCard.hasAction(bid)) SenderHeroCard(bid: bid),
       if (supplementReply) supplement,
-      if (amendmentReply) amendment,
       // Destinataire absent signalé par le voyageur (FLUTTER-E2) : nouveau
       // rendez-vous, changement de destinataire, garde, colis non réclamé.
       if (DeliveryNoShowProcedureCard.shouldShow(bid, isSender: true))
@@ -344,7 +376,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     final infos = <(String, Widget)>[
       if (supplement != null && !supplementReply)
         ('info-supplement', supplement),
-      if (amendment != null && !amendmentReply) ('info-amendment', amendment),
+      if (amendment != null) ('info-amendment', amendment),
       if (reschedule != null) ('info-reschedule', reschedule),
       // Consignes de retrait : hors du hero, qui les masquait dès qu'une
       // contestation, une absence ou la livraison prenait la place.

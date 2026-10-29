@@ -14,6 +14,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
+import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -260,7 +261,7 @@ void main() {
   });
 
   group('expéditeur', () {
-    testWidgets('senderPending_showsDeadlineAndCancel', (tester) async {
+    testWidgets('senderPending_showsDeadline_noButtonInCard', (tester) async {
       await pump(tester, AmendmentSenderCard(bid: _bid(_am())));
 
       expect(find.text('MODIFICATION DU COLIS'), findsOneWidget);
@@ -268,27 +269,68 @@ void main() {
       expect(find.textContaining('(47 h)'), findsOneWidget);
       expect(find.textContaining('26,80'), findsWidgets);
       expect(find.text('Téléphone'), findsOneWidget);
-      expect(find.text('Annuler ma demande'), findsOneWidget);
+      // « Annuler ma demande » vit dans le pied du sheet de la tuile.
+      expect(find.byType(DonyButton), findsNothing);
     });
 
-    testWidgets('senderCancel_confirmDialog_callsCancel_reloadsBid', (
-      tester,
-    ) async {
-      when(
-        () => repository.cancel('bid-1', 'am-1'),
-      ).thenAnswer((_) async => _am(status: BidAmendmentStatus.cancelled));
-      await pump(tester, AmendmentSenderCard(bid: _bid(_am())));
+    testWidgets('senderUnframed_noTitleNoFrame_sameContent', (tester) async {
+      await pump(tester, AmendmentSenderCard(bid: _bid(_am()), framed: false));
 
-      await tester.tap(find.text('Annuler ma demande'));
-      await tester.pumpAndSettle();
-      verifyNever(() => repository.cancel(any(), any()));
-      expect(find.text('Annuler votre demande ?'), findsOneWidget);
+      expect(find.text('MODIFICATION DU COLIS'), findsNothing);
+      expect(find.byType(DetailCard), findsNothing);
+      expect(find.text('En attente de Moussa'), findsOneWidget);
+      expect(find.textContaining('(47 h)'), findsOneWidget);
+      expect(find.byType(DonyButton), findsNothing);
+    });
 
-      await tester.tap(find.text('Annuler ma demande').last);
-      await tester.pumpAndSettle();
+    group('AmendmentSenderCancelButton', () {
+      Future<void> pumpButton(WidgetTester tester, BidAmendment a) => pump(
+        tester,
+        BlocProvider<AmendmentActionCubit>(
+          create: (_) => getIt<AmendmentActionCubit>(),
+          child: AmendmentSenderCancelButton(bid: _bid(a), amendment: a),
+        ),
+      );
 
-      verify(() => repository.cancel('bid-1', 'am-1')).called(1);
-      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+      test('canCancel : proposée ou autorisation carte en attente', () {
+        for (final s in BidAmendmentStatus.values) {
+          expect(
+            AmendmentSenderCancelButton.canCancel(_am(status: s)),
+            s == BidAmendmentStatus.proposed ||
+                s == BidAmendmentStatus.authorizationPending,
+            reason: '$s',
+          );
+        }
+      });
+
+      testWidgets('confirmDialog_thenCallsCancel', (tester) async {
+        when(
+          () => repository.cancel('bid-1', 'am-1'),
+        ).thenAnswer((_) async => _am(status: BidAmendmentStatus.cancelled));
+        await pumpButton(tester, _am());
+
+        expect(find.text('Annuler ma demande'), findsOneWidget);
+        await tester.tap(find.text('Annuler ma demande'));
+        await tester.pumpAndSettle();
+        verifyNever(() => repository.cancel(any(), any()));
+        expect(find.text('Annuler votre demande ?'), findsOneWidget);
+
+        await tester.tap(find.text('Annuler ma demande').last);
+        await tester.pumpAndSettle();
+
+        verify(() => repository.cancel('bid-1', 'am-1')).called(1);
+      });
+
+      testWidgets('dialogDismissed_noCall', (tester) async {
+        await pumpButton(tester, _am());
+
+        await tester.tap(find.text('Annuler ma demande'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Annuler').last);
+        await tester.pumpAndSettle();
+
+        verifyNever(() => repository.cancel(any(), any()));
+      });
     });
 
     testWidgets('senderNeverShowsNet', (tester) async {

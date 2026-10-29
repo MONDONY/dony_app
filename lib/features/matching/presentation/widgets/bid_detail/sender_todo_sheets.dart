@@ -2,13 +2,19 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_pay_button.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/live_bid.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
@@ -19,8 +25,20 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// D'où s'ouvre le sheet d'une tuile « À traiter » : propriété `source` de
+/// `bid_detail_tile_opened`.
+enum SenderTodoSource {
+  /// Tuile touchée dans la grille.
+  tile,
+
+  /// Lien d'une notification (`?action=amendment`) : le sheet s'ouvre de
+  /// lui-même à l'affichage de la fiche.
+  link,
+}
+
 /// Ouvre le bottom sheet de la tuile « À traiter » [tile] pour [bid] (fiche
-/// colis, vue expéditeur) et compte l'ouverture (`bid_detail_tile_opened`).
+/// colis, vue expéditeur) et compte l'ouverture (`bid_detail_tile_opened`,
+/// avec [source]).
 ///
 /// Comme [openSenderTileSheet] : le sheet s'ouvre sur le navigateur racine, les
 /// BLoCs de l'écran y sont reposés par le `wrapper` (`BidBloc` pour suivre le
@@ -39,33 +57,44 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// y est fermé au démontage de la route, après l'animation de sortie), et sa
 /// fermeture au succès dans [_SenderTodoSheetContent] si l'action ne recharge
 /// pas le colis.
+///
+/// Modification : `AmendmentActionCubit` est créé dans le `wrapper`, sans
+/// mesure d'affichage (`bid_amendment_viewed` part à l'affichage de la tuile,
+/// [senderTodoViewed]) ; « Payer » ferme le sheet avant de pousser l'écran
+/// d'attente.
 Future<void> openSenderTodoSheet(
   BuildContext context,
   BidModel bid,
-  SenderTodoTile tile,
-) {
+  SenderTodoTile tile, {
+  SenderTodoSource source = SenderTodoSource.tile,
+}) {
   unawaited(
     getItSafe<AnalyticsService>()?.logEvent(
       AnalyticsEvents.bidDetailTileOpened,
-      properties: {'tile': tile.name, 'role': 'sender', 'source': 'tile'},
+      properties: {'tile': tile.name, 'role': 'sender', 'source': source.name},
     ),
   );
 
   final bidBloc = _maybeRead<BidBloc>(context);
   final cancellationBloc = _maybeRead<CancellationBloc>(context);
   final live = bidBloc != null;
+  final amendment = tile == SenderTodoTile.amendment;
 
   return DonyBottomSheet.show<void>(
     context,
     title: senderTodoTitle(context.l10n, tile),
     analyticsName: 'bid-detail/todo-${tile.name}',
-    wrapper: (bidBloc == null && cancellationBloc == null)
+    wrapper: (bidBloc == null && cancellationBloc == null && !amendment)
         ? null
         : (content) => MultiBlocProvider(
             providers: [
               if (bidBloc != null) BlocProvider<BidBloc>.value(value: bidBloc),
               if (cancellationBloc != null)
                 BlocProvider<CancellationBloc>.value(value: cancellationBloc),
+              if (amendment)
+                BlocProvider<AmendmentActionCubit>(
+                  create: (_) => getIt<AmendmentActionCubit>(),
+                ),
             ],
             child: content,
           ),
@@ -105,6 +134,32 @@ Widget? _stickyBottomFor(
 }) {
   final l = screenContext.l10n;
   return switch (tile) {
+    // Un bouton à la fois, selon l'état de la demande : « Annuler ma
+    // demande » tant que le montant n'est pas acquis, « Payer » une fois
+    // acceptée en mobile money, rien pendant la commission du voyageur.
+    SenderTodoTile.amendment => LiveBid(
+      bid: bid,
+      live: live,
+      builder: (sheetContext, current) {
+        final open = AmendmentSenderCard.openRequest(current);
+        if (open != null && AmendmentSenderCancelButton.canCancel(open)) {
+          return AmendmentSenderCancelButton(bid: current, amendment: open);
+        }
+        if (AmendmentPayButton.canPay(current)) {
+          // Pousse un écran : ferme d'abord ce sheet, puis paie avec le
+          // contexte de l'écran (le colis y est relu au retour).
+          return AmendmentPayButton(
+            bid: current,
+            launcher: (pay) => closeTileSheetThen(
+              sheetContext,
+              screenContext,
+              () => unawaited(pay(screenContext)),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    ),
     // Bouton simple : ferme ce sheet, puis ouvre « Modifier le destinataire »
     // avec le contexte de l'écran (rechargement et confirmation y vivent).
     SenderTodoTile.recipient => LiveBid(
@@ -169,6 +224,12 @@ class _SenderTodoSheetContent extends StatelessWidget {
       bid: bid,
       live: live,
       builder: (_, current) => switch (tile) {
+        // Comme le report : le colis rechargé peut perdre sa demande ouverte
+        // pendant l'animation de sortie, la carte garde la dernière connue.
+        SenderTodoTile.amendment => AmendmentSenderCard(
+          bid: AmendmentSenderCard.needsReply(current) ? current : bid,
+          framed: false,
+        ),
         SenderTodoTile.recipient => RecipientDeclinedBody(bid: current),
         // Le colis rechargé peut perdre son report pendant l'animation de
         // sortie : la carte garde alors le dernier report connu.
@@ -194,6 +255,14 @@ class _SenderTodoSheetContent extends StatelessWidget {
       );
     }
 
+    if (tile == SenderTodoTile.amendment) {
+      content = BlocListener<AmendmentActionCubit, AmendmentActionState>(
+        listenWhen: (prev, curr) => prev.status != curr.status,
+        listener: _onAmendmentAction,
+        child: content,
+      );
+    }
+
     if (tile == SenderTodoTile.reschedule && closesOnDecision) {
       content = BlocListener<CancellationBloc, CancellationState>(
         listenWhen: (_, state) =>
@@ -204,5 +273,33 @@ class _SenderTodoSheetContent extends StatelessWidget {
     }
 
     return content;
+  }
+
+  /// Annulation de la modification : au succès, le sheet se ferme, puis la
+  /// confirmation s'affiche sur l'écran (le sheet n'est plus la route active)
+  /// et le colis est relu ; la tuile disparaît. En échec (demande déjà
+  /// traitée ou expirée), l'erreur s'affiche au-dessus du sheet et le colis
+  /// relu montre le vrai état (le sheet se ferme alors si la demande n'est
+  /// plus ouverte).
+  void _onAmendmentAction(BuildContext context, AmendmentActionState state) {
+    switch (state.status) {
+      case AmendmentActionStatus.done:
+        _reload(context);
+        _closeIfOnTop(context);
+        DonySnackbar.show(
+          context,
+          message: context.l10n.amendmentCancelledSnackbar,
+          type: DonySnackbarType.success,
+        );
+      case AmendmentActionStatus.failure:
+        unawaited(ErrorPresenter.show(context, state.error));
+        _reload(context);
+      case AmendmentActionStatus.idle || AmendmentActionStatus.busy:
+        break;
+    }
+  }
+
+  void _reload(BuildContext context) {
+    if (live) context.read<BidBloc>().add(BidDetailRequested(bid.id));
   }
 }

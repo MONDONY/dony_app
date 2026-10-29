@@ -1269,6 +1269,53 @@ void main() {
       expect(offset, greaterThan(0));
     });
 
+    // Notification de modification côté expéditeur, demande ouverte : le sheet
+    // de la tuile s'ouvre de lui-même, avec les BLoCs de l'écran.
+    testWidgets('?action=amendment opens the amendment tile sheet with the '
+        'screen BLoCs', (tester) async {
+      getIt.registerFactory<AmendmentActionCubit>(
+        () => AmendmentActionCubit(
+          _MockAmendmentRepository(),
+          _MockAnalyticsService(),
+        ),
+      );
+      addTearDown(() => getIt.unregister<AmendmentActionCubit>());
+      final bid = _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        amendments: const [
+          BidAmendment(
+            id: 'am-1',
+            status: BidAmendmentStatus.proposed,
+            rail: 'CASH',
+            addedWeightKg: 3,
+            grossAmount: 26.8,
+            blocksHandover: true,
+          ),
+        ],
+      );
+      await _pump(
+        tester,
+        bid: bid,
+        authBloc: senderAuth(),
+        focusAmendment: true,
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final footer = find.byKey(const Key('donyBottomSheetFooter'));
+      final cancel = find.descendant(
+        of: footer,
+        matching: find.byKey(const Key('amendment-cancel-btn')),
+      );
+      expect(cancel, findsOneWidget);
+      expect(find.byType(AmendmentSenderCard), findsOneWidget);
+      expect(tester.element(cancel).read<BidBloc>(), same(bidBloc));
+
+      await closeSheet(tester);
+      expect(cancel, findsNothing);
+      expect(tile('Modification du colis'), findsOneWidget);
+    });
+
     testWidgets('tiles recompute after a polling refresh from ACCEPTED to '
         'HANDED_OVER', (tester) async {
       await _pump(tester, bid: acceptedBid(), authBloc: senderAuth());

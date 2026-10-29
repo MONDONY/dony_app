@@ -7691,6 +7691,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get senderTodoRescheduleChoice => 'Garder ou annuler sans frais';
 
   @override
+  String senderTodoAmendmentSummary(String weight, String amount) {
+    return '$weight en plus · $amount';
+  }
+
+  @override
+  String senderTodoAmendmentAmount(String amount) {
+    return '$amount en plus';
+  }
+
+  @override
   String get bidDetailSectionTransport => 'Votre transport';
 
   @override

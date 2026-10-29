@@ -20,6 +20,12 @@ import 'package:go_router/go_router.dart';
 typedef AmendmentMobileMoneyOpener =
     Future<bool?> Function(BuildContext context, String route);
 
+/// Lancement du paiement par un appelant qui choisit le contexte : reçoit le
+/// paiement à lancer avec ce contexte (écran d'attente poussé, colis relu
+/// avec le `BidBloc` qu'il voit).
+typedef AmendmentPayLauncher =
+    void Function(Future<void> Function(BuildContext context) pay);
+
 /// Bouton « Payer {brut} » de la barre du bas de l'expéditeur, tant qu'une
 /// modification de colis payée en mobile money attend son dépôt : le voyageur
 /// l'a acceptée (`PAYMENT_PENDING`). Le dépôt se fait dans les
@@ -36,9 +42,15 @@ class AmendmentPayButton extends StatelessWidget {
     required this.bid,
     this.openMobileMoney,
     this.analytics,
+    this.launcher,
   });
 
   final BidModel bid;
+
+  /// Dans le sheet d'une tuile « À traiter » : ferme d'abord le sheet, puis
+  /// lance le paiement avec le contexte de l'écran. `null` dans la barre du
+  /// bas, qui paie avec son propre contexte.
+  final AmendmentPayLauncher? launcher;
 
   /// Injectables pour les tests ; `null` en usage réel.
   final AmendmentMobileMoneyOpener? openMobileMoney;
@@ -69,7 +81,14 @@ class AmendmentPayButton extends StatelessWidget {
       key: const Key('amendment-pay-btn'),
       label: context.l10n.amendmentPay(gross),
       iconAsset: 'smartphone',
-      onPressed: () => _pay(context, amendment),
+      onPressed: () {
+        final launch = launcher;
+        if (launch == null) {
+          unawaited(_pay(context, amendment));
+        } else {
+          launch((screenContext) => _pay(screenContext, amendment));
+        }
+      },
     );
   }
 

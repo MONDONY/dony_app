@@ -3912,6 +3912,25 @@
     }
   },
   "senderTodoRescheduleChoice": "Keep it or cancel at no cost",
+  "senderTodoAmendmentSummary": "{weight} extra · {amount}",
+  "@senderTodoAmendmentSummary": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "senderTodoAmendmentAmount": "{amount} extra",
+  "@senderTodoAmendmentAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "bidDetailSectionTransport": "Your trip",
   "travelerTileBadgeTodo": "To do",
   "travelerTileLieux": "Places",

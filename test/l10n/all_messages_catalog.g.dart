@@ -2801,6 +2801,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'senderTodoRescheduleSummary': (l) =>
       l.senderTodoRescheduleSummary(placeholderMarker('deadline')),
   'senderTodoRescheduleChoice': (l) => l.senderTodoRescheduleChoice,
+  'senderTodoAmendmentSummary': (l) => l.senderTodoAmendmentSummary(
+    placeholderMarker('weight'),
+    placeholderMarker('amount'),
+  ),
+  'senderTodoAmendmentAmount': (l) =>
+      l.senderTodoAmendmentAmount(placeholderMarker('amount')),
   'bidDetailSectionTransport': (l) => l.bidDetailSectionTransport,
   'travelerTileBadgeTodo': (l) => l.travelerTileBadgeTodo,
   'travelerTileLieux': (l) => l.travelerTileLieux,
@@ -8233,6 +8239,8 @@ const textParameters = <String, List<String>>{
   'bidRejectionReasonShown': ['reason'],
   'senderTileColisSubtitle': ['weight', 'recipient'],
   'senderTodoRescheduleSummary': ['deadline'],
+  'senderTodoAmendmentSummary': ['weight', 'amount'],
+  'senderTodoAmendmentAmount': ['amount'],
   'travelerTileLieuxDropoff': ['place'],
   'travelerTileLieuxPickup': ['place'],
   'travelerTileColisSubtitle': ['weight', 'recipient'],

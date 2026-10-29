@@ -12696,6 +12696,18 @@ abstract class AppLocalizations {
   /// **'Garder ou annuler sans frais'**
   String get senderTodoRescheduleChoice;
 
+  /// Résumé court de la tuile « Modification du colis » (section « À traiter » de la fiche colis expéditeur) : kilos ajoutés par la demande ouverte et son montant brut
+  ///
+  /// In fr, this message translates to:
+  /// **'{weight} en plus · {amount}'**
+  String senderTodoAmendmentSummary(String weight, String amount);
+
+  /// Résumé court de la tuile « Modification du colis » quand la demande n'ajoute que des articles (aucun kilo) : son montant brut
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} en plus'**
+  String senderTodoAmendmentAmount(String amount);
+
   /// Titre de la grille de tuiles de la fiche colis voyageur (traveler_transport_section.dart)
   ///
   /// In fr, this message translates to:
