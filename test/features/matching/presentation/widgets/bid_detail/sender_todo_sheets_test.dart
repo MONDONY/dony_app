@@ -814,6 +814,124 @@ void main() {
       ).called(1);
     });
 
+    // Sheet fermé de force (glissement) pendant l'appel : le cubit est fermé
+    // avec la route, mais l'annulation reste mesurée et le colis est relu
+    // quand le serveur répond.
+    testWidgets('fermé pendant l\'annulation : l\'annulation est mesurée et '
+        'le colis relu à la réponse', (tester) async {
+      final pending = Completer<BidAmendment>();
+      when(
+        () => amendmentRepository.cancel(any(), any()),
+      ).thenAnswer((_) => pending.future);
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+      );
+      await tester.tap(cancelButton());
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.widgetWithText(FilledButton, 'Annuler ma demande'),
+        ),
+      );
+      await tester.pump();
+
+      Navigator.of(tester.element(cancelButton())).pop();
+      await tester.pumpAndSettle();
+      expect(find.text('Modification du colis'), findsNothing);
+      verifyNever(() => bidBloc.add(any()));
+
+      pending.complete(_amendment(status: BidAmendmentStatus.cancelled));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verify(
+        () => backend.capture(AnalyticsEvents.bidAmendmentCancelled, any()),
+      ).called(1);
+      final event =
+          verify(() => bidBloc.add(captureAny())).captured.single
+              as BidDetailRequested;
+      expect(event.bidId, 'bid-001');
+    });
+
+    testWidgets('pendant l\'annulation, le retour système ne ferme pas le '
+        'sheet', (tester) async {
+      final pending = Completer<BidAmendment>();
+      when(
+        () => amendmentRepository.cancel(any(), any()),
+      ).thenAnswer((_) => pending.future);
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+      );
+      await tester.tap(cancelButton());
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.widgetWithText(FilledButton, 'Annuler ma demande'),
+        ),
+      );
+      await tester.pump();
+
+      // Le bouton tourne (indicateur sans fin) : pas de pumpAndSettle.
+      await Navigator.of(tester.element(cancelButton())).maybePop();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Modification du colis'), findsOneWidget);
+
+      pending.complete(_amendment(status: BidAmendmentStatus.cancelled));
+      await tester.pumpAndSettle();
+      expect(find.text('Modification du colis'), findsNothing);
+    });
+
+    testWidgets('hors appel, le retour système ferme le sheet', (tester) async {
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+      );
+
+      await Navigator.of(tester.element(cancelButton())).maybePop();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Modification du colis'), findsNothing);
+    });
+
+    testWidgets('demande traitée ailleurs pendant la confirmation : '
+        'confirmer n\'annule rien et la feuille se referme', (tester) async {
+      await openTodo(
+        tester,
+        withAmendment(_amendment()),
+        SenderTodoTile.amendment,
+      );
+      await tester.tap(cancelButton());
+      await tester.pumpAndSettle();
+
+      bidStates.add(
+        BidDetailLoaded(
+          withAmendment(_amendment(status: BidAmendmentStatus.declined)),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Annuler votre demande ?'), findsOneWidget);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.widgetWithText(FilledButton, 'Annuler ma demande'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verifyNever(() => amendmentRepository.cancel(any(), any()));
+      expect(find.text('Modification du colis'), findsNothing);
+      expect(find.text('open-todo'), findsOneWidget);
+    });
+
     testWidgets('suit le colis rechargé : proposée puis acceptée en mobile '
         'money, le pied passe d\'« Annuler » à « Payer »', (tester) async {
       await openTodo(

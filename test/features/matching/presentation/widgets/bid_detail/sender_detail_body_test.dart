@@ -1427,11 +1427,11 @@ void main() {
     });
 
     testWidgets('?action=amendment : colis encore squelette, le sheet '
-        's\'ouvre à l\'arrivée de la demande', (tester) async {
+        's\'ouvre au chargement de la demande', (tester) async {
       sizeView(tester);
       await tester.pumpWidget(
         _host(
-          _bid(),
+          BidModel.skeleton('bid-001'),
           cancellationBloc,
           conversationOpenBloc,
           focusAmendment: true,
@@ -1450,6 +1450,67 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(sheetCancel(), findsOneWidget);
+    });
+
+    // Le lien est consommé au premier colis chargé : une demande créée plus
+    // tard (relevé périodique) n'ouvre pas de sheet tout seule.
+    testWidgets('?action=amendment : pas de demande au chargement, demande '
+        'créée ensuite, aucun sheet ne s\'ouvre', (tester) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          BidModel.skeleton('bid-001'),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusAmendment: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _host(
+          _bid(),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusAmendment: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.pumpWidget(
+        _host(
+          _bid(amendments: const [open]),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusAmendment: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(sheetCancel(), findsNothing);
+      expect(_tile('Modification du colis'), findsOneWidget);
+    });
+
+    testWidgets('pastille de la tuile selon l\'état : « En attente »', (
+      tester,
+    ) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(amendments: const [open]),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      final badge = tester.widget<ToolStatusBadge>(
+        find.descendant(
+          of: _tile('Modification du colis'),
+          matching: find.byType(ToolStatusBadge),
+        ),
+      );
+      expect(badge.label, 'En attente');
     });
 
     const commission = BidAmendment(

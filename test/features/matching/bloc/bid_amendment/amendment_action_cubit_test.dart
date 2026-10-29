@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -122,6 +124,48 @@ void main() {
 
     expect(cubit.state.status, AmendmentActionStatus.failure);
     expect(cubit.state.error?.code, 'amendment-not-cancellable');
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.bidAmendmentActionFailed,
+        properties: {
+          'action': 'cancel',
+          'error_code': 'amendment-not-cancellable',
+        },
+      ),
+    ).called(1);
+  });
+
+  // Sheet fermé pendant l'appel : le cubit est fermé avec la route, mais
+  // l'action confirmée par le serveur reste mesurée (et l'échec aussi).
+  test('cancel_cubitClosedDuringCall_stillLogsCancelled', () async {
+    final pending = Completer<BidAmendment>();
+    when(
+      () => repository.cancel('bid-1', 'am-1'),
+    ).thenAnswer((_) => pending.future);
+
+    final call = cubit.cancel(_bid, _a);
+    await cubit.close();
+    pending.complete(_closed);
+    await call;
+
+    verify(
+      () => analytics.logEvent(AnalyticsEvents.bidAmendmentCancelled),
+    ).called(1);
+  });
+
+  test('cancel_cubitClosedDuringCall_stillLogsFailure', () async {
+    final pending = Completer<BidAmendment>();
+    when(
+      () => repository.cancel('bid-1', 'am-1'),
+    ).thenAnswer((_) => pending.future);
+
+    final call = cubit.cancel(_bid, _a);
+    await cubit.close();
+    pending.completeError(
+      const ConflictException('x', code: 'amendment-not-cancellable'),
+    );
+    await call;
+
     verify(
       () => analytics.logEvent(
         AnalyticsEvents.bidAmendmentActionFailed,

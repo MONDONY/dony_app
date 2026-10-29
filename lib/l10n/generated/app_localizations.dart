@@ -12588,11 +12588,23 @@ abstract class AppLocalizations {
   /// **'Étape en cours'**
   String get senderTileBadgeCurrentStep;
 
-  /// Pastille ambre des tuiles de la section « À traiter » de la fiche colis, vue expéditeur (sender_detail_body.dart) et vue voyageur (traveler_detail_body.dart) : une réponse est attendue
+  /// Pastille ambre des tuiles de la section « À traiter » de la fiche colis, vue expéditeur (trajet reporté, destinataire à remplacer ; sender_todo_tiles.dart) et vue voyageur (traveler_detail_body.dart) : une réponse est attendue. La tuile « Modification du colis » a ses propres pastilles (senderTodoAmendmentBadgePending, senderTodoAmendmentBadgePaymentDue)
   ///
   /// In fr, this message translates to:
   /// **'Réponse attendue'**
   String get todoTileBadgeReplyNeeded;
+
+  /// Pastille ambre de la tuile « Modification du colis » (« À traiter », fiche colis expéditeur) tant que la demande est proposée ou que la carte est en cours d'autorisation : le voyageur doit répondre, le seul geste de l'expéditeur est d'annuler
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get senderTodoAmendmentBadgePending;
+
+  /// Pastille ambre de la tuile « Modification du colis » quand le voyageur l'a acceptée et que l'expéditeur doit la payer en mobile money
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement attendu'**
+  String get senderTodoAmendmentBadgePaymentDue;
 
   /// Résumé de la tuile « Supplément de prix » de la section « À traiter » de la fiche colis voyageur (traveler_todo_tiles.dart) : frais de service du supplément (colis payé en espèces) à valider par le voyageur. Court, deux lignes au plus sous le titre de la tuile
   ///
@@ -34536,7 +34548,7 @@ abstract class AppLocalizations {
   /// **'Modification payée'**
   String get amendmentPaidSnackbar;
 
-  /// Bouton de la barre du bas de l'expéditeur : payer en mobile money la modification acceptée par le voyageur. {amount} : brut formaté, jamais le net
+  /// Bouton de la barre du bas de l'expéditeur, et du pied du sheet de la tuile « Modification du colis » (« À traiter ») : payer en mobile money la modification acceptée par le voyageur. {amount} : brut formaté, jamais le net
   ///
   /// In fr, this message translates to:
   /// **'Payer {amount}'**

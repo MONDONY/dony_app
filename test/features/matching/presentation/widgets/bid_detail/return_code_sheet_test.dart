@@ -1,10 +1,13 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_errors_shown_above.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +65,7 @@ void main() {
   });
 
   setUp(() {
+    DonySnackbar.clearDedup();
     bloc = _MockCancellationBloc();
     when(() => bloc.state).thenReturn(CancellationInitial());
   });
@@ -185,6 +189,71 @@ void main() {
       ).called(1);
     },
   );
+
+  // L'écran sous la feuille s'en remet à elle (marqueur) : l'erreur doit
+  // donc s'afficher par-dessus la feuille, des deux côtés.
+  testWidgets(
+    'ReturnCodeSheet : CancellationError → message visible par-dessus '
+    'le sheet, qui reste ouvert et le déclare',
+    (tester) async {
+      const error = NetworkException('Échec réseau');
+      whenListen(
+        bloc,
+        Stream<CancellationState>.fromIterable([CancellationError(error)]),
+        initialState: CancellationInitial(),
+      );
+
+      await tester.pumpWidget(
+        _host(
+          (ctx) => ReturnCodeSheet.show(
+            ctx,
+            bid: _bid(
+              returnCode: '654321',
+              returnDeadline: DateTime(2026, 6, 4),
+            ),
+            cancellationBloc: bloc,
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      final message = ErrorPresenter.resolve(error).message;
+      expect(find.text(message).hitTestable(), findsOneWidget);
+      expect(find.text('Copier le code'), findsOneWidget);
+      expect(CancellationErrorsShownAbove.isClaimed(bloc), isTrue);
+    },
+  );
+
+  testWidgets('ReturnEntrySheet : déclare afficher ses erreurs, message '
+      'visible par-dessus', (tester) async {
+    const error = NetworkException('Échec réseau');
+    whenListen(
+      bloc,
+      Stream<CancellationState>.fromIterable([CancellationError(error)]),
+      initialState: CancellationInitial(),
+    );
+
+    await tester.pumpWidget(
+      _host(
+        (ctx) => ReturnEntrySheet.show(
+          ctx,
+          bid: _bid(returnDeadline: DateTime(2026, 6, 4)),
+          cancellationBloc: bloc,
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open'));
+    // Curseur du champ de code (Pinput) : pas de pumpAndSettle.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(CancellationErrorsShownAbove.isClaimed(bloc), isTrue);
+    expect(
+      find.text(ErrorPresenter.resolve(error).message).hitTestable(),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('ReturnEntrySheet : ReturnConfirmed → ferme le sheet', (
     tester,

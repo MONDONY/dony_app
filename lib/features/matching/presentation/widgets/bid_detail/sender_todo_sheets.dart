@@ -8,6 +8,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_errors_shown_above.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -246,10 +247,16 @@ class _SenderTodoSheetContent extends StatelessWidget {
     }
 
     if (tile == SenderTodoTile.amendment) {
-      content = BlocListener<AmendmentActionCubit, AmendmentActionState>(
+      // Pendant l'annulation, le retour système et le toucher du fond ne
+      // ferment pas le sheet (la réponse y est attendue) ; les fermetures
+      // forcées (glissement, succès) restent possibles, le bouton relit
+      // alors le colis à la réponse.
+      final inner = content;
+      content = BlocConsumer<AmendmentActionCubit, AmendmentActionState>(
         listenWhen: (prev, curr) => prev.status != curr.status,
         listener: _onAmendmentAction,
-        child: content,
+        buildWhen: (prev, curr) => prev.isBusy != curr.isBusy,
+        builder: (_, action) => PopScope(canPop: !action.isBusy, child: inner),
       );
     }
 
@@ -261,15 +268,18 @@ class _SenderTodoSheetContent extends StatelessWidget {
             state is CancellationError,
         listener: (context, state) {
           if (state is CancellationError) {
-            // Échéance passée, réseau : l'écran n'affiche pas l'erreur tant
-            // que le sheet le couvre ; le sheet la montre par-dessus lui et
-            // reste ouvert, boutons actifs, pour réessayer.
+            // Échéance passée, réseau : le sheet la montre par-dessus lui et
+            // reste ouvert, boutons actifs, pour réessayer ; il le déclare
+            // (CancellationErrorsShownAbove), l'écran dessous se tait.
             unawaited(ErrorPresenter.show(context, state.error));
           } else {
             _closeIfOnTop(context);
           }
         },
-        child: content,
+        child: CancellationErrorsShownAbove(
+          bloc: context.read<CancellationBloc>(),
+          child: content,
+        ),
       );
     }
 

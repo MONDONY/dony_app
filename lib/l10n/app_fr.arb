@@ -7561,7 +7561,15 @@
   },
   "todoTileBadgeReplyNeeded": "Réponse attendue",
   "@todoTileBadgeReplyNeeded": {
-    "description": "Pastille ambre des tuiles de la section « À traiter » de la fiche colis, vue expéditeur (sender_detail_body.dart) et vue voyageur (traveler_detail_body.dart) : une réponse est attendue"
+    "description": "Pastille ambre des tuiles de la section « À traiter » de la fiche colis, vue expéditeur (trajet reporté, destinataire à remplacer ; sender_todo_tiles.dart) et vue voyageur (traveler_detail_body.dart) : une réponse est attendue. La tuile « Modification du colis » a ses propres pastilles (senderTodoAmendmentBadgePending, senderTodoAmendmentBadgePaymentDue)"
+  },
+  "senderTodoAmendmentBadgePending": "En attente",
+  "@senderTodoAmendmentBadgePending": {
+    "description": "Pastille ambre de la tuile « Modification du colis » (« À traiter », fiche colis expéditeur) tant que la demande est proposée ou que la carte est en cours d'autorisation : le voyageur doit répondre, le seul geste de l'expéditeur est d'annuler"
+  },
+  "senderTodoAmendmentBadgePaymentDue": "Paiement attendu",
+  "@senderTodoAmendmentBadgePaymentDue": {
+    "description": "Pastille ambre de la tuile « Modification du colis » quand le voyageur l'a acceptée et que l'expéditeur doit la payer en mobile money"
   },
   "travelerTodoSupplementSummary": "{amount} de frais à valider",
   "@travelerTodoSupplementSummary": {
@@ -22034,7 +22042,7 @@
   "amendmentPaidSnackbar": "Modification payée",
   "@amendmentPaidSnackbar": {"description": "Snackbar de l'écran d'attente mobile money quand le dépôt de la modification d'un colis est confirmé"},
   "amendmentPay": "Payer {amount}",
-  "@amendmentPay": {"description": "Bouton de la barre du bas de l'expéditeur : payer en mobile money la modification acceptée par le voyageur. {amount} : brut formaté, jamais le net", "placeholders": {"amount": {"type": "String"}}},
+  "@amendmentPay": {"description": "Bouton de la barre du bas de l'expéditeur, et du pied du sheet de la tuile « Modification du colis » (« À traiter ») : payer en mobile money la modification acceptée par le voyageur. {amount} : brut formaté, jamais le net", "placeholders": {"amount": {"type": "String"}}},
   "mobileMoneyOverdueBody": "Si vous validez quand même dans les prochaines minutes, votre paiement sera pris en compte.",
   "@mobileMoneyOverdueBody": {"description": "Texte de l'état « Pas encore validé » du paiement d'un colis : l'échéance est passée mais le dépôt reste ouvert, il peut encore aboutir. Ne dit jamais que le délai est dépassé ni que le paiement est perdu (mobile_money_awaiting_screen.dart)."},
   "mobileMoneyPaymentFailedTitle": "Paiement non abouti",

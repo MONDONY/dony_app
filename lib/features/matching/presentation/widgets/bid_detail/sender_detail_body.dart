@@ -153,19 +153,18 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     _scrollTo(_supplementKey);
   }
 
-  /// `?action=amendment`, une seule fois dès que la modification est connue :
-  /// demande ouverte → le sheet de sa tuile s'ouvre (comme `?action=new-code`),
-  /// demande close → la carte d'information est amenée à l'écran.
+  /// `?action=amendment`, une seule fois, au premier colis chargé : demande où
+  /// l'expéditeur a un geste à faire → le sheet de sa tuile s'ouvre (comme
+  /// `?action=new-code`) ; demande en commission chez le voyageur ou close →
+  /// la carte d'information est amenée à l'écran ; aucune demande → rien.
   void _maybeFocusAmendment() {
     final bid = widget.bid;
-    if (!widget.focusAmendment ||
-        _amendmentFocused ||
-        !AmendmentSenderCard.shouldShow(bid)) {
-      return;
-    }
+    // Consommé dès le premier colis chargé, qu'il y ait une demande ou non :
+    // une demande créée plus tard (relevé) n'ouvre pas de sheet toute seule.
+    if (!widget.focusAmendment || _amendmentFocused || bid.isSkeleton) return;
     _amendmentFocused = true;
     if (!AmendmentSenderCard.needsReply(bid)) {
-      _scrollTo(_amendmentKey);
+      if (AmendmentSenderCard.shouldShow(bid)) _scrollTo(_amendmentKey);
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -275,7 +274,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       label: senderTodoTitle(l, tile),
       subtitle: senderTodoSummary(l, bid, tile),
       color: cs.primary,
-      badge: _badge(l.todoTileBadgeReplyNeeded, ToolStatusTone.news),
+      badge: _badge(senderTodoBadge(l, bid, tile), ToolStatusTone.news),
       onTap: () => unawaited(openSenderTodoSheet(context, bid, tile)),
     );
   }
@@ -332,8 +331,9 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
         : null;
     final supplementReply =
         supplement != null && SupplementSenderCard.needsReply(bid);
-    // Modification : tuile « À traiter » tant que la demande est ouverte,
-    // sinon carte d'information (cible du défilement `?action=amendment`).
+    // Modification : tuile « À traiter » tant que l'expéditeur a un geste à
+    // faire (annuler, payer), sinon carte d'information (en commission chez
+    // le voyageur, ou close ; cible du défilement `?action=amendment`).
     final amendment =
         AmendmentSenderCard.shouldShow(bid) &&
             !AmendmentSenderCard.needsReply(bid)

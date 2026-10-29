@@ -3844,6 +3844,8 @@
   "senderTileBadgeCodeReady": "Code ready",
   "senderTileBadgeCurrentStep": "Current step",
   "todoTileBadgeReplyNeeded": "Reply needed",
+  "senderTodoAmendmentBadgePending": "Pending",
+  "senderTodoAmendmentBadgePaymentDue": "Payment due",
   "travelerTodoSupplementSummary": "{amount} fee to confirm",
   "@travelerTodoSupplementSummary": {
     "placeholders": {

@@ -11,6 +11,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_errors_shown_above.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
@@ -569,13 +570,17 @@ class _BidDetailViewState extends State<_BidDetailView>
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is CancellationError) {
-            // Une feuille ouverte par-dessus la fiche (tuile « À traiter »,
-            // code de retour) affiche elle-même l'erreur, au-dessus d'elle :
-            // le snackbar de l'écran resterait caché dessous, et doublé il
-            // éteindrait le sien (déduplication de DonySnackbar).
-            if (ModalRoute.of(context)?.isCurrent ?? true) {
-              ErrorPresenter.show(context, state.error);
-            }
+            // Une feuille ouverte par-dessus la fiche qui DÉCLARE afficher
+            // elle-même l'erreur (report de la tuile « À traiter », code de
+            // retour) la montre au-dessus d'elle : le snackbar de l'écran
+            // resterait caché dessous, et doublé il éteindrait le sien
+            // (déduplication de DonySnackbar). Sinon, l'écran affiche.
+            final shownAbove =
+                !(ModalRoute.of(context)?.isCurrent ?? true) &&
+                CancellationErrorsShownAbove.isClaimed(
+                  context.read<CancellationBloc>(),
+                );
+            if (!shownAbove) ErrorPresenter.show(context, state.error);
           }
         },
         child: BlocListener<RatingBloc, RatingState>(

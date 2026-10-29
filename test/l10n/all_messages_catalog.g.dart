@@ -2778,6 +2778,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'senderTileBadgeCodeReady': (l) => l.senderTileBadgeCodeReady,
   'senderTileBadgeCurrentStep': (l) => l.senderTileBadgeCurrentStep,
   'todoTileBadgeReplyNeeded': (l) => l.todoTileBadgeReplyNeeded,
+  'senderTodoAmendmentBadgePending': (l) => l.senderTodoAmendmentBadgePending,
+  'senderTodoAmendmentBadgePaymentDue': (l) =>
+      l.senderTodoAmendmentBadgePaymentDue,
   'travelerTodoSupplementSummary': (l) =>
       l.travelerTodoSupplementSummary(placeholderMarker('amount')),
   'senderTodoRecipientSummary': (l) => l.senderTodoRecipientSummary,

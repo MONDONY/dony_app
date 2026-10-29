@@ -7630,6 +7630,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get todoTileBadgeReplyNeeded => 'Réponse attendue';
 
   @override
+  String get senderTodoAmendmentBadgePending => 'En attente';
+
+  @override
+  String get senderTodoAmendmentBadgePaymentDue => 'Paiement attendu';
+
+  @override
   String travelerTodoSupplementSummary(String amount) {
     return '$amount de frais à valider';
   }

@@ -82,22 +82,24 @@ class AmendmentActionCubit extends Cubit<AmendmentActionState> {
     emit(const AmendmentActionState(status: AmendmentActionStatus.busy));
     try {
       await call();
+      // Mesuré même si l'encart s'est fermé pendant l'appel (sheet refermé de
+      // force) : l'action est confirmée par le serveur.
+      onDone();
       if (isClosed) return;
       emit(const AmendmentActionState(status: AmendmentActionStatus.done));
-      onDone();
     } catch (e) {
-      if (isClosed) return;
       final error = unwrapDioError(e);
-      emit(
-        AmendmentActionState(
-          status: AmendmentActionStatus.failure,
-          error: error,
-        ),
-      );
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.bidAmendmentActionFailed,
           properties: {'action': action, 'error_code': error.code ?? 'unknown'},
+        ),
+      );
+      if (isClosed) return;
+      emit(
+        AmendmentActionState(
+          status: AmendmentActionStatus.failure,
+          error: error,
         ),
       );
     }

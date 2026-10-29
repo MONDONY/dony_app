@@ -320,6 +320,56 @@ void main() {
     });
   });
 
+  // Pastille de la tuile : propre à l'état de la demande pour la
+  // modification (le voyageur répond, ou le paiement est attendu), « Réponse
+  // attendue » pour les autres tuiles.
+  group('pastille', () {
+    test('modification proposée ou autorisation carte : « En attente »', () {
+      for (final a in [
+        _amendment(),
+        _amendment(status: BidAmendmentStatus.authorizationPending),
+      ]) {
+        final bid = _bid(status: 'ACCEPTED', amendments: [a]);
+        expect(
+          senderTodoBadge(fr, bid, SenderTodoTile.amendment),
+          'En attente',
+        );
+        expect(senderTodoBadge(en, bid, SenderTodoTile.amendment), 'Pending');
+      }
+    });
+
+    test('modification à payer (mobile money) : « Paiement attendu »', () {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        amendments: [
+          _amendment(
+            status: BidAmendmentStatus.paymentPending,
+            rail: BidAmendment.railPawapay,
+          ),
+        ],
+      );
+      expect(
+        senderTodoBadge(fr, bid, SenderTodoTile.amendment),
+        'Paiement attendu',
+      );
+      expect(senderTodoBadge(en, bid, SenderTodoTile.amendment), 'Payment due');
+    });
+
+    test('report et destinataire : « Réponse attendue »', () {
+      final bid = _bid(
+        recipientAppStatus: 'DECLINED',
+        reschedule: _reschedule(),
+      );
+      for (final tile in [
+        SenderTodoTile.reschedule,
+        SenderTodoTile.recipient,
+      ]) {
+        expect(senderTodoBadge(fr, bid, tile), fr.todoTileBadgeReplyNeeded);
+        expect(senderTodoBadge(en, bid, tile), en.todoTileBadgeReplyNeeded);
+      }
+    });
+  });
+
   group('mesure d\'affichage', () {
     test('événement de tuile affichée, statut du colis', () {
       final bid = _bid(
@@ -342,6 +392,19 @@ void main() {
 
     // Clé de dédoublonnage : un nouveau report, ou un refus d'un autre
     // destinataire, sur un colis au même statut, est de nouveau mesuré.
+    test('modification : la clé suit la demande ouverte (A annulée, B créée, '
+        'même statut de colis)', () {
+      String key(String id) => senderTodoShown(
+        SenderTodoTile.amendment,
+        _bid(
+          status: 'ACCEPTED',
+          amendments: [_amendment(id: id)],
+        ),
+      ).status;
+      expect(key('am-A'), 'ACCEPTED|am-A');
+      expect(key('am-A'), isNot(key('am-B')));
+    });
+
     test('report : la clé suit l\'identifiant du report', () {
       String key(String id) => senderTodoShown(
         SenderTodoTile.reschedule,

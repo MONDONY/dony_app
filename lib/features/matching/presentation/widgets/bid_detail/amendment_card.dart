@@ -131,6 +131,12 @@ class AmendmentSenderCancelButton extends StatelessWidget {
   Future<void> _cancel(BuildContext context) async {
     final l = context.l10n;
     final cubit = context.read<AmendmentActionCubit>();
+    BidBloc? bidBloc;
+    try {
+      bidBloc = context.read<BidBloc>();
+    } on ProviderNotFoundException {
+      bidBloc = null;
+    }
     final confirmed = await DonyDialog.show(
       context,
       title: l.amendmentCancelConfirmTitle,
@@ -139,8 +145,13 @@ class AmendmentSenderCancelButton extends StatelessWidget {
       cancelLabel: l.commonCancel,
       variant: DonyDialogVariant.destructive,
     );
-    if (confirmed != true) return;
+    // Demande traitée ailleurs pendant la confirmation : le pied a retiré le
+    // bouton (démonté), rien à annuler. Le sheet se referme de lui-même.
+    if (!context.mounted || confirmed != true) return;
     await cubit.cancel(bid, amendment);
+    // Sheet refermé de force pendant l'appel : son écouteur n'est plus là
+    // pour relire le colis, la tuile resterait jusqu'au relevé suivant.
+    if (!context.mounted) bidBloc?.add(BidDetailRequested(bid.id));
   }
 }
 

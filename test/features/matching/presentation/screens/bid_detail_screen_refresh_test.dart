@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_action_tile.dart';
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -1391,6 +1392,8 @@ void main() {
       );
 
       setUp(() {
+        // Même message d'un test à l'autre : la déduplication le tairait.
+        DonySnackbar.clearDedup();
         cancellation = StreamController<CancellationState>.broadcast();
         when(
           () => cancellationBloc.stream,
@@ -1437,6 +1440,34 @@ void main() {
         expect(tester.takeException(), isNull);
         expect(find.byType(SenderDetailBody), findsOneWidget);
         expect(tile('Trajet reporté'), findsNothing);
+      });
+
+      // Une feuille qui n'affiche pas les erreurs d'annulation (ici « Plus de
+      // détails ») ne fait pas taire l'écran : le message n'est pas perdu.
+      testWidgets('feuille sans affichage d\'erreur ouverte : l\'écran affiche '
+          'l\'erreur comme avant', (tester) async {
+        await _pump(
+          tester,
+          bid: rescheduled(pending: true),
+          authBloc: senderAuth(),
+        );
+        await tester.pump(const Duration(seconds: 1));
+        await tester.tap(tile('Plus de détails'));
+        await tester.pumpAndSettle();
+        expect(find.byType(BidDetailsContent), findsOneWidget);
+
+        const error = ConflictException(
+          'trop tard',
+          code: 'reschedule-decision-closed',
+        );
+        cancellation.add(CancellationError(error));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(
+          find.text(ErrorPresenter.resolve(error).message),
+          findsOneWidget,
+        );
       });
 
       testWidgets('décision refusée : l\'erreur est visible par-dessus la '
