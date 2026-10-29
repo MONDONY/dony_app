@@ -1,6 +1,7 @@
 // Bottom sheets des tuiles « Votre envoi » de la fiche colis (vue expéditeur) :
 // titre, contenu, bouton du bas, BLoCs reposés, mesure d'ouverture et libellés
 // des boutons à taille nominale en anglais, à 360 dp et grand texte.
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
@@ -100,6 +101,7 @@ TravelerTrackingModel _tracking({
 );
 
 BidModel _bid({
+  String id = 'bid-001',
   String status = 'IN_TRANSIT',
   String? confirmationCode,
   bool pickupCodeRenewalNeeded = false,
@@ -108,7 +110,7 @@ BidModel _bid({
   String? recipientName = 'Awa',
   String? recipientPhone = '+221700000000',
 }) => BidModel(
-  id: 'bid-001',
+  id: id,
   announcementId: 'ann-001',
   senderId: 'sender-001',
   status: status,
@@ -221,6 +223,7 @@ void main() {
     Locale locale = const Locale('fr'),
     double textScale = 1,
     Size? size,
+    bool withBidBloc = true,
   }) async {
     if (size != null) {
       tester.view.physicalSize = size;
@@ -241,7 +244,7 @@ void main() {
         ),
         home: MultiBlocProvider(
           providers: [
-            BlocProvider<BidBloc>.value(value: bidBloc),
+            if (withBidBloc) BlocProvider<BidBloc>.value(value: bidBloc),
             BlocProvider<BidAcceptanceBloc>.value(
               value: _MockBidAcceptanceBloc(),
             ),
@@ -523,6 +526,74 @@ void main() {
 
       final inSheet = tester.element(find.byType(ColisDestinataireCard));
       expect(inSheet.read<BidBloc>(), same(bidBloc));
+    });
+  });
+
+  group('colis courant', () {
+    late StreamController<BidState> states;
+
+    setUp(() {
+      states = StreamController<BidState>.broadcast();
+      addTearDown(states.close);
+      whenListen(bidBloc, states.stream, initialState: BidInitial());
+    });
+
+    testWidgets('colis sheet shows the new recipient after a BidDetailLoaded', (
+      tester,
+    ) async {
+      await openTile(tester, _bid(), SenderTile.colis);
+      expect(find.text('Awa'), findsOneWidget);
+
+      states.add(BidDetailLoaded(_bid(recipientName: 'Fatou')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Fatou'), findsOneWidget);
+      expect(find.text('Awa'), findsNothing);
+    });
+
+    testWidgets('a BidDetailLoaded of another bid changes nothing', (
+      tester,
+    ) async {
+      await openTile(tester, _bid(), SenderTile.colis);
+
+      states.add(
+        BidDetailLoaded(_bid(recipientName: 'Fatou', id: 'bid-other')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Awa'), findsOneWidget);
+      expect(find.text('Fatou'), findsNothing);
+    });
+
+    testWidgets('without BidBloc the sheet shows the opening bid', (
+      tester,
+    ) async {
+      await openTile(tester, _bid(), SenderTile.colis, withBidBloc: false);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Awa'), findsOneWidget);
+    });
+
+    testWidgets('amendment button follows the current bid', (tester) async {
+      await openTile(tester, _bid(amendmentAllowed: true), SenderTile.colis);
+      expect(find.text('Ajouter des kilos ou des articles'), findsOneWidget);
+
+      states.add(BidDetailLoaded(_bid()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ajouter des kilos ou des articles'), findsNothing);
+    });
+
+    testWidgets('prevenir button label follows the current bid', (
+      tester,
+    ) async {
+      await openTile(tester, _bid(), SenderTile.prevenir);
+      expect(find.text('Prévenir sur WhatsApp'), findsOneWidget);
+
+      states.add(BidDetailLoaded(_bid(confirmationCode: '482913')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Envoyer le code sur WhatsApp'), findsOneWidget);
     });
   });
 

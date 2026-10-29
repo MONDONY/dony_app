@@ -5,6 +5,7 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry_card.dart';
@@ -50,61 +51,21 @@ Future<void> openSenderTileSheet(
     bidBloc = null;
   }
 
-  final (title, child, stickyBottom) = switch (tile) {
-    SenderTile.prevenir => (
-      l.recipientNotifyTitle(PrevenirDestinataire.displayName(l, bid)),
-      PrevenirDestinataireBody(bid: bid),
-      Builder(
-        builder: (sheetContext) => DonyButton(
-          label: PrevenirDestinataire.buttonLabel(l, bid),
-          iconAsset: 'message-circle',
-          onPressed: () => PrevenirDestinataire.notify(sheetContext, bid),
-        ),
-      ),
+  final title = switch (tile) {
+    SenderTile.prevenir => l.recipientNotifyTitle(
+      PrevenirDestinataire.displayName(l, bid),
     ),
-    SenderTile.suivi => (
-      l.senderTileSuivi,
-      _SuiviContent(bid: bid),
-      Builder(
-        builder: (sheetContext) => DonyButton(
-          label: l.travelerTrackingOpenTimeline,
-          variant: DonyButtonVariant.secondary,
-          onPressed: () => _closeThen(sheetContext, context, () {
-            _logTimelineOpened(bid);
-            openSenderTrackingTimeline(context, bid);
-          }),
-        ),
-      ),
-    ),
-    SenderTile.lieux => (
-      l.senderTileLieux,
-      _RoundedMiniMap(child: ParcelLocationsCard(bid: bid, framed: false)),
-      null,
-    ),
-    SenderTile.colis => (
-      l.senderTileColis,
-      ColisDestinataireCard(bid: bid, framed: false),
-      AmendmentEntryCard.shouldShow(bid)
-          ? Builder(
-              builder: (sheetContext) => DonyButton(
-                label: l.amendmentEntryButton,
-                iconAsset: 'plus',
-                variant: DonyButtonVariant.secondary,
-                onPressed: () => _closeThen(
-                  sheetContext,
-                  context,
-                  () => unawaited(AmendmentEntryCard.open(context, bid)),
-                ),
-              ),
-            )
-          : null,
-    ),
-    SenderTile.details => (
-      l.bidDetailMoreDetails,
-      BidDetailsContent(bid: bid),
-      null,
-    ),
+    SenderTile.suivi => l.senderTileSuivi,
+    SenderTile.lieux => l.senderTileLieux,
+    SenderTile.colis => l.senderTileColis,
+    SenderTile.details => l.bidDetailMoreDetails,
   };
+
+  // Contenu et bouton du bas lisent le colis courant : le sheet reste ouvert
+  // pendant les rechargements de l'écran (relevé périodique, changement de
+  // destinataire fait depuis le sheet Colis).
+  final live = bidBloc != null;
+  final stickyBottom = _stickyBottomFor(tile, l, context, bid, live: live);
 
   final screenBidBloc = bidBloc;
   return DonyBottomSheet.show<void>(
@@ -116,8 +77,102 @@ Future<void> openSenderTileSheet(
         : (content) =>
               BlocProvider<BidBloc>.value(value: screenBidBloc, child: content),
     stickyBottom: stickyBottom,
-    child: child,
+    child: _LiveBid(
+      bid: bid,
+      live: live,
+      builder: (_, current) => switch (tile) {
+        SenderTile.prevenir => PrevenirDestinataireBody(bid: current),
+        SenderTile.suivi => _SuiviContent(bid: current),
+        SenderTile.lieux => _RoundedMiniMap(
+          child: ParcelLocationsCard(bid: current, framed: false),
+        ),
+        SenderTile.colis => ColisDestinataireCard(bid: current, framed: false),
+        SenderTile.details => BidDetailsContent(bid: current),
+      },
+    ),
   );
+}
+
+/// Bouton du bas du sheet de [tile], `null` quand la tuile n'en a pas. La
+/// présence du pied est décidée à l'ouverture (colis : modification autorisée
+/// pour [bid]) ; le bouton lui-même suit le colis courant.
+Widget? _stickyBottomFor(
+  SenderTile tile,
+  AppLocalizations l,
+  BuildContext screenContext,
+  BidModel bid, {
+  required bool live,
+}) {
+  Widget liveBid(Widget Function(BuildContext, BidModel) builder) =>
+      _LiveBid(bid: bid, live: live, builder: builder);
+
+  return switch (tile) {
+    SenderTile.prevenir => liveBid(
+      (sheetContext, current) => DonyButton(
+        label: PrevenirDestinataire.buttonLabel(l, current),
+        iconAsset: 'message-circle',
+        onPressed: () => PrevenirDestinataire.notify(sheetContext, current),
+      ),
+    ),
+    SenderTile.suivi => liveBid(
+      (sheetContext, current) => DonyButton(
+        label: l.travelerTrackingOpenTimeline,
+        variant: DonyButtonVariant.secondary,
+        onPressed: () => _closeThen(sheetContext, screenContext, () {
+          _logTimelineOpened(current);
+          openSenderTrackingTimeline(screenContext, current);
+        }),
+      ),
+    ),
+    SenderTile.colis =>
+      AmendmentEntryCard.shouldShow(bid)
+          ? liveBid(
+              (sheetContext, current) => AmendmentEntryCard.shouldShow(current)
+                  ? DonyButton(
+                      label: l.amendmentEntryButton,
+                      iconAsset: 'plus',
+                      variant: DonyButtonVariant.secondary,
+                      onPressed: () => _closeThen(
+                        sheetContext,
+                        screenContext,
+                        () => unawaited(
+                          AmendmentEntryCard.open(screenContext, current),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            )
+          : null,
+    SenderTile.lieux || SenderTile.details => null,
+  };
+}
+
+/// Rend [builder] avec le colis courant : le dernier [BidDetailLoaded] du
+/// `BidBloc` de l'écran pour ce colis, à défaut [bid] (celui de l'ouverture).
+/// Sans `BidBloc` ([live] faux), rendu statique avec [bid].
+class _LiveBid extends StatelessWidget {
+  const _LiveBid({
+    required this.bid,
+    required this.live,
+    required this.builder,
+  });
+
+  final BidModel bid;
+  final bool live;
+  final Widget Function(BuildContext context, BidModel bid) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!live) return builder(context, bid);
+    return BlocBuilder<BidBloc, BidState>(
+      buildWhen: (_, state) =>
+          state is BidDetailLoaded && state.bid.id == bid.id,
+      builder: (context, state) => builder(
+        context,
+        state is BidDetailLoaded && state.bid.id == bid.id ? state.bid : bid,
+      ),
+    );
+  }
 }
 
 /// Ferme le sheet, puis lance [action] si l'écran est toujours là.
