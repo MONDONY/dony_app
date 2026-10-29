@@ -45,7 +45,15 @@ class TravelerGainCard extends StatelessWidget {
   const TravelerGainCard({super.key, required this.bid});
 
   static const _terminal = {'COMPLETED', 'DELIVERED'};
-  static const _cancelled = {'CANCELLED', 'REJECTED', 'NO_SHOW', 'EXPIRED'};
+  // PARCEL_REFUSED : le voyageur a refusé le colis, l'expéditeur est remboursé,
+  // rien ne sera versé au voyageur (jamais « séquestré, libéré à la livraison »).
+  static const _cancelled = {
+    'CANCELLED',
+    'REJECTED',
+    'NO_SHOW',
+    'EXPIRED',
+    'PARCEL_REFUSED',
+  };
 
   @override
   Widget build(BuildContext context) {
