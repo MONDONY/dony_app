@@ -3,6 +3,7 @@ import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/l10n/l10n.dart';
+import 'package:intl/intl.dart';
 
 /// Libellé court sous le montant de la carte de liste des discussions de prix.
 extension BidNegotiationStageL10n on BidNegotiationSummary {
@@ -144,6 +145,25 @@ String? travelerVisibleTrackingNumber(BidModel bid) =>
 String? travelerVisibleTrackingNumberFor(String? number, String status) {
   if (number == null || number.trim().isEmpty) return null;
   return _bidTrackingNumberTravelerStatuses.contains(status) ? number : null;
+}
+
+/// Sous-titre du héros « Une absence est signalée » (absence à la livraison,
+/// côté adversaire, quand « Contester ce signalement » est proposé), voyageur
+/// comme expéditeur : avec l'échéance de contestation en heure locale quand le
+/// serveur la renvoie (`deliveryNoShowContestationDeadline`), sinon le texte
+/// sans date (aussi quand les données de locale manquent).
+String deliveryNoShowAlertSubtitle(AppLocalizations l, BidModel bid) {
+  final deadline = bid.deliveryNoShowContestationDeadline?.toLocal();
+  if (deadline == null) return l.bidDetailDeliveryNoShowAlertSubtitle;
+  final locale = l.localeName;
+  try {
+    return l.bidDetailDeliveryNoShowAlertSubtitleUntil(
+      DateFormat.MMMEd(locale).format(deadline),
+      DateFormat.jm(locale).format(deadline),
+    );
+  } catch (_) {
+    return l.bidDetailDeliveryNoShowAlertSubtitle;
+  }
 }
 
 /// Retour en cours d'un colis annulé alors que le voyageur l'avait déjà

@@ -420,6 +420,76 @@ void main() {
       });
     }
 
+    // Arrivée par notification ou lien profond : `push('/bids/id')` sans
+    // `extra` ouvre un colis squelette (sans expéditeur), le rôle n'est connu
+    // qu'au chargement.
+    group('colis squelette (notification, lien profond)', () {
+      late StreamController<BidState> states;
+
+      setUp(() {
+        states = StreamController<BidState>.broadcast();
+        when(() => bidBloc.stream).thenAnswer((_) => states.stream);
+      });
+
+      tearDown(() => states.close());
+
+      Future<void> load(WidgetTester tester, String status) async {
+        states.add(
+          BidDetailLoaded(
+            _makeBid(status: status, paymentMethod: BidPaymentMethod.stripe),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+
+      for (final status in ['PENDING', 'HANDED_OVER']) {
+        testWidgets('voyageur · $status : aucun GET du paiement, ni à '
+            'l\'ouverture ni au chargement', (tester) async {
+          await _pump(
+            tester,
+            bid: BidModel.skeleton('bid-001'),
+            authBloc: viewer('traveler-001'),
+          );
+          verifyNever(() => paymentRepository.getPaymentForBid(any()));
+
+          await load(tester, status);
+          verifyNever(() => paymentRepository.getPaymentForBid(any()));
+        });
+
+        testWidgets('expéditeur · $status : un seul GET, au chargement', (
+          tester,
+        ) async {
+          await _pump(
+            tester,
+            bid: BidModel.skeleton('bid-001'),
+            authBloc: senderAuth(),
+          );
+          verifyNever(() => paymentRepository.getPaymentForBid(any()));
+
+          await load(tester, status);
+          verify(() => paymentRepository.getPaymentForBid('bid-001')).called(1);
+        });
+      }
+
+      testWidgets('rôle non résolu : le paiement est lu au chargement', (
+        tester,
+      ) async {
+        final authBloc = _MockAuthBloc();
+        when(() => authBloc.state).thenReturn(const AuthInitial());
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
+        await _pump(
+          tester,
+          bid: BidModel.skeleton('bid-001'),
+          authBloc: authBloc,
+        );
+        await load(tester, 'HANDED_OVER');
+        verify(() => paymentRepository.getPaymentForBid('bid-001')).called(1);
+      });
+    });
+
     testWidgets('rôle non résolu (aucun utilisateur) : le paiement est lu', (
       tester,
     ) async {

@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockCancelBloc extends MockBloc<CancellationEvent, CancellationState>
@@ -593,17 +594,25 @@ void main() {
       deliveryNoShowContestationDeadline: deadline,
     );
 
-    testWidgets('adversaire + échéance → « contester jusqu\'au … à … »', (
+    // Échéance en UTC : l'affichage doit se faire en heure locale.
+    final deadlineUtc = DateTime.utc(2026, 10, 30, 14, 30);
+
+    testWidgets('adversaire + échéance → date et heure locales exactes', (
       tester,
     ) async {
-      await _pump(
-        tester,
-        deliveryBid(deadline: DateTime.now().add(const Duration(hours: 20))),
-      );
+      await _pump(tester, deliveryBid(deadline: deadlineUtc));
+      final local = deadlineUtc.toLocal();
+      final date = DateFormat.MMMEd('fr').format(local);
+      final time = DateFormat.jm('fr').format(local);
       expect(find.textContaining('Une absence est signalée'), findsOneWidget);
-      expect(find.textContaining('Vous pouvez contester jusqu\'au '), findsOne);
-      expect(find.textContaining(' à '), findsWidgets);
-      expect(find.textContaining('si ce signalement est erroné'), findsOne);
+      expect(
+        find.text(
+          'Une absence à la livraison a été signalée sur cet envoi. Vous '
+          "pouvez contester jusqu'au $date à $time si ce signalement est "
+          'erroné.',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Contester ce signalement'), findsOneWidget);
     });
 
@@ -653,18 +662,22 @@ void main() {
           home: Scaffold(
             body: BlocProvider<CancellationBloc>.value(
               value: cancel,
-              child: TravelerHeroCard(
-                bid: deliveryBid(
-                  deadline: DateTime.now().add(const Duration(hours: 20)),
-                ),
-              ),
+              child: TravelerHeroCard(bid: deliveryBid(deadline: deadlineUtc)),
             ),
           ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.textContaining('You can contest it until '), findsOneWidget);
-      expect(find.textContaining(' at '), findsWidgets);
+      final local = deadlineUtc.toLocal();
+      final date = DateFormat.MMMEd('en').format(local);
+      final time = DateFormat.jm('en').format(local);
+      expect(
+        find.text(
+          'A delivery no-show has been reported on this shipment. You can '
+          'contest it until $date at $time if this report is wrong.',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Contest this report'), findsOneWidget);
     });
   });

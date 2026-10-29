@@ -176,7 +176,9 @@ class _BidDetailViewState extends State<_BidDetailView>
     _skeletonLoading = _bid.isSkeleton;
     _lastUserId = context.read<AuthBloc>().state.currentUserId;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
-    _loadPaymentStatus();
+    // Colis squelette (notification, lien profond) : le rôle n'est connu qu'au
+    // chargement, la lecture du paiement attend `BidDetailLoaded`.
+    if (!_bid.isSkeleton) _loadPaymentStatus();
     if (_kPollingStatuses.contains(_bid.status)) {
       _refreshTimer = Timer.periodic(_kPollingInterval, (_) => _pollDetail());
     }
@@ -662,6 +664,7 @@ class _BidDetailViewState extends State<_BidDetailView>
                   _skeletonLoading = false;
                 } else if (state is BidDetailLoaded) {
                   final previousBidId = _bid.id;
+                  final wasSkeleton = _bid.isSkeleton;
                   _bid = state.bid;
                   _skeletonLoading = false;
                   _maybeOpenCodeRenewal(context, state.bid);
@@ -669,7 +672,11 @@ class _BidDetailViewState extends State<_BidDetailView>
                     _existingPaymentNotifier.value = null;
                     _paymentLoadedNotifier.value = false;
                   }
-                  if ((state.bid.status == 'PENDING' ||
+                  // Premier chargement d'un colis squelette : la lecture du
+                  // paiement (expéditeur seulement) n'a pas eu lieu à
+                  // l'ouverture, quel que soit le statut.
+                  if ((wasSkeleton ||
+                          state.bid.status == 'PENDING' ||
                           state.bid.status == 'ACCEPTED') &&
                       !_paymentLoadedNotifier.value) {
                     _loadPaymentStatus();

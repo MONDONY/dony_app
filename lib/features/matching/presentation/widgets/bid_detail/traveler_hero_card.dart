@@ -567,7 +567,7 @@ class _DeliveryNoShowHero extends StatelessWidget {
               : l.bidDetailDeliveryNoShowAlertTitle,
           subtitle: contested
               ? l.bidDetailDeliveryNoShowContestSentSubtitle
-              : _alertSubtitle(context),
+              : deliveryNoShowAlertSubtitle(l, bid),
           footer: contested
               ? null
               : _HeroButton(
@@ -580,23 +580,5 @@ class _DeliveryNoShowHero extends StatelessWidget {
         );
       },
     );
-  }
-
-  /// Sous-titre du signalement encore ouvert : avec l'échéance de contestation
-  /// quand le serveur la renvoie, sinon le texte sans date.
-  String _alertSubtitle(BuildContext context) {
-    final l = context.l10n;
-    final deadline = bid.deliveryNoShowContestationDeadline?.toLocal();
-    if (deadline == null) return l.bidDetailDeliveryNoShowAlertSubtitle;
-    final locale = l.localeName;
-    try {
-      return l.bidDetailDeliveryNoShowAlertSubtitleUntil(
-        DateFormat.MMMEd(locale).format(deadline),
-        DateFormat.jm(locale).format(deadline),
-      );
-    } catch (_) {
-      // Repli sur le texte sans date quand les données de locale manquent.
-      return l.bidDetailDeliveryNoShowAlertSubtitle;
-    }
   }
 }
