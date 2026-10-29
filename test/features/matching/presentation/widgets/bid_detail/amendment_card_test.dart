@@ -190,16 +190,13 @@ void main() {
       expect(AmendmentTravelerCard.shouldShow(_bid(null)), isFalse);
     });
 
-    // « À traiter » côté voyageur : la carte porte un bouton qui attend son
-    // geste (Accepter / Refuser, Finaliser la commission, « Les kilos en plus
-    // ne sont pas là »).
-    test('traveler_needsReply_whenACardButtonAwaitsTheTraveler', () {
+    // « À traiter » côté voyageur : une réponse attendue (Accepter / Refuser,
+    // Finaliser la commission). « Les kilos en plus ne sont pas là » est un
+    // geste facultatif : information.
+    test('traveler_needsReply_onlyProposedOrCommissionToFinalize', () {
       for (final s in [
         BidAmendmentStatus.proposed,
         BidAmendmentStatus.commissionPending,
-        BidAmendmentStatus.accepted,
-        BidAmendmentStatus.payoutPending,
-        BidAmendmentStatus.paidOut,
       ]) {
         expect(
           AmendmentTravelerCard.needsReply(_bid(_am(status: s))),
@@ -212,6 +209,9 @@ void main() {
       for (final s in [
         BidAmendmentStatus.authorizationPending,
         BidAmendmentStatus.paymentPending,
+        BidAmendmentStatus.accepted,
+        BidAmendmentStatus.payoutPending,
+        BidAmendmentStatus.paidOut,
         BidAmendmentStatus.declined,
         BidAmendmentStatus.expired,
         BidAmendmentStatus.cancelled,
@@ -228,28 +228,34 @@ void main() {
       expect(AmendmentTravelerCard.needsReply(_bid(null)), isFalse);
     });
 
-    test('traveler_needsReply_acceptedOnlyBeforeHandover', () {
-      final accepted = _am(status: BidAmendmentStatus.accepted);
-      for (final status in ['HANDED_OVER', 'IN_TRANSIT', 'COMPLETED']) {
-        expect(
-          AmendmentTravelerCard.needsReply(_bid(accepted, status: status)),
-          isFalse,
-          reason: status,
-        );
-      }
-    });
-
     test('traveler_needsReply_anySectionAwaitingTheTraveler', () {
-      // Paiement de l'expéditeur attendu, et une modification acquise avant :
-      // le bouton « Les kilos en plus ne sont pas là » de la seconde suffit.
-      final bid = _bid(
-        null,
-        all: [
-          _am(id: 'am-0', status: BidAmendmentStatus.accepted),
-          _am(status: BidAmendmentStatus.paymentPending),
-        ],
+      // Une modification acquise puis une nouvelle demande proposée : la
+      // seconde suffit.
+      expect(
+        AmendmentTravelerCard.needsReply(
+          _bid(
+            null,
+            all: [
+              _am(id: 'am-0', status: BidAmendmentStatus.accepted),
+              _am(),
+            ],
+          ),
+        ),
+        isTrue,
       );
-      expect(AmendmentTravelerCard.needsReply(bid), isTrue);
+      // Acquise et paiement attendu : rien n'attend le voyageur.
+      expect(
+        AmendmentTravelerCard.needsReply(
+          _bid(
+            null,
+            all: [
+              _am(id: 'am-0', status: BidAmendmentStatus.accepted),
+              _am(status: BidAmendmentStatus.paymentPending),
+            ],
+          ),
+        ),
+        isFalse,
+      );
     });
   });
 

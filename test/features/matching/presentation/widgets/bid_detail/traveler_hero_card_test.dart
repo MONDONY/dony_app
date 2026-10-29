@@ -683,21 +683,32 @@ void main() {
       );
     });
 
-    test('absence à la livraison signalée contre le voyageur : alerte', () {
-      for (final dns in ['PENDING_CONFIRMATION', 'CONTESTED']) {
-        for (final reported in [false, null]) {
-          expect(
-            TravelerHeroCard.hasAction(
-              heroBid(
-                'ARRIVED',
-                deliveryNoShowStatus: dns,
-                reportedByTraveler: reported,
-              ),
+    test('absence à la livraison signalée contre le voyageur : bouton '
+        '« Contester ce signalement »', () {
+      for (final reported in [false, null]) {
+        expect(
+          TravelerHeroCard.hasAction(
+            heroBid(
+              'ARRIVED',
+              deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+              reportedByTraveler: reported,
             ),
-            isTrue,
-            reason: '$dns / $reported',
-          );
-        }
+          ),
+          isTrue,
+          reason: '$reported',
+        );
+        // Contestation envoyée : alerte rouge, mais plus de bouton.
+        expect(
+          TravelerHeroCard.hasAction(
+            heroBid(
+              'ARRIVED',
+              deliveryNoShowStatus: 'CONTESTED',
+              reportedByTraveler: reported,
+            ),
+          ),
+          isFalse,
+          reason: '$reported',
+        );
       }
     });
 

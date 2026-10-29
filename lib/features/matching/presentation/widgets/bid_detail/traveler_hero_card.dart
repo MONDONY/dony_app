@@ -67,24 +67,24 @@ class TravelerHeroCard extends StatelessWidget {
       _windowExpired(bid) ||
       _contentStatuses.contains(bid.status);
 
-  /// La carte est une alerte (variante `alert`) qui attend le voyageur : elle
-  /// va dans « À traiter » au lieu de rester sous le billet. Dans l'ordre des
-  /// priorités de [build] :
+  /// La carte porte un bouton (un `footer`) : elle va dans « À traiter » au
+  /// lieu de rester sous le billet. Dans l'ordre des priorités de [build] :
   /// - 1, absence de l'expéditeur signalée ou contestée : variante `wait`, sans
-  ///   bouton, le voyageur attend la réponse → `false` (et elle masque tout le
-  ///   reste) ;
-  /// - 1b, absence à la livraison signalée par l'expéditeur CONTRE le voyageur :
-  ///   variante `alert`, « Contester ce signalement » tant qu'il n'a pas
-  ///   contesté, puis « contestation envoyée » → `true` ; signalée par le
-  ///   voyageur lui-même : variante `wait` → `false` ;
-  /// - 2, date limite de dépôt dépassée (ACCEPTED) : variante `alert`,
-  ///   « Signaler l'absence de l'expéditeur » → `true` ;
+  ///   bouton → `false` (et elle masque tout le reste) ;
+  /// - 1b, absence à la livraison signalée par l'expéditeur CONTRE le voyageur,
+  ///   pas encore contestée : « Contester ce signalement » → `true` ; une fois
+  ///   contestée, alerte rouge sans bouton (« contestation envoyée ») →
+  ///   `false` ; signalée par le voyageur lui-même : `wait`, sans bouton →
+  ///   `false` ;
+  /// - 2, date limite de dépôt dépassée (ACCEPTED) : « Signaler l'absence de
+  ///   l'expéditeur » → `true` ;
   /// - 3, mapping par statut (« Récupérez le colis », « Colis en route »…) :
-  ///   information seule → `false`.
+  ///   information seule, sans bouton → `false`.
   static bool hasAction(BidModel bid) {
     if (_senderNoShowOpen(bid)) return false;
     if (_deliveryNoShowOpen(bid)) {
-      return bid.deliveryNoShowReportedByTraveler != true;
+      return bid.deliveryNoShowReportedByTraveler != true &&
+          bid.deliveryNoShowStatus != 'CONTESTED';
     }
     return _windowExpired(bid);
   }

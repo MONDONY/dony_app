@@ -5,6 +5,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -15,6 +16,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/bloc/delivery_noshow_procedure/delivery_noshow_procedure_cubit.dart';
+import 'package:dony/features/cancellation/data/models/delivery_noshow_procedure_model.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_accept_cubit.dart';
@@ -190,6 +192,19 @@ List<String> _sections(WidgetTester tester) {
 Finder _inSection(String name, Finder child) =>
     find.descendant(of: _section(name), matching: child);
 
+/// Si « À traiter » est affiché, il a du contenu sous son titre.
+void _expectTodoNeverEmpty(WidgetTester tester) {
+  final todo = _section('todo');
+  if (todo.evaluate().isEmpty) return;
+  final title = find.descendant(of: todo, matching: find.text('À traiter'));
+  final titleHeight = tester.getSize(title).height;
+  // Titre, espace sous le titre, puis au moins 20 px de contenu.
+  expect(
+    tester.getSize(todo).height,
+    greaterThan(titleHeight + DonySpacing.md + 20),
+  );
+}
+
 Future<void> _pump(
   WidgetTester tester,
   BidModel bid, {
@@ -325,7 +340,7 @@ void main() {
       ),
       'HANDED_OVER départ passé': (
         _bid('HANDED_OVER', departureAt: _past),
-        ['billet', 'hero', 'todo', ...base],
+        ['billet', 'hero', 'info-noshow', ...base],
       ),
       'IN_TRANSIT avant le départ': (
         _bid('IN_TRANSIT', departureAt: _future),
@@ -333,11 +348,11 @@ void main() {
       ),
       'IN_TRANSIT départ passé': (
         _bid('IN_TRANSIT', departureAt: _past),
-        ['billet', 'hero', 'todo', ...base],
+        ['billet', 'hero', 'info-noshow', ...base],
       ),
       'ARRIVED': (
         _bid('ARRIVED', departureAt: _past),
-        ['billet', 'hero', 'todo', ...base],
+        ['billet', 'hero', 'info-noshow', ...base],
       ),
       'COMPLETED noté': (
         _bid('COMPLETED', travelerHasRated: true),
@@ -360,6 +375,7 @@ void main() {
         await _pump(tester, bid);
 
         expect(_sections(tester), expected);
+        _expectTodoNeverEmpty(tester);
         expect(tester.takeException(), isNull);
       });
     }
@@ -460,7 +476,7 @@ void main() {
       );
     });
 
-    testWidgets('contestation envoyée : l\'alerte reste dans « À traiter »', (
+    testWidgets('contestation envoyée : alerte sans bouton, sous le billet', (
       tester,
     ) async {
       await _pump(
@@ -471,8 +487,9 @@ void main() {
           deliveryNoShowReportedByTraveler: false,
         ),
       );
-      expect(_inSection('todo', find.byType(TravelerHeroCard)), findsOneWidget);
+      expect(_inSection('hero', find.byType(TravelerHeroCard)), findsOneWidget);
       expect(find.text('Contester ce signalement'), findsNothing);
+      expect(_section('todo'), findsNothing);
     });
 
     for (final dns in ['PENDING_CONFIRMATION', 'CONTESTED']) {
@@ -504,40 +521,45 @@ void main() {
   });
 
   // ── Destinataire absent à la livraison (FLUTTER-E2) ────────────────────────
+  // Toute la procédure (checklist comprise) est une information sans titre :
+  // son contenu dépend d'un chargement, « À traiter » n'en dépend jamais.
   group('procédure « destinataire absent »', () {
-    testWidgets('ARRIVED : la procédure est dans « À traiter »', (
+    testWidgets('ARRIVED : la procédure est en information, sans titre', (
       tester,
     ) async {
       await _pump(tester, _bid('ARRIVED', departureAt: _past));
       expect(
-        _inSection('todo', find.byType(DeliveryNoShowProcedureCard)),
+        _inSection('info-noshow', find.byType(DeliveryNoShowProcedureCard)),
         findsOneWidget,
       );
       // Procédure indisponible (back ancien) : l'ancien signalement.
       expect(
-        _inSection('todo', find.byType(DeliveryNoShowCtaCell)),
+        _inSection('info-noshow', find.byType(DeliveryNoShowCtaCell)),
         findsOneWidget,
       );
+      expect(_section('todo'), findsNothing);
     });
 
     for (final status in ['HANDED_OVER', 'IN_TRANSIT']) {
-      testWidgets('$status départ passé : cellule de signalement dans « À '
-          'traiter »', (tester) async {
+      testWidgets('$status départ passé : cellule de signalement repliée en '
+          'information', (tester) async {
         await _pump(tester, _bid(status, departureAt: _past));
         expect(
-          _inSection('todo', find.byType(DeliveryNoShowCtaCell)),
+          _inSection(
+            'info-noshow',
+            find.text("Signaler l'absence du destinataire"),
+          ),
           findsOneWidget,
         );
-        expect(
-          _inSection('todo', find.text('Signaler l\'absence du destinataire')),
-          findsOneWidget,
-        );
+        expect(_section('todo'), findsNothing);
       });
 
-      testWidgets('$status avant le départ : pas de cellule, pas de « À '
-          'traiter »', (tester) async {
+      testWidgets('$status avant le départ : ni cellule ni section', (
+        tester,
+      ) async {
         await _pump(tester, _bid(status, departureAt: _future));
         expect(find.byType(DeliveryNoShowCtaCell), findsNothing);
+        expect(_section('info-noshow'), findsNothing);
         expect(_section('todo'), findsNothing);
       });
     }
@@ -555,6 +577,85 @@ void main() {
       // La procédure indisponible remonte la cellule, qui ne rend plus rien.
       expect(find.text("Signaler l'absence du destinataire"), findsNothing);
       expect(_section('todo'), findsNothing);
+    });
+
+    // « À traiter » n'est jamais affiché sans contenu, quel que soit l'état
+    // de la procédure.
+    group('« À traiter » jamais sans contenu', () {
+      final now = DateTime.now();
+      DeliveryNoShowProcedureModel model({
+        bool reported = false,
+        DateTime? holdUntil,
+        DateTime? unclaimedAt,
+      }) => DeliveryNoShowProcedureModel(
+        bidId: 'b1',
+        role: 'TRAVELER',
+        bidStatus: 'ARRIVED',
+        arrivedAt: now.subtract(const Duration(hours: 3)),
+        reported: reported,
+        holdUntil: holdUntil,
+        unclaimedAt: unclaimedAt,
+      );
+      final states = <String, DeliveryNoShowProcedureState>{
+        'Loading': const DeliveryNoShowProcedureLoading(),
+        'Error': const DeliveryNoShowProcedureError(NetworkException('x')),
+        'Unavailable': const DeliveryNoShowProcedureUnavailable(),
+        'checklist': DeliveryNoShowProcedureLoaded(model(), now: now),
+        'garde': DeliveryNoShowProcedureLoaded(
+          model(reported: true, holdUntil: now.add(const Duration(days: 5))),
+          now: now,
+        ),
+        'non réclamé': DeliveryNoShowProcedureLoaded(
+          model(reported: true, unclaimedAt: now),
+          now: now,
+        ),
+        'signalé, sans garde': DeliveryNoShowProcedureLoaded(
+          model(reported: true),
+          now: now,
+        ),
+      };
+      final bids = <String, BidModel>{
+        'arrivé': _bid('ARRIVED', departureAt: _past),
+        'signalé par le voyageur': _bid(
+          'ARRIVED',
+          departureAt: _past,
+          deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+          deliveryNoShowReportedByTraveler: true,
+        ),
+        // Le hero à bouton remplit « À traiter » ; la procédure n'y est pas.
+        'signalé contre le voyageur': _bid(
+          'ARRIVED',
+          departureAt: _past,
+          deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+          deliveryNoShowReportedByTraveler: false,
+        ),
+      };
+      for (final MapEntry(key: stateName, value: state) in states.entries) {
+        for (final MapEntry(key: bidName, value: bid) in bids.entries) {
+          testWidgets('$stateName, $bidName', (tester) async {
+            whenListen(
+              procedure,
+              const Stream<DeliveryNoShowProcedureState>.empty(),
+              initialState: state,
+            );
+            await _pump(tester, bid);
+
+            _expectTodoNeverEmpty(tester);
+            expect(
+              _inSection('todo', find.byType(DeliveryNoShowProcedureCard)),
+              findsNothing,
+            );
+            expect(
+              _inSection(
+                'info-noshow',
+                find.byType(DeliveryNoShowProcedureCard),
+              ),
+              findsOneWidget,
+            );
+            expect(tester.takeException(), isNull);
+          });
+        }
+      }
     });
   });
 
@@ -654,9 +755,6 @@ void main() {
     for (final s in [
       BidAmendmentStatus.proposed,
       BidAmendmentStatus.commissionPending,
-      BidAmendmentStatus.accepted,
-      BidAmendmentStatus.payoutPending,
-      BidAmendmentStatus.paidOut,
     ]) {
       testWidgets('${s.name} (ACCEPTED) : dans « À traiter »', (tester) async {
         await _pump(tester, _bid('ACCEPTED', amendments: [_amendment(s)]));
@@ -671,6 +769,11 @@ void main() {
     for (final s in [
       BidAmendmentStatus.authorizationPending,
       BidAmendmentStatus.paymentPending,
+      // Acquise : « Les kilos en plus ne sont pas là » reste un geste
+      // facultatif, porté par la carte d'information.
+      BidAmendmentStatus.accepted,
+      BidAmendmentStatus.payoutPending,
+      BidAmendmentStatus.paidOut,
       BidAmendmentStatus.declined,
       BidAmendmentStatus.expired,
       BidAmendmentStatus.cancelled,

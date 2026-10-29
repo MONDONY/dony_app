@@ -25,14 +25,21 @@ import 'package:flutter_animate/flutter_animate.dart';
 /// Corps de l'écran « Détail d'envoi » (vue voyageur).
 ///
 /// Ordre : billet de colis ; hero « prochaine étape » sans titre quand il ne
-/// fait qu'informer ; « À traiter » (ce qui attend un geste du voyageur, et le
-/// hero quand c'est une alerte, seulement s'il y a quelque chose) ; cartes
-/// d'information sans titre (attente du paiement, scan bloqué, verrou avant le
-/// départ, supplément et modification qui n'attendent rien de lui, trajet
-/// reporté, garde du colis) ; expéditeur ; gain ; grille de tuiles « Votre
+/// porte pas de bouton ; « À traiter » (ce qui attend un geste du voyageur : le
+/// hero à bouton, le supplément et la modification à bouton, seulement s'il y
+/// a quelque chose) ; cartes d'information sans titre (attente du paiement,
+/// scan bloqué, verrou avant le départ, supplément et modification qui
+/// n'attendent rien de lui, trajet reporté, procédure « destinataire absent »
+/// dans tous ses états) ; expéditeur ; gain ; grille de tuiles « Votre
 /// transport » (Lieux, Colis et destinataire, Plus de détails), chacune
 /// ouvrant un bottom sheet ([TravelerTransportSection]) ; badge d'évaluation
 /// si déjà notée.
+///
+/// Une carte qui change de section (supplément ou modification qui n'attend
+/// plus le voyageur, hero qui gagne ou perd son bouton) change de
+/// `KeyedSubtree` : elle est remontée et ses cubits sont recréés (les
+/// événements `*_viewed` peuvent repartir). Choix assumé : les autres sections
+/// ne bougent pas.
 ///
 /// Requiert les BLoCs ambiants suivants (fournis par l'écran parent) :
 ///   - [CancellationBloc] (via [TravelerHeroCard] et la procédure
@@ -64,33 +71,19 @@ class TravelerDetailBody extends StatefulWidget {
     this.focusAmendment = false,
   });
 
-  /// Où va la procédure « destinataire absent » (FLUTTER-E2), qui retombe sur
-  /// l'ancienne cellule de signalement quand elle ne s'applique pas.
-  ///
-  /// - « À traiter » : colis arrivé et pas encore signalé par le voyageur
-  ///   (étapes puis « Signaler le destinataire absent »), ou cellule de
-  ///   signalement visible (remis, en route ou arrivé, départ passé, aucun
-  ///   signalement en cours) ;
-  /// - information sans titre : signalement déjà fait par le voyageur (garde
-  ///   du colis, colis non réclamé, ou rien) ; la placer sous « À traiter »
-  ///   laisserait le titre seul quand la procédure n'a rien à montrer ;
-  /// - absente sinon (elle ne rendrait rien).
-  static _NoShowPlace _noShowPlace(BidModel bid) {
-    if (DeliveryNoShowProcedureCard.shouldShow(bid, isSender: false)) {
-      return bid.deliveryNoShowReportedByTraveler == true
-          ? _NoShowPlace.info
-          : _NoShowPlace.todo;
-    }
-    return DeliveryNoShowCtaCell.shouldShow(bid)
-        ? _NoShowPlace.todo
-        : _NoShowPlace.none;
-  }
+  /// La procédure « destinataire absent » (FLUTTER-E2) rend quelque chose :
+  /// colis arrivé ou absence signalée par le voyageur (checklist, garde,
+  /// colis non réclamé, chargement, erreur), sinon l'ancienne cellule de
+  /// signalement quand elle s'affiche. Toujours en information sans titre :
+  /// son contenu dépend d'un chargement asynchrone, et « À traiter » ne doit
+  /// jamais montrer son titre sans rien dessous.
+  static bool _showsNoShow(BidModel bid) =>
+      DeliveryNoShowProcedureCard.shouldShow(bid, isSender: false) ||
+      DeliveryNoShowCtaCell.shouldShow(bid);
 
   @override
   State<TravelerDetailBody> createState() => _TravelerDetailBodyState();
 }
-
-enum _NoShowPlace { todo, info, none }
 
 class _TravelerDetailBodyState extends State<TravelerDetailBody> {
   /// `true` uniquement lors du premier build : déclenche le stagger d'entrée.
@@ -213,17 +206,13 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
     final amendmentReply =
         amendment != null && AmendmentTravelerCard.needsReply(bid);
 
-    // Procédure « destinataire absent » (FLUTTER-E2) ; elle retombe sur
-    // l'ancien signalement si le serveur ne la connaît pas encore.
-    final noShowPlace = TravelerDetailBody._noShowPlace(bid);
-    final noShow = DeliveryNoShowProcedureCard(bid: bid, isSender: false);
-
-    // « À traiter » ne réunit que ce qui attend une réponse ou un geste.
+    // « À traiter » ne réunit que ce qui attend une réponse ou un geste, et
+    // seulement des cartes qui rendent toujours un contenu (jamais un titre
+    // seul) : le hero à bouton, le supplément et la modification à bouton.
     final actions = <Widget>[
       if (heroAction) hero,
       if (supplementReply) supplement,
       if (amendmentReply) amendment,
-      if (noShowPlace == _NoShowPlace.todo) noShow,
     ];
 
     // Informations sans titre : phrases d'aide sorties du footer (qui n'a
@@ -241,7 +230,10 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
       // Le voyageur n'a aucun bouton sur un report : l'expéditeur décide.
       if (TripRescheduleCard.shouldShow(bid))
         ('info-reschedule', TripRescheduleCard(bid: bid, isSender: false)),
-      if (noShowPlace == _NoShowPlace.info) ('info-noshow', noShow),
+      // Procédure « destinataire absent » (FLUTTER-E2) ; elle retombe sur
+      // l'ancien signalement si le serveur ne la connaît pas encore.
+      if (TravelerDetailBody._showsNoShow(bid))
+        ('info-noshow', DeliveryNoShowProcedureCard(bid: bid, isSender: false)),
     ];
 
     // Chaque section porte une clé : l'apparition ou la disparition de
