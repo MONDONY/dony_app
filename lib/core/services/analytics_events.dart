@@ -543,7 +543,10 @@ abstract final class AnalyticsEvents {
   static const bidSupplementWithdrawn = 'bid_supplement_withdrawn';
 
   /// Encart du supplément affiché dans le détail d'envoi, une fois par
-  /// écran. Propriétés `role` (`sender`/`traveler`), `status`.
+  /// écran. Propriétés `role` (`sender`/`traveler`), `status`. Côté voyageur,
+  /// des frais à valider sont la tuile « Supplément de prix » de « À traiter » :
+  /// l'événement part à l'affichage de la tuile, avec `surface: tile`, une
+  /// fois par demande et statut de la demande (jamais à l'ouverture du sheet).
   static const bidSupplementViewed = 'bid_supplement_viewed';
 
   /// L'expéditeur refuse le supplément, confirmé par le serveur. Propriété
@@ -594,7 +597,11 @@ abstract final class AnalyticsEvents {
   static const bidAmendmentRequestFailed = 'bid_amendment_request_failed';
 
   /// Encart de la modification affiché dans le détail d'envoi, une fois par écran.
-  /// Propriétés `role` (`sender`/`traveler`), `status`.
+  /// Propriétés `role` (`sender`/`traveler`), `status`. Côté expéditeur, une
+  /// demande où il a un geste à faire est la tuile « Modification du colis »
+  /// de « À traiter » : l'événement part à l'affichage de la tuile, avec
+  /// `surface: tile`, une fois par demande et statut de la demande (jamais à
+  /// l'ouverture du sheet).
   static const bidAmendmentViewed = 'bid_amendment_viewed';
 
   /// L'expéditeur annule sa demande, confirmé par le serveur.
@@ -1299,23 +1306,26 @@ abstract final class AnalyticsEvents {
   static const travelerTrackingTimelineOpened =
       'traveler_tracking_timeline_opened';
 
-  /// Tuile de la grille « Votre envoi » (vue expéditeur) ou « Votre transport »
-  /// (vue voyageur) de la fiche colis touchée : son bottom sheet s'ouvre
-  /// (propriété `tile` : `prevenir` / `suivi` / `lieux` / `colis` / `details`
-  /// côté expéditeur, `lieux` / `colis` / `details` côté voyageur ; propriété
-  /// `role` : `sender` / `traveler` ; propriété `source`, voyageur seulement :
-  /// `tile` (tuile de la grille) ou `menu`). Ni identifiant ni nom. Côté
-  /// voyageur, l'entrée « Détails du colis » du menu Options ouvre la même
-  /// feuille que la tuile `colis` et émet le même événement, avec la source
-  /// `menu`. Les tuiles « À traiter » de la vue expéditeur
-  /// (`openSenderTodoSheet`) émettent le même événement avec `tile` :
-  /// `recipient` / `reschedule`, `role: sender` et `source: tile`.
+  /// Tuile de la fiche colis touchée : son bottom sheet s'ouvre. Propriétés :
+  /// - `tile` : grille « Votre envoi » (expéditeur) `prevenir` / `suivi` /
+  ///   `lieux` / `colis` / `details` ; grille « Votre transport » (voyageur)
+  ///   `lieux` / `colis` / `details` ; section « À traiter » `amendment` /
+  ///   `reschedule` / `recipient` (expéditeur, `openSenderTodoSheet`) et
+  ///   `supplement` (voyageur, `openTravelerTodoSheet`) ;
+  /// - `role` : `sender` / `traveler` ;
+  /// - `source` : `tile` (tuile touchée), `menu` (entrée « Détails du colis »
+  ///   du menu Options du voyageur, même feuille que la tuile `colis`) ou
+  ///   `link` (notification `?action=amendment` côté expéditeur,
+  ///   `?action=supplement` côté voyageur : le sheet « À traiter » s'ouvre de
+  ///   lui-même, une fois).
+  /// Ni identifiant ni nom.
   static const bidDetailTileOpened = 'bid_detail_tile_opened';
 
   /// Tuile de la section « À traiter » de la fiche colis affichée (une
   /// demande attend une réponse), une fois par colis, tuile et statut du colis
   /// pour une même instance d'écran (`TodoTileViewLog`). Propriétés `tile`
-  /// (`recipient` / `reschedule`), `role` (`sender`), `status` (statut du
+  /// (`amendment` / `reschedule` / `recipient` côté expéditeur, `supplement`
+  /// côté voyageur), `role` (`sender` / `traveler`), `status` (statut du
   /// colis). Ni identifiant ni nom.
   static const bidDetailTodoTileShown = 'bid_detail_todo_tile_shown';
 

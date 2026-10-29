@@ -719,12 +719,17 @@ final GoRouter appRouter = GoRouter(
           fromPayment: fromPayment,
           openCodeRenewal: action == 'new-code',
           // Notifications de supplément (REQUESTED pour l'expéditeur, DECLINED
-          // et EXPIRED pour le voyageur, EXPIRED aussi pour l'expéditeur) : la
-          // fiche amène l'encart du supplément à l'écran.
+          // et EXPIRED pour le voyageur, EXPIRED aussi pour l'expéditeur) :
+          // côté voyageur, le sheet de la tuile « Supplément de prix » de
+          // « À traiter » s'ouvre quand ses frais attendent une réponse ;
+          // sinon (et toujours côté expéditeur) la fiche amène l'encart du
+          // supplément à l'écran.
           focusSupplement: action == 'supplement',
           // Notifications de modification de colis (voyageur ou expéditeur
-          // selon le type) : la fiche amène la carte de la modification à
-          // l'écran.
+          // selon le type) : côté expéditeur, le sheet de la tuile
+          // « Modification du colis » de « À traiter » s'ouvre quand il a un
+          // geste à faire ; sinon (et toujours côté voyageur) la fiche amène
+          // la carte de la modification à l'écran.
           focusAmendment: action == 'amendment',
         );
       },
