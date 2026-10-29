@@ -418,13 +418,22 @@ void main() {
       expect(find.text("Contacter l'expéditeur"), findsNothing);
       expect(find.text('Colis et destinataire'), findsWidgets);
       expect(find.byType(ColisDestinataireCard), findsOneWidget);
-      // Le même événement que la tuile, avec le rôle voyageur.
+      // Le même événement que la tuile, avec le rôle voyageur, mais la source
+      // `menu` : les deux chemins vers la feuille restent distinguables.
       verify(
         () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
           'tile': 'colis',
           'role': 'traveler',
+          'source': 'menu',
         }),
       ).called(1);
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'colis',
+          'role': 'traveler',
+          'source': 'tile',
+        }),
+      );
     });
 
     testWidgets('le contact du destinataire est dans la même feuille '

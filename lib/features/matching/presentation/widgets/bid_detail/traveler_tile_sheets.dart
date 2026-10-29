@@ -19,6 +19,11 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// D'où part l'ouverture d'une feuille de tuile : la tuile de la grille
+/// « Votre transport » ou une entrée du menu Options. Part en propriété
+/// `source` de `bid_detail_tile_opened`.
+enum TravelerTileSource { tile, menu }
+
 /// Ouvre le bottom sheet de [tile] pour [bid] (grille « Votre transport » de
 /// la fiche colis, vue voyageur) et compte l'ouverture.
 ///
@@ -28,18 +33,26 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// `BlocProvider.value` quand l'écran le fournit. Les autres BLoCs (contact
 /// destinataire, remplacement) sont créés par les cartes elles-mêmes.
 ///
+/// [source] dit d'où part l'ouverture (`tile` par défaut, `menu` pour l'entrée
+/// « Détails du colis » du menu Options), pour mesurer les deux chemins.
+///
 /// Aucun sheet n'a de bouton propre : les actions des cartes (contacter le
 /// destinataire, demander un autre destinataire) vivent dans leur carte.
 Future<void> openTravelerTileSheet(
   BuildContext context,
   BidModel bid,
-  TravelerTile tile,
-) {
+  TravelerTile tile, {
+  TravelerTileSource source = TravelerTileSource.tile,
+}) {
   final l = context.l10n;
   unawaited(
     getItSafe<AnalyticsService>()?.logEvent(
       AnalyticsEvents.bidDetailTileOpened,
-      properties: {'tile': tile.name, 'role': 'traveler'},
+      properties: {
+        'tile': tile.name,
+        'role': 'traveler',
+        'source': source.name,
+      },
     ),
   );
 

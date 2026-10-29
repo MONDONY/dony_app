@@ -122,7 +122,12 @@ class _TravelerOptionsSheet extends StatelessWidget {
                 // Même sheet que la tuile « Colis et destinataire » de la
                 // grille « Votre transport » (colis, destinataire, contact).
                 unawaited(
-                  openTravelerTileSheet(outerContext, bid, TravelerTile.colis),
+                  openTravelerTileSheet(
+                    outerContext,
+                    bid,
+                    TravelerTile.colis,
+                    source: TravelerTileSource.menu,
+                  ),
                 );
               },
             ),
