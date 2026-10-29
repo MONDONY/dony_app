@@ -26,6 +26,69 @@ class TravelerHeroCard extends StatelessWidget {
 
   final BidModel bid;
 
+  /// Statuts que le mapping de priorité 3 (`_buildContent`) habille d'un hero.
+  /// Les statuts clos (REJECTED, CANCELLED, NO_SHOW, EXPIRED, PARCEL_REFUSED)
+  /// et inconnus n'en ont pas.
+  static const _contentStatuses = <String>{
+    'PENDING',
+    'PAYMENT_ESCROWED',
+    'AWAITING_PAYMENT',
+    'ACCEPTED',
+    'HANDED_OVER',
+    'IN_TRANSIT',
+    'ARRIVED',
+    'COMPLETED',
+    'DELIVERED',
+  };
+
+  /// Priorité 1 : absence de l'expéditeur au dépôt déjà signalée.
+  static bool _senderNoShowOpen(BidModel bid) =>
+      bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION' ||
+      bid.cancellationNoShowStatus == 'CONTESTED';
+
+  /// Priorité 1b : absence à la livraison déjà signalée.
+  static bool _deliveryNoShowOpen(BidModel bid) =>
+      bid.deliveryNoShowStatus == 'PENDING_CONFIRMATION' ||
+      bid.deliveryNoShowStatus == 'CONTESTED';
+
+  /// Priorité 2 : date limite de dépôt dépassée.
+  static bool _windowExpired(BidModel bid) {
+    final deadline = bid.handoverDeadline;
+    return bid.status == 'ACCEPTED' &&
+        deadline != null &&
+        DateTime.now().isAfter(deadline);
+  }
+
+  /// La carte rend quelque chose (sinon `SizedBox.shrink`) : un signalement en
+  /// cours, la date limite dépassée ou un statut du mapping.
+  static bool isShown(BidModel bid) =>
+      _senderNoShowOpen(bid) ||
+      _deliveryNoShowOpen(bid) ||
+      _windowExpired(bid) ||
+      _contentStatuses.contains(bid.status);
+
+  /// La carte porte un bouton (un `footer`) : elle va dans « À traiter » au
+  /// lieu de rester sous le billet. Dans l'ordre des priorités de [build] :
+  /// - 1, absence de l'expéditeur signalée ou contestée : variante `wait`, sans
+  ///   bouton → `false` (et elle masque tout le reste) ;
+  /// - 1b, absence à la livraison signalée par l'expéditeur CONTRE le voyageur,
+  ///   pas encore contestée : « Contester ce signalement » → `true` ; une fois
+  ///   contestée, alerte rouge sans bouton (« contestation envoyée ») →
+  ///   `false` ; signalée par le voyageur lui-même : `wait`, sans bouton →
+  ///   `false` ;
+  /// - 2, date limite de dépôt dépassée (ACCEPTED) : « Signaler l'absence de
+  ///   l'expéditeur » → `true` ;
+  /// - 3, mapping par statut (« Récupérez le colis », « Colis en route »…) :
+  ///   information seule, sans bouton → `false`.
+  static bool hasAction(BidModel bid) {
+    if (_senderNoShowOpen(bid)) return false;
+    if (_deliveryNoShowOpen(bid)) {
+      return bid.deliveryNoShowReportedByTraveler != true &&
+          bid.deliveryNoShowStatus != 'CONTESTED';
+    }
+    return _windowExpired(bid);
+  }
+
   @override
   Widget build(BuildContext context) {
     // ── Priorité 1 : absence déjà signalée (en attente / contestée) ───────
@@ -33,7 +96,7 @@ class TravelerHeroCard extends StatelessWidget {
     // et que le délai n'est pas expiré. Sans ce check, on ré-afficherait
     // « Signaler l'absence » alors que le signalement est déjà fait.
     final noShowStatus = bid.cancellationNoShowStatus;
-    if (noShowStatus == 'PENDING_CONFIRMATION' || noShowStatus == 'CONTESTED') {
+    if (_senderNoShowOpen(bid)) {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
         child: _NoShowReportedHero(
@@ -50,8 +113,7 @@ class TravelerHeroCard extends StatelessWidget {
     // ce champ, deliveryNoShowStatus seul ne suffit pas à savoir qui doit
     // voir "Absence signalée" (auteur) vs "Une absence est signalée" (adversaire).
     final deliveryStatus = bid.deliveryNoShowStatus;
-    if (deliveryStatus == 'PENDING_CONFIRMATION' ||
-        deliveryStatus == 'CONTESTED') {
+    if (_deliveryNoShowOpen(bid)) {
       final iAmReporter = bid.deliveryNoShowReportedByTraveler == true;
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
@@ -65,10 +127,7 @@ class TravelerHeroCard extends StatelessWidget {
     }
 
     // ── Priorité 2 : date limite de dépôt dépassée ────────────────────────
-    final deadline = bid.handoverDeadline;
-    if (bid.status == 'ACCEPTED' &&
-        deadline != null &&
-        DateTime.now().isAfter(deadline)) {
+    if (_windowExpired(bid)) {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
         child: _WindowExpiredHero(
@@ -185,7 +244,8 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
         subtitle: l.bidDetailTravelerDeliveredSubtitle,
       );
 
-    // Terminal or unknown statuses → shrink
+    // Terminal or unknown statuses → shrink (hors de
+    // TravelerHeroCard._contentStatuses : à tenir ensemble).
     case 'REJECTED':
     case 'CANCELLED':
     case 'NO_SHOW':
@@ -507,7 +567,7 @@ class _DeliveryNoShowHero extends StatelessWidget {
               : l.bidDetailDeliveryNoShowAlertTitle,
           subtitle: contested
               ? l.bidDetailDeliveryNoShowContestSentSubtitle
-              : l.bidDetailDeliveryNoShowAlertSubtitle,
+              : deliveryNoShowAlertSubtitle(l, bid),
           footer: contested
               ? null
               : _HeroButton(

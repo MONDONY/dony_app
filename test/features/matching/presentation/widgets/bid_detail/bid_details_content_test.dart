@@ -1,10 +1,10 @@
-// Tests ciblés sur les dates de DetailsAccordion (K3) : la date de départ du
-// trajet (motif fixe branché par langue, details_accordion.dart:64-73 —
-// corrigé en K3 : la locale 'fr_FR' codée en dur devient `locale`) et la date
-// limite de dépôt (squelette yMd, déjà correcte, non-régression).
+// Tests ciblés sur BidDetailsContent, contenu du sheet « Plus de détails » de
+// la fiche colis (K3) : la date de départ du trajet (motif fixe branché par
+// langue, la locale 'fr_FR' codée en dur est devenue `locale`), la date limite
+// de dépôt (squelette yMd, non-régression), les sections et les adresses.
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -16,11 +16,12 @@ BidModel _bid({
   DateTime? handoverDeadline,
   DateTime? departureDate,
   String? trackingNumber,
+  String status = 'ACCEPTED',
 }) => BidModel(
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: 'sender-001',
-  status: 'ACCEPTED',
+  status: status,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
   handoverDeadline: handoverDeadline,
@@ -28,10 +29,12 @@ BidModel _bid({
   trackingNumber: trackingNumber,
 );
 
-Widget _host(BidModel bid) => MaterialApp(
-  // Défilant comme l'écran réel : l'accordéon ouvert dépasse la hauteur du test.
+Widget _host(BidModel bid, {bool isSender = true}) => MaterialApp(
+  // Défilant comme le sheet réel : le contenu dépasse la hauteur du test.
   home: Scaffold(
-    body: SingleChildScrollView(child: DetailsAccordion(bid: bid)),
+    body: SingleChildScrollView(
+      child: BidDetailsContent(bid: bid, isSender: isSender),
+    ),
   ),
 );
 
@@ -41,19 +44,12 @@ void main() {
     await initializeDateFormatting('en');
   });
 
-  // Le corps de l'accordéon n'est rendu qu'une fois ouvert.
-  Future<void> ouvrir(WidgetTester tester) async {
-    await tester.tap(find.byType(InkWell).first);
-    await tester.pumpAndSettle();
-  }
-
   testWidgets(
     'date de départ du trajet fr non-régression (motif EEE dd MMM yyyy '
     'inchangé, locale explicite au lieu de fr_FR)',
     (tester) async {
       final departure = DateTime(2026, 10, 6, 14, 5);
       await tester.pumpWidget(_host(_bid(departureDate: departure)));
-      await ouvrir(tester);
 
       expect(
         find.textContaining(
@@ -70,7 +66,6 @@ void main() {
     useEnglish();
     final departure = DateTime(2026, 10, 6, 14, 5);
     await tester.pumpWidget(_host(_bid(departureDate: departure)));
-    await ouvrir(tester);
 
     expect(
       find.textContaining(DateFormat.yMMMEd('en').format(departure)),
@@ -83,7 +78,6 @@ void main() {
     (tester) async {
       final deadline = DateTime(2026, 10, 6, 14, 5);
       await tester.pumpWidget(_host(_bid(handoverDeadline: deadline)));
-      await ouvrir(tester);
 
       expect(
         find.textContaining(DateFormat.yMd('fr').format(deadline)),
@@ -98,7 +92,6 @@ void main() {
     useEnglish();
     final deadline = DateTime(2026, 10, 6, 14, 5);
     await tester.pumpWidget(_host(_bid(handoverDeadline: deadline)));
-    await ouvrir(tester);
 
     expect(
       find.textContaining(DateFormat.yMd('en').format(deadline)),
@@ -125,7 +118,6 @@ void main() {
       arrivalInstructions: 'Marché Sandaga, porte 3',
     );
     await tester.pumpWidget(_host(bid));
-    await ouvrir(tester);
 
     expect(find.text('DEMANDE'), findsOneWidget);
     // Sans numéro de suivi servi : début de l'identifiant.
@@ -163,7 +155,6 @@ void main() {
         arrivalInstructions: 'Appeler à l\'arrivée',
       );
       await tester.pumpWidget(_host(bid));
-      await ouvrir(tester);
 
       expect(find.byKey(const Key('details-handover-address')), findsOneWidget);
       expect(find.text("RÉCUPÉRATION À L'ARRIVÉE"), findsOneWidget);
@@ -186,7 +177,6 @@ void main() {
       handoverLocation: '22 Rue du Séminaire, Chevilly-Larue',
     );
     await tester.pumpWidget(_host(bid));
-    await ouvrir(tester);
 
     expect(find.text('22 Rue du Séminaire, Chevilly-Larue'), findsOneWidget);
     expect(find.byKey(const Key('details-handover-address')), findsNothing);
@@ -196,17 +186,121 @@ void main() {
   testWidgets('numéro de suivi servi : libellé « Numéro de suivi », jamais '
       '« Référence » (FLUTTER-J2)', (tester) async {
     await tester.pumpWidget(_host(_bid(trackingNumber: 'DON-E69EDCSG')));
-    await ouvrir(tester);
     expect(find.text('Numéro de suivi'), findsOneWidget);
     expect(find.text('Référence'), findsNothing);
     expect(find.text('DON-E69EDCSG'), findsOneWidget);
+  });
+
+  // Règle du propriétaire : le voyageur ne voit pas le numéro de suivi tant que
+  // le colis n'a pas été remis (défense en profondeur, le back le garantit).
+  group('numéro de suivi : visibilité par rôle et par statut', () {
+    const handedOver = [
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'COMPLETED',
+      'DELIVERED',
+    ];
+    const beforeOrWithoutHandover = [
+      'PENDING',
+      'PAYMENT_ESCROWED',
+      'AWAITING_PAYMENT',
+      'ACCEPTED',
+      'REJECTED',
+      'CANCELLED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+    ];
+
+    for (final status in handedOver) {
+      testWidgets('voyageur · $status + numéro → « Numéro de suivi »', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _host(_bid(status: status, trackingNumber: 'DON-1'), isSender: false),
+        );
+        expect(find.text('Numéro de suivi'), findsOneWidget);
+        expect(find.text('DON-1'), findsOneWidget);
+        expect(find.text('Référence'), findsNothing);
+      });
+
+      testWidgets('voyageur · $status sans numéro → « Référence »', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_host(_bid(status: status), isSender: false));
+        expect(find.text('Numéro de suivi'), findsNothing);
+        expect(find.text('Référence'), findsOneWidget);
+        expect(find.text('BID-001'), findsOneWidget);
+      });
+    }
+
+    for (final status in beforeOrWithoutHandover) {
+      testWidgets(
+        'voyageur · $status + numéro servi quand même → « Référence », '
+        'numéro jamais affiché',
+        (tester) async {
+          await tester.pumpWidget(
+            _host(
+              _bid(status: status, trackingNumber: 'DON-1'),
+              isSender: false,
+            ),
+          );
+          expect(find.text('Numéro de suivi'), findsNothing);
+          expect(find.text('DON-1'), findsNothing);
+          expect(find.text('Référence'), findsOneWidget);
+          expect(find.text('BID-001'), findsOneWidget);
+        },
+      );
+
+      testWidgets('voyageur · $status sans numéro → « Référence »', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_host(_bid(status: status), isSender: false));
+        expect(find.text('Numéro de suivi'), findsNothing);
+        expect(find.text('Référence'), findsOneWidget);
+      });
+    }
+
+    // Expéditeur : inchangé, le numéro est montré dès qu'il existe.
+    for (final status in [...handedOver, ...beforeOrWithoutHandover]) {
+      testWidgets('expéditeur · $status + numéro → « Numéro de suivi »', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _host(_bid(status: status, trackingNumber: 'DON-1')),
+        );
+        expect(find.text('Numéro de suivi'), findsOneWidget);
+        expect(find.text('DON-1'), findsOneWidget);
+        expect(find.text('Référence'), findsNothing);
+      });
+
+      testWidgets('expéditeur · $status sans numéro → « Référence »', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_host(_bid(status: status)));
+        expect(find.text('Numéro de suivi'), findsNothing);
+        expect(find.text('Référence'), findsOneWidget);
+      });
+    }
+
+    testWidgets('voyageur · numéro en anglais après la remise', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _host(
+          _bid(status: 'ARRIVED', trackingNumber: 'DON-1'),
+          isSender: false,
+        ),
+      );
+      expect(find.text('Tracking number'), findsOneWidget);
+      expect(find.text('DON-1'), findsOneWidget);
+    });
   });
 
   testWidgets('sans numéro de suivi : « Référence » de la demande', (
     tester,
   ) async {
     await tester.pumpWidget(_host(_bid()));
-    await ouvrir(tester);
     expect(find.text('Référence'), findsOneWidget);
   });
 
@@ -235,7 +329,7 @@ void main() {
     expect(find.text('Numéro de suivi'), findsOneWidget);
     expect(find.text('LIEN DE SUIVI'), findsOneWidget);
     expect(find.text('RESPONSABILITÉ LÉGALE'), findsOneWidget);
-    // Pas d'en-tête d'accordéon : le sheet porte le titre.
+    // Pas de titre « Plus de détails » : le sheet le porte.
     expect(find.text('Plus de détails'), findsNothing);
   });
 

@@ -1009,7 +1009,6 @@ abstract final class AnalyticsEvents {
   /// Le voyageur demande un nouveau code de retrait à l'expéditeur
   /// (FLUTTER-G2). Propriétés : `source` (écran) et `outcome` seulement.
   static const pickupCodeRequested = 'pickup_code_requested';
-  static const senderCallInitiated = 'sender_call_initiated';
   static const trackingLinkShared = 'tracking_link_shared';
   static const recipientNotified = 'recipient_notified';
   static const bidRecipientChanged = 'bid_recipient_changed';
@@ -1300,9 +1299,15 @@ abstract final class AnalyticsEvents {
   static const travelerTrackingTimelineOpened =
       'traveler_tracking_timeline_opened';
 
-  /// Tuile de la grille « Votre envoi » de la fiche colis (vue expéditeur)
-  /// touchée : son bottom sheet s'ouvre (propriété `tile` : `prevenir` /
-  /// `suivi` / `lieux` / `colis` / `details`). Ni identifiant ni nom.
+  /// Tuile de la grille « Votre envoi » (vue expéditeur) ou « Votre transport »
+  /// (vue voyageur) de la fiche colis touchée : son bottom sheet s'ouvre
+  /// (propriété `tile` : `prevenir` / `suivi` / `lieux` / `colis` / `details`
+  /// côté expéditeur, `lieux` / `colis` / `details` côté voyageur ; propriété
+  /// `role` : `sender` / `traveler` ; propriété `source`, voyageur seulement :
+  /// `tile` (tuile de la grille) ou `menu`). Ni identifiant ni nom. Côté
+  /// voyageur, l'entrée « Détails du colis » du menu Options ouvre la même
+  /// feuille que la tuile `colis` et émet le même événement, avec la source
+  /// `menu`.
   static const bidDetailTileOpened = 'bid_detail_tile_opened';
 
   /// Envoi silencieux de la position non fait (propriété `reason` :

@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsAction, Tristate;
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -50,9 +52,13 @@ Finder get _oldIcons => find.byWidgetPredicate(
   (w) => w is DonyIcon && (w.name == 'phone' || w.name == 'message-circle'),
 );
 
-Future<_MockConvBloc> _pump(WidgetTester tester, BidModel bid) async {
+Future<_MockConvBloc> _pump(
+  WidgetTester tester,
+  BidModel bid, {
+  ConversationOpenState state = const ConversationOpenInitial(),
+}) async {
   final conv = _MockConvBloc();
-  when(() => conv.state).thenReturn(const ConversationOpenInitial());
+  when(() => conv.state).thenReturn(state);
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.light(),
@@ -87,6 +93,47 @@ void main() {
   // FLUTTER-FM : après l'annulation, l'expéditeur doit pouvoir joindre le
   // voyageur qui a encore son colis.
   // FLUTTER-P1 : contact gardé 48 h après l'annulation, sur décision serveur.
+  // `Semantics(excludeSemantics: true)` autour d'un `GestureDetector` sans
+  // `onTap` sur le nœud retirait l'action d'activation : un lecteur d'écran
+  // annonçait « bouton » sans pouvoir l'activer.
+  testWidgets('lecteur d\'écran : le bouton expose l\'action « toucher »', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    final conv = await _pump(
+      tester,
+      _bid(status: 'ACCEPTED', contactWindowOpen: true),
+    );
+    final node = tester.getSemantics(
+      find.bySemanticsLabel('Contacter le voyageur'),
+    );
+    expect(node.label, 'Contacter le voyageur');
+    expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+    expect(node.flagsCollection.isButton, isTrue);
+    expect(node.flagsCollection.isEnabled, Tristate.isTrue);
+    tester.semantics.tap(find.semantics.byLabel('Contacter le voyageur'));
+    await tester.pump();
+    final captured = verify(() => conv.add(captureAny())).captured;
+    expect(captured.single, isA<ConversationOpenRequested>());
+    handle.dispose();
+  });
+
+  testWidgets('lecteur d\'écran, ouverture en cours : bouton désactivé, '
+      'sans action « toucher »', (tester) async {
+    final handle = tester.ensureSemantics();
+    await _pump(
+      tester,
+      _bid(status: 'ACCEPTED', contactWindowOpen: true),
+      state: const ConversationOpenLoading(),
+    );
+    final node = tester.getSemantics(
+      find.bySemanticsLabel('Contacter le voyageur'),
+    );
+    expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isFalse);
+    expect(node.flagsCollection.isEnabled, Tristate.isFalse);
+    handle.dispose();
+  });
+
   testWidgets('annulé, fenêtre de 48 h ouverte : 💬 + 📞 et indication', (
     tester,
   ) async {

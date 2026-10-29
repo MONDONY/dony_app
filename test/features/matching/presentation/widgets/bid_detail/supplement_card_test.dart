@@ -186,6 +186,27 @@ void main() {
       }
       expect(SupplementSenderCard.needsReply(_bid(null)), isFalse);
     });
+
+    // « À traiter » côté voyageur : seule la commission espèces à valider
+    // (« Valider le paiement », 3DS) attend son geste. Une demande proposée
+    // attend l'expéditeur ; refusée ou expirée, le colis part au prix prévu.
+    test('voyageur : seulement la commission à valider', () {
+      expect(
+        SupplementTravelerCard.needsReply(
+          _bid(_supplement(BidSupplementStatus.commissionPending)),
+        ),
+        isTrue,
+      );
+      for (final s in BidSupplementStatus.values) {
+        if (s == BidSupplementStatus.commissionPending) continue;
+        expect(
+          SupplementTravelerCard.needsReply(_bid(_supplement(s))),
+          isFalse,
+          reason: '$s',
+        );
+      }
+      expect(SupplementTravelerCard.needsReply(_bid(null)), isFalse);
+    });
   });
 
   group('encart expéditeur', () {

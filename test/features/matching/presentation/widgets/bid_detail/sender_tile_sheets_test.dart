@@ -19,15 +19,12 @@ import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tile_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tiles.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -62,10 +59,6 @@ class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
 class _MockConversationOpenBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
-
-class _MockContactRevealBloc
-    extends MockBloc<ContactRevealEvent, ContactRevealState>
-    implements ContactRevealBloc {}
 
 class _MockRatingBloc extends MockBloc<RatingEvent, RatingState>
     implements RatingBloc {}
@@ -253,9 +246,6 @@ void main() {
             BlocProvider<TrackingBloc>.value(value: trackingBloc),
             BlocProvider<ConversationOpenBloc>.value(
               value: _MockConversationOpenBloc(),
-            ),
-            BlocProvider<ContactRevealBloc>.value(
-              value: _MockContactRevealBloc(),
             ),
             BlocProvider<RatingBloc>.value(value: _MockRatingBloc()),
             BlocProvider<CancellationBloc>.value(
@@ -667,14 +657,14 @@ void main() {
 
   group('mesure', () {
     for (final tile in SenderTile.values) {
-      testWidgets('logs bid_detail_tile_opened with tile name (${tile.name})', (
-        tester,
-      ) async {
+      testWidgets('logs bid_detail_tile_opened with tile name and role sender '
+          '(${tile.name})', (tester) async {
         await openTile(tester, _bid(travelerTracking: _tracking()), tile);
 
         verify(
           () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
             'tile': tile.name,
+            'role': 'sender',
           }),
         ).called(1);
       });

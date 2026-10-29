@@ -4493,7 +4493,7 @@
   },
   "listingDeliveryPickupTitle": "Récupération",
   "@listingDeliveryPickupTitle": {
-    "description": "Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart)"
+    "description": "Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)"
   },
   "listingAlreadyHasParcelMessage": "Vous avez déjà un colis sur ce trajet",
   "@listingAlreadyHasParcelMessage": {
@@ -4585,7 +4585,7 @@
   },
   "listingPickupParcelTitle": "Remise du colis",
   "@listingPickupParcelTitle": {
-    "description": "Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart)"
+    "description": "Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)"
   },
   "listingReportTripLink": "Signaler ce trajet",
   "@listingReportTripLink": {
@@ -5488,7 +5488,7 @@
   },
   "bidCreateDisclaimerSigned": "Disclaimer signé le {dateTime}",
   "@bidCreateDisclaimerSigned": {
-    "description": "Statut du disclaimer avec sa date de signature (details_accordion, tâche D2)",
+    "description": "Statut du disclaimer avec sa date de signature (bid_details_content, tâche D2)",
     "placeholders": {
       "dateTime": {
         "type": "String"
@@ -6965,6 +6965,20 @@
   "@bidDetailDeliveryNoShowAlertSubtitle": {
     "description": "_DeliveryNoShowHero, sous-titre cote adversaire quand le signalement est encore ouvert (sender_hero_card.dart, traveler_hero_card.dart)"
   },
+  "bidDetailDeliveryNoShowAlertSubtitleUntil": "Une absence à la livraison a été signalée sur cet envoi. Vous pouvez contester jusqu'au {date} à {time} si ce signalement est erroné.",
+  "@bidDetailDeliveryNoShowAlertSubtitleUntil": {
+    "description": "_DeliveryNoShowHero, sous-titre côté adversaire quand le signalement est encore ouvert et que le serveur renvoie l'échéance de contestation (bid.deliveryNoShowContestationDeadline, traveler_hero_card.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "lun. 28 sept."
+      },
+      "time": {
+        "type": "String",
+        "example": "14:30"
+      }
+    }
+  },
   "bidDetailDeliveryNoShowContestButton": "Contester ce signalement",
   "@bidDetailDeliveryNoShowContestButton": {
     "description": "_DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)"
@@ -7548,11 +7562,11 @@
   },
   "bidDetailMoreDetails": "Plus de détails",
   "@bidDetailMoreDetails": {
-    "description": "En-tête de l'accordéon (details_accordion.dart)"
+    "description": "Titre de la tuile Plus de détails et de son bottom sheet, vues expéditeur et voyageur (sender_tile_sheets.dart, traveler_tile_sheets.dart)"
   },
   "bidDetailSectionTodo": "À traiter",
   "@bidDetailSectionTodo": {
-    "description": "Titre de la section des actions en attente de la fiche colis expéditeur (sender_detail_body.dart)"
+    "description": "Titre de la section des actions en attente de la fiche colis, vues expéditeur et voyageur (sender_detail_body.dart, traveler_detail_body.dart)"
   },
   "bidDetailSectionShipment": "Votre envoi",
   "@bidDetailSectionShipment": {
@@ -7602,53 +7616,103 @@
   "@senderTileBadgeCurrentStep": {
     "description": "Pastille de la tuile Suivi (colis remis, en route ou arrivé) : une étape est en cours"
   },
+  "bidDetailSectionTransport": "Votre transport",
+  "@bidDetailSectionTransport": {
+    "description": "Titre de la grille de tuiles de la fiche colis voyageur (traveler_transport_section.dart)"
+  },
+  "travelerTileBadgeTodo": "À traiter",
+  "@travelerTileBadgeTodo": {
+    "description": "Pastille de la tuile Colis et destinataire de la fiche colis voyageur quand le destinataire a refusé et qu'un autre peut être demandé (traveler_transport_section.dart)"
+  },
+  "travelerTileLieux": "Lieux",
+  "@travelerTileLieux": {
+    "description": "Tuile Lieux (dépôt et récupération) de la fiche colis voyageur"
+  },
+  "travelerTileLieuxDropoff": "Remise à {place}",
+  "@travelerTileLieuxDropoff": {
+    "description": "Sous-titre de la tuile Lieux avant la remise du colis : où le voyageur le récupère (ville, à défaut l'adresse)",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileLieuxPickup": "Récupération à {place}",
+  "@travelerTileLieuxPickup": {
+    "description": "Sous-titre de la tuile Lieux une fois le colis remis : où le destinataire le récupère (ville, à défaut l'adresse)",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileColis": "Colis et destinataire",
+  "@travelerTileColis": {
+    "description": "Tuile Colis et destinataire de la fiche colis voyageur"
+  },
+  "travelerTileColisSubtitle": "{weight} · pour {recipient}",
+  "@travelerTileColisSubtitle": {
+    "description": "Sous-titre de la tuile Colis et destinataire (voyageur) : poids puis destinataire",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileDetailsSubtitle": "Référence, dépôt, trajet",
+  "@travelerTileDetailsSubtitle": {
+    "description": "Sous-titre de la tuile Plus de détails de la fiche colis voyageur"
+  },
   "bidDetailSectionDropoff": "DÉPÔT DU COLIS",
   "@bidDetailSectionDropoff": {
-    "description": "Titre de section 1 de l'accordéon (details_accordion.dart)"
+    "description": "Titre de section 1 de « Plus de détails » (bid_details_content.dart)"
   },
   "bidDetailLocationLabel": "Lieu",
   "@bidDetailLocationLabel": {
-    "description": "InfoRow lieu de remise (details_accordion.dart)"
+    "description": "InfoRow lieu de remise (bid_details_content.dart)"
   },
   "bidDetailHandoverStatusLabel": "Remise",
   "@bidDetailHandoverStatusLabel": {
-    "description": "Libellé InfoRow quand le colis a déjà été remis (details_accordion.dart)"
+    "description": "Libellé InfoRow quand le colis a déjà été remis (bid_details_content.dart)"
   },
   "bidDetailPresenceConfirmedLabel": "Présence confirmée",
   "@bidDetailPresenceConfirmedLabel": {
-    "description": "Libellé InfoRow avant remise (details_accordion.dart)"
+    "description": "Libellé InfoRow avant remise (bid_details_content.dart)"
   },
   "bidDetailParcelHandedOverValue": "Colis remis ✓",
   "@bidDetailParcelHandedOverValue": {
-    "description": "Valeur InfoRow quand le colis a déjà été remis (details_accordion.dart)"
+    "description": "Valeur InfoRow quand le colis a déjà été remis (bid_details_content.dart)"
   },
   "bidDetailYesValue": "Oui ✓",
   "@bidDetailYesValue": {
-    "description": "Valeur InfoRow, présence confirmée (details_accordion.dart)"
+    "description": "Valeur InfoRow, présence confirmée (bid_details_content.dart)"
   },
   "bidDetailNotYetValue": "Non encore",
   "@bidDetailNotYetValue": {
-    "description": "Valeur InfoRow, présence non confirmée (details_accordion.dart)"
+    "description": "Valeur InfoRow, présence non confirmée (bid_details_content.dart)"
   },
   "bidDetailPricePerKgLabel": "Tarif par kg",
   "@bidDetailPricePerKgLabel": {
-    "description": "InfoRow tarif brut par kg (details_accordion.dart)"
+    "description": "InfoRow tarif brut par kg (bid_details_content.dart)"
   },
   "bidDetailSectionTrackingLink": "LIEN DE SUIVI",
   "@bidDetailSectionTrackingLink": {
-    "description": "Titre de section 3 de l'accordéon (details_accordion.dart)"
+    "description": "Titre de section 3 de « Plus de détails » (bid_details_content.dart)"
   },
   "bidDetailSectionLegal": "RESPONSABILITÉ LÉGALE",
   "@bidDetailSectionLegal": {
-    "description": "Titre de section 4 de l'accordéon (details_accordion.dart)"
+    "description": "Titre de section 4 de « Plus de détails » (bid_details_content.dart)"
   },
   "bidDetailDisclaimerSignedNoDate": "Disclaimer signé",
   "@bidDetailDisclaimerSignedNoDate": {
-    "description": "Disclaimer sans date de signature (details_accordion.dart)"
+    "description": "Disclaimer sans date de signature (bid_details_content.dart)"
   },
   "bidDetailDisclaimerSignedCompact": "Disclaimer signé le {date} {time}",
   "@bidDetailDisclaimerSignedCompact": {
-    "description": "Repli du disclaimer sans locale, sans « à » entre date et heure (details_accordion.dart)",
+    "description": "Repli du disclaimer sans locale, sans « à » entre date et heure (bid_details_content.dart)",
     "placeholders": {
       "date": {
         "type": "String"
@@ -7660,7 +7724,7 @@
   },
   "bidDetailContactSenderLabel": "Contacter l'expéditeur",
   "@bidDetailContactSenderLabel": {
-    "description": "Tuile d'options voyageur : contacter l'expéditeur (traveler_options_sheet.dart)"
+    "description": "Contacter l'expéditeur : tuile d'options voyageur (traveler_options_sheet.dart) et nom annoncé du bouton rond de la carte Expéditeur (expediteur_contact_card.dart)"
   },
   "bidDetailContactSenderSubtitle": "Envoyer un message à l'expéditeur",
   "@bidDetailContactSenderSubtitle": {
@@ -7668,7 +7732,7 @@
   },
   "bidDetailParcelDetailsLabel": "Détails du colis",
   "@bidDetailParcelDetailsLabel": {
-    "description": "Tuile d'options voyageur et titre du sous-sheet colis (traveler_options_sheet.dart)"
+    "description": "Tuile d'options voyageur qui ouvre la feuille de la tuile « Colis et destinataire » (traveler_options_sheet.dart)"
   },
   "bidDetailParcelDetailsSubtitle": "Voir les informations du colis et du destinataire",
   "@bidDetailParcelDetailsSubtitle": {
@@ -8156,21 +8220,13 @@
   "@bidDetailDescriptionLabel": {
     "description": "Clé dédiée (Ruling R40) — remplace requestDescriptionLabel dans colis_destinataire_card.dart - identique en anglais"
   },
-  "bidDetailSenderCallSemanticLabel": "Appeler",
-  "@bidDetailSenderCallSemanticLabel": {
-    "description": "Clé dédiée (Ruling R40) — remplace voyageurCardCallSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)"
-  },
-  "bidDetailSenderOpenChatSemanticLabel": "Ouvrir la discussion",
-  "@bidDetailSenderOpenChatSemanticLabel": {
-    "description": "Clé dédiée (Ruling R40) — remplace voyageurCardOpenChatSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)"
-  },
   "bidDetailCopyTrackingLinkButton": "Copier le lien",
   "@bidDetailCopyTrackingLinkButton": {
-    "description": "Clé dédiée (Ruling R40) — remplace tripPosterCopyLinkButton dans details_accordion.dart (lien de suivi)"
+    "description": "Clé dédiée (Ruling R40) — remplace tripPosterCopyLinkButton dans bid_details_content.dart (lien de suivi)"
   },
   "bidDetailTrackingLinkCopiedMessage": "Lien copié",
   "@bidDetailTrackingLinkCopiedMessage": {
-    "description": "Clé dédiée (Ruling R40) — remplace tripPosterLinkCopiedMessage dans details_accordion.dart (lien de suivi)"
+    "description": "Clé dédiée (Ruling R40) — remplace tripPosterLinkCopiedMessage dans bid_details_content.dart (lien de suivi)"
   },
   "bidDetailAcceptRequestButton": "Accepter",
   "@bidDetailAcceptRequestButton": {
@@ -8230,7 +8286,23 @@
   },
   "ticketRequestClosedMessage": "Cette demande est terminée.",
   "@ticketRequestClosedMessage": {
-    "description": "Message terminal REJECTED/CANCELLED du talon (billet_talon.dart)"
+    "description": "Message terminal REJECTED/CANCELLED du talon, et NO_SHOW / PARCEL_REFUSED / EXPIRED, pour les deux rôles (billet_talon.dart)"
+  },
+  "ticketClosedNoShowReason": "Absence constatée",
+  "@ticketClosedNoShowReason": {
+    "description": "Motif au-dessus de « Cette demande est terminée. » dans le talon du billet (voyageur et expéditeur), statut NO_SHOW (billet_talon.dart). Reprend le vocabulaire du tampon « Absent »"
+  },
+  "ticketClosedParcelRefusedReason": "Colis refusé à la remise",
+  "@ticketClosedParcelRefusedReason": {
+    "description": "Motif au-dessus de « Cette demande est terminée. » dans le talon du billet voyageur, statut PARCEL_REFUSED (billet_talon.dart). Reprend le vocabulaire du tampon « Colis refusé »"
+  },
+  "ticketClosedParcelRefusedReasonSender": "Le voyageur a refusé le colis à la remise",
+  "@ticketClosedParcelRefusedReasonSender": {
+    "description": "Motif au-dessus de « Cette demande est terminée. » dans le talon du billet EXPÉDITEUR, statut PARCEL_REFUSED : le voyageur a refusé le colis à la remise (billet_talon.dart)"
+  },
+  "ticketClosedExpiredReason": "Demande expirée",
+  "@ticketClosedExpiredReason": {
+    "description": "Motif au-dessus de « Cette demande est terminée. » dans le talon du billet (voyageur et expéditeur), statut EXPIRED hors date limite de dépôt (billet_talon.dart). Reprend le vocabulaire du tampon « Expiré »"
   },
   "ticketHandoverDeadlineExpiredTitle": "Date limite de dépôt passée",
   "@ticketHandoverDeadlineExpiredTitle": {
@@ -17909,27 +17981,27 @@
   },
   "bidDetailSectionRequest": "DEMANDE",
   "@bidDetailSectionRequest": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailReferenceLabel": "Référence",
   "@bidDetailReferenceLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailSentAtLabel": "Envoyée le",
   "@bidDetailSentAtLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailUpdatedAtLabel": "Mise à jour",
   "@bidDetailUpdatedAtLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailPaymentMethodLabel": "Paiement",
   "@bidDetailPaymentMethodLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailPaymentMethodValue": "{method, select, stripe{Carte bancaire} cash{Espèces à la remise} wave{Wave} orangeMoney{Orange Money} mobileMoney{Mobile money} other{-}}",
   "@bidDetailPaymentMethodValue": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)",
+    "description": "Plus de détails d'une demande (bid_details_content.dart)",
     "placeholders": {
       "method": {
         "type": "String"
@@ -17938,19 +18010,19 @@
   },
   "bidDetailPromoCodeLabel": "Code promo",
   "@bidDetailPromoCodeLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailRouteLabel": "Itinéraire",
   "@bidDetailRouteLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailArrivalTimeLabel": "Heure d'arrivée",
   "@bidDetailArrivalTimeLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailPickupInstructionsLabel": "Retrait à l'arrivée",
   "@bidDetailPickupInstructionsLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "negotiationMakeOfferStepProgress": "Étape {step} sur 3 · {name}",
   "@negotiationMakeOfferStepProgress": {
@@ -19661,7 +19733,7 @@
   },
   "bidDetailSectionPickup": "RÉCUPÉRATION À L'ARRIVÉE",
   "@bidDetailSectionPickup": {
-    "description": "Section de l'adresse de récupération du destinataire, Plus de détails (details_accordion.dart)"
+    "description": "Section de l'adresse de récupération du destinataire, Plus de détails (bid_details_content.dart)"
   },
   "payoutContactEmailLabel": "E-mail de contact : {email}",
   "@payoutContactEmailLabel": {
@@ -20366,7 +20438,7 @@
   "ticketPickupCodeSecretHint": "Secret, à donner au voyageur seulement au moment de la remise.",
   "@ticketPickupCodeSecretHint": {"description": "Aide sous l'étiquette du code de retrait de l'expéditeur (talon_retrait_code_view.dart, FLUTTER-J2)."},
   "bidDetailTrackingNumberLabel": "Numéro de suivi",
-  "@bidDetailTrackingNumberLabel": {"description": "Libellé de la ligne du numéro de suivi dans le détail d'un colis (details_accordion.dart, FLUTTER-J2)."},
+  "@bidDetailTrackingNumberLabel": {"description": "Libellé de la ligne du numéro de suivi dans le détail d'un colis (bid_details_content.dart, FLUTTER-J2)."},
   "deliveryLockedHelp": "À la remise, demandez au destinataire son code de retrait à 6 chiffres.",
   "@deliveryLockedHelp": {"description": "Aide de la carte du verrou avant le départ du trajet, vue voyageur (traveler_info_cards.dart), et sous le bouton de l'écran de confirmation (delivery_departure_gate.dart, FLUTTER-J2)."},
   "moneyUpcomingLabel": "À venir · {count, plural, =1{1 colis} other{{count} colis}}",
@@ -22058,6 +22130,8 @@
   "@bidDetailRequestSupplementSubtitle": {"description": "Sous-titre de la tuile supplément (traveler_options_sheet.dart)"},
   "bidDetailScanBlockedSupplement": "Un supplément attend la réponse de l'expéditeur : le scan est bloqué.",
   "@bidDetailScanBlockedSupplement": {"description": "Carte d'information du corps de la vue voyageur, quand le bouton de scan du footer est désactivé (traveler_info_cards.dart)"},
+  "bidDetailScanBlockedSupplementCommission": "Le scan est bloqué tant que vous n'avez pas validé le paiement de votre commission.",
+  "@bidDetailScanBlockedSupplementCommission": {"description": "Carte d'information du corps de la vue voyageur, à la place de bidDetailScanBlockedSupplement quand le supplément attend la validation de la commission espèces du voyageur lui-même (SupplementTravelerCard.needsReply) : « Valider le paiement » est dans « À traiter » (traveler_info_cards.dart)"},
   "supplementRequestTitle": "Demander un supplément",
   "@supplementRequestTitle": {"description": "Titre de la feuille de demande de supplément (supplement_request_sheet.dart)"},
   "supplementRequestIntro": "Le colis ne correspond pas à la déclaration ? Demandez la différence à l'expéditeur. Il paie par le même moyen que le colis, ou refuse.",
@@ -22683,7 +22757,9 @@
   "amendmentNotBroughtSnackbar": "Modification annulée, l'expéditeur est remboursé",
   "@amendmentNotBroughtSnackbar": {"description": "Confirmation « non apportée »"},
   "amendmentScanBlocked": "Une modification attend votre réponse : le scan est bloqué.",
-  "@amendmentScanBlocked": {"description": "Scan de remise bloqué côté voyageur"},
+  "@amendmentScanBlocked": {"description": "Scan de remise bloqué côté voyageur, quand la modification attend SA réponse (carte d'information de la fiche colis voyageur, traveler_info_cards.dart)"},
+  "amendmentScanBlockedSender": "Une modification attend l'expéditeur : le scan est bloqué.",
+  "@amendmentScanBlockedSender": {"description": "Scan de remise bloqué côté voyageur, quand la modification attend l'expéditeur (autorisation de la carte ou dépôt mobile money). Carte d'information de la fiche colis voyageur, traveler_info_cards.dart"},
   "amendmentCommissionAuthInterrupted": "Validation interrompue, réessayez d'accepter.",
   "@amendmentCommissionAuthInterrupted": {"description": "3DS commission abandonnée"},
   "amendmentSenderNotBroughtStatus": "{name} a signalé que les kilos en plus n'étaient pas là",

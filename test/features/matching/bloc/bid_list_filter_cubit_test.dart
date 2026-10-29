@@ -150,15 +150,25 @@ void main() {
       expect(bidMatchesQuery(b, 'diallo'), isFalse);
     });
 
-    test('match par numéro de suivi', () {
+    test('match par numéro de suivi (à partir de la remise)', () {
       final b = _bid(
-        status: 'ACCEPTED',
+        status: 'HANDED_OVER',
         senderName: 'X',
         trackingNumber: 'DNY-4815',
       );
       expect(bidMatchesQuery(b, 'dny-48'), isTrue);
       expect(bidMatchesQuery(b, '4815'), isTrue);
       expect(bidMatchesQuery(b, '9999'), isFalse);
+    });
+
+    test('numéro de suivi pas encore visible du voyageur → pas de match', () {
+      final b = _bid(
+        status: 'ACCEPTED',
+        senderName: 'X',
+        trackingNumber: 'DNY-4815',
+      );
+      expect(bidMatchesQuery(b, 'dny-48'), isFalse);
+      expect(bidMatchesQuery(b, '4815'), isFalse);
     });
 
     test('trackingNumber nul → pas de crash, pas de match numéro', () {

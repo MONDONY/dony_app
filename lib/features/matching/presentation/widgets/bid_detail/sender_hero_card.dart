@@ -6,6 +6,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -681,7 +682,7 @@ class _DeliveryNoShowHero extends StatelessWidget {
               : l.bidDetailDeliveryNoShowAlertTitle,
           subtitle: contested
               ? l.bidDetailDeliveryNoShowContestSentSubtitle
-              : l.bidDetailDeliveryNoShowAlertSubtitle,
+              : deliveryNoShowAlertSubtitle(l, bid),
           footer: contested
               ? null
               : _HeroButton(

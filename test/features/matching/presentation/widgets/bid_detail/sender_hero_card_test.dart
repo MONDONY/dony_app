@@ -11,11 +11,13 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
@@ -784,6 +786,113 @@ void main() {
   );
 
   // ── Test 17c: bannière absence livraison — je suis l'adversaire (sender) ───
+
+  // Délai de contestation de l'absence à la livraison (même champ que côté
+  // voyageur) : l'expéditeur, adversaire quand le voyageur signale, le lit.
+  group('absence à la livraison : délai de contestation (expéditeur)', () {
+    // Échéance en UTC : l'affichage doit se faire en heure locale.
+    final deadlineUtc = DateTime.utc(2026, 10, 30, 14, 30);
+
+    BidModel deliveryBid({
+      DateTime? deadline,
+      String status = 'PENDING_CONFIRMATION',
+      bool reportedByTraveler = true,
+    }) => BidModel(
+      id: 'bid-001',
+      announcementId: 'ann-001',
+      senderId: 'sender-001',
+      status: 'IN_TRANSIT',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+      deliveryNoShowStatus: status,
+      deliveryNoShowReportedByTraveler: reportedByTraveler,
+      deliveryNoShowContestationDeadline: deadline,
+    );
+
+    testWidgets('adversaire + échéance → date et heure locales exactes', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(deliveryBid(deadline: deadlineUtc), cancellationBloc),
+      );
+      await tester.pump();
+      final local = deadlineUtc.toLocal();
+      final date = DateFormat.MMMEd('fr').format(local);
+      final time = DateFormat.jm('fr').format(local);
+      expect(
+        find.text(
+          'Une absence à la livraison a été signalée sur cet envoi. Vous '
+          "pouvez contester jusqu'au $date à $time si ce signalement est "
+          'erroné.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Contester ce signalement'), findsOneWidget);
+    });
+
+    testWidgets('adversaire sans échéance → texte d\'avant', (tester) async {
+      await tester.pumpWidget(_host(deliveryBid(), cancellationBloc));
+      await tester.pump();
+      expect(
+        find.textContaining('Vous pouvez contester si ce signalement est'),
+        findsOneWidget,
+      );
+      expect(find.textContaining("jusqu'au"), findsNothing);
+    });
+
+    testWidgets('contestation déjà envoyée : pas de délai', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          deliveryBid(status: 'CONTESTED', deadline: deadlineUtc),
+          cancellationBloc,
+        ),
+      );
+      await tester.pump();
+      expect(find.textContaining('Contestation envoyée'), findsOneWidget);
+      expect(find.textContaining("jusqu'au"), findsNothing);
+    });
+
+    testWidgets('auteur du signalement : texte inchangé', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          deliveryBid(reportedByTraveler: false, deadline: deadlineUtc),
+          cancellationBloc,
+        ),
+      );
+      await tester.pump();
+      expect(find.textContaining('Absence signalée'), findsOneWidget);
+      expect(find.textContaining("jusqu'au"), findsNothing);
+    });
+
+    testWidgets('en anglais : date et heure locales exactes', (tester) async {
+      await initializeDateFormatting('en');
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          locale: AppL10n.en,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: BlocProvider<CancellationBloc>.value(
+              value: cancellationBloc,
+              child: SenderHeroCard(bid: deliveryBid(deadline: deadlineUtc)),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      final local = deadlineUtc.toLocal();
+      final date = DateFormat.MMMEd('en').format(local);
+      final time = DateFormat.jm('en').format(local);
+      expect(
+        find.text(
+          'A delivery no-show has been reported on this shipment. You can '
+          'contest it until $date at $time if this report is wrong.',
+        ),
+        findsOneWidget,
+      );
+    });
+  });
 
   testWidgets(
     'bannière "Une absence est signalée" + Contester si deliveryNoShowReportedByTraveler=true (je suis l\'adversaire, expéditeur)',

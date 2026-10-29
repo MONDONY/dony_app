@@ -5,6 +5,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
@@ -14,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-/// Accordéon « Plus de détails » — tout ce que l'app sait de la demande :
+/// Contenu de « Plus de détails » : tout ce que l'app sait de la demande.
 ///   1. DEMANDE (référence, dates d'envoi et de mise à jour, paiement, promo)
 ///   2. DÉPÔT DU COLIS (lieu ouvrable dans la carte, date limite, remise)
 ///   3. RÉCUPÉRATION À L'ARRIVÉE (lieu ouvrable dans la carte, instructions)
@@ -22,124 +23,23 @@ import 'package:intl/intl.dart';
 ///   5. LIEN DE SUIVI (si autorisé et trackingToken != null)
 ///   6. RESPONSABILITÉ LÉGALE
 ///
-/// NOTE : ce widget est un [StatefulWidget] pour gérer l'état UI `_open`
-/// (pattern AnimatedSize standard). Ce setState local ne gère que l'ouverture/
-/// fermeture de l'accordéon — aucun état métier.
-class DetailsAccordion extends StatefulWidget {
-  final BidModel bid;
-  final bool showTrackingLink;
-
-  const DetailsAccordion({
-    super.key,
-    required this.bid,
-    this.showTrackingLink = true,
-  });
-
-  @override
-  State<DetailsAccordion> createState() => _DetailsAccordionState();
-}
-
-class _DetailsAccordionState extends State<DetailsAccordion> {
-  bool _open = false;
-
-  BidModel get bid => widget.bid;
-
-  void _toggle() {
-    HapticFeedback.lightImpact();
-    setState(() => _open = !_open);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Header ─────────────────────────────────────────────────────────
-          InkWell(
-            onTap: _toggle,
-            borderRadius: _open
-                ? const BorderRadius.vertical(
-                    top: Radius.circular(DonyRadius.card),
-                  )
-                : BorderRadius.circular(DonyRadius.card),
-            child: Padding(
-              padding: const EdgeInsets.all(DonySpacing.base),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l.bidDetailMoreDetails,
-                      style: tt.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  AnimatedRotation(
-                    turns: _open ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOutCubic,
-                    child: DonyIcon('chevron-down', color: cs.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // ── Body ───────────────────────────────────────────────────────────
-          AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: !_open
-                ? const SizedBox(width: double.infinity, height: 0)
-                : Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.base,
-                      0,
-                      DonySpacing.base,
-                      DonySpacing.base,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Divider(color: cs.outline, height: 1),
-                        const SizedBox(height: DonySpacing.md),
-                        BidDetailsContent(
-                          bid: bid,
-                          showTrackingLink: widget.showTrackingLink,
-                        ),
-                      ],
-                    ),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Contenu de « Plus de détails » : tout ce que l'app sait de la demande
-/// (sections détaillées sur [DetailsAccordion]). Public pour être posé tel quel
-/// dans un bottom sheet de la fiche colis expéditeur ; l'accordéon de la vue
-/// voyageur l'utilise pour son corps.
+/// Posé tel quel dans le bottom sheet de la tuile « Plus de détails » de la
+/// fiche colis, vue expéditeur (`openSenderTileSheet`) comme vue voyageur
+/// (`openTravelerTileSheet`, sans le lien de suivi) : le sheet porte le titre.
 class BidDetailsContent extends StatelessWidget {
   const BidDetailsContent({
     super.key,
     required this.bid,
     this.showTrackingLink = true,
+    this.isSender = true,
   });
 
   final BidModel bid;
   final bool showTrackingLink;
+
+  /// Lecteur expéditeur (défaut) ou voyageur. Le voyageur ne voit le numéro de
+  /// suivi qu'à partir de la remise ([travelerVisibleTrackingNumber]).
+  final bool isSender;
 
   String _formatHandoverDate(BuildContext context, DateTime? d) {
     if (d == null) {
@@ -169,10 +69,15 @@ class BidDetailsContent extends StatelessWidget {
         '${DateFormat.Hm(locale).format(d.toLocal())}';
   }
 
-  /// Numéro de suivi quand il est servi (expéditeur, ou voyageur après la
-  /// remise), sinon le début de l'identifiant de la demande.
+  /// Numéro de suivi visible par le lecteur : celui de l'expéditeur dès qu'il
+  /// existe, celui du voyageur après la remise seulement.
+  String? get _trackingNumber =>
+      isSender ? bid.trackingNumber : travelerVisibleTrackingNumber(bid);
+
+  /// Numéro de suivi quand il est visible, sinon le début de l'identifiant de
+  /// la demande.
   String get _reference =>
-      bid.trackingNumber ??
+      _trackingNumber ??
       bid.id.substring(0, bid.id.length < 8 ? bid.id.length : 8).toUpperCase();
 
   String get _route {
@@ -221,7 +126,7 @@ class BidDetailsContent extends StatelessWidget {
           // Numéro de suivi quand il est servi, jamais
           // « Référence » : vu des deux côtés, il passait pour
           // un code (FLUTTER-J2).
-          label: bid.trackingNumber != null
+          label: _trackingNumber != null
               ? l.bidDetailTrackingNumberLabel
               : l.bidDetailReferenceLabel,
           value: _reference,

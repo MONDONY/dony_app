@@ -27,6 +27,79 @@ BidModel _bid({String? senderName}) => BidModel(
 );
 
 void main() {
+  group('travelerVisibleTrackingNumber', () {
+    BidModel withTracking(String status, String? number) => BidModel(
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      weightKg: 5,
+      status: status,
+      trackingNumber: number,
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
+    );
+
+    // Servi dès que le colis est entre les mains du voyageur.
+    for (final status in [
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'COMPLETED',
+      'DELIVERED',
+    ]) {
+      test('$status → le numéro', () {
+        expect(
+          travelerVisibleTrackingNumber(withTracking(status, 'DON-1')),
+          'DON-1',
+        );
+      });
+      test('$status sans numéro → null', () {
+        expect(
+          travelerVisibleTrackingNumber(withTracking(status, null)),
+          isNull,
+        );
+      });
+      test('$status avec numéro vide → null', () {
+        expect(
+          travelerVisibleTrackingNumber(withTracking(status, '  ')),
+          isNull,
+        );
+      });
+    }
+
+    // Avant la remise, ou demande close sans remise : jamais, même si le
+    // serveur l'envoyait (défense en profondeur).
+    for (final status in [
+      'PENDING',
+      'PAYMENT_ESCROWED',
+      'AWAITING_PAYMENT',
+      'ACCEPTED',
+      'REJECTED',
+      'CANCELLED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+      'NEGOTIATING',
+      'NEGOTIATION_CLOSED',
+      'UNKNOWN_STATUS',
+      '',
+    ]) {
+      test('« $status » avec numéro servi → null', () {
+        expect(
+          travelerVisibleTrackingNumber(withTracking(status, 'DON-1')),
+          isNull,
+        );
+      });
+    }
+
+    test('le numéro est rendu tel quel', () {
+      expect(
+        travelerVisibleTrackingNumber(withTracking('ARRIVED', 'DON-E69EDCSG')),
+        'DON-E69EDCSG',
+      );
+    });
+  });
+
   final l = lookupAppLocalizations(AppL10n.fr);
   final en = lookupAppLocalizations(AppL10n.en);
 

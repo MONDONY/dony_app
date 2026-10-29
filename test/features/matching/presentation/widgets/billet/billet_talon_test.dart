@@ -840,8 +840,8 @@ void main() {
       find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'),
       findsOneWidget,
     );
-    // La bande de suivi reste.
-    expect(find.text('NUMÉRO DE SUIVI'), findsOneWidget);
+    // Le numéro de suivi n'est pas visible du voyageur avant la remise.
+    expect(find.text('NUMÉRO DE SUIVI'), findsNothing);
   });
 
   // Régression staging : un bid accepté en mobile money passe en
@@ -1014,7 +1014,7 @@ void main() {
     await _pump(
       tester,
       _bid(status: 'ACCEPTED', trackingNumber: 'DON-1'),
-      false,
+      true,
     );
     expect(find.text('NUMÉRO DE SUIVI'), findsOneWidget);
     expect(find.text('DON-1'), findsOneWidget);
@@ -1023,6 +1023,104 @@ void main() {
   testWidgets('sans trackingNumber → pas de bande de suivi', (tester) async {
     await _pump(tester, _bid(status: 'PENDING'), true);
     expect(find.text('NUMÉRO DE SUIVI'), findsNothing);
+  });
+
+  // Règle du propriétaire : le voyageur ne voit pas le numéro de suivi tant que
+  // le colis n'a pas été remis. Le back le garantit ; l'app aussi.
+  group('numéro de suivi voyageur : invisible avant la remise', () {
+    const handedOver = [
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'COMPLETED',
+      'DELIVERED',
+    ];
+    const beforeOrWithoutHandover = [
+      'PENDING',
+      'PAYMENT_ESCROWED',
+      'AWAITING_PAYMENT',
+      'ACCEPTED',
+      'REJECTED',
+      'CANCELLED',
+      'NO_SHOW',
+      'EXPIRED',
+      'PARCEL_REFUSED',
+    ];
+
+    for (final status in handedOver) {
+      testWidgets('voyageur · $status + numéro → bande, copier, partager', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          _bid(status: status, trackingNumber: 'DON-1'),
+          false,
+        );
+        expect(find.text('NUMÉRO DE SUIVI'), findsOneWidget);
+        expect(find.text('DON-1'), findsOneWidget);
+        expect(find.byKey(const Key('talon-copy-button')), findsOneWidget);
+        expect(find.byKey(const Key('talon-share-button')), findsOneWidget);
+        expect(find.byKey(const Key('talon-tracking-help')), findsOneWidget);
+      });
+
+      testWidgets('voyageur · $status sans numéro → pas de bande', (
+        tester,
+      ) async {
+        await _pump(tester, _bid(status: status), false);
+        expect(find.text('NUMÉRO DE SUIVI'), findsNothing);
+        expect(find.byKey(const Key('talon-copy-button')), findsNothing);
+      });
+    }
+
+    for (final status in beforeOrWithoutHandover) {
+      testWidgets(
+        'voyageur · $status + numéro servi quand même → ni bande, ni copier, '
+        'ni partager',
+        (tester) async {
+          await _pump(
+            tester,
+            _bid(status: status, trackingNumber: 'DON-1'),
+            false,
+          );
+          expect(find.text('NUMÉRO DE SUIVI'), findsNothing);
+          expect(find.text('DON-1'), findsNothing);
+          expect(find.byKey(const Key('talon-copy-button')), findsNothing);
+          expect(find.byKey(const Key('talon-share-button')), findsNothing);
+          expect(find.byKey(const Key('talon-tracking-help')), findsNothing);
+        },
+      );
+
+      testWidgets('voyageur · $status sans numéro → pas de bande', (
+        tester,
+      ) async {
+        await _pump(tester, _bid(status: status), false);
+        expect(find.text('NUMÉRO DE SUIVI'), findsNothing);
+      });
+    }
+
+    // Expéditeur : inchangé, la bande suit le numéro quel que soit le statut.
+    for (final status in [...handedOver, ...beforeOrWithoutHandover]) {
+      testWidgets('expéditeur · $status + numéro → bande inchangée', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          _bid(status: status, trackingNumber: 'DON-1'),
+          true,
+        );
+        expect(find.text('NUMÉRO DE SUIVI'), findsOneWidget);
+        expect(find.text('DON-1'), findsOneWidget);
+        expect(find.byKey(const Key('talon-copy-button')), findsOneWidget);
+        expect(find.byKey(const Key('talon-share-button')), findsOneWidget);
+      });
+
+      testWidgets('expéditeur · $status sans numéro → pas de bande', (
+        tester,
+      ) async {
+        await _pump(tester, _bid(status: status), true);
+        expect(find.text('NUMÉRO DE SUIVI'), findsNothing);
+      });
+    }
   });
 
   group('traductions', () {
@@ -1083,12 +1181,12 @@ void main() {
     );
 
     testWidgets(
-      'en anglais : voyageur + ACCEPTED → "Scan the step QR codes" et "TRACKING NUMBER"',
+      'en anglais : voyageur + IN_TRANSIT → "Scan the step QR codes" et "TRACKING NUMBER"',
       (tester) async {
         useEnglish();
         await _pump(
           tester,
-          _bid(status: 'ACCEPTED', trackingNumber: 'DON-1'),
+          _bid(status: 'IN_TRANSIT', trackingNumber: 'DON-1'),
           false,
         );
         expect(find.text('Scan the step QR codes'), findsOneWidget);
@@ -1152,6 +1250,126 @@ void main() {
         true,
       );
       expect(find.text('Drop-off deadline passed'), findsOneWidget);
+    });
+  });
+
+  // NO_SHOW, PARCEL_REFUSED et EXPIRED (hors date limite de dépôt) : le talon
+  // était vide, l'écran n'expliquait rien. Il dit maintenant que la demande
+  // est terminée et pourquoi, avec le vocabulaire du tampon, pour le voyageur
+  // comme pour l'expéditeur.
+  group('demande terminée sans bloc dédié (voyageur et expéditeur)', () {
+    const closed = 'Cette demande est terminée.';
+    const closedEn = 'This request is closed.';
+    // (statut, motif voyageur FR/EN, motif expéditeur FR/EN)
+    final cases = <(String, String, String, String, String)>[
+      (
+        'NO_SHOW',
+        'Absence constatée',
+        'No-show recorded',
+        'Absence constatée',
+        'No-show recorded',
+      ),
+      (
+        'PARCEL_REFUSED',
+        'Colis refusé à la remise',
+        'Parcel refused at handover',
+        'Le voyageur a refusé le colis à la remise',
+        'The traveler refused the parcel at handover',
+      ),
+      (
+        'EXPIRED',
+        'Demande expirée',
+        'Request expired',
+        'Demande expirée',
+        'Request expired',
+      ),
+    ];
+
+    for (final (status, fr, en, senderFr, senderEn) in cases) {
+      testWidgets('voyageur · $status : motif + « demande terminée »', (
+        tester,
+      ) async {
+        await _pump(tester, _bid(status: status), false);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('billet-closed-reason')))
+              .data,
+          fr,
+        );
+        expect(find.text(closed), findsOneWidget);
+        // Rien d'autre dans la zone du talon : pas de bouton, pas de bande.
+        expect(find.byType(OutlinedButton), findsNothing);
+        expect(find.byType(FilledButton), findsNothing);
+        expect(find.text('NUMÉRO DE SUIVI'), findsNothing);
+      });
+
+      testWidgets('voyageur · $status, en anglais', (tester) async {
+        useEnglish();
+        await _pump(tester, _bid(status: status), false);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('billet-closed-reason')))
+              .data,
+          en,
+        );
+        expect(find.text(closedEn), findsOneWidget);
+      });
+
+      testWidgets('expéditeur · $status : motif + « demande terminée »', (
+        tester,
+      ) async {
+        await _pump(tester, _bid(status: status), true);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('billet-closed-reason')))
+              .data,
+          senderFr,
+        );
+        expect(find.text(closed), findsOneWidget);
+        expect(find.byType(OutlinedButton), findsNothing);
+        expect(find.byType(FilledButton), findsNothing);
+      });
+
+      testWidgets('expéditeur · $status, en anglais', (tester) async {
+        useEnglish();
+        await _pump(tester, _bid(status: status), true);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('billet-closed-reason')))
+              .data,
+          senderEn,
+        );
+        expect(find.text(closedEn), findsOneWidget);
+      });
+    }
+
+    testWidgets('expéditeur · EXPIRED à la date limite de dépôt : son bloc, '
+        'sans le motif générique', (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'EXPIRED', rejectionReason: 'HANDOVER_DEADLINE_PASSED'),
+        true,
+      );
+      expect(
+        find.byKey(const Key('billet-handover-deadline-expired')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('billet-closed-reason')), findsNothing);
+    });
+
+    testWidgets('voyageur · EXPIRED à la date limite de dépôt : son bloc, '
+        'sans le motif générique', (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'EXPIRED', rejectionReason: 'HANDOVER_DEADLINE_PASSED'),
+        false,
+      );
+      expect(
+        find.byKey(const Key('billet-handover-deadline-expired')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('billet-closed-reason')), findsNothing);
+      expect(find.text('Demande expirée'), findsNothing);
     });
   });
 

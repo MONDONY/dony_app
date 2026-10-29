@@ -32,4 +32,58 @@ void main() {
     await pump(tester, item());
     expect(find.textContaining('Mobile Money'), findsNothing);
   });
+
+  // Le voyageur ne voit le numéro de suivi qu'à partir de la remise, comme
+  // sur la fiche du colis : « Mon argent » ne le lui montre pas avant.
+  group('numéro de suivi voyageur', () {
+    const beforeHandover = ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'];
+    const fromHandover = [
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'COMPLETED',
+      'DELIVERED',
+    ];
+
+    for (final status in beforeHandover) {
+      testWidgets('voyageur · $status : numéro masqué', (tester) async {
+        await pump(
+          tester,
+          item(trackingNumber: 'DON-HIDDEN01', bidStatus: status),
+        );
+        expect(find.textContaining('DON-HIDDEN01'), findsNothing);
+        // La ligne reste lisible : le trajet vient des détails.
+        expect(find.byType(MoneyParcelLine), findsOneWidget);
+      });
+    }
+
+    for (final status in fromHandover) {
+      testWidgets('voyageur · $status : numéro affiché', (tester) async {
+        await pump(
+          tester,
+          item(trackingNumber: 'DON-SHOWN001', bidStatus: status),
+        );
+        expect(find.textContaining('DON-SHOWN001'), findsOneWidget);
+      });
+    }
+
+    testWidgets('voyageur · statut inconnu (ancien back) : numéro conservé', (
+      tester,
+    ) async {
+      await pump(tester, item(trackingNumber: 'DON-NOSTATUS'));
+      expect(find.textContaining('DON-NOSTATUS'), findsOneWidget);
+    });
+
+    testWidgets('expéditeur · ACCEPTED : numéro affiché', (tester) async {
+      await pump(
+        tester,
+        item(
+          trackingNumber: 'DON-SENDER001',
+          bidStatus: 'ACCEPTED',
+          role: MoneyRole.sender,
+        ),
+      );
+      expect(find.textContaining('DON-SENDER001'), findsOneWidget);
+    });
+  });
 }

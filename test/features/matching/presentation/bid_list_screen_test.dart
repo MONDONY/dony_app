@@ -346,7 +346,7 @@ void main() {
     await _pump(tester, bidBloc);
     ctrl.add(
       BidListLoaded([
-        _makeBid(status: 'ACCEPTED', id: 'b1', trackingNumber: 'DNY-4815'),
+        _makeBid(status: 'ARRIVED', id: 'b1', trackingNumber: 'DNY-4815'),
         _makeBid(
           status: 'IN_TRANSIT',
           id: 'b2',
@@ -361,7 +361,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(DonyAvatar), findsOneWidget);
-    expect(find.text('Accepté'), findsOneWidget);
+    expect(find.text('Arrivé'), findsOneWidget);
     expect(find.text('En transit'), findsNothing);
   });
 

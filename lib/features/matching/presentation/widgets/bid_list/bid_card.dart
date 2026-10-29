@@ -78,8 +78,9 @@ class BidCard extends StatelessWidget {
             .map((c) => contentCategoryDisplayName(l, c))
             .toList() ??
         const <String>[];
-    final hasTracking =
-        bid.trackingNumber != null && bid.trackingNumber!.isNotEmpty;
+    // Cette carte est lue par le voyageur : le numéro n'apparaît qu'à partir
+    // de la remise.
+    final trackingNumber = travelerVisibleTrackingNumber(bid);
 
     return Material(
       color: cs.surface,
@@ -111,11 +112,11 @@ class BidCard extends StatelessWidget {
                           query: query,
                           style: tt.titleLarge,
                         ),
-                        if (hasTracking) ...[
+                        if (trackingNumber != null) ...[
                           const SizedBox(height: DonySpacing.xxs),
                           _HighlightedText(
                             text: l.bidListCardTrackingNumberLabel(
-                              bid.trackingNumber!,
+                              trackingNumber,
                             ),
                             query: query,
                             style: tt.labelSmall?.copyWith(

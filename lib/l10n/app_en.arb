@@ -2086,7 +2086,7 @@
   },
   "bidCreateDisclaimerSigned": "Disclaimer signed on {dateTime}",
   "@bidCreateDisclaimerSigned": {
-    "description": "Statut du disclaimer avec sa date de signature (details_accordion, tâche D2)",
+    "description": "Statut du disclaimer avec sa date de signature (bid_details_content, tâche D2)",
     "placeholders": {
       "dateTime": {
         "type": "String"
@@ -3457,6 +3457,7 @@
   "@bidDetailDeliveryNoShowAlertSubtitle": {
     "description": "_DeliveryNoShowHero, sous-titre cote adversaire quand le signalement est encore ouvert (sender_hero_card.dart, traveler_hero_card.dart)"
   },
+  "bidDetailDeliveryNoShowAlertSubtitleUntil": "A delivery no-show has been reported on this shipment. You can contest it until {date} at {time} if this report is wrong.",
   "bidDetailDeliveryNoShowContestButton": "Contest this report",
   "@bidDetailDeliveryNoShowContestButton": {
     "description": "_DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)"
@@ -3899,6 +3900,38 @@
   "senderTilePrevenirLink": "Send the tracking link",
   "senderTileBadgeCodeReady": "Code ready",
   "senderTileBadgeCurrentStep": "Current step",
+  "bidDetailSectionTransport": "Your trip",
+  "travelerTileBadgeTodo": "To do",
+  "travelerTileLieux": "Places",
+  "travelerTileLieuxDropoff": "Drop-off in {place}",
+  "@travelerTileLieuxDropoff": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileLieuxPickup": "Pickup in {place}",
+  "@travelerTileLieuxPickup": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileColis": "Parcel and recipient",
+  "travelerTileColisSubtitle": "{weight} · for {recipient}",
+  "@travelerTileColisSubtitle": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerTileDetailsSubtitle": "Reference, drop-off, trip",
   "bidDetailSectionDropoff": "PARCEL DROP-OFF",
   "bidDetailLocationLabel": "Location",
   "bidDetailHandoverStatusLabel": "Drop-off",
@@ -4157,8 +4190,6 @@
   "bidDetailRecipientLabel": "Recipient",
   "bidDetailPhoneLabel": "Phone",
   "bidDetailDescriptionLabel": "Description",
-  "bidDetailSenderCallSemanticLabel": "Call",
-  "bidDetailSenderOpenChatSemanticLabel": "Open the conversation",
   "bidDetailCopyTrackingLinkButton": "Copy the link",
   "bidDetailTrackingLinkCopiedMessage": "Link copied",
   "bidDetailAcceptRequestButton": "Accept",
@@ -4176,6 +4207,10 @@
   "ticketTravelerAwaitingPayment": "Waiting for the sender's payment",
   "ticketParcelDeliveredLabel": "Parcel delivered",
   "ticketRequestClosedMessage": "This request is closed.",
+  "ticketClosedNoShowReason": "No-show recorded",
+  "ticketClosedParcelRefusedReason": "Parcel refused at handover",
+  "ticketClosedParcelRefusedReasonSender": "The traveler refused the parcel at handover",
+  "ticketClosedExpiredReason": "Request expired",
   "ticketHandoverDeadlineExpiredTitle": "Drop-off deadline passed",
   "ticketHandoverDeadlineExpiredSender": "The drop-off deadline has passed: request cancelled. Any payment is refunded to you in full.",
   "ticketHandoverDeadlineExpiredTraveler": "The drop-off deadline has passed: request cancelled.",
@@ -8673,27 +8708,27 @@
   },
   "bidDetailSectionRequest": "REQUEST",
   "@bidDetailSectionRequest": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailReferenceLabel": "Reference",
   "@bidDetailReferenceLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailSentAtLabel": "Sent on",
   "@bidDetailSentAtLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailUpdatedAtLabel": "Last update",
   "@bidDetailUpdatedAtLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailPaymentMethodLabel": "Payment",
   "@bidDetailPaymentMethodLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailPaymentMethodValue": "{method, select, stripe{Bank card} cash{Cash at drop-off} wave{Wave} orangeMoney{Orange Money} mobileMoney{Mobile money} other{-}}",
   "@bidDetailPaymentMethodValue": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)",
+    "description": "Plus de détails d'une demande (bid_details_content.dart)",
     "placeholders": {
       "method": {
         "type": "String"
@@ -8702,19 +8737,19 @@
   },
   "bidDetailPromoCodeLabel": "Promo code",
   "@bidDetailPromoCodeLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailRouteLabel": "Route",
   "@bidDetailRouteLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailArrivalTimeLabel": "Arrival time",
   "@bidDetailArrivalTimeLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "bidDetailPickupInstructionsLabel": "Pickup on arrival",
   "@bidDetailPickupInstructionsLabel": {
-    "description": "Plus de détails d'une demande (details_accordion.dart)"
+    "description": "Plus de détails d'une demande (bid_details_content.dart)"
   },
   "negotiationMakeOfferStepProgress": "Step {step} of 3 · {name}",
   "negotiationMakeOfferStepTrip": "Trip",
@@ -10838,6 +10873,7 @@
   "bidDetailRequestSupplementLabel": "Request an extra charge",
   "bidDetailRequestSupplementSubtitle": "The parcel is worth more than agreed: the sender pays the difference",
   "bidDetailScanBlockedSupplement": "An extra charge is awaiting the sender's reply: scanning is blocked.",
+  "bidDetailScanBlockedSupplementCommission": "Scanning is blocked until you confirm payment of your commission.",
   "supplementRequestTitle": "Request an extra charge",
   "supplementRequestIntro": "Doesn't the parcel match what was declared? Ask the sender for the difference. They pay with the same method as the parcel, or decline.",
   "supplementRequestSuggestionsLabel": "Suggested amounts",
@@ -11186,6 +11222,7 @@
   "amendmentNotBroughtConfirmMessage": "The change will be cancelled and the sender refunded. The parcel stays at its original weight.",
   "amendmentNotBroughtSnackbar": "Change cancelled, the sender is refunded",
   "amendmentScanBlocked": "A change is waiting for your reply: scanning is blocked.",
+  "amendmentScanBlockedSender": "A change is waiting on the sender: scanning is on hold.",
   "amendmentCommissionAuthInterrupted": "Confirmation interrupted, try accepting again.",
   "amendmentSenderNotBroughtStatus": "{name} reported the extra kilos weren't there",
   "amendmentSenderBodyCardReleased": "Your parcel stays at {kg}. The amount held on your card is released.",

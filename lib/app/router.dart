@@ -718,11 +718,13 @@ final GoRouter appRouter = GoRouter(
           bid: bid,
           fromPayment: fromPayment,
           openCodeRenewal: action == 'new-code',
-          // Notification BID_SUPPLEMENT_REQUESTED : la fiche amène l'encart
-          // du supplément à l'écran de l'expéditeur.
+          // Notifications de supplément (REQUESTED pour l'expéditeur, DECLINED
+          // et EXPIRED pour le voyageur, EXPIRED aussi pour l'expéditeur) : la
+          // fiche amène l'encart du supplément à l'écran.
           focusSupplement: action == 'supplement',
-          // Notifications de modification de colis : la fiche amène la
-          // carte de la modification à l'écran de l'expéditeur.
+          // Notifications de modification de colis (voyageur ou expéditeur
+          // selon le type) : la fiche amène la carte de la modification à
+          // l'écran.
           focusAmendment: action == 'amendment',
         );
       },

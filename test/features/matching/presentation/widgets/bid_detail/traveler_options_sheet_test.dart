@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -12,6 +13,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_options_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -23,6 +25,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
@@ -50,8 +53,12 @@ BidModel _bid({
   DateTime? departureAt,
   bool supplementRequestAllowed = false,
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+  bool? contactWindowOpen,
+  DateTime? returnDeadline,
 }) => BidModel(
   id: 'b1',
+  contactWindowOpen: contactWindowOpen,
+  returnDeadline: returnDeadline,
   supplementRequestAllowed: supplementRequestAllowed,
   paymentMethod: paymentMethod,
   announcementId: 'a1',
@@ -69,6 +76,7 @@ Widget _buildApp({
   required _MockConvBloc conv,
   required BidModel bid,
   List<Object?>? transitExtras,
+  double textScale = 1.0,
 }) {
   final router = GoRouter(
     routes: [
@@ -111,14 +119,30 @@ Widget _buildApp({
       ),
     ],
   );
-  return MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
+  return MaterialApp.router(
+    theme: AppTheme.light(),
+    routerConfig: router,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(textScale)),
+      child: child!,
+    ),
+  );
 }
 
 Future<_MockBidBloc> _open(
   WidgetTester tester,
   BidModel bid, {
   List<Object?>? transitExtras,
+  Size? size,
+  double textScale = 1.0,
 }) async {
+  if (size != null) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   final bidBloc = _MockBidBloc();
   final conv = _MockConvBloc();
   when(() => bidBloc.state).thenReturn(BidInitial());
@@ -129,6 +153,7 @@ Future<_MockBidBloc> _open(
       conv: conv,
       bid: bid,
       transitExtras: transitExtras,
+      textScale: textScale,
     ),
   );
   await tester.tap(find.text('open'));
@@ -370,12 +395,65 @@ void main() {
     },
   );
 
-  testWidgets('tap Détails du colis → sub-sheet apparaît', (tester) async {
-    await _open(tester, _bid());
-    await tester.tap(find.text('Détails du colis'));
-    await tester.pumpAndSettle();
-    // After tapping, the sub-sheet title 'Détails du colis' should appear
-    expect(find.text('Détails du colis'), findsWidgets);
+  group('Détails du colis', () {
+    late MockAnalyticsBackend backend;
+
+    setUp(() async {
+      backend = MockAnalyticsBackend();
+      final analytics = makeEnabledAnalytics(backend);
+      await analytics.onConfigured();
+      await getIt.reset();
+      getIt.registerSingleton<AnalyticsService>(analytics);
+    });
+
+    tearDown(() async => getIt.reset());
+
+    testWidgets('ouvre la tuile « Colis et destinataire » de la grille '
+        '« Votre transport »', (tester) async {
+      await _open(tester, _bid());
+      await tester.tap(find.text('Détails du colis'));
+      await tester.pumpAndSettle();
+
+      // Le menu est fermé, la feuille de la tuile Colis est ouverte.
+      expect(find.text("Contacter l'expéditeur"), findsNothing);
+      expect(find.text('Colis et destinataire'), findsWidgets);
+      expect(find.byType(ColisDestinataireCard), findsOneWidget);
+      // Le même événement que la tuile, avec le rôle voyageur, mais la source
+      // `menu` : les deux chemins vers la feuille restent distinguables.
+      verify(
+        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'colis',
+          'role': 'traveler',
+          'source': 'menu',
+        }),
+      ).called(1);
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'colis',
+          'role': 'traveler',
+          'source': 'tile',
+        }),
+      );
+    });
+
+    testWidgets('le contact du destinataire est dans la même feuille '
+        '(colis récupéré)', (tester) async {
+      await _open(tester, _bid(status: 'HANDED_OVER', token: null));
+      await tester.tap(find.text('Détails du colis'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ColisDestinataireCard), findsOneWidget);
+    });
+
+    testWidgets('en anglais : feuille « Parcel and recipient »', (
+      tester,
+    ) async {
+      useEnglish();
+      await _open(tester, _bid());
+      await tester.tap(find.text('Parcel details'));
+      await tester.pumpAndSettle();
+      expect(find.text('Parcel and recipient'), findsWidgets);
+    });
   });
 
   testWidgets('avec trackingToken → le voyageur ne voit pas le partage suivi', (
@@ -494,5 +572,199 @@ void main() {
     expect(find.text('Report the sender'), findsOneWidget);
     expect(find.text('Cancel this transport'), findsOneWidget);
     expect(find.text("The parcel doesn't match"), findsOneWidget);
+  });
+
+  // ── Matrice du menu ⋮ : chaque statut, chaque entrée (inventaire B5) ──────
+  group('entrées du menu par statut', () {
+    const contact = "Contacter l'expéditeur";
+    const details = 'Détails du colis';
+    const report = "Signaler l'expéditeur";
+    const supplement = 'Demander un supplément';
+    const refuse = 'Le colis ne correspond pas';
+    const cancel = 'Annuler ce transport';
+    const transit = 'Scanner le transit';
+    const delete = 'Supprimer cette demande';
+    const all = [
+      contact,
+      details,
+      report,
+      supplement,
+      refuse,
+      cancel,
+      transit,
+      delete,
+    ];
+    // Le contact suit la même condition que la carte « Expéditeur » du corps
+    // (`bidAllowsContactFor`) : proposer « Contacter » là où la carte ne
+    // montre pas le bouton menait à une ouverture de discussion refusée.
+    const base = [contact, details, report];
+    const noContact = [details, report];
+    final soon = DateTime.now().add(const Duration(days: 2));
+    final gone = DateTime.now().subtract(const Duration(hours: 2));
+
+    final cases = <String, (BidModel, List<String>)>{
+      'PENDING': (_bid(status: 'PENDING'), noContact),
+      'PAYMENT_ESCROWED': (_bid(status: 'PAYMENT_ESCROWED'), noContact),
+      'AWAITING_PAYMENT': (_bid(status: 'AWAITING_PAYMENT'), noContact),
+      'ACCEPTED': (_bid(), [...base, refuse, cancel]),
+      'HANDED_OVER avant le départ': (
+        _bid(status: 'HANDED_OVER', departureAt: soon),
+        [...base, refuse, cancel, transit],
+      ),
+      'HANDED_OVER départ passé': (
+        _bid(status: 'HANDED_OVER', departureAt: gone),
+        [...base, transit],
+      ),
+      'IN_TRANSIT': (_bid(status: 'IN_TRANSIT'), base),
+      'ARRIVED': (_bid(status: 'ARRIVED'), base),
+      'COMPLETED': (_bid(status: 'COMPLETED'), base),
+      'DELIVERED': (_bid(status: 'DELIVERED'), base),
+      'REJECTED': (_bid(status: 'REJECTED'), [...noContact, delete]),
+      // Annulé : le contact n'existe que pendant la fenêtre de 48 h ou un
+      // retour de colis en cours, décidés par le serveur (`contactWindowOpen`).
+      'CANCELLED fenêtre fermée': (
+        _bid(status: 'CANCELLED', contactWindowOpen: false),
+        [...noContact, delete],
+      ),
+      'CANCELLED sans le champ (ancien back)': (
+        _bid(status: 'CANCELLED'),
+        [...noContact, delete],
+      ),
+      'CANCELLED fenêtre de 48 h ouverte': (
+        _bid(status: 'CANCELLED', contactWindowOpen: true),
+        [...base, delete],
+      ),
+      'CANCELLED retour du colis en cours': (
+        _bid(
+          status: 'CANCELLED',
+          contactWindowOpen: true,
+          returnDeadline: soon,
+        ),
+        [...base, delete],
+      ),
+      'CANCELLED délai de retour écoulé (serveur)': (
+        _bid(
+          status: 'CANCELLED',
+          contactWindowOpen: false,
+          returnDeadline: gone,
+        ),
+        [...noContact, delete],
+      ),
+      // Le serveur ne laisse masquer que REJECTED et CANCELLED (409
+      // invalid-bid-status sinon) : pas d'entrée pour les trois autres.
+      'NO_SHOW': (_bid(status: 'NO_SHOW'), noContact),
+      'EXPIRED': (_bid(status: 'EXPIRED'), noContact),
+      'PARCEL_REFUSED': (_bid(status: 'PARCEL_REFUSED'), noContact),
+    };
+
+    for (final MapEntry(key: name, value: (bid, expected)) in cases.entries) {
+      testWidgets('$name : exactement les entrées attendues', (tester) async {
+        await _open(tester, bid);
+        final present = [
+          for (final label in all)
+            if (find.text(label).evaluate().isNotEmpty) label,
+        ];
+        expect(present, unorderedEquals(expected));
+        // Jamais de partage du suivi pour le voyageur.
+        expect(find.text('Partager le suivi'), findsNothing);
+      });
+    }
+
+    testWidgets('PENDING en anglais : pas de « Contact the sender »', (
+      tester,
+    ) async {
+      useEnglish();
+      await _open(tester, _bid(status: 'PENDING'));
+      expect(find.text('Contact the sender'), findsNothing);
+      expect(find.text('Parcel details'), findsOneWidget);
+      expect(find.text('Report the sender'), findsOneWidget);
+    });
+
+    testWidgets('supplément autorisé par le serveur : il s\'ajoute, quel que '
+        'soit le statut', (tester) async {
+      for (final status in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT']) {
+        await _open(
+          tester,
+          _bid(status: status, supplementRequestAllowed: true),
+        );
+        expect(find.text(supplement), findsOneWidget, reason: status);
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+      }
+    });
+  });
+
+  // ── Sept entrées : la feuille défile, la dernière est atteignable ────────
+  group('sept entrées sur un petit écran', () {
+    // HANDED_OVER avant le départ, supplément autorisé : contacter, détails,
+    // signaler, supplément, le colis ne correspond pas, annuler, scanner le
+    // transit.
+    final sevenEntries = _bid(
+      status: 'HANDED_OVER',
+      token: null,
+      supplementRequestAllowed: true,
+      departureAt: DateTime.now().add(const Duration(days: 2)),
+    );
+
+    for (final (english, labels) in [
+      (false, ['Scanner le transit', "Contacter l'expéditeur"]),
+      (true, ['Scan the transit', 'Contact the sender']),
+    ]) {
+      for (final scale in [1.0, 1.3]) {
+        testWidgets(
+          '360 × 640 dp, texte ×$scale, ${english ? 'EN' : 'FR'} : pas '
+          'd\'exception, dernière entrée atteignable',
+          (tester) async {
+            if (english) useEnglish();
+            final extras = <Object?>[];
+            await _open(
+              tester,
+              sevenEntries,
+              size: const Size(360, 640),
+              textScale: scale,
+              transitExtras: extras,
+            );
+            expect(tester.takeException(), isNull);
+
+            final last = find.text(labels.first);
+            final first = find.text(labels.last);
+            expect(last, findsOneWidget);
+            expect(first, findsOneWidget);
+
+            // La feuille n'est plus bornée à 9/16 de l'écran : elle prend la
+            // hauteur dont elle a besoin (comme celle de l'expéditeur).
+            final sheet = tester.getSize(
+              find.ancestor(
+                of: first,
+                matching: find.byType(SingleChildScrollView),
+              ),
+            );
+            expect(sheet.height, greaterThan(640 * 9 / 16 + 1));
+
+            // Le défilement amène la dernière entrée à l'écran, et un tap
+            // l'atteint vraiment.
+            await tester.scrollUntilVisible(
+              last,
+              120,
+              scrollable: find.descendant(
+                of: find.byType(SingleChildScrollView),
+                matching: find.byType(Scrollable),
+              ),
+            );
+            await tester.pumpAndSettle();
+            expect(last.hitTestable(), findsOneWidget);
+            expect(tester.getBottomLeft(last).dy, lessThanOrEqualTo(640));
+            await tester.tap(last);
+            await tester.pumpAndSettle();
+            expect(find.text('identify-screen'), findsOneWidget);
+            expect(extras.single, <String, dynamic>{
+              'etape': 'TRANSIT',
+              'focusNumber': false,
+            });
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+    }
   });
 }

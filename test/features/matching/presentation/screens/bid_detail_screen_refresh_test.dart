@@ -18,6 +18,9 @@ import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_accept_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_amendment/amendment_commission_flow.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -25,18 +28,22 @@ import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cub
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
@@ -99,6 +106,8 @@ class _MockSupplementPaymentCubit extends MockCubit<SupplementPaymentState>
 class _MockSupplementRepository extends Mock
     implements BidSupplementRepository {}
 
+class _MockAmendmentRepository extends Mock implements BidAmendmentRepository {}
+
 class _MockBidAcceptanceBloc
     extends MockBloc<BidAcceptanceEvent, acs.BidAcceptanceState>
     implements BidAcceptanceBloc {}
@@ -120,6 +129,7 @@ BidModel _makeBid({
   AddressData? deliveryAddress,
   String? recipientName,
   BidSupplement? supplement,
+  List<BidAmendment> amendments = const [],
 }) => BidModel(
   id: 'bid-001',
   announcementId: 'ann-001',
@@ -139,6 +149,7 @@ BidModel _makeBid({
   deliveryAddress: deliveryAddress,
   recipientName: recipientName,
   supplement: supplement,
+  amendments: amendments,
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
 );
@@ -158,6 +169,7 @@ Future<GoRouter> _pump(
   required _MockAuthBloc authBloc,
   bool openCodeRenewal = false,
   bool focusSupplement = false,
+  bool focusAmendment = false,
   Size size = const Size(800, 3000),
 }) async {
   await initializeDateFormatting('fr_FR');
@@ -176,6 +188,7 @@ Future<GoRouter> _pump(
             bid: bid,
             openCodeRenewal: openCodeRenewal,
             focusSupplement: focusSupplement,
+            focusAmendment: focusAmendment,
           ),
         ),
       ),
@@ -369,6 +382,131 @@ void main() {
     );
   });
 
+  // La lecture du paiement (`GET /payments/bid`) ne nourrit que la vue
+  // expéditeur (carte Paiement, barre collante) : le voyageur ne la déclenche
+  // pas. Rôle non résolu (aucun utilisateur connu) : comportement d'avant.
+  group('lecture du paiement selon le rôle', () {
+    _MockAuthBloc viewer(String id) {
+      final authBloc = _MockAuthBloc();
+      when(() => authBloc.state).thenReturn(AuthAuthenticated(_user(id)));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+      return authBloc;
+    }
+
+    for (final status in ['PENDING', 'ACCEPTED', 'HANDED_OVER']) {
+      testWidgets('voyageur · $status : aucun GET du paiement', (tester) async {
+        await _pump(
+          tester,
+          bid: _makeBid(status: status, paymentMethod: BidPaymentMethod.stripe),
+          authBloc: viewer('traveler-001'),
+        );
+        verifyNever(() => paymentRepository.getPaymentForBid(any()));
+        // Le relevé suivant ne la lit pas non plus.
+        await tester.pump(const Duration(seconds: 31));
+        verifyNever(() => paymentRepository.getPaymentForBid(any()));
+      });
+    }
+
+    for (final status in ['PENDING', 'ACCEPTED', 'HANDED_OVER']) {
+      testWidgets('expéditeur · $status : le paiement est lu', (tester) async {
+        await _pump(
+          tester,
+          bid: _makeBid(status: status, paymentMethod: BidPaymentMethod.stripe),
+          authBloc: senderAuth(),
+        );
+        verify(() => paymentRepository.getPaymentForBid('bid-001')).called(1);
+      });
+    }
+
+    // Arrivée par notification ou lien profond : `push('/bids/id')` sans
+    // `extra` ouvre un colis squelette (sans expéditeur), le rôle n'est connu
+    // qu'au chargement.
+    group('colis squelette (notification, lien profond)', () {
+      late StreamController<BidState> states;
+
+      setUp(() {
+        states = StreamController<BidState>.broadcast();
+        when(() => bidBloc.stream).thenAnswer((_) => states.stream);
+      });
+
+      tearDown(() => states.close());
+
+      Future<void> load(WidgetTester tester, String status) async {
+        states.add(
+          BidDetailLoaded(
+            _makeBid(status: status, paymentMethod: BidPaymentMethod.stripe),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+
+      for (final status in ['PENDING', 'HANDED_OVER']) {
+        testWidgets('voyageur · $status : aucun GET du paiement, ni à '
+            'l\'ouverture ni au chargement', (tester) async {
+          await _pump(
+            tester,
+            bid: BidModel.skeleton('bid-001'),
+            authBloc: viewer('traveler-001'),
+          );
+          verifyNever(() => paymentRepository.getPaymentForBid(any()));
+
+          await load(tester, status);
+          verifyNever(() => paymentRepository.getPaymentForBid(any()));
+        });
+
+        testWidgets('expéditeur · $status : un seul GET, au chargement', (
+          tester,
+        ) async {
+          await _pump(
+            tester,
+            bid: BidModel.skeleton('bid-001'),
+            authBloc: senderAuth(),
+          );
+          verifyNever(() => paymentRepository.getPaymentForBid(any()));
+
+          await load(tester, status);
+          verify(() => paymentRepository.getPaymentForBid('bid-001')).called(1);
+        });
+      }
+
+      testWidgets('rôle non résolu : le paiement est lu au chargement', (
+        tester,
+      ) async {
+        final authBloc = _MockAuthBloc();
+        when(() => authBloc.state).thenReturn(const AuthInitial());
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
+        await _pump(
+          tester,
+          bid: BidModel.skeleton('bid-001'),
+          authBloc: authBloc,
+        );
+        await load(tester, 'HANDED_OVER');
+        verify(() => paymentRepository.getPaymentForBid('bid-001')).called(1);
+      });
+    });
+
+    testWidgets('rôle non résolu (aucun utilisateur) : le paiement est lu', (
+      tester,
+    ) async {
+      final authBloc = _MockAuthBloc();
+      when(() => authBloc.state).thenReturn(const AuthInitial());
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+      await _pump(
+        tester,
+        bid: _makeBid(paymentMethod: BidPaymentMethod.stripe),
+        authBloc: authBloc,
+      );
+      verify(() => paymentRepository.getPaymentForBid('bid-001')).called(1);
+    });
+  });
+
   group('Annulation avant paiement', () {
     testWidgets(
       'BidCancelledBeforePayment → snackbar « Demande annulée » et sortie de la fiche',
@@ -400,7 +538,9 @@ void main() {
   });
 
   group('FLUTTER-CH — relecture du colis en attente du voyageur', () {
-    for (final status in ['PENDING', 'PAYMENT_ESCROWED']) {
+    // AWAITING_PAYMENT : le voyageur attend le séquestre de l'expéditeur (30
+    // min) et doit voir le colis passer à ACCEPTED sans rien faire.
+    for (final status in ['PENDING', 'PAYMENT_ESCROWED', 'AWAITING_PAYMENT']) {
       testWidgets('$status → relevé périodique toutes les 30 s', (
         tester,
       ) async {
@@ -688,6 +828,233 @@ void main() {
     );
   });
 
+  // Le résolveur de notifications envoie aussi le voyageur sur
+  // `?action=amendment` (BID_AMENDMENT_REQUESTED|REMINDER|ACCEPTED) et
+  // `?action=supplement` : la vue voyageur reçoit les deux paramètres.
+  group('?action= côté voyageur', () {
+    setUp(() {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerFactory<SupplementActionCubit>(
+        () => SupplementActionCubit(_MockSupplementRepository(), analytics),
+      );
+      final amendmentRepo = _MockAmendmentRepository();
+      getIt
+        ..registerFactory<AmendmentActionCubit>(
+          () => AmendmentActionCubit(amendmentRepo, analytics),
+        )
+        ..registerFactory<AmendmentAcceptCubit>(
+          () => AmendmentAcceptCubit(
+            amendmentRepo,
+            analytics,
+            AmendmentCommissionFlow(amendmentRepo, analytics),
+          ),
+        );
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<SupplementActionCubit>()) {
+        getIt.unregister<SupplementActionCubit>();
+      }
+      if (getIt.isRegistered<AmendmentActionCubit>()) {
+        getIt.unregister<AmendmentActionCubit>();
+      }
+      if (getIt.isRegistered<AmendmentAcceptCubit>()) {
+        getIt.unregister<AmendmentAcceptCubit>();
+      }
+    });
+
+    _MockAuthBloc travelerViewer() {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user('traveler-001')));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+      return authBloc;
+    }
+
+    for (final (supplement, amendment) in [(true, false), (false, true)]) {
+      testWidgets(
+        'supplement=$supplement amendment=$amendment : transmis à la vue '
+        'voyageur',
+        (tester) async {
+          await _pump(
+            tester,
+            bid: _makeBid(paymentMethod: BidPaymentMethod.stripe),
+            authBloc: travelerViewer(),
+            focusSupplement: supplement,
+            focusAmendment: amendment,
+          );
+          await tester.pump(const Duration(milliseconds: 500));
+
+          final body = tester.widget<TravelerDetailBody>(
+            find.byType(TravelerDetailBody),
+          );
+          expect(body.focusSupplement, supplement);
+          expect(body.focusAmendment, amendment);
+          expect(find.byType(SenderDetailBody), findsNothing);
+        },
+      );
+    }
+
+    testWidgets('?action=supplement : la carte du supplément est amenée à '
+        'l\'écran', (tester) async {
+      final bid = _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        supplement: const BidSupplement(
+          id: 'sup-1',
+          status: BidSupplementStatus.proposed,
+          netAmount: 15,
+          commissionAmount: 2,
+          grossAmount: 17,
+          blocksHandover: true,
+        ),
+      );
+      await _pump(
+        tester,
+        bid: bid,
+        authBloc: travelerViewer(),
+        focusSupplement: true,
+        size: const Size(800, 700),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(SupplementTravelerCard), findsOneWidget);
+      final offset = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .pixels;
+      expect(offset, greaterThan(0));
+      // Le haut de la carte est dans la fenêtre visible, pas seulement
+      // « ça a défilé ».
+      final top = tester.getTopLeft(find.byType(SupplementTravelerCard)).dy;
+      expect(top, greaterThanOrEqualTo(0));
+      expect(top, lessThan(700));
+    });
+
+    // Notifications BID_SUPPLEMENT_DECLINED / EXPIRED : la carte du supplément
+    // refusé ou expiré, avec « Le colis ne correspond pas », est amenée à
+    // l'écran.
+    for (final status in [
+      BidSupplementStatus.declined,
+      BidSupplementStatus.expired,
+    ]) {
+      testWidgets('?action=supplement (${status.name}) : la carte du '
+          'supplément clos est amenée à l\'écran', (tester) async {
+        final bid = _makeBid(
+          paymentMethod: BidPaymentMethod.stripe,
+          supplement: BidSupplement(
+            id: 'sup-1',
+            status: status,
+            netAmount: 15,
+            commissionAmount: 2,
+            grossAmount: 17,
+          ),
+        );
+        await _pump(
+          tester,
+          bid: bid,
+          authBloc: travelerViewer(),
+          focusSupplement: true,
+          size: const Size(800, 700),
+        );
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byType(SupplementTravelerCard), findsOneWidget);
+        final offset = tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position
+            .pixels;
+        expect(offset, greaterThan(0));
+        final top = tester.getTopLeft(find.byType(SupplementTravelerCard)).dy;
+        expect(top, greaterThanOrEqualTo(0));
+        expect(top, lessThan(700));
+      });
+    }
+
+    for (final status in [
+      BidAmendmentStatus.proposed,
+      BidAmendmentStatus.declined,
+    ]) {
+      testWidgets('?action=amendment (${status.name}) : la carte de la '
+          'modification est amenée à l\'écran', (tester) async {
+        final bid = _makeBid(
+          paymentMethod: BidPaymentMethod.stripe,
+          amendments: [
+            BidAmendment(
+              id: 'am-1',
+              status: status,
+              rail: 'CASH',
+              addedWeightKg: 3,
+              grossAmount: 26.8,
+              netAmount: 23.5,
+              commissionAmount: 3.3,
+              blocksHandover: status.isOpen,
+            ),
+          ],
+        );
+        await _pump(
+          tester,
+          bid: bid,
+          authBloc: travelerViewer(),
+          focusAmendment: true,
+          size: const Size(800, 700),
+        );
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byType(AmendmentTravelerCard), findsOneWidget);
+        final offset = tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position
+            .pixels;
+        expect(offset, greaterThan(0));
+        final top = tester.getTopLeft(find.byType(AmendmentTravelerCard)).dy;
+        expect(top, greaterThanOrEqualTo(0));
+        expect(top, lessThan(700));
+      });
+    }
+
+    testWidgets('sans paramètre : pas de défilement vers la modification', (
+      tester,
+    ) async {
+      final bid = _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        amendments: [
+          const BidAmendment(
+            id: 'am-1',
+            status: BidAmendmentStatus.proposed,
+            rail: 'CASH',
+            addedWeightKg: 3,
+            grossAmount: 26.8,
+            netAmount: 23.5,
+            commissionAmount: 3.3,
+            blocksHandover: true,
+          ),
+        ],
+      );
+      await _pump(
+        tester,
+        bid: bid,
+        authBloc: travelerViewer(),
+        size: const Size(800, 700),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+      final offset = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .pixels;
+      expect(offset, 0);
+    });
+  });
+
   // ── Fiche expéditeur en tuiles : vrai écran ───────────────────────────────
   // Les sheets des tuiles s'ouvrent sur le navigateur racine : chaque tuile
   // doit fonctionner avec les seuls BLoCs que l'écran fournit.
@@ -823,7 +1190,7 @@ void main() {
         findsNothing,
       );
       expect(find.byType(TravelerTrackingCard), findsNothing);
-      expect(find.byType(DetailsAccordion), findsNothing);
+      expect(find.byType(BidDetailsContent), findsNothing);
       expect(find.byType(DonyActionTile), findsNWidgets(4));
 
       double top(Finder f) => tester.getTopLeft(f).dy;

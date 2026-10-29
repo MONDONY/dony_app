@@ -2590,6 +2590,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDetailDeliveryNoShowContestSentSubtitle,
   'bidDetailDeliveryNoShowAlertSubtitle': (l) =>
       l.bidDetailDeliveryNoShowAlertSubtitle,
+  'bidDetailDeliveryNoShowAlertSubtitleUntil': (l) =>
+      l.bidDetailDeliveryNoShowAlertSubtitleUntil(
+        placeholderMarker('date'),
+        placeholderMarker('time'),
+      ),
   'bidDetailDeliveryNoShowContestButton': (l) =>
       l.bidDetailDeliveryNoShowContestButton,
   'bidDetailSenderPendingSubtitle': (l) => l.bidDetailSenderPendingSubtitle,
@@ -2790,6 +2795,19 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'senderTilePrevenirLink': (l) => l.senderTilePrevenirLink,
   'senderTileBadgeCodeReady': (l) => l.senderTileBadgeCodeReady,
   'senderTileBadgeCurrentStep': (l) => l.senderTileBadgeCurrentStep,
+  'bidDetailSectionTransport': (l) => l.bidDetailSectionTransport,
+  'travelerTileBadgeTodo': (l) => l.travelerTileBadgeTodo,
+  'travelerTileLieux': (l) => l.travelerTileLieux,
+  'travelerTileLieuxDropoff': (l) =>
+      l.travelerTileLieuxDropoff(placeholderMarker('place')),
+  'travelerTileLieuxPickup': (l) =>
+      l.travelerTileLieuxPickup(placeholderMarker('place')),
+  'travelerTileColis': (l) => l.travelerTileColis,
+  'travelerTileColisSubtitle': (l) => l.travelerTileColisSubtitle(
+    placeholderMarker('weight'),
+    placeholderMarker('recipient'),
+  ),
+  'travelerTileDetailsSubtitle': (l) => l.travelerTileDetailsSubtitle,
   'bidDetailSectionDropoff': (l) => l.bidDetailSectionDropoff,
   'bidDetailLocationLabel': (l) => l.bidDetailLocationLabel,
   'bidDetailHandoverStatusLabel': (l) => l.bidDetailHandoverStatusLabel,
@@ -2942,9 +2960,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailRecipientLabel': (l) => l.bidDetailRecipientLabel,
   'bidDetailPhoneLabel': (l) => l.bidDetailPhoneLabel,
   'bidDetailDescriptionLabel': (l) => l.bidDetailDescriptionLabel,
-  'bidDetailSenderCallSemanticLabel': (l) => l.bidDetailSenderCallSemanticLabel,
-  'bidDetailSenderOpenChatSemanticLabel': (l) =>
-      l.bidDetailSenderOpenChatSemanticLabel,
   'bidDetailCopyTrackingLinkButton': (l) => l.bidDetailCopyTrackingLinkButton,
   'bidDetailTrackingLinkCopiedMessage': (l) =>
       l.bidDetailTrackingLinkCopiedMessage,
@@ -2965,6 +2980,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'ticketTravelerAwaitingPayment': (l) => l.ticketTravelerAwaitingPayment,
   'ticketParcelDeliveredLabel': (l) => l.ticketParcelDeliveredLabel,
   'ticketRequestClosedMessage': (l) => l.ticketRequestClosedMessage,
+  'ticketClosedNoShowReason': (l) => l.ticketClosedNoShowReason,
+  'ticketClosedParcelRefusedReason': (l) => l.ticketClosedParcelRefusedReason,
+  'ticketClosedParcelRefusedReasonSender': (l) =>
+      l.ticketClosedParcelRefusedReasonSender,
+  'ticketClosedExpiredReason': (l) => l.ticketClosedExpiredReason,
   'ticketHandoverDeadlineExpiredTitle': (l) =>
       l.ticketHandoverDeadlineExpiredTitle,
   'ticketHandoverDeadlineExpiredSender': (l) =>
@@ -7442,6 +7462,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailRequestSupplementSubtitle': (l) =>
       l.bidDetailRequestSupplementSubtitle,
   'bidDetailScanBlockedSupplement': (l) => l.bidDetailScanBlockedSupplement,
+  'bidDetailScanBlockedSupplementCommission': (l) =>
+      l.bidDetailScanBlockedSupplementCommission,
   'supplementRequestTitle': (l) => l.supplementRequestTitle,
   'supplementRequestIntro': (l) => l.supplementRequestIntro,
   'supplementRequestSuggestionsLabel': (l) =>
@@ -7911,6 +7933,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.amendmentNotBroughtConfirmMessage,
   'amendmentNotBroughtSnackbar': (l) => l.amendmentNotBroughtSnackbar,
   'amendmentScanBlocked': (l) => l.amendmentScanBlocked,
+  'amendmentScanBlockedSender': (l) => l.amendmentScanBlockedSender,
   'amendmentCommissionAuthInterrupted': (l) =>
       l.amendmentCommissionAuthInterrupted,
   'amendmentSenderNotBroughtStatus': (l) =>
@@ -8187,6 +8210,7 @@ const textParameters = <String, List<String>>{
   'requestPublicCardOnlyWarningResidenceCountry': ['country'],
   'negotiationCardRoundShortLabel': ['timeAgo'],
   'bidDetailUntil': ['date'],
+  'bidDetailDeliveryNoShowAlertSubtitleUntil': ['date', 'time'],
   'bidDetailSenderAwaitingPaymentSubtitle': ['amount'],
   'bidDetailSenderEscrowedSubtitle': ['amount'],
   'bidDetailSenderHandedOverSubtitleWithDate': ['date'],
@@ -8202,6 +8226,9 @@ const textParameters = <String, List<String>>{
   'bidDetailGainCashGrossDetail': ['commission', 'net'],
   'bidRejectionReasonShown': ['reason'],
   'senderTileColisSubtitle': ['weight', 'recipient'],
+  'travelerTileLieuxDropoff': ['place'],
+  'travelerTileLieuxPickup': ['place'],
+  'travelerTileColisSubtitle': ['weight', 'recipient'],
   'bidDetailDisclaimerSignedCompact': ['date', 'time'],
   'parcelRefusalDeclaredWeight': ['weight'],
   'bidDetailReturnDeadlineHint': ['date'],

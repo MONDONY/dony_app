@@ -7171,6 +7171,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une absence à la livraison a été signalée sur cet envoi. Vous pouvez contester si ce signalement est erroné.';
 
   @override
+  String bidDetailDeliveryNoShowAlertSubtitleUntil(String date, String time) {
+    return 'Une absence à la livraison a été signalée sur cet envoi. Vous pouvez contester jusqu\'au $date à $time si ce signalement est erroné.';
+  }
+
+  @override
   String get bidDetailDeliveryNoShowContestButton => 'Contester ce signalement';
 
   @override
@@ -7669,6 +7674,36 @@ class AppLocalizationsFr extends AppLocalizations {
   String get senderTileBadgeCurrentStep => 'Étape en cours';
 
   @override
+  String get bidDetailSectionTransport => 'Votre transport';
+
+  @override
+  String get travelerTileBadgeTodo => 'À traiter';
+
+  @override
+  String get travelerTileLieux => 'Lieux';
+
+  @override
+  String travelerTileLieuxDropoff(String place) {
+    return 'Remise à $place';
+  }
+
+  @override
+  String travelerTileLieuxPickup(String place) {
+    return 'Récupération à $place';
+  }
+
+  @override
+  String get travelerTileColis => 'Colis et destinataire';
+
+  @override
+  String travelerTileColisSubtitle(String weight, String recipient) {
+    return '$weight · pour $recipient';
+  }
+
+  @override
+  String get travelerTileDetailsSubtitle => 'Référence, dépôt, trajet';
+
+  @override
   String get bidDetailSectionDropoff => 'DÉPÔT DU COLIS';
 
   @override
@@ -8079,12 +8114,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailDescriptionLabel => 'Description';
 
   @override
-  String get bidDetailSenderCallSemanticLabel => 'Appeler';
-
-  @override
-  String get bidDetailSenderOpenChatSemanticLabel => 'Ouvrir la discussion';
-
-  @override
   String get bidDetailCopyTrackingLinkButton => 'Copier le lien';
 
   @override
@@ -8138,6 +8167,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ticketRequestClosedMessage => 'Cette demande est terminée.';
+
+  @override
+  String get ticketClosedNoShowReason => 'Absence constatée';
+
+  @override
+  String get ticketClosedParcelRefusedReason => 'Colis refusé à la remise';
+
+  @override
+  String get ticketClosedParcelRefusedReasonSender =>
+      'Le voyageur a refusé le colis à la remise';
+
+  @override
+  String get ticketClosedExpiredReason => 'Demande expirée';
 
   @override
   String get ticketHandoverDeadlineExpiredTitle =>
@@ -21569,6 +21611,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Un supplément attend la réponse de l\'expéditeur : le scan est bloqué.';
 
   @override
+  String get bidDetailScanBlockedSupplementCommission =>
+      'Le scan est bloqué tant que vous n\'avez pas validé le paiement de votre commission.';
+
+  @override
   String get supplementRequestTitle => 'Demander un supplément';
 
   @override
@@ -22781,6 +22827,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get amendmentScanBlocked =>
       'Une modification attend votre réponse : le scan est bloqué.';
+
+  @override
+  String get amendmentScanBlockedSender =>
+      'Une modification attend l\'expéditeur : le scan est bloqué.';
 
   @override
   String get amendmentCommissionAuthInterrupted =>

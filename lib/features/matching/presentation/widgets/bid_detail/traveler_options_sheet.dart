@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
@@ -6,10 +8,12 @@ import 'package:dony/features/incident_report/data/repositories/incident_report_
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/confirm_delete_bid.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_refusal_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tile_sheets.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -32,6 +36,13 @@ void showTravelerOptionsSheet(BuildContext context, BidModel bid) {
   showModalBottomSheet<void>(
     context: context,
     useRootNavigator: true,
+    // Jusqu'à sept entrées (contacter, détails, signaler, supplément, le colis
+    // ne correspond pas, annuler, scanner le transit) : la hauteur par défaut
+    // (9/16 de l'écran) ne suffit plus sur un petit téléphone ni en grand
+    // texte. Même mécanisme que la feuille de l'expéditeur : la feuille prend
+    // la hauteur dont elle a besoin, le contenu défile au-delà.
+    isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => _TravelerOptionsSheet(bid: bid, outerContext: context),
   );
@@ -78,21 +89,26 @@ class _TravelerOptionsSheet extends StatelessWidget {
             Text(l.bidDetailOptionsTitle, style: tt.headlineMedium),
             const SizedBox(height: DonySpacing.base),
 
-            // ── Contacter l'expéditeur (always) ────────────────────────────
-            _OptionTile(
-              iconAsset: 'message-circle',
-              iconColor: cs.primary,
-              iconBg: cs.primaryContainer,
-              label: l.bidDetailContactSenderLabel,
-              subtitle: l.bidDetailContactSenderSubtitle,
-              onTap: () {
-                context.pop();
-                outerContext.read<ConversationOpenBloc>().add(
-                  ConversationOpenRequested(bid.id),
-                );
-              },
-            ),
-            const SizedBox(height: DonySpacing.sm),
+            // ── Contacter l'expéditeur ──────────────────────────────────────
+            // Même condition que la carte « Expéditeur » du corps de la
+            // fiche : avant l'acceptation (ou une fois le contact refermé),
+            // la carte n'a pas de bouton et le menu n'en propose pas non plus.
+            if (bidAllowsContactFor(bid)) ...[
+              _OptionTile(
+                iconAsset: 'message-circle',
+                iconColor: cs.primary,
+                iconBg: cs.primaryContainer,
+                label: l.bidDetailContactSenderLabel,
+                subtitle: l.bidDetailContactSenderSubtitle,
+                onTap: () {
+                  context.pop();
+                  outerContext.read<ConversationOpenBloc>().add(
+                    ConversationOpenRequested(bid.id),
+                  );
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
 
             // ── Détails du colis (always) ───────────────────────────────────
             _OptionTile(
@@ -103,7 +119,16 @@ class _TravelerOptionsSheet extends StatelessWidget {
               subtitle: l.bidDetailParcelDetailsSubtitle,
               onTap: () {
                 context.pop();
-                _showColisSheet(outerContext, bid);
+                // Même sheet que la tuile « Colis et destinataire » de la
+                // grille « Votre transport » (colis, destinataire, contact).
+                unawaited(
+                  openTravelerTileSheet(
+                    outerContext,
+                    bid,
+                    TravelerTile.colis,
+                    source: TravelerTileSource.menu,
+                  ),
+                );
               },
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -223,56 +248,6 @@ class _TravelerOptionsSheet extends StatelessWidget {
   }
 
   // ── Sub-sheets ────────────────────────────────────────────────────────────
-
-  void _showColisSheet(BuildContext context, BidModel bid) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(DonyRadius.sheet),
-          ),
-        ),
-        padding: EdgeInsets.fromLTRB(
-          DonySpacing.lg,
-          0,
-          DonySpacing.lg,
-          bottomPad + DonySpacing.xl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: cs.outline,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Text(
-              context.l10n.bidDetailParcelDetailsLabel,
-              style: tt.headlineMedium,
-            ),
-            const SizedBox(height: DonySpacing.base),
-            ColisDestinataireCard(bid: bid, isSender: false),
-          ],
-        ),
-      ),
-    );
-  }
 
   /// Signalement réel de l'expéditeur — délègue au flux existant
   /// (IncidentReportScreen), comme pour showSenderOptionsSheet côté

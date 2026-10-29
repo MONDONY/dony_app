@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/payments/money/data/models/money_overview_model.dart';
 import 'package:dony/features/payments/money/presentation/money_labels.dart';
 import 'package:dony/features/payments/money/presentation/widgets/money_amount_lines.dart';
@@ -43,7 +44,12 @@ class MoneyParcelLine extends StatelessWidget {
       MoneyTone.attention => textColor ?? cs.onSurface,
       MoneyTone.neutral => textColor ?? cs.onSurfaceVariant,
     };
-    final code = item.trackingNumber;
+    // Le voyageur ne voit le numéro qu'à partir de la remise. Statut brut
+    // absent (ancien back) : on ne peut pas trancher, le numéro reste.
+    final bidStatus = item.bidStatus;
+    final code = item.role == MoneyRole.traveler && bidStatus != null
+        ? travelerVisibleTrackingNumberFor(item.trackingNumber, bidStatus)
+        : item.trackingNumber;
     final amount = item.amount;
     final spans = <InlineSpan>[];
     void add(InlineSpan span) {

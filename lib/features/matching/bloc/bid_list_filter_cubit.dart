@@ -53,6 +53,8 @@ bool isPendingBid(BidModel bid) =>
     bid.status == 'PENDING' || bid.status == 'PAYMENT_ESCROWED';
 
 /// `true` si le bid correspond à la requête (nom de l'expéditeur ou n° de suivi).
+/// Le numéro n'est cherché qu'à partir de la remise : avant, le voyageur ne le
+/// voit pas ([travelerVisibleTrackingNumber]).
 ///
 /// Pas de `BuildContext` ici (filtre pur) : le nom de repli traduit passe par
 /// [AppL10n.current], la langue courante hors contexte.
@@ -60,7 +62,7 @@ bool bidMatchesQuery(BidModel bid, String query) {
   final q = normalizeSearch(query.trim());
   if (q.isEmpty) return true;
   final name = normalizeSearch(bid.senderDisplayName(AppL10n.current));
-  final track = normalizeSearch(bid.trackingNumber ?? '');
+  final track = normalizeSearch(travelerVisibleTrackingNumber(bid) ?? '');
   return name.contains(q) || track.contains(q);
 }
 

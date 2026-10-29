@@ -96,6 +96,19 @@ class AmendmentTravelerCard extends StatelessWidget {
 
   static bool shouldShow(BidModel bid) => _sections(bid).isNotEmpty;
 
+  /// Une section de la carte attend une réponse du voyageur : seul cas où la
+  /// carte relève de « À traiter ». C'est le cas d'une demande proposée
+  /// (« Accepter » / « Refuser ») et d'une commission à finaliser (« Finaliser
+  /// la commission », sa propre 3DS). Une modification acquise (« Les kilos en
+  /// plus ne sont pas là », geste facultatif), l'autorisation carte et le
+  /// paiement (qui attendent l'expéditeur) et une demande close ne font que
+  /// renseigner.
+  static bool needsReply(BidModel bid) => _sections(bid).any(
+    (a) =>
+        a.status == BidAmendmentStatus.proposed ||
+        a.status == BidAmendmentStatus.commissionPending,
+  );
+
   @override
   Widget build(BuildContext context) {
     final sections = _sections(bid);

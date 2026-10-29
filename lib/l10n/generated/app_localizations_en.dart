@@ -7128,6 +7128,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'A delivery no-show has been reported on this shipment. You can contest it if this report is wrong.';
 
   @override
+  String bidDetailDeliveryNoShowAlertSubtitleUntil(String date, String time) {
+    return 'A delivery no-show has been reported on this shipment. You can contest it until $date at $time if this report is wrong.';
+  }
+
+  @override
   String get bidDetailDeliveryNoShowContestButton => 'Contest this report';
 
   @override
@@ -7622,6 +7627,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get senderTileBadgeCurrentStep => 'Current step';
 
   @override
+  String get bidDetailSectionTransport => 'Your trip';
+
+  @override
+  String get travelerTileBadgeTodo => 'To do';
+
+  @override
+  String get travelerTileLieux => 'Places';
+
+  @override
+  String travelerTileLieuxDropoff(String place) {
+    return 'Drop-off in $place';
+  }
+
+  @override
+  String travelerTileLieuxPickup(String place) {
+    return 'Pickup in $place';
+  }
+
+  @override
+  String get travelerTileColis => 'Parcel and recipient';
+
+  @override
+  String travelerTileColisSubtitle(String weight, String recipient) {
+    return '$weight · for $recipient';
+  }
+
+  @override
+  String get travelerTileDetailsSubtitle => 'Reference, drop-off, trip';
+
+  @override
   String get bidDetailSectionDropoff => 'PARCEL DROP-OFF';
 
   @override
@@ -8025,12 +8060,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailDescriptionLabel => 'Description';
 
   @override
-  String get bidDetailSenderCallSemanticLabel => 'Call';
-
-  @override
-  String get bidDetailSenderOpenChatSemanticLabel => 'Open the conversation';
-
-  @override
   String get bidDetailCopyTrackingLinkButton => 'Copy the link';
 
   @override
@@ -8083,6 +8112,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ticketRequestClosedMessage => 'This request is closed.';
+
+  @override
+  String get ticketClosedNoShowReason => 'No-show recorded';
+
+  @override
+  String get ticketClosedParcelRefusedReason => 'Parcel refused at handover';
+
+  @override
+  String get ticketClosedParcelRefusedReasonSender =>
+      'The traveler refused the parcel at handover';
+
+  @override
+  String get ticketClosedExpiredReason => 'Request expired';
 
   @override
   String get ticketHandoverDeadlineExpiredTitle => 'Drop-off deadline passed';
@@ -21423,6 +21465,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'An extra charge is awaiting the sender\'s reply: scanning is blocked.';
 
   @override
+  String get bidDetailScanBlockedSupplementCommission =>
+      'Scanning is blocked until you confirm payment of your commission.';
+
+  @override
   String get supplementRequestTitle => 'Request an extra charge';
 
   @override
@@ -22614,6 +22660,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get amendmentScanBlocked =>
       'A change is waiting for your reply: scanning is blocked.';
+
+  @override
+  String get amendmentScanBlockedSender =>
+      'A change is waiting on the sender: scanning is on hold.';
 
   @override
   String get amendmentCommissionAuthInterrupted =>

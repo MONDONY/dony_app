@@ -5,12 +5,12 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/live_bid.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
@@ -41,7 +41,7 @@ Future<void> openSenderTileSheet(
   unawaited(
     getItSafe<AnalyticsService>()?.logEvent(
       AnalyticsEvents.bidDetailTileOpened,
-      properties: {'tile': tile.name},
+      properties: {'tile': tile.name, 'role': 'sender'},
     ),
   );
 
@@ -78,7 +78,7 @@ Future<void> openSenderTileSheet(
         : (content) =>
               BlocProvider<BidBloc>.value(value: screenBidBloc, child: content),
     stickyBottom: stickyBottom,
-    child: _LiveBid(
+    child: LiveBid(
       bid: bid,
       live: live,
       builder: (_, current) => switch (tile) {
@@ -103,7 +103,7 @@ Widget? _stickyBottomFor(
   required bool live,
 }) {
   Widget liveBid(Widget Function(BuildContext, BidModel) builder) =>
-      _LiveBid(bid: bid, live: live, builder: builder);
+      LiveBid(bid: bid, live: live, builder: builder);
 
   return switch (tile) {
     SenderTile.prevenir => liveBid(
@@ -144,34 +144,6 @@ Widget? _stickyBottomFor(
           : null,
     SenderTile.lieux || SenderTile.details => null,
   };
-}
-
-/// Rend [builder] avec le colis courant : le dernier [BidDetailLoaded] du
-/// `BidBloc` de l'écran pour ce colis, à défaut [bid] (celui de l'ouverture).
-/// Sans `BidBloc` ([live] faux), rendu statique avec [bid].
-class _LiveBid extends StatelessWidget {
-  const _LiveBid({
-    required this.bid,
-    required this.live,
-    required this.builder,
-  });
-
-  final BidModel bid;
-  final bool live;
-  final Widget Function(BuildContext context, BidModel bid) builder;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!live) return builder(context, bid);
-    return BlocBuilder<BidBloc, BidState>(
-      buildWhen: (_, state) =>
-          state is BidDetailLoaded && state.bid.id == bid.id,
-      builder: (context, state) => builder(
-        context,
-        state is BidDetailLoaded && state.bid.id == bid.id ? state.bid : bid,
-      ),
-    );
-  }
 }
 
 /// Ferme le sheet, puis lance [action] si l'écran est toujours là.

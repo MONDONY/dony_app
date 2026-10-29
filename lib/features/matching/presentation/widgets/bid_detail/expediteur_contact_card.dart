@@ -1,16 +1,5 @@
-import 'dart:async';
-
-import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/get_it_safe.dart';
-import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/services/analytics_events.dart';
-import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
@@ -23,18 +12,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Carte profil expéditeur (vue voyageur) — bouton 📞 conditionnel + 💬 chat.
+/// Carte profil expéditeur (vue voyageur) : un bouton « Contacter » (icône
+/// conversation) qui ouvre la discussion. L'appel se lance depuis la
+/// messagerie, pas depuis cette carte.
 ///
 /// Affichée à tous les statuts : tant que la demande est en attente, seul le
-/// profil est visible, sans bouton d'appel ni de message
-/// ([bidAllowsContact]).
+/// profil est visible, sans bouton de contact ([bidAllowsContact]), avec un
+/// indice qui dit quand le contact deviendra possible.
 ///
-/// Le bouton téléphone est affiché uniquement si :
-///   - `bid.senderPhoneAvailable` est vrai (le serveur autorise la révélation),
-///   - ET la fenêtre de contact est ouverte : `bid.contactWindowOpen` du
-///     serveur (ACCEPTED → ARRIVED, puis COMPLETED jusqu'à J+3 après la
-///     livraison, même règle que l'appel in-app). Back antérieur sans ce
-///     champ : repli sur le statut, ni COMPLETED ni DELIVERED.
+/// Le bouton n'apparaît qu'une fois la demande acceptée ([bidAllowsContact]) ou
+/// pendant la fenêtre de contact d'un colis annulé ou en retour
+/// ([bidAllowsContactFor]).
 ///
 /// Requiert un [ConversationOpenBloc] dans le contexte.
 class ExpediteurContactCard extends StatelessWidget {
@@ -42,28 +30,25 @@ class ExpediteurContactCard extends StatelessWidget {
 
   const ExpediteurContactCard({super.key, required this.bid});
 
-  /// Le serveur dit si l'expéditeur est joignable ; le numéro lui-même est
-  /// demandé au tap. La fenêtre de contact vient du serveur ; à défaut (ancien
-  /// back), on masque le bouton en fin de course.
-  bool get _showPhoneButton {
-    if (!bid.senderPhoneAvailable || !smsAuthEnabledListenable.value) {
-      return false;
-    }
-    final open = bid.contactWindowOpen;
-    if (open != null) return open;
-    final s = bid.status;
-    return s != 'COMPLETED' && s != 'DELIVERED';
+  /// Bouton rond « Contacter » (icône conversation) : il dit qu'on peut parler
+  /// à l'expéditeur et ouvre la discussion.
+  Widget _contactButton(BuildContext context) {
+    return BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
+      builder: (context, openState) {
+        final busy = openState is ConversationOpenLoading;
+        return _IconActionButton(
+          iconAsset: 'messages-square',
+          semanticLabel: context.l10n.bidDetailContactSenderLabel,
+          isLoading: busy,
+          onTap: busy ? null : () => _openChat(context),
+        );
+      },
+    );
   }
 
-  void _requestCall(BuildContext context) {
-    unawaited(
-      getItSafe<AnalyticsService>()?.logEvent(
-        AnalyticsEvents.senderCallInitiated,
-        properties: {'status': bid.status},
-      ),
-    );
-    context.read<ContactRevealBloc>().add(ContactRevealRequested(bid.id));
-  }
+  void _openChat(BuildContext context) => context
+      .read<ConversationOpenBloc>()
+      .add(ConversationOpenRequested(bid.id));
 
   @override
   Widget build(BuildContext context) {
@@ -160,45 +145,7 @@ class ExpediteurContactCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Bouton 📞 — conditionnel
-                if (_showPhoneButton && contactAllowed) ...[
-                  BlocConsumer<ContactRevealBloc, ContactRevealState>(
-                    listener: (context, state) {
-                      if (state is ContactRevealSuccess) {
-                        unawaited(dialPhoneNumber(context, state.phoneNumber));
-                      } else if (state is ContactRevealError) {
-                        ErrorPresenter.show(context, state.error);
-                      }
-                    },
-                    builder: (context, state) {
-                      final isRevealing = state is ContactRevealLoading;
-                      return _IconActionButton(
-                        iconAsset: 'phone',
-                        semanticLabel: l.bidDetailSenderCallSemanticLabel,
-                        isLoading: isRevealing,
-                        onTap: isRevealing ? null : () => _requestCall(context),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                ],
-                // Bouton 💬 chat
-                if (contactAllowed)
-                  BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
-                    builder: (context, openState) {
-                      final isOpening = openState is ConversationOpenLoading;
-                      return _IconActionButton(
-                        iconAsset: 'message-circle',
-                        semanticLabel: l.bidDetailSenderOpenChatSemanticLabel,
-                        isLoading: isOpening,
-                        onTap: isOpening
-                            ? null
-                            : () => context.read<ConversationOpenBloc>().add(
-                                ConversationOpenRequested(bid.id),
-                              ),
-                      );
-                    },
-                  ),
+                if (contactAllowed) _contactButton(context),
                 if (canOpenProfile) ...[
                   const SizedBox(width: DonySpacing.xs),
                   DonyIcon(
@@ -296,6 +243,7 @@ class _IconActionButton extends StatelessWidget {
       excludeSemantics: true,
       enabled: onTap != null,
       label: semanticLabel,
+      onTap: onTap, // excludeSemantics retire l'action du GestureDetector
       child: GestureDetector(
         onTap: onTap,
         child: Container(

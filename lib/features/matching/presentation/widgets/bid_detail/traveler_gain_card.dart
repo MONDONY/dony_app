@@ -45,7 +45,15 @@ class TravelerGainCard extends StatelessWidget {
   const TravelerGainCard({super.key, required this.bid});
 
   static const _terminal = {'COMPLETED', 'DELIVERED'};
-  static const _cancelled = {'CANCELLED', 'REJECTED', 'NO_SHOW', 'EXPIRED'};
+  // PARCEL_REFUSED : le voyageur a refusé le colis, l'expéditeur est remboursé,
+  // rien ne sera versé au voyageur (jamais « séquestré, libéré à la livraison »).
+  static const _cancelled = {
+    'CANCELLED',
+    'REJECTED',
+    'NO_SHOW',
+    'EXPIRED',
+    'PARCEL_REFUSED',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +76,10 @@ class TravelerGainCard extends StatelessWidget {
     String? note;
     _Pill? pill;
 
-    if (isCash) {
+    // Le statut du colis prime sur l'espèces pour un colis clos sans livraison
+    // (refusé, annulé, absent, expiré, colis refusé) : rien ne sera encaissé.
+    // COMPLETED / DELIVERED restent « VOUS ENCAISSEZ ».
+    if (isCash && !_cancelled.contains(bid.status)) {
       topLabel = l.bidDetailGainCashTopLabel;
       final net = travelerNetAmount(bid);
       final gross = travelerCashGrossAmount(bid);

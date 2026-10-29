@@ -8775,7 +8775,7 @@ abstract class AppLocalizations {
   /// **'Remise colis'**
   String get listingPickupParcelTitleShort;
 
-  /// Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart)
+  /// Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)
   ///
   /// In fr, this message translates to:
   /// **'Récupération'**
@@ -8883,7 +8883,7 @@ abstract class AppLocalizations {
   /// **'Voir tous les tarifs ({count})'**
   String listingSeeAllPricesButton(int count);
 
-  /// Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart)
+  /// Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)
   ///
   /// In fr, this message translates to:
   /// **'Remise du colis'**
@@ -9961,7 +9961,7 @@ abstract class AppLocalizations {
   /// **' · Votre prix est compétitif.'**
   String get bidCreateCompetitivePriceSuffix;
 
-  /// Statut du disclaimer avec sa date de signature (details_accordion, tâche D2)
+  /// Statut du disclaimer avec sa date de signature (bid_details_content, tâche D2)
   ///
   /// In fr, this message translates to:
   /// **'Disclaimer signé le {dateTime}'**
@@ -11838,6 +11838,12 @@ abstract class AppLocalizations {
   /// **'Une absence à la livraison a été signalée sur cet envoi. Vous pouvez contester si ce signalement est erroné.'**
   String get bidDetailDeliveryNoShowAlertSubtitle;
 
+  /// _DeliveryNoShowHero, sous-titre côté adversaire quand le signalement est encore ouvert et que le serveur renvoie l'échéance de contestation (bid.deliveryNoShowContestationDeadline, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une absence à la livraison a été signalée sur cet envoi. Vous pouvez contester jusqu\'au {date} à {time} si ce signalement est erroné.'**
+  String bidDetailDeliveryNoShowAlertSubtitleUntil(String date, String time);
+
   /// _DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)
   ///
   /// In fr, this message translates to:
@@ -12588,13 +12594,13 @@ abstract class AppLocalizations {
   /// **'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.'**
   String get bidDetailCancelAfterHandoverBody;
 
-  /// En-tête de l'accordéon (details_accordion.dart)
+  /// Titre de la tuile Plus de détails et de son bottom sheet, vues expéditeur et voyageur (sender_tile_sheets.dart, traveler_tile_sheets.dart)
   ///
   /// In fr, this message translates to:
   /// **'Plus de détails'**
   String get bidDetailMoreDetails;
 
-  /// Titre de la section des actions en attente de la fiche colis expéditeur (sender_detail_body.dart)
+  /// Titre de la section des actions en attente de la fiche colis, vues expéditeur et voyageur (sender_detail_body.dart, traveler_detail_body.dart)
   ///
   /// In fr, this message translates to:
   /// **'À traiter'**
@@ -12660,79 +12666,127 @@ abstract class AppLocalizations {
   /// **'Étape en cours'**
   String get senderTileBadgeCurrentStep;
 
-  /// Titre de section 1 de l'accordéon (details_accordion.dart)
+  /// Titre de la grille de tuiles de la fiche colis voyageur (traveler_transport_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre transport'**
+  String get bidDetailSectionTransport;
+
+  /// Pastille de la tuile Colis et destinataire de la fiche colis voyageur quand le destinataire a refusé et qu'un autre peut être demandé (traveler_transport_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À traiter'**
+  String get travelerTileBadgeTodo;
+
+  /// Tuile Lieux (dépôt et récupération) de la fiche colis voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieux'**
+  String get travelerTileLieux;
+
+  /// Sous-titre de la tuile Lieux avant la remise du colis : où le voyageur le récupère (ville, à défaut l'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise à {place}'**
+  String travelerTileLieuxDropoff(String place);
+
+  /// Sous-titre de la tuile Lieux une fois le colis remis : où le destinataire le récupère (ville, à défaut l'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récupération à {place}'**
+  String travelerTileLieuxPickup(String place);
+
+  /// Tuile Colis et destinataire de la fiche colis voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis et destinataire'**
+  String get travelerTileColis;
+
+  /// Sous-titre de la tuile Colis et destinataire (voyageur) : poids puis destinataire
+  ///
+  /// In fr, this message translates to:
+  /// **'{weight} · pour {recipient}'**
+  String travelerTileColisSubtitle(String weight, String recipient);
+
+  /// Sous-titre de la tuile Plus de détails de la fiche colis voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Référence, dépôt, trajet'**
+  String get travelerTileDetailsSubtitle;
+
+  /// Titre de section 1 de « Plus de détails » (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'DÉPÔT DU COLIS'**
   String get bidDetailSectionDropoff;
 
-  /// InfoRow lieu de remise (details_accordion.dart)
+  /// InfoRow lieu de remise (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Lieu'**
   String get bidDetailLocationLabel;
 
-  /// Libellé InfoRow quand le colis a déjà été remis (details_accordion.dart)
+  /// Libellé InfoRow quand le colis a déjà été remis (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Remise'**
   String get bidDetailHandoverStatusLabel;
 
-  /// Libellé InfoRow avant remise (details_accordion.dart)
+  /// Libellé InfoRow avant remise (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Présence confirmée'**
   String get bidDetailPresenceConfirmedLabel;
 
-  /// Valeur InfoRow quand le colis a déjà été remis (details_accordion.dart)
+  /// Valeur InfoRow quand le colis a déjà été remis (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Colis remis ✓'**
   String get bidDetailParcelHandedOverValue;
 
-  /// Valeur InfoRow, présence confirmée (details_accordion.dart)
+  /// Valeur InfoRow, présence confirmée (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Oui ✓'**
   String get bidDetailYesValue;
 
-  /// Valeur InfoRow, présence non confirmée (details_accordion.dart)
+  /// Valeur InfoRow, présence non confirmée (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Non encore'**
   String get bidDetailNotYetValue;
 
-  /// InfoRow tarif brut par kg (details_accordion.dart)
+  /// InfoRow tarif brut par kg (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Tarif par kg'**
   String get bidDetailPricePerKgLabel;
 
-  /// Titre de section 3 de l'accordéon (details_accordion.dart)
+  /// Titre de section 3 de « Plus de détails » (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'LIEN DE SUIVI'**
   String get bidDetailSectionTrackingLink;
 
-  /// Titre de section 4 de l'accordéon (details_accordion.dart)
+  /// Titre de section 4 de « Plus de détails » (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'RESPONSABILITÉ LÉGALE'**
   String get bidDetailSectionLegal;
 
-  /// Disclaimer sans date de signature (details_accordion.dart)
+  /// Disclaimer sans date de signature (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Disclaimer signé'**
   String get bidDetailDisclaimerSignedNoDate;
 
-  /// Repli du disclaimer sans locale, sans « à » entre date et heure (details_accordion.dart)
+  /// Repli du disclaimer sans locale, sans « à » entre date et heure (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Disclaimer signé le {date} {time}'**
   String bidDetailDisclaimerSignedCompact(String date, String time);
 
-  /// Tuile d'options voyageur : contacter l'expéditeur (traveler_options_sheet.dart)
+  /// Contacter l'expéditeur : tuile d'options voyageur (traveler_options_sheet.dart) et nom annoncé du bouton rond de la carte Expéditeur (expediteur_contact_card.dart)
   ///
   /// In fr, this message translates to:
   /// **'Contacter l\'expéditeur'**
@@ -12744,7 +12798,7 @@ abstract class AppLocalizations {
   /// **'Envoyer un message à l\'expéditeur'**
   String get bidDetailContactSenderSubtitle;
 
-  /// Tuile d'options voyageur et titre du sous-sheet colis (traveler_options_sheet.dart)
+  /// Tuile d'options voyageur qui ouvre la feuille de la tuile « Colis et destinataire » (traveler_options_sheet.dart)
   ///
   /// In fr, this message translates to:
   /// **'Détails du colis'**
@@ -13344,25 +13398,13 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get bidDetailDescriptionLabel;
 
-  /// Clé dédiée (Ruling R40) — remplace voyageurCardCallSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Appeler'**
-  String get bidDetailSenderCallSemanticLabel;
-
-  /// Clé dédiée (Ruling R40) — remplace voyageurCardOpenChatSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Ouvrir la discussion'**
-  String get bidDetailSenderOpenChatSemanticLabel;
-
-  /// Clé dédiée (Ruling R40) — remplace tripPosterCopyLinkButton dans details_accordion.dart (lien de suivi)
+  /// Clé dédiée (Ruling R40) — remplace tripPosterCopyLinkButton dans bid_details_content.dart (lien de suivi)
   ///
   /// In fr, this message translates to:
   /// **'Copier le lien'**
   String get bidDetailCopyTrackingLinkButton;
 
-  /// Clé dédiée (Ruling R40) — remplace tripPosterLinkCopiedMessage dans details_accordion.dart (lien de suivi)
+  /// Clé dédiée (Ruling R40) — remplace tripPosterLinkCopiedMessage dans bid_details_content.dart (lien de suivi)
   ///
   /// In fr, this message translates to:
   /// **'Lien copié'**
@@ -13452,11 +13494,35 @@ abstract class AppLocalizations {
   /// **'Colis livré'**
   String get ticketParcelDeliveredLabel;
 
-  /// Message terminal REJECTED/CANCELLED du talon (billet_talon.dart)
+  /// Message terminal REJECTED/CANCELLED du talon, et NO_SHOW / PARCEL_REFUSED / EXPIRED, pour les deux rôles (billet_talon.dart)
   ///
   /// In fr, this message translates to:
   /// **'Cette demande est terminée.'**
   String get ticketRequestClosedMessage;
+
+  /// Motif au-dessus de « Cette demande est terminée. » dans le talon du billet (voyageur et expéditeur), statut NO_SHOW (billet_talon.dart). Reprend le vocabulaire du tampon « Absent »
+  ///
+  /// In fr, this message translates to:
+  /// **'Absence constatée'**
+  String get ticketClosedNoShowReason;
+
+  /// Motif au-dessus de « Cette demande est terminée. » dans le talon du billet voyageur, statut PARCEL_REFUSED (billet_talon.dart). Reprend le vocabulaire du tampon « Colis refusé »
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis refusé à la remise'**
+  String get ticketClosedParcelRefusedReason;
+
+  /// Motif au-dessus de « Cette demande est terminée. » dans le talon du billet EXPÉDITEUR, statut PARCEL_REFUSED : le voyageur a refusé le colis à la remise (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur a refusé le colis à la remise'**
+  String get ticketClosedParcelRefusedReasonSender;
+
+  /// Motif au-dessus de « Cette demande est terminée. » dans le talon du billet (voyageur et expéditeur), statut EXPIRED hors date limite de dépôt (billet_talon.dart). Reprend le vocabulaire du tampon « Expiré »
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande expirée'**
+  String get ticketClosedExpiredReason;
 
   /// Titre du bloc talon d'une demande EXPIRED pour date limite de dépôt passée (billet_talon.dart, FLUTTER-GA)
   ///
@@ -26095,61 +26161,61 @@ abstract class AppLocalizations {
   /// **'La date limite de remise des colis de ce trajet est passée. La demande ne peut plus être acceptée, payée ni renégociée.'**
   String get errorHandoverDeadlinePassedMessage;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'DEMANDE'**
   String get bidDetailSectionRequest;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Référence'**
   String get bidDetailReferenceLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Envoyée le'**
   String get bidDetailSentAtLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Mise à jour'**
   String get bidDetailUpdatedAtLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Paiement'**
   String get bidDetailPaymentMethodLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'{method, select, stripe{Carte bancaire} cash{Espèces à la remise} wave{Wave} orangeMoney{Orange Money} mobileMoney{Mobile money} other{-}}'**
   String bidDetailPaymentMethodValue(String method);
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Code promo'**
   String get bidDetailPromoCodeLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Itinéraire'**
   String get bidDetailRouteLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Heure d\'arrivée'**
   String get bidDetailArrivalTimeLabel;
 
-  /// Plus de détails d'une demande (details_accordion.dart)
+  /// Plus de détails d'une demande (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'Retrait à l\'arrivée'**
@@ -28423,7 +28489,7 @@ abstract class AppLocalizations {
   /// **'À l\'arrivée'**
   String get parcelLocationsOnArrival;
 
-  /// Section de l'adresse de récupération du destinataire, Plus de détails (details_accordion.dart)
+  /// Section de l'adresse de récupération du destinataire, Plus de détails (bid_details_content.dart)
   ///
   /// In fr, this message translates to:
   /// **'RÉCUPÉRATION À L\'ARRIVÉE'**
@@ -30157,7 +30223,7 @@ abstract class AppLocalizations {
   /// **'Secret, à donner au voyageur seulement au moment de la remise.'**
   String get ticketPickupCodeSecretHint;
 
-  /// Libellé de la ligne du numéro de suivi dans le détail d'un colis (details_accordion.dart, FLUTTER-J2).
+  /// Libellé de la ligne du numéro de suivi dans le détail d'un colis (bid_details_content.dart, FLUTTER-J2).
   ///
   /// In fr, this message translates to:
   /// **'Numéro de suivi'**
@@ -34797,6 +34863,12 @@ abstract class AppLocalizations {
   /// **'Un supplément attend la réponse de l\'expéditeur : le scan est bloqué.'**
   String get bidDetailScanBlockedSupplement;
 
+  /// Carte d'information du corps de la vue voyageur, à la place de bidDetailScanBlockedSupplement quand le supplément attend la validation de la commission espèces du voyageur lui-même (SupplementTravelerCard.needsReply) : « Valider le paiement » est dans « À traiter » (traveler_info_cards.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le scan est bloqué tant que vous n\'avez pas validé le paiement de votre commission.'**
+  String get bidDetailScanBlockedSupplementCommission;
+
   /// Titre de la feuille de demande de supplément (supplement_request_sheet.dart)
   ///
   /// In fr, this message translates to:
@@ -36680,11 +36752,17 @@ abstract class AppLocalizations {
   /// **'Modification annulée, l\'expéditeur est remboursé'**
   String get amendmentNotBroughtSnackbar;
 
-  /// Scan de remise bloqué côté voyageur
+  /// Scan de remise bloqué côté voyageur, quand la modification attend SA réponse (carte d'information de la fiche colis voyageur, traveler_info_cards.dart)
   ///
   /// In fr, this message translates to:
   /// **'Une modification attend votre réponse : le scan est bloqué.'**
   String get amendmentScanBlocked;
+
+  /// Scan de remise bloqué côté voyageur, quand la modification attend l'expéditeur (autorisation de la carte ou dépôt mobile money). Carte d'information de la fiche colis voyageur, traveler_info_cards.dart
+  ///
+  /// In fr, this message translates to:
+  /// **'Une modification attend l\'expéditeur : le scan est bloqué.'**
+  String get amendmentScanBlockedSender;
 
   /// 3DS commission abandonnée
   ///

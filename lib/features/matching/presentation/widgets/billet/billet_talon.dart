@@ -3,6 +3,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_rejection_reason.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip_validation.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
@@ -20,8 +21,10 @@ import 'package:go_router/go_router.dart';
 ///
 /// Dispatcher : selon [bid.status] × [isSender], affiche le bon contenu
 /// d'action (QR, code retrait, scan, confirmation, placeholder, done…).
-/// Si [bid.trackingNumber] est non-null, la [TalonTrackingStrip] est
-/// toujours ajoutée en bas, quelle que soit l'action.
+/// Si le numéro de suivi est visible, la [TalonTrackingStrip] est toujours
+/// ajoutée en bas, quelle que soit l'action. L'expéditeur le voit dès qu'il
+/// existe ; le voyageur seulement à partir de la remise
+/// ([travelerVisibleTrackingNumber]).
 ///
 /// NOTE : les boutons [_QrTalonButton] et [_RetraitTalonButton] ouvrent
 /// respectivement la [QrSheet] et la [RetraitCodeSheet] ; les BLoCs ambiants
@@ -36,6 +39,10 @@ class BilletTalon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Le voyageur ne voit le numéro de suivi qu'à partir de la remise.
+    final trackingNumber = isSender
+        ? bid.trackingNumber
+        : travelerVisibleTrackingNumber(bid);
 
     return Container(
       decoration: BoxDecoration(
@@ -50,10 +57,10 @@ class BilletTalon extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildActionZone(context),
-          if (bid.trackingNumber != null) ...[
+          if (trackingNumber != null) ...[
             const SizedBox(height: DonySpacing.md),
             TalonTrackingStrip(
-              trackingNumber: bid.trackingNumber!,
+              trackingNumber: trackingNumber,
               trackingToken: bid.trackingToken,
             ),
           ],
@@ -116,6 +123,9 @@ class BilletTalon extends StatelessWidget {
         'REJECTED' => _RejectedBlock(bid: bid, isSender: true),
         'EXPIRED' when bid.isExpiredAtHandoverDeadline =>
           const _HandoverDeadlineExpiredBlock(isSender: true),
+        'NO_SHOW' ||
+        'PARCEL_REFUSED' ||
+        'EXPIRED' => _ClosedBlock(status: status, isSender: true),
         _ => const SizedBox.shrink(),
       };
     }
@@ -156,6 +166,11 @@ class BilletTalon extends StatelessWidget {
       'REJECTED' => _RejectedBlock(bid: bid, isSender: false),
       'EXPIRED' when bid.isExpiredAtHandoverDeadline =>
         const _HandoverDeadlineExpiredBlock(isSender: false),
+      // Statuts terminaux sans bloc dédié : sans cela la zone du talon restait
+      // vide et rien n'expliquait pourquoi la demande ne bouge plus.
+      'NO_SHOW' ||
+      'PARCEL_REFUSED' ||
+      'EXPIRED' => _ClosedBlock(status: status, isSender: false),
       _ => const SizedBox.shrink(),
     };
   }
@@ -420,7 +435,7 @@ class _TeamCancelledBlock extends StatelessWidget {
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
-        _TeamSupportCta(bid: bid),
+        _TeamSupportCta(bid: bid, isSender: isSender),
       ],
     );
   }
@@ -432,12 +447,18 @@ class _TeamCancelledBlock extends StatelessWidget {
 /// sans qu'il touche « Envoyer ».
 class _TeamSupportCta extends StatelessWidget {
   final BidModel bid;
+  final bool isSender;
 
-  const _TeamSupportCta({required this.bid});
+  const _TeamSupportCta({required this.bid, required this.isSender});
 
   /// Numéro de suivi, sinon le début de l'identifiant (lisible par l'équipe).
+  /// Le voyageur ne voit le numéro qu'à partir de la remise
+  /// ([travelerVisibleTrackingNumber]) : sur un colis annulé, il n'y a droit
+  /// qu'à l'identifiant.
   String get _parcelNumber {
-    final tracking = bid.trackingNumber?.trim();
+    final tracking =
+        (isSender ? bid.trackingNumber : travelerVisibleTrackingNumber(bid))
+            ?.trim();
     if (tracking != null && tracking.isNotEmpty) return tracking;
     final id = bid.id;
     return (id.length > 8 ? id.substring(0, 8) : id).toUpperCase();
@@ -777,7 +798,8 @@ class _DoneBlock extends StatelessWidget {
   }
 }
 
-/// any / REJECTED or CANCELLED — muted terminal message.
+/// any / REJECTED or CANCELLED (et NO_SHOW / PARCEL_REFUSED / EXPIRED, sous
+/// leur motif) — muted terminal message.
 class _TerminalBlock extends StatelessWidget {
   const _TerminalBlock();
 
@@ -792,6 +814,51 @@ class _TerminalBlock extends StatelessWidget {
         textAlign: TextAlign.center,
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
       ),
+    );
+  }
+}
+
+/// any / NO_SHOW, PARCEL_REFUSED, EXPIRED (hors date limite de dépôt) :
+/// le motif, avec le vocabulaire du tampon, puis le message terminal commun.
+/// Seul le refus du colis change de point de vue : l'expéditeur lit que c'est
+/// le voyageur qui l'a refusé. Aucune ligne de remboursement : l'app ne sait
+/// pas ce que ces statuts ont remboursé.
+class _ClosedBlock extends StatelessWidget {
+  final String status;
+  final bool isSender;
+
+  const _ClosedBlock({required this.status, required this.isSender});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final reason = switch (status) {
+      'NO_SHOW' => l.ticketClosedNoShowReason,
+      'PARCEL_REFUSED' =>
+        isSender
+            ? l.ticketClosedParcelRefusedReasonSender
+            : l.ticketClosedParcelRefusedReason,
+      _ => l.ticketClosedExpiredReason,
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: DonySpacing.sm),
+          child: Text(
+            reason,
+            key: const Key('billet-closed-reason'),
+            textAlign: TextAlign.center,
+            style: tt.bodyMedium?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const _TerminalBlock(),
+      ],
     );
   }
 }

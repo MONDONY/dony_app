@@ -189,6 +189,74 @@ void main() {
       expect(AmendmentTravelerCard.shouldShow(_bid(_am())), isTrue);
       expect(AmendmentTravelerCard.shouldShow(_bid(null)), isFalse);
     });
+
+    // « À traiter » côté voyageur : une réponse attendue (Accepter / Refuser,
+    // Finaliser la commission). « Les kilos en plus ne sont pas là » est un
+    // geste facultatif : information.
+    test('traveler_needsReply_onlyProposedOrCommissionToFinalize', () {
+      for (final s in [
+        BidAmendmentStatus.proposed,
+        BidAmendmentStatus.commissionPending,
+      ]) {
+        expect(
+          AmendmentTravelerCard.needsReply(_bid(_am(status: s))),
+          isTrue,
+          reason: '$s',
+        );
+      }
+      // L'autorisation carte est celle de l'expéditeur, le paiement aussi : la
+      // carte n'a aucun bouton. Une demande close ne fait que renseigner.
+      for (final s in [
+        BidAmendmentStatus.authorizationPending,
+        BidAmendmentStatus.paymentPending,
+        BidAmendmentStatus.accepted,
+        BidAmendmentStatus.payoutPending,
+        BidAmendmentStatus.paidOut,
+        BidAmendmentStatus.declined,
+        BidAmendmentStatus.expired,
+        BidAmendmentStatus.cancelled,
+        BidAmendmentStatus.refundPending,
+        BidAmendmentStatus.refunded,
+        BidAmendmentStatus.unknown,
+      ]) {
+        expect(
+          AmendmentTravelerCard.needsReply(_bid(_am(status: s))),
+          isFalse,
+          reason: '$s',
+        );
+      }
+      expect(AmendmentTravelerCard.needsReply(_bid(null)), isFalse);
+    });
+
+    test('traveler_needsReply_anySectionAwaitingTheTraveler', () {
+      // Une modification acquise puis une nouvelle demande proposée : la
+      // seconde suffit.
+      expect(
+        AmendmentTravelerCard.needsReply(
+          _bid(
+            null,
+            all: [
+              _am(id: 'am-0', status: BidAmendmentStatus.accepted),
+              _am(),
+            ],
+          ),
+        ),
+        isTrue,
+      );
+      // Acquise et paiement attendu : rien n'attend le voyageur.
+      expect(
+        AmendmentTravelerCard.needsReply(
+          _bid(
+            null,
+            all: [
+              _am(id: 'am-0', status: BidAmendmentStatus.accepted),
+              _am(status: BidAmendmentStatus.paymentPending),
+            ],
+          ),
+        ),
+        isFalse,
+      );
+    });
   });
 
   group('expéditeur', () {
@@ -475,6 +543,50 @@ void main() {
       expect(find.text("En attente du paiement d'Aïcha"), findsNothing);
       expect(find.textContaining('En attente du paiement de'), findsOneWidget);
       expect(find.textContaining('Accepter'), findsNothing);
+    });
+  });
+
+  // L'autorisation carte est celle de l'EXPÉDITEUR (blocage du montant) : la
+  // modification est ouverte et bloque la remise, mais le voyageur n'a rien à
+  // faire. La carte n'a aucun bouton. Elle tombe aujourd'hui sur la ligne grise
+  // générique « Modification non acquise » (anomalie connue de l'inventaire B6,
+  // texte non corrigé : logique de carte hors du périmètre de la refonte).
+  group('voyageur : autorisation carte en attente', () {
+    final pending = _am(
+      status: BidAmendmentStatus.authorizationPending,
+      rail: BidAmendment.railStripe,
+    );
+
+    testWidgets('aucun bouton, aucune action possible', (tester) async {
+      await pump(tester, traveler(_bid(pending)));
+
+      expect(find.byType(AmendmentTravelerCard), findsOneWidget);
+      expect(find.textContaining('Accepter'), findsNothing);
+      expect(find.text('Refuser'), findsNothing);
+      expect(find.textContaining('Finaliser'), findsNothing);
+      expect(find.text('Les kilos en plus ne sont pas là'), findsNothing);
+      expect(find.byType(FilledButton), findsNothing);
+      expect(find.byType(OutlinedButton), findsNothing);
+      expect(find.byType(TextButton), findsNothing);
+    });
+
+    testWidgets('ligne grise générique (comportement actuel épinglé)', (
+      tester,
+    ) async {
+      await pump(tester, traveler(_bid(pending)));
+      expect(find.text('Modification non acquise'), findsOneWidget);
+    });
+
+    test('affichée, ouverte (bloque la remise), mais sans réponse attendue', () {
+      final bid = _bid(pending);
+      expect(AmendmentTravelerCard.shouldShow(bid), isTrue);
+      expect(pending.blocksHandover, isTrue);
+      expect(AmendmentTravelerCard.needsReply(bid), isFalse);
+      // Hors ACCEPTED (ici IN_TRANSIT), une modification ouverte reste visible.
+      expect(
+        AmendmentTravelerCard.shouldShow(_bid(pending, status: 'IN_TRANSIT')),
+        isTrue,
+      );
     });
   });
 

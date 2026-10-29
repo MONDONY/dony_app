@@ -17,7 +17,6 @@ import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
@@ -57,13 +56,15 @@ class BidDetailScreen extends StatelessWidget {
   /// nouveau code, la feuille de régénération s'ouvre dès le chargement.
   final bool openCodeRenewal;
 
-  /// Ouvert depuis la notification `BID_SUPPLEMENT_REQUESTED`
-  /// (`?action=supplement`) : la vue expéditeur amène l'encart du supplément
-  /// à l'écran.
+  /// Ouvert depuis une notification de supplément (`?action=supplement`) :
+  /// la vue expéditeur comme la vue voyageur amènent l'encart du supplément à
+  /// l'écran.
   final bool focusSupplement;
 
   /// Ouvert depuis une notification de modification de colis
-  /// (`?action=amendment`) : la vue expéditeur amène la carte à l'écran.
+  /// (`?action=amendment`, envoyée aussi au voyageur pour
+  /// `BID_AMENDMENT_REQUESTED|REMINDER|ACCEPTED`) : les deux vues amènent la
+  /// carte à l'écran.
   final bool focusAmendment;
 
   const BidDetailScreen({
@@ -83,7 +84,6 @@ class BidDetailScreen extends StatelessWidget {
         BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
         BlocProvider(create: (_) => getIt<TrackingBloc>()),
         BlocProvider(create: (_) => getIt<ConversationOpenBloc>()),
-        BlocProvider(create: (_) => getIt<ContactRevealBloc>()),
         BlocProvider(create: (_) => getIt<RatingBloc>()),
         BlocProvider(create: (_) => getIt<CancellationBloc>()),
       ],
@@ -121,10 +121,13 @@ class _BidDetailViewState extends State<_BidDetailView>
   // Statuts vivants : le colis peut encore transitionner vers COMPLETED
   // à tout moment → le polling doit rester actif. PENDING et
   // PAYMENT_ESCROWED attendent la réponse du voyageur : sans relevé,
-  // l'expéditeur ne voyait jamais l'acceptation (FLUTTER-CH).
+  // l'expéditeur ne voyait jamais l'acceptation (FLUTTER-CH). AWAITING_PAYMENT
+  // attend le séquestre de l'expéditeur (30 min, mobile money) : le voyageur
+  // voit le colis passer à ACCEPTED sans rien faire.
   static const _kPollingStatuses = {
     'PENDING',
     'PAYMENT_ESCROWED',
+    'AWAITING_PAYMENT',
     'ACCEPTED',
     'HANDED_OVER',
     'IN_TRANSIT',
@@ -173,7 +176,9 @@ class _BidDetailViewState extends State<_BidDetailView>
     _skeletonLoading = _bid.isSkeleton;
     _lastUserId = context.read<AuthBloc>().state.currentUserId;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
-    _loadPaymentStatus();
+    // Colis squelette (notification, lien profond) : le rôle n'est connu qu'au
+    // chargement, la lecture du paiement attend `BidDetailLoaded`.
+    if (!_bid.isSkeleton) _loadPaymentStatus();
     if (_kPollingStatuses.contains(_bid.status)) {
       _refreshTimer = Timer.periodic(_kPollingInterval, (_) => _pollDetail());
     }
@@ -257,6 +262,11 @@ class _BidDetailViewState extends State<_BidDetailView>
     if (_bid.status == 'REJECTED' || _bid.status == 'CANCELLED') {
       return;
     }
+    // Cette lecture ne nourrit que la vue expéditeur (carte Paiement, barre
+    // collante) : le voyageur, rôle résolu, ne la déclenche pas. Rôle non
+    // résolu (aucun utilisateur connu, colis squelette sans expéditeur) :
+    // comportement d'avant, on lit.
+    if (_viewerIsTraveler(context)) return;
     // Colis en espèces : aucun paiement en ligne n'existe, la lecture rendait
     // 404 à chaque ouverture (staging 10/10). Rien à attendre.
     if (_bid.paymentMethod == BidPaymentMethod.cash) {
@@ -437,6 +447,14 @@ class _BidDetailViewState extends State<_BidDetailView>
       if (!mounted) return;
       showPickupCodeRenewalSheet(this.context, bidId: bid.id);
     });
+  }
+
+  /// `true` seulement quand le lecteur est connu ET n'est pas l'expéditeur du
+  /// colis. Un colis squelette n'a pas encore d'expéditeur : rôle non résolu.
+  bool _viewerIsTraveler(BuildContext context) {
+    if (_bid.isSkeleton) return false;
+    final viewerId = _resolveViewerId(context.read<AuthBloc>().state);
+    return viewerId != null && viewerId != _bid.senderId;
   }
 
   String? _resolveViewerId(AuthState authState) {
@@ -646,6 +664,7 @@ class _BidDetailViewState extends State<_BidDetailView>
                   _skeletonLoading = false;
                 } else if (state is BidDetailLoaded) {
                   final previousBidId = _bid.id;
+                  final wasSkeleton = _bid.isSkeleton;
                   _bid = state.bid;
                   _skeletonLoading = false;
                   _maybeOpenCodeRenewal(context, state.bid);
@@ -653,7 +672,11 @@ class _BidDetailViewState extends State<_BidDetailView>
                     _existingPaymentNotifier.value = null;
                     _paymentLoadedNotifier.value = false;
                   }
-                  if ((state.bid.status == 'PENDING' ||
+                  // Premier chargement d'un colis squelette : la lecture du
+                  // paiement (expéditeur seulement) n'a pas eu lieu à
+                  // l'ouverture, quel que soit le statut.
+                  if ((wasSkeleton ||
+                          state.bid.status == 'PENDING' ||
                           state.bid.status == 'ACCEPTED') &&
                       !_paymentLoadedNotifier.value) {
                     _loadPaymentStatus();
@@ -695,9 +718,13 @@ class _BidDetailViewState extends State<_BidDetailView>
                 );
                 final isSender = viewerId != null && viewerId == _bid.senderId;
 
-                // Derive bid code from tracking number or id
+                // Code du titre : numéro de suivi quand le lecteur peut le voir
+                // (le voyageur, à partir de la remise seulement), sinon début
+                // de l'identifiant (ce n'est pas le numéro de suivi).
                 final bidCode =
-                    _bid.trackingNumber ??
+                    (isSender
+                        ? _bid.trackingNumber
+                        : travelerVisibleTrackingNumber(_bid)) ??
                     _bid.id.substring(0, 6).toUpperCase();
 
                 return Scaffold(
@@ -761,7 +788,11 @@ class _BidDetailViewState extends State<_BidDetailView>
                             existingPayment: payment,
                           ),
                         )
-                      : TravelerDetailBody(bid: _bid),
+                      : TravelerDetailBody(
+                          bid: _bid,
+                          focusSupplement: widget.focusSupplement,
+                          focusAmendment: widget.focusAmendment,
+                        ),
                   bottomNavigationBar: isSender
                       ? (SenderStickyBar.hasAction(_bid)
                             ? ListenableBuilder(
