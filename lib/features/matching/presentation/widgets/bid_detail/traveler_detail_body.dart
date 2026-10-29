@@ -24,8 +24,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 /// Corps de l'écran « Détail d'envoi » (vue voyageur).
 ///
-/// Ordre : billet de colis ; hero « prochaine étape » sans titre quand il ne
-/// porte pas de bouton ; « À traiter » (ce qui attend un geste du voyageur : le
+/// Ordre : billet de colis ; hero sans titre quand il ne porte pas de bouton
+/// (demande à décider, attente du paiement, absence signalée : les étapes du
+/// transport n'ont plus de carte d'information, le footer les porte) ;
+/// « À traiter » (ce qui attend un geste du voyageur : le
 /// hero à bouton, le supplément et la modification à bouton, seulement s'il y
 /// a quelque chose) ; cartes d'information sans titre (attente du paiement,
 /// scan bloqué, verrou avant le départ, supplément et modification qui
@@ -192,8 +194,10 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
     _maybeFocusSupplement();
     _maybeFocusAmendment();
 
-    // Hero : sous le billet quand il informe, sous « À traiter » quand c'est
-    // une alerte qui attend le voyageur.
+    // Hero : sous le billet quand il informe (demande à décider, attente du
+    // paiement, absence signalée), sous « À traiter » quand c'est une alerte
+    // qui attend le voyageur. Aux étapes du transport il ne rend rien
+    // (`isShown` faux) : aucune section, donc aucun espace vide.
     final hero = TravelerHeroCard.isShown(bid)
         ? TravelerHeroCard(bid: bid)
         : null;

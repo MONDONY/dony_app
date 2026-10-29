@@ -7265,53 +7265,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get bidDetailTravelerScanQrTitle => '📷 Scan the parcel\'s QR code';
-
-  @override
-  String get bidDetailTravelerScanQrSubtitle =>
-      'Scan the sender\'s QR code to confirm the drop-off.';
-
-  @override
-  String get bidDetailTravelerAcceptedTitle => '⚡ Collect the parcel';
-
-  @override
-  String get bidDetailTravelerAcceptedInstructions =>
-      'Be at the drop-off point.';
-
-  @override
-  String get bidDetailTravelerAcceptedInstructionsDefault =>
-      'Be at the drop-off point agreed with the sender.';
-
-  @override
-  String get bidDetailTravelerCollectedTitle => '✓ Parcel collected';
-
-  @override
-  String get bidDetailTravelerCollectedSubtitle =>
-      'You have the parcel. Have a safe trip!';
-
-  @override
-  String get bidDetailTravelerInTransitTitle => '✈ Parcel on its way';
-
-  @override
-  String bidDetailTravelerInTransitSubtitle(String city) {
-    return 'In transit to $city. Have a good delivery!';
-  }
-
-  @override
-  String get bidDetailTravelerArrivedTitle => '📍 Arrived at destination';
-
-  @override
-  String get bidDetailTravelerArrivedSubtitle =>
-      'Wait for the recipient to pick up the parcel, then confirm the drop-off.';
-
-  @override
-  String get bidDetailTravelerDeliveredTitle => '✓ Delivery confirmed';
-
-  @override
-  String get bidDetailTravelerDeliveredSubtitle =>
-      'The payment will be released to your account.';
-
-  @override
   String get bidDetailTravelerWindowExpiredTitle =>
       '⚠ Drop-off deadline passed';
 

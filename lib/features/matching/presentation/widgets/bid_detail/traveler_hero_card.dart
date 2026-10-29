@@ -12,33 +12,31 @@ import 'package:intl/intl.dart';
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
-enum TravelerHeroVariant { wait, info, done, alert }
+enum TravelerHeroVariant { wait, alert }
 
 // ── Public widget ─────────────────────────────────────────────────────────────
 
-/// Carte "prochaine étape" contextuelle au statut du bid (vue voyageur).
+/// Carte d'en-tête de la fiche colis (vue voyageur) : la demande à décider,
+/// l'attente du paiement de l'expéditeur, et les alertes liées à une absence
+/// (absence de l'expéditeur signalée ou contestée, absence à la livraison,
+/// date limite de dépôt dépassée avec « Signaler l'absence de l'expéditeur »).
 ///
-/// Affiche l'action suivante selon le statut : nouvelle demande, récupération
-/// du colis, scan QR, transit, livraison confirmée.
-/// Gère aussi la fenêtre de remise dépassée (signalement absence expéditeur).
+/// Les étapes du transport (ACCEPTED, HANDED_OVER, IN_TRANSIT, ARRIVED,
+/// COMPLETED) n'ont plus de carte d'information : le footer (« Confirmer ma
+/// présence », « Lire le QR du colis », « Valider la remise ») et le tampon du
+/// billet disent déjà où en est le colis (décision du propriétaire).
 class TravelerHeroCard extends StatelessWidget {
   const TravelerHeroCard({super.key, required this.bid});
 
   final BidModel bid;
 
-  /// Statuts que le mapping de priorité 3 (`_buildContent`) habille d'un hero.
-  /// Les statuts clos (REJECTED, CANCELLED, NO_SHOW, EXPIRED, PARCEL_REFUSED)
-  /// et inconnus n'en ont pas.
+  /// Statuts que le mapping de priorité 3 (`_buildContent`) habille d'un hero :
+  /// la demande à décider et l'attente du paiement. Les étapes du transport,
+  /// les statuts clos et inconnus n'en ont pas.
   static const _contentStatuses = <String>{
     'PENDING',
     'PAYMENT_ESCROWED',
     'AWAITING_PAYMENT',
-    'ACCEPTED',
-    'HANDED_OVER',
-    'IN_TRANSIT',
-    'ARRIVED',
-    'COMPLETED',
-    'DELIVERED',
   };
 
   /// Priorité 1 : absence de l'expéditeur au dépôt déjà signalée.
@@ -78,7 +76,7 @@ class TravelerHeroCard extends StatelessWidget {
   ///   `false` ;
   /// - 2, date limite de dépôt dépassée (ACCEPTED) : « Signaler l'absence de
   ///   l'expéditeur » → `true` ;
-  /// - 3, mapping par statut (« Récupérez le colis », « Colis en route »…) :
+  /// - 3, mapping par statut (demande à décider, attente du paiement) :
   ///   information seule, sans bouton → `false`.
   static bool hasAction(BidModel bid) {
     if (_senderNoShowOpen(bid)) return false;
@@ -137,7 +135,7 @@ class TravelerHeroCard extends StatelessWidget {
       );
     }
 
-    // ── Priorité 2 : mapping par statut ────────────────────────────────────
+    // ── Priorité 3 : mapping par statut ────────────────────────────────────
     final content = _buildContent(context, bid);
     if (content == null) {
       return const SizedBox.shrink();
@@ -199,58 +197,8 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
             : l.bidDetailTravelerAwaitingPaymentSubtitle,
       );
 
-    case 'ACCEPTED':
-      if (bid.voyageurConfirmed) {
-        return _HeroContent(
-          variant: TravelerHeroVariant.info,
-          title: l.bidDetailTravelerScanQrTitle,
-          subtitle: l.bidDetailTravelerScanQrSubtitle,
-        );
-      }
-      final subtitle = _buildAcceptedSubtitle(context, bid);
-      return _HeroContent(
-        variant: TravelerHeroVariant.info,
-        title: l.bidDetailTravelerAcceptedTitle,
-        subtitle: subtitle,
-      );
-
-    case 'HANDED_OVER':
-      return _HeroContent(
-        variant: TravelerHeroVariant.info,
-        title: l.bidDetailTravelerCollectedTitle,
-        subtitle: l.bidDetailTravelerCollectedSubtitle,
-      );
-
-    case 'IN_TRANSIT':
-      final arrivalCity = bid.arrivalCity ?? l.bidDetailFallbackDestination;
-      return _HeroContent(
-        variant: TravelerHeroVariant.info,
-        title: l.bidDetailTravelerInTransitTitle,
-        subtitle: l.bidDetailTravelerInTransitSubtitle(arrivalCity),
-      );
-
-    case 'ARRIVED':
-      return _HeroContent(
-        variant: TravelerHeroVariant.info,
-        title: l.bidDetailTravelerArrivedTitle,
-        subtitle: l.bidDetailTravelerArrivedSubtitle,
-      );
-
-    case 'COMPLETED':
-    case 'DELIVERED':
-      return _HeroContent(
-        variant: TravelerHeroVariant.done,
-        title: l.bidDetailTravelerDeliveredTitle,
-        subtitle: l.bidDetailTravelerDeliveredSubtitle,
-      );
-
-    // Terminal or unknown statuses → shrink (hors de
+    // Étapes du transport, statuts clos ou inconnus → shrink (hors de
     // TravelerHeroCard._contentStatuses : à tenir ensemble).
-    case 'REJECTED':
-    case 'CANCELLED':
-    case 'NO_SHOW':
-    case 'EXPIRED':
-    case 'PARCEL_REFUSED':
     default:
       return null;
   }
@@ -275,24 +223,6 @@ String _formatDeadline(BuildContext context, DateTime? deadline) {
   }
 }
 
-String _buildAcceptedSubtitle(BuildContext context, BidModel bid) {
-  final l = context.l10n;
-  final window = _formatDeadline(context, bid.handoverDeadline);
-  final location = bid.handoverLocation;
-  final parts = <String>[];
-  if (window.isNotEmpty) {
-    parts.add(window);
-  }
-  if (location != null && location.isNotEmpty) {
-    parts.add(location);
-  }
-  final base = parts.join(' · ');
-  if (base.isNotEmpty) {
-    return '$base.\n${l.bidDetailTravelerAcceptedInstructions}';
-  }
-  return l.bidDetailTravelerAcceptedInstructionsDefault;
-}
-
 // ── _HeroShell ────────────────────────────────────────────────────────────────
 
 class _HeroShell extends StatelessWidget {
@@ -309,27 +239,18 @@ class _HeroShell extends StatelessWidget {
   final String subtitle;
   final Widget? footer;
 
-  /// Aplat uni de la carte et couleur de son texte. Les variantes bleues
-  /// suivent le thème ; les autres restent sombres dans les deux thèmes,
-  /// sous un texte blanc (≥ 4.5:1), comme les boutons `_HeroButton`.
-  (Color, Color) _colors(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    const white = Color(0xFFFFFFFF);
-    switch (variant) {
-      case TravelerHeroVariant.wait:
-        return (DonyColors.ink700, white);
-      case TravelerHeroVariant.info:
-      case TravelerHeroVariant.done:
-        return (cs.primary, cs.onPrimary);
-      case TravelerHeroVariant.alert:
-        return (DonyColors.danger700, white);
-    }
-  }
+  /// Aplat uni de la carte, sombre dans les deux thèmes, sous un texte blanc
+  /// (≥ 4.5:1), comme les boutons `_HeroButton`.
+  Color get _background => switch (variant) {
+    TravelerHeroVariant.wait => DonyColors.ink700,
+    TravelerHeroVariant.alert => DonyColors.danger700,
+  };
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final (background, foreground) = _colors(context);
+    final background = _background;
+    const foreground = Color(0xFFFFFFFF);
 
     return Container(
       width: double.infinity,

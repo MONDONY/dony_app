@@ -7309,53 +7309,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get bidDetailTravelerScanQrTitle => '📷 Lisez le QR du colis';
-
-  @override
-  String get bidDetailTravelerScanQrSubtitle =>
-      'Lisez le QR code de l\'expéditeur pour confirmer la prise en charge.';
-
-  @override
-  String get bidDetailTravelerAcceptedTitle => '⚡ Récupérez le colis';
-
-  @override
-  String get bidDetailTravelerAcceptedInstructions =>
-      'Présentez-vous au point de remise.';
-
-  @override
-  String get bidDetailTravelerAcceptedInstructionsDefault =>
-      'Présentez-vous au point de remise convenu avec l\'expéditeur.';
-
-  @override
-  String get bidDetailTravelerCollectedTitle => '✓ Colis récupéré';
-
-  @override
-  String get bidDetailTravelerCollectedSubtitle =>
-      'Le colis est en votre possession. Bon voyage !';
-
-  @override
-  String get bidDetailTravelerInTransitTitle => '✈ Colis en route';
-
-  @override
-  String bidDetailTravelerInTransitSubtitle(String city) {
-    return 'En transit vers $city. Bonne livraison !';
-  }
-
-  @override
-  String get bidDetailTravelerArrivedTitle => '📍 Arrivé à destination';
-
-  @override
-  String get bidDetailTravelerArrivedSubtitle =>
-      'Attendez que le destinataire récupère le colis, puis validez la remise.';
-
-  @override
-  String get bidDetailTravelerDeliveredTitle => '✓ Livraison confirmée';
-
-  @override
-  String get bidDetailTravelerDeliveredSubtitle =>
-      'Le paiement va être libéré sur votre compte.';
-
-  @override
   String get bidDetailTravelerWindowExpiredTitle =>
       '⚠ Date limite de dépôt dépassée';
 

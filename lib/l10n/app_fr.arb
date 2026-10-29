@@ -7158,63 +7158,6 @@
       }
     }
   },
-  "bidDetailTravelerScanQrTitle": "📷 Lisez le QR du colis",
-  "@bidDetailTravelerScanQrTitle": {
-    "description": "ACCEPTED deja scanne par le voyageur (voyageurConfirmed), titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerScanQrSubtitle": "Lisez le QR code de l'expéditeur pour confirmer la prise en charge.",
-  "@bidDetailTravelerScanQrSubtitle": {
-    "description": "ACCEPTED deja scanne par le voyageur (voyageurConfirmed), sous-titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerAcceptedTitle": "⚡ Récupérez le colis",
-  "@bidDetailTravelerAcceptedTitle": {
-    "description": "ACCEPTED, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerAcceptedInstructions": "Présentez-vous au point de remise.",
-  "@bidDetailTravelerAcceptedInstructions": {
-    "description": "ACCEPTED, instruction avec fenetre/lieu connus (traveler_hero_card.dart, _buildAcceptedSubtitle)"
-  },
-  "bidDetailTravelerAcceptedInstructionsDefault": "Présentez-vous au point de remise convenu avec l'expéditeur.",
-  "@bidDetailTravelerAcceptedInstructionsDefault": {
-    "description": "ACCEPTED, instruction sans fenetre ni lieu connus (traveler_hero_card.dart, _buildAcceptedSubtitle)"
-  },
-  "bidDetailTravelerCollectedTitle": "✓ Colis récupéré",
-  "@bidDetailTravelerCollectedTitle": {
-    "description": "HANDED_OVER, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerCollectedSubtitle": "Le colis est en votre possession. Bon voyage !",
-  "@bidDetailTravelerCollectedSubtitle": {
-    "description": "HANDED_OVER, sous-titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerInTransitTitle": "✈ Colis en route",
-  "@bidDetailTravelerInTransitTitle": {
-    "description": "IN_TRANSIT, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerInTransitSubtitle": "En transit vers {city}. Bonne livraison !",
-  "@bidDetailTravelerInTransitSubtitle": {
-    "description": "IN_TRANSIT, sous-titre (traveler_hero_card.dart)",
-    "placeholders": {
-      "city": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailTravelerArrivedTitle": "📍 Arrivé à destination",
-  "@bidDetailTravelerArrivedTitle": {
-    "description": "ARRIVED, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerArrivedSubtitle": "Attendez que le destinataire récupère le colis, puis validez la remise.",
-  "@bidDetailTravelerArrivedSubtitle": {
-    "description": "ARRIVED, sous-titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerDeliveredTitle": "✓ Livraison confirmée",
-  "@bidDetailTravelerDeliveredTitle": {
-    "description": "COMPLETED/DELIVERED, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerDeliveredSubtitle": "Le paiement va être libéré sur votre compte.",
-  "@bidDetailTravelerDeliveredSubtitle": {
-    "description": "COMPLETED/DELIVERED, sous-titre (traveler_hero_card.dart)"
-  },
   "bidDetailTravelerWindowExpiredTitle": "⚠ Date limite de dépôt dépassée",
   "@bidDetailTravelerWindowExpiredTitle": {
     "description": "_WindowExpiredHero, titre (traveler_hero_card.dart)"

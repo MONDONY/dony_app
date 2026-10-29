@@ -1,5 +1,6 @@
-// Corps de la fiche colis, vue voyageur : billet, hero (sous le billet ou dans
-// « À traiter »), « À traiter », informations sans titre, expéditeur, gain,
+// Corps de la fiche colis, vue voyageur : billet, hero (demande à décider ou
+// attente du paiement sous le billet, alerte à bouton dans « À traiter »),
+// « À traiter », informations sans titre, expéditeur, gain,
 // « Votre transport » et badge d'évaluation. Chaque section porte une clé
 // (KeyedSubtree) : les tests lisent l'ordre des sections présentes.
 import 'package:bloc_test/bloc_test.dart';
@@ -319,13 +320,16 @@ void main() {
         _bid('AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.mobileMoney),
         ['billet', 'hero', 'info-awaiting-payment', ...base],
       ),
+      // Plus de carte « prochaine étape » d'information pour les étapes du
+      // transport (décision du propriétaire) : rien entre le billet et la
+      // suite.
       'ACCEPTED présence non confirmée': (
         _bid('ACCEPTED', handoverDeadline: _future),
-        ['billet', 'hero', ...base],
+        ['billet', ...base],
       ),
       'ACCEPTED présence confirmée': (
         _bid('ACCEPTED', voyageurConfirmed: true, handoverDeadline: _future),
-        ['billet', 'hero', ...base],
+        ['billet', ...base],
       ),
       // « À traiter » ET informations dans le même scénario : la commission
       // à valider va sous « À traiter », le scan bloqué et le report décidé
@@ -342,14 +346,7 @@ void main() {
           ),
           reschedule: _reschedule(pending: false),
         ),
-        [
-          'billet',
-          'hero',
-          'todo',
-          'info-scan-blocked',
-          'info-reschedule',
-          ...base,
-        ],
+        ['billet', 'todo', 'info-scan-blocked', 'info-reschedule', ...base],
       ),
       'ACCEPTED date limite dépassée': (
         _bid('ACCEPTED', handoverDeadline: _past),
@@ -361,33 +358,33 @@ void main() {
       ),
       'HANDED_OVER avant le départ': (
         _bid('HANDED_OVER', departureAt: _future),
-        ['billet', 'hero', 'info-locked', ...base],
+        ['billet', 'info-locked', ...base],
       ),
       'HANDED_OVER départ passé': (
         _bid('HANDED_OVER', departureAt: _past),
-        ['billet', 'hero', 'info-noshow', ...base],
+        ['billet', 'info-noshow', ...base],
       ),
       'IN_TRANSIT avant le départ': (
         _bid('IN_TRANSIT', departureAt: _future),
-        ['billet', 'hero', 'info-locked', ...base],
+        ['billet', 'info-locked', ...base],
       ),
       'IN_TRANSIT départ passé': (
         _bid('IN_TRANSIT', departureAt: _past),
-        ['billet', 'hero', 'info-noshow', ...base],
+        ['billet', 'info-noshow', ...base],
       ),
       'ARRIVED': (
         _bid('ARRIVED', departureAt: _past),
-        ['billet', 'hero', 'info-noshow', ...base],
+        ['billet', 'info-noshow', ...base],
       ),
       'COMPLETED noté': (
         _bid('COMPLETED', travelerHasRated: true),
-        ['billet', 'hero', ...base, 'rating'],
+        ['billet', ...base, 'rating'],
       ),
-      'COMPLETED non noté': (_bid('COMPLETED'), ['billet', 'hero', ...base]),
+      'COMPLETED non noté': (_bid('COMPLETED'), ['billet', ...base]),
       // DELIVERED (alias hérité) : pas de badge, il exige COMPLETED.
       'DELIVERED noté': (
         _bid('DELIVERED', travelerHasRated: true),
-        ['billet', 'hero', ...base],
+        ['billet', ...base],
       ),
       'CANCELLED': (_bid('CANCELLED'), ['billet', ...base]),
       'REJECTED': (_bid('REJECTED'), ['billet', ...base]),
@@ -427,9 +424,12 @@ void main() {
     });
 
     testWidgets('chaque section a sa carte', (tester) async {
+      await _pump(tester, _bid('PENDING'));
+      expect(_inSection('hero', find.byType(TravelerHeroCard)), findsOneWidget);
+
       await _pump(tester, _bid('COMPLETED', travelerHasRated: true));
       expect(_inSection('billet', find.byType(ColisBillet)), findsOneWidget);
-      expect(_inSection('hero', find.byType(TravelerHeroCard)), findsOneWidget);
+      expect(find.byType(TravelerHeroCard), findsNothing);
       expect(
         _inSection('expediteur', find.byType(ExpediteurContactCard)),
         findsOneWidget,
@@ -445,10 +445,48 @@ void main() {
   // ── Hero : sous le billet, ou dans « À traiter » s'il attend le voyageur ──
   group('hero', () {
     testWidgets('sans action : sous le billet, sans titre', (tester) async {
-      await _pump(tester, _bid('IN_TRANSIT'));
-      expect(_inSection('hero', find.byType(TravelerHeroCard)), findsOneWidget);
-      expect(find.text('À traiter'), findsNothing);
+      for (final status in [
+        'PENDING',
+        'PAYMENT_ESCROWED',
+        'AWAITING_PAYMENT',
+      ]) {
+        await _pump(tester, _bid(status));
+        expect(
+          _inSection('hero', find.byType(TravelerHeroCard)),
+          findsOneWidget,
+          reason: status,
+        );
+        expect(find.text('À traiter'), findsNothing, reason: status);
+      }
     });
+
+    // Cartes « prochaine étape » d'information retirées : ni section hero, ni
+    // espace vide entre le billet et la section suivante.
+    for (final (label, bid) in [
+      ('ACCEPTED', _bid('ACCEPTED', handoverDeadline: _future)),
+      (
+        'ACCEPTED présence confirmée',
+        _bid('ACCEPTED', voyageurConfirmed: true, handoverDeadline: _future),
+      ),
+      ('HANDED_OVER', _bid('HANDED_OVER')),
+      ('IN_TRANSIT', _bid('IN_TRANSIT')),
+      ('ARRIVED', _bid('ARRIVED')),
+      ('COMPLETED', _bid('COMPLETED')),
+      ('DELIVERED', _bid('DELIVERED')),
+    ]) {
+      testWidgets('$label : plus de carte « prochaine étape », pas d\'espace '
+          'vide sous le billet', (tester) async {
+        await _pump(tester, bid);
+        expect(_section('hero'), findsNothing);
+        expect(find.byType(TravelerHeroCard), findsNothing);
+        final order = _sections(tester);
+        expect(order.first, 'billet');
+        final gap =
+            tester.getTopLeft(_section(order[1])).dy -
+            tester.getBottomLeft(_section('billet')).dy;
+        expect(gap, DonySpacing.base);
+      });
+    }
 
     testWidgets('date limite dépassée : dans « À traiter », avec son bouton', (
       tester,
@@ -765,7 +803,6 @@ void main() {
       );
       expect(_sections(tester), [
         'billet',
-        'hero',
         'info-scan-blocked',
         'info-supplement',
         'expediteur',
@@ -935,7 +972,7 @@ void main() {
     });
 
     testWidgets(
-      'demande ouverte : la carte reste entre le hero et le contact',
+      'demande ouverte : la carte reste entre le billet et le contact',
       (tester) async {
         await _pump(
           tester,
@@ -947,7 +984,7 @@ void main() {
         final card = tester.getTopLeft(find.byType(AmendmentTravelerCard)).dy;
         expect(
           card,
-          greaterThan(tester.getTopLeft(find.byType(TravelerHeroCard)).dy),
+          greaterThan(tester.getTopLeft(find.byType(ColisBillet)).dy),
         );
         expect(
           card,
@@ -1204,10 +1241,9 @@ void main() {
         findsOneWidget,
       );
       expect(find.text(supplementBlocked), findsNothing);
-      // Information sous le hero, puis la modification sous « À traiter ».
+      // La modification sous « À traiter », puis l'information.
       expect(_sections(tester), [
         'billet',
-        'hero',
         'todo',
         'info-scan-blocked',
         'expediteur',
@@ -1546,9 +1582,9 @@ void main() {
     });
   });
 
-  testWidgets('ACCEPTED → hero + contact + gain présents', (tester) async {
+  testWidgets('ACCEPTED → contact + gain présents, sans hero', (tester) async {
     await _pump(tester, _bid('ACCEPTED'));
-    expect(find.byType(TravelerHeroCard), findsOneWidget);
+    expect(find.byType(TravelerHeroCard), findsNothing);
     expect(find.byType(ExpediteurContactCard), findsOneWidget);
     expect(find.byType(TravelerGainCard), findsOneWidget);
   });

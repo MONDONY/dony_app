@@ -3637,63 +3637,6 @@
       }
     }
   },
-  "bidDetailTravelerScanQrTitle": "📷 Scan the parcel's QR code",
-  "@bidDetailTravelerScanQrTitle": {
-    "description": "ACCEPTED deja scanne par le voyageur (voyageurConfirmed), titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerScanQrSubtitle": "Scan the sender's QR code to confirm the drop-off.",
-  "@bidDetailTravelerScanQrSubtitle": {
-    "description": "ACCEPTED deja scanne par le voyageur (voyageurConfirmed), sous-titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerAcceptedTitle": "⚡ Collect the parcel",
-  "@bidDetailTravelerAcceptedTitle": {
-    "description": "ACCEPTED, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerAcceptedInstructions": "Be at the drop-off point.",
-  "@bidDetailTravelerAcceptedInstructions": {
-    "description": "ACCEPTED, instruction avec fenetre/lieu connus (traveler_hero_card.dart, _buildAcceptedSubtitle)"
-  },
-  "bidDetailTravelerAcceptedInstructionsDefault": "Be at the drop-off point agreed with the sender.",
-  "@bidDetailTravelerAcceptedInstructionsDefault": {
-    "description": "ACCEPTED, instruction sans fenetre ni lieu connus (traveler_hero_card.dart, _buildAcceptedSubtitle)"
-  },
-  "bidDetailTravelerCollectedTitle": "✓ Parcel collected",
-  "@bidDetailTravelerCollectedTitle": {
-    "description": "HANDED_OVER, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerCollectedSubtitle": "You have the parcel. Have a safe trip!",
-  "@bidDetailTravelerCollectedSubtitle": {
-    "description": "HANDED_OVER, sous-titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerInTransitTitle": "✈ Parcel on its way",
-  "@bidDetailTravelerInTransitTitle": {
-    "description": "IN_TRANSIT, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerInTransitSubtitle": "In transit to {city}. Have a good delivery!",
-  "@bidDetailTravelerInTransitSubtitle": {
-    "description": "IN_TRANSIT, sous-titre (traveler_hero_card.dart)",
-    "placeholders": {
-      "city": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailTravelerArrivedTitle": "📍 Arrived at destination",
-  "@bidDetailTravelerArrivedTitle": {
-    "description": "ARRIVED, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerArrivedSubtitle": "Wait for the recipient to pick up the parcel, then confirm the drop-off.",
-  "@bidDetailTravelerArrivedSubtitle": {
-    "description": "ARRIVED, sous-titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerDeliveredTitle": "✓ Delivery confirmed",
-  "@bidDetailTravelerDeliveredTitle": {
-    "description": "COMPLETED/DELIVERED, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerDeliveredSubtitle": "The payment will be released to your account.",
-  "@bidDetailTravelerDeliveredSubtitle": {
-    "description": "COMPLETED/DELIVERED, sous-titre (traveler_hero_card.dart)"
-  },
   "bidDetailTravelerWindowExpiredTitle": "⚠ Drop-off deadline passed",
   "@bidDetailTravelerWindowExpiredTitle": {
     "description": "_WindowExpiredHero, titre (traveler_hero_card.dart)"

@@ -2653,24 +2653,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailTravelerPendingTitle': (l) => l.bidDetailTravelerPendingTitle,
   'bidDetailTravelerPendingSubtitle': (l) =>
       l.bidDetailTravelerPendingSubtitle(placeholderMarker('amount')),
-  'bidDetailTravelerScanQrTitle': (l) => l.bidDetailTravelerScanQrTitle,
-  'bidDetailTravelerScanQrSubtitle': (l) => l.bidDetailTravelerScanQrSubtitle,
-  'bidDetailTravelerAcceptedTitle': (l) => l.bidDetailTravelerAcceptedTitle,
-  'bidDetailTravelerAcceptedInstructions': (l) =>
-      l.bidDetailTravelerAcceptedInstructions,
-  'bidDetailTravelerAcceptedInstructionsDefault': (l) =>
-      l.bidDetailTravelerAcceptedInstructionsDefault,
-  'bidDetailTravelerCollectedTitle': (l) => l.bidDetailTravelerCollectedTitle,
-  'bidDetailTravelerCollectedSubtitle': (l) =>
-      l.bidDetailTravelerCollectedSubtitle,
-  'bidDetailTravelerInTransitTitle': (l) => l.bidDetailTravelerInTransitTitle,
-  'bidDetailTravelerInTransitSubtitle': (l) =>
-      l.bidDetailTravelerInTransitSubtitle(placeholderMarker('city')),
-  'bidDetailTravelerArrivedTitle': (l) => l.bidDetailTravelerArrivedTitle,
-  'bidDetailTravelerArrivedSubtitle': (l) => l.bidDetailTravelerArrivedSubtitle,
-  'bidDetailTravelerDeliveredTitle': (l) => l.bidDetailTravelerDeliveredTitle,
-  'bidDetailTravelerDeliveredSubtitle': (l) =>
-      l.bidDetailTravelerDeliveredSubtitle,
   'bidDetailTravelerWindowExpiredTitle': (l) =>
       l.bidDetailTravelerWindowExpiredTitle,
   'bidDetailTravelerWindowExpiredSubtitleWithWindow': (l) =>
@@ -8231,7 +8213,6 @@ const textParameters = <String, List<String>>{
   'bidDetailSenderWindowExpiredSubtitle': ['window'],
   'bidDetailSenderContestCountdown': ['timeLeft'],
   'bidDetailTravelerPendingSubtitle': ['amount'],
-  'bidDetailTravelerInTransitSubtitle': ['city'],
   'bidDetailTravelerWindowExpiredSubtitleWithWindow': ['window'],
   'bidDetailTravelerNoShowPendingSubtitleUntil': ['date', 'time'],
   'bidDetailGainCashAmount': ['amount'],
