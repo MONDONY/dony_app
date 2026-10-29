@@ -19,6 +19,7 @@ BidModel _makeBid({
   String? contentCategory = 'Vêtements',
   String? description,
   bool travelerHasRated = false,
+  String? trackingNumber,
 }) => BidModel(
   id: id,
   announcementId: 'ann-1',
@@ -31,6 +32,7 @@ BidModel _makeBid({
   status: status,
   paymentMethod: paymentMethod,
   travelerHasRated: travelerHasRated,
+  trackingNumber: trackingNumber,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
@@ -364,5 +366,47 @@ void main() {
       ),
     );
     expect(find.text('À noter'), findsNothing);
+  });
+
+  // Le voyageur lit cette carte (listes « Demandes » et « À traiter ») : le
+  // numéro de suivi n'y apparaît qu'à partir de la remise.
+  group('numéro de suivi (lecteur voyageur)', () {
+    for (final status in const [
+      'PENDING',
+      'PAYMENT_ESCROWED',
+      'ACCEPTED',
+      'REJECTED',
+      'CANCELLED',
+    ]) {
+      testWidgets('$status : numéro masqué', (tester) async {
+        await _pumpCard(
+          tester,
+          BidCard(
+            bid: _makeBid(status: status, trackingNumber: 'DON-HIDDEN01'),
+            isProcessing: false,
+          ),
+        );
+        expect(find.textContaining('DON-HIDDEN01'), findsNothing);
+      });
+    }
+
+    for (final status in const [
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'COMPLETED',
+      'DELIVERED',
+    ]) {
+      testWidgets('$status : numéro affiché', (tester) async {
+        await _pumpCard(
+          tester,
+          BidCard(
+            bid: _makeBid(status: status, trackingNumber: 'DON-SHOWN001'),
+            isProcessing: false,
+          ),
+        );
+        expect(find.textContaining('DON-SHOWN001'), findsOneWidget);
+      });
+    }
   });
 }

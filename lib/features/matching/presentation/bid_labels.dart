@@ -129,20 +129,21 @@ const _bidTrackingNumberTravelerStatuses = <String>{
 /// serveur n'en a pas servi.
 ///
 /// Le back ne l'envoie déjà qu'à partir de la remise ; l'app le garantit
-/// elle-même (défense en profondeur) aux quatre emplacements voyageur : bande
-/// du talon, titre de l'écran, ligne « Numéro de suivi » de « Plus de
-/// détails », sujet du ticket support du bloc « annulé par l'équipe ». Côté
-/// expéditeur, on lit `bid.trackingNumber` directement.
-///
-/// Hors périmètre, protégés par le back seulement : `bid_card.dart` (liste des
-/// demandes), `suivi_track_panel.dart` (onglet Suivi) et `money_parcel_line.dart`
-/// (Mon argent) lisent encore `trackingNumber` brut.
-String? travelerVisibleTrackingNumber(BidModel bid) {
-  final number = bid.trackingNumber;
+/// elle-même (défense en profondeur) partout où le voyageur lit le numéro :
+/// bande du talon, titre de l'écran, ligne « Numéro de suivi » de « Plus de
+/// détails », sujet du ticket support du bloc « annulé par l'équipe », carte
+/// des listes de demandes (`bid_card.dart`) et lignes de « Mon argent »
+/// (`money_parcel_line.dart`, côté voyageur). Côté expéditeur, on lit
+/// `bid.trackingNumber` directement. L'onglet Suivi (`suivi_track_panel.dart`,
+/// « Mes envois ») ne liste que les colis de l'expéditeur : il n'est pas concerné.
+String? travelerVisibleTrackingNumber(BidModel bid) =>
+    travelerVisibleTrackingNumberFor(bid.trackingNumber, bid.status);
+
+/// Même règle que [travelerVisibleTrackingNumber] pour un lecteur qui n'a pas
+/// le [BidModel] entier (ligne de « Mon argent » : numéro + statut brut).
+String? travelerVisibleTrackingNumberFor(String? number, String status) {
   if (number == null || number.trim().isEmpty) return null;
-  return _bidTrackingNumberTravelerStatuses.contains(bid.status)
-      ? number
-      : null;
+  return _bidTrackingNumberTravelerStatuses.contains(status) ? number : null;
 }
 
 /// Retour en cours d'un colis annulé alors que le voyageur l'avait déjà
