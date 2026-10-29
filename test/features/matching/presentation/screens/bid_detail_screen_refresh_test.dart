@@ -867,6 +867,47 @@ void main() {
       expect(top, lessThan(700));
     });
 
+    // Notifications BID_SUPPLEMENT_DECLINED / EXPIRED : la carte du supplément
+    // refusé ou expiré, avec « Le colis ne correspond pas », est amenée à
+    // l'écran.
+    for (final status in [
+      BidSupplementStatus.declined,
+      BidSupplementStatus.expired,
+    ]) {
+      testWidgets('?action=supplement (${status.name}) : la carte du '
+          'supplément clos est amenée à l\'écran', (tester) async {
+        final bid = _makeBid(
+          paymentMethod: BidPaymentMethod.stripe,
+          supplement: BidSupplement(
+            id: 'sup-1',
+            status: status,
+            netAmount: 15,
+            commissionAmount: 2,
+            grossAmount: 17,
+          ),
+        );
+        await _pump(
+          tester,
+          bid: bid,
+          authBloc: travelerViewer(),
+          focusSupplement: true,
+          size: const Size(800, 700),
+        );
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byType(SupplementTravelerCard), findsOneWidget);
+        final offset = tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position
+            .pixels;
+        expect(offset, greaterThan(0));
+        final top = tester.getTopLeft(find.byType(SupplementTravelerCard)).dy;
+        expect(top, greaterThanOrEqualTo(0));
+        expect(top, lessThan(700));
+      });
+    }
+
     for (final status in [
       BidAmendmentStatus.proposed,
       BidAmendmentStatus.declined,

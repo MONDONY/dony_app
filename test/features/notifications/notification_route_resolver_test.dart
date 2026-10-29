@@ -116,10 +116,26 @@ void main() {
       );
     });
 
+    // Refus et expiration vont au voyageur (l'expiration aussi à l'expéditeur,
+    // même type) : sa carte porte « Le colis ne correspond pas ». Côté
+    // expéditeur la carte du supplément expiré existe aussi, le paramètre
+    // l'y amène sans effet gênant.
+    for (final type in ['BID_SUPPLEMENT_DECLINED', 'BID_SUPPLEMENT_EXPIRED']) {
+      test('$type amène la carte du supplément (?action=supplement)', () {
+        expect(
+          resolveNotificationRoute(type, {
+            'bidId': bidId,
+            'supplementId': cancellationId,
+          }),
+          '/bids/$bidId?action=supplement',
+        );
+        expect(resolveNotificationRoute(type, {}), isNull);
+        expect(resolveNotificationRoute(type, {'bidId': '../admin'}), isNull);
+      });
+    }
+
     for (final type in [
       'BID_SUPPLEMENT_PAID',
-      'BID_SUPPLEMENT_DECLINED',
-      'BID_SUPPLEMENT_EXPIRED',
       'BID_SUPPLEMENT_WITHDRAWN',
       'BID_SUPPLEMENT_REFUNDED',
       'BID_SUPPLEMENT_PAID_OUT',

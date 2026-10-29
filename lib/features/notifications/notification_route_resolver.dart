@@ -56,13 +56,16 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'DISPUTE_OPENED' when _isUuid(bidId) => '/bids/$bidId',
     'PARCEL_REFUSED' when _isUuid(bidId) => '/bids/$bidId',
     // Supplément de prix à la remise : la demande ouvre la fiche du colis sur
-    // l'encart de l'expéditeur ; les suites (payé, refusé, expiré, retiré,
-    // remboursé, versé) ouvrent la fiche.
-    'BID_SUPPLEMENT_REQUESTED' when _isUuid(bidId) =>
+    // l'encart de l'expéditeur. Le refus (voyageur) et l'expiration (voyageur
+    // et expéditeur, même type) l'y ouvrent aussi : la carte du voyageur porte
+    // « Le colis ne correspond pas », celle de l'expéditeur dit que la
+    // demande est expirée. Les autres suites (payé, retiré, remboursé, versé)
+    // ouvrent la fiche.
+    'BID_SUPPLEMENT_REQUESTED' ||
+    'BID_SUPPLEMENT_DECLINED' ||
+    'BID_SUPPLEMENT_EXPIRED' when _isUuid(bidId) =>
       '/bids/$bidId?action=supplement',
     'BID_SUPPLEMENT_PAID' ||
-    'BID_SUPPLEMENT_DECLINED' ||
-    'BID_SUPPLEMENT_EXPIRED' ||
     'BID_SUPPLEMENT_WITHDRAWN' ||
     'BID_SUPPLEMENT_REFUNDED' ||
     'BID_SUPPLEMENT_PAID_OUT' when _isUuid(bidId) => '/bids/$bidId',
