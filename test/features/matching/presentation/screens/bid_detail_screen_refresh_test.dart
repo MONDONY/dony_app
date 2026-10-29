@@ -413,7 +413,9 @@ void main() {
   });
 
   group('FLUTTER-CH — relecture du colis en attente du voyageur', () {
-    for (final status in ['PENDING', 'PAYMENT_ESCROWED']) {
+    // AWAITING_PAYMENT : le voyageur attend le séquestre de l'expéditeur (30
+    // min) et doit voir le colis passer à ACCEPTED sans rien faire.
+    for (final status in ['PENDING', 'PAYMENT_ESCROWED', 'AWAITING_PAYMENT']) {
       testWidgets('$status → relevé périodique toutes les 30 s', (
         tester,
       ) async {

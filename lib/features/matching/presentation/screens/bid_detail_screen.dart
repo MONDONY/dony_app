@@ -121,10 +121,13 @@ class _BidDetailViewState extends State<_BidDetailView>
   // Statuts vivants : le colis peut encore transitionner vers COMPLETED
   // à tout moment → le polling doit rester actif. PENDING et
   // PAYMENT_ESCROWED attendent la réponse du voyageur : sans relevé,
-  // l'expéditeur ne voyait jamais l'acceptation (FLUTTER-CH).
+  // l'expéditeur ne voyait jamais l'acceptation (FLUTTER-CH). AWAITING_PAYMENT
+  // attend le séquestre de l'expéditeur (30 min, mobile money) : le voyageur
+  // voit le colis passer à ACCEPTED sans rien faire.
   static const _kPollingStatuses = {
     'PENDING',
     'PAYMENT_ESCROWED',
+    'AWAITING_PAYMENT',
     'ACCEPTED',
     'HANDED_OVER',
     'IN_TRANSIT',
