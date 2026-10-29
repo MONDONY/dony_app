@@ -12588,11 +12588,17 @@ abstract class AppLocalizations {
   /// **'Étape en cours'**
   String get senderTileBadgeCurrentStep;
 
-  /// Pastille ambre des tuiles de la section « À traiter » de la fiche colis expéditeur (sender_detail_body.dart) : une réponse est attendue
+  /// Pastille ambre des tuiles de la section « À traiter » de la fiche colis, vue expéditeur (sender_detail_body.dart) et vue voyageur (traveler_detail_body.dart) : une réponse est attendue
   ///
   /// In fr, this message translates to:
   /// **'Réponse attendue'**
-  String get senderTodoBadge;
+  String get todoTileBadgeReplyNeeded;
+
+  /// Résumé de la tuile « Supplément de prix » de la section « À traiter » de la fiche colis voyageur (traveler_todo_tiles.dart) : frais de service du supplément (colis payé en espèces) à valider par le voyageur. Court, deux lignes au plus sous le titre de la tuile
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} de frais à valider'**
+  String travelerTodoSupplementSummary(String amount);
 
   /// Résumé court de la tuile « Destinataire à remplacer » (fiche colis expéditeur) : le destinataire a refusé le colis ou s'en est retiré
   ///

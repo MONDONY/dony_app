@@ -7559,9 +7559,19 @@
   "@senderTileBadgeCurrentStep": {
     "description": "Pastille de la tuile Suivi (colis remis, en route ou arrivé) : une étape est en cours"
   },
-  "senderTodoBadge": "Réponse attendue",
-  "@senderTodoBadge": {
-    "description": "Pastille ambre des tuiles de la section « À traiter » de la fiche colis expéditeur (sender_detail_body.dart) : une réponse est attendue"
+  "todoTileBadgeReplyNeeded": "Réponse attendue",
+  "@todoTileBadgeReplyNeeded": {
+    "description": "Pastille ambre des tuiles de la section « À traiter » de la fiche colis, vue expéditeur (sender_detail_body.dart) et vue voyageur (traveler_detail_body.dart) : une réponse est attendue"
+  },
+  "travelerTodoSupplementSummary": "{amount} de frais à valider",
+  "@travelerTodoSupplementSummary": {
+    "description": "Résumé de la tuile « Supplément de prix » de la section « À traiter » de la fiche colis voyageur (traveler_todo_tiles.dart) : frais de service du supplément (colis payé en espèces) à valider par le voyageur. Court, deux lignes au plus sous le titre de la tuile",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "2 €"
+      }
+    }
   },
   "senderTodoRecipientSummary": "A refusé le colis",
   "@senderTodoRecipientSummary": {

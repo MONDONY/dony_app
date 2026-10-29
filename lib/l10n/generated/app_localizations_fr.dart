@@ -7627,7 +7627,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get senderTileBadgeCurrentStep => 'Étape en cours';
 
   @override
-  String get senderTodoBadge => 'Réponse attendue';
+  String get todoTileBadgeReplyNeeded => 'Réponse attendue';
+
+  @override
+  String travelerTodoSupplementSummary(String amount) {
+    return '$amount de frais à valider';
+  }
 
   @override
   String get senderTodoRecipientSummary => 'A refusé le colis';

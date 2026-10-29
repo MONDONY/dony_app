@@ -7580,7 +7580,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get senderTileBadgeCurrentStep => 'Current step';
 
   @override
-  String get senderTodoBadge => 'Reply needed';
+  String get todoTileBadgeReplyNeeded => 'Reply needed';
+
+  @override
+  String travelerTodoSupplementSummary(String amount) {
+    return '$amount fee to confirm';
+  }
 
   @override
   String get senderTodoRecipientSummary => 'Declined the parcel';

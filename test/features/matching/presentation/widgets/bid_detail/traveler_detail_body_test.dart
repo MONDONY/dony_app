@@ -7,6 +7,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -39,6 +40,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteu
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart'
     show RatingDoneBadge;
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
@@ -47,6 +49,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/recipient_contact.dart';
+import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
@@ -194,6 +197,21 @@ List<String> _sections(WidgetTester tester) {
 Finder _inSection(String name, Finder child) =>
     find.descendant(of: _section(name), matching: child);
 
+/// Tuile « Supplément de prix » de « À traiter ».
+final _supplementTile = find.byKey(const Key('traveler-todo-supplement'));
+
+/// Pied du sheet de cette tuile (« Valider le paiement »).
+final _supplementSheetFooter = find.byKey(
+  const Key('supplement-commission-confirm-btn'),
+);
+
+/// Colis payé en espèces dont les frais du supplément attendent le voyageur.
+BidModel _commissionPending({String status = 'ACCEPTED'}) => _bid(
+  status,
+  paymentMethod: BidPaymentMethod.cash,
+  supplement: _supplement(BidSupplementStatus.commissionPending, cash: true),
+);
+
 /// Si « À traiter » est affiché, il a du contenu sous son titre.
 void _expectTodoNeverEmpty(WidgetTester tester) {
   final todo = _section('todo');
@@ -254,6 +272,8 @@ void main() {
   });
 
   late _MockProcedureCubit procedure;
+  late MockAnalyticsBackend tileBackend;
+  late _MockAnalytics analytics;
 
   setUp(() async {
     DonySnackbar.clearDedup();
@@ -267,13 +287,14 @@ void main() {
     );
     when(() => procedure.load(any())).thenAnswer((_) async {});
 
-    final analytics = _MockAnalytics();
+    analytics = _MockAnalytics();
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
     final amendmentRepo = _MockAmendmentRepo();
     final supplementRepo = _MockSupplementRepo();
-    final tileAnalytics = makeEnabledAnalytics(MockAnalyticsBackend());
+    tileBackend = MockAnalyticsBackend();
+    final tileAnalytics = makeEnabledAnalytics(tileBackend);
     await tileAnalytics.onConfigured();
 
     await getIt.reset();
@@ -724,22 +745,15 @@ void main() {
 
   // ── Supplément de prix, chaque statut ─────────────────────────────────────
   group('supplément de prix', () {
-    testWidgets('commission à valider : dans « À traiter »', (tester) async {
-      await _pump(
-        tester,
-        _bid(
-          'ACCEPTED',
-          paymentMethod: BidPaymentMethod.cash,
-          supplement: _supplement(
-            BidSupplementStatus.commissionPending,
-            cash: true,
-          ),
-        ),
-      );
+    testWidgets('commission à valider : tuile « Supplément de prix » dans '
+        '« À traiter », plus de carte au corps', (tester) async {
+      await _pump(tester, _commissionPending());
+      expect(_inSection('todo', _supplementTile), findsOneWidget);
       expect(
-        _inSection('todo', find.byType(SupplementTravelerCard)),
+        _inSection('todo', find.byKey(const ValueKey('todo-tiles'))),
         findsOneWidget,
       );
+      expect(find.byType(SupplementTravelerCard), findsNothing);
       expect(_section('info-supplement'), findsNothing);
     });
 
@@ -823,73 +837,27 @@ void main() {
           .first,
     );
 
-    testWidgets('supplément : « À traiter » → information, même élément', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        _bid(
-          'ACCEPTED',
-          paymentMethod: BidPaymentMethod.cash,
-          supplement: _supplement(
-            BidSupplementStatus.commissionPending,
-            cash: true,
-          ),
-        ),
-      );
-      expect(
-        _inSection('todo', find.byType(SupplementTravelerCard)),
-        findsOneWidget,
-      );
-      final card = tester.element(find.byType(SupplementTravelerCard));
-      final inner = innerStateful(tester, SupplementTravelerCard);
+    // Le supplément ne change plus de section : tuile tant que ses frais
+    // attendent le voyageur, carte d'information ensuite.
+    testWidgets('supplément : la tuile laisse place à la carte d\'information '
+        'une fois les frais validés', (tester) async {
+      await _pump(tester, _commissionPending());
+      expect(_inSection('todo', _supplementTile), findsOneWidget);
 
       await _pump(
         tester,
         _bid(
           'ACCEPTED',
           paymentMethod: BidPaymentMethod.cash,
-          supplement: _supplement(BidSupplementStatus.paid, cash: true),
+          supplement: _supplement(BidSupplementStatus.proposed, cash: true),
         ),
       );
       expect(_section('todo'), findsNothing);
+      expect(_supplementTile, findsNothing);
       expect(
         _inSection('info-supplement', find.byType(SupplementTravelerCard)),
         findsOneWidget,
       );
-      expect(tester.element(find.byType(SupplementTravelerCard)), same(card));
-      expect(innerStateful(tester, SupplementTravelerCard), same(inner));
-    });
-
-    testWidgets('supplément : information → « À traiter », même élément', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        _bid(
-          'ACCEPTED',
-          paymentMethod: BidPaymentMethod.cash,
-          supplement: _supplement(BidSupplementStatus.paid, cash: true),
-        ),
-      );
-      final card = tester.element(find.byType(SupplementTravelerCard));
-
-      await _pump(
-        tester,
-        _bid(
-          'ACCEPTED',
-          paymentMethod: BidPaymentMethod.cash,
-          supplement: _supplement(
-            BidSupplementStatus.commissionPending,
-            cash: true,
-          ),
-        ),
-      );
-      expect(
-        _inSection('todo', find.byType(SupplementTravelerCard)),
-        findsOneWidget,
-      );
-      expect(tester.element(find.byType(SupplementTravelerCard)), same(card));
     });
 
     testWidgets('modification : « À traiter » → information, même élément', (
@@ -994,7 +962,9 @@ void main() {
     );
 
     testWidgets('supplément à valider et modification proposée : les deux '
-        'dans « À traiter », supplément d\'abord', (tester) async {
+        'dans « À traiter », la carte de la modification puis la tuile', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _bid(
@@ -1007,16 +977,13 @@ void main() {
           amendments: [_amendment(BidAmendmentStatus.proposed)],
         ),
       );
-      final supplement = _inSection(
-        'todo',
-        find.byType(SupplementTravelerCard),
-      );
+      final supplement = _inSection('todo', _supplementTile);
       final amendment = _inSection('todo', find.byType(AmendmentTravelerCard));
       expect(supplement, findsOneWidget);
       expect(amendment, findsOneWidget);
       expect(
-        tester.getTopLeft(supplement).dy,
-        lessThan(tester.getTopLeft(amendment).dy),
+        tester.getBottomLeft(amendment).dy,
+        lessThan(tester.getTopLeft(supplement).dy),
       );
     });
 
@@ -1155,10 +1122,7 @@ void main() {
         );
         expect(find.text(supplementBlocked), findsNothing);
         // « À traiter » demande bien de valider le paiement.
-        expect(
-          _inSection('todo', find.byType(SupplementTravelerCard)),
-          findsOneWidget,
-        );
+        expect(_inSection('todo', _supplementTile), findsOneWidget);
       },
     );
 
@@ -1641,6 +1605,151 @@ void main() {
     expect(find.textContaining('public-token'), findsNothing);
   });
 
+  // ── « À traiter » en tuiles : frais du supplément à valider ─────────────
+  group('À traiter en tuiles', () {
+    final fee = formatSupplementAmount(2, 'EUR');
+
+    testWidgets(
+      'tuile : titre, résumé et pastille ambre « Réponse attendue »',
+      (tester) async {
+        await _pump(tester, _commissionPending());
+        expect(
+          find.descendant(
+            of: _supplementTile,
+            matching: find.text('Supplément de prix'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: _supplementTile,
+            matching: find.text('$fee de frais à valider'),
+          ),
+          findsOneWidget,
+        );
+        final badge = tester.widget<ToolStatusBadge>(
+          find.descendant(
+            of: _supplementTile,
+            matching: find.byType(ToolStatusBadge),
+          ),
+        );
+        expect(badge.tone, ToolStatusTone.news);
+        expect(badge.label, 'Réponse attendue');
+        _expectTodoNeverEmpty(tester);
+      },
+    );
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      await _pump(tester, _commissionPending());
+      for (final text in [
+        'Extra charge',
+        '$fee fee to confirm',
+        'Reply needed',
+      ]) {
+        expect(
+          find.descendant(of: _supplementTile, matching: find.text(text)),
+          findsOneWidget,
+          reason: text,
+        );
+      }
+    });
+
+    testWidgets('les cartes d\'alerte d\'abord, puis la grille des tuiles', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          handoverDeadline: _past,
+          paymentMethod: BidPaymentMethod.cash,
+          supplement: _supplement(
+            BidSupplementStatus.commissionPending,
+            cash: true,
+          ),
+        ),
+      );
+      final hero = _inSection('todo', find.byType(TravelerHeroCard));
+      final tile = _inSection('todo', _supplementTile);
+      expect(hero, findsOneWidget);
+      expect(tile, findsOneWidget);
+      expect(
+        tester.getBottomLeft(hero).dy,
+        lessThan(tester.getTopLeft(tile).dy),
+      );
+    });
+
+    testWidgets('le tap ouvre le sheet de la tuile et compte l\'ouverture', (
+      tester,
+    ) async {
+      await _pump(tester, _commissionPending());
+      await tester.tap(_supplementTile);
+      await tester.pumpAndSettle();
+
+      expect(_supplementSheetFooter, findsOneWidget);
+      verify(
+        () => tileBackend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'supplement',
+          'role': 'traveler',
+          'source': 'tile',
+        }),
+      ).called(1);
+    });
+
+    testWidgets('mesures à l\'affichage de la tuile, une seule fois malgré '
+        'les relevés du colis', (tester) async {
+      await _pump(tester, _commissionPending());
+      await _pump(tester, _commissionPending());
+      await _pump(tester, _commissionPending());
+
+      verify(
+        () => tileBackend.capture(AnalyticsEvents.bidDetailTodoTileShown, {
+          'tile': 'supplement',
+          'role': 'traveler',
+          'status': 'ACCEPTED',
+        }),
+      ).called(1);
+      verify(
+        () => tileBackend.capture(AnalyticsEvents.bidSupplementViewed, {
+          'role': 'traveler',
+          'status': 'commissionPending',
+          'surface': 'tile',
+        }),
+      ).called(1);
+      // La carte n'est pas montée : pas de seconde mesure à son montage.
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidSupplementViewed,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    testWidgets('supplément proposé (information) : mesure au montage de la '
+        'carte, sans surface, pas de tuile', (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          'ACCEPTED',
+          paymentMethod: BidPaymentMethod.cash,
+          supplement: _supplement(BidSupplementStatus.proposed, cash: true),
+        ),
+      );
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidSupplementViewed,
+          properties: {'role': 'traveler', 'status': 'proposed'},
+        ),
+      ).called(1);
+      verifyNever(
+        () =>
+            tileBackend.capture(AnalyticsEvents.bidDetailTodoTileShown, any()),
+      );
+      expect(_supplementTile, findsNothing);
+    });
+  });
+
   // ── Points d'entrée : ?action=supplement et ?action=amendment ─────────────
   group('défilement vers la carte (notification)', () {
     double offset(WidgetTester tester) => tester
@@ -1661,24 +1770,65 @@ void main() {
       expect(top, lessThan(700));
     }
 
-    testWidgets('?action=supplement : la carte en « À traiter » est amenée à '
-        'l\'écran', (tester) async {
+    testWidgets('?action=supplement, frais à valider : le sheet de la tuile '
+        's\'ouvre de lui-même, une seule fois, en source link', (tester) async {
       await _pump(
         tester,
-        _bid(
-          'ACCEPTED',
-          paymentMethod: BidPaymentMethod.cash,
-          supplement: _supplement(
-            BidSupplementStatus.commissionPending,
-            cash: true,
-          ),
-        ),
+        _commissionPending(),
         focusSupplement: true,
         size: const Size(800, 700),
       );
-      await settleScroll(tester);
-      expect(offset(tester), greaterThan(0));
-      expectOnScreen(tester, SupplementTravelerCard);
+      await tester.pumpAndSettle();
+      expect(_supplementSheetFooter, findsOneWidget);
+      verify(
+        () => tileBackend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'supplement',
+          'role': 'traveler',
+          'source': 'link',
+        }),
+      ).called(1);
+
+      // Fermé à la main : un relevé du colis ne le rouvre pas.
+      await tester.tapAt(const Offset(400, 20));
+      await tester.pumpAndSettle();
+      expect(_supplementSheetFooter, findsNothing);
+      await _pump(
+        tester,
+        _commissionPending(),
+        focusSupplement: true,
+        size: const Size(800, 700),
+      );
+      await tester.pumpAndSettle();
+      expect(_supplementSheetFooter, findsNothing);
+    });
+
+    testWidgets('?action=supplement : colis squelette puis supplément à '
+        'valider, le sheet s\'ouvre à son arrivée', (tester) async {
+      await _pump(
+        tester,
+        _bid('ACCEPTED'),
+        focusSupplement: true,
+        size: const Size(800, 700),
+      );
+      await tester.pumpAndSettle();
+      expect(_supplementSheetFooter, findsNothing);
+
+      await _pump(
+        tester,
+        _commissionPending(),
+        focusSupplement: true,
+        size: const Size(800, 700),
+      );
+      await tester.pumpAndSettle();
+      expect(_supplementSheetFooter, findsOneWidget);
+    });
+
+    testWidgets('?action=supplement sans paramètre : pas de sheet', (
+      tester,
+    ) async {
+      await _pump(tester, _commissionPending(), size: const Size(800, 700));
+      await tester.pumpAndSettle();
+      expect(_supplementSheetFooter, findsNothing);
     });
 
     testWidgets('?action=supplement : supplément payé (information), la carte '

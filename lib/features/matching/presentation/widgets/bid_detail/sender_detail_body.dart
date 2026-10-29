@@ -275,7 +275,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       label: senderTodoTitle(l, tile),
       subtitle: senderTodoSummary(l, bid, tile),
       color: cs.primary,
-      badge: _badge(l.senderTodoBadge, ToolStatusTone.news),
+      badge: _badge(l.todoTileBadgeReplyNeeded, ToolStatusTone.news),
       onTap: () => unawaited(openSenderTodoSheet(context, bid, tile)),
     );
   }

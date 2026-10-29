@@ -2777,7 +2777,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'senderTilePrevenirLink': (l) => l.senderTilePrevenirLink,
   'senderTileBadgeCodeReady': (l) => l.senderTileBadgeCodeReady,
   'senderTileBadgeCurrentStep': (l) => l.senderTileBadgeCurrentStep,
-  'senderTodoBadge': (l) => l.senderTodoBadge,
+  'todoTileBadgeReplyNeeded': (l) => l.todoTileBadgeReplyNeeded,
+  'travelerTodoSupplementSummary': (l) =>
+      l.travelerTodoSupplementSummary(placeholderMarker('amount')),
   'senderTodoRecipientSummary': (l) => l.senderTodoRecipientSummary,
   'senderTodoRecipientRequested': (l) => l.senderTodoRecipientRequested,
   'senderTodoRescheduleSummary': (l) =>
@@ -8218,6 +8220,7 @@ const textParameters = <String, List<String>>{
   'bidDetailGainCashGrossDetail': ['commission', 'net'],
   'bidRejectionReasonShown': ['reason'],
   'senderTileColisSubtitle': ['weight', 'recipient'],
+  'travelerTodoSupplementSummary': ['amount'],
   'senderTodoRescheduleSummary': ['deadline'],
   'senderTodoAmendmentSummary': ['weight', 'amount'],
   'senderTodoAmendmentAmount': ['amount'],

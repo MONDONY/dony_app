@@ -3843,7 +3843,15 @@
   "senderTilePrevenirLink": "Send the tracking link",
   "senderTileBadgeCodeReady": "Code ready",
   "senderTileBadgeCurrentStep": "Current step",
-  "senderTodoBadge": "Reply needed",
+  "todoTileBadgeReplyNeeded": "Reply needed",
+  "travelerTodoSupplementSummary": "{amount} fee to confirm",
+  "@travelerTodoSupplementSummary": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "senderTodoRecipientSummary": "Declined the parcel",
   "senderTodoRecipientRequested": "The traveler asks for another one",
   "senderTodoRescheduleSummary": "Reply by {deadline}",

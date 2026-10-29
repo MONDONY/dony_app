@@ -26,6 +26,8 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_flow.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
@@ -939,6 +941,56 @@ void main() {
       final top = tester.getTopLeft(find.byType(SupplementTravelerCard)).dy;
       expect(top, greaterThanOrEqualTo(0));
       expect(top, lessThan(700));
+    });
+
+    // Frais du supplément à valider (espèces) : plus de carte, le sheet de la
+    // tuile « Supplément de prix » s'ouvre de lui-même, avec le BidBloc de
+    // l'écran ; refermé, la tuile reste dans « À traiter ».
+    testWidgets('?action=supplement (commission à valider) : le sheet de la '
+        'tuile s\'ouvre avec le BidBloc de l\'écran', (tester) async {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerFactory<SupplementCommissionCubit>(
+        () => SupplementCommissionCubit(
+          SupplementCommissionFlow(_MockSupplementRepository(), analytics),
+          analytics,
+        ),
+      );
+      addTearDown(() => getIt.unregister<SupplementCommissionCubit>());
+      final bid = _makeBid(
+        supplement: const BidSupplement(
+          id: 'sup-1',
+          status: BidSupplementStatus.commissionPending,
+          rail: 'CASH',
+          netAmount: 15,
+          commissionAmount: 2,
+          grossAmount: 17,
+          blocksHandover: true,
+        ),
+      );
+      await _pump(
+        tester,
+        bid: bid,
+        authBloc: travelerViewer(),
+        focusSupplement: true,
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final confirm = find.descendant(
+        of: find.byKey(const Key('donyBottomSheetFooter')),
+        matching: find.byKey(const Key('supplement-commission-confirm-btn')),
+      );
+      expect(confirm, findsOneWidget);
+      expect(tester.element(confirm).read<BidBloc>(), same(bidBloc));
+
+      Navigator.of(tester.element(confirm), rootNavigator: true).pop();
+      await tester.pumpAndSettle();
+      expect(confirm, findsNothing);
+      expect(find.byKey(const Key('traveler-todo-supplement')), findsOneWidget);
+      expect(find.byType(SupplementTravelerCard), findsNothing);
     });
 
     // Notifications BID_SUPPLEMENT_DECLINED / EXPIRED : la carte du supplément
