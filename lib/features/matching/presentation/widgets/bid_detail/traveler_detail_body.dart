@@ -36,13 +36,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 /// bouton, puis la grille des tuiles des demandes qui attendent une réponse,
 /// chacune ouvrant son bottom sheet par [openTravelerTodoSheet] : frais de
 /// service du supplément à valider) ; cartes d'information sans titre
-/// (attente du paiement,
-/// scan bloqué, verrou avant le départ, supplément et modification qui
-/// n'attendent rien de lui, trajet reporté, procédure « destinataire absent »
-/// dans tous ses états) ; expéditeur ; gain ; grille de tuiles « Votre
-/// transport » (Lieux, Colis et destinataire, Plus de détails), chacune
-/// ouvrant un bottom sheet ([TravelerTransportSection]) ; badge d'évaluation
-/// si déjà notée.
+/// (attente du paiement, scan bloqué, verrou avant le départ, supplément et
+/// modification qui n'attendent rien de lui, trajet reporté, procédure
+/// « destinataire absent » dans tous ses états) ; expéditeur ; gain ; grille
+/// de tuiles « Votre transport » (Lieux, Colis et destinataire, Plus de
+/// détails), chacune ouvrant un bottom sheet ([TravelerTransportSection]) ;
+/// badge d'évaluation si déjà notée.
 ///
 /// Une carte qui change de section ne perd pas son état : la modification
 /// porte une `GlobalKey` (cible du défilement `?action=amendment`), qui la
@@ -150,20 +149,18 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
     super.dispose();
   }
 
-  /// `?action=supplement`, une seule fois dès que le supplément est connu (le
-  /// colis arrive souvent après le premier affichage, lien profond) : frais à
-  /// valider → le sheet de sa tuile s'ouvre (comme `?action=new-code`), sinon
-  /// la carte d'information est amenée à l'écran.
+  /// `?action=supplement`, une seule fois, au premier colis chargé (le corps
+  /// ne reçoit jamais de squelette, l'écran affiche le sien) : frais à valider
+  /// → le sheet de sa tuile s'ouvre (comme `?action=new-code`) ; autre état
+  /// → la carte d'information est amenée à l'écran ; aucun supplément → rien.
+  /// Consommé même sans supplément : une demande créée ensuite (menu ⋮)
+  /// n'ouvre pas de sheet, attribué à tort au lien (`source: link`).
   void _maybeFocusSupplement() {
     final bid = widget.bid;
-    if (!widget.focusSupplement ||
-        _supplementFocused ||
-        !SupplementTravelerCard.shouldShow(bid)) {
-      return;
-    }
+    if (!widget.focusSupplement || _supplementFocused) return;
     _supplementFocused = true;
     if (!SupplementTravelerCard.needsReply(bid)) {
-      _scrollTo(_supplementKey);
+      if (SupplementTravelerCard.shouldShow(bid)) _scrollTo(_supplementKey);
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -180,15 +177,13 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
     });
   }
 
-  /// Même chose pour la carte de la modification (`?action=amendment`).
+  /// `?action=amendment` : la carte de la modification est amenée à l'écran,
+  /// une seule fois, au premier colis chargé ; consommé même sans
+  /// modification (une demande arrivée ensuite ne fait pas défiler).
   void _maybeFocusAmendment() {
-    if (!widget.focusAmendment ||
-        _amendmentFocused ||
-        !AmendmentTravelerCard.shouldShow(widget.bid)) {
-      return;
-    }
+    if (!widget.focusAmendment || _amendmentFocused) return;
     _amendmentFocused = true;
-    _scrollTo(_amendmentKey);
+    if (AmendmentTravelerCard.shouldShow(widget.bid)) _scrollTo(_amendmentKey);
   }
 
   void _scrollTo(GlobalKey key) {

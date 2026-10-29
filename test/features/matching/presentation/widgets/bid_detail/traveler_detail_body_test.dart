@@ -1802,8 +1802,12 @@ void main() {
       expect(_supplementSheetFooter, findsNothing);
     });
 
-    testWidgets('?action=supplement : colis squelette puis supplément à '
-        'valider, le sheet s\'ouvre à son arrivée', (tester) async {
+    // Le corps ne reçoit jamais de squelette (l'écran affiche le sien) : le
+    // paramètre est consommé au premier colis, qu'il ait un supplément ou non.
+    // Une demande créée ensuite (menu ⋮) n'ouvre pas de sheet, et ne serait
+    // pas attribuée à tort au lien de la notification.
+    testWidgets('?action=supplement : premier colis sans supplément, demande '
+        'créée plus tard : ni sheet ni mesure « link »', (tester) async {
       await _pump(
         tester,
         _bid('ACCEPTED'),
@@ -1820,7 +1824,11 @@ void main() {
         size: const Size(800, 700),
       );
       await tester.pumpAndSettle();
-      expect(_supplementSheetFooter, findsOneWidget);
+      expect(_supplementSheetFooter, findsNothing);
+      expect(_supplementTile, findsOneWidget);
+      verifyNever(
+        () => tileBackend.capture(AnalyticsEvents.bidDetailTileOpened, any()),
+      );
     });
 
     testWidgets('?action=supplement sans paramètre : pas de sheet', (
@@ -1892,8 +1900,9 @@ void main() {
       expect(offset(tester), 0);
     });
 
-    testWidgets('carte arrivée après le premier affichage (lien profond) : '
-        'défilement une seule fois', (tester) async {
+    // Même règle pour `?action=amendment` : consommé au premier colis.
+    testWidgets('?action=amendment : modification apparue après le premier '
+        'colis, pas de défilement', (tester) async {
       await _pump(
         tester,
         _bid('ACCEPTED'),
@@ -1910,8 +1919,19 @@ void main() {
         size: const Size(800, 700),
       );
       await settleScroll(tester);
-      final first = offset(tester);
-      expect(first, greaterThan(0));
+      expect(offset(tester), 0);
+    });
+
+    testWidgets('?action=amendment : défilement une seule fois, un relevé ne '
+        'redéfile pas', (tester) async {
+      await _pump(
+        tester,
+        _bid('ACCEPTED', amendments: [_amendment(BidAmendmentStatus.proposed)]),
+        focusAmendment: true,
+        size: const Size(800, 700),
+      );
+      await settleScroll(tester);
+      expect(offset(tester), greaterThan(0));
       expectOnScreen(tester, AmendmentTravelerCard);
 
       // Remonte à la main : un rafraîchissement ne redéfile pas.
