@@ -178,7 +178,6 @@ class SenderStickyBar extends StatelessWidget {
         context,
         pay: DonyButton(
           label: context.l10n.bidDetailPayByMobileMoney,
-          iconAsset: 'smartphone',
           isLoading: isLoading,
           onPressed: isLoading
               ? null
@@ -205,7 +204,6 @@ class SenderStickyBar extends StatelessWidget {
         context,
         pay: DonyButton(
           label: context.l10n.bidDetailPayMyShipment,
-          iconAsset: 'lock',
           isLoading: isLoading,
           onPressed: isLoading
               ? null
@@ -309,6 +307,10 @@ class SenderStickyBar extends StatelessWidget {
   /// confirmation : vraie annulation (autorisation carte ou paiement en
   /// attente libéré, voyageur prévenu). Le BLoC retombe sur le masquage d'avant
   /// si le back ne connaît pas l'endpoint.
+  ///
+  /// Le bouton principal de la ligne n'a pas d'icône : sans elle, « Payer par
+  /// mobile money » tient à taille nominale dans 2/3 de 360 dp. Les boutons
+  /// seuls (E1 à E4, E8…) gardent la leur.
   Widget _cancelAndPayRow(BuildContext context, {required Widget pay}) {
     return Row(
       children: [

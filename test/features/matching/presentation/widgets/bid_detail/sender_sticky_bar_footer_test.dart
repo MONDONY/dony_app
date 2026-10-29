@@ -253,62 +253,68 @@ void main() {
       }
     }
 
-    // Le principal (2/3 de 360 dp, icône comprise) tient à taille nominale
-    // pour ces libellés.
-    for (final (locale, scale, mobileMoney) in const [
-      (Locale('fr'), 1.0, false),
-      (Locale('en'), 1.0, false),
-      (Locale('en'), 1.0, true),
-    ]) {
+    // Le principal (2/3 de 360 dp, sans icône dans la ligne) tient à taille
+    // nominale, en français comme en anglais, à ×1,0.
+    for (final locale in const [Locale('fr'), Locale('en')]) {
       final l = lookupAppLocalizations(locale);
-      final label = mobileMoney
-          ? l.bidDetailPayByMobileMoney
-          : l.bidDetailPayMyShipment;
-      testWidgets('${locale.languageCode} x$scale : « $label » tient sans '
-          'réduction', (tester) async {
-        final bid = _bid(
-          paymentMethod: mobileMoney
-              ? BidPaymentMethod.mobileMoney
-              : BidPaymentMethod.stripe,
-        );
-        await pumpBar(tester, bid, locale: locale, textScale: scale);
+      for (final (name, bid, label) in [
+        (
+          'mobile money',
+          _bid(paymentMethod: BidPaymentMethod.mobileMoney),
+          l.bidDetailPayByMobileMoney,
+        ),
+        ('stripe', _bid(), l.bidDetailPayMyShipment),
+      ]) {
+        testWidgets(
+          '${locale.languageCode} x1.0 ($name) : « $label » et « ${l.commonCancel} » '
+          'tiennent à taille nominale',
+          (tester) async {
+            await pumpBar(tester, bid, locale: locale);
 
-        expect(tester.takeException(), isNull);
-        expect(
-          labelScale(tester, find.widgetWithText(DonyButton, label), label),
-          closeTo(1, 0.001),
+            expect(tester.takeException(), isNull);
+            expect(
+              labelScale(tester, cancelFinder, l.commonCancel),
+              closeTo(1, 0.001),
+              reason: l.commonCancel,
+            );
+            expect(
+              labelScale(tester, find.widgetWithText(DonyButton, label), label),
+              closeTo(1, 0.001),
+              reason: label,
+            );
+          },
         );
-      });
+      }
     }
 
-    // Limites connues, signalées au propriétaire (rapport de la tâche 1) : ces
-    // libellés sont trop longs pour 2/3 de 360 dp et rétrécissent dans le
-    // `FittedBox` du `DonyButton`. Le garde-fou empêche seulement qu'ils
-    // deviennent illisibles ; il ne valide pas la règle « taille nominale ».
-    for (final (locale, scale, mobileMoney) in const [
-      (Locale('fr'), 1.0, true),
-      (Locale('en'), 1.3, true),
-      (Locale('en'), 1.3, false),
-    ]) {
+    // ×1,3 (très grand texte) : LIMITE ACCEPTÉE, pas la règle. Les libellés
+    // principaux rétrécissent dans le `FittedBox` du `DonyButton` ; le
+    // garde-fou empêche seulement qu'ils deviennent illisibles. La règle
+    // « taille nominale » est celle des tests à ×1,0 ci-dessus.
+    for (final locale in const [Locale('fr'), Locale('en')]) {
       final l = lookupAppLocalizations(locale);
-      final label = mobileMoney
-          ? l.bidDetailPayByMobileMoney
-          : l.bidDetailPayMyShipment;
-      testWidgets('${locale.languageCode} x$scale : « $label » reste lisible '
-          '(réduction bornée)', (tester) async {
-        final bid = _bid(
-          paymentMethod: mobileMoney
-              ? BidPaymentMethod.mobileMoney
-              : BidPaymentMethod.stripe,
-        );
-        await pumpBar(tester, bid, locale: locale, textScale: scale);
+      for (final (name, bid, label) in [
+        (
+          'mobile money',
+          _bid(paymentMethod: BidPaymentMethod.mobileMoney),
+          l.bidDetailPayByMobileMoney,
+        ),
+        ('stripe', _bid(), l.bidDetailPayMyShipment),
+      ]) {
+        testWidgets(
+          '${locale.languageCode} x1.3 ($name) : « $label » reste lisible '
+          '(réduction bornée)',
+          (tester) async {
+            await pumpBar(tester, bid, locale: locale, textScale: 1.3);
 
-        expect(tester.takeException(), isNull);
-        expect(
-          labelScale(tester, find.widgetWithText(DonyButton, label), label),
-          greaterThan(0.75),
+            expect(tester.takeException(), isNull);
+            expect(
+              labelScale(tester, find.widgetWithText(DonyButton, label), label),
+              greaterThan(0.75),
+            );
+          },
         );
-      });
+      }
     }
   });
 }
