@@ -69,6 +69,7 @@ Widget _buildApp({
   required _MockConvBloc conv,
   required BidModel bid,
   List<Object?>? transitExtras,
+  double textScale = 1.0,
 }) {
   final router = GoRouter(
     routes: [
@@ -111,14 +112,30 @@ Widget _buildApp({
       ),
     ],
   );
-  return MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
+  return MaterialApp.router(
+    theme: AppTheme.light(),
+    routerConfig: router,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(textScale)),
+      child: child!,
+    ),
+  );
 }
 
 Future<_MockBidBloc> _open(
   WidgetTester tester,
   BidModel bid, {
   List<Object?>? transitExtras,
+  Size? size,
+  double textScale = 1.0,
 }) async {
+  if (size != null) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   final bidBloc = _MockBidBloc();
   final conv = _MockConvBloc();
   when(() => bidBloc.state).thenReturn(BidInitial());
@@ -129,6 +146,7 @@ Future<_MockBidBloc> _open(
       conv: conv,
       bid: bid,
       transitExtras: transitExtras,
+      textScale: textScale,
     ),
   );
   await tester.tap(find.text('open'));
@@ -494,5 +512,156 @@ void main() {
     expect(find.text('Report the sender'), findsOneWidget);
     expect(find.text('Cancel this transport'), findsOneWidget);
     expect(find.text("The parcel doesn't match"), findsOneWidget);
+  });
+
+  // ── Matrice du menu ⋮ : chaque statut, chaque entrée (inventaire B5) ──────
+  group('entrées du menu par statut', () {
+    const contact = "Contacter l'expéditeur";
+    const details = 'Détails du colis';
+    const report = "Signaler l'expéditeur";
+    const supplement = 'Demander un supplément';
+    const refuse = 'Le colis ne correspond pas';
+    const cancel = 'Annuler ce transport';
+    const transit = 'Scanner le transit';
+    const delete = 'Supprimer cette demande';
+    const all = [
+      contact,
+      details,
+      report,
+      supplement,
+      refuse,
+      cancel,
+      transit,
+      delete,
+    ];
+    const base = [contact, details, report];
+    final soon = DateTime.now().add(const Duration(days: 2));
+    final gone = DateTime.now().subtract(const Duration(hours: 2));
+
+    final cases = <String, (BidModel, List<String>)>{
+      'PENDING': (_bid(status: 'PENDING'), base),
+      'PAYMENT_ESCROWED': (_bid(status: 'PAYMENT_ESCROWED'), base),
+      'AWAITING_PAYMENT': (_bid(status: 'AWAITING_PAYMENT'), base),
+      'ACCEPTED': (_bid(status: 'ACCEPTED'), [...base, refuse, cancel]),
+      'HANDED_OVER avant le départ': (
+        _bid(status: 'HANDED_OVER', departureAt: soon),
+        [...base, refuse, cancel, transit],
+      ),
+      'HANDED_OVER départ passé': (
+        _bid(status: 'HANDED_OVER', departureAt: gone),
+        [...base, transit],
+      ),
+      'IN_TRANSIT': (_bid(status: 'IN_TRANSIT'), base),
+      'ARRIVED': (_bid(status: 'ARRIVED'), base),
+      'COMPLETED': (_bid(status: 'COMPLETED'), base),
+      'DELIVERED': (_bid(status: 'DELIVERED'), base),
+      'REJECTED': (_bid(status: 'REJECTED'), [...base, delete]),
+      'CANCELLED': (_bid(status: 'CANCELLED'), [...base, delete]),
+      // Le serveur ne laisse masquer que REJECTED et CANCELLED (409
+      // invalid-bid-status sinon) : pas d'entrée pour les trois autres.
+      'NO_SHOW': (_bid(status: 'NO_SHOW'), base),
+      'EXPIRED': (_bid(status: 'EXPIRED'), base),
+      'PARCEL_REFUSED': (_bid(status: 'PARCEL_REFUSED'), base),
+    };
+
+    for (final MapEntry(key: name, value: (bid, expected)) in cases.entries) {
+      testWidgets('$name : exactement les entrées attendues', (tester) async {
+        await _open(tester, bid);
+        final present = [
+          for (final label in all)
+            if (find.text(label).evaluate().isNotEmpty) label,
+        ];
+        expect(present, unorderedEquals(expected));
+        // Jamais de partage du suivi pour le voyageur.
+        expect(find.text('Partager le suivi'), findsNothing);
+      });
+    }
+
+    testWidgets('supplément autorisé par le serveur : il s\'ajoute, quel que '
+        'soit le statut', (tester) async {
+      for (final status in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT']) {
+        await _open(
+          tester,
+          _bid(status: status, supplementRequestAllowed: true),
+        );
+        expect(find.text(supplement), findsOneWidget, reason: status);
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+      }
+    });
+  });
+
+  // ── Sept entrées : la feuille défile, la dernière est atteignable ────────
+  group('sept entrées sur un petit écran', () {
+    // HANDED_OVER avant le départ, supplément autorisé : contacter, détails,
+    // signaler, supplément, le colis ne correspond pas, annuler, scanner le
+    // transit.
+    final sevenEntries = _bid(
+      status: 'HANDED_OVER',
+      token: null,
+      supplementRequestAllowed: true,
+      departureAt: DateTime.now().add(const Duration(days: 2)),
+    );
+
+    for (final (english, labels) in [
+      (false, ['Scanner le transit', "Contacter l'expéditeur"]),
+      (true, ['Scan the transit', 'Contact the sender']),
+    ]) {
+      for (final scale in [1.0, 1.3]) {
+        testWidgets(
+          '360 × 640 dp, texte ×$scale, ${english ? 'EN' : 'FR'} : pas '
+          'd\'exception, dernière entrée atteignable',
+          (tester) async {
+            if (english) useEnglish();
+            final extras = <Object?>[];
+            await _open(
+              tester,
+              sevenEntries,
+              size: const Size(360, 640),
+              textScale: scale,
+              transitExtras: extras,
+            );
+            expect(tester.takeException(), isNull);
+
+            final last = find.text(labels.first);
+            final first = find.text(labels.last);
+            expect(last, findsOneWidget);
+            expect(first, findsOneWidget);
+
+            // La feuille n'est plus bornée à 9/16 de l'écran : elle prend la
+            // hauteur dont elle a besoin (comme celle de l'expéditeur).
+            final sheet = tester.getSize(
+              find.ancestor(
+                of: first,
+                matching: find.byType(SingleChildScrollView),
+              ),
+            );
+            expect(sheet.height, greaterThan(640 * 9 / 16 + 1));
+
+            // Le défilement amène la dernière entrée à l'écran, et un tap
+            // l'atteint vraiment.
+            await tester.scrollUntilVisible(
+              last,
+              120,
+              scrollable: find.descendant(
+                of: find.byType(SingleChildScrollView),
+                matching: find.byType(Scrollable),
+              ),
+            );
+            await tester.pumpAndSettle();
+            expect(last.hitTestable(), findsOneWidget);
+            expect(tester.getBottomLeft(last).dy, lessThanOrEqualTo(640));
+            await tester.tap(last);
+            await tester.pumpAndSettle();
+            expect(find.text('identify-screen'), findsOneWidget);
+            expect(extras.single, <String, dynamic>{
+              'etape': 'TRANSIT',
+              'focusNumber': false,
+            });
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+    }
   });
 }

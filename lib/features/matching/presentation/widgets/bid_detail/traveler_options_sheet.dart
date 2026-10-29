@@ -32,6 +32,13 @@ void showTravelerOptionsSheet(BuildContext context, BidModel bid) {
   showModalBottomSheet<void>(
     context: context,
     useRootNavigator: true,
+    // Jusqu'à sept entrées (contacter, détails, signaler, supplément, le colis
+    // ne correspond pas, annuler, scanner le transit) : la hauteur par défaut
+    // (9/16 de l'écran) ne suffit plus sur un petit téléphone ni en grand
+    // texte. Même mécanisme que la feuille de l'expéditeur : la feuille prend
+    // la hauteur dont elle a besoin, le contenu défile au-delà.
+    isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => _TravelerOptionsSheet(bid: bid, outerContext: context),
   );
