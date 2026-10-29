@@ -258,11 +258,7 @@ void main() {
         () => authBloc.stream,
       ).thenAnswer((_) => const Stream<AuthState>.empty());
 
-      await _pump(
-        tester,
-        bid: _makeBid(status: 'ACCEPTED'),
-        authBloc: authBloc,
-      );
+      await _pump(tester, bid: _makeBid(), authBloc: authBloc);
 
       // Dans le redesign, TravelerGainCard affiche 'ESPÈCES' pour les paiements cash.
       expect(find.text('ESPÈCES'), findsOneWidget);

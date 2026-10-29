@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -12,6 +13,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_options_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -23,6 +25,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
@@ -388,12 +391,56 @@ void main() {
     },
   );
 
-  testWidgets('tap Détails du colis → sub-sheet apparaît', (tester) async {
-    await _open(tester, _bid());
-    await tester.tap(find.text('Détails du colis'));
-    await tester.pumpAndSettle();
-    // After tapping, the sub-sheet title 'Détails du colis' should appear
-    expect(find.text('Détails du colis'), findsWidgets);
+  group('Détails du colis', () {
+    late MockAnalyticsBackend backend;
+
+    setUp(() async {
+      backend = MockAnalyticsBackend();
+      final analytics = makeEnabledAnalytics(backend);
+      await analytics.onConfigured();
+      await getIt.reset();
+      getIt.registerSingleton<AnalyticsService>(analytics);
+    });
+
+    tearDown(() async => getIt.reset());
+
+    testWidgets('ouvre la tuile « Colis et destinataire » de la grille '
+        '« Votre transport »', (tester) async {
+      await _open(tester, _bid());
+      await tester.tap(find.text('Détails du colis'));
+      await tester.pumpAndSettle();
+
+      // Le menu est fermé, la feuille de la tuile Colis est ouverte.
+      expect(find.text("Contacter l'expéditeur"), findsNothing);
+      expect(find.text('Colis et destinataire'), findsWidgets);
+      expect(find.byType(ColisDestinataireCard), findsOneWidget);
+      // Le même événement que la tuile, avec le rôle voyageur.
+      verify(
+        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'colis',
+          'role': 'traveler',
+        }),
+      ).called(1);
+    });
+
+    testWidgets('le contact du destinataire est dans la même feuille '
+        '(colis récupéré)', (tester) async {
+      await _open(tester, _bid(status: 'HANDED_OVER', token: null));
+      await tester.tap(find.text('Détails du colis'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ColisDestinataireCard), findsOneWidget);
+    });
+
+    testWidgets('en anglais : feuille « Parcel and recipient »', (
+      tester,
+    ) async {
+      useEnglish();
+      await _open(tester, _bid());
+      await tester.tap(find.text('Parcel details'));
+      await tester.pumpAndSettle();
+      expect(find.text('Parcel and recipient'), findsWidgets);
+    });
   });
 
   testWidgets('avec trackingToken → le voyageur ne voit pas le partage suivi', (
@@ -542,7 +589,7 @@ void main() {
       'PENDING': (_bid(status: 'PENDING'), base),
       'PAYMENT_ESCROWED': (_bid(status: 'PAYMENT_ESCROWED'), base),
       'AWAITING_PAYMENT': (_bid(status: 'AWAITING_PAYMENT'), base),
-      'ACCEPTED': (_bid(status: 'ACCEPTED'), [...base, refuse, cancel]),
+      'ACCEPTED': (_bid(), [...base, refuse, cancel]),
       'HANDED_OVER avant le départ': (
         _bid(status: 'HANDED_OVER', departureAt: soon),
         [...base, refuse, cancel, transit],

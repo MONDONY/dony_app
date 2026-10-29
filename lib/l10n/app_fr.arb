@@ -7718,7 +7718,7 @@
   },
   "bidDetailParcelDetailsLabel": "Détails du colis",
   "@bidDetailParcelDetailsLabel": {
-    "description": "Tuile d'options voyageur et titre du sous-sheet colis (traveler_options_sheet.dart)"
+    "description": "Tuile d'options voyageur qui ouvre la feuille de la tuile « Colis et destinataire » (traveler_options_sheet.dart)"
   },
   "bidDetailParcelDetailsSubtitle": "Voir les informations du colis et du destinataire",
   "@bidDetailParcelDetailsSubtitle": {

@@ -12792,7 +12792,7 @@ abstract class AppLocalizations {
   /// **'Envoyer un message à l\'expéditeur'**
   String get bidDetailContactSenderSubtitle;
 
-  /// Tuile d'options voyageur et titre du sous-sheet colis (traveler_options_sheet.dart)
+  /// Tuile d'options voyageur qui ouvre la feuille de la tuile « Colis et destinataire » (traveler_options_sheet.dart)
   ///
   /// In fr, this message translates to:
   /// **'Détails du colis'**
