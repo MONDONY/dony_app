@@ -12,9 +12,12 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_de
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_info_cards.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/recipient_contact.dart';
+import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -79,6 +82,19 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
 
   @override
   Widget build(BuildContext context) {
+    // Le verrou de la remise avant le départ vient du même
+    // [DeliveryDepartureGate] que le bouton du footer : il tombe seul à l'heure
+    // du départ et la carte disparaît avec lui.
+    if (TravelerStickyBar.hasDeliveryStep(widget.bid)) {
+      return DeliveryDepartureGate(
+        window: DeliveryWindow.fromBid(widget.bid),
+        builder: (context, lockedHint) => _content(context, lockedHint),
+      );
+    }
+    return _content(context, null);
+  }
+
+  Widget _content(BuildContext context, String? lockedHint) {
     final h = DonyLayout.hPadding(context);
     final status = widget.bid.status;
 
@@ -88,6 +104,13 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
       // pour éviter une double animation (fade × fade + slide × slide).
       ColisBillet(bid: widget.bid, isSender: false),
       TravelerHeroCard(bid: widget.bid),
+      // Phrases d'aide sorties du footer (qui n'a plus qu'un ou deux boutons).
+      if (TravelerAwaitingPaymentCard.shouldShow(widget.bid))
+        const TravelerAwaitingPaymentCard(),
+      if (TravelerScanBlockedCard.shouldShow(widget.bid))
+        TravelerScanBlockedCard(bid: widget.bid),
+      if (lockedHint != null)
+        TravelerHandoverLockedCard(lockedHint: lockedHint),
       // Supplément de prix : en attente, il bloque le scan de remise.
       if (SupplementTravelerCard.shouldShow(widget.bid))
         SupplementTravelerCard(bid: widget.bid),

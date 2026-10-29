@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
@@ -98,7 +99,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Refuser'));
+      await tester.tap(find.widgetWithText(DonyButton, 'Refuser'));
       await tester.pumpAndSettle();
 
       expect(find.text('Refuser la demande'), findsOneWidget);
@@ -113,7 +114,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.widgetWithText(OutlinedButton, 'Refuser'));
+        await tester.tap(find.widgetWithText(DonyButton, 'Refuser'));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Contenu du colis non accepté'));
@@ -146,7 +147,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Accepter'));
+      await tester.tap(find.widgetWithText(DonyButton, 'Accepter'));
       await tester.pump();
 
       verify(() => bidBloc.add(any(that: isA<BidAcceptRequested>()))).called(1);
@@ -159,10 +160,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(OutlinedButton, 'Decline'), findsOneWidget);
-      expect(find.widgetWithText(FilledButton, 'Accept'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Decline'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Accept'), findsOneWidget);
 
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Decline'));
+      await tester.tap(find.widgetWithText(DonyButton, 'Decline'));
       await tester.pumpAndSettle();
 
       expect(find.text('Decline the request'), findsOneWidget);
@@ -180,7 +181,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.widgetWithText(FilledButton, 'Accepter'));
+        await tester.tap(find.widgetWithText(DonyButton, 'Accepter'));
         await tester.pump();
 
         verify(
@@ -199,7 +200,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.widgetWithText(FilledButton, 'Accepter'));
+        await tester.tap(find.widgetWithText(DonyButton, 'Accepter'));
         await tester.pump();
 
         verify(

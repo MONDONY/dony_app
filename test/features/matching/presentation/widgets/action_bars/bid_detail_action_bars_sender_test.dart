@@ -9,7 +9,6 @@ import 'package:dony/features/matching/bloc/bid_amendment/amendment_request_cubi
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
@@ -158,55 +157,6 @@ void main() {
       await tester.pump();
       await tester.tap(find.byType(DonyButton), warnIfMissed: false);
       await tester.pump();
-      verifyNever(() => bidBloc.add(any()));
-    });
-  });
-
-  group('TravelerRejectedBar', () {
-    testWidgets(
-      'Supprimer puis confirmer dispatch BidTravelerDismissRequested',
-      (tester) async {
-        await tester.pumpWidget(
-          wrap(
-            (_) => TravelerRejectedBar(
-              bid: _bid(status: 'REJECTED'),
-              isLoading: false,
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byType(DonyButton));
-        await tester.pumpAndSettle();
-        expect(find.text(_l.bidDetailDeleteRejectedBody), findsOneWidget);
-
-        await tester.tap(find.widgetWithText(FilledButton, _l.commonDelete));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(AlertDialog), findsNothing);
-        verify(
-          () => bidBloc.add(any(that: isA<BidTravelerDismissRequested>())),
-        ).called(1);
-      },
-    );
-
-    testWidgets('Annuler ferme la boîte sans événement', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          (_) => TravelerRejectedBar(
-            bid: _bid(status: 'REJECTED'),
-            isLoading: false,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(DonyButton));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.widgetWithText(TextButton, _l.commonCancel));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(AlertDialog), findsNothing);
       verifyNever(() => bidBloc.add(any()));
     });
   });

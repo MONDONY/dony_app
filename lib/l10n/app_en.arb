@@ -3965,9 +3965,21 @@
   "bidDetailDeleteRequestDefaultBody": "It will be permanently removed from your history.",
   "bidDetailAwaitingSenderMobileMoneyPayment": "Awaiting the sender's payment (mobile money).",
   "bidDetailScanParcelQr": "Scan the parcel QR",
-  "bidDetailScanTransitOptional": "Scan transit (optional)",
-  "@bidDetailScanTransitOptional": {
-    "description": "Action secondaire du voyageur sur un colis récupéré : le scan Transit est facultatif (traveler_sticky_bar.dart)"
+  "bidDetailScanTransitLabel": "Scan the transit",
+  "@bidDetailScanTransitLabel": {
+    "description": "Entrée du menu ⋮ voyageur sur un colis récupéré (HANDED_OVER) : scan Transit, étape facultative (traveler_options_sheet.dart)"
+  },
+  "bidDetailScanTransitSubtitle": "Optional step: record the parcel's passage.",
+  "@bidDetailScanTransitSubtitle": {
+    "description": "Sous-titre de l'entrée « Scanner le transit » du menu ⋮ voyageur (traveler_options_sheet.dart)"
+  },
+  "bidDetailScanPending": "Scan on hold",
+  "@bidDetailScanPending": {
+    "description": "Libellé court du bouton de scan désactivé quand un supplément ou une modification attend une réponse ; la phrase complète est dans une carte du corps (traveler_sticky_bar.dart, traveler_info_cards.dart)"
+  },
+  "bidDetailHandoverLockedLabel": "Available at departure",
+  "@bidDetailHandoverLockedLabel": {
+    "description": "Libellé du bouton de remise désactivé tant que le trajet n'est pas parti ; les phrases du verrou sont dans une carte du corps (traveler_sticky_bar.dart, traveler_info_cards.dart)"
   },
   "bidDetailConfirmHandover": "Confirm the drop-off",
   "bidDetailQrSheetTitle": "Parcel QR",

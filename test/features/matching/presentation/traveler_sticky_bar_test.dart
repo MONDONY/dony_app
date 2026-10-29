@@ -23,8 +23,8 @@ void main() {
       expect(TravelerStickyBar.hasAction(bidWith('PAYMENT_ESCROWED')), isTrue);
     });
 
-    test('true pour REJECTED — supprimer', () {
-      expect(TravelerStickyBar.hasAction(bidWith('REJECTED')), isTrue);
+    test('false pour REJECTED — Supprimer est dans le menu ⋮', () {
+      expect(TravelerStickyBar.hasAction(bidWith('REJECTED')), isFalse);
     });
 
     test('true pour ACCEPTED (présence à confirmer)', () {

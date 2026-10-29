@@ -111,29 +111,27 @@ class TravelerPendingBar extends StatelessWidget {
         h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
+      // Refuser (1/3) | Accepter (2/3), deux DonyButton de 52 px sur une ligne.
       child: Row(
         children: [
           Expanded(
-            child: OutlinedButton.icon(
+            child: DonyButton(
+              label: l.bidDetailDeclineRequestButton,
+              // Sans icône : à 360 dp, 1/3 de la ligne laisse 70 px au contenu
+              // du bouton ; l'icône (22 px) forcerait « Refuser » / « Decline »
+              // à rétrécir dans le FittedBox du DonyButton.
+              variant: DonyButtonVariant.destructiveGhost,
               onPressed: isLoading ? null : () => _showRejectDialog(context),
-              icon: DonyIcon('x', size: 20, color: cs.error),
-              label: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(l.bidDetailDeclineRequestButton, maxLines: 1),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: cs.error,
-                side: BorderSide(color: cs.error),
-                padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.lg),
-                ),
-              ),
             ),
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(
-            child: FilledButton.icon(
+            flex: 2,
+            child: DonyButton(
+              label: l.bidDetailAcceptRequestButton,
+              iconAsset: 'check',
+              variant: DonyButtonVariant.success,
+              isLoading: isLoading,
               onPressed: isLoading
                   ? null
                   : () async {
@@ -145,29 +143,6 @@ class TravelerPendingBar extends StatelessWidget {
                       }
                       if (context.mounted) dispatchBidAccept(context, bid);
                     },
-              icon: isLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: DonyColors.white,
-                      ),
-                    )
-                  : const DonyIcon('check', color: DonyColors.white),
-              label: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(l.bidDetailAcceptRequestButton, maxLines: 1),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: cs.success,
-                foregroundColor: DonyColors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.lg),
-                ),
-              ),
             ),
           ),
         ],
@@ -219,81 +194,6 @@ class ConfirmPresenceBar extends StatelessWidget {
                 BidConfirmPresenceRequested(bid.id),
               ),
         isLoading: isLoading,
-      ),
-    );
-  }
-}
-
-// ── Traveler REJECTED bar ─────────────────────────────────────────────────────
-
-class TravelerRejectedBar extends StatelessWidget {
-  final BidModel bid;
-  final bool isLoading;
-
-  const TravelerRejectedBar({
-    super.key,
-    required this.bid,
-    required this.isLoading,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final h = DonyLayout.hPadding(context);
-    return Container(
-      color: cs.surface,
-      padding: EdgeInsets.fromLTRB(
-        h,
-        DonySpacing.base,
-        h,
-        MediaQuery.of(context).padding.bottom + DonySpacing.base,
-      ),
-      child: DonyButton(
-        label: context.l10n.bidDetailDeleteRequest,
-        iconAsset: 'trash-2',
-        variant: DonyButtonVariant.destructive,
-        onPressed: isLoading ? null : () => _showDeleteDialog(context),
-        isLoading: isLoading,
-      ),
-    );
-  }
-
-  void _showDeleteDialog(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.sheet),
-        ),
-        title: Text(l.bidDetailDeleteRequest, style: tt.headlineMedium),
-        content: Text(
-          l.bidDetailDeleteRejectedBody,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => ctx.pop(),
-            child: Text(
-              l.commonCancel,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ),
-          FilledButton(
-            onPressed: () {
-              ctx.pop();
-              context.read<BidBloc>().add(BidTravelerDismissRequested(bid.id));
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: cs.error,
-              foregroundColor: DonyColors.white,
-              elevation: 0,
-            ),
-            child: Text(l.commonDelete, style: tt.labelLarge),
-          ),
-        ],
       ),
     );
   }

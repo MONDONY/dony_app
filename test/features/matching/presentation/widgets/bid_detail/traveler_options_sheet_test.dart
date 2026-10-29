@@ -68,6 +68,7 @@ Widget _buildApp({
   required _MockBidBloc bidBloc,
   required _MockConvBloc conv,
   required BidModel bid,
+  List<Object?>? transitExtras,
 }) {
   final router = GoRouter(
     routes: [
@@ -91,6 +92,13 @@ Widget _buildApp({
         ),
       ),
       GoRoute(
+        path: '/tracking/scan/identify',
+        builder: (_, state) {
+          transitExtras?.add(state.extra);
+          return const Scaffold(body: Text('identify-screen'));
+        },
+      ),
+      GoRoute(
         path: '/settings/report-incident',
         builder: (_, state) {
           final extra = state.extra as Map<String, dynamic>?;
@@ -106,14 +114,26 @@ Widget _buildApp({
   return MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
 }
 
-Future<void> _open(WidgetTester tester, BidModel bid) async {
+Future<_MockBidBloc> _open(
+  WidgetTester tester,
+  BidModel bid, {
+  List<Object?>? transitExtras,
+}) async {
   final bidBloc = _MockBidBloc();
   final conv = _MockConvBloc();
   when(() => bidBloc.state).thenReturn(BidInitial());
   when(() => conv.state).thenReturn(const ConversationOpenInitial());
-  await tester.pumpWidget(_buildApp(bidBloc: bidBloc, conv: conv, bid: bid));
+  await tester.pumpWidget(
+    _buildApp(
+      bidBloc: bidBloc,
+      conv: conv,
+      bid: bid,
+      transitExtras: transitExtras,
+    ),
+  );
   await tester.tap(find.text('open'));
   await tester.pumpAndSettle();
+  return bidBloc;
 }
 
 void main() {
@@ -142,6 +162,106 @@ void main() {
     expect(find.text('Annuler ce transport'), findsNothing);
     expect(find.text('Le colis ne correspond pas'), findsNothing);
     expect(find.text('Partager le suivi'), findsNothing);
+  });
+
+  group('Supprimer cette demande (ex-footer)', () {
+    testWidgets('REJECTED : confirmation puis BidTravelerDismissRequested', (
+      tester,
+    ) async {
+      final bidBloc = await _open(
+        tester,
+        _bid(status: 'REJECTED', token: null),
+      );
+      await tester.ensureVisible(find.text('Supprimer cette demande'));
+      await tester.tap(find.text('Supprimer cette demande'));
+      await tester.pumpAndSettle();
+
+      // Même boîte de confirmation que l'ancien bouton du footer.
+      expect(
+        find.text(
+          'Cette demande refusée sera retirée définitivement de votre liste.',
+        ),
+        findsOneWidget,
+      );
+      verifyNever(() => bidBloc.add(any()));
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Supprimer'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      final event = verify(() => bidBloc.add(captureAny())).captured.single;
+      expect(event, isA<BidTravelerDismissRequested>());
+      expect((event as BidTravelerDismissRequested).bidId, 'b1');
+    });
+
+    testWidgets('REJECTED : Annuler ferme la boîte sans événement', (
+      tester,
+    ) async {
+      final bidBloc = await _open(
+        tester,
+        _bid(status: 'REJECTED', token: null),
+      );
+      await tester.ensureVisible(find.text('Supprimer cette demande'));
+      await tester.tap(find.text('Supprimer cette demande'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(TextButton, 'Annuler'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      verifyNever(() => bidBloc.add(any()));
+    });
+
+    for (final status in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'PENDING']) {
+      testWidgets('$status : pas d\'entrée Supprimer', (tester) async {
+        await _open(tester, _bid(status: status, token: null));
+        expect(find.text('Supprimer cette demande'), findsNothing);
+      });
+    }
+  });
+
+  group('Scanner le transit (ex-footer)', () {
+    testWidgets('HANDED_OVER : entrée présente, ouvre le scan TRANSIT', (
+      tester,
+    ) async {
+      final extras = <Object?>[];
+      await _open(
+        tester,
+        _bid(status: 'HANDED_OVER', token: null),
+        transitExtras: extras,
+      );
+      expect(find.text('Scanner le transit'), findsOneWidget);
+      expect(find.textContaining('facultatif)'), findsNothing);
+
+      await tester.ensureVisible(find.text('Scanner le transit'));
+      await tester.tap(find.text('Scanner le transit'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('identify-screen'), findsOneWidget);
+      expect(extras.single, <String, dynamic>{
+        'etape': 'TRANSIT',
+        'focusNumber': false,
+      });
+    });
+
+    for (final status in [
+      'ACCEPTED',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'REJECTED',
+      'PENDING',
+    ]) {
+      testWidgets('$status : pas d\'entrée Scanner le transit', (tester) async {
+        await _open(tester, _bid(status: status, token: null));
+        expect(find.text('Scanner le transit'), findsNothing);
+      });
+    }
+
+    testWidgets('anglais : « Scan the transit »', (tester) async {
+      useEnglish();
+      await _open(tester, _bid(status: 'HANDED_OVER', token: null));
+      expect(find.text('Scan the transit'), findsOneWidget);
+    });
   });
 
   testWidgets('CANCELLED → supprimer présent, pas annuler', (tester) async {
@@ -273,32 +393,6 @@ void main() {
 
     expect(find.text('Déclaré par l\'expéditeur'), findsOneWidget);
     expect(find.widgetWithText(DonyButton, 'Refuser le colis'), findsOneWidget);
-  });
-
-  testWidgets('tap Supprimer → BidTravelerDismissRequested émis', (
-    tester,
-  ) async {
-    final bidBloc = _MockBidBloc();
-    final conv = _MockConvBloc();
-    when(() => bidBloc.state).thenReturn(BidInitial());
-    when(() => conv.state).thenReturn(const ConversationOpenInitial());
-
-    await tester.pumpWidget(
-      _buildApp(
-        bidBloc: bidBloc,
-        conv: conv,
-        bid: _bid(status: 'REJECTED', token: null),
-      ),
-    );
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Supprimer cette demande'));
-    await tester.pumpAndSettle();
-
-    verify(
-      () => bidBloc.add(any(that: isA<BidTravelerDismissRequested>())),
-    ).called(1);
   });
 
   group('Demander un supplément', () {

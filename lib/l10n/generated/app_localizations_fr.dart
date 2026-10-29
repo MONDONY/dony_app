@@ -7862,7 +7862,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailScanParcelQr => 'Lire le QR du colis';
 
   @override
-  String get bidDetailScanTransitOptional => 'Scanner le transit (facultatif)';
+  String get bidDetailScanTransitLabel => 'Scanner le transit';
+
+  @override
+  String get bidDetailScanTransitSubtitle =>
+      'Étape facultative : enregistrer le passage du colis.';
+
+  @override
+  String get bidDetailScanPending => 'Scan en attente';
+
+  @override
+  String get bidDetailHandoverLockedLabel => 'Disponible au départ';
 
   @override
   String get bidDetailConfirmHandover => 'Valider la remise';

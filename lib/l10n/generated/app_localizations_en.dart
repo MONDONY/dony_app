@@ -7811,7 +7811,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailScanParcelQr => 'Scan the parcel QR';
 
   @override
-  String get bidDetailScanTransitOptional => 'Scan transit (optional)';
+  String get bidDetailScanTransitLabel => 'Scan the transit';
+
+  @override
+  String get bidDetailScanTransitSubtitle =>
+      'Optional step: record the parcel\'s passage.';
+
+  @override
+  String get bidDetailScanPending => 'Scan on hold';
+
+  @override
+  String get bidDetailHandoverLockedLabel => 'Available at departure';
 
   @override
   String get bidDetailConfirmHandover => 'Confirm the drop-off';

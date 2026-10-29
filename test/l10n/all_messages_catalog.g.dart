@@ -2858,7 +2858,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailAwaitingSenderMobileMoneyPayment': (l) =>
       l.bidDetailAwaitingSenderMobileMoneyPayment,
   'bidDetailScanParcelQr': (l) => l.bidDetailScanParcelQr,
-  'bidDetailScanTransitOptional': (l) => l.bidDetailScanTransitOptional,
+  'bidDetailScanTransitLabel': (l) => l.bidDetailScanTransitLabel,
+  'bidDetailScanTransitSubtitle': (l) => l.bidDetailScanTransitSubtitle,
+  'bidDetailScanPending': (l) => l.bidDetailScanPending,
+  'bidDetailHandoverLockedLabel': (l) => l.bidDetailHandoverLockedLabel,
   'bidDetailConfirmHandover': (l) => l.bidDetailConfirmHandover,
   'bidDetailQrSheetTitle': (l) => l.bidDetailQrSheetTitle,
   'bidDetailQrSaveErrorSnackbar': (l) => l.bidDetailQrSaveErrorSnackbar,

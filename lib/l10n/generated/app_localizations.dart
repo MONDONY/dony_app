@@ -12504,7 +12504,7 @@ abstract class AppLocalizations {
   /// **'Supprimer cette demande'**
   String get bidDetailDeleteRequest;
 
-  /// Corps du dialog de suppression, vue voyageur d'une demande refusée (bid_detail_action_bars.dart)
+  /// Corps du dialog de suppression, vue voyageur d'une demande refusée (confirm_delete_bid.dart)
   ///
   /// In fr, this message translates to:
   /// **'Cette demande refusée sera retirée définitivement de votre liste.'**
@@ -12984,7 +12984,7 @@ abstract class AppLocalizations {
   /// **'Elle sera retirée définitivement de votre historique.'**
   String get bidDetailDeleteRequestDefaultBody;
 
-  /// Ligne d'information AWAITING_PAYMENT mobile money, vue voyageur (traveler_sticky_bar.dart)
+  /// Carte d'information du corps, AWAITING_PAYMENT mobile money, vue voyageur (traveler_info_cards.dart)
   ///
   /// In fr, this message translates to:
   /// **'En attente du paiement de l\'expéditeur (mobile money).'**
@@ -12996,11 +12996,29 @@ abstract class AppLocalizations {
   /// **'Lire le QR du colis'**
   String get bidDetailScanParcelQr;
 
-  /// Action secondaire du voyageur sur un colis récupéré : le scan Transit est facultatif (traveler_sticky_bar.dart)
+  /// Entrée du menu ⋮ voyageur sur un colis récupéré (HANDED_OVER) : scan Transit, étape facultative (traveler_options_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Scanner le transit (facultatif)'**
-  String get bidDetailScanTransitOptional;
+  /// **'Scanner le transit'**
+  String get bidDetailScanTransitLabel;
+
+  /// Sous-titre de l'entrée « Scanner le transit » du menu ⋮ voyageur (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape facultative : enregistrer le passage du colis.'**
+  String get bidDetailScanTransitSubtitle;
+
+  /// Libellé court du bouton de scan désactivé quand un supplément ou une modification attend une réponse ; la phrase complète est dans une carte du corps (traveler_sticky_bar.dart, traveler_info_cards.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Scan en attente'**
+  String get bidDetailScanPending;
+
+  /// Libellé du bouton de remise désactivé tant que le trajet n'est pas parti ; les phrases du verrou sont dans une carte du corps (traveler_sticky_bar.dart, traveler_info_cards.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible au départ'**
+  String get bidDetailHandoverLockedLabel;
 
   /// Bouton étape Arrivée, valider la remise au destinataire (traveler_sticky_bar.dart)
   ///

@@ -21,8 +21,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../../../../../helpers/l10n_test_helpers.dart';
-
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockAcceptBloc extends MockBloc<BidAcceptanceEvent, BidAcceptanceState>
@@ -92,8 +90,9 @@ void main() {
     test('PENDING → true', () {
       expect(TravelerStickyBar.hasAction(_bid(status: 'PENDING')), isTrue);
     });
-    test('REJECTED → true', () {
-      expect(TravelerStickyBar.hasAction(_bid(status: 'REJECTED')), isTrue);
+    // « Supprimer cette demande » a quitté le footer pour le menu ⋮.
+    test('REJECTED → false (plus de footer)', () {
+      expect(TravelerStickyBar.hasAction(_bid(status: 'REJECTED')), isFalse);
     });
     test('HANDED_OVER → true', () {
       expect(TravelerStickyBar.hasAction(_bid(status: 'HANDED_OVER')), isTrue);
@@ -142,7 +141,7 @@ void main() {
     expect(find.text('Lire le QR du colis'), findsOneWidget);
   });
 
-  testWidgets('supplément en attente → scan désactivé et expliqué', (
+  testWidgets('supplément en attente → scan désactivé, libellé court', (
     tester,
   ) async {
     await _pump(
@@ -162,12 +161,9 @@ void main() {
       find.byKey(const Key('traveler-scan-btn')),
     );
     expect(button.onPressed, isNull);
-    expect(
-      find.text(
-        "Un supplément attend la réponse de l'expéditeur : le scan est bloqué.",
-      ),
-      findsOneWidget,
-    );
+    expect(button.label, 'Scan en attente');
+    // La phrase complète vit dans une carte du corps, plus dans le footer.
+    expect(find.textContaining('le scan est bloqué'), findsNothing);
   });
 
   testWidgets('scanDisabled_whenAmendmentBlocksHandover', (tester) async {
@@ -191,10 +187,8 @@ void main() {
       find.byKey(const Key('traveler-scan-btn')),
     );
     expect(button.onPressed, isNull);
-    expect(
-      find.text('Une modification attend votre réponse : le scan est bloqué.'),
-      findsOneWidget,
-    );
+    expect(button.label, 'Scan en attente');
+    expect(find.textContaining('le scan est bloqué'), findsNothing);
   });
 
   testWidgets('modification acceptée → scan possible', (tester) async {
@@ -249,17 +243,19 @@ void main() {
   });
 
   // Seuls le départ et la remise sont obligatoires : dès le colis récupéré,
-  // la remise est l'action principale, le transit une option.
-  testWidgets('HANDED_OVER → Valider la remise + transit facultatif', (
+  // la remise est l'action principale. Le scan du transit (facultatif) a
+  // quitté le footer pour le menu ⋮.
+  testWidgets('HANDED_OVER → Valider la remise seule, sans transit', (
     tester,
   ) async {
     await _pump(tester, _bid(status: 'HANDED_OVER'));
     expect(find.text('Valider la remise'), findsOneWidget);
+    expect(find.byType(DonyButton), findsOneWidget);
     expect(
       find.byKey(const Key('traveler-optional-transit-btn')),
-      findsOneWidget,
+      findsNothing,
     );
-    expect(find.text('Scanner le transit (facultatif)'), findsOneWidget);
+    expect(find.textContaining('Scanner le transit'), findsNothing);
   });
 
   testWidgets('IN_TRANSIT → Valider la remise, plus de transit proposé', (
@@ -273,9 +269,12 @@ void main() {
     );
   });
 
-  testWidgets('REJECTED → Supprimer cette demande', (tester) async {
+  testWidgets('REJECTED → barre vide, Supprimer est dans le menu ⋮', (
+    tester,
+  ) async {
     await _pump(tester, _bid(status: 'REJECTED'));
-    expect(find.text('Supprimer cette demande'), findsOneWidget);
+    expect(find.text('Supprimer cette demande'), findsNothing);
+    expect(find.byType(DonyButton), findsNothing);
   });
 
   testWidgets('COMPLETED → barre vide (SizedBox)', (tester) async {
@@ -347,7 +346,7 @@ void main() {
   // uniquement (seul rail concerné par cette attente de 30 min côté
   // voyageur) : hors périmètre pour les autres moyens de paiement.
   group('TravelerStickyBar.hasAction — AWAITING_PAYMENT', () {
-    test('mobile money → true (ligne d\'information, pas un bouton)', () {
+    test('mobile money → false (phrase déplacée dans le corps)', () {
       expect(
         TravelerStickyBar.hasAction(
           _bid(
@@ -355,7 +354,7 @@ void main() {
             paymentMethod: BidPaymentMethod.mobileMoney,
           ),
         ),
-        isTrue,
+        isFalse,
       );
     });
 
@@ -368,7 +367,7 @@ void main() {
   });
 
   testWidgets(
-    'AWAITING_PAYMENT mobile money → ligne d\'information, aucune action',
+    'AWAITING_PAYMENT mobile money → plus de footer (carte dans le corps)',
     (tester) async {
       await _pump(
         tester,
@@ -378,10 +377,8 @@ void main() {
         ),
       );
 
-      expect(
-        find.text("En attente du paiement de l'expéditeur (mobile money)."),
-        findsOneWidget,
-      );
+      expect(find.textContaining('En attente du paiement'), findsNothing);
+      expect(find.byType(DonyButton), findsNothing);
       expect(find.text('Lire le QR du colis'), findsNothing);
       expect(find.text('Lire le QR de transit'), findsNothing);
       expect(find.text('Valider la remise'), findsNothing);
@@ -494,7 +491,7 @@ void main() {
       MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Valider la remise'));
+    await tester.tap(find.byKey(const Key('traveler-deliver-btn')));
     await tester.pumpAndSettle();
     return pushedRoutes;
   }
@@ -558,8 +555,9 @@ void main() {
     });
 
     // FLUTTER-CB : le back refuse la remise avant le départ (422
-    // trip-not-departed). Le bouton reste éteint, avec l'explication.
-    testWidgets('trajet pas encore parti : bouton désactivé, explication', (
+    // trip-not-departed). Le bouton reste éteint, libellé court ; la phrase
+    // d'explication est dans une carte du corps.
+    testWidgets('trajet pas encore parti : bouton désactivé, libellé court', (
       tester,
     ) async {
       final pushed = await pumpDeliver(
@@ -573,10 +571,8 @@ void main() {
         find.byKey(const Key('traveler-deliver-btn')),
       );
       expect(button.onPressed, isNull);
-      expect(
-        find.textContaining('Disponible après le départ du trajet (le'),
-        findsOneWidget,
-      );
+      expect(button.label, 'Disponible au départ');
+      expect(find.textContaining('Disponible après le départ'), findsNothing);
       expect(pushed, isEmpty);
     });
 
@@ -593,7 +589,7 @@ void main() {
         windows: windows,
       );
 
-      expect(find.byType(DeliveryLockedHint), findsNothing);
+      expect(find.text('Disponible au départ'), findsNothing);
       expect(pushed, contains('/tracking/scan/photo:b1:ARRIVEE'));
       expect(
         windows.single,
@@ -615,14 +611,5 @@ void main() {
       expect(pushed, contains('/tracking/scan/photo:b1:ARRIVEE'));
       expect(windows.single, isNull);
     });
-  });
-
-  testWidgets('anglais — HANDED_OVER : transit facultatif traduit', (
-    tester,
-  ) async {
-    useEnglish();
-    await _pump(tester, _bid(status: 'HANDED_OVER'));
-
-    expect(find.text('Scan transit (optional)'), findsOneWidget);
   });
 }

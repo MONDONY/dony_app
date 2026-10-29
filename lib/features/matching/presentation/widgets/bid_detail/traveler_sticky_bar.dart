@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -12,17 +11,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-enum _TravelerAction {
-  decide,
-  confirmPresence,
-  scan,
-  deliver,
-  delete,
-  awaitingMobileMoneyPayment,
-}
+enum _TravelerAction { decide, confirmPresence, scan, deliver }
 
 /// Barre collante contextuelle voyageur — route vers le bon scanner/étape
 /// selon le statut de l'offre.
+///
+/// Un seul bouton, ou deux sur la même ligne (secondaire à gauche = 1/3,
+/// principal à droite = 2/3). Jamais de phrase d'aide : celles du scan bloqué,
+/// du verrou avant le départ et de l'attente de paiement vivent dans des
+/// cartes d'information du corps (`traveler_info_cards.dart`). « Supprimer cette
+/// demande » et « Scanner le transit » sont des entrées du menu ⋮
+/// (`traveler_options_sheet.dart`).
 class TravelerStickyBar extends StatelessWidget {
   final BidModel bid;
   final bool isLoading;
@@ -38,6 +37,31 @@ class TravelerStickyBar extends StatelessWidget {
   /// Returns true if this bar should be shown for the given [bid] status.
   static bool hasAction(BidModel bid) => _resolve(bid) != null;
 
+  /// Le bouton de scan est affiché mais bloqué par un supplément en attente
+  /// de l'expéditeur : le back refuserait le scan (409
+  /// `handover-supplement-pending`).
+  static bool scanBlockedBySupplement(BidModel bid) =>
+      _resolve(bid) == _TravelerAction.scan &&
+      (bid.supplement?.blocksHandover ?? false);
+
+  /// Le bouton de scan est affiché mais bloqué par une modification en attente
+  /// du voyageur (le supplément, s'il bloque aussi, est expliqué en premier).
+  static bool scanBlockedByAmendment(BidModel bid) =>
+      _resolve(bid) == _TravelerAction.scan &&
+      !scanBlockedBySupplement(bid) &&
+      bid.amendments.any((a) => a.blocksHandover);
+
+  /// Le bouton de remise est affiché (colis récupéré, en route ou arrivé) :
+  /// il dépend du verrou [DeliveryDepartureGate].
+  static bool hasDeliveryStep(BidModel bid) =>
+      _resolve(bid) == _TravelerAction.deliver;
+
+  /// Offre acceptée en mobile money : l'expéditeur a 30 min pour séquestrer
+  /// via pawaPay. Rien à faire côté voyageur, simple carte d'information.
+  static bool awaitingMobileMoneyPayment(BidModel bid) =>
+      bid.status == 'AWAITING_PAYMENT' &&
+      bid.paymentMethod == BidPaymentMethod.mobileMoney;
+
   static _TravelerAction? _resolve(BidModel bid) {
     final now = DateTime.now();
     switch (bid.status) {
@@ -47,19 +71,10 @@ class TravelerStickyBar extends StatelessWidget {
       case 'PENDING':
       case 'PAYMENT_ESCROWED':
         return _TravelerAction.decide;
-      // Le voyageur vient d'accepter une offre mobile money : l'expéditeur a
-      // 30 min pour séquestrer via pawaPay. Rien à faire ici tant que le
-      // paiement n'est pas séquestré (le bid repasse alors en ACCEPTED) —
-      // simple ligne d'information, jamais un bouton scan/remise. Scopé au
-      // mobile money : stripe/cash en AWAITING_PAYMENT restent hors
-      // périmètre (barre vide, comportement historique).
-      case 'AWAITING_PAYMENT':
-        if (bid.paymentMethod == BidPaymentMethod.mobileMoney) {
-          return _TravelerAction.awaitingMobileMoneyPayment;
-        }
-        return null;
-      case 'REJECTED':
-        return _TravelerAction.delete;
+      // AWAITING_PAYMENT (mobile money, 30 min pour le séquestre) et REJECTED
+      // n'ont plus de footer : la phrase d'attente est une carte du corps
+      // ([awaitingMobileMoneyPayment]) et « Supprimer cette demande » une
+      // entrée du menu ⋮.
       case 'ACCEPTED':
         if (bid.voyageurConfirmed) {
           return _TravelerAction.scan;
@@ -71,8 +86,8 @@ class TravelerStickyBar extends StatelessWidget {
         }
         return _TravelerAction.confirmPresence;
       // Colis récupéré (départ scanné) : la seule étape obligatoire restante
-      // est la remise au destinataire. Le scan Transit est facultatif, proposé
-      // en second tant qu'il n'a pas été fait (HANDED_OVER).
+      // est la remise au destinataire. Le scan Transit est facultatif : entrée
+      // du menu ⋮ tant qu'il n'a pas été fait (HANDED_OVER).
       // ARRIVED : trajet marqué arrivé, même action tant que la livraison
       // n'est pas confirmée.
       case 'HANDED_OVER':
@@ -95,57 +110,11 @@ class TravelerStickyBar extends StatelessWidget {
         return TravelerPendingBar(bid: bid, isLoading: isLoading);
       case _TravelerAction.confirmPresence:
         return ConfirmPresenceBar(bid: bid, isLoading: isLoading);
-      case _TravelerAction.delete:
-        return TravelerRejectedBar(bid: bid, isLoading: isLoading);
       case _TravelerAction.scan:
         return _ScanBar(bid: bid);
       case _TravelerAction.deliver:
-        return _DeliverBar(
-          bid: bid,
-          offerOptionalTransit: bid.status == 'HANDED_OVER',
-        );
-      case _TravelerAction.awaitingMobileMoneyPayment:
-        return const _AwaitingMobileMoneyPaymentBar();
+        return _DeliverBar(bid: bid);
     }
-  }
-}
-
-// ── Awaiting mobile money payment bar ────────────────────────────────────────
-
-/// Bid AWAITING_PAYMENT (mobile money) côté voyageur : ligne d'information
-/// sans action, jamais de bouton scan/remise tant que l'expéditeur n'a pas
-/// séquestré son paiement (30 min, le bid repasse alors en ACCEPTED).
-class _AwaitingMobileMoneyPaymentBar extends StatelessWidget {
-  const _AwaitingMobileMoneyPaymentBar();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final h = DonyLayout.hPadding(context);
-    return Container(
-      color: cs.surface,
-      padding: EdgeInsets.fromLTRB(
-        h,
-        DonySpacing.base,
-        h,
-        MediaQuery.of(context).padding.bottom + DonySpacing.base,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          DonyIcon('timer', size: 16, color: cs.onSurfaceVariant),
-          const SizedBox(width: DonySpacing.xs),
-          Flexible(
-            child: Text(
-              context.l10n.bidDetailAwaitingSenderMobileMoneyPayment,
-              textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -160,9 +129,9 @@ class _ScanBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final h = DonyLayout.hPadding(context);
-    final supplementBlocks = bid.supplement?.blocksHandover ?? false;
-    final amendmentBlocks = bid.amendments.any((a) => a.blocksHandover);
-    final blocked = supplementBlocks || amendmentBlocks;
+    final blocked =
+        TravelerStickyBar.scanBlockedBySupplement(bid) ||
+        TravelerStickyBar.scanBlockedByAmendment(bid);
     return Container(
       color: cs.surface,
       padding: EdgeInsets.fromLTRB(
@@ -173,31 +142,17 @@ class _ScanBar extends StatelessWidget {
       ),
       // Mode Valider du Suivi, sur le trajet de ce colis (FLUTTER-9N) :
       // le QR lu y ouvre l'étape suivante, le retour ramène au colis.
-      // Un supplément en attente de l'expéditeur bloque la remise : le back
-      // refuserait le scan (409 `handover-supplement-pending`).
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DonyButton(
-            key: const Key('traveler-scan-btn'),
-            label: context.l10n.bidDetailScanParcelQr,
-            iconAsset: 'scan-line',
-            onPressed: blocked ? null : () => openTripValidation(context, bid),
-          ),
-          if (blocked) ...[
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              supplementBlocks
-                  ? context.l10n.bidDetailScanBlockedSupplement
-                  : context.l10n.amendmentScanBlocked,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-        ],
+      // Un supplément (ou une modification) en attente bloque la remise : le
+      // back refuserait le scan (409 `handover-supplement-pending`). Le bouton
+      // reste, éteint, avec un libellé court ; la phrase complète est une
+      // carte du corps.
+      child: DonyButton(
+        key: const Key('traveler-scan-btn'),
+        label: blocked
+            ? context.l10n.bidDetailScanPending
+            : context.l10n.bidDetailScanParcelQr,
+        iconAsset: 'scan-line',
+        onPressed: blocked ? null : () => openTripValidation(context, bid),
       ),
     );
   }
@@ -206,13 +161,9 @@ class _ScanBar extends StatelessWidget {
 // ── Deliver bar ───────────────────────────────────────────────────────────────
 
 class _DeliverBar extends StatelessWidget {
-  const _DeliverBar({required this.bid, this.offerOptionalTransit = false});
+  const _DeliverBar({required this.bid});
 
   final BidModel bid;
-
-  /// Colis récupéré, transit pas encore scanné : propose le scan Transit en
-  /// action secondaire, jamais comme un passage obligé.
-  final bool offerOptionalTransit;
 
   /// Remise au destinataire. Si le voyageur n'a pas encore déclaré son
   /// arrivée, on la lui propose d'abord : sans elle, l'expéditeur n'est pas
@@ -272,51 +223,23 @@ class _DeliverBar extends StatelessWidget {
       // Redirige vers l'étape Arrivée du hub de scan (identify → confirm), qui
       // dispatche ConfirmDeliveryRequested et libère le paiement — au lieu de
       // l'écran de réception autonome (/tracking/confirm).
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Pas de remise avant le départ du trajet : le back la refuse
-          // (422 trip-not-departed, FLUTTER-CB). Le bouton s'active seul à
-          // l'heure du départ.
-          DeliveryDepartureGate(
-            window: DeliveryWindow.fromBid(bid),
-            builder: (context, lockedHint) => Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                DonyButton(
-                  key: const Key('traveler-deliver-btn'),
-                  label: context.l10n.bidDetailConfirmHandover,
-                  iconAsset: 'badge-check',
-                  variant: DonyButtonVariant.success,
-                  onPressed: lockedHint == null
-                      ? () => _deliver(context)
-                      : null,
-                ),
-                if (lockedHint != null) ...[
-                  const SizedBox(height: DonySpacing.xs),
-                  DeliveryLockedHint(lockedHint),
-                ],
-              ],
-            ),
-          ),
-          if (offerOptionalTransit) ...[
-            const SizedBox(height: DonySpacing.sm),
-            DonyButton(
-              key: const Key('traveler-optional-transit-btn'),
-              label: context.l10n.bidDetailScanTransitOptional,
-              iconAsset: 'arrow-left-right',
-              variant: DonyButtonVariant.ghost,
-              onPressed: () => context.push(
-                '/tracking/scan/identify',
-                extra: <String, dynamic>{
-                  'etape': 'TRANSIT',
-                  'focusNumber': false,
-                },
-              ),
-            ),
-          ],
-        ],
+      //
+      // Pas de remise avant le départ du trajet : le back la refuse (422
+      // trip-not-departed, FLUTTER-CB). Le bouton, éteint, dit « Disponible au
+      // départ » et s'active seul à l'heure du départ ; les deux phrases du
+      // verrou sont une carte du corps (même [DeliveryDepartureGate]). Le scan
+      // du transit (facultatif) est une entrée du menu ⋮.
+      child: DeliveryDepartureGate(
+        window: DeliveryWindow.fromBid(bid),
+        builder: (context, lockedHint) => DonyButton(
+          key: const Key('traveler-deliver-btn'),
+          label: lockedHint == null
+              ? context.l10n.bidDetailConfirmHandover
+              : context.l10n.bidDetailHandoverLockedLabel,
+          iconAsset: lockedHint == null ? 'badge-check' : 'clock',
+          variant: DonyButtonVariant.success,
+          onPressed: lockedHint == null ? () => _deliver(context) : null,
+        ),
       ),
     );
   }
