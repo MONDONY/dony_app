@@ -8,9 +8,9 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
-import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
-import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,25 +19,8 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
-import '../../../../helpers/stripe_account_test_doubles.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
-
-// Cet écran ne dispatche pas encore `AuthNewAccountAuthenticated` dans ces
-// tests, mais `_continueAfterNewAccount` lit `StripeAccountBloc` et
-// `BusinessPrefsBloc` (fournis à l'échelle de l'app dans `app.dart`) dès que
-// cet état arrive : les provisionner ici évite qu'un futur test qui l'émet
-// casse sans raison apparente (`ProviderNotFoundException`).
-class _MockBusinessPrefsBloc
-    extends MockBloc<BusinessPrefsEvent, BusinessPrefsState>
-    implements BusinessPrefsBloc {}
-
-_MockBusinessPrefsBloc _stubBusinessPrefsBloc() {
-  final bloc = _MockBusinessPrefsBloc();
-  when(() => bloc.state).thenReturn(const BusinessPrefsState());
-  when(() => bloc.stream).thenAnswer((_) => Stream.value(bloc.state));
-  return bloc;
-}
 
 Widget _app(AuthBloc bloc) => MaterialApp.router(
   theme: AppTheme.light(),
@@ -46,21 +29,21 @@ Widget _app(AuthBloc bloc) => MaterialApp.router(
       GoRoute(
         path: '/',
         builder: (_, _) => MultiBlocProvider(
-          providers: [
-            BlocProvider<AuthBloc>.value(value: bloc),
-            BlocProvider<StripeAccountBloc>.value(
-              value: stubStripeAccountBloc(),
-            ),
-            BlocProvider<BusinessPrefsBloc>.value(
-              value: _stubBusinessPrefsBloc(),
-            ),
-          ],
+          providers: [BlocProvider<AuthBloc>.value(value: bloc)],
           child: const AuthMethodScreen(),
         ),
       ),
       GoRoute(
         path: '/home',
         builder: (_, _) => const Scaffold(body: Text('Recherche avec carte')),
+      ),
+      GoRoute(
+        path: profileBasicsRoute,
+        builder: (_, _) => const Scaffold(body: Text('profile-basics')),
+      ),
+      GoRoute(
+        path: '/auth/local',
+        builder: (_, _) => const Scaffold(body: Text('local-auth')),
       ),
       GoRoute(
         path: '/legal/terms',
@@ -408,6 +391,79 @@ void main() {
       await bloc.close();
     },
   );
+
+  // Connexion sociale (Google, Apple) : seul un compte tout juste créé passe
+  // par la suite de l'inscription ; un compte existant garde son chemin.
+  group('après une connexion sociale', () {
+    const user = UserModel(
+      id: 'u1',
+      roles: [],
+      kycStatus: 'NOT_STARTED',
+      status: 'ACTIVE',
+    );
+
+    testWidgets('nouveau compte : « Faisons connaissance »', (tester) async {
+      final bloc = MockAuthBloc();
+      whenListen(
+        bloc,
+        Stream.fromIterable(<AuthState>[
+          const AuthNewAccountAuthenticated(user),
+        ]),
+        initialState: const AuthInitial(),
+      );
+
+      await tester.pumpWidget(_app(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('profile-basics'), findsOneWidget);
+      await bloc.close();
+    });
+
+    testWidgets('nouveau compte déjà passé par la fin : accueil', (
+      tester,
+    ) async {
+      final bloc = MockAuthBloc();
+      whenListen(
+        bloc,
+        Stream.fromIterable(<AuthState>[
+          AuthNewAccountAuthenticated(
+            UserModel(
+              id: 'u1',
+              roles: const [],
+              kycStatus: 'NOT_STARTED',
+              status: 'ACTIVE',
+              onboardingSeenAt: DateTime(2026, 10, 2),
+            ),
+          ),
+        ]),
+        initialState: const AuthInitial(),
+      );
+
+      await tester.pumpWidget(_app(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Recherche avec carte'), findsOneWidget);
+      await bloc.close();
+    });
+
+    testWidgets('compte existant : verrouillage local, comme avant', (
+      tester,
+    ) async {
+      final bloc = MockAuthBloc();
+      whenListen(
+        bloc,
+        Stream.fromIterable(<AuthState>[const AuthAuthenticated(user)]),
+        initialState: const AuthInitial(),
+      );
+
+      await tester.pumpWidget(_app(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('local-auth'), findsOneWidget);
+      expect(find.text('profile-basics'), findsNothing);
+      await bloc.close();
+    });
+  });
 
   testWidgets(
     'session invitee ouverte avec succes ouvre la vraie recherche avec carte',

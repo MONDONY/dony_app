@@ -3,16 +3,14 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Code parrain venu d'un lien d'invitation (`yadony://referral?code=XXX`),
-/// gardé jusqu'à ce que l'inscription le propose.
+/// gardé jusqu'à l'inscription.
 ///
 /// Un code parrain n'est pas une donnée sensible : SharedPreferences suffit.
-/// La valeur est aussi gardée en mémoire pour être lue sans attendre par le
-/// routeur (`/auth/referral-code`). Le chargement depuis le disque est lancé à
-/// la construction : il a fini bien avant que l'inscription n'atteigne
-/// l'étape du parrainage.
+/// La valeur est aussi gardée en mémoire pour être lue sans attendre ; le
+/// chargement depuis le disque est lancé à la construction.
 ///
-/// Jamais d'application automatique : le code n'est que pré-rempli, la
-/// personne valide elle-même.
+/// Après une nouvelle inscription, `PendingReferralRedeemer` l'applique tout
+/// seul puis l'efface.
 class PendingReferralCodeStore {
   PendingReferralCodeStore({
     Future<SharedPreferences> Function()? prefs,

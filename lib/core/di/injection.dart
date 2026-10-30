@@ -17,6 +17,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/app_badge_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/services/camera_handoff.dart';
+import 'package:dony/core/services/consent_prompt.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
@@ -45,7 +46,7 @@ import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
-import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
+import 'package:dony/features/auth/bloc/profile_basics_cubit.dart';
 import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -115,7 +116,6 @@ import 'package:dony/features/flights/data/datasources/flight_recent_store.dart'
 import 'package:dony/features/flights/data/datasources/flights_remote_datasource.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
-import 'package:dony/features/gp_pro/bloc/gp_pro_signup_cubit.dart';
 import 'package:dony/features/gp_pro/data/datasources/gp_pro_remote_datasource.dart';
 import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/home/data/home_matching_default_store.dart';
@@ -275,6 +275,7 @@ import 'package:dony/features/recipients/data/repositories/recipient_invitation_
 import 'package:dony/features/recipients/data/repositories/recipient_repository.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/data/pending_referral_code_store.dart';
+import 'package:dony/features/referral/data/pending_referral_redeemer.dart';
 import 'package:dony/features/referral/data/referral_datasource.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
@@ -357,6 +358,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       remote: getIt<AnalyticsConsentRemote>(),
     ),
   );
+  getIt.registerLazySingleton<ConsentPrompt>(ConsentPrompt.new);
   getIt.registerLazySingleton<AiConsentService>(
     () => AiConsentService(getIt<HiveService>(), getIt<AnalyticsService>()),
   );
@@ -583,8 +585,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
     ),
   );
-  getIt.registerFactory<PersonalInfoCubit>(
-    () => PersonalInfoCubit(getIt<AuthRepository>(), getIt<AnalyticsService>()),
+  getIt.registerFactory<ProfileBasicsCubit>(
+    () => ProfileBasicsCubit(
+      getIt<AuthRepository>(),
+      getIt<BusinessPrefsRepository>(),
+      getIt<HiveService>().userPrefs,
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Local auth (biometric + PIN)
@@ -961,9 +968,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<GpProRepository>(
     () => GpProRepository(getIt<GpProRemoteDatasource>()),
-  );
-  getIt.registerFactory<GpProSignupCubit>(
-    () => GpProSignupCubit(getIt(), getIt<AnalyticsService>()),
   );
   getIt.registerFactory<GpProCubit>(
     () => GpProCubit(getIt(), getIt<AnalyticsService>()),
@@ -1656,6 +1660,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Code parrain venu d'un lien d'invitation, en attente de l'inscription.
   getIt.registerLazySingleton<PendingReferralCodeStore>(
     PendingReferralCodeStore.new,
+  );
+  getIt.registerLazySingleton<PendingReferralRedeemer>(
+    () => PendingReferralRedeemer(
+      getIt<PendingReferralCodeStore>(),
+      getIt<ReferralRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Package request marketplace

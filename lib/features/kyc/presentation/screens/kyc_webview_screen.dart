@@ -9,9 +9,6 @@ import 'package:dony/core/services/camera_permission_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
-import 'package:dony/features/auth/data/repositories/auth_repository.dart';
-import 'package:dony/features/auth/presentation/onboarding_step.dart';
-import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
@@ -44,7 +41,6 @@ class KycWebViewScreen extends StatefulWidget {
   const KycWebViewScreen({
     super.key,
     required this.stripeUrl,
-    this.progress,
     this.returnTo,
     this.cameraPermission = const CameraPermissionService(),
     this.analytics,
@@ -65,12 +61,6 @@ class KycWebViewScreen extends StatefulWidget {
   /// Ouvre la fiche de l'app dans les réglages du téléphone. Injectable pour
   /// les tests : le canal natif n'existe pas dans le binaire de test.
   final Future<void> Function() openAppSettings;
-
-  /// Non `null` seulement quand cette webview a été ouverte depuis
-  /// l'onboarding — voir `KycStatusScreen`, seul point d'entrée qui la
-  /// construit avec cette valeur (`readOnboardingProgress` reste un point
-  /// impur du routeur, jamais lu ici directement).
-  final OnboardingProgress? progress;
 
   @override
   State<KycWebViewScreen> createState() => _KycWebViewScreenState();
@@ -261,17 +251,9 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
                     request.url.startsWith('https://dony.store/kyc/complete') ||
                     request.url.startsWith('https://dony.app/kyc/complete')) {
                   if (mounted) {
-                    // Depuis l'onboarding, `/kyc/status` ferait perdre
-                    // `widget.progress` (route distincte, sans query param) :
-                    // `/kyc/verify` avec le même marqueur reconstruit la même
-                    // progression et permet à l'écran de statut d'enchaîner
-                    // sur l'étape suivante une fois vérifié.
-                    context.go(
-                      kycVerifyLocation(
-                        fromOnboarding: widget.progress != null,
-                        returnTo: widget.returnTo,
-                      ),
-                    );
+                    // `/kyc/verify` plutôt que `/kyc/status` : l'écran de
+                    // statut garde l'écran où revenir une fois vérifié.
+                    context.go(kycVerifyLocation(returnTo: widget.returnTo));
                   }
                   return NavigationDecision.prevent;
                 }
@@ -308,22 +290,13 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
   void _close() {
     context.read<KycBloc>().add(const KycSessionAbandoned());
     context.read<AuthBloc>().add(const AuthCheckRequested());
-    // Abandonner l'identité ne la termine pas : positionnel, pas
-    // `progress.next`, pour ne jamais reboucler sur cette même
-    // étape (voir `OnboardingProgress.routeAfter`).
-    final progress = widget.progress;
-    final destination =
-        progress?.routeAfter(OnboardingStep.identity) ?? '/home';
-    if (progress != null && destination == '/home') {
-      unawaited(
-        getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),
-      );
-      // Fin du parcours : « Par quoi commencer ? » plutôt que
-      // l'accueil.
-      context.go(firstStepsRoute);
-      return;
+    // Revient d'où la vérification a été ouverte ; seule dans la pile
+    // (route ouverte par `go`), l'accueil.
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
     }
-    context.go(destination);
   }
 
   /// Retour Android : l'écran n'a pas de bouton retour, seulement la croix.

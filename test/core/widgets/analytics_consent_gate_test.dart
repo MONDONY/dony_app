@@ -3,13 +3,11 @@
 // JAMAIS déclencher `identify()` (UID Firebase anonyme -> utilisateur
 // identifié fantôme dans PostHog), ni `syncFromBackend()` (appelle
 // `/auth/me/analytics-consent`, 404 pour un visiteur sans ligne backend),
-// ni surtout la NAVIGATION vers l'entonnoir de consentement RGPD /
-// inscription (`/auth/analytics-consent` -> country-selection ->
-// referral-code) : sans ce dernier verrou, un visiteur en zone RGPD
-// (Paris/Lyon/Marseille) est éjecté de l'accueil au moment même où il
-// choisit "Parcourir sans compte" — le mode invité ne fonctionne plus du
-// tout. C'est ce risque de navigation, pas seulement le tracking, que ce
-// fichier verrouille en priorité (`navigate` injectable, cf. widget).
+// ni surtout une demande de consentement RGPD (aujourd'hui la feuille de
+// l'accueil, autrefois un écran d'inscription) : sans ce dernier verrou, un
+// visiteur en zone RGPD (Paris/Lyon/Marseille) est interrompu au moment même
+// où il choisit "Parcourir sans compte". C'est ce risque de navigation, pas seulement le tracking, que ce
+// fichier verrouille en priorité (la demande `ConsentPrompt` reste éteinte).
 //
 // Utilise un vrai Hive (comme `auth_bloc_test.dart`) car `.listenable()` est
 // une extension sur `Box` que `Fake`/`Mock` ne peuvent pas reproduire
@@ -20,6 +18,7 @@ import 'dart:io';
 
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/consent_prompt.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -41,6 +40,7 @@ void main() {
   late MockAnalyticsService mockAnalytics;
   late MockFirebaseAuth mockFirebaseAuth;
   late StreamController<User?> authChanges;
+  late ConsentPrompt consentPrompt;
 
   setUpAll(() async {
     tempDir = await Directory.systemTemp.createTemp(
@@ -70,6 +70,8 @@ void main() {
 
     getIt.registerSingleton<AnalyticsService>(mockAnalytics);
     getIt.registerSingleton<HiveService>(hiveService);
+    consentPrompt = ConsentPrompt();
+    getIt.registerSingleton<ConsentPrompt>(consentPrompt);
   });
 
   tearDown(() async {
@@ -84,19 +86,109 @@ void main() {
     return user;
   }
 
+  MockUser realUser() {
+    final user = MockUser();
+    when(() => user.isAnonymous).thenReturn(false);
+    when(() => user.uid).thenReturn('uid-1');
+    return user;
+  }
+
+  Future<void> logIn(
+    WidgetTester tester,
+    String country, {
+    bool hasAnswered = false,
+    bool alreadyPending = false,
+  }) async {
+    if (alreadyPending) consentPrompt.request();
+    when(() => mockFirebaseAuth.currentUser).thenReturn(null);
+    when(() => mockAnalytics.identify(any())).thenAnswer((_) async {});
+    when(() => mockAnalytics.syncFromBackend()).thenAnswer((_) async {});
+    when(() => mockAnalytics.isConfigured).thenReturn(true);
+    when(() => mockAnalytics.hasAnswered).thenReturn(hasAnswered);
+    when(
+      () => mockAnalytics.setConsent(
+        granted: any(named: 'granted'),
+        source: any(named: 'source'),
+      ),
+    ).thenAnswer((_) async {});
+    await tester.runAsync(
+      () =>
+          hiveService.userPrefs.put(HiveService.kDetectedCountryCode, country),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AnalyticsConsentGate(
+          firebaseAuth: mockFirebaseAuth,
+          child: const SizedBox(),
+        ),
+      ),
+    );
+    await tester.pump();
+    authChanges.add(realUser());
+    for (var i = 0; i < 10; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump();
+    }
+  }
+
+  testWidgets('askConsent appelle ConsentPrompt.request et ne navigue plus', (
+    tester,
+  ) async {
+    await logIn(tester, 'FR');
+
+    expect(consentPrompt.wanted.value, isTrue);
+    verifyNever(
+      () => mockAnalytics.setConsent(
+        granted: any(named: 'granted'),
+        source: any(named: 'source'),
+      ),
+    );
+  });
+
+  testWidgets(
+    'un compte qui a déjà répondu lève la demande laissée par un autre compte',
+    (tester) async {
+      await logIn(tester, 'FR', hasAnswered: true, alreadyPending: true);
+
+      expect(consentPrompt.wanted.value, isFalse);
+    },
+  );
+
+  testWidgets('la déconnexion lève la demande en attente', (tester) async {
+    await logIn(tester, 'FR');
+    expect(consentPrompt.wanted.value, isTrue);
+    when(() => mockAnalytics.reset()).thenAnswer((_) async {});
+
+    authChanges.add(null);
+    await tester.pump();
+    await tester.pump();
+
+    expect(consentPrompt.wanted.value, isFalse);
+    verify(() => mockAnalytics.reset()).called(1);
+  });
+
+  testWidgets('hors RGPD accorde automatiquement sans feuille', (tester) async {
+    await logIn(tester, 'SN');
+
+    expect(consentPrompt.wanted.value, isFalse);
+    verify(
+      () => mockAnalytics.setConsent(granted: true, source: 'auto_non_gdpr'),
+    ).called(1);
+  });
+
   testWidgets(
     'CRITIQUE : session invitee ne navigue JAMAIS vers l\'entonnoir '
     'consentement/inscription, et ne touche jamais AnalyticsService '
     '(ni identify, ni syncFromBackend, ni resolution de consentement, ni reset)',
     (tester) async {
       when(() => mockFirebaseAuth.currentUser).thenReturn(null);
-      final navigated = <String>[];
 
       await tester.pumpWidget(
         MaterialApp(
           home: AnalyticsConsentGate(
             firebaseAuth: mockFirebaseAuth,
-            navigate: navigated.add,
             child: const SizedBox(),
           ),
         ),
@@ -108,15 +200,8 @@ void main() {
       await tester.pump();
 
       // Le vrai dégât produit, avant tout tracking : un visiteur en zone
-      // RGPD éjecté vers /auth/analytics-consent (puis country-selection,
-      // referral-code) au moment où il choisit "Parcourir sans compte".
-      expect(
-        navigated,
-        isEmpty,
-        reason:
-            'une session invitee ne doit jamais declencher de navigation '
-            '(GdprHelper.resolveConsentAction ne doit meme pas etre appele)',
-      );
+      // RGPD interrompu par une demande de consentement au moment où il
+      // choisit "Parcourir sans compte".
 
       // Aucune interaction avec AnalyticsService : ni identify(uid anonyme),
       // ni syncFromBackend() (donc aucun appel /auth/me/analytics-consent),
@@ -126,6 +211,7 @@ void main() {
       // "login" et non la branche "logout" : reset() ne doit pas fuiter ici
       // non plus).
       verifyZeroInteractions(mockAnalytics);
+      expect(consentPrompt.wanted.value, isFalse);
     },
   );
 
@@ -135,13 +221,11 @@ void main() {
   ) async {
     final guest = anonymousUser();
     when(() => mockFirebaseAuth.currentUser).thenReturn(guest);
-    final navigated = <String>[];
 
     await tester.pumpWidget(
       MaterialApp(
         home: AnalyticsConsentGate(
           firebaseAuth: mockFirebaseAuth,
-          navigate: navigated.add,
           child: const SizedBox(),
         ),
       ),
@@ -167,7 +251,6 @@ void main() {
     await tester.pump();
 
     verifyNever(() => mockAnalytics.identify(any()));
-    expect(navigated, isEmpty);
   });
 
   test('defaut de consentement : un visiteur qui n\'a jamais repondu reste '

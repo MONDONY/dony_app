@@ -5,7 +5,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -22,8 +21,6 @@ class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
-
-class _MockAuthRepository extends Mock implements AuthRepository {}
 
 const _pending = KycStatusLoaded(
   kycStatus: 'PENDING',
@@ -45,9 +42,6 @@ void main() {
       initialState: const AuthInitial(),
     );
     states = StreamController<KycState>.broadcast();
-    final repo = _MockAuthRepository();
-    when(() => repo.markOnboardingSeen()).thenAnswer((_) async {});
-    getIt.registerSingleton<AuthRepository>(repo);
   });
 
   tearDown(() async {

@@ -386,7 +386,7 @@ void main() {
 
       expect(find.byKey(const Key('settings-intent')), findsOneWidget);
       expect(find.text('Ce que je fais sur Yadony'), findsOneWidget);
-      expect(find.text('Envoyer, voyager ou les deux'), findsOneWidget);
+      expect(find.text('Choisit aussi l\'écran d\'accueil.'), findsOneWidget);
     });
 
     testWidgets('APPARENCE : ligne Thème sans segmented', (tester) async {

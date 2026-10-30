@@ -23,7 +23,7 @@ class IntentFormState extends Equatable {
   final String? destination;
   final IntentFormStatus status;
 
-  bool get isValid => intent != null && destination != null;
+  bool get isValid => intent != null;
 
   String? get destinationForApi =>
       destination == kIntentOtherDestination ? null : destination;
@@ -84,8 +84,9 @@ class IntentCubit extends Cubit<IntentFormState> {
           AnalyticsEvents.intentDeclared,
           properties: {
             'intent': intent.wire,
-            'destination_country':
-                state.destinationForApi ?? kIntentOtherDestination,
+            // Absente = aucune destination donnée ; `OTHER` = « Autre »
+            // choisi explicitement (le serveur reçoit alors null).
+            'destination_country': ?state.destination,
             'source': source.wire,
           },
         ),

@@ -9,7 +9,6 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
-import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -36,46 +35,10 @@ class _FakeKycEvent extends Fake implements KycEvent {}
 
 class _FakeAuthEvent extends Fake implements AuthEvent {}
 
-/// Il reste les paiements à faire : `routeAfter(identity)` doit pointer
-/// vers `/payments/onboarding`, jamais vers `/home`.
-const _progressPayoutsLeft = OnboardingProgress(
-  steps: [
-    OnboardingStep.consent,
-    OnboardingStep.country,
-    OnboardingStep.personalInfo,
-    OnboardingStep.identity,
-    OnboardingStep.payouts,
-  ],
-  done: {
-    OnboardingStep.consent,
-    OnboardingStep.country,
-    OnboardingStep.personalInfo,
-  },
-  current: OnboardingStep.identity,
-);
-
-/// Pays hors couverture Stripe : l'identité est la dernière étape comptée,
-/// `routeAfter(identity)` doit pointer vers `/home`.
-const _progressNoPayouts = OnboardingProgress(
-  steps: [
-    OnboardingStep.consent,
-    OnboardingStep.country,
-    OnboardingStep.personalInfo,
-    OnboardingStep.identity,
-  ],
-  done: {
-    OnboardingStep.consent,
-    OnboardingStep.country,
-    OnboardingStep.personalInfo,
-  },
-  current: OnboardingStep.identity,
-);
-
 Future<void> _wrap(
   WidgetTester tester, {
   required KycBloc kycBloc,
   required AuthBloc authBloc,
-  OnboardingProgress? progress,
   String? returnTo,
 }) async {
   final router = GoRouter(
@@ -87,7 +50,7 @@ Future<void> _wrap(
             BlocProvider<KycBloc>.value(value: kycBloc),
             BlocProvider<AuthBloc>.value(value: authBloc),
           ],
-          child: KycStatusScreen(progress: progress, returnTo: returnTo),
+          child: KycStatusScreen(returnTo: returnTo),
         ),
       ),
       GoRoute(
@@ -97,10 +60,6 @@ Future<void> _wrap(
       GoRoute(
         path: '/first-steps',
         builder: (_, _) => const Scaffold(body: Text('First steps route')),
-      ),
-      GoRoute(
-        path: '/payments/onboarding',
-        builder: (_, _) => const Scaffold(body: Text('Payouts route')),
       ),
       GoRoute(
         path: '/parcels/send-intro',
@@ -169,10 +128,8 @@ void main() {
     verify(() => kycBloc.add(const KycSessionRequested())).called(1);
   });
 
-  testWidgets('depuis le profil (progress null) : ni jauge, ni « Passer pour '
-      'l\'instant » — une jauge d\'inscription n\'aurait aucun sens ici', (
-    tester,
-  ) async {
+  testWidgets('NOT_STARTED : pas de « Passer pour l\'instant », l\'écran '
+      'ne fait plus partie de l\'inscription', (tester) async {
     when(() => kycBloc.state).thenReturn(
       const KycStatusLoaded(
         kycStatus: 'NOT_STARTED',
@@ -188,86 +145,7 @@ void main() {
   });
 
   testWidgets(
-    'depuis l\'onboarding : NOT_STARTED affiche la jauge et « Passer pour '
-    'l\'instant »',
-    (tester) async {
-      when(() => kycBloc.state).thenReturn(
-        const KycStatusLoaded(
-          kycStatus: 'NOT_STARTED',
-          verificationStatus: 'unverified',
-        ),
-      );
-      when(() => kycBloc.stream).thenAnswer((_) => const Stream.empty());
-
-      await _wrap(
-        tester,
-        kycBloc: kycBloc,
-        authBloc: authBloc,
-        progress: _progressPayoutsLeft,
-      );
-
-      expect(find.text('Passer pour l\'instant'), findsOneWidget);
-    },
-  );
-
-  testWidgets('« Passer pour l\'instant » va vers /home même s\'il reste les '
-      'paiements : Stripe Connect exige une identité vérifiée', (tester) async {
-    when(() => kycBloc.state).thenReturn(
-      const KycStatusLoaded(
-        kycStatus: 'NOT_STARTED',
-        verificationStatus: 'unverified',
-      ),
-    );
-    when(() => kycBloc.stream).thenAnswer((_) => const Stream.empty());
-
-    await _wrap(
-      tester,
-      kycBloc: kycBloc,
-      authBloc: authBloc,
-      progress: _progressPayoutsLeft,
-    );
-
-    await tester.tap(find.text('Passer pour l\'instant'));
-    await tester.pumpAndSettle();
-
-    // Conduire aux paiements n'offrirait qu'un refus serveur (422
-    // `kyc-required`). Le parcours s'arrête donc là, et `onboarding_seen_at`
-    // est bien posé : l'utilisateur a atteint l'accueil.
-    verify(() => authRepository.markOnboardingSeen()).called(1);
-    expect(find.text('First steps route'), findsOneWidget);
-    expect(find.text('Payouts route'), findsNothing);
-  });
-
-  testWidgets(
-    '« Passer pour l\'instant » sans paiements applicables va vers /home et '
-    'marque l\'onboarding vu — l\'identité était la dernière étape',
-    (tester) async {
-      when(() => kycBloc.state).thenReturn(
-        const KycStatusLoaded(
-          kycStatus: 'NOT_STARTED',
-          verificationStatus: 'unverified',
-        ),
-      );
-      when(() => kycBloc.stream).thenAnswer((_) => const Stream.empty());
-
-      await _wrap(
-        tester,
-        kycBloc: kycBloc,
-        authBloc: authBloc,
-        progress: _progressNoPayouts,
-      );
-
-      await tester.tap(find.text('Passer pour l\'instant'));
-      await tester.pumpAndSettle();
-
-      verify(() => authRepository.markOnboardingSeen()).called(1);
-      expect(find.text('First steps route'), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'un rejet affiche aussi « Passer pour l\'instant » depuis l\'onboarding '
-    '— un rejet ne doit jamais bloquer le parcours',
+    'un rejet propose de réessayer, sans « Passer pour l\'instant »',
     (tester) async {
       when(() => kycBloc.state).thenReturn(
         const KycStatusLoaded(
@@ -278,25 +156,67 @@ void main() {
       );
       when(() => kycBloc.stream).thenAnswer((_) => const Stream.empty());
 
-      await _wrap(
-        tester,
-        kycBloc: kycBloc,
-        authBloc: authBloc,
-        progress: _progressPayoutsLeft,
-      );
+      await _wrap(tester, kycBloc: kycBloc, authBloc: authBloc);
 
-      expect(find.text('Passer pour l\'instant'), findsOneWidget);
-      await tester.tap(find.text('Passer pour l\'instant'));
-      await tester.pumpAndSettle();
-
-      // Un rejet laisse l'identité non vérifiée : les paiements restent
-      // verrouillés, le parcours se termine à l'accueil.
-      expect(find.text('First steps route'), findsOneWidget);
+      expect(find.text('Passer pour l\'instant'), findsNothing);
+      await tester.tap(find.text('Réessayer la vérification'));
+      await tester.pump();
+      verify(() => kycBloc.add(const KycSessionRequested())).called(1);
     },
   );
 
-  testWidgets('VERIFIED depuis l\'onboarding avec paiements restants : '
-      'auto-navigation vers /payments/onboarding, jamais /home', (
+  testWidgets('VERIFIED sans écran de retour : va vers /home sans marquer '
+      'l\'onboarding vu (les premiers pas le posent)', (tester) async {
+    const verified = KycStatusLoaded(
+      kycStatus: 'VERIFIED',
+      verificationStatus: 'verified',
+    );
+    whenListen<KycState>(
+      kycBloc,
+      Stream.value(verified),
+      initialState: verified,
+    );
+
+    await _wrap(tester, kycBloc: kycBloc, authBloc: authBloc);
+
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => authRepository.markOnboardingSeen());
+    expect(find.text('Home route'), findsOneWidget);
+  });
+
+  testWidgets('VERIFIED sans écran de retour ni première action : '
+      'premiers pas (guidage après KYC)', (tester) async {
+    final activation = _MockActivationCubit();
+    when(() => activation.state).thenReturn(
+      const ActivationLoaded(
+        ActivationStatus(intent: UserIntent.sender, firstActionDone: false),
+      ),
+    );
+    getIt.registerSingleton<ActivationCubit>(activation);
+    addTearDown(() => getIt.unregister<ActivationCubit>());
+    const verified = KycStatusLoaded(
+      kycStatus: 'VERIFIED',
+      verificationStatus: 'verified',
+    );
+    whenListen<KycState>(
+      kycBloc,
+      Stream.value(verified),
+      initialState: verified,
+    );
+
+    await _wrap(tester, kycBloc: kycBloc, authBloc: authBloc);
+
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => authRepository.markOnboardingSeen());
+    expect(find.text('First steps route'), findsOneWidget);
+  });
+
+  testWidgets('VERIFIED avec un écran de retour : y revient au lieu '
+      'de l\'accueil (l\'intention de publier n\'est plus perdue)', (
     tester,
   ) async {
     const verified = KycStatusLoaded(
@@ -313,156 +233,15 @@ void main() {
       tester,
       kycBloc: kycBloc,
       authBloc: authBloc,
-      progress: _progressPayoutsLeft,
+      returnTo: '/parcels/send-intro',
     );
 
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pumpAndSettle();
 
     verify(() => authBloc.add(const AuthCheckRequested())).called(1);
-    verifyNever(() => authRepository.markOnboardingSeen());
-    expect(find.text('Payouts route'), findsOneWidget);
+    expect(find.text('Send intro route'), findsOneWidget);
   });
-
-  testWidgets('VERIFIED depuis l\'onboarding sans paiements applicables : '
-      'auto-navigation vers /home et marque l\'onboarding vu', (tester) async {
-    const verified = KycStatusLoaded(
-      kycStatus: 'VERIFIED',
-      verificationStatus: 'verified',
-    );
-    whenListen<KycState>(
-      kycBloc,
-      Stream.value(verified),
-      initialState: verified,
-    );
-
-    await _wrap(
-      tester,
-      kycBloc: kycBloc,
-      authBloc: authBloc,
-      progress: _progressNoPayouts,
-    );
-
-    await tester.pump(const Duration(milliseconds: 1600));
-    await tester.pumpAndSettle();
-
-    verify(() => authRepository.markOnboardingSeen()).called(1);
-    expect(find.text('First steps route'), findsOneWidget);
-  });
-
-  testWidgets(
-    'VERIFIED depuis le profil (progress null) : va vers /home sans marquer '
-    'l\'onboarding vu — comportement inchangé hors onboarding',
-    (tester) async {
-      const verified = KycStatusLoaded(
-        kycStatus: 'VERIFIED',
-        verificationStatus: 'verified',
-      );
-      whenListen<KycState>(
-        kycBloc,
-        Stream.value(verified),
-        initialState: verified,
-      );
-
-      await _wrap(tester, kycBloc: kycBloc, authBloc: authBloc);
-
-      await tester.pump(const Duration(milliseconds: 1600));
-      await tester.pumpAndSettle();
-
-      verifyNever(() => authRepository.markOnboardingSeen());
-      expect(find.text('Home route'), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'VERIFIED depuis le profil sans écran de retour ni première action : '
-    'premiers pas (guidage après KYC)',
-    (tester) async {
-      final activation = _MockActivationCubit();
-      when(() => activation.state).thenReturn(
-        const ActivationLoaded(
-          ActivationStatus(intent: UserIntent.sender, firstActionDone: false),
-        ),
-      );
-      getIt.registerSingleton<ActivationCubit>(activation);
-      addTearDown(() => getIt.unregister<ActivationCubit>());
-      const verified = KycStatusLoaded(
-        kycStatus: 'VERIFIED',
-        verificationStatus: 'verified',
-      );
-      whenListen<KycState>(
-        kycBloc,
-        Stream.value(verified),
-        initialState: verified,
-      );
-
-      await _wrap(tester, kycBloc: kycBloc, authBloc: authBloc);
-
-      await tester.pump(const Duration(milliseconds: 1600));
-      await tester.pumpAndSettle();
-
-      verifyNever(() => authRepository.markOnboardingSeen());
-      expect(find.text('First steps route'), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'VERIFIED hors onboarding avec un écran de retour : y revient au lieu '
-    'de l\'accueil (l\'intention de publier n\'est plus perdue)',
-    (tester) async {
-      const verified = KycStatusLoaded(
-        kycStatus: 'VERIFIED',
-        verificationStatus: 'verified',
-      );
-      whenListen<KycState>(
-        kycBloc,
-        Stream.value(verified),
-        initialState: verified,
-      );
-
-      await _wrap(
-        tester,
-        kycBloc: kycBloc,
-        authBloc: authBloc,
-        returnTo: '/parcels/send-intro',
-      );
-
-      await tester.pump(const Duration(milliseconds: 1600));
-      await tester.pumpAndSettle();
-
-      verify(() => authBloc.add(const AuthCheckRequested())).called(1);
-      expect(find.text('Send intro route'), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'onboarding prioritaire sur l\'écran de retour : les paiements restent '
-    'l\'étape suivante',
-    (tester) async {
-      const verified = KycStatusLoaded(
-        kycStatus: 'VERIFIED',
-        verificationStatus: 'verified',
-      );
-      whenListen<KycState>(
-        kycBloc,
-        Stream.value(verified),
-        initialState: verified,
-      );
-
-      await _wrap(
-        tester,
-        kycBloc: kycBloc,
-        authBloc: authBloc,
-        progress: _progressPayoutsLeft,
-        returnTo: '/parcels/send-intro',
-      );
-
-      await tester.pump(const Duration(milliseconds: 1600));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Payouts route'), findsOneWidget);
-    },
-  );
 
   // Régression : nginx bride /kyc à 5 req/min. Quand le poll de statut tombe
   // sur un 429 (KycError RateLimitException), repartir tous les 30 s

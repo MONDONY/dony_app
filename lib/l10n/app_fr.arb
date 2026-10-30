@@ -447,14 +447,8 @@
   "errorGuestSessionFailedMessage": "Impossible de démarrer la navigation sans compte. Vérifiez votre connexion.",
   "authCountrySaveError": "Impossible d’enregistrer le pays. Réessayez.",
   "authCountryChoiceSaveError": "Impossible d’enregistrer ce choix. Réessayez.",
-  "authPersonalInfoSaveError": "Impossible d'enregistrer ces informations. Réessayez.",
   "authUserFallbackName": "Utilisateur",
   "authBiometricUnlockReason": "Déverrouillez Yadony pour accéder à votre compte",
-  "authStepConsent": "Confidentialité",
-  "authStepCountry": "Pays",
-  "authStepIdentity": "Identité",
-  "authStepPersonalInfo": "Vos infos",
-  "authStepPayouts": "Paiements",
   "authMethodIllustrationLabel": "Voyageur Yadony tenant un colis sécurisé",
   "authMethodSecureBadge": "Sécurisé",
   "authMethodTitle": "Connectez-vous en toute confiance",
@@ -535,6 +529,15 @@
   "authFlowIllustrationLabel": "Connexion sécurisée Yadony",
   "authFlowProtectedBadge": "Connexion protégée",
   "authFlowSkipForNow": "Passer pour l'instant",
+  "profileBasicsEyebrow": "Facultatif",
+  "profileBasicsTitle": "Faisons connaissance",
+  "profileBasicsBody": "Votre prénom est visible des autres membres. Votre pays adapte les paiements. Vous pouvez tout compléter plus tard.",
+  "profileBasicsFirstNameLabel": "Prénom",
+  "profileBasicsLastNameLabel": "Nom",
+  "profileBasicsCountryLabel": "Pays de résidence",
+  "profileBasicsCountryPrefilledHint": "Pays proposé d'après votre numéro. Modifiable.",
+  "profileBasicsSaveError": "Impossible d'enregistrer pour le moment. Réessayez ou passez cette étape.",
+  "referralAutoAppliedMessage": "Code de parrainage appliqué.",
   "authRequiredTitle": "Connexion requise",
   "authRequiredSignIn": "Se connecter",
   "authRequiredKeepExploring": "Continuer à explorer",
@@ -629,47 +632,10 @@
       }
     }
   },
-  "authPersonalInfoCountryNotSet": "Non renseigné",
-  "authPersonalInfoGaugeLabel": "Informations",
-  "authPersonalInfoTitle": "Vos informations",
-  "authPersonalInfoBody": "Votre nom légal, tel qu’il figure sur votre pièce d’identité. Le reste vous sera demandé une seule fois, par Stripe.",
-  "authPersonalInfoFootnote": "Jamais partagées avec les autres membres, jamais affichées publiquement.",
-  "authPersonalInfoIdentitySection": "Identité",
-  "authPersonalInfoFirstName": "Prénom",
-  "authPersonalInfoLastName": "Nom",
-  "authPersonalInfoCountrySection": "Pays",
-  "authPersonalInfoCountryField": "Pays",
-  "authPersonalInfoCountrySemantics": "Pays de résidence : {country}. Déterminé à l’inscription, non modifiable ici.",
-  "@authPersonalInfoCountrySemantics": {
-    "placeholders": {
-      "country": {
-        "type": "String"
-      }
-    }
-  },
-  "authPersonalInfoCountryMissingSemantics": "Pays de résidence non renseigné. Déterminé à l’inscription, non modifiable ici.",
-  "authReferralGaugeLabel": "Parrainage",
-  "authReferralTitle": "Vous avez été invité par un ami ?",
-  "authReferralBody": "Entrez son code pour qu’il soit récompensé à votre première livraison.",
-  "authReferralFootnote": "Cette étape est facultative. Vous pouvez entrer dans Yadony sans code.",
-  "authReferralCodeLabel": "Code parrain",
-  "authReferralCodeHint": "Ex : JEAN0234",
-  "authReferralApply": "Appliquer le code",
-  "authReferralSuccessTitle": "Code appliqué !",
-  "authReferralSuccessBody": "Votre ami sera récompensé dès que vous aurez effectué votre première livraison.",
-  "authReferralSuccessFootnote": "Votre compte Yadony est prêt. Vous pouvez commencer à rechercher, envoyer ou suivre vos colis.",
-  "authReferralContinueHome": "Continuer",
-  "authReferralPrefilledBody": "Votre code parrain est déjà rempli : la personne qui vous a invité sera récompensée à votre premier envoi.",
-  "authReferralPrefilledHint": "Code reconnu, venu de votre lien d'invitation",
-  "authConsentTitle": "Une dernière chose",
-  "authConsentBody": "Pour améliorer Yadony, on aimerait mesurer comment l'app est utilisée et enregistrer l'écran de façon anonymisée. Les photos, les champs que vous remplissez et les écrans de paiement, d'identité ou de messagerie ne sont jamais enregistrés. C'est facultatif.",
-  "authConsentFootnote": "Jamais vos paiements, votre identité ou votre numéro. Vous pouvez changer d’avis dans Réglages.",
-  "authConsentPointScreens": "Écrans visités et fonctionnalités utilisées",
-  "authConsentPointGestures": "Enregistrement de l'écran, sans photos ni champs remplis, pour repérer ce qui bloque",
-  "authConsentPointNeverPersonal": "Jamais vos paiements, identité ou numéro",
-  "authConsentPointChangeAnytime": "Modifiable à tout moment dans Réglages",
   "authConsentAccept": "Accepter",
-  "authConsentDecline": "Non merci",
+  "consentSheetTitle": "Aidez-nous à améliorer Yadony",
+  "consentSheetBody": "Nous mesurons comment l'app est utilisée pour corriger ce qui bloque. Aucune donnée n'est vendue. Tant que vous n'avez pas répondu, rien n'est mesuré.",
+  "consentSheetDecline": "Refuser",
   "authLocalSwitchAccountTitle": "Changer de compte ?",
   "authLocalSwitchAccountMessage": "Vous allez être déconnecté de ce compte. Vous devrez vous reconnecter et reconfigurer votre code PIN.",
   "authLocalOtherAccount": "Autre compte",
@@ -1410,20 +1376,26 @@
   },
   "firstStepsDoneLabel": "Inscription terminée",
   "@firstStepsDoneLabel": {"description": "Pastille en haut de l'écran de fin d'inscription."},
-  "firstStepsTitle": "Votre compte est prêt",
+  "firstStepsTitle": "Par quoi voulez-vous commencer ?",
   "@firstStepsTitle": {"description": "Titre de l'écran de fin d'inscription."},
-  "firstStepsSubtitle": "Par quoi voulez-vous commencer ? Vous pourrez toujours faire l'autre plus tard.",
+  "firstStepsSubtitle": "Votre choix personnalise l'accueil. Vous pourrez en changer à tout moment.",
   "@firstStepsSubtitle": {"description": "Sous-titre de l'écran de fin d'inscription."},
-  "firstStepsTripTitle": "Je voyage",
-  "@firstStepsTripTitle": {"description": "Carte de choix voyageur, fin d'inscription."},
-  "firstStepsTripSubtitle": "Publiez votre trajet et rentabilisez vos kilos libres.",
-  "@firstStepsTripSubtitle": {"description": "Détail de la carte voyageur, fin d'inscription."},
-  "firstStepsParcelTitle": "J'envoie un colis",
-  "@firstStepsParcelTitle": {"description": "Carte de choix expéditeur, fin d'inscription."},
-  "firstStepsParcelSubtitle": "Trouvez un voyageur ou publiez votre demande d'envoi.",
-  "@firstStepsParcelSubtitle": {"description": "Détail de la carte expéditeur, fin d'inscription."},
   "firstStepsLater": "Plus tard, aller à l'accueil",
   "@firstStepsLater": {"description": "Bouton discret pour ignorer le choix et aller à l'accueil."},
+  "firstStepsSendTitle": "Envoyer un colis",
+  "@firstStepsSendTitle": {"description": "Carte de choix expéditeur, fin d'inscription."},
+  "firstStepsSendSubtitle": "Trouvez un voyageur sur votre trajet.",
+  "@firstStepsSendSubtitle": {"description": "Détail de la carte expéditeur, fin d'inscription."},
+  "firstStepsTravelTitle": "Voyager avec des colis",
+  "@firstStepsTravelTitle": {"description": "Carte de choix voyageur, fin d'inscription."},
+  "firstStepsTravelSubtitle": "Publiez votre trajet et vendez vos kilos libres.",
+  "@firstStepsTravelSubtitle": {"description": "Détail de la carte voyageur, fin d'inscription."},
+  "firstStepsBrowseTitle": "Je regarde d'abord",
+  "@firstStepsBrowseTitle": {"description": "Bouton pour explorer l'accueil sans déclarer d'intention."},
+  "firstStepsLaterShort": "Plus tard",
+  "@firstStepsLaterShort": {"description": "Bouton discret pour passer le choix de fin d'inscription."},
+  "firstStepsIdentityNote": "Votre identité n'est vérifiée qu'au moment d'envoyer un colis ou de publier un trajet.",
+  "@firstStepsIdentityNote": {"description": "Rassurance sous les choix de fin d'inscription."},
   "tripPublishIntroVerifiedTextTrip": "Identité vérifiée. Vous pouvez publier votre trajet en toute sécurité.",
   "@tripPublishIntroVerifiedTextTrip": {
     "description": "Encart vert de l'intro quand l'identité est déjà vérifiée, rôle voyageur"
@@ -10880,10 +10852,6 @@
   "@payoutTitle": {
     "description": "Titre de l'app bar « Recevoir mes paiements », répété dans les trois vues de l'écran (payout_onboarding_screen.dart) et passé comme titre à ConnectUnavailableView/IdentityRequiredView quand l'écran est atteint hors onboarding."
   },
-  "payoutGaugeLabel": "Paiements",
-  "@payoutGaugeLabel": {
-    "description": "Libellé de la jauge d'onboarding « Paiements », répété dans les trois vues de payout_onboarding_screen.dart."
-  },
   "payoutBrowserLaunchFailed": "Impossible d'ouvrir la page de configuration. Vérifiez qu'un navigateur est installé.",
   "@payoutBrowserLaunchFailed": {
     "description": "Snackbar d'erreur quand le navigateur système ne s'ouvre pas sur l'URL d'onboarding Stripe (payout_onboarding_screen.dart _PayoutOnboardingScreenState)."
@@ -10967,10 +10935,6 @@
   "payoutActiveInfoBankAccountSubtitle": "Vous recevez l'argent sur le compte lié à votre RIB/IBAN, pas dans un portefeuille Stripe.",
   "@payoutActiveInfoBankAccountSubtitle": {
     "description": "Sous-titre de la troisième ligne d'info de payout_onboarding_screen.dart _ActiveAccountView."
-  },
-  "payoutContinueToHome": "Continuer",
-  "@payoutContinueToHome": {
-    "description": "Bouton de sortie de l'étape paiements de l'onboarding, répété dans _ActiveAccountView et _SuccessView (payout_onboarding_screen.dart)."
   },
   "payoutSuccessTitle": "Paiements activés ✓",
   "@payoutSuccessTitle": {
@@ -17036,18 +17000,6 @@
   "@dsSignupProgress": {
     "description": "Libellé d'accessibilité par défaut de la jauge d'onboarding, lu par le lecteur d'écran (dony_onboarding_gauge.dart)."
   },
-  "dsGaugeCurrentStep": "Étape {index} sur {total}",
-  "@dsGaugeCurrentStep": {
-    "description": "Lu par le lecteur d'écran quand une étape de la jauge d'onboarding est en cours (dony_onboarding_gauge.dart).",
-    "placeholders": {
-      "index": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "dsGaugeReachedSteps": "{count, plural, =1{{count} étape sur {total}} other{{count} étapes sur {total}}}",
   "@dsGaugeReachedSteps": {
     "description": "Lu par le lecteur d'écran quand aucune étape de la jauge d'onboarding n'est en cours : nombre d'étapes déjà franchies sur le total (dony_onboarding_gauge.dart).",
@@ -19388,18 +19340,6 @@
   "@recipientSentInvitationShareMessage": {"description": "Carnet : texte partagé par « Partager le lien de l'app » pour inviter la personne à installer Yadony."},
   "trackingStepPhotoOpen": "Agrandir la photo",
   "@trackingStepPhotoOpen": {"description": "Suivi en lecture seule : action d'accessibilité sur la miniature photo d'une étape, qui l'ouvre en plein écran (FLUTTER-82)."},
-  "authStepIntent": "Votre projet",
-  "@authStepIntent": {
-    "description": "Libellé de l'étape d'inscription où l'utilisateur déclare son intention"
-  },
-  "intentTitle": "Vous utilisez Yadony pour…",
-  "@intentTitle": {
-    "description": "Titre de l'étape intention"
-  },
-  "intentSubtitle": "On vous montre directement ce qui vous intéresse.",
-  "@intentSubtitle": {
-    "description": "Sous-titre de l'étape intention"
-  },
   "intentSender": "Envoyer des colis",
   "@intentSender": {
     "description": "Choix d'intention : expéditeur"
@@ -19424,7 +19364,7 @@
   "@intentBothHint": {
     "description": "Précision du choix les deux"
   },
-  "intentDestinationTitle": "Votre destination principale",
+  "intentDestinationTitle": "Votre destination principale (facultatif)",
   "@intentDestinationTitle": {
     "description": "Titre du choix du pays de destination principal (intent_form.dart). Formulé pour ne pas laisser croire que le choix limite les envois ou trajets à ce pays."
   },
@@ -19464,7 +19404,7 @@
   "@settingsIntentLabel": {
     "description": "Ligne des réglages pour modifier l'intention"
   },
-  "settingsIntentSubtitle": "Envoyer, voyager ou les deux",
+  "settingsIntentSubtitle": "Choisit aussi l'écran d'accueil.",
   "@settingsIntentSubtitle": {
     "description": "Sous-titre de la ligne intention des réglages"
   },
@@ -21746,10 +21686,6 @@
   "@gpProFrequencyLessOften": {"description": "Fréquence de voyage GP Pro : LESS_OFTEN."},
   "gpProCommercialNameLabel": "Nom commercial (facultatif)",
   "@gpProCommercialNameLabel": {"description": "Formulaire GP Pro : libellé flottant du nom commercial, 80 caractères au plus."},
-  "gpProSignupCheckbox": "Je suis GP (voyageur régulier ou entreprise)",
-  "@gpProSignupCheckbox": {"description": "Inscription, étape intention : case « Je suis GP » (voyageur ou les deux)."},
-  "gpProSignupDocsHint": "Vous pourrez ajouter des justificatifs plus tard depuis votre profil.",
-  "@gpProSignupDocsHint": {"description": "Inscription : précise que les justificatifs GP Pro se joignent depuis le profil."},
   "gpProPiecesTitle": "Justificatifs (facultatif)",
   "@gpProPiecesTitle": {"description": "Formulaire GP Pro : titre de la section des justificatifs, facultatifs."},
   "gpProPiecesHint": "Ils aident l'équipe à examiner votre demande. Images seulement, 4 au plus.",

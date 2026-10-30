@@ -5,9 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 
-/// `AuthFlowHeader` coiffe les écrans d'inscription et d'onboarding (téléphone,
-/// code, e-mail, pays, infos personnelles, parrainage, consentement, statut
-/// d'identité) : le scarabée y est posé une fois pour tous.
+/// `AuthFlowHeader` coiffe les écrans d'inscription (téléphone, code, e-mail,
+/// « Faisons connaissance », pays) : le scarabée y est posé une fois pour
+/// tous.
 void main() {
   Widget host(Widget header) =>
       localizedApp(Scaffold(body: SafeArea(child: header)));
@@ -19,25 +19,12 @@ void main() {
     expect(find.byType(DonyFeedbackButton), findsOneWidget);
   });
 
-  testWidgets('jauge d\'onboarding : scarabée présent', (tester) async {
-    await tester.pumpWidget(
-      host(const AuthFlowHeader.gauge(segments: [], label: 'Pays')),
-    );
-    expect(find.byType(DonyFeedbackButton), findsOneWidget);
-  });
-
-  testWidgets('showFeedback: false sous un DonyAppBar : pas de doublon', (
+  testWidgets('en-tête simple : logo et scarabée, sans pastille', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      host(
-        const AuthFlowHeader.gauge(
-          segments: [],
-          label: 'Paiements',
-          showFeedback: false,
-        ),
-      ),
-    );
-    expect(find.byType(DonyFeedbackButton), findsNothing);
+    await tester.pumpWidget(host(const AuthFlowHeader.plain()));
+    expect(find.byType(DonyLogo), findsOneWidget);
+    expect(find.byType(DonyFeedbackButton), findsOneWidget);
+    expect(find.byType(DonyStepPill), findsNothing);
   });
 }

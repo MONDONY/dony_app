@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:dony/app/router.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/consent_prompt.dart';
 import 'package:dony/core/services/gdpr_helper.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,7 +16,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 ///
 /// - Login  → [AnalyticsService.identify] + détection pays GPS (si permission)
 ///   + tranche le consentement analytics (cf. [GdprHelper.resolveConsentAction]) :
-///   zone RGPD (ou pays indéterminé) → écran de consentement ; zone hors RGPD
+///   zone RGPD (ou pays indéterminé) → demande de la feuille de consentement
+///   de l'accueil ([ConsentPrompt]) ; zone hors RGPD
 ///   → consentement accordé automatiquement, sans écran.
 /// - Consentement accordé en cours de session (écran RGPD, sheet, réglages,
 ///   ou l'auto-octroi ci-dessus) → ré-identifie l'utilisateur courant. Sans
@@ -35,7 +36,6 @@ class AnalyticsConsentGate extends StatefulWidget {
   const AnalyticsConsentGate({
     required this.child,
     this.firebaseAuth,
-    this.navigate,
     super.key,
   });
 
@@ -45,13 +45,6 @@ class AnalyticsConsentGate extends StatefulWidget {
   /// sur [FirebaseAuth.instance] (même pattern que `AuthBloc`/
   /// `FirebaseSessionProbe`).
   final FirebaseAuth? firebaseAuth;
-
-  /// Overridable en test uniquement. En production, reste `null` et retombe
-  /// sur `appRouter.go` (le routeur global de l'app, `lib/app/router.dart`).
-  /// Permet de verrouiller par un test direct qu'une session invitée ne
-  /// déclenche JAMAIS de navigation vers l'entonnoir de consentement/
-  /// inscription — le vrai risque produit de cette classe.
-  final void Function(String location)? navigate;
 
   @override
   State<AnalyticsConsentGate> createState() => _AnalyticsConsentGateState();
@@ -64,8 +57,6 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   FirebaseAuth get _firebaseAuth =>
       widget.firebaseAuth ?? FirebaseAuth.instance;
   AnalyticsService get _analytics => getIt<AnalyticsService>();
-  void Function(String location) get _navigate =>
-      widget.navigate ?? appRouter.go;
 
   @override
   void initState() {
@@ -113,6 +104,9 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
     if (user != null) {
       unawaited(_onLogin(user));
     } else {
+      // Une demande levée pour le compte précédent ne doit pas s'afficher au
+      // suivant, qui a peut-être déjà répondu.
+      getIt<ConsentPrompt>().clear();
       unawaited(_analytics.reset());
     }
   }
@@ -151,11 +145,14 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
 
     switch (action) {
       case AnalyticsConsentAction.askConsent:
-        _navigate('/auth/analytics-consent');
+        getIt<ConsentPrompt>().request();
       case AnalyticsConsentAction.autoGrantNonGdpr:
+        getIt<ConsentPrompt>().clear();
         await _analytics.setConsent(granted: true, source: 'auto_non_gdpr');
       case AnalyticsConsentAction.none:
-        break;
+        // Déjà répondu (ou mesure non configurée) : toute demande encore
+        // levée pour un autre compte est périmée.
+        getIt<ConsentPrompt>().clear();
     }
   }
 

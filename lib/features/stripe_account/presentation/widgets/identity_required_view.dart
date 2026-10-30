@@ -1,5 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -61,7 +61,7 @@ class IdentityRequiredView extends StatelessWidget {
           DonyButton(
             label: l.stripeAccountIdentityRequiredCta,
             iconAsset: 'shield-check',
-            onPressed: () => context.push(OnboardingStep.identity.route),
+            onPressed: () => context.push(kKycVerifyRoute),
           ),
         ],
       ),

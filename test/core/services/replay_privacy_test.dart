@@ -23,8 +23,7 @@ void main() {
         '/auth/otp',
         '/auth/email',
         '/auth/email-otp',
-        '/auth/personal-info',
-        '/auth/referral-code',
+        '/auth/profile-basics',
       ]) {
         expect(isReplaySensitivePath(p), isTrue, reason: p);
       }
@@ -93,7 +92,6 @@ void main() {
       for (final p in [
         '/home',
         '/auth/method',
-        '/auth/analytics-consent',
         '/auth/country-selection',
         '/announcements',
         '/announcements/abc/trip',

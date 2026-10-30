@@ -537,6 +537,11 @@ class _DonyAppState extends State<DonyApp> {
                     // Statut d'activation (intention, première action) : chargé à
                     // la connexion seulement, un visiteur n'y a pas accès.
                     unawaited(context.read<ActivationCubit>().load());
+                    // Pays et préférences du compte : après une réinstallation
+                    // Hive est vide, la garde pays du trajet lit ces valeurs.
+                    context.read<BusinessPrefsBloc>().add(
+                      const BusinessPrefsSyncRequested(),
+                    );
                     // One-shot migration: push legacy Hive-saved trips to server,
                     // then reload favorites so migrated items appear immediately.
                     // Capture cubit ref before the async gap to avoid

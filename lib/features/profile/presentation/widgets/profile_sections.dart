@@ -5,7 +5,7 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/store_review_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
-import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
@@ -15,6 +15,7 @@ import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.d
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/presentation/widgets/redeem_code_bottom_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/stripe_account/presentation/effective_stripe_status.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -819,7 +820,7 @@ class ProfileCompletionBanner extends StatelessWidget {
       missing.add(
         _MissingItem(
           l.profileCompletionVerifyIdentity,
-          route: '/kyc/verify',
+          route: kKycVerifyRoute,
           iconAsset: 'shield-check',
         ),
       );

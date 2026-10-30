@@ -43,37 +43,24 @@ class AuthFlowHeader extends StatelessWidget {
     required int this.total,
     required this.label,
     this.showBack = true,
-    this.showFeedback = true,
-  }) : segments = null;
+  }) : _hasProgress = true;
 
-  /// Parcours d'onboarding progressif : la jauge remplace la pastille.
-  ///
-  /// Les deux ne comptent pas la même chose. La pastille compte les écrans du
-  /// tunnel d'inscription ; la jauge compte les étapes du compte (quatre ou
-  /// cinq selon la couverture Stripe du pays, parrainage exclu).
-  ///
-  /// Pas de `showBack` ici : aucun écran du parcours (pays, adresse,
-  /// parrainage, consentement, identité, paiements) n'affiche de retour, et
-  /// aucun appelant ne l'a jamais demandé (vérifié par grep) — toujours
-  /// `false`, sans paramètre pour l'exposer.
-  const AuthFlowHeader.gauge({
-    super.key,
-    required List<DonyGaugeSegment> this.segments,
-    required this.label,
-    this.showFeedback = true,
-  }) : current = null,
-       total = null,
-       showBack = false;
+  /// Écran après le code (« Faisons connaissance », pays) : le logo et le
+  /// scarabée, sans pastille. Pas de retour : l'écran suit le code
+  /// de vérification, revenir dessus n'a pas de sens.
+  const AuthFlowHeader.plain({super.key})
+    : current = null,
+      total = null,
+      label = '',
+      showBack = false,
+      _hasProgress = false;
 
   final int? current;
   final int? total;
-  final List<DonyGaugeSegment>? segments;
   final String label;
   final bool showBack;
 
-  /// Scarabée de signalement en bout de ligne. À couper seulement sous un
-  /// [DonyAppBar], qui porte déjà le sien (paiements).
-  final bool showFeedback;
+  final bool _hasProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +73,7 @@ class AuthFlowHeader extends StatelessWidget {
           children: [
             if (showBack)
               const DonyAppBarBackButton()
-            else if (showFeedback)
+            else
               // Contrepoids du scarabée : le logo reste centré.
               const SizedBox(width: kDonyMinTapTarget),
             const Spacer(),
@@ -111,23 +98,16 @@ class AuthFlowHeader extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            if (showFeedback)
-              const DonyFeedbackButton()
-            else if (showBack)
-              const SizedBox(width: kDonyMinTapTarget),
+            const DonyFeedbackButton(),
           ],
         ),
-        const SizedBox(height: DonySpacing.sm),
-        if (segments == null)
+        if (_hasProgress) ...[
+          const SizedBox(height: DonySpacing.sm),
           Align(
             alignment: Alignment.centerRight,
             child: DonyStepPill(current: current!, total: total!, label: label),
-          )
-        else
-          // Le `Column` parent est en `CrossAxisAlignment.stretch` : la jauge
-          // prend la largeur, son propre `Column` aligne le compteur à droite
-          // comme le faisait la pastille.
-          DonyOnboardingGauge(segments: segments!, label: label),
+          ),
+        ],
       ],
     );
   }

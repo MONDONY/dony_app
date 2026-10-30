@@ -57,9 +57,8 @@ enum GpProDocType {
   );
 }
 
-/// Origine de la demande : inscription ou profil.
+/// Origine de la demande : le profil (l'inscription ne la propose plus).
 enum GpProSource {
-  signup('SIGNUP'),
   profile('PROFILE');
 
   const GpProSource(this.wire);

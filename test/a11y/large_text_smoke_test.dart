@@ -10,11 +10,10 @@ import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
+import 'package:dony/features/auth/bloc/profile_basics_cubit.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
-import 'package:dony/features/auth/presentation/onboarding_step.dart';
-import 'package:dony/features/auth/presentation/screens/personal_info_screen.dart';
+import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
@@ -972,45 +971,21 @@ Widget _suiviHarness(List<String> roles, {SuiviMode? mode}) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Vos informations — harnais recopié de
-// test/features/auth/presentation/personal_info_screen_test.dart
+// Faisons connaissance — écran qui suit le code à l'inscription
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _PersonalInfoMockCubit extends MockCubit<PersonalInfoState>
-    implements PersonalInfoCubit {}
+class _ProfileBasicsMockCubit extends MockCubit<ProfileBasicsState>
+    implements ProfileBasicsCubit {}
 
-// Pays hors couverture Stripe : quatre segments, sans `OnboardingStep.payouts`
-// — couvre la variante réduite de la jauge (spec §4.1, correction 4).
-const _personalInfoProgress = OnboardingProgress(
-  steps: [
-    OnboardingStep.consent,
-    OnboardingStep.country,
-    OnboardingStep.personalInfo,
-    OnboardingStep.identity,
-  ],
-  done: {OnboardingStep.consent, OnboardingStep.country},
-  current: OnboardingStep.personalInfo,
-);
-
-Widget _wrapPersonalInfo(PersonalInfoCubit cubit) => MaterialApp.router(
+Widget _wrapProfileBasics(ProfileBasicsCubit cubit) => MaterialApp.router(
   routerConfig: GoRouter(
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, _) => BlocProvider<PersonalInfoCubit>.value(
+        builder: (_, _) => BlocProvider<ProfileBasicsCubit>.value(
           value: cubit,
-          // Code ISO, comme le fournit `BusinessPrefsBloc.state.country`
-          // depuis la correction du lot 1 (le widget résout lui-même le nom
-          // lisible via `CountryCatalog.byCode`) — pas le nom affiché.
-          child: const PersonalInfoScreen(
-            country: 'SN',
-            progress: _personalInfoProgress,
-          ),
+          child: const ProfileBasicsScreen(initialCountryCode: 'SN'),
         ),
-      ),
-      GoRoute(
-        path: '/auth/referral-code',
-        builder: (_, _) => const Scaffold(body: Text('Parrainage')),
       ),
     ],
   ),
@@ -1273,16 +1248,15 @@ void main() {
       expect(find.byKey(const Key('money-trip-dkr')), findsOneWidget);
     });
 
-    testWidgets('vos informations', (tester) async {
-      final cubit = _PersonalInfoMockCubit();
-      when(() => cubit.state).thenReturn(const PersonalInfoInitial());
+    testWidgets('faisons connaissance', (tester) async {
+      final cubit = _ProfileBasicsMockCubit();
       whenListen(
         cubit,
-        const Stream<PersonalInfoState>.empty(),
-        initialState: const PersonalInfoInitial(),
+        const Stream<ProfileBasicsState>.empty(),
+        initialState: const ProfileBasicsInitial(),
       );
 
-      await pumpAt200(tester, _wrapPersonalInfo(cubit));
+      await pumpAt200(tester, _wrapProfileBasics(cubit));
       expect(tester.takeException(), isNull);
     });
   });

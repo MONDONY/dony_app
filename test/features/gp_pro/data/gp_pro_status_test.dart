@@ -87,7 +87,6 @@ void main() {
         GpProDocType.businessRegistration,
       );
       expect(GpProDocType.fromWire('x'), GpProDocType.other);
-      expect(GpProSource.signup.wire, 'SIGNUP');
       expect(GpProSource.profile.wire, 'PROFILE');
     });
   });

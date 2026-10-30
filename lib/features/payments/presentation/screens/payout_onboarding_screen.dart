@@ -1,14 +1,9 @@
-import 'dart:async';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/data/repositories/auth_repository.dart';
-import 'package:dony/features/auth/presentation/onboarding_step.dart';
-import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/connect_onboarding/bloc/bank_account_link_cubit.dart';
 import 'package:dony/features/connect_onboarding/presentation/widgets/change_bank_account_button.dart';
@@ -24,32 +19,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Étape suivante depuis les paiements : `routeAfter` reste appelé (plutôt
-/// que `/home` en dur) pour que l'écran suive automatiquement l'ordre réel
-/// du parcours si `onboardingSteps()` change un jour — aujourd'hui toujours
-/// l'accueil, les paiements étant la dernière étape comptée. Hors onboarding
-/// ([progress] `null`), toujours l'accueil aussi, comme avant cette étape.
-/// Pose `onboarding_seen_at` uniquement quand la destination est vraiment
-/// l'accueil — même garde que `KycStatusScreen._leaveIdentityStep`.
-void _leavePayoutsStep(BuildContext context, OnboardingProgress? progress) {
-  final destination = progress?.routeAfter(OnboardingStep.payouts) ?? '/home';
-  if (progress != null && destination == '/home') {
-    unawaited(getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}));
-    // Fin du parcours : l'écran « Par quoi commencer ? » plutôt que l'accueil.
-    context.go(firstStepsRoute);
-    return;
-  }
-  context.go(destination);
-}
-
+/// « Recevoir mes paiements » (Réglages, profil) : activer les versements
+/// par carte via Stripe Connect.
 class PayoutOnboardingScreen extends StatefulWidget {
-  const PayoutOnboardingScreen({super.key, this.progress});
-
-  /// Non `null` seulement depuis l'onboarding (étape paiements, spec §2) —
-  /// même convention que `KycStatusScreen.progress`. Construit par
-  /// `router.dart` (`readOnboardingProgress`), jamais lu ici via un provider
-  /// ambiant : cet écran reste montable en test sans lui.
-  final OnboardingProgress? progress;
+  const PayoutOnboardingScreen({super.key});
 
   @override
   State<PayoutOnboardingScreen> createState() => _PayoutOnboardingScreenState();
@@ -108,31 +81,20 @@ class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen>
       builder: (context, stripeState) {
         if (stripeState is StripeAccountReady &&
             stripeState.accountStatus.isComplete) {
-          return _ActiveAccountView(progress: widget.progress);
+          return const _ActiveAccountView();
         }
 
         // Stripe n'ouvre pas de compte connecté dans tous les pays desservis
         // par yadony. Laisser dérouler l'inscription pour finir sur un refus
         // serveur, après un aller-retour par le navigateur, n'apporte rien.
         if (!stripeState.connectAvailableInCountry) {
-          final progress = widget.progress;
-          if (progress != null) {
-            // `onboardingSteps()` exclut déjà les paiements pour ces pays :
-            // arriver ici depuis l'onboarding ne peut être qu'une course
-            // (statut optimiste au moment de router, corrigé par le
-            // rafraîchissement forcé de `initState` ci-dessus). Rien à
-            // proposer — on continue silencieusement, sans montrer une
-            // impasse à un utilisateur qui n'aurait jamais dû l'atteindre.
-            return _AutoLeavePayoutsStep(progress: progress);
-          }
           return ConnectUnavailableView(title: l.payoutTitle);
         }
 
         // Deuxième porte vers Stripe Connect, et donc deuxième garde : le
         // serveur refuse une identité non vérifiée (422 `kyc-required`).
-        // Depuis le parcours, `OnboardingProgress` verrouille déjà l'étape ;
-        // hors parcours, seule cette garde empêche l'écran de lancer une
-        // création de compte vouée au refus.
+        // Cette garde empêche l'écran de lancer une création de compte vouée
+        // au refus.
         final kycStatus = context
             .watch<AuthBloc>()
             .state
@@ -188,45 +150,17 @@ class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen>
           },
           builder: (context, state) {
             if (state is PaymentOnboardingComplete) {
-              return _SuccessView(progress: widget.progress);
+              return const _SuccessView();
             }
             return _OnboardingView(
               state: state,
               startedOnServer: startedOnServer,
-              progress: widget.progress,
             );
           },
         );
       },
     );
   }
-}
-
-/// Rendu quand `/payments/onboarding` est atteint depuis l'onboarding alors
-/// que Stripe n'ouvre finalement pas de compte connecté dans ce pays (course
-/// avec le rafraîchissement forcé de `initState`) : rien à afficher, juste
-/// laisser passer vers l'étape suivante — ce n'est pas une impasse pour cet
-/// utilisateur, seulement pour l'écran.
-class _AutoLeavePayoutsStep extends StatefulWidget {
-  const _AutoLeavePayoutsStep({required this.progress});
-  final OnboardingProgress progress;
-
-  @override
-  State<_AutoLeavePayoutsStep> createState() => _AutoLeavePayoutsStepState();
-}
-
-class _AutoLeavePayoutsStepState extends State<_AutoLeavePayoutsStep> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _leavePayoutsStep(context, widget.progress);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: CircularProgressIndicator()));
 }
 
 // ── Vue principale d'onboarding ───────────────────────────────────────────────
@@ -238,15 +172,7 @@ class _OnboardingView extends StatelessWidget {
   /// Survit au démontage de l'écran, contrairement à l'état du [PaymentBloc].
   final bool startedOnServer;
 
-  /// Non `null` seulement depuis l'onboarding — voir
-  /// `PayoutOnboardingScreen.progress`.
-  final OnboardingProgress? progress;
-
-  const _OnboardingView({
-    required this.state,
-    required this.startedOnServer,
-    this.progress,
-  });
+  const _OnboardingView({required this.state, required this.startedOnServer});
 
   @override
   Widget build(BuildContext context) {
@@ -291,14 +217,6 @@ class _OnboardingView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (progress != null) ...[
-                    AuthFlowHeader.gauge(
-                      showFeedback: false,
-                      segments: progress!.segments,
-                      label: l.payoutGaugeLabel,
-                    ),
-                    const SizedBox(height: DonySpacing.md),
-                  ],
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
@@ -384,14 +302,6 @@ class _OnboardingView extends StatelessWidget {
                       isLoading: isLoading,
                       iconAsset: 'landmark',
                     ),
-                    // Configurer un compte bancaire est lourd (identité,
-                    // IBAN) : personne ne doit être bloqué pour l'avoir remis
-                    // à plus tard. Uniquement depuis l'onboarding — depuis le
-                    // profil, il n'y a pas d'étape à passer.
-                    skipEnabled: !isLoading,
-                    onSkip: progress == null
-                        ? null
-                        : () => _leavePayoutsStep(context, progress),
                   ),
                 ],
               ),
@@ -534,11 +444,7 @@ class _BenefitsSection extends StatelessWidget {
 // ── Vue compte bancaire déjà connecté ────────────────────────────────────────
 
 class _ActiveAccountView extends StatelessWidget {
-  const _ActiveAccountView({this.progress});
-
-  /// Non `null` seulement depuis l'onboarding — voir
-  /// `PayoutOnboardingScreen.progress`.
-  final OnboardingProgress? progress;
+  const _ActiveAccountView();
 
   @override
   Widget build(BuildContext context) {
@@ -561,14 +467,6 @@ class _ActiveAccountView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (progress != null) ...[
-                AuthFlowHeader.gauge(
-                  showFeedback: false,
-                  segments: progress!.segments,
-                  label: l.payoutGaugeLabel,
-                ),
-                const SizedBox(height: DonySpacing.md),
-              ],
               Expanded(
                 child: SingleChildScrollView(
                   child:
@@ -657,18 +555,6 @@ class _ActiveAccountView extends StatelessWidget {
                           .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                 ),
               ),
-              // Le compte est actif : plus rien à passer, seulement à sortir.
-              // Depuis le profil (progress null), l'écran est purement
-              // informatif — aucune zone d'action.
-              if (progress != null)
-                AuthFlowActions(
-                  primary: DonyButton(
-                    label: l.payoutContinueToHome,
-                    iconAsset: 'arrow-right',
-                    onPressed: () => _leavePayoutsStep(context, progress),
-                    variant: DonyButtonVariant.success,
-                  ),
-                ),
             ],
           ),
         ),
@@ -728,11 +614,7 @@ class _InfoRow extends StatelessWidget {
 // ── Vue succès ────────────────────────────────────────────────────────────────
 
 class _SuccessView extends StatelessWidget {
-  const _SuccessView({this.progress});
-
-  /// Non `null` seulement depuis l'onboarding — voir
-  /// `PayoutOnboardingScreen.progress`.
-  final OnboardingProgress? progress;
+  const _SuccessView();
 
   @override
   Widget build(BuildContext context) {
@@ -757,14 +639,6 @@ class _SuccessView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (progress != null) ...[
-                    AuthFlowHeader.gauge(
-                      showFeedback: false,
-                      segments: progress!.segments,
-                      label: l.payoutGaugeLabel,
-                    ),
-                    const SizedBox(height: DonySpacing.md),
-                  ],
                   Expanded(
                     child: Center(
                       child: SingleChildScrollView(
@@ -802,15 +676,6 @@ class _SuccessView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (progress != null)
-                    AuthFlowActions(
-                      primary: DonyButton(
-                        label: l.payoutContinueToHome,
-                        iconAsset: 'arrow-right',
-                        onPressed: () => _leavePayoutsStep(context, progress),
-                        variant: DonyButtonVariant.success,
-                      ),
-                    ),
                 ],
               ),
             ),

@@ -19,8 +19,7 @@ const kReplaySensitivePathPrefixes = <String>[
   '/auth/otp',
   '/auth/email',
   '/auth/email-otp',
-  '/auth/personal-info',
-  '/auth/referral-code',
+  '/auth/profile-basics',
   '/auth/local',
   // Identité et paiement.
   '/kyc',

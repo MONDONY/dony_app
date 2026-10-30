@@ -90,7 +90,7 @@ void main() {
     );
     expect(gauge.segments.length, 5);
     expect(gauge.segments.where((s) => s == DonyGaugeSegment.done).length, 3);
-    expect(gauge.segments.contains(DonyGaugeSegment.current), isFalse);
+    expect(gauge.segments.where((s) => s == DonyGaugeSegment.todo).length, 2);
     expect(gauge.semanticsLabel, 'Préparation de vos outils');
   });
 

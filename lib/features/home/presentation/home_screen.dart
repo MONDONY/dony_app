@@ -9,6 +9,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
+import 'package:dony/core/services/consent_prompt.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -396,6 +397,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// spécifiques et la feuille de filtres.
   late SearchMode _mode;
 
+  /// Mode dicté par la dernière intention connue : sert à ne réagir qu'à un
+  /// vrai changement d'intention, pas à un rechargement qui rend la même.
+  late SearchMode _intentMode;
+
   /// Filtres de recherche, communs et spécifiques réunis. Un seul porteur pour
   /// les deux modes : c'est ce qui fait survivre le corridor et la date à la
   /// bascule, là où deux jeux de champs parallèles les perdaient.
@@ -426,7 +431,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
     // Mode par défaut identique pour tout le monde : la recherche de trajets
     // fonctionne désormais pour un visiteur (Task 7), il n'y a plus de raison
     // de le distinguer d'un inscrit à l'ouverture de l'écran.
-    _mode = SearchMode.trips;
+    // Seule exception : l'intention déclarée. Un voyageur ouvre l'accueil sur
+    // les colis, tous les autres sur les trajets.
+    final activationState = _activationCubit?.state;
+    _intentMode = searchModeForIntent(
+      activationState is ActivationLoaded
+          ? activationState.status.intent
+          : null,
+    );
+    _mode = _intentMode;
     if (HomeSheetSession.takeFullOpening()) {
       _sheetStartsFull = true;
       _sheetSize = 1.0;
@@ -913,7 +926,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
     unawaited(store.setOptedOut(value: !active));
   }
 
-  void _onModeChanged(SearchMode mode) {
+  /// [automatic] : mode posé par l'intention déclarée, pas par un geste de la
+  /// personne, donc pas d'événement `home_search_mode_changed`.
+  void _onModeChanged(SearchMode mode, {bool automatic = false}) {
     if (mode == _mode) {
       return;
     }
@@ -930,12 +945,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _selectedAnnouncementId = null;
     });
     final analytics = getIt<AnalyticsService>();
-    unawaited(
-      analytics.logEvent(
-        AnalyticsEvents.homeSearchModeChanged,
-        properties: {'mode': mode.name},
-      ),
-    );
+    if (!automatic) {
+      unawaited(
+        analytics.logEvent(
+          AnalyticsEvents.homeSearchModeChanged,
+          properties: {'mode': mode.name},
+        ),
+      );
+    }
     if (defaultToMatching) {
       unawaited(
         analytics.logEvent(
@@ -1876,10 +1893,27 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (activation == null) return scaffold;
     // Bloc passé explicitement : même instance que le provider global de
     // l'app, et l'accueil reste montable sans lui (tests, aperçus).
-    return BlocListener<ActivationCubit, ActivationState>(
-      bloc: activation,
-      listenWhen: (p, c) => c is ActivationLoaded && p is! ActivationLoaded,
-      listener: _maybeAskIntent,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ActivationCubit, ActivationState>(
+          bloc: activation,
+          listenWhen: (p, c) => c is ActivationLoaded && p is! ActivationLoaded,
+          listener: _maybeAskIntent,
+        ),
+        BlocListener<ActivationCubit, ActivationState>(
+          bloc: activation,
+          listenWhen: (p, c) =>
+              c is ActivationLoaded &&
+              searchModeForIntent(c.status.intent) != _intentMode,
+          listener: (_, state) {
+            final mode = searchModeForIntent(
+              (state as ActivationLoaded).status.intent,
+            );
+            _intentMode = mode;
+            _onModeChanged(mode, automatic: true);
+          },
+        ),
+      ],
       child: scaffold,
     );
   }
@@ -1891,6 +1925,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
     ActivationState state,
   ) async {
     if (state is! ActivationLoaded || state.status.intent != null) return;
+    // Jamais deux feuilles empilées : on attend la réponse au consentement, et
+    // on ne s'ouvre pas par-dessus une autre route.
+    if (getItSafe<ConsentPrompt>()?.wanted.value ?? false) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
     final policy = IntentPromptPolicy(getIt<HiveService>().userPrefs);
     final now = DateTime.now();
     if (!policy.shouldShow(now)) return;
