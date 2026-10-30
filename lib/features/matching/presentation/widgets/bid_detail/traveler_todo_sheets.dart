@@ -86,18 +86,19 @@ Future<void> openTravelerTodoSheet(
       TravelerTodoTile.supplement => LiveBid(
         bid: bid,
         live: live,
-        builder: (_, current) => SupplementTravelerCard.needsReply(current)
-            ? SupplementCommissionButtons(
-                bid: current,
-                supplement: current.supplement!,
-                authorize: authorize,
-              )
-            : SupplementCommissionButtons(
-                key: const ValueKey('supplement-buttons-resolved'),
-                bid: bid,
-                supplement: bid.supplement!,
-                enabled: false,
-              ),
+        builder: (_, current) {
+          final awaiting = SupplementTravelerCard.needsReply(current);
+          final shown = awaiting ? current : bid;
+          return SupplementCommissionButtons(
+            key: awaiting
+                ? null
+                : const ValueKey('supplement-buttons-resolved'),
+            bid: shown,
+            supplement: shown.supplement!,
+            authorize: awaiting ? authorize : null,
+            enabled: awaiting,
+          );
+        },
       ),
     },
     child: _TravelerTodoSheetContent(bid: bid, tile: tile, live: live),
@@ -148,10 +149,13 @@ class _TravelerTodoSheetContent extends StatelessWidget {
       final inner = content;
       content = Builder(
         builder: (context) {
-          final busy =
-              context.watch<SupplementCommissionCubit>().state.isBusy ||
-              context.watch<SupplementActionCubit>().state.isBusy;
-          return PopScope(canPop: !busy, child: inner);
+          final paying = context.select(
+            (SupplementCommissionCubit c) => c.state.isBusy,
+          );
+          final withdrawing = context.select(
+            (SupplementActionCubit c) => c.state.isBusy,
+          );
+          return PopScope(canPop: !(paying || withdrawing), child: inner);
         },
       );
     }

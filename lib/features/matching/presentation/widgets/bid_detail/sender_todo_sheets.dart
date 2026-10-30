@@ -62,13 +62,17 @@ Future<void> openSenderTodoSheet(
   final bidBloc = maybeRead<BidBloc>(context);
   final cancellationBloc = maybeRead<CancellationBloc>(context);
   final live = bidBloc != null;
+  // Le `CancellationBloc` de l'écran est là : le report peut être décidé
+  // depuis le sheet, qui se referme au report gardé ou retiré.
+  final canDecide = cancellationBloc != null;
   final amendment = tile == SenderTodoTile.amendment;
 
   return DonyBottomSheet.show<void>(
     context,
     title: senderTodoTitle(context.l10n, tile),
     analyticsName: 'bid-detail/todo-${tile.name}',
-    wrapper: (bidBloc == null && cancellationBloc == null && !amendment)
+    // `MultiBlocProvider` refuse une liste vide : pas de `wrapper` sans BLoC.
+    wrapper: (!live && !canDecide && !amendment)
         ? null
         : (content) => MultiBlocProvider(
             providers: [
@@ -87,13 +91,13 @@ Future<void> openSenderTodoSheet(
       context,
       bid,
       live: live,
-      canDecide: cancellationBloc != null,
+      canDecide: canDecide,
     ),
     child: _SenderTodoSheetContent(
       bid: bid,
       tile: tile,
       live: live,
-      closesOnDecision: cancellationBloc != null,
+      canDecide: canDecide,
     ),
   );
 }
@@ -177,7 +181,7 @@ class _SenderTodoSheetContent extends StatelessWidget {
     required this.bid,
     required this.tile,
     required this.live,
-    required this.closesOnDecision,
+    required this.canDecide,
   });
 
   final BidModel bid;
@@ -186,7 +190,7 @@ class _SenderTodoSheetContent extends StatelessWidget {
 
   /// Le `CancellationBloc` de l'écran est là : le report gardé ou retiré
   /// referme le sheet sans attendre le rechargement du colis.
-  final bool closesOnDecision;
+  final bool canDecide;
 
   @override
   Widget build(BuildContext context) {
@@ -235,7 +239,7 @@ class _SenderTodoSheetContent extends StatelessWidget {
       );
     }
 
-    if (tile == SenderTodoTile.reschedule && closesOnDecision) {
+    if (tile == SenderTodoTile.reschedule && canDecide) {
       content = BlocListener<CancellationBloc, CancellationState>(
         listenWhen: (_, state) =>
             state is RescheduleKept ||
