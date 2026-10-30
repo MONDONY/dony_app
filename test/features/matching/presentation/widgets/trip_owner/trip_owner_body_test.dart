@@ -69,6 +69,7 @@ AnnouncementModel _trip({
   TripParcelsSummary? summary,
   String? groupId,
   bool trackingActive = false,
+  int? remainingReschedules,
 }) => AnnouncementModel(
   id: 'trip-1',
   travelerId: 'trav-1',
@@ -87,6 +88,7 @@ AnnouncementModel _trip({
   parcelsSummary: summary,
   tripGroupId: groupId,
   trackingActive: trackingActive,
+  remainingReschedules: remainingReschedules,
 );
 
 BidModel _bid(String id, String status) => BidModel(
@@ -264,6 +266,88 @@ void main() {
     }
   });
 
+  group('carte de statut selon les colis', () {
+    testWidgets('IN_PROGRESS, colis arrivés : les colis attendent', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        trip: _trip(status: 'IN_PROGRESS', summary: _summary),
+        bids: [_bid('b1', 'ARRIVED'), _bid('b2', 'ARRIVED')],
+      );
+      expect(key('trip-status-card-arrived'), findsOneWidget);
+      expect(key('trip-status-card-inProgress'), findsNothing);
+      expect(
+        find.text('Trajet arrivé : vos colis attendent leurs destinataires.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('IN_PROGRESS, colis en transit : en cours', (tester) async {
+      await pump(
+        tester,
+        trip: _trip(status: 'IN_PROGRESS', summary: _summary),
+        bids: [_bid('b1', 'IN_TRANSIT')],
+      );
+      expect(key('trip-status-card-inProgress'), findsOneWidget);
+      expect(key('trip-status-card-arrived'), findsNothing);
+      expect(
+        find.text('Trajet en cours : vos colis voyagent avec vous.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('IN_PROGRESS, colis en chargement : en cours', (tester) async {
+      await pump(
+        tester,
+        trip: _trip(status: 'IN_PROGRESS', summary: _summary),
+        bids: null,
+      );
+      expect(key('trip-status-card-inProgress'), findsOneWidget);
+    });
+
+    // Même règle que l'entrée « Reporter » du menu ⋮.
+    testWidgets('FULL reportable : la carte propose le report', (tester) async {
+      await pump(
+        tester,
+        trip: _trip(status: 'FULL'),
+        bids: [_bid('b1', 'ACCEPTED')],
+      );
+      expect(find.textContaining('Vous pouvez reporter'), findsOneWidget);
+      expect(key('trip-status-card-support'), findsOneWidget);
+    });
+
+    testWidgets('FULL déjà reporté deux fois : pas de report promis', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        trip: _trip(status: 'FULL', remainingReschedules: 0),
+        bids: [_bid('b1', 'ACCEPTED')],
+      );
+      expect(key('trip-status-card-full'), findsOneWidget);
+      expect(find.textContaining('reporter'), findsNothing);
+      expect(key('trip-status-card-support'), findsOneWidget);
+    });
+
+    testWidgets('FULL avec un colis en transit : pas de report promis', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        trip: _trip(status: 'FULL', summary: _summary),
+        bids: [_bid('b1', 'IN_TRANSIT')],
+      );
+      expect(find.textContaining('reporter'), findsNothing);
+    });
+
+    testWidgets('REMOVED_BY_ADMIN : lien vers le support', (tester) async {
+      await pump(tester, trip: _trip(status: 'REMOVED_BY_ADMIN'));
+      expect(key('trip-status-card-support'), findsOneWidget);
+      expect(find.text('Contacter le support'), findsOneWidget);
+    });
+  });
+
   group('sans demande ni colis', () {
     // (audience, Demandes, Colis, tuile Affiche)
     const expected = {
@@ -301,7 +385,9 @@ void main() {
       'ACTIVE': (true, true),
       'FULL': (true, true),
       'IN_PROGRESS': (true, true),
-      'COMPLETED': (false, true),
+      // Le back refuse toute acceptation sur un trajet terminé : ni tuile ni
+      // carte qui promettrait une réponse.
+      'COMPLETED': (false, false),
       'CANCELLED': (false, false),
       'REMOVED_BY_ADMIN': (false, false),
       'SOMETHING_NEW': (false, false),
@@ -398,6 +484,35 @@ void main() {
         expect(key('activate-card-payments-cta'), findsNothing);
       });
     }
+
+    // Le back refuse la modification dès qu'un colis est accepté (409
+    // `modification-impossible`) : la tuile mènerait à un refus certain.
+    for (final status in const ['ACTIVE', 'FULL']) {
+      testWidgets('$status avec un colis accepté : tuile carte absente', (
+        tester,
+      ) async {
+        await pump(
+          tester,
+          trip: _trip(status: status, methods: const {BidPaymentMethod.cash}),
+          bids: [_bid('b1', 'PENDING'), _bid('b2', 'ACCEPTED')],
+          stripeReady: true,
+        );
+        expect(key('trip_owner-todo-card'), findsNothing);
+        expect(key('trip_owner-todo-requests'), findsOneWidget);
+      });
+    }
+
+    testWidgets('ACTIVE avec seulement des demandes : tuile carte', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        trip: _trip(methods: const {BidPaymentMethod.cash}),
+        bids: [_bid('b1', 'PENDING')],
+        stripeReady: true,
+      );
+      expect(key('trip_owner-todo-card'), findsOneWidget);
+    });
   });
 
   testWidgets('« Je pars » : tuile quand le détail sert trackingActive', (

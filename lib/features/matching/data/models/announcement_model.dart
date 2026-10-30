@@ -280,8 +280,9 @@ class AnnouncementModel {
   final String? departureTimezone;
 
   /// La fenêtre de suivi du trajet est ouverte : l'app peut envoyer la
-  /// position du voyageur à la reprise. Servi par « Mes trajets » ; `false`
-  /// sur un back antérieur.
+  /// position du voyageur à la reprise. Servi par « Mes trajets » et, au seul
+  /// voyageur propriétaire, par le détail du trajet ; `false` pour tout autre
+  /// lecteur ou sur un back antérieur.
   @JsonKey(defaultValue: false)
   final bool trackingActive;
 

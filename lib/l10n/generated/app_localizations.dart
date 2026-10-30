@@ -8505,12 +8505,6 @@ abstract class AppLocalizations {
   /// **'prix'**
   String get listingPricingSuffixPrix;
 
-  /// Nombre de colis acceptés sur le trajet (écran du trajet, ex-corps de détail)
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{colis accepté} other{colis acceptés}}'**
-  String listingAcceptedParcels(int count);
-
   /// Titre de la section moyens de paiement acceptés (écran du trajet, ex-corps de détail, traveler_announcement_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
@@ -36816,17 +36810,29 @@ abstract class AppLocalizations {
   /// **'Recevez plus de colis grâce à la carte'**
   String get tripTodoCardActivateSummary;
 
-  /// Carte de statut de l'écran du trajet (propriétaire), trajet FULL : le back refuse l'annulation d'un trajet complet (trip_status_card.dart).
+  /// Carte de statut de l'écran du trajet (propriétaire), trajet FULL dont le report est encore possible ; le back refuse l'annulation d'un trajet complet, un lien « Contacter le support » suit (trip_status_card.dart).
   ///
   /// In fr, this message translates to:
   /// **'Trajet complet : plus de demande possible. Vous pouvez reporter le départ. Pour annuler, contactez le support.'**
   String get tripStatusFullMessage;
 
-  /// Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS (trip_status_card.dart).
+  /// Carte de statut de l'écran du trajet (propriétaire), trajet FULL qui ne peut plus être reporté (deux reports faits, colis en route) ; le back refuse l'annulation d'un trajet complet, un lien « Contacter le support » suit (trip_status_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet complet : plus de demande possible. Pour annuler, contactez le support.'**
+  String get tripStatusFullNoRescheduleMessage;
+
+  /// Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS dont des colis sont encore en route, ou colis pas encore chargés (trip_status_card.dart).
   ///
   /// In fr, this message translates to:
   /// **'Trajet en cours : vos colis voyagent avec vous.'**
   String get tripStatusInProgressMessage;
+
+  /// Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS après « Arrivé à destination » : un colis est ARRIVED et plus aucun n'est remis ou en transit ; le trajet ne passe COMPLETED qu'au dernier colis livré (trip_status_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet arrivé : vos colis attendent leurs destinataires.'**
+  String get tripStatusArrivedMessage;
 
   /// Carte de statut de l'écran du trajet (propriétaire), trajet COMPLETED (trip_status_card.dart).
   ///
@@ -36840,10 +36846,10 @@ abstract class AppLocalizations {
   /// **'Trajet annulé. Les colis déjà remis suivent la procédure de retour.'**
   String get tripStatusCancelledMessage;
 
-  /// Carte de statut de l'écran du trajet (propriétaire), trajet REMOVED_BY_ADMIN, retiré par la modération (trip_status_card.dart).
+  /// Carte de statut de l'écran du trajet (propriétaire), trajet REMOVED_BY_ADMIN, retiré par la modération ; un lien « Contacter le support » (/support) suit (trip_status_card.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ce trajet a été retiré par l\'équipe Yadony. Contactez le support.'**
+  /// **'Ce trajet a été retiré par l\'équipe Yadony.'**
   String get tripStatusRemovedMessage;
 
   /// Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
@@ -37092,23 +37098,11 @@ abstract class AppLocalizations {
   /// **'Voir les demandes de ce trajet'**
   String get tripRequestsCardUnknown;
 
-  /// Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet complet (FULL), qui ne reçoit plus de nouvelle demande ; celles déjà reçues se traitent encore (trip_requests_card.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Trajet complet : plus de nouvelle demande.'**
-  String get tripRequestsCardFullHint;
-
   /// Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet parti (IN_PROGRESS) ; la carte n'est affichée que s'il reste des demandes à traiter, le back refusant tout nouveau colis (trip_requests_card.dart).
   ///
   /// In fr, this message translates to:
   /// **'Trajet parti : plus de nouvelle demande.'**
   String get tripRequestsCardDepartedHint;
-
-  /// Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet terminé (COMPLETED) ; la carte n'est affichée que s'il reste des demandes à traiter (trip_requests_card.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Trajet terminé : plus de nouvelle demande.'**
-  String get tripRequestsCardEndedHint;
 
   /// Écran du trajet vu par son voyageur : titre de la grille de tuiles (itinéraire et lieux, paiements, conditions, affiche, arrivée), chacune ouvrant un bottom sheet (trip_owner_body.dart).
   ///
@@ -37169,6 +37163,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le trajet disparaît de vos trajets'**
   String get tripMenuDeleteSubtitle;
+
+  /// Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Instructions de retrait » quand le sheet ne fait que les montrer (aucun colis arrivé : avant l'arrivée, trajet terminé ou annulé) ; après l'arrivée, le sous-titre invite à les saisir (trip_owner_options_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que voient les destinataires'**
+  String get tripMenuArrivalReadSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -29,9 +29,10 @@ void main() {
       .data!;
 
   group('statuts', () {
-    // ACTIVE et FULL : toujours (PROD-1N). Parti ou terminé : seulement
-    // s'il reste des demandes (le back les expire au départ et refuse tout
-    // nouveau colis). Brouillon, annulé, retiré, inconnu : jamais.
+    // ACTIVE et FULL : toujours (PROD-1N). Parti : seulement s'il reste des
+    // demandes (le back les expire au départ et refuse tout nouveau colis).
+    // Terminé : jamais, le back y refuse toute acceptation (même règle que la
+    // tuile « À traiter »). Brouillon, annulé, retiré, inconnu : jamais.
     const withoutRequests = {
       'DRAFT': false,
       'ACTIVE': true,
@@ -47,7 +48,7 @@ void main() {
       'ACTIVE': true,
       'FULL': true,
       'IN_PROGRESS': true,
-      'COMPLETED': true,
+      'COMPLETED': false,
       'CANCELLED': false,
       'REMOVED_BY_ADMIN': false,
       'SOMETHING_NEW': false,
@@ -85,6 +86,18 @@ void main() {
       );
     });
 
+    test('terminé : absente même avec des demandes restées en attente', () {
+      final trip = tripFixture(status: 'COMPLETED', pendingBidCount: 2);
+      expect(TripRequestsCard.shownFor(trip, null), isFalse);
+      expect(
+        TripRequestsCard.shownFor(trip, [
+          bidFixture('b1', 'PENDING'),
+          bidFixture('b2', 'PAYMENT_ESCROWED'),
+        ]),
+        isFalse,
+      );
+    });
+
     test('même source que la tuile « À traiter »', () {
       expect(tripRequestsPhaseFor('ACTIVE'), TripRequestsPhase.open);
       expect(tripRequestsPhaseFor('FULL'), TripRequestsPhase.full);
@@ -107,7 +120,9 @@ void main() {
       return f.evaluate().isEmpty ? null : tester.widget<Text>(f).data;
     }
 
-    testWidgets('complet : plus de nouvelle demande, avec ou sans demande', (
+    // La carte de statut, juste au-dessus, dit déjà qu'un trajet complet ne
+    // reçoit plus de demande : pas de sous-ligne qui le répète.
+    testWidgets('complet : aucune sous-ligne, avec ou sans demande', (
       tester,
     ) async {
       await pumpTripCard(
@@ -118,7 +133,7 @@ void main() {
         ),
       );
       expect(countText(tester), 'Aucune demande à traiter');
-      expect(hint(tester), 'Trajet complet : plus de nouvelle demande.');
+      expect(hint(tester), isNull);
 
       await pumpTripCard(
         tester,
@@ -128,7 +143,7 @@ void main() {
         ),
       );
       expect(countText(tester), '1 demande à traiter');
-      expect(hint(tester), 'Trajet complet : plus de nouvelle demande.');
+      expect(hint(tester), isNull);
       // Jamais « Répondez pour remplir votre trajet » : il est plein.
       expect(find.text('Répondez pour remplir votre trajet.'), findsNothing);
     });
@@ -149,17 +164,6 @@ void main() {
       );
     });
 
-    testWidgets('terminé', (tester) async {
-      await pumpTripCard(
-        tester,
-        TripRequestsCard(
-          trip: tripFixture(status: 'COMPLETED'),
-          bids: [bidFixture('b1', 'PAYMENT_ESCROWED')],
-        ),
-      );
-      expect(hint(tester), 'Trajet terminé : plus de nouvelle demande.');
-    });
-
     testWidgets('en anglais', (tester) async {
       Future<String?> render(String status) async {
         await pumpTripCard(
@@ -173,9 +177,8 @@ void main() {
         return hint(tester);
       }
 
-      expect(await render('FULL'), 'Trip full: no new requests.');
+      expect(await render('FULL'), isNull);
       expect(await render('IN_PROGRESS'), 'Trip underway: no new requests.');
-      expect(await render('COMPLETED'), 'Trip completed: no new requests.');
     });
   });
 
@@ -202,17 +205,14 @@ void main() {
       expect(ink.onTap, isNotNull);
     });
 
-    testWidgets('complet : ligne neutre, sous-ligne du statut', (tester) async {
+    testWidgets('complet : ligne neutre, sans sous-ligne', (tester) async {
       await pumpTripCard(
         tester,
         TripRequestsCard(trip: tripFixture(status: 'FULL'), bids: null),
       );
 
       expect(countText(tester), 'Voir les demandes de ce trajet');
-      expect(
-        find.text('Trajet complet : plus de nouvelle demande.'),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('trip-requests-card-hint')), findsNothing);
     });
 
     testWidgets('en anglais', (tester) async {

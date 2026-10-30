@@ -1777,8 +1777,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'listingCapacityAvailableSuffix': (l) => l.listingCapacityAvailableSuffix,
   'listingPricingSuffixTarifaire': (l) => l.listingPricingSuffixTarifaire,
   'listingPricingSuffixPrix': (l) => l.listingPricingSuffixPrix,
-  'listingAcceptedParcels': (l) =>
-      l.listingAcceptedParcels(intPlaceholderValue),
   'listingPaymentsAcceptedTitle': (l) => l.listingPaymentsAcceptedTitle,
   'listingCashOnlyNudgeMessage': (l) => l.listingCashOnlyNudgeMessage,
   'listingActivateCardPaymentsButton': (l) =>
@@ -7982,7 +7980,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripTodoCardReadySummary': (l) => l.tripTodoCardReadySummary,
   'tripTodoCardActivateSummary': (l) => l.tripTodoCardActivateSummary,
   'tripStatusFullMessage': (l) => l.tripStatusFullMessage,
+  'tripStatusFullNoRescheduleMessage': (l) =>
+      l.tripStatusFullNoRescheduleMessage,
   'tripStatusInProgressMessage': (l) => l.tripStatusInProgressMessage,
+  'tripStatusArrivedMessage': (l) => l.tripStatusArrivedMessage,
   'tripStatusCompletedMessage': (l) => l.tripStatusCompletedMessage,
   'tripStatusCancelledMessage': (l) => l.tripStatusCancelledMessage,
   'tripStatusRemovedMessage': (l) => l.tripStatusRemovedMessage,
@@ -8043,9 +8044,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripRequestsCardEmpty': (l) => l.tripRequestsCardEmpty,
   'tripRequestsCardEmptyHint': (l) => l.tripRequestsCardEmptyHint,
   'tripRequestsCardUnknown': (l) => l.tripRequestsCardUnknown,
-  'tripRequestsCardFullHint': (l) => l.tripRequestsCardFullHint,
   'tripRequestsCardDepartedHint': (l) => l.tripRequestsCardDepartedHint,
-  'tripRequestsCardEndedHint': (l) => l.tripRequestsCardEndedHint,
   'tripSectionYourTrip': (l) => l.tripSectionYourTrip,
   'tripParcelsSeeList': (l) => l.tripParcelsSeeList,
   'tripParcelsCardTitle': (l) => l.tripParcelsCardTitle(intPlaceholderValue),
@@ -8056,6 +8055,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripMenuSaveTemplate': (l) => l.tripMenuSaveTemplate,
   'tripMenuSaveTemplateSubtitle': (l) => l.tripMenuSaveTemplateSubtitle,
   'tripMenuDeleteSubtitle': (l) => l.tripMenuDeleteSubtitle,
+  'tripMenuArrivalReadSubtitle': (l) => l.tripMenuArrivalReadSubtitle,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

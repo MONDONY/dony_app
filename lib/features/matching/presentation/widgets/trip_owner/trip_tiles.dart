@@ -44,7 +44,7 @@ bool tripHasArrivedParcel(List<BidModel>? bids) =>
 /// statut inconnu de l'app les garde, en lecture.
 ///
 /// [isOwner] faux (visiteur, ou propriété pas encore tranchée) : aucune
-/// tuile, comme « À traiter » (`tripTodoTilesFor`) et la grille d'actions.
+/// tuile, comme « À traiter » (`tripTodoTilesFor`), le pied et le menu ⋮.
 List<TripTile> tripTilesFor({
   required AnnouncementModel trip,
   required List<BidModel>? bids,

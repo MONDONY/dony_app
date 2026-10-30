@@ -456,23 +456,96 @@ void main() {
       expect(seeList(), findsNothing);
     });
 
-    testWidgets('échec (BidError) : rien sous le titre, pas d\'« aucun »', (
+    Finder loadError() => find.byKey(const Key('trip-parcels-load-error'));
+
+    // Hors ligne au premier chargement : sans « Réessayer », plus aucun
+    // chemin ne menait aux colis du trajet (ni lien, ni bouton, ni ligne).
+    testWidgets('échec (BidError) : « Réessayer », jamais « aucun »', (
       tester,
     ) async {
       await pump(tester, BidError(const OfflineException()));
+      await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.text('Colis dans le trajet'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(find.text('Aucun colis embarqué'), findsNothing);
       expect(seeList(), findsNothing);
+      expect(loadError(), findsOneWidget);
+      expect(
+        find.descendant(of: loadError(), matching: find.text('Réessayer')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: loadError(),
+          matching: find.text('Erreur de chargement'),
+        ),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('échec après une liste : le lien reste', (tester) async {
+    testWidgets('« Réessayer » redemande la liste, puis la montre', (
+      tester,
+    ) async {
+      await pump(tester, BidError(const OfflineException()));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+      final event =
+          verify(() => bidBloc.add(captureAny())).captured.single
+              as BidListRequested;
+      expect(event.announcementId, 'trip-1');
+      // Rechargement visible : l'indicateur, puis la liste.
+      expect(event.silent, isFalse);
+
+      bidStates.add(BidLoading());
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      bidStates.add(BidListLoaded(_mixed));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(loadError(), findsNothing);
+      expect(find.text('Colis dans le trajet · 7'), findsOneWidget);
+      expect(seeList(), findsOneWidget);
+    });
+
+    testWidgets('anglais : « Try again »', (tester) async {
+      await pump(
+        tester,
+        BidError(const OfflineException()),
+        locale: const Locale('en'),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(
+        find.descendant(of: loadError(), matching: find.text('Try again')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('échec après une liste : le lien et le total restent', (
+      tester,
+    ) async {
       await pump(tester, BidListLoaded(_mixed));
 
       bidStates.add(BidError(const OfflineException()));
-      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pumpAndSettle();
       expect(seeList(), findsOneWidget);
+      expect(find.text('Colis dans le trajet · 7'), findsOneWidget);
+      expect(loadError(), findsOneWidget);
+    });
+
+    testWidgets('échec à 360 dp, texte × 1,3 : rien ne déborde', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        BidError(const OfflineException()),
+        textScale: 1.3,
+        size: const Size(360, 800),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(tester.takeException(), isNull);
+      expect(loadError(), findsOneWidget);
     });
   });
 

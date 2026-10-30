@@ -7,6 +7,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -56,7 +57,8 @@ List<BidModel> tripParcelsPreview(List<BidModel> embarked) => [
 /// embarqué) ouvrent la liste des colis du trajet (`/announcements/:id/bids`) ;
 /// une ligne ouvre la fiche du colis (`/bids/:id`). Au retour de l'une ou de
 /// l'autre, les colis et le trajet sont relus ([openTripParcelsList],
-/// [openTripParcel]).
+/// [openTripParcel]). Liste en échec (`BidError`) : « Réessayer » la
+/// redemande.
 /// Filtre les offres réellement embarquées via [isAcceptedTabBid] (source de
 /// vérité du projet : ACCEPTED / HANDED_OVER / IN_TRANSIT / ARRIVED / COMPLETED,
 /// moins les
@@ -196,6 +198,22 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
                       ),
                     ],
                   ],
+                );
+              }
+              // Liste en échec (hors ligne au premier chargement, ou
+              // rechargement visible qui échoue) : sans « Réessayer », plus
+              // aucun chemin ne mènerait aux colis du trajet.
+              if (state is BidError) {
+                return DonyEmptyState(
+                  key: const Key('trip-parcels-load-error'),
+                  type: DonyEmptyStateType.error,
+                  iconAsset: 'circle-alert',
+                  title: context.l10n.commonLoadError,
+                  actionLabel: context.l10n.commonRetry,
+                  onAction: () => context.read<BidBloc>().add(
+                    BidListRequested(widget.announcementId),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
                 );
               }
               return const SizedBox.shrink();

@@ -666,6 +666,7 @@ void main() {
     required AnnouncementModel announcement,
     required AuthState auth,
     StripeAccountState? stripeState,
+    List<BidModel>? bids,
   }) async {
     when(
       () => annBloc.state,
@@ -677,12 +678,12 @@ void main() {
     );
     when(() => authBloc.state).thenReturn(auth);
     whenListen(authBloc, const Stream<AuthState>.empty(), initialState: auth);
-    final bids = [_makeBid(status: 'ARRIVED')];
-    when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
+    final loaded = bids ?? [_makeBid(status: 'ARRIVED')];
+    when(() => bidBloc.state).thenReturn(BidListLoaded(loaded));
     whenListen(
       bidBloc,
-      Stream<BidState>.value(BidListLoaded(bids)),
-      initialState: BidListLoaded(bids),
+      Stream<BidState>.value(BidListLoaded(loaded)),
+      initialState: BidListLoaded(loaded),
     );
     await _pump(
       tester,
@@ -696,6 +697,7 @@ void main() {
   }
 
   // Sentry FLUTTER-DH : trajet publié en espèces avant l'activation de Stripe.
+  // Seulement des demandes : le back accepte encore la modification.
   testWidgets(
     'propriétaire, Stripe activé, trajet en espèces : « Ajouter la carte » '
     'ouvre l\'édition puis relit le détail',
@@ -709,6 +711,7 @@ void main() {
         stripeState: const StripeAccountReady(
           ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
         ),
+        bids: [_makeBid(status: 'PENDING')],
       );
       clearInteractions(annBloc);
 
@@ -732,6 +735,28 @@ void main() {
       expect(reloads.single.id, 'ann-trip-001');
     },
   );
+
+  // Un colis accepté, remis ou arrivé : le back répond 409
+  // `modification-impossible` à toute modification, la tuile mènerait à un
+  // refus certain (relecture finale, n° 1).
+  for (final status in const ['ACCEPTED', 'ARRIVED']) {
+    testWidgets('propriétaire, trajet en espèces avec un colis $status : '
+        'pas de tuile « Ajouter la carte »', (tester) async {
+      await pumpOwnerWith(
+        tester,
+        announcement: _makeAnnouncement(
+          acceptedPaymentMethods: const {BidPaymentMethod.cash},
+        ),
+        auth: const AuthAuthenticated(_owner),
+        stripeState: const StripeAccountReady(
+          ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+        ),
+        bids: [_makeBid(status: status)],
+      );
+      expect(find.byKey(const Key('trip_owner-todo-card')), findsNothing);
+      expect(find.byKey(const Key('enable-card-on-trip-cta')), findsNothing);
+    });
+  }
 
   // Le voyageur ne relisait son texte que dans la feuille d'édition, qui
   // disparaît avec le dernier colis actif.

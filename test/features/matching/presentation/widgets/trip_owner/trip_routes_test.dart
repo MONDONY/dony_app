@@ -1,6 +1,7 @@
-// Navigations de l'écran du trajet (trip_routes.dart) : route filtrée des
-// demandes, relecture silencieuse au retour ancrée sur l'écran (pas sur le
-// widget touché), double appui, écran quitté pendant la page ouverte.
+// Navigations de l'écran du trajet (trip_routes.dart, trip_edit.dart) :
+// route filtrée des demandes, relecture silencieuse au retour ancrée sur
+// l'écran (pas sur le widget touché), double appui (colis, Modifier,
+// affiche, verrou partagé), écran quitté pendant la page ouverte.
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
@@ -10,6 +11,8 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -206,6 +209,140 @@ void main() {
       await tester.tap(find.text('row'));
       await tester.pumpAndSettle();
       expect(pushes, 2);
+    });
+  });
+
+  // Modifier et Partager l'affiche partent du pied, du menu ⋮, des sheets et
+  // de l'icône de l'AppBar : deux appuis dans la même image empilaient deux
+  // formulaires ou deux affiches (relecture finale, n° 12).
+  group('une seule page à la fois depuis l\'écran', () {
+    late MockAnnouncementBloc annBloc;
+    late Map<String, int> pages;
+    Object? editExtra;
+
+    setUp(() {
+      annBloc = MockAnnouncementBloc();
+      whenListen(
+        annBloc,
+        const Stream<AnnouncementState>.empty(),
+        initialState: AnnouncementDetailLoaded(tripFixture()),
+      );
+      pages = {};
+      editExtra = null;
+    });
+
+    Future<void> pump(WidgetTester tester) async {
+      final trip = tripFixture();
+      Widget page(String name, BuildContext context, {Object? result}) {
+        pages.update(name, (n) => n + 1, ifAbsent: () => 1);
+        return Scaffold(
+          body: TextButton(
+            onPressed: () => context.pop(result),
+            child: Text('close $name'),
+          ),
+        );
+      }
+
+      final router = GoRouter(
+        initialLocation: '/trip',
+        routes: [
+          GoRoute(
+            path: '/trip',
+            builder: (context, _) => BlocProvider<AnnouncementBloc>.value(
+              value: annBloc,
+              child: Scaffold(
+                body: Builder(
+                  builder: (context) => Column(
+                    children: [
+                      TextButton(
+                        onPressed: () => unawaited(openTripEdit(context, trip)),
+                        child: const Text('edit'),
+                      ),
+                      TextButton(
+                        onPressed: () => openTripPoster(context, trip),
+                        child: const Text('poster'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/trips/create',
+            builder: (context, state) {
+              editExtra = state.extra;
+              return page('edit', context, result: true);
+            },
+          ),
+          GoRoute(
+            path: '/announcements/:id/affiche',
+            builder: (context, _) => page('poster', context),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Modifier : double appui, un seul formulaire, une relecture', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      await tester.tap(find.text('edit'));
+      await tester.tap(find.text('edit'));
+      await tester.pumpAndSettle();
+      expect(pages['edit'], 1);
+      expect(editExtra, isA<CreateTripArgs>());
+
+      await tester.tap(find.text('close edit'));
+      await tester.pumpAndSettle();
+      final event =
+          verify(() => annBloc.add(captureAny())).captured.single
+              as AnnouncementDetailRequested;
+      expect(event.id, 'trip-1');
+
+      // Le verrou est levé au retour.
+      await tester.tap(find.text('edit'));
+      await tester.pumpAndSettle();
+      expect(pages['edit'], 2);
+    });
+
+    testWidgets('affiche : double appui, une seule affiche, rien relu', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      await tester.tap(find.text('poster'));
+      await tester.tap(find.text('poster'));
+      await tester.pumpAndSettle();
+      expect(pages['poster'], 1);
+
+      await tester.tap(find.text('close poster'));
+      await tester.pumpAndSettle();
+      verifyNever(() => annBloc.add(any()));
+      await tester.tap(find.text('poster'));
+      await tester.pumpAndSettle();
+      expect(pages['poster'], 2);
+    });
+
+    testWidgets('verrou partagé : affiche puis Modifier dans la même image', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      await tester.tap(find.text('poster'));
+      await tester.tap(find.text('edit'));
+      await tester.pumpAndSettle();
+      expect(pages, {'poster': 1});
     });
   });
 }

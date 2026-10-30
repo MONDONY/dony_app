@@ -445,6 +445,69 @@ void main() {
       }
     });
 
+    // Le sheet n'a « Modifier les instructions » qu'après l'arrivée (un
+    // colis ARRIVED) : avant, ou sur un trajet terminé ou annulé, l'entrée
+    // n'annonce pas de saisie.
+    group('Instructions de retrait : sous-titre', () {
+      Finder subtitle(String text) => find.descendant(
+        of: entry(TripMenuEntry.arrivalInstructions),
+        matching: find.text(text),
+      );
+
+      testWidgets('colis arrivé : saisie annoncée', (tester) async {
+        await openMenu(
+          tester,
+          trip: ownerTrip(status: 'IN_PROGRESS', arrivalInstructions: 'Rue 10'),
+          bids: [ownerBid('b1', 'ARRIVED')],
+        );
+        expect(
+          subtitle('Indiquez où et comment récupérer le colis'),
+          findsOneWidget,
+        );
+        expect(subtitle('Ce que voient les destinataires'), findsNothing);
+      });
+
+      for (final (status, bids) in [
+        ('COMPLETED', [ownerBid('b1', 'COMPLETED')]),
+        ('CANCELLED', <BidModel>[]),
+        ('IN_PROGRESS', [ownerBid('b1', 'IN_TRANSIT')]),
+      ]) {
+        testWidgets('$status sans colis arrivé : lecture seule', (
+          tester,
+        ) async {
+          await openMenu(
+            tester,
+            trip: ownerTrip(status: status, arrivalInstructions: 'Rue 10'),
+            bids: bids,
+          );
+          expect(subtitle('Ce que voient les destinataires'), findsOneWidget);
+          expect(
+            subtitle('Indiquez où et comment récupérer le colis'),
+            findsNothing,
+          );
+        });
+      }
+
+      testWidgets('anglais', (tester) async {
+        await openMenu(
+          tester,
+          trip: ownerTrip(status: 'COMPLETED', arrivalInstructions: 'Rue 10'),
+          locale: const Locale('en'),
+        );
+        expect(subtitle('What recipients see'), findsOneWidget);
+        await openMenu(
+          tester,
+          trip: ownerTrip(status: 'IN_PROGRESS', arrivalInstructions: 'Rue 10'),
+          bids: [ownerBid('b1', 'ARRIVED')],
+          locale: const Locale('en'),
+        );
+        expect(
+          subtitle('Say where and how to pick up the parcel'),
+          findsOneWidget,
+        );
+      });
+    });
+
     testWidgets('Reporter verrouillé : la vraie raison, aucun effet', (
       tester,
     ) async {

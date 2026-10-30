@@ -130,6 +130,14 @@ final _pendingBids = [
   _bid('b3', 'ACCEPTED', description: 'Épices', weightKg: 2, net: 20),
 ];
 
+/// Demandes seules, sans colis accepté : la modification du trajet reste
+/// possible côté back, la tuile « carte » existe. Colis par défaut du sheet
+/// de cette tuile.
+final _requestsOnlyBids = [
+  for (final b in _pendingBids)
+    if (b.status != 'ACCEPTED') b,
+];
+
 /// Vraies polices de l'app : la police de repli des tests donne un cadratin
 /// par glyphe et fausserait la mesure des libellés.
 Future<void> _loadAppFonts() async {
@@ -235,7 +243,11 @@ void main() {
     whenListen(
       bidBloc,
       bidStates.stream,
-      initialState: bidState ?? BidListLoaded(_pendingBids),
+      initialState:
+          bidState ??
+          BidListLoaded(
+            tile == TripTodoTile.card ? _requestsOnlyBids : _pendingBids,
+          ),
     );
     whenListen(departCubit, departStates.stream, initialState: departState);
     final StripeAccountBloc stripeBloc;
@@ -936,6 +948,26 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Activer les paiements par carte'), findsNothing);
+    });
+
+    // Le back refuse la modification dès qu'un colis est accepté
+    // (`modification-impossible`) : le sheet se ferme avant qu'on y touche.
+    testWidgets('colis accepté arrivé pendant l\'ouverture : fermeture', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        trip: _cashTrip(),
+        tile: TripTodoTile.card,
+        stripe: _ready,
+      );
+      expect(enableCard(), findsOneWidget);
+
+      bidStates.add(BidListLoaded(_pendingBids));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ajouter la carte à ce trajet'), findsNothing);
+      expect(enableCard(), findsNothing);
     });
   });
 

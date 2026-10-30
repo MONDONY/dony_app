@@ -33,6 +33,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owne
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -118,8 +119,15 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   /// Trajet ouvert par son propriétaire pendant la fenêtre de suivi : la
   /// feuille de consentement se montre au plus une fois dans la vie du
   /// compte (le cubit mémorise la réponse). Ne bloque rien.
+  ///
+  /// Seulement pour un trajet publié, complet ou en cours
+  /// ([tripTrackingStatusOpen], même règle que « Je pars ») : le back sert la
+  /// fenêtre ouverte sans regarder le statut, un trajet annulé avec un colis
+  /// remis en retour la verrait encore ouverte.
   void _askTrackingConsentOnce(AnnouncementModel a) {
-    if (_askedTrackingConsent || !a.trackingActive) {
+    if (_askedTrackingConsent ||
+        !a.trackingActive ||
+        !tripTrackingStatusOpen(a.status)) {
       return;
     }
     _askedTrackingConsent = true;

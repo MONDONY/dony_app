@@ -4354,15 +4354,6 @@
   "@listingPricingSuffixPrix": {
     "description": "Libellé secondaire de la pastille prix au kilo (écran du trajet, ex-corps de détail)"
   },
-  "listingAcceptedParcels": "{count, plural, =1{colis accepté} other{colis acceptés}}",
-  "@listingAcceptedParcels": {
-    "description": "Nombre de colis acceptés sur le trajet (écran du trajet, ex-corps de détail)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "listingPaymentsAcceptedTitle": "Paiements acceptés",
   "@listingPaymentsAcceptedTitle": {
     "description": "Titre de la section moyens de paiement acceptés (écran du trajet, ex-corps de détail, traveler_announcement_bottom_sheet.dart)"
@@ -22741,15 +22732,19 @@
   "tripTodoCardActivateSummary": "Recevez plus de colis grâce à la carte",
   "@tripTodoCardActivateSummary": {"description": "Écran du trajet (propriétaire), « À traiter » : résumé de la tuile « Activer les paiements par carte », trajet en espèces seules et paiements par carte pas encore activés (trip_todo_tiles.dart)."},
   "tripStatusFullMessage": "Trajet complet : plus de demande possible. Vous pouvez reporter le départ. Pour annuler, contactez le support.",
-  "@tripStatusFullMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet FULL : le back refuse l'annulation d'un trajet complet (trip_status_card.dart)."},
+  "@tripStatusFullMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet FULL dont le report est encore possible ; le back refuse l'annulation d'un trajet complet, un lien « Contacter le support » suit (trip_status_card.dart)."},
+  "tripStatusFullNoRescheduleMessage": "Trajet complet : plus de demande possible. Pour annuler, contactez le support.",
+  "@tripStatusFullNoRescheduleMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet FULL qui ne peut plus être reporté (deux reports faits, colis en route) ; le back refuse l'annulation d'un trajet complet, un lien « Contacter le support » suit (trip_status_card.dart)."},
   "tripStatusInProgressMessage": "Trajet en cours : vos colis voyagent avec vous.",
-  "@tripStatusInProgressMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS (trip_status_card.dart)."},
+  "@tripStatusInProgressMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS dont des colis sont encore en route, ou colis pas encore chargés (trip_status_card.dart)."},
+  "tripStatusArrivedMessage": "Trajet arrivé : vos colis attendent leurs destinataires.",
+  "@tripStatusArrivedMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS après « Arrivé à destination » : un colis est ARRIVED et plus aucun n'est remis ou en transit ; le trajet ne passe COMPLETED qu'au dernier colis livré (trip_status_card.dart)."},
   "tripStatusCompletedMessage": "Trajet terminé : il ne reçoit plus de demande.",
   "@tripStatusCompletedMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet COMPLETED (trip_status_card.dart)."},
   "tripStatusCancelledMessage": "Trajet annulé. Les colis déjà remis suivent la procédure de retour.",
   "@tripStatusCancelledMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet CANCELLED (trip_status_card.dart)."},
-  "tripStatusRemovedMessage": "Ce trajet a été retiré par l'équipe Yadony. Contactez le support.",
-  "@tripStatusRemovedMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet REMOVED_BY_ADMIN, retiré par la modération (trip_status_card.dart)."},
+  "tripStatusRemovedMessage": "Ce trajet a été retiré par l'équipe Yadony.",
+  "@tripStatusRemovedMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet REMOVED_BY_ADMIN, retiré par la modération ; un lien « Contacter le support » (/support) suit (trip_status_card.dart)."},
   "travelerTrackingBadgeEnRoute": "En route",
   "@travelerTrackingBadgeEnRoute": {
     "description": "Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
@@ -22893,12 +22888,8 @@
   "@tripRequestsCardEmptyHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne sans demande à traiter (trip_requests_card.dart)."},
   "tripRequestsCardUnknown": "Voir les demandes de ce trajet",
   "@tripRequestsCardUnknown": {"description": "Carte « Demandes » de l'écran du trajet : titre quand le nombre de demandes à traiter n'est pas encore connu (liste des colis en chargement, en échec ou jamais chargée) ; ne jamais affirmer « aucune » (trip_requests_card.dart)."},
-  "tripRequestsCardFullHint": "Trajet complet : plus de nouvelle demande.",
-  "@tripRequestsCardFullHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet complet (FULL), qui ne reçoit plus de nouvelle demande ; celles déjà reçues se traitent encore (trip_requests_card.dart)."},
   "tripRequestsCardDepartedHint": "Trajet parti : plus de nouvelle demande.",
   "@tripRequestsCardDepartedHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet parti (IN_PROGRESS) ; la carte n'est affichée que s'il reste des demandes à traiter, le back refusant tout nouveau colis (trip_requests_card.dart)."},
-  "tripRequestsCardEndedHint": "Trajet terminé : plus de nouvelle demande.",
-  "@tripRequestsCardEndedHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet terminé (COMPLETED) ; la carte n'est affichée que s'il reste des demandes à traiter (trip_requests_card.dart)."},
   "tripSectionYourTrip": "Votre trajet",
   "@tripSectionYourTrip": {"description": "Écran du trajet vu par son voyageur : titre de la grille de tuiles (itinéraire et lieux, paiements, conditions, affiche, arrivée), chacune ouvrant un bottom sheet (trip_owner_body.dart)."},
   "tripParcelsSeeList": "Voir la liste",
@@ -22918,5 +22909,7 @@
   "tripMenuSaveTemplateSubtitle": "Pour le republier en quelques gestes",
   "@tripMenuSaveTemplateSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Enregistrer en modèle » (trip_owner_options_sheet.dart)."},
   "tripMenuDeleteSubtitle": "Le trajet disparaît de vos trajets",
-  "@tripMenuDeleteSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Supprimer » (trajet modifiable ou annulé), suivie d'une confirmation (trip_owner_options_sheet.dart)."}
+  "@tripMenuDeleteSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Supprimer » (trajet modifiable ou annulé), suivie d'une confirmation (trip_owner_options_sheet.dart)."},
+  "tripMenuArrivalReadSubtitle": "Ce que voient les destinataires",
+  "@tripMenuArrivalReadSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Instructions de retrait » quand le sheet ne fait que les montrer (aucun colis arrivé : avant l'arrivée, trajet terminé ou annulé) ; après l'arrivée, le sous-titre invite à les saisir (trip_owner_options_sheet.dart)."}
 }

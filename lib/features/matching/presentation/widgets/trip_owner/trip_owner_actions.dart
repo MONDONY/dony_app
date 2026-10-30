@@ -10,8 +10,8 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-// Actions du voyageur sur son trajet, communes à la grille d'actions, au pied
-// collant et au menu ⋮ de l'écran du trajet. Chacune agit depuis [context],
+// Actions du voyageur sur son trajet, communes au pied collant et au menu ⋮
+// de l'écran du trajet. Chacune agit depuis [context],
 // le contexte de l'écran : il porte l'`AnnouncementBloc`, le `BidBloc` et le
 // `CancellationBloc` de la route, dont les écouteurs de l'écran tirent les
 // suites (snackbar, rechargement, sortie de l'écran).
@@ -111,7 +111,8 @@ Future<void> confirmTripDelete(
 
 /// « Annuler le voyage » : feuille d'annulation, avec le nombre de colis déjà
 /// remis ([tripHandedOverParcelCount]) pour qu'elle annonce leur retour
-/// (piège n°6 de l'inventaire : la tuile de la grille ne le passait pas).
+/// (piège n°6 de l'inventaire : l'ancienne grille d'actions ne le passait
+/// pas).
 /// L'écran écoute le `CancellationBloc` (snackbar, relecture, FLUTTER-FH).
 Future<void> openTripCancellation(
   BuildContext context,

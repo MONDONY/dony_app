@@ -1,8 +1,9 @@
 // Bottom sheets des tuiles « Votre trajet » de l'écran du trajet (vue du
 // voyageur propriétaire) : itinéraire et lieux, paiements, conditions,
-// affiche, arrivée. Contenu repris du corps de détail (mêmes assertions que
-// `announcement_detail_body_test.dart` et `_payment_test.dart` pour les
-// sections déplacées), bouton dans le pied selon que le trajet est
+// affiche, arrivée. Contenu repris de l'ancien corps de détail (mêmes
+// assertions que les anciens tests du corps et de son encart de paiement,
+// supprimés avec lui, pour les sections déplacées), bouton dans le pied
+// selon que le trajet est
 // modifiable, trajet et colis relus suivis, fermeture seule, navigation,
 // mesure d'ouverture, statuts REMOVED_BY_ADMIN et inconnu, FR / EN, libellés
 // à taille nominale à 360 dp × 1,3.
@@ -83,7 +84,8 @@ const _mtnCi = MobileMoneyNetwork(
   country: 'CI',
 );
 
-/// Même trajet que `_full()` de `announcement_detail_body_test.dart`.
+/// Trajet complet (tous les lieux, moyens et conditions), celui des anciens
+/// tests du corps de détail.
 AnnouncementModel _trip({
   String id = 'trip-1',
   String status = 'ACTIVE',

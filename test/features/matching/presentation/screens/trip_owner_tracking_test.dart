@@ -72,6 +72,7 @@ const _owner = UserModel(
 AnnouncementModel _ann({
   bool trackingActive = false,
   TripParcelsSummary? summary,
+  String status = 'ACTIVE',
 }) => AnnouncementModel(
   id: 'ann-trip-001',
   travelerId: _ownerId,
@@ -81,7 +82,7 @@ AnnouncementModel _ann({
   availableKg: 10,
   totalKg: 23,
   pricePerKg: 8,
-  status: 'ACTIVE',
+  status: status,
   bidsCount: 0,
   createdAt: DateTime(2026, 6),
   updatedAt: DateTime(2026, 6),
@@ -414,9 +415,9 @@ void main() {
       expect(find.byKey(departTile), findsNothing);
     });
 
-    // Piège n°1 de l'inventaire : le détail ne sert pas encore
-    // `trackingActive` (contrat ancien). Un détail relu sans lui retire la
-    // tuile, rien ne casse.
+    // Piège n°1 de l'inventaire : un back antérieur à la PR jumelle ne sert
+    // pas `trackingActive` dans le détail (contrat ancien). Un détail relu
+    // sans lui retire la tuile, rien ne casse.
     testWidgets('detailWithoutTrackingActiveHidesTileWithoutError', (
       tester,
     ) async {
@@ -440,6 +441,44 @@ void main() {
     await pump(tester, _ann(summary: _summary));
     verifyNever(() => consent.ensureAsked(any(), source: any(named: 'source')));
   });
+
+  // Le back sert la fenêtre de suivi sans regarder le statut : un trajet
+  // annulé dont un colis remis suit la procédure de retour la verrait encore
+  // ouverte. Le consentement suit la règle de « Je pars ».
+  for (final status in const ['FULL', 'IN_PROGRESS']) {
+    testWidgets('consentement proposé sur un trajet $status', (tester) async {
+      await pump(
+        tester,
+        _ann(trackingActive: true, summary: _summary, status: status),
+      );
+      verify(
+        () => consent.ensureAsked(
+          any(),
+          source: TrackingConsentSource.tripScreen,
+        ),
+      ).called(1);
+    });
+  }
+
+  for (final status in const [
+    'CANCELLED',
+    'COMPLETED',
+    'DRAFT',
+    'REMOVED_BY_ADMIN',
+  ]) {
+    testWidgets('consentement jamais proposé sur un trajet $status', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        _ann(trackingActive: true, summary: _summary, status: status),
+      );
+      verifyNever(
+        () => consent.ensureAsked(any(), source: any(named: 'source')),
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
 
 TripAudienceCubit _hiddenAudience() {

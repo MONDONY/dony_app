@@ -44,6 +44,7 @@ const _summary = TripParcelsSummary(
 AnnouncementModel _trip({
   String status = 'ACTIVE',
   int pendingBidCount = 0,
+  int confirmedParcelCount = 0,
   bool trackingActive = false,
   TripParcelsSummary? parcelsSummary,
   Set<BidPaymentMethod> methods = const {BidPaymentMethod.stripe},
@@ -62,6 +63,7 @@ AnnouncementModel _trip({
     createdAt: now,
     updatedAt: now,
     pendingBidCount: pendingBidCount,
+    confirmedParcelCount: confirmedParcelCount,
     trackingActive: trackingActive,
     parcelsSummary: parcelsSummary,
     acceptedPaymentMethods: methods,
@@ -197,7 +199,19 @@ void main() {
       });
     }
 
-    test('après les demandes, avant la carte', () {
+    test('après les demandes', () {
+      expect(
+        _tiles(
+          _trip(trackingActive: true, parcelsSummary: _summary),
+          bids: [_bid('b1', 'PENDING')],
+        ),
+        [TripTodoTile.requests, TripTodoTile.depart],
+      );
+    });
+
+    // « Je pars » suppose des colis remis : le back refuse alors toute
+    // modification du trajet, la tuile « carte » ne l'accompagne jamais.
+    test('jamais avec la carte : colis remis, modification refusée', () {
       expect(
         _tiles(
           _trip(
@@ -206,8 +220,9 @@ void main() {
             methods: const {BidPaymentMethod.cash},
           ),
           bids: [_bid('b1', 'PENDING')],
+          stripe: _ready,
         ),
-        [TripTodoTile.requests, TripTodoTile.depart, TripTodoTile.card],
+        [TripTodoTile.requests, TripTodoTile.depart],
       );
     });
   });
@@ -237,6 +252,132 @@ void main() {
         );
       });
     }
+
+    test('après les demandes', () {
+      expect(_tiles(cashTrip(), bids: [_bid('b1', 'PENDING')]), [
+        TripTodoTile.requests,
+        TripTodoTile.card,
+      ]);
+    });
+
+    // Règle du back (`AnnouncementService.updateAnnouncement`) : 409
+    // `modification-impossible` dès qu'un colis est ACCEPTED, HANDED_OVER,
+    // IN_TRANSIT ou ARRIVED, quel que soit le statut du trajet. La tuile mène
+    // à l'édition du trajet (ou à l'activation de la carte, puis à elle) :
+    // elle n'existe que si le back accepterait la modification.
+    group('modification acceptée par le back', () {
+      for (final stripe in const [_ready, _notReady]) {
+        final variant = stripe == _ready ? 'compte prêt' : 'compte pas prêt';
+        for (final locking in const [
+          'ACCEPTED',
+          'HANDED_OVER',
+          'IN_TRANSIT',
+          'ARRIVED',
+        ]) {
+          test('ACTIVE avec un colis $locking ($variant) : rien', () {
+            expect(
+              _tiles(
+                cashTrip(),
+                bids: [_bid('b1', 'PENDING'), _bid('b2', locking)],
+                stripe: stripe,
+              ),
+              [TripTodoTile.requests],
+            );
+          });
+        }
+        test('FULL avec un colis accepté ($variant) : rien', () {
+          expect(
+            _tiles(
+              cashTrip(status: 'FULL'),
+              bids: [_bid('b1', 'ACCEPTED')],
+              stripe: stripe,
+            ),
+            isEmpty,
+          );
+        });
+        test('ACTIVE avec seulement des demandes ($variant) : tuile', () {
+          expect(
+            _tiles(
+              cashTrip(),
+              bids: [_bid('b1', 'PENDING'), _bid('b2', 'PAYMENT_ESCROWED')],
+              stripe: stripe,
+            ),
+            [TripTodoTile.requests, TripTodoTile.card],
+          );
+        });
+        test('DRAFT sans colis ($variant) : tuile', () {
+          expect(_tiles(cashTrip(status: 'DRAFT'), stripe: stripe), [
+            TripTodoTile.card,
+          ]);
+        });
+      }
+
+      test('paiement attendu, colis clôturés : ne bloquent pas', () {
+        expect(
+          _tiles(
+            cashTrip(),
+            bids: [
+              _bid('b1', 'AWAITING_PAYMENT'),
+              _bid('b2', 'CANCELLED'),
+              _bid('b3', 'NO_SHOW'),
+              _bid('b4', 'PARCEL_REFUSED'),
+              _bid('b5', 'REJECTED'),
+            ],
+            stripe: _ready,
+          ),
+          [TripTodoTile.card],
+        );
+      });
+
+      test('liste pas encore chargée : compteurs du détail', () {
+        AnnouncementModel counted({
+          int confirmed = 0,
+          TripParcelsSummary? summary,
+        }) => _trip(
+          methods: const {BidPaymentMethod.cash},
+          confirmedParcelCount: confirmed,
+          parcelsSummary: summary,
+        );
+        expect(_tiles(counted(), bids: null, stripe: _ready), [
+          TripTodoTile.card,
+        ]);
+        expect(
+          _tiles(counted(confirmed: 1), bids: null, stripe: _ready),
+          isEmpty,
+        );
+        expect(
+          _tiles(counted(summary: _summary), bids: null, stripe: _ready),
+          isEmpty,
+        );
+      });
+
+      test('un compteur du détail suffit, même liste chargée sans colis', () {
+        final trip = _trip(
+          methods: const {BidPaymentMethod.cash},
+          confirmedParcelCount: 1,
+        );
+        expect(_tiles(trip, stripe: _ready), isEmpty);
+      });
+
+      test('tripEditAcceptedByBack', () {
+        expect(tripEditAcceptedByBack(_trip(), const []), isTrue);
+        expect(tripEditAcceptedByBack(_trip(), null), isTrue);
+        expect(
+          tripEditAcceptedByBack(_trip(), [_bid('b1', 'PENDING')]),
+          isTrue,
+        );
+        expect(
+          tripEditAcceptedByBack(_trip(), [_bid('b1', 'ACCEPTED')]),
+          isFalse,
+        );
+        expect(
+          tripEditAcceptedByBack(_trip(status: 'DRAFT'), [
+            _bid('b1', 'ARRIVED'),
+          ]),
+          isFalse,
+        );
+      });
+    });
 
     test('statut Stripe pas encore chargé : tuile (activation)', () {
       expect(_tiles(cashTrip(), stripe: const StripeAccountInitial()), [
@@ -289,6 +430,16 @@ void main() {
       expect(tripCardPaymentsReady(const StripeAccountInitial()), isFalse);
       expect(tripCardPaymentsReady(const StripeAccountLoading()), isFalse);
     });
+  });
+
+  test('suivi ouvert : trajet publié, complet ou en cours seulement', () {
+    for (final status in _statuses) {
+      expect(
+        tripTrackingStatusOpen(status),
+        const {'ACTIVE', 'FULL', 'IN_PROGRESS'}.contains(status),
+        reason: status,
+      );
+    }
   });
 
   test('non propriétaire : aucune tuile, même si tout est réuni', () {

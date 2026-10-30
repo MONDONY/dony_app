@@ -5081,17 +5081,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingPricingSuffixPrix => 'prix';
 
   @override
-  String listingAcceptedParcels(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'colis acceptés',
-      one: 'colis accepté',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get listingPaymentsAcceptedTitle => 'Paiements acceptés';
 
   @override
@@ -22913,8 +22902,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Trajet complet : plus de demande possible. Vous pouvez reporter le départ. Pour annuler, contactez le support.';
 
   @override
+  String get tripStatusFullNoRescheduleMessage =>
+      'Trajet complet : plus de demande possible. Pour annuler, contactez le support.';
+
+  @override
   String get tripStatusInProgressMessage =>
       'Trajet en cours : vos colis voyagent avec vous.';
+
+  @override
+  String get tripStatusArrivedMessage =>
+      'Trajet arrivé : vos colis attendent leurs destinataires.';
 
   @override
   String get tripStatusCompletedMessage =>
@@ -22926,7 +22923,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripStatusRemovedMessage =>
-      'Ce trajet a été retiré par l\'équipe Yadony. Contactez le support.';
+      'Ce trajet a été retiré par l\'équipe Yadony.';
 
   @override
   String get travelerTrackingBadgeEnRoute => 'En route';
@@ -23106,16 +23103,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripRequestsCardUnknown => 'Voir les demandes de ce trajet';
 
   @override
-  String get tripRequestsCardFullHint =>
-      'Trajet complet : plus de nouvelle demande.';
-
-  @override
   String get tripRequestsCardDepartedHint =>
       'Trajet parti : plus de nouvelle demande.';
-
-  @override
-  String get tripRequestsCardEndedHint =>
-      'Trajet terminé : plus de nouvelle demande.';
 
   @override
   String get tripSectionYourTrip => 'Votre trajet';
@@ -23157,4 +23146,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripMenuDeleteSubtitle => 'Le trajet disparaît de vos trajets';
+
+  @override
+  String get tripMenuArrivalReadSubtitle => 'Ce que voient les destinataires';
 }

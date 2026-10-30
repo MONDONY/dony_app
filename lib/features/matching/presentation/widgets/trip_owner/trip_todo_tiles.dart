@@ -31,7 +31,8 @@ enum TripTodoTile {
 
 /// Place des demandes des expéditeurs selon le statut du trajet. Source
 /// unique de la tuile « À traiter » [TripTodoTile.requests] et de la carte
-/// « Demandes » du corps (`TripRequestsCard`).
+/// « Demandes » du corps (`TripRequestsCard`), absentes toutes deux d'un
+/// trajet terminé.
 enum TripRequestsPhase {
   /// ACTIVE : le trajet reçoit des demandes.
   open,
@@ -77,13 +78,48 @@ bool _requestsAnswerable(String status) =>
 /// suivi ouverte (`trackingActive` ne dépend pas du statut).
 const _departStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
 
+/// Le suivi du trajet a-t-il un sens pour son statut [status] (« Je pars »,
+/// consentement au suivi proposé à l'ouverture de l'écran) ? Oui pour un
+/// trajet publié, complet ou en cours ; jamais pour un brouillon, un trajet
+/// annulé, terminé, retiré par l'équipe ou d'un statut inconnu de l'app.
+bool tripTrackingStatusOpen(String status) => _departStatuses.contains(status);
+
 /// Statuts où la carte peut encore être ajoutée au trajet : sur un trajet
 /// terminé ou annulé, l'encart « espèces seules » n'a plus d'objet.
 const _cardStatuses = {'DRAFT', 'ACTIVE', 'FULL'};
 
+/// Colis « en vol » qui verrouillent la modification du trajet, même
+/// ensemble que le back (`BidStatus.IN_FLIGHT` : `ACCEPTED` et `EN_ROUTE`).
+/// `AnnouncementService.updateAnnouncement` répond 409
+/// `modification-impossible` dès qu'un colis du trajet est dans l'un d'eux,
+/// quel que soit le statut du trajet. Une demande en attente (`PENDING`,
+/// `PAYMENT_ESCROWED`), un paiement attendu (`AWAITING_PAYMENT`), un colis
+/// livré ou clôturé ne bloquent rien.
+const _editLockingBidStatuses = {
+  'ACCEPTED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'ARRIVED',
+};
+
+/// Le back accepterait-il une modification de [trip] ? Non dès qu'un colis
+/// est en vol ([_editLockingBidStatuses]), et l'app répond non dès qu'une de
+/// ses sources en montre un : les colis chargés par l'écran ([bids], `null`
+/// tant que la liste n'a pas répondu) et les compteurs du détail.
+/// `confirmedParcelCount` compte `ACCEPTED`, `HANDED_OVER`, `IN_TRANSIT` et
+/// `COMPLETED`, `parcelsSummary` les colis `HANDED_OVER`, `IN_TRANSIT` et
+/// `ARRIVED` : à eux deux ils couvrent tout colis en vol, liste chargée ou
+/// non. Un colis livré compté par `confirmedParcelCount` ne bloque pas le
+/// back, mais un trajet qui en a un est déjà parti (statut hors des tuiles
+/// qui s'en servent).
+bool tripEditAcceptedByBack(AnnouncementModel trip, List<BidModel>? bids) =>
+    !(bids?.any((b) => _editLockingBidStatuses.contains(b.status)) ?? false) &&
+    trip.confirmedParcelCount == 0 &&
+    trip.parcelsSummary == null;
+
 /// Nombre de demandes à traiter du trajet : les colis chargés par l'écran
 /// quand la liste a répondu ([bids] non nul), sinon le compteur servi par
-/// `GET /announcements/my` (`pendingBidCount`), comme la grille d'actions.
+/// `GET /announcements/my` (`pendingBidCount`).
 int tripPendingRequestCount(AnnouncementModel trip, List<BidModel>? bids) =>
     bids != null ? bids.where(isPendingBid).length : trip.pendingBidCount;
 
@@ -110,7 +146,7 @@ bool _cashOnlyWithCardPossible(AnnouncementModel trip) =>
     trip.acceptedPaymentMethods.contains(BidPaymentMethod.cash) &&
     SupportedCurrency.fromCodeOrDefault(trip.currency).isStripeEligible;
 
-/// Tuiles « À traiter » de [trip], dans l'ordre de la grille. Fonction pure :
+/// Tuiles « À traiter » de [trip], dans l'ordre de la section. Fonction pure :
 /// l'écran la rappelle à chaque rechargement, et le sheet ouvert s'en sert
 /// pour se fermer quand sa tuile n'a plus lieu d'être.
 ///
@@ -124,9 +160,23 @@ bool _cashOnlyWithCardPossible(AnnouncementModel trip) =>
 ///
 /// « Je pars » reprend la règle de l'ancien bouton de l'écran (colis remis
 /// servis par le détail, `parcelsSummary`, et fenêtre de suivi ouverte,
-/// `trackingActive`), limitée aux statuts ACTIVE, FULL et IN_PROGRESS. Le
-/// détail ne sert pas encore `trackingActive` (piège n°1 de l'inventaire) :
-/// la tuile apparaîtra quand le back le fera.
+/// `trackingActive`), limitée aux statuts ACTIVE, FULL et IN_PROGRESS
+/// ([tripTrackingStatusOpen]). Un back antérieur au champ `trackingActive`
+/// du détail le sert à `false` : la tuile n'apparaît pas, rien ne casse.
+///
+/// « carte » (ajouter la carte au trajet, ou activer les paiements par
+/// carte pour l'y ajouter ensuite) passe par l'édition du trajet : la tuile
+/// n'existe que si le back accepterait cette modification. Règle exacte :
+/// - statut DRAFT, ACTIVE ou FULL (sur un trajet parti, terminé ou annulé,
+///   l'encart « espèces seules » n'a plus d'objet) ;
+/// - trajet en espèces seules dans une devise qui permet la carte, et
+///   paiement par carte ouvert dans le pays du voyageur ;
+/// - aucun colis en vol ([tripEditAcceptedByBack] : `ACCEPTED`,
+///   `HANDED_OVER`, `IN_TRANSIT`, `ARRIVED`), sans quoi
+///   `AnnouncementService.updateAnnouncement` refuse la modification (409
+///   `modification-impossible`). Des demandes en attente seules ne bloquent
+///   pas. Un trajet complet a presque toujours un colis accepté : la tuile
+///   n'y apparaît alors pas.
 List<TripTodoTile> tripTodoTilesFor({
   required AnnouncementModel trip,
   required List<BidModel>? bids,
@@ -140,7 +190,7 @@ List<TripTodoTile> tripTodoTilesFor({
     if (_requestsAnswerable(trip.status) &&
         tripPendingRequestCount(trip, bids) > 0)
       TripTodoTile.requests,
-    if (_departStatuses.contains(trip.status) &&
+    if (tripTrackingStatusOpen(trip.status) &&
         summary != null &&
         summary.count > 0 &&
         trip.trackingActive &&
@@ -148,7 +198,8 @@ List<TripTodoTile> tripTodoTilesFor({
       TripTodoTile.depart,
     if (_cardStatuses.contains(trip.status) &&
         _cashOnlyWithCardPossible(trip) &&
-        stripe.connectAvailableInCountry)
+        stripe.connectAvailableInCountry &&
+        tripEditAcceptedByBack(trip, bids))
       TripTodoTile.card,
   ];
 }

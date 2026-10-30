@@ -5053,17 +5053,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingPricingSuffixPrix => 'price';
 
   @override
-  String listingAcceptedParcels(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'parcels accepted',
-      one: 'parcel accepted',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get listingPaymentsAcceptedTitle => 'Accepted payment methods';
 
   @override
@@ -8720,7 +8709,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripOwnerArrivalSubtitle =>
-      'Tell us where and how to pick up the parcel';
+      'Say where and how to pick up the parcel';
 
   @override
   String get tripOwnerArrivalConfirmButton => 'Confirm arrival';
@@ -22735,7 +22724,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripTodoDepartIntro =>
-      'Confirm your departure: your senders see that the trip is under way.';
+      'Confirm your departure: your senders see that the trip is underway.';
 
   @override
   String get tripTodoCardReadySummary => 'Accept cards on this trip too';
@@ -22746,11 +22735,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripStatusFullMessage =>
-      'Trip full: no more requests can come in. You can postpone the departure. To cancel, contact support.';
+      'Trip full: no more requests can come in. You can reschedule the departure. To cancel, contact support.';
+
+  @override
+  String get tripStatusFullNoRescheduleMessage =>
+      'Trip full: no more requests can come in. To cancel, contact support.';
 
   @override
   String get tripStatusInProgressMessage =>
-      'Trip in progress: your parcels are travelling with you.';
+      'Trip in progress: your parcels are traveling with you.';
+
+  @override
+  String get tripStatusArrivedMessage =>
+      'Trip arrived: your parcels are waiting for their recipients.';
 
   @override
   String get tripStatusCompletedMessage =>
@@ -22758,11 +22755,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripStatusCancelledMessage =>
-      'Trip cancelled. Parcels already handed over follow the return procedure.';
+      'Trip canceled. Parcels already handed over follow the return procedure.';
 
   @override
   String get tripStatusRemovedMessage =>
-      'This trip was removed by the Yadony team. Contact support.';
+      'This trip was removed by the Yadony team.';
 
   @override
   String get travelerTrackingBadgeEnRoute => 'On the way';
@@ -22941,13 +22938,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripRequestsCardUnknown => 'See this trip\'s requests';
 
   @override
-  String get tripRequestsCardFullHint => 'Trip full: no new requests.';
-
-  @override
   String get tripRequestsCardDepartedHint => 'Trip underway: no new requests.';
-
-  @override
-  String get tripRequestsCardEndedHint => 'Trip completed: no new requests.';
 
   @override
   String get tripSectionYourTrip => 'Your trip';
@@ -22990,4 +22981,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripMenuDeleteSubtitle => 'The trip disappears from your trips';
+
+  @override
+  String get tripMenuArrivalReadSubtitle => 'What recipients see';
 }

@@ -243,10 +243,16 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
         l.tripPosterShareButton,
         l.tripTilePosterSubtitle,
       ),
+      // Le sheet ne propose de modifier les instructions qu'après l'arrivée
+      // (un colis ARRIVED, règle du back) : avant, ou sur un trajet terminé
+      // ou annulé, il se lit seulement, le sous-titre n'annonce pas de
+      // saisie.
       TripMenuEntry.arrivalInstructions => (
         'flag',
         l.tripOwnerArrivalEditingTitle,
-        l.tripOwnerArrivalSubtitle,
+        tripHasArrivedParcel(bids)
+            ? l.tripOwnerArrivalSubtitle
+            : l.tripMenuArrivalReadSubtitle,
       ),
       TripMenuEntry.makeRecurring => (
         'calendar',

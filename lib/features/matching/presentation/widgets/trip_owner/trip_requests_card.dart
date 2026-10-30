@@ -15,10 +15,12 @@ import 'package:flutter/material.dart';
 /// Où elle s'affiche ([shownFor], phase de [tripRequestsPhaseFor]) : toujours
 /// pour un trajet publié ou complet, jamais grisée, même sans demande
 /// (PROD-1N : une entrée éteinte laissait croire à une panne). Pour un trajet
-/// parti ou terminé, seulement s'il reste des demandes à traiter : le back
-/// les expire au départ et refuse tout nouveau colis, la carte n'aurait rien
-/// à promettre. Un brouillon, un trajet annulé ou retiré par l'équipe n'en a
-/// pas.
+/// parti, seulement s'il reste des demandes à traiter : le back les expire au
+/// départ et refuse tout nouveau colis, la carte n'aurait rien à promettre.
+/// Jamais pour un trajet terminé : le back y refuse toute acceptation, une
+/// demande restée en attente ne se traite plus (la tuile « À traiter » est
+/// absente pour la même raison). Un brouillon, un trajet annulé ou retiré
+/// par l'équipe n'en a pas non plus.
 ///
 /// Le compte ([tripPendingRequestCount]) : demandes `PENDING` /
 /// `PAYMENT_ESCROWED` des colis chargés par l'écran ([bids]), à défaut
@@ -26,8 +28,9 @@ import 'package:flutter/material.dart';
 /// inconnu ([tripPendingRequestCountKnown] faux) : une ligne neutre, jamais
 /// « Aucune demande à traiter ».
 ///
-/// La sous-ligne dépend du statut : ACTIVE, ce qui arrive ensuite ; FULL,
-/// plus de nouvelle demande ; parti ou terminé, idem.
+/// La sous-ligne dépend du statut : ACTIVE, ce qui arrive ensuite ; parti,
+/// plus de nouvelle demande. Un trajet complet n'en a pas : sa carte de
+/// statut le dit déjà juste au-dessus.
 ///
 /// Un tap ouvre Activité › Demandes « À traiter » de ce trajet, puis relit
 /// les colis et le trajet au retour ([openTripRequests]).
@@ -44,9 +47,8 @@ class TripRequestsCard extends StatelessWidget {
   static bool shownFor(AnnouncementModel trip, List<BidModel>? bids) =>
       switch (tripRequestsPhaseFor(trip.status)) {
         TripRequestsPhase.open || TripRequestsPhase.full => true,
-        TripRequestsPhase.departed ||
-        TripRequestsPhase.ended => tripPendingRequestCount(trip, bids) > 0,
-        null => false,
+        TripRequestsPhase.departed => tripPendingRequestCount(trip, bids) > 0,
+        TripRequestsPhase.ended || null => false,
       };
 
   @override
@@ -65,10 +67,8 @@ class TripRequestsCard extends StatelessWidget {
       TripRequestsPhase.open when !known => null,
       TripRequestsPhase.open =>
         count > 0 ? l.tripRequestsCardPendingHint : l.tripRequestsCardEmptyHint,
-      TripRequestsPhase.full => l.tripRequestsCardFullHint,
       TripRequestsPhase.departed => l.tripRequestsCardDepartedHint,
-      TripRequestsPhase.ended => l.tripRequestsCardEndedHint,
-      null => null,
+      TripRequestsPhase.full || TripRequestsPhase.ended || null => null,
     };
     return DetailCard(
       key: const Key('trip-requests-card'),

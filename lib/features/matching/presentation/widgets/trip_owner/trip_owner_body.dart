@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_action_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_header.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_requests_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_status_card.dart';
@@ -30,7 +33,7 @@ import 'package:go_router/go_router.dart';
 /// [tripTodoTilesFor], chacune ouvrant son bottom sheet) ; cartes
 /// d'information sans titre (étapes du voyage [TripLegsCard], audience
 /// [TripAudienceSection]) ; cartes directes Demandes ([TripRequestsCard]),
-/// Colis ([TripParcelsSection]) et Gain ([TripSummaryCard]) ; grille « Votre
+/// Colis ([TripParcelsSection]) et Gain ([TripSummaryCard]) ; tuiles « Votre
 /// trajet » ([tripTilesFor], chacune ouvrant son bottom sheet). Le pied
 /// collant et le menu ⋮ sont posés par l'écran, hors du défilement.
 ///
@@ -85,8 +88,7 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
     if (!widget.isOwner) {
       column = _column([
         ('header', TripOwnerHeader(a: widget.trip)),
-        if (tripStatusCardKindFor(widget.trip.status) case final kind?)
-          ('status', TripStatusCard(kind: kind)),
+        if (_statusCard(widget.trip, null) case final card?) ('status', card),
       ]);
     } else {
       column = TripTodoLive(
@@ -141,8 +143,7 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
 
     return [
       ('header', TripOwnerHeader(a: trip)),
-      if (tripStatusCardKindFor(trip.status) case final kind?)
-        ('status', TripStatusCard(kind: kind)),
+      if (_statusCard(trip, bids) case final card?) ('status', card),
       if (todoTiles.isNotEmpty)
         (
           'todo',
@@ -196,6 +197,22 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
   }
 
   static const _noParcelsCard = {'DRAFT', 'REMOVED_BY_ADMIN'};
+
+  /// Carte de statut de [trip] ([tripStatusCardKindFor]) d'après ses colis
+  /// chargés ([bids], `null` tant que la liste n'a pas répondu). Le report
+  /// est annoncé possible sur la même règle que l'entrée « Reporter » du menu
+  /// : reportable ([tripCanReschedule]) et pas verrouillé
+  /// ([tripRescheduleBlockFor]).
+  static Widget? _statusCard(AnnouncementModel trip, List<BidModel>? bids) {
+    final kind = tripStatusCardKindFor(trip.status, bids: bids);
+    if (kind == null) return null;
+    return TripStatusCard(
+      kind: kind,
+      canReschedule:
+          tripCanReschedule(trip, tripHasBids(trip, bids)) &&
+          tripRescheduleBlockFor(trip, bids) == null,
+    );
+  }
 
   /// Tuile « À traiter » : pastille « Réponse attendue », résumé de ce qui
   /// est attendu ; le sheet part des colis de la tuile ([TripTodoLiveData]).
