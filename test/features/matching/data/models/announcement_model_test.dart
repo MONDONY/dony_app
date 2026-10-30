@@ -328,22 +328,6 @@ void main() {
       expect(dedicated.isDedicated, isTrue);
       expect(normal.isDedicated, isFalse);
     });
-
-    test('canOpenSurplus is true only when eligible and not yet published', () {
-      AnnouncementModel build({
-        required bool eligible,
-        required bool published,
-      }) => AnnouncementModel.fromJson(
-        baseAnnouncementJson()
-          ..['surplusEligible'] = eligible
-          ..['surplusPublished'] = published,
-      );
-
-      expect(build(eligible: true, published: false).canOpenSurplus, isTrue);
-      expect(build(eligible: true, published: true).canOpenSurplus, isFalse);
-      expect(build(eligible: false, published: false).canOpenSurplus, isFalse);
-      expect(build(eligible: false, published: true).canOpenSurplus, isFalse);
-    });
   });
 
   group('AnnouncementModel country codes & flags', () {

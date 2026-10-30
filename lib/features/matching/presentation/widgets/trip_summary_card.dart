@@ -1,27 +1,33 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
+import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-/// Résumé du trajet du voyageur : colis en sa possession, kilos transportés et
-/// gain estimé (net, dans la devise du trajet). Le gain n'apparaît que s'il
-/// est positif : les colis payés en espèces comptent pour 0.
+/// Carte « argent » du trajet du voyageur, comme la carte de gain de la
+/// fiche colis : gain estimé (net, dans la devise du trajet) en grand, puis
+/// les colis en sa possession et les kilos transportés. Le gain n'apparaît
+/// que s'il est positif (les colis payés en espèces comptent pour 0) : la
+/// carte reste alors le résumé du trajet (colis et kilos).
 ///
-/// « Voir mes colis » mène au même écran que la tuile « Colis » de la grille
-/// d'actions (`/announcements/:id/bids`).
+/// Sans bouton : la liste des colis s'ouvre depuis la carte Colis (« Voir la
+/// liste »).
 class TripSummaryCard extends StatelessWidget {
-  const TripSummaryCard({
-    super.key,
-    required this.announcementId,
-    required this.summary,
-  });
+  const TripSummaryCard({super.key, required this.summary});
 
-  final String announcementId;
   final TripParcelsSummary summary;
+
+  /// La carte s'affiche pour le propriétaire confirmé quand le détail sert un
+  /// résumé d'au moins un colis remis, en transit ou arrivé
+  /// (`parcelsSummary`, servi au seul propriétaire).
+  static bool shownFor({
+    required bool isOwner,
+    required AnnouncementModel trip,
+  }) => isOwner && (trip.parcelsSummary?.count ?? 0) > 0;
 
   @override
   Widget build(BuildContext context) {
@@ -29,56 +35,45 @@ class TripSummaryCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final kg = NumberFormat('#,##0.#', l.localeName).format(summary.totalKg);
-    return Container(
+    final hasEarnings = summary.netAmount > 0;
+    return DetailCard(
       key: const Key('trip-summary-card'),
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outlineVariant),
-      ),
+      title: hasEarnings ? l.tripSummaryEarningsLabel : l.tripSummaryTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l.tripSummaryTitle,
-            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: DonySpacing.sm),
+          if (hasEarnings) ...[
+            // Montant sur une ligne : il rétrécit plutôt que de passer à la
+            // ligne à texte agrandi, comme la carte de gain de la fiche colis.
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                CurrencyFormatter.format(
+                  summary.netAmount,
+                  SupportedCurrency.fromCodeOrDefault(summary.currency),
+                ),
+                key: const Key('trip-summary-earnings'),
+                maxLines: 1,
+                style: tt.titleLarge?.copyWith(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            const SizedBox(height: DonySpacing.xs),
+          ],
           Text(l.tripSummaryParcels(summary.count), style: tt.bodyMedium),
-          const SizedBox(height: DonySpacing.xs),
+          const SizedBox(height: DonySpacing.xxs),
           Text(l.tripSummaryWeight(kg), style: tt.bodyMedium),
-          if (summary.netAmount > 0) ...[
-            const SizedBox(height: DonySpacing.md),
-            Text(
-              l.tripSummaryEarningsLabel,
-              style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            Text(
-              CurrencyFormatter.format(
-                summary.netAmount,
-                SupportedCurrency.fromCodeOrDefault(summary.currency),
-              ),
-              style: tt.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
+          if (hasEarnings) ...[
+            const SizedBox(height: DonySpacing.xs),
             Text(
               l.tripSummaryEarningsNote,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
-          const SizedBox(height: DonySpacing.md),
-          DonyButton(
-            key: const Key('trip-summary-view-parcels'),
-            label: l.tripSummaryViewParcels,
-            variant: DonyButtonVariant.secondary,
-            onPressed: () => context.push(
-              '/announcements/$announcementId/bids',
-              extra: <String, dynamic>{'title': l.tripOwnerParcelsTile},
-            ),
-          ),
         ],
       ),
     );

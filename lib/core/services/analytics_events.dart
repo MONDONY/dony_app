@@ -68,7 +68,6 @@ abstract final class AnalyticsEvents {
   /// Trajet récurrent créé, modifié ou supprimé. Propriété `action`.
   static const tripRecurrenceSaved = 'trip_recurrence_saved';
   static const announcementViewed = 'announcement_viewed';
-  static const surplusOpened = 'surplus_opened';
   static const tripCreateStarted = 'trip_create_started';
 
   /// Brouillon local d'un formulaire de publication (trajet ou demande

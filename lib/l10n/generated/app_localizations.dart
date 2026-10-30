@@ -14418,7 +14418,7 @@ abstract class AppLocalizations {
   /// **'Annulé'**
   String get bidListStatusCancelled;
 
-  /// Tuile « Publier » (owner_action_grid.dart) ; réutilisée pour le libellé actif du bouton de OpenSurplusBottomSheet (même préfixe tripOwner, texte identique).
+  /// Tuile « Publier » (owner_action_grid.dart).
   ///
   /// In fr, this message translates to:
   /// **'Publier'**
@@ -14573,102 +14573,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Colis'**
   String get tripOwnerParcelsDefaultContent;
-
-  /// Titre de la sheet (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Ouvrir les kg restants'**
-  String get tripOwnerSurplusTitle;
-
-  /// Sous-titre de la sheet (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Mettez votre capacité libre à disposition du public'**
-  String get tripOwnerSurplusSubtitle;
-
-  /// Libellé du bouton pendant la publication (open_surplus_bottom_sheet.dart) ; l'état actif réutilise tripOwnerPublishTile.
-  ///
-  /// In fr, this message translates to:
-  /// **'Publication…'**
-  String get tripOwnerSurplusPublishingButton;
-
-  /// Erreur du validateur kg quand le champ est vide/invalide (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Entrez un nombre de kg'**
-  String get tripOwnerSurplusKgValidatorEmpty;
-
-  /// Erreur du validateur kg quand la valeur est < 1 (open_surplus_bottom_sheet.dart) — identique en anglais (chiffre + unité).
-  ///
-  /// In fr, this message translates to:
-  /// **'Minimum 1 kg'**
-  String get tripOwnerSurplusKgValidatorMin;
-
-  /// Snackbar de succès à l'ouverture du surplus (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Capacité ouverte au public'**
-  String get tripOwnerSurplusOpenedSnackbar;
-
-  /// Libellé du bandeau de capacité réservée (open_surplus_bottom_sheet.dart _ReservedBanner).
-  ///
-  /// In fr, this message translates to:
-  /// **'Réservé à votre expéditeur'**
-  String get tripOwnerSurplusReservedLabel;
-
-  /// Valeur du bandeau de capacité réservée, {kg} déjà formaté (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'{kg} kg verrouillés'**
-  String tripOwnerSurplusReservedKgValue(String kg);
-
-  /// Libellé de section, en majuscules dans le code (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'KG À OUVRIR'**
-  String get tripOwnerSurplusKgSectionLabel;
-
-  /// Libellé de section, en majuscules dans le code (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'PRIX PAR KG'**
-  String get tripOwnerSurplusPriceSectionLabel;
-
-  /// Hint du champ kg à ouvrir (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Ex. 8'**
-  String get tripOwnerSurplusKgHint;
-
-  /// Chip de prix « Autre » (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Autre'**
-  String get tripOwnerSurplusOtherPriceChip;
-
-  /// Hint du champ de prix libre (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre prix'**
-  String get tripOwnerSurplusCustomPriceHint;
-
-  /// Erreur du validateur de prix libre (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Prix invalide'**
-  String get tripOwnerSurplusCustomPriceInvalid;
-
-  /// Texte d'avertissement en bas de la sheet (open_surplus_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Action définitive : une fois publiée, votre capacité libre devient visible dans la recherche et ne peut plus être refermée.'**
-  String get tripOwnerSurplusDisclaimerText;
-
-  /// Libellé de l'aperçu du prix public (open_surplus_bottom_sheet.dart _PublicPricePreview).
-  ///
-  /// In fr, this message translates to:
-  /// **'Prix affiché aux expéditeurs'**
-  String get tripOwnerSurplusPublicPriceLabel;
 
   /// Titre de la sheet en mode édition, et titre statique du corps (arrival_instructions_bottom_sheet.dart).
   ///
@@ -36906,12 +36810,6 @@ abstract class AppLocalizations {
   /// **'Le paiement suit la livraison de chaque colis.'**
   String get tripSummaryEarningsNote;
 
-  /// Résumé du trajet : ouvre la liste des colis du trajet.
-  ///
-  /// In fr, this message translates to:
-  /// **'Voir mes colis'**
-  String get tripSummaryViewParcels;
-
   /// Écran du trajet voyageur : confirme le départ (position approximative facultative).
   ///
   /// In fr, this message translates to:
@@ -37211,6 +37109,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Modifier les instructions'**
   String get tripTileArrivalEditButton;
+
+  /// Carte « Demandes » de l'écran du trajet (propriétaire) : nombre de demandes PENDING / PAYMENT_ESCROWED qui attendent la réponse du voyageur, count ≥ 1 (trip_requests_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 demande à traiter} other{{count} demandes à traiter}}'**
+  String tripRequestsCardPending(int count);
+
+  /// Carte « Demandes » de l'écran du trajet : sous-ligne quand des demandes attendent une réponse (trip_requests_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Répondez pour remplir votre trajet.'**
+  String get tripRequestsCardPendingHint;
+
+  /// Carte « Demandes » de l'écran du trajet : aucune demande n'attend de réponse ; la carte reste affichée et tappable (PROD-1N, trip_requests_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande à traiter'**
+  String get tripRequestsCardEmpty;
+
+  /// Carte « Demandes » de l'écran du trajet : sous-ligne sans demande à traiter (trip_requests_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Elles arrivent ici dès qu\'un expéditeur propose un colis.'**
+  String get tripRequestsCardEmptyHint;
+
+  /// Lien de l'en-tête de la carte « Colis dans le trajet » : ouvre la liste des colis du trajet (/announcements/:id/bids), affiché dès qu'un colis est embarqué ; une ligne, sans icône (trip_parcels_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir la liste'**
+  String get tripParcelsSeeList;
 }
 
 class _AppLocalizationsDelegate

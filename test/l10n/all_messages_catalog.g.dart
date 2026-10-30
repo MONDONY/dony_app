@@ -3211,25 +3211,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripOwnerParcelsStatusParcelRefused,
   'tripOwnerParcelsStatusCancelled': (l) => l.tripOwnerParcelsStatusCancelled,
   'tripOwnerParcelsDefaultContent': (l) => l.tripOwnerParcelsDefaultContent,
-  'tripOwnerSurplusTitle': (l) => l.tripOwnerSurplusTitle,
-  'tripOwnerSurplusSubtitle': (l) => l.tripOwnerSurplusSubtitle,
-  'tripOwnerSurplusPublishingButton': (l) => l.tripOwnerSurplusPublishingButton,
-  'tripOwnerSurplusKgValidatorEmpty': (l) => l.tripOwnerSurplusKgValidatorEmpty,
-  'tripOwnerSurplusKgValidatorMin': (l) => l.tripOwnerSurplusKgValidatorMin,
-  'tripOwnerSurplusOpenedSnackbar': (l) => l.tripOwnerSurplusOpenedSnackbar,
-  'tripOwnerSurplusReservedLabel': (l) => l.tripOwnerSurplusReservedLabel,
-  'tripOwnerSurplusReservedKgValue': (l) =>
-      l.tripOwnerSurplusReservedKgValue(placeholderMarker('kg')),
-  'tripOwnerSurplusKgSectionLabel': (l) => l.tripOwnerSurplusKgSectionLabel,
-  'tripOwnerSurplusPriceSectionLabel': (l) =>
-      l.tripOwnerSurplusPriceSectionLabel,
-  'tripOwnerSurplusKgHint': (l) => l.tripOwnerSurplusKgHint,
-  'tripOwnerSurplusOtherPriceChip': (l) => l.tripOwnerSurplusOtherPriceChip,
-  'tripOwnerSurplusCustomPriceHint': (l) => l.tripOwnerSurplusCustomPriceHint,
-  'tripOwnerSurplusCustomPriceInvalid': (l) =>
-      l.tripOwnerSurplusCustomPriceInvalid,
-  'tripOwnerSurplusDisclaimerText': (l) => l.tripOwnerSurplusDisclaimerText,
-  'tripOwnerSurplusPublicPriceLabel': (l) => l.tripOwnerSurplusPublicPriceLabel,
   'tripOwnerArrivalEditingTitle': (l) => l.tripOwnerArrivalEditingTitle,
   'tripOwnerArrivalSubtitle': (l) => l.tripOwnerArrivalSubtitle,
   'tripOwnerArrivalConfirmButton': (l) => l.tripOwnerArrivalConfirmButton,
@@ -8000,7 +7981,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripSummaryWeight': (l) => l.tripSummaryWeight(placeholderMarker('kg')),
   'tripSummaryEarningsLabel': (l) => l.tripSummaryEarningsLabel,
   'tripSummaryEarningsNote': (l) => l.tripSummaryEarningsNote,
-  'tripSummaryViewParcels': (l) => l.tripSummaryViewParcels,
   'tripDepartButton': (l) => l.tripDepartButton,
   'tripDepartConfirmedSnackbar': (l) => l.tripDepartConfirmedSnackbar,
   'tripTodoRequestsTitle': (l) => l.tripTodoRequestsTitle,
@@ -8067,6 +8047,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripTilePaymentsCashOnlyNote': (l) =>
       l.tripTilePaymentsCashOnlyNote(placeholderMarker('section')),
   'tripTileArrivalEditButton': (l) => l.tripTileArrivalEditButton,
+  'tripRequestsCardPending': (l) =>
+      l.tripRequestsCardPending(intPlaceholderValue),
+  'tripRequestsCardPendingHint': (l) => l.tripRequestsCardPendingHint,
+  'tripRequestsCardEmpty': (l) => l.tripRequestsCardEmpty,
+  'tripRequestsCardEmptyHint': (l) => l.tripRequestsCardEmptyHint,
+  'tripParcelsSeeList': (l) => l.tripParcelsSeeList,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8275,7 +8261,6 @@ const textParameters = <String, List<String>>{
   'tripOwnerPublishedSubtitle': ['dep', 'arr'],
   'tripOwnerShareMessage': ['dep', 'arr', 'date', 'url'],
   'bidListCardTrackingNumberLabel': ['number'],
-  'tripOwnerSurplusReservedKgValue': ['kg'],
   'activityToolsMissing': ['items'],
   'activityToolHubSemanticsReady': ['label', 'title'],
   'activityToolHubSemanticsUnconfigured': ['title'],

@@ -198,7 +198,6 @@ const _sameInBothLanguages = <String>{
   'bidDetailDescriptionLabel', // « Description » se dit pareil (tâche D2, correction R40)
   'ticketMiniStatCategoryLabel', // « TYPE » se dit pareil (tâche D3)
   'shipmentDestinationFallback', // « destination » se dit pareil (tâche D3, clé dédiée : duplique bidDetailFallbackDestination d'un autre préfixe, R40)
-  'tripOwnerSurplusKgValidatorMin', // « Minimum 1 kg » : chiffre + unité, se dit pareil (tâche D4)
   'tripOwnerArrivalFieldLabel', // « Instructions » se dit pareil (tâche D4)
   'activityRevenueMobileMoney', // « Mobile money » se dit pareil (tâche D5)
   'activityMenuButtonTooltip', // « Menu » se dit pareil (tâche D5)

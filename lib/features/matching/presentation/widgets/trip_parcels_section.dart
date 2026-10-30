@@ -12,21 +12,32 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-/// Section « Colis dans le trajet » de l'écran détail trajet (propriétaire).
+/// Carte « Colis dans le trajet » de l'écran détail trajet (propriétaire),
+/// carte du corps comme celles de la fiche colis ([DetailCard]).
 ///
 /// Consomme le [BidBloc] fourni par la route (`BidListRequested(announcementId)`).
+/// En tête, le lien « Voir la liste » (dès qu'un colis est embarqué) ouvre
+/// la liste des colis du trajet (`/announcements/:id/bids`), seul chemin vers
+/// elle depuis l'écran ; une ligne ouvre la fiche du colis (`/bids/:id`).
+/// Au retour de l'une ou de l'autre, les colis et le trajet sont relus
+/// ([openTripParcelsList], [openTripParcel]).
 /// Filtre les offres réellement embarquées via [isAcceptedTabBid] (source de
 /// vérité du projet : ACCEPTED / HANDED_OVER / IN_TRANSIT / ARRIVED / COMPLETED,
 /// moins les
 /// auto-annulés). Émet une fois l'event analytics `trip_parcels_viewed` au
 /// premier chargement de la liste (compteur uniquement, aucune PII).
 class TripParcelsSection extends StatefulWidget {
-  const TripParcelsSection({super.key});
+  const TripParcelsSection({super.key, required this.announcementId});
+
+  /// Trajet dont les colis sont affichés, relus au retour d'un écran ouvert
+  /// depuis la carte.
+  final String announcementId;
 
   @override
   State<TripParcelsSection> createState() => _TripParcelsSectionState();
@@ -78,112 +89,135 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          context.l10n.tripOwnerParcelsSectionTitle,
-          style: tt.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: cs.onSurface,
-          ),
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        BlocBuilder<BidBloc, BidState>(
-          builder: (context, state) {
-            if (state is BidInitial || state is BidLoading) {
-              return Padding(
-                padding: const EdgeInsets.all(DonySpacing.lg),
-                child: Center(
-                  child: CircularProgressIndicator(color: cs.primary),
-                ),
-              );
-            }
-            if (state is BidListLoaded) {
-              final embarked = state.bids
-                  .where(isAcceptedTabBid)
-                  .toList(growable: false);
-
-              // Premier rendu de la liste chargée → tir analytics unique.
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _logOnce(embarked.length);
-              });
-
-              if (embarked.isEmpty) {
-                return DonyEmptyState(
-                  iconAsset: 'inbox',
-                  title: context.l10n.tripOwnerNoParcelsMessage,
-                  description: context.l10n.tripOwnerParcelsEmptyDescription,
-                  padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
+    return DetailCard(
+      title: context.l10n.tripOwnerParcelsSectionTitle,
+      trailing: BlocBuilder<BidBloc, BidState>(
+        buildWhen: (previous, state) => state is BidListLoaded,
+        builder: (context, state) {
+          final hasParcels =
+              state is BidListLoaded && state.bids.any(isAcceptedTabBid);
+          if (!hasParcels) return const SizedBox.shrink();
+          return TextButton(
+            key: const Key('trip-parcels-see-list'),
+            onPressed: () =>
+                unawaited(openTripParcelsList(context, widget.announcementId)),
+            style: TextButton.styleFrom(
+              foregroundColor: cs.primary,
+              textStyle: tt.labelLarge,
+            ),
+            child: Text(
+              context.l10n.tripParcelsSeeList,
+              maxLines: 1,
+              softWrap: false,
+            ),
+          );
+        },
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          BlocBuilder<BidBloc, BidState>(
+            builder: (context, state) {
+              if (state is BidInitial || state is BidLoading) {
+                return Padding(
+                  padding: const EdgeInsets.all(DonySpacing.lg),
+                  child: Center(
+                    child: CircularProgressIndicator(color: cs.primary),
+                  ),
                 );
               }
+              if (state is BidListLoaded) {
+                final embarked = state.bids
+                    .where(isAcceptedTabBid)
+                    .toList(growable: false);
 
-              // Compteur par statut + statuts présents (ordre métier fixe).
-              final counts = <String, int>{};
-              for (final b in embarked) {
-                counts[b.status] = (counts[b.status] ?? 0) + 1;
-              }
-              final present = <String>[
-                for (final st in _kStatusOrder)
-                  if (counts.containsKey(st)) st,
-                for (final st in counts.keys)
-                  if (!_kStatusOrder.contains(st)) st,
-              ];
+                // Premier rendu de la liste chargée → tir analytics unique.
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _logOnce(embarked.length);
+                });
 
-              return ValueListenableBuilder<String?>(
-                valueListenable: _statusFilter,
-                builder: (context, filter, _) {
-                  // Filtre actif disparu (liste rechargée) → repli sur « Tous ».
-                  final active = (filter != null && counts.containsKey(filter))
-                      ? filter
-                      : null;
-                  final visible = active == null
-                      ? embarked
-                      : embarked
-                            .where((b) => b.status == active)
-                            .toList(growable: false);
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Résumé toujours visible, indépendant du filtre
-                      // (FLUTTER-GS).
-                      TripParcelsSummary(bids: embarked),
-                      // Filtre rapide : seulement si ≥ 2 statuts distincts.
-                      if (present.length >= 2) ...[
-                        StatusChipsRow<String?>(
-                          selected: active,
-                          onSelected: _onFilter,
-                          chips: [
-                            StatusChipData<String?>(
-                              label: context.l10n.tripOwnerParcelsFilterAll,
-                              value: null,
-                              count: embarked.length,
-                            ),
-                            for (final st in present)
-                              _statusFilterChip(
-                                st,
-                                counts[st]!,
-                                cs,
-                                context.l10n,
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: DonySpacing.md),
-                      ],
-                      for (var i = 0; i < visible.length; i++) ...[
-                        if (i > 0) const SizedBox(height: DonySpacing.sm),
-                        _ColisRow(bid: visible[i]),
-                      ],
-                    ],
+                if (embarked.isEmpty) {
+                  return DonyEmptyState(
+                    iconAsset: 'inbox',
+                    title: context.l10n.tripOwnerNoParcelsMessage,
+                    description: context.l10n.tripOwnerParcelsEmptyDescription,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: DonySpacing.xl,
+                    ),
                   );
-                },
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
-      ],
+                }
+
+                // Compteur par statut + statuts présents (ordre métier fixe).
+                final counts = <String, int>{};
+                for (final b in embarked) {
+                  counts[b.status] = (counts[b.status] ?? 0) + 1;
+                }
+                final present = <String>[
+                  for (final st in _kStatusOrder)
+                    if (counts.containsKey(st)) st,
+                  for (final st in counts.keys)
+                    if (!_kStatusOrder.contains(st)) st,
+                ];
+
+                return ValueListenableBuilder<String?>(
+                  valueListenable: _statusFilter,
+                  builder: (context, filter, _) {
+                    // Filtre actif disparu (liste rechargée) → repli sur « Tous ».
+                    final active =
+                        (filter != null && counts.containsKey(filter))
+                        ? filter
+                        : null;
+                    final visible = active == null
+                        ? embarked
+                        : embarked
+                              .where((b) => b.status == active)
+                              .toList(growable: false);
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Résumé toujours visible, indépendant du filtre
+                        // (FLUTTER-GS).
+                        TripParcelsSummary(bids: embarked),
+                        // Filtre rapide : seulement si ≥ 2 statuts distincts.
+                        if (present.length >= 2) ...[
+                          StatusChipsRow<String?>(
+                            selected: active,
+                            onSelected: _onFilter,
+                            chips: [
+                              StatusChipData<String?>(
+                                label: context.l10n.tripOwnerParcelsFilterAll,
+                                value: null,
+                                count: embarked.length,
+                              ),
+                              for (final st in present)
+                                _statusFilterChip(
+                                  st,
+                                  counts[st]!,
+                                  cs,
+                                  context.l10n,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: DonySpacing.md),
+                        ],
+                        for (var i = 0; i < visible.length; i++) ...[
+                          if (i > 0) const SizedBox(height: DonySpacing.sm),
+                          _ColisRow(
+                            bid: visible[i],
+                            announcementId: widget.announcementId,
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
+      ),
     );
   }
 }
@@ -287,11 +321,13 @@ class TripParcelsSummary extends StatelessWidget {
 }
 
 /// Ligne compacte d'un colis embarqué : miniature optionnelle, contenu, poids,
-/// expéditeur et chip de statut. Tap → détail de l'offre (`/bids/:bidId`).
+/// expéditeur et chip de statut. Tap → détail de l'offre (`/bids/:bidId`),
+/// colis et trajet relus au retour.
 class _ColisRow extends StatelessWidget {
-  const _ColisRow({required this.bid});
+  const _ColisRow({required this.bid, required this.announcementId});
 
   final BidModel bid;
+  final String announcementId;
 
   String? get _weightLabel {
     final w = bid.displayWeightKg;
@@ -319,7 +355,9 @@ class _ColisRow extends StatelessWidget {
       color: cs.surface,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
-        onTap: () => context.push('/bids/${bid.id}'),
+        onTap: () => unawaited(
+          openTripParcel(context, tripId: announcementId, bidId: bid.id),
+        ),
         borderRadius: BorderRadius.circular(DonyRadius.card),
         child: Container(
           padding: const EdgeInsets.all(DonySpacing.base),

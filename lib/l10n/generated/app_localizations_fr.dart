@@ -8811,58 +8811,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerParcelsDefaultContent => 'Colis';
 
   @override
-  String get tripOwnerSurplusTitle => 'Ouvrir les kg restants';
-
-  @override
-  String get tripOwnerSurplusSubtitle =>
-      'Mettez votre capacité libre à disposition du public';
-
-  @override
-  String get tripOwnerSurplusPublishingButton => 'Publication…';
-
-  @override
-  String get tripOwnerSurplusKgValidatorEmpty => 'Entrez un nombre de kg';
-
-  @override
-  String get tripOwnerSurplusKgValidatorMin => 'Minimum 1 kg';
-
-  @override
-  String get tripOwnerSurplusOpenedSnackbar => 'Capacité ouverte au public';
-
-  @override
-  String get tripOwnerSurplusReservedLabel => 'Réservé à votre expéditeur';
-
-  @override
-  String tripOwnerSurplusReservedKgValue(String kg) {
-    return '$kg kg verrouillés';
-  }
-
-  @override
-  String get tripOwnerSurplusKgSectionLabel => 'KG À OUVRIR';
-
-  @override
-  String get tripOwnerSurplusPriceSectionLabel => 'PRIX PAR KG';
-
-  @override
-  String get tripOwnerSurplusKgHint => 'Ex. 8';
-
-  @override
-  String get tripOwnerSurplusOtherPriceChip => 'Autre';
-
-  @override
-  String get tripOwnerSurplusCustomPriceHint => 'Votre prix';
-
-  @override
-  String get tripOwnerSurplusCustomPriceInvalid => 'Prix invalide';
-
-  @override
-  String get tripOwnerSurplusDisclaimerText =>
-      'Action définitive : une fois publiée, votre capacité libre devient visible dans la recherche et ne peut plus être refermée.';
-
-  @override
-  String get tripOwnerSurplusPublicPriceLabel => 'Prix affiché aux expéditeurs';
-
-  @override
   String get tripOwnerArrivalEditingTitle => 'Instructions de retrait';
 
   @override
@@ -22964,9 +22912,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le paiement suit la livraison de chaque colis.';
 
   @override
-  String get tripSummaryViewParcels => 'Voir mes colis';
-
-  @override
   String get tripDepartButton => 'Je pars';
 
   @override
@@ -23176,4 +23121,29 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripTileArrivalEditButton => 'Modifier les instructions';
+
+  @override
+  String tripRequestsCardPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count demandes à traiter',
+      one: '1 demande à traiter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripRequestsCardPendingHint =>
+      'Répondez pour remplir votre trajet.';
+
+  @override
+  String get tripRequestsCardEmpty => 'Aucune demande à traiter';
+
+  @override
+  String get tripRequestsCardEmptyHint =>
+      'Elles arrivent ici dès qu\'un expéditeur propose un colis.';
+
+  @override
+  String get tripParcelsSeeList => 'Voir la liste';
 }

@@ -175,19 +175,6 @@ class AnnouncementTripCreateRequested extends AnnouncementEvent {
   AnnouncementTripCreateRequested({required this.first, required this.legs});
 }
 
-/// Ouverture de la capacité excédentaire d'un trajet dédié au public.
-class AnnouncementSurplusOpenRequested extends AnnouncementEvent {
-  final String announcementId;
-  final double surplusKg;
-  final double pricePerKg;
-
-  AnnouncementSurplusOpenRequested({
-    required this.announcementId,
-    required this.surplusKg,
-    required this.pricePerKg,
-  });
-}
-
 /// Marquage groupé « Arrivé à destination » : passe le trajet à ARRIVED et
 /// enregistre en une fois des instructions de retrait optionnelles.
 class AnnouncementTripMarkArrivedRequested extends AnnouncementEvent {

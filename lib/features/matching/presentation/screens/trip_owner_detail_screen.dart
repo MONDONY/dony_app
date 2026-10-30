@@ -446,7 +446,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                         context.push('/announcements/${leg.id}/trip'),
                   ),
                   if (hasSummary) ...[
-                    TripSummaryCard(announcementId: a.id, summary: summary),
+                    TripSummaryCard(summary: summary),
                     if (a.trackingActive) ...[
                       const SizedBox(height: DonySpacing.md),
                       TripDepartButton(announcementId: a.id),
@@ -456,7 +456,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                   if (isOwner) TripAudienceSection(announcementId: a.id),
                   OwnerActionGrid(a: a, isOwner: isOwner),
                   const SizedBox(height: DonySpacing.lg),
-                  const TripParcelsSection(),
+                  TripParcelsSection(announcementId: a.id),
                   // Relecture du texte envoyé aux expéditeurs : le voyageur ne
                   // le voyait que dans la feuille d'édition, qui disparaît avec
                   // le dernier colis actif.

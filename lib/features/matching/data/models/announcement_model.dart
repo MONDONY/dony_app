@@ -364,10 +364,6 @@ class AnnouncementModel {
   /// Trajet dédié : une part de la capacité est réservée à une négociation.
   bool get isDedicated => reservedKg > 0;
 
-  /// Le voyageur peut ouvrir le surplus : la négo est payée mais le surplus
-  /// n'a pas encore été publié.
-  bool get canOpenSurplus => surplusEligible && !surplusPublished;
-
   /// Trajet vendu au kilo sans capacité fixe totale (mode "kilo libre").
   /// Toujours vrai quand `capacityUnit == 'KG_FREE'`.
   bool get isKgFree => capacityUnit == 'KG_FREE';

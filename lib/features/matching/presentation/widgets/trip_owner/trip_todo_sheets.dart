@@ -2,12 +2,9 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
-import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -297,21 +294,12 @@ class _TripTodoFooter extends StatelessWidget {
     };
   }
 
-  /// Activité › Demandes « À traiter » de ce trajet. Au retour, les colis et
-  /// le trajet sont relus : une demande acceptée ou refusée là-bas change les
-  /// compteurs de l'écran.
+  /// Activité › Demandes « À traiter » de ce trajet, relu au retour
+  /// ([openTripRequests]).
   Future<void> _openRequests(BuildContext sheetContext) async {
-    final bidBloc = maybeRead<BidBloc>(sheetContext);
-    final announcementBloc = maybeRead<AnnouncementBloc>(sheetContext);
     closeSheetIfOnTop(sheetContext);
     if (!screenContext.mounted) return;
-    await screenContext.push<void>(tripRequestsLocation(live.trip.id));
-    // Écran quitté entre-temps : ses blocs sont fermés.
-    if (!screenContext.mounted) return;
-    // Relecture silencieuse : l'écran garde ses colis affichés, ni
-    // indicateur de chargement ni tuile qui disparaît le temps de la réponse.
-    bidBloc?.add(BidListRequested(live.trip.id, silent: true));
-    announcementBloc?.add(AnnouncementDetailRequested(live.trip.id));
+    await openTripRequests(screenContext, live.trip.id);
   }
 
   /// Compte de paiement prêt : l'édition du trajet propose la carte, puis le

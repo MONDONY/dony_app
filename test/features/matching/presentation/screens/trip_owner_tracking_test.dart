@@ -299,13 +299,17 @@ void main() {
       expect(find.byKey(const Key('trip-summary-card')), findsNothing);
     });
 
-    testWidgets('summaryButtonOpensTripParcels', (tester) async {
+    // La liste des colis s'ouvre depuis la carte Colis (« Voir la liste ») :
+    // la carte du gain n'a plus de bouton.
+    testWidgets('summaryHasNoParcelsButton', (tester) async {
       await pump(tester, _ann(summary: _summary));
-      final button = find.byKey(const Key('trip-summary-view-parcels'));
-      await tester.ensureVisible(button);
-      await tester.tap(button);
-      await settle(tester);
-      expect(find.text('BIDS:ann-trip-001'), findsOneWidget);
+      final card = find.byKey(const Key('trip-summary-card'));
+      expect(card, findsOneWidget);
+      expect(
+        find.descendant(of: card, matching: find.byType(DonyButton)),
+        findsNothing,
+      );
+      expect(find.text('Voir mes colis'), findsNothing);
     });
   });
 

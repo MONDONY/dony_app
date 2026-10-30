@@ -8757,58 +8757,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripOwnerParcelsDefaultContent => 'Parcel';
 
   @override
-  String get tripOwnerSurplusTitle => 'Open remaining kg';
-
-  @override
-  String get tripOwnerSurplusSubtitle =>
-      'Make your spare capacity available to the public';
-
-  @override
-  String get tripOwnerSurplusPublishingButton => 'Posting…';
-
-  @override
-  String get tripOwnerSurplusKgValidatorEmpty => 'Enter a number of kg';
-
-  @override
-  String get tripOwnerSurplusKgValidatorMin => 'Minimum 1 kg';
-
-  @override
-  String get tripOwnerSurplusOpenedSnackbar => 'Capacity opened to the public';
-
-  @override
-  String get tripOwnerSurplusReservedLabel => 'Reserved for your sender';
-
-  @override
-  String tripOwnerSurplusReservedKgValue(String kg) {
-    return '$kg kg locked';
-  }
-
-  @override
-  String get tripOwnerSurplusKgSectionLabel => 'KG TO OPEN';
-
-  @override
-  String get tripOwnerSurplusPriceSectionLabel => 'PRICE PER KG';
-
-  @override
-  String get tripOwnerSurplusKgHint => 'E.g. 8';
-
-  @override
-  String get tripOwnerSurplusOtherPriceChip => 'Other';
-
-  @override
-  String get tripOwnerSurplusCustomPriceHint => 'Your price';
-
-  @override
-  String get tripOwnerSurplusCustomPriceInvalid => 'Invalid price';
-
-  @override
-  String get tripOwnerSurplusDisclaimerText =>
-      'Final action: once published, your spare capacity becomes visible in search and can no longer be closed.';
-
-  @override
-  String get tripOwnerSurplusPublicPriceLabel => 'Price shown to senders';
-
-  @override
   String get tripOwnerArrivalEditingTitle => 'Pickup instructions';
 
   @override
@@ -22800,9 +22748,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Payment follows the delivery of each parcel.';
 
   @override
-  String get tripSummaryViewParcels => 'View my parcels';
-
-  @override
   String get tripDepartButton => 'I\'m leaving';
 
   @override
@@ -23011,4 +22956,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripTileArrivalEditButton => 'Edit instructions';
+
+  @override
+  String tripRequestsCardPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count requests to review',
+      one: '1 request to review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripRequestsCardPendingHint => 'Reply to fill your trip.';
+
+  @override
+  String get tripRequestsCardEmpty => 'No requests to review';
+
+  @override
+  String get tripRequestsCardEmptyHint =>
+      'They show up here as soon as a sender offers a parcel.';
+
+  @override
+  String get tripParcelsSeeList => 'See list';
 }

@@ -57,7 +57,9 @@ Future<void> _pump(WidgetTester tester, _MockBidBloc bidBloc) async {
         builder: (ctx, _) => BlocProvider<BidBloc>.value(
           value: bidBloc,
           child: const Scaffold(
-            body: SingleChildScrollView(child: TripParcelsSection()),
+            body: SingleChildScrollView(
+              child: TripParcelsSection(announcementId: 'ann-1'),
+            ),
           ),
         ),
       ),

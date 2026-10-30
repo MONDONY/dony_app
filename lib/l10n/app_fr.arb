@@ -9131,7 +9131,7 @@
   },
   "tripOwnerPublishTile": "Publier",
   "@tripOwnerPublishTile": {
-    "description": "Tuile « Publier » (owner_action_grid.dart) ; réutilisée pour le libellé actif du bouton de OpenSurplusBottomSheet (même préfixe tripOwner, texte identique)."
+    "description": "Tuile « Publier » (owner_action_grid.dart)."
   },
   "tripOwnerPosterTile": "Affiche",
   "@tripOwnerPosterTile": {
@@ -9232,75 +9232,6 @@
   "tripOwnerParcelsDefaultContent": "Colis",
   "@tripOwnerParcelsDefaultContent": {
     "description": "Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcels_section.dart _ColisRow)."
-  },
-  "tripOwnerSurplusTitle": "Ouvrir les kg restants",
-  "@tripOwnerSurplusTitle": {
-    "description": "Titre de la sheet (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusSubtitle": "Mettez votre capacité libre à disposition du public",
-  "@tripOwnerSurplusSubtitle": {
-    "description": "Sous-titre de la sheet (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusPublishingButton": "Publication…",
-  "@tripOwnerSurplusPublishingButton": {
-    "description": "Libellé du bouton pendant la publication (open_surplus_bottom_sheet.dart) ; l'état actif réutilise tripOwnerPublishTile."
-  },
-  "tripOwnerSurplusKgValidatorEmpty": "Entrez un nombre de kg",
-  "@tripOwnerSurplusKgValidatorEmpty": {
-    "description": "Erreur du validateur kg quand le champ est vide/invalide (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusKgValidatorMin": "Minimum 1 kg",
-  "@tripOwnerSurplusKgValidatorMin": {
-    "description": "Erreur du validateur kg quand la valeur est < 1 (open_surplus_bottom_sheet.dart) — identique en anglais (chiffre + unité)."
-  },
-  "tripOwnerSurplusOpenedSnackbar": "Capacité ouverte au public",
-  "@tripOwnerSurplusOpenedSnackbar": {
-    "description": "Snackbar de succès à l'ouverture du surplus (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusReservedLabel": "Réservé à votre expéditeur",
-  "@tripOwnerSurplusReservedLabel": {
-    "description": "Libellé du bandeau de capacité réservée (open_surplus_bottom_sheet.dart _ReservedBanner)."
-  },
-  "tripOwnerSurplusReservedKgValue": "{kg} kg verrouillés",
-  "@tripOwnerSurplusReservedKgValue": {
-    "description": "Valeur du bandeau de capacité réservée, {kg} déjà formaté (open_surplus_bottom_sheet.dart).",
-    "placeholders": {
-      "kg": {
-        "type": "String"
-      }
-    }
-  },
-  "tripOwnerSurplusKgSectionLabel": "KG À OUVRIR",
-  "@tripOwnerSurplusKgSectionLabel": {
-    "description": "Libellé de section, en majuscules dans le code (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusPriceSectionLabel": "PRIX PAR KG",
-  "@tripOwnerSurplusPriceSectionLabel": {
-    "description": "Libellé de section, en majuscules dans le code (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusKgHint": "Ex. 8",
-  "@tripOwnerSurplusKgHint": {
-    "description": "Hint du champ kg à ouvrir (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusOtherPriceChip": "Autre",
-  "@tripOwnerSurplusOtherPriceChip": {
-    "description": "Chip de prix « Autre » (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusCustomPriceHint": "Votre prix",
-  "@tripOwnerSurplusCustomPriceHint": {
-    "description": "Hint du champ de prix libre (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusCustomPriceInvalid": "Prix invalide",
-  "@tripOwnerSurplusCustomPriceInvalid": {
-    "description": "Erreur du validateur de prix libre (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusDisclaimerText": "Action définitive : une fois publiée, votre capacité libre devient visible dans la recherche et ne peut plus être refermée.",
-  "@tripOwnerSurplusDisclaimerText": {
-    "description": "Texte d'avertissement en bas de la sheet (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusPublicPriceLabel": "Prix affiché aux expéditeurs",
-  "@tripOwnerSurplusPublicPriceLabel": {
-    "description": "Libellé de l'aperçu du prix public (open_surplus_bottom_sheet.dart _PublicPricePreview)."
   },
   "tripOwnerArrivalEditingTitle": "Instructions de retrait",
   "@tripOwnerArrivalEditingTitle": {
@@ -22833,8 +22764,6 @@
   "@tripSummaryEarningsLabel": {"description": "Résumé du trajet : net estimé du voyageur."},
   "tripSummaryEarningsNote": "Le paiement suit la livraison de chaque colis.",
   "@tripSummaryEarningsNote": {"description": "Résumé du trajet : précise que le gain est versé après la livraison."},
-  "tripSummaryViewParcels": "Voir mes colis",
-  "@tripSummaryViewParcels": {"description": "Résumé du trajet : ouvre la liste des colis du trajet."},
   "tripDepartButton": "Je pars",
   "@tripDepartButton": {"description": "Écran du trajet voyageur : confirme le départ (position approximative facultative)."},
   "tripDepartConfirmedSnackbar": "C'est noté, bon voyage !",
@@ -22995,5 +22924,15 @@
   "tripTilePaymentsCashOnlyNote": "Ce trajet n'accepte que les espèces. Pour ajouter la carte, voyez « {section} ».",
   "@tripTilePaymentsCashOnlyNote": {"description": "Sheet de la tuile « Paiements » : trajet en espèces seules où la carte est possible, renvoi vers la tuile de la section « À traiter » qui porte l'action (trip_tile_sheets.dart). {section} : titre réel de cette section (bidDetailSectionTodo), pour que le renvoi suive son nom.", "placeholders": {"section": {"type": "String"}}},
   "tripTileArrivalEditButton": "Modifier les instructions",
-  "@tripTileArrivalEditButton": {"description": "Sheet de la tuile « Arrivée » de l'écran du trajet (propriétaire) : bouton du pied qui ouvre l'édition des instructions de retrait, libellé court pour tenir sur une ligne à 360 dp (trip_tile_sheets.dart)."}
+  "@tripTileArrivalEditButton": {"description": "Sheet de la tuile « Arrivée » de l'écran du trajet (propriétaire) : bouton du pied qui ouvre l'édition des instructions de retrait, libellé court pour tenir sur une ligne à 360 dp (trip_tile_sheets.dart)."},
+  "tripRequestsCardPending": "{count, plural, =1{1 demande à traiter} other{{count} demandes à traiter}}",
+  "@tripRequestsCardPending": {"description": "Carte « Demandes » de l'écran du trajet (propriétaire) : nombre de demandes PENDING / PAYMENT_ESCROWED qui attendent la réponse du voyageur, count ≥ 1 (trip_requests_card.dart).", "placeholders": {"count": {"type": "int"}}},
+  "tripRequestsCardPendingHint": "Répondez pour remplir votre trajet.",
+  "@tripRequestsCardPendingHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne quand des demandes attendent une réponse (trip_requests_card.dart)."},
+  "tripRequestsCardEmpty": "Aucune demande à traiter",
+  "@tripRequestsCardEmpty": {"description": "Carte « Demandes » de l'écran du trajet : aucune demande n'attend de réponse ; la carte reste affichée et tappable (PROD-1N, trip_requests_card.dart)."},
+  "tripRequestsCardEmptyHint": "Elles arrivent ici dès qu'un expéditeur propose un colis.",
+  "@tripRequestsCardEmptyHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne sans demande à traiter (trip_requests_card.dart)."},
+  "tripParcelsSeeList": "Voir la liste",
+  "@tripParcelsSeeList": {"description": "Lien de l'en-tête de la carte « Colis dans le trajet » : ouvre la liste des colis du trajet (/announcements/:id/bids), affiché dès qu'un colis est embarqué ; une ligne, sans icône (trip_parcels_section.dart)."}
 }

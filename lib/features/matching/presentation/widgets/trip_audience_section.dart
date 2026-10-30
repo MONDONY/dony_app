@@ -12,10 +12,28 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Rien n'est affiché tant que rien n'est sûr : chargement, échec, ancien back.
 /// Sans aucune vue, la carte le dit (« Personne n'a encore vu ton trajet ») :
 /// le voyageur sait que le compteur existe.
+///
+/// Carte d'information sans titre du corps de l'écran. Un trajet que les
+/// expéditeurs ne voient pas ou plus ([shownFor] faux : brouillon, annulé,
+/// retiré par l'équipe) n'en a pas : la carte n'y est pas montée.
 class TripAudienceSection extends StatefulWidget {
-  const TripAudienceSection({super.key, required this.announcementId});
+  const TripAudienceSection({
+    super.key,
+    required this.announcementId,
+    this.padding = const EdgeInsets.only(bottom: DonySpacing.lg),
+  });
 
   final String announcementId;
+
+  /// Marge autour de la carte, appliquée seulement quand elle s'affiche
+  /// (comme `TripLegsCard`).
+  final EdgeInsetsGeometry padding;
+
+  static const _hiddenStatuses = {'DRAFT', 'CANCELLED', 'REMOVED_BY_ADMIN'};
+
+  /// L'audience a-t-elle un sens pour ce statut ? Non pour un brouillon
+  /// (invisible des expéditeurs), un trajet annulé ou retiré par l'équipe.
+  static bool shownFor(String status) => !_hiddenStatuses.contains(status);
 
   @override
   State<TripAudienceSection> createState() => _TripAudienceSectionState();
@@ -40,7 +58,7 @@ class _TripAudienceSectionState extends State<TripAudienceSection> {
         final tt = Theme.of(context).textTheme;
         final cs = Theme.of(context).colorScheme;
         return Padding(
-          padding: const EdgeInsets.only(bottom: DonySpacing.lg),
+          padding: widget.padding,
           child: DonyCard(
             key: const Key('trip-audience-card'),
             child: Row(
