@@ -1,6 +1,7 @@
 import 'package:dony/app/router.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -38,6 +39,7 @@ void main() {
       '/kyc/verify',
       '/kyc/status',
       '/profile/edit',
+      profileBasicsRoute,
       '/trips/create',
     ];
 
@@ -236,6 +238,7 @@ void main() {
       '/payments/wallet',
       '/kyc/verify',
       '/profile/edit',
+      profileBasicsRoute,
       '/trips/create',
       '/home',
       '/package-requests/abc-123',

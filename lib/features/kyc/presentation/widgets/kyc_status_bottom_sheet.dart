@@ -12,6 +12,7 @@ import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/presentation/kyc_rejection_messages.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -60,7 +61,7 @@ class KycStatusBottomSheet extends StatefulWidget {
     );
 
     if (stripeUrl != null && context.mounted) {
-      GoRouter.of(context).go('/kyc/verify', extra: stripeUrl);
+      GoRouter.of(context).go(kKycVerifyRoute, extra: stripeUrl);
     }
   }
 

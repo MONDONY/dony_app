@@ -1,4 +1,5 @@
 import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 
 // Résout la route GoRouter correspondant à un type + payload de notification —
 // utilisé à la fois par le tap sur push (foreground/background/terminated) et
@@ -158,7 +159,7 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'RECIPIENT_PARCEL_ANNOUNCED' when _isUuid(bidId) => '/receptions/$bidId',
 
     'KYC_VERIFIED' => '/kyc/status',
-    'KYC_ACTION_REQUIRED' => '/kyc/verify',
+    'KYC_ACTION_REQUIRED' => kKycVerifyRoute,
     'DISPUTE_UPDATED' => '/disputes',
     'DISPUTE_RESOLVED' => '/disputes',
 
