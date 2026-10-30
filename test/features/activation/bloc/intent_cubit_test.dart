@@ -128,6 +128,23 @@ void main() {
   );
 
   blocTest<IntentCubit, IntentFormState>(
+    'sans destination, la propriété destination_country est omise',
+    build: () {
+      stubDeclare();
+      return IntentCubit(repo, analytics, initialIntent: UserIntent.sender);
+    },
+    act: (c) => c.submit(IntentSource.signup),
+    verify: (_) {
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.intentDeclared,
+          properties: {'intent': 'SENDER', 'source': 'SIGNUP'},
+        ),
+      ).called(1);
+    },
+  );
+
+  blocTest<IntentCubit, IntentFormState>(
     '« Autre » trace OTHER',
     build: () {
       stubDeclare();
