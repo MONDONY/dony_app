@@ -24975,12 +24975,6 @@ abstract class AppLocalizations {
   /// **'Progression de l\'inscription'**
   String get dsSignupProgress;
 
-  /// Lu par le lecteur d'écran quand une étape de la jauge d'onboarding est en cours (dony_onboarding_gauge.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Étape {index} sur {total}'**
-  String dsGaugeCurrentStep(int index, int total);
-
   /// Lu par le lecteur d'écran quand aucune étape de la jauge d'onboarding n'est en cours : nombre d'étapes déjà franchies sur le total (dony_onboarding_gauge.dart).
   ///
   /// In fr, this message translates to:

@@ -17000,18 +17000,6 @@
   "@dsSignupProgress": {
     "description": "Libellé d'accessibilité par défaut de la jauge d'onboarding, lu par le lecteur d'écran (dony_onboarding_gauge.dart)."
   },
-  "dsGaugeCurrentStep": "Étape {index} sur {total}",
-  "@dsGaugeCurrentStep": {
-    "description": "Lu par le lecteur d'écran quand une étape de la jauge d'onboarding est en cours (dony_onboarding_gauge.dart).",
-    "placeholders": {
-      "index": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "dsGaugeReachedSteps": "{count, plural, =1{{count} étape sur {total}} other{{count} étapes sur {total}}}",
   "@dsGaugeReachedSteps": {
     "description": "Lu par le lecteur d'écran quand aucune étape de la jauge d'onboarding n'est en cours : nombre d'étapes déjà franchies sur le total (dony_onboarding_gauge.dart).",

@@ -82,7 +82,7 @@ void main() {
     await datasource.apply(
       frequency: GpProFrequency.monthly,
       commercialName: '   ',
-      source: GpProSource.signup,
+      source: GpProSource.profile,
     );
 
     final body =
@@ -93,7 +93,7 @@ void main() {
               ),
             ).captured.single
             as Map<String, dynamic>;
-    expect(body, {'travelFrequency': 'MONTHLY', 'source': 'SIGNUP'});
+    expect(body, {'travelFrequency': 'MONTHLY', 'source': 'PROFILE'});
   });
 
   test('uploadDocument envoie un FormData file + type', () async {

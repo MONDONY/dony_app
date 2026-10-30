@@ -4154,7 +4154,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'dsSelect': (l) => l.dsSelect,
   'dsConfirmSelection': (l) => l.dsConfirmSelection,
   'dsSignupProgress': (l) => l.dsSignupProgress,
-  'dsGaugeCurrentStep': (l) => l.dsGaugeCurrentStep(intPlaceholderValue, intPlaceholderValue),
   'dsGaugeReachedSteps': (l) => l.dsGaugeReachedSteps(intPlaceholderValue, intPlaceholderValue),
   'dsBannerInfo': (l) => l.dsBannerInfo,
   'dsBannerSuccess': (l) => l.dsBannerSuccess,

@@ -23,7 +23,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(GpProFrequency.weekly);
-    registerFallbackValue(GpProSource.signup);
+    registerFallbackValue(GpProSource.profile);
     registerFallbackValue(GpProDocType.other);
   });
 
@@ -62,7 +62,7 @@ void main() {
     expect(
       await repo.apply(
         frequency: GpProFrequency.weekly,
-        source: GpProSource.signup,
+        source: GpProSource.profile,
       ),
       status,
     );
@@ -95,7 +95,7 @@ void main() {
       ),
     ).thenThrow(_http(404, {'type': 'https://x/errors/not-found'}));
     expect(
-      repo.apply(frequency: GpProFrequency.weekly, source: GpProSource.signup),
+      repo.apply(frequency: GpProFrequency.weekly, source: GpProSource.profile),
       throwsA(isA<GpProUnavailableException>()),
     );
   });

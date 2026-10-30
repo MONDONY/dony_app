@@ -15169,11 +15169,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dsSignupProgress => 'Progression de l\'inscription';
 
   @override
-  String dsGaugeCurrentStep(int index, int total) {
-    return 'Étape $index sur $total';
-  }
-
-  @override
   String dsGaugeReachedSteps(int count, int total) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

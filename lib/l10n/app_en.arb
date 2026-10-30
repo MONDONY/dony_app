@@ -8019,7 +8019,6 @@
   "dsSelect": "Select",
   "dsConfirmSelection": "Confirm selection",
   "dsSignupProgress": "Sign-up progress",
-  "dsGaugeCurrentStep": "Step {index} of {total}",
   "dsGaugeReachedSteps": "{count, plural, =1{{count} step of {total}} other{{count} steps of {total}}}",
   "dsBannerInfo": "Info",
   "dsBannerSuccess": "Success",
