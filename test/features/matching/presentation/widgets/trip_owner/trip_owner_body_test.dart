@@ -444,6 +444,27 @@ void main() {
     }
   });
 
+  testWidgets('dix colis : carte Colis à deux lignes, total et bouton', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      trip: _trip(status: 'IN_PROGRESS', summary: _summary),
+      bids: [for (var i = 0; i < 10; i++) _bid('b$i', 'IN_TRANSIT')],
+    );
+    expect(find.text('Colis dans le trajet · 10'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(TripParcelsSection),
+        matching: find.textContaining('Awa Diop'),
+      ),
+      findsNWidgets(2),
+    );
+    expect(find.text('Voir les 8 autres colis'), findsOneWidget);
+    expect(key('trip-parcels-see-list'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('liste des colis en chargement : carte Demandes neutre', (
     tester,
   ) async {

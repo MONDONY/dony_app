@@ -14466,12 +14466,6 @@ abstract class AppLocalizations {
   /// **'Les colis acceptés apparaîtront ici.'**
   String get tripOwnerParcelsEmptyDescription;
 
-  /// Chip de filtre « Tous » de la section colis embarqués (trip_parcels_section.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Tous'**
-  String get tripOwnerParcelsFilterAll;
-
   /// Statut compact de la section colis embarqués (trip_parcels_section.dart _statusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté.
   ///
   /// In fr, this message translates to:
@@ -37127,6 +37121,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Voir la liste'**
   String get tripParcelsSeeList;
+
+  /// Titre de la carte « Colis dans le trajet » de l'écran du trajet (propriétaire) quand au moins un colis est embarqué : count = nombre total de colis embarqués (isAcceptedTabBid), même quand la carte n'en montre que deux. Sans colis, ou tant que la liste n'a pas répondu, le titre seul (tripOwnerParcelsSectionTitle) (trip_parcels_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis dans le trajet · {count}'**
+  String tripParcelsCardTitle(int count);
+
+  /// Bouton secondaire pleine largeur sous les deux premiers colis de la carte « Colis dans le trajet », affiché au-delà de deux colis : count = colis non montrés (total - 2, count ≥ 1). Ouvre la liste des colis du trajet (/announcements/:id/bids), comme « Voir la liste ». Une ligne à 360 dp × 1,3 (trip_parcels_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Voir 1 autre colis} other{Voir les {count} autres colis}}'**
+  String tripParcelsSeeMore(int count);
 
   /// Écran du trajet (propriétaire) : libellé d'accessibilité et info-bulle du bouton ⋮ de la barre d'application, qui ouvre le menu des actions du trajet (trip_owner_options_sheet.dart).
   ///

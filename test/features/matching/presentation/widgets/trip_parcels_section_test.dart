@@ -163,9 +163,8 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('≥ 2 statuts → filtre rapide affiché avec compteur « Tous »', (
-    tester,
-  ) async {
+  testWidgets('trois colis de statuts mêlés → deux lignes, total au titre, '
+      'bouton « Voir 1 autre colis », aucune puce de filtre', (tester) async {
     stub(
       BidListLoaded([
         _makeBid(status: 'ACCEPTED', id: 'b1', contentCategory: 'Documents'),
@@ -181,39 +180,15 @@ void main() {
     await _pump(tester, bidBloc);
     await tester.pump();
 
-    expect(find.byType(StatusChipsRow<String?>), findsOneWidget);
-    expect(find.text('Tous · 3'), findsOneWidget);
-    // Les 3 colis sont visibles tant qu'aucun filtre n'est actif.
+    expect(find.text('Colis dans le trajet · 3'), findsOneWidget);
+    expect(find.byType(StatusChipsRow<String?>), findsNothing);
+    expect(find.text('Tous · 3'), findsNothing);
+    // Les deux colis qui attendent le voyageur ; le colis annulé passe
+    // dans la liste complète.
     expect(find.text('Documents'), findsOneWidget);
     expect(find.text('Électronique'), findsOneWidget);
-    expect(find.text('Bijoux'), findsOneWidget);
-  });
-
-  testWidgets('tap chip statut → filtre la liste sur ce statut', (
-    tester,
-  ) async {
-    stub(
-      BidListLoaded([
-        _makeBid(status: 'ACCEPTED', id: 'b1', contentCategory: 'Documents'),
-        _makeBid(
-          status: 'IN_TRANSIT',
-          id: 'b2',
-          contentCategory: 'Électronique',
-        ),
-        _makeBid(status: 'CANCELLED', id: 'b3', contentCategory: 'Bijoux'),
-      ]),
-    );
-
-    await _pump(tester, bidBloc);
-    await tester.pump();
-
-    // La chip de filtre « En transit · 1 » est distincte du chip de ligne.
-    await tester.tap(find.text('En transit · 1'));
-    await tester.pump(const Duration(milliseconds: 200));
-
-    expect(find.text('Électronique'), findsOneWidget);
-    expect(find.text('Documents'), findsNothing);
     expect(find.text('Bijoux'), findsNothing);
+    expect(find.text('Voir 1 autre colis'), findsOneWidget);
   });
 
   // Régression : sans entrée ARRIVED, _statusMeta retombait sur le défaut et
@@ -249,7 +224,7 @@ void main() {
     expect(find.byType(DonyEmptyState), findsNothing);
   });
 
-  testWidgets('un seul statut → pas de filtre rapide', (tester) async {
+  testWidgets('deux colis → deux lignes, pas de bouton', (tester) async {
     stub(
       BidListLoaded([
         _makeBid(status: 'ACCEPTED', id: 'b1'),
@@ -261,6 +236,9 @@ void main() {
     await tester.pump();
 
     expect(find.byType(StatusChipsRow<String?>), findsNothing);
+    expect(find.textContaining('Moussa Traoré'), findsOneWidget);
+    expect(find.textContaining('Autre Expéditeur'), findsOneWidget);
+    expect(find.byKey(const Key('trip-parcels-see-more')), findsNothing);
   });
 
   group('traductions', () {
@@ -388,20 +366,27 @@ void main() {
       );
     });
 
-    testWidgets('toujours visible quand un filtre est actif', (tester) async {
+    testWidgets('compte tous les colis, pas seulement les deux lignes', (
+      tester,
+    ) async {
       stub(
         BidListLoaded([
           _makeBid(status: 'ACCEPTED', id: 'b1'),
-          _makeBid(status: 'COMPLETED', id: 'b2'),
+          _makeBid(status: 'IN_TRANSIT', id: 'b2'),
+          _makeBid(status: 'COMPLETED', id: 'b3'),
+          _makeBid(status: 'COMPLETED', id: 'b4'),
         ]),
       );
 
       await _pump(tester, bidBloc);
       await tester.pump();
-      await tester.tap(find.text('Livré').first);
-      await tester.pump();
 
-      expect(summaryText(tester), '1 à récupérer  ·  1 livré');
+      // Les deux livrés ne sont pas en ligne, ils comptent au résumé.
+      expect(find.text('Livré'), findsNothing);
+      expect(
+        summaryText(tester),
+        '1 colis en route  ·  1 à récupérer  ·  2 livrés',
+      );
     });
 
     testWidgets('que des clôturés → pas de résumé', (tester) async {

@@ -315,8 +315,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `announcement_created` | AnnouncementBloc._onCreateRequested() |
 | `announcement_viewed` | AnnouncementDetailScreen (BlocListener) |
 | `trip_owner_detail_opened` | TripOwnerDetailScreen.initState — ouverture de l'écran détail trajet par le propriétaire (propriété `status`) |
-| `trip_parcels_viewed` | TripParcelsSection — chargement de la liste des colis embarqués (propriété `count`) |
-| `trip_parcels_filtered` | TripParcelsSection — chip de filtre statut tapée dans « Colis dans le trajet » (propriété `status`, `all` si « Tous ») |
+| `trip_parcels_viewed` | TripParcelsSection — premier chargement de la liste des colis embarqués de la carte « Colis dans le trajet » (propriété `count` : total des colis embarqués, `isAcceptedTabBid`, même quand la carte n'en montre que deux ; le bouton « Voir les N autres colis » n'émet rien de plus). Une seule fois tant que la carte reste affichée (un rechargement ne réémet pas) |
 | `bid_submitted` | BidBloc._onCreateRequested() |
 | `bid_accepted` | BidAcceptanceBloc._handleResponse() |
 | `bid_rejected` | BidBloc._onRejectRequested() |

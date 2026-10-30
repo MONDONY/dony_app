@@ -8739,9 +8739,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les colis acceptés apparaîtront ici.';
 
   @override
-  String get tripOwnerParcelsFilterAll => 'Tous';
-
-  @override
   String get tripOwnerParcelsStatusAccepted => 'Accepté';
 
   @override
@@ -23125,6 +23122,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripParcelsSeeList => 'Voir la liste';
+
+  @override
+  String tripParcelsCardTitle(int count) {
+    return 'Colis dans le trajet · $count';
+  }
+
+  @override
+  String tripParcelsSeeMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Voir les $count autres colis',
+      one: 'Voir 1 autre colis',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get tripOwnerMenuTooltip => 'Options du trajet';

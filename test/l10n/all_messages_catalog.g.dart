@@ -3189,7 +3189,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripOwnerDeleteActiveMessage': (l) => l.tripOwnerDeleteActiveMessage,
   'tripOwnerParcelsSectionTitle': (l) => l.tripOwnerParcelsSectionTitle,
   'tripOwnerParcelsEmptyDescription': (l) => l.tripOwnerParcelsEmptyDescription,
-  'tripOwnerParcelsFilterAll': (l) => l.tripOwnerParcelsFilterAll,
   'tripOwnerParcelsStatusAccepted': (l) => l.tripOwnerParcelsStatusAccepted,
   'tripOwnerParcelsStatusAwaitingPayment': (l) =>
       l.tripOwnerParcelsStatusAwaitingPayment,
@@ -8049,6 +8048,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripRequestsCardEndedHint': (l) => l.tripRequestsCardEndedHint,
   'tripSectionYourTrip': (l) => l.tripSectionYourTrip,
   'tripParcelsSeeList': (l) => l.tripParcelsSeeList,
+  'tripParcelsCardTitle': (l) => l.tripParcelsCardTitle(intPlaceholderValue),
+  'tripParcelsSeeMore': (l) => l.tripParcelsSeeMore(intPlaceholderValue),
   'tripOwnerMenuTooltip': (l) => l.tripOwnerMenuTooltip,
   'tripMenuEditSubtitle': (l) => l.tripMenuEditSubtitle,
   'tripMenuRecurringSubtitle': (l) => l.tripMenuRecurringSubtitle,

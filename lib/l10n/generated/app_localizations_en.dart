@@ -8686,9 +8686,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Accepted parcels will appear here.';
 
   @override
-  String get tripOwnerParcelsFilterAll => 'All';
-
-  @override
   String get tripOwnerParcelsStatusAccepted => 'Accepted';
 
   @override
@@ -22957,6 +22954,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripParcelsSeeList => 'See list';
+
+  @override
+  String tripParcelsCardTitle(int count) {
+    return 'Parcels on this trip · $count';
+  }
+
+  @override
+  String tripParcelsSeeMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'See the $count other parcels',
+      one: 'See 1 other parcel',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get tripOwnerMenuTooltip => 'Trip options';

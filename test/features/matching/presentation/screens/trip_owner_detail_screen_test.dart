@@ -1523,7 +1523,7 @@ void main() {
       expect(find.byKey(const Key('trip-owner-share-button')), findsNothing);
       // Ni demandes ni colis à montrer.
       expect(find.byKey(const Key('trip-requests-card')), findsNothing);
-      expect(find.text('Colis dans le trajet'), findsNothing);
+      expect(find.textContaining('Colis dans le trajet'), findsNothing);
       expect(tester.takeException(), isNull);
     });
 

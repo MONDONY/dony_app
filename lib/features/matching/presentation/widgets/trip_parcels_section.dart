@@ -11,27 +11,57 @@ import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
-import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Nombre de colis montrés en ligne par la carte « Colis dans le trajet » :
+/// au-delà, « Voir les N autres colis » ouvre la liste complète (un trajet de
+/// dix colis rendait l'écran trop long).
+const kTripParcelsPreviewCount = 2;
+
+/// Statuts où le colis attend encore un geste du voyageur : à récupérer
+/// (`ACCEPTED`), en route (`HANDED_OVER`, `IN_TRANSIT`), à remettre
+/// (`ARRIVED`). Ce sont les segments « à récupérer », « en route » et
+/// « arrivés » du résumé ([tripParcelsCounts]) ; un colis livré, clôturé ou
+/// dont le paiement est attendu (`AWAITING_PAYMENT`, rien à aller chercher)
+/// ne demande rien au voyageur.
+const _kAwaitingTravelerStatuses = {
+  'ACCEPTED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'ARRIVED',
+};
+
+/// Les [kTripParcelsPreviewCount] colis montrés par la carte parmi
+/// [embarked] : d'abord ceux qui attendent un geste du voyageur
+/// ([_kAwaitingTravelerStatuses]), puis les autres ; l'ordre reçu est gardé
+/// à l'intérieur de chaque groupe (tri stable).
+List<BidModel> tripParcelsPreview(List<BidModel> embarked) => [
+  ...embarked.where((b) => _kAwaitingTravelerStatuses.contains(b.status)),
+  ...embarked.where((b) => !_kAwaitingTravelerStatuses.contains(b.status)),
+].take(kTripParcelsPreviewCount).toList(growable: false);
+
 /// Carte « Colis dans le trajet » de l'écran détail trajet (propriétaire),
 /// carte du corps comme celles de la fiche colis ([DetailCard]).
 ///
 /// Consomme le [BidBloc] fourni par la route (`BidListRequested(announcementId)`).
-/// En tête, le lien « Voir la liste » (dès qu'un colis est embarqué) ouvre
-/// la liste des colis du trajet (`/announcements/:id/bids`), seul chemin vers
-/// elle depuis l'écran ; une ligne ouvre la fiche du colis (`/bids/:id`).
-/// Au retour de l'une ou de l'autre, les colis et le trajet sont relus
-/// ([openTripParcelsList], [openTripParcel]).
+/// Le titre porte le total des colis embarqués (« Colis dans le trajet · 7 »).
+/// Le résumé ([TripParcelsSummary]) compte tous les colis ; seules les
+/// [kTripParcelsPreviewCount] premières lignes sont rendues
+/// ([tripParcelsPreview]), suivies au-delà de « Voir les N autres colis ».
+/// Ce bouton et le lien « Voir la liste » de l'en-tête (dès qu'un colis est
+/// embarqué) ouvrent la liste des colis du trajet (`/announcements/:id/bids`) ;
+/// une ligne ouvre la fiche du colis (`/bids/:id`). Au retour de l'une ou de
+/// l'autre, les colis et le trajet sont relus ([openTripParcelsList],
+/// [openTripParcel]).
 /// Filtre les offres réellement embarquées via [isAcceptedTabBid] (source de
 /// vérité du projet : ACCEPTED / HANDED_OVER / IN_TRANSIT / ARRIVED / COMPLETED,
 /// moins les
 /// auto-annulés). Émet une fois l'event analytics `trip_parcels_viewed` au
-/// premier chargement de la liste (compteur uniquement, aucune PII).
+/// premier chargement de la liste (total des colis embarqués, aucune PII).
 class TripParcelsSection extends StatefulWidget {
   const TripParcelsSection({super.key, required this.announcementId});
 
@@ -48,16 +78,6 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
   /// `setState` — elle ne déclenche aucun rendu, juste l'idempotence du log.
   bool _logged = false;
 
-  /// Filtre statut courant (`null` = « Tous »). Mutation via `ValueNotifier`
-  /// (pas de `setState`) — seul le contenu de la liste se reconstruit.
-  final ValueNotifier<String?> _statusFilter = ValueNotifier<String?>(null);
-
-  @override
-  void dispose() {
-    _statusFilter.dispose();
-    super.dispose();
-  }
-
   void _logOnce(int count) {
     if (_logged) {
       return;
@@ -71,22 +91,14 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
     );
   }
 
-  void _onFilter(String? status) {
-    if (_statusFilter.value == status) {
-      return;
-    }
-    _statusFilter.value = status;
-    unawaited(
-      getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.tripParcelsFiltered,
-        properties: {'status': status ?? 'all'},
-      ),
-    );
-  }
+  /// Liste complète des colis du trajet, ouverte depuis le contexte de la
+  /// section (qui vit autant que l'écran), jamais celui du lien ou du bouton,
+  /// que la liste relue peut démonter.
+  void _openList() =>
+      unawaited(openTripParcelsList(context, widget.announcementId));
 
-  /// Fiche du colis [bidId], ouverte depuis le contexte de la section (qui
-  /// vit autant que l'écran), jamais celui d'une ligne qu'une liste relue
-  /// peut démonter.
+  /// Fiche du colis [bidId], ouverte depuis le contexte de la section, jamais
+  /// celui d'une ligne qu'une liste relue peut démonter.
   void _openParcel(String bidId) => unawaited(
     openTripParcel(context, tripId: widget.announcementId, bidId: bidId),
   );
@@ -96,42 +108,39 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return DetailCard(
-      title: context.l10n.tripOwnerParcelsSectionTitle,
-      trailing: BlocBuilder<BidBloc, BidState>(
-        buildWhen: (previous, state) => state is BidListLoaded,
-        builder: (context, state) {
-          final hasParcels =
-              state is BidListLoaded && state.bids.any(isAcceptedTabBid);
-          if (!hasParcels) return const SizedBox.shrink();
-          return TextButton(
-            key: const Key('trip-parcels-see-list'),
-            // Contexte de la section (vit autant que l'écran), pas celui du
-            // lien, que la liste relue peut démonter.
-            onPressed: () => unawaited(
-              openTripParcelsList(this.context, widget.announcementId),
-            ),
-            // Aligné sur le bord droit du contenu de la carte (sans la marge
-            // intérieure du bouton), cible tactile de 44 dp gardée.
-            style: TextButton.styleFrom(
-              foregroundColor: cs.primary,
-              textStyle: tt.labelLarge,
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(44, 44),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              context.l10n.tripParcelsSeeList,
-              maxLines: 1,
-              softWrap: false,
-            ),
-          );
-        },
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          BlocBuilder<BidBloc, BidState>(
+    // Titre et lien suivent la dernière liste reçue : gardés pendant un
+    // rechargement ou après un échec.
+    return BlocBuilder<BidBloc, BidState>(
+      buildWhen: (previous, state) => state is BidListLoaded,
+      builder: (context, state) {
+        final total = state is BidListLoaded
+            ? state.bids.where(isAcceptedTabBid).length
+            : 0;
+        return DetailCard(
+          title: total > 0
+              ? context.l10n.tripParcelsCardTitle(total)
+              : context.l10n.tripOwnerParcelsSectionTitle,
+          trailing: total > 0
+              ? TextButton(
+                  key: const Key('trip-parcels-see-list'),
+                  onPressed: _openList,
+                  // Aligné sur le bord droit du contenu de la carte (sans la
+                  // marge intérieure du bouton), cible tactile de 44 dp gardée.
+                  style: TextButton.styleFrom(
+                    foregroundColor: cs.primary,
+                    textStyle: tt.labelLarge,
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(44, 44),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    context.l10n.tripParcelsSeeList,
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                )
+              : const SizedBox.shrink(),
+          child: BlocBuilder<BidBloc, BidState>(
             builder: (context, state) {
               if (state is BidInitial || state is BidLoading) {
                 return Padding(
@@ -162,77 +171,38 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
                   );
                 }
 
-                // Compteur par statut + statuts présents (ordre métier fixe).
-                final counts = <String, int>{};
-                for (final b in embarked) {
-                  counts[b.status] = (counts[b.status] ?? 0) + 1;
-                }
-                final present = <String>[
-                  for (final st in _kStatusOrder)
-                    if (counts.containsKey(st)) st,
-                  for (final st in counts.keys)
-                    if (!_kStatusOrder.contains(st)) st,
-                ];
-
-                return ValueListenableBuilder<String?>(
-                  valueListenable: _statusFilter,
-                  builder: (context, filter, _) {
-                    // Filtre actif disparu (liste rechargée) → repli sur « Tous ».
-                    final active =
-                        (filter != null && counts.containsKey(filter))
-                        ? filter
-                        : null;
-                    final visible = active == null
-                        ? embarked
-                        : embarked
-                              .where((b) => b.status == active)
-                              .toList(growable: false);
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Résumé toujours visible, indépendant du filtre
-                        // (FLUTTER-GS).
-                        TripParcelsSummary(bids: embarked),
-                        // Filtre rapide : seulement si ≥ 2 statuts distincts.
-                        if (present.length >= 2) ...[
-                          StatusChipsRow<String?>(
-                            selected: active,
-                            onSelected: _onFilter,
-                            chips: [
-                              StatusChipData<String?>(
-                                label: context.l10n.tripOwnerParcelsFilterAll,
-                                value: null,
-                                count: embarked.length,
-                              ),
-                              for (final st in present)
-                                _statusFilterChip(
-                                  st,
-                                  counts[st]!,
-                                  cs,
-                                  context.l10n,
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: DonySpacing.md),
-                        ],
-                        for (var i = 0; i < visible.length; i++) ...[
-                          if (i > 0) const SizedBox(height: DonySpacing.sm),
-                          _ColisRow(
-                            bid: visible[i],
-                            onTap: () => _openParcel(visible[i].id),
-                          ),
-                        ],
-                      ],
-                    );
-                  },
+                final preview = tripParcelsPreview(embarked);
+                final hidden = embarked.length - preview.length;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Résumé sur tous les colis, jamais sur les seules lignes
+                    // montrées (FLUTTER-GS).
+                    TripParcelsSummary(bids: embarked),
+                    for (var i = 0; i < preview.length; i++) ...[
+                      if (i > 0) const SizedBox(height: DonySpacing.sm),
+                      _ColisRow(
+                        bid: preview[i],
+                        onTap: () => _openParcel(preview[i].id),
+                      ),
+                    ],
+                    if (hidden > 0) ...[
+                      const SizedBox(height: DonySpacing.md),
+                      DonyButton(
+                        key: const Key('trip-parcels-see-more'),
+                        label: context.l10n.tripParcelsSeeMore(hidden),
+                        variant: DonyButtonVariant.secondary,
+                        onPressed: _openList,
+                      ),
+                    ],
+                  ],
                 );
               }
               return const SizedBox.shrink();
             },
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -438,19 +408,6 @@ class _ColisRow extends StatelessWidget {
   }
 }
 
-/// Ordre d'affichage métier des statuts dans le filtre rapide.
-const _kStatusOrder = <String>[
-  'ACCEPTED',
-  'AWAITING_PAYMENT',
-  'HANDED_OVER',
-  'IN_TRANSIT',
-  'ARRIVED',
-  'COMPLETED',
-  'NO_SHOW',
-  'PARCEL_REFUSED',
-  'CANCELLED',
-];
-
 /// Libellé traduit + couleur d'un statut de colis embarqué.
 (String, Color) _statusMeta(
   String status,
@@ -471,22 +428,6 @@ const _kStatusOrder = <String>[
   'CANCELLED' => (l.tripOwnerParcelsStatusCancelled, cs.error),
   _ => (status, cs.onSurfaceVariant),
 };
-
-/// Chip de filtre d'un statut : libellé traduit + compteur + pastille colorée.
-StatusChipData<String?> _statusFilterChip(
-  String status,
-  int count,
-  ColorScheme cs,
-  AppLocalizations l,
-) {
-  final (label, color) = _statusMeta(status, cs, l);
-  return StatusChipData<String?>(
-    label: label,
-    value: status,
-    count: count,
-    dotColor: color,
-  );
-}
 
 /// Petit chip de statut traduit pour un colis embarqué.
 class _StatusChip extends StatelessWidget {
