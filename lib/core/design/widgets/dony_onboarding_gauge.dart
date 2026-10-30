@@ -7,9 +7,6 @@ enum DonyGaugeSegment {
   /// Le fait serveur existe : segment plein.
   done,
 
-  /// Étape en cours : segment à demi rempli.
-  current,
-
   /// Reste à faire, ou (hors parcours) une étape passée : passer n'est pas
   /// terminer.
   todo,
@@ -37,7 +34,7 @@ class DonyOnboardingGauge extends StatelessWidget {
 
   final List<DonyGaugeSegment> segments;
 
-  /// Nom de l'étape en cours, ou du contexte quand aucune ne l'est.
+  /// Nom du contexte affiché dans le compteur, déjà localisé par l'appelant.
   final String label;
 
   /// Ce que la jauge mesure, lu par le lecteur d'écran. Par défaut le parcours
@@ -50,21 +47,12 @@ class DonyOnboardingGauge extends StatelessWidget {
   /// `Semantics` reste inchangée dans les deux cas.
   final bool showCounter;
 
-  /// Position affichée : segments pleins + l'étape en cours. Sur le 4e écran
-  /// d'un parcours de 5, le compteur dit « 4 / 5 » — le numéro de l'étape où
-  /// l'on se trouve, pas le nombre d'étapes remplies (un compteur qui stagne
-  /// pendant qu'on avance se lit comme un parcours cassé).
+  /// Nombre de segments pleins.
   int get _reachedCount =>
       segments.where((s) => s != DonyGaugeSegment.todo).length;
 
-  String _semanticsValue(AppLocalizations l) {
-    final total = segments.length;
-    final index = segments.indexOf(DonyGaugeSegment.current);
-    if (index >= 0) {
-      return l.dsGaugeCurrentStep(index + 1, total);
-    }
-    return l.dsGaugeReachedSteps(_reachedCount, total);
-  }
+  String _semanticsValue(AppLocalizations l) =>
+      l.dsGaugeReachedSteps(_reachedCount, segments.length);
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +115,6 @@ class _GaugeSegment extends StatelessWidget {
 
     final fill = switch (state) {
       DonyGaugeSegment.done => 1.0,
-      DonyGaugeSegment.current => 0.5,
       DonyGaugeSegment.todo => 0.0,
     };
 
