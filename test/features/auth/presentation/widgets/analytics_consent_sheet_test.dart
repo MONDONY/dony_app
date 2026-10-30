@@ -130,7 +130,9 @@ void main() {
       expect(errors.single, isA<StateError>());
       expect(prompt.wanted.value, isFalse);
       expect(find.byKey(const Key('consent-sheet-accept')), findsNothing);
-      verifyNever(() => analytics.logEvent(any(), properties: any(named: 'properties')));
+      verifyNever(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      );
     },
   );
 

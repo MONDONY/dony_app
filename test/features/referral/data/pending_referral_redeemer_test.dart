@@ -42,10 +42,9 @@ void main() {
     expect(await redeemer.apply(), PendingReferralOutcome.applied);
     expect(store.current, isNull);
     verify(
-      () => backend.capture(
-        AnalyticsEvents.referralAutoApplied,
-        {'outcome': 'applied'},
-      ),
+      () => backend.capture(AnalyticsEvents.referralAutoApplied, {
+        'outcome': 'applied',
+      }),
     ).called(1);
   });
 
@@ -62,10 +61,9 @@ void main() {
       expect(await redeemer.apply(), PendingReferralOutcome.rejected);
       expect(store.current, isNull);
       verify(
-        () => backend.capture(
-          AnalyticsEvents.referralAutoApplied,
-          {'outcome': 'rejected'},
-        ),
+        () => backend.capture(AnalyticsEvents.referralAutoApplied, {
+          'outcome': 'rejected',
+        }),
       ).called(1);
     });
   }
