@@ -22992,8 +22992,8 @@
   "@tripTileArrivalEmpty": {"description": "Sheet de la tuile « Arrivée » : un colis est arrivé mais le voyageur n'a pas laissé d'instructions de retrait (trip_tile_sheets.dart)."},
   "tripTilePaymentsNetworksTitle": "Réseaux mobile money",
   "@tripTilePaymentsNetworksTitle": {"description": "Sheet de la tuile « Paiements » : titre des pastilles des réseaux mobile money acceptés par le voyageur, affiché en majuscules (trip_detail_sections.dart)."},
-  "tripTilePaymentsCashOnlyNote": "Ce trajet n'accepte que les espèces. Pour ajouter la carte, voyez « À traiter ».",
-  "@tripTilePaymentsCashOnlyNote": {"description": "Sheet de la tuile « Paiements » : trajet en espèces seules où la carte est possible, renvoi vers la tuile de la section « À traiter » qui porte l'action (trip_tile_sheets.dart)."},
+  "tripTilePaymentsCashOnlyNote": "Ce trajet n'accepte que les espèces. Pour ajouter la carte, voyez « {section} ».",
+  "@tripTilePaymentsCashOnlyNote": {"description": "Sheet de la tuile « Paiements » : trajet en espèces seules où la carte est possible, renvoi vers la tuile de la section « À traiter » qui porte l'action (trip_tile_sheets.dart). {section} : titre réel de cette section (bidDetailSectionTodo), pour que le renvoi suive son nom.", "placeholders": {"section": {"type": "String"}}},
   "tripTileArrivalEditButton": "Modifier les instructions",
   "@tripTileArrivalEditButton": {"description": "Sheet de la tuile « Arrivée » de l'écran du trajet (propriétaire) : bouton du pied qui ouvre l'édition des instructions de retrait, libellé court pour tenir sur une ligne à 360 dp (trip_tile_sheets.dart)."}
 }

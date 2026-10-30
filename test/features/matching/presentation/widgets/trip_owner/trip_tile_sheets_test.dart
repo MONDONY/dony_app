@@ -27,7 +27,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/mobile_money_network.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tile_sheets.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_tile_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_tiles.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -97,6 +97,7 @@ AnnouncementModel _trip({
   String currency = 'EUR',
   String? description = 'Pas de produits fragiles svp.',
   String? instructions,
+  AddressData pickup = _pickup,
 }) => AnnouncementModel(
   id: id,
   travelerId: 'trav-1',
@@ -109,7 +110,7 @@ AnnouncementModel _trip({
   status: status,
   createdAt: DateTime(2026, 7),
   updatedAt: DateTime(2026, 7),
-  pickupAddress: places ? _pickup : null,
+  pickupAddress: places ? pickup : null,
   deliveryAddress: places ? _delivery : null,
   handoverDeadline: places ? DateTime(2026, 8, 10, 18) : null,
   acceptedPaymentMethods: methods,
@@ -212,7 +213,8 @@ void main() {
     Locale locale = const Locale('fr'),
     double textScale = 1,
     Size? size,
-    TravelerTileSource source = TravelerTileSource.tile,
+    TileSource source = TileSource.tile,
+    List<BidModel>? screenBids,
   }) async {
     if (size != null) {
       tester.view.physicalSize = size;
@@ -235,8 +237,13 @@ void main() {
       final opener = Scaffold(
         body: Builder(
           builder: (context) => TextButton(
-            onPressed: () =>
-                openTripTileSheet(context, trip, tile, source: source),
+            onPressed: () => openTripTileSheet(
+              context,
+              trip,
+              tile,
+              source: source,
+              bids: screenBids,
+            ),
             child: const Text('open-tile'),
           ),
         ),
@@ -463,6 +470,19 @@ void main() {
       expectNoButton();
     });
 
+    testWidgets('ouvert pendant un rechargement : les colis acceptés de '
+        "l'écran comptent", (tester) async {
+      await open(
+        tester,
+        trip: _trip(),
+        tile: TripTile.itinerary,
+        bids: null,
+        screenBids: [_bid('b1', 'ACCEPTED')],
+      );
+
+      expectNoButton();
+    });
+
     testWidgets('une demande arrive pendant que le sheet est ouvert : le '
         'bouton disparaît', (tester) async {
       await open(tester, trip: _trip(), tile: TripTile.itinerary);
@@ -471,7 +491,58 @@ void main() {
       bidStates.add(BidListLoaded([_bid('b1', 'PENDING')]));
       await tester.pumpAndSettle();
       expect(editButton(), findsNothing);
+      // Ni bordure ni ombre : plus aucun conteneur de pied.
+      expect(footer(), findsNothing);
       expect(content(TripTile.itinerary), findsOneWidget);
+    });
+
+    testWidgets('le trajet redevient modifiable : le pied revient', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        trip: _trip(),
+        tile: TripTile.itinerary,
+        bids: [_bid('b1', 'PENDING')],
+      );
+      expectNoButton();
+
+      // La demande a été refusée ailleurs : liste relue sans elle.
+      bidStates.add(BidListLoaded([_bid('b1', 'REJECTED')]));
+      await tester.pumpAndSettle();
+      expectSingleFooterButton(editButton());
+    });
+
+    testWidgets('double appui sur « Modifier » : une seule édition', (
+      tester,
+    ) async {
+      await open(tester, trip: _trip(), tile: TripTile.itinerary);
+
+      // Second appui avant que la sortie du sheet ne soit dessinée.
+      await tester.tap(editButton());
+      await tester.tap(editButton(), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(pushed, hasLength(1));
+      expect(pushed.single.location, '/trips/create');
+    });
+
+    testWidgets('suit le trajet relu (lieux modifiés)', (tester) async {
+      await open(tester, trip: _trip(), tile: TripTile.itinerary);
+
+      annStates.add(
+        AnnouncementUpdated(
+          _trip(
+            pickup: const AddressData(
+              label: '3 place Bellecour, Lyon',
+              lat: 45.76,
+              lng: 4.83,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('3 place Bellecour, Lyon'), findsOneWidget);
+      expect(find.text('12 rue de Paris, 75001'), findsNothing);
     });
   });
 
@@ -572,6 +643,34 @@ void main() {
       expectNoButton();
     });
 
+    testWidgets('renvoi en anglais : nom réel de la section', (tester) async {
+      await open(
+        tester,
+        trip: _cashOnly(),
+        tile: TripTile.payments,
+        locale: const Locale('en'),
+      );
+
+      expect(
+        find.text(
+          'This trip only accepts cash. To add card payments, see “To do”.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('suit le trajet relu (moyens modifiés)', (tester) async {
+      await open(tester, trip: _trip(), tile: TripTile.payments);
+      expect(find.text('💳 Carte'), findsOneWidget);
+
+      annStates.add(
+        AnnouncementUpdated(_trip(methods: const {BidPaymentMethod.cash})),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('💳 Carte'), findsNothing);
+      expect(find.text('💵 Espèces'), findsOneWidget);
+    });
+
     for (final (name, trip, stripe) in [
       ('devise sans carte (XOF)', _cashOnly(currency: 'XOF'), _notReady),
       ('Stripe absent du pays', _cashOnly(), stripeCountryUnavailableState),
@@ -668,6 +767,17 @@ void main() {
       await tester.pumpAndSettle();
       expect(content(TripTile.conditions), findsNothing);
     });
+
+    testWidgets('note faite d\'espaces : pas d\'encart vide', (tester) async {
+      await open(
+        tester,
+        trip: _trip(description: '   '),
+        tile: TripTile.conditions,
+      );
+
+      expect(find.text("CE QUE J'ACCEPTE"), findsOneWidget);
+      expect(find.text('NOTE AUX EXPÉDITEURS'), findsNothing);
+    });
   });
 
   group('affiche', () {
@@ -702,6 +812,41 @@ void main() {
       await tester.pumpAndSettle();
       expect(content(TripTile.poster), findsNothing);
       expect(pushed, isEmpty);
+    });
+
+    testWidgets('jamais refermé par-dessus une confirmation, fermé quand '
+        'elle se referme', (tester) async {
+      await open(tester, trip: _trip(), tile: TripTile.poster);
+
+      unawaited(
+        showDialog<void>(
+          context: tester.element(content(TripTile.poster)),
+          builder: (context) => TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('close-dialog'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      annStates.add(AnnouncementDetailLoaded(_trip(status: 'FULL')));
+      await tester.pumpAndSettle();
+      expect(find.text('close-dialog'), findsOneWidget);
+      expect(content(TripTile.poster), findsOneWidget);
+
+      await tester.tap(find.text('close-dialog'));
+      await tester.pumpAndSettle();
+      expect(content(TripTile.poster), findsNothing);
+    });
+
+    testWidgets('double appui sur « Partager l\'affiche » : une seule '
+        'affiche', (tester) async {
+      await open(tester, trip: _trip(), tile: TripTile.poster);
+
+      await tester.tap(posterButton());
+      await tester.tap(posterButton(), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(pushed, hasLength(1));
     });
   });
 
@@ -810,6 +955,43 @@ void main() {
       );
       expectNoButton();
     });
+
+    testWidgets('ouvert pendant un rechargement des colis, sans '
+        'instructions : reste ouvert', (tester) async {
+      await open(tester, trip: _trip(), tile: TripTile.arrival, bids: null);
+
+      expect(content(TripTile.arrival), findsOneWidget);
+      expect(find.byKey(const Key('trip-tile-arrival-empty')), findsOneWidget);
+      expectNoButton();
+
+      // La liste répond : un colis arrivé, le bouton apparaît.
+      bidStates.add(BidListLoaded([_bid('b1', 'ARRIVED')]));
+      await tester.pumpAndSettle();
+      expect(content(TripTile.arrival), findsOneWidget);
+      expectSingleFooterButton(arrivalButton());
+    });
+
+    testWidgets('ouvert pendant un rechargement : reprend les colis de '
+        "l'écran", (tester) async {
+      await open(
+        tester,
+        trip: _trip(instructions: 'Au marché'),
+        tile: TripTile.arrival,
+        bids: null,
+        screenBids: [_bid('b1', 'ARRIVED')],
+      );
+
+      expectSingleFooterButton(arrivalButton());
+    });
+
+    testWidgets('colis relus sans colis arrivé ni instructions : le sheet se '
+        'ferme', (tester) async {
+      await open(tester, trip: _trip(), tile: TripTile.arrival, bids: null);
+
+      bidStates.add(BidListLoaded([_bid('b1', 'IN_TRANSIT')]));
+      await tester.pumpAndSettle();
+      expect(content(TripTile.arrival), findsNothing);
+    });
   });
 
   testWidgets('sans blocs à l\'écran : rendu statique', (tester) async {
@@ -853,7 +1035,7 @@ void main() {
         tester,
         trip: _trip(instructions: 'Au marché'),
         tile: TripTile.arrival,
-        source: TravelerTileSource.menu,
+        source: TileSource.menu,
       );
 
       verify(

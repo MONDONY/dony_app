@@ -190,7 +190,12 @@ class TripConditionsSection extends StatelessWidget {
   static bool hasContent(AnnouncementModel trip) =>
       (trip.acceptedContentTypes?.isNotEmpty ?? false) ||
       (trip.refusedTypes?.isNotEmpty ?? false) ||
-      (trip.description?.isNotEmpty ?? false);
+      hasNote(trip);
+
+  /// Note aux expéditeurs non blanche : une note faite d'espaces ne fait ni
+  /// tuile ni encart vide.
+  static bool hasNote(AnnouncementModel trip) =>
+      trip.description?.trim().isNotEmpty ?? false;
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +250,7 @@ class TripConditionsSection extends StatelessWidget {
         ],
 
         // ── Note expéditeurs ─────────────────────────────────────────────────
-        if (a.description != null && a.description!.isNotEmpty) ...[
+        if (hasNote(a)) ...[
           _BSectionTitle(
             label: l.listingSenderNoteTitle,
             color: const Color(0xFFB45309),

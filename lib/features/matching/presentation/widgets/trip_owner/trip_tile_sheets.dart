@@ -10,9 +10,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/close_sheet_when_resolved.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tile_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_detail_sections.dart';
@@ -39,24 +37,33 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// contient plus [tile] (trajet complet pour l'affiche, par exemple), jamais
 /// par-dessus une confirmation.
 ///
-/// Le bouton, quand le sheet en a un, vit dans le `stickyBottom` ; le pied
-/// n'existe que si l'action vaut à l'ouverture, et le bouton disparaît si
-/// elle ne vaut plus :
+/// Le bouton, quand le sheet en a un, vit dans le pied collant, qui suit les
+/// données : il apparaît quand l'action devient possible (colis chargés
+/// après l'ouverture) et disparaît, pied compris (ni bordure ni ombre), quand
+/// elle ne l'est plus (une demande arrive pendant que le sheet est ouvert) :
 /// - `itinerary`, `conditions` : « Modifier » si le trajet est modifiable
 ///   ([canEditTrip]) ;
-/// - `payments` : aucun (l'action « carte » est dans « À traiter ») ;
+/// - `payments` : aucun pied (l'action « carte » est dans « À traiter ») ;
 /// - `poster` : « Partager l'affiche » ([openTripPoster]) ;
 /// - `arrival` : « Modifier les instructions » dès qu'un colis est
 ///   arrivé ([tripHasArrivedParcel], ce que le back exige pour les modifier)
 ///   et que l'écran fournit son `AnnouncementBloc`.
 ///
-/// Les boutons ferment d'abord le sheet, puis agissent depuis [context]
-/// (l'écran, jamais la tuile qui peut disparaître).
+/// [bids] : derniers colis connus de l'écran, repris quand le `BidBloc` n'a
+/// pas de liste chargée à l'ouverture (rechargement en cours) ; sans eux, le
+/// sheet partirait sans colis (sans « Modifier les instructions », avec un
+/// « Modifier » qui ne voit pas les colis acceptés).
+///
+/// Les boutons ferment d'abord le sheet, puis agissent depuis [context] :
+/// l'écran le passe (contexte stable), jamais la tuile, qui peut disparaître
+/// pendant l'action. Un second appui pendant l'animation de sortie est
+/// ignoré.
 Future<void> openTripTileSheet(
   BuildContext context,
   AnnouncementModel trip,
   TripTile tile, {
-  TravelerTileSource source = TravelerTileSource.tile,
+  TileSource source = TileSource.tile,
+  List<BidModel>? bids,
 }) {
   logBidDetailTileOpened(
     tile: tile.name,
@@ -76,7 +83,7 @@ Future<void> openTripTileSheet(
     },
     bids: switch (blocs.bids?.state) {
       BidListLoaded(:final bids) => bids,
-      _ => null,
+      _ => bids,
     },
     stripe: blocs.stripe?.state ?? const StripeAccountInitial(),
     canUpdateInstructions: blocs.announcement != null,
@@ -98,23 +105,42 @@ Future<void> openTripTileSheet(
           ? content
           : MultiBlocProvider(providers: providers, child: content);
     },
-    stickyBottom: opening.hasAction(tile)
-        ? _LiveTripTile(
+    footer: tile == TripTile.payments
+        ? null
+        : _LiveTripTile(
             opening: opening,
             blocs: blocs,
-            builder: (sheetContext, live) =>
-                _TripTileFooter(tile: tile, live: live, screenContext: context),
-          )
-        : null,
+            builder: (sheetContext, live) => DonyBottomSheetFooter(
+              child: live.hasAction(tile)
+                  ? _TripTileButton(
+                      tile: tile,
+                      live: live,
+                      screenContext: context,
+                    )
+                  : null,
+            ),
+          ),
     child: _LiveTripTile(
       opening: opening,
       blocs: blocs,
       builder: (sheetContext, live) => CloseTripSheetWhenGone(
-        gone: !tripTilesFor(trip: live.trip, bids: live.bids).contains(tile),
+        gone: _gone(tile, live),
         child: _TripTileContent(tile: tile, live: live),
       ),
     ),
   );
+}
+
+/// Les données relues ne justifient plus la tuile du sheet. Colis inconnus
+/// (aucune liste chargée ni transmise) : `arrival`, qui peut ne tenir qu'à un
+/// colis arrivé, reste ouvert plutôt que de se refermer à l'ouverture.
+bool _gone(TripTile tile, _TripTileLiveData live) {
+  if (tile == TripTile.arrival && live.bids == null) return false;
+  return !tripTilesFor(
+    trip: live.trip,
+    bids: live.bids,
+    isOwner: true,
+  ).contains(tile);
 }
 
 /// Blocs de l'écran trouvés à l'ouverture du sheet, à reposer dans le sheet.
@@ -247,7 +273,7 @@ class _TripTileContent extends StatelessWidget {
           TripMobileMoneyNetworksSection(trip: trip),
           if (live.cardTodoShown)
             Text(
-              l.tripTilePaymentsCashOnlyNote,
+              l.tripTilePaymentsCashOnlyNote(l.bidDetailSectionTodo),
               key: const Key('trip-tile-payments-cash-note'),
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
@@ -269,11 +295,11 @@ class _TripTileContent extends StatelessWidget {
   }
 }
 
-/// Bouton du pied, sur les données courantes ; rien quand l'action ne vaut
-/// plus. [screenContext] : contexte de l'écran qui a ouvert le sheet, pour
-/// agir une fois le sheet fermé.
-class _TripTileFooter extends StatelessWidget {
-  const _TripTileFooter({
+/// Bouton du pied, sur les données courantes (le pied ne le rend que si
+/// l'action vaut). [screenContext] : contexte de l'écran qui a ouvert le
+/// sheet, pour agir une fois le sheet fermé.
+class _TripTileButton extends StatelessWidget {
+  const _TripTileButton({
     required this.tile,
     required this.live,
     required this.screenContext,
@@ -285,7 +311,6 @@ class _TripTileFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!live.hasAction(tile)) return const SizedBox.shrink();
     final l = context.l10n;
     return switch (tile) {
       TripTile.itinerary || TripTile.conditions => DonyButton(
@@ -307,17 +332,25 @@ class _TripTileFooter extends StatelessWidget {
     };
   }
 
+  /// Ferme le sheet avant d'agir. Faux quand il n'est plus au premier plan
+  /// (second appui pendant l'animation de sortie, confirmation par-dessus)
+  /// ou que l'écran n'est plus monté : l'action n'est pas rejouée.
+  bool _closeForAction(BuildContext sheetContext) {
+    final route = ModalRoute.of(sheetContext);
+    if (route == null || !route.isCurrent) return false;
+    Navigator.of(sheetContext).pop();
+    return screenContext.mounted;
+  }
+
   /// Édition du trajet, relu au retour s'il a été enregistré.
   Future<void> _edit(BuildContext sheetContext) async {
-    closeSheetIfOnTop(sheetContext);
-    if (!screenContext.mounted) return;
+    if (!_closeForAction(sheetContext)) return;
     await openTripEdit(screenContext, live.trip);
   }
 
   /// Affiche partageable du trajet. Elle ne modifie rien : pas de relecture.
   void _sharePoster(BuildContext sheetContext) {
-    closeSheetIfOnTop(sheetContext);
-    if (!screenContext.mounted) return;
+    if (!_closeForAction(sheetContext)) return;
     openTripPoster(screenContext, live.trip);
   }
 
@@ -325,8 +358,7 @@ class _TripTileFooter extends StatelessWidget {
   /// de l'écran : la relecture du trajet et des colis passe par l'écran
   /// (`AnnouncementArrivalInstructionsUpdated`), comme avec l'ancien bouton.
   Future<void> _editInstructions(BuildContext sheetContext) async {
-    closeSheetIfOnTop(sheetContext);
-    if (!screenContext.mounted) return;
+    if (!_closeForAction(sheetContext)) return;
     await ArrivalInstructionsBottomSheet.show(
       screenContext,
       announcementId: live.trip.id,

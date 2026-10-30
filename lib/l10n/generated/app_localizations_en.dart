@@ -23005,8 +23005,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripTilePaymentsNetworksTitle => 'Mobile money networks';
 
   @override
-  String get tripTilePaymentsCashOnlyNote =>
-      'This trip only accepts cash. To add card payments, see “To do”.';
+  String tripTilePaymentsCashOnlyNote(String section) {
+    return 'This trip only accepts cash. To add card payments, see “$section”.';
+  }
 
   @override
   String get tripTileArrivalEditButton => 'Edit instructions';

@@ -37200,11 +37200,11 @@ abstract class AppLocalizations {
   /// **'Réseaux mobile money'**
   String get tripTilePaymentsNetworksTitle;
 
-  /// Sheet de la tuile « Paiements » : trajet en espèces seules où la carte est possible, renvoi vers la tuile de la section « À traiter » qui porte l'action (trip_tile_sheets.dart).
+  /// Sheet de la tuile « Paiements » : trajet en espèces seules où la carte est possible, renvoi vers la tuile de la section « À traiter » qui porte l'action (trip_tile_sheets.dart). {section} : titre réel de cette section (bidDetailSectionTodo), pour que le renvoi suive son nom.
   ///
   /// In fr, this message translates to:
-  /// **'Ce trajet n\'accepte que les espèces. Pour ajouter la carte, voyez « À traiter ».'**
-  String get tripTilePaymentsCashOnlyNote;
+  /// **'Ce trajet n\'accepte que les espèces. Pour ajouter la carte, voyez « {section} ».'**
+  String tripTilePaymentsCashOnlyNote(String section);
 
   /// Sheet de la tuile « Arrivée » de l'écran du trajet (propriétaire) : bouton du pied qui ouvre l'édition des instructions de retrait, libellé court pour tenir sur une ligne à 360 dp (trip_tile_sheets.dart).
   ///

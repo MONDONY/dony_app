@@ -12,6 +12,7 @@ import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/confirm_delete_bid.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_refusal_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tile_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
@@ -126,7 +127,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
                     outerContext,
                     bid,
                     TravelerTile.colis,
-                    source: TravelerTileSource.menu,
+                    source: TileSource.menu,
                   ),
                 );
               },

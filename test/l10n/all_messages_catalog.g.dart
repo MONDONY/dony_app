@@ -8064,7 +8064,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripTilePosterIntro': (l) => l.tripTilePosterIntro,
   'tripTileArrivalEmpty': (l) => l.tripTileArrivalEmpty,
   'tripTilePaymentsNetworksTitle': (l) => l.tripTilePaymentsNetworksTitle,
-  'tripTilePaymentsCashOnlyNote': (l) => l.tripTilePaymentsCashOnlyNote,
+  'tripTilePaymentsCashOnlyNote': (l) =>
+      l.tripTilePaymentsCashOnlyNote(placeholderMarker('section')),
   'tripTileArrivalEditButton': (l) => l.tripTileArrivalEditButton,
 };
 
@@ -8752,4 +8753,5 @@ const textParameters = <String, List<String>>{
   'travelerTrackingLastPosition': ['age'],
   'tripTileItineraryPickup': ['place'],
   'tripTileItineraryDelivery': ['place'],
+  'tripTilePaymentsCashOnlyNote': ['section'],
 };

@@ -17,6 +17,18 @@ enum TodoSource {
   link,
 }
 
+/// D'où part l'ouverture du sheet d'une tuile de grille (« Votre transport »
+/// de la fiche colis côté voyageur, « Votre trajet » de l'écran du trajet) :
+/// la tuile de la grille ou une entrée du menu (Options, ⋮) qui ouvre la même
+/// feuille. Propriété `source` de `bid_detail_tile_opened` (son `name`).
+enum TileSource {
+  /// Tuile touchée dans la grille.
+  tile,
+
+  /// Entrée du menu qui ouvre la même feuille.
+  menu,
+}
+
 /// Compte l'ouverture du sheet d'une tuile de la fiche colis
 /// (`bid_detail_tile_opened`) : grilles « Votre envoi » / « Votre transport »
 /// et tuiles « À traiter ». [tile] : nom de la tuile, [role] : `sender` ou

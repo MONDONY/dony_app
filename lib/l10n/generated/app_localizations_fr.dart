@@ -23170,8 +23170,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripTilePaymentsNetworksTitle => 'Réseaux mobile money';
 
   @override
-  String get tripTilePaymentsCashOnlyNote =>
-      'Ce trajet n\'accepte que les espèces. Pour ajouter la carte, voyez « À traiter ».';
+  String tripTilePaymentsCashOnlyNote(String section) {
+    return 'Ce trajet n\'accepte que les espèces. Pour ajouter la carte, voyez « $section ».';
+  }
 
   @override
   String get tripTileArrivalEditButton => 'Modifier les instructions';

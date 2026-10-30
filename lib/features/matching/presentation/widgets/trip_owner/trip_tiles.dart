@@ -42,18 +42,25 @@ bool tripHasArrivedParcel(List<BidModel>? bids) =>
 /// Aucune règle de statut pour `itinerary`, `payments` et `conditions` : un
 /// trajet terminé, annulé, retiré par l'équipe (REMOVED_BY_ADMIN) ou d'un
 /// statut inconnu de l'app les garde, en lecture.
+///
+/// [isOwner] faux (visiteur, ou propriété pas encore tranchée) : aucune
+/// tuile, comme « À traiter » (`tripTodoTilesFor`) et la grille d'actions.
 List<TripTile> tripTilesFor({
   required AnnouncementModel trip,
   required List<BidModel>? bids,
-}) => [
-  if (TripPlacesSection.hasContent(trip)) TripTile.itinerary,
-  if (TripPaymentsSection.hasContent(trip)) TripTile.payments,
-  if (TripConditionsSection.hasContent(trip)) TripTile.conditions,
-  if (canShareTripPoster(trip)) TripTile.poster,
-  if (ArrivalInstructionsCard.hasText(trip.arrivalInstructions) ||
-      tripHasArrivedParcel(bids))
-    TripTile.arrival,
-];
+  required bool isOwner,
+}) {
+  if (!isOwner) return const [];
+  return [
+    if (TripPlacesSection.hasContent(trip)) TripTile.itinerary,
+    if (TripPaymentsSection.hasContent(trip)) TripTile.payments,
+    if (TripConditionsSection.hasContent(trip)) TripTile.conditions,
+    if (canShareTripPoster(trip)) TripTile.poster,
+    if (ArrivalInstructionsCard.hasText(trip.arrivalInstructions) ||
+        tripHasArrivedParcel(bids))
+      TripTile.arrival,
+  ];
+}
 
 /// Icône de la tuile (nom d'un SVG de `assets/icons`).
 String tripTileIcon(TripTile tile) => switch (tile) {
@@ -114,7 +121,7 @@ String? tripTileSubtitle(
         if (refused > 0) l.tripTileConditionsRefused(refused),
       ];
       if (parts.isNotEmpty) return parts.join(' · ');
-      return (trip.description?.isNotEmpty ?? false)
+      return TripConditionsSection.hasNote(trip)
           ? l.listingSenderNoteTitle
           : null;
     case TripTile.poster:
