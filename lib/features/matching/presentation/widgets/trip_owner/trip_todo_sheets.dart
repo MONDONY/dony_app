@@ -20,6 +20,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/close_she
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_depart_button.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
@@ -106,9 +107,8 @@ Future<void> openTripTodoSheet(
       trip: trip,
       blocs: blocs,
       hasDepart: blocs.depart != null || createDepart,
-      builder: (sheetContext, live) => _CloseWhenResolved(
-        tile: tile,
-        live: live,
+      builder: (sheetContext, live) => CloseTripSheetWhenGone(
+        gone: !live.tiles.contains(tile),
         child: _TripTodoContent(tile: tile, live: live),
       ),
     ),
@@ -160,21 +160,6 @@ class _TripTodoLiveData {
   );
 }
 
-/// Le trajet porté par [state] s'il s'agit de [id], sinon `null` (états
-/// sans trajet : chargement, erreur, suppression…).
-AnnouncementModel? _announcementIn(AnnouncementState state, String id) {
-  final a = switch (state) {
-    AnnouncementDetailLoaded(:final announcement) ||
-    AnnouncementUpdated(:final announcement) ||
-    AnnouncementPublished(:final announcement) ||
-    AnnouncementTripArrived(:final announcement) ||
-    AnnouncementArrivalInstructionsUpdated(:final announcement) ||
-    AnnouncementRescheduled(:final announcement) => announcement,
-    _ => null,
-  };
-  return a?.id == id ? a : null;
-}
-
 /// Rend [builder] avec les données courantes : chaque bloc présent est suivi
 /// (seuls ses états porteurs de données reconstruisent : un chargement garde
 /// les dernières connues), un bloc absent laisse la valeur de l'ouverture.
@@ -193,74 +178,38 @@ class _LiveTripTodo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _follow<AnnouncementBloc, AnnouncementState, AnnouncementModel>(
+    return followBloc<AnnouncementBloc, AnnouncementState, AnnouncementModel>(
       present: blocs.announcement != null,
-      select: (s) => _announcementIn(s, trip.id),
-      builder: (context, current) => _follow<BidBloc, BidState, List<BidModel>>(
-        present: blocs.bids != null,
-        select: (s) => s is BidListLoaded ? s.bids : null,
-        builder: (context, bids) =>
-            _follow<StripeAccountBloc, StripeAccountState, StripeAccountState>(
-              present: blocs.stripe != null,
-              select: (s) => s,
-              builder: (context, stripe) =>
-                  _follow<TripDepartCubit, TripDepartState, bool>(
-                    present: hasDepart,
-                    select: (s) => s.departed,
-                    builder: (context, departed) => builder(
-                      context,
-                      _TripTodoLiveData(
-                        trip: current ?? trip,
-                        bids: bids,
-                        departed: departed ?? false,
-                        stripe: stripe ?? const StripeAccountInitial(),
+      select: (s) => tripAnnouncementIn(s, trip.id),
+      builder: (context, current) =>
+          followBloc<BidBloc, BidState, List<BidModel>>(
+            present: blocs.bids != null,
+            select: (s) => s is BidListLoaded ? s.bids : null,
+            builder: (context, bids) =>
+                followBloc<
+                  StripeAccountBloc,
+                  StripeAccountState,
+                  StripeAccountState
+                >(
+                  present: blocs.stripe != null,
+                  select: (s) => s,
+                  builder: (context, stripe) =>
+                      followBloc<TripDepartCubit, TripDepartState, bool>(
+                        present: hasDepart,
+                        select: (s) => s.departed,
+                        builder: (context, departed) => builder(
+                          context,
+                          _TripTodoLiveData(
+                            trip: current ?? trip,
+                            bids: bids,
+                            departed: departed ?? false,
+                            stripe: stripe ?? const StripeAccountInitial(),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-            ),
-      ),
+                ),
+          ),
     );
-  }
-}
-
-/// Suit le bloc [B] quand il est [present] : ne reconstruit que pour un état
-/// dont [select] tire une valeur, et rend la dernière connue (`null` tant
-/// qu'aucune ne l'a été). Absent : `null`.
-Widget _follow<B extends StateStreamable<S>, S, V extends Object>({
-  required bool present,
-  required V? Function(S state) select,
-  required Widget Function(BuildContext context, V? value) builder,
-}) {
-  if (!present) return Builder(builder: (context) => builder(context, null));
-  return BlocBuilder<B, S>(
-    buildWhen: (_, state) => select(state) != null,
-    builder: (context, state) => builder(context, select(state)),
-  );
-}
-
-/// Ferme le sheet dès que les données relues ne justifient plus [tile] et
-/// que le sheet est au premier plan (`ModalRoute.isCurrentOf` : reconstruit
-/// quand une confirmation ouverte par-dessus se referme).
-class _CloseWhenResolved extends StatelessWidget {
-  const _CloseWhenResolved({
-    required this.tile,
-    required this.live,
-    required this.child,
-  });
-
-  final TripTodoTile tile;
-  final _TripTodoLiveData live;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final onTop = ModalRoute.isCurrentOf(context) ?? false;
-    if (onTop && !live.tiles.contains(tile)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) closeSheetIfOnTop(context);
-      });
-    }
-    return child;
   }
 }
 

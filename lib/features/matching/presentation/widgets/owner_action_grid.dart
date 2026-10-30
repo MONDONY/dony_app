@@ -8,7 +8,7 @@ import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_reschedule_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -63,19 +63,16 @@ class OwnerActionGrid extends StatelessWidget {
     final colisCount = loadedBids != null
         ? loadedBids.where(isAcceptedTabBid).length
         : a.confirmedParcelCount;
-    final hasPending = pendingCount > 0;
     final hasColis = colisCount > 0;
 
-    // Le trajet engage-t-il quelqu'un ? `bidsCount` du back ne compte que les
-    // demandes en attente : un trajet dont tous les colis sont acceptés y vaut
-    // 0, et passait pour vide (« Modifier » et « Supprimer » ouverts, refusés
-    // ensuite par le back ; « Reporter » caché). Les colis acceptés comptent.
-    final hasBids = (a.bidsCount ?? 0) > 0 || hasPending || hasColis;
+    // Le trajet engage-t-il quelqu'un ? Demandes et colis acceptés comptent
+    // (voir [tripHasBids]).
+    final hasBids = tripHasBids(a, loadedBids);
 
     // Gating édition / suppression — un brouillon (DRAFT) est modifiable ET
     // supprimable au même titre qu'un trajet ACTIF sans demande (le backend
     // autorise désormais la suppression d'un DRAFT).
-    final canEdit = (a.status == 'ACTIVE' || a.status == 'DRAFT') && !hasBids;
+    final canEdit = canEditTrip(a, hasBids);
     final isCancelled = a.status == 'CANCELLED';
     final canDelete = canEdit || isCancelled;
     final isActive = a.status == 'ACTIVE';
@@ -167,18 +164,7 @@ class OwnerActionGrid extends StatelessWidget {
         iconAsset: 'square-pen',
         label: l.commonEdit,
         accent: cs.onSurface,
-        onTap: canEdit
-            ? () async {
-                final bloc = context.read<AnnouncementBloc>();
-                final changed = await context.push<bool>(
-                  '/trips/create',
-                  extra: CreateTripArgs(announcement: a),
-                );
-                if ((changed ?? false) && context.mounted) {
-                  bloc.add(AnnouncementDetailRequested(a.id));
-                }
-              }
-            : null,
+        onTap: canEdit ? () => openTripEdit(context, a) : null,
         disabledMessage: l.tripOwnerEditDisabledMessage,
       ),
       if (canReschedule)
