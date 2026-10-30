@@ -4194,6 +4194,7 @@
   "ticketParcelReturnedLabel": "Parcel returned",
   "ticketViewAlternativeTripsButton": "View alternative trips",
   "ticketQrButtonCompact": "Parcel QR",
+  "ticketQrButtonSubtitle": "To show or stick on the parcel",
   "ticketAwaitingTravelerConfirmation": "Waiting for the traveler's confirmation",
   "ticketAwaitingSenderCardPayment": "Waiting for your payment",
   "ticketSenderAwaitingMobileMoneyHint": "The traveler has accepted: pay by mobile money from the button below to secure your shipment.",

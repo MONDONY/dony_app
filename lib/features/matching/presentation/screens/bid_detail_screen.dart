@@ -789,14 +789,20 @@ class _BidDetailViewState extends State<_BidDetailView>
                       ? const DonyDetailSkeleton()
                       : isSender
                       // Seule la lecture du paiement reconstruit le corps : la
-                      // carte Paiement dit « échoué » plutôt que « séquestré ».
-                      ? ValueListenableBuilder<PaymentModel?>(
-                          valueListenable: _existingPaymentNotifier,
-                          builder: (context, payment, _) => SenderDetailBody(
+                      // carte Paiement dit « échoué » plutôt que « séquestré »,
+                      // et le talon garde le QR quand le footer ne le propose
+                      // pas (paiement carte introuvable).
+                      ? ListenableBuilder(
+                          listenable: Listenable.merge([
+                            _existingPaymentNotifier,
+                            _paymentLoadedNotifier,
+                          ]),
+                          builder: (context, _) => SenderDetailBody(
                             bid: _bid,
                             focusSupplement: widget.focusSupplement,
                             focusAmendment: widget.focusAmendment,
-                            existingPayment: payment,
+                            existingPayment: _existingPaymentNotifier.value,
+                            paymentLoaded: _paymentLoadedNotifier.value,
                           ),
                         )
                       : TravelerDetailBody(

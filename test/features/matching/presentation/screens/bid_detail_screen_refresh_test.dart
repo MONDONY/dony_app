@@ -1253,6 +1253,34 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    // Paiement carte introuvable : le footer dit « Payer mon envoi », le QR
+    // du colis reste donc au talon, avec son sous-titre.
+    testWidgets('ACCEPTED carte sans paiement : QR au talon, pas au footer', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        bid: _makeBid(
+          paymentMethod: BidPaymentMethod.stripe,
+          recipientName: 'Awa',
+          handoverAddress: handover,
+        ),
+        authBloc: senderAuth(),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('Payer mon envoi'), findsOneWidget);
+      expect(find.text('Afficher le QR de remise'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(ColisBillet),
+          matching: find.text('À présenter ou coller sur le colis'),
+        ),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('IN_TRANSIT shows billet, voyageur, paiement then 4 tiles, '
         'no hero, no quick actions', (tester) async {
       await _pump(tester, bid: inTransitBid(), authBloc: senderAuth());

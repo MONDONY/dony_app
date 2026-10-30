@@ -27,10 +27,11 @@ import 'package:go_router/go_router.dart';
 ///
 /// Le voyageur n'a plus de bouton « Lire les QR des étapes » (ACCEPTED à
 /// ARRIVED) : le footer porte déjà « Lire le QR du colis » puis « Valider la
-/// remise ». L'expéditeur n'a plus de bouton « QR du colis » avant la remise
-/// (ACCEPTED) : le footer porte « Afficher le QR de remise ». Sans zone
-/// d'action ni numéro (colis accepté, pas encore remis), le talon ne rend
-/// rien et [ColisBillet] retire aussi la perforation ([isShown]).
+/// remise ». Avant la remise (ACCEPTED), l'expéditeur n'a le bouton « QR du
+/// colis » que si le footer ne propose pas « Afficher le QR de remise »
+/// ([showQrInTalon]). Sans zone d'action ni numéro (colis accepté, pas encore
+/// remis), le talon ne rend rien et [ColisBillet] retire aussi la perforation
+/// ([isShown]).
 ///
 /// NOTE : les boutons [_QrTalonButton] et [_RetraitTalonButton] ouvrent
 /// respectivement la [QrSheet] et la [RetraitCodeSheet] ; les BLoCs ambiants
@@ -40,14 +41,31 @@ class BilletTalon extends StatelessWidget {
   final BidModel bid;
   final bool isSender;
 
-  const BilletTalon({super.key, required this.bid, required this.isSender});
+  /// Expéditeur, colis ACCEPTED : le footer ne propose pas « Afficher le QR
+  /// de remise » (paiement carte introuvable, déclaration d'absence en
+  /// attente, voir `SenderStickyBar.leavesQrToTalon`), le talon porte alors
+  /// le bouton « QR du colis » et son sous-titre. Ignoré aux autres statuts
+  /// et côté voyageur.
+  final bool showQrInTalon;
+
+  const BilletTalon({
+    super.key,
+    required this.bid,
+    required this.isSender,
+    this.showQrInTalon = false,
+  });
 
   /// Le talon a quelque chose à montrer : une zone d'action ou le numéro de
   /// suivi. Sinon (colis accepté pas encore remis, sans numéro côté
   /// expéditeur ; toujours côté voyageur ; statut inconnu de l'app, sans
   /// numéro), ni talon ni perforation. Lu sans construire la zone.
-  static bool isShown(BidModel bid, {required bool isSender}) => isSender
-      ? _hasSenderAction(bid) || bid.trackingNumber != null
+  static bool isShown(
+    BidModel bid, {
+    required bool isSender,
+    bool showQrInTalon = false,
+  }) => isSender
+      ? _hasSenderAction(bid, showQrInTalon: showQrInTalon) ||
+            bid.trackingNumber != null
       : _hasTravelerAction(bid) || travelerVisibleTrackingNumber(bid) != null;
 
   /// Statuts où les deux côtés ont une zone d'action : attente (décision,
@@ -69,10 +87,12 @@ class BilletTalon extends StatelessWidget {
   static const _handedOverStatuses = {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'};
 
   /// [_senderActionZone] rend une zone, sans la construire : en plus des
-  /// statuts communs, la remise au retrait (QR, code de retrait).
-  static bool _hasSenderAction(BidModel bid) =>
+  /// statuts communs, la remise au retrait (QR, code de retrait), et le QR
+  /// d'un colis accepté quand le footer le laisse au talon.
+  static bool _hasSenderAction(BidModel bid, {required bool showQrInTalon}) =>
       _actionStatuses.contains(bid.status) ||
-      _handedOverStatuses.contains(bid.status);
+      _handedOverStatuses.contains(bid.status) ||
+      (bid.status == 'ACCEPTED' && showQrInTalon);
 
   /// [_travelerActionZone] rend une zone, sans la construire : en plus des
   /// statuts communs, la remise au retrait seulement quand le code de
@@ -88,11 +108,15 @@ class BilletTalon extends StatelessWidget {
     final trackingNumber = isSender
         ? bid.trackingNumber
         : travelerVisibleTrackingNumber(bid);
-    final action = isSender ? _senderActionZone(bid) : _travelerActionZone(bid);
+    final action = isSender
+        ? _senderActionZone(bid, showQrInTalon: showQrInTalon)
+        : _travelerActionZone(bid);
     // Le prédicat de [isShown] doit dire exactement si une zone existe.
     assert(
       (action != null) ==
-          (isSender ? _hasSenderAction(bid) : _hasTravelerAction(bid)),
+          (isSender
+              ? _hasSenderAction(bid, showQrInTalon: showQrInTalon)
+              : _hasTravelerAction(bid)),
     );
     if (action == null && trackingNumber == null) {
       return const SizedBox.shrink();
@@ -125,7 +149,10 @@ class BilletTalon extends StatelessWidget {
 
   // ── Sender dispatch ─────────────────────────────────────────────────────────
   /// Zone d'action de l'expéditeur, `null` quand il n'y a rien à y mettre.
-  static Widget? _senderActionZone(BidModel bid) {
+  static Widget? _senderActionZone(
+    BidModel bid, {
+    required bool showQrInTalon,
+  }) {
     final status = bid.status;
     return switch (status) {
       // Carte pas encore payée : c'est à l'expéditeur d'agir (FLUTTER-G7).
@@ -139,10 +166,13 @@ class BilletTalon extends StatelessWidget {
           when bid.paymentMethod == BidPaymentMethod.mobileMoney =>
         const _SenderAwaitingPaymentBlock(),
       'AWAITING_PAYMENT' => const _PendingPlaceholder(),
-      // Décision du propriétaire : pas de « QR du colis » avant la remise, le
-      // footer porte « Afficher le QR de remise » (feuille du QR, avec la
-      // consigne « imprimer et coller sur le colis »). Il ne reste que le
-      // numéro de suivi, s'il existe.
+      // Décision du propriétaire : avant la remise, le QR s'ouvre depuis le
+      // footer « Afficher le QR de remise » (feuille du QR, avec la consigne
+      // « imprimer et coller sur le colis »), il ne reste que le numéro de
+      // suivi. Quand le footer ne le propose pas (paiement carte introuvable,
+      // déclaration d'absence en attente), le QR reste ici, avec son
+      // sous-titre.
+      'ACCEPTED' when showQrInTalon => _QrTalonButton(bid: bid, withHint: true),
       'ACCEPTED' => null,
       // Le code de retrait existe dès la remise (HANDED_OVER). Comme le QR,
       // il s'ouvre dans un bottom sheet : deux boutons côte à côte dans le
@@ -642,23 +672,43 @@ class _ReturnedBlock extends StatelessWidget {
 
 /// sender / HANDED_OVER · IN_TRANSIT · ARRIVED — bouton d'ouverture de la
 /// [QrSheet] (QR du colis à présenter ou à coller). Libellé court : il tient
-/// à côté du « Code de retrait » ([Expanded]). Avant la remise (ACCEPTED), le
-/// QR s'ouvre depuis le footer (« Afficher le QR de remise »).
+/// à côté du « Code de retrait » ([Expanded]).
+///
+/// sender / ACCEPTED, quand le footer ne propose pas le QR ([withHint]) :
+/// seul en pleine largeur, avec la précision « À présenter ou coller sur le
+/// colis » en sous-titre plus petit sous le libellé.
 class _QrTalonButton extends StatelessWidget {
   final BidModel bid;
+  final bool withHint;
 
-  const _QrTalonButton({required this.bid});
+  const _QrTalonButton({required this.bid, this.withHint = false});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final label = Text(
+      context.l10n.ticketQrButtonCompact,
+      textAlign: TextAlign.center,
+    );
     return OutlinedButton.icon(
       onPressed: () => QrSheet.show(context, bidId: bid.id, status: bid.status),
       icon: DonyIcon('qr-code', size: 20, color: cs.primary),
-      label: Text(
-        context.l10n.ticketQrButtonCompact,
-        textAlign: TextAlign.center,
-      ),
+      label: withHint
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                label,
+                Text(
+                  context.l10n.ticketQrButtonSubtitle,
+                  maxLines: 1,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            )
+          : label,
       style: OutlinedButton.styleFrom(
         foregroundColor: cs.primary,
         side: BorderSide(color: cs.primary),

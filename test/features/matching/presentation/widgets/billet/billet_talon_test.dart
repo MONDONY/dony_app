@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -15,6 +17,8 @@ import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -71,7 +75,38 @@ final _scanStepsIcon = find.byWidgetPredicate(
   (w) => w is DonyIcon && w.name == 'scan-line',
 );
 
-Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
+/// Charge les vraies polices de l'app : avec la police de repli des tests,
+/// chaque glyphe fait un cadratin, ce qui fausserait la mesure du bouton.
+Future<void> _loadAppFonts() async {
+  const families = {
+    'HankenGrotesk': [
+      'HankenGrotesk-SemiBold',
+      'HankenGrotesk-Bold',
+      'HankenGrotesk-ExtraBold',
+    ],
+    'PlusJakartaSans': [
+      'PlusJakartaSans-Regular',
+      'PlusJakartaSans-Medium',
+      'PlusJakartaSans-SemiBold',
+      'PlusJakartaSans-Bold',
+    ],
+  };
+  for (final MapEntry(key: family, value: files) in families.entries) {
+    final loader = FontLoader(family);
+    for (final file in files) {
+      final bytes = File('assets/fonts/$file.ttf').readAsBytesSync();
+      loader.addFont(Future.value(ByteData.sublistView(bytes)));
+    }
+    await loader.load();
+  }
+}
+
+Future<void> _pump(
+  WidgetTester tester,
+  BidModel bid,
+  bool isSender, {
+  bool showQrInTalon = false,
+}) async {
   // TrackingBloc/BidBloc sont consommés par TalonRetraitCodeView (statuts
   // HANDED_OVER/IN_TRANSIT avec code) ; fournis pour tous les cas, inoffensif
   // pour les autres.
@@ -88,7 +123,11 @@ Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
             BlocProvider<TrackingBloc>.value(value: t),
             BlocProvider<BidBloc>.value(value: b),
           ],
-          child: BilletTalon(bid: bid, isSender: isSender),
+          child: BilletTalon(
+            bid: bid,
+            isSender: isSender,
+            showQrInTalon: showQrInTalon,
+          ),
         ),
       ),
     ),
@@ -175,6 +214,96 @@ void main() {
     );
     expect(find.textContaining('Parcel QR'), findsNothing);
     expect(find.text('TRACKING NUMBER'), findsOneWidget);
+  });
+
+  // Décision du propriétaire : quand le footer ne propose pas « Afficher le
+  // QR de remise » (paiement carte introuvable, déclaration d'absence en
+  // attente), le QR du colis reste au talon, avec son sous-titre.
+  group('sender + ACCEPTED, QR laissé au talon', () {
+    final qrIcon = find.byWidgetPredicate(
+      (w) => w is DonyIcon && w.name == 'qr-code',
+    );
+
+    for (final tracking in [null, 'DON-1']) {
+      testWidgets('numéro ${tracking ?? 'absent'} → « QR du colis » + '
+          'sous-titre${tracking == null ? '' : ' + bande de suivi'}', (
+        tester,
+      ) async {
+        final bid = _bid(status: 'ACCEPTED', trackingNumber: tracking);
+        expect(
+          BilletTalon.isShown(bid, isSender: true, showQrInTalon: true),
+          isTrue,
+        );
+        await _pump(tester, bid, true, showQrInTalon: true);
+        expect(find.text('QR du colis'), findsOneWidget);
+        expect(find.text('À présenter ou coller sur le colis'), findsOneWidget);
+        expect(qrIcon, findsOneWidget);
+        expect(
+          find.byType(TalonTrackingStrip),
+          tracking == null ? findsNothing : findsOneWidget,
+        );
+      });
+    }
+
+    testWidgets('en anglais → « Parcel QR » + sous-titre', (tester) async {
+      useEnglish();
+      await _pump(tester, _bid(status: 'ACCEPTED'), true, showQrInTalon: true);
+      expect(find.text('Parcel QR'), findsOneWidget);
+      expect(find.text('To show or stick on the parcel'), findsOneWidget);
+    });
+
+    for (final english in [false, true]) {
+      testWidgets('${english ? 'EN' : 'FR'}, 360 dp, texte ×1,3 : libellé et '
+          'sous-titre sur une ligne chacun', (tester) async {
+        await _loadAppFonts();
+        if (english) useEnglish();
+        tester.view
+          ..physicalSize = const Size(360, 800)
+          ..devicePixelRatio = 1;
+        tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+        addTearDown(tester.view.reset);
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+        await _pump(
+          tester,
+          _bid(status: 'ACCEPTED', trackingNumber: 'DON-1'),
+          true,
+          showQrInTalon: true,
+        );
+        expect(tester.takeException(), isNull);
+        for (final text
+            in english
+                ? ['Parcel QR', 'To show or stick on the parcel']
+                : ['QR du colis', 'À présenter ou coller sur le colis']) {
+          final paragraph = tester.renderObject<RenderParagraph>(
+            find.text(text),
+          );
+          // Hauteur d'une seule ligne : celle du texte posé sans limite de
+          // largeur.
+          expect(
+            paragraph.size.height,
+            paragraph.getMinIntrinsicHeight(double.infinity),
+            reason: text,
+          );
+          expect(paragraph.didExceedMaxLines, isFalse, reason: text);
+        }
+      });
+    }
+
+    for (final status in ['HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+      testWidgets('$status : talon inchangé, QR compact sans sous-titre', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          _bid(status: status, confirmationCode: '123456'),
+          true,
+          showQrInTalon: true,
+        );
+        expect(find.text('QR du colis'), findsOneWidget);
+        expect(find.text('À présenter ou coller sur le colis'), findsNothing);
+      });
+    }
   });
 
   testWidgets(
@@ -1562,6 +1691,24 @@ void main() {
             BilletTalon.isShown(bid, isSender: true),
             tester.getSize(find.byType(BilletTalon)).height > 0,
           );
+        });
+
+        // QR laissé au talon par le footer : seul un colis accepté gagne un
+        // talon, les autres statuts sont inchangés.
+        testWidgets('expéditeur, $status, numéro ${tracking ?? 'absent'}, '
+            'QR laissé au talon', (tester) async {
+          final bid = _bid(status: status, trackingNumber: tracking);
+          await _pump(tester, bid, true, showQrInTalon: true);
+          final shown = BilletTalon.isShown(
+            bid,
+            isSender: true,
+            showQrInTalon: true,
+          );
+          expect(
+            shown,
+            status == 'ACCEPTED' || BilletTalon.isShown(bid, isSender: true),
+          );
+          expect(shown, tester.getSize(find.byType(BilletTalon)).height > 0);
         });
       }
     }

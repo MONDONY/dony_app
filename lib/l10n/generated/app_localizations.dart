@@ -13434,11 +13434,17 @@ abstract class AppLocalizations {
   /// **'Voir les trajets alternatifs'**
   String get ticketViewAlternativeTripsButton;
 
-  /// Bouton QR du talon de l'expéditeur, à partir de la remise, à côté du code de retrait (billet_talon.dart)
+  /// Bouton QR du talon de l'expéditeur : à partir de la remise, à côté du code de retrait ; avant la remise (ACCEPTED), seul en pleine largeur avec le sous-titre ticketQrButtonSubtitle quand le footer ne propose pas le QR (billet_talon.dart)
   ///
   /// In fr, this message translates to:
   /// **'QR du colis'**
   String get ticketQrButtonCompact;
+
+  /// Sous-titre du bouton « QR du colis » du talon de l'expéditeur, colis accepté pas encore remis, quand le footer ne propose pas « Afficher le QR de remise » : paiement carte introuvable ou déclaration d'absence en attente (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À présenter ou coller sur le colis'**
+  String get ticketQrButtonSubtitle;
 
   /// Placeholder sender / PENDING du talon (billet_talon.dart)
   ///

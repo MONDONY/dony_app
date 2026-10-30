@@ -22,12 +22,24 @@ class ColisBillet extends StatelessWidget {
   final BidModel bid;
   final bool isSender;
 
-  const ColisBillet({super.key, required this.bid, required this.isSender});
+  /// Transmis au talon : voir [BilletTalon.showQrInTalon].
+  final bool showQrInTalon;
+
+  const ColisBillet({
+    super.key,
+    required this.bid,
+    required this.isSender,
+    this.showQrInTalon = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final talon = BilletTalon.isShown(bid, isSender: isSender);
+    final talon = BilletTalon.isShown(
+      bid,
+      isSender: isSender,
+      showQrInTalon: showQrInTalon,
+    );
 
     return Container(
           decoration: BoxDecoration(
@@ -58,7 +70,12 @@ class ColisBillet extends StatelessWidget {
                     ? Theme.of(context).scaffoldBackgroundColor
                     : null,
               ),
-              if (talon) BilletTalon(bid: bid, isSender: isSender),
+              if (talon)
+                BilletTalon(
+                  bid: bid,
+                  isSender: isSender,
+                  showQrInTalon: showQrInTalon,
+                ),
             ],
           ),
         )

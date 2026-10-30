@@ -8137,6 +8137,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ticketQrButtonCompact => 'QR du colis';
 
   @override
+  String get ticketQrButtonSubtitle => 'À présenter ou coller sur le colis';
+
+  @override
   String get ticketAwaitingTravelerConfirmation =>
       'En attente de confirmation du voyageur';
 

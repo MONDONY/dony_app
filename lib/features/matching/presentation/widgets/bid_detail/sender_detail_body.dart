@@ -13,6 +13,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detai
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tile_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_todo_sheets.dart';
@@ -69,12 +70,18 @@ class SenderDetailBody extends StatefulWidget {
   /// Paiement dit ainsi un paiement échoué plutôt qu'un séquestre.
   final PaymentModel? existingPayment;
 
+  /// La lecture du paiement est terminée ([existingPayment] null veut alors
+  /// dire « introuvable ») : avec lui, le corps sait si le footer propose le
+  /// QR du colis ou le laisse au talon ([SenderStickyBar.leavesQrToTalon]).
+  final bool paymentLoaded;
+
   const SenderDetailBody({
     super.key,
     required this.bid,
     this.focusSupplement = false,
     this.focusAmendment = false,
     this.existingPayment,
+    this.paymentLoaded = false,
   });
 
   @override
@@ -380,7 +387,18 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // index 0 — ColisBillet possède déjà son propre .animate().fadeIn().slideY()
       // en interne (colis_billet.dart:53). On ne lui applique PAS le stagger ici
       // pour éviter une double animation (fade × fade + slide × slide).
-      ('billet', ColisBillet(bid: bid, isSender: true)),
+      (
+        'billet',
+        ColisBillet(
+          bid: bid,
+          isSender: true,
+          showQrInTalon: SenderStickyBar.leavesQrToTalon(
+            bid,
+            paymentLoaded: widget.paymentLoaded,
+            existingPayment: widget.existingPayment,
+          ),
+        ),
+      ),
       if (actions.isNotEmpty)
         (
           'todo',

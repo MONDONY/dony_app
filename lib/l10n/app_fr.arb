@@ -8279,7 +8279,11 @@
   },
   "ticketQrButtonCompact": "QR du colis",
   "@ticketQrButtonCompact": {
-    "description": "Bouton QR du talon de l'expéditeur, à partir de la remise, à côté du code de retrait (billet_talon.dart)"
+    "description": "Bouton QR du talon de l'expéditeur : à partir de la remise, à côté du code de retrait ; avant la remise (ACCEPTED), seul en pleine largeur avec le sous-titre ticketQrButtonSubtitle quand le footer ne propose pas le QR (billet_talon.dart)"
+  },
+  "ticketQrButtonSubtitle": "À présenter ou coller sur le colis",
+  "@ticketQrButtonSubtitle": {
+    "description": "Sous-titre du bouton « QR du colis » du talon de l'expéditeur, colis accepté pas encore remis, quand le footer ne propose pas « Afficher le QR de remise » : paiement carte introuvable ou déclaration d'absence en attente (billet_talon.dart)"
   },
   "ticketAwaitingTravelerConfirmation": "En attente de confirmation du voyageur",
   "@ticketAwaitingTravelerConfirmation": {

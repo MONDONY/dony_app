@@ -118,8 +118,10 @@ BidModel _bid({
   bool pickupCodeRenewalNeeded = false,
   DateTime? departureAt,
   TripRescheduleInfo? reschedule,
+  String? cancellationNoShowStatus,
 }) => BidModel(
   reschedule: reschedule,
+  cancellationNoShowStatus: cancellationNoShowStatus,
   recipientAppStatus: recipientAppStatus,
   confirmationCode: confirmationCode,
   pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
@@ -162,6 +164,7 @@ Widget _host(
   bool focusSupplement = false,
   bool focusAmendment = false,
   PaymentModel? existingPayment,
+  bool paymentLoaded = false,
 }) {
   return MaterialApp(
     theme: AppTheme.light(),
@@ -178,6 +181,7 @@ Widget _host(
           focusSupplement: focusSupplement,
           focusAmendment: focusAmendment,
           existingPayment: existingPayment,
+          paymentLoaded: paymentLoaded,
         ),
       ),
     ),
@@ -314,6 +318,66 @@ void main() {
     final card = tester.widget<PaiementCard>(find.byType(PaiementCard));
     expect(card.existingPayment?.status, PaymentStatus.failed);
     expect(find.text('Paiement échoué'), findsOneWidget);
+  });
+
+  // Décision du propriétaire : le QR du colis reste au talon quand le footer
+  // ne propose pas « Afficher le QR de remise ».
+  group('QR du colis au talon (ACCEPTED)', () {
+    const payment = PaymentModel(
+      id: 'pay-1',
+      bidId: 'bid-001',
+      amount: 56,
+      commissionAmount: 5,
+      status: PaymentStatus.escrow,
+    );
+    final talonQr = find.descendant(
+      of: find.byType(ColisBillet),
+      matching: find.text('À présenter ou coller sur le colis'),
+    );
+
+    for (final (label, bid, loaded, existing, expected) in [
+      ('carte, paiement introuvable', _bid(), true, null, true),
+      ('carte, paiement trouvé', _bid(), true, payment, false),
+      ('carte, paiement en lecture', _bid(), false, null, false),
+      (
+        'espèces',
+        _bid(paymentMethod: BidPaymentMethod.cash),
+        true,
+        null,
+        false,
+      ),
+      (
+        'absence déclarée en attente',
+        _bid(cancellationNoShowStatus: 'PENDING_CONFIRMATION'),
+        true,
+        payment,
+        true,
+      ),
+      (
+        'absence contestée',
+        _bid(cancellationNoShowStatus: 'CONTESTED'),
+        true,
+        payment,
+        false,
+      ),
+    ]) {
+      testWidgets('$label → ${expected ? 'QR au talon' : 'pas de QR'}', (
+        tester,
+      ) async {
+        sizeView(tester);
+        await tester.pumpWidget(
+          _host(
+            bid,
+            cancellationBloc,
+            conversationOpenBloc,
+            existingPayment: existing,
+            paymentLoaded: loaded,
+          ),
+        );
+        await tester.pump(const Duration(seconds: 1));
+        expect(talonQr, expected ? findsOneWidget : findsNothing);
+      });
+    }
   });
 
   // ── Test 1: ACCEPTED → billet, voyageur, paiement, tuiles ───────────────────

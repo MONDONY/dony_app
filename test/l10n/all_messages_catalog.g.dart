@@ -2973,6 +2973,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'ticketParcelReturnedLabel': (l) => l.ticketParcelReturnedLabel,
   'ticketViewAlternativeTripsButton': (l) => l.ticketViewAlternativeTripsButton,
   'ticketQrButtonCompact': (l) => l.ticketQrButtonCompact,
+  'ticketQrButtonSubtitle': (l) => l.ticketQrButtonSubtitle,
   'ticketAwaitingTravelerConfirmation': (l) =>
       l.ticketAwaitingTravelerConfirmation,
   'ticketAwaitingSenderCardPayment': (l) => l.ticketAwaitingSenderCardPayment,

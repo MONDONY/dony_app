@@ -1187,4 +1187,124 @@ void main() {
       expect(find.byType(SupplementPayButton), findsNothing);
     });
   });
+
+  // Décision du propriétaire : colis ACCEPTED, le QR du colis reste au talon
+  // quand le footer ne propose pas « Afficher le QR de remise » (paiement
+  // carte introuvable, déclaration d'absence en attente). Partout ailleurs,
+  // pas de QR au talon avant la remise.
+  group('leavesQrToTalon', () {
+    const methods = BidPaymentMethod.values;
+    const absences = <String?>[null, 'PENDING_CONFIRMATION', 'CONTESTED'];
+    // (paiement lu, paiement trouvé)
+    const payments = <(bool, bool)>[
+      (false, false),
+      (true, false),
+      (true, true),
+    ];
+
+    for (final method in methods) {
+      for (final absence in absences) {
+        for (final (loaded, found) in payments) {
+          final expected =
+              absence == 'PENDING_CONFIRMATION' ||
+              (method == BidPaymentMethod.stripe && loaded && !found);
+          testWidgets(
+            'ACCEPTED ${method.name}, absence ${absence ?? 'aucune'}, '
+            'paiement ${loaded ? (found ? 'trouvé' : 'introuvable') : 'en lecture'}'
+            ' → ${expected ? 'QR au talon' : 'pas de QR au talon'}',
+            (tester) async {
+              final bid = _bid(
+                status: 'ACCEPTED',
+                paymentMethod: method,
+                cancellationNoShowStatus: absence,
+              );
+              final payment = found ? _payment() : null;
+              expect(
+                SenderStickyBar.leavesQrToTalon(
+                  bid,
+                  paymentLoaded: loaded,
+                  existingPayment: payment,
+                ),
+                expected,
+              );
+
+              // Le footer et le talon ne proposent jamais le QR tous les deux,
+              // et l'un des deux le propose dès que le paiement est lu.
+              final bloc = _MockBidBloc();
+              whenListen<BidState>(
+                bloc,
+                const Stream.empty(),
+                initialState: BidInitial(),
+              );
+              await tester.pumpWidget(
+                _host(
+                  bloc,
+                  bid,
+                  paymentLoaded: loaded,
+                  existingPayment: payment,
+                ),
+              );
+              await tester.pump();
+              final footerQr = find
+                  .text('Afficher le QR de remise')
+                  .evaluate()
+                  .isNotEmpty;
+              expect(footerQr && expected, isFalse);
+              if (loaded) expect(footerQr || expected, isTrue);
+            },
+          );
+        }
+      }
+    }
+
+    test('supplément ou modification à payer : pas de QR au talon', () {
+      final supplement = BidModel(
+        id: 'bid-test-1',
+        announcementId: 'ann-1',
+        senderId: 'sender-1',
+        status: 'ACCEPTED',
+        supplement: const BidSupplement(
+          id: 'sup-1',
+          status: BidSupplementStatus.proposed,
+          rail: 'STRIPE',
+          grossAmount: 16.8,
+        ),
+        createdAt: DateTime(2025),
+        updatedAt: DateTime(2025),
+      );
+      expect(SupplementPayButton.canPay(supplement), isTrue);
+      expect(
+        SenderStickyBar.leavesQrToTalon(
+          supplement,
+          paymentLoaded: true,
+          existingPayment: _payment(),
+        ),
+        isFalse,
+      );
+    });
+
+    for (final status in [
+      'PENDING',
+      'AWAITING_PAYMENT',
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'DELIVERED',
+      'COMPLETED',
+      'CANCELLED',
+    ]) {
+      test('$status : jamais (le talon garde son comportement)', () {
+        for (final absence in absences) {
+          expect(
+            SenderStickyBar.leavesQrToTalon(
+              _bid(status: status, cancellationNoShowStatus: absence),
+              paymentLoaded: true,
+            ),
+            isFalse,
+            reason: absence,
+          );
+        }
+      });
+    }
+  });
 }
