@@ -176,6 +176,15 @@ class OfflineSyncService {
   int pendingCountFor(Set<String> bidIds) =>
       _countWaiting((raw) => bidIds.contains(raw['bidId']));
 
+  /// Parmi eux, les remises qui attendent la décision de l'équipe sur une
+  /// déclaration d'absence (dernier refus `handover-sender-noshow-pending`) :
+  /// le retour du réseau ne suffira pas à les faire partir.
+  int awaitingDecisionCountFor(Set<String> bidIds) => _countWaiting(
+    (raw) =>
+        bidIds.contains(raw['bidId']) &&
+        raw[retryLaterCodeField] == senderNoShowPendingCode,
+  );
+
   int _countWaiting(bool Function(Map raw) test) {
     final box = _hive.offlineQueue;
     final now = _now();
@@ -480,7 +489,10 @@ class OfflineSyncService {
           // Refusée pour l'instant : déjà repoussée par _send, elle repart à
           // son échéance sans compter comme une panne.
           if (isRetryLaterTrackingRejection(cause)) {
-            final due = _now().add(retryLaterDelay);
+            final stored = _hive.offlineQueue.get(key);
+            final due =
+                (stored == null ? null : _notBefore(stored)) ??
+                _now().add(retryLaterDelay);
             if (nextDue == null || due.isBefore(nextDue)) nextDue = due;
             continue;
           }
@@ -585,7 +597,7 @@ class OfflineSyncService {
         if (canShowRefusal) {
           await _delete(key, entry);
         } else {
-          await _postpone(key, entry);
+          await _postpone(key, entry, code: cause.code);
         }
         final blocked = handoverBlockedEvent(cause.code);
         if (firstBlock && blocked != null) {
@@ -645,16 +657,52 @@ class OfflineSyncService {
   /// ([isRetryLaterTrackingRejection]).
   static const retryLaterDelay = Duration(minutes: 5);
 
-  /// Garde l'entrée en file avec une échéance dans [retryLaterDelay].
-  Future<void> _postpone(Object? key, Map<String, dynamic> entry) async {
+  /// Refus d'une remise dont la déclaration d'absence est examinée par
+  /// l'équipe : la décision peut prendre des jours.
+  static const senderNoShowPendingCode = 'handover-sender-noshow-pending';
+
+  /// Délais successifs des rejeux pour [senderNoShowPendingCode] : 5 min,
+  /// 15 min, puis toutes les heures au plus.
+  static const senderNoShowRetryDelays = [
+    Duration(minutes: 5),
+    Duration(minutes: 15),
+    Duration(minutes: 60),
+  ];
+
+  /// Garde l'entrée en file avec une échéance : [retryLaterDelay], ou pour
+  /// une absence examinée ([senderNoShowPendingCode]) un délai qui s'espace
+  /// à chaque refus ([senderNoShowRetryDelays]). Le compteur vit dans
+  /// l'entrée : il disparaît avec elle (étape partie ou abandonnée) et
+  /// repart de zéro quand le motif du refus change.
+  Future<void> _postpone(
+    Object? key,
+    Map<String, dynamic> entry, {
+    required String? code,
+  }) async {
     if (!_hive.offlineQueue.containsKey(key)) return;
-    final due = _now().add(retryLaterDelay);
+    final sameCode = entry[retryLaterCodeField] == code;
+    final count = (sameCode ? entry[retryLaterCountField] as int? ?? 0 : 0) + 1;
+    final delay = code == senderNoShowPendingCode
+        ? senderNoShowRetryDelays[count > senderNoShowRetryDelays.length
+              ? senderNoShowRetryDelays.length - 1
+              : count - 1]
+        : retryLaterDelay;
+    final due = _now().add(delay);
     entry
       ..['notBefore'] = due.toUtc().toIso8601String()
-      ..[retryLaterField] = true;
+      ..[retryLaterField] = true
+      ..[retryLaterCountField] = count
+      ..[retryLaterCodeField] = code;
     await _hive.offlineQueue.put(key, entry);
     _wakeUpBy(due);
   }
+
+  /// Champ de l'entrée : nombre de refus « pour l'instant » d'affilée pour
+  /// le même motif.
+  static const retryLaterCountField = 'retryLaterCount';
+
+  /// Champ de l'entrée : code du dernier refus « pour l'instant ».
+  static const retryLaterCodeField = 'retryLaterCode';
 
   /// Champ de l'entrée : clé de la photo déjà envoyée.
   static const photoKeyField = 'photoKey';

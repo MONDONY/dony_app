@@ -15432,6 +15432,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String suiviPendingScansAwaitingDecision(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count handovers are waiting for the Yadony team\'s decision.',
+      one: '1 handover is waiting for the Yadony team\'s decision.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get suiviOtherTripTitle => 'This parcel isn\'t on this trip';
 
   @override

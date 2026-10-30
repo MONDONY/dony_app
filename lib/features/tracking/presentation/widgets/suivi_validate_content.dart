@@ -732,7 +732,10 @@ class _RecentScans extends StatelessWidget {
 }
 
 /// Scans enregistrés hors ligne pour ces colis, pas encore envoyés.
-/// Masqué quand la file est vide pour eux ; se met à jour avec la file.
+/// Masqué quand la file est vide pour eux ; se met à jour avec la file. Les
+/// remises qui attendent la décision de l'équipe sur une déclaration
+/// d'absence sont comptées à part : le retour du réseau ne les fera pas
+/// partir.
 class SuiviPendingScansBanner extends StatelessWidget {
   const SuiviPendingScansBanner({super.key, required this.bidIds});
 
@@ -746,8 +749,15 @@ class SuiviPendingScansBanner extends StatelessWidget {
       builder: (context, _) {
         final count = sync.pendingCountFor(bidIds);
         if (count == 0) return const SizedBox.shrink();
+        final awaitingDecision = sync.awaitingDecisionCountFor(bidIds);
+        final waitingNetwork = count - awaitingDecision;
+        final l = context.l10n;
         final cs = Theme.of(context).colorScheme;
         final tt = Theme.of(context).textTheme;
+        final style = tt.bodyMedium?.copyWith(
+          color: cs.onSurface,
+          fontFeatures: _tabular,
+        );
         return Padding(
           padding: const EdgeInsets.only(bottom: DonySpacing.base),
           child: Material(
@@ -764,12 +774,23 @@ class SuiviPendingScansBanner extends StatelessWidget {
                     DonyIcon('wifi-off', size: 18, color: cs.onSurface),
                     const SizedBox(width: DonySpacing.md),
                     Expanded(
-                      child: Text(
-                        context.l10n.suiviPendingScans(count),
-                        style: tt.bodyMedium?.copyWith(
-                          color: cs.onSurface,
-                          fontFeatures: _tabular,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: DonySpacing.xs,
+                        children: [
+                          if (waitingNetwork > 0)
+                            Text(
+                              l.suiviPendingScans(waitingNetwork),
+                              style: style,
+                            ),
+                          if (awaitingDecision > 0)
+                            Text(
+                              l.suiviPendingScansAwaitingDecision(
+                                awaitingDecision,
+                              ),
+                              style: style,
+                            ),
+                        ],
                       ),
                     ),
                     DonyIcon(

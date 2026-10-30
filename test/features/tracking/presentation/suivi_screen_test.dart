@@ -308,6 +308,7 @@ void main() {
       ],
     );
     when(() => offlineSync.pendingCountFor(any())).thenReturn(0);
+    when(() => offlineSync.awaitingDecisionCountFor(any())).thenReturn(0);
     when(() => offlineSync.queueChanges).thenReturn(queue);
     when(() => offlineSync.lostPhotoChanges).thenReturn(queue);
     when(() => offlineSync.lostPhotosFor(any())).thenReturn(const []);
@@ -1461,6 +1462,39 @@ void main() {
       await tester.tap(find.byKey(const Key('suivi-pending-scans')));
       await settle(tester);
       expect(visited, contains('/tracking/offline-queue'));
+    });
+
+    testWidgets('remise en attente de la décision de l\'équipe → dit dans '
+        'la bannière', (tester) async {
+      when(() => offlineSync.pendingCountFor(any())).thenReturn(2);
+      when(() => offlineSync.awaitingDecisionCountFor(any())).thenReturn(1);
+      stubDefaultTrips();
+      await pump(tester);
+
+      expect(
+        text('1 scan en attente. Il part tout seul dès le retour du réseau.'),
+        findsOneWidget,
+      );
+      expect(
+        text("1 remise attend la décision de l'équipe Yadony."),
+        findsOneWidget,
+      );
+      await settle(tester, rounds: 12);
+    });
+
+    testWidgets('seulement des remises en attente de décision → pas de '
+        'promesse de réseau', (tester) async {
+      when(() => offlineSync.pendingCountFor(any())).thenReturn(2);
+      when(() => offlineSync.awaitingDecisionCountFor(any())).thenReturn(2);
+      stubDefaultTrips();
+      await pump(tester);
+
+      expect(find.textContaining('retour du réseau'), findsNothing);
+      expect(
+        text("2 remises attendent la décision de l'équipe Yadony."),
+        findsOneWidget,
+      );
+      await settle(tester, rounds: 12);
     });
 
     testWidgets('aucun trajet, mode Valider demandé → état vide', (

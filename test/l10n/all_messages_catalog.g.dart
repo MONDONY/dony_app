@@ -5454,6 +5454,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.suiviRecentScanStepByNumber(placeholderMarker('step')),
   'suiviHelpTooltip': (l) => l.suiviHelpTooltip,
   'suiviPendingScans': (l) => l.suiviPendingScans(intPlaceholderValue),
+  'suiviPendingScansAwaitingDecision': (l) =>
+      l.suiviPendingScansAwaitingDecision(intPlaceholderValue),
   'suiviOtherTripTitle': (l) => l.suiviOtherTripTitle,
   'suiviOtherTripBody': (l) => l.suiviOtherTripBody(
     placeholderMarker('parcel'),

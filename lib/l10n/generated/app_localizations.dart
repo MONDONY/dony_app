@@ -25537,6 +25537,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 scan en attente. Il part tout seul dès le retour du réseau.} other{{count} scans en attente. Ils partent tout seuls dès le retour du réseau.}}'**
   String suiviPendingScans(int count);
 
+  /// Bannière des scans en attente de la feuille Valider (SuiviPendingScansBanner) : remises refusées pour l'instant parce que la déclaration d'absence de l'expéditeur est examinée par l'équipe (409 handover-sender-noshow-pending) ; la file les renvoie de plus en plus espacées.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 remise attend la décision de l\'équipe Yadony.} other{{count} remises attendent la décision de l\'équipe Yadony.}}'**
+  String suiviPendingScansAwaitingDecision(int count);
+
   /// Titre de la feuille d'un colis lu sur un autre trajet (suivi_parcel_sheets.dart).
   ///
   /// In fr, this message translates to:

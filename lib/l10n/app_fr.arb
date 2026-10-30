@@ -17519,6 +17519,8 @@
     "description": "Bouton « ? » de l'en-tête de l'onglet Suivi, ouvre le tutoriel de la remise par QR (suivi_header.dart, SuiviHelpButton)."
   },
   "suiviPendingScans": "{count, plural, =1{1 scan en attente. Il part tout seul dès le retour du réseau.} other{{count} scans en attente. Ils partent tout seuls dès le retour du réseau.}}",
+  "suiviPendingScansAwaitingDecision": "{count, plural, =1{1 remise attend la décision de l'équipe Yadony.} other{{count} remises attendent la décision de l'équipe Yadony.}}",
+  "@suiviPendingScansAwaitingDecision": {"description": "Bannière des scans en attente de la feuille Valider (SuiviPendingScansBanner) : remises refusées pour l'instant parce que la déclaration d'absence de l'expéditeur est examinée par l'équipe (409 handover-sender-noshow-pending) ; la file les renvoie de plus en plus espacées.", "placeholders": {"count": {"type": "int"}}},
   "@suiviPendingScans": {
     "description": "Bannière hors ligne de la feuille Valider (suivi_validate_content.dart, SuiviPendingScansBanner).",
     "placeholders": {

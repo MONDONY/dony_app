@@ -1881,6 +1881,95 @@ void main() {
       ).called(1);
     });
 
+    // L'équipe peut mettre des jours à trancher : le rejeu s'espace (5 min,
+    // 15 min, puis toutes les heures) au lieu de repartir toutes les 5 min.
+    test(
+      'absence examinée : rejeux espacés à 5, 15 puis 60 min au plus',
+      () async {
+        stubPost(() async => throw conflict('handover-sender-noshow-pending'));
+        final key = await timed.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+
+        String notBefore() =>
+            _hiveService.offlineQueue.get(key)!['notBefore'] as String;
+
+        await timed.syncAll();
+        expect(notBefore(), '2026-10-30T09:05:00.000Z');
+
+        now = DateTime.utc(2026, 10, 30, 9, 6);
+        await timed.syncAll();
+        expect(notBefore(), '2026-10-30T09:21:00.000Z');
+
+        now = DateTime.utc(2026, 10, 30, 9, 22);
+        await timed.syncAll();
+        expect(notBefore(), '2026-10-30T10:22:00.000Z');
+
+        now = DateTime.utc(2026, 10, 30, 10, 23);
+        await timed.syncAll();
+        expect(
+          notBefore(),
+          '2026-10-30T11:23:00.000Z',
+          reason: 'plafond 60 min',
+        );
+        expect(timed.awaitingDecisionCountFor({'bid-1'}), 1);
+        expect(timed.awaitingDecisionCountFor({'bid-2'}), 0);
+      },
+    );
+
+    test(
+      'compteur remis à zéro : nouvelle étape et changement de motif',
+      () async {
+        stubPost(() async => throw conflict('handover-sender-noshow-pending'));
+        final first = await timed.queueScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+        );
+        await timed.syncAll();
+        now = DateTime.utc(2026, 10, 30, 9, 6);
+        await timed.syncAll();
+
+        // L'étape part : la suivante repart de 5 min.
+        stubPost(() async => _fakeEvent());
+        now = DateTime.utc(2026, 10, 30, 9, 22);
+        await timed.syncAll();
+        expect(_hiveService.offlineQueue.containsKey(first), isFalse);
+
+        stubPost(() async => throw conflict('handover-sender-noshow-pending'));
+        final second = await timed.queueScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+        );
+        await timed.syncAll();
+        expect(
+          _hiveService.offlineQueue.get(second)!['notBefore'],
+          '2026-10-30T09:27:00.000Z',
+        );
+
+        // Le motif change (un supplément attend) : 5 min, sans décision de
+        // l'équipe à annoncer.
+        stubPost(() async => throw conflict('handover-supplement-pending'));
+        now = DateTime.utc(2026, 10, 30, 9, 28);
+        await timed.syncAll();
+        expect(
+          _hiveService.offlineQueue.get(second)!['notBefore'],
+          '2026-10-30T09:33:00.000Z',
+        );
+        expect(timed.awaitingDecisionCountFor({'bid-1'}), 0);
+        expect(timed.pendingCountFor({'bid-1'}), 1);
+      },
+    );
+
+    test('supplément en attente : toujours 5 min', () async {
+      stubPost(() async => throw conflict('handover-supplement-pending'));
+      final key = await timed.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+      await timed.syncAll();
+      now = DateTime.utc(2026, 10, 30, 9, 6);
+      await timed.syncAll();
+      expect(
+        _hiveService.offlineQueue.get(key)!['notBefore'],
+        '2026-10-30T09:11:00.000Z',
+      );
+    });
+
     test('modification en attente : son propre événement', () async {
       stubPost(() async => throw conflict('handover-amendment-pending'));
       await timed.queueScan(bidId: 'bid-1', eventType: 'DEPART');
