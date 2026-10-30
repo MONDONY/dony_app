@@ -2,6 +2,25 @@ import 'package:dony/app/router.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group('isCountryEmpty', () {
+    final cases = <(String?, String?, bool)>[
+      (null, null, true),
+      ('', '', true),
+      ('  ', '\t', true),
+      ('FR', null, false),
+      ('FR', '', false),
+      // Réinstallation : Hive vide, le serveur connaît le pays.
+      (null, 'FR', false),
+      ('', ' SN ', false),
+      ('FR', 'SN', false),
+    ];
+    for (final (hive, synced, empty) in cases) {
+      test('Hive "$hive" + serveur "$synced" -> $empty', () {
+        expect(isCountryEmpty(hiveCountry: hive, syncedCountry: synced), empty);
+      });
+    }
+  });
+
   const next = '/auth/country-selection?next=%2Ftrips%2Fcreate';
 
   group('resolveCountryGuardRedirect', () {

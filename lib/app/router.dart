@@ -324,6 +324,13 @@ String? resolveAuthRedirect({
   return '/auth/method';
 }
 
+/// Le pays est inconnu seulement si ni le cache Hive ni les préférences
+/// synchronisées avec le serveur ne le donnent. Vide, blanc ou absent comptent
+/// comme inconnu.
+bool isCountryEmpty({String? hiveCountry, String? syncedCountry}) =>
+    (hiveCountry?.trim().isEmpty ?? true) &&
+    (syncedCountry?.trim().isEmpty ?? true);
+
 /// Garde pays de la publication d'un trajet : le pays est demandé au moment
 /// où il sert. Renvoie la sélection de pays avec `next` (la route à retrouver
 /// ensuite), ou `null` si la navigation peut aboutir. Fonction pure, testée
@@ -417,15 +424,17 @@ final GoRouter appRouter = GoRouter(
               ) ==
               true;
       // Vide = ni le cache Hive ni les préférences synchronisées avec le
-      // serveur ne connaissent le pays (une réinstallation peut vider Hive
-      // alors que le serveur le sait : pas de détour dans ce cas).
+      // serveur ne connaissent le pays. Après une réinstallation, Hive est
+      // vide mais le serveur le sait : `DonyApp` relance la synchro des
+      // préférences à la connexion, ce qui évite le détour.
       final hiveCountry = getIt.isRegistered<HiveService>()
           ? getIt<HiveService>().userPrefs.get(HiveService.kCountryCode)
           : null;
       final syncedCountry = context.read<BusinessPrefsBloc>().state.country;
-      final countryEmpty =
-          (hiveCountry is! String || hiveCountry.isEmpty) &&
-          (syncedCountry == null || syncedCountry.isEmpty);
+      final countryEmpty = isCountryEmpty(
+        hiveCountry: hiveCountry is String ? hiveCountry : null,
+        syncedCountry: syncedCountry,
+      );
       final countryRedirect = resolveCountryGuardRedirect(
         path: state.matchedLocation,
         countryEmpty: countryEmpty,
