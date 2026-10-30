@@ -22221,6 +22221,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'The sender contested your absence report: the Yadony team must decide before the handover. Contact support if the sender did show up.';
 
   @override
+  String get errorNoShowAlreadyDecidedTitle => 'Report already handled';
+
+  @override
+  String get errorNoShowAlreadyDecidedMessage =>
+      'This report has already been handled.';
+
+  @override
   String get amendmentEntryButton => 'Add kilos or items';
 
   @override

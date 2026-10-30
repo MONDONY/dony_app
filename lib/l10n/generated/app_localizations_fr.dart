@@ -22373,6 +22373,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'expéditeur a contesté votre déclaration d\'absence : l\'équipe Yadony doit trancher avant la remise. Contactez le support si l\'expéditeur est venu.';
 
   @override
+  String get errorNoShowAlreadyDecidedTitle => 'Déclaration déjà traitée';
+
+  @override
+  String get errorNoShowAlreadyDecidedMessage =>
+      'Cette déclaration a déjà été traitée.';
+
+  @override
   String get amendmentEntryButton => 'Ajouter des kilos ou des articles';
 
   @override

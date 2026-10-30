@@ -546,6 +546,15 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.gavel_rounded,
     ),
+    // Contestation d'une déclaration d'absence déjà levée (scan de départ)
+    // ou tranchée par l'équipe : la fiche du colis est relue
+    // (`BidDetailScreen`).
+    'noshow-already-decided': _Entry(
+      title: (l) => l.errorNoShowAlreadyDecidedTitle,
+      message: (l) => l.errorNoShowAlreadyDecidedMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.task_alt_rounded,
+    ),
     'already-bid': _Entry(
       title: (l) => l.errorAlreadyBidTitle,
       message: (l) => l.errorAlreadyBidMessage,

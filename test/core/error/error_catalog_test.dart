@@ -2026,4 +2026,26 @@ void main() {
       expect(p.icon, isNot(Icons.hourglass_top_rounded));
     });
   });
+
+  group('ErrorCatalog — déclaration d\'absence déjà traitée', () {
+    // 409 de la contestation quand la déclaration a été levée par le scan
+    // de départ ou tranchée par l'équipe entre-temps.
+    const error = ConflictException('d', code: 'noshow-already-decided');
+
+    test('message en français et en anglais', () {
+      expect(ErrorCatalog.isKnown(error), isTrue);
+      final fr = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+      expect(fr.message, 'Cette déclaration a déjà été traitée.');
+      expect(fr.severity, ErrorSeverity.info);
+      final en = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(en.message, 'This report has already been handled.');
+      expect(en.title, isNot(fr.title));
+    });
+  });
 }

@@ -581,6 +581,11 @@ class _BidDetailViewState extends State<_BidDetailView>
                   context.read<CancellationBloc>(),
                 );
             if (!shownAbove) ErrorPresenter.show(context, state.error);
+            // Déclaration d'absence déjà levée par le scan de départ ou
+            // tranchée par l'équipe : la fiche affichée est périmée.
+            if (state.noShowAlreadyDecided) {
+              context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+            }
           }
         },
         child: BlocListener<RatingBloc, RatingState>(

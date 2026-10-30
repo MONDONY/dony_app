@@ -36054,6 +36054,18 @@ abstract class AppLocalizations {
   /// **'L\'expéditeur a contesté votre déclaration d\'absence : l\'équipe Yadony doit trancher avant la remise. Contactez le support si l\'expéditeur est venu.'**
   String get errorHandoverSenderNoShowPendingMessage;
 
+  /// ErrorCatalog noshow-already-decided : l'expéditeur conteste une déclaration d'absence déjà levée par le scan de départ ou tranchée par l'équipe (409). La fiche du colis est relue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déclaration déjà traitée'**
+  String get errorNoShowAlreadyDecidedTitle;
+
+  /// ErrorCatalog noshow-already-decided : message de la contestation refusée, déclaration déjà levée ou tranchée
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette déclaration a déjà été traitée.'**
+  String get errorNoShowAlreadyDecidedMessage;
+
   /// Bouton d'entrée de la modification
   ///
   /// In fr, this message translates to:
