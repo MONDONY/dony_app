@@ -213,6 +213,26 @@ void main() {
     );
   });
 
+  // Le scan de départ lève une déclaration encore en attente : le back la
+  // passe en RESOLVED et le colis, relu au retour du scan, n'affiche plus
+  // l'alerte.
+  testWidgets('absence levée par le scan (RESOLVED) → plus d\'alerte', (
+    tester,
+  ) async {
+    for (final status in ['HANDED_OVER', 'IN_TRANSIT', 'ACCEPTED']) {
+      final bid = _bid(
+        status: status,
+        voyageurConfirmed: true,
+        cancellationNoShowStatus: 'RESOLVED',
+      );
+      await _pump(tester, bid);
+      expect(find.textContaining('Absence signalée'), findsNothing);
+      expect(find.textContaining('Absence contestée'), findsNothing);
+      expect(TravelerHeroCard.senderNoShowOpen(bid), isFalse, reason: status);
+      expect(TravelerHeroCard.isShown(bid), isFalse, reason: status);
+    }
+  });
+
   testWidgets('REJECTED → rien (SizedBox.shrink)', (tester) async {
     await _pump(tester, _bid(status: 'REJECTED'));
     expect(
@@ -673,7 +693,7 @@ void main() {
           reason: status,
         );
       }
-      for (final status in [null, 'CONFIRMED', 'REJECTED']) {
+      for (final status in [null, 'CONFIRMED', 'REJECTED', 'RESOLVED']) {
         expect(
           TravelerHeroCard.senderNoShowOpen(
             heroBid('ACCEPTED', cancellationNoShowStatus: status),
