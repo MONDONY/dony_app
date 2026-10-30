@@ -47,15 +47,20 @@ abstract final class AnalyticsConsentSheet {
   }) async {
     final navigator = Navigator.of(context);
     final analytics = getIt<AnalyticsService>();
-    await analytics.setConsent(granted: granted);
-    unawaited(
-      analytics.logEvent(
-        AnalyticsEvents.analyticsConsentAnswered,
-        properties: {'granted': granted},
-      ),
-    );
-    getIt<ConsentPrompt>().clear();
-    navigator.pop();
+    try {
+      await analytics.setConsent(granted: granted);
+      unawaited(
+        analytics.logEvent(
+          AnalyticsEvents.analyticsConsentAnswered,
+          properties: {'granted': granted},
+        ),
+      );
+    } finally {
+      // Même si l'écriture locale échoue, la feuille ne doit pas rester
+      // coincée ni la demande levée.
+      getIt<ConsentPrompt>().clear();
+      navigator.pop();
+    }
   }
 }
 

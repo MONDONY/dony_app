@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/consent_prompt.dart';
@@ -103,6 +105,32 @@ void main() {
         ),
       );
       expect(prompt.wanted.value, isTrue);
+    },
+  );
+
+  testWidgets(
+    "une écriture locale qui échoue ferme quand même la feuille et lève la "
+    'demande',
+    (tester) async {
+      when(
+        () => analytics.setConsent(
+          granted: any(named: 'granted'),
+          source: any(named: 'source'),
+        ),
+      ).thenThrow(StateError('Hive indisponible'));
+      await open(tester);
+      // L'erreur remonte hors du widget (callback async) : on l'intercepte
+      // pour ne vérifier que ce qui doit survivre à l'échec.
+      final errors = <Object>[];
+      await runZonedGuarded(() async {
+        await tester.tap(find.byKey(const Key('consent-sheet-accept')));
+        await tester.pumpAndSettle();
+      }, (e, _) => errors.add(e));
+
+      expect(errors.single, isA<StateError>());
+      expect(prompt.wanted.value, isFalse);
+      expect(find.byKey(const Key('consent-sheet-accept')), findsNothing);
+      verifyNever(() => analytics.logEvent(any(), properties: any(named: 'properties')));
     },
   );
 

@@ -104,6 +104,9 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
     if (user != null) {
       unawaited(_onLogin(user));
     } else {
+      // Une demande levée pour le compte précédent ne doit pas s'afficher au
+      // suivant, qui a peut-être déjà répondu.
+      getIt<ConsentPrompt>().clear();
       unawaited(_analytics.reset());
     }
   }
@@ -144,9 +147,12 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
       case AnalyticsConsentAction.askConsent:
         getIt<ConsentPrompt>().request();
       case AnalyticsConsentAction.autoGrantNonGdpr:
+        getIt<ConsentPrompt>().clear();
         await _analytics.setConsent(granted: true, source: 'auto_non_gdpr');
       case AnalyticsConsentAction.none:
-        break;
+        // Déjà répondu (ou mesure non configurée) : toute demande encore
+        // levée pour un autre compte est périmée.
+        getIt<ConsentPrompt>().clear();
     }
   }
 

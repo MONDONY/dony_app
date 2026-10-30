@@ -93,12 +93,18 @@ void main() {
     return user;
   }
 
-  Future<void> logIn(WidgetTester tester, String country) async {
+  Future<void> logIn(
+    WidgetTester tester,
+    String country, {
+    bool hasAnswered = false,
+    bool alreadyPending = false,
+  }) async {
+    if (alreadyPending) consentPrompt.request();
     when(() => mockFirebaseAuth.currentUser).thenReturn(null);
     when(() => mockAnalytics.identify(any())).thenAnswer((_) async {});
     when(() => mockAnalytics.syncFromBackend()).thenAnswer((_) async {});
     when(() => mockAnalytics.isConfigured).thenReturn(true);
-    when(() => mockAnalytics.hasAnswered).thenReturn(false);
+    when(() => mockAnalytics.hasAnswered).thenReturn(hasAnswered);
     when(
       () => mockAnalytics.setConsent(
         granted: any(named: 'granted'),
@@ -139,6 +145,28 @@ void main() {
         source: any(named: 'source'),
       ),
     );
+  });
+
+  testWidgets(
+    'un compte qui a déjà répondu lève la demande laissée par un autre compte',
+    (tester) async {
+      await logIn(tester, 'FR', hasAnswered: true, alreadyPending: true);
+
+      expect(consentPrompt.wanted.value, isFalse);
+    },
+  );
+
+  testWidgets('la déconnexion lève la demande en attente', (tester) async {
+    await logIn(tester, 'FR');
+    expect(consentPrompt.wanted.value, isTrue);
+    when(() => mockAnalytics.reset()).thenAnswer((_) async {});
+
+    authChanges.add(null);
+    await tester.pump();
+    await tester.pump();
+
+    expect(consentPrompt.wanted.value, isFalse);
+    verify(() => mockAnalytics.reset()).called(1);
   });
 
   testWidgets('hors RGPD accorde automatiquement sans feuille', (tester) async {
