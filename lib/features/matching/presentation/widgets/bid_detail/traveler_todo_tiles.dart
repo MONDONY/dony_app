@@ -28,7 +28,7 @@ List<TravelerTodoTile> travelerTodoTilesFor(BidModel bid) => [
   if (SupplementTravelerCard.needsReply(bid)) TravelerTodoTile.supplement,
 ];
 
-/// Titre de la tuile et de son sheet, repris de la carte.
+/// Titre de la tuile et de son sheet, le même que celui de la carte.
 String travelerTodoTitle(AppLocalizations l, TravelerTodoTile tile) =>
     switch (tile) {
       TravelerTodoTile.supplement => l.supplementCardTitle,
@@ -67,7 +67,7 @@ TodoTileShown travelerTodoShown(TravelerTodoTile tile, BidModel bid) =>
     );
 
 /// Mesure de la carte reprise par la tuile [tile], émise à l'affichage de la
-/// tuile en plus de [travelerTodoShown] : la carte n'est plus montée tant que
+/// tuile en plus de [travelerTodoShown] : la carte n'est pas montée tant que
 /// la demande attend le voyageur, et son sheet ne la réémet pas à chaque
 /// ouverture.
 ///

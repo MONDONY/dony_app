@@ -22,9 +22,9 @@ enum TravelerHeroVariant { wait, alert }
 /// date limite de dépôt dépassée avec « Signaler l'absence de l'expéditeur »).
 ///
 /// Les étapes du transport (ACCEPTED, HANDED_OVER, IN_TRANSIT, ARRIVED,
-/// COMPLETED) n'ont plus de carte d'information : le footer (« Confirmer ma
-/// présence », « Lire le QR du colis », « Valider la remise ») et le tampon du
-/// billet disent déjà où en est le colis (décision du propriétaire).
+/// COMPLETED) n'ont pas de carte : le footer (« Confirmer ma présence »,
+/// « Lire le QR du colis », « Valider la remise ») et le tampon du billet
+/// disent où en est le colis.
 class TravelerHeroCard extends StatelessWidget {
   const TravelerHeroCard({super.key, required this.bid});
 

@@ -71,30 +71,15 @@ class TravelerStickyBar extends StatelessWidget {
       case 'PENDING':
       case 'PAYMENT_ESCROWED':
         return _TravelerAction.decide;
-      // AWAITING_PAYMENT (mobile money, 30 min pour le séquestre) et REJECTED
-      // n'ont plus de footer : la phrase d'attente est une carte du corps
-      // ([awaitingMobileMoneyPayment]) et « Supprimer cette demande » une
-      // entrée du menu ⋮.
-      // ACCEPTED : « Confirmer ma présence » avant la date limite, puis
-      // « Lire le QR du colis ». Le back n'exige pas la présence confirmée
-      // pour le scan de départ, et ne passe un colis accepté en NO_SHOW
-      // qu'une heure après la date limite, sans scan de départ ni
-      // signalement (`BidRepository.findNoShowBids`) : passé la date limite,
-      // la présence n'est plus à confirmer mais le colis peut encore être
-      // remis. Le héros d'alerte (« Signaler l'absence ») reste dans
-      // « À traiter ».
-      //
-      // Déclaration d'absence de l'expéditeur ouverte (en attente ou
-      // contestée), présence non confirmée : pas de scan. Le back ne regarde
-      // pas la déclaration au scan de départ et ne la clôt pas : sans réponse
-      // sous 24 h, `NoShowContestationTimeoutJob` confirmerait l'absence, le
-      // séquestre serait remboursé et l'expéditeur pénalisé alors que le
-      // colis voyage. Même règle qu'avant la date limite dépassée : pas de
-      // footer après elle, « Confirmer ma présence » avant.
-      //
-      // Risque connu, à traiter par une PR back : présence confirmée et
-      // déclaration ouverte, le scan reste proposé (comportement antérieur,
-      // gardé tel quel).
+      // AWAITING_PAYMENT et REJECTED n'ont pas de footer : l'attente est une
+      // carte du corps ([awaitingMobileMoneyPayment]), « Supprimer cette
+      // demande » une entrée du menu ⋮.
+      // ACCEPTED : présence confirmée, « Lire le QR du colis » ; sinon
+      // « Confirmer ma présence » jusqu'à la date limite, puis le scan (le
+      // back accepte encore la remise), sauf si une absence de l'expéditeur
+      // est déclarée (en attente ou contestée) : alors rien. Risque connu :
+      // le back ne bloque pas le scan pendant une déclaration d'absence
+      // ouverte, voir la PR.
       case 'ACCEPTED':
         if (bid.voyageurConfirmed) {
           return _TravelerAction.scan;

@@ -34,9 +34,9 @@ enum SenderTodoTile {
 /// le corps la rappelle à chaque rafraîchissement du colis, et le sheet
 /// ouvert s'en sert pour se fermer quand sa tuile n'a plus lieu d'être.
 ///
-/// Les conditions sont celles qui rangeaient jusqu'ici la carte sous
-/// « À traiter » ; hors de ces cas, la carte reste une information du corps
-/// (report déjà décidé) ou n'existe pas.
+/// Une tuile par demande qui attend l'expéditeur ; sinon la carte est une
+/// information du corps (modification en commission chez le voyageur ou
+/// close, report déjà décidé) ou n'existe pas.
 ///
 /// [open] : la modification ouverte de [bid] ([openAmendmentOf]) quand
 /// l'appelant l'a déjà lue (le corps la lit une fois par construction) ;
@@ -49,7 +49,7 @@ List<SenderTodoTile> senderTodoTilesFor(BidModel bid, {BidAmendment? open}) => [
   if (PrevenirDestinataire.showsDeclined(bid)) SenderTodoTile.recipient,
 ];
 
-/// Titre de la tuile et de son sheet, repris de la carte.
+/// Titre de la tuile et de son sheet, le même que celui de la carte.
 String senderTodoTitle(AppLocalizations l, SenderTodoTile tile) =>
     switch (tile) {
       // « Modification du colis » : le titre de la carte est en capitales.
@@ -140,9 +140,9 @@ TodoTileShown senderTodoShown(
 );
 
 /// Mesure de la carte reprise par la tuile [tile], émise à l'affichage de la
-/// tuile en plus de [senderTodoShown] : la carte n'est plus montée tant que la
+/// tuile en plus de [senderTodoShown] : la carte n'est pas montée tant que la
 /// demande attend une réponse, et son sheet ne la réémet pas à chaque
-/// ouverture. `null` pour une tuile dont la carte n'avait pas de mesure.
+/// ouverture. `null` pour une tuile dont la carte n'a pas de mesure.
 ///
 /// Modification : `bid_amendment_viewed` avec `surface: tile`, une fois par
 /// demande et par statut de la demande.
