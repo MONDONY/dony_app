@@ -20,15 +20,12 @@ enum DonyGaugeSegment {
 /// Segmentée et non continue : un segment par étape, pour montrer *lesquelles*
 /// sont faites et pas seulement combien.
 ///
-/// Second usage : la carte de complétion des outils du hub Activités
-/// (« Publiez en 3 taps ») réemploie la même jauge, avec son propre
-/// `semanticsLabel` et `showCounter` à `false` puisque la carte affiche déjà
-/// son compteur.
+/// Usage : la carte de complétion des outils du hub Activités (« Publiez en
+/// 3 taps »), avec son propre `semanticsLabel` et `showCounter` à `false`
+/// puisque la carte affiche déjà son compteur.
 ///
 /// Ne connaît aucune étape métier — `lib/core/design/widgets/` n'importe jamais
-/// `lib/features/**`. Le mappage se fait dans
-/// `features/auth/presentation/onboarding_step.dart`
-/// (`OnboardingProgress.segments`).
+/// `lib/features/**`. Le mappage se fait chez l'appelant.
 class DonyOnboardingGauge extends StatelessWidget {
   const DonyOnboardingGauge({
     super.key,

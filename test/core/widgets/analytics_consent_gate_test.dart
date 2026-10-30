@@ -3,12 +3,10 @@
 // JAMAIS déclencher `identify()` (UID Firebase anonyme -> utilisateur
 // identifié fantôme dans PostHog), ni `syncFromBackend()` (appelle
 // `/auth/me/analytics-consent`, 404 pour un visiteur sans ligne backend),
-// ni surtout la NAVIGATION vers l'entonnoir de consentement RGPD /
-// inscription (`/auth/analytics-consent` -> country-selection ->
-// referral-code) : sans ce dernier verrou, un visiteur en zone RGPD
-// (Paris/Lyon/Marseille) est éjecté de l'accueil au moment même où il
-// choisit "Parcourir sans compte" — le mode invité ne fonctionne plus du
-// tout. C'est ce risque de navigation, pas seulement le tracking, que ce
+// ni surtout une demande de consentement RGPD (aujourd'hui la feuille de
+// l'accueil, autrefois un écran d'inscription) : sans ce dernier verrou, un
+// visiteur en zone RGPD (Paris/Lyon/Marseille) est interrompu au moment même
+// où il choisit "Parcourir sans compte". C'est ce risque de navigation, pas seulement le tracking, que ce
 // fichier verrouille en priorité (la demande `ConsentPrompt` reste éteinte).
 //
 // Utilise un vrai Hive (comme `auth_bloc_test.dart`) car `.listenable()` est
@@ -174,8 +172,8 @@ void main() {
       await tester.pump();
 
       // Le vrai dégât produit, avant tout tracking : un visiteur en zone
-      // RGPD éjecté vers /auth/analytics-consent (puis country-selection,
-      // referral-code) au moment où il choisit "Parcourir sans compte".
+      // RGPD interrompu par une demande de consentement au moment où il
+      // choisit "Parcourir sans compte".
 
       // Aucune interaction avec AnalyticsService : ni identify(uid anonyme),
       // ni syncFromBackend() (donc aucun appel /auth/me/analytics-consent),
