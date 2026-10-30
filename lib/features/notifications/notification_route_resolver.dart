@@ -98,6 +98,9 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'CONFIRMATION_CODE_REQUESTED' when _isUuid(bidId) =>
       '/bids/$bidId?action=new-code',
     'DELIVERY_NOSHOW_REPORTED' when _isUuid(bidId) => '/bids/$bidId',
+    // Expéditeur : la déclaration d'absence qui le visait a été levée par le
+    // scan de départ du voyageur (colis remis), plus rien à contester.
+    'SENDER_NOSHOW_WITHDRAWN' when _isUuid(bidId) => '/bids/$bidId',
     // Demande annulée par l'expéditeur avant paiement (yadony-back, voyageur).
     'BID_CANCELLED_BEFORE_PAYMENT' when _isUuid(bidId) => '/bids/$bidId',
     'MM_PAYMENT_PENDING' when _isUuid(bidId) =>

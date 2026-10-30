@@ -760,6 +760,8 @@ class _NotificationIcon extends StatelessWidget {
       'RECIPIENT_PARCEL_DELIVERED' => (cs.success, 'circle-check'),
       'RECIPIENT_CONFIRMED' => (cs.success, 'badge-check'),
       'RECIPIENT_INVITATION_ACCEPTED' => (cs.success, 'badge-check'),
+      // Déclaration d'absence levée par le scan de départ : colis remis.
+      'SENDER_NOSHOW_WITHDRAWN' => (cs.success, 'circle-check'),
 
       // Perdu
       'BID_REJECTED' => (cs.error, 'circle-x'),
