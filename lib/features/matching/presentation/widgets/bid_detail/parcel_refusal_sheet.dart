@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/parcel_refusal/parcel_refusal_cubit.dart';
@@ -34,12 +35,7 @@ String parcelRefusalReasonLabel(
 /// heurte au départ du trajet, recharge le détail d'envoi ([BidBloc] de
 /// l'écran, s'il est là). Un refus confirmé est annoncé d'une snackbar.
 Future<void> openParcelRefusalSheet(BuildContext context, BidModel bid) async {
-  BidBloc? bidBloc;
-  try {
-    bidBloc = context.read<BidBloc>();
-  } on ProviderNotFoundException {
-    bidBloc = null;
-  }
+  final bidBloc = maybeRead<BidBloc>(context);
   final result = await ParcelRefusalSheet.show(context, bid: bid);
   if (result == null || !context.mounted) return;
   bidBloc?.add(BidDetailRequested(bid.id));

@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
@@ -56,12 +57,7 @@ Future<void> openTravelerTileSheet(
     ),
   );
 
-  BidBloc? bidBloc;
-  try {
-    bidBloc = context.read<BidBloc>();
-  } on ProviderNotFoundException {
-    bidBloc = null;
-  }
+  final bidBloc = maybeRead<BidBloc>(context);
 
   final title = switch (tile) {
     TravelerTile.lieux => l.travelerTileLieux,

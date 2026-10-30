@@ -1,9 +1,9 @@
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_request_sheet.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Entrée de la modification d'un colis accepté, dans le détail d'envoi de
 /// l'expéditeur : règle d'affichage et ouverture de la feuille « Modifier mon
@@ -17,12 +17,7 @@ abstract final class AmendmentEntry {
   /// quand une demande a été envoyée ou n'est plus possible. Aussi appelée par
   /// l'entrée du menu d'options.
   static Future<void> open(BuildContext context, BidModel bid) async {
-    BidBloc? bidBloc;
-    try {
-      bidBloc = context.read<BidBloc>();
-    } on ProviderNotFoundException {
-      bidBloc = null;
-    }
+    final bidBloc = maybeRead<BidBloc>(context);
     final changed = await AmendmentRequestSheet.show(context, bid: bid);
     if (changed) bidBloc?.add(BidDetailRequested(bid.id));
   }

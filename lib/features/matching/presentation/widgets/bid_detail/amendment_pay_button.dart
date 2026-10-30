@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
@@ -12,7 +13,6 @@ import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Ouverture de l'écran d'attente mobile money de la modification
@@ -97,7 +97,8 @@ class AmendmentPayButton extends StatelessWidget {
       bidId: bid.id,
       amendmentId: amendment.id,
     ).awaitingRoute;
-    final bloc = _bidBloc(context);
+    // Sans `BidBloc` (bouton hors de l'écran de détail) : rien à relire.
+    final bloc = maybeRead<BidBloc>(context);
     unawaited(
       (analytics ?? getIt<AnalyticsService>()).logEvent(
         AnalyticsEvents.bidAmendmentPaymentStarted,
@@ -114,13 +115,4 @@ class AmendmentPayButton extends StatelessWidget {
     BuildContext context,
     String route,
   ) => context.push<bool>(route);
-
-  BidBloc? _bidBloc(BuildContext context) {
-    try {
-      return context.read<BidBloc>();
-    } on ProviderNotFoundException {
-      // Bouton hors de l'écran de détail (tests) : rien à relire.
-      return null;
-    }
-  }
 }

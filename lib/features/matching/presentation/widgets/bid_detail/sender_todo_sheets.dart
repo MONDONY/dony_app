@@ -6,6 +6,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_errors_shown_above.dart';
@@ -66,8 +67,8 @@ Future<void> openSenderTodoSheet(
     ),
   );
 
-  final bidBloc = _maybeRead<BidBloc>(context);
-  final cancellationBloc = _maybeRead<CancellationBloc>(context);
+  final bidBloc = maybeRead<BidBloc>(context);
+  final cancellationBloc = maybeRead<CancellationBloc>(context);
   final live = bidBloc != null;
   final amendment = tile == SenderTodoTile.amendment;
 
@@ -103,14 +104,6 @@ Future<void> openSenderTodoSheet(
       closesOnDecision: cancellationBloc != null,
     ),
   );
-}
-
-T? _maybeRead<T>(BuildContext context) {
-  try {
-    return context.read<T>();
-  } on ProviderNotFoundException {
-    return null;
-  }
 }
 
 /// Pied du sheet de [tile] : les boutons de la carte, qui suivent le colis

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_accept_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
@@ -131,12 +132,7 @@ class AmendmentSenderCancelButton extends StatelessWidget {
   Future<void> _cancel(BuildContext context) async {
     final l = context.l10n;
     final cubit = context.read<AmendmentActionCubit>();
-    BidBloc? bidBloc;
-    try {
-      bidBloc = context.read<BidBloc>();
-    } on ProviderNotFoundException {
-      bidBloc = null;
-    }
+    final bidBloc = maybeRead<BidBloc>(context);
     final confirmed = await DonyDialog.show(
       context,
       title: l.amendmentCancelConfirmTitle,
@@ -271,13 +267,9 @@ class _AmendmentCardShell extends StatelessWidget {
   }
 }
 
-void _reloadBid(BuildContext context, String bidId) {
-  try {
-    context.read<BidBloc>().add(BidDetailRequested(bidId));
-  } on ProviderNotFoundException {
-    // Encart hors de l'écran de détail (tests) : rien à relire.
-  }
-}
+/// Relit le colis ; hors de l'écran de détail (sans `BidBloc`), rien à relire.
+void _reloadBid(BuildContext context, String bidId) =>
+    maybeRead<BidBloc>(context)?.add(BidDetailRequested(bidId));
 
 String _money(double amount, String currency, {bool signed = false}) =>
     '${signed ? '+' : ''}${formatSupplementAmount(amount, currency)}';

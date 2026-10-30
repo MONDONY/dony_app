@@ -6,6 +6,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cubit.dart';
@@ -60,13 +61,7 @@ Future<void> openTravelerTodoSheet(
     ),
   );
 
-  BidBloc? bidBloc;
-  try {
-    bidBloc = context.read<BidBloc>();
-  } on ProviderNotFoundException {
-    bidBloc = null;
-  }
-  final screenBidBloc = bidBloc;
+  final screenBidBloc = maybeRead<BidBloc>(context);
   final live = screenBidBloc != null;
 
   return DonyBottomSheet.show<void>(

@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -170,7 +171,7 @@ class _SupplementCard extends StatelessWidget {
 
 /// Encart hors de l'écran de détail (tests) : rien à relire.
 void _reloadBidOf(BuildContext context, String bidId) =>
-    _bidBlocOf(context)?.add(BidDetailRequested(bidId));
+    maybeRead<BidBloc>(context)?.add(BidDetailRequested(bidId));
 
 class _TravelerContent extends StatelessWidget {
   const _TravelerContent({
@@ -370,7 +371,7 @@ Future<void> _confirmWithdraw(
 ) async {
   final l = context.l10n;
   final cubit = context.read<SupplementActionCubit>();
-  final bidBloc = _bidBlocOf(context);
+  final bidBloc = maybeRead<BidBloc>(context);
   final confirmed = await DonyDialog.show(
     context,
     title: l.supplementWithdrawConfirmTitle,
@@ -382,14 +383,6 @@ Future<void> _confirmWithdraw(
   if (confirmed != true || !context.mounted) return;
   await cubit.withdraw(bid, supplement);
   if (!context.mounted) bidBloc?.add(BidDetailRequested(bid.id));
-}
-
-BidBloc? _bidBlocOf(BuildContext context) {
-  try {
-    return context.read<BidBloc>();
-  } on ProviderNotFoundException {
-    return null;
-  }
 }
 
 /// Espèces, demande close : ce qu'il advient de la commission du
@@ -474,7 +467,7 @@ class SupplementCommissionButtons extends StatelessWidget {
 
   Future<void> _confirm(BuildContext context) async {
     final cubit = context.read<SupplementCommissionCubit>();
-    final bidBloc = _bidBlocOf(context);
+    final bidBloc = maybeRead<BidBloc>(context);
     if (!cubit.beginAuthorization()) return;
     final authenticated = await (authorize ?? defaultSupplementAuthorize)(
       context,
