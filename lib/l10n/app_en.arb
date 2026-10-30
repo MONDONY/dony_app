@@ -11097,6 +11097,7 @@
   "errorHandoverAmendmentPendingMessage": "An edit to the parcel is awaiting the traveler's reply. Scan the parcel once they've replied.",
   "errorHandoverSenderNoShowPendingTitle": "Handover blocked",
   "errorHandoverSenderNoShowPendingMessage": "Your absence report is being reviewed by the Yadony team: the handover is waiting for its decision. Contact support if the sender did show up.",
+  "bidDetailSenderHandoverBlockedByNoShow": "The Yadony team is reviewing the dispute: the handover is waiting for its decision.",
   "errorNoShowAlreadyDecidedTitle": "Report already handled",
   "errorNoShowAlreadyDecidedMessage": "This report has already been handled.",
   "amendmentEntryButton": "Add kilos or items",

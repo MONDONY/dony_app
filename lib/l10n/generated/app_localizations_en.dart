@@ -22221,6 +22221,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your absence report is being reviewed by the Yadony team: the handover is waiting for its decision. Contact support if the sender did show up.';
 
   @override
+  String get bidDetailSenderHandoverBlockedByNoShow =>
+      'The Yadony team is reviewing the dispute: the handover is waiting for its decision.';
+
+  @override
   String get errorNoShowAlreadyDecidedTitle => 'Report already handled';
 
   @override

@@ -22373,6 +22373,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre déclaration d\'absence est examinée par l\'équipe Yadony : la remise attend sa décision. Contactez le support si l\'expéditeur est venu.';
 
   @override
+  String get bidDetailSenderHandoverBlockedByNoShow =>
+      'L\'équipe Yadony examine la contestation : la remise attend sa décision.';
+
+  @override
   String get errorNoShowAlreadyDecidedTitle => 'Déclaration déjà traitée';
 
   @override

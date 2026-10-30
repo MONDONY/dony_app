@@ -7769,6 +7769,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorHandoverSenderNoShowPendingTitle,
   'errorHandoverSenderNoShowPendingMessage': (l) =>
       l.errorHandoverSenderNoShowPendingMessage,
+  'bidDetailSenderHandoverBlockedByNoShow': (l) =>
+      l.bidDetailSenderHandoverBlockedByNoShow,
   'errorNoShowAlreadyDecidedTitle': (l) => l.errorNoShowAlreadyDecidedTitle,
   'errorNoShowAlreadyDecidedMessage': (l) => l.errorNoShowAlreadyDecidedMessage,
   'amendmentEntryButton': (l) => l.amendmentEntryButton,

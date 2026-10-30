@@ -36054,6 +36054,12 @@ abstract class AppLocalizations {
   /// **'Votre déclaration d\'absence est examinée par l\'équipe Yadony : la remise attend sa décision. Contactez le support si l\'expéditeur est venu.'**
   String get errorHandoverSenderNoShowPendingMessage;
 
+  /// Carte d'information du corps de la fiche colis (vue expéditeur, sender_info_cards.dart) : la déclaration d'absence est contestée ou confirmée, colis encore ACCEPTED ; ni QR au footer ni au talon
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'équipe Yadony examine la contestation : la remise attend sa décision.'**
+  String get bidDetailSenderHandoverBlockedByNoShow;
+
   /// ErrorCatalog noshow-already-decided : l'expéditeur conteste une déclaration d'absence déjà levée par le scan de départ ou tranchée par l'équipe (409). La fiche du colis est relue.
   ///
   /// In fr, this message translates to:

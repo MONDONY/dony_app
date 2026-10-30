@@ -1191,10 +1191,17 @@ void main() {
   // Décision du propriétaire : colis ACCEPTED, le QR du colis reste au talon
   // quand le footer ne propose pas « Afficher le QR de remise » (paiement
   // carte introuvable, déclaration d'absence en attente). Partout ailleurs,
-  // pas de QR au talon avant la remise.
+  // pas de QR au talon avant la remise. Déclaration contestée ou confirmée :
+  // le QR n'est proposé nulle part, le back refuserait le scan.
   group('leavesQrToTalon', () {
     const methods = BidPaymentMethod.values;
-    const absences = <String?>[null, 'PENDING_CONFIRMATION', 'CONTESTED'];
+    const absences = <String?>[
+      null,
+      'PENDING_CONFIRMATION',
+      'CONTESTED',
+      'CONFIRMED',
+      'RESOLVED',
+    ];
     // (paiement lu, paiement trouvé)
     const payments = <(bool, bool)>[
       (false, false),
@@ -1205,9 +1212,11 @@ void main() {
     for (final method in methods) {
       for (final absence in absences) {
         for (final (loaded, found) in payments) {
+          final blocked = absence == 'CONTESTED' || absence == 'CONFIRMED';
           final expected =
-              absence == 'PENDING_CONFIRMATION' ||
-              (method == BidPaymentMethod.stripe && loaded && !found);
+              !blocked &&
+              (absence == 'PENDING_CONFIRMATION' ||
+                  (method == BidPaymentMethod.stripe && loaded && !found));
           testWidgets(
             'ACCEPTED ${method.name}, absence ${absence ?? 'aucune'}, '
             'paiement ${loaded ? (found ? 'trouvé' : 'introuvable') : 'en lecture'}'
@@ -1250,7 +1259,11 @@ void main() {
                   .evaluate()
                   .isNotEmpty;
               expect(footerQr && expected, isFalse);
-              if (loaded) expect(footerQr || expected, isTrue);
+              if (blocked) {
+                expect(footerQr, isFalse);
+              } else if (loaded) {
+                expect(footerQr || expected, isTrue);
+              }
             },
           );
         }
@@ -1350,5 +1363,82 @@ void main() {
         }
       });
     }
+  });
+
+  // Colis ACCEPTED payé par carte, paiement lu : ce que montrent le footer et
+  // le talon pour chaque état de la déclaration d'absence de l'expéditeur.
+  // Contestée ou confirmée : ni QR ni bouton, aucun footer réservé ; la carte
+  // d'information du corps dit que l'équipe examine la déclaration.
+  group('déclaration d\'absence × paiement : footer et talon', () {
+    const qr = 'Afficher le QR de remise';
+    const pay = 'Payer mon envoi';
+    // (déclaration, paiement trouvé, bouton du footer, QR au talon, footer)
+    const table = <(String?, bool, String?, bool, bool)>[
+      (null, true, qr, false, true),
+      (null, false, pay, true, true),
+      ('PENDING_CONFIRMATION', true, null, true, false),
+      ('PENDING_CONFIRMATION', false, null, true, false),
+      ('CONTESTED', true, null, false, false),
+      ('CONTESTED', false, null, false, false),
+      ('CONFIRMED', true, null, false, false),
+      ('CONFIRMED', false, null, false, false),
+      ('RESOLVED', true, qr, false, true),
+      ('RESOLVED', false, pay, true, true),
+    ];
+    for (final (absence, found, button, talon, footer) in table) {
+      testWidgets(
+        '${absence ?? 'aucune'}, paiement ${found ? 'trouvé' : 'introuvable'}'
+        ' → footer ${button ?? 'vide'}, ${talon ? 'QR au talon' : 'pas de QR au talon'}',
+        (tester) async {
+          final bid = _bid(
+            status: 'ACCEPTED',
+            cancellationNoShowStatus: absence,
+          );
+          final payment = found ? _payment() : null;
+          expect(
+            SenderStickyBar.leavesQrToTalon(
+              bid,
+              paymentLoaded: true,
+              existingPayment: payment,
+            ),
+            talon,
+          );
+          expect(SenderStickyBar.hasAction(bid), footer);
+          expect(
+            SenderStickyBar.handoverBlockedByNoShow(bid),
+            absence == 'CONTESTED' || absence == 'CONFIRMED',
+          );
+
+          final bloc = _MockBidBloc();
+          whenListen<BidState>(
+            bloc,
+            const Stream.empty(),
+            initialState: BidInitial(),
+          );
+          await tester.pumpWidget(
+            _host(bloc, bid, paymentLoaded: true, existingPayment: payment),
+          );
+          await tester.pump();
+          expect(find.text(qr), button == qr ? findsOneWidget : findsNothing);
+          expect(find.text(pay), button == pay ? findsOneWidget : findsNothing);
+          if (button == null) {
+            expect(find.byType(DonyButton), findsNothing);
+            expect(tester.getSize(find.byType(SenderStickyBar)).height, 0);
+          }
+        },
+      );
+    }
+
+    test('hors ACCEPTED, une déclaration tranchée ne bloque rien', () {
+      for (final status in ['HANDED_OVER', 'CANCELLED', 'NO_SHOW']) {
+        expect(
+          SenderStickyBar.handoverBlockedByNoShow(
+            _bid(status: status, cancellationNoShowStatus: 'CONFIRMED'),
+          ),
+          isFalse,
+          reason: status,
+        );
+      }
+    });
   });
 }

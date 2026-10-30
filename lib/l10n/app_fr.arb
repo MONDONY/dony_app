@@ -22553,6 +22553,8 @@
   "@errorHandoverSenderNoShowPendingTitle": {"description": "ErrorCatalog handover-sender-noshow-pending : scan DEPART refusé (409), la déclaration d'absence de l'expéditeur est contestée ou confirmée, l'équipe tranche"},
   "errorHandoverSenderNoShowPendingMessage": "Votre déclaration d'absence est examinée par l'équipe Yadony : la remise attend sa décision. Contactez le support si l'expéditeur est venu.",
   "@errorHandoverSenderNoShowPendingMessage": {"description": "ErrorCatalog handover-sender-noshow-pending : message du scan DEPART refusé, déclaration d'absence contestée ou confirmée. Formulation neutre qui couvre les deux cas, alignée sur le detail du back"},
+  "bidDetailSenderHandoverBlockedByNoShow": "L'équipe Yadony examine la contestation : la remise attend sa décision.",
+  "@bidDetailSenderHandoverBlockedByNoShow": {"description": "Carte d'information du corps de la fiche colis (vue expéditeur, sender_info_cards.dart) : la déclaration d'absence est contestée ou confirmée, colis encore ACCEPTED ; ni QR au footer ni au talon"},
   "errorNoShowAlreadyDecidedTitle": "Déclaration déjà traitée",
   "@errorNoShowAlreadyDecidedTitle": {"description": "ErrorCatalog noshow-already-decided : l'expéditeur conteste une déclaration d'absence déjà levée par le scan de départ ou tranchée par l'équipe (409). La fiche du colis est relue."},
   "errorNoShowAlreadyDecidedMessage": "Cette déclaration a déjà été traitée.",

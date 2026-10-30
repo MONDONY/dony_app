@@ -67,7 +67,8 @@ class SenderStickyBar extends StatelessWidget {
   /// Do NOT "synchronise" this gate with [_resolve]: it is a *superset*
   /// of what [_resolve] ultimately picks, and that is by design.
   static bool hasAction(BidModel bid) {
-    if (bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION') {
+    if (bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION' ||
+        handoverBlockedByNoShow(bid)) {
       return false;
     }
 
@@ -136,6 +137,16 @@ class SenderStickyBar extends StatelessWidget {
 
   // ── Action resolver ──────────────────────────────────────────────────────────
 
+  /// Colis ACCEPTED dont la déclaration d'absence de l'expéditeur est
+  /// contestée ou confirmée : l'équipe tranche et le back refuserait le scan
+  /// de départ (409 `handover-sender-noshow-pending`). Le QR n'est proposé ni
+  /// au footer ni au talon, et le footer ne réserve aucune place ; une carte
+  /// d'information du corps le dit (`SenderHandoverBlockedCard`).
+  static bool handoverBlockedByNoShow(BidModel bid) =>
+      bid.status == 'ACCEPTED' &&
+      (bid.cancellationNoShowStatus == 'CONTESTED' ||
+          bid.cancellationNoShowStatus == 'CONFIRMED');
+
   /// Colis ACCEPTED dont le footer ne propose pas « Afficher le QR de
   /// remise » : paiement carte introuvable (« Payer mon envoi ») ou
   /// déclaration d'absence en attente (pas de footer). Le QR du colis reste
@@ -143,7 +154,8 @@ class SenderStickyBar extends StatelessWidget {
   /// du paiement, non : le footer le proposera dans le cas courant, le talon
   /// ne s'ouvre pas pour se refermer aussitôt. Un supplément ou une
   /// modification à payer ne le laisse pas non plus : le voyageur ne peut pas
-  /// scanner tant qu'ils attendent.
+  /// scanner tant qu'ils attendent. Une déclaration contestée ou confirmée non
+  /// plus ([handoverBlockedByNoShow]).
   ///
   /// Lit le même résolveur que la barre ([_resolve]) : footer et talon ne
   /// peuvent pas diverger.
@@ -171,6 +183,12 @@ class SenderStickyBar extends StatelessWidget {
     // 1. PENDING_CONFIRMATION: no action (hero handles it)
     if (bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION') {
       return _SenderFooterAction.none;
+    }
+
+    // 1.1 Déclaration contestée ou confirmée : remise bloquée, ni QR au
+    //     footer ni au talon (pas `none`, qui laisse le QR au talon).
+    if (handoverBlockedByNoShow(bid)) {
+      return _SenderFooterAction.blockedByNoShow;
     }
 
     final status = bid.status;
@@ -250,7 +268,7 @@ class SenderStickyBar extends StatelessWidget {
       paymentLoaded: paymentLoaded,
       existingPayment: existingPayment,
     )) {
-      _SenderFooterAction.none => null,
+      _SenderFooterAction.none || _SenderFooterAction.blockedByNoShow => null,
       _SenderFooterAction.supplementPay => SupplementPayButton(
         key: ValueKey('supplement-pay-${bid.supplement!.id}'),
         bid: bid,
@@ -393,6 +411,10 @@ class SenderStickyBar extends StatelessWidget {
 /// lit seulement si le QR lui revient ([SenderStickyBar.leavesQrToTalon]).
 enum _SenderFooterAction {
   none,
+
+  /// Déclaration d'absence contestée ou confirmée : rien au footer, et pas
+  /// de QR au talon ([SenderStickyBar.handoverBlockedByNoShow]).
+  blockedByNoShow,
   supplementPay,
   amendmentPay,
   mobileMoneyPay,
