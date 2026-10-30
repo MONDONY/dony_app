@@ -51,13 +51,21 @@ class TravelerHeroCard extends StatelessWidget {
         DateTime.now().isAfter(deadline);
   }
 
+  /// Priorité 2 : date limite passée et aucune déclaration d'absence au dépôt
+  /// pour ce colis. `cancellationNoShowStatus` est celui de la déclaration
+  /// HANDOVER, la seule possible par colis (UNIQUE(bid, scope) côté back) :
+  /// levée (`RESOLVED`) ou tranchée (`CONFIRMED`), en signaler une autre
+  /// répondrait 409 `noshow-already-reported`.
+  static bool canReportSenderNoShow(BidModel bid) =>
+      windowExpired(bid) && bid.cancellationNoShowStatus == null;
+
   /// La carte rend quelque chose (sinon `SizedBox.shrink`) : un signalement en
   /// cours, la date limite dépassée ou un contenu de priorité 3
   /// ([_contentKind]).
   static bool isShown(BidModel bid) =>
       senderNoShowOpen(bid) ||
       _deliveryNoShowOpen(bid) ||
-      windowExpired(bid) ||
+      canReportSenderNoShow(bid) ||
       _contentKind(bid) != null;
 
   /// La carte porte un bouton (un `footer`) : elle va dans « À traiter » au
@@ -69,8 +77,9 @@ class TravelerHeroCard extends StatelessWidget {
   ///   contestée, alerte rouge sans bouton (« contestation envoyée ») →
   ///   `false` ; signalée par le voyageur lui-même : `wait`, sans bouton →
   ///   `false` ;
-  /// - 2, date limite de dépôt dépassée (ACCEPTED) : « Signaler l'absence de
-  ///   l'expéditeur » → `true` ;
+  /// - 2, date limite de dépôt dépassée (ACCEPTED), aucune déclaration
+  ///   ([canReportSenderNoShow]) : « Signaler l'absence de l'expéditeur » →
+  ///   `true` ;
   /// - 3, mapping par statut (demande à décider, attente du paiement) :
   ///   information seule, sans bouton → `false`.
   static bool hasAction(BidModel bid) {
@@ -79,7 +88,7 @@ class TravelerHeroCard extends StatelessWidget {
       return bid.deliveryNoShowReportedByTraveler != true &&
           bid.deliveryNoShowStatus != 'CONTESTED';
     }
-    return windowExpired(bid);
+    return canReportSenderNoShow(bid);
   }
 
   @override
@@ -119,8 +128,8 @@ class TravelerHeroCard extends StatelessWidget {
       );
     }
 
-    // ── Priorité 2 : date limite de dépôt dépassée ────────────────────────
-    if (windowExpired(bid)) {
+    // ── Priorité 2 : date limite de dépôt dépassée, rien de déclaré ───────
+    if (canReportSenderNoShow(bid)) {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
         child: _WindowExpiredHero(
