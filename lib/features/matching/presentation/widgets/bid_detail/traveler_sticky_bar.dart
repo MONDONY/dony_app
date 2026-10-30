@@ -52,6 +52,15 @@ class TravelerStickyBar extends StatelessWidget {
       !scanBlockedBySupplement(bid) &&
       bid.amendments.any((a) => a.blocksHandover);
 
+  /// La déclaration d'absence de l'expéditeur est contestée ou confirmée :
+  /// l'équipe tranche, le back refuserait le scan de départ (409
+  /// `handover-sender-noshow-pending`), il n'est pas proposé. Une déclaration
+  /// encore en attente (`PENDING_CONFIRMATION`) ne bloque pas : le scan la
+  /// lève (`RESOLVED`).
+  static bool scanBlockedBySenderNoShow(BidModel bid) =>
+      bid.cancellationNoShowStatus == 'CONTESTED' ||
+      bid.cancellationNoShowStatus == 'CONFIRMED';
+
   /// Le bouton de remise est affiché (colis récupéré, en route ou arrivé) :
   /// il dépend du verrou [DeliveryDepartureGate].
   static bool hasDeliveryStep(BidModel bid) =>
@@ -74,22 +83,17 @@ class TravelerStickyBar extends StatelessWidget {
       // AWAITING_PAYMENT et REJECTED n'ont pas de footer : l'attente est une
       // carte du corps ([awaitingMobileMoneyPayment]), « Supprimer cette
       // demande » une entrée du menu ⋮.
-      // ACCEPTED : présence confirmée, « Lire le QR du colis » ; sinon
-      // « Confirmer ma présence » jusqu'à la date limite, puis le scan (le
-      // back accepte encore la remise), sauf si une absence de l'expéditeur
-      // est déclarée (en attente ou contestée) : alors rien. Risque connu :
-      // le back ne bloque pas le scan pendant une déclaration d'absence
-      // ouverte, voir la PR.
+      // ACCEPTED : présence non confirmée, « Confirmer ma présence » jusqu'à
+      // la date limite ; sinon (présence confirmée, ou date limite passée :
+      // le back accepte encore la remise) « Lire le QR du colis ». Une
+      // déclaration d'absence de l'expéditeur en attente ne l'empêche pas :
+      // le scan de départ la lève. Contestée ou confirmée, rien
+      // ([scanBlockedBySenderNoShow]).
       case 'ACCEPTED':
-        if (bid.voyageurConfirmed) {
-          return _TravelerAction.scan;
-        }
-        if (!TravelerHeroCard.windowExpired(bid)) {
+        if (!bid.voyageurConfirmed && !TravelerHeroCard.windowExpired(bid)) {
           return _TravelerAction.confirmPresence;
         }
-        return TravelerHeroCard.senderNoShowOpen(bid)
-            ? null
-            : _TravelerAction.scan;
+        return scanBlockedBySenderNoShow(bid) ? null : _TravelerAction.scan;
       // Colis récupéré (départ scanné) : la seule étape obligatoire restante
       // est la remise au destinataire. Le scan Transit est facultatif : entrée
       // du menu ⋮ tant qu'il n'a pas été fait (HANDED_OVER).

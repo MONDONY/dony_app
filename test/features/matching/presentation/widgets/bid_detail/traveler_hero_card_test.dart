@@ -681,7 +681,7 @@ void main() {
     final past = DateTime.now().subtract(const Duration(hours: 2));
     final future = DateTime.now().add(const Duration(days: 1));
 
-    // Prédicats lus aussi par le footer (`TravelerStickyBar`).
+    // `windowExpired` est lu aussi par le footer (`TravelerStickyBar`).
     test('senderNoShowOpen : absence de l\'expéditeur en attente ou '
         'contestée', () {
       for (final status in ['PENDING_CONFIRMATION', 'CONTESTED']) {

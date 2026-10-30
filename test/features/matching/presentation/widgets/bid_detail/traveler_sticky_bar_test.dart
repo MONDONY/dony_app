@@ -291,27 +291,32 @@ void main() {
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
-  // ACCEPTED : confirmé ou non × avant ou après la date limite × absence de
-  // l'expéditeur signalée ou contestée. Passé la date limite (ou une absence
-  // signalée), la présence n'est plus à confirmer mais le colis peut encore
-  // être remis : « Lire le QR du colis », le héros d'alerte reste dans
-  // « À traiter ».
+  // ACCEPTED : confirmé ou non × avant ou après la date limite × état de la
+  // déclaration d'absence de l'expéditeur. Passé la date limite, la présence
+  // n'est plus à confirmer mais le colis peut encore être remis : « Lire le
+  // QR du colis », le héros d'alerte reste dans « À traiter ».
   group('ACCEPTED : présence, date limite, absence signalée', () {
     final past = DateTime.now().subtract(const Duration(hours: 1));
     final future = DateTime.now().add(const Duration(hours: 2));
     // (confirmé / non confirmé) × (avant / après la date limite) ×
-    // (déclaration d'absence de l'expéditeur ouverte / aucune).
-    // Déclaration ouverte, présence non confirmée : jamais de scan. Le back ne
-    // regarde pas la déclaration au scan de départ et ne la clôt pas : sans
-    // réponse sous 24 h, l'absence serait confirmée, le séquestre remboursé et
-    // l'expéditeur pénalisé alors que le colis voyage.
-    // Déclaration ouverte, présence confirmée : scan proposé, comme avant la
-    // branche (risque connu, à traiter côté back).
+    // (PENDING_CONFIRMATION / CONTESTED / CONFIRMED / RESOLVED / aucune).
+    // Déclaration en attente (PENDING_CONFIRMATION) : le scan est proposé, le
+    // back la lève au scan de départ (RESOLVED). Contestée ou confirmée :
+    // jamais de scan, le back le refuserait (409
+    // `handover-sender-noshow-pending`) tant que l'équipe n'a pas tranché.
+    // Avant la date limite, la présence reste à confirmer quoi qu'il arrive.
+    const statuses = [
+      null,
+      'PENDING_CONFIRMATION',
+      'CONTESTED',
+      'CONFIRMED',
+      'RESOLVED',
+    ];
     final cases = <String, (BidModel, String)>{
       'non confirmé, sans date limite': (_bid(status: 'ACCEPTED'), 'presence'),
       for (final confirmed in [false, true])
         for (final (moment, deadline) in [('avant', future), ('après', past)])
-          for (final ns in [null, 'PENDING_CONFIRMATION', 'CONTESTED'])
+          for (final ns in statuses)
             '${confirmed ? 'confirmé' : 'non confirmé'}, $moment la date '
                 'limite, ${ns == null ? 'aucune déclaration' : 'absence $ns'}': (
               _bid(
@@ -320,11 +325,14 @@ void main() {
                 windowEnd: deadline,
                 cancellationNoShowStatus: ns,
               ),
-              switch ((confirmed, deadline == past, ns != null)) {
-                (true, _, _) => 'scan',
+              switch ((
+                confirmed,
+                deadline == past,
+                ns == 'CONTESTED' || ns == 'CONFIRMED',
+              )) {
                 (false, false, _) => 'presence',
-                (false, true, false) => 'scan',
-                (false, true, true) => 'none',
+                (_, _, true) => 'none',
+                _ => 'scan',
               },
             ),
     };
@@ -349,6 +357,18 @@ void main() {
         }
       });
     }
+
+    test('scanBlockedBySenderNoShow : contestée ou confirmée seulement', () {
+      for (final ns in statuses) {
+        expect(
+          TravelerStickyBar.scanBlockedBySenderNoShow(
+            _bid(status: 'ACCEPTED', cancellationNoShowStatus: ns),
+          ),
+          ns == 'CONTESTED' || ns == 'CONFIRMED',
+          reason: '$ns',
+        );
+      }
+    });
 
     testWidgets('en anglais : date limite dépassée → « Scan the parcel QR »', (
       tester,

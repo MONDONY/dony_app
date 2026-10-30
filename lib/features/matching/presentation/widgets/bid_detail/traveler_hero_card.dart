@@ -31,8 +31,8 @@ class TravelerHeroCard extends StatelessWidget {
   final BidModel bid;
 
   /// Priorité 1 : absence de l'expéditeur au dépôt déjà signalée (en attente
-  /// de réponse ou contestée). Lue aussi par le footer, qui ne propose alors
-  /// pas le scan après la date limite.
+  /// de réponse ou contestée). Levée par le scan de départ, elle passe en
+  /// `RESOLVED` et la carte disparaît.
   static bool senderNoShowOpen(BidModel bid) =>
       bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION' ||
       bid.cancellationNoShowStatus == 'CONTESTED';
