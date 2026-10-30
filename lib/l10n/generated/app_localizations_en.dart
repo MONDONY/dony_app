@@ -22809,6 +22809,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripDepartConfirmedSnackbar => 'Noted, have a safe trip!';
 
   @override
+  String get tripTodoRequestsTitle => 'Requests to review';
+
+  @override
+  String tripTodoRequestsSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count requests are waiting for your reply',
+      one: 'One request is waiting for your reply',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoRequestsHint =>
+      'You accept or decline each request from the requests list.';
+
+  @override
+  String get tripTodoDepartSummary => 'Confirm that your trip has started';
+
+  @override
+  String get tripTodoDepartIntro =>
+      'Confirm your departure: your senders see that the trip is under way.';
+
+  @override
+  String get tripTodoCardReadySummary => 'Accept cards on this trip too';
+
+  @override
+  String get tripTodoCardActivateSummary =>
+      'Get more parcels with card payments';
+
+  @override
+  String get tripStatusFullMessage =>
+      'Trip full: no more requests can come in. You can postpone the departure. To cancel, contact support.';
+
+  @override
+  String get tripStatusInProgressMessage =>
+      'Trip in progress: your parcels are travelling with you.';
+
+  @override
+  String get tripStatusCompletedMessage =>
+      'Trip completed: it no longer receives requests.';
+
+  @override
+  String get tripStatusCancelledMessage =>
+      'Trip cancelled. Parcels already handed over follow the return procedure.';
+
+  @override
+  String get tripStatusRemovedMessage =>
+      'This trip was removed by the Yadony team. Contact support.';
+
+  @override
   String get travelerTrackingBadgeEnRoute => 'On the way';
 
   @override

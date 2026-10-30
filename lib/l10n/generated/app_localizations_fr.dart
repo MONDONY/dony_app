@@ -22973,6 +22973,59 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripDepartConfirmedSnackbar => 'C\'est noté, bon voyage !';
 
   @override
+  String get tripTodoRequestsTitle => 'Demandes à traiter';
+
+  @override
+  String tripTodoRequestsSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count demandes attendent votre réponse',
+      one: 'Une demande attend votre réponse',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoRequestsHint =>
+      'Vous acceptez ou refusez chaque demande depuis la liste des demandes.';
+
+  @override
+  String get tripTodoDepartSummary => 'Confirmez le départ de votre trajet';
+
+  @override
+  String get tripTodoDepartIntro =>
+      'Confirmez votre départ : vos expéditeurs voient que le trajet est lancé.';
+
+  @override
+  String get tripTodoCardReadySummary =>
+      'Acceptez aussi la carte sur ce trajet';
+
+  @override
+  String get tripTodoCardActivateSummary =>
+      'Recevez plus de colis grâce à la carte';
+
+  @override
+  String get tripStatusFullMessage =>
+      'Trajet complet : plus de demande possible. Vous pouvez reporter le départ. Pour annuler, contactez le support.';
+
+  @override
+  String get tripStatusInProgressMessage =>
+      'Trajet en cours : vos colis voyagent avec vous.';
+
+  @override
+  String get tripStatusCompletedMessage =>
+      'Trajet terminé : il ne reçoit plus de demande.';
+
+  @override
+  String get tripStatusCancelledMessage =>
+      'Trajet annulé. Les colis déjà remis suivent la procédure de retour.';
+
+  @override
+  String get tripStatusRemovedMessage =>
+      'Ce trajet a été retiré par l\'équipe Yadony. Contactez le support.';
+
+  @override
   String get travelerTrackingBadgeEnRoute => 'En route';
 
   @override

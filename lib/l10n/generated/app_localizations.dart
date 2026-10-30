@@ -36924,6 +36924,78 @@ abstract class AppLocalizations {
   /// **'C\'est noté, bon voyage !'**
   String get tripDepartConfirmedSnackbar;
 
+  /// Écran du trajet (propriétaire), « À traiter » : titre de la tuile et du sheet des demandes en attente de réponse (trip_todo_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes à traiter'**
+  String get tripTodoRequestsTitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : résumé de la tuile des demandes, avec leur nombre (trip_todo_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une demande attend votre réponse} other{{count} demandes attendent votre réponse}}'**
+  String tripTodoRequestsSummary(int count);
+
+  /// Sheet « Demandes à traiter » de l'écran du trajet : phrase sous la liste des demandes (trip_todo_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous acceptez ou refusez chaque demande depuis la liste des demandes.'**
+  String get tripTodoRequestsHint;
+
+  /// Écran du trajet (propriétaire), « À traiter » : résumé de la tuile « Je pars » (trip_todo_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmez le départ de votre trajet'**
+  String get tripTodoDepartSummary;
+
+  /// Sheet « Je pars » de l'écran du trajet : première phrase, avant l'explication du partage de l'avancée (trip_todo_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmez votre départ : vos expéditeurs voient que le trajet est lancé.'**
+  String get tripTodoDepartIntro;
+
+  /// Écran du trajet (propriétaire), « À traiter » : résumé de la tuile « Ajouter la carte à ce trajet », trajet en espèces seules et paiements par carte déjà activés sur le compte (trip_todo_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Acceptez aussi la carte sur ce trajet'**
+  String get tripTodoCardReadySummary;
+
+  /// Écran du trajet (propriétaire), « À traiter » : résumé de la tuile « Activer les paiements par carte », trajet en espèces seules et paiements par carte pas encore activés (trip_todo_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevez plus de colis grâce à la carte'**
+  String get tripTodoCardActivateSummary;
+
+  /// Carte de statut de l'écran du trajet (propriétaire), trajet FULL : le back refuse l'annulation d'un trajet complet (trip_status_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet complet : plus de demande possible. Vous pouvez reporter le départ. Pour annuler, contactez le support.'**
+  String get tripStatusFullMessage;
+
+  /// Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS (trip_status_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet en cours : vos colis voyagent avec vous.'**
+  String get tripStatusInProgressMessage;
+
+  /// Carte de statut de l'écran du trajet (propriétaire), trajet COMPLETED (trip_status_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet terminé : il ne reçoit plus de demande.'**
+  String get tripStatusCompletedMessage;
+
+  /// Carte de statut de l'écran du trajet (propriétaire), trajet CANCELLED (trip_status_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet annulé. Les colis déjà remis suivent la procédure de retour.'**
+  String get tripStatusCancelledMessage;
+
+  /// Carte de statut de l'écran du trajet (propriétaire), trajet REMOVED_BY_ADMIN, retiré par la modération (trip_status_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet a été retiré par l\'équipe Yadony. Contactez le support.'**
+  String get tripStatusRemovedMessage;
+
   /// Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart).
   ///
   /// In fr, this message translates to:
