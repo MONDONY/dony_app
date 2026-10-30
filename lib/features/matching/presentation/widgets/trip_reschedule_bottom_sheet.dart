@@ -71,6 +71,7 @@ class TripRescheduleBottomSheet extends StatefulWidget {
       context,
       title: l.tripRescheduleTitle,
       subtitle: l.tripRescheduleSubtitle,
+      analyticsName: 'trip-owner/reschedule',
       wrapper: (child) =>
           BlocProvider.value(value: announcementBloc, child: child),
       stickyBottom: ValueListenableBuilder<bool>(

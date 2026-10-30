@@ -1,14 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_reschedule_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -71,19 +70,11 @@ class OwnerActionGrid extends StatelessWidget {
     final isCancelled = a.status == 'CANCELLED';
     final canDelete = canEdit || isCancelled;
     final isActive = a.status == 'ACTIVE';
-    // Report (vol annulé, voyage repoussé) : là où « Modifier » est bloqué par
-    // des demandes ou des colis, sur un trajet encore à venir ou passé « en
-    // cours » à tort.
-    final canReschedule =
-        hasBids && const {'ACTIVE', 'FULL', 'IN_PROGRESS'}.contains(a.status);
-    // Un colis en route, arrivé ou livré : le voyage a eu lieu, le report est
-    // verrouillé (FLUTTER-BD). Même règle que le back
-    // (`TripRescheduleRules.BLOCKING_STATUSES`), qui refuse de toute façon.
-    final parcelOnTheWay =
-        loadedBids?.any(
-          (b) => _rescheduleBlockingStatuses.contains(b.status),
-        ) ??
-        false;
+    // Report (vol annulé, voyage repoussé), verrouillé dès qu'un colis est en
+    // route (FLUTTER-BD) ou après deux reports : voir [tripCanReschedule] et
+    // [tripRescheduleBlockFor].
+    final canReschedule = tripCanReschedule(a, hasBids);
+    final rescheduleBlock = tripRescheduleBlockFor(a, loadedBids);
 
     // Tuiles présentes selon le statut. Construites dans une liste pour éviter
     // les demi-tuiles vides (ex. trajet COMPLETED/FULL n'a ni Demandes ni
@@ -114,20 +105,7 @@ class OwnerActionGrid extends StatelessWidget {
           iconAsset: 'eye-off',
           label: l.tripOwnerUnpublishTile,
           accent: cs.onSurface,
-          onTap: () async {
-            final confirmed = await DonyDialog.show(
-              context,
-              title: l.tripOwnerUnpublishDialogTitle,
-              message: l.tripOwnerUnpublishDialogMessage,
-              confirmLabel: l.tripOwnerUnpublishTile,
-              iconAsset: 'eye-off',
-            );
-            if (confirmed == true && context.mounted) {
-              context.read<AnnouncementBloc>().add(
-                AnnouncementUnpublishRequested(a.id),
-              );
-            }
-          },
+          onTap: () => confirmTripUnpublish(context, a),
         ),
       // ── Demandes → Activité › Demandes « À traiter » de ce trajet ──
       // Toujours active : grisée à zéro, elle laissait croire à une panne
@@ -167,12 +145,12 @@ class OwnerActionGrid extends StatelessWidget {
           iconAsset: 'calendar-sync',
           label: l.tripRescheduleTile,
           accent: cs.primary,
-          onTap: parcelOnTheWay || a.remainingReschedules == 0
+          onTap: rescheduleBlock != null
               ? null
               : () => TripRescheduleBottomSheet.show(context, announcement: a),
-          disabledMessage: parcelOnTheWay
-              ? l.tripRescheduleParcelOnTheWayMessage
-              : l.tripRescheduleLimitReachedMessage,
+          disabledMessage: rescheduleBlock == null
+              ? null
+              : tripRescheduleBlockMessage(l, rescheduleBlock),
         ),
       // ── Supprimer (si supprimable) ou Annuler (si ACTIVE non supprimable) ──
       if (canDelete)
@@ -180,33 +158,14 @@ class OwnerActionGrid extends StatelessWidget {
           iconAsset: 'trash-2',
           label: l.commonDelete,
           accent: cs.error,
-          onTap: () async {
-            final confirmed = await DonyDialog.show(
-              context,
-              title: l.tripOwnerDeleteDialogTitle,
-              message: isCancelled
-                  ? l.tripOwnerDeleteCancelledMessage
-                  : l.tripOwnerDeleteActiveMessage,
-              confirmLabel: l.commonDelete,
-              variant: DonyDialogVariant.destructive,
-              iconAsset: 'trash-2',
-            );
-            if (confirmed == true && context.mounted) {
-              final following = await askCancelFollowingLegs(context, a.id);
-              if (!context.mounted || following == null) return;
-              context.read<AnnouncementBloc>().add(
-                AnnouncementDeleteRequested(a.id, followingLegIds: following),
-              );
-            }
-          },
+          onTap: () => confirmTripDelete(context, a),
         )
       else if (isActive)
         _tile(
           iconAsset: 'circle-x',
           label: l.tripOwnerCancelTile,
           accent: cs.error,
-          onTap: () =>
-              CancellationBottomSheet.show(context, announcementId: a.id),
+          onTap: () => openTripCancellation(context, a, loadedBids),
         ),
     ];
 
@@ -244,9 +203,6 @@ bool canShareTripPoster(AnnouncementModel a) => a.status == 'ACTIVE';
 void openTripPoster(BuildContext context, AnnouncementModel a) {
   context.push('/announcements/${a.id}/affiche', extra: a);
 }
-
-/// Statuts de colis qui interdisent de reporter le trajet.
-const _rescheduleBlockingStatuses = {'IN_TRANSIT', 'ARRIVED', 'COMPLETED'};
 
 /// Construit une tuile d'action. Quand [onTap] est `null` et [disabledMessage]
 /// fourni, la tuile est grisée (opacity 0.4) + tooltip et n'est plus tappable.
@@ -388,37 +344,4 @@ class _CountPill extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Voyage à plusieurs étapes (FLUTTER-4D) : avant d'annuler une étape,
-/// propose d'annuler aussi les suivantes encore ouvertes.
-///
-/// Rend les identifiants à annuler en plus (vide : les garder), ou `null` si
-/// le voyageur a fermé la question sans choisir. Sans [TripGroupCubit] dans
-/// l'arbre, ou pour un trajet isolé, rend une liste vide sans rien demander.
-@visibleForTesting
-Future<List<String>?> askCancelFollowingLegs(
-  BuildContext context,
-  String announcementId,
-) async {
-  TripGroupCubit? cubit;
-  try {
-    cubit = context.read<TripGroupCubit>();
-  } on ProviderNotFoundException {
-    cubit = null;
-  }
-  final following = cubit?.state.info.openLegsAfter(announcementId) ?? const [];
-  if (following.isEmpty) return const [];
-  final l = context.l10n;
-  final cancelThem = await DonyDialog.show(
-    context,
-    title: l.tripLegsCancelFollowingTitle,
-    message: l.tripLegsCancelFollowingMessage(following.length),
-    confirmLabel: l.tripLegsCancelFollowingConfirm,
-    cancelLabel: l.tripLegsCancelFollowingKeep,
-    variant: DonyDialogVariant.destructive,
-    icon: Icons.alt_route_rounded,
-  );
-  if (cancelThem == null) return null;
-  return cancelThem ? following.map((leg) => leg.id).toList() : const [];
 }

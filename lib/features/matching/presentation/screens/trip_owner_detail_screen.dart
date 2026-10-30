@@ -22,7 +22,6 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
@@ -33,6 +32,7 @@ import 'package:dony/features/matching/presentation/widgets/traveler_announcemen
 import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_depart_button.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_summary_card.dart';
 import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
@@ -42,48 +42,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
-
-const _biddableActiveStatuses = <String>{
-  'ACCEPTED',
-  'HANDED_OVER',
-  'IN_TRANSIT',
-  'ARRIVED',
-};
-
-/// Colis entre les mains du voyageur : à restituer si le trajet est annulé.
-const _handedOverStatuses = <String>{'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'};
-
-/// Mode du CTA d'arrivée affiché au voyageur propriétaire.
-enum TripArrivalCta {
-  /// Au moins un colis actif a été récupéré (HANDED_OVER, avec ou sans scan
-  /// Transit, facultatif) : le marquer arrivé.
-  markArrived,
-
-  /// Trajet déjà marqué arrivé : seule l'édition des instructions reste
-  /// possible (le bouton doit rester accessible, sinon les instructions
-  /// deviennent définitivement figées).
-  editInstructions,
-}
-
-/// `null` = aucun CTA (aucun colis récupéré ni arrivé, ou plus aucun colis actif).
-///
-/// Le scan Transit est facultatif (yadony-back #336) : un colis récupéré au
-/// départ suffit à marquer le trajet arrivé. Un colis pas encore récupéré ne
-/// bloque pas le trajet, il reste simplement en attente.
-TripArrivalCta? tripArrivalCtaFor(List<BidModel> bids) {
-  final active = bids
-      .where((b) => _biddableActiveStatuses.contains(b.status))
-      .toList();
-  if (active.any(
-    (b) => b.status == 'HANDED_OVER' || b.status == 'IN_TRANSIT',
-  )) {
-    return TripArrivalCta.markArrived;
-  }
-  if (active.any((b) => b.status == 'ARRIVED')) {
-    return TripArrivalCta.editInstructions;
-  }
-  return null;
-}
 
 /// Écran plein écran « Trajet » côté propriétaire (voyageur).
 ///
@@ -609,12 +567,9 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   /// l'annulation, la feuille d'annulation le signale.
   int _handedOverParcels(BuildContext context) {
     final state = context.read<BidBloc>().state;
-    if (state is! BidListLoaded) {
-      return 0;
-    }
-    return state.bids
-        .where((b) => _handedOverStatuses.contains(b.status))
-        .length;
+    return tripHandedOverParcelCount(
+      state is BidListLoaded ? state.bids : null,
+    );
   }
 
   /// Suppression bloquée par un colis déjà accepté — propose l'annulation du
