@@ -14,15 +14,32 @@ import 'package:flutter_animate/flutter_animate.dart';
 ///
 /// Le corridor, les dates et la perforation viennent de [BilletRoute],
 /// partagé avec la fiche trajet vue par un expéditeur (FLUTTER-GG).
+///
+/// Quand le talon n'a rien à montrer ([BilletTalon.isShown] faux : voyageur,
+/// colis accepté pas encore remis), ni talon ni perforation : le billet
+/// s'arrête sous les dates, sur ses bords arrondis.
 class ColisBillet extends StatelessWidget {
   final BidModel bid;
   final bool isSender;
 
-  const ColisBillet({super.key, required this.bid, required this.isSender});
+  /// Transmis au talon : voir [BilletTalon.showQrInTalon].
+  final bool showQrInTalon;
+
+  const ColisBillet({
+    super.key,
+    required this.bid,
+    required this.isSender,
+    this.showQrInTalon = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final talon = BilletTalon.isShown(
+      bid,
+      isSender: isSender,
+      showQrInTalon: showQrInTalon,
+    );
 
     return Container(
           decoration: BoxDecoration(
@@ -49,9 +66,16 @@ class ColisBillet extends StatelessWidget {
                 departureTime: bid.departureTime,
                 arrivalDate: bid.arrivalDate,
                 arrivalTime: bid.arrivalTime,
-                notchColor: Theme.of(context).scaffoldBackgroundColor,
+                notchColor: talon
+                    ? Theme.of(context).scaffoldBackgroundColor
+                    : null,
               ),
-              BilletTalon(bid: bid, isSender: isSender),
+              if (talon)
+                BilletTalon(
+                  bid: bid,
+                  isSender: isSender,
+                  showQrInTalon: showQrInTalon,
+                ),
             ],
           ),
         )

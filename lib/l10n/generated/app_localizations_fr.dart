@@ -7223,53 +7223,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get bidDetailTravelerScanQrTitle => '📷 Lisez le QR du colis';
-
-  @override
-  String get bidDetailTravelerScanQrSubtitle =>
-      'Lisez le QR code de l\'expéditeur pour confirmer la prise en charge.';
-
-  @override
-  String get bidDetailTravelerAcceptedTitle => '⚡ Récupérez le colis';
-
-  @override
-  String get bidDetailTravelerAcceptedInstructions =>
-      'Présentez-vous au point de remise.';
-
-  @override
-  String get bidDetailTravelerAcceptedInstructionsDefault =>
-      'Présentez-vous au point de remise convenu avec l\'expéditeur.';
-
-  @override
-  String get bidDetailTravelerCollectedTitle => '✓ Colis récupéré';
-
-  @override
-  String get bidDetailTravelerCollectedSubtitle =>
-      'Le colis est en votre possession. Bon voyage !';
-
-  @override
-  String get bidDetailTravelerInTransitTitle => '✈ Colis en route';
-
-  @override
-  String bidDetailTravelerInTransitSubtitle(String city) {
-    return 'En transit vers $city. Bonne livraison !';
-  }
-
-  @override
-  String get bidDetailTravelerArrivedTitle => '📍 Arrivé à destination';
-
-  @override
-  String get bidDetailTravelerArrivedSubtitle =>
-      'Attendez que le destinataire récupère le colis, puis validez la remise.';
-
-  @override
-  String get bidDetailTravelerDeliveredTitle => '✓ Livraison confirmée';
-
-  @override
-  String get bidDetailTravelerDeliveredSubtitle =>
-      'Le paiement va être libéré sur votre compte.';
-
-  @override
   String get bidDetailTravelerWindowExpiredTitle =>
       '⚠ Date limite de dépôt dépassée';
 
@@ -7588,6 +7541,44 @@ class AppLocalizationsFr extends AppLocalizations {
   String get senderTileBadgeCurrentStep => 'Étape en cours';
 
   @override
+  String get todoTileBadgeReplyNeeded => 'Réponse attendue';
+
+  @override
+  String get senderTodoAmendmentBadgePending => 'En attente';
+
+  @override
+  String get senderTodoAmendmentBadgePaymentDue => 'Paiement attendu';
+
+  @override
+  String travelerTodoSupplementSummary(String amount) {
+    return '$amount de frais à valider';
+  }
+
+  @override
+  String get senderTodoRecipientSummary => 'A refusé le colis';
+
+  @override
+  String get senderTodoRecipientRequested => 'Le voyageur en demande un autre';
+
+  @override
+  String senderTodoRescheduleSummary(String deadline) {
+    return 'Répondre avant le $deadline';
+  }
+
+  @override
+  String get senderTodoRescheduleChoice => 'Garder ou annuler sans frais';
+
+  @override
+  String senderTodoAmendmentSummary(String weight, String amount) {
+    return '$weight en plus · $amount';
+  }
+
+  @override
+  String senderTodoAmendmentAmount(String amount) {
+    return '$amount en plus';
+  }
+
+  @override
   String get bidDetailSectionTransport => 'Votre transport';
 
   @override
@@ -7599,6 +7590,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String travelerTileLieuxDropoff(String place) {
     return 'Remise à $place';
+  }
+
+  @override
+  String travelerTileLieuxDeadline(String date, String time) {
+    return 'Dépôt avant le $date à $time';
   }
 
   @override
@@ -8055,11 +8051,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ticketQrButtonCompact => 'QR du colis';
 
   @override
-  String get ticketQrButtonFull =>
-      'QR du colis (à présenter ou coller sur le colis)';
-
-  @override
-  String get ticketScanStepsButton => 'Lire les QR des étapes';
+  String get ticketQrButtonSubtitle => 'À présenter ou coller sur le colis';
 
   @override
   String get ticketAwaitingTravelerConfirmation =>

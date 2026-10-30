@@ -16,6 +16,7 @@ class DonyActionTile extends StatelessWidget {
     this.subtitle,
     this.badge,
     this.showNotificationDot = false,
+    this.subtitleMaxLines = 2,
   });
 
   final String iconName;
@@ -25,6 +26,11 @@ class DonyActionTile extends StatelessWidget {
   /// fond, sans aplat plein, pour ne pas concurrencer la grille d'activité.
   final Color color;
   final String? subtitle;
+
+  /// Lignes du sous-titre avant les points de suspension : 2 par défaut ; 3
+  /// pour une échéance (date et heure) qui doit rester entière à 360 dp et en
+  /// grand texte (tuile Lieux du voyageur).
+  final int subtitleMaxLines;
 
   /// Pastille d'état de l'outil, sur sa propre ligne sous l'icône. `null` pour
   /// les tuiles sans rien à remplir (Historique, Aide) ou tant que l'état est
@@ -105,7 +111,7 @@ class DonyActionTile extends StatelessWidget {
                 Text(
                   subtitle!,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  maxLines: 2,
+                  maxLines: subtitleMaxLines,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

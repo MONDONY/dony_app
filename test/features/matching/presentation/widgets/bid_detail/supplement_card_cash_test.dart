@@ -1,7 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -67,7 +66,6 @@ void main() {
   late _MockRepository repository;
   late _MockAnalyticsService analytics;
   late _MockBidBloc bidBloc;
-  late bool failAuth;
   late bool authorizeResult;
   late int authorizations;
 
@@ -78,7 +76,6 @@ void main() {
     repository = _MockRepository();
     analytics = _MockAnalyticsService();
     bidBloc = _MockBidBloc();
-    failAuth = false;
     authorizeResult = true;
     authorizations = 0;
     when(() => bidBloc.state).thenReturn(BidInitial());
@@ -94,9 +91,7 @@ void main() {
           SupplementCommissionFlow(
             repository,
             analytics,
-            nextAction: (_) async {
-              if (failAuth) throw StateError('canceled');
-            },
+            nextAction: (_) async {},
           ),
           analytics,
         ),
@@ -121,13 +116,8 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  SupplementTravelerCard traveler(BidSupplement s) => SupplementTravelerCard(
-    bid: _bid(s),
-    authorize: (_) async {
-      authorizations++;
-      return authorizeResult;
-    },
-  );
+  SupplementTravelerCard traveler(BidSupplement s, {bool framed = true}) =>
+      SupplementTravelerCard(bid: _bid(s), framed: framed);
 
   group('shouldShow (voyageur, espèces)', () {
     test('annulée : toujours montrée en espèces, jamais sinon', () {
@@ -190,18 +180,15 @@ void main() {
   });
 
   group('voyageur', () {
-    testWidgets('commission à valider : aide et « Valider le paiement »', (
-      tester,
-    ) async {
-      when(() => repository.confirmCommission('bid-1', 'sup-1')).thenAnswer(
-        (_) async => _cash(
-          BidSupplementStatus.proposed,
-          commissionStatus: SupplementCommissionStatus.charged,
-        ),
-      );
+    // Commission à valider : contenu du sheet de la tuile « Supplément de
+    // prix » (`framed: false`), sans bouton ; « Valider le paiement » et
+    // « Retirer la demande » sont dans son pied (traveler_todo_sheets_test,
+    // 3DS comprise).
+    testWidgets('commission à valider, sans cadre : aide, récap, aucun bouton '
+        'ni mesure', (tester) async {
       await pump(
         tester,
-        traveler(_cash(BidSupplementStatus.commissionPending)),
+        traveler(_cash(BidSupplementStatus.commissionPending), framed: false),
       );
 
       expect(find.text('Frais de service à valider'), findsOneWidget);
@@ -209,7 +196,34 @@ void main() {
         find.textContaining('Validez le paiement des frais de service'),
         findsOneWidget,
       );
-      expect(find.text('Retirer la demande'), findsOneWidget);
+      expect(find.text('Supplément de prix'), findsNothing);
+      expect(find.byType(DonyButton), findsNothing);
+      verifyNever(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      );
+    });
+
+    testWidgets('pied « Valider le paiement » : vérification refusée, rien '
+        'n\'est confirmé', (tester) async {
+      authorizeResult = false;
+      final s = _cash(BidSupplementStatus.commissionPending);
+      await pump(
+        tester,
+        MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => getIt<SupplementCommissionCubit>()),
+            BlocProvider(create: (_) => getIt<SupplementActionCubit>()),
+          ],
+          child: SupplementCommissionButtons(
+            bid: _bid(s),
+            supplement: s,
+            authorize: (_) async {
+              authorizations++;
+              return authorizeResult;
+            },
+          ),
+        ),
+      );
 
       await tester.tap(
         find.byKey(const Key('supplement-commission-confirm-btn')),
@@ -217,105 +231,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(authorizations, 1);
-      verify(() => repository.confirmCommission('bid-1', 'sup-1')).called(1);
-      expect(
-        find.text('Frais de service payés : demande envoyée à l\'expéditeur'),
-        findsOneWidget,
-      );
-      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
-    });
-
-    testWidgets('vérification refusée : rien n\'est confirmé', (tester) async {
-      authorizeResult = false;
-      await pump(
-        tester,
-        traveler(_cash(BidSupplementStatus.commissionPending)),
-      );
-
-      await tester.tap(
-        find.byKey(const Key('supplement-commission-confirm-btn')),
-      );
-      await tester.pumpAndSettle();
-
       expect(find.text('Paiement non confirmé, réessayez'), findsOneWidget);
       verifyNever(() => repository.confirmCommission(any(), any()));
-    });
-
-    testWidgets('3DS abandonnée : message, pas de relecture', (tester) async {
-      failAuth = true;
-      when(() => repository.confirmCommission('bid-1', 'sup-1')).thenAnswer(
-        (_) async => const BidSupplement(
-          id: 'sup-1',
-          status: BidSupplementStatus.commissionPending,
-          rail: 'CASH',
-          grossAmount: 17,
-          commissionClientSecret: 'pi_secret',
-        ),
-      );
-      await pump(
-        tester,
-        traveler(_cash(BidSupplementStatus.commissionPending)),
-      );
-
-      await tester.tap(
-        find.byKey(const Key('supplement-commission-confirm-btn')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text(
-          'Validation bancaire interrompue : rien n\'a été prélevé. Réessayez.',
-        ),
-        findsOneWidget,
-      );
-      verifyNever(() => bidBloc.add(any()));
-    });
-
-    testWidgets('carte refusée : erreur et relecture', (tester) async {
-      when(() => repository.confirmCommission('bid-1', 'sup-1')).thenThrow(
-        const ValidationException(
-          'd',
-          code: 'supplement-commission-card-declined',
-        ),
-      );
-      await pump(
-        tester,
-        traveler(_cash(BidSupplementStatus.commissionPending)),
-      );
-
-      await tester.tap(
-        find.byKey(const Key('supplement-commission-confirm-btn')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Carte refusée'), findsWidgets);
-      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
-    });
-
-    testWidgets('Stripe traite encore : message neutre et relecture', (
-      tester,
-    ) async {
-      when(
-        () => repository.confirmCommission('bid-1', 'sup-1'),
-      ).thenAnswer((_) async => _cash(BidSupplementStatus.commissionPending));
-      await pump(
-        tester,
-        traveler(_cash(BidSupplementStatus.commissionPending)),
-      );
-
-      await tester.tap(
-        find.byKey(const Key('supplement-commission-confirm-btn')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text(
-          'Demande enregistrée : paiement des frais de service en cours de '
-          'validation',
-        ),
-        findsOneWidget,
-      );
-      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
     });
 
     testWidgets('en attente, commission prélevée : aide et récap espèces', (

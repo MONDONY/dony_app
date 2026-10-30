@@ -10,6 +10,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 /// Section « Votre transport » de la fiche colis (vue voyageur) : un titre puis
 /// la grille des tuiles de [travelerTilesFor], chacune ouvrant son bottom sheet
@@ -32,6 +33,10 @@ class TravelerTransportSection extends StatelessWidget {
     return null;
   }
 
+  /// Colis accepté, pas encore remis, avec une date limite de dépôt connue.
+  bool get _showsDeadline =>
+      bid.status == 'ACCEPTED' && bid.handoverDeadline != null;
+
   /// Résumé de la tuile Lieux : où remettre le colis tant qu'il n'est pas chez
   /// le voyageur, où le destinataire le récupère ensuite. La ville d'abord, à
   /// défaut le libellé de l'adresse ; `null` quand l'étape n'a rien de connu.
@@ -40,7 +45,21 @@ class TravelerTransportSection extends StatelessWidget {
   /// adresse ou un texte de dépôt existe, la récupération si une adresse
   /// d'arrivée existe) : une ville sans cette ligne promettrait un lieu que
   /// la feuille n'affiche pas.
+  ///
+  /// Colis accepté, pas encore remis, avec une date limite de dépôt connue :
+  /// cette échéance d'abord, en heure locale (décision du propriétaire, elle
+  /// n'est sinon que dans « Plus de détails »).
   String? _placesSubtitle(AppLocalizations l) {
+    final deadline = bid.handoverDeadline;
+    if (_showsDeadline && deadline != null) {
+      // Instant UTC : jour et heure de l'appareil, comme les autres
+      // échéances de la fiche (PROD-1R).
+      final local = deadline.toLocal();
+      return l.travelerTileLieuxDeadline(
+        DateFormat.MMMEd(l.localeName).format(local),
+        DateFormat.jm(l.localeName).format(local),
+      );
+    }
     if (!kParcelHandedOverStatuses.contains(bid.status)) {
       final hasHandoverRow =
           bid.handoverAddress != null ||
@@ -101,6 +120,9 @@ class TravelerTransportSection extends StatelessWidget {
       iconName: iconName,
       label: label,
       subtitle: subtitle,
+      // La date limite de dépôt (date et heure) reste entière à 360 dp et en
+      // grand texte.
+      subtitleMaxLines: tile == TravelerTile.lieux && _showsDeadline ? 3 : 2,
       color: color,
       badge: tile == TravelerTile.colis && recipientNeedsReplacement(bid)
           ? ToolStatusBadge(

@@ -134,6 +134,20 @@ void main() {
       ]);
       expect(AmendmentPayButton.payable(bid)?.id, 'to-pay');
     });
+
+    test('isPayable : la règle sur une seule modification', () {
+      expect(AmendmentPayButton.isPayable(_amendment()), isTrue);
+      expect(
+        AmendmentPayButton.isPayable(_amendment(rail: BidAmendment.railCash)),
+        isFalse,
+      );
+      expect(
+        AmendmentPayButton.isPayable(
+          _amendment(status: BidAmendmentStatus.proposed),
+        ),
+        isFalse,
+      );
+    });
   });
 
   testWidgets('affiche « Payer {brut} », jamais le net', (tester) async {
@@ -184,6 +198,58 @@ void main() {
       expect((reload as BidDetailRequested).bidId, 'bid-1');
     });
   }
+
+  // Dans le sheet d'une tuile « À traiter » : le lanceur reçoit le paiement
+  // et choisit le contexte (celui de l'écran, une fois le sheet fermé).
+  testWidgets('launcher : le paiement part avec le contexte fourni', (
+    tester,
+  ) async {
+    BuildContext? openedWith;
+    late BuildContext launchContext;
+    final bid = _bid([_amendment()]);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        locale: AppL10n.fr,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: BlocProvider<BidBloc>.value(
+            value: bidBloc,
+            child: Builder(
+              builder: (context) {
+                launchContext = context;
+                return Column(
+                  children: [
+                    // Le bouton lui-même ne voit pas de BidBloc.
+                    BlocProvider<BidBloc>.value(
+                      value: _MockBidBloc(),
+                      child: AmendmentPayButton(
+                        bid: bid,
+                        analytics: analytics,
+                        openMobileMoney: (context, _) async {
+                          openedWith = context;
+                          return true;
+                        },
+                        launcher: (pay) => pay(launchContext),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('amendment-pay-btn')));
+    await tester.pump();
+
+    expect(openedWith, same(launchContext));
+    // Relu avec le BidBloc du contexte fourni.
+    verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+  });
 
   testWidgets('hors de l\'écran de détail (pas de BidBloc) : ne plante pas', (
     tester,

@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
@@ -12,13 +13,18 @@ import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Ouverture de l'écran d'attente mobile money de la modification
 /// (`context.push<bool>(route)` par défaut) ; rend son résultat de `pop`.
 typedef AmendmentMobileMoneyOpener =
     Future<bool?> Function(BuildContext context, String route);
+
+/// Lancement du paiement par un appelant qui choisit le contexte : reçoit le
+/// paiement à lancer avec ce contexte (écran d'attente poussé, colis relu
+/// avec le `BidBloc` qu'il voit).
+typedef AmendmentPayLauncher =
+    void Function(Future<void> Function(BuildContext context) pay);
 
 /// Bouton « Payer {brut} » de la barre du bas de l'expéditeur, tant qu'une
 /// modification de colis payée en mobile money attend son dépôt : le voyageur
@@ -36,25 +42,29 @@ class AmendmentPayButton extends StatelessWidget {
     required this.bid,
     this.openMobileMoney,
     this.analytics,
+    this.launcher,
   });
 
   final BidModel bid;
+
+  /// Dans le sheet d'une tuile « À traiter » : ferme d'abord le sheet, puis
+  /// lance le paiement avec le contexte de l'écran. `null` dans la barre du
+  /// bas, qui paie avec son propre contexte.
+  final AmendmentPayLauncher? launcher;
 
   /// Injectables pour les tests ; `null` en usage réel.
   final AmendmentMobileMoneyOpener? openMobileMoney;
   final AnalyticsService? analytics;
 
-  /// Modification à payer maintenant : acceptée par le voyageur, en attente du
-  /// dépôt mobile money de l'expéditeur. `null` sinon.
-  static BidAmendment? payable(BidModel bid) {
-    for (final a in bid.amendments) {
-      if (a.status == BidAmendmentStatus.paymentPending &&
-          a.rail == BidAmendment.railPawapay) {
-        return a;
-      }
-    }
-    return null;
-  }
+  /// [a] est à payer maintenant : acceptée par le voyageur, en attente du
+  /// dépôt mobile money de l'expéditeur.
+  static bool isPayable(BidAmendment a) =>
+      a.status == BidAmendmentStatus.paymentPending &&
+      a.rail == BidAmendment.railPawapay;
+
+  /// Modification à payer maintenant ([isPayable]), `null` sinon.
+  static BidAmendment? payable(BidModel bid) =>
+      bid.amendments.where(isPayable).firstOrNull;
 
   static bool canPay(BidModel bid) => payable(bid) != null;
 
@@ -69,7 +79,14 @@ class AmendmentPayButton extends StatelessWidget {
       key: const Key('amendment-pay-btn'),
       label: context.l10n.amendmentPay(gross),
       iconAsset: 'smartphone',
-      onPressed: () => _pay(context, amendment),
+      onPressed: () {
+        final launch = launcher;
+        if (launch == null) {
+          unawaited(_pay(context, amendment));
+        } else {
+          launch((screenContext) => _pay(screenContext, amendment));
+        }
+      },
     );
   }
 
@@ -78,7 +95,8 @@ class AmendmentPayButton extends StatelessWidget {
       bidId: bid.id,
       amendmentId: amendment.id,
     ).awaitingRoute;
-    final bloc = _bidBloc(context);
+    // Sans `BidBloc` (bouton hors de l'écran de détail) : rien à relire.
+    final bloc = maybeRead<BidBloc>(context);
     unawaited(
       (analytics ?? getIt<AnalyticsService>()).logEvent(
         AnalyticsEvents.bidAmendmentPaymentStarted,
@@ -95,13 +113,4 @@ class AmendmentPayButton extends StatelessWidget {
     BuildContext context,
     String route,
   ) => context.push<bool>(route);
-
-  BidBloc? _bidBloc(BuildContext context) {
-    try {
-      return context.read<BidBloc>();
-    } on ProviderNotFoundException {
-      // Bouton hors de l'écran de détail (tests) : rien à relire.
-      return null;
-    }
-  }
 }

@@ -73,31 +73,43 @@ void main() {
     expect(find.textContaining('48'), findsOneWidget);
   });
 
-  testWidgets('ACCEPTED présence non confirmée → récupérez le colis', (
-    tester,
-  ) async {
-    await _pump(tester, _bid(status: 'ACCEPTED'));
-    expect(find.textContaining('Récupérez le colis'), findsOneWidget);
-  });
-
-  testWidgets('ACCEPTED présence confirmée → scannez le colis', (tester) async {
-    await _pump(tester, _bid(status: 'ACCEPTED', voyageurConfirmed: true));
-    expect(find.textContaining('Lisez le QR du colis'), findsOneWidget);
-  });
-
-  testWidgets('IN_TRANSIT → colis en route', (tester) async {
-    await _pump(tester, _bid(status: 'IN_TRANSIT'));
-    expect(find.textContaining('en route'), findsOneWidget);
-  });
-
-  testWidgets('COMPLETED → livraison confirmée', (tester) async {
-    await _pump(tester, _bid(status: 'COMPLETED'));
-    expect(find.textContaining('Livraison confirmée'), findsOneWidget);
-  });
-
-  testWidgets('ARRIVED → arrivé à destination', (tester) async {
-    await _pump(tester, _bid(status: 'ARRIVED'));
-    expect(find.textContaining('Arrivé'), findsOneWidget);
+  // Les cartes « prochaine étape » d'information ont été retirées (décision
+  // du propriétaire) : le footer et le billet disent déjà l'étape. Seules
+  // restent la demande à décider, l'attente du paiement et les alertes.
+  group('étapes du transport : plus de carte d\'information', () {
+    final future = DateTime.now().add(const Duration(days: 30));
+    final cases = <String, BidModel>{
+      'ACCEPTED, présence à confirmer': _bid(status: 'ACCEPTED'),
+      'ACCEPTED, présence confirmée': _bid(
+        status: 'ACCEPTED',
+        voyageurConfirmed: true,
+      ),
+      'ACCEPTED, date limite à venir et lieu': BidModel(
+        id: 'b1',
+        announcementId: 'a1',
+        senderId: 's1',
+        status: 'ACCEPTED',
+        weightKg: 5,
+        handoverDeadline: future,
+        handoverLocation: 'CDG Terminal 2',
+        createdAt: DateTime(2026, 5),
+        updatedAt: DateTime(2026, 5),
+      ),
+      'HANDED_OVER': _bid(status: 'HANDED_OVER'),
+      'IN_TRANSIT': _bid(status: 'IN_TRANSIT'),
+      'ARRIVED': _bid(status: 'ARRIVED'),
+      'COMPLETED': _bid(status: 'COMPLETED'),
+      'DELIVERED': _bid(status: 'DELIVERED'),
+    };
+    for (final MapEntry(key: label, value: bid) in cases.entries) {
+      testWidgets('$label → rien', (tester) async {
+        await _pump(tester, bid);
+        expect(TravelerHeroCard.isShown(bid), isFalse);
+        expect(TravelerHeroCard.hasAction(bid), isFalse);
+        expect(find.byType(Text), findsNothing);
+        expect(tester.getSize(find.byType(TravelerHeroCard)).height, 0);
+      });
+    }
   });
 
   testWidgets('date limite dépassée → bouton signaler absence expéditeur', (
@@ -210,16 +222,6 @@ void main() {
     expect(find.textContaining('Livraison'), findsNothing);
   });
 
-  testWidgets('HANDED_OVER → colis récupéré', (tester) async {
-    await _pump(tester, _bid(status: 'HANDED_OVER'));
-    expect(find.textContaining('Colis récupéré'), findsOneWidget);
-  });
-
-  testWidgets('DELIVERED → livraison confirmée', (tester) async {
-    await _pump(tester, _bid(status: 'DELIVERED'));
-    expect(find.textContaining('Livraison confirmée'), findsOneWidget);
-  });
-
   testWidgets('CANCELLED → rien (SizedBox.shrink)', (tester) async {
     await _pump(tester, _bid(status: 'CANCELLED'));
     expect(
@@ -227,69 +229,6 @@ void main() {
       findsNothing,
     );
     expect(find.textContaining('Colis'), findsNothing);
-  });
-
-  testWidgets('IN_TRANSIT avec ville arrivée → ville affichée dans subtitle', (
-    tester,
-  ) async {
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: 'IN_TRANSIT',
-      weightKg: 5,
-      arrivalCity: 'Dakar',
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await _pump(tester, bid);
-    expect(find.textContaining('Dakar'), findsOneWidget);
-  });
-
-  testWidgets('IN_TRANSIT sans ville arrivée → destination fallback', (
-    tester,
-  ) async {
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: 'IN_TRANSIT',
-      weightKg: 5,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await _pump(tester, bid);
-    expect(find.textContaining('destination'), findsOneWidget);
-  });
-
-  testWidgets('ACCEPTED avec fenêtre et lieu → subtitle contient lieu', (
-    tester,
-  ) async {
-    // Use a date far in the future to ensure the window is not expired
-    final futureStart = DateTime.now().add(const Duration(days: 30));
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: 'ACCEPTED',
-      weightKg: 5,
-      handoverDeadline: futureStart.add(const Duration(hours: 1)),
-      handoverLocation: 'CDG Terminal 2',
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await _pump(tester, bid);
-    // The card should show the recovery info
-    expect(find.textContaining('Récupérez le colis'), findsOneWidget);
-    // Subtitle includes location and the rendez-vous hint
-    expect(find.textContaining('point de remise'), findsOneWidget);
-  });
-
-  testWidgets('ACCEPTED sans fenêtre ni lieu → fallback texte générique', (
-    tester,
-  ) async {
-    await _pump(tester, _bid(status: 'ACCEPTED'));
-    expect(find.textContaining('point de remise'), findsOneWidget);
   });
 
   testWidgets('fenêtre dépassée sans fenêtre start → subtitle sans dates', (
@@ -359,62 +298,6 @@ void main() {
       find.textContaining('vous demande de transporter son colis'),
       findsOneWidget,
     );
-  });
-
-  testWidgets('ACCEPTED avec seulement windowStart → subtitle ok', (
-    tester,
-  ) async {
-    final futureStart = DateTime.now().add(const Duration(days: 30));
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: 'ACCEPTED',
-      weightKg: 5,
-      handoverDeadline: futureStart,
-      // no windowEnd
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await _pump(tester, bid);
-    expect(find.textContaining('Récupérez le colis'), findsOneWidget);
-  });
-
-  testWidgets('ACCEPTED avec seulement windowEnd → subtitle ok', (
-    tester,
-  ) async {
-    final futureEnd = DateTime.now().add(const Duration(days: 30));
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: 'ACCEPTED',
-      weightKg: 5,
-      // no windowStart, only end (future so not expired)
-      handoverDeadline: futureEnd,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await _pump(tester, bid);
-    expect(find.textContaining('Récupérez le colis'), findsOneWidget);
-  });
-
-  testWidgets('ACCEPTED avec fenêtre multi-jours → subtitle ok', (
-    tester,
-  ) async {
-    final futureStart = DateTime.now().add(const Duration(days: 30));
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: 'ACCEPTED',
-      weightKg: 5,
-      handoverDeadline: futureStart.add(const Duration(days: 1)),
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await _pump(tester, bid);
-    expect(find.textContaining('Récupérez le colis'), findsOneWidget);
   });
 
   testWidgets('date limite dépassée → subtitle avec la date', (tester) async {
@@ -778,7 +661,46 @@ void main() {
     final past = DateTime.now().subtract(const Duration(hours: 2));
     final future = DateTime.now().add(const Duration(days: 1));
 
-    // `isShown` recopie à la main la liste des statuts du mapping : ce test la
+    // Prédicats lus aussi par le footer (`TravelerStickyBar`).
+    test('senderNoShowOpen : absence de l\'expéditeur en attente ou '
+        'contestée', () {
+      for (final status in ['PENDING_CONFIRMATION', 'CONTESTED']) {
+        expect(
+          TravelerHeroCard.senderNoShowOpen(
+            heroBid('ACCEPTED', cancellationNoShowStatus: status),
+          ),
+          isTrue,
+          reason: status,
+        );
+      }
+      for (final status in [null, 'CONFIRMED', 'REJECTED']) {
+        expect(
+          TravelerHeroCard.senderNoShowOpen(
+            heroBid('ACCEPTED', cancellationNoShowStatus: status),
+          ),
+          isFalse,
+          reason: '$status',
+        );
+      }
+    });
+
+    test('windowExpired : colis accepté, date limite passée', () {
+      expect(
+        TravelerHeroCard.windowExpired(heroBid('ACCEPTED', windowEnd: past)),
+        isTrue,
+      );
+      expect(
+        TravelerHeroCard.windowExpired(heroBid('ACCEPTED', windowEnd: future)),
+        isFalse,
+      );
+      expect(TravelerHeroCard.windowExpired(heroBid('ACCEPTED')), isFalse);
+      expect(
+        TravelerHeroCard.windowExpired(heroBid('HANDED_OVER', windowEnd: past)),
+        isFalse,
+      );
+    });
+
+    // `isShown` et le contenu de priorité 3 lisent la même fonction : ce test
     // compare, pour chaque statut de l'inventaire et chaque signalement, à ce
     // que la carte rend réellement (hauteur nulle = SizedBox.shrink).
     const everyStatus = [
@@ -959,17 +881,12 @@ void main() {
       }
     });
 
-    test('isShown : un hero pour les statuts en cours, rien pour les clos', () {
+    test('isShown : la demande à décider et l\'attente du paiement, rien '
+        'pour les étapes du transport ni les clos', () {
       for (final status in [
         'PENDING',
         'PAYMENT_ESCROWED',
         'AWAITING_PAYMENT',
-        'ACCEPTED',
-        'HANDED_OVER',
-        'IN_TRANSIT',
-        'ARRIVED',
-        'COMPLETED',
-        'DELIVERED',
       ]) {
         expect(
           TravelerHeroCard.isShown(heroBid(status)),
@@ -978,6 +895,12 @@ void main() {
         );
       }
       for (final status in [
+        'ACCEPTED',
+        'HANDED_OVER',
+        'IN_TRANSIT',
+        'ARRIVED',
+        'COMPLETED',
+        'DELIVERED',
         'REJECTED',
         'CANCELLED',
         'NO_SHOW',
@@ -1008,7 +931,7 @@ void main() {
     });
 
     testWidgets('isShown faux : la carte ne rend rien', (tester) async {
-      for (final status in ['REJECTED', 'PARCEL_REFUSED']) {
+      for (final status in ['REJECTED', 'PARCEL_REFUSED', 'ARRIVED']) {
         await _pump(tester, heroBid(status));
         expect(find.byType(Text), findsNothing, reason: status);
       }

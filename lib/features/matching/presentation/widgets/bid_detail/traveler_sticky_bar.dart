@@ -4,6 +4,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip_validation.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_validate_content.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -63,7 +64,6 @@ class TravelerStickyBar extends StatelessWidget {
       bid.paymentMethod == BidPaymentMethod.mobileMoney;
 
   static _TravelerAction? _resolve(BidModel bid) {
-    final now = DateTime.now();
     switch (bid.status) {
       // PENDING (cash / Mobile Money) ET PAYMENT_ESCROWED (carte, paiement
       // séquestré) : le voyageur doit pouvoir accepter/refuser depuis le détail,
@@ -71,20 +71,25 @@ class TravelerStickyBar extends StatelessWidget {
       case 'PENDING':
       case 'PAYMENT_ESCROWED':
         return _TravelerAction.decide;
-      // AWAITING_PAYMENT (mobile money, 30 min pour le séquestre) et REJECTED
-      // n'ont plus de footer : la phrase d'attente est une carte du corps
-      // ([awaitingMobileMoneyPayment]) et « Supprimer cette demande » une
-      // entrée du menu ⋮.
+      // AWAITING_PAYMENT et REJECTED n'ont pas de footer : l'attente est une
+      // carte du corps ([awaitingMobileMoneyPayment]), « Supprimer cette
+      // demande » une entrée du menu ⋮.
+      // ACCEPTED : présence confirmée, « Lire le QR du colis » ; sinon
+      // « Confirmer ma présence » jusqu'à la date limite, puis le scan (le
+      // back accepte encore la remise), sauf si une absence de l'expéditeur
+      // est déclarée (en attente ou contestée) : alors rien. Risque connu :
+      // le back ne bloque pas le scan pendant une déclaration d'absence
+      // ouverte, voir la PR.
       case 'ACCEPTED':
         if (bid.voyageurConfirmed) {
           return _TravelerAction.scan;
         }
-        final deadline = bid.handoverDeadline;
-        // Date limite dépassée sans confirmation du voyageur → le hero prend le relais
-        if (deadline != null && now.isAfter(deadline)) {
-          return null;
+        if (!TravelerHeroCard.windowExpired(bid)) {
+          return _TravelerAction.confirmPresence;
         }
-        return _TravelerAction.confirmPresence;
+        return TravelerHeroCard.senderNoShowOpen(bid)
+            ? null
+            : _TravelerAction.scan;
       // Colis récupéré (départ scanné) : la seule étape obligatoire restante
       // est la remise au destinataire. Le scan Transit est facultatif : entrée
       // du menu ⋮ tant qu'il n'a pas été fait (HANDED_OVER).

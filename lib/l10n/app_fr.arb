@@ -7130,63 +7130,6 @@
       }
     }
   },
-  "bidDetailTravelerScanQrTitle": "📷 Lisez le QR du colis",
-  "@bidDetailTravelerScanQrTitle": {
-    "description": "ACCEPTED deja scanne par le voyageur (voyageurConfirmed), titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerScanQrSubtitle": "Lisez le QR code de l'expéditeur pour confirmer la prise en charge.",
-  "@bidDetailTravelerScanQrSubtitle": {
-    "description": "ACCEPTED deja scanne par le voyageur (voyageurConfirmed), sous-titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerAcceptedTitle": "⚡ Récupérez le colis",
-  "@bidDetailTravelerAcceptedTitle": {
-    "description": "ACCEPTED, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerAcceptedInstructions": "Présentez-vous au point de remise.",
-  "@bidDetailTravelerAcceptedInstructions": {
-    "description": "ACCEPTED, instruction avec fenetre/lieu connus (traveler_hero_card.dart, _buildAcceptedSubtitle)"
-  },
-  "bidDetailTravelerAcceptedInstructionsDefault": "Présentez-vous au point de remise convenu avec l'expéditeur.",
-  "@bidDetailTravelerAcceptedInstructionsDefault": {
-    "description": "ACCEPTED, instruction sans fenetre ni lieu connus (traveler_hero_card.dart, _buildAcceptedSubtitle)"
-  },
-  "bidDetailTravelerCollectedTitle": "✓ Colis récupéré",
-  "@bidDetailTravelerCollectedTitle": {
-    "description": "HANDED_OVER, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerCollectedSubtitle": "Le colis est en votre possession. Bon voyage !",
-  "@bidDetailTravelerCollectedSubtitle": {
-    "description": "HANDED_OVER, sous-titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerInTransitTitle": "✈ Colis en route",
-  "@bidDetailTravelerInTransitTitle": {
-    "description": "IN_TRANSIT, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerInTransitSubtitle": "En transit vers {city}. Bonne livraison !",
-  "@bidDetailTravelerInTransitSubtitle": {
-    "description": "IN_TRANSIT, sous-titre (traveler_hero_card.dart)",
-    "placeholders": {
-      "city": {
-        "type": "String"
-      }
-    }
-  },
-  "bidDetailTravelerArrivedTitle": "📍 Arrivé à destination",
-  "@bidDetailTravelerArrivedTitle": {
-    "description": "ARRIVED, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerArrivedSubtitle": "Attendez que le destinataire récupère le colis, puis validez la remise.",
-  "@bidDetailTravelerArrivedSubtitle": {
-    "description": "ARRIVED, sous-titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerDeliveredTitle": "✓ Livraison confirmée",
-  "@bidDetailTravelerDeliveredTitle": {
-    "description": "COMPLETED/DELIVERED, titre (traveler_hero_card.dart)"
-  },
-  "bidDetailTravelerDeliveredSubtitle": "Le paiement va être libéré sur votre compte.",
-  "@bidDetailTravelerDeliveredSubtitle": {
-    "description": "COMPLETED/DELIVERED, sous-titre (traveler_hero_card.dart)"
-  },
   "bidDetailTravelerWindowExpiredTitle": "⚠ Date limite de dépôt dépassée",
   "@bidDetailTravelerWindowExpiredTitle": {
     "description": "_WindowExpiredHero, titre (traveler_hero_card.dart)"
@@ -7588,6 +7531,74 @@
   "@senderTileBadgeCurrentStep": {
     "description": "Pastille de la tuile Suivi (colis remis, en route ou arrivé) : une étape est en cours"
   },
+  "todoTileBadgeReplyNeeded": "Réponse attendue",
+  "@todoTileBadgeReplyNeeded": {
+    "description": "Pastille ambre des tuiles de la section « À traiter » de la fiche colis, vue expéditeur (trajet reporté, destinataire à remplacer ; sender_todo_tiles.dart) et vue voyageur (traveler_detail_body.dart) : une réponse est attendue. La tuile « Modification du colis » a ses propres pastilles (senderTodoAmendmentBadgePending, senderTodoAmendmentBadgePaymentDue)"
+  },
+  "senderTodoAmendmentBadgePending": "En attente",
+  "@senderTodoAmendmentBadgePending": {
+    "description": "Pastille ambre de la tuile « Modification du colis » (« À traiter », fiche colis expéditeur) tant que la demande est proposée ou que la carte est en cours d'autorisation : le voyageur doit répondre, le seul geste de l'expéditeur est d'annuler"
+  },
+  "senderTodoAmendmentBadgePaymentDue": "Paiement attendu",
+  "@senderTodoAmendmentBadgePaymentDue": {
+    "description": "Pastille ambre de la tuile « Modification du colis » quand le voyageur l'a acceptée et que l'expéditeur doit la payer en mobile money"
+  },
+  "travelerTodoSupplementSummary": "{amount} de frais à valider",
+  "@travelerTodoSupplementSummary": {
+    "description": "Résumé de la tuile « Supplément de prix » de la section « À traiter » de la fiche colis voyageur (traveler_todo_tiles.dart) : frais de service du supplément (colis payé en espèces) à valider par le voyageur. Court, deux lignes au plus sous le titre de la tuile",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "2 €"
+      }
+    }
+  },
+  "senderTodoRecipientSummary": "A refusé le colis",
+  "@senderTodoRecipientSummary": {
+    "description": "Résumé court de la tuile « Destinataire à remplacer » (fiche colis expéditeur) : le destinataire a refusé le colis ou s'en est retiré"
+  },
+  "senderTodoRecipientRequested": "Le voyageur en demande un autre",
+  "@senderTodoRecipientRequested": {
+    "description": "Résumé court de la tuile « Destinataire à remplacer » quand le voyageur a demandé un autre destinataire"
+  },
+  "senderTodoRescheduleSummary": "Répondre avant le {deadline}",
+  "@senderTodoRescheduleSummary": {
+    "description": "Résumé court de la tuile « Trajet reporté » (fiche colis expéditeur) : échéance de la réponse, jour et heure de l'appareil",
+    "placeholders": {
+      "deadline": {
+        "type": "String",
+        "example": "12 oct. 18:00"
+      }
+    }
+  },
+  "senderTodoRescheduleChoice": "Garder ou annuler sans frais",
+  "@senderTodoRescheduleChoice": {
+    "description": "Résumé court de la tuile « Trajet reporté » quand l'échéance de la réponse est inconnue : les deux choix de l'expéditeur"
+  },
+  "senderTodoAmendmentSummary": "{weight} en plus · {amount}",
+  "@senderTodoAmendmentSummary": {
+    "description": "Résumé court de la tuile « Modification du colis » (section « À traiter » de la fiche colis expéditeur) : kilos ajoutés par la demande ouverte et son montant brut",
+    "placeholders": {
+      "weight": {
+        "type": "String",
+        "example": "3 kg"
+      },
+      "amount": {
+        "type": "String",
+        "example": "26,80 €"
+      }
+    }
+  },
+  "senderTodoAmendmentAmount": "{amount} en plus",
+  "@senderTodoAmendmentAmount": {
+    "description": "Résumé court de la tuile « Modification du colis » quand la demande n'ajoute que des articles (aucun kilo) : son montant brut",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "26,80 €"
+      }
+    }
+  },
   "bidDetailSectionTransport": "Votre transport",
   "@bidDetailSectionTransport": {
     "description": "Titre de la grille de tuiles de la fiche colis voyageur (traveler_transport_section.dart)"
@@ -7606,6 +7617,20 @@
     "placeholders": {
       "place": {
         "type": "String"
+      }
+    }
+  },
+  "travelerTileLieuxDeadline": "Dépôt avant le {date} à {time}",
+  "@travelerTileLieuxDeadline": {
+    "description": "Sous-titre de la tuile Lieux de la fiche colis voyageur quand le colis est accepté (pas encore remis) et que la date limite de dépôt est connue : jusqu'à quand l'expéditeur peut remettre le colis, en heure locale (date courte avec le jour, heure)",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "mar. 3 nov."
+      },
+      "time": {
+        "type": "String",
+        "example": "14:30"
       }
     }
   },
@@ -8226,15 +8251,11 @@
   },
   "ticketQrButtonCompact": "QR du colis",
   "@ticketQrButtonCompact": {
-    "description": "Bouton QR du talon, variante compacte (billet_talon.dart)"
+    "description": "Bouton QR du talon de l'expéditeur : à partir de la remise, à côté du code de retrait ; avant la remise (ACCEPTED), seul en pleine largeur avec le sous-titre ticketQrButtonSubtitle quand le footer ne propose pas le QR (billet_talon.dart)"
   },
-  "ticketQrButtonFull": "QR du colis (à présenter ou coller sur le colis)",
-  "@ticketQrButtonFull": {
-    "description": "Bouton QR du talon, variante pleine largeur (billet_talon.dart)"
-  },
-  "ticketScanStepsButton": "Lire les QR des étapes",
-  "@ticketScanStepsButton": {
-    "description": "Bouton voyageur vers les étapes de scan du talon (billet_talon.dart)"
+  "ticketQrButtonSubtitle": "À présenter ou coller sur le colis",
+  "@ticketQrButtonSubtitle": {
+    "description": "Sous-titre du bouton « QR du colis » du talon de l'expéditeur, colis accepté pas encore remis, quand le footer ne propose pas « Afficher le QR de remise » : paiement carte introuvable ou déclaration d'absence en attente (billet_talon.dart)"
   },
   "ticketAwaitingTravelerConfirmation": "En attente de confirmation du voyageur",
   "@ticketAwaitingTravelerConfirmation": {
@@ -18279,7 +18300,7 @@
   },
   "bidRescheduleTitle": "Trajet reporté",
   "@bidRescheduleTitle": {
-    "description": "Carte de report dans le suivi du colis (trip_reschedule_card.dart)"
+    "description": "Titre de la carte de report (trip_reschedule_card.dart) ; aussi titre de la tuile « À traiter » du report et de son sheet, vue expéditeur (sender_todo_tiles.dart)"
   },
   "bidRescheduleBody": "Le voyageur a reporté son trajet du {previous} au {next} ({reason}).",
   "@bidRescheduleBody": {
@@ -18325,11 +18346,11 @@
   },
   "bidRescheduleKeep": "Garder mon colis",
   "@bidRescheduleKeep": {
-    "description": "Bouton de la carte de report"
+    "description": "Bouton du pied du sheet de la tuile « Trajet reporté » de « À traiter », vue expéditeur (TripRescheduleDecisionButtons, sender_todo_sheets.dart)"
   },
   "bidRescheduleWithdraw": "Annuler sans frais",
   "@bidRescheduleWithdraw": {
-    "description": "Bouton de la carte de report"
+    "description": "Bouton du pied du sheet de la tuile « Trajet reporté » de « À traiter », vue expéditeur (TripRescheduleDecisionButtons, sender_todo_sheets.dart)"
   },
   "bidRescheduleWithdrawConfirmTitle": "Annuler votre envoi ?",
   "@bidRescheduleWithdrawConfirmTitle": {
@@ -19840,7 +19861,7 @@
   },
   "recipientDeclinedSenderTitle": "Destinataire à remplacer",
   "@recipientDeclinedSenderTitle": {
-    "description": "Vue expéditeur : titre de l'encart quand le destinataire a refusé le colis ou s'en est retiré (prevenir_destinataire_card.dart)."
+    "description": "Vue expéditeur : titre de la tuile « À traiter » et de son sheet quand le destinataire a refusé le colis ou s'en est retiré (sender_todo_tiles.dart, sender_todo_sheets.dart)."
   },
   "recipientDeclinedSenderBody": "Désignez un autre destinataire : il pourra suivre le colis et recevoir le code de retrait.",
   "@recipientDeclinedSenderBody": {
@@ -19848,7 +19869,7 @@
   },
   "recipientDeclinedSenderButton": "Désigner un autre destinataire",
   "@recipientDeclinedSenderButton": {
-    "description": "Vue expéditeur : bouton qui ouvre la feuille de changement de destinataire après un refus (prevenir_destinataire_card.dart)."
+    "description": "Vue expéditeur : bouton du pied du sheet de la tuile « Destinataire à remplacer » de « À traiter » (sender_todo_sheets.dart), qui ferme ce sheet et ouvre la feuille de changement de destinataire après un refus."
   },
   "recipientReplacementRequestedSender": "Le voyageur vous demande d'en désigner un autre.",
   "@recipientReplacementRequestedSender": {
@@ -21971,7 +21992,7 @@
   "amendmentPaidSnackbar": "Modification payée",
   "@amendmentPaidSnackbar": {"description": "Snackbar de l'écran d'attente mobile money quand le dépôt de la modification d'un colis est confirmé"},
   "amendmentPay": "Payer {amount}",
-  "@amendmentPay": {"description": "Bouton de la barre du bas de l'expéditeur : payer en mobile money la modification acceptée par le voyageur. {amount} : brut formaté, jamais le net", "placeholders": {"amount": {"type": "String"}}},
+  "@amendmentPay": {"description": "Bouton de la barre du bas de l'expéditeur, et du pied du sheet de la tuile « Modification du colis » (« À traiter ») : payer en mobile money la modification acceptée par le voyageur. {amount} : brut formaté, jamais le net", "placeholders": {"amount": {"type": "String"}}},
   "mobileMoneyOverdueBody": "Si vous validez quand même dans les prochaines minutes, votre paiement sera pris en compte.",
   "@mobileMoneyOverdueBody": {"description": "Texte de l'état « Pas encore validé » du paiement d'un colis : l'échéance est passée mais le dépôt reste ouvert, il peut encore aboutir. Ne dit jamais que le délai est dépassé ni que le paiement est perdu (mobile_money_awaiting_screen.dart)."},
   "mobileMoneyPaymentFailedTitle": "Paiement non abouti",
@@ -22121,7 +22142,7 @@
   "supplementRequestSent": "Demande envoyée à l'expéditeur",
   "@supplementRequestSent": {"description": "Snackbar après une demande de supplément"},
   "supplementCardTitle": "Supplément de prix",
-  "@supplementCardTitle": {"description": "Titre de l'encart du supplément (détail d'envoi)"},
+  "@supplementCardTitle": {"description": "Titre de l'encart du supplément (détail d'envoi) ; aussi titre de la tuile « À traiter » du voyageur (frais à valider) et de son sheet (traveler_todo_tiles.dart)"},
   "supplementDeadline": "Réponse attendue avant {time}",
   "@supplementDeadline": {"description": "Échéance de réponse de l'expéditeur. {time} : heure locale", "placeholders": {"time": {"type": "String"}}},
   "supplementReasonWithItem": "Article : {label}",
@@ -22133,7 +22154,7 @@
   "supplementTravelerPaymentPending": "L'expéditeur est en train de payer",
   "@supplementTravelerPaymentPending": {"description": "Encart voyageur : paiement en cours"},
   "supplementWithdraw": "Retirer la demande",
-  "@supplementWithdraw": {"description": "Bouton secondaire de l'encart voyageur"},
+  "@supplementWithdraw": {"description": "Bouton secondaire de l'encart voyageur (demande proposée) ; aussi bouton du pied du sheet de la tuile « Supplément de prix » de « À traiter » (commission à valider) et de la confirmation du retrait"},
   "supplementWithdrawConfirmTitle": "Retirer la demande ?",
   "@supplementWithdrawConfirmTitle": {"description": "Dialogue de confirmation du retrait"},
   "supplementWithdrawConfirmMessage": "L'expéditeur est prévenu et vous pourrez scanner le colis au prix prévu.",
@@ -22289,11 +22310,11 @@
   "supplementRecapGrossCash": "Remis en espèces par l'expéditeur",
   "@supplementRecapGrossCash": {"description": "Récapitulatif voyageur, espèces : total remis par l'expéditeur"},
   "supplementTravelerCommissionPending": "Frais de service à valider",
-  "@supplementTravelerCommissionPending": {"description": "Encart voyageur : demande en attente du paiement de sa commission (espèces)"},
+  "@supplementTravelerCommissionPending": {"description": "Contenu du sheet de la tuile « Supplément de prix » (vue voyageur) : demande en attente du paiement de sa commission (espèces) ; aussi résumé de repli de la tuile quand le montant des frais est inconnu (traveler_todo_tiles.dart)"},
   "supplementTravelerCommissionPendingHelp": "Validez le paiement des frais de service pour envoyer la demande à l'expéditeur. Sans validation sous 30 minutes, elle est annulée sans frais.",
   "@supplementTravelerCommissionPendingHelp": {"description": "Encart voyageur : aide de la commission à valider"},
   "supplementCommissionConfirm": "Valider le paiement",
-  "@supplementCommissionConfirm": {"description": "Bouton de l'encart voyageur : valider la commission du supplément"},
+  "@supplementCommissionConfirm": {"description": "Bouton du pied du sheet de la tuile « Supplément de prix » de « À traiter », vue voyageur (SupplementCommissionButtons) : valider la commission du supplément"},
   "supplementCommissionConfirmedSnackbar": "Frais de service payés : demande envoyée à l'expéditeur",
   "@supplementCommissionConfirmedSnackbar": {"description": "Snackbar : commission du supplément prélevée après reprise"},
   "supplementTravelerCashCommissionHelp": "Frais de service prélevés. Ils vous sont rendus si la demande n'aboutit pas.",
@@ -22625,7 +22646,7 @@
   "amendmentGainHandoverNote": "À la remise, récupérez {amount} en espèces avant de scanner le QR du colis.",
   "@amendmentGainHandoverNote": {"description": "Note de remise côté voyageur", "placeholders": {"amount": {"type": "String"}}},
   "amendmentPaymentContextLabel": "Modification du colis",
-  "@amendmentPaymentContextLabel": {"description": "Libellé de contexte de la feuille de paiement"},
+  "@amendmentPaymentContextLabel": {"description": "Libellé de contexte de la feuille de paiement ; aussi titre de la tuile « Modification du colis » de « À traiter » (vue expéditeur) et de son sheet (sender_todo_tiles.dart)"},
   "amendmentSheetKgLabelOpen": "KILOS EN PLUS · {price}/KG",
   "@amendmentSheetKgLabelOpen": {"description": "Titre du sélecteur de kilos quand la capacité est libre. {price} : prix au kilo formaté", "placeholders": {"price": {"type": "String"}}},
   "amendmentSheetLoadFailed": "Impossible de charger les options de modification.",

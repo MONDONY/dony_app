@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -73,12 +74,7 @@ Future<void> openSupplementRequestSheet(
   BidModel bid, {
   SupplementRequestAuthorizer? authorize,
 }) async {
-  BidBloc? bidBloc;
-  try {
-    bidBloc = context.read<BidBloc>();
-  } on ProviderNotFoundException {
-    bidBloc = null;
-  }
+  final bidBloc = maybeRead<BidBloc>(context);
   final result = await SupplementRequestSheet.show(
     context,
     bid: bid,

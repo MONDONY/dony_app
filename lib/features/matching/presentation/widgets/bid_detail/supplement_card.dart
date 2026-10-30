@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -22,17 +23,27 @@ import 'package:intl/intl.dart';
 /// refusé ou expiré (lien vers « Le colis ne correspond pas »), remboursé.
 /// Le voyageur voit son net, la commission et le total de l'expéditeur.
 ///
-/// Colis payé en espèces (PR A4) : commission à valider (« Valider le
-/// paiement », 3DS), complément remis en main propre, commission rendue
-/// quand la demande n'aboutit pas.
+/// Colis payé en espèces (PR A4) : commission à valider, complément remis en
+/// main propre, commission rendue quand la demande n'aboutit pas.
+///
+/// Commission à valider ([needsReply]) : la carte n'est plus montée dans le
+/// corps de la fiche, c'est la tuile « Supplément de prix » de « À traiter ».
+/// Son sheet montre ce contenu sans cadre (`framed: false`, sans bouton ni
+/// mesure d'affichage) et porte « Valider le paiement » / « Retirer la
+/// demande » dans son pied ([SupplementCommissionButtons]).
 class SupplementTravelerCard extends StatelessWidget {
-  const SupplementTravelerCard({super.key, required this.bid, this.authorize});
+  const SupplementTravelerCard({
+    super.key,
+    required this.bid,
+    this.framed = true,
+  });
 
   final BidModel bid;
 
-  /// Vérification locale avant « Valider le paiement » ; `null` en usage
-  /// réel (`requirePaymentAuth`).
-  final SupplementRequestAuthorizer? authorize;
+  /// `false` : contenu seul, pour le sheet de la tuile (ni cadre, ni titre, ni
+  /// bouton, ni cubit, ni mesure `bid_supplement_viewed`, émise à l'affichage
+  /// de la tuile).
+  final bool framed;
 
   /// Une demande retirée ou annulée ne laisse rien à dire au voyageur, sauf
   /// en espèces : une demande annulée (commission jamais validée, colis
@@ -57,11 +68,13 @@ class SupplementTravelerCard extends StatelessWidget {
       bid.supplement?.status == BidSupplementStatus.commissionPending;
 
   @override
-  Widget build(BuildContext context) => _SupplementCard(
-    bid: bid,
-    isSender: false,
-    authorize: authorize ?? defaultSupplementAuthorize,
-  );
+  Widget build(BuildContext context) => framed
+      ? _SupplementCard(bid: bid, isSender: false)
+      : _TravelerContent(
+          bid: bid,
+          supplement: bid.supplement!,
+          withActions: false,
+        );
 }
 
 /// Commission du supplément prélevée au voyageur (rendue ou à rendre).
@@ -106,15 +119,10 @@ class SupplementSenderCard extends StatelessWidget {
 }
 
 class _SupplementCard extends StatelessWidget {
-  const _SupplementCard({
-    required this.bid,
-    required this.isSender,
-    this.authorize,
-  });
+  const _SupplementCard({required this.bid, required this.isSender});
 
   final BidModel bid;
   final bool isSender;
-  final SupplementRequestAuthorizer? authorize;
 
   BidSupplement get _supplement => bid.supplement!;
 
@@ -131,11 +139,7 @@ class _SupplementCard extends StatelessWidget {
           title: context.l10n.supplementCardTitle,
           child: isSender
               ? _SenderContent(bid: bid, supplement: _supplement)
-              : _TravelerContent(
-                  bid: bid,
-                  supplement: _supplement,
-                  authorize: authorize ?? defaultSupplementAuthorize,
-                ),
+              : _TravelerContent(bid: bid, supplement: _supplement),
         ),
       ),
     );
@@ -165,24 +169,24 @@ class _SupplementCard extends StatelessWidget {
   void _reloadBid(BuildContext context) => _reloadBidOf(context, bid.id);
 }
 
-void _reloadBidOf(BuildContext context, String bidId) {
-  try {
-    context.read<BidBloc>().add(BidDetailRequested(bidId));
-  } on ProviderNotFoundException {
-    // Encart hors de l'écran de détail (tests) : rien à relire.
-  }
-}
+/// Encart hors de l'écran de détail (tests) : rien à relire.
+void _reloadBidOf(BuildContext context, String bidId) =>
+    maybeRead<BidBloc>(context)?.add(BidDetailRequested(bidId));
 
 class _TravelerContent extends StatelessWidget {
   const _TravelerContent({
     required this.bid,
     required this.supplement,
-    required this.authorize,
+    this.withActions = true,
   });
 
   final BidModel bid;
   final BidSupplement supplement;
-  final SupplementRequestAuthorizer authorize;
+
+  /// Boutons de la carte d'information (« Retirer la demande » d'une demande
+  /// proposée, « Le colis ne correspond pas »). `false` dans le sheet de la
+  /// tuile, dont le pied porte les boutons.
+  final bool withActions;
 
   @override
   Widget build(BuildContext context) {
@@ -306,11 +310,16 @@ class _TravelerContent extends StatelessWidget {
       if (s.isCash && closedUnpaid) ?_cashCommissionHelp(l, s),
     ];
 
-    final canWithdraw =
-        s.status == BidSupplementStatus.proposed ||
-        s.status == BidSupplementStatus.commissionPending;
-    final canConfirmCommission =
-        s.status == BidSupplementStatus.commissionPending;
+    if (!withActions) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: _spaced(children),
+      );
+    }
+
+    // La commission à valider n'est pas une carte d'information : ses
+    // boutons sont dans le pied du sheet de la tuile.
+    final canWithdraw = s.status == BidSupplementStatus.proposed;
     final canRefuseParcel =
         (s.status == BidSupplementStatus.declined ||
             s.status == BidSupplementStatus.expired) &&
@@ -321,14 +330,6 @@ class _TravelerContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ..._spaced(children),
-          if (canConfirmCommission) ...[
-            const SizedBox(height: DonySpacing.md),
-            _CommissionConfirmButton(
-              bid: bid,
-              supplement: s,
-              authorize: authorize,
-            ),
-          ],
           if (canWithdraw) ...[
             const SizedBox(height: DonySpacing.md),
             DonyButton(
@@ -336,7 +337,9 @@ class _TravelerContent extends StatelessWidget {
               label: l.supplementWithdraw,
               variant: DonyButtonVariant.destructiveGhost,
               isLoading: action.isBusy,
-              onPressed: action.isBusy ? null : () => _withdraw(context),
+              onPressed: action.isBusy
+                  ? null
+                  : () => _confirmWithdraw(context, bid, s),
             ),
           ],
           if (canRefuseParcel) ...[
@@ -353,21 +356,33 @@ class _TravelerContent extends StatelessWidget {
       ),
     );
   }
+}
 
-  Future<void> _withdraw(BuildContext context) async {
-    final l = context.l10n;
-    final cubit = context.read<SupplementActionCubit>();
-    final confirmed = await DonyDialog.show(
-      context,
-      title: l.supplementWithdrawConfirmTitle,
-      message: l.supplementWithdrawConfirmMessage,
-      confirmLabel: l.supplementWithdraw,
-      cancelLabel: l.commonCancel,
-      variant: DonyDialogVariant.destructive,
-    );
-    if (confirmed != true) return;
-    await cubit.withdraw(bid, supplement);
-  }
+/// « Retirer la demande » : confirmation destructive, puis
+/// [SupplementActionCubit.withdraw] (le cubit de la carte, ou celui du sheet
+/// de la tuile). Rien n'est envoyé si le bouton a disparu pendant la
+/// confirmation (colis relu entre-temps, demande déjà traitée). Bouton
+/// démonté pendant l'appel (sheet refermé de force) : son écouteur n'est plus
+/// là, le colis est relu ici à la réponse.
+Future<void> _confirmWithdraw(
+  BuildContext context,
+  BidModel bid,
+  BidSupplement supplement,
+) async {
+  final l = context.l10n;
+  final cubit = context.read<SupplementActionCubit>();
+  final bidBloc = maybeRead<BidBloc>(context);
+  final confirmed = await DonyDialog.show(
+    context,
+    title: l.supplementWithdrawConfirmTitle,
+    message: l.supplementWithdrawConfirmMessage,
+    confirmLabel: l.supplementWithdraw,
+    cancelLabel: l.commonCancel,
+    variant: DonyDialogVariant.destructive,
+  );
+  if (confirmed != true || !context.mounted) return;
+  await cubit.withdraw(bid, supplement);
+  if (!context.mounted) bidBloc?.add(BidDetailRequested(bid.id));
 }
 
 /// Espèces, demande close : ce qu'il advient de la commission du
@@ -387,46 +402,76 @@ Widget? _cashCommissionHelp(AppLocalizations l, BidSupplement s) {
   return null;
 }
 
-/// « Valider le paiement » d'une demande en attente de sa commission
-/// (espèces) : `requirePaymentAuth`, puis `…/commission/confirm` et la 3DS
-/// si la carte la redemande. Jamais un nouveau `POST`.
-class _CommissionConfirmButton extends StatelessWidget {
-  const _CommissionConfirmButton({
+/// Pied du sheet de la tuile « Supplément de prix » (commission à valider,
+/// colis payé en espèces), empilé en pleine largeur : « Valider le paiement »
+/// en haut, « Retirer la demande » dessous.
+///
+/// Lit [SupplementCommissionCubit] et [SupplementActionCubit] dans le
+/// contexte : ils sont créés par le `wrapper` du sheet, qui enveloppe aussi
+/// son contenu. Les issues (fermeture, confirmation, erreurs, relecture du
+/// colis) sont traitées par le contenu du sheet. Pendant un appel, les deux
+/// boutons sont désactivés.
+///
+/// « Valider le paiement » : `requirePaymentAuth` ([authorize]), puis
+/// `…/commission/confirm` et la 3DS si la carte la redemande. Jamais un
+/// nouveau `POST`. Une vérification refusée est dite par-dessus le sheet.
+class SupplementCommissionButtons extends StatelessWidget {
+  const SupplementCommissionButtons({
+    super.key,
     required this.bid,
     required this.supplement,
-    required this.authorize,
+    this.authorize,
+    this.enabled = true,
   });
 
   final BidModel bid;
   final BidSupplement supplement;
-  final SupplementRequestAuthorizer authorize;
+
+  /// `false` : derniers boutons connus, désactivés, gardés le temps que le
+  /// sheet se referme quand la demande n'attend plus le voyageur.
+  final bool enabled;
+
+  /// Vérification locale ; `null` en usage réel (`requirePaymentAuth`).
+  final SupplementRequestAuthorizer? authorize;
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<SupplementCommissionCubit>(),
-      child:
-          BlocConsumer<
-            SupplementCommissionCubit,
-            SupplementCommissionResumeState
-          >(
-            listenWhen: (prev, curr) => prev.status != curr.status,
-            listener: _onState,
-            builder: (context, state) => DonyButton(
-              key: const Key('supplement-commission-confirm-btn'),
-              label: context.l10n.supplementCommissionConfirm,
-              iconAsset: 'credit-card',
-              isLoading: state.isBusy,
-              onPressed: state.isBusy ? null : () => _confirm(context),
-            ),
-          ),
+    final l = context.l10n;
+    final commission = context.watch<SupplementCommissionCubit>().state;
+    final action = context.watch<SupplementActionCubit>().state;
+    final busy = !enabled || commission.isBusy || action.isBusy;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DonyButton(
+          key: const Key('supplement-commission-confirm-btn'),
+          label: l.supplementCommissionConfirm,
+          iconAsset: 'credit-card',
+          isLoading: commission.isBusy,
+          onPressed: busy ? null : () => _confirm(context),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        DonyButton(
+          key: const Key('supplement-withdraw-btn'),
+          label: l.supplementWithdraw,
+          variant: DonyButtonVariant.destructiveGhost,
+          isLoading: action.isBusy,
+          onPressed: busy
+              ? null
+              : () => _confirmWithdraw(context, bid, supplement),
+        ),
+      ],
     );
   }
 
   Future<void> _confirm(BuildContext context) async {
     final cubit = context.read<SupplementCommissionCubit>();
+    final bidBloc = maybeRead<BidBloc>(context);
     if (!cubit.beginAuthorization()) return;
-    final authenticated = await authorize(context);
+    final authenticated = await (authorize ?? defaultSupplementAuthorize)(
+      context,
+    );
     if (!context.mounted) {
       cubit.authorizationDenied();
       return;
@@ -441,38 +486,9 @@ class _CommissionConfirmButton extends StatelessWidget {
       return;
     }
     await cubit.resume(bid, supplement);
-  }
-
-  void _onState(BuildContext context, SupplementCommissionResumeState state) {
-    final l = context.l10n;
-    switch (state.status) {
-      case SupplementCommissionResumeStatus.proposed:
-        _reloadBidOf(context, bid.id);
-        DonySnackbar.show(
-          context,
-          message: l.supplementCommissionConfirmedSnackbar,
-          type: DonySnackbarType.success,
-        );
-      case SupplementCommissionResumeStatus.pending:
-        _reloadBidOf(context, bid.id);
-        DonySnackbar.show(context, message: l.supplementCommissionProcessing);
-      case SupplementCommissionResumeStatus.failure:
-        if (state.error == null) {
-          DonySnackbar.show(
-            context,
-            message: l.supplementCommissionAuthInterrupted,
-            type: DonySnackbarType.error,
-          );
-        } else {
-          ErrorPresenter.show(context, state.error);
-          // Carte refusée : la demande est annulée, la fiche le montre.
-          _reloadBidOf(context, bid.id);
-        }
-      case SupplementCommissionResumeStatus.idle ||
-          SupplementCommissionResumeStatus.authorizing ||
-          SupplementCommissionResumeStatus.busy:
-        break;
-    }
+    // Sheet refermé de force pendant l'appel ou la 3DS : son écouteur n'est
+    // plus là pour relire le colis, la tuile resterait jusqu'au relevé.
+    if (!context.mounted) bidBloc?.add(BidDetailRequested(bid.id));
   }
 }
 

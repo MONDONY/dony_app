@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -234,5 +236,90 @@ void main() {
     await cubit.close();
     await cubit.resume(_bid, _pending);
     expect(cubit.beginAuthorization(), isFalse);
+  });
+
+  // Sheet de la tuile fermé pendant l'appel (ou la 3DS) : le cubit est fermé
+  // avec la route, l'issue reste mesurée.
+  group('cubit fermé pendant l\'appel', () {
+    Future<void> closedDuring(
+      SupplementCommissionCubit cubit,
+      Completer<BidSupplement> pending,
+      void Function() complete,
+    ) async {
+      when(
+        () => repository.confirmCommission('bid-1', 'sup-1'),
+      ).thenAnswer((_) => pending.future);
+      final call = cubit.resume(_bid, _pending);
+      await cubit.close();
+      complete();
+      await call;
+    }
+
+    test('frais prélevés : issue et paiement mesurés', () async {
+      final pending = Completer<BidSupplement>();
+      await closedDuring(build(), pending, () => pending.complete(_proposed));
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidSupplementCommissionResumed,
+          properties: {'outcome': 'proposed'},
+        ),
+      ).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.paymentSucceeded,
+          properties: any(named: 'properties'),
+        ),
+      ).called(1);
+    });
+
+    test('3DS abandonnée : échec mesuré', () async {
+      failAuth = true;
+      final pending = Completer<BidSupplement>();
+      await closedDuring(
+        build(),
+        pending,
+        () => pending.complete(
+          const BidSupplement(
+            id: 'sup-1',
+            status: BidSupplementStatus.commissionPending,
+            rail: 'CASH',
+            grossAmount: 16.8,
+            commissionClientSecret: 'pi_secret',
+          ),
+        ),
+      );
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidSupplementCommissionResumed,
+          properties: {'outcome': 'failed'},
+        ),
+      ).called(1);
+    });
+
+    test('carte refusée : échec mesuré', () async {
+      final pending = Completer<BidSupplement>();
+      await closedDuring(
+        build(),
+        pending,
+        () => pending.completeError(
+          const ValidationException(
+            'd',
+            code: 'supplement-commission-card-declined',
+          ),
+        ),
+      );
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidSupplementCommissionResumed,
+          properties: {'outcome': 'failed'},
+        ),
+      ).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.paymentFailed,
+          properties: any(named: 'properties'),
+        ),
+      ).called(1);
+    });
   });
 }

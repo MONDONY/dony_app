@@ -21,6 +21,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockAcceptBloc extends MockBloc<BidAcceptanceEvent, BidAcceptanceState>
@@ -39,8 +41,10 @@ BidModel _bid({
   DateTime? departureAt,
   BidSupplement? supplement,
   List<BidAmendment> amendments = const [],
+  String? cancellationNoShowStatus,
 }) => BidModel(
   id: 'b1',
+  cancellationNoShowStatus: cancellationNoShowStatus,
   supplement: supplement,
   amendments: amendments,
   announcementId: 'a1',
@@ -111,7 +115,9 @@ void main() {
     test('ACCEPTED non confirmé sans fenêtre → true (confirmPresence)', () {
       expect(TravelerStickyBar.hasAction(_bid(status: 'ACCEPTED')), isTrue);
     });
-    test('ACCEPTED fenêtre dépassée non confirmé → false', () {
+    // Le back n'expire jamais un colis ACCEPTED et n'exige pas la présence
+    // confirmée pour le départ : passé la date limite, le scan reste ouvert.
+    test('ACCEPTED fenêtre dépassée non confirmé → true (scan)', () {
       expect(
         TravelerStickyBar.hasAction(
           _bid(
@@ -119,7 +125,7 @@ void main() {
             windowEnd: DateTime.now().subtract(const Duration(hours: 1)),
           ),
         ),
-        isFalse,
+        isTrue,
       );
     });
     test('COMPLETED → false', () {
@@ -285,18 +291,103 @@ void main() {
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
-  testWidgets('ACCEPTED fenêtre expirée non confirmé → barre vide', (
-    tester,
-  ) async {
-    await _pump(
+  // ACCEPTED : confirmé ou non × avant ou après la date limite × absence de
+  // l'expéditeur signalée ou contestée. Passé la date limite (ou une absence
+  // signalée), la présence n'est plus à confirmer mais le colis peut encore
+  // être remis : « Lire le QR du colis », le héros d'alerte reste dans
+  // « À traiter ».
+  group('ACCEPTED : présence, date limite, absence signalée', () {
+    final past = DateTime.now().subtract(const Duration(hours: 1));
+    final future = DateTime.now().add(const Duration(hours: 2));
+    // (confirmé / non confirmé) × (avant / après la date limite) ×
+    // (déclaration d'absence de l'expéditeur ouverte / aucune).
+    // Déclaration ouverte, présence non confirmée : jamais de scan. Le back ne
+    // regarde pas la déclaration au scan de départ et ne la clôt pas : sans
+    // réponse sous 24 h, l'absence serait confirmée, le séquestre remboursé et
+    // l'expéditeur pénalisé alors que le colis voyage.
+    // Déclaration ouverte, présence confirmée : scan proposé, comme avant la
+    // branche (risque connu, à traiter côté back).
+    final cases = <String, (BidModel, String)>{
+      'non confirmé, sans date limite': (_bid(status: 'ACCEPTED'), 'presence'),
+      for (final confirmed in [false, true])
+        for (final (moment, deadline) in [('avant', future), ('après', past)])
+          for (final ns in [null, 'PENDING_CONFIRMATION', 'CONTESTED'])
+            '${confirmed ? 'confirmé' : 'non confirmé'}, $moment la date '
+                'limite, ${ns == null ? 'aucune déclaration' : 'absence $ns'}': (
+              _bid(
+                status: 'ACCEPTED',
+                voyageurConfirmed: confirmed,
+                windowEnd: deadline,
+                cancellationNoShowStatus: ns,
+              ),
+              switch ((confirmed, deadline == past, ns != null)) {
+                (true, _, _) => 'scan',
+                (false, false, _) => 'presence',
+                (false, true, false) => 'scan',
+                (false, true, true) => 'none',
+              },
+            ),
+    };
+    for (final MapEntry(key: name, value: (bid, expected)) in cases.entries) {
+      testWidgets('$name → $expected', (tester) async {
+        expect(TravelerStickyBar.hasAction(bid), expected != 'none');
+        await _pump(tester, bid);
+        switch (expected) {
+          case 'scan':
+            expect(find.text('Lire le QR du colis'), findsOneWidget);
+            expect(find.text('Confirmer ma présence'), findsNothing);
+            final button = tester.widget<DonyButton>(
+              find.byKey(const Key('traveler-scan-btn')),
+            );
+            expect(button.onPressed, isNotNull);
+          case 'presence':
+            expect(find.text('Confirmer ma présence'), findsOneWidget);
+            expect(find.text('Lire le QR du colis'), findsNothing);
+          default:
+            expect(find.text('Lire le QR du colis'), findsNothing);
+            expect(find.text('Confirmer ma présence'), findsNothing);
+        }
+      });
+    }
+
+    testWidgets('en anglais : date limite dépassée → « Scan the parcel QR »', (
       tester,
-      _bid(
-        status: 'ACCEPTED',
-        windowEnd: DateTime.now().subtract(const Duration(hours: 1)),
-      ),
-    );
-    expect(find.text('Lire le QR du colis'), findsNothing);
-    expect(find.text('Confirmer ma présence'), findsNothing);
+    ) async {
+      useEnglish();
+      await _pump(tester, _bid(status: 'ACCEPTED', windowEnd: past));
+      expect(find.text('Scan the parcel QR'), findsOneWidget);
+      expect(find.text('Confirm my presence'), findsNothing);
+    });
+
+    testWidgets('en anglais : avant la date limite → « Confirm my presence »', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pump(tester, _bid(status: 'ACCEPTED', windowEnd: future));
+      expect(find.text('Confirm my presence'), findsOneWidget);
+    });
+
+    testWidgets('date limite dépassée, supplément bloquant → scan éteint', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'ACCEPTED',
+          windowEnd: past,
+          supplement: const BidSupplement(
+            id: 'sup-1',
+            status: BidSupplementStatus.proposed,
+            grossAmount: 17,
+            blocksHandover: true,
+          ),
+        ),
+      );
+      final button = tester.widget<DonyButton>(
+        find.byKey(const Key('traveler-scan-btn')),
+      );
+      expect(button.onPressed, isNull);
+    });
   });
 
   testWidgets('CANCELLED → barre vide (SizedBox)', (tester) async {

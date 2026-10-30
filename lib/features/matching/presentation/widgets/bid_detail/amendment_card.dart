@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_accept_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_action_cubit.dart';
@@ -11,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_pay_button.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -18,10 +20,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-/// Modification en cours ou dernière modification close sans avoir été
-/// acquise. Le serveur ne sert que les modifications acquises et la dernière
+/// Modification en cours de [bid] (la dernière ouverte), `null` sans demande
+/// ouverte. Le serveur ne sert que les modifications acquises et la dernière
 /// non acquise récente (moins de 7 jours) : pas de filtre de date ici.
-BidAmendment? _openOf(BidModel bid) =>
+BidAmendment? openAmendmentOf(BidModel bid) =>
     bid.amendments.where((a) => a.status.isOpen).lastOrNull;
 
 BidAmendment? _closedOf(BidModel bid) =>
@@ -32,41 +34,140 @@ List<BidAmendment> _securedOf(BidModel bid) =>
     bid.amendments.where((a) => a.status.isSecured).toList();
 
 /// Encart « Modification du colis » de la vue expéditeur : la demande en
-/// attente (brut, échéance, « Annuler ma demande ») ou sa fin (refusée,
-/// expirée, annulée, paiement échoué). Jamais le net ni la commission du
-/// voyageur. Une modification acceptée se lit dans la carte Paiement.
+/// attente (brut, échéance) ou sa fin (refusée, expirée, annulée, paiement
+/// échoué). Jamais le net ni la commission du voyageur. Une modification
+/// acceptée se lit dans la carte Paiement.
+///
+/// Une demande où l'expéditeur a un geste à faire ([needsReply]) relève de la
+/// tuile « À traiter » : la carte y est montrée sans cadre ([framed] faux)
+/// dans le sheet de la tuile, dont le pied porte « Annuler ma demande »
+/// ([AmendmentSenderCancelButton]) ou « Payer ». Une demande en commission
+/// chez le voyageur ou close reste une carte d'information du corps.
 class AmendmentSenderCard extends StatelessWidget {
-  const AmendmentSenderCard({super.key, required this.bid});
+  const AmendmentSenderCard({super.key, required this.bid, this.framed = true});
 
   final BidModel bid;
+
+  /// `false` dans le sheet de la tuile « À traiter » : ni cadre ni titre (le
+  /// sheet porte le titre), ni mesure d'affichage (la tuile mesure la
+  /// demande, une fois par statut).
+  final bool framed;
 
   /// La demande ouverte d'abord. Tant que le colis est `ACCEPTED`, une
   /// modification acquise passe avant une close : la fin d'une autre demande
   /// ne doit pas la masquer (elle se lit dans la carte Paiement). Sinon la
   /// plus récente des closes.
   static BidAmendment? _current(BidModel bid) =>
-      _openOf(bid) ??
-      (bid.status == 'ACCEPTED' && _securedOf(bid).isNotEmpty
+      openAmendmentOf(bid) ??
+      (bid.status == 'ACCEPTED' && bid.amendments.any((a) => a.status.isSecured)
           ? null
           : _closedOf(bid));
 
   static bool shouldShow(BidModel bid) => _current(bid) != null;
 
-  /// Une demande est encore ouverte (l'expéditeur peut l'annuler ou la régler) :
-  /// seul cas où la carte relève de « À traiter ». Une demande close (refusée,
-  /// expirée, annulée, paiement échoué) ne fait que renseigner.
-  static bool needsReply(BidModel bid) => _openOf(bid) != null;
+  /// L'expéditeur a un geste à faire sur la demande ouverte : l'annuler
+  /// (proposée, autorisation carte en attente) ou la payer (acceptée, dépôt
+  /// mobile money attendu). Seul cas où elle relève de « À traiter » : son
+  /// sheet porte alors un bouton. En commission chez le voyageur, l'expéditeur
+  /// attend ; close, elle ne fait que renseigner (carte d'information).
+  static bool needsReply(BidModel bid) =>
+      senderAmendmentGesture(openAmendmentOf(bid)) !=
+      SenderAmendmentGesture.none;
 
   @override
   Widget build(BuildContext context) {
     final amendment = _current(bid);
     if (amendment == null) return const SizedBox.shrink();
+    final content = _SenderContent(bid: bid, amendment: amendment);
+    if (!framed) return content;
     return _AmendmentCardShell(
       bid: bid,
       amendment: amendment,
       isSender: true,
-      child: _SenderContent(bid: bid, amendment: amendment),
+      child: content,
     );
+  }
+}
+
+/// Geste attendu de l'expéditeur sur sa modification ouverte : il décide de
+/// la tuile « À traiter » ([AmendmentSenderCard.needsReply]), de sa pastille
+/// et du bouton du pied de son sheet.
+enum SenderAmendmentGesture {
+  /// Le montant n'est pas encore acquis : « Annuler ma demande »
+  /// ([AmendmentSenderCancelButton.canCancel]).
+  cancel,
+
+  /// Acceptée par le voyageur, dépôt mobile money attendu : « Payer »
+  /// ([AmendmentPayButton.isPayable]).
+  pay,
+
+  /// Rien à faire : pas de demande ouverte, ou commission chez le voyageur.
+  none,
+}
+
+/// Geste attendu de l'expéditeur sur [open], sa modification ouverte
+/// ([openAmendmentOf]). Fonction pure.
+SenderAmendmentGesture senderAmendmentGesture(BidAmendment? open) {
+  if (open == null) return SenderAmendmentGesture.none;
+  if (AmendmentSenderCancelButton.canCancel(open)) {
+    return SenderAmendmentGesture.cancel;
+  }
+  if (AmendmentPayButton.isPayable(open)) return SenderAmendmentGesture.pay;
+  return SenderAmendmentGesture.none;
+}
+
+/// « Annuler ma demande » de l'expéditeur, dans le pied du sheet de la tuile
+/// « À traiter » : confirmation destructive, puis [AmendmentActionCubit.cancel]
+/// (le cubit est fourni par le sheet, qui confirme, relit le colis et se
+/// ferme au succès).
+class AmendmentSenderCancelButton extends StatelessWidget {
+  const AmendmentSenderCancelButton({
+    super.key,
+    required this.bid,
+    required this.amendment,
+  });
+
+  final BidModel bid;
+  final BidAmendment amendment;
+
+  /// Le montant n'est pas encore acquis : la demande proposée ou dont la carte
+  /// est en cours d'autorisation s'annule. Acceptée (paiement attendu) ou en
+  /// commission chez le voyageur, elle ne s'annule plus.
+  static bool canCancel(BidAmendment a) =>
+      a.status == BidAmendmentStatus.proposed ||
+      a.status == BidAmendmentStatus.authorizationPending;
+
+  @override
+  Widget build(BuildContext context) =>
+      BlocBuilder<AmendmentActionCubit, AmendmentActionState>(
+        builder: (context, action) => DonyButton(
+          key: const Key('amendment-cancel-btn'),
+          label: context.l10n.amendmentCancelButton,
+          variant: DonyButtonVariant.destructiveGhost,
+          isLoading: action.isBusy,
+          onPressed: action.isBusy ? null : () => _cancel(context),
+        ),
+      );
+
+  Future<void> _cancel(BuildContext context) async {
+    final l = context.l10n;
+    final cubit = context.read<AmendmentActionCubit>();
+    final bidBloc = maybeRead<BidBloc>(context);
+    final confirmed = await DonyDialog.show(
+      context,
+      title: l.amendmentCancelConfirmTitle,
+      message: l.amendmentCancelConfirmMessage,
+      confirmLabel: l.amendmentCancelButton,
+      cancelLabel: l.commonCancel,
+      variant: DonyDialogVariant.destructive,
+    );
+    // Demande traitée ailleurs pendant la confirmation : le pied a retiré le
+    // bouton (démonté), rien à annuler. Le sheet se referme de lui-même.
+    if (!context.mounted || confirmed != true) return;
+    await cubit.cancel(bid, amendment);
+    // Sheet refermé de force pendant l'appel : son écouteur n'est plus là
+    // pour relire le colis, la tuile resterait jusqu'au relevé suivant.
+    if (!context.mounted) bidBloc?.add(BidDetailRequested(bid.id));
   }
 }
 
@@ -86,7 +187,7 @@ class AmendmentTravelerCard extends StatelessWidget {
   /// colis est `ACCEPTED` (une « Les kilos en plus ne sont pas là » chacune),
   /// sinon la dernière close.
   static List<BidAmendment> _sections(BidModel bid) {
-    final open = _openOf(bid);
+    final open = openAmendmentOf(bid);
     final secured = bid.status == 'ACCEPTED'
         ? _securedOf(bid)
         : const <BidAmendment>[];
@@ -135,7 +236,9 @@ class AmendmentTravelerCard extends StatelessWidget {
 }
 
 /// Fournit le cubit d'actions, trace l'affichage et relit le colis après une
-/// action (le `BidBloc` de l'écran, s'il est là).
+/// action du voyageur (le `BidBloc` de l'écran, s'il est là). Côté
+/// expéditeur, la carte encadrée n'a plus d'action (demande close) : le shell
+/// ne fait que tracer l'affichage.
 class _AmendmentCardShell extends StatelessWidget {
   const _AmendmentCardShell({
     super.key,
@@ -165,9 +268,7 @@ class _AmendmentCardShell extends StatelessWidget {
               _reloadBid(context, bid.id);
               DonySnackbar.show(
                 context,
-                message: isSender
-                    ? l.amendmentCancelledSnackbar
-                    : amendment.status.isSecured
+                message: amendment.status.isSecured
                     ? l.amendmentNotBroughtSnackbar
                     : l.amendmentDeclinedSnackbar,
                 type: DonySnackbarType.success,
@@ -186,13 +287,9 @@ class _AmendmentCardShell extends StatelessWidget {
   }
 }
 
-void _reloadBid(BuildContext context, String bidId) {
-  try {
-    context.read<BidBloc>().add(BidDetailRequested(bidId));
-  } on ProviderNotFoundException {
-    // Encart hors de l'écran de détail (tests) : rien à relire.
-  }
-}
+/// Relit le colis ; hors de l'écran de détail (sans `BidBloc`), rien à relire.
+void _reloadBid(BuildContext context, String bidId) =>
+    maybeRead<BidBloc>(context)?.add(BidDetailRequested(bidId));
 
 String _money(double amount, String currency, {bool signed = false}) =>
     '${signed ? '+' : ''}${formatSupplementAmount(amount, currency)}';
@@ -383,9 +480,6 @@ class _SenderContent extends StatelessWidget {
     final a = amendment;
     final name = bid.travelerName ?? l.bidDetailSenderTravelerFallback;
     final kg = _kg(bid.totalWeightKg ?? bid.weightKg ?? 0);
-    final canCancel =
-        a.status == BidAmendmentStatus.proposed ||
-        a.status == BidAmendmentStatus.authorizationPending;
 
     if (!a.status.isOpen) {
       final held = a.rail == BidAmendment.railStripe;
@@ -439,67 +533,40 @@ class _SenderContent extends StatelessWidget {
 
     final accepted = a.status == BidAmendmentStatus.paymentPending;
     final deadline = a.expiresAt;
-    return BlocBuilder<AmendmentActionCubit, AmendmentActionState>(
-      builder: (context, action) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ..._spaced([
-            _StatusLine(
-              iconAsset: accepted ? 'smartphone' : 'timer',
-              color: cs.warning,
-              text: accepted
-                  ? l.amendmentSenderAcceptedStatus(name)
-                  : l.amendmentSenderPendingStatus(name),
-            ),
-            _LinesTable(lines: _lines(context, a, net: false)),
-          ]),
-          _TotalRow(
-            label: a.isCash
-                ? l.amendmentSenderPendingLine
-                : a.isMobileMoney
-                ? l.amendmentSenderPendingLineMobileMoney
-                : l.amendmentSenderPendingLineCard,
-            amount: _money(a.grossAmount, a.currency),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ..._spaced([
+          _StatusLine(
+            iconAsset: accepted ? 'smartphone' : 'timer',
+            color: cs.warning,
+            text: accepted
+                ? l.amendmentSenderAcceptedStatus(name)
+                : l.amendmentSenderPendingStatus(name),
           ),
-          const SizedBox(height: DonySpacing.sm),
-          if (accepted && a.isMobileMoney)
-            _Note(l.amendmentSenderPayNow)
-          else if (deadline != null)
-            _Note(
-              l.amendmentSenderPendingDeadline(
-                _deadlineLabel(context, deadline),
-                _hoursLeft(deadline).toString(),
-                kg,
-              ),
+          _LinesTable(lines: _lines(context, a, net: false)),
+        ]),
+        _TotalRow(
+          label: a.isCash
+              ? l.amendmentSenderPendingLine
+              : a.isMobileMoney
+              ? l.amendmentSenderPendingLineMobileMoney
+              : l.amendmentSenderPendingLineCard,
+          amount: _money(a.grossAmount, a.currency),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        if (accepted && a.isMobileMoney)
+          _Note(l.amendmentSenderPayNow)
+        else if (deadline != null)
+          _Note(
+            l.amendmentSenderPendingDeadline(
+              _deadlineLabel(context, deadline),
+              _hoursLeft(deadline).toString(),
+              kg,
             ),
-          if (canCancel) ...[
-            const SizedBox(height: DonySpacing.md),
-            DonyButton(
-              key: const Key('amendment-cancel-btn'),
-              label: l.amendmentCancelButton,
-              variant: DonyButtonVariant.destructiveGhost,
-              isLoading: action.isBusy,
-              onPressed: action.isBusy ? null : () => _cancel(context),
-            ),
-          ],
-        ],
-      ),
+          ),
+      ],
     );
-  }
-
-  Future<void> _cancel(BuildContext context) async {
-    final l = context.l10n;
-    final cubit = context.read<AmendmentActionCubit>();
-    final confirmed = await DonyDialog.show(
-      context,
-      title: l.amendmentCancelConfirmTitle,
-      message: l.amendmentCancelConfirmMessage,
-      confirmLabel: l.amendmentCancelButton,
-      cancelLabel: l.commonCancel,
-      variant: DonyDialogVariant.destructive,
-    );
-    if (confirmed != true) return;
-    await cubit.cancel(bid, amendment);
   }
 }
 

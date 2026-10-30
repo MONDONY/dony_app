@@ -9,6 +9,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_errors_shown_above.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/copy_code_button.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -66,6 +67,20 @@ class _ReturnCodeBodyState extends State<_ReturnCodeBody> {
 
   @override
   Widget build(BuildContext context) {
+    // L'erreur (lecture du code) s'affiche par-dessus la feuille, qui le
+    // déclare : le snackbar de l'écran resterait caché dessous.
+    return CancellationErrorsShownAbove(
+      bloc: context.read<CancellationBloc>(),
+      child: BlocListener<CancellationBloc, CancellationState>(
+        listenWhen: (_, s) => s is CancellationError,
+        listener: (context, state) =>
+            ErrorPresenter.show(context, (state as CancellationError).error),
+        child: _content(),
+      ),
+    );
+  }
+
+  Widget _content() {
     return BlocBuilder<CancellationBloc, CancellationState>(
       buildWhen: (_, s) =>
           s is ReturnCodeLoaded ||
@@ -328,27 +343,32 @@ class _ReturnEntryBodyState extends State<_ReturnEntryBody> {
           // Le listener de l'écran parent affiche le snackbar + rafraîchit le bid.
           Navigator.of(context, rootNavigator: true).pop();
         } else if (state is CancellationError) {
+          // Affichée par-dessus la feuille, qui le déclare
+          // (CancellationErrorsShownAbove plus bas) : l'écran se tait.
           ErrorPresenter.show(context, state.error);
         }
       },
-      child: Column(
-        children: [
-          Pinput(
-            controller: _controller,
-            length: 6,
-            autofocus: true,
-            onChanged: (v) => widget.codeNotifier.value = v,
-            defaultPinTheme: defaultPinTheme,
-            focusedPinTheme: focusedPinTheme,
-          ),
-          const SizedBox(height: DonySpacing.md),
-          Text(
-            context.l10n.bidDetailReturnConfirmHint,
-            textAlign: TextAlign.center,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: DonySpacing.xl),
-        ],
+      child: CancellationErrorsShownAbove(
+        bloc: context.read<CancellationBloc>(),
+        child: Column(
+          children: [
+            Pinput(
+              controller: _controller,
+              length: 6,
+              autofocus: true,
+              onChanged: (v) => widget.codeNotifier.value = v,
+              defaultPinTheme: defaultPinTheme,
+              focusedPinTheme: focusedPinTheme,
+            ),
+            const SizedBox(height: DonySpacing.md),
+            Text(
+              context.l10n.bidDetailReturnConfirmHint,
+              textAlign: TextAlign.center,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: DonySpacing.xl),
+          ],
+        ),
       ),
     );
   }

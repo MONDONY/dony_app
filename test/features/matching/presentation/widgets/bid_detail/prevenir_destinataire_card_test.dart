@@ -138,18 +138,18 @@ void main() {
     });
   });
 
-  group('RecipientDeclinedCard', () {
+  group('RecipientDeclinedBody', () {
     Future<void> pump(WidgetTester tester, BidModel bid) => tester.pumpWidget(
       localizedApp(
         Scaffold(
-          body: SingleChildScrollView(child: RecipientDeclinedCard(bid: bid)),
+          body: SingleChildScrollView(child: RecipientDeclinedBody(bid: bid)),
         ),
       ),
     );
 
     testWidgets(
-      'destinataire en refus : bandeau neutre et action « Désigner un autre '
-      'destinataire » (FLUTTER-E8)',
+      'destinataire en refus : bandeau neutre et explication, sans titre ni '
+      'bouton (le sheet de la tuile les porte, FLUTTER-E8)',
       (tester) async {
         await pump(
           tester,
@@ -160,7 +160,9 @@ void main() {
           find.byKey(const Key('recipient-declined-sender')),
           findsOneWidget,
         );
-        expect(find.text('Destinataire à remplacer'), findsOneWidget);
+        // Sans cadre : le titre est celui du sheet.
+        expect(find.text('Destinataire à remplacer'), findsNothing);
+        expect(find.byType(DetailCard), findsNothing);
         expect(find.byKey(const Key('recipient-app-declined')), findsOneWidget);
         expect(find.text('Ce destinataire a refusé le colis.'), findsOneWidget);
         expect(find.byKey(const Key('recipient-app-confirmed')), findsNothing);
@@ -169,10 +171,15 @@ void main() {
         expect(find.text('Envoyer le code sur WhatsApp'), findsNothing);
         expect(find.text('Prévenir Fatou'), findsNothing);
         expect(
-          find.byKey(const Key('recipient-declined-change')),
+          find.text(
+            lookupAppLocalizations(
+              const Locale('fr'),
+            ).recipientDeclinedSenderBody,
+          ),
           findsOneWidget,
         );
-        expect(find.text('Désigner un autre destinataire'), findsOneWidget);
+        // Le bouton vit dans le pied du sheet.
+        expect(find.byType(DonyButton), findsNothing);
         // Pas de demande du voyageur : pas de mention.
         expect(
           find.byKey(const Key('recipient-replacement-requested')),
@@ -619,15 +626,15 @@ void main() {
     });
   });
 
-  group('RecipientDeclinedCard', () {
-    testWidgets('rendu public : bandeau, mention du voyageur, action', (
+  group('RecipientDeclinedBody', () {
+    testWidgets('rendu public : bandeau et mention du voyageur', (
       tester,
     ) async {
       await tester.pumpWidget(
         localizedApp(
           Scaffold(
             body: SingleChildScrollView(
-              child: RecipientDeclinedCard(
+              child: RecipientDeclinedBody(
                 bid: BidModel(
                   id: 'bid-001',
                   announcementId: 'ann-001',
@@ -651,10 +658,6 @@ void main() {
       expect(find.text('Ce destinataire a refusé le colis.'), findsOneWidget);
       expect(
         find.byKey(const Key('recipient-replacement-requested')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('recipient-declined-change')),
         findsOneWidget,
       );
     });

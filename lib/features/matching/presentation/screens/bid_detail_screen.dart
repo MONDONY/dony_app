@@ -11,6 +11,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_errors_shown_above.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
@@ -569,7 +570,17 @@ class _BidDetailViewState extends State<_BidDetailView>
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is CancellationError) {
-            ErrorPresenter.show(context, state.error);
+            // Une feuille ouverte par-dessus la fiche qui DÉCLARE afficher
+            // elle-même l'erreur (report de la tuile « À traiter », code de
+            // retour) la montre au-dessus d'elle : le snackbar de l'écran
+            // resterait caché dessous, et doublé il éteindrait le sien
+            // (déduplication de DonySnackbar). Sinon, l'écran affiche.
+            final shownAbove =
+                !(ModalRoute.of(context)?.isCurrent ?? true) &&
+                CancellationErrorsShownAbove.isClaimed(
+                  context.read<CancellationBloc>(),
+                );
+            if (!shownAbove) ErrorPresenter.show(context, state.error);
           }
         },
         child: BlocListener<RatingBloc, RatingState>(
@@ -778,14 +789,20 @@ class _BidDetailViewState extends State<_BidDetailView>
                       ? const DonyDetailSkeleton()
                       : isSender
                       // Seule la lecture du paiement reconstruit le corps : la
-                      // carte Paiement dit « échoué » plutôt que « séquestré ».
-                      ? ValueListenableBuilder<PaymentModel?>(
-                          valueListenable: _existingPaymentNotifier,
-                          builder: (context, payment, _) => SenderDetailBody(
+                      // carte Paiement dit « échoué » plutôt que « séquestré »,
+                      // et le talon garde le QR quand le footer ne le propose
+                      // pas (paiement carte introuvable).
+                      ? ListenableBuilder(
+                          listenable: Listenable.merge([
+                            _existingPaymentNotifier,
+                            _paymentLoadedNotifier,
+                          ]),
+                          builder: (context, _) => SenderDetailBody(
                             bid: _bid,
                             focusSupplement: widget.focusSupplement,
                             focusAmendment: widget.focusAmendment,
-                            existingPayment: payment,
+                            existingPayment: _existingPaymentNotifier.value,
+                            paymentLoaded: _paymentLoadedNotifier.value,
                           ),
                         )
                       : TravelerDetailBody(

@@ -72,7 +72,7 @@ void main() {
     );
   });
 
-  Widget host(BidModel bid, {bool isSender = true}) => MaterialApp(
+  Widget app(Widget child) => MaterialApp(
     theme: AppTheme.light(),
     locale: AppL10n.fr,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -80,16 +80,20 @@ void main() {
     home: Scaffold(
       body: BlocProvider<CancellationBloc>.value(
         value: bloc,
-        child: SingleChildScrollView(
-          child: TripRescheduleCard(bid: bid, isSender: isSender),
-        ),
+        child: SingleChildScrollView(child: child),
       ),
     ),
   );
 
-  testWidgets('expéditeur : nouvelle date, motif, message et ses deux choix', (
-    tester,
-  ) async {
+  Widget host(BidModel bid, {bool isSender = true, bool framed = true}) =>
+      app(TripRescheduleCard(bid: bid, isSender: isSender, framed: framed));
+
+  /// Boutons de réponse de l'expéditeur, posés dans le pied du sheet de la
+  /// tuile « À traiter ».
+  Widget buttons(BidModel bid) => app(TripRescheduleDecisionButtons(bid: bid));
+
+  testWidgets('expéditeur : nouvelle date, motif, message et échéance, sans '
+      'bouton (la réponse passe par la tuile « À traiter »)', (tester) async {
     await tester.pumpWidget(host(_bid(note: 'Vol Air Sénégal annulé')));
 
     expect(find.text('Trajet reporté'), findsOneWidget);
@@ -104,6 +108,24 @@ void main() {
       find.textContaining('Sans réponse, votre colis reste sur le trajet.'),
       findsOneWidget,
     );
+    expect(find.byType(DonyButton), findsNothing);
+    expect(find.byKey(const Key('trip-reschedule-card')), findsOneWidget);
+  });
+
+  testWidgets('sans cadre : ni carte ni titre, le sheet porte le titre', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(_bid(), framed: false));
+
+    expect(find.byKey(const Key('trip-reschedule-card')), findsNothing);
+    expect(find.byType(DonyCard), findsNothing);
+    expect(find.text('Trajet reporté'), findsNothing);
+    expect(find.textContaining('(vol annulé)'), findsOneWidget);
+    expect(find.textContaining('Répondez avant'), findsOneWidget);
+  });
+
+  testWidgets('« Garder mon colis » envoie la décision', (tester) async {
+    await tester.pumpWidget(buttons(_bid()));
 
     await tester.tap(find.byKey(const Key('reschedule-keep')));
     await tester.pump();
@@ -118,7 +140,7 @@ void main() {
   testWidgets('se retirer demande une confirmation avant d\'envoyer', (
     tester,
   ) async {
-    await tester.pumpWidget(host(_bid()));
+    await tester.pumpWidget(buttons(_bid()));
 
     await tester.tap(find.byKey(const Key('reschedule-withdraw')));
     await tester.pumpAndSettle();
@@ -143,7 +165,7 @@ void main() {
   testWidgets('colis déjà remis : la confirmation parle du code de retour', (
     tester,
   ) async {
-    await tester.pumpWidget(host(_bid(status: 'HANDED_OVER')));
+    await tester.pumpWidget(buttons(_bid(status: 'HANDED_OVER')));
 
     await tester.tap(find.byKey(const Key('reschedule-withdraw')));
     await tester.pumpAndSettle();
@@ -151,13 +173,45 @@ void main() {
     expect(find.textContaining('code de retour'), findsOneWidget);
   });
 
-  testWidgets('voyageur : délai laissé à l\'expéditeur, aucun bouton', (
+  testWidgets('pendant l\'envoi : principal en chargement, second inactif', (
+    tester,
+  ) async {
+    whenListen(
+      bloc,
+      const Stream<CancellationState>.empty(),
+      initialState: CancellationLoading(),
+    );
+    await tester.pumpWidget(buttons(_bid()));
+
+    final keep = tester.widget<DonyButton>(
+      find.byKey(const Key('reschedule-keep')),
+    );
+    final withdraw = tester.widget<DonyButton>(
+      find.byKey(const Key('reschedule-withdraw')),
+    );
+    expect(keep.isLoading, isTrue);
+    expect(keep.onPressed, isNull);
+    expect(withdraw.onPressed, isNull);
+  });
+
+  // La carte n'a plus de bouton (ils vivent dans le pied du sheet de la
+  // tuile) : ce qui distingue le voyageur, c'est la consigne affichée.
+  testWidgets('voyageur : délai laissé à l\'expéditeur, pas sa consigne', (
     tester,
   ) async {
     await tester.pumpWidget(host(_bid(), isSender: false));
 
     expect(find.textContaining("L'expéditeur a jusqu'au"), findsOneWidget);
-    expect(find.byKey(const Key('reschedule-keep')), findsNothing);
+    expect(find.textContaining('Répondez avant'), findsNothing);
+  });
+
+  testWidgets('expéditeur : sa consigne, pas celle du voyageur', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(_bid()));
+
+    expect(find.textContaining('Répondez avant'), findsOneWidget);
+    expect(find.textContaining("L'expéditeur a jusqu'au"), findsNothing);
   });
 
   testWidgets('décision close : information seule', (tester) async {

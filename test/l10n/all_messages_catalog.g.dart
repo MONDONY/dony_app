@@ -2628,24 +2628,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailTravelerPendingTitle': (l) => l.bidDetailTravelerPendingTitle,
   'bidDetailTravelerPendingSubtitle': (l) =>
       l.bidDetailTravelerPendingSubtitle(placeholderMarker('amount')),
-  'bidDetailTravelerScanQrTitle': (l) => l.bidDetailTravelerScanQrTitle,
-  'bidDetailTravelerScanQrSubtitle': (l) => l.bidDetailTravelerScanQrSubtitle,
-  'bidDetailTravelerAcceptedTitle': (l) => l.bidDetailTravelerAcceptedTitle,
-  'bidDetailTravelerAcceptedInstructions': (l) =>
-      l.bidDetailTravelerAcceptedInstructions,
-  'bidDetailTravelerAcceptedInstructionsDefault': (l) =>
-      l.bidDetailTravelerAcceptedInstructionsDefault,
-  'bidDetailTravelerCollectedTitle': (l) => l.bidDetailTravelerCollectedTitle,
-  'bidDetailTravelerCollectedSubtitle': (l) =>
-      l.bidDetailTravelerCollectedSubtitle,
-  'bidDetailTravelerInTransitTitle': (l) => l.bidDetailTravelerInTransitTitle,
-  'bidDetailTravelerInTransitSubtitle': (l) =>
-      l.bidDetailTravelerInTransitSubtitle(placeholderMarker('city')),
-  'bidDetailTravelerArrivedTitle': (l) => l.bidDetailTravelerArrivedTitle,
-  'bidDetailTravelerArrivedSubtitle': (l) => l.bidDetailTravelerArrivedSubtitle,
-  'bidDetailTravelerDeliveredTitle': (l) => l.bidDetailTravelerDeliveredTitle,
-  'bidDetailTravelerDeliveredSubtitle': (l) =>
-      l.bidDetailTravelerDeliveredSubtitle,
   'bidDetailTravelerWindowExpiredTitle': (l) =>
       l.bidDetailTravelerWindowExpiredTitle,
   'bidDetailTravelerWindowExpiredSubtitleWithWindow': (l) =>
@@ -2770,11 +2752,32 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'senderTilePrevenirLink': (l) => l.senderTilePrevenirLink,
   'senderTileBadgeCodeReady': (l) => l.senderTileBadgeCodeReady,
   'senderTileBadgeCurrentStep': (l) => l.senderTileBadgeCurrentStep,
+  'todoTileBadgeReplyNeeded': (l) => l.todoTileBadgeReplyNeeded,
+  'senderTodoAmendmentBadgePending': (l) => l.senderTodoAmendmentBadgePending,
+  'senderTodoAmendmentBadgePaymentDue': (l) =>
+      l.senderTodoAmendmentBadgePaymentDue,
+  'travelerTodoSupplementSummary': (l) =>
+      l.travelerTodoSupplementSummary(placeholderMarker('amount')),
+  'senderTodoRecipientSummary': (l) => l.senderTodoRecipientSummary,
+  'senderTodoRecipientRequested': (l) => l.senderTodoRecipientRequested,
+  'senderTodoRescheduleSummary': (l) =>
+      l.senderTodoRescheduleSummary(placeholderMarker('deadline')),
+  'senderTodoRescheduleChoice': (l) => l.senderTodoRescheduleChoice,
+  'senderTodoAmendmentSummary': (l) => l.senderTodoAmendmentSummary(
+    placeholderMarker('weight'),
+    placeholderMarker('amount'),
+  ),
+  'senderTodoAmendmentAmount': (l) =>
+      l.senderTodoAmendmentAmount(placeholderMarker('amount')),
   'bidDetailSectionTransport': (l) => l.bidDetailSectionTransport,
   'travelerTileBadgeTodo': (l) => l.travelerTileBadgeTodo,
   'travelerTileLieux': (l) => l.travelerTileLieux,
   'travelerTileLieuxDropoff': (l) =>
       l.travelerTileLieuxDropoff(placeholderMarker('place')),
+  'travelerTileLieuxDeadline': (l) => l.travelerTileLieuxDeadline(
+    placeholderMarker('date'),
+    placeholderMarker('time'),
+  ),
   'travelerTileLieuxPickup': (l) =>
       l.travelerTileLieuxPickup(placeholderMarker('place')),
   'travelerTileColis': (l) => l.travelerTileColis,
@@ -2945,8 +2948,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'ticketParcelReturnedLabel': (l) => l.ticketParcelReturnedLabel,
   'ticketViewAlternativeTripsButton': (l) => l.ticketViewAlternativeTripsButton,
   'ticketQrButtonCompact': (l) => l.ticketQrButtonCompact,
-  'ticketQrButtonFull': (l) => l.ticketQrButtonFull,
-  'ticketScanStepsButton': (l) => l.ticketScanStepsButton,
+  'ticketQrButtonSubtitle': (l) => l.ticketQrButtonSubtitle,
   'ticketAwaitingTravelerConfirmation': (l) =>
       l.ticketAwaitingTravelerConfirmation,
   'ticketAwaitingSenderCardPayment': (l) => l.ticketAwaitingSenderCardPayment,
@@ -8184,14 +8186,18 @@ const textParameters = <String, List<String>>{
   'bidDetailSenderWindowExpiredSubtitle': ['window'],
   'bidDetailSenderContestCountdown': ['timeLeft'],
   'bidDetailTravelerPendingSubtitle': ['amount'],
-  'bidDetailTravelerInTransitSubtitle': ['city'],
   'bidDetailTravelerWindowExpiredSubtitleWithWindow': ['window'],
   'bidDetailTravelerNoShowPendingSubtitleUntil': ['date', 'time'],
   'bidDetailGainCashAmount': ['amount'],
   'bidDetailGainCashGrossDetail': ['commission', 'net'],
   'bidRejectionReasonShown': ['reason'],
   'senderTileColisSubtitle': ['weight', 'recipient'],
+  'travelerTodoSupplementSummary': ['amount'],
+  'senderTodoRescheduleSummary': ['deadline'],
+  'senderTodoAmendmentSummary': ['weight', 'amount'],
+  'senderTodoAmendmentAmount': ['amount'],
   'travelerTileLieuxDropoff': ['place'],
+  'travelerTileLieuxDeadline': ['date', 'time'],
   'travelerTileLieuxPickup': ['place'],
   'travelerTileColisSubtitle': ['weight', 'recipient'],
   'bidDetailDisclaimerSignedCompact': ['date', 'time'],

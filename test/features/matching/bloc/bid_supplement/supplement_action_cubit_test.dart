@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -155,4 +157,49 @@ void main() {
     expect: () => const <SupplementActionState>[],
     verify: (_) => verifyNever(() => repository.withdraw(any(), any())),
   );
+
+  // Sheet de la tuile « Supplément de prix » fermé pendant l'appel : le cubit
+  // est fermé avec la route, mais l'issue confirmée par le serveur reste
+  // mesurée (et l'échec aussi).
+  test('withdraw : cubit fermé pendant l\'appel, retrait mesuré', () async {
+    final pending = Completer<BidSupplement>();
+    when(
+      () => repository.withdraw('bid-1', 'sup-1'),
+    ).thenAnswer((_) => pending.future);
+    final cubit = build();
+
+    final call = cubit.withdraw(_bid, _supplement);
+    await cubit.close();
+    pending.complete(_with(BidSupplementStatus.withdrawn));
+    await call;
+
+    verify(
+      () => analytics.logEvent(AnalyticsEvents.bidSupplementWithdrawn),
+    ).called(1);
+  });
+
+  test('withdraw : cubit fermé pendant l\'appel, échec mesuré', () async {
+    final pending = Completer<BidSupplement>();
+    when(
+      () => repository.withdraw('bid-1', 'sup-1'),
+    ).thenAnswer((_) => pending.future);
+    final cubit = build();
+
+    final call = cubit.withdraw(_bid, _supplement);
+    await cubit.close();
+    pending.completeError(
+      const ConflictException('x', code: 'supplement-not-pending'),
+    );
+    await call;
+
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.bidSupplementActionFailed,
+        properties: {
+          'action': 'withdraw',
+          'error_code': 'supplement-not-pending',
+        },
+      ),
+    ).called(1);
+  });
 }

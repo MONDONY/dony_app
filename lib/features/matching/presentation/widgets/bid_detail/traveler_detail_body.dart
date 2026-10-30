@@ -10,10 +10,14 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteu
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart'
     show RatingDoneBadge;
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_action_tile.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_info_cards.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_todo_sheets.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_todo_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_transport_section.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
@@ -24,23 +28,30 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 /// Corps de l'écran « Détail d'envoi » (vue voyageur).
 ///
-/// Ordre : billet de colis ; hero « prochaine étape » sans titre quand il ne
-/// porte pas de bouton ; « À traiter » (ce qui attend un geste du voyageur : le
-/// hero à bouton, le supplément et la modification à bouton, seulement s'il y
-/// a quelque chose) ; cartes d'information sans titre (attente du paiement,
-/// scan bloqué, verrou avant le départ, supplément et modification qui
-/// n'attendent rien de lui, trajet reporté, procédure « destinataire absent »
-/// dans tous ses états) ; expéditeur ; gain ; grille de tuiles « Votre
-/// transport » (Lieux, Colis et destinataire, Plus de détails), chacune
-/// ouvrant un bottom sheet ([TravelerTransportSection]) ; badge d'évaluation
-/// si déjà notée.
+/// Ordre : billet de colis ; hero sans titre quand il ne porte pas de bouton
+/// (demande à décider, attente du paiement, absence signalée : les étapes du
+/// transport n'ont plus de carte d'information, le footer les porte) ;
+/// « À traiter » (ce qui attend un geste du voyageur, seulement s'il y a
+/// quelque chose : les cartes d'alerte, hero à bouton puis modification à
+/// bouton, puis la grille des tuiles des demandes qui attendent une réponse,
+/// chacune ouvrant son bottom sheet par [openTravelerTodoSheet] : frais de
+/// service du supplément à valider) ; cartes d'information sans titre
+/// (attente du paiement, scan bloqué, verrou avant le départ, supplément et
+/// modification qui n'attendent rien de lui, trajet reporté, procédure
+/// « destinataire absent » dans tous ses états) ; expéditeur ; gain ; grille
+/// de tuiles « Votre transport » (Lieux, Colis et destinataire, Plus de
+/// détails), chacune ouvrant un bottom sheet ([TravelerTransportSection]) ;
+/// badge d'évaluation si déjà notée.
 ///
-/// Une carte qui change de section ne perd pas son état : le supplément et la
-/// modification portent une `GlobalKey` (cible du défilement `?action=`), qui
-/// les déplace de « À traiter » à l'information (ou l'inverse) SANS les
-/// remonter. Leur `State` est gardé, leurs cubits ne sont pas recréés et les
-/// événements `*_viewed` ne repartent pas. Le hero, sans clé, est remonté
-/// quand il gagne ou perd son bouton (choix assumé).
+/// Une carte qui change de section ne perd pas son état : la modification
+/// porte une `GlobalKey` (cible du défilement `?action=amendment`), qui la
+/// déplace de « À traiter » à l'information (ou l'inverse) SANS la remonter.
+/// Son `State` est gardé, ses cubits ne sont pas recréés et
+/// `bid_amendment_viewed` ne repart pas. Le supplément ne change plus de
+/// section : tuile tant que ses frais attendent le voyageur (mesurée à
+/// l'affichage de la tuile, `surface: tile`), carte d'information sinon (sa
+/// `GlobalKey` reste la cible du défilement `?action=supplement`). Le hero,
+/// sans clé, est remonté quand il gagne ou perd son bouton (choix assumé).
 ///
 /// Une exception, la fin du stagger d'entrée : quand l'animation est retirée
 /// (voir plus bas), toutes les sections sauf le billet et les deux cartes à
@@ -63,8 +74,9 @@ class TravelerDetailBody extends StatefulWidget {
   final BidModel bid;
 
   /// Ouvert depuis une notification de supplément (`?action=supplement`) :
-  /// l'encart du supplément est amené à l'écran au premier affichage où il
-  /// existe.
+  /// au premier affichage où le supplément existe, le sheet de la tuile
+  /// « Supplément de prix » s'ouvre de lui-même si ses frais attendent le
+  /// voyageur, sinon la carte d'information est amenée à l'écran.
   final bool focusSupplement;
 
   /// Ouvert depuis une notification de modification (`?action=amendment` :
@@ -109,6 +121,10 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
   final _supplementKey = GlobalKey();
   bool _supplementFocused = false;
 
+  /// Mesure d'affichage des tuiles « À traiter », une fois par colis, tuile
+  /// et statut pour cet écran.
+  final _todoViews = TodoTileViewLog();
+
   /// Carte de la modification, cible de [TravelerDetailBody.focusAmendment].
   final _amendmentKey = GlobalKey();
   bool _amendmentFocused = false;
@@ -133,27 +149,41 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
     super.dispose();
   }
 
-  /// Amène l'encart du supplément à l'écran une seule fois, dès qu'il existe
-  /// (le colis arrive souvent après le premier affichage, lien profond).
+  /// `?action=supplement`, une seule fois, au premier colis chargé (le corps
+  /// ne reçoit jamais de squelette, l'écran affiche le sien) : frais à valider
+  /// → le sheet de sa tuile s'ouvre (comme `?action=new-code`) ; autre état
+  /// → la carte d'information est amenée à l'écran ; aucun supplément → rien.
+  /// Consommé même sans supplément : une demande créée ensuite (menu ⋮)
+  /// n'ouvre pas de sheet, attribué à tort au lien (`source: link`).
   void _maybeFocusSupplement() {
-    if (!widget.focusSupplement ||
-        _supplementFocused ||
-        !SupplementTravelerCard.shouldShow(widget.bid)) {
+    final bid = widget.bid;
+    if (!widget.focusSupplement || _supplementFocused) return;
+    _supplementFocused = true;
+    if (!SupplementTravelerCard.needsReply(bid)) {
+      if (SupplementTravelerCard.shouldShow(bid)) _scrollTo(_supplementKey);
       return;
     }
-    _supplementFocused = true;
-    _scrollTo(_supplementKey);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Une autre feuille déjà ouverte par-dessus la fiche : on n'empile pas.
+      if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? true)) return;
+      unawaited(
+        openTravelerTodoSheet(
+          context,
+          bid,
+          TravelerTodoTile.supplement,
+          source: TodoSource.link,
+        ),
+      );
+    });
   }
 
-  /// Même chose pour la carte de la modification (`?action=amendment`).
+  /// `?action=amendment` : la carte de la modification est amenée à l'écran,
+  /// une seule fois, au premier colis chargé ; consommé même sans
+  /// modification (une demande arrivée ensuite ne fait pas défiler).
   void _maybeFocusAmendment() {
-    if (!widget.focusAmendment ||
-        _amendmentFocused ||
-        !AmendmentTravelerCard.shouldShow(widget.bid)) {
-      return;
-    }
+    if (!widget.focusAmendment || _amendmentFocused) return;
     _amendmentFocused = true;
-    _scrollTo(_amendmentKey);
+    if (AmendmentTravelerCard.shouldShow(widget.bid)) _scrollTo(_amendmentKey);
   }
 
   void _scrollTo(GlobalKey key) {
@@ -167,6 +197,26 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
         alignment: 0.1,
       );
     });
+  }
+
+  /// Tuile de la section « À traiter » : pastille ambre, résumé de ce qui est
+  /// attendu. Le tap ouvre le sheet avec le contexte de ce `State` (jamais
+  /// celui de la tuile, qui disparaît dès que la demande est traitée).
+  Widget _todoTileFor(TravelerTodoTile tile) {
+    final bid = widget.bid;
+    final l = context.l10n;
+    return todoActionTile(
+      context,
+      role: 'traveler',
+      tile: tile.name,
+      iconName: switch (tile) {
+        TravelerTodoTile.supplement => 'credit-card',
+      },
+      label: travelerTodoTitle(l, tile),
+      subtitle: travelerTodoSummary(l, bid, tile),
+      badge: l.todoTileBadgeReplyNeeded,
+      onTap: () => unawaited(openTravelerTodoSheet(context, bid, tile)),
+    );
   }
 
   @override
@@ -192,34 +242,56 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
     _maybeFocusSupplement();
     _maybeFocusAmendment();
 
-    // Hero : sous le billet quand il informe, sous « À traiter » quand c'est
-    // une alerte qui attend le voyageur.
+    // Hero : sous le billet quand il informe (demande à décider, attente du
+    // paiement, absence signalée), sous « À traiter » quand c'est une alerte
+    // qui attend le voyageur. Aux étapes du transport il ne rend rien
+    // (`isShown` faux) : aucune section, donc aucun espace vide.
     final hero = TravelerHeroCard.isShown(bid)
         ? TravelerHeroCard(bid: bid)
         : null;
     final heroAction = hero != null && TravelerHeroCard.hasAction(bid);
 
-    // Supplément et modification : sous « À traiter » tant qu'ils attendent
-    // un geste du voyageur, sinon simples informations, sans titre. La clé de
-    // focus suit la carte d'un côté comme de l'autre.
-    final supplement = SupplementTravelerCard.shouldShow(bid)
+    // Supplément : tuile « À traiter » tant que ses frais attendent le
+    // voyageur, sinon carte d'information sans titre (cible du défilement
+    // `?action=supplement`).
+    final supplement =
+        SupplementTravelerCard.shouldShow(bid) &&
+            !SupplementTravelerCard.needsReply(bid)
         ? SupplementTravelerCard(key: _supplementKey, bid: bid)
         : null;
-    final supplementReply =
-        supplement != null && SupplementTravelerCard.needsReply(bid);
+    // Modification : sous « À traiter » tant qu'elle attend un geste du
+    // voyageur, sinon simple information, sans titre. La clé de focus suit la
+    // carte d'un côté comme de l'autre.
     final amendment = AmendmentTravelerCard.shouldShow(bid)
         ? AmendmentTravelerCard(key: _amendmentKey, bid: bid)
         : null;
     final amendmentReply =
         amendment != null && AmendmentTravelerCard.needsReply(bid);
 
+    // Demandes qui attendent une réponse : une tuile chacune (frais du
+    // supplément à valider), sous les cartes d'alerte.
+    final todoTiles = travelerTodoTilesFor(bid);
+    // Mesure d'affichage de chaque tuile, plus celle de la carte qu'elle
+    // reprend ([travelerTodoViewed]), une fois chacune pour cet écran.
+    _todoViews.logAll(context, bid.id, [
+      for (final tile in todoTiles) ...[
+        travelerTodoShown(tile, bid),
+        ?travelerTodoViewed(tile, bid),
+      ],
+    ]);
+
     // « À traiter » ne réunit que ce qui attend une réponse ou un geste, et
-    // seulement des cartes qui rendent toujours un contenu (jamais un titre
-    // seul) : le hero à bouton, le supplément et la modification à bouton.
+    // seulement ce qui rend toujours un contenu (jamais un titre seul) : les
+    // cartes d'alerte (hero à bouton, modification à bouton), puis la grille
+    // des tuiles.
     final actions = <Widget>[
       if (heroAction) hero,
-      if (supplementReply) supplement,
       if (amendmentReply) amendment,
+      if (todoTiles.isNotEmpty)
+        DonyActionTileGrid(
+          key: const ValueKey('todo-tiles'),
+          tiles: [for (final tile in todoTiles) _todoTileFor(tile)],
+        ),
     ];
 
     // Informations sans titre : phrases d'aide sorties du footer (qui n'a
@@ -231,8 +303,7 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
         ('info-scan-blocked', TravelerScanBlockedCard(bid: bid)),
       if (lockedHint != null)
         ('info-locked', TravelerHandoverLockedCard(lockedHint: lockedHint)),
-      if (supplement != null && !supplementReply)
-        ('info-supplement', supplement),
+      if (supplement != null) ('info-supplement', supplement),
       if (amendment != null && !amendmentReply) ('info-amendment', amendment),
       // Le voyageur n'a aucun bouton sur un report : l'expéditeur décide.
       if (TripRescheduleCard.shouldShow(bid))

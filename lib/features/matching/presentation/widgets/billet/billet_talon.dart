@@ -4,7 +4,6 @@ import 'package:dony/features/content_categories/presentation/content_category_l
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_rejection_reason.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip_validation.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
@@ -26,6 +25,14 @@ import 'package:go_router/go_router.dart';
 /// existe ; le voyageur seulement à partir de la remise
 /// ([travelerVisibleTrackingNumber]).
 ///
+/// Le voyageur n'a plus de bouton « Lire les QR des étapes » (ACCEPTED à
+/// ARRIVED) : le footer porte déjà « Lire le QR du colis » puis « Valider la
+/// remise ». Avant la remise (ACCEPTED), l'expéditeur n'a le bouton « QR du
+/// colis » que si le footer ne propose pas « Afficher le QR de remise »
+/// ([showQrInTalon]). Sans zone d'action ni numéro (colis accepté, pas encore
+/// remis), le talon ne rend rien et [ColisBillet] retire aussi la perforation
+/// ([isShown]).
+///
 /// NOTE : les boutons [_QrTalonButton] et [_RetraitTalonButton] ouvrent
 /// respectivement la [QrSheet] et la [RetraitCodeSheet] ; les BLoCs ambiants
 /// (TrackingBloc / BidBloc) sont fournis par l'écran parent. Ce widget
@@ -34,7 +41,65 @@ class BilletTalon extends StatelessWidget {
   final BidModel bid;
   final bool isSender;
 
-  const BilletTalon({super.key, required this.bid, required this.isSender});
+  /// Expéditeur, colis ACCEPTED : le footer ne propose pas « Afficher le QR
+  /// de remise » (paiement carte introuvable, déclaration d'absence en
+  /// attente, voir `SenderStickyBar.leavesQrToTalon`), le talon porte alors
+  /// le bouton « QR du colis » et son sous-titre. Ignoré aux autres statuts
+  /// et côté voyageur.
+  final bool showQrInTalon;
+
+  const BilletTalon({
+    super.key,
+    required this.bid,
+    required this.isSender,
+    this.showQrInTalon = false,
+  });
+
+  /// Le talon a quelque chose à montrer : une zone d'action ou le numéro de
+  /// suivi. Sinon (colis accepté pas encore remis, sans numéro côté
+  /// expéditeur ; toujours côté voyageur ; statut inconnu de l'app, sans
+  /// numéro), ni talon ni perforation. Lu sans construire la zone.
+  static bool isShown(
+    BidModel bid, {
+    required bool isSender,
+    bool showQrInTalon = false,
+  }) => isSender
+      ? _hasSenderAction(bid, showQrInTalon: showQrInTalon) ||
+            bid.trackingNumber != null
+      : _hasTravelerAction(bid) || travelerVisibleTrackingNumber(bid) != null;
+
+  /// Statuts où les deux côtés ont une zone d'action : attente (décision,
+  /// paiement), livraison, demande close.
+  static const _actionStatuses = {
+    'PENDING',
+    'PAYMENT_ESCROWED',
+    'AWAITING_PAYMENT',
+    'COMPLETED',
+    'DELIVERED',
+    'CANCELLED',
+    'REJECTED',
+    'EXPIRED',
+    'NO_SHOW',
+    'PARCEL_REFUSED',
+  };
+
+  /// Statuts de la remise au retrait (HANDED_OVER à ARRIVED).
+  static const _handedOverStatuses = {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'};
+
+  /// [_senderActionZone] rend une zone, sans la construire : en plus des
+  /// statuts communs, la remise au retrait (QR, code de retrait), et le QR
+  /// d'un colis accepté quand le footer le laisse au talon.
+  static bool _hasSenderAction(BidModel bid, {required bool showQrInTalon}) =>
+      _actionStatuses.contains(bid.status) ||
+      _handedOverStatuses.contains(bid.status) ||
+      (bid.status == 'ACCEPTED' && showQrInTalon);
+
+  /// [_travelerActionZone] rend une zone, sans la construire : en plus des
+  /// statuts communs, la remise au retrait seulement quand le code de
+  /// retrait est à renouveler.
+  static bool _hasTravelerAction(BidModel bid) =>
+      _actionStatuses.contains(bid.status) ||
+      (_handedOverStatuses.contains(bid.status) && bid.pickupCodeRenewalNeeded);
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +108,19 @@ class BilletTalon extends StatelessWidget {
     final trackingNumber = isSender
         ? bid.trackingNumber
         : travelerVisibleTrackingNumber(bid);
+    final action = isSender
+        ? _senderActionZone(bid, showQrInTalon: showQrInTalon)
+        : _travelerActionZone(bid);
+    // Le prédicat de [isShown] doit dire exactement si une zone existe.
+    assert(
+      (action != null) ==
+          (isSender
+              ? _hasSenderAction(bid, showQrInTalon: showQrInTalon)
+              : _hasTravelerAction(bid)),
+    );
+    if (action == null && trackingNumber == null) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -56,9 +134,9 @@ class BilletTalon extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildActionZone(context),
+          ?action,
           if (trackingNumber != null) ...[
-            const SizedBox(height: DonySpacing.md),
+            if (action != null) const SizedBox(height: DonySpacing.md),
             TalonTrackingStrip(
               trackingNumber: trackingNumber,
               trackingToken: bid.trackingToken,
@@ -69,68 +147,80 @@ class BilletTalon extends StatelessWidget {
     );
   }
 
-  Widget _buildActionZone(BuildContext context) {
+  // ── Sender dispatch ─────────────────────────────────────────────────────────
+  /// Zone d'action de l'expéditeur, `null` quand il n'y a rien à y mettre.
+  static Widget? _senderActionZone(
+    BidModel bid, {
+    required bool showQrInTalon,
+  }) {
     final status = bid.status;
+    return switch (status) {
+      // Carte pas encore payée : c'est à l'expéditeur d'agir (FLUTTER-G7).
+      'PENDING' when bid.isAwaitingSenderCardPayment =>
+        const _PendingPlaceholder(awaitingMyPayment: true),
+      'PENDING' || 'PAYMENT_ESCROWED' => const _PendingPlaceholder(),
+      // Offre mobile money acceptée par le voyageur : c'est à l'expéditeur
+      // de payer (30 min), via « Payer par mobile money » dans la barre
+      // collante. Le placeholder « en attente du voyageur » serait faux ici.
+      'AWAITING_PAYMENT'
+          when bid.paymentMethod == BidPaymentMethod.mobileMoney =>
+        const _SenderAwaitingPaymentBlock(),
+      'AWAITING_PAYMENT' => const _PendingPlaceholder(),
+      // Décision du propriétaire : avant la remise, le QR s'ouvre depuis le
+      // footer « Afficher le QR de remise » (feuille du QR, avec la consigne
+      // « imprimer et coller sur le colis »), il ne reste que le numéro de
+      // suivi. Quand le footer ne le propose pas (paiement carte introuvable,
+      // déclaration d'absence en attente), le QR reste ici, avec son
+      // sous-titre.
+      'ACCEPTED' when showQrInTalon => _QrTalonButton(bid: bid, withHint: true),
+      'ACCEPTED' => null,
+      // Le code de retrait existe dès la remise (HANDED_OVER). Comme le QR,
+      // il s'ouvre dans un bottom sheet : deux boutons côte à côte dans le
+      // talon, le QR restant accessible jusqu'au retrait.
+      // ARRIVED (voyageur arrivé à destination) se comporte comme IN_TRANSIT :
+      // c'est justement le moment où le code de retrait sert le plus.
+      // Un code expiré mais encore présent compte comme absent : le
+      // voyageur ne peut plus s'en servir (FLUTTER-G2).
+      'HANDED_OVER' ||
+      'IN_TRANSIT' ||
+      'ARRIVED' when !bid.needsNewPickupCode => Row(
+        children: [
+          Expanded(child: _QrTalonButton(bid: bid)),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(child: _RetraitTalonButton(bid: bid)),
+        ],
+      ),
+      // Colis remis sans code : le serveur l'a effacé après trois essais
+      // faux du voyageur, ou à l'expiration (FLUTTER-G1). Le QR seul
+      // laissait le colis inconfirmable : l'expéditeur peut en générer un
+      // nouveau ici.
+      'HANDED_OVER' || 'IN_TRANSIT' || 'ARRIVED' => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _QrTalonButton(bid: bid),
+          const SizedBox(height: DonySpacing.sm),
+          TalonBlockedCodeBlock(
+            bidId: bid.id,
+            expired: bid.isPickupCodeExpired,
+          ),
+        ],
+      ),
+      'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
+      'CANCELLED' => _CancelledBlock(bid: bid, isSender: true),
+      'REJECTED' => _RejectedBlock(bid: bid, isSender: true),
+      'EXPIRED' when bid.isExpiredAtHandoverDeadline =>
+        const _HandoverDeadlineExpiredBlock(isSender: true),
+      'NO_SHOW' ||
+      'PARCEL_REFUSED' ||
+      'EXPIRED' => _ClosedBlock(status: status, isSender: true),
+      _ => null,
+    };
+  }
 
-    // ── Sender dispatch ───────────────────────────────────────────────────────
-    if (isSender) {
-      return switch (status) {
-        // Carte pas encore payée : c'est à l'expéditeur d'agir (FLUTTER-G7).
-        'PENDING' when bid.isAwaitingSenderCardPayment =>
-          const _PendingPlaceholder(awaitingMyPayment: true),
-        'PENDING' || 'PAYMENT_ESCROWED' => const _PendingPlaceholder(),
-        // Offre mobile money acceptée par le voyageur : c'est à l'expéditeur
-        // de payer (30 min), via « Payer par mobile money » dans la barre
-        // collante. Le placeholder « en attente du voyageur » serait faux ici.
-        'AWAITING_PAYMENT'
-            when bid.paymentMethod == BidPaymentMethod.mobileMoney =>
-          const _SenderAwaitingPaymentBlock(),
-        'AWAITING_PAYMENT' => const _PendingPlaceholder(),
-        'ACCEPTED' => _QrTalonButton(bid: bid),
-        // Le code de retrait existe dès la remise (HANDED_OVER). Comme le QR,
-        // il s'ouvre dans un bottom sheet : deux boutons côte à côte dans le
-        // talon, le QR restant accessible jusqu'au retrait.
-        // ARRIVED (voyageur arrivé à destination) se comporte comme IN_TRANSIT :
-        // c'est justement le moment où le code de retrait sert le plus.
-        // Un code expiré mais encore présent compte comme absent : le
-        // voyageur ne peut plus s'en servir (FLUTTER-G2).
-        'HANDED_OVER' ||
-        'IN_TRANSIT' ||
-        'ARRIVED' when !bid.needsNewPickupCode => Row(
-          children: [
-            Expanded(child: _QrTalonButton(bid: bid, compact: true)),
-            const SizedBox(width: DonySpacing.sm),
-            Expanded(child: _RetraitTalonButton(bid: bid)),
-          ],
-        ),
-        // Colis remis sans code : le serveur l'a effacé après trois essais
-        // faux du voyageur, ou à l'expiration (FLUTTER-G1). Le QR seul
-        // laissait le colis inconfirmable : l'expéditeur peut en générer un
-        // nouveau ici.
-        'HANDED_OVER' || 'IN_TRANSIT' || 'ARRIVED' => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _QrTalonButton(bid: bid, compact: true),
-            const SizedBox(height: DonySpacing.sm),
-            TalonBlockedCodeBlock(
-              bidId: bid.id,
-              expired: bid.isPickupCodeExpired,
-            ),
-          ],
-        ),
-        'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
-        'CANCELLED' => _CancelledBlock(bid: bid, isSender: true),
-        'REJECTED' => _RejectedBlock(bid: bid, isSender: true),
-        'EXPIRED' when bid.isExpiredAtHandoverDeadline =>
-          const _HandoverDeadlineExpiredBlock(isSender: true),
-        'NO_SHOW' ||
-        'PARCEL_REFUSED' ||
-        'EXPIRED' => _ClosedBlock(status: status, isSender: true),
-        _ => const SizedBox.shrink(),
-      };
-    }
-
-    // ── Traveler dispatch ───────────────────────────────────────────────────────
+  // ── Traveler dispatch ───────────────────────────────────────────────────────
+  /// Zone d'action du voyageur, `null` quand il n'y a rien à y mettre.
+  static Widget? _travelerActionZone(BidModel bid) {
+    final status = bid.status;
     return switch (status) {
       'PENDING' || 'PAYMENT_ESCROWED' => _TravelerDecisionSummary(bid: bid),
       // Voyageur vient d'accepter une offre mobile money : l'expéditeur a
@@ -138,29 +228,17 @@ class BilletTalon extends StatelessWidget {
       // paiement n'est pas séquestré (le bid repasse alors en ACCEPTED) —
       // simple repère visuel, jamais d'action de scan.
       'AWAITING_PAYMENT' => const _TravelerAwaitingPaymentBlock(),
-      // ACCEPTED / HANDED_OVER / IN_TRANSIT : accès au scan depuis le détail →
-      // lien vers les étapes du Suivi (ScanHub : Départ/Transit/Arrivée + scan
-      // QR + identification par numéro). La barre collante garde son CTA
-      // contextuel (Scanner le colis / Valider la remise).
-      // ARRIVED : le trajet est arrivé mais le scan d'arrivée reste à faire →
-      // le voyageur garde l'accès aux étapes de scan.
       // Code de retrait bloqué ou expiré (FLUTTER-G2) : seul l'expéditeur
       // peut en générer un nouveau, le voyageur le lui demande d'ici. Sur un
       // back antérieur, le drapeau reste faux et le talon ne change pas.
-      'HANDED_OVER' ||
-      'IN_TRANSIT' ||
-      'ARRIVED' when bid.pickupCodeRenewalNeeded => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _TravelerScanStepsButton(bid: bid),
-          const SizedBox(height: DonySpacing.sm),
-          TalonCodeRenewalRequestBlock(bidId: bid.id),
-        ],
-      ),
-      'ACCEPTED' ||
-      'HANDED_OVER' ||
-      'IN_TRANSIT' ||
-      'ARRIVED' => _TravelerScanStepsButton(bid: bid),
+      'HANDED_OVER' || 'IN_TRANSIT' || 'ARRIVED'
+          when bid.pickupCodeRenewalNeeded =>
+        TalonCodeRenewalRequestBlock(bidId: bid.id),
+      // ACCEPTED à ARRIVED : plus de bouton des étapes de scan, le footer
+      // porte « Lire le QR du colis » puis « Valider la remise » (et le menu
+      // ⋮ « Scanner le transit »). Il ne reste que le numéro de suivi, à
+      // partir de la remise.
+      'ACCEPTED' || 'HANDED_OVER' || 'IN_TRANSIT' || 'ARRIVED' => null,
       'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
       'CANCELLED' => _CancelledBlock(bid: bid, isSender: false),
       'REJECTED' => _RejectedBlock(bid: bid, isSender: false),
@@ -171,7 +249,7 @@ class BilletTalon extends StatelessWidget {
       'NO_SHOW' ||
       'PARCEL_REFUSED' ||
       'EXPIRED' => _ClosedBlock(status: status, isSender: false),
-      _ => const SizedBox.shrink(),
+      _ => null,
     };
   }
 }
@@ -592,29 +670,44 @@ class _ReturnedBlock extends StatelessWidget {
 
 // ── Inline helper widgets ─────────────────────────────────────────────────────
 
-/// sender / ACCEPTED · HANDED_OVER · IN_TRANSIT — bouton d'ouverture de la
-/// [QrSheet] (QR du colis à présenter ou à coller).
+/// sender / HANDED_OVER · IN_TRANSIT · ARRIVED — bouton d'ouverture de la
+/// [QrSheet] (QR du colis à présenter ou à coller). Libellé court : il tient
+/// à côté du « Code de retrait » ([Expanded]).
 ///
-/// En mode [compact] (côté IN_TRANSIT, à côté du code retrait), le label est
-/// raccourci pour tenir dans une largeur contrainte ([Expanded]).
+/// sender / ACCEPTED, quand le footer ne propose pas le QR ([withHint]) :
+/// seul en pleine largeur, avec la précision « À présenter ou coller sur le
+/// colis » en sous-titre plus petit sous le libellé.
 class _QrTalonButton extends StatelessWidget {
   final BidModel bid;
-  final bool compact;
+  final bool withHint;
 
-  const _QrTalonButton({required this.bid, this.compact = false});
+  const _QrTalonButton({required this.bid, this.withHint = false});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final text = context.l10n.ticketQrButtonCompact;
     return OutlinedButton.icon(
       onPressed: () => QrSheet.show(context, bidId: bid.id, status: bid.status),
       icon: DonyIcon('qr-code', size: 20, color: cs.primary),
-      label: Text(
-        compact
-            ? context.l10n.ticketQrButtonCompact
-            : context.l10n.ticketQrButtonFull,
-        textAlign: TextAlign.center,
-      ),
+      label: withHint
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(text),
+                Text(
+                  context.l10n.ticketQrButtonSubtitle,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            )
+          : Text(text, textAlign: TextAlign.center),
       style: OutlinedButton.styleFrom(
         foregroundColor: cs.primary,
         side: BorderSide(color: cs.primary),
@@ -643,36 +736,6 @@ class _RetraitTalonButton extends StatelessWidget {
       onPressed: () => RetraitCodeSheet.show(context, bid: bid),
       icon: DonyIcon('key-round', size: 20, color: cs.primary),
       label: Text(context.l10n.ticketPickupCode, textAlign: TextAlign.center),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: cs.primary,
-        side: BorderSide(color: cs.primary),
-        padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-        ),
-      ),
-    );
-  }
-}
-
-/// traveler / HANDED_OVER · IN_TRANSIT — mode « Valider une étape » sur le
-/// trajet de ce colis, où le voyageur scanne (QR) ou saisit le numéro.
-/// Poussé, pas `go` : le retour ramène au colis (FLUTTER-9N).
-class _TravelerScanStepsButton extends StatelessWidget {
-  const _TravelerScanStepsButton({required this.bid});
-
-  final BidModel bid;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return OutlinedButton.icon(
-      onPressed: () => openTripValidation(context, bid),
-      icon: DonyIcon('scan-line', size: 20, color: cs.primary),
-      label: Text(
-        context.l10n.ticketScanStepsButton,
-        textAlign: TextAlign.center,
-      ),
       style: OutlinedButton.styleFrom(
         foregroundColor: cs.primary,
         side: BorderSide(color: cs.primary),

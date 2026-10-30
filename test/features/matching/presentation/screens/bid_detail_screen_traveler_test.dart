@@ -27,6 +27,7 @@ import 'package:dony/features/matching/presentation/screens/bid_detail_screen.da
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_status_stamp.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
@@ -92,6 +93,8 @@ BidModel _bid(
   String status, {
   bool voyageurConfirmed = false,
   DateTime? departureAt,
+  DateTime? handoverDeadline,
+  String? cancellationNoShowStatus,
   String? trackingNumber,
   String? rejectionReason,
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
@@ -106,6 +109,8 @@ BidModel _bid(
   status: status,
   voyageurConfirmed: voyageurConfirmed,
   departureAt: departureAt,
+  handoverDeadline: handoverDeadline,
+  cancellationNoShowStatus: cancellationNoShowStatus,
   trackingNumber: trackingNumber,
   rejectionReason: rejectionReason,
   paymentMethod: paymentMethod,
@@ -304,81 +309,80 @@ void main() {
       bid: _bid('ACCEPTED'),
       stamp: 'Confirmé',
       title: '#BID-00',
-      sections: ['billet', 'hero', 'expediteur', 'gain', 'transport'],
+      sections: ['billet', 'expediteur', 'gain', 'transport'],
       footer: ['Confirmer ma présence'],
-      talon: 'Lire les QR des étapes',
       gain: 'VOUS RECEVEZ',
-      hero: 'Récupérez le colis',
     ),
     'ACCEPTED (présence confirmée)': _Scenario(
       bid: _bid('ACCEPTED', voyageurConfirmed: true),
       stamp: 'Confirmé',
       title: '#BID-00',
-      sections: ['billet', 'hero', 'expediteur', 'gain', 'transport'],
+      sections: ['billet', 'expediteur', 'gain', 'transport'],
       footer: ['Lire le QR du colis'],
-      talon: 'Lire les QR des étapes',
       gain: 'VOUS RECEVEZ',
-      hero: 'Lisez le QR du colis',
+    ),
+    // Date limite dépassée, présence non confirmée : le héros d'alerte va
+    // dans « À traiter », le footer garde le scan du départ (le back
+    // n'expire pas un colis accepté).
+    'ACCEPTED (date limite dépassée)': _Scenario(
+      bid: _bid('ACCEPTED', handoverDeadline: _past),
+      stamp: 'Confirmé',
+      title: '#BID-00',
+      sections: ['billet', 'todo', 'expediteur', 'gain', 'transport'],
+      footer: ['Lire le QR du colis'],
+      gain: 'VOUS RECEVEZ',
+    ),
+    // Absence de l'expéditeur signalée, présence non confirmée : héros
+    // d'information sous le billet, pas de footer. Pas de scan du départ
+    // tant que la déclaration est ouverte : le back ne la clôt pas au scan,
+    // et la confirmerait 24 h plus tard (remboursement, pénalité) alors que
+    // le colis voyage.
+    'ACCEPTED (absence de l\'expéditeur signalée)': _Scenario(
+      bid: _bid(
+        'ACCEPTED',
+        handoverDeadline: _past,
+        cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+      ),
+      stamp: 'Confirmé',
+      title: '#BID-00',
+      sections: ['billet', 'hero', 'expediteur', 'gain', 'transport'],
+      gain: 'VOUS RECEVEZ',
+      hero: 'Absence signalée',
     ),
     'HANDED_OVER': _Scenario(
       bid: _bid('HANDED_OVER', departureAt: _past, trackingNumber: 'YAD-0042'),
       stamp: 'En route',
       title: '#YAD-0042',
-      sections: [
-        'billet',
-        'hero',
-        'info-noshow',
-        'expediteur',
-        'gain',
-        'transport',
-      ],
+      sections: ['billet', 'info-noshow', 'expediteur', 'gain', 'transport'],
       footer: ['Valider la remise'],
-      talon: 'Lire les QR des étapes',
+      talon: 'NUMÉRO DE SUIVI',
       gain: 'VOUS RECEVEZ',
-      hero: 'Colis récupéré',
     ),
     'IN_TRANSIT': _Scenario(
       bid: _bid('IN_TRANSIT', departureAt: _past, trackingNumber: 'YAD-0042'),
       stamp: 'En transit',
       title: '#YAD-0042',
-      sections: [
-        'billet',
-        'hero',
-        'info-noshow',
-        'expediteur',
-        'gain',
-        'transport',
-      ],
+      sections: ['billet', 'info-noshow', 'expediteur', 'gain', 'transport'],
       footer: ['Valider la remise'],
-      talon: 'Lire les QR des étapes',
+      talon: 'NUMÉRO DE SUIVI',
       gain: 'VOUS RECEVEZ',
-      hero: 'Colis en route',
     ),
     'ARRIVED': _Scenario(
       bid: _bid('ARRIVED', departureAt: _past, trackingNumber: 'YAD-0042'),
       stamp: 'Arrivé',
       title: '#YAD-0042',
-      sections: [
-        'billet',
-        'hero',
-        'info-noshow',
-        'expediteur',
-        'gain',
-        'transport',
-      ],
+      sections: ['billet', 'info-noshow', 'expediteur', 'gain', 'transport'],
       footer: ['Valider la remise'],
-      talon: 'Lire les QR des étapes',
+      talon: 'NUMÉRO DE SUIVI',
       gain: 'VOUS RECEVEZ',
-      hero: 'Arrivé à destination',
     ),
     'COMPLETED': _Scenario(
       bid: _bid('COMPLETED', trackingNumber: 'YAD-0042'),
       stamp: 'Livré',
       title: '#YAD-0042',
-      sections: ['billet', 'hero', 'expediteur', 'gain', 'transport'],
+      sections: ['billet', 'expediteur', 'gain', 'transport'],
       talon: 'Colis livré',
       gain: 'VOUS AVEZ REÇU',
-      hero: 'Livraison confirmée',
     ),
     'REJECTED': _Scenario(
       bid: _bid('REJECTED'),
@@ -452,6 +456,12 @@ void main() {
         }
         if (s.talonReason != null) {
           expect(_in('billet', find.text(s.talonReason!)), findsOneWidget);
+        }
+        // Plus de bouton « Lire les QR des étapes » dans le talon du voyageur
+        // (le footer porte le scan) ; avant la remise, plus de talon du tout.
+        expect(find.text('Lire les QR des étapes'), findsNothing);
+        if (s.bid.status == 'ACCEPTED') {
+          expect(find.byType(BilletTalon), findsNothing);
         }
 
         // Sections du corps, dans l'ordre.
@@ -570,6 +580,21 @@ void main() {
       expect(find.text('Expired'), findsOneWidget);
       expect(find.text('Drop-off deadline passed'), findsOneWidget);
       expect(find.byType(TravelerStickyBar), findsNothing);
+    });
+
+    testWidgets('ACCEPTED, date limite dépassée : « Scan the parcel QR »', (
+      tester,
+    ) async {
+      useEnglish();
+      await pumpScreen(tester, _bid('ACCEPTED', handoverDeadline: _past));
+      expect(
+        find.descendant(
+          of: find.byType(TravelerStickyBar),
+          matching: find.text('Scan the parcel QR'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Confirm my presence'), findsNothing);
     });
 
     testWidgets('COMPLETED : colis livré', (tester) async {

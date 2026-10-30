@@ -7180,53 +7180,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get bidDetailTravelerScanQrTitle => '📷 Scan the parcel\'s QR code';
-
-  @override
-  String get bidDetailTravelerScanQrSubtitle =>
-      'Scan the sender\'s QR code to confirm the drop-off.';
-
-  @override
-  String get bidDetailTravelerAcceptedTitle => '⚡ Collect the parcel';
-
-  @override
-  String get bidDetailTravelerAcceptedInstructions =>
-      'Be at the drop-off point.';
-
-  @override
-  String get bidDetailTravelerAcceptedInstructionsDefault =>
-      'Be at the drop-off point agreed with the sender.';
-
-  @override
-  String get bidDetailTravelerCollectedTitle => '✓ Parcel collected';
-
-  @override
-  String get bidDetailTravelerCollectedSubtitle =>
-      'You have the parcel. Have a safe trip!';
-
-  @override
-  String get bidDetailTravelerInTransitTitle => '✈ Parcel on its way';
-
-  @override
-  String bidDetailTravelerInTransitSubtitle(String city) {
-    return 'In transit to $city. Have a good delivery!';
-  }
-
-  @override
-  String get bidDetailTravelerArrivedTitle => '📍 Arrived at destination';
-
-  @override
-  String get bidDetailTravelerArrivedSubtitle =>
-      'Wait for the recipient to pick up the parcel, then confirm the drop-off.';
-
-  @override
-  String get bidDetailTravelerDeliveredTitle => '✓ Delivery confirmed';
-
-  @override
-  String get bidDetailTravelerDeliveredSubtitle =>
-      'The payment will be released to your account.';
-
-  @override
   String get bidDetailTravelerWindowExpiredTitle =>
       '⚠ Drop-off deadline passed';
 
@@ -7542,6 +7495,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get senderTileBadgeCurrentStep => 'Current step';
 
   @override
+  String get todoTileBadgeReplyNeeded => 'Reply needed';
+
+  @override
+  String get senderTodoAmendmentBadgePending => 'Pending';
+
+  @override
+  String get senderTodoAmendmentBadgePaymentDue => 'Payment due';
+
+  @override
+  String travelerTodoSupplementSummary(String amount) {
+    return '$amount fee to confirm';
+  }
+
+  @override
+  String get senderTodoRecipientSummary => 'Declined the parcel';
+
+  @override
+  String get senderTodoRecipientRequested =>
+      'The traveler asks for another one';
+
+  @override
+  String senderTodoRescheduleSummary(String deadline) {
+    return 'Reply by $deadline';
+  }
+
+  @override
+  String get senderTodoRescheduleChoice => 'Keep it or cancel at no cost';
+
+  @override
+  String senderTodoAmendmentSummary(String weight, String amount) {
+    return '$weight extra · $amount';
+  }
+
+  @override
+  String senderTodoAmendmentAmount(String amount) {
+    return '$amount extra';
+  }
+
+  @override
   String get bidDetailSectionTransport => 'Your trip';
 
   @override
@@ -7553,6 +7545,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String travelerTileLieuxDropoff(String place) {
     return 'Drop-off in $place';
+  }
+
+  @override
+  String travelerTileLieuxDeadline(String date, String time) {
+    return 'Drop-off before $date at $time';
   }
 
   @override
@@ -8002,10 +7999,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ticketQrButtonCompact => 'Parcel QR';
 
   @override
-  String get ticketQrButtonFull => 'Parcel QR (to show or stick on the parcel)';
-
-  @override
-  String get ticketScanStepsButton => 'Scan the step QR codes';
+  String get ticketQrButtonSubtitle => 'To show or stick on the parcel';
 
   @override
   String get ticketAwaitingTravelerConfirmation =>

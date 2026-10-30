@@ -64,8 +64,8 @@ class SenderStickyBar extends StatelessWidget {
   /// While the payment is being fetched the bar shows « Payer mon envoi » as a
   /// disabled, loading [DonyButton] (same 52 px, no layout shift).
   ///
-  /// Do NOT "synchronise" this gate with [_buildAction]: it is a *superset*
-  /// of what [_buildAction] ultimately renders, and that is by design.
+  /// Do NOT "synchronise" this gate with [_resolve]: it is a *superset*
+  /// of what [_resolve] ultimately picks, and that is by design.
   static bool hasAction(BidModel bid) {
     if (bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION') {
       return false;
@@ -136,10 +136,41 @@ class SenderStickyBar extends StatelessWidget {
 
   // ── Action resolver ──────────────────────────────────────────────────────────
 
-  Widget? _buildAction(BuildContext context) {
+  /// Colis ACCEPTED dont le footer ne propose pas « Afficher le QR de
+  /// remise » : paiement carte introuvable (« Payer mon envoi ») ou
+  /// déclaration d'absence en attente (pas de footer). Le QR du colis reste
+  /// alors au talon du billet (décision du propriétaire). Pendant la lecture
+  /// du paiement, non : le footer le proposera dans le cas courant, le talon
+  /// ne s'ouvre pas pour se refermer aussitôt. Un supplément ou une
+  /// modification à payer ne le laisse pas non plus : le voyageur ne peut pas
+  /// scanner tant qu'ils attendent.
+  ///
+  /// Lit le même résolveur que la barre ([_resolve]) : footer et talon ne
+  /// peuvent pas diverger.
+  static bool leavesQrToTalon(
+    BidModel bid, {
+    required bool paymentLoaded,
+    PaymentModel? existingPayment,
+  }) =>
+      bid.status == 'ACCEPTED' &&
+      switch (_resolve(
+        bid,
+        paymentLoaded: paymentLoaded,
+        existingPayment: existingPayment,
+      )) {
+        _SenderFooterAction.none || _SenderFooterAction.pay => true,
+        _ => false,
+      };
+
+  /// Action du footer pour ce colis, sans la construire.
+  static _SenderFooterAction _resolve(
+    BidModel bid, {
+    required bool paymentLoaded,
+    PaymentModel? existingPayment,
+  }) {
     // 1. PENDING_CONFIRMATION: no action (hero handles it)
     if (bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION') {
-      return null;
+      return _SenderFooterAction.none;
     }
 
     final status = bid.status;
@@ -151,30 +182,87 @@ class SenderStickyBar extends StatelessWidget {
     //     `handover-supplement-pending`).
     //     « Refuser » se trouve dans l'encart du supplément.
     if (SupplementPayButton.canPay(bid)) {
-      return SupplementPayButton(
-        key: ValueKey('supplement-pay-${bid.supplement!.id}'),
-        bid: bid,
-      );
+      return _SenderFooterAction.supplementPay;
     }
 
     // 1.3 Modification de colis acceptée, à payer en mobile money : même
     //     priorité que le supplément (le voyageur attend le dépôt).
-    final amendmentToPay = AmendmentPayButton.payable(bid);
-    if (amendmentToPay != null) {
-      return AmendmentPayButton(
-        key: ValueKey('amendment-pay-${amendmentToPay.id}'),
-        bid: bid,
-      );
+    if (AmendmentPayButton.canPay(bid)) {
+      return _SenderFooterAction.amendmentPay;
     }
 
     // 1.4 AWAITING_PAYMENT (mobile money) : le voyageur vient d'accepter,
-    //     l'expéditeur a 30 min pour séquestrer via pawaPay. Le retour de
-    //     l'écran d'attente (pop true/false/null) recharge toujours le
-    //     détail via [onPaymentReturned] — un pop sans paiement peut aussi
-    //     signifier que le bid a expiré ou a été annulé entre-temps.
+    //     l'expéditeur a 30 min pour séquestrer via pawaPay.
     if (status == 'AWAITING_PAYMENT' &&
         bid.paymentMethod == BidPaymentMethod.mobileMoney) {
-      return _cancelAndPayRow(
+      return _SenderFooterAction.mobileMoneyPay;
+    }
+
+    // 1.5 AWAITING_PAYMENT (stripe) : l'expéditeur a quitté la PaymentSheet
+    //     avant d'autoriser l'escrow → reprendre le paiement. Le backend
+    //     (createEscrow) recycle le PaymentIntent en attente et renvoie le
+    //     clientSecret existant. On ne gate PAS sur existingPayment : un bid
+    //     de checkout abandonné porte un PaymentEntity PENDING obsolète.
+    if (status == 'AWAITING_PAYMENT' &&
+        bid.paymentMethod == BidPaymentMethod.stripe) {
+      return _SenderFooterAction.cardResume;
+    }
+
+    final cardBeforeHandover =
+        (status == 'PENDING' || status == 'ACCEPTED') &&
+        bid.paymentMethod == BidPaymentMethod.stripe;
+
+    // 2. Paiement stripe en cours de lecture : le bouton réel « Payer mon
+    //    envoi » s'affiche désactivé en chargement (même hauteur de 52 px, donc
+    //    aucun saut de mise en page quand l'état se résout). Seulement stripe
+    //    (le cash n'a pas de paiement expéditeur en ligne).
+    if (cardBeforeHandover && !paymentLoaded) {
+      return _SenderFooterAction.payLoading;
+    }
+
+    // 3. Needs payment: (PENDING || ACCEPTED) && stripe && paymentLoaded && not yet paid
+    if (cardBeforeHandover && existingPayment == null) {
+      return _SenderFooterAction.pay;
+    }
+
+    // 4. By status
+    if (status == 'ACCEPTED') return _SenderFooterAction.showQr;
+
+    // ARRIVED : le colis est arrivé mais pas encore retiré, le suivi reste la
+    // bonne action primaire pour l'expéditeur.
+    if (status == 'HANDED_OVER' ||
+        status == 'IN_TRANSIT' ||
+        status == 'ARRIVED') {
+      return _SenderFooterAction.track;
+    }
+
+    if ((status == 'COMPLETED' || status == 'DELIVERED') &&
+        !bid.senderHasRated) {
+      return _SenderFooterAction.rate;
+    }
+
+    return _SenderFooterAction.none;
+  }
+
+  Widget? _buildAction(BuildContext context) {
+    return switch (_resolve(
+      bid,
+      paymentLoaded: paymentLoaded,
+      existingPayment: existingPayment,
+    )) {
+      _SenderFooterAction.none => null,
+      _SenderFooterAction.supplementPay => SupplementPayButton(
+        key: ValueKey('supplement-pay-${bid.supplement!.id}'),
+        bid: bid,
+      ),
+      _SenderFooterAction.amendmentPay => AmendmentPayButton(
+        key: ValueKey('amendment-pay-${AmendmentPayButton.payable(bid)!.id}'),
+        bid: bid,
+      ),
+      // Le retour de l'écran d'attente (pop true/false/null) recharge
+      // toujours le détail via [onPaymentReturned] — un pop sans paiement
+      // peut aussi signifier que le bid a expiré ou a été annulé entre-temps.
+      _SenderFooterAction.mobileMoneyPay => _cancelAndPayRow(
         context,
         pay: DonyButton(
           label: context.l10n.bidDetailPayByMobileMoney,
@@ -190,17 +278,8 @@ class SenderStickyBar extends StatelessWidget {
                   }
                 },
         ),
-      );
-    }
-
-    // 1.5 AWAITING_PAYMENT (stripe) : l'expéditeur a quitté la PaymentSheet
-    //     avant d'autoriser l'escrow → reprendre le paiement. Le backend
-    //     (createEscrow) recycle le PaymentIntent en attente et renvoie le
-    //     clientSecret existant. On ne gate PAS sur existingPayment : un bid
-    //     de checkout abandonné porte un PaymentEntity PENDING obsolète.
-    if (status == 'AWAITING_PAYMENT' &&
-        bid.paymentMethod == BidPaymentMethod.stripe) {
-      return _cancelAndPayRow(
+      ),
+      _SenderFooterAction.cardResume => _cancelAndPayRow(
         context,
         pay: DonyButton(
           label: context.l10n.bidDetailPayMyShipment,
@@ -209,60 +288,30 @@ class SenderStickyBar extends StatelessWidget {
               ? null
               : () => context.push('/payments/pay', extra: bid),
         ),
-      );
-    }
-
-    // 2. Paiement stripe en cours de lecture : le bouton réel « Payer mon
-    //    envoi » s'affiche désactivé en chargement (même hauteur de 52 px, donc
-    //    aucun saut de mise en page quand l'état se résout). Seulement stripe
-    //    (le cash n'a pas de paiement expéditeur en ligne).
-    if ((status == 'PENDING' || status == 'ACCEPTED') &&
-        bid.paymentMethod == BidPaymentMethod.stripe &&
-        !paymentLoaded) {
-      return DonyButton(
+      ),
+      _SenderFooterAction.payLoading => DonyButton(
         label: context.l10n.bidDetailPayMyShipment,
         iconAsset: 'lock',
         isLoading: true,
         onPressed: null,
-      );
-    }
-
-    // 3. Needs payment: (PENDING || ACCEPTED) && stripe && paymentLoaded && not yet paid
-    final needsPayment =
-        (status == 'PENDING' || status == 'ACCEPTED') &&
-        bid.paymentMethod == BidPaymentMethod.stripe &&
-        paymentLoaded &&
-        existingPayment == null;
-
-    if (needsPayment) {
-      return DonyButton(
+      ),
+      _SenderFooterAction.pay => DonyButton(
         label: context.l10n.bidDetailPayMyShipment,
         iconAsset: 'lock',
         isLoading: isLoading,
         onPressed: isLoading
             ? null
             : () => context.push('/payments/pay', extra: bid),
-      );
-    }
-
-    // 4. By status
-    if (status == 'ACCEPTED') {
-      return DonyButton(
+      ),
+      _SenderFooterAction.showQr => DonyButton(
         label: context.l10n.bidDetailShowPickupQr,
         iconAsset: 'qr-code',
         onPressed: () {
           // Haptic is handled by QrSheet.show internally — do not duplicate it.
           QrSheet.show(context, bidId: bid.id, status: bid.status);
         },
-      );
-    }
-
-    // ARRIVED : le colis est arrivé mais pas encore retiré, le suivi reste la
-    // bonne action primaire pour l'expéditeur.
-    if (status == 'HANDED_OVER' ||
-        status == 'IN_TRANSIT' ||
-        status == 'ARRIVED') {
-      return DonyButton(
+      ),
+      _SenderFooterAction.track => DonyButton(
         label: context.l10n.bidDetailTrackParcel,
         iconAsset: 'package',
         onPressed: () {
@@ -275,14 +324,8 @@ class SenderStickyBar extends StatelessWidget {
             openSenderTrackingTimeline(context, bid);
           }
         },
-      );
-    }
-
-    if (status == 'COMPLETED' || status == 'DELIVERED') {
-      if (bid.senderHasRated) {
-        return null;
-      }
-      return DonyButton(
+      ),
+      _SenderFooterAction.rate => DonyButton(
         label: context.l10n.bidDetailRateTraveler,
         iconAsset: 'star',
         onPressed: () {
@@ -294,10 +337,8 @@ class SenderStickyBar extends StatelessWidget {
                 context.l10n.bidDetailSenderTravelerFallback,
           );
         },
-      );
-    }
-
-    return null;
+      ),
+    };
   }
 
   // ── Annuler + Payer ──────────────────────────────────────────────────────────
@@ -345,4 +386,20 @@ class SenderStickyBar extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Action portée par le footer de l'expéditeur, résolue par
+/// [SenderStickyBar._resolve] : le footer la construit, le talon du billet
+/// lit seulement si le QR lui revient ([SenderStickyBar.leavesQrToTalon]).
+enum _SenderFooterAction {
+  none,
+  supplementPay,
+  amendmentPay,
+  mobileMoneyPay,
+  cardResume,
+  payLoading,
+  pay,
+  showQr,
+  track,
+  rate,
 }

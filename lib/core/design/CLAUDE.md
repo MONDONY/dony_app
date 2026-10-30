@@ -354,7 +354,7 @@ DonyOperatorTile(
 
 ### `DonyActionTile` / `DonyActionTileGrid`
 
-Tuile d'action façon « Outils » d'Activités : icône teintée, pastille d'état facultative, titre (2 lignes max) et description (2 lignes max). Un tap ouvre l'écran ou la feuille annoncée. Lue par le lecteur d'écran comme un seul bouton (titre, pastille et description fusionnés). Utilisée par le hub Activités et par la grille « Votre envoi » de la fiche colis expéditeur.
+Tuile d'action façon « Outils » d'Activités : icône teintée, pastille d'état facultative, titre (2 lignes max) et description (2 lignes max, `subtitleMaxLines: 3` pour une échéance qui doit rester entière, comme la date limite de dépôt de la tuile Lieux du voyageur). Un tap ouvre l'écran ou la feuille annoncée. Lue par le lecteur d'écran comme un seul bouton (titre, pastille et description fusionnés). Utilisée par le hub Activités et par la grille « Votre envoi » de la fiche colis expéditeur.
 
 ```dart
 DonyActionTileGrid(

@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_action_tile.dart';
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/trip_arrival_events_service.dart';
@@ -25,12 +27,15 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_flow.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
@@ -130,7 +135,9 @@ BidModel _makeBid({
   String? recipientName,
   BidSupplement? supplement,
   List<BidAmendment> amendments = const [],
+  TripRescheduleInfo? reschedule,
 }) => BidModel(
+  reschedule: reschedule,
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: _kSenderId,
@@ -937,6 +944,56 @@ void main() {
       expect(top, lessThan(700));
     });
 
+    // Frais du supplément à valider (espèces) : plus de carte, le sheet de la
+    // tuile « Supplément de prix » s'ouvre de lui-même, avec le BidBloc de
+    // l'écran ; refermé, la tuile reste dans « À traiter ».
+    testWidgets('?action=supplement (commission à valider) : le sheet de la '
+        'tuile s\'ouvre avec le BidBloc de l\'écran', (tester) async {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerFactory<SupplementCommissionCubit>(
+        () => SupplementCommissionCubit(
+          SupplementCommissionFlow(_MockSupplementRepository(), analytics),
+          analytics,
+        ),
+      );
+      addTearDown(() => getIt.unregister<SupplementCommissionCubit>());
+      final bid = _makeBid(
+        supplement: const BidSupplement(
+          id: 'sup-1',
+          status: BidSupplementStatus.commissionPending,
+          rail: 'CASH',
+          netAmount: 15,
+          commissionAmount: 2,
+          grossAmount: 17,
+          blocksHandover: true,
+        ),
+      );
+      await _pump(
+        tester,
+        bid: bid,
+        authBloc: travelerViewer(),
+        focusSupplement: true,
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final confirm = find.descendant(
+        of: find.byKey(const Key('donyBottomSheetFooter')),
+        matching: find.byKey(const Key('supplement-commission-confirm-btn')),
+      );
+      expect(confirm, findsOneWidget);
+      expect(tester.element(confirm).read<BidBloc>(), same(bidBloc));
+
+      Navigator.of(tester.element(confirm), rootNavigator: true).pop();
+      await tester.pumpAndSettle();
+      expect(confirm, findsNothing);
+      expect(find.byKey(const Key('traveler-todo-supplement')), findsOneWidget);
+      expect(find.byType(SupplementTravelerCard), findsNothing);
+    });
+
     // Notifications BID_SUPPLEMENT_DECLINED / EXPIRED : la carte du supplément
     // refusé ou expiré, avec « Le colis ne correspond pas », est amenée à
     // l'écran.
@@ -1172,6 +1229,58 @@ void main() {
       });
     }
 
+    // Décision du propriétaire : avant la remise, le QR s'ouvre depuis le
+    // footer « Afficher le QR de remise », plus depuis le talon.
+    testWidgets('ACCEPTED : QR dans le footer seulement, plus dans le talon', (
+      tester,
+    ) async {
+      // Colis payé en espèces : rien à payer, le footer porte le QR.
+      await _pump(
+        tester,
+        bid: _makeBid(recipientName: 'Awa', handoverAddress: handover),
+        authBloc: senderAuth(),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('Afficher le QR de remise'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ColisBillet),
+          matching: find.textContaining('QR du colis'),
+        ),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    // Paiement carte introuvable : le footer dit « Payer mon envoi », le QR
+    // du colis reste donc au talon, avec son sous-titre.
+    testWidgets('ACCEPTED carte sans paiement : QR au talon, pas au footer', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        bid: _makeBid(
+          paymentMethod: BidPaymentMethod.stripe,
+          recipientName: 'Awa',
+          handoverAddress: handover,
+        ),
+        authBloc: senderAuth(),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('Payer mon envoi'), findsOneWidget);
+      expect(find.text('Afficher le QR de remise'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(ColisBillet),
+          matching: find.text('À présenter ou coller sur le colis'),
+        ),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('IN_TRANSIT shows billet, voyageur, paiement then 4 tiles, '
         'no hero, no quick actions', (tester) async {
       await _pump(tester, bid: inTransitBid(), authBloc: senderAuth());
@@ -1267,6 +1376,173 @@ void main() {
           .position
           .pixels;
       expect(offset, greaterThan(0));
+    });
+
+    // Notification de modification côté expéditeur, demande ouverte : le sheet
+    // de la tuile s'ouvre de lui-même, avec les BLoCs de l'écran.
+    testWidgets('?action=amendment opens the amendment tile sheet with the '
+        'screen BLoCs', (tester) async {
+      getIt.registerFactory<AmendmentActionCubit>(
+        () => AmendmentActionCubit(
+          _MockAmendmentRepository(),
+          _MockAnalyticsService(),
+        ),
+      );
+      addTearDown(() => getIt.unregister<AmendmentActionCubit>());
+      final bid = _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        amendments: const [
+          BidAmendment(
+            id: 'am-1',
+            status: BidAmendmentStatus.proposed,
+            rail: 'CASH',
+            addedWeightKg: 3,
+            grossAmount: 26.8,
+            blocksHandover: true,
+          ),
+        ],
+      );
+      await _pump(
+        tester,
+        bid: bid,
+        authBloc: senderAuth(),
+        focusAmendment: true,
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final footer = find.byKey(const Key('donyBottomSheetFooter'));
+      final cancel = find.descendant(
+        of: footer,
+        matching: find.byKey(const Key('amendment-cancel-btn')),
+      );
+      expect(cancel, findsOneWidget);
+      expect(find.byType(AmendmentSenderCard), findsOneWidget);
+      expect(tester.element(cancel).read<BidBloc>(), same(bidBloc));
+
+      await closeSheet(tester);
+      expect(cancel, findsNothing);
+      expect(tile('Modification du colis'), findsOneWidget);
+    });
+
+    group('trajet reporté depuis la tuile', () {
+      late StreamController<CancellationState> cancellation;
+
+      TripRescheduleInfo reschedule({required bool pending}) =>
+          TripRescheduleInfo(
+            id: 'r1',
+            reason: 'FLIGHT_CANCELLED',
+            previousDepartureDate: DateTime(2026, 10, 9),
+            newDepartureDate: DateTime(2026, 10, 13),
+            decisionPending: pending,
+            decisionDeadline: DateTime.utc(2026, 10, 12, 16),
+          );
+
+      BidModel rescheduled({required bool pending}) => _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        reschedule: reschedule(pending: pending),
+      );
+
+      setUp(() {
+        // Même message d'un test à l'autre : la déduplication le tairait.
+        DonySnackbar.clearDedup();
+        cancellation = StreamController<CancellationState>.broadcast();
+        when(
+          () => cancellationBloc.stream,
+        ).thenAnswer((_) => cancellation.stream);
+      });
+
+      tearDown(() => cancellation.close());
+
+      Future<void> openRescheduleSheet(WidgetTester tester) async {
+        await _pump(
+          tester,
+          bid: rescheduled(pending: true),
+          authBloc: senderAuth(),
+        );
+        await tester.pump(const Duration(seconds: 1));
+        await tester.tap(tile('Trajet reporté'));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('reschedule-keep')), findsOneWidget);
+      }
+
+      testWidgets('« Garder mon colis » : la feuille se ferme, la confirmation '
+          'de l\'écran est visible, et la relecture ne referme rien de plus', (
+        tester,
+      ) async {
+        await openRescheduleSheet(tester);
+
+        await tester.tap(find.byKey(const Key('reschedule-keep')));
+        await tester.pump();
+        cancellation.add(RescheduleKept());
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.byKey(const Key('reschedule-keep')), findsNothing);
+        expect(
+          find
+              .text("C'est noté : votre colis part à la nouvelle date.")
+              .hitTestable(),
+          findsOneWidget,
+        );
+
+        states.add(BidDetailLoaded(rescheduled(pending: false)));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.byType(SenderDetailBody), findsOneWidget);
+        expect(tile('Trajet reporté'), findsNothing);
+      });
+
+      // Une feuille qui n'affiche pas les erreurs d'annulation (ici « Plus de
+      // détails ») ne fait pas taire l'écran : le message n'est pas perdu.
+      testWidgets('feuille sans affichage d\'erreur ouverte : l\'écran affiche '
+          'l\'erreur comme avant', (tester) async {
+        await _pump(
+          tester,
+          bid: rescheduled(pending: true),
+          authBloc: senderAuth(),
+        );
+        await tester.pump(const Duration(seconds: 1));
+        await tester.tap(tile('Plus de détails'));
+        await tester.pumpAndSettle();
+        expect(find.byType(BidDetailsContent), findsOneWidget);
+
+        const error = ConflictException(
+          'trop tard',
+          code: 'reschedule-decision-closed',
+        );
+        cancellation.add(CancellationError(error));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(
+          find.text(ErrorPresenter.resolve(error).message),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('décision refusée : l\'erreur est visible par-dessus la '
+          'feuille, une seule fois, et la feuille reste ouverte', (
+        tester,
+      ) async {
+        await openRescheduleSheet(tester);
+
+        await tester.tap(find.byKey(const Key('reschedule-keep')));
+        await tester.pump();
+        const error = ConflictException(
+          'trop tard',
+          code: 'reschedule-decision-closed',
+        );
+        cancellation.add(CancellationError(error));
+        await tester.pumpAndSettle();
+
+        final message = ErrorPresenter.resolve(error).message;
+        expect(tester.takeException(), isNull);
+        expect(find.text(message), findsOneWidget);
+        expect(find.text(message).hitTestable(), findsOneWidget);
+        expect(find.byKey(const Key('reschedule-keep')), findsOneWidget);
+      });
     });
 
     testWidgets('tiles recompute after a polling refresh from ACCEPTED to '

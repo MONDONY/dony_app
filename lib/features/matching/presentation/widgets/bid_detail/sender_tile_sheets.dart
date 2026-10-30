@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -15,6 +16,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_lo
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tiles.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -38,19 +40,10 @@ Future<void> openSenderTileSheet(
   SenderTile tile,
 ) {
   final l = context.l10n;
-  unawaited(
-    getItSafe<AnalyticsService>()?.logEvent(
-      AnalyticsEvents.bidDetailTileOpened,
-      properties: {'tile': tile.name, 'role': 'sender'},
-    ),
-  );
+  // `source` comme les tuiles « À traiter » (`openSenderTodoSheet`).
+  logBidDetailTileOpened(tile: tile.name, role: 'sender', source: 'tile');
 
-  BidBloc? bidBloc;
-  try {
-    bidBloc = context.read<BidBloc>();
-  } on ProviderNotFoundException {
-    bidBloc = null;
-  }
+  final bidBloc = maybeRead<BidBloc>(context);
 
   final title = switch (tile) {
     SenderTile.prevenir => l.recipientNotifyTitle(
@@ -117,7 +110,7 @@ Widget? _stickyBottomFor(
       (sheetContext, current) => DonyButton(
         label: l.travelerTrackingOpenTimeline,
         variant: DonyButtonVariant.secondary,
-        onPressed: () => _closeThen(sheetContext, screenContext, () {
+        onPressed: () => closeTileSheetThen(sheetContext, screenContext, () {
           _logTimelineOpened(current);
           openSenderTrackingTimeline(screenContext, current);
         }),
@@ -131,7 +124,7 @@ Widget? _stickyBottomFor(
                       label: l.amendmentEntryButton,
                       iconAsset: 'plus',
                       variant: DonyButtonVariant.secondary,
-                      onPressed: () => _closeThen(
+                      onPressed: () => closeTileSheetThen(
                         sheetContext,
                         screenContext,
                         () => unawaited(
@@ -146,8 +139,9 @@ Widget? _stickyBottomFor(
   };
 }
 
-/// Ferme le sheet, puis lance [action] si l'écran est toujours là.
-void _closeThen(
+/// Ferme le sheet, puis lance [action] si l'écran est toujours là. Sert aussi
+/// aux sheets des tuiles « À traiter » (`openSenderTodoSheet`).
+void closeTileSheetThen(
   BuildContext sheetContext,
   BuildContext screenContext,
   VoidCallback action,

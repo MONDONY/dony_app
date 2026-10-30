@@ -16,6 +16,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../../helpers/mock_analytics_backend.dart';
 
@@ -41,7 +42,9 @@ BidModel _bid({
   String? arrivalCity = 'Bamako',
   String? handoverLocation,
   DateTime? recipientReplacementRequestedAt,
+  DateTime? handoverDeadline,
 }) => BidModel(
+  handoverDeadline: handoverDeadline,
   recipientReplacementRequestedAt: recipientReplacementRequestedAt,
   id: 'bid-001',
   announcementId: 'ann-001',
@@ -440,6 +443,72 @@ void main() {
     });
   });
 
+  // Décision du propriétaire : la date limite de dépôt reste visible avant la
+  // remise, sur la tuile Lieux, tant que le colis est accepté.
+  group('tuile Lieux : date limite de dépôt', () {
+    // Instant UTC : affichage en heure locale.
+    final deadline = DateTime.utc(2026, 11, 3, 13, 30);
+    String expected(String locale) {
+      final local = deadline.toLocal();
+      return locale == 'fr'
+          ? 'Dépôt avant le ${DateFormat.MMMEd('fr').format(local)} à '
+                '${DateFormat.jm('fr').format(local)}'
+          : 'Drop-off before ${DateFormat.MMMEd('en').format(local)} at '
+                '${DateFormat.jm('en').format(local)}';
+    }
+
+    testWidgets('ACCEPTED avec échéance (FR)', (tester) async {
+      await pump(tester, _bid(handoverDeadline: deadline));
+      expect(textIn(TravelerTile.lieux, expected('fr')), findsOneWidget);
+      expect(find.textContaining('Remise à'), findsNothing);
+    });
+
+    testWidgets('ACCEPTED avec échéance (EN)', (tester) async {
+      await pump(
+        tester,
+        _bid(handoverDeadline: deadline),
+        locale: const Locale('en'),
+      );
+      expect(textIn(TravelerTile.lieux, expected('en')), findsOneWidget);
+      expect(find.textContaining('Drop-off in'), findsNothing);
+    });
+
+    testWidgets('ACCEPTED sans échéance : le lieu de remise', (tester) async {
+      await pump(tester, _bid());
+      expect(textIn(TravelerTile.lieux, 'Remise à Paris'), findsOneWidget);
+      expect(find.textContaining('Dépôt avant'), findsNothing);
+    });
+
+    for (final status in [
+      'PENDING',
+      'PAYMENT_ESCROWED',
+      'AWAITING_PAYMENT',
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+      'COMPLETED',
+    ]) {
+      testWidgets('$status avec échéance : résumé habituel', (tester) async {
+        await pump(tester, _bid(status: status, handoverDeadline: deadline));
+        expect(find.textContaining('Dépôt avant'), findsNothing);
+        expect(
+          textIn(
+            TravelerTile.lieux,
+            const {
+                  'HANDED_OVER',
+                  'IN_TRANSIT',
+                  'ARRIVED',
+                  'COMPLETED',
+                }.contains(status)
+                ? 'Récupération à Bamako'
+                : 'Remise à Paris',
+          ),
+          findsOneWidget,
+        );
+      });
+    }
+  });
+
   testWidgets('tuile Détails : résumé de ce que montre le sheet', (
     tester,
   ) async {
@@ -500,6 +569,10 @@ void main() {
       'sans ville d\'arrivée': _bid(status: 'IN_TRANSIT', arrivalCity: null),
       // Pastille « À traiter » sur la tuile Colis.
       'destinataire refusé': _bid(recipientDeclined: true),
+      // Date limite de dépôt sur la tuile Lieux.
+      'date limite de dépôt': _bid(
+        handoverDeadline: DateTime.utc(2026, 11, 3, 13, 30),
+      ),
     };
     for (final locale in const [Locale('fr'), Locale('en')]) {
       for (final scale in const [1.0, 1.3]) {
@@ -527,6 +600,27 @@ void main() {
               matching: find.byType(RichText),
             );
             for (final element in badgeText.evaluate()) {
+              final paragraph = element.renderObject! as RenderParagraph;
+              expect(paragraph.didExceedMaxLines, isFalse);
+            }
+            // La date limite de dépôt tient entière dans le résumé de la
+            // tuile Lieux, sans points de suspension.
+            final deadlineText = find.descendant(
+              of: find.descendant(
+                of: tile(TravelerTile.lieux),
+                matching: find.byWidgetPredicate(
+                  (w) =>
+                      w is Text &&
+                      (w.data?.startsWith('Dépôt avant') == true ||
+                          w.data?.startsWith('Drop-off before') == true),
+                ),
+              ),
+              matching: find.byType(RichText),
+            );
+            if (bid.handoverDeadline != null) {
+              expect(deadlineText, findsOneWidget);
+            }
+            for (final element in deadlineText.evaluate()) {
               final paragraph = element.renderObject! as RenderParagraph;
               expect(paragraph.didExceedMaxLines, isFalse);
             }
