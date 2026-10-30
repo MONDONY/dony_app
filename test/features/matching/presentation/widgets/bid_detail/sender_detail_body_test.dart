@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -46,6 +48,8 @@ import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -456,6 +460,50 @@ void main() {
       lessThan(tester.getTopLeft(find.byType(VoyageurContactCard)).dy),
     );
   });
+
+  // Même format de date que la carte (avec le jour de la semaine) : le résumé
+  // de la tuile peut passer à trois lignes, jamais coupé.
+  for (final english in [false, true]) {
+    testWidgets('report en attente, ${english ? 'EN' : 'FR'}, 360 dp, texte '
+        '×1,3 : échéance entière dans la tuile', (tester) async {
+      await _loadAppFonts();
+      await initializeDateFormatting('en');
+      if (english) useEnglish();
+      tester.view
+        ..physicalSize = const Size(360, 2400)
+        ..devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await tester.pumpWidget(
+        _host(
+          _bid(reschedule: _reschedule(pending: true)),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(tester.takeException(), isNull);
+      final summary = find.descendant(
+        of: find.byKey(const Key('sender-todo-reschedule')),
+        matching: find.textContaining(
+          english ? 'Reply by ' : 'Répondre avant le ',
+        ),
+      );
+      expect(summary, findsOneWidget);
+      // Jour de la semaine, comme la carte du report.
+      expect(
+        tester.widget<Text>(summary).data,
+        contains(english ? 'Mon, Oct 12' : 'lun. 12 oct.'),
+      );
+      expect(
+        tester.renderObject<RenderParagraph>(summary).didExceedMaxLines,
+        isFalse,
+      );
+    });
+  }
 
   testWidgets('report en attente → tuile sous le titre « À traiter », la '
       'carte n\'est plus dans le corps', (tester) async {
@@ -1674,3 +1722,29 @@ Finder _contactIcon(Type card, String icon) => find.descendant(
   of: find.byType(card),
   matching: find.byWidgetPredicate((w) => w is DonyIcon && w.name == icon),
 );
+
+/// Charge les vraies polices de l'app : avec la police de repli des tests,
+/// chaque glyphe fait un cadratin, ce qui fausserait la mesure des tuiles.
+Future<void> _loadAppFonts() async {
+  const families = {
+    'HankenGrotesk': [
+      'HankenGrotesk-SemiBold',
+      'HankenGrotesk-Bold',
+      'HankenGrotesk-ExtraBold',
+    ],
+    'PlusJakartaSans': [
+      'PlusJakartaSans-Regular',
+      'PlusJakartaSans-Medium',
+      'PlusJakartaSans-SemiBold',
+      'PlusJakartaSans-Bold',
+    ],
+  };
+  for (final MapEntry(key: family, value: files) in families.entries) {
+    final loader = FontLoader(family);
+    for (final file in files) {
+      final bytes = File('assets/fonts/$file.ttf').readAsBytesSync();
+      loader.addFont(Future.value(ByteData.sublistView(bytes)));
+    }
+    await loader.load();
+  }
+}

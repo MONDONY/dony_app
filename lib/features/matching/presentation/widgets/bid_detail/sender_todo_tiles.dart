@@ -8,7 +8,6 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/supplemen
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/l10n/l10n.dart';
-import 'package:intl/intl.dart';
 
 /// Demandes qui attendent une réponse de l'expéditeur et prennent la forme
 /// d'une tuile dans la section « À traiter » de la fiche colis. Chaque tuile
@@ -88,9 +87,9 @@ String senderTodoSummary(
     open ?? openAmendmentOf(bid),
   ),
   SenderTodoTile.reschedule => switch (bid.reschedule?.decisionDeadline) {
-    // Envoyée en UTC (yadony-back #627) : heure de l'appareil, comme la carte.
+    // Même format que la carte (jour de la semaine, heure de l'appareil).
     final deadline? => l.senderTodoRescheduleSummary(
-      DateFormat.MMMd(l.localeName).add_Hm().format(deadline.toLocal()),
+      TripRescheduleCard.formatDeadline(l.localeName, deadline),
     ),
     null => l.senderTodoRescheduleChoice,
   },

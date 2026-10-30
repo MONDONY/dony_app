@@ -6,6 +6,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_todo_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -299,13 +300,21 @@ void main() {
           '${local.minute.toString().padLeft(2, '0')}';
 
       final summary = senderTodoSummary(fr, bid, SenderTodoTile.reschedule);
-      expect(summary, startsWith('Répondre avant le '));
-      expect(summary, contains('12 oct.'));
-      expect(summary, contains(hm));
+      // Même format que la carte du report : jour de la semaine compris.
       expect(
-        senderTodoSummary(en, bid, SenderTodoTile.reschedule),
-        startsWith('Reply by '),
+        summary,
+        'Répondre avant le '
+        '${TripRescheduleCard.formatDeadline(fr.localeName, deadline)}',
       );
+      expect(summary, contains('${_frWeekday(local)} 12 oct.'));
+      expect(summary, contains(hm));
+      final english = senderTodoSummary(en, bid, SenderTodoTile.reschedule);
+      expect(
+        english,
+        'Reply by ${TripRescheduleCard.formatDeadline(en.localeName, deadline)}',
+      );
+      expect(english, contains('Oct 12'));
+      expect(english, contains(','));
     });
 
     test('report sans échéance : les deux choix', () {
@@ -483,3 +492,14 @@ void main() {
     });
   });
 }
+
+/// Abréviation française du jour de [d], comme `DateFormat.MMMEd('fr')`.
+String _frWeekday(DateTime d) => const [
+  'lun.',
+  'mar.',
+  'mer.',
+  'jeu.',
+  'ven.',
+  'sam.',
+  'dim.',
+][d.weekday - 1];

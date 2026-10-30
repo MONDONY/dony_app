@@ -49,6 +49,13 @@ class TripRescheduleCard extends StatelessWidget {
     };
   }
 
+  /// Date limite de la réponse, avec le jour de la semaine (« lun. 12 oct.
+  /// 18:00 »). Envoyée en UTC depuis yadony-back #627 (PROD-1R) : heure de
+  /// l'appareil, le colis ne porte pas le fuseau du trajet. Partagée avec le
+  /// résumé de la tuile « À traiter » (`senderTodoSummary`).
+  static String formatDeadline(String localeName, DateTime deadline) =>
+      DateFormat.MMMEd(localeName).add_Hm().format(deadline.toLocal());
+
   String _date(BuildContext context, DateTime? date) => date == null
       ? ''
       : DateFormat.MMMEd(context.l10n.localeName).format(date);
@@ -62,11 +69,7 @@ class TripRescheduleCard extends StatelessWidget {
     final pending = r.decisionPending;
     final deadline = r.decisionDeadline == null
         ? ''
-        // Envoyée en UTC depuis yadony-back #627 (PROD-1R) : heure de
-        // l'appareil, le colis ne porte pas le fuseau du trajet.
-        : DateFormat.MMMEd(
-            l.localeName,
-          ).add_Hm().format(r.decisionDeadline!.toLocal());
+        : formatDeadline(l.localeName, r.decisionDeadline!);
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

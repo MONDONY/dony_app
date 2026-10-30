@@ -284,6 +284,9 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       },
       label: senderTodoTitle(l, tile),
       subtitle: senderTodoSummary(l, bid, tile, open: openAmendment),
+      // L'échéance du report, avec le jour de la semaine, reste entière à
+      // 360 dp et texte agrandi.
+      subtitleMaxLines: tile == SenderTodoTile.reschedule ? 3 : 2,
       badge: senderTodoBadge(l, bid, tile, open: openAmendment),
       onTap: () => unawaited(openSenderTodoSheet(context, bid, tile)),
     );
