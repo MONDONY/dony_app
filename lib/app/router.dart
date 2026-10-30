@@ -20,7 +20,9 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
+import 'package:dony/features/auth/bloc/profile_basics_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/auth/domain/country_from_phone.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
@@ -33,6 +35,7 @@ import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/personal_info_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
+import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
@@ -984,6 +987,19 @@ final GoRouter appRouter = GoRouter(
         create: (_) =>
             getIt<CommissionMethodBloc>()..add(CommissionMethodLoadRequested()),
         child: const CommissionMethodScreen(),
+      ),
+    ),
+    // Après le code : prénom, nom et pays, tout facultatif (voir
+    // ProfileBasicsScreen). Le pays proposé vient du numéro du compte.
+    GoRoute(
+      path: profileBasicsRoute,
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<ProfileBasicsCubit>(),
+        child: ProfileBasicsScreen(
+          initialCountryCode: countryFromPhone(
+            context.read<AuthBloc>().state.currentUser?.phoneNumber,
+          ),
+        ),
       ),
     ),
     // Fin d'inscription : choix de la première action (voir FirstStepsScreen).

@@ -46,6 +46,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
+import 'package:dony/features/auth/bloc/profile_basics_cubit.dart';
 import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -585,6 +586,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<PersonalInfoCubit>(
     () => PersonalInfoCubit(getIt<AuthRepository>(), getIt<AnalyticsService>()),
+  );
+  getIt.registerFactory<ProfileBasicsCubit>(
+    () => ProfileBasicsCubit(
+      getIt<AuthRepository>(),
+      getIt<BusinessPrefsRepository>(),
+      getIt<HiveService>().userPrefs,
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Local auth (biometric + PIN)

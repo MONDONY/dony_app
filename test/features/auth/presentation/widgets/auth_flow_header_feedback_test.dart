@@ -26,6 +26,16 @@ void main() {
     expect(find.byType(DonyFeedbackButton), findsOneWidget);
   });
 
+  testWidgets('en-tête simple : logo et scarabée, ni pastille ni jauge', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(const AuthFlowHeader.plain()));
+    expect(find.byType(DonyLogo), findsOneWidget);
+    expect(find.byType(DonyFeedbackButton), findsOneWidget);
+    expect(find.byType(DonyStepPill), findsNothing);
+    expect(find.byType(DonyOnboardingGauge), findsNothing);
+  });
+
   testWidgets('showFeedback: false sous un DonyAppBar : pas de doublon', (
     tester,
   ) async {

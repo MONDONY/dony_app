@@ -1504,6 +1504,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authFlowSkipForNow => 'Skip for now';
 
   @override
+  String get profileBasicsEyebrow => 'Optional';
+
+  @override
+  String get profileBasicsTitle => 'Let\'s get acquainted';
+
+  @override
+  String get profileBasicsBody =>
+      'Your first name is visible to other members. Your country sets up payments. You can fill everything in later.';
+
+  @override
+  String get profileBasicsFirstNameLabel => 'First name';
+
+  @override
+  String get profileBasicsLastNameLabel => 'Last name';
+
+  @override
+  String get profileBasicsCountryLabel => 'Country of residence';
+
+  @override
+  String get profileBasicsCountryPrefilledHint =>
+      'Suggested from your phone number. You can change it.';
+
+  @override
+  String get profileBasicsSaveError =>
+      'We couldn\'t save this right now. Try again or skip this step.';
+
+  @override
   String get authRequiredTitle => 'Sign-in required';
 
   @override

@@ -2720,6 +2720,54 @@ abstract class AppLocalizations {
   /// **'Passer pour l\'instant'**
   String get authFlowSkipForNow;
 
+  /// No description provided for @profileBasicsEyebrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Facultatif'**
+  String get profileBasicsEyebrow;
+
+  /// No description provided for @profileBasicsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Faisons connaissance'**
+  String get profileBasicsTitle;
+
+  /// No description provided for @profileBasicsBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre prénom est visible des autres membres. Votre pays adapte les paiements. Vous pouvez tout compléter plus tard.'**
+  String get profileBasicsBody;
+
+  /// No description provided for @profileBasicsFirstNameLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prénom'**
+  String get profileBasicsFirstNameLabel;
+
+  /// No description provided for @profileBasicsLastNameLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get profileBasicsLastNameLabel;
+
+  /// No description provided for @profileBasicsCountryLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays de résidence'**
+  String get profileBasicsCountryLabel;
+
+  /// No description provided for @profileBasicsCountryPrefilledHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays proposé d\'après votre numéro. Modifiable.'**
+  String get profileBasicsCountryPrefilledHint;
+
+  /// No description provided for @profileBasicsSaveError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer pour le moment. Réessayez ou passez cette étape.'**
+  String get profileBasicsSaveError;
+
   /// No description provided for @authRequiredTitle.
   ///
   /// In fr, this message translates to:

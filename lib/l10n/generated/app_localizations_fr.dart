@@ -1515,6 +1515,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authFlowSkipForNow => 'Passer pour l\'instant';
 
   @override
+  String get profileBasicsEyebrow => 'Facultatif';
+
+  @override
+  String get profileBasicsTitle => 'Faisons connaissance';
+
+  @override
+  String get profileBasicsBody =>
+      'Votre prénom est visible des autres membres. Votre pays adapte les paiements. Vous pouvez tout compléter plus tard.';
+
+  @override
+  String get profileBasicsFirstNameLabel => 'Prénom';
+
+  @override
+  String get profileBasicsLastNameLabel => 'Nom';
+
+  @override
+  String get profileBasicsCountryLabel => 'Pays de résidence';
+
+  @override
+  String get profileBasicsCountryPrefilledHint =>
+      'Pays proposé d\'après votre numéro. Modifiable.';
+
+  @override
+  String get profileBasicsSaveError =>
+      'Impossible d\'enregistrer pour le moment. Réessayez ou passez cette étape.';
+
+  @override
   String get authRequiredTitle => 'Connexion requise';
 
   @override

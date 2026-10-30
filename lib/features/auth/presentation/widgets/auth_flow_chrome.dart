@@ -44,7 +44,8 @@ class AuthFlowHeader extends StatelessWidget {
     required this.label,
     this.showBack = true,
     this.showFeedback = true,
-  }) : segments = null;
+  }) : segments = null,
+       _hasProgress = true;
 
   /// Parcours d'onboarding progressif : la jauge remplace la pastille.
   ///
@@ -63,7 +64,19 @@ class AuthFlowHeader extends StatelessWidget {
     this.showFeedback = true,
   }) : current = null,
        total = null,
-       showBack = false;
+       showBack = false,
+       _hasProgress = true;
+
+  /// Écran hors parcours compté (« Faisons connaissance ») : le logo et le
+  /// scarabée, sans pastille ni jauge. Pas de retour : l'écran suit le code
+  /// de vérification, revenir dessus n'a pas de sens.
+  const AuthFlowHeader.plain({super.key, this.showFeedback = true})
+    : current = null,
+      total = null,
+      segments = null,
+      label = '',
+      showBack = false,
+      _hasProgress = false;
 
   final int? current;
   final int? total;
@@ -74,6 +87,8 @@ class AuthFlowHeader extends StatelessWidget {
   /// Scarabée de signalement en bout de ligne. À couper seulement sous un
   /// [DonyAppBar], qui porte déjà le sien (paiements).
   final bool showFeedback;
+
+  final bool _hasProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -117,17 +132,23 @@ class AuthFlowHeader extends StatelessWidget {
               const SizedBox(width: kDonyMinTapTarget),
           ],
         ),
-        const SizedBox(height: DonySpacing.sm),
-        if (segments == null)
-          Align(
-            alignment: Alignment.centerRight,
-            child: DonyStepPill(current: current!, total: total!, label: label),
-          )
-        else
-          // Le `Column` parent est en `CrossAxisAlignment.stretch` : la jauge
-          // prend la largeur, son propre `Column` aligne le compteur à droite
-          // comme le faisait la pastille.
-          DonyOnboardingGauge(segments: segments!, label: label),
+        if (_hasProgress) ...[
+          const SizedBox(height: DonySpacing.sm),
+          if (segments == null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: DonyStepPill(
+                current: current!,
+                total: total!,
+                label: label,
+              ),
+            )
+          else
+            // Le `Column` parent est en `CrossAxisAlignment.stretch` : la
+            // jauge prend la largeur, son propre `Column` aligne le compteur
+            // à droite comme le faisait la pastille.
+            DonyOnboardingGauge(segments: segments!, label: label),
+        ],
       ],
     );
   }

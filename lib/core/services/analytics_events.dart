@@ -1215,6 +1215,15 @@ abstract final class AnalyticsEvents {
 
   /// Choix de l'écran de fin d'inscription : trip, parcel ou later.
   static const firstStepsChoice = 'first_steps_choice';
+
+  /// Écran facultatif « Faisons connaissance » (prénom, nom, pays), juste
+  /// après le code : ouvert, validé (`has_name`, `has_country`), passé, ou
+  /// en échec (`step` : `name`/`country`, `error_code`). Jamais le nom ni le
+  /// pays.
+  static const profileBasicsViewed = 'profile_basics_viewed';
+  static const profileBasicsCompleted = 'profile_basics_completed';
+  static const profileBasicsSkipped = 'profile_basics_skipped';
+  static const profileBasicsFailed = 'profile_basics_failed';
   static const intentDeclared = 'intent_declared';
   static const intentPromptShown = 'intent_prompt_shown';
   static const firstActionCardTapped = 'first_action_card_tapped';
