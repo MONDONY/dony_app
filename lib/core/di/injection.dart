@@ -17,6 +17,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/app_badge_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/services/camera_handoff.dart';
+import 'package:dony/core/services/consent_prompt.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
@@ -359,6 +360,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       remote: getIt<AnalyticsConsentRemote>(),
     ),
   );
+  getIt.registerLazySingleton<ConsentPrompt>(ConsentPrompt.new);
   getIt.registerLazySingleton<AiConsentService>(
     () => AiConsentService(getIt<HiveService>(), getIt<AnalyticsService>()),
   );

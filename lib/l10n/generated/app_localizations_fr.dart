@@ -1916,6 +1916,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authConsentDecline => 'Non merci';
 
   @override
+  String get consentSheetTitle => 'Aidez-nous à améliorer Yadony';
+
+  @override
+  String get consentSheetBody =>
+      'Nous mesurons comment l\'app est utilisée pour corriger ce qui bloque. Aucune donnée n\'est vendue. Tant que vous n\'avez pas répondu, rien n\'est mesuré.';
+
+  @override
+  String get consentSheetDecline => 'Refuser';
+
+  @override
   String get authLocalSwitchAccountTitle => 'Changer de compte ?';
 
   @override

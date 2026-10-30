@@ -348,7 +348,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `signup_started` | PhoneAuthScreen._submit() |
 | `otp_submitted` | OtpVerificationScreen._verify() |
 | `signup_completed` | PinSetupScreen._handleComplete() |
-| `analytics_consent_answered` | AnalyticsConsentScreen._respond() |
+| `analytics_consent_answered` | AnalyticsConsentScreen._respond() · AnalyticsConsentSheet (feuille de l'accueil `consent/analytics`, ouverte par `ConsentPromptHost` quand `AnalyticsConsentGate` lève `ConsentPrompt` ; propriété `granted`) |
 | `onboarding_step_skipped` | PersonalInfoCubit.skip() (`step: 'personal_info'`) · CountryOnboardingCubit.skip()/continueAsSenderOnly() (`step: 'country'`) — étape du parcours d'onboarding progressif passée |
 | `onboarding_step_viewed` | `resolvePostSignupRoute` — étape retenue à l'entrée du parcours d'onboarding progressif (propriétés `step` énumération fermée, `index`, `total`) |
 | `onboarding_step_completed` | CountryOnboardingCubit.select() (`step: 'country'`) · PersonalInfoCubit.submit() (`step: 'personal_info'`) · AnalyticsConsentScreen._respond() (`step: 'consent'`) — étape du parcours d'onboarding progressif complétée |

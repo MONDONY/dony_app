@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/app/notification_badge_sync.dart';
 import 'package:dony/app/resume_refresh_policy.dart';
+import 'package:dony/app/widgets/consent_prompt_host.dart';
 import 'package:dony/app/widgets/dony_nav_item.dart';
 import 'package:dony/app/widgets/dony_nav_orb.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -305,68 +306,70 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        NotificationBadgeListener(badge: getIt<AppBadgeService>()),
-        BlocListener<RatingBloc, RatingState>(
-          listener: (context, state) {
-            if (state is PendingRatingFound && !_ratingPromptShown) {
-              _ratingPromptShown = true;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) return;
-                RatingBottomSheet.show(
-                  context,
-                  bidId: state.bidId,
-                  travelerName: state.otherPartyName,
-                  isTravelerRating: state.isTravelerRating,
-                );
-              });
+    return ConsentPromptHost(
+      child: MultiBlocListener(
+        listeners: [
+          NotificationBadgeListener(badge: getIt<AppBadgeService>()),
+          BlocListener<RatingBloc, RatingState>(
+            listener: (context, state) {
+              if (state is PendingRatingFound && !_ratingPromptShown) {
+                _ratingPromptShown = true;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  RatingBottomSheet.show(
+                    context,
+                    bidId: state.bidId,
+                    travelerName: state.otherPartyName,
+                    isTravelerRating: state.isTravelerRating,
+                  );
+                });
+              }
+            },
+          ),
+        ],
+        child: BlocBuilder<StripeAccountBloc, StripeAccountState>(
+          buildWhen: (prev, curr) {
+            if (prev is StripeAccountReady && curr is StripeAccountReady) {
+              return prev.accountStatus.isRejected !=
+                  curr.accountStatus.isRejected;
             }
+            return prev.runtimeType != curr.runtimeType;
+          },
+          builder: (context, accountState) {
+            Widget? banner;
+            // Seul un compte REJETÉ garde un bandeau permanent : c'est un état
+            // terminal qui exige de contacter le support, l'utilisateur doit le
+            // voir sans le chercher.
+            //
+            // Un compte simplement désactivé n'en a plus : le bandeau squattait
+            // le haut de toutes les pages avec l'allure d'une erreur réseau,
+            // pour un état qui se règle en reprenant l'onboarding Stripe. Le
+            // gating de `/trips/create` (voir router.dart) suffit à l'annoncer
+            // au moment où il gêne vraiment.
+            if (accountState is StripeAccountReady) {
+              if (accountState.accountStatus.isRejected) {
+                banner = const AccountRejectedBanner();
+              }
+            }
+            return Scaffold(
+              // Le contenu passe DERRIÈRE la bottom nav (bar ancrée dont le
+              // fond s'étend sous le home indicator). Scaffold injecte la
+              // hauteur de la nav dans MediaQuery.padding.bottom du body,
+              // donc les écrans en SafeArea réservent l'espace.
+              extendBody: true,
+              body: Column(
+                children: [
+                  ?banner,
+                  Expanded(child: widget.navigationShell),
+                ],
+              ),
+              bottomNavigationBar: MainShellBottomNav(
+                currentIndex: widget.navigationShell.currentIndex,
+                onTap: _onTap,
+              ),
+            );
           },
         ),
-      ],
-      child: BlocBuilder<StripeAccountBloc, StripeAccountState>(
-        buildWhen: (prev, curr) {
-          if (prev is StripeAccountReady && curr is StripeAccountReady) {
-            return prev.accountStatus.isRejected !=
-                curr.accountStatus.isRejected;
-          }
-          return prev.runtimeType != curr.runtimeType;
-        },
-        builder: (context, accountState) {
-          Widget? banner;
-          // Seul un compte REJETÉ garde un bandeau permanent : c'est un état
-          // terminal qui exige de contacter le support, l'utilisateur doit le
-          // voir sans le chercher.
-          //
-          // Un compte simplement désactivé n'en a plus : le bandeau squattait
-          // le haut de toutes les pages avec l'allure d'une erreur réseau,
-          // pour un état qui se règle en reprenant l'onboarding Stripe. Le
-          // gating de `/trips/create` (voir router.dart) suffit à l'annoncer
-          // au moment où il gêne vraiment.
-          if (accountState is StripeAccountReady) {
-            if (accountState.accountStatus.isRejected) {
-              banner = const AccountRejectedBanner();
-            }
-          }
-          return Scaffold(
-            // Le contenu passe DERRIÈRE la bottom nav (bar ancrée dont le
-            // fond s'étend sous le home indicator). Scaffold injecte la
-            // hauteur de la nav dans MediaQuery.padding.bottom du body,
-            // donc les écrans en SafeArea réservent l'espace.
-            extendBody: true,
-            body: Column(
-              children: [
-                ?banner,
-                Expanded(child: widget.navigationShell),
-              ],
-            ),
-            bottomNavigationBar: MainShellBottomNav(
-              currentIndex: widget.navigationShell.currentIndex,
-              onTap: _onTap,
-            ),
-          );
-        },
       ),
     );
   }

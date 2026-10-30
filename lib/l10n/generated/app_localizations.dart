@@ -3422,6 +3422,24 @@ abstract class AppLocalizations {
   /// **'Non merci'**
   String get authConsentDecline;
 
+  /// No description provided for @consentSheetTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aidez-nous à améliorer Yadony'**
+  String get consentSheetTitle;
+
+  /// No description provided for @consentSheetBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous mesurons comment l\'app est utilisée pour corriger ce qui bloque. Aucune donnée n\'est vendue. Tant que vous n\'avez pas répondu, rien n\'est mesuré.'**
+  String get consentSheetBody;
+
+  /// No description provided for @consentSheetDecline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser'**
+  String get consentSheetDecline;
+
   /// No description provided for @authLocalSwitchAccountTitle.
   ///
   /// In fr, this message translates to:

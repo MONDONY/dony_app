@@ -1899,6 +1899,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authConsentDecline => 'No thanks';
 
   @override
+  String get consentSheetTitle => 'Help us improve Yadony';
+
+  @override
+  String get consentSheetBody =>
+      'We measure how the app is used so we can fix what gets in the way. No data is sold. Until you answer, nothing is measured.';
+
+  @override
+  String get consentSheetDecline => 'Decline';
+
+  @override
   String get authLocalSwitchAccountTitle => 'Switch account?';
 
   @override
