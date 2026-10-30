@@ -8047,6 +8047,25 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorWalletExternalRefundHoldMessage,
   'walletTxTypeTopupDisputed': (l) => l.walletTxTypeTopupDisputed,
   'walletTxTypeTopupDisputeReversed': (l) => l.walletTxTypeTopupDisputeReversed,
+  'tripTileItinerary': (l) => l.tripTileItinerary,
+  'tripTilePayments': (l) => l.tripTilePayments,
+  'tripTileConditions': (l) => l.tripTileConditions,
+  'tripTilePoster': (l) => l.tripTilePoster,
+  'tripTileArrival': (l) => l.tripTileArrival,
+  'tripTileItineraryPickup': (l) =>
+      l.tripTileItineraryPickup(placeholderMarker('place')),
+  'tripTileItineraryDelivery': (l) =>
+      l.tripTileItineraryDelivery(placeholderMarker('place')),
+  'tripTileConditionsAccepted': (l) =>
+      l.tripTileConditionsAccepted(intPlaceholderValue),
+  'tripTileConditionsRefused': (l) =>
+      l.tripTileConditionsRefused(intPlaceholderValue),
+  'tripTilePosterSubtitle': (l) => l.tripTilePosterSubtitle,
+  'tripTilePosterIntro': (l) => l.tripTilePosterIntro,
+  'tripTileArrivalEmpty': (l) => l.tripTileArrivalEmpty,
+  'tripTilePaymentsNetworksTitle': (l) => l.tripTilePaymentsNetworksTitle,
+  'tripTilePaymentsCashOnlyNote': (l) => l.tripTilePaymentsCashOnlyNote,
+  'tripTileArrivalEditButton': (l) => l.tripTileArrivalEditButton,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8731,4 +8750,6 @@ const textParameters = <String, List<String>>{
   'travelerTrackingNearCity': ['city'],
   'travelerTrackingUpdated': ['age'],
   'travelerTrackingLastPosition': ['age'],
+  'tripTileItineraryPickup': ['place'],
+  'tripTileItineraryDelivery': ['place'],
 };

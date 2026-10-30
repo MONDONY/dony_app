@@ -22942,4 +22942,72 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get walletTxTypeTopupDisputeReversed =>
       'Dispute closed in your favour';
+
+  @override
+  String get tripTileItinerary => 'Route and places';
+
+  @override
+  String get tripTilePayments => 'Payments';
+
+  @override
+  String get tripTileConditions => 'Conditions';
+
+  @override
+  String get tripTilePoster => 'Poster';
+
+  @override
+  String get tripTileArrival => 'Arrival';
+
+  @override
+  String tripTileItineraryPickup(String place) {
+    return 'Drop-off: $place';
+  }
+
+  @override
+  String tripTileItineraryDelivery(String place) {
+    return 'Pickup: $place';
+  }
+
+  @override
+  String tripTileConditionsAccepted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count types accepted',
+      one: '1 type accepted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripTileConditionsRefused(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count types refused',
+      one: '1 type refused',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTilePosterSubtitle => 'Share the trip';
+
+  @override
+  String get tripTilePosterIntro =>
+      'Your trip as an image, with a link and a caption ready to send on WhatsApp or social media.';
+
+  @override
+  String get tripTileArrivalEmpty =>
+      'No pickup instructions yet. Tell recipients where and when to collect their parcel.';
+
+  @override
+  String get tripTilePaymentsNetworksTitle => 'Mobile money networks';
+
+  @override
+  String get tripTilePaymentsCashOnlyNote =>
+      'This trip only accepts cash. To add card payments, see “To do”.';
+
+  @override
+  String get tripTileArrivalEditButton => 'Edit instructions';
 }

@@ -37121,6 +37121,96 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Contestation close en votre faveur'**
   String get walletTxTypeTopupDisputeReversed;
+
+  /// Écran du trajet (propriétaire), section « Votre trajet » : titre de la tuile et du sheet des lieux de remise et de la date limite de dépôt (trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Itinéraire et lieux'**
+  String get tripTileItinerary;
+
+  /// Écran du trajet (propriétaire), section « Votre trajet » : titre de la tuile et du sheet des moyens de paiement acceptés (trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements'**
+  String get tripTilePayments;
+
+  /// Écran du trajet (propriétaire), section « Votre trajet » : titre de la tuile et du sheet des contenus acceptés, refusés et de la note aux expéditeurs (trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Conditions'**
+  String get tripTileConditions;
+
+  /// Écran du trajet (propriétaire), section « Votre trajet » : titre de la tuile et du sheet de l'affiche partageable (trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Affiche'**
+  String get tripTilePoster;
+
+  /// Écran du trajet (propriétaire), section « Votre trajet » : titre de la tuile et du sheet des instructions de retrait à l'arrivée (trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get tripTileArrival;
+
+  /// Résumé de la tuile « Itinéraire et lieux » : ville (à défaut libellé) du lieu où l'expéditeur remet son colis au voyageur (trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise : {place}'**
+  String tripTileItineraryPickup(String place);
+
+  /// Résumé de la tuile « Itinéraire et lieux » : ville (à défaut libellé) du lieu où le destinataire récupère son colis (trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retrait : {place}'**
+  String tripTileItineraryDelivery(String place);
+
+  /// Résumé de la tuile « Conditions » : nombre de types de contenu acceptés par le voyageur (trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 type accepté} other{{count} types acceptés}}'**
+  String tripTileConditionsAccepted(int count);
+
+  /// Résumé de la tuile « Conditions » : nombre de types de contenu refusés par le voyageur (trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 type refusé} other{{count} types refusés}}'**
+  String tripTileConditionsRefused(int count);
+
+  /// Résumé de la tuile « Affiche » de l'écran du trajet (propriétaire) (trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager le trajet'**
+  String get tripTilePosterSubtitle;
+
+  /// Sheet de la tuile « Affiche » : ce que contient l'affiche partageable du trajet, avant le bouton « Partager l'affiche » (trip_tile_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre trajet en image, avec un lien et une légende prêts à envoyer sur WhatsApp ou les réseaux sociaux.'**
+  String get tripTilePosterIntro;
+
+  /// Sheet de la tuile « Arrivée » : un colis est arrivé mais le voyageur n'a pas laissé d'instructions de retrait (trip_tile_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune instruction de retrait pour l\'instant. Dites aux destinataires où et quand récupérer leur colis.'**
+  String get tripTileArrivalEmpty;
+
+  /// Sheet de la tuile « Paiements » : titre des pastilles des réseaux mobile money acceptés par le voyageur, affiché en majuscules (trip_detail_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réseaux mobile money'**
+  String get tripTilePaymentsNetworksTitle;
+
+  /// Sheet de la tuile « Paiements » : trajet en espèces seules où la carte est possible, renvoi vers la tuile de la section « À traiter » qui porte l'action (trip_tile_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet n\'accepte que les espèces. Pour ajouter la carte, voyez « À traiter ».'**
+  String get tripTilePaymentsCashOnlyNote;
+
+  /// Sheet de la tuile « Arrivée » de l'écran du trajet (propriétaire) : bouton du pied qui ouvre l'édition des instructions de retrait, libellé court pour tenir sur une ligne à 360 dp (trip_tile_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier les instructions'**
+  String get tripTileArrivalEditButton;
 }
 
 class _AppLocalizationsDelegate

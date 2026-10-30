@@ -23107,4 +23107,72 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get walletTxTypeTopupDisputeReversed =>
       'Contestation close en votre faveur';
+
+  @override
+  String get tripTileItinerary => 'Itinéraire et lieux';
+
+  @override
+  String get tripTilePayments => 'Paiements';
+
+  @override
+  String get tripTileConditions => 'Conditions';
+
+  @override
+  String get tripTilePoster => 'Affiche';
+
+  @override
+  String get tripTileArrival => 'Arrivée';
+
+  @override
+  String tripTileItineraryPickup(String place) {
+    return 'Remise : $place';
+  }
+
+  @override
+  String tripTileItineraryDelivery(String place) {
+    return 'Retrait : $place';
+  }
+
+  @override
+  String tripTileConditionsAccepted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count types acceptés',
+      one: '1 type accepté',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripTileConditionsRefused(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count types refusés',
+      one: '1 type refusé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTilePosterSubtitle => 'Partager le trajet';
+
+  @override
+  String get tripTilePosterIntro =>
+      'Votre trajet en image, avec un lien et une légende prêts à envoyer sur WhatsApp ou les réseaux sociaux.';
+
+  @override
+  String get tripTileArrivalEmpty =>
+      'Aucune instruction de retrait pour l\'instant. Dites aux destinataires où et quand récupérer leur colis.';
+
+  @override
+  String get tripTilePaymentsNetworksTitle => 'Réseaux mobile money';
+
+  @override
+  String get tripTilePaymentsCashOnlyNote =>
+      'Ce trajet n\'accepte que les espèces. Pour ajouter la carte, voyez « À traiter ».';
+
+  @override
+  String get tripTileArrivalEditButton => 'Modifier les instructions';
 }
