@@ -10,7 +10,6 @@ import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/services/replay_privacy.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
-import 'package:dony/features/activation/presentation/screens/intent_step_screen.dart';
 import 'package:dony/features/app_update/presentation/screens/force_update_screen.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/bloc/assistant_voice_cubit.dart';
@@ -19,13 +18,11 @@ import 'package:dony/features/assistant/presentation/screens/assistant_screen.da
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
-import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
 import 'package:dony/features/auth/bloc/profile_basics_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/domain/country_from_phone.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
-import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
 import 'package:dony/features/auth/presentation/screens/email_auth_screen.dart';
@@ -33,10 +30,8 @@ import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart'
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
-import 'package:dony/features/auth/presentation/screens/personal_info_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
-import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
@@ -66,7 +61,6 @@ import 'package:dony/features/flights/presentation/flight_alerts_screen.dart';
 import 'package:dony/features/flights/presentation/flight_city_picker_screen.dart';
 import 'package:dony/features/flights/presentation/flights_screen.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
-import 'package:dony/features/gp_pro/bloc/gp_pro_signup_cubit.dart';
 import 'package:dony/features/gp_pro/presentation/screens/gp_pro_screen.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
@@ -280,11 +274,7 @@ const _publicRoutes = {
   '/auth/otp',
   '/auth/email',
   '/auth/email-otp',
-  '/auth/referral-code',
-  '/auth/analytics-consent',
   '/auth/country-selection',
-  intentStepRoute,
-  '/auth/personal-info',
   '/auth/local',
   '/home',
   '/recherche/composer',
@@ -294,6 +284,14 @@ const _publicRoutes = {
   '/legal/terms',
   '/legal/privacy',
 };
+
+/// Routes de l'ancien parcours d'inscription, redirigées vers l'accueil.
+const _retiredSignupRoutes = [
+  '/auth/intent',
+  '/auth/personal-info',
+  '/auth/referral-code',
+  '/auth/analytics-consent',
+];
 
 /// Décide si une navigation doit être détournée vers l'écran de connexion, et
 /// renvoie `null` si elle peut aboutir.
@@ -501,103 +499,12 @@ final GoRouter appRouter = GoRouter(
         child: CountrySelectionScreen(next: state.uri.queryParameters['next']),
       ),
     ),
-    GoRoute(
-      path: intentStepRoute,
-      builder: (context, state) => MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create: (_) =>
-                getIt<IntentCubit>(param1: (intent: null, destination: null)),
-          ),
-          BlocProvider(create: (_) => getIt<GpProSignupCubit>()),
-        ],
-        child: IntentStepScreen(
-          progress: readOnboardingProgress(
-            context,
-            reachedPast: OnboardingStep.country,
-          ),
-          args:
-              state.extra as IntentStepArgs? ??
-              const IntentStepArgs(next: '/auth/referral-code'),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/auth/personal-info',
-      builder: (context, state) {
-        // `AuthBloc.state.currentUser?.country` n'est jamais renseigné :
-        // `POST /auth/register` n'écrit pas `users.country`. Le pays choisi
-        // à l'étape précédente est prioritairement lu dans `extra` — passé
-        // par `country_selection_screen.dart` juste après un `select()`
-        // réussi, donc garanti frais. `BusinessPrefsBloc.state.country`
-        // reste le repli : ce singleton app-wide est construit avant cet
-        // écran et ne se resynchronise pas automatiquement quand
-        // `CountryOnboardingCubit` écrit directement dans Hive, mais il
-        // reste utile pour toute navigation qui ne passerait pas par
-        // `country_selection_screen` (deep link, retour arrière...). Même
-        // repli réutilisé pour `countryFallback` : sans lui, la jauge
-        // afficherait l'étape « Pays » comme non faite juste après l'avoir
-        // choisie (`readOnboardingProgress` ne le déduit pas seul).
-        final country =
-            (state.extra as String?) ??
-            context.read<BusinessPrefsBloc>().state.country;
-        return BlocProvider(
-          create: (_) => getIt<PersonalInfoCubit>(),
-          child: PersonalInfoScreen(
-            country: country,
-            // Préremplit ce que le profil sait déjà (retour sur l'étape
-            // depuis le profil, second passage) — lu ici comme le reste de
-            // l'état ambiant, jamais dans l'écran.
-            user: context.read<AuthBloc>().state.currentUser,
-            progress: readOnboardingProgress(
-              context,
-              current: OnboardingStep.personalInfo,
-              countryFallback: country,
-            ),
-          ),
-        );
-      },
-    ),
-    GoRoute(
-      path: '/auth/referral-code',
-      builder: (context, state) => BlocProvider(
-        create: (_) => ReferralBloc(
-          getIt<ReferralRepository>(),
-          getIt<AnalyticsService>(),
-        ),
-        // Aucune étape en cours : le parrainage est hors décompte (spec §4.2).
-        // Même repli `extra ?? BusinessPrefsBloc` que `personal-info`
-        // pour `countryFallback` : `personal_info_screen.dart` transmet
-        // le pays en `extra` (repli immédiat, le temps que le
-        // `AuthProfileRefreshRequested` déclenché juste avant revienne) —
-        // sans lui, l'étape « Pays » regresserait sur cet écran (correction 1
-        // de la revue finale du lot 2).
-        child: ReferralCodeScreen(
-          // Code venu d'un lien d'invitation ouvert avant l'inscription :
-          // pré-rempli, jamais appliqué sans « Appliquer ».
-          pendingCodeStore: getIt<PendingReferralCodeStore>(),
-          progress: readOnboardingProgress(
-            context,
-            // Hors décompte mais pas hors position : le parrainage vient
-            // juste après les informations, la jauge doit donc afficher
-            // « 3 / 5 » et non retomber sur les seuls faits accomplis.
-            reachedPast: OnboardingStep.personalInfo,
-            countryFallback:
-                (state.extra as String?) ??
-                context.read<BusinessPrefsBloc>().state.country,
-          ),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/auth/analytics-consent',
-      builder: (context, state) => AnalyticsConsentScreen(
-        progress: readOnboardingProgress(
-          context,
-          current: OnboardingStep.consent,
-        ),
-      ),
-    ),
+    // Ancien parcours d'inscription (« Votre projet », informations,
+    // parrainage, consentement) : les écrans n'existent plus depuis que
+    // l'inscription se réduit au code. Un lien ou un état restauré qui les
+    // vise atterrit sur l'accueil.
+    for (final retired in _retiredSignupRoutes)
+      GoRoute(path: retired, redirect: (_, _) => '/home'),
     GoRoute(
       path: '/auth/local',
       builder: (context, state) => LocalAuthScreen(

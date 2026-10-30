@@ -11,8 +11,7 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
-import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
-import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,24 +22,8 @@ import 'package:pinput/pinput.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
-import '../../../../helpers/stripe_account_test_doubles.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
-
-// `AuthNewAccountAuthenticated` fait lire `StripeAccountBloc` et
-// `BusinessPrefsBloc` (fournis à l'échelle de l'app dans `app.dart`) par
-// `_continueAfterSignup`. Tout harnais qui monte cet écran sans eux tombe en
-// `ProviderNotFoundException` — voir `stripe_account_test_doubles.dart`.
-class _MockBusinessPrefsBloc
-    extends MockBloc<BusinessPrefsEvent, BusinessPrefsState>
-    implements BusinessPrefsBloc {}
-
-_MockBusinessPrefsBloc _stubBusinessPrefsBloc() {
-  final bloc = _MockBusinessPrefsBloc();
-  when(() => bloc.state).thenReturn(const BusinessPrefsState());
-  when(() => bloc.stream).thenAnswer((_) => Stream.value(bloc.state));
-  return bloc;
-}
 
 const _testUser = UserModel(
   id: 'u1',
@@ -100,21 +83,13 @@ void main() {
         GoRoute(
           path: '/auth/otp',
           builder: (_, _) => MultiBlocProvider(
-            providers: [
-              BlocProvider<AuthBloc>.value(value: mockBloc),
-              BlocProvider<StripeAccountBloc>.value(
-                value: stubStripeAccountBloc(),
-              ),
-              BlocProvider<BusinessPrefsBloc>.value(
-                value: _stubBusinessPrefsBloc(),
-              ),
-            ],
+            providers: [BlocProvider<AuthBloc>.value(value: mockBloc)],
             child: const OtpVerificationScreen(),
           ),
         ),
         GoRoute(
-          path: '/auth/country-selection',
-          builder: (_, _) => const Scaffold(body: Text('country-selection')),
+          path: profileBasicsRoute,
+          builder: (_, _) => const Scaffold(body: Text('profile-basics')),
         ),
         GoRoute(
           path: '/home',
@@ -145,7 +120,7 @@ void main() {
   );
 
   testWidgets(
-    'quand AuthNewAccountAuthenticated est émis, poursuit vers la sélection du pays',
+    'quand AuthNewAccountAuthenticated est émis, poursuit vers « Faisons connaissance »',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -156,7 +131,7 @@ void main() {
         buildScreen([const AuthNewAccountAuthenticated(_testUser)]),
       );
       await tester.pumpAndSettle();
-      expect(find.text('country-selection'), findsOneWidget);
+      expect(find.text('profile-basics'), findsOneWidget);
     },
   );
 
@@ -174,7 +149,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('home'), findsOneWidget);
-      expect(find.text('country-selection'), findsNothing);
+      expect(find.text('profile-basics'), findsNothing);
     },
   );
 
@@ -193,15 +168,7 @@ void main() {
           GoRoute(
             path: '/auth/otp',
             builder: (_, _) => MultiBlocProvider(
-              providers: [
-                BlocProvider<AuthBloc>.value(value: mockBloc),
-                BlocProvider<StripeAccountBloc>.value(
-                  value: stubStripeAccountBloc(),
-                ),
-                BlocProvider<BusinessPrefsBloc>.value(
-                  value: _stubBusinessPrefsBloc(),
-                ),
-              ],
+              providers: [BlocProvider<AuthBloc>.value(value: mockBloc)],
               child: const OtpVerificationScreen(),
             ),
           ),
@@ -408,15 +375,7 @@ void main() {
               GoRoute(
                 path: '/auth/otp',
                 builder: (_, _) => MultiBlocProvider(
-                  providers: [
-                    BlocProvider<AuthBloc>.value(value: mockBloc),
-                    BlocProvider<StripeAccountBloc>.value(
-                      value: stubStripeAccountBloc(),
-                    ),
-                    BlocProvider<BusinessPrefsBloc>.value(
-                      value: _stubBusinessPrefsBloc(),
-                    ),
-                  ],
+                  providers: [BlocProvider<AuthBloc>.value(value: mockBloc)],
                   child: const OtpVerificationScreen(),
                 ),
               ),
@@ -455,15 +414,7 @@ void main() {
         GoRoute(
           path: '/auth/otp',
           builder: (_, _) => MultiBlocProvider(
-            providers: [
-              BlocProvider<AuthBloc>.value(value: mockBloc),
-              BlocProvider<StripeAccountBloc>.value(
-                value: stubStripeAccountBloc(),
-              ),
-              BlocProvider<BusinessPrefsBloc>.value(
-                value: _stubBusinessPrefsBloc(),
-              ),
-            ],
+            providers: [BlocProvider<AuthBloc>.value(value: mockBloc)],
             child: const OtpVerificationScreen(),
           ),
         ),

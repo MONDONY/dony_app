@@ -10,7 +10,7 @@ void main() {
           '/auth/local',
           '/auth/method',
           '/auth/otp',
-          '/auth/personal-info',
+          '/auth/profile-basics',
           '/auth/country-selection',
           '/onboarding',
           '/force-update',

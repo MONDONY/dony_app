@@ -166,6 +166,70 @@ void main() {
     });
   });
 
+  // Ancien parcours d'inscription (consentement, informations, parrainage,
+  // « Votre projet ») : les écrans n'existent plus, un lien ou un état
+  // restauré qui les vise atterrit sur l'accueil.
+  group('routes retirées de l\'inscription', () {
+    tearDown(getIt.reset);
+
+    const retired = [
+      '/auth/personal-info',
+      '/auth/referral-code',
+      '/auth/analytics-consent',
+      '/auth/intent',
+    ];
+
+    GoRoute? findRoute(List<RouteBase> routes, String path) {
+      for (final route in routes) {
+        if (route is GoRoute && route.path == path) return route;
+        final nested = findRoute(route.routes, path);
+        if (nested != null) return nested;
+      }
+      return null;
+    }
+
+    for (final location in retired) {
+      testWidgets('$location mène à /home, sans boucle', (tester) async {
+        getIt.registerSingleton<FirebaseSessionProbe>(
+          const _StubSessionProbe(hasRealSession: true),
+        );
+        late BuildContext ctx;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                ctx = context;
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        );
+        GoRouterState stateFor(String path) => GoRouterState(
+          appRouter.configuration,
+          uri: Uri.parse(path),
+          matchedLocation: path,
+          fullPath: path,
+          pathParameters: const {},
+          pageKey: ValueKey(path),
+        );
+
+        final route = findRoute(appRouter.configuration.routes, location);
+        expect(route, isNotNull, reason: location);
+        expect(route!.redirect, isNotNull, reason: location);
+        expect(await route.redirect!(ctx, stateFor(location)), '/home');
+        // L'accueil ne renvoie nulle part : la redirection s'arrête là.
+        expect(
+          await appRouter.configuration.topRedirect(ctx, stateFor('/home')),
+          isNull,
+        );
+      });
+
+      test('$location n\'est plus une route publique', () {
+        expect(redirectFor(location, hasRealSession: false), '/auth/method');
+      });
+    }
+  });
+
   group('utilisateur réel', () {
     const routes = [
       '/payments/pay',

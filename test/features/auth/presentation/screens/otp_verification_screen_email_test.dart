@@ -9,8 +9,7 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
-import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
-import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,24 +19,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:pinput/pinput.dart';
 
 import '../../../../helpers/mock_analytics_backend.dart';
-import '../../../../helpers/stripe_account_test_doubles.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
-
-// `AuthNewAccountAuthenticated` fait lire `StripeAccountBloc` et
-// `BusinessPrefsBloc` (fournis à l'échelle de l'app dans `app.dart`) par
-// `_continueAfterSignup`. Tout harnais qui monte cet écran sans eux tombe en
-// `ProviderNotFoundException` — voir `stripe_account_test_doubles.dart`.
-class _MockBusinessPrefsBloc
-    extends MockBloc<BusinessPrefsEvent, BusinessPrefsState>
-    implements BusinessPrefsBloc {}
-
-_MockBusinessPrefsBloc _stubBusinessPrefsBloc() {
-  final bloc = _MockBusinessPrefsBloc();
-  when(() => bloc.state).thenReturn(const BusinessPrefsState());
-  when(() => bloc.stream).thenAnswer((_) => Stream.value(bloc.state));
-  return bloc;
-}
 
 const _testUser = UserModel(
   id: 'u1',
@@ -56,21 +39,13 @@ Widget _buildEmail({
         GoRoute(
           path: '/',
           builder: (_, _) => MultiBlocProvider(
-            providers: [
-              BlocProvider<AuthBloc>.value(value: bloc),
-              BlocProvider<StripeAccountBloc>.value(
-                value: stubStripeAccountBloc(),
-              ),
-              BlocProvider<BusinessPrefsBloc>.value(
-                value: _stubBusinessPrefsBloc(),
-              ),
-            ],
+            providers: [BlocProvider<AuthBloc>.value(value: bloc)],
             child: OtpVerificationScreen(mode: OtpMode.email, contact: contact),
           ),
         ),
         GoRoute(
-          path: '/auth/country-selection',
-          builder: (_, _) => const Scaffold(body: Text('Country selection')),
+          path: profileBasicsRoute,
+          builder: (_, _) => const Scaffold(body: Text('Profile basics')),
         ),
         GoRoute(
           path: '/home',
@@ -183,7 +158,7 @@ void main() {
   );
 
   testWidgets(
-    'mode email — compte nouvellement créé poursuit vers la sélection du pays',
+    'mode email — compte nouvellement créé poursuit vers « Faisons connaissance »',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -199,7 +174,7 @@ void main() {
       await tester.pumpWidget(_buildEmail(bloc: mockBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Country selection'), findsOneWidget);
+      expect(find.text('Profile basics'), findsOneWidget);
     },
   );
 
@@ -219,7 +194,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Country selection'), findsNothing);
+    expect(find.text('Profile basics'), findsNothing);
   });
 
   testWidgets('mode email — affiche le timer du state AuthEmailOtpSent', (
@@ -300,7 +275,7 @@ void main() {
   });
 
   testWidgets(
-    'mode email — poursuit vers la sélection du pays, aucune étape code PIN quand nouveau compte authentifié',
+    'mode email — poursuit vers « Faisons connaissance », aucune étape code PIN quand nouveau compte authentifié',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -325,7 +300,7 @@ void main() {
       await tester.pumpWidget(_buildEmail(bloc: mockBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Country selection'), findsOneWidget);
+      expect(find.text('Profile basics'), findsOneWidget);
     },
   );
 

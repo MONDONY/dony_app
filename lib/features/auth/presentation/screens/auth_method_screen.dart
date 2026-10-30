@@ -4,17 +4,12 @@ import 'dart:ui';
 import 'package:dony/core/config/google_auth_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/post_signup_route.dart';
-import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
-import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -31,25 +26,6 @@ class AuthMethodScreen extends StatelessWidget {
 
   bool get _showGoogleButton => googleSignInAvailable;
 
-  Future<void> _continueAfterNewAccount(
-    BuildContext context,
-    UserModel user,
-  ) async {
-    // Lus avant l'await : après, le contexte peut être démonté.
-    final stripe = context.read<StripeAccountBloc>().state;
-    final country = context.read<BusinessPrefsBloc>().state.country;
-
-    final route = await resolvePostSignupRoute(
-      analytics: getIt<AnalyticsService>(),
-      user: user,
-      stripe: stripe,
-      countryFallback: country,
-    );
-    if (context.mounted) {
-      context.go(route);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final h = DonyLayout.hPadding(context);
@@ -59,7 +35,7 @@ class AuthMethodScreen extends StatelessWidget {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthNewAccountAuthenticated) {
-            unawaited(_continueAfterNewAccount(context, state.user));
+            context.go(resolvePostSignupRoute(state.user));
           } else if (state is AuthAuthenticated) {
             context.go('/auth/local');
           } else if (state is AuthOAuthNewUser) {
