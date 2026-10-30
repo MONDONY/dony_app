@@ -212,6 +212,7 @@ import 'package:dony/features/recipients/presentation/screens/recipient_invitati
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/data/pending_referral_code_store.dart';
+import 'package:dony/features/referral/data/pending_referral_redeemer.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
 import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
@@ -996,6 +997,7 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<ProfileBasicsCubit>(),
         child: ProfileBasicsScreen(
+          redeemer: getIt<PendingReferralRedeemer>(),
           initialCountryCode: countryFromPhone(
             context.read<AuthBloc>().state.currentUser?.phoneNumber,
           ),

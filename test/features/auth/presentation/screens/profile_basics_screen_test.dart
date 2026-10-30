@@ -11,6 +11,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
+import 'package:dony/features/referral/data/pending_referral_redeemer.dart';
 import 'package:dony/features/settings/data/models/user_business_prefs_dto.dart';
 import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -30,6 +31,8 @@ class _MockAuthRepository extends Mock implements AuthRepository {}
 
 class _MockBusinessPrefsRepository extends Mock
     implements BusinessPrefsRepository {}
+
+class _MockRedeemer extends Mock implements PendingReferralRedeemer {}
 
 class _MockBox extends Mock implements Box<dynamic> {}
 
@@ -88,6 +91,7 @@ void main() {
   });
 
   setUp(() {
+    DonySnackbar.clearDedup();
     auth = _MockAuthRepository();
     businessPrefs = _MockBusinessPrefsRepository();
     box = _MockBox();
@@ -111,6 +115,7 @@ void main() {
 
   Future<void> pump(
     WidgetTester tester, {
+    PendingReferralRedeemer? redeemer,
     String? initialCountryCode,
     Locale locale = AppL10n.fr,
     Size? size,
@@ -131,7 +136,10 @@ void main() {
           builder: (_, _) => BlocProvider(
             create: (_) =>
                 ProfileBasicsCubit(auth, businessPrefs, box, analytics),
-            child: ProfileBasicsScreen(initialCountryCode: initialCountryCode),
+            child: ProfileBasicsScreen(
+              initialCountryCode: initialCountryCode,
+              redeemer: redeemer,
+            ),
           ),
         ),
         GoRoute(
@@ -339,6 +347,37 @@ void main() {
     );
     expect(find.text('Premiers pas'), findsNothing);
     await tester.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  group('code de parrainage du lien', () {
+    late _MockRedeemer redeemer;
+    setUp(() => redeemer = _MockRedeemer());
+
+    testWidgets('applied : snackbar de succès, apply appelé une fois', (
+      tester,
+    ) async {
+      when(
+        () => redeemer.apply(),
+      ).thenAnswer((_) async => PendingReferralOutcome.applied);
+      await pump(tester, redeemer: redeemer);
+
+      expect(find.text('Code de parrainage appliqué.'), findsOneWidget);
+      verify(() => redeemer.apply()).called(1);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    for (final outcome in [
+      PendingReferralOutcome.none,
+      PendingReferralOutcome.rejected,
+    ]) {
+      testWidgets('$outcome : aucun message', (tester) async {
+        when(() => redeemer.apply()).thenAnswer((_) async => outcome);
+        await pump(tester, redeemer: redeemer);
+
+        expect(find.text('Code de parrainage appliqué.'), findsNothing);
+        verify(() => redeemer.apply()).called(1);
+      });
+    }
   });
 
   group('360 dp, polices réelles', () {

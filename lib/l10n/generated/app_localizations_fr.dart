@@ -1542,6 +1542,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d\'enregistrer pour le moment. Réessayez ou passez cette étape.';
 
   @override
+  String get referralAutoAppliedMessage => 'Code de parrainage appliqué.';
+
+  @override
   String get authRequiredTitle => 'Connexion requise';
 
   @override

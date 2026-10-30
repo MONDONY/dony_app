@@ -2768,6 +2768,12 @@ abstract class AppLocalizations {
   /// **'Impossible d\'enregistrer pour le moment. Réessayez ou passez cette étape.'**
   String get profileBasicsSaveError;
 
+  /// No description provided for @referralAutoAppliedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de parrainage appliqué.'**
+  String get referralAutoAppliedMessage;
+
   /// No description provided for @authRequiredTitle.
   ///
   /// In fr, this message translates to:

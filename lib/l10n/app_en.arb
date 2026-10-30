@@ -494,6 +494,7 @@
   "profileBasicsCountryLabel": "Country of residence",
   "profileBasicsCountryPrefilledHint": "Suggested from your phone number. You can change it.",
   "profileBasicsSaveError": "We couldn't save this right now. Try again or skip this step.",
+  "referralAutoAppliedMessage": "Referral code applied.",
   "authRequiredTitle": "Sign-in required",
   "authRequiredSignIn": "Sign in",
   "authRequiredKeepExploring": "Keep exploring",

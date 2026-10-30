@@ -543,6 +543,7 @@
   "profileBasicsCountryLabel": "Pays de résidence",
   "profileBasicsCountryPrefilledHint": "Pays proposé d'après votre numéro. Modifiable.",
   "profileBasicsSaveError": "Impossible d'enregistrer pour le moment. Réessayez ou passez cette étape.",
+  "referralAutoAppliedMessage": "Code de parrainage appliqué.",
   "authRequiredTitle": "Connexion requise",
   "authRequiredSignIn": "Se connecter",
   "authRequiredKeepExploring": "Continuer à explorer",

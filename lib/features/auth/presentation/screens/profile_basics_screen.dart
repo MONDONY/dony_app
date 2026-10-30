@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/currency/country_picker.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -6,6 +8,7 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/profile_basics_cubit.dart';
 import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/features/referral/data/pending_referral_redeemer.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -26,9 +29,17 @@ const String profileBasicsRoute = '/auth/profile-basics';
 /// (`countryFromPhone`), lu par le routeur. Il n'est qu'affiché : rien n'est
 /// écrit tant que l'utilisateur ne touche pas « Continuer ».
 class ProfileBasicsScreen extends StatefulWidget {
-  const ProfileBasicsScreen({super.key, this.initialCountryCode});
+  const ProfileBasicsScreen({
+    super.key,
+    this.initialCountryCode,
+    this.redeemer,
+  });
 
   final String? initialCountryCode;
+
+  /// Applique le code parrain venu d'un lien d'invitation, une seule fois à
+  /// l'ouverture. `null` : rien à appliquer.
+  final PendingReferralRedeemer? redeemer;
 
   @override
   State<ProfileBasicsScreen> createState() => _ProfileBasicsScreenState();
@@ -44,7 +55,19 @@ class _ProfileBasicsScreenState extends State<ProfileBasicsScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) context.read<ProfileBasicsCubit>().trackViewed();
+      unawaited(_applyReferral());
     });
+  }
+
+  Future<void> _applyReferral() async {
+    final outcome = await widget.redeemer?.apply();
+    if (outcome == PendingReferralOutcome.applied && mounted) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.referralAutoAppliedMessage,
+        type: DonySnackbarType.success,
+      );
+    }
   }
 
   @override

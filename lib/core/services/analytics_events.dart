@@ -781,6 +781,10 @@ abstract final class AnalyticsEvents {
   /// Lien d'invitation `yadony://referral?code=…` ouvert dans l'app.
   static const referralLinkOpened = 'referral_link_opened';
 
+  /// Code du lien d'invitation appliqué tout seul après une inscription
+  /// (propriété `outcome` : `applied` / `rejected`, jamais le code).
+  static const referralAutoApplied = 'referral_auto_applied';
+
   /// Bouton « Ouvrir Yadony » d'un e-mail de notification ouvert dans l'app
   /// (lien universel `https://yadony.com/ouvrir?type=…` ou
   /// `yadony://open?type=…`). Propriétés `type` (type de notification) et

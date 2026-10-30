@@ -11,8 +11,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// la construction : il a fini bien avant que l'inscription n'atteigne
 /// l'étape du parrainage.
 ///
-/// Jamais d'application automatique : le code n'est que pré-rempli, la
-/// personne valide elle-même.
+/// Après une nouvelle inscription, `PendingReferralRedeemer` l'applique tout
+/// seul puis l'efface. En attendant que l'ancien écran de saisie
+/// (`/auth/referral-code`) disparaisse, le code y reste aussi pré-rempli.
 class PendingReferralCodeStore {
   PendingReferralCodeStore({
     Future<SharedPreferences> Function()? prefs,

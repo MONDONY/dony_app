@@ -1531,6 +1531,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'We couldn\'t save this right now. Try again or skip this step.';
 
   @override
+  String get referralAutoAppliedMessage => 'Referral code applied.';
+
+  @override
   String get authRequiredTitle => 'Sign-in required';
 
   @override
