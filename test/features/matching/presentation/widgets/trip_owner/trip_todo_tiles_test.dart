@@ -184,10 +184,16 @@ void main() {
       );
     });
 
-    // Règle reprise telle quelle de l'ancien bouton : aucun filtre de statut.
+    // Trajet publié, complet ou en cours seulement : jamais annulé (colis
+    // en retour), terminé, brouillon, retiré ni d'un statut inconnu, même
+    // si le back sert la fenêtre de suivi ouverte.
     for (final status in _statuses) {
-      test('$status : même règle, quel que soit le statut', () {
-        expect(_tiles(trip(status: status)), [TripTodoTile.depart]);
+      final shown = const {'ACTIVE', 'FULL', 'IN_PROGRESS'}.contains(status);
+      test('$status : ${shown ? 'tuile' : 'rien'}', () {
+        expect(
+          _tiles(trip(status: status)),
+          shown ? [TripTodoTile.depart] : isEmpty,
+        );
       });
     }
 
@@ -259,6 +265,14 @@ void main() {
         _tiles(_trip(methods: const {BidPaymentMethod.mobileMoney})),
         isEmpty,
       );
+    });
+
+    test('espèces et mobile money : rien (pas « espèces seules »)', () {
+      final trip = _trip(
+        methods: const {BidPaymentMethod.cash, BidPaymentMethod.mobileMoney},
+      );
+      expect(_tiles(trip), isEmpty);
+      expect(_tiles(trip, stripe: _ready), isEmpty);
     });
 
     test('devise sans carte (XOF) : rien', () {
@@ -407,5 +421,27 @@ void main() {
       expect(a.status, isNot(more.status));
       expect(a.status, isNot(full.status));
     });
+
+    for (final tile in [TripTodoTile.depart, TripTodoTile.card]) {
+      test('${tile.name} : dédoublonnée par statut du trajet seulement', () {
+        final a = tripTodoShown(tile, _trip(), pendingCount: 0);
+        final more = tripTodoShown(tile, _trip(), pendingCount: 3);
+        final full = tripTodoShown(
+          tile,
+          _trip(status: 'FULL'),
+          pendingCount: 0,
+        );
+        // Une demande reçue ou traitée ne remesure ni « Je pars » ni la
+        // carte.
+        expect(a.status, more.status);
+        expect(a.status, 'ACTIVE');
+        expect(a.status, isNot(full.status));
+        expect(a.properties, {
+          'tile': tile.name,
+          'role': 'trip_owner',
+          'status': 'ACTIVE',
+        });
+      });
+    }
   });
 }

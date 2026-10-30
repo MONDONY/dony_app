@@ -33,6 +33,12 @@ enum TripTodoTile {
 /// d'accepter une demande sur un trajet terminé, annulé ou retiré).
 const _requestStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
 
+/// Statuts où « Je pars » a un sens : trajet publié, complet ou en cours.
+/// Jamais sur un trajet annulé (ses colis remis suivent la procédure de
+/// retour), terminé, brouillon ou retiré, même si le back sert la fenêtre de
+/// suivi ouverte (`trackingActive` ne dépend pas du statut).
+const _departStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
+
 /// Statuts où la carte peut encore être ajoutée au trajet : sur un trajet
 /// terminé ou annulé, l'encart « espèces seules » n'a plus d'objet.
 const _cardStatuses = {'DRAFT', 'ACTIVE', 'FULL'};
@@ -67,10 +73,11 @@ bool _cashOnlyWithCardPossible(AnnouncementModel trip) =>
 ///   Hive lu par `TripDepartCubit`).
 /// - [stripe] : statut du compte de paiement par carte (`StripeAccountBloc`).
 ///
-/// « Je pars » reprend exactement la règle de l'ancien bouton de l'écran :
-/// colis remis servis par le détail (`parcelsSummary`) et fenêtre de suivi
-/// ouverte (`trackingActive`). Le détail ne sert pas encore `trackingActive`
-/// (piège n°1 de l'inventaire) : la tuile apparaîtra quand le back le fera.
+/// « Je pars » reprend la règle de l'ancien bouton de l'écran (colis remis
+/// servis par le détail, `parcelsSummary`, et fenêtre de suivi ouverte,
+/// `trackingActive`), limitée aux statuts ACTIVE, FULL et IN_PROGRESS. Le
+/// détail ne sert pas encore `trackingActive` (piège n°1 de l'inventaire) :
+/// la tuile apparaîtra quand le back le fera.
 List<TripTodoTile> tripTodoTilesFor({
   required AnnouncementModel trip,
   required List<BidModel>? bids,
@@ -84,7 +91,8 @@ List<TripTodoTile> tripTodoTilesFor({
     if (_requestStatuses.contains(trip.status) &&
         tripPendingRequestCount(trip, bids) > 0)
       TripTodoTile.requests,
-    if (summary != null &&
+    if (_departStatuses.contains(trip.status) &&
+        summary != null &&
         summary.count > 0 &&
         trip.trackingActive &&
         !departed)
@@ -135,8 +143,10 @@ String tripTodoSummary(
 /// Mesure d'affichage de la tuile [tile] de [trip]
 /// (`bid_detail_todo_tile_shown`, `role: trip_owner`), à émettre par
 /// `TodoTileViewLog.logAll` avec l'identifiant du trajet. Dédoublonnée par
-/// le statut du trajet et le nombre de demandes à traiter : une nouvelle
-/// demande remesure la tuile, un simple rechargement non.
+/// le statut du trajet, et pour la tuile [TripTodoTile.requests] seulement
+/// par le nombre de demandes à traiter : une nouvelle demande remesure cette
+/// tuile, jamais « Je pars » ni « carte » ; un simple rechargement ne
+/// remesure rien.
 TodoTileShown tripTodoShown(
   TripTodoTile tile,
   AnnouncementModel trip, {
@@ -149,5 +159,7 @@ TodoTileShown tripTodoShown(
     'role': 'trip_owner',
     'status': trip.status,
   },
-  status: '${trip.status}|$pendingCount',
+  status: tile == TripTodoTile.requests
+      ? '${trip.status}|$pendingCount'
+      : trip.status,
 );

@@ -1,26 +1,25 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
-import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
-import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
-import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/close_sheet_when_resolved.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
-import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_depart_button.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
@@ -32,16 +31,22 @@ import 'package:go_router/go_router.dart';
 
 /// Ouvre le bottom sheet de la tuile « À traiter » [tile] du trajet [trip]
 /// (écran du trajet, vue du voyageur propriétaire) et compte l'ouverture
-/// (`bid_detail_tile_opened`, `role: trip_owner`, avec [source]).
+/// (`bid_detail_tile_opened`, `role: trip_owner`, `source: tile`).
 ///
 /// Comme `openTravelerTodoSheet` de la fiche colis : le sheet s'ouvre sur le
 /// navigateur racine, les blocs de l'écran y sont reposés par le `wrapper`
-/// (`BlocProvider.value`) quand [context] les fournit : `AnnouncementBloc`
-/// (trajet relu), `BidBloc` (colis du trajet), `StripeAccountBloc` (compte
-/// de paiement par carte) et `TripDepartCubit` (« Je pars »). Pour la tuile
-/// [TripTodoTile.depart], un `TripDepartCubit` est créé par le `wrapper` si
-/// l'écran n'en fournit pas. Contenu et pied suivent les données relues ; le
-/// bouton vit dans le `stickyBottom`.
+/// (`BlocProvider.value`) quand [context] les fournit ([TripTodoBlocs]) :
+/// `AnnouncementBloc` (trajet relu), `BidBloc` (colis du trajet),
+/// `StripeAccountBloc` (compte de paiement par carte) et `TripDepartCubit`
+/// (« Je pars »). La tuile [TripTodoTile.depart] exige le `TripDepartCubit`
+/// de l'écran, celui dont la section « À traiter » lit `departed` : le sheet
+/// n'en crée jamais (un cubit propre au sheet serait fermé au glissement du
+/// sheet, réponse du départ encore en vol).
+///
+/// Titre, contenu et pied suivent les mêmes données que la section
+/// ([TripTodoLive]) ; [bids] : derniers colis connus de la section, repris
+/// si le `BidBloc` est en plein rechargement à l'ouverture. Le bouton vit
+/// dans le `stickyBottom`.
 ///
 /// Le sheet se ferme seul dès que les données relues ne justifient plus
 /// [tile] ([tripTodoTilesFor]) : départ confirmé, dernière demande traitée,
@@ -55,28 +60,38 @@ Future<void> openTripTodoSheet(
   BuildContext context,
   AnnouncementModel trip,
   TripTodoTile tile, {
-  TodoSource source = TodoSource.tile,
+  List<BidModel>? bids,
 }) {
+  final blocs = TripTodoBlocs.of(context);
+  // La tuile « Je pars » se calcule avec le TripDepartCubit de l'écran : il
+  // doit être fourni au-dessus de [context].
+  assert(
+    tile != TripTodoTile.depart || blocs.depart != null,
+    'TripDepartCubit missing above context',
+  );
   logBidDetailTileOpened(
     tile: tile.name,
     role: 'trip_owner',
-    source: source.name,
+    source: TodoSource.tile.name,
   );
 
-  final blocs = _TripTodoBlocs(
-    announcement: maybeRead<AnnouncementBloc>(context),
-    bids: maybeRead<BidBloc>(context),
-    stripe: maybeRead<StripeAccountBloc>(context),
-    depart: maybeRead<TripDepartCubit>(context),
-  );
-  final cardReady = tripCardPaymentsReady(
-    blocs.stripe?.state ?? const StripeAccountInitial(),
-  );
-  final createDepart = tile == TripTodoTile.depart && blocs.depart == null;
+  Widget follow(Widget Function(BuildContext, TripTodoLiveData) builder) =>
+      TripTodoLive(
+        trip: trip,
+        blocs: blocs,
+        initialBids: bids,
+        builder: builder,
+      );
 
   return DonyBottomSheet.show<void>(
     context,
-    title: tripTodoTitle(context.l10n, tile, cardReady: cardReady),
+    // Le titre de la tuile « carte » change avec le compte de paiement : il
+    // suit les données comme le corps et le bouton.
+    titleWidget: follow(
+      (sheetContext, live) => Text(
+        tripTodoTitle(sheetContext.l10n, tile, cardReady: live.cardReady),
+      ),
+    ),
     analyticsName: 'trip-owner/todo-${tile.name}',
     wrapper: (content) {
       final providers = [
@@ -86,28 +101,18 @@ Future<void> openTripTodoSheet(
         if (blocs.stripe case final b?)
           BlocProvider<StripeAccountBloc>.value(value: b),
         if (blocs.depart case final b?)
-          BlocProvider<TripDepartCubit>.value(value: b)
-        else if (createDepart)
-          BlocProvider<TripDepartCubit>(
-            create: (_) => getIt<TripDepartCubit>(param1: trip.id),
-          ),
+          BlocProvider<TripDepartCubit>.value(value: b),
       ];
       return providers.isEmpty
           ? content
           : MultiBlocProvider(providers: providers, child: content);
     },
-    stickyBottom: _LiveTripTodo(
-      trip: trip,
-      blocs: blocs,
-      hasDepart: blocs.depart != null || createDepart,
-      builder: (sheetContext, live) =>
+    stickyBottom: follow(
+      (sheetContext, live) =>
           _TripTodoFooter(tile: tile, live: live, screenContext: context),
     ),
-    child: _LiveTripTodo(
-      trip: trip,
-      blocs: blocs,
-      hasDepart: blocs.depart != null || createDepart,
-      builder: (sheetContext, live) => CloseTripSheetWhenGone(
+    child: follow(
+      (sheetContext, live) => CloseTripSheetWhenGone(
         gone: !live.tiles.contains(tile),
         child: _TripTodoContent(tile: tile, live: live),
       ),
@@ -115,110 +120,12 @@ Future<void> openTripTodoSheet(
   );
 }
 
-/// Blocs de l'écran trouvés à l'ouverture du sheet, à reposer dans le sheet.
-class _TripTodoBlocs {
-  const _TripTodoBlocs({
-    required this.announcement,
-    required this.bids,
-    required this.stripe,
-    required this.depart,
-  });
-
-  final AnnouncementBloc? announcement;
-  final BidBloc? bids;
-  final StripeAccountBloc? stripe;
-  final TripDepartCubit? depart;
-}
-
-/// Données courantes d'un sheet « À traiter » du trajet.
-class _TripTodoLiveData {
-  const _TripTodoLiveData({
-    required this.trip,
-    required this.bids,
-    required this.departed,
-    required this.stripe,
-  });
-
-  /// Dernier trajet relu par l'écran, à défaut celui de l'ouverture.
-  final AnnouncementModel trip;
-
-  /// Derniers colis chargés (`BidListLoaded`), `null` tant que la liste n'a
-  /// pas répondu.
-  final List<BidModel>? bids;
-  final bool departed;
-  final StripeAccountState stripe;
-
-  int get pendingCount => tripPendingRequestCount(trip, bids);
-  bool get cardReady => tripCardPaymentsReady(stripe);
-
-  List<TripTodoTile> get tiles => tripTodoTilesFor(
-    trip: trip,
-    bids: bids,
-    isOwner: true,
-    departed: departed,
-    stripe: stripe,
-  );
-}
-
-/// Rend [builder] avec les données courantes : chaque bloc présent est suivi
-/// (seuls ses états porteurs de données reconstruisent : un chargement garde
-/// les dernières connues), un bloc absent laisse la valeur de l'ouverture.
-class _LiveTripTodo extends StatelessWidget {
-  const _LiveTripTodo({
-    required this.trip,
-    required this.blocs,
-    required this.hasDepart,
-    required this.builder,
-  });
-
-  final AnnouncementModel trip;
-  final _TripTodoBlocs blocs;
-  final bool hasDepart;
-  final Widget Function(BuildContext context, _TripTodoLiveData live) builder;
-
-  @override
-  Widget build(BuildContext context) {
-    return followBloc<AnnouncementBloc, AnnouncementState, AnnouncementModel>(
-      present: blocs.announcement != null,
-      select: (s) => tripAnnouncementIn(s, trip.id),
-      builder: (context, current) =>
-          followBloc<BidBloc, BidState, List<BidModel>>(
-            present: blocs.bids != null,
-            select: (s) => s is BidListLoaded ? s.bids : null,
-            builder: (context, bids) =>
-                followBloc<
-                  StripeAccountBloc,
-                  StripeAccountState,
-                  StripeAccountState
-                >(
-                  present: blocs.stripe != null,
-                  select: (s) => s,
-                  builder: (context, stripe) =>
-                      followBloc<TripDepartCubit, TripDepartState, bool>(
-                        present: hasDepart,
-                        select: (s) => s.departed,
-                        builder: (context, departed) => builder(
-                          context,
-                          _TripTodoLiveData(
-                            trip: current ?? trip,
-                            bids: bids,
-                            departed: departed ?? false,
-                            stripe: stripe ?? const StripeAccountInitial(),
-                          ),
-                        ),
-                      ),
-                ),
-          ),
-    );
-  }
-}
-
 /// Contenu du sheet, sur les données courantes.
 class _TripTodoContent extends StatelessWidget {
   const _TripTodoContent({required this.tile, required this.live});
 
   final TripTodoTile tile;
-  final _TripTodoLiveData live;
+  final TripTodoLiveData live;
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +179,7 @@ class _TripTodoContent extends StatelessWidget {
 }
 
 /// Une demande à traiter : contenu, expéditeur · poids, net du voyageur
-/// quand le back le sert (`totalNetAmountEur`).
+/// ([travelerNetAmount], même montant que la liste des demandes).
 class _RequestRow extends StatelessWidget {
   const _RequestRow({required this.bid});
 
@@ -283,18 +190,24 @@ class _RequestRow extends StatelessWidget {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final content =
-        (bid.contentCategory != null
-            ? contentCategoriesDisplayName(l, bid.contentCategory!)
-            : null) ??
-        bid.description ??
-        l.tripOwnerParcelsDefaultContent;
+    // Catégories, sinon description, sinon « Colis » : une valeur vide du
+    // back ne laisse jamais la ligne sans titre.
+    final category = bid.contentCategory;
+    final categories = category == null
+        ? ''
+        : contentCategoriesDisplayName(l, category);
+    final description = bid.description?.trim() ?? '';
+    final content = categories.isNotEmpty
+        ? categories
+        : description.isNotEmpty
+        ? description
+        : l.tripOwnerParcelsDefaultContent;
     final sender = bid.senderDisplayName(l);
     final w = bid.displayWeightKg;
     final weight = w == null
         ? null
         : '${w.toStringAsFixed(w % 1 == 0 ? 0 : 1)} kg';
-    final net = bid.totalAmountEur;
+    final net = travelerNetAmount(bid);
     return Container(
       key: Key('trip-todo-request-${bid.id}'),
       padding: const EdgeInsets.all(DonySpacing.md),
@@ -356,7 +269,7 @@ class _TripTodoFooter extends StatelessWidget {
   });
 
   final TripTodoTile tile;
-  final _TripTodoLiveData live;
+  final TripTodoLiveData live;
   final BuildContext screenContext;
 
   @override
@@ -395,24 +308,19 @@ class _TripTodoFooter extends StatelessWidget {
     await screenContext.push<void>(tripRequestsLocation(live.trip.id));
     // Écran quitté entre-temps : ses blocs sont fermés.
     if (!screenContext.mounted) return;
-    bidBloc?.add(BidListRequested(live.trip.id));
+    // Relecture silencieuse : l'écran garde ses colis affichés, ni
+    // indicateur de chargement ni tuile qui disparaît le temps de la réponse.
+    bidBloc?.add(BidListRequested(live.trip.id, silent: true));
     announcementBloc?.add(AnnouncementDetailRequested(live.trip.id));
   }
 
   /// Compte de paiement prêt : l'édition du trajet propose la carte, puis le
   /// trajet est relu pour que la tuile disparaisse (Sentry FLUTTER-DH), comme
-  /// l'encart du corps du trajet.
+  /// l'encart du corps du trajet ([openTripEdit]).
   Future<void> _openEditToEnableCard(BuildContext sheetContext) async {
-    final announcementBloc = maybeRead<AnnouncementBloc>(sheetContext);
     closeSheetIfOnTop(sheetContext);
     if (!screenContext.mounted) return;
-    final changed = await screenContext.push<bool>(
-      '/trips/create',
-      extra: CreateTripArgs(announcement: live.trip),
-    );
-    if ((changed ?? false) && screenContext.mounted) {
-      announcementBloc?.add(AnnouncementDetailRequested(live.trip.id));
-    }
+    await openTripEdit(screenContext, live.trip);
   }
 
   /// Activation des paiements par carte. Le `StripeAccountBloc` est partagé

@@ -9,6 +9,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_reschedule_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -26,12 +27,6 @@ import 'package:go_router/go_router.dart';
 ///   colis embarqué.
 /// - **Modifier** → édition (uniquement si 0 demande, sinon désactivé).
 /// - **Supprimer** (si supprimable) ou **Annuler** (si ACTIVE non supprimable).
-/// Activité › Demandes, onglet « À traiter », restreint au trajet [tripId].
-String tripRequestsLocation(String tripId) => Uri(
-  path: '/demandes',
-  queryParameters: {'filter': 'aTraiter', 'announcement': tripId},
-).toString();
-
 class OwnerActionGrid extends StatelessWidget {
   const OwnerActionGrid({super.key, required this.a, required this.isOwner});
 

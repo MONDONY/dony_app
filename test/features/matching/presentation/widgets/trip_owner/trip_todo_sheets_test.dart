@@ -10,7 +10,9 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -23,7 +25,6 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -101,16 +102,24 @@ BidModel _bid(
   String id,
   String status, {
   String? description,
+  String? contentCategory,
+  String? senderName,
   double? weightKg,
   double? net,
+  double? pricePerKg,
+  String currency = 'EUR',
 }) => BidModel(
   id: id,
   announcementId: 'trip-1',
   senderId: 'sender-$id',
+  senderName: senderName,
   status: status,
   description: description,
+  contentCategory: contentCategory,
   weightKg: weightKg,
   totalAmountEur: net,
+  pricePerKg: pricePerKg,
+  currency: currency,
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
 );
@@ -155,7 +164,7 @@ void main() {
   late StreamController<BidState> bidStates;
   late _MockDepart departCubit;
   late StreamController<TripDepartState> departStates;
-  late List<String?> createdDepartIds;
+  late StreamController<StripeAccountState> stripeStates;
   late Object? createTripExtra;
 
   setUpAll(() async {
@@ -176,21 +185,17 @@ void main() {
     addTearDown(bidStates.close);
     departStates = StreamController<TripDepartState>.broadcast();
     addTearDown(departStates.close);
+    stripeStates = StreamController<StripeAccountState>.broadcast();
+    addTearDown(stripeStates.close);
 
     annBloc = _MockAnnouncementBloc();
     bidBloc = _MockBidBloc();
     departCubit = _MockDepart();
     when(() => departCubit.depart(any())).thenAnswer((_) async {});
-    createdDepartIds = [];
     createTripExtra = null;
 
     await getIt.reset();
-    getIt
-      ..registerSingleton<AnalyticsService>(analytics)
-      ..registerFactoryParam<TripDepartCubit, String, void>((id, _) {
-        createdDepartIds.add(id);
-        return departCubit;
-      });
+    getIt.registerSingleton<AnalyticsService>(analytics);
     DonySnackbar.clearDedup();
   });
 
@@ -198,7 +203,9 @@ void main() {
 
   /// Ouvre la feuille depuis un `Builder` posé sous les blocs de l'écran,
   /// comme le fera la section « À traiter ». [withDepart] : l'écran fournit
-  /// son `TripDepartCubit` (sinon le sheet « Je pars » en crée un).
+  /// son `TripDepartCubit`. [liveStripe] : statut Stripe suivi par
+  /// `stripeStates` plutôt que figé. [bids] : derniers colis connus de la
+  /// section, passés à l'ouverture.
   Future<void> open(
     WidgetTester tester, {
     required AnnouncementModel trip,
@@ -211,7 +218,8 @@ void main() {
     Locale locale = const Locale('fr'),
     double textScale = 1,
     Size? size,
-    TodoSource source = TodoSource.tile,
+    bool liveStripe = false,
+    List<BidModel>? bids,
     bool settle = true,
   }) async {
     if (size != null) {
@@ -230,14 +238,20 @@ void main() {
       initialState: bidState ?? BidListLoaded(_pendingBids),
     );
     whenListen(departCubit, departStates.stream, initialState: departState);
-    final stripeBloc = stubStripeAccountBloc(state: stripe);
+    final StripeAccountBloc stripeBloc;
+    if (liveStripe) {
+      final live = MockStripeAccountBloc();
+      whenListen(live, stripeStates.stream, initialState: stripe);
+      stripeBloc = live;
+    } else {
+      stripeBloc = stubStripeAccountBloc(state: stripe);
+    }
 
     Widget screen(BuildContext context) {
       final opener = Scaffold(
         body: Builder(
           builder: (context) => TextButton(
-            onPressed: () =>
-                openTripTodoSheet(context, trip, tile, source: source),
+            onPressed: () => openTripTodoSheet(context, trip, tile, bids: bids),
             child: const Text('open-todo'),
           ),
         ),
@@ -385,7 +399,11 @@ void main() {
 
       final reloads = verify(() => bidBloc.add(captureAny())).captured;
       expect(reloads.single, isA<BidListRequested>());
-      expect((reloads.single as BidListRequested).announcementId, 'trip-1');
+      final reload = reloads.single as BidListRequested;
+      expect(reload.announcementId, 'trip-1');
+      // Relecture silencieuse : ni indicateur de chargement ni tuile qui
+      // retombe sur `pendingBidCount` le temps de la réponse.
+      expect(reload.silent, isTrue);
       final details = verify(() => annBloc.add(captureAny())).captured;
       expect((details.single as AnnouncementDetailRequested).id, 'trip-1');
     });
@@ -503,6 +521,134 @@ void main() {
     });
   });
 
+  group('lignes de demande hors cas nominal', () {
+    Future<void> openWith(
+      WidgetTester tester,
+      List<BidModel> bids, {
+      Locale locale = const Locale('fr'),
+    }) => open(
+      tester,
+      trip: _trip(),
+      tile: TripTodoTile.requests,
+      bidState: BidListLoaded(bids),
+      locale: locale,
+    );
+
+    String rowText(WidgetTester tester, String id) => tester
+        .widgetList<Text>(
+          find.descendant(
+            of: find.byKey(Key('trip-todo-request-$id')),
+            matching: find.byType(Text),
+          ),
+        )
+        .map((t) => t.data)
+        .join(' | ');
+
+    testWidgets('catégories traduites, prioritaires sur la description', (
+      tester,
+    ) async {
+      await openWith(tester, locale: const Locale('en'), [
+        _bid(
+          'c1',
+          'PENDING',
+          contentCategory: 'Documents & administratif,Vêtements & tissus',
+          description: 'Mes papiers',
+        ),
+      ]);
+
+      expect(
+        rowText(tester, 'c1'),
+        startsWith('Documents & paperwork, Clothing & fabrics | '),
+      );
+      expect(find.text('Mes papiers'), findsNothing);
+    });
+
+    testWidgets('ni catégorie ni description (ou vides) : « Colis »', (
+      tester,
+    ) async {
+      await openWith(tester, [
+        _bid('d1', 'PENDING'),
+        _bid('d2', 'PENDING', contentCategory: '', description: '  '),
+      ]);
+
+      expect(rowText(tester, 'd1'), startsWith('Colis | '));
+      expect(rowText(tester, 'd2'), startsWith('Colis | '));
+    });
+
+    testWidgets('expéditeur nommé ou anonyme, poids absent ou décimal', (
+      tester,
+    ) async {
+      await openWith(tester, [
+        _bid('s1', 'PENDING', senderName: 'Awa', weightKg: 2.5),
+        _bid('s2', 'PENDING'),
+      ]);
+
+      expect(rowText(tester, 's1'), contains('Awa · 2.5 kg'));
+      // Sans nom : le libellé générique ; sans poids : pas de « · ».
+      expect(rowText(tester, 's2'), endsWith('| Expéditeur'));
+    });
+
+    testWidgets('net : servi, sinon prix au kilo × poids, sinon rien', (
+      tester,
+    ) async {
+      await openWith(tester, [
+        _bid('n1', 'PENDING', net: 42, pricePerKg: 99, weightKg: 1),
+        _bid('n2', 'PENDING', pricePerKg: 8, weightKg: 3),
+        _bid('n3', 'PENDING', weightKg: 3),
+      ]);
+
+      expect(rowText(tester, 'n1'), endsWith(formatPriceIn(42, 'EUR')));
+      // Même repli que la liste des demandes (`travelerNetAmount`).
+      expect(rowText(tester, 'n2'), endsWith(formatPriceIn(24, 'EUR')));
+      expect(rowText(tester, 'n3'), endsWith('3 kg'));
+    });
+
+    testWidgets('devise du colis (XOF)', (tester) async {
+      await openWith(tester, [
+        _bid('x1', 'PENDING', net: 25000, weightKg: 5, currency: 'XOF'),
+      ]);
+
+      expect(rowText(tester, 'x1'), endsWith(formatPriceIn(25000, 'XOF')));
+      expect(rowText(tester, 'x1'), contains('CFA'));
+    });
+  });
+
+  group('dernières données gardées', () {
+    testWidgets('ouvert pendant un rechargement : colis de la tuile repris, '
+        'pas de repli sur pendingBidCount ni de fermeture', (tester) async {
+      await open(
+        tester,
+        // Le détail ne sert pas pendingBidCount (0).
+        trip: _trip(),
+        tile: TripTodoTile.requests,
+        bidState: BidLoading(),
+        bids: _pendingBids,
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Demandes à traiter'), findsOneWidget);
+      expect(find.byKey(const Key('trip-todo-request-b1')), findsOneWidget);
+      expect(find.text('Voir les demandes (2)'), findsOneWidget);
+
+      // La relecture répond : le sheet la suit.
+      bidStates.add(BidListLoaded([_pendingBids.first]));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-todo-request-b2')), findsNothing);
+      expect(find.text('Voir les demandes (1)'), findsOneWidget);
+    });
+
+    testWidgets('une erreur de relecture garde les dernières demandes', (
+      tester,
+    ) async {
+      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
+
+      bidStates.add(BidError(const NetworkException('x')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('trip-todo-request-b1')), findsOneWidget);
+    });
+  });
+
   group('« Je pars »', () {
     testWidgets('explication du partage de l\'avancée, « Je pars » au pied', (
       tester,
@@ -529,7 +675,6 @@ void main() {
       await tester.pump();
 
       verify(() => departCubit.depart(any())).called(1);
-      expect(createdDepartIds, isEmpty);
       expect(
         tester.element(departButton()).read<TripDepartCubit>(),
         same(departCubit),
@@ -565,9 +710,8 @@ void main() {
       expect(find.text("C'est noté, bon voyage !"), findsOneWidget);
     });
 
-    testWidgets('sans TripDepartCubit à l\'écran : le sheet crée le sien', (
-      tester,
-    ) async {
+    testWidgets('sans TripDepartCubit à l\'écran : refusé (jamais un cubit '
+        'propre au sheet)', (tester) async {
       await open(
         tester,
         trip: _departTrip(),
@@ -575,10 +719,25 @@ void main() {
         withDepart: false,
       );
 
-      expect(createdDepartIds, ['trip-1']);
-      await tester.tap(departButton());
+      expect(tester.takeException(), isAssertionError);
+      expect(find.byType(TrackingConsentExplainer), findsNothing);
+    });
+
+    testWidgets('sheet fermé pendant le départ : le cubit de l\'écran reste '
+        'ouvert, la réponse arrive sans plantage', (tester) async {
+      await open(tester, trip: _departTrip(), tile: TripTodoTile.depart);
+
+      departStates.add(const TripDepartState(loading: true));
       await tester.pump();
-      verify(() => departCubit.depart(any())).called(1);
+      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+      await tester.pumpAndSettle();
+      expect(find.byType(TrackingConsentExplainer), findsNothing);
+
+      departStates.add(const TripDepartState(departed: true));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verifyNever(() => departCubit.close());
     });
 
     testWidgets('fenêtre de suivi refermée par le trajet relu : fermeture', (
@@ -700,6 +859,35 @@ void main() {
       expect(find.text('Ajouter la carte à ce trajet'), findsNothing);
     });
 
+    testWidgets('compte devenu prêt pendant l\'ouverture : titre, texte et '
+        'bouton basculent ensemble', (tester) async {
+      await open(
+        tester,
+        trip: _cashTrip(),
+        tile: TripTodoTile.card,
+        stripe: const StripeAccountInitial(),
+        liveStripe: true,
+      );
+
+      // Statut pas encore chargé : activation (titre et bouton).
+      expect(find.text('Activer les paiements par carte'), findsNWidgets(2));
+      expectSingleFooterButton(activateCard());
+
+      stripeStates.add(_ready);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Activer les paiements par carte'), findsNothing);
+      expect(find.text('Ajouter la carte à ce trajet'), findsNWidgets(2));
+      expect(find.textContaining('Le paiement par carte est activé'), findsOne);
+      expectSingleFooterButton(enableCard());
+
+      // Une relecture du compte (chargement) garde le dernier statut connu.
+      stripeStates.add(const StripeAccountLoading());
+      await tester.pumpAndSettle();
+      expect(find.text('Ajouter la carte à ce trajet'), findsNWidgets(2));
+    });
+
     testWidgets('trajet relu annulé : fermeture', (tester) async {
       await open(tester, trip: _cashTrip(), tile: TripTodoTile.card);
 
@@ -733,22 +921,6 @@ void main() {
         ).called(1);
       });
     }
-
-    testWidgets('source link', (tester) async {
-      await open(
-        tester,
-        trip: _trip(),
-        tile: TripTodoTile.requests,
-        source: TodoSource.link,
-      );
-      verify(
-        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
-          'tile': 'requests',
-          'role': 'trip_owner',
-          'source': 'link',
-        }),
-      ).called(1);
-    });
   });
 
   group('boutons à taille nominale', () {
