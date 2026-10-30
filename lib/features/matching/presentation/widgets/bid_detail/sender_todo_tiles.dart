@@ -75,7 +75,8 @@ String senderTodoBadge(
   SenderTodoTile.recipient => l.todoTileBadgeReplyNeeded,
 };
 
-/// Résumé de la tuile : ce qui est attendu, en une ou deux lignes.
+/// Résumé de la tuile : ce qui est attendu, en une ou deux lignes ; jusqu'à
+/// trois pour le report, dont l'échéance porte le jour de la semaine.
 String senderTodoSummary(
   AppLocalizations l,
   BidModel bid,

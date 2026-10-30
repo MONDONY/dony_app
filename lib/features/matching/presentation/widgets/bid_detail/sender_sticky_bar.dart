@@ -64,8 +64,8 @@ class SenderStickyBar extends StatelessWidget {
   /// While the payment is being fetched the bar shows « Payer mon envoi » as a
   /// disabled, loading [DonyButton] (same 52 px, no layout shift).
   ///
-  /// Do NOT "synchronise" this gate with [_buildAction]: it is a *superset*
-  /// of what [_buildAction] ultimately renders, and that is by design.
+  /// Do NOT "synchronise" this gate with [_resolve]: it is a *superset*
+  /// of what [_resolve] ultimately picks, and that is by design.
   static bool hasAction(BidModel bid) {
     if (bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION') {
       return false;

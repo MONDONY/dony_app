@@ -686,10 +686,7 @@ class _QrTalonButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final label = Text(
-      context.l10n.ticketQrButtonCompact,
-      textAlign: TextAlign.center,
-    );
+    final text = context.l10n.ticketQrButtonCompact;
     return OutlinedButton.icon(
       onPressed: () => QrSheet.show(context, bidId: bid.id, status: bid.status),
       icon: DonyIcon('qr-code', size: 20, color: cs.primary),
@@ -698,17 +695,19 @@ class _QrTalonButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                label,
+                Text(text),
                 Text(
                   context.l10n.ticketQrButtonSubtitle,
                   maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             )
-          : label,
+          : Text(text, textAlign: TextAlign.center),
       style: OutlinedButton.styleFrom(
         foregroundColor: cs.primary,
         side: BorderSide(color: cs.primary),

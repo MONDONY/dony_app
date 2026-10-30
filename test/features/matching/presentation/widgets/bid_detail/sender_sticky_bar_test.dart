@@ -1283,6 +1283,50 @@ void main() {
       );
     });
 
+    // Modification acceptée à payer en mobile money : « Payer » prend le
+    // footer, le QR ne revient pas au talon (le voyageur attend le dépôt),
+    // que le paiement du colis soit trouvé ou non.
+    for (final found in [true, false]) {
+      testWidgets('modification à payer, paiement '
+          '${found ? 'trouvé' : 'introuvable'} : « Payer » au footer, pas de '
+          'QR au talon', (tester) async {
+        final bloc = _MockBidBloc();
+        whenListen<BidState>(
+          bloc,
+          const Stream.empty(),
+          initialState: BidInitial(),
+        );
+        final bid = _bid(
+          status: 'ACCEPTED',
+          amendments: const [
+            BidAmendment(
+              id: 'am-1',
+              status: BidAmendmentStatus.paymentPending,
+              rail: BidAmendment.railPawapay,
+              grossAmount: 26.8,
+            ),
+          ],
+        );
+        final payment = found ? _payment() : null;
+        expect(
+          SenderStickyBar.leavesQrToTalon(
+            bid,
+            paymentLoaded: true,
+            existingPayment: payment,
+          ),
+          isFalse,
+        );
+
+        await tester.pumpWidget(
+          _host(bloc, bid, paymentLoaded: true, existingPayment: payment),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('amendment-pay-btn')), findsOneWidget);
+        expect(find.text('Afficher le QR de remise'), findsNothing);
+        expect(find.text('Payer mon envoi'), findsNothing);
+      });
+    }
+
     for (final status in [
       'PENDING',
       'AWAITING_PAYMENT',

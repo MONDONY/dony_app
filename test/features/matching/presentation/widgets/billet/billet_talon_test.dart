@@ -106,6 +106,9 @@ Future<void> _pump(
   BidModel bid,
   bool isSender, {
   bool showQrInTalon = false,
+  // Marges horizontales du corps de la fiche (2 × DonySpacing.lg) : la mesure
+  // d'un libellé se fait alors à la vraie largeur du talon.
+  bool bodyMargins = false,
 }) async {
   // TrackingBloc/BidBloc sont consommés par TalonRetraitCodeView (statuts
   // HANDED_OVER/IN_TRANSIT avec code) ; fournis pour tous les cas, inoffensif
@@ -123,10 +126,15 @@ Future<void> _pump(
             BlocProvider<TrackingBloc>.value(value: t),
             BlocProvider<BidBloc>.value(value: b),
           ],
-          child: BilletTalon(
-            bid: bid,
-            isSender: isSender,
-            showQrInTalon: showQrInTalon,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: bodyMargins ? DonySpacing.lg : 0,
+            ),
+            child: BilletTalon(
+              bid: bid,
+              isSender: isSender,
+              showQrInTalon: showQrInTalon,
+            ),
           ),
         ),
       ),
@@ -269,8 +277,13 @@ void main() {
           _bid(status: 'ACCEPTED', trackingNumber: 'DON-1'),
           true,
           showQrInTalon: true,
+          bodyMargins: true,
         );
         expect(tester.takeException(), isNull);
+        expect(
+          tester.getSize(find.byType(BilletTalon)).width,
+          360 - 2 * DonySpacing.lg,
+        );
         for (final text
             in english
                 ? ['Parcel QR', 'To show or stick on the parcel']
