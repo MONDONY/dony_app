@@ -2336,12 +2336,6 @@ abstract class AppLocalizations {
   /// **'Impossible d’enregistrer ce choix. Réessayez.'**
   String get authCountryChoiceSaveError;
 
-  /// No description provided for @authPersonalInfoSaveError.
-  ///
-  /// In fr, this message translates to:
-  /// **'Impossible d\'enregistrer ces informations. Réessayez.'**
-  String get authPersonalInfoSaveError;
-
   /// No description provided for @authUserFallbackName.
   ///
   /// In fr, this message translates to:
@@ -2353,36 +2347,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Déverrouillez Yadony pour accéder à votre compte'**
   String get authBiometricUnlockReason;
-
-  /// No description provided for @authStepConsent.
-  ///
-  /// In fr, this message translates to:
-  /// **'Confidentialité'**
-  String get authStepConsent;
-
-  /// No description provided for @authStepCountry.
-  ///
-  /// In fr, this message translates to:
-  /// **'Pays'**
-  String get authStepCountry;
-
-  /// No description provided for @authStepIdentity.
-  ///
-  /// In fr, this message translates to:
-  /// **'Identité'**
-  String get authStepIdentity;
-
-  /// No description provided for @authStepPersonalInfo.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vos infos'**
-  String get authStepPersonalInfo;
-
-  /// No description provided for @authStepPayouts.
-  ///
-  /// In fr, this message translates to:
-  /// **'Paiements'**
-  String get authStepPayouts;
 
   /// No description provided for @authMethodIllustrationLabel.
   ///
@@ -3218,209 +3182,11 @@ abstract class AppLocalizations {
   /// **'Sélectionner {country}, devise {currency}'**
   String authCountryOptionSelectLabel(String country, String currency);
 
-  /// No description provided for @authPersonalInfoCountryNotSet.
-  ///
-  /// In fr, this message translates to:
-  /// **'Non renseigné'**
-  String get authPersonalInfoCountryNotSet;
-
-  /// No description provided for @authPersonalInfoGaugeLabel.
-  ///
-  /// In fr, this message translates to:
-  /// **'Informations'**
-  String get authPersonalInfoGaugeLabel;
-
-  /// No description provided for @authPersonalInfoTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vos informations'**
-  String get authPersonalInfoTitle;
-
-  /// No description provided for @authPersonalInfoBody.
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre nom légal, tel qu’il figure sur votre pièce d’identité. Le reste vous sera demandé une seule fois, par Stripe.'**
-  String get authPersonalInfoBody;
-
-  /// No description provided for @authPersonalInfoFootnote.
-  ///
-  /// In fr, this message translates to:
-  /// **'Jamais partagées avec les autres membres, jamais affichées publiquement.'**
-  String get authPersonalInfoFootnote;
-
-  /// No description provided for @authPersonalInfoIdentitySection.
-  ///
-  /// In fr, this message translates to:
-  /// **'Identité'**
-  String get authPersonalInfoIdentitySection;
-
-  /// No description provided for @authPersonalInfoFirstName.
-  ///
-  /// In fr, this message translates to:
-  /// **'Prénom'**
-  String get authPersonalInfoFirstName;
-
-  /// No description provided for @authPersonalInfoLastName.
-  ///
-  /// In fr, this message translates to:
-  /// **'Nom'**
-  String get authPersonalInfoLastName;
-
-  /// No description provided for @authPersonalInfoCountrySection.
-  ///
-  /// In fr, this message translates to:
-  /// **'Pays'**
-  String get authPersonalInfoCountrySection;
-
-  /// No description provided for @authPersonalInfoCountryField.
-  ///
-  /// In fr, this message translates to:
-  /// **'Pays'**
-  String get authPersonalInfoCountryField;
-
-  /// No description provided for @authPersonalInfoCountrySemantics.
-  ///
-  /// In fr, this message translates to:
-  /// **'Pays de résidence : {country}. Déterminé à l’inscription, non modifiable ici.'**
-  String authPersonalInfoCountrySemantics(String country);
-
-  /// No description provided for @authPersonalInfoCountryMissingSemantics.
-  ///
-  /// In fr, this message translates to:
-  /// **'Pays de résidence non renseigné. Déterminé à l’inscription, non modifiable ici.'**
-  String get authPersonalInfoCountryMissingSemantics;
-
-  /// No description provided for @authReferralGaugeLabel.
-  ///
-  /// In fr, this message translates to:
-  /// **'Parrainage'**
-  String get authReferralGaugeLabel;
-
-  /// No description provided for @authReferralTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vous avez été invité par un ami ?'**
-  String get authReferralTitle;
-
-  /// No description provided for @authReferralBody.
-  ///
-  /// In fr, this message translates to:
-  /// **'Entrez son code pour qu’il soit récompensé à votre première livraison.'**
-  String get authReferralBody;
-
-  /// No description provided for @authReferralFootnote.
-  ///
-  /// In fr, this message translates to:
-  /// **'Cette étape est facultative. Vous pouvez entrer dans Yadony sans code.'**
-  String get authReferralFootnote;
-
-  /// No description provided for @authReferralCodeLabel.
-  ///
-  /// In fr, this message translates to:
-  /// **'Code parrain'**
-  String get authReferralCodeLabel;
-
-  /// No description provided for @authReferralCodeHint.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ex : JEAN0234'**
-  String get authReferralCodeHint;
-
-  /// No description provided for @authReferralApply.
-  ///
-  /// In fr, this message translates to:
-  /// **'Appliquer le code'**
-  String get authReferralApply;
-
-  /// No description provided for @authReferralSuccessTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Code appliqué !'**
-  String get authReferralSuccessTitle;
-
-  /// No description provided for @authReferralSuccessBody.
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre ami sera récompensé dès que vous aurez effectué votre première livraison.'**
-  String get authReferralSuccessBody;
-
-  /// No description provided for @authReferralSuccessFootnote.
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre compte Yadony est prêt. Vous pouvez commencer à rechercher, envoyer ou suivre vos colis.'**
-  String get authReferralSuccessFootnote;
-
-  /// No description provided for @authReferralContinueHome.
-  ///
-  /// In fr, this message translates to:
-  /// **'Continuer'**
-  String get authReferralContinueHome;
-
-  /// No description provided for @authReferralPrefilledBody.
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre code parrain est déjà rempli : la personne qui vous a invité sera récompensée à votre premier envoi.'**
-  String get authReferralPrefilledBody;
-
-  /// No description provided for @authReferralPrefilledHint.
-  ///
-  /// In fr, this message translates to:
-  /// **'Code reconnu, venu de votre lien d\'invitation'**
-  String get authReferralPrefilledHint;
-
-  /// No description provided for @authConsentTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Une dernière chose'**
-  String get authConsentTitle;
-
-  /// No description provided for @authConsentBody.
-  ///
-  /// In fr, this message translates to:
-  /// **'Pour améliorer Yadony, on aimerait mesurer comment l\'app est utilisée et enregistrer l\'écran de façon anonymisée. Les photos, les champs que vous remplissez et les écrans de paiement, d\'identité ou de messagerie ne sont jamais enregistrés. C\'est facultatif.'**
-  String get authConsentBody;
-
-  /// No description provided for @authConsentFootnote.
-  ///
-  /// In fr, this message translates to:
-  /// **'Jamais vos paiements, votre identité ou votre numéro. Vous pouvez changer d’avis dans Réglages.'**
-  String get authConsentFootnote;
-
-  /// No description provided for @authConsentPointScreens.
-  ///
-  /// In fr, this message translates to:
-  /// **'Écrans visités et fonctionnalités utilisées'**
-  String get authConsentPointScreens;
-
-  /// No description provided for @authConsentPointGestures.
-  ///
-  /// In fr, this message translates to:
-  /// **'Enregistrement de l\'écran, sans photos ni champs remplis, pour repérer ce qui bloque'**
-  String get authConsentPointGestures;
-
-  /// No description provided for @authConsentPointNeverPersonal.
-  ///
-  /// In fr, this message translates to:
-  /// **'Jamais vos paiements, identité ou numéro'**
-  String get authConsentPointNeverPersonal;
-
-  /// No description provided for @authConsentPointChangeAnytime.
-  ///
-  /// In fr, this message translates to:
-  /// **'Modifiable à tout moment dans Réglages'**
-  String get authConsentPointChangeAnytime;
-
   /// No description provided for @authConsentAccept.
   ///
   /// In fr, this message translates to:
   /// **'Accepter'**
   String get authConsentAccept;
-
-  /// No description provided for @authConsentDecline.
-  ///
-  /// In fr, this message translates to:
-  /// **'Non merci'**
-  String get authConsentDecline;
 
   /// No description provided for @consentSheetTitle.
   ///
@@ -16857,12 +16623,6 @@ abstract class AppLocalizations {
   /// **'Recevoir mes paiements'**
   String get payoutTitle;
 
-  /// Libellé de la jauge d'onboarding « Paiements », répété dans les trois vues de payout_onboarding_screen.dart.
-  ///
-  /// In fr, this message translates to:
-  /// **'Paiements'**
-  String get payoutGaugeLabel;
-
   /// Snackbar d'erreur quand le navigateur système ne s'ouvre pas sur l'URL d'onboarding Stripe (payout_onboarding_screen.dart _PayoutOnboardingScreenState).
   ///
   /// In fr, this message translates to:
@@ -16988,12 +16748,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vous recevez l\'argent sur le compte lié à votre RIB/IBAN, pas dans un portefeuille Stripe.'**
   String get payoutActiveInfoBankAccountSubtitle;
-
-  /// Bouton de sortie de l'étape paiements de l'onboarding, répété dans _ActiveAccountView et _SuccessView (payout_onboarding_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Continuer'**
-  String get payoutContinueToHome;
 
   /// Titre de payout_onboarding_screen.dart _SuccessView, la coche fait partie de la valeur dans les deux langues.
   ///
@@ -28123,24 +27877,6 @@ abstract class AppLocalizations {
   /// **'Agrandir la photo'**
   String get trackingStepPhotoOpen;
 
-  /// Libellé de l'étape d'inscription où l'utilisateur déclare son intention
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre projet'**
-  String get authStepIntent;
-
-  /// Titre de l'étape intention
-  ///
-  /// In fr, this message translates to:
-  /// **'Vous utilisez Yadony pour…'**
-  String get intentTitle;
-
-  /// Sous-titre de l'étape intention
-  ///
-  /// In fr, this message translates to:
-  /// **'On vous montre directement ce qui vous intéresse.'**
-  String get intentSubtitle;
-
   /// Choix d'intention : expéditeur
   ///
   /// In fr, this message translates to:
@@ -33797,18 +33533,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Nom commercial (facultatif)'**
   String get gpProCommercialNameLabel;
-
-  /// Inscription, étape intention : case « Je suis GP » (voyageur ou les deux).
-  ///
-  /// In fr, this message translates to:
-  /// **'Je suis GP (voyageur régulier ou entreprise)'**
-  String get gpProSignupCheckbox;
-
-  /// Inscription : précise que les justificatifs GP Pro se joignent depuis le profil.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vous pourrez ajouter des justificatifs plus tard depuis votre profil.'**
-  String get gpProSignupDocsHint;
 
   /// Formulaire GP Pro : titre de la section des justificatifs, facultatifs.
   ///

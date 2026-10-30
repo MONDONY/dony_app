@@ -1302,30 +1302,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d’enregistrer ce choix. Réessayez.';
 
   @override
-  String get authPersonalInfoSaveError =>
-      'Impossible d\'enregistrer ces informations. Réessayez.';
-
-  @override
   String get authUserFallbackName => 'Utilisateur';
 
   @override
   String get authBiometricUnlockReason =>
       'Déverrouillez Yadony pour accéder à votre compte';
-
-  @override
-  String get authStepConsent => 'Confidentialité';
-
-  @override
-  String get authStepCountry => 'Pays';
-
-  @override
-  String get authStepIdentity => 'Identité';
-
-  @override
-  String get authStepPersonalInfo => 'Vos infos';
-
-  @override
-  String get authStepPayouts => 'Paiements';
 
   @override
   String get authMethodIllustrationLabel =>
@@ -1797,123 +1778,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get authPersonalInfoCountryNotSet => 'Non renseigné';
-
-  @override
-  String get authPersonalInfoGaugeLabel => 'Informations';
-
-  @override
-  String get authPersonalInfoTitle => 'Vos informations';
-
-  @override
-  String get authPersonalInfoBody =>
-      'Votre nom légal, tel qu’il figure sur votre pièce d’identité. Le reste vous sera demandé une seule fois, par Stripe.';
-
-  @override
-  String get authPersonalInfoFootnote =>
-      'Jamais partagées avec les autres membres, jamais affichées publiquement.';
-
-  @override
-  String get authPersonalInfoIdentitySection => 'Identité';
-
-  @override
-  String get authPersonalInfoFirstName => 'Prénom';
-
-  @override
-  String get authPersonalInfoLastName => 'Nom';
-
-  @override
-  String get authPersonalInfoCountrySection => 'Pays';
-
-  @override
-  String get authPersonalInfoCountryField => 'Pays';
-
-  @override
-  String authPersonalInfoCountrySemantics(String country) {
-    return 'Pays de résidence : $country. Déterminé à l’inscription, non modifiable ici.';
-  }
-
-  @override
-  String get authPersonalInfoCountryMissingSemantics =>
-      'Pays de résidence non renseigné. Déterminé à l’inscription, non modifiable ici.';
-
-  @override
-  String get authReferralGaugeLabel => 'Parrainage';
-
-  @override
-  String get authReferralTitle => 'Vous avez été invité par un ami ?';
-
-  @override
-  String get authReferralBody =>
-      'Entrez son code pour qu’il soit récompensé à votre première livraison.';
-
-  @override
-  String get authReferralFootnote =>
-      'Cette étape est facultative. Vous pouvez entrer dans Yadony sans code.';
-
-  @override
-  String get authReferralCodeLabel => 'Code parrain';
-
-  @override
-  String get authReferralCodeHint => 'Ex : JEAN0234';
-
-  @override
-  String get authReferralApply => 'Appliquer le code';
-
-  @override
-  String get authReferralSuccessTitle => 'Code appliqué !';
-
-  @override
-  String get authReferralSuccessBody =>
-      'Votre ami sera récompensé dès que vous aurez effectué votre première livraison.';
-
-  @override
-  String get authReferralSuccessFootnote =>
-      'Votre compte Yadony est prêt. Vous pouvez commencer à rechercher, envoyer ou suivre vos colis.';
-
-  @override
-  String get authReferralContinueHome => 'Continuer';
-
-  @override
-  String get authReferralPrefilledBody =>
-      'Votre code parrain est déjà rempli : la personne qui vous a invité sera récompensée à votre premier envoi.';
-
-  @override
-  String get authReferralPrefilledHint =>
-      'Code reconnu, venu de votre lien d\'invitation';
-
-  @override
-  String get authConsentTitle => 'Une dernière chose';
-
-  @override
-  String get authConsentBody =>
-      'Pour améliorer Yadony, on aimerait mesurer comment l\'app est utilisée et enregistrer l\'écran de façon anonymisée. Les photos, les champs que vous remplissez et les écrans de paiement, d\'identité ou de messagerie ne sont jamais enregistrés. C\'est facultatif.';
-
-  @override
-  String get authConsentFootnote =>
-      'Jamais vos paiements, votre identité ou votre numéro. Vous pouvez changer d’avis dans Réglages.';
-
-  @override
-  String get authConsentPointScreens =>
-      'Écrans visités et fonctionnalités utilisées';
-
-  @override
-  String get authConsentPointGestures =>
-      'Enregistrement de l\'écran, sans photos ni champs remplis, pour repérer ce qui bloque';
-
-  @override
-  String get authConsentPointNeverPersonal =>
-      'Jamais vos paiements, identité ou numéro';
-
-  @override
-  String get authConsentPointChangeAnytime =>
-      'Modifiable à tout moment dans Réglages';
-
-  @override
   String get authConsentAccept => 'Accepter';
-
-  @override
-  String get authConsentDecline => 'Non merci';
 
   @override
   String get consentSheetTitle => 'Aidez-nous à améliorer Yadony';
@@ -10230,9 +10095,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get payoutTitle => 'Recevoir mes paiements';
 
   @override
-  String get payoutGaugeLabel => 'Paiements';
-
-  @override
   String get payoutBrowserLaunchFailed =>
       'Impossible d\'ouvrir la page de configuration. Vérifiez qu\'un navigateur est installé.';
 
@@ -10304,9 +10166,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get payoutActiveInfoBankAccountSubtitle =>
       'Vous recevez l\'argent sur le compte lié à votre RIB/IBAN, pas dans un portefeuille Stripe.';
-
-  @override
-  String get payoutContinueToHome => 'Continuer';
 
   @override
   String get payoutSuccessTitle => 'Paiements activés ✓';
@@ -17190,16 +17049,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trackingStepPhotoOpen => 'Agrandir la photo';
 
   @override
-  String get authStepIntent => 'Votre projet';
-
-  @override
-  String get intentTitle => 'Vous utilisez Yadony pour…';
-
-  @override
-  String get intentSubtitle =>
-      'On vous montre directement ce qui vous intéresse.';
-
-  @override
   String get intentSender => 'Envoyer des colis';
 
   @override
@@ -20953,14 +20802,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get gpProCommercialNameLabel => 'Nom commercial (facultatif)';
-
-  @override
-  String get gpProSignupCheckbox =>
-      'Je suis GP (voyageur régulier ou entreprise)';
-
-  @override
-  String get gpProSignupDocsHint =>
-      'Vous pourrez ajouter des justificatifs plus tard depuis votre profil.';
 
   @override
   String get gpProPiecesTitle => 'Justificatifs (facultatif)';

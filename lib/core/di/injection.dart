@@ -46,7 +46,6 @@ import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
-import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
 import 'package:dony/features/auth/bloc/profile_basics_cubit.dart';
 import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
@@ -117,7 +116,6 @@ import 'package:dony/features/flights/data/datasources/flight_recent_store.dart'
 import 'package:dony/features/flights/data/datasources/flights_remote_datasource.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
-import 'package:dony/features/gp_pro/bloc/gp_pro_signup_cubit.dart';
 import 'package:dony/features/gp_pro/data/datasources/gp_pro_remote_datasource.dart';
 import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/home/data/home_matching_default_store.dart';
@@ -587,9 +585,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
     ),
   );
-  getIt.registerFactory<PersonalInfoCubit>(
-    () => PersonalInfoCubit(getIt<AuthRepository>(), getIt<AnalyticsService>()),
-  );
   getIt.registerFactory<ProfileBasicsCubit>(
     () => ProfileBasicsCubit(
       getIt<AuthRepository>(),
@@ -973,9 +968,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<GpProRepository>(
     () => GpProRepository(getIt<GpProRemoteDatasource>()),
-  );
-  getIt.registerFactory<GpProSignupCubit>(
-    () => GpProSignupCubit(getIt(), getIt<AnalyticsService>()),
   );
   getIt.registerFactory<GpProCubit>(
     () => GpProCubit(getIt(), getIt<AnalyticsService>()),

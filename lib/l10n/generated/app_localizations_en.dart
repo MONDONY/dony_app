@@ -1292,30 +1292,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t save your choice. Try again.';
 
   @override
-  String get authPersonalInfoSaveError =>
-      'Couldn\'t save your details. Try again.';
-
-  @override
   String get authUserFallbackName => 'User';
 
   @override
   String get authBiometricUnlockReason =>
       'Unlock Yadony to access your account';
-
-  @override
-  String get authStepConsent => 'Privacy';
-
-  @override
-  String get authStepCountry => 'Country';
-
-  @override
-  String get authStepIdentity => 'Identity';
-
-  @override
-  String get authStepPersonalInfo => 'Your details';
-
-  @override
-  String get authStepPayouts => 'Payments';
 
   @override
   String get authMethodIllustrationLabel =>
@@ -1781,122 +1762,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get authPersonalInfoCountryNotSet => 'Not provided';
-
-  @override
-  String get authPersonalInfoGaugeLabel => 'Details';
-
-  @override
-  String get authPersonalInfoTitle => 'Your details';
-
-  @override
-  String get authPersonalInfoBody =>
-      'Your legal name, exactly as it appears on your ID. Stripe will ask for the rest, only once.';
-
-  @override
-  String get authPersonalInfoFootnote =>
-      'Never shared with other members, never shown publicly.';
-
-  @override
-  String get authPersonalInfoIdentitySection => 'Identity';
-
-  @override
-  String get authPersonalInfoFirstName => 'First name';
-
-  @override
-  String get authPersonalInfoLastName => 'Last name';
-
-  @override
-  String get authPersonalInfoCountrySection => 'Country';
-
-  @override
-  String get authPersonalInfoCountryField => 'Country';
-
-  @override
-  String authPersonalInfoCountrySemantics(String country) {
-    return 'Country of residence: $country. Set at sign-up, can\'t be changed here.';
-  }
-
-  @override
-  String get authPersonalInfoCountryMissingSemantics =>
-      'Country of residence not provided. Set at sign-up, can\'t be changed here.';
-
-  @override
-  String get authReferralGaugeLabel => 'Referral';
-
-  @override
-  String get authReferralTitle => 'Did a friend invite you?';
-
-  @override
-  String get authReferralBody =>
-      'Enter their code so they get a reward after your first delivery.';
-
-  @override
-  String get authReferralFootnote =>
-      'This step is optional. You can use Yadony without a code.';
-
-  @override
-  String get authReferralCodeLabel => 'Referral code';
-
-  @override
-  String get authReferralCodeHint => 'E.g. JEAN0234';
-
-  @override
-  String get authReferralApply => 'Apply code';
-
-  @override
-  String get authReferralSuccessTitle => 'Code applied!';
-
-  @override
-  String get authReferralSuccessBody =>
-      'Your friend gets a reward as soon as you complete your first delivery.';
-
-  @override
-  String get authReferralSuccessFootnote =>
-      'Your Yadony account is ready. You can start searching for, sending and tracking parcels.';
-
-  @override
-  String get authReferralContinueHome => 'Continue';
-
-  @override
-  String get authReferralPrefilledBody =>
-      'Your referral code is already filled in: the person who invited you will be rewarded at your first shipment.';
-
-  @override
-  String get authReferralPrefilledHint =>
-      'Code recognised from your invitation link';
-
-  @override
-  String get authConsentTitle => 'One last thing';
-
-  @override
-  String get authConsentBody =>
-      'To improve Yadony, we\'d like to measure how the app is used and record the screen in an anonymised way. Photos, the fields you fill in, and the payment, identity and messaging screens are never recorded. It\'s optional.';
-
-  @override
-  String get authConsentFootnote =>
-      'Never your payments, identity or phone number. You can change your mind in Settings.';
-
-  @override
-  String get authConsentPointScreens => 'Screens visited and features used';
-
-  @override
-  String get authConsentPointGestures =>
-      'Screen recording, without photos or filled-in fields, to spot what gets in the way';
-
-  @override
-  String get authConsentPointNeverPersonal =>
-      'Never your payments, identity or phone number';
-
-  @override
-  String get authConsentPointChangeAnytime =>
-      'Can be changed anytime in Settings';
-
-  @override
   String get authConsentAccept => 'Accept';
-
-  @override
-  String get authConsentDecline => 'No thanks';
 
   @override
   String get consentSheetTitle => 'Help us improve Yadony';
@@ -10162,9 +10028,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payoutTitle => 'Get paid';
 
   @override
-  String get payoutGaugeLabel => 'Payments';
-
-  @override
   String get payoutBrowserLaunchFailed =>
       'Unable to open the setup page. Check that a browser is installed.';
 
@@ -10236,9 +10099,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get payoutActiveInfoBankAccountSubtitle =>
       'You receive the money in the account linked to your bank details/IBAN, not in a Stripe wallet.';
-
-  @override
-  String get payoutContinueToHome => 'Continue';
 
   @override
   String get payoutSuccessTitle => 'Payments enabled ✓';
@@ -17075,15 +16935,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackingStepPhotoOpen => 'Enlarge photo';
 
   @override
-  String get authStepIntent => 'Your plan';
-
-  @override
-  String get intentTitle => 'You use Yadony to…';
-
-  @override
-  String get intentSubtitle => 'We show you what matters to you right away.';
-
-  @override
   String get intentSender => 'Send parcels';
 
   @override
@@ -20808,13 +20659,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gpProCommercialNameLabel => 'Business name (optional)';
-
-  @override
-  String get gpProSignupCheckbox => 'I\'m a GP (regular traveler or business)';
-
-  @override
-  String get gpProSignupDocsHint =>
-      'You can add supporting documents later from your profile.';
 
   @override
   String get gpProPiecesTitle => 'Supporting documents (optional)';
