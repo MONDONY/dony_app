@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/data/services/residence_country_writer.dart';
 import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -79,15 +80,7 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
 
     emit(CountryOnboardingSaving(countryCode));
     try {
-      final current = await _repository.fetchPrefs();
-      final saved = await _repository.updatePrefs(
-        current.copyWith(country: countryCode),
-      );
-      await _prefs.put(HiveService.kCountryCode, countryCode);
-      // Devise du serveur, jamais `CountryCatalog.byCode(...).currency` : la
-      // table locale n'est qu'un miroir d'affichage, le backend tranche.
-      await _prefs.put(HiveService.kCurrencyCode, saved.currencyCode);
-      await _prefs.put(HiveService.kTravelerCountryUnsupported, false);
+      await writeResidenceCountry(_repository, _prefs, countryCode);
       unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSelected));
       unawaited(
         _analytics.logEvent(
