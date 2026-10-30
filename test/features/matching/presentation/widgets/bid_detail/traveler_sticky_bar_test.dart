@@ -312,29 +312,46 @@ void main() {
       'CONFIRMED',
       'RESOLVED',
     ];
+    const presence = 'presence';
+    const scan = 'scan';
+    const none = 'none';
+    // (présence confirmée, date limite passée, déclaration) → action attendue.
+    const table = <(bool, bool, String?, String)>[
+      (false, false, null, presence),
+      (false, false, 'PENDING_CONFIRMATION', presence),
+      (false, false, 'CONTESTED', presence),
+      (false, false, 'CONFIRMED', presence),
+      (false, false, 'RESOLVED', presence),
+      (false, true, null, scan),
+      (false, true, 'PENDING_CONFIRMATION', scan),
+      (false, true, 'CONTESTED', none),
+      (false, true, 'CONFIRMED', none),
+      (false, true, 'RESOLVED', scan),
+      (true, false, null, scan),
+      (true, false, 'PENDING_CONFIRMATION', scan),
+      (true, false, 'CONTESTED', none),
+      (true, false, 'CONFIRMED', none),
+      (true, false, 'RESOLVED', scan),
+      (true, true, null, scan),
+      (true, true, 'PENDING_CONFIRMATION', scan),
+      (true, true, 'CONTESTED', none),
+      (true, true, 'CONFIRMED', none),
+      (true, true, 'RESOLVED', scan),
+    ];
     final cases = <String, (BidModel, String)>{
-      'non confirmé, sans date limite': (_bid(status: 'ACCEPTED'), 'presence'),
-      for (final confirmed in [false, true])
-        for (final (moment, deadline) in [('avant', future), ('après', past)])
-          for (final ns in statuses)
-            '${confirmed ? 'confirmé' : 'non confirmé'}, $moment la date '
-                'limite, ${ns == null ? 'aucune déclaration' : 'absence $ns'}': (
-              _bid(
-                status: 'ACCEPTED',
-                voyageurConfirmed: confirmed,
-                windowEnd: deadline,
-                cancellationNoShowStatus: ns,
-              ),
-              switch ((
-                confirmed,
-                deadline == past,
-                ns == 'CONTESTED' || ns == 'CONFIRMED',
-              )) {
-                (false, false, _) => 'presence',
-                (_, _, true) => 'none',
-                _ => 'scan',
-              },
-            ),
+      'non confirmé, sans date limite': (_bid(status: 'ACCEPTED'), presence),
+      for (final (confirmed, expired, ns, expected) in table)
+        '${confirmed ? 'confirmé' : 'non confirmé'}, '
+            '${expired ? 'après' : 'avant'} la date limite, '
+            '${ns == null ? 'aucune déclaration' : 'absence $ns'}': (
+          _bid(
+            status: 'ACCEPTED',
+            voyageurConfirmed: confirmed,
+            windowEnd: expired ? past : future,
+            cancellationNoShowStatus: ns,
+          ),
+          expected,
+        ),
     };
     for (final MapEntry(key: name, value: (bid, expected)) in cases.entries) {
       testWidgets('$name → $expected', (tester) async {
