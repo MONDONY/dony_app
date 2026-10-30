@@ -5064,31 +5064,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get listingPendingParcelsLabel => 'pending';
-
-  @override
-  String listingAcceptedParcelsSemantics(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'View the $count accepted parcels',
-      one: 'View the accepted parcel',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String listingPendingParcelsSemantics(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'View the $count pending requests',
-      one: 'View the pending request',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get listingPaymentsAcceptedTitle => 'Accepted payment methods';
 
   @override
@@ -8609,9 +8584,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripOwnerMarkArrivedButton => 'Arrived at destination';
 
   @override
-  String get tripOwnerEditInstructionsButton => 'Edit pickup instructions';
-
-  @override
   String get tripOwnerDeleteBlockedTitle => 'Deletion not possible';
 
   @override
@@ -8677,9 +8649,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripOwnerPublishTile => 'Post';
 
   @override
-  String get tripOwnerPosterTile => 'Poster';
-
-  @override
   String get tripOwnerUnpublishTile => 'Unpublish';
 
   @override
@@ -8699,10 +8668,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripOwnerNoParcelsMessage => 'No parcels on board';
 
   @override
-  String get tripOwnerEditDisabledMessage =>
-      'Editable only while there\'s no request';
-
-  @override
   String get tripOwnerDeleteDialogTitle => 'Delete this trip?';
 
   @override
@@ -8712,9 +8677,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tripOwnerDeleteActiveMessage =>
       'This action is irreversible. The trip will no longer be visible to senders.';
-
-  @override
-  String get tripOwnerCancelTile => 'Cancel';
 
   @override
   String get tripOwnerParcelsSectionTitle => 'Parcels on this trip';
@@ -22989,6 +22951,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripRequestsCardEndedHint => 'Trip completed: no new requests.';
+
+  @override
+  String get tripSectionYourTrip => 'Your trip';
 
   @override
   String get tripParcelsSeeList => 'See list';

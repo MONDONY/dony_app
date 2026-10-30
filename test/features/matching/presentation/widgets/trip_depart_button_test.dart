@@ -1,7 +1,5 @@
-// « Je pars » : bouton autonome de l'écran actuel (`TripDepartButton`, qui
-// crée son cubit) et bouton sur le cubit ambiant (`TripDepartAction`, pied du
-// sheet de la tuile « Je pars »). La confirmation part dans les deux cas,
-// même quand le bouton autonome disparaît dans la même livraison d'état.
+// « Je pars » : bouton sur le cubit ambiant (`TripDepartAction`, pied du
+// sheet de la tuile « Je pars », cubit fourni par l'écran du trajet).
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
@@ -58,38 +56,6 @@ void main() {
   }
 
   Finder button() => find.byKey(const Key('trip-depart-button'));
-
-  group('TripDepartButton (cubit créé par le bouton)', () {
-    testWidgets('départ confirmé : confirmation, puis le bouton disparaît', (
-      tester,
-    ) async {
-      await pump(tester, const TripDepartButton(announcementId: 'trip-1'));
-      expect(createdIds, ['trip-1']);
-
-      await tester.tap(button());
-      await tester.pump();
-      verify(() => cubit.depart(any())).called(1);
-
-      states.add(const TripDepartState(departed: true));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-
-      expect(tester.takeException(), isNull);
-      expect(button(), findsNothing);
-      expect(find.text("C'est noté, bon voyage !"), findsOneWidget);
-    });
-
-    testWidgets('déjà parti à l\'ouverture : rien à afficher', (tester) async {
-      whenListen(
-        cubit,
-        states.stream,
-        initialState: const TripDepartState(departed: true),
-      );
-      await pump(tester, const TripDepartButton(announcementId: 'trip-1'));
-
-      expect(button(), findsNothing);
-    });
-  });
 
   group('TripDepartAction (cubit ambiant)', () {
     Widget action() => BlocProvider<TripDepartCubit>.value(

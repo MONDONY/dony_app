@@ -5092,31 +5092,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get listingPendingParcelsLabel => 'en attente';
-
-  @override
-  String listingAcceptedParcelsSemantics(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Voir les $count colis acceptés',
-      one: 'Voir le colis accepté',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String listingPendingParcelsSemantics(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Voir les $count demandes en attente',
-      one: 'Voir la demande en attente',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get listingPaymentsAcceptedTitle => 'Paiements acceptés';
 
   @override
@@ -8662,10 +8637,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerMarkArrivedButton => 'Arrivé à destination';
 
   @override
-  String get tripOwnerEditInstructionsButton =>
-      'Modifier les instructions de retrait';
-
-  @override
   String get tripOwnerDeleteBlockedTitle => 'Suppression impossible';
 
   @override
@@ -8731,9 +8702,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerPublishTile => 'Publier';
 
   @override
-  String get tripOwnerPosterTile => 'Affiche';
-
-  @override
   String get tripOwnerUnpublishTile => 'Dépublier';
 
   @override
@@ -8753,10 +8721,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerNoParcelsMessage => 'Aucun colis embarqué';
 
   @override
-  String get tripOwnerEditDisabledMessage =>
-      'Modifiable tant qu\'aucune demande';
-
-  @override
   String get tripOwnerDeleteDialogTitle => 'Supprimer ce trajet ?';
 
   @override
@@ -8766,9 +8730,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tripOwnerDeleteActiveMessage =>
       'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.';
-
-  @override
-  String get tripOwnerCancelTile => 'Annuler';
 
   @override
   String get tripOwnerParcelsSectionTitle => 'Colis dans le trajet';
@@ -23158,6 +23119,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tripRequestsCardEndedHint =>
       'Trajet terminé : plus de nouvelle demande.';
+
+  @override
+  String get tripSectionYourTrip => 'Votre trajet';
 
   @override
   String get tripParcelsSeeList => 'Voir la liste';

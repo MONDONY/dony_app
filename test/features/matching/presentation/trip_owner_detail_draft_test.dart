@@ -34,6 +34,7 @@ import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -70,6 +71,10 @@ TripAudienceCubit _hiddenAudience() {
 }
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
+/// « Je pars » : l'écran fournit son cubit (getIt) ; ces tests ne partent pas.
+class _MockTripDepartCubit extends MockCubit<TripDepartState>
+    implements TripDepartCubit {}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -215,11 +220,26 @@ void main() {
       getIt.unregister<AnalyticsService>();
     }
     getIt.registerLazySingleton<AnalyticsService>(() => analytics);
+    if (getIt.isRegistered<TripDepartCubit>()) {
+      getIt.unregister<TripDepartCubit>();
+    }
+    getIt.registerFactoryParam<TripDepartCubit, String, void>((_, _) {
+      final cubit = _MockTripDepartCubit();
+      whenListen(
+        cubit,
+        const Stream<TripDepartState>.empty(),
+        initialState: const TripDepartState(),
+      );
+      return cubit;
+    });
   });
 
   tearDown(() {
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
+    }
+    if (getIt.isRegistered<TripDepartCubit>()) {
+      getIt.unregister<TripDepartCubit>();
     }
     annBloc.close();
     bidBloc.close();
@@ -339,20 +359,22 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tuile « Modifier » tappable (pas grisée par un Opacity 0.4 wrapper).
-      final modifierTooltip = find.ancestor(
-        of: find.text('Modifier'),
-        matching: find.byType(Tooltip),
+      // « Modifier » au pied, à côté de « Publier », et actif.
+      final edit = tester.widget<DonyButton>(
+        find.byKey(const Key('trip-footer-edit')),
       );
       expect(
-        modifierTooltip,
-        findsNothing,
-        reason:
-            'Modifier doit être actif (pas de tooltip disabled) pour un DRAFT à 0 demande',
+        edit.onPressed,
+        isNotNull,
+        reason: 'Modifier doit être actif pour un DRAFT à 0 demande',
       );
 
-      // Tuile « Supprimer » présente (le backend autorise la suppression d'un DRAFT).
-      expect(find.text('Supprimer'), findsOneWidget);
+      // « Supprimer » au menu ⋮ (le backend autorise la suppression d'un
+      // DRAFT), « Modifier » aussi.
+      await tester.tap(find.byKey(const Key('trip-owner-menu-button')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-menu-delete')), findsOneWidget);
+      expect(find.byKey(const Key('trip-menu-edit')), findsOneWidget);
     },
   );
 

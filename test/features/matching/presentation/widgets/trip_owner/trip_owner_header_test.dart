@@ -1,22 +1,22 @@
-// Widget tests pour le corps partagé du détail de trajet
-// (AnnouncementDetailBody) — utilisé par le bottom sheet et le futur écran
-// plein écran du propriétaire.
+// Tête de l'écran du trajet vu par son voyageur (TripOwnerHeader, ex-corps
+// de détail) : billet, badges, pastilles kilos et prix, jauge des valises.
+// Les sections déplacées sont testées sur leur nouvelle surface :
+// lieux, dépôt (PROD-1R), paiements, conditions dans `trip_tile_sheets_test`,
+// l'encart « espèces seules » dans `trip_todo_tiles_test` /
+// `trip_todo_sheets_test`, les compteurs de colis (FLUTTER-HK) par les cartes
+// Demandes et Colis (`trip_requests_card_test`, `trip_parcels_card_test`).
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
-import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_header.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../helpers/l10n_test_helpers.dart';
-import '../../../../helpers/stripe_account_test_doubles.dart';
+import '../../../../../helpers/l10n_test_helpers.dart';
 
 AnnouncementModel _full() => AnnouncementModel(
   id: 'ann-1',
@@ -80,11 +80,8 @@ void main() {
       GlobalCupertinoLocalizations.delegate,
     ],
     supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
-    home: BlocProvider<StripeAccountBloc>.value(
-      value: stubStripeAccountBloc(),
-      child: Scaffold(
-        body: SingleChildScrollView(child: AnnouncementDetailBody(a: a)),
-      ),
+    home: Scaffold(
+      body: SingleChildScrollView(child: TripOwnerHeader(a: a)),
     ),
   );
 
@@ -169,36 +166,8 @@ void main() {
     expect(find.byKey(const Key('trip-suitcase-gauge')), findsNothing);
   });
 
-  // PROD-1R : limite reçue en UTC, affichée à l'heure de la ville de départ.
-  testWidgets('date limite à l\'heure de Paris (18:30Z en été → 20:30)', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      host(
-        AnnouncementModel.fromJson({
-          'id': 'ann-4',
-          'travelerId': 'trav-1',
-          'departureCity': 'Paris',
-          'arrivalCity': 'Dakar',
-          'departureDate': DateTime(2026, 8, 12).toIso8601String(),
-          'availableKg': 5,
-          'totalKg': 5,
-          'pricePerKg': 6,
-          'status': 'ACTIVE',
-          'handoverDeadline': '2026-08-10T18:30:00Z',
-          'departureTimezone': 'Europe/Paris',
-          'createdAt': DateTime(2026, 7).toIso8601String(),
-          'updatedAt': DateTime(2026, 7).toIso8601String(),
-        }),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.textContaining('20:30'), findsOneWidget);
-  });
-
-  testWidgets('modèle complet ACTIVE → corridor + badge + sections présentes', (
-    tester,
-  ) async {
+  testWidgets('modèle complet ACTIVE → corridor, badge, pastilles ; les '
+      'sections et les compteurs sont ailleurs', (tester) async {
     await tester.pumpWidget(host(_full()));
     await tester.pumpAndSettle();
 
@@ -206,25 +175,18 @@ void main() {
     expect(find.bySemanticsLabel('Paris → Dakar'), findsOneWidget);
     // Status badge ACTIF
     expect(find.text('● ACTIF'), findsOneWidget);
-    // Sections
-    expect(find.text('LIEUX DE REMISE'), findsOneWidget);
-    expect(find.text('12 rue de Paris, 75001'), findsOneWidget);
-    expect(find.text('Marché Sandaga, Dakar'), findsOneWidget);
-    expect(find.text('DÉPÔT DES COLIS'), findsOneWidget);
-    // Jour ET heure de la date limite (FLUTTER-MY).
-    expect(find.text("Jusqu'au lun. 10 août à 18:00"), findsOneWidget);
-    expect(find.text('PAIEMENTS ACCEPTÉS'), findsOneWidget);
-    expect(find.text('💵 Espèces'), findsOneWidget);
-    expect(find.text('💳 Carte'), findsOneWidget);
-    expect(find.text('CE QUE J\'ACCEPTE'), findsOneWidget);
-    expect(find.text('Vêtements'), findsOneWidget);
-    expect(find.text('CE QUE JE REFUSE'), findsOneWidget);
-    expect(find.text('Liquides'), findsOneWidget);
-    expect(find.text('NOTE AUX EXPÉDITEURS'), findsOneWidget);
-    expect(find.text('Pas de produits fragiles svp.'), findsOneWidget);
-    // Compteurs colis
-    expect(find.text('colis acceptés'), findsOneWidget);
-    expect(find.text('en attente'), findsOneWidget);
+    // Pastilles kilos et prix.
+    expect(find.text('10 kg'), findsOneWidget);
+    expect(find.textContaining('€/kg'), findsOneWidget);
+    // Sections passées dans les sheets « Votre trajet ».
+    expect(find.text('LIEUX DE REMISE'), findsNothing);
+    expect(find.text('DÉPÔT DES COLIS'), findsNothing);
+    expect(find.text('PAIEMENTS ACCEPTÉS'), findsNothing);
+    expect(find.text('CE QUE J\'ACCEPTE'), findsNothing);
+    expect(find.text('NOTE AUX EXPÉDITEURS'), findsNothing);
+    // Compteurs remplacés par les cartes Demandes et Colis.
+    expect(find.byKey(const Key('parcel-stat-accepted')), findsNothing);
+    expect(find.byKey(const Key('parcel-stat-pending')), findsNothing);
   });
 
   testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR', (
@@ -253,23 +215,13 @@ void main() {
     expect(find.textContaining('8€/kg'), findsNothing);
   });
 
-  testWidgets(
-    'modèle minimal → corridor présent, sections optionnelles absentes',
-    (tester) async {
-      await tester.pumpWidget(host(_minimal()));
-      await tester.pumpAndSettle();
+  testWidgets('modèle minimal → corridor et badge présents', (tester) async {
+    await tester.pumpWidget(host(_minimal()));
+    await tester.pumpAndSettle();
 
-      expect(find.bySemanticsLabel('Lyon → Bamako'), findsOneWidget);
-      expect(find.text('● ACTIF'), findsOneWidget);
-      // Sections optionnelles absentes
-      expect(find.text('LIEUX DE REMISE'), findsNothing);
-      expect(find.text('DÉPÔT DES COLIS'), findsNothing);
-      expect(find.text('PAIEMENTS ACCEPTÉS'), findsNothing);
-      expect(find.text('CE QUE J\'ACCEPTE'), findsNothing);
-      expect(find.text('CE QUE JE REFUSE'), findsNothing);
-      expect(find.text('NOTE AUX EXPÉDITEURS'), findsNothing);
-    },
-  );
+    expect(find.bySemanticsLabel('Lyon → Bamako'), findsOneWidget);
+    expect(find.text('● ACTIF'), findsOneWidget);
+  });
 
   testWidgets('date de départ proche → badge urgent affiché', (tester) async {
     final urgent = AnnouncementModel(
@@ -347,16 +299,6 @@ void main() {
     expect(gradients, isEmpty);
   });
 
-  testWidgets('en anglais : titres de section traduits', (tester) async {
-    useEnglish();
-    await tester.pumpWidget(host(_full()));
-    await tester.pumpAndSettle();
-
-    expect(find.text('DROP-OFF LOCATIONS'), findsOneWidget);
-    expect(find.text('PARCEL DROP-OFF DEADLINE'), findsOneWidget);
-    expect(find.text('LIEUX DE REMISE'), findsNothing);
-  });
-
   testWidgets(
     'date de départ (billet) en français, jour de la semaine compris',
     (tester) async {
@@ -389,142 +331,62 @@ void main() {
     );
   });
 
-  // FLUTTER-HK : les tuiles « colis acceptés » / « en attente » ouvrent le
-  // détail des colis, avec la même navigation que la grille du propriétaire.
-  group('tuiles colis tappables (FLUTTER-HK)', () {
-    late List<({String location, Object? extra})> pushed;
+  // Situations qui ne changent que les pastilles (cible validée) : kilo
+  // libre, grille de prix, prix absent ; et la ligne surplus.
+  AnnouncementModel pills(Map<String, Object?> extra) =>
+      AnnouncementModel.fromJson({
+        'id': 'ann-5',
+        'travelerId': 'trav-1',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Dakar',
+        'departureDate': DateTime(2026, 9, 2).toIso8601String(),
+        'availableKg': 12,
+        'totalKg': 20,
+        'pricePerKg': 6,
+        'status': 'ACTIVE',
+        'createdAt': DateTime(2026, 7).toIso8601String(),
+        'updatedAt': DateTime(2026, 7).toIso8601String(),
+        ...extra,
+      });
 
-    Widget routerHost(AnnouncementModel a) {
-      pushed = [];
-      Widget stub(BuildContext context, GoRouterState state) {
-        pushed.add((location: state.uri.toString(), extra: state.extra));
-        return const Scaffold(body: Text('destination'));
-      }
+  testWidgets('kilo libre : « Kg libre », pas de jauge', (tester) async {
+    await tester.pumpWidget(host(pills({'capacityUnit': 'KG_FREE'})));
+    await tester.pumpAndSettle();
+    expect(find.text('Kg libre'), findsOneWidget);
+    expect(find.byKey(const Key('trip-suitcase-gauge')), findsNothing);
+  });
 
-      final router = GoRouter(
-        initialLocation: '/detail',
-        routes: [
-          GoRoute(
-            path: '/detail',
-            builder: (_, _) => BlocProvider<StripeAccountBloc>.value(
-              value: stubStripeAccountBloc(),
-              child: Scaffold(
-                body: SingleChildScrollView(
-                  child: AnnouncementDetailBody(a: a),
-                ),
-              ),
-            ),
-          ),
-          GoRoute(path: '/announcements/:id/bids', builder: stub),
-          GoRoute(path: '/announcements/:id/bids/pending', builder: stub),
-        ],
-      );
-      return MaterialApp.router(
-        theme: AppTheme.light(),
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
-        routerConfig: router,
-      );
-    }
+  testWidgets('grille de prix : « Par article »', (tester) async {
+    await tester.pumpWidget(host(pills({'pricingMode': 'MIXED'})));
+    await tester.pumpAndSettle();
+    expect(find.text('Par article'), findsOneWidget);
+    expect(find.textContaining('€/kg'), findsNothing);
+  });
 
-    AnnouncementModel withCounts({required int accepted, int? pending}) =>
-        AnnouncementModel(
-          id: 'ann-hk',
-          travelerId: 'trav-1',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          departureDate: DateTime(2026, 8, 12),
-          availableKg: 10,
-          totalKg: 10,
-          pricePerKg: 7,
-          status: 'ACTIVE',
-          bidsCount: pending,
-          confirmedParcelCount: accepted,
-          createdAt: DateTime(2026, 7),
-          updatedAt: DateTime(2026, 7),
-          acceptedPaymentMethods: const <BidPaymentMethod>{},
-        );
+  testWidgets('pas de prix au kilo : « Indisponible »', (tester) async {
+    await tester.pumpWidget(host(pills({'pricePerKg': 0})));
+    await tester.pumpAndSettle();
+    expect(find.text('Indisponible'), findsOneWidget);
+  });
 
-    testWidgets('tap acceptés → liste des colis avec le titre de la grille', (
-      tester,
-    ) async {
-      await tester.pumpWidget(routerHost(withCounts(accepted: 3, pending: 2)));
-      await tester.pumpAndSettle();
+  testWidgets('surplus publié : kilos réservés et ouverts', (tester) async {
+    await tester.pumpWidget(
+      host(pills({'reservedKg': 8, 'surplusPublished': true})),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('8 kg réservés'), findsOneWidget);
+    expect(find.textContaining('12 kg ouverts'), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('parcel-stat-accepted')));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(host(pills({'reservedKg': 8})));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('kg réservés'), findsNothing);
+  });
 
-      expect(pushed, hasLength(1));
-      expect(pushed.single.location, '/announcements/ann-hk/bids');
-      expect(pushed.single.extra, <String, dynamic>{'title': 'Colis'});
-      expect(find.text('destination'), findsOneWidget);
-    });
-
-    testWidgets('tap en attente → demandes à traiter', (tester) async {
-      await tester.pumpWidget(routerHost(withCounts(accepted: 3, pending: 2)));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const Key('parcel-stat-pending')));
-      await tester.pumpAndSettle();
-
-      expect(pushed, hasLength(1));
-      expect(pushed.single.location, '/announcements/ann-hk/bids/pending');
-      expect(find.text('destination'), findsOneWidget);
-    });
-
-    testWidgets('compteurs à 0 → tuiles inertes, sans chevron ni bouton', (
-      tester,
-    ) async {
-      final semantics = tester.ensureSemantics();
-      await tester.pumpWidget(routerHost(withCounts(accepted: 0)));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const Key('parcel-stat-accepted')));
-      await tester.tap(find.byKey(const Key('parcel-stat-pending')));
-      await tester.pumpAndSettle();
-
-      expect(pushed, isEmpty);
-      expect(find.text('destination'), findsNothing);
-      for (final key in ['parcel-stat-accepted', 'parcel-stat-pending']) {
-        expect(
-          find.descendant(
-            of: find.byKey(Key(key)),
-            matching: find.byType(DonyPressable),
-          ),
-          findsNothing,
-        );
-      }
-      semantics.dispose();
-    });
-
-    testWidgets('tuiles actives → rôle bouton et libellé localisé', (
-      tester,
-    ) async {
-      final semantics = tester.ensureSemantics();
-      await tester.pumpWidget(routerHost(withCounts(accepted: 3, pending: 1)));
-      await tester.pumpAndSettle();
-
-      expect(
-        tester.getSemantics(find.byKey(const Key('parcel-stat-accepted'))),
-        matchesSemantics(
-          label: 'Voir les 3 colis acceptés',
-          isButton: true,
-          hasTapAction: true,
-        ),
-      );
-      expect(
-        tester.getSemantics(find.byKey(const Key('parcel-stat-pending'))),
-        matchesSemantics(
-          label: 'Voir la demande en attente',
-          isButton: true,
-          hasTapAction: true,
-        ),
-      );
-      semantics.dispose();
-    });
+  testWidgets('statut inconnu (REMOVED_BY_ADMIN) : badge brut, sans '
+      'exception', (tester) async {
+    await tester.pumpWidget(host(pills({'status': 'REMOVED_BY_ADMIN'})));
+    await tester.pumpAndSettle();
+    expect(find.text('REMOVED_BY_ADMIN'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

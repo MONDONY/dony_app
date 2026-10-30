@@ -4170,11 +4170,11 @@
   },
   "listingPickupLocationsTitle": "Lieux de remise",
   "@listingPickupLocationsTitle": {
-    "description": "Titre de la section adresses de remise/récupération (announcement_detail_screen.dart, announcement_detail_body.dart)"
+    "description": "Titre de la section adresses de remise/récupération (announcement_detail_screen.dart, écran du trajet, ex-corps de détail)"
   },
   "listingHandoverDeadlineTitle": "Dépôt des colis",
   "@listingHandoverDeadlineTitle": {
-    "description": "Titre de la section date limite de dépôt (announcement_detail_screen.dart, announcement_detail_body.dart)"
+    "description": "Titre de la section date limite de dépôt (announcement_detail_screen.dart, écran du trajet, ex-corps de détail)"
   },
   "listingCapacityAvailableLabel": "Capacité dispo.",
   "@listingCapacityAvailableLabel": {
@@ -4190,7 +4190,7 @@
   },
   "listingPriceGridShort": "Par article",
   "@listingPriceGridShort": {
-    "description": "Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, announcement_detail_body.dart, marker_bitmap_factory.dart via announcement_map_view.dart)"
+    "description": "Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, écran du trajet, ex-corps de détail, marker_bitmap_factory.dart via announcement_map_view.dart)"
   },
   "listingPriceUnavailableShort": "Indisponible",
   "@listingPriceUnavailableShort": {
@@ -4239,7 +4239,7 @@
   },
   "listingHandoverUntil": "Jusqu'au {date}",
   "@listingHandoverUntil": {
-    "description": "Date limite de dépôt affichée en toutes lettres (announcement_detail_screen.dart, announcement_detail_body.dart)",
+    "description": "Date limite de dépôt affichée en toutes lettres (announcement_detail_screen.dart, écran du trajet, ex-corps de détail)",
     "placeholders": {
       "date": {
         "type": "String"
@@ -4340,45 +4340,23 @@
   },
   "listingHeroTripLabelCaps": "TRAJET",
   "@listingHeroTripLabelCaps": {
-    "description": "Petit libellé capitalisé au-dessus du corridor (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)"
+    "description": "Petit libellé capitalisé au-dessus du corridor (écran du trajet, ex-corps de détail, traveler_announcement_bottom_sheet.dart)"
   },
   "listingCapacityAvailableSuffix": "disponibles",
   "@listingCapacityAvailableSuffix": {
-    "description": "Libellé secondaire de la pastille capacité disponible (announcement_detail_body.dart)"
+    "description": "Libellé secondaire de la pastille capacité disponible (écran du trajet, ex-corps de détail)"
   },
   "listingPricingSuffixTarifaire": "prix",
   "@listingPricingSuffixTarifaire": {
-    "description": "Libellé secondaire de la pastille prix en mode grille (announcement_detail_body.dart)"
+    "description": "Libellé secondaire de la pastille prix en mode grille (écran du trajet, ex-corps de détail)"
   },
   "listingPricingSuffixPrix": "prix",
   "@listingPricingSuffixPrix": {
-    "description": "Libellé secondaire de la pastille prix au kilo (announcement_detail_body.dart)"
+    "description": "Libellé secondaire de la pastille prix au kilo (écran du trajet, ex-corps de détail)"
   },
   "listingAcceptedParcels": "{count, plural, =1{colis accepté} other{colis acceptés}}",
   "@listingAcceptedParcels": {
-    "description": "Nombre de colis acceptés sur le trajet (announcement_detail_body.dart)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "listingPendingParcelsLabel": "en attente",
-  "@listingPendingParcelsLabel": {
-    "description": "Libellé secondaire du compteur de demandes en attente (announcement_detail_body.dart)"
-  },
-  "listingAcceptedParcelsSemantics": "{count, plural, =1{Voir le colis accepté} other{Voir les {count} colis acceptés}}",
-  "@listingAcceptedParcelsSemantics": {
-    "description": "Libellé d'accessibilité de la tuile tappable des colis acceptés, ouvre la liste des colis du trajet (announcement_detail_body.dart, FLUTTER-HK)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "listingPendingParcelsSemantics": "{count, plural, =1{Voir la demande en attente} other{Voir les {count} demandes en attente}}",
-  "@listingPendingParcelsSemantics": {
-    "description": "Libellé d'accessibilité de la tuile tappable des demandes en attente, ouvre l'écran des demandes à traiter (announcement_detail_body.dart, FLUTTER-HK)",
+    "description": "Nombre de colis acceptés sur le trajet (écran du trajet, ex-corps de détail)",
     "placeholders": {
       "count": {
         "type": "int"
@@ -4387,19 +4365,19 @@
   },
   "listingPaymentsAcceptedTitle": "Paiements acceptés",
   "@listingPaymentsAcceptedTitle": {
-    "description": "Titre de la section moyens de paiement acceptés (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)"
+    "description": "Titre de la section moyens de paiement acceptés (écran du trajet, ex-corps de détail, traveler_announcement_bottom_sheet.dart)"
   },
   "listingCashOnlyNudgeMessage": "Trajet en espèces uniquement. Beaucoup d'expéditeurs préfèrent payer par carte, activez cette option pour augmenter vos chances de recevoir des colis.",
   "@listingCashOnlyNudgeMessage": {
-    "description": "Message incitant le voyageur à activer la carte quand seul le cash est accepté (announcement_detail_body.dart)"
+    "description": "Message incitant le voyageur à activer la carte quand seul le cash est accepté (écran du trajet, ex-corps de détail)"
   },
   "listingActivateCardPaymentsButton": "Activer les paiements par carte",
   "@listingActivateCardPaymentsButton": {
-    "description": "Bouton d'activation des paiements par carte (announcement_detail_body.dart)"
+    "description": "Bouton d'activation des paiements par carte (écran du trajet, ex-corps de détail)"
   },
   "listingCashOnlyCardReadyMessage": "Le paiement par carte est activé sur votre compte, mais ce trajet n'accepte encore que les espèces.",
   "@listingCashOnlyCardReadyMessage": {
-    "description": "Encart d'un trajet en espèces seulement quand le compte Stripe est déjà activé (announcement_detail_body.dart, Sentry FLUTTER-DH)."
+    "description": "Encart d'un trajet en espèces seulement quand le compte Stripe est déjà activé (écran du trajet, ex-corps de détail, Sentry FLUTTER-DH)."
   },
   "listingEnableCardOnTripButton": "Ajouter la carte à ce trajet",
   "@listingEnableCardOnTripButton": {
@@ -4407,43 +4385,43 @@
   },
   "listingAcceptedContentTitle": "Ce que j'accepte",
   "@listingAcceptedContentTitle": {
-    "description": "Titre de la section contenus acceptés (announcement_detail_body.dart)"
+    "description": "Titre de la section contenus acceptés (écran du trajet, ex-corps de détail)"
   },
   "listingRefusedContentTitle": "Ce que je refuse",
   "@listingRefusedContentTitle": {
-    "description": "Titre de la section contenus refusés (announcement_detail_body.dart)"
+    "description": "Titre de la section contenus refusés (écran du trajet, ex-corps de détail)"
   },
   "listingSenderNoteTitle": "Note aux expéditeurs",
   "@listingSenderNoteTitle": {
-    "description": "Titre de la note libre du voyageur à destination des expéditeurs (announcement_detail_body.dart)"
+    "description": "Titre de la note libre du voyageur à destination des expéditeurs (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeActive": "● ACTIF",
   "@listingBadgeActive": {
-    "description": "Badge de statut compact ACTIVE (announcement_detail_body.dart)"
+    "description": "Badge de statut compact ACTIVE (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeDraft": "✎ BROUILLON",
   "@listingBadgeDraft": {
-    "description": "Badge de statut compact DRAFT (announcement_detail_body.dart)"
+    "description": "Badge de statut compact DRAFT (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeFull": "● COMPLET",
   "@listingBadgeFull": {
-    "description": "Badge de statut compact FULL (announcement_detail_body.dart)"
+    "description": "Badge de statut compact FULL (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeInProgress": "● EN COURS",
   "@listingBadgeInProgress": {
-    "description": "Badge de statut compact IN_PROGRESS (announcement_detail_body.dart)"
+    "description": "Badge de statut compact IN_PROGRESS (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeCompleted": "✓ TERMINÉ",
   "@listingBadgeCompleted": {
-    "description": "Badge de statut compact COMPLETED (announcement_detail_body.dart)"
+    "description": "Badge de statut compact COMPLETED (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeCancelled": "✕ ANNULÉ",
   "@listingBadgeCancelled": {
-    "description": "Badge de statut compact CANCELLED (announcement_detail_body.dart)"
+    "description": "Badge de statut compact CANCELLED (écran du trajet, ex-corps de détail)"
   },
   "listingReservedKgLabel": "{kg} kg réservés",
   "@listingReservedKgLabel": {
-    "description": "Répartition kg réservés d'un trajet dédié au surplus (announcement_detail_body.dart)",
+    "description": "Répartition kg réservés d'un trajet dédié au surplus (écran du trajet, ex-corps de détail)",
     "placeholders": {
       "kg": {
         "type": "String"
@@ -4452,7 +4430,7 @@
   },
   "listingOpenKgLabel": "{kg} kg ouverts",
   "@listingOpenKgLabel": {
-    "description": "Répartition kg ouverts au public d'un trajet dédié au surplus (announcement_detail_body.dart)",
+    "description": "Répartition kg ouverts au public d'un trajet dédié au surplus (écran du trajet, ex-corps de détail)",
     "placeholders": {
       "kg": {
         "type": "String"
@@ -4461,11 +4439,11 @@
   },
   "listingPickupParcelTitleShort": "Remise colis",
   "@listingPickupParcelTitleShort": {
-    "description": "Libellé court de la ligne remise du colis (announcement_detail_body.dart)"
+    "description": "Libellé court de la ligne remise du colis (écran du trajet, ex-corps de détail)"
   },
   "listingDeliveryPickupTitle": "Récupération",
   "@listingDeliveryPickupTitle": {
-    "description": "Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)"
+    "description": "Libellé de la ligne récupération du colis (écran du trajet, ex-corps de détail, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)"
   },
   "listingAlreadyHasParcelMessage": "Vous avez déjà un colis sur ce trajet",
   "@listingAlreadyHasParcelMessage": {
@@ -4988,7 +4966,7 @@
   },
   "listingDeadlineLabel": "Date limite",
   "@listingDeadlineLabel": {
-    "description": "Libellé de la ligne date limite de dépôt (announcement_detail_body.dart)"
+    "description": "Libellé de la ligne date limite de dépôt (écran du trajet, ex-corps de détail)"
   },
   "listingInstructionsCardTitle": "Instructions du voyageur",
   "@listingInstructionsCardTitle": {
@@ -9044,10 +9022,6 @@
   "@tripOwnerMarkArrivedButton": {
     "description": "Bouton CTA d'arrivée (trip_owner_detail_screen.dart) ; réutilisé comme titre de ArrivalInstructionsBottomSheet en mode création (arrival_instructions_bottom_sheet.dart, même préfixe tripOwner, texte identique)."
   },
-  "tripOwnerEditInstructionsButton": "Modifier les instructions de retrait",
-  "@tripOwnerEditInstructionsButton": {
-    "description": "Bouton CTA d'édition des instructions déjà arrivées (trip_owner_detail_screen.dart)."
-  },
   "tripOwnerDeleteBlockedTitle": "Suppression impossible",
   "@tripOwnerDeleteBlockedTitle": {
     "description": "Titre du dialogue de suppression bloquée par un colis accepté (trip_owner_detail_screen.dart)."
@@ -9131,55 +9105,43 @@
   },
   "tripOwnerPublishTile": "Publier",
   "@tripOwnerPublishTile": {
-    "description": "Tuile « Publier » (owner_action_grid.dart)."
-  },
-  "tripOwnerPosterTile": "Affiche",
-  "@tripOwnerPosterTile": {
-    "description": "Tuile « Affiche » (owner_action_grid.dart)."
+    "description": "Tuile « Publier » (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerUnpublishTile": "Dépublier",
   "@tripOwnerUnpublishTile": {
-    "description": "Tuile + confirmLabel « Dépublier » (owner_action_grid.dart)."
+    "description": "Tuile + confirmLabel « Dépublier » (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerUnpublishDialogTitle": "Dépublier ce trajet ?",
   "@tripOwnerUnpublishDialogTitle": {
-    "description": "Titre du dialogue de dépublication (owner_action_grid.dart)."
+    "description": "Titre du dialogue de dépublication (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerUnpublishDialogMessage": "Le trajet ne sera plus visible et restera dans vos brouillons.",
   "@tripOwnerUnpublishDialogMessage": {
-    "description": "Message du dialogue de dépublication (owner_action_grid.dart)."
+    "description": "Message du dialogue de dépublication (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerRequestsTile": "Demandes",
   "@tripOwnerRequestsTile": {
-    "description": "Tuile « Demandes » (owner_action_grid.dart). Clé dédiée (R40) : distincte de bidListDemandesTitle."
+    "description": "Tuile « Demandes » (écran du trajet, ex-grille d’actions). Clé dédiée (R40) : distincte de bidListDemandesTitle."
   },
   "tripOwnerParcelsTile": "Colis",
   "@tripOwnerParcelsTile": {
-    "description": "Tuile « Colis » (owner_action_grid.dart), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur)."
+    "description": "Tuile « Colis » (écran du trajet, ex-grille d’actions), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur)."
   },
   "tripOwnerNoParcelsMessage": "Aucun colis embarqué",
   "@tripOwnerNoParcelsMessage": {
-    "description": "Tooltip de la tuile « Colis » désactivée (owner_action_grid.dart) ; réutilisé comme titre de l'état vide de la section Colis (trip_parcels_section.dart, même préfixe, texte identique)."
-  },
-  "tripOwnerEditDisabledMessage": "Modifiable tant qu'aucune demande",
-  "@tripOwnerEditDisabledMessage": {
-    "description": "Tooltip de la tuile « Modifier » désactivée (owner_action_grid.dart)."
+    "description": "Tooltip de la tuile « Colis » désactivée (écran du trajet, ex-grille d’actions) ; réutilisé comme titre de l'état vide de la section Colis (trip_parcels_section.dart, même préfixe, texte identique)."
   },
   "tripOwnerDeleteDialogTitle": "Supprimer ce trajet ?",
   "@tripOwnerDeleteDialogTitle": {
-    "description": "Titre du dialogue de suppression du trajet (owner_action_grid.dart)."
+    "description": "Titre du dialogue de suppression du trajet (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerDeleteCancelledMessage": "Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.",
   "@tripOwnerDeleteCancelledMessage": {
-    "description": "Message de suppression d'un trajet déjà annulé (owner_action_grid.dart)."
+    "description": "Message de suppression d'un trajet déjà annulé (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerDeleteActiveMessage": "Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.",
   "@tripOwnerDeleteActiveMessage": {
-    "description": "Message de suppression d'un trajet actif (owner_action_grid.dart)."
-  },
-  "tripOwnerCancelTile": "Annuler",
-  "@tripOwnerCancelTile": {
-    "description": "Tuile « Annuler » quand le trajet actif n'est plus supprimable (owner_action_grid.dart)."
+    "description": "Message de suppression d'un trajet actif (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerParcelsSectionTitle": "Colis dans le trajet",
   "@tripOwnerParcelsSectionTitle": {
@@ -18180,7 +18142,7 @@
   },
   "tripRescheduleTile": "Reporter",
   "@tripRescheduleTile": {
-    "description": "Tuile du trajet propriétaire (owner_action_grid.dart)"
+    "description": "Tuile du trajet propriétaire (écran du trajet, ex-grille d’actions)"
   },
   "tripRescheduleTitle": "Reporter le trajet",
   "@tripRescheduleTitle": {
@@ -18420,7 +18382,7 @@
   },
   "tripRescheduleLimitReachedMessage": "Déjà reporté 2 fois : annulez et publiez un nouveau trajet",
   "@tripRescheduleLimitReachedMessage": {
-    "description": "Tuile Reporter grisée (owner_action_grid.dart)"
+    "description": "Tuile Reporter grisée (écran du trajet, ex-grille d’actions)"
   },
   "profilePublicLastSeenToday": "Actif aujourd'hui",
   "@profilePublicLastSeenToday": {
@@ -22941,6 +22903,8 @@
   "@tripRequestsCardDepartedHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet parti (IN_PROGRESS) ; la carte n'est affichée que s'il reste des demandes à traiter, le back refusant tout nouveau colis (trip_requests_card.dart)."},
   "tripRequestsCardEndedHint": "Trajet terminé : plus de nouvelle demande.",
   "@tripRequestsCardEndedHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet terminé (COMPLETED) ; la carte n'est affichée que s'il reste des demandes à traiter (trip_requests_card.dart)."},
+  "tripSectionYourTrip": "Votre trajet",
+  "@tripSectionYourTrip": {"description": "Écran du trajet vu par son voyageur : titre de la grille de tuiles (itinéraire et lieux, paiements, conditions, affiche, arrivée), chacune ouvrant un bottom sheet (trip_owner_body.dart)."},
   "tripParcelsSeeList": "Voir la liste",
   "@tripParcelsSeeList": {"description": "Lien de l'en-tête de la carte « Colis dans le trajet » : ouvre la liste des colis du trajet (/announcements/:id/bids), affiché dès qu'un colis est embarqué ; une ligne, sans icône (trip_parcels_section.dart)."},
   "tripOwnerMenuTooltip": "Options du trajet",

@@ -31,8 +31,8 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -70,6 +70,10 @@ TripAudienceCubit _hiddenAudience() {
 }
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
+/// « Je pars » : l'écran fournit son cubit (getIt) ; ces tests ne partent pas.
+class _MockTripDepartCubit extends MockCubit<TripDepartState>
+    implements TripDepartCubit {}
 
 class _MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
@@ -182,6 +186,17 @@ Future<void> _pump(
       GoRoute(
         path: '/profile/upgrade-to-pro',
         builder: (ctx, _) => const Scaffold(body: Text('UPGRADE_TO_PRO')),
+      ),
+      // Demandes à traiter du trajet (carte Demandes, tuile « À traiter »,
+      // pied) : `back` revient à l'écran.
+      GoRoute(
+        path: '/demandes',
+        builder: (ctx, state) => Scaffold(
+          body: TextButton(
+            onPressed: () => ctx.pop(),
+            child: Text('DEMANDES:${state.uri.query}'),
+          ),
+        ),
       ),
       // Affiche partageable : même destination pour la tuile « Affiche » et
       // l'icône de partage de l'en-tête.
@@ -309,11 +324,26 @@ void main() {
       getIt.unregister<AnalyticsService>();
     }
     getIt.registerLazySingleton<AnalyticsService>(() => analytics);
+    if (getIt.isRegistered<TripDepartCubit>()) {
+      getIt.unregister<TripDepartCubit>();
+    }
+    getIt.registerFactoryParam<TripDepartCubit, String, void>((_, _) {
+      final cubit = _MockTripDepartCubit();
+      whenListen(
+        cubit,
+        const Stream<TripDepartState>.empty(),
+        initialState: const TripDepartState(),
+      );
+      return cubit;
+    });
   });
 
   tearDown(() {
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
+    }
+    if (getIt.isRegistered<TripDepartCubit>()) {
+      getIt.unregister<TripDepartCubit>();
     }
     annBloc.close();
     bidBloc.close();
@@ -346,7 +376,7 @@ void main() {
     expect(find.byType(DonyAppBar), findsOneWidget);
     expect(find.text('Trajet'), findsOneWidget);
     expect(find.byType(DonyFeedbackButton), findsOneWidget);
-    // Corridor rendu par AnnouncementDetailBody.
+    // Corridor rendu par la tête du trajet (TripOwnerHeader).
     expect(find.bySemanticsLabel('Paris → Dakar'), findsOneWidget);
   });
 
@@ -436,11 +466,36 @@ void main() {
       );
     }
 
-    testWidgets('bouton visible avec un colis en route, ouvre la feuille', (
+    // Cible validée : « Prévenir les destinataires » est le bouton du pied
+    // après l'arrivée seulement ; avant, le pied propose « Arrivé à
+    // destination ».
+    testWidgets('colis en route : « Arrivé à destination », pas « Prévenir »', (
       tester,
     ) async {
       ownerWithBids([
         _makeBid(status: 'IN_TRANSIT', recipientPhone: '+221700000000'),
+      ]);
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('trip-footer-markArrived')), findsOneWidget);
+      expect(
+        find.byKey(const Key('trip-footer-notifyRecipients')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('arrivée marquée : bouton du pied, ouvre la feuille', (
+      tester,
+    ) async {
+      ownerWithBids([
+        _makeBid(status: 'ARRIVED', recipientPhone: '+221700000000'),
         _makeBid(status: 'ACCEPTED', id: 'bid-002'),
       ]);
       await _pump(
@@ -454,7 +509,14 @@ void main() {
 
       final button = find.text('Prévenir les destinataires (1)');
       expect(button, findsOneWidget);
-      await tester.ensureVisible(button);
+      // Pied collant, hors du défilement.
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('trip-owner-sticky-bar')),
+          matching: button,
+        ),
+        findsOneWidget,
+      );
       await tester.tap(button);
       await tester.pumpAndSettle();
 
@@ -481,7 +543,10 @@ void main() {
         authBloc: authBloc,
       );
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('notify-recipients-button')), findsNothing);
+      expect(
+        find.byKey(const Key('trip-footer-notifyRecipients')),
+        findsNothing,
+      );
     });
 
     testWidgets('visiteur non propriétaire : pas de bouton', (tester) async {
@@ -500,7 +565,10 @@ void main() {
         authBloc: authBloc,
       );
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('notify-recipients-button')), findsNothing);
+      expect(
+        find.byKey(const Key('trip-footer-notifyRecipients')),
+        findsNothing,
+      );
     });
 
     Future<(StreamController<AnnouncementState>, StreamController<BidState>)>
@@ -644,9 +712,14 @@ void main() {
       );
       clearInteractions(annBloc);
 
-      final cta = find.byKey(const Key('enable-card-on-trip-cta'));
-      await tester.ensureVisible(cta);
+      // L'encart est devenu la tuile « À traiter », qui ouvre son sheet.
+      final tile = find.byKey(const Key('trip_owner-todo-card'));
+      await tester.ensureVisible(tile);
       await tester.pumpAndSettle();
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      final cta = find.byKey(const Key('enable-card-on-trip-cta'));
+      expect(cta, findsOneWidget);
       await tester.tap(cta);
       await tester.pumpAndSettle();
       await tester.tap(find.text('TRIP_EDIT_SAVE'));
@@ -671,6 +744,14 @@ void main() {
       auth: const AuthAuthenticated(_owner),
     );
 
+    // L'encart a quitté le corps pour la tuile « Arrivée » (une seule
+    // carte à l'écran, sinon deux clés `arrival-instructions-card`).
+    expect(find.byKey(const Key('arrival-instructions-card')), findsNothing);
+    final tile = find.byKey(const Key('trip-tile-arrival'));
+    await tester.ensureVisible(tile);
+    await tester.pumpAndSettle();
+    await tester.tap(tile);
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('arrival-instructions-card')), findsOneWidget);
     expect(find.text('Gare routière'), findsOneWidget);
   });
@@ -781,8 +862,8 @@ void main() {
 
       // Régression I9(a) : sans le refresh, AnnouncementTripArrived ne
       // déclenche aucun BidListRequested, le bloc bids reste figé sur
-      // IN_TRANSIT et le CTA rediraffiche "Arrivé à destination" au lieu de
-      // basculer vers l'édition des instructions.
+      // IN_TRANSIT et le pied réaffiche « Arrivé à destination » au lieu de
+      // passer à « Prévenir les destinataires ».
       verify(
         () => bidBloc.add(
           any(
@@ -802,7 +883,8 @@ void main() {
   // actifs devenait vide et le bouton disparaissait définitivement, rendant les
   // instructions de retrait non éditables.
   testWidgets(
-    'tous les colis ARRIVED → bouton "Modifier les instructions de retrait"',
+    'tous les colis ARRIVED → « Modifier les instructions » dans la tuile '
+    '« Arrivée », plus « Arrivé à destination »',
     (tester) async {
       final announcement = _makeAnnouncement();
       when(
@@ -838,8 +920,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Modifier les instructions de retrait'), findsOneWidget);
       expect(find.text('Arrivé à destination'), findsNothing);
+      final tile = find.byKey(const Key('trip-tile-arrival'));
+      await tester.ensureVisible(tile);
+      await tester.pumpAndSettle();
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('trip-tile-arrival-edit-button')),
+        findsOneWidget,
+      );
+      expect(find.text('Modifier les instructions'), findsOneWidget);
     },
   );
 
@@ -1045,10 +1136,12 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      final tile = find.text('Affiche');
+      final tile = find.byKey(const Key('trip-tile-poster'));
       await tester.ensureVisible(tile);
       await tester.pumpAndSettle();
       await tester.tap(tile);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('trip-tile-poster-button')));
       await tester.pumpAndSettle();
       expect(find.text('AFFICHE:ann-trip-001'), findsOneWidget);
     });
@@ -1230,75 +1323,8 @@ void main() {
     );
   });
 
-  group('tripArrivalCtaFor', () {
-    test('tous IN_TRANSIT → markArrived', () {
-      expect(
-        tripArrivalCtaFor([_makeBid(status: 'IN_TRANSIT')]),
-        TripArrivalCta.markArrived,
-      );
-    });
-    test('tous ARRIVED → editInstructions', () {
-      expect(
-        tripArrivalCtaFor([_makeBid(status: 'ARRIVED')]),
-        TripArrivalCta.editInstructions,
-      );
-    });
-    test('ARRIVED restant + COMPLETED → editInstructions', () {
-      expect(
-        tripArrivalCtaFor([
-          _makeBid(status: 'ARRIVED'),
-          _makeBid(status: 'COMPLETED'),
-        ]),
-        TripArrivalCta.editInstructions,
-      );
-    });
-    // Un colis pas encore parti bloquait tout le trajet, et avec lui la saisie
-    // des instructions de retrait (yadony-back #334 : seuls les colis en
-    // transit passent en ARRIVED).
-    test('un colis encore HANDED_OVER + un IN_TRANSIT → markArrived', () {
-      expect(
-        tripArrivalCtaFor([
-          _makeBid(status: 'HANDED_OVER'),
-          _makeBid(status: 'IN_TRANSIT'),
-        ]),
-        TripArrivalCta.markArrived,
-      );
-    });
-    test('ARRIVED + un colis resté ACCEPTED → editInstructions', () {
-      expect(
-        tripArrivalCtaFor([
-          _makeBid(status: 'ARRIVED'),
-          _makeBid(status: 'ACCEPTED'),
-        ]),
-        TripArrivalCta.editInstructions,
-      );
-    });
-    test('ARRIVED + un colis passé en transit plus tard → markArrived', () {
-      expect(
-        tripArrivalCtaFor([
-          _makeBid(status: 'ARRIVED'),
-          _makeBid(status: 'IN_TRANSIT'),
-        ]),
-        TripArrivalCta.markArrived,
-      );
-    });
-    test('colis recupere sans transit + un ACCEPTED → markArrived', () {
-      expect(
-        tripArrivalCtaFor([
-          _makeBid(status: 'HANDED_OVER'),
-          _makeBid(status: 'ACCEPTED'),
-        ]),
-        TripArrivalCta.markArrived,
-      );
-    });
-    test('aucun colis recupere ni arrive → aucun CTA', () {
-      expect(tripArrivalCtaFor([_makeBid(status: 'ACCEPTED')]), isNull);
-    });
-    test('aucun colis actif → aucun CTA', () {
-      expect(tripArrivalCtaFor([_makeBid(status: 'COMPLETED')]), isNull);
-      expect(tripArrivalCtaFor(const []), isNull);
-    });
-  });
+  // Les cas de « Arrivé à destination » (`tripCanMarkArrived`, ex-
+  // `tripArrivalCtaFor`) sont dans `trip_owner/trip_arrival_test.dart`.
 
   // ── Annulation du trajet (FLUTTER-FH) ─────────────────────────────────────
   //
@@ -1444,5 +1470,157 @@ void main() {
         );
       },
     );
+  });
+
+  // ── Écran assemblé ───────────────────────────────────────────────────────
+  group('écran assemblé', () {
+    void ownerOn(AnnouncementModel a, {List<BidModel> bids = const []}) {
+      when(() => annBloc.state).thenReturn(AnnouncementDetailLoaded(a));
+      whenListen(
+        annBloc,
+        const Stream<AnnouncementState>.empty(),
+        initialState: AnnouncementDetailLoaded(a),
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+      when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
+      whenListen(
+        bidBloc,
+        const Stream<BidState>.empty(),
+        initialState: BidListLoaded(bids),
+      );
+    }
+
+    Future<void> pumpScreen(WidgetTester tester) async {
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+    }
+
+    final stickyBar = find.byKey(const Key('trip-owner-sticky-bar'));
+    final menuButton = find.byKey(const Key('trip-owner-menu-button'));
+
+    testWidgets('retiré par l\'équipe : carte dédiée, ni pied, ni menu, ni '
+        'partage', (tester) async {
+      ownerOn(_makeAnnouncement(status: 'REMOVED_BY_ADMIN'));
+      await pumpScreen(tester);
+
+      expect(
+        find.byKey(const Key('trip-status-card-removedByAdmin')),
+        findsOneWidget,
+      );
+      expect(stickyBar, findsNothing);
+      expect(menuButton, findsNothing);
+      expect(find.byKey(const Key('trip-owner-share-button')), findsNothing);
+      // Ni demandes ni colis à montrer.
+      expect(find.byKey(const Key('trip-requests-card')), findsNothing);
+      expect(find.text('Colis dans le trajet'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('pied et menu selon le statut, hors du défilement', (
+      tester,
+    ) async {
+      ownerOn(_makeAnnouncement(status: 'DRAFT'));
+      await pumpScreen(tester);
+      expect(find.byKey(const Key('trip-footer-publish')), findsOneWidget);
+      expect(find.byKey(const Key('trip-footer-edit')), findsOneWidget);
+      expect(
+        find.descendant(of: find.byType(AppBar), matching: menuButton),
+        findsOneWidget,
+      );
+      // Le pied n'est pas dans la colonne qui défile.
+      expect(
+        find.descendant(
+          of: find.byType(SingleChildScrollView),
+          matching: stickyBar,
+        ),
+        findsNothing,
+      );
+
+      ownerOn(_makeAnnouncement());
+      await pumpScreen(tester);
+      expect(find.byKey(const Key('trip-footer-sharePoster')), findsOneWidget);
+
+      ownerOn(_makeAnnouncement(status: 'COMPLETED'));
+      await pumpScreen(tester);
+      expect(stickyBar, findsNothing);
+    });
+
+    testWidgets('demandes à traiter : « Voir les demandes », relu en silence '
+        'au retour', (tester) async {
+      ownerOn(_makeAnnouncement(), bids: [_makeBid(status: 'PENDING')]);
+      await pumpScreen(tester);
+      clearInteractions(bidBloc);
+      clearInteractions(annBloc);
+
+      await tester.tap(find.byKey(const Key('trip-footer-seeRequests')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('DEMANDES:filter=aTraiter&announcement=ann-trip-001'),
+        findsOneWidget,
+      );
+      verifyNever(() => bidBloc.add(any()));
+
+      await tester.tap(find.textContaining('DEMANDES:'));
+      await tester.pumpAndSettle();
+      final bidEvent =
+          verify(() => bidBloc.add(captureAny())).captured.single
+              as BidListRequested;
+      expect(bidEvent.silent, isTrue);
+      registerFallbackValue(AnnouncementDetailRequested('fallback'));
+      final annEvent = verify(
+        () => annBloc.add(captureAny()),
+      ).captured.whereType<AnnouncementDetailRequested>().single;
+      expect(annEvent.silent, isTrue);
+    });
+
+    testWidgets('carte Demandes : même relecture au retour', (tester) async {
+      ownerOn(_makeAnnouncement(), bids: [_makeBid(status: 'PENDING')]);
+      await pumpScreen(tester);
+      clearInteractions(bidBloc);
+
+      final card = find.byKey(const Key('trip-requests-card'));
+      await tester.ensureVisible(card);
+      await tester.pumpAndSettle();
+      await tester.tap(card);
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('DEMANDES:'));
+      await tester.pumpAndSettle();
+      verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+    });
+
+    testWidgets('détail en échec sans trajet : erreur et « Réessayer », '
+        'pas de squelette sans fin', (tester) async {
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementError(const NetworkException('offline')));
+      whenListen(
+        annBloc,
+        const Stream<AnnouncementState>.empty(),
+        initialState: AnnouncementError(const NetworkException('offline')),
+      );
+      await pumpScreen(tester);
+
+      expect(find.byType(DonyDetailSkeleton), findsNothing);
+      expect(find.byKey(const Key('trip-owner-load-error')), findsOneWidget);
+      registerFallbackValue(AnnouncementDetailRequested('fallback'));
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+      final event =
+          verify(() => annBloc.add(captureAny())).captured.single
+              as AnnouncementDetailRequested;
+      expect(event.id, 'ann-trip-001');
+      expect(event.silent, isFalse);
+    });
   });
 }

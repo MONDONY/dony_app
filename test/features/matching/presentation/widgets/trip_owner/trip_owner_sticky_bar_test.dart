@@ -223,25 +223,6 @@ void main() {
         }
       }
     });
-
-    test('hasAction suit la règle', () {
-      expect(
-        TripOwnerStickyBar.hasAction(
-          trip: ownerTrip(),
-          bids: const [],
-          isOwner: true,
-        ),
-        isTrue,
-      );
-      expect(
-        TripOwnerStickyBar.hasAction(
-          trip: ownerTrip(status: 'COMPLETED'),
-          bids: const [],
-          isOwner: true,
-        ),
-        isFalse,
-      );
-    });
   });
 
   group('barre', () {

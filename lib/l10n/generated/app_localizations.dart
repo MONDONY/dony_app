@@ -8229,13 +8229,13 @@ abstract class AppLocalizations {
   /// **'Trajet'**
   String get listingHeroTripLabel;
 
-  /// Titre de la section adresses de remise/récupération (announcement_detail_screen.dart, announcement_detail_body.dart)
+  /// Titre de la section adresses de remise/récupération (announcement_detail_screen.dart, écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'Lieux de remise'**
   String get listingPickupLocationsTitle;
 
-  /// Titre de la section date limite de dépôt (announcement_detail_screen.dart, announcement_detail_body.dart)
+  /// Titre de la section date limite de dépôt (announcement_detail_screen.dart, écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'Dépôt des colis'**
@@ -8259,7 +8259,7 @@ abstract class AppLocalizations {
   /// **'Prix par kg'**
   String get listingPricePerKgLabel;
 
-  /// Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, announcement_detail_body.dart, marker_bitmap_factory.dart via announcement_map_view.dart)
+  /// Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, écran du trajet, ex-corps de détail, marker_bitmap_factory.dart via announcement_map_view.dart)
   ///
   /// In fr, this message translates to:
   /// **'Par article'**
@@ -8325,7 +8325,7 @@ abstract class AppLocalizations {
   /// **'Annulé'**
   String get listingStatusCancelled;
 
-  /// Date limite de dépôt affichée en toutes lettres (announcement_detail_screen.dart, announcement_detail_body.dart)
+  /// Date limite de dépôt affichée en toutes lettres (announcement_detail_screen.dart, écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'Jusqu\'au {date}'**
@@ -8481,73 +8481,55 @@ abstract class AppLocalizations {
   /// **'Aucun trajet ne correspond à votre recherche.'**
   String get listingEmptyAllDesc;
 
-  /// Petit libellé capitalisé au-dessus du corridor (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)
+  /// Petit libellé capitalisé au-dessus du corridor (écran du trajet, ex-corps de détail, traveler_announcement_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
   /// **'TRAJET'**
   String get listingHeroTripLabelCaps;
 
-  /// Libellé secondaire de la pastille capacité disponible (announcement_detail_body.dart)
+  /// Libellé secondaire de la pastille capacité disponible (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'disponibles'**
   String get listingCapacityAvailableSuffix;
 
-  /// Libellé secondaire de la pastille prix en mode grille (announcement_detail_body.dart)
+  /// Libellé secondaire de la pastille prix en mode grille (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'prix'**
   String get listingPricingSuffixTarifaire;
 
-  /// Libellé secondaire de la pastille prix au kilo (announcement_detail_body.dart)
+  /// Libellé secondaire de la pastille prix au kilo (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'prix'**
   String get listingPricingSuffixPrix;
 
-  /// Nombre de colis acceptés sur le trajet (announcement_detail_body.dart)
+  /// Nombre de colis acceptés sur le trajet (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =1{colis accepté} other{colis acceptés}}'**
   String listingAcceptedParcels(int count);
 
-  /// Libellé secondaire du compteur de demandes en attente (announcement_detail_body.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'en attente'**
-  String get listingPendingParcelsLabel;
-
-  /// Libellé d'accessibilité de la tuile tappable des colis acceptés, ouvre la liste des colis du trajet (announcement_detail_body.dart, FLUTTER-HK)
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{Voir le colis accepté} other{Voir les {count} colis acceptés}}'**
-  String listingAcceptedParcelsSemantics(int count);
-
-  /// Libellé d'accessibilité de la tuile tappable des demandes en attente, ouvre l'écran des demandes à traiter (announcement_detail_body.dart, FLUTTER-HK)
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{Voir la demande en attente} other{Voir les {count} demandes en attente}}'**
-  String listingPendingParcelsSemantics(int count);
-
-  /// Titre de la section moyens de paiement acceptés (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)
+  /// Titre de la section moyens de paiement acceptés (écran du trajet, ex-corps de détail, traveler_announcement_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
   /// **'Paiements acceptés'**
   String get listingPaymentsAcceptedTitle;
 
-  /// Message incitant le voyageur à activer la carte quand seul le cash est accepté (announcement_detail_body.dart)
+  /// Message incitant le voyageur à activer la carte quand seul le cash est accepté (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'Trajet en espèces uniquement. Beaucoup d\'expéditeurs préfèrent payer par carte, activez cette option pour augmenter vos chances de recevoir des colis.'**
   String get listingCashOnlyNudgeMessage;
 
-  /// Bouton d'activation des paiements par carte (announcement_detail_body.dart)
+  /// Bouton d'activation des paiements par carte (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'Activer les paiements par carte'**
   String get listingActivateCardPaymentsButton;
 
-  /// Encart d'un trajet en espèces seulement quand le compte Stripe est déjà activé (announcement_detail_body.dart, Sentry FLUTTER-DH).
+  /// Encart d'un trajet en espèces seulement quand le compte Stripe est déjà activé (écran du trajet, ex-corps de détail, Sentry FLUTTER-DH).
   ///
   /// In fr, this message translates to:
   /// **'Le paiement par carte est activé sur votre compte, mais ce trajet n\'accepte encore que les espèces.'**
@@ -8559,79 +8541,79 @@ abstract class AppLocalizations {
   /// **'Ajouter la carte à ce trajet'**
   String get listingEnableCardOnTripButton;
 
-  /// Titre de la section contenus acceptés (announcement_detail_body.dart)
+  /// Titre de la section contenus acceptés (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'Ce que j\'accepte'**
   String get listingAcceptedContentTitle;
 
-  /// Titre de la section contenus refusés (announcement_detail_body.dart)
+  /// Titre de la section contenus refusés (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'Ce que je refuse'**
   String get listingRefusedContentTitle;
 
-  /// Titre de la note libre du voyageur à destination des expéditeurs (announcement_detail_body.dart)
+  /// Titre de la note libre du voyageur à destination des expéditeurs (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'Note aux expéditeurs'**
   String get listingSenderNoteTitle;
 
-  /// Badge de statut compact ACTIVE (announcement_detail_body.dart)
+  /// Badge de statut compact ACTIVE (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'● ACTIF'**
   String get listingBadgeActive;
 
-  /// Badge de statut compact DRAFT (announcement_detail_body.dart)
+  /// Badge de statut compact DRAFT (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'✎ BROUILLON'**
   String get listingBadgeDraft;
 
-  /// Badge de statut compact FULL (announcement_detail_body.dart)
+  /// Badge de statut compact FULL (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'● COMPLET'**
   String get listingBadgeFull;
 
-  /// Badge de statut compact IN_PROGRESS (announcement_detail_body.dart)
+  /// Badge de statut compact IN_PROGRESS (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'● EN COURS'**
   String get listingBadgeInProgress;
 
-  /// Badge de statut compact COMPLETED (announcement_detail_body.dart)
+  /// Badge de statut compact COMPLETED (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'✓ TERMINÉ'**
   String get listingBadgeCompleted;
 
-  /// Badge de statut compact CANCELLED (announcement_detail_body.dart)
+  /// Badge de statut compact CANCELLED (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'✕ ANNULÉ'**
   String get listingBadgeCancelled;
 
-  /// Répartition kg réservés d'un trajet dédié au surplus (announcement_detail_body.dart)
+  /// Répartition kg réservés d'un trajet dédié au surplus (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'{kg} kg réservés'**
   String listingReservedKgLabel(String kg);
 
-  /// Répartition kg ouverts au public d'un trajet dédié au surplus (announcement_detail_body.dart)
+  /// Répartition kg ouverts au public d'un trajet dédié au surplus (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'{kg} kg ouverts'**
   String listingOpenKgLabel(String kg);
 
-  /// Libellé court de la ligne remise du colis (announcement_detail_body.dart)
+  /// Libellé court de la ligne remise du colis (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'Remise colis'**
   String get listingPickupParcelTitleShort;
 
-  /// Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)
+  /// Libellé de la ligne récupération du colis (écran du trajet, ex-corps de détail, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)
   ///
   /// In fr, this message translates to:
   /// **'Récupération'**
@@ -9231,7 +9213,7 @@ abstract class AppLocalizations {
   /// **'Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.'**
   String get listingDeleteTripAssociatedRequestsMessage;
 
-  /// Libellé de la ligne date limite de dépôt (announcement_detail_body.dart)
+  /// Libellé de la ligne date limite de dépôt (écran du trajet, ex-corps de détail)
   ///
   /// In fr, this message translates to:
   /// **'Date limite'**
@@ -14298,12 +14280,6 @@ abstract class AppLocalizations {
   /// **'Arrivé à destination'**
   String get tripOwnerMarkArrivedButton;
 
-  /// Bouton CTA d'édition des instructions déjà arrivées (trip_owner_detail_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Modifier les instructions de retrait'**
-  String get tripOwnerEditInstructionsButton;
-
   /// Titre du dialogue de suppression bloquée par un colis accepté (trip_owner_detail_screen.dart).
   ///
   /// In fr, this message translates to:
@@ -14418,83 +14394,65 @@ abstract class AppLocalizations {
   /// **'Annulé'**
   String get bidListStatusCancelled;
 
-  /// Tuile « Publier » (owner_action_grid.dart).
+  /// Tuile « Publier » (écran du trajet, ex-grille d’actions).
   ///
   /// In fr, this message translates to:
   /// **'Publier'**
   String get tripOwnerPublishTile;
 
-  /// Tuile « Affiche » (owner_action_grid.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Affiche'**
-  String get tripOwnerPosterTile;
-
-  /// Tuile + confirmLabel « Dépublier » (owner_action_grid.dart).
+  /// Tuile + confirmLabel « Dépublier » (écran du trajet, ex-grille d’actions).
   ///
   /// In fr, this message translates to:
   /// **'Dépublier'**
   String get tripOwnerUnpublishTile;
 
-  /// Titre du dialogue de dépublication (owner_action_grid.dart).
+  /// Titre du dialogue de dépublication (écran du trajet, ex-grille d’actions).
   ///
   /// In fr, this message translates to:
   /// **'Dépublier ce trajet ?'**
   String get tripOwnerUnpublishDialogTitle;
 
-  /// Message du dialogue de dépublication (owner_action_grid.dart).
+  /// Message du dialogue de dépublication (écran du trajet, ex-grille d’actions).
   ///
   /// In fr, this message translates to:
   /// **'Le trajet ne sera plus visible et restera dans vos brouillons.'**
   String get tripOwnerUnpublishDialogMessage;
 
-  /// Tuile « Demandes » (owner_action_grid.dart). Clé dédiée (R40) : distincte de bidListDemandesTitle.
+  /// Tuile « Demandes » (écran du trajet, ex-grille d’actions). Clé dédiée (R40) : distincte de bidListDemandesTitle.
   ///
   /// In fr, this message translates to:
   /// **'Demandes'**
   String get tripOwnerRequestsTile;
 
-  /// Tuile « Colis » (owner_action_grid.dart), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur).
+  /// Tuile « Colis » (écran du trajet, ex-grille d’actions), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur).
   ///
   /// In fr, this message translates to:
   /// **'Colis'**
   String get tripOwnerParcelsTile;
 
-  /// Tooltip de la tuile « Colis » désactivée (owner_action_grid.dart) ; réutilisé comme titre de l'état vide de la section Colis (trip_parcels_section.dart, même préfixe, texte identique).
+  /// Tooltip de la tuile « Colis » désactivée (écran du trajet, ex-grille d’actions) ; réutilisé comme titre de l'état vide de la section Colis (trip_parcels_section.dart, même préfixe, texte identique).
   ///
   /// In fr, this message translates to:
   /// **'Aucun colis embarqué'**
   String get tripOwnerNoParcelsMessage;
 
-  /// Tooltip de la tuile « Modifier » désactivée (owner_action_grid.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Modifiable tant qu\'aucune demande'**
-  String get tripOwnerEditDisabledMessage;
-
-  /// Titre du dialogue de suppression du trajet (owner_action_grid.dart).
+  /// Titre du dialogue de suppression du trajet (écran du trajet, ex-grille d’actions).
   ///
   /// In fr, this message translates to:
   /// **'Supprimer ce trajet ?'**
   String get tripOwnerDeleteDialogTitle;
 
-  /// Message de suppression d'un trajet déjà annulé (owner_action_grid.dart).
+  /// Message de suppression d'un trajet déjà annulé (écran du trajet, ex-grille d’actions).
   ///
   /// In fr, this message translates to:
   /// **'Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.'**
   String get tripOwnerDeleteCancelledMessage;
 
-  /// Message de suppression d'un trajet actif (owner_action_grid.dart).
+  /// Message de suppression d'un trajet actif (écran du trajet, ex-grille d’actions).
   ///
   /// In fr, this message translates to:
   /// **'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.'**
   String get tripOwnerDeleteActiveMessage;
-
-  /// Tuile « Annuler » quand le trajet actif n'est plus supprimable (owner_action_grid.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Annuler'**
-  String get tripOwnerCancelTile;
 
   /// Titre de la section colis embarqués (trip_parcels_section.dart).
   ///
@@ -26257,7 +26215,7 @@ abstract class AppLocalizations {
   /// **'{time} (+{days} j)'**
   String tripArrivalDayOffsetSuffix(String time, int days);
 
-  /// Tuile du trajet propriétaire (owner_action_grid.dart)
+  /// Tuile du trajet propriétaire (écran du trajet, ex-grille d’actions)
   ///
   /// In fr, this message translates to:
   /// **'Reporter'**
@@ -26563,7 +26521,7 @@ abstract class AppLocalizations {
   /// **'Un colis est déjà en route, arrivé ou livré : le trajet ne peut plus être reporté.'**
   String get tripRescheduleParcelOnTheWayMessage;
 
-  /// Tuile Reporter grisée (owner_action_grid.dart)
+  /// Tuile Reporter grisée (écran du trajet, ex-grille d’actions)
   ///
   /// In fr, this message translates to:
   /// **'Déjà reporté 2 fois : annulez et publiez un nouveau trajet'**
@@ -37157,6 +37115,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Trajet terminé : plus de nouvelle demande.'**
   String get tripRequestsCardEndedHint;
+
+  /// Écran du trajet vu par son voyageur : titre de la grille de tuiles (itinéraire et lieux, paiements, conditions, affiche, arrivée), chacune ouvrant un bottom sheet (trip_owner_body.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre trajet'**
+  String get tripSectionYourTrip;
 
   /// Lien de l'en-tête de la carte « Colis dans le trajet » : ouvre la liste des colis du trajet (/announcements/:id/bids), affiché dès qu'un colis est embarqué ; une ligne, sans icône (trip_parcels_section.dart).
   ///

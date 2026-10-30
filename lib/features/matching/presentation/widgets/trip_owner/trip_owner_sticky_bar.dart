@@ -6,7 +6,6 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
@@ -48,7 +47,7 @@ const _travellingStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
 /// Pied collant de [trip] pour son voyageur, ou `null` s'il n'a rien à
 /// proposer. Fonction pure, la première règle qui s'applique l'emporte :
 /// 1. un colis remis ou en transit sur un trajet ACTIVE, FULL ou IN_PROGRESS
-///    ([tripArrivalCtaFor] `markArrived`) : « Arrivé à destination » ;
+///    ([tripCanMarkArrived]) : « Arrivé à destination » ;
 /// 2. sur ces mêmes trajets, l'arrivée est marquée (un colis `ARRIVED`, plus
 ///    aucun remis ni en transit) : « Prévenir les destinataires (N) » ;
 /// 3. brouillon : « Modifier » | « Publier » ;
@@ -76,7 +75,7 @@ TripFooter? tripFooterFor({
 }) {
   if (!isOwner) return null;
   if (bids != null && _travellingStatuses.contains(trip.status)) {
-    if (tripArrivalCtaFor(bids) == TripArrivalCta.markArrived) {
+    if (tripCanMarkArrived(bids)) {
       return (primary: TripFooterButton.markArrived, secondary: null);
     }
     if (tripHasArrivedParcel(bids) && recipientsToNotify(bids).isNotEmpty) {
@@ -133,13 +132,6 @@ class TripOwnerStickyBar extends StatelessWidget {
   /// Colis chargés par l'écran, `null` tant que la liste n'a pas répondu.
   final List<BidModel>? bids;
   final bool isOwner;
-
-  /// La barre a-t-elle un bouton pour [trip] ?
-  static bool hasAction({
-    required AnnouncementModel trip,
-    required List<BidModel>? bids,
-    required bool isOwner,
-  }) => tripFooterFor(trip: trip, bids: bids, isOwner: isOwner) != null;
 
   @override
   Widget build(BuildContext context) {

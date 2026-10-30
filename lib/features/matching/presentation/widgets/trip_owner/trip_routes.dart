@@ -3,6 +3,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +12,19 @@ import 'package:go_router/go_router.dart';
 // tuiles « À traiter », cartes directes du corps). Chacune ignore un second
 // appui tant que sa page n'est pas refermée, et relit l'écran en silence au
 // retour.
+
+/// `true` si le trajet peut être partagé par son affiche : uniquement tant
+/// qu'il reste de la place (ACTIVE). Une affiche postée sur un trajet complet
+/// ferait venir des expéditeurs pour rien. Même règle pour l'icône de partage
+/// de la barre d'application, la tuile « Affiche », le pied, le menu ⋮ et la
+/// feuille du trajet vue par un expéditeur.
+bool canShareTripPoster(AnnouncementModel a) => a.status == 'ACTIVE';
+
+/// Ouvre l'affiche partageable du trajet (lien, légende, image). Elle ne
+/// modifie rien : pas de relecture au retour.
+void openTripPoster(BuildContext context, AnnouncementModel a) {
+  context.push('/announcements/${a.id}/affiche', extra: a);
+}
 
 /// Activité › Demandes, onglet « À traiter », restreint au trajet [tripId]
 /// (`/demandes?filter=aTraiter&announcement=<id>`).

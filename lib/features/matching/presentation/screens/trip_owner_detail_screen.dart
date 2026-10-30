@@ -7,6 +7,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -23,19 +24,17 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
-import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
-import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
-import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_depart_button.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_summary_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_body.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_options_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_sticky_bar.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
 import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
+import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -45,10 +44,18 @@ import 'package:share_plus/share_plus.dart';
 
 /// Écran plein écran « Trajet » côté propriétaire (voyageur).
 ///
-/// Bouton retour + bouton de signalement de bug dans l'AppBar, puis, dans l'ordre :
-/// le détail complet du trajet via [AnnouncementDetailBody], la grille d'actions
-/// [OwnerActionGrid] (Demandes / Colis / Modifier / Supprimer) et la section des
-/// colis déjà embarqués [TripParcelsSection].
+/// Barre d'application : retour, icône de partage de l'affiche (trajet
+/// ouvert), menu ⋮ ([TripOwnerOptionsButton]), scarabée. Corps en sections
+/// ([TripOwnerBody] : billet, carte de statut, « À traiter », étapes et
+/// audience, Demandes, Colis, Gain, « Votre trajet »), pied collant hors du
+/// défilement ([TripOwnerStickyBar], un ou deux boutons).
+///
+/// L'écran possède les blocs de la route et en écoute les suites : les
+/// actions lancées depuis le pied, le menu ou les sheets (publier, dépublier,
+/// reporter, annuler, supprimer, marquer l'arrivée) aboutissent ici
+/// (snackbars, écran de succès, relectures, sortie). Il fournit aussi le
+/// `TripDepartCubit` du trajet, partagé par la tuile « Je pars » et son
+/// sheet.
 class TripOwnerDetailScreen extends StatefulWidget {
   const TripOwnerDetailScreen({
     super.key,
@@ -195,306 +202,234 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     );
   }
 
+  /// Dernier trajet connu hors des états qui le portent (erreurs, chargement).
+  AnnouncementModel? _known() => _current ?? widget.initial;
+
   @override
   Widget build(BuildContext context) {
     final safeBottom = MediaQuery.paddingOf(context).bottom;
+    final id = widget.announcementId;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: DonyAppBar(
-        title: context.l10n.listingHeroTripLabel,
-        // Partage à portée de pouce : la tuile « Affiche » de la grille reste
-        // en bas de page, sous le détail du trajet.
-        actions: [
-          BlocBuilder<AnnouncementBloc, AnnouncementState>(
+    // « Je pars » : la tuile « À traiter » et son sheet lisent le même cubit
+    // (état « parti » partagé), fourni au-dessus de la barre, du corps et du
+    // pied.
+    return BlocProvider<TripDepartCubit>(
+      create: (_) => getIt<TripDepartCubit>(param1: id),
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: DonyAppBar(
+          title: context.l10n.listingHeroTripLabel,
+          // Partage à portée de pouce, puis le menu ⋮ ; le scarabée suit.
+          // Toujours montés une fois le trajet connu : chacun décide de se
+          // masquer, son contexte (d'où partent ses actions) reste stable.
+          actions: [
+            _LiveTrip(
+              tripId: id,
+              known: _known,
+              builder: (context, live, isOwner) =>
+                  isOwner && canShareTripPoster(live.trip)
+                  ? IconButton(
+                      key: const Key('trip-owner-share-button'),
+                      tooltip: context.l10n.tripPosterShareButton,
+                      icon: const DonyIcon('share-2', size: 22),
+                      onPressed: () => openTripPoster(context, live.trip),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            _LiveTrip(
+              tripId: id,
+              known: _known,
+              builder: (context, live, isOwner) => TripOwnerOptionsButton(
+                trip: live.trip,
+                bids: live.bids,
+                isOwner: isOwner,
+              ),
+            ),
+          ],
+        ),
+        body: MultiBlocListener(
+          listeners: [
+            BlocListener<AuthBloc, AuthState>(
+              listener: (context, _) {
+                final a = _current;
+                if (a != null) {
+                  _evaluateViewer(context, a);
+                }
+              },
+            ),
+            BlocListener<BidBloc, BidState>(listener: _onBidState),
+            BlocListener<CancellationBloc, CancellationState>(
+              listener: _onCancellationState,
+            ),
+            // « Je pars » confirmé, sheet ouvert ou déjà refermé pendant
+            // l'appel : la confirmation part de l'écran (le message est
+            // dédoublonné avec celle du bouton du sheet).
+            BlocListener<TripDepartCubit, TripDepartState>(
+              listenWhen: (a, b) => !a.departed && b.departed,
+              listener: (context, _) => DonySnackbar.show(
+                context,
+                message: context.l10n.tripDepartConfirmedSnackbar,
+                type: DonySnackbarType.success,
+              ),
+            ),
+          ],
+          child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
+            listener: _onAnnouncementState,
             builder: (context, state) {
               final a = state is AnnouncementDetailLoaded
                   ? state.announcement
-                  : (_current ?? widget.initial);
-              if (a == null ||
-                  !_isOwner(context, a) ||
-                  !canShareTripPoster(a)) {
-                return const SizedBox.shrink();
+                  : _known();
+              if (a == null) {
+                // Détail en échec sans trajet à montrer (ouvert par une
+                // notification ou un lien, sans `extra`) : un état d'erreur
+                // avec « Réessayer » plutôt qu'un squelette sans fin.
+                if (state is AnnouncementError) {
+                  return _LoadError(
+                    error: state.error,
+                    onRetry: () => context.read<AnnouncementBloc>().add(
+                      AnnouncementDetailRequested(id),
+                    ),
+                  );
+                }
+                return const DonyDetailSkeleton();
               }
-              return IconButton(
-                key: const Key('trip-owner-share-button'),
-                tooltip: context.l10n.tripPosterShareButton,
-                icon: const DonyIcon('share-2', size: 22),
-                onPressed: () => openTripPoster(context, a),
+              return _OwnerOf(
+                trip: a,
+                builder: (context, isOwner) {
+                  if (isOwner) {
+                    _askTrackingConsentOnce(a);
+                  }
+                  return TripOwnerBody(
+                    trip: a,
+                    isOwner: isOwner,
+                    bottomPadding: safeBottom,
+                  );
+                },
               );
             },
           ),
-        ],
+        ),
+        bottomNavigationBar: _LiveTrip(
+          tripId: id,
+          known: _known,
+          builder: (context, live, isOwner) => TripOwnerStickyBar(
+            trip: live.trip,
+            bids: live.bids,
+            isOwner: isOwner,
+          ),
+        ),
       ),
-      body: MultiBlocListener(
-        listeners: [
-          BlocListener<AuthBloc, AuthState>(
-            listener: (context, _) {
-              final a = _current;
-              if (a != null) {
-                _evaluateViewer(context, a);
-              }
-            },
+    );
+  }
+
+  /// Suites des actions du trajet (pied, menu, sheets) et relectures.
+  void _onAnnouncementState(BuildContext context, AnnouncementState state) {
+    final id = widget.announcementId;
+    if (state is AnnouncementDetailLoaded) {
+      _current = state.announcement;
+      _detailModel = state.announcement;
+      _evaluateViewer(context, state.announcement);
+    } else if (state is AnnouncementUpdated) {
+      _current = state.announcement;
+    } else if (state is AnnouncementTripArrived) {
+      _current = state.announcement;
+      _notifyAfterArrival = true;
+      // Pas silencieuse : un échec doit abandonner l'ouverture automatique
+      // de « Prévenir les destinataires » (BidError).
+      context.read<BidBloc>().add(BidListRequested(id));
+    } else if (state is AnnouncementRescheduled) {
+      _current = state.announcement;
+      context.read<BidBloc>().add(BidListRequested(id, silent: true));
+    } else if (state is AnnouncementArrivalInstructionsUpdated) {
+      _current = state.announcement;
+      context.read<BidBloc>().add(BidListRequested(id, silent: true));
+    }
+    if (state is AnnouncementDeleted) {
+      DonySnackbar.show(
+        context,
+        message: state.followingFailed > 0
+            ? context.l10n.tripLegsFollowingFailed(state.followingFailed)
+            : context.l10n.tripOwnerDeletedSnackbar,
+        type: state.followingFailed > 0
+            ? DonySnackbarType.warning
+            : DonySnackbarType.success,
+      );
+      if (context.mounted) {
+        context.pop(true);
+      }
+    } else if (state is AnnouncementNotFound) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.listingAnnouncementGoneMessage,
+        type: DonySnackbarType.warning,
+      );
+      if (context.mounted) {
+        context.pop(true);
+      }
+    } else if (state is AnnouncementDeleteBlockedByAcceptedBid) {
+      unawaited(_onDeleteBlocked(context, state.announcementId));
+    } else if (state is AnnouncementPublished) {
+      _current = state.announcement;
+      context.read<AnnouncementBloc>().add(AnnouncementDetailRequested(id));
+      _showPublished(context, state.announcement);
+    } else if (state is AnnouncementKycRequired) {
+      DonySnackbar.show(
+        context,
+        message: ErrorPresenter.resolve(
+          state.error,
+          l10n: context.l10n,
+        ).message,
+        type: DonySnackbarType.warning,
+      );
+      context.push('/kyc/status');
+    } else if (state is AnnouncementDepartureDatePassed) {
+      DonySnackbar.show(
+        context,
+        message: ErrorPresenter.resolve(
+          state.error,
+          l10n: context.l10n,
+        ).message,
+        type: DonySnackbarType.warning,
+      );
+      unawaited(_onDepartureDatePassed(context));
+    } else if (state is AnnouncementProLimitReached) {
+      unawaited(_onProLimitReached(context, state.error));
+    } else if (state is AnnouncementError) {
+      // Sans trajet affiché, l'état d'erreur de l'écran le dit déjà.
+      if (_known() != null) ErrorPresenter.show(context, state.error);
+    }
+  }
+
+  /// Écran de succès « Trajet publié » (brouillon publié depuis le pied).
+  void _showPublished(BuildContext context, AnnouncementModel published) {
+    final l = context.l10n;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (routeContext) => DonySuccessScreen(
+          mascotteType: DonyMascotteType.succes,
+          title: l.tripOwnerPublishedTitle,
+          subtitle: l.tripOwnerPublishedSubtitle(
+            published.departureCity,
+            published.arrivalCity,
           ),
-          BlocListener<BidBloc, BidState>(listener: _onBidState),
-          BlocListener<CancellationBloc, CancellationState>(
-            listener: _onCancellationState,
+          ctaLabel: l.commonContinue,
+          ctaVariant: DonyButtonVariant.accent,
+          onCta: () => Navigator.of(
+            routeContext,
+          ).pop(), // revient au détail, déjà rafraîchi
+          analyticsContext: 'trip_draft_published',
+          secondaryLabel: l.tripOwnerShareMyTrip,
+          onSecondary: () => unawaited(
+            Share.share(
+              l.tripOwnerShareMessage(
+                published.departureCity,
+                published.arrivalCity,
+                DateFormat.MMMMd(l.localeName).format(published.departureDate),
+                '$posterShareBaseUrl/annonce/${published.id}',
+              ),
+              sharePositionOrigin: sharePositionOriginFor(routeContext),
+            ),
           ),
-        ],
-        child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
-          listener: (context, state) {
-            if (state is AnnouncementDetailLoaded) {
-              _current = state.announcement;
-              _detailModel = state.announcement;
-              _evaluateViewer(context, state.announcement);
-            } else if (state is AnnouncementUpdated) {
-              _current = state.announcement;
-            } else if (state is AnnouncementTripArrived) {
-              _current = state.announcement;
-              _notifyAfterArrival = true;
-              context.read<BidBloc>().add(
-                BidListRequested(widget.announcementId),
-              );
-            } else if (state is AnnouncementRescheduled) {
-              _current = state.announcement;
-              context.read<BidBloc>().add(
-                BidListRequested(widget.announcementId),
-              );
-            } else if (state is AnnouncementArrivalInstructionsUpdated) {
-              _current = state.announcement;
-              context.read<BidBloc>().add(
-                BidListRequested(widget.announcementId),
-              );
-            }
-            if (state is AnnouncementDeleted) {
-              DonySnackbar.show(
-                context,
-                message: state.followingFailed > 0
-                    ? context.l10n.tripLegsFollowingFailed(
-                        state.followingFailed,
-                      )
-                    : context.l10n.tripOwnerDeletedSnackbar,
-                type: state.followingFailed > 0
-                    ? DonySnackbarType.warning
-                    : DonySnackbarType.success,
-              );
-              if (context.mounted) {
-                context.pop(true);
-              }
-            } else if (state is AnnouncementNotFound) {
-              DonySnackbar.show(
-                context,
-                message: context.l10n.listingAnnouncementGoneMessage,
-                type: DonySnackbarType.warning,
-              );
-              if (context.mounted) {
-                context.pop(true);
-              }
-            } else if (state is AnnouncementDeleteBlockedByAcceptedBid) {
-              unawaited(_onDeleteBlocked(context, state.announcementId));
-            } else if (state is AnnouncementPublished) {
-              _current = state.announcement;
-              context.read<AnnouncementBloc>().add(
-                AnnouncementDetailRequested(widget.announcementId),
-              );
-              final l = context.l10n;
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (routeContext) => DonySuccessScreen(
-                    mascotteType: DonyMascotteType.succes,
-                    title: l.tripOwnerPublishedTitle,
-                    subtitle: l.tripOwnerPublishedSubtitle(
-                      state.announcement.departureCity,
-                      state.announcement.arrivalCity,
-                    ),
-                    ctaLabel: l.commonContinue,
-                    ctaVariant: DonyButtonVariant.accent,
-                    onCta: () => Navigator.of(
-                      routeContext,
-                    ).pop(), // revient au détail, déjà rafraîchi
-                    analyticsContext: 'trip_draft_published',
-                    secondaryLabel: l.tripOwnerShareMyTrip,
-                    onSecondary: () => unawaited(
-                      Share.share(
-                        l.tripOwnerShareMessage(
-                          state.announcement.departureCity,
-                          state.announcement.arrivalCity,
-                          DateFormat.MMMMd(
-                            l.localeName,
-                          ).format(state.announcement.departureDate),
-                          '$posterShareBaseUrl/annonce/${state.announcement.id}',
-                        ),
-                        sharePositionOrigin: sharePositionOriginFor(
-                          routeContext,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            } else if (state is AnnouncementKycRequired) {
-              DonySnackbar.show(
-                context,
-                message: ErrorPresenter.resolve(
-                  state.error,
-                  l10n: context.l10n,
-                ).message,
-                type: DonySnackbarType.warning,
-              );
-              context.push('/kyc/status');
-            } else if (state is AnnouncementDepartureDatePassed) {
-              DonySnackbar.show(
-                context,
-                message: ErrorPresenter.resolve(
-                  state.error,
-                  l10n: context.l10n,
-                ).message,
-                type: DonySnackbarType.warning,
-              );
-              unawaited(_onDepartureDatePassed(context));
-            } else if (state is AnnouncementProLimitReached) {
-              unawaited(_onProLimitReached(context, state.error));
-            } else if (state is AnnouncementError) {
-              ErrorPresenter.show(context, state.error);
-            }
-          },
-          builder: (context, state) {
-            final a = state is AnnouncementDetailLoaded
-                ? state.announcement
-                : (_current ?? widget.initial);
-            if (a == null) {
-              return const DonyDetailSkeleton();
-            }
-            final isOwner = _isOwner(context, a);
-            if (isOwner) {
-              _askTrackingConsentOnce(a);
-            }
-            final summary = isOwner ? a.parcelsSummary : null;
-            final hasSummary = summary != null && summary.count > 0;
-            return SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.md,
-                DonySpacing.lg,
-                DonySpacing.lg + safeBottom,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (a.status == 'DRAFT') ...[
-                    DonyStatusBanner(
-                      type: DonyStatusBannerType.warning,
-                      title: context.l10n.tripOwnerDraftBannerTitle,
-                      message: context.l10n.tripOwnerDraftBannerMessage,
-                    ),
-                    const SizedBox(height: DonySpacing.md),
-                  ],
-                  AnnouncementDetailBody(
-                    a: a,
-                    onEnableCardOnTrip: isOwner
-                        ? () => unawaited(_openEditToEnableCard(context))
-                        : null,
-                  ),
-                  const SizedBox(height: DonySpacing.lg),
-                  // Voyage à plusieurs étapes (FLUTTER-4D).
-                  TripLegsCard(
-                    announcementId: a.id,
-                    padding: const EdgeInsets.only(bottom: DonySpacing.lg),
-                    onOpenLeg: (leg) =>
-                        context.push('/announcements/${leg.id}/trip'),
-                  ),
-                  if (hasSummary) ...[
-                    TripSummaryCard(summary: summary),
-                    if (a.trackingActive) ...[
-                      const SizedBox(height: DonySpacing.md),
-                      TripDepartButton(announcementId: a.id),
-                    ],
-                    const SizedBox(height: DonySpacing.lg),
-                  ],
-                  if (isOwner) TripAudienceSection(announcementId: a.id),
-                  OwnerActionGrid(a: a, isOwner: isOwner),
-                  const SizedBox(height: DonySpacing.lg),
-                  TripParcelsSection(announcementId: a.id),
-                  // Relecture du texte envoyé aux expéditeurs : le voyageur ne
-                  // le voyait que dans la feuille d'édition, qui disparaît avec
-                  // le dernier colis actif.
-                  if (isOwner &&
-                      ArrivalInstructionsCard.hasText(a.arrivalInstructions))
-                    Padding(
-                      padding: const EdgeInsets.only(top: DonySpacing.md),
-                      child: ArrivalInstructionsCard(
-                        instructions: a.arrivalInstructions!,
-                      ),
-                    ),
-                  BlocBuilder<BidBloc, BidState>(
-                    builder: (context, bidState) {
-                      if (!isOwner || bidState is! BidListLoaded) {
-                        return const SizedBox.shrink();
-                      }
-                      final cta = tripArrivalCtaFor(bidState.bids);
-                      final toNotify = recipientsToNotify(bidState.bids);
-                      if (cta == null && toNotify.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      final isEditing = cta == TripArrivalCta.editInstructions;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (cta != null)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                top: DonySpacing.md,
-                              ),
-                              child: DonyButton(
-                                label: isEditing
-                                    ? context
-                                          .l10n
-                                          .tripOwnerEditInstructionsButton
-                                    : context.l10n.tripOwnerMarkArrivedButton,
-                                variant: isEditing
-                                    ? DonyButtonVariant.secondary
-                                    : DonyButtonVariant.primary,
-                                onPressed: () =>
-                                    ArrivalInstructionsBottomSheet.show(
-                                      context,
-                                      announcementId: a.id,
-                                      initialInstructions:
-                                          a.arrivalInstructions,
-                                      isEditing: isEditing,
-                                    ),
-                              ),
-                            ),
-                          // Destinataires des colis remis, en transit ou
-                          // arrivés : message pré-rempli WhatsApp / SMS, ou
-                          // appel.
-                          if (toNotify.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                top: DonySpacing.sm,
-                              ),
-                              child: DonyButton(
-                                key: const Key('notify-recipients-button'),
-                                label: context.l10n.notifyRecipientsButton(
-                                  toNotify.length,
-                                ),
-                                iconAsset: 'message-circle',
-                                variant: DonyButtonVariant.ghost,
-                                onPressed: () => NotifyRecipientsSheet.show(
-                                  context,
-                                  bids: bidState.bids,
-                                  source: NotifyRecipientsSource.manual,
-                                  instructions: a.arrivalInstructions,
-                                ),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
         ),
       ),
     );
@@ -523,22 +458,6 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     }
   }
 
-  /// Détermine si l'utilisateur courant est le voyageur propriétaire du trajet.
-  ///
-  /// Lit l'`AuthBloc` global (fourni par l'app, instance unique). En l'absence
-  /// d'utilisateur authentifié — ou si le provider n'est pas dans l'arbre —
-  /// considère que ce n'est pas le propriétaire (sécurité non-propriétaire).
-  bool _isOwner(BuildContext context, AnnouncementModel a) {
-    AuthState authState;
-    try {
-      authState = context.read<AuthBloc>().state;
-    } catch (_) {
-      return false;
-    }
-    final currentUserId = authState.currentUserId;
-    return currentUserId != null && a.travelerId == currentUserId;
-  }
-
   /// Issue de l'annulation du trajet, envoyée depuis [CancellationBottomSheet]
   /// une fois la feuille fermée : l'écran se recharge pour montrer le trajet
   /// et ses colis annulés. Sans cela, il restait affiché tel quel et le
@@ -557,7 +476,9 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
       context.read<AnnouncementBloc>().add(
         AnnouncementDetailRequested(widget.announcementId),
       );
-      context.read<BidBloc>().add(BidListRequested(widget.announcementId));
+      context.read<BidBloc>().add(
+        BidListRequested(widget.announcementId, silent: true),
+      );
     } else if (state is CancellationError) {
       ErrorPresenter.show(context, state.error);
     }
@@ -597,25 +518,6 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     }
   }
 
-  /// Trajet publié en espèces avant l'activation de Stripe : l'édition
-  /// propose désormais la carte (statut rechargé à l'ouverture), puis le
-  /// détail est relu pour que l'encart disparaisse (Sentry FLUTTER-DH).
-  Future<void> _openEditToEnableCard(BuildContext context) async {
-    final current = _current;
-    if (current == null) {
-      return;
-    }
-    final changed = await context.push<bool>(
-      '/trips/create',
-      extra: CreateTripArgs(announcement: current),
-    );
-    if ((changed ?? false) && context.mounted) {
-      context.read<AnnouncementBloc>().add(
-        AnnouncementDetailRequested(widget.announcementId),
-      );
-    }
-  }
-
   /// La date de départ est passée : publication refusée tant que
   /// l'utilisateur ne corrige pas la date. Ouvre directement l'édition.
   Future<void> _onDepartureDatePassed(BuildContext context) async {
@@ -648,5 +550,94 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     if (goPro && context.mounted) {
       unawaited(context.push('/profile/upgrade-to-pro'));
     }
+  }
+}
+
+/// Rend [builder] avec les dernières données du trajet [tripId] (trajet relu,
+/// derniers colis chargés, [TripTodoLive]) et le verdict de propriété, dès
+/// que le trajet est connu ([known] : `extra` ou dernier relu). Une fois le
+/// trajet connu, le widget rendu reste monté : la barre d'application et le
+/// pied gardent un contexte stable, d'où partent leurs actions.
+class _LiveTrip extends StatelessWidget {
+  const _LiveTrip({
+    required this.tripId,
+    required this.known,
+    required this.builder,
+  });
+
+  final String tripId;
+  final AnnouncementModel? Function() known;
+  final Widget Function(
+    BuildContext context,
+    TripTodoLiveData live,
+    bool isOwner,
+  )
+  builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AnnouncementBloc, AnnouncementState>(
+      buildWhen: (_, state) => tripAnnouncementIn(state, tripId) != null,
+      builder: (context, state) {
+        final trip = tripAnnouncementIn(state, tripId) ?? known();
+        if (trip == null) return const SizedBox.shrink();
+        return TripTodoLive(
+          trip: trip,
+          blocs: TripTodoBlocs.of(context),
+          builder: (context, live) => _OwnerOf(
+            trip: live.trip,
+            builder: (context, isOwner) => builder(context, live, isOwner),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Le voyageur connecté est-il le propriétaire de [trip] ? Suit l'`AuthBloc`
+/// global : une session qui se tranche après l'ouverture (démarrage à froid
+/// par un lien) reconstruit le verdict. Sans `AuthBloc` dans l'arbre, ou
+/// tant que la session n'est pas tranchée : non (rien du voyageur ne fuit).
+class _OwnerOf extends StatelessWidget {
+  const _OwnerOf({required this.trip, required this.builder});
+
+  final AnnouncementModel trip;
+  final Widget Function(BuildContext context, bool isOwner) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    if (maybeRead<AuthBloc>(context) == null) return builder(context, false);
+    return BlocBuilder<AuthBloc, AuthState>(
+      buildWhen: (a, b) => a.currentUserId != b.currentUserId,
+      builder: (context, auth) {
+        final userId = auth.currentUserId;
+        return builder(context, userId != null && trip.travelerId == userId);
+      },
+    );
+  }
+}
+
+/// Détail du trajet introuvable faute de réseau (ou refusé) alors qu'aucun
+/// trajet n'est affiché : le motif et « Réessayer ».
+class _LoadError extends StatelessWidget {
+  const _LoadError({required this.error, required this.onRetry});
+
+  final AppException error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Center(
+      child: DonyEmptyState(
+        key: const Key('trip-owner-load-error'),
+        type: DonyEmptyStateType.error,
+        iconAsset: 'circle-alert',
+        title: l.commonLoadError,
+        description: ErrorPresenter.resolve(error, l10n: l).message,
+        actionLabel: l.commonRetry,
+        onAction: onRetry,
+      ),
+    );
   }
 }

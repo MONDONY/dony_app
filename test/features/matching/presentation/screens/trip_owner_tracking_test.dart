@@ -313,19 +313,34 @@ void main() {
     });
   });
 
+  // « Je pars » : tuile « À traiter » de l'écran, qui ouvre son sheet ; le
+  // bouton du pied du sheet part sur le TripDepartCubit fourni par l'écran.
   group('je pars', () {
+    const departTile = Key('trip_owner-todo-depart');
+
+    Future<void> openDepart(WidgetTester tester) async {
+      await tester.ensureVisible(find.byKey(departTile));
+      await tester.tap(find.byKey(departTile));
+      await settle(tester);
+      expect(find.byKey(departKey), findsOneWidget);
+    }
+
     testWidgets('departSendsPositionWhenGranted', (tester) async {
       when(
         () => consent.ensureAsked(any(), source: any(named: 'source')),
       ).thenAnswer((_) async => true);
       await pump(tester, _ann(trackingActive: true, summary: _summary));
-      await tester.ensureVisible(find.byKey(departKey));
+      await openDepart(tester);
       await tester.tap(find.byKey(departKey));
       await settle(tester);
       verify(
         () => tracking.depart('ann-trip-001', lat: 48.85, lon: 2.35),
       ).called(1);
+      // Départ confirmé : confirmation, le sheet se ferme et la tuile
+      // disparaît (même cubit pour l'écran et le sheet).
+      expect(find.text("C'est noté, bon voyage !"), findsOneWidget);
       expect(find.byKey(departKey), findsNothing);
+      expect(find.byKey(departTile), findsNothing);
     });
 
     testWidgets('departWithoutPositionStillCallsApi', (tester) async {
@@ -336,7 +351,7 @@ void main() {
         () => locator.captureCoordinatesIfGranted(),
       ).thenAnswer((_) async => null);
       await pump(tester, _ann(trackingActive: true, summary: _summary));
-      await tester.ensureVisible(find.byKey(departKey));
+      await openDepart(tester);
       await tester.tap(find.byKey(departKey));
       await settle(tester);
       verify(() => tracking.depart('ann-trip-001')).called(1);
@@ -350,7 +365,7 @@ void main() {
         () => locator.captureCoordinatesIfGranted(),
       ).thenAnswer((_) async => null);
       await pump(tester, _ann(trackingActive: true, summary: _summary));
-      await tester.ensureVisible(find.byKey(departKey));
+      await openDepart(tester);
       await tester.tap(find.byKey(departKey));
       await settle(tester);
       verify(
@@ -359,20 +374,55 @@ void main() {
       verify(() => tracking.depart('ann-trip-001')).called(1);
     });
 
-    testWidgets('departButtonHiddenAfterConfirmation', (tester) async {
+    testWidgets('sheetClosedDuringDepartStillConfirmsOnScreen', (tester) async {
+      final reply = Completer<void>();
+      when(
+        () => tracking.depart(
+          any(),
+          lat: any(named: 'lat'),
+          lon: any(named: 'lon'),
+        ),
+      ).thenAnswer((_) => reply.future);
+      await pump(tester, _ann(trackingActive: true, summary: _summary));
+      await openDepart(tester);
+      await tester.tap(find.byKey(departKey));
+      await tester.pump();
+      // Le voyageur referme le sheet, réponse encore en vol.
+      await tester.tapAt(const Offset(5, 5));
+      await settle(tester);
+      expect(find.byKey(departKey), findsNothing);
+
+      reply.complete();
+      await settle(tester);
+      expect(find.text("C'est noté, bon voyage !"), findsOneWidget);
+      expect(find.byKey(departTile), findsNothing);
+    });
+
+    testWidgets('departTileHiddenAfterConfirmation', (tester) async {
       stored['${HiveService.kTripDepartedPrefix}ann-trip-001'] = true;
       await pump(tester, _ann(trackingActive: true, summary: _summary));
-      expect(find.byKey(departKey), findsNothing);
+      expect(find.byKey(departTile), findsNothing);
     });
 
-    testWidgets('departButtonHiddenWithoutTrackingActive', (tester) async {
+    testWidgets('departTileHiddenWithoutTrackingActive', (tester) async {
       await pump(tester, _ann(summary: _summary));
-      expect(find.byKey(departKey), findsNothing);
+      expect(find.byKey(departTile), findsNothing);
     });
 
-    testWidgets('departButtonHiddenWithoutParcelsSummary', (tester) async {
+    testWidgets('departTileHiddenWithoutParcelsSummary', (tester) async {
       await pump(tester, _ann(trackingActive: true));
-      expect(find.byKey(departKey), findsNothing);
+      expect(find.byKey(departTile), findsNothing);
+    });
+
+    // Piège n°1 de l'inventaire : le détail ne sert pas encore
+    // `trackingActive` (contrat ancien). Un détail relu sans lui retire la
+    // tuile, rien ne casse.
+    testWidgets('detailWithoutTrackingActiveHidesTileWithoutError', (
+      tester,
+    ) async {
+      await pump(tester, _ann(summary: _summary));
+      expect(find.byKey(departTile), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 

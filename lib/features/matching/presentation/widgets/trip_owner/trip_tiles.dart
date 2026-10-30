@@ -1,8 +1,8 @@
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
-import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_detail_sections.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/l10n/l10n.dart';
 
 /// Tuiles de la grille « Votre trajet » de l'écran du trajet vu par son
