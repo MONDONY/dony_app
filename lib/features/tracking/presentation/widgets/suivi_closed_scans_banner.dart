@@ -6,9 +6,10 @@ import 'package:flutter/material.dart';
 
 /// Remises scannées hors ligne puis refusées à la synchronisation : le colis
 /// a été clos entre-temps (absence de l'expéditeur confirmée, annulation),
-/// le back a répondu 422 `bid-not-accepted` et prévenu l'équipe. L'étape a
-/// quitté la file ; le voyageur en est prévenu jusqu'à ce qu'il ferme le
-/// message.
+/// le back a répondu 422 `bid-not-accepted`. L'étape a quitté la file ; le
+/// voyageur en est prévenu jusqu'à ce qu'il ferme le message. Le texte ne
+/// promet pas d'alerte de l'équipe : le back n'en lève que dans quelques cas
+/// (colis annulé pour absence, preuve valide).
 class SuiviClosedScansBanner extends StatelessWidget {
   const SuiviClosedScansBanner({super.key, required this.bidIds, this.sync});
 

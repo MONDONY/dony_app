@@ -31021,10 +31021,10 @@ abstract class AppLocalizations {
   /// **'Fermer le message sur la photo perdue'**
   String get suiviPhotoLostDismiss;
 
-  /// Onglet Suivi : une remise (DEPART) scannée hors ligne a été refusée à la synchronisation (422 bid-not-accepted) parce que le colis a été clos entre-temps (absence confirmée, annulation). Le back a prévenu l'équipe (suivi_closed_scans_banner.dart).
+  /// Onglet Suivi : une remise (DEPART) scannée hors ligne a été refusée à la synchronisation (422 bid-not-accepted) parce que le colis a été clos entre-temps (absence confirmée, annulation). Ne jamais promettre une alerte de l'équipe : le back n'alerte que dans quelques cas (suivi_closed_scans_banner.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ce colis a été clos avant la synchronisation de votre scan. L\'équipe Yadony a été prévenue.'**
+  /// **'Ce colis a été clos avant la synchronisation de votre scan. Si vous avez le colis, contactez le support.'**
   String get suiviScanClosedBeforeSync;
 
   /// Libellé d'accessibilité du bouton qui ferme le message de remise refusée à la synchronisation (onglet Suivi)

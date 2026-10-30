@@ -308,8 +308,8 @@ class OfflineSyncService {
   }
 
   /// Remise (DEPART) hors ligne arrivée après la clôture du colis : le back
-  /// la refuse (422 `bid-not-accepted`) et prévient l'équipe. Le voyageur en
-  /// est prévenu dans l'onglet Suivi, une fois par colis.
+  /// la refuse (422 `bid-not-accepted`). Le voyageur en est prévenu dans
+  /// l'onglet Suivi, une fois par colis.
   Future<void> _reportClosedScan(String bidId) async {
     final known = _closedScans();
     if (known.contains(bidId)) return;

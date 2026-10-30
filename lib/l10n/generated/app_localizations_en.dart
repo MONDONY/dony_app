@@ -18994,7 +18994,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suiviScanClosedBeforeSync =>
-      'This parcel was closed before your scan synced. The Yadony team has been notified.';
+      'This parcel was closed before your scan synced. If you have the parcel, contact support.';
 
   @override
   String get suiviScanClosedBeforeSyncDismiss =>

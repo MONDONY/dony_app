@@ -48,7 +48,7 @@ void main() {
     expect(
       find.text(
         'Ce colis a été clos avant la synchronisation de votre scan. '
-        "L'équipe Yadony a été prévenue.",
+        'Si vous avez le colis, contactez le support.',
       ),
       findsOneWidget,
     );
@@ -61,11 +61,36 @@ void main() {
     expect(
       find.text(
         'This parcel was closed before your scan synced. '
-        'The Yadony team has been notified.',
+        'If you have the parcel, contact support.',
       ),
       findsOneWidget,
     );
   });
+
+  // Le back n'alerte l'équipe que dans quelques cas (colis annulé pour
+  // absence, preuve valide) : le message ne doit jamais le promettre.
+  for (final locale in [AppL10n.fr, AppL10n.en]) {
+    testWidgets(
+      'ne promet aucune alerte de l\'équipe (${locale.languageCode})',
+      (tester) async {
+        await pump(tester, locale: locale);
+        final text = tester
+            .widgetList<Text>(find.byType(Text))
+            .map((t) => t.data ?? '')
+            .join(' ')
+            .toLowerCase();
+        for (final promise in [
+          'prévenu',
+          'averti',
+          'alert',
+          'notified',
+          'informed',
+        ]) {
+          expect(text, isNot(contains(promise)), reason: promise);
+        }
+      },
+    );
+  }
 
   testWidgets('le bouton de fermeture retire le message', (tester) async {
     await pump(tester);

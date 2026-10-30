@@ -9875,7 +9875,7 @@
   "@suiviPhotoLost": {"description": "Onglet Suivi : une étape de la file hors ligne est partie sans sa photo, dont le fichier local a disparu (cache purgé, FLUTTER-MJ). step = libellé d'étape traduit.", "placeholders": {"step": {"type": "String"}}},
   "suiviPhotoLostDismiss": "Close the lost photo message",
   "@suiviPhotoLostDismiss": {"description": "Libellé d'accessibilité du bouton qui ferme le message de photo perdue (onglet Suivi)"},
-  "suiviScanClosedBeforeSync": "This parcel was closed before your scan synced. The Yadony team has been notified.",
+  "suiviScanClosedBeforeSync": "This parcel was closed before your scan synced. If you have the parcel, contact support.",
   "suiviScanClosedBeforeSyncDismiss": "Close the unsynced scan message",
   "authRequiredFlightAlertSubtitle": "Get an alert when the price drops",
   "@authRequiredFlightAlertSubtitle": {"description": "Feuille compte requis : un visiteur veut créer ou voir des alertes prix de billets."},

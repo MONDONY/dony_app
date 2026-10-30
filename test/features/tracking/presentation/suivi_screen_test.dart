@@ -1254,7 +1254,7 @@ void main() {
       expect(
         text(
           'Ce colis a été clos avant la synchronisation de votre scan. '
-          "L'équipe Yadony a été prévenue.",
+          'Si vous avez le colis, contactez le support.',
         ),
         findsOneWidget,
       );

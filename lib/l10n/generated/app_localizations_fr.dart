@@ -19136,7 +19136,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get suiviScanClosedBeforeSync =>
-      'Ce colis a été clos avant la synchronisation de votre scan. L\'équipe Yadony a été prévenue.';
+      'Ce colis a été clos avant la synchronisation de votre scan. Si vous avez le colis, contactez le support.';
 
   @override
   String get suiviScanClosedBeforeSyncDismiss =>
