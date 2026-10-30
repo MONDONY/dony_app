@@ -162,7 +162,8 @@ void main() {
       ),
     ).called(1);
     expect(find.text('Home route'), findsOneWidget);
-    verify(() => activation.load()).called(greaterThanOrEqualTo(1));
+    // initState (1) puis le rechargement après `saved` (2).
+    verify(() => activation.load()).called(2);
     verify(
       () =>
           backend.capture(AnalyticsEvents.firstStepsChoice, {'choice': 'send'}),
@@ -240,6 +241,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Home route'), findsOneWidget);
+    // Pas de rechargement sur `error` : seul l'appel d'initState a eu lieu.
+    verify(() => activation.load()).called(1);
+    verify(
+      () =>
+          backend.capture(AnalyticsEvents.firstStepsChoice, {'choice': 'send'}),
+    ).called(1);
   });
 
   testWidgets('markOnboardingSeen est appelé une fois à l\'affichage', (
@@ -258,10 +265,24 @@ void main() {
     ) async {
       await pump(tester, locale: locale, size: const Size(360, 800));
       expect(tester.takeException(), isNull);
-      final button = find.byKey(const Key('first-steps-later'));
-      expect(tester.getSize(button).height, 52);
-      final label = find.descendant(of: button, matching: find.byType(Text));
-      expect(tester.getSize(label).height, lessThan(24));
+      for (final key in const ['first-steps-browse', 'first-steps-later']) {
+        final button = find.byKey(Key(key));
+        expect(tester.getSize(button).height, 52, reason: key);
+        final label = find.descendant(of: button, matching: find.byType(Text));
+        expect(tester.getSize(label).height, lessThan(24), reason: key);
+      }
+      // Cartes : la police de test (Ahem) est plus large que la vraie, un
+      // titre peut y passer à la ligne ; il doit rester dans sa carte.
+      for (final key in const ['first-steps-send', 'first-steps-travel']) {
+        final card = find.byKey(Key(key));
+        final title = find
+            .descendant(of: card, matching: find.byType(Text))
+            .first;
+        final cardRect = tester.getRect(card);
+        final titleRect = tester.getRect(title);
+        expect(cardRect.contains(titleRect.topLeft), isTrue, reason: key);
+        expect(cardRect.contains(titleRect.bottomRight), isTrue, reason: key);
+      }
     });
   }
 
