@@ -56,17 +56,15 @@ class AmendmentPayButton extends StatelessWidget {
   final AmendmentMobileMoneyOpener? openMobileMoney;
   final AnalyticsService? analytics;
 
-  /// Modification à payer maintenant : acceptée par le voyageur, en attente du
-  /// dépôt mobile money de l'expéditeur. `null` sinon.
-  static BidAmendment? payable(BidModel bid) {
-    for (final a in bid.amendments) {
-      if (a.status == BidAmendmentStatus.paymentPending &&
-          a.rail == BidAmendment.railPawapay) {
-        return a;
-      }
-    }
-    return null;
-  }
+  /// [a] est à payer maintenant : acceptée par le voyageur, en attente du
+  /// dépôt mobile money de l'expéditeur.
+  static bool isPayable(BidAmendment a) =>
+      a.status == BidAmendmentStatus.paymentPending &&
+      a.rail == BidAmendment.railPawapay;
+
+  /// Modification à payer maintenant ([isPayable]), `null` sinon.
+  static BidAmendment? payable(BidModel bid) =>
+      bid.amendments.where(isPayable).firstOrNull;
 
   static bool canPay(BidModel bid) => payable(bid) != null;
 

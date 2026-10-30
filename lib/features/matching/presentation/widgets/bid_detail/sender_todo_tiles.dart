@@ -37,8 +37,14 @@ enum SenderTodoTile {
 /// Les conditions sont celles qui rangeaient jusqu'ici la carte sous
 /// « À traiter » ; hors de ces cas, la carte reste une information du corps
 /// (report déjà décidé) ou n'existe pas.
-List<SenderTodoTile> senderTodoTilesFor(BidModel bid) => [
-  if (AmendmentSenderCard.needsReply(bid)) SenderTodoTile.amendment,
+///
+/// [open] : la modification ouverte de [bid] ([openAmendmentOf]) quand
+/// l'appelant l'a déjà lue (le corps la lit une fois par construction) ;
+/// relue sinon. Même règle pour les fonctions suivantes.
+List<SenderTodoTile> senderTodoTilesFor(BidModel bid, {BidAmendment? open}) => [
+  if (senderAmendmentGesture(open ?? openAmendmentOf(bid)) !=
+      SenderAmendmentGesture.none)
+    SenderTodoTile.amendment,
   if (TripRescheduleCard.needsReply(bid)) SenderTodoTile.reschedule,
   if (PrevenirDestinataire.showsDeclined(bid)) SenderTodoTile.recipient,
 ];
@@ -52,28 +58,35 @@ String senderTodoTitle(AppLocalizations l, SenderTodoTile tile) =>
       SenderTodoTile.recipient => l.recipientDeclinedSenderTitle,
     };
 
-/// Pastille de la tuile. Modification : l'état de la demande, puisque c'est
-/// le voyageur qui répond (« En attente », seul geste : annuler) ou que le
-/// paiement est attendu (« Paiement attendu »). Autres tuiles : « Réponse
-/// attendue ».
-String senderTodoBadge(AppLocalizations l, BidModel bid, SenderTodoTile tile) =>
-    switch (tile) {
-      SenderTodoTile.amendment =>
-        AmendmentSenderCard.openRequest(bid)?.status ==
-                BidAmendmentStatus.paymentPending
-            ? l.senderTodoAmendmentBadgePaymentDue
-            : l.senderTodoAmendmentBadgePending,
-      SenderTodoTile.reschedule ||
-      SenderTodoTile.recipient => l.todoTileBadgeReplyNeeded,
-    };
+/// Pastille de la tuile. Modification : selon le geste attendu, « Paiement
+/// attendu » (payer) ou « En attente » (c'est le voyageur qui répond, seul
+/// geste : annuler). Autres tuiles : « Réponse attendue ».
+String senderTodoBadge(
+  AppLocalizations l,
+  BidModel bid,
+  SenderTodoTile tile, {
+  BidAmendment? open,
+}) => switch (tile) {
+  SenderTodoTile.amendment =>
+    senderAmendmentGesture(open ?? openAmendmentOf(bid)) ==
+            SenderAmendmentGesture.pay
+        ? l.senderTodoAmendmentBadgePaymentDue
+        : l.senderTodoAmendmentBadgePending,
+  SenderTodoTile.reschedule ||
+  SenderTodoTile.recipient => l.todoTileBadgeReplyNeeded,
+};
 
 /// Résumé de la tuile : ce qui est attendu, en une ou deux lignes.
 String senderTodoSummary(
   AppLocalizations l,
   BidModel bid,
-  SenderTodoTile tile,
-) => switch (tile) {
-  SenderTodoTile.amendment => _amendmentSummary(l, bid),
+  SenderTodoTile tile, {
+  BidAmendment? open,
+}) => switch (tile) {
+  SenderTodoTile.amendment => _amendmentSummary(
+    l,
+    open ?? openAmendmentOf(bid),
+  ),
   SenderTodoTile.reschedule => switch (bid.reschedule?.decisionDeadline) {
     // Envoyée en UTC (yadony-back #627) : heure de l'appareil, comme la carte.
     final deadline? => l.senderTodoRescheduleSummary(
@@ -89,8 +102,7 @@ String senderTodoSummary(
 
 /// Kilos ajoutés et montant brut de la demande ouverte ; le montant seul
 /// quand elle n'ajoute que des articles.
-String _amendmentSummary(AppLocalizations l, BidModel bid) {
-  final a = AmendmentSenderCard.openRequest(bid);
+String _amendmentSummary(AppLocalizations l, BidAmendment? a) {
   if (a == null) return '';
   final amount = formatSupplementAmount(a.grossAmount, a.currency);
   return a.addedWeightKg > 0
@@ -109,24 +121,23 @@ String _amendmentSummary(AppLocalizations l, BidModel bid) {
 /// n'a pas d'horodatage du refus : un même destinataire qui refuse deux fois
 /// au même statut n'est mesuré qu'une fois). Jamais le nom ni le numéro en
 /// clair : la clé reste en mémoire, hors des propriétés.
-TodoTileShown senderTodoShown(SenderTodoTile tile, BidModel bid) =>
-    TodoTileShown(
-      AnalyticsEvents.bidDetailTodoTileShown,
-      tile: tile.name,
-      properties: () => {
-        'tile': tile.name,
-        'role': 'sender',
-        'status': bid.status,
-      },
-      status: switch (tile) {
-        SenderTodoTile.amendment =>
-          '${bid.status}|${AmendmentSenderCard.openRequest(bid)?.id}',
-        SenderTodoTile.reschedule => '${bid.status}|${bid.reschedule?.id}',
-        SenderTodoTile.recipient =>
-          '${bid.status}|'
-              '${Object.hash(bid.recipientName, bid.recipientPhone)}',
-      },
-    );
+TodoTileShown senderTodoShown(
+  SenderTodoTile tile,
+  BidModel bid, {
+  BidAmendment? open,
+}) => TodoTileShown(
+  AnalyticsEvents.bidDetailTodoTileShown,
+  tile: tile.name,
+  properties: () => {'tile': tile.name, 'role': 'sender', 'status': bid.status},
+  status: switch (tile) {
+    SenderTodoTile.amendment =>
+      '${bid.status}|${(open ?? openAmendmentOf(bid))?.id}',
+    SenderTodoTile.reschedule => '${bid.status}|${bid.reschedule?.id}',
+    SenderTodoTile.recipient =>
+      '${bid.status}|'
+          '${Object.hash(bid.recipientName, bid.recipientPhone)}',
+  },
+);
 
 /// Mesure de la carte reprise par la tuile [tile], émise à l'affichage de la
 /// tuile en plus de [senderTodoShown] : la carte n'est plus montée tant que la
@@ -135,9 +146,13 @@ TodoTileShown senderTodoShown(SenderTodoTile tile, BidModel bid) =>
 ///
 /// Modification : `bid_amendment_viewed` avec `surface: tile`, une fois par
 /// demande et par statut de la demande.
-TodoTileShown? senderTodoViewed(SenderTodoTile tile, BidModel bid) {
+TodoTileShown? senderTodoViewed(
+  SenderTodoTile tile,
+  BidModel bid, {
+  BidAmendment? open,
+}) {
   if (tile != SenderTodoTile.amendment) return null;
-  final a = AmendmentSenderCard.openRequest(bid);
+  final a = open ?? openAmendmentOf(bid);
   if (a == null) return null;
   return TodoTileShown(
     AnalyticsEvents.bidAmendmentViewed,

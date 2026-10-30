@@ -134,6 +134,20 @@ void main() {
       ]);
       expect(AmendmentPayButton.payable(bid)?.id, 'to-pay');
     });
+
+    test('isPayable : la règle sur une seule modification', () {
+      expect(AmendmentPayButton.isPayable(_amendment()), isTrue);
+      expect(
+        AmendmentPayButton.isPayable(_amendment(rail: BidAmendment.railCash)),
+        isFalse,
+      );
+      expect(
+        AmendmentPayButton.isPayable(
+          _amendment(status: BidAmendmentStatus.proposed),
+        ),
+        isFalse,
+      );
+    });
   });
 
   testWidgets('affiche « Payer {brut} », jamais le net', (tester) async {

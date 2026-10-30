@@ -12,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_pay_button.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -19,10 +20,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-/// Modification en cours ou dernière modification close sans avoir été
-/// acquise. Le serveur ne sert que les modifications acquises et la dernière
+/// Modification en cours de [bid] (la dernière ouverte), `null` sans demande
+/// ouverte. Le serveur ne sert que les modifications acquises et la dernière
 /// non acquise récente (moins de 7 jours) : pas de filtre de date ici.
-BidAmendment? _openOf(BidModel bid) =>
+BidAmendment? openAmendmentOf(BidModel bid) =>
     bid.amendments.where((a) => a.status.isOpen).lastOrNull;
 
 BidAmendment? _closedOf(BidModel bid) =>
@@ -57,8 +58,8 @@ class AmendmentSenderCard extends StatelessWidget {
   /// ne doit pas la masquer (elle se lit dans la carte Paiement). Sinon la
   /// plus récente des closes.
   static BidAmendment? _current(BidModel bid) =>
-      _openOf(bid) ??
-      (bid.status == 'ACCEPTED' && _securedOf(bid).isNotEmpty
+      openAmendmentOf(bid) ??
+      (bid.status == 'ACCEPTED' && bid.amendments.any((a) => a.status.isSecured)
           ? null
           : _closedOf(bid));
 
@@ -69,17 +70,9 @@ class AmendmentSenderCard extends StatelessWidget {
   /// mobile money attendu). Seul cas où elle relève de « À traiter » : son
   /// sheet porte alors un bouton. En commission chez le voyageur, l'expéditeur
   /// attend ; close, elle ne fait que renseigner (carte d'information).
-  static bool needsReply(BidModel bid) {
-    final open = _openOf(bid);
-    if (open == null) return false;
-    return AmendmentSenderCancelButton.canCancel(open) ||
-        (open.status == BidAmendmentStatus.paymentPending &&
-            open.rail == BidAmendment.railPawapay);
-  }
-
-  /// La demande ouverte de [bid] (tuile « À traiter », pied de son sheet,
-  /// mesure de la tuile), `null` sans demande ouverte.
-  static BidAmendment? openRequest(BidModel bid) => _openOf(bid);
+  static bool needsReply(BidModel bid) =>
+      senderAmendmentGesture(openAmendmentOf(bid)) !=
+      SenderAmendmentGesture.none;
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +87,33 @@ class AmendmentSenderCard extends StatelessWidget {
       child: content,
     );
   }
+}
+
+/// Geste attendu de l'expéditeur sur sa modification ouverte : il décide de
+/// la tuile « À traiter » ([AmendmentSenderCard.needsReply]), de sa pastille
+/// et du bouton du pied de son sheet.
+enum SenderAmendmentGesture {
+  /// Le montant n'est pas encore acquis : « Annuler ma demande »
+  /// ([AmendmentSenderCancelButton.canCancel]).
+  cancel,
+
+  /// Acceptée par le voyageur, dépôt mobile money attendu : « Payer »
+  /// ([AmendmentPayButton.isPayable]).
+  pay,
+
+  /// Rien à faire : pas de demande ouverte, ou commission chez le voyageur.
+  none,
+}
+
+/// Geste attendu de l'expéditeur sur [open], sa modification ouverte
+/// ([openAmendmentOf]). Fonction pure.
+SenderAmendmentGesture senderAmendmentGesture(BidAmendment? open) {
+  if (open == null) return SenderAmendmentGesture.none;
+  if (AmendmentSenderCancelButton.canCancel(open)) {
+    return SenderAmendmentGesture.cancel;
+  }
+  if (AmendmentPayButton.isPayable(open)) return SenderAmendmentGesture.pay;
+  return SenderAmendmentGesture.none;
 }
 
 /// « Annuler ma demande » de l'expéditeur, dans le pied du sheet de la tuile
@@ -167,7 +187,7 @@ class AmendmentTravelerCard extends StatelessWidget {
   /// colis est `ACCEPTED` (une « Les kilos en plus ne sont pas là » chacune),
   /// sinon la dernière close.
   static List<BidAmendment> _sections(BidModel bid) {
-    final open = _openOf(bid);
+    final open = openAmendmentOf(bid);
     final secured = bid.status == 'ACCEPTED'
         ? _securedOf(bid)
         : const <BidAmendment>[];

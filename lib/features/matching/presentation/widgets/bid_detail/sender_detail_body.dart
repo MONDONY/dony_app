@@ -5,6 +5,7 @@ import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
+import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
@@ -158,7 +159,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
   /// l'expéditeur a un geste à faire → le sheet de sa tuile s'ouvre (comme
   /// `?action=new-code`) ; demande en commission chez le voyageur ou close →
   /// la carte d'information est amenée à l'écran ; aucune demande → rien.
-  void _maybeFocusAmendment() {
+  void _maybeFocusAmendment({required bool needsReply}) {
     final bid = widget.bid;
     // Consommé dès le premier colis chargé, qu'il y ait une demande ou non :
     // une demande créée plus tard (relevé) n'ouvre pas de sheet toute seule.
@@ -166,7 +167,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     // (`DonyDetailSkeleton`) tant que le colis n'est pas chargé.
     if (!widget.focusAmendment || _amendmentFocused) return;
     _amendmentFocused = true;
-    if (!AmendmentSenderCard.needsReply(bid)) {
+    if (!needsReply) {
       if (AmendmentSenderCard.shouldShow(bid)) _scrollTo(_amendmentKey);
       return;
     }
@@ -262,7 +263,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
   /// Tuile de la section « À traiter » : pastille ambre, résumé de ce qui est
   /// attendu. Le tap ouvre le sheet avec le contexte de ce `State`, comme
   /// [_tileFor] : la tuile disparaît dès que la demande est traitée.
-  Widget _todoTileFor(SenderTodoTile tile) {
+  Widget _todoTileFor(SenderTodoTile tile, BidAmendment? openAmendment) {
     final bid = widget.bid;
     final l = context.l10n;
     return todoActionTile(
@@ -275,8 +276,8 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
         SenderTodoTile.recipient => 'user-plus',
       },
       label: senderTodoTitle(l, tile),
-      subtitle: senderTodoSummary(l, bid, tile),
-      badge: senderTodoBadge(l, bid, tile),
+      subtitle: senderTodoSummary(l, bid, tile, open: openAmendment),
+      badge: senderTodoBadge(l, bid, tile, open: openAmendment),
       onTap: () => unawaited(openSenderTodoSheet(context, bid, tile)),
     );
   }
@@ -293,10 +294,13 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     final h = DonyLayout.hPadding(context);
     final status = widget.bid.status;
     final l = context.l10n;
-    _maybeFocusSupplement();
-    _maybeFocusAmendment();
-
     final bid = widget.bid;
+    // Modification ouverte, lue une fois pour toute la construction.
+    final openAmendment = openAmendmentOf(bid);
+    final amendmentReply =
+        senderAmendmentGesture(openAmendment) != SenderAmendmentGesture.none;
+    _maybeFocusSupplement();
+    _maybeFocusAmendment(needsReply: amendmentReply);
 
     // Supplément : sous « À traiter » tant qu'il attend une réponse, sinon
     // simple information juste après, sans titre. La clé de focus suit la
@@ -309,9 +313,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     // Modification : tuile « À traiter » tant que l'expéditeur a un geste à
     // faire (annuler, payer), sinon carte d'information (en commission chez
     // le voyageur, ou close ; cible du défilement `?action=amendment`).
-    final amendment =
-        AmendmentSenderCard.shouldShow(bid) &&
-            !AmendmentSenderCard.needsReply(bid)
+    final amendment = AmendmentSenderCard.shouldShow(bid) && !amendmentReply
         ? AmendmentSenderCard(key: _amendmentKey, bid: bid)
         : null;
 
@@ -325,13 +327,13 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
 
     // Demandes qui attendent une réponse : une tuile chacune (modification,
     // report, destinataire à remplacer), sous les cartes d'alerte.
-    final todoTiles = senderTodoTilesFor(bid);
+    final todoTiles = senderTodoTilesFor(bid, open: openAmendment);
     // Mesure d'affichage de chaque tuile, plus celle de la carte qu'elle
     // reprend ([senderTodoViewed]), une fois chacune pour cet écran.
     _todoViews.logAll(context, bid.id, [
       for (final tile in todoTiles) ...[
-        senderTodoShown(tile, bid),
-        ?senderTodoViewed(tile, bid),
+        senderTodoShown(tile, bid, open: openAmendment),
+        ?senderTodoViewed(tile, bid, open: openAmendment),
       ],
     ]);
 
@@ -351,7 +353,9 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       if (todoTiles.isNotEmpty)
         DonyActionTileGrid(
           key: const ValueKey('todo-tiles'),
-          tiles: [for (final tile in todoTiles) _todoTileFor(tile)],
+          tiles: [
+            for (final tile in todoTiles) _todoTileFor(tile, openAmendment),
+          ],
         ),
     ];
 

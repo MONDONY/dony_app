@@ -117,23 +117,24 @@ Widget? _stickyBottomFor(
       bid: bid,
       live: live,
       builder: (sheetContext, current) {
-        final open = AmendmentSenderCard.openRequest(current);
-        if (open != null && AmendmentSenderCancelButton.canCancel(open)) {
-          return AmendmentSenderCancelButton(bid: current, amendment: open);
-        }
-        if (AmendmentPayButton.canPay(current)) {
+        final open = openAmendmentOf(current);
+        return switch (senderAmendmentGesture(open)) {
+          SenderAmendmentGesture.cancel => AmendmentSenderCancelButton(
+            bid: current,
+            amendment: open!,
+          ),
           // Pousse un écran : ferme d'abord ce sheet, puis paie avec le
           // contexte de l'écran (le colis y est relu au retour).
-          return AmendmentPayButton(
+          SenderAmendmentGesture.pay => AmendmentPayButton(
             bid: current,
             launcher: (pay) => closeTileSheetThen(
               sheetContext,
               screenContext,
               () => unawaited(pay(screenContext)),
             ),
-          );
-        }
-        return const SizedBox.shrink();
+          ),
+          SenderAmendmentGesture.none => const SizedBox.shrink(),
+        };
       },
     ),
     // Bouton simple : ferme ce sheet, puis ouvre « Modifier le destinataire »

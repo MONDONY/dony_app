@@ -198,7 +198,52 @@ void main() {
     test('sender_commissionPending_shownAsInformation', () {
       final bid = _bid(_am(status: BidAmendmentStatus.commissionPending));
       expect(AmendmentSenderCard.shouldShow(bid), isTrue);
-      expect(AmendmentSenderCard.openRequest(bid)?.id, 'am-1');
+      expect(openAmendmentOf(bid)?.id, 'am-1');
+    });
+
+    // Un seul prédicat pour la tuile, sa pastille et le pied du sheet.
+    test('senderAmendmentGesture : annuler, payer ou rien', () {
+      for (final status in [
+        BidAmendmentStatus.proposed,
+        BidAmendmentStatus.authorizationPending,
+      ]) {
+        expect(
+          senderAmendmentGesture(_am(status: status)),
+          SenderAmendmentGesture.cancel,
+          reason: '$status',
+        );
+      }
+      expect(
+        senderAmendmentGesture(
+          _am(
+            status: BidAmendmentStatus.paymentPending,
+            rail: BidAmendment.railPawapay,
+          ),
+        ),
+        SenderAmendmentGesture.pay,
+      );
+      for (final a in [
+        _am(status: BidAmendmentStatus.paymentPending),
+        _am(status: BidAmendmentStatus.commissionPending),
+        _am(status: BidAmendmentStatus.accepted),
+        _am(status: BidAmendmentStatus.declined),
+      ]) {
+        expect(
+          senderAmendmentGesture(a),
+          SenderAmendmentGesture.none,
+          reason: '${a.status} ${a.rail}',
+        );
+      }
+      expect(senderAmendmentGesture(null), SenderAmendmentGesture.none);
+    });
+
+    test('openAmendmentOf : la dernière demande ouverte', () {
+      expect(openAmendmentOf(_bid(null)), isNull);
+      expect(
+        openAmendmentOf(_bid(_am(status: BidAmendmentStatus.declined))),
+        isNull,
+      );
+      expect(openAmendmentOf(_bid(_am()))?.id, 'am-1');
     });
 
     test('traveler_accepted_shownOnlyWhileAcceptedBid', () {
