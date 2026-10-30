@@ -44,11 +44,42 @@ class BilletTalon extends StatelessWidget {
 
   /// Le talon a quelque chose à montrer : une zone d'action ou le numéro de
   /// suivi. Sinon (colis accepté pas encore remis, sans numéro côté
-  /// expéditeur ; toujours côté voyageur), ni talon ni perforation.
+  /// expéditeur ; toujours côté voyageur ; statut inconnu de l'app, sans
+  /// numéro), ni talon ni perforation. Lu sans construire la zone.
   static bool isShown(BidModel bid, {required bool isSender}) => isSender
-      ? _senderActionZone(bid) != null || bid.trackingNumber != null
-      : _travelerActionZone(bid) != null ||
-            travelerVisibleTrackingNumber(bid) != null;
+      ? _hasSenderAction(bid) || bid.trackingNumber != null
+      : _hasTravelerAction(bid) || travelerVisibleTrackingNumber(bid) != null;
+
+  /// Statuts où les deux côtés ont une zone d'action : attente (décision,
+  /// paiement), livraison, demande close.
+  static const _actionStatuses = {
+    'PENDING',
+    'PAYMENT_ESCROWED',
+    'AWAITING_PAYMENT',
+    'COMPLETED',
+    'DELIVERED',
+    'CANCELLED',
+    'REJECTED',
+    'EXPIRED',
+    'NO_SHOW',
+    'PARCEL_REFUSED',
+  };
+
+  /// Statuts de la remise au retrait (HANDED_OVER à ARRIVED).
+  static const _handedOverStatuses = {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'};
+
+  /// [_senderActionZone] rend une zone, sans la construire : en plus des
+  /// statuts communs, la remise au retrait (QR, code de retrait).
+  static bool _hasSenderAction(BidModel bid) =>
+      _actionStatuses.contains(bid.status) ||
+      _handedOverStatuses.contains(bid.status);
+
+  /// [_travelerActionZone] rend une zone, sans la construire : en plus des
+  /// statuts communs, la remise au retrait seulement quand le code de
+  /// retrait est à renouveler.
+  static bool _hasTravelerAction(BidModel bid) =>
+      _actionStatuses.contains(bid.status) ||
+      (_handedOverStatuses.contains(bid.status) && bid.pickupCodeRenewalNeeded);
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +89,11 @@ class BilletTalon extends StatelessWidget {
         ? bid.trackingNumber
         : travelerVisibleTrackingNumber(bid);
     final action = isSender ? _senderActionZone(bid) : _travelerActionZone(bid);
+    // Le prédicat de [isShown] doit dire exactement si une zone existe.
+    assert(
+      (action != null) ==
+          (isSender ? _hasSenderAction(bid) : _hasTravelerAction(bid)),
+    );
     if (action == null && trackingNumber == null) {
       return const SizedBox.shrink();
     }
@@ -147,7 +183,7 @@ class BilletTalon extends StatelessWidget {
       'NO_SHOW' ||
       'PARCEL_REFUSED' ||
       'EXPIRED' => _ClosedBlock(status: status, isSender: true),
-      _ => const SizedBox.shrink(),
+      _ => null,
     };
   }
 

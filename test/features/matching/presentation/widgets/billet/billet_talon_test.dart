@@ -1494,6 +1494,19 @@ void main() {
   // `isShown` suit ce que le talon rend vraiment : sans contenu (voyageur
   // avant la remise), ni bloc vide ni perforation dans le billet.
   group('isShown = le talon rend quelque chose', () {
+    // Code à renouveler : le talon du voyageur monte le bloc de demande.
+    setUp(() {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerFactory<PickupCodeRequestCubit>(
+        () => PickupCodeRequestCubit(_MockTrackingRepository(), analytics),
+      );
+    });
+
+    tearDown(() => getIt.unregister<PickupCodeRequestCubit>());
+
     const statuses = [
       'PENDING',
       'PAYMENT_ESCROWED',
@@ -1503,6 +1516,7 @@ void main() {
       'IN_TRANSIT',
       'ARRIVED',
       'COMPLETED',
+      'DELIVERED',
       'REJECTED',
       'CANCELLED',
       'NO_SHOW',
@@ -1512,16 +1526,21 @@ void main() {
     ];
     for (final status in statuses) {
       for (final tracking in [null, 'DON-1']) {
-        testWidgets('voyageur, $status, numéro ${tracking ?? 'absent'}', (
-          tester,
-        ) async {
-          final bid = _bid(status: status, trackingNumber: tracking);
-          await _pump(tester, bid, false);
-          expect(
-            BilletTalon.isShown(bid, isSender: false),
-            tester.getSize(find.byType(BilletTalon)).height > 0,
-          );
-        });
+        for (final renewal in [false, true]) {
+          testWidgets('voyageur, $status, numéro ${tracking ?? 'absent'}'
+              '${renewal ? ', code à renouveler' : ''}', (tester) async {
+            final bid = _bid(
+              status: status,
+              trackingNumber: tracking,
+              pickupCodeRenewalNeeded: renewal,
+            );
+            await _pump(tester, bid, false);
+            expect(
+              BilletTalon.isShown(bid, isSender: false),
+              tester.getSize(find.byType(BilletTalon)).height > 0,
+            );
+          });
+        }
       }
     }
 
@@ -1532,11 +1551,12 @@ void main() {
         ) async {
           final bid = _bid(status: status, trackingNumber: tracking);
           await _pump(tester, bid, true);
-          // Seul un colis accepté sans numéro n'a plus de talon côté
-          // expéditeur ; les autres statuts sont inchangés.
+          // Seuls un colis accepté et un statut inconnu, sans numéro, n'ont
+          // pas de talon côté expéditeur.
           expect(
             BilletTalon.isShown(bid, isSender: true),
-            !(status == 'ACCEPTED' && tracking == null),
+            !((status == 'ACCEPTED' || status == 'UNKNOWN') &&
+                tracking == null),
           );
           expect(
             BilletTalon.isShown(bid, isSender: true),
@@ -1545,5 +1565,25 @@ void main() {
         });
       }
     }
+  });
+
+  // Statut que l'app ne connaît pas encore (back plus récent) : comme côté
+  // voyageur, pas de talon vide ni de perforation ; le numéro de suivi, s'il
+  // existe, reste montré seul.
+  group('expéditeur, statut inconnu', () {
+    testWidgets('sans numéro : talon absent', (tester) async {
+      final bid = _bid(status: 'SOMETHING_NEW');
+      await _pump(tester, bid, true);
+      expect(BilletTalon.isShown(bid, isSender: true), isFalse);
+      expect(tester.getSize(find.byType(BilletTalon)).height, 0);
+    });
+
+    testWidgets('avec numéro : seulement la bande de suivi', (tester) async {
+      final bid = _bid(status: 'SOMETHING_NEW', trackingNumber: 'DON-9');
+      await _pump(tester, bid, true);
+      expect(BilletTalon.isShown(bid, isSender: true), isTrue);
+      expect(find.byType(TalonTrackingStrip), findsOneWidget);
+      expect(find.byType(OutlinedButton), findsNothing);
+    });
   });
 }
