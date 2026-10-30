@@ -14,5 +14,8 @@ String sanitizeNextRoute(String? raw) {
   if (raw.startsWith('//') || raw.startsWith(r'/\')) {
     return kNextRouteFallback;
   }
+  // La sélection du pays ne peut pas être sa propre destination : `next`
+  // bouclerait sur elle-même.
+  if (raw.startsWith('/auth/country-selection')) return kNextRouteFallback;
   return raw;
 }

@@ -8,8 +8,21 @@ void main() {
       expect(sanitizeNextRoute('/trips/create?a=1'), '/trips/create?a=1');
     });
 
+    test('documente le comportement actuel sur les formes ambiguës', () {
+      // Chemins internes valides : acceptés tels quels.
+      expect(sanitizeNextRoute('/%5Cevil'), '/%5Cevil');
+      expect(sanitizeNextRoute('/trips/create#frag'), '/trips/create#frag');
+      // Espace blanc interne : go_router le traite comme un chemin, pas un hôte.
+      expect(sanitizeNextRoute('/a\tb'), '/a\tb');
+      expect(sanitizeNextRoute('/a\nb'), '/a\nb');
+    });
+
     for (final raw in [
       null,
+      '/auth/country-selection',
+      '/auth/country-selection?next=%2Ftrips%2Fcreate',
+      '/auth/country-selection/',
+      '/auth/country-selection#x',
       '',
       'trips/create',
       '//evil.com',
