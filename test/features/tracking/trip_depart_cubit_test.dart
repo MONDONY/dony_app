@@ -170,6 +170,46 @@ void main() {
     });
   });
 
+  for (final fails in [false, true]) {
+    testWidgets(
+      'cubit fermé pendant l\'appel (${fails ? 'échec' : 'succès'}) : '
+      'aucune StateError',
+      (tester) async {
+        when(
+          () => locator.captureCoordinatesIfGranted(),
+        ).thenAnswer((_) async => null);
+        final reply = Completer<void>();
+        when(
+          () => tracking.depart(
+            any(),
+            lat: any(named: 'lat'),
+            lon: any(named: 'lon'),
+          ),
+        ).thenAnswer((_) => reply.future);
+        await withContext(tester, () async {
+          final cubit = build();
+          final pending = cubit.depart(ctx);
+          await tester.pump();
+          expect(cubit.state.loading, isTrue);
+          // L'écran qui fournit le cubit se ferme, la réponse arrive ensuite.
+          await cubit.close();
+          if (fails) {
+            reply.completeError(const NetworkException('x'));
+          } else {
+            reply.complete();
+          }
+          await pending;
+          expect(tester.takeException(), isNull);
+          // Départ fait côté serveur : le drapeau local est quand même posé.
+          expect(
+            stored['${HiveService.kTripDepartedPrefix}trip-1'],
+            fails ? isNull : isTrue,
+          );
+        });
+      },
+    );
+  }
+
   test('startsDepartedWhenFlagStored', () {
     stored['${HiveService.kTripDepartedPrefix}trip-1'] = true;
     expect(build().state.departed, isTrue);

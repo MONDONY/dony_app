@@ -20,6 +20,7 @@ abstract final class DonyBottomSheet {
     BuildContext context, {
     required Widget child,
     String? title,
+    Widget? titleWidget,
     String? subtitle,
     Widget? stickyBottom,
     bool isDismissible = true,
@@ -59,6 +60,7 @@ abstract final class DonyBottomSheet {
         final Widget content = DonyReplayMask(
           child: _DonyBottomSheetContent(
             title: title,
+            titleWidget: titleWidget,
             subtitle: subtitle,
             showHandle: showHandle,
             isDanger: isDanger,
@@ -78,6 +80,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
   const _DonyBottomSheetContent({
     required this.child,
     this.title,
+    this.titleWidget,
     this.subtitle,
     this.stickyBottom,
     this.showHandle = true,
@@ -88,6 +91,11 @@ class _DonyBottomSheetContent extends StatelessWidget {
 
   final Widget child;
   final String? title;
+
+  /// Titre qui suit des données (un `BlocBuilder` qui rend un `Text`), à la
+  /// place de [title] : même en-tête, même style (`headlineSmall`). Le
+  /// `wrapper` de `show` l'enveloppe comme le contenu.
+  final Widget? titleWidget;
   final String? subtitle;
   final Widget? stickyBottom;
   final bool showHandle;
@@ -118,6 +126,11 @@ class _DonyBottomSheetContent extends StatelessWidget {
         ? mq.viewPadding.top + DonySpacing.sm
         : mq.size.height * 0.1;
 
+    final hasHeader = title != null || titleWidget != null;
+    final titleStyle = tt.headlineSmall?.copyWith(
+      color: isDanger ? cs.error : null,
+    );
+
     final bgColor = isDanger ? cs.errorContainer : cs.surface;
     final handleColor = isDanger
         ? cs.error.withValues(alpha: 0.35)
@@ -130,7 +143,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
-        title != null ? 0 : DonySpacing.sm,
+        hasHeader ? 0 : DonySpacing.sm,
         DonySpacing.lg,
         stickyBottom != null ? DonySpacing.xl : DonySpacing.xl + bottomInset,
       ),
@@ -164,7 +177,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
                 ),
               ),
             ),
-          if (title != null) ...[
+          if (hasHeader) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 DonySpacing.lg,
@@ -178,12 +191,13 @@ class _DonyBottomSheetContent extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          title!,
-                          style: tt.headlineSmall?.copyWith(
-                            color: isDanger ? cs.error : null,
-                          ),
-                        ),
+                        if (titleWidget case final widget?)
+                          DefaultTextStyle.merge(
+                            style: titleStyle,
+                            child: widget,
+                          )
+                        else
+                          Text(title!, style: titleStyle),
                         if (subtitle != null) ...[
                           const SizedBox(height: DonySpacing.xs),
                           Text(

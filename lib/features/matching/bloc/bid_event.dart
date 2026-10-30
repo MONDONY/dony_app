@@ -98,7 +98,14 @@ class BidQuoteRequested extends BidEvent {
 
 class BidListRequested extends BidEvent {
   final String announcementId;
-  BidListRequested(this.announcementId);
+
+  /// Relecture silencieuse d'une liste déjà affichée (retour d'un autre
+  /// écran) : ni `BidLoading` (l'écran ne repasse pas par son indicateur de
+  /// chargement), ni `BidError` (la dernière liste reste affichée si la
+  /// relecture échoue). Un 404 émet toujours `BidNotFound`.
+  final bool silent;
+
+  BidListRequested(this.announcementId, {this.silent = false});
 }
 
 class BidMyListRequested extends BidEvent {}

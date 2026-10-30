@@ -50,6 +50,35 @@ void main() {
     expect(find.byType(DonyFeedbackButton), findsNothing);
   });
 
+  testWidgets('titleWidget : en-tête, style du titre et croix', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => DonyBottomSheet.show<void>(
+                context,
+                titleWidget: const Text('Titre vivant'),
+                child: const SizedBox(height: 40),
+              ),
+              child: const Text('ouvrir'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('ouvrir'));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.text('Titre vivant'));
+    expect(
+      DefaultTextStyle.of(context).style.fontSize,
+      Theme.of(context).textTheme.headlineSmall?.fontSize,
+    );
+    expect(find.byTooltip('Fermer'), findsOneWidget);
+  });
+
   group('hauteur fixe (heightFraction)', () {
     Widget fixedHarness({bool withFooter = true}) => MaterialApp(
       theme: AppTheme.light(),
