@@ -661,7 +661,46 @@ void main() {
     final past = DateTime.now().subtract(const Duration(hours: 2));
     final future = DateTime.now().add(const Duration(days: 1));
 
-    // `isShown` recopie à la main la liste des statuts du mapping : ce test la
+    // Prédicats lus aussi par le footer (`TravelerStickyBar`).
+    test('senderNoShowOpen : absence de l\'expéditeur en attente ou '
+        'contestée', () {
+      for (final status in ['PENDING_CONFIRMATION', 'CONTESTED']) {
+        expect(
+          TravelerHeroCard.senderNoShowOpen(
+            heroBid('ACCEPTED', cancellationNoShowStatus: status),
+          ),
+          isTrue,
+          reason: status,
+        );
+      }
+      for (final status in [null, 'CONFIRMED', 'REJECTED']) {
+        expect(
+          TravelerHeroCard.senderNoShowOpen(
+            heroBid('ACCEPTED', cancellationNoShowStatus: status),
+          ),
+          isFalse,
+          reason: '$status',
+        );
+      }
+    });
+
+    test('windowExpired : colis accepté, date limite passée', () {
+      expect(
+        TravelerHeroCard.windowExpired(heroBid('ACCEPTED', windowEnd: past)),
+        isTrue,
+      );
+      expect(
+        TravelerHeroCard.windowExpired(heroBid('ACCEPTED', windowEnd: future)),
+        isFalse,
+      );
+      expect(TravelerHeroCard.windowExpired(heroBid('ACCEPTED')), isFalse);
+      expect(
+        TravelerHeroCard.windowExpired(heroBid('HANDED_OVER', windowEnd: past)),
+        isFalse,
+      );
+    });
+
+    // `isShown` et le contenu de priorité 3 lisent la même fonction : ce test
     // compare, pour chaque statut de l'inventaire et chaque signalement, à ce
     // que la carte rend réellement (hauteur nulle = SizedBox.shrink).
     const everyStatus = [

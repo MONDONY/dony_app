@@ -30,17 +30,10 @@ class TravelerHeroCard extends StatelessWidget {
 
   final BidModel bid;
 
-  /// Statuts que le mapping de priorité 3 (`_buildContent`) habille d'un hero :
-  /// la demande à décider et l'attente du paiement. Les étapes du transport,
-  /// les statuts clos et inconnus n'en ont pas.
-  static const _contentStatuses = <String>{
-    'PENDING',
-    'PAYMENT_ESCROWED',
-    'AWAITING_PAYMENT',
-  };
-
-  /// Priorité 1 : absence de l'expéditeur au dépôt déjà signalée.
-  static bool _senderNoShowOpen(BidModel bid) =>
+  /// Priorité 1 : absence de l'expéditeur au dépôt déjà signalée (en attente
+  /// de réponse ou contestée). Lue aussi par le footer, qui ne propose alors
+  /// pas le scan après la date limite.
+  static bool senderNoShowOpen(BidModel bid) =>
       bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION' ||
       bid.cancellationNoShowStatus == 'CONTESTED';
 
@@ -49,8 +42,9 @@ class TravelerHeroCard extends StatelessWidget {
       bid.deliveryNoShowStatus == 'PENDING_CONFIRMATION' ||
       bid.deliveryNoShowStatus == 'CONTESTED';
 
-  /// Priorité 2 : date limite de dépôt dépassée.
-  static bool _windowExpired(BidModel bid) {
+  /// Priorité 2 : colis accepté dont la date limite de dépôt est dépassée.
+  /// Lue aussi par le footer (« Confirmer ma présence » avant, plus après).
+  static bool windowExpired(BidModel bid) {
     final deadline = bid.handoverDeadline;
     return bid.status == 'ACCEPTED' &&
         deadline != null &&
@@ -58,12 +52,13 @@ class TravelerHeroCard extends StatelessWidget {
   }
 
   /// La carte rend quelque chose (sinon `SizedBox.shrink`) : un signalement en
-  /// cours, la date limite dépassée ou un statut du mapping.
+  /// cours, la date limite dépassée ou un contenu de priorité 3
+  /// ([_contentKind]).
   static bool isShown(BidModel bid) =>
-      _senderNoShowOpen(bid) ||
+      senderNoShowOpen(bid) ||
       _deliveryNoShowOpen(bid) ||
-      _windowExpired(bid) ||
-      _contentStatuses.contains(bid.status);
+      windowExpired(bid) ||
+      _contentKind(bid) != null;
 
   /// La carte porte un bouton (un `footer`) : elle va dans « À traiter » au
   /// lieu de rester sous le billet. Dans l'ordre des priorités de [build] :
@@ -79,12 +74,12 @@ class TravelerHeroCard extends StatelessWidget {
   /// - 3, mapping par statut (demande à décider, attente du paiement) :
   ///   information seule, sans bouton → `false`.
   static bool hasAction(BidModel bid) {
-    if (_senderNoShowOpen(bid)) return false;
+    if (senderNoShowOpen(bid)) return false;
     if (_deliveryNoShowOpen(bid)) {
       return bid.deliveryNoShowReportedByTraveler != true &&
           bid.deliveryNoShowStatus != 'CONTESTED';
     }
-    return _windowExpired(bid);
+    return windowExpired(bid);
   }
 
   @override
@@ -94,7 +89,7 @@ class TravelerHeroCard extends StatelessWidget {
     // et que le délai n'est pas expiré. Sans ce check, on ré-afficherait
     // « Signaler l'absence » alors que le signalement est déjà fait.
     final noShowStatus = bid.cancellationNoShowStatus;
-    if (_senderNoShowOpen(bid)) {
+    if (senderNoShowOpen(bid)) {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
         child: _NoShowReportedHero(
@@ -125,7 +120,7 @@ class TravelerHeroCard extends StatelessWidget {
     }
 
     // ── Priorité 2 : date limite de dépôt dépassée ────────────────────────
-    if (_windowExpired(bid)) {
+    if (windowExpired(bid)) {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
         child: _WindowExpiredHero(
@@ -169,14 +164,30 @@ class _HeroContent {
 
 // ── Status mapping ────────────────────────────────────────────────────────────
 
+/// Contenu de priorité 3, par statut.
+enum _ContentKind {
+  /// Au voyageur de décider. PAYMENT_ESCROWED (carte déjà séquestrée) a aussi
+  /// son hero : sans lui, « En attente » et deux boutons restaient sans
+  /// contexte (FLUTTER-4T).
+  request,
+
+  /// Paiement de l'expéditeur attendu : rien à faire pour le voyageur.
+  awaitingPayment,
+}
+
+/// Contenu de priorité 3 de [bid], `null` pour les étapes du transport, les
+/// statuts clos et inconnus. Fonction pure : [TravelerHeroCard.isShown] et
+/// [_buildContent] la lisent toutes deux.
+_ContentKind? _contentKind(BidModel bid) => switch (bid.status) {
+  'PENDING' || 'PAYMENT_ESCROWED' => _ContentKind.request,
+  'AWAITING_PAYMENT' => _ContentKind.awaitingPayment,
+  _ => null,
+};
+
 _HeroContent? _buildContent(BuildContext context, BidModel bid) {
   final l = context.l10n;
-  switch (bid.status) {
-    // Au voyageur de décider. PAYMENT_ESCROWED (carte déjà séquestrée) n'avait
-    // aucun hero : seulement « En attente » et deux boutons sans contexte
-    // (FLUTTER-4T : « on ne sait pas ce que cet écran signifie »).
-    case 'PENDING':
-    case 'PAYMENT_ESCROWED':
+  switch (_contentKind(bid)) {
+    case _ContentKind.request:
       final amount = travelerAmountLabel(bid);
       return _HeroContent(
         variant: TravelerHeroVariant.wait,
@@ -184,8 +195,7 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
         subtitle: l.bidDetailTravelerPendingSubtitle(amount),
       );
 
-    // Paiement de l'expéditeur attendu : rien à faire pour le voyageur.
-    case 'AWAITING_PAYMENT':
+    case _ContentKind.awaitingPayment:
       final mobileMoney = bid.paymentMethod == BidPaymentMethod.mobileMoney;
       return _HeroContent(
         variant: TravelerHeroVariant.wait,
@@ -197,9 +207,7 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
             : l.bidDetailTravelerAwaitingPaymentSubtitle,
       );
 
-    // Étapes du transport, statuts clos ou inconnus → shrink (hors de
-    // TravelerHeroCard._contentStatuses : à tenir ensemble).
-    default:
+    case null:
       return null;
   }
 }
