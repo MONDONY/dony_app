@@ -109,7 +109,7 @@ void main() {
   );
 
   testWidgets(
-    "une écriture locale qui échoue ferme quand même la feuille et lève la "
+    'une écriture locale qui échoue ferme quand même la feuille et lève la '
     'demande',
     (tester) async {
       when(
