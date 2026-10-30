@@ -321,23 +321,28 @@ void main() {
       footer: ['Lire le QR du colis'],
       gain: 'VOUS RECEVEZ',
     ),
-    // Date limite dépassée, présence non confirmée : le héros d'alerte va
-    // dans « À traiter », le footer garde le scan du départ (le back
-    // n'expire pas un colis accepté).
-    'ACCEPTED (date limite dépassée)': _Scenario(
+    // Date limite dépassée, présence non confirmée × état de la déclaration
+    // d'absence de l'expéditeur, table écrite à la main.
+    // - Aucune : « Signaler l'absence de l'expéditeur » dans « À traiter »,
+    //   le footer garde le scan du départ (le back n'expire pas un colis
+    //   accepté).
+    // - En attente : héros d'information sous le billet, et le scan reste
+    //   proposé : le back lève la déclaration au scan de départ (RESOLVED).
+    // - Contestée : héros « Absence contestée », pas de footer (le back
+    //   refuserait le scan, 409 `handover-sender-noshow-pending`).
+    // - Confirmée (colis pas encore relu en annulé) : ni héros ni footer.
+    // - Levée : plus d'alerte, ni de « Signaler » (une seule déclaration par
+    //   colis), le scan reste proposé.
+    'ACCEPTED, date limite dépassée, aucune déclaration': _Scenario(
       bid: _bid('ACCEPTED', handoverDeadline: _past),
       stamp: 'Confirmé',
       title: '#BID-00',
       sections: ['billet', 'todo', 'expediteur', 'gain', 'transport'],
       footer: ['Lire le QR du colis'],
       gain: 'VOUS RECEVEZ',
+      todo: "Signaler l'absence de l'expéditeur",
     ),
-    // Absence de l'expéditeur signalée, présence non confirmée : héros
-    // d'information sous le billet, pas de footer. Pas de scan du départ
-    // tant que la déclaration est ouverte : le back ne la clôt pas au scan,
-    // et la confirmerait 24 h plus tard (remboursement, pénalité) alors que
-    // le colis voyage.
-    'ACCEPTED (absence de l\'expéditeur signalée)': _Scenario(
+    'ACCEPTED, date limite dépassée, absence PENDING_CONFIRMATION': _Scenario(
       bid: _bid(
         'ACCEPTED',
         handoverDeadline: _past,
@@ -346,8 +351,44 @@ void main() {
       stamp: 'Confirmé',
       title: '#BID-00',
       sections: ['billet', 'hero', 'expediteur', 'gain', 'transport'],
+      footer: ['Lire le QR du colis'],
       gain: 'VOUS RECEVEZ',
       hero: 'Absence signalée',
+    ),
+    'ACCEPTED, date limite dépassée, absence CONTESTED': _Scenario(
+      bid: _bid(
+        'ACCEPTED',
+        handoverDeadline: _past,
+        cancellationNoShowStatus: 'CONTESTED',
+      ),
+      stamp: 'Confirmé',
+      title: '#BID-00',
+      sections: ['billet', 'hero', 'expediteur', 'gain', 'transport'],
+      gain: 'VOUS RECEVEZ',
+      hero: 'Absence contestée',
+    ),
+    'ACCEPTED, date limite dépassée, absence CONFIRMED': _Scenario(
+      bid: _bid(
+        'ACCEPTED',
+        handoverDeadline: _past,
+        cancellationNoShowStatus: 'CONFIRMED',
+      ),
+      stamp: 'Confirmé',
+      title: '#BID-00',
+      sections: ['billet', 'expediteur', 'gain', 'transport'],
+      gain: 'VOUS RECEVEZ',
+    ),
+    'ACCEPTED, date limite dépassée, absence RESOLVED': _Scenario(
+      bid: _bid(
+        'ACCEPTED',
+        handoverDeadline: _past,
+        cancellationNoShowStatus: 'RESOLVED',
+      ),
+      stamp: 'Confirmé',
+      title: '#BID-00',
+      sections: ['billet', 'expediteur', 'gain', 'transport'],
+      footer: ['Lire le QR du colis'],
+      gain: 'VOUS RECEVEZ',
     ),
     'HANDED_OVER': _Scenario(
       bid: _bid('HANDED_OVER', departureAt: _past, trackingNumber: 'YAD-0042'),
@@ -470,6 +511,16 @@ void main() {
         expect(_in('transport', find.text('Votre transport')), findsOneWidget);
         if (s.hero != null) {
           expect(_in('hero', find.textContaining(s.hero!)), findsOneWidget);
+        }
+        if (s.todo != null) {
+          expect(_in('todo', find.textContaining(s.todo!)), findsOneWidget);
+        }
+        // Une fois une déclaration faite, plus de « Signaler l'absence ».
+        if (s.bid.cancellationNoShowStatus != null) {
+          expect(
+            find.textContaining("Signaler l'absence de l'expéditeur"),
+            findsNothing,
+          );
         }
 
         // Carte Gain.
@@ -616,6 +667,7 @@ class _Scenario {
     this.footer = const [],
     this.talon,
     this.hero,
+    this.todo,
     this.talonReason,
   });
 
@@ -633,6 +685,9 @@ class _Scenario {
 
   /// Fragment du titre du hero.
   final String? hero;
+
+  /// Fragment attendu dans la section « À traiter » (null = rien à vérifier).
+  final String? todo;
 
   /// Motif affiché au-dessus du message terminal (NO_SHOW, PARCEL_REFUSED,
   /// EXPIRED hors date limite).
