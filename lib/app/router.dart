@@ -22,7 +22,6 @@ import 'package:dony/features/auth/bloc/profile_basics_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/domain/country_from_phone.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
-import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
 import 'package:dony/features/auth/presentation/screens/email_auth_screen.dart';
@@ -514,27 +513,15 @@ final GoRouter appRouter = GoRouter(
 
     // ── KYC (hors shell) ─────────────────────────────────────────────────
     GoRoute(
-      path: '/kyc/verify',
+      path: kKycVerifyRoute,
       builder: (context, state) {
-        // `/kyc/verify` a deux entrées : le parcours d'onboarding (identité,
-        // spec §2) et le profil (vérifier son identité à tout moment). Seul
-        // ce query param les distingue — c'est lui qui décide si la jauge
-        // s'affiche et si l'écran enchaîne sur l'étape suivante une fois
-        // terminé ou passé, plutôt que de renvoyer droit à l'accueil comme
-        // depuis le profil.
-        final fromOnboarding =
-            state.uri.queryParameters[onboardingEntryParam] ==
-            onboardingEntryValue;
-        final progress = fromOnboarding
-            ? readOnboardingProgress(context, current: OnboardingStep.identity)
-            : null;
         final returnTo = kycReturnRouteOrNull(
           state.uri.queryParameters[kycReturnParam],
         );
 
         final raw = state.extra;
         if (raw is! String) {
-          return KycStatusScreen(progress: progress, returnTo: returnTo);
+          return KycStatusScreen(returnTo: returnTo);
         }
         // Second filtre, en plus de celui de la webview elle-même : une URL
         // qui n'est pas celle d'un fournisseur connu ne doit même pas ouvrir
@@ -548,15 +535,11 @@ final GoRouter appRouter = GoRouter(
             uri.scheme == 'https' &&
             isVerificationProviderHost(uri.host);
         if (!estFournisseurConnu) {
-          return KycStatusScreen(progress: progress, returnTo: returnTo);
+          return KycStatusScreen(returnTo: returnTo);
         }
         return BlocProvider(
           create: (_) => getIt<KycBloc>(),
-          child: KycWebViewScreen(
-            stripeUrl: raw,
-            progress: progress,
-            returnTo: returnTo,
-          ),
+          child: KycWebViewScreen(stripeUrl: raw, returnTo: returnTo),
         );
       },
     ),
@@ -945,25 +928,11 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/payments/onboarding',
-      builder: (context, state) {
-        // Même double entrée que `/kyc/verify` : onboarding (paiements,
-        // dernière étape comptée) ou profil (« Recevoir mes paiements »
-        // dans Réglages, à tout moment).
-        final fromOnboarding =
-            state.uri.queryParameters[onboardingEntryParam] ==
-            onboardingEntryValue;
-        return BlocProvider(
-          create: (_) => getIt<PaymentBloc>(),
-          child: PayoutOnboardingScreen(
-            progress: fromOnboarding
-                ? readOnboardingProgress(
-                    context,
-                    current: OnboardingStep.payouts,
-                  )
-                : null,
-          ),
-        );
-      },
+      // « Recevoir mes paiements » (Réglages, profil).
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<PaymentBloc>(),
+        child: const PayoutOnboardingScreen(),
+      ),
     ),
     GoRoute(
       path: '/payments/mobile-money/account',

@@ -24,32 +24,20 @@ void main() {
   });
 
   group('kycVerifyLocation', () {
-    test('sans marqueur : route nue, comme avant', () {
-      expect(kycVerifyLocation(fromOnboarding: false), '/kyc/verify');
-    });
-
-    test('onboarding seul : même query qu\'onboardingEntrySuffix', () {
-      expect(
-        kycVerifyLocation(fromOnboarding: true),
-        '/kyc/verify?from=onboarding',
-      );
+    test('sans écran de retour : route nue', () {
+      expect(kycVerifyLocation(), kKycVerifyRoute);
+      expect(kKycVerifyRoute, '/kyc/verify');
     });
 
     test('écran de retour autorisé : transporté et relisible', () {
-      final location = kycVerifyLocation(
-        fromOnboarding: false,
-        returnTo: '/parcels/send-intro',
-      );
+      final location = kycVerifyLocation(returnTo: '/parcels/send-intro');
       final uri = Uri.parse(location);
       expect(uri.path, '/kyc/verify');
-      expect(uri.queryParameters[kycReturnParam], '/parcels/send-intro');
+      expect(uri.queryParameters, {kycReturnParam: '/parcels/send-intro'});
     });
 
     test('écran de retour refusé : ignoré', () {
-      expect(
-        kycVerifyLocation(fromOnboarding: false, returnTo: '/bids/new'),
-        '/kyc/verify',
-      );
+      expect(kycVerifyLocation(returnTo: '/bids/new'), '/kyc/verify');
     });
   });
 }

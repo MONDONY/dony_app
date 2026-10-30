@@ -99,10 +99,9 @@ class KycRequiredBottomSheet extends StatelessWidget {
     );
 
     if (stripeUrl != null && context.mounted) {
-      GoRouter.of(context).go(
-        kycVerifyLocation(fromOnboarding: false, returnTo: returnTo),
-        extra: stripeUrl,
-      );
+      GoRouter.of(
+        context,
+      ).go(kycVerifyLocation(returnTo: returnTo), extra: stripeUrl);
     }
   }
 

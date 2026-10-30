@@ -8,8 +8,6 @@ import 'package:dony/core/services/camera_permission_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/data/repositories/auth_repository.dart';
-import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -25,8 +23,6 @@ import 'package:webview_flutter_platform_interface/webview_flutter_platform_inte
 import '../../../../helpers/l10n_test_helpers.dart';
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
-
-class _MockAuthRepository extends Mock implements AuthRepository {}
 
 class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
 
@@ -161,7 +157,6 @@ void main() {
   late _MockAnalyticsService analytics;
   late _MockKycBloc kycBloc;
   late _MockAuthBloc authBloc;
-  late _MockAuthRepository authRepo;
 
   setUp(() {
     useEnglish();
@@ -184,8 +179,6 @@ void main() {
       const Stream<AuthState>.empty(),
       initialState: const AuthInitial(),
     );
-    authRepo = _MockAuthRepository();
-    getIt.registerSingleton<AuthRepository>(authRepo);
   });
 
   tearDown(() => getIt.reset());
@@ -194,12 +187,12 @@ void main() {
   Future<void> pump(
     WidgetTester tester, {
     bool cameraGranted = true,
-    OnboardingProgress? progress,
     String? returnTo,
+    bool pushed = false,
   }) async {
     Widget echo(GoRouterState s) => Scaffold(body: Text('page ${s.uri}'));
     final router = GoRouter(
-      initialLocation: '/kyc/session',
+      initialLocation: pushed ? '/profile' : '/kyc/session',
       routes: [
         GoRoute(
           path: '/kyc/session',
@@ -213,19 +206,22 @@ void main() {
               analytics: analytics,
               cameraPermission: _FakeCameraPermission(cameraGranted),
               openAppSettings: () async {},
-              progress: progress,
               returnTo: returnTo,
             ),
           ),
         ),
         GoRoute(path: '/kyc/verify', builder: (_, s) => echo(s)),
         GoRoute(path: '/home', builder: (_, s) => echo(s)),
-        GoRoute(path: '/first-steps', builder: (_, s) => echo(s)),
-        GoRoute(path: '/auth/personal-info', builder: (_, s) => echo(s)),
+        GoRoute(path: '/profile', builder: (_, s) => echo(s)),
       ],
     );
     addTearDown(router.dispose);
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    if (pushed) {
+      unawaited(router.push('/kyc/session'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
     await tester.pump();
   }
 
@@ -329,21 +325,17 @@ void main() {
       });
     }
 
-    testWidgets('retour depuis l\'onboarding : marqueur conservé', (
+    testWidgets('retour du fournisseur : l\'écran où revenir est conservé', (
       tester,
     ) async {
-      await pump(
-        tester,
-        progress: const OnboardingProgress(
-          steps: [OnboardingStep.identity, OnboardingStep.personalInfo],
-          done: {},
-          current: OnboardingStep.identity,
-        ),
-      );
+      await pump(tester, returnTo: '/parcels/send-intro');
       navigate('https://yadony.com/kyc/complete');
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.textContaining('page /kyc/verify?'), findsOneWidget);
+      expect(
+        find.text('page /kyc/verify?next=%2Fparcels%2Fsend-intro'),
+        findsOneWidget,
+      );
     });
   });
 
@@ -396,43 +388,17 @@ void main() {
       verify(() => kycBloc.add(const KycSessionAbandoned())).called(1);
       verify(() => authBloc.add(const AuthCheckRequested())).called(1);
       expect(find.text('page /home'), findsOneWidget);
-      verifyNever(() => authRepo.markOnboardingSeen());
     });
 
-    testWidgets('onboarding : la croix passe à l\'étape suivante', (
+    testWidgets('ouverte par-dessus un écran : la croix y revient', (
       tester,
     ) async {
-      await pump(
-        tester,
-        progress: const OnboardingProgress(
-          steps: [OnboardingStep.identity, OnboardingStep.personalInfo],
-          done: {},
-          current: OnboardingStep.identity,
-        ),
-      );
+      await pump(tester, pushed: true);
       await tester.tap(find.byTooltip('Close'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(find.text('page /auth/personal-info'), findsOneWidget);
-    });
-
-    testWidgets('dernière étape de l\'onboarding : premiers pas', (
-      tester,
-    ) async {
-      when(() => authRepo.markOnboardingSeen()).thenAnswer((_) async {});
-      await pump(
-        tester,
-        progress: const OnboardingProgress(
-          steps: [OnboardingStep.identity],
-          done: {},
-          current: OnboardingStep.identity,
-        ),
-      );
-      await tester.tap(find.byTooltip('Close'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      verify(() => authRepo.markOnboardingSeen()).called(1);
-      expect(find.text('page /first-steps'), findsOneWidget);
+      await tester.pumpAndSettle();
+      verify(() => kycBloc.add(const KycSessionAbandoned())).called(1);
+      expect(find.text('page /profile'), findsOneWidget);
+      expect(find.byType(KycWebViewScreen), findsNothing);
     });
 
     testWidgets('retour système : recule d\'abord dans la page', (

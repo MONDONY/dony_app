@@ -73,7 +73,7 @@ class _GpProScreenState extends State<GpProScreen> {
 
   Future<void> _openKyc() async {
     final cubit = context.read<GpProCubit>();
-    await context.push(kycVerifyLocation(fromOnboarding: false));
+    await context.push(kycVerifyLocation());
     // Au retour, une demande AWAITING_KYC a pu passer en PENDING.
     if (mounted) await cubit.load();
   }

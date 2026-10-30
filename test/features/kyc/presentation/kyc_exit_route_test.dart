@@ -10,34 +10,9 @@ void main() {
   );
   const done = ActivationLoaded(ActivationStatus(intent: UserIntent.sender));
 
-  test('inscription terminée : premiers pas', () {
+  test('vérifié avec next : retour à l\'action', () {
     expect(
       kycExitRoute(
-        onboardingDestination: '/home',
-        returnTo: null,
-        justVerified: true,
-        activation: done,
-      ),
-      firstStepsRoute,
-    );
-  });
-
-  test('inscription en cours : étape suivante', () {
-    expect(
-      kycExitRoute(
-        onboardingDestination: '/auth/x',
-        returnTo: null,
-        justVerified: false,
-        activation: notDone,
-      ),
-      '/auth/x',
-    );
-  });
-
-  test('profil avec next : retour à l\'action', () {
-    expect(
-      kycExitRoute(
-        onboardingDestination: null,
         returnTo: '/trips/publish-intro',
         justVerified: true,
         activation: notDone,
@@ -46,31 +21,20 @@ void main() {
     );
   });
 
-  test('profil sans next, rien fait : premiers pas', () {
+  test('vérifié sans next, rien fait : premiers pas', () {
     expect(
-      kycExitRoute(
-        onboardingDestination: null,
-        returnTo: null,
-        justVerified: true,
-        activation: notDone,
-      ),
+      kycExitRoute(returnTo: null, justVerified: true, activation: notDone),
       firstStepsRoute,
     );
   });
 
-  test('profil sans next, déjà actif ou statut inconnu : accueil', () {
+  test('vérifié sans next, déjà actif ou statut inconnu : accueil', () {
     expect(
-      kycExitRoute(
-        onboardingDestination: null,
-        returnTo: null,
-        justVerified: true,
-        activation: done,
-      ),
+      kycExitRoute(returnTo: null, justVerified: true, activation: done),
       '/home',
     );
     expect(
       kycExitRoute(
-        onboardingDestination: null,
         returnTo: null,
         justVerified: true,
         activation: const ActivationUnavailable(),
@@ -81,12 +45,7 @@ void main() {
 
   test('pas encore vérifié : accueil', () {
     expect(
-      kycExitRoute(
-        onboardingDestination: null,
-        returnTo: null,
-        justVerified: false,
-        activation: notDone,
-      ),
+      kycExitRoute(returnTo: null, justVerified: false, activation: notDone),
       '/home',
     );
   });

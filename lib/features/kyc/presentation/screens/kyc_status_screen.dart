@@ -2,15 +2,12 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
-import 'package:dony/features/auth/data/repositories/auth_repository.dart';
-import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
@@ -23,19 +20,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Écran de statut KYC, à double entrée : le parcours d'onboarding (étape
-/// identité, spec §2) et le profil (vérifier son identité à tout moment,
-/// hors inscription). [progress] distingue les deux — non `null` seulement
-/// depuis l'onboarding, jamais lu ici via un provider ambiant : c'est
-/// `router.dart` qui le construit (`readOnboardingProgress`), pour que cet
-/// écran reste montable en test sans `AuthBloc`/`StripeAccountBloc` fournis.
+/// Écran de statut KYC : vérifier son identité à tout moment, depuis le
+/// profil ou au moment où une action l'exige (publier, GP Pro).
 class KycStatusScreen extends StatefulWidget {
-  const KycStatusScreen({super.key, this.progress, this.returnTo});
+  const KycStatusScreen({super.key, this.returnTo});
 
-  final OnboardingProgress? progress;
-
-  /// Écran où revenir une fois vérifié, hors onboarding (cf.
-  /// `kycReturnRoutes`). `null` : l'accueil, comme avant.
+  /// Écran où revenir une fois vérifié (cf. `kycReturnRoutes`). `null` :
+  /// premiers pas ou accueil, selon [kycExitRoute].
   final String? returnTo;
 
   @override
@@ -101,43 +92,19 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
   void _navigateHome() {
     if (!mounted) return;
     context.read<AuthBloc>().add(const AuthCheckRequested());
-    _leaveIdentityStep();
+    _leave();
   }
 
-  /// Étape suivante depuis l'identité : paiements si applicable, sinon
-  /// l'accueil (`OnboardingProgress.routeAfter` — positionnel, pas de
-  /// distinction terminée/passée : dans les deux cas l'écran suivant du
-  /// parcours est le même). Hors onboarding ([widget.progress] `null`),
-  /// toujours l'accueil, comme avant cette étape.
-  ///
-  /// Pose `onboarding_seen_at` seulement quand la destination est vraiment
-  /// l'accueil — jamais quand il reste l'étape paiements à faire.
-  void _leaveIdentityStep() {
-    // L'instantané `widget.progress` a été pris à l'ouverture de l'écran,
-    // avant toute vérification. Quand l'identité vient d'aboutir, il faut le
-    // corriger : sans ça `payoutsUnlocked` resterait faux et l'étape paiements
-    // serait considérée comme verrouillée juste après l'avoir déverrouillée.
+  /// Sortie de l'écran : l'écran d'où la vérification a été demandée
+  /// (publier un trajet, envoyer un colis), seulement une fois vérifié — un
+  /// statut encore en attente n'y donnerait pas accès. Sinon premiers pas tant
+  /// que la personne n'a rien fait (guidage après KYC), sinon l'accueil.
+  void _leave() {
     final kyc = context.read<KycBloc>().state;
     final justVerified = kyc is KycStatusLoaded && kyc.kycStatus == 'VERIFIED';
-    final progress = justVerified
-        ? widget.progress?.completing(OnboardingStep.identity)
-        : widget.progress;
-    // Hors onboarding, l'écran d'où la vérification a été demandée (publier
-    // un trajet, envoyer un colis) plutôt que l'accueil — seulement une fois
-    // vérifié : un statut encore en attente n'y donnerait pas accès.
-    final returnTo = justVerified ? widget.returnTo : null;
-    final onboardingDestination = progress?.routeAfter(OnboardingStep.identity);
-    if (onboardingDestination == '/home') {
-      unawaited(
-        getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),
-      );
-    }
-    // Hors inscription et sans action demandée : premiers pas tant que la
-    // personne n'a rien fait (guidage après KYC), sinon l'accueil.
     context.go(
       kycExitRoute(
-        onboardingDestination: onboardingDestination,
-        returnTo: returnTo,
+        returnTo: justVerified ? widget.returnTo : null,
         justVerified: justVerified,
         // Même instance que le provider global ; tolère l'absence de DI.
         activation:
@@ -154,14 +121,10 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
       body: BlocConsumer<KycBloc, KycState>(
         listener: (context, state) {
           if (state is KycSessionCreated) {
-            // Préserve le marqueur d'onboarding : sans lui, le retour du
-            // webview (`KycWebViewScreen`) perdrait `widget.progress` et
-            // rendrait l'écran de statut suivant amnésique du parcours.
+            // Préserve l'écran de retour, que la webview transmet à l'écran
+            // de statut suivant.
             context.go(
-              kycVerifyLocation(
-                fromOnboarding: widget.progress != null,
-                returnTo: widget.returnTo,
-              ),
+              kycVerifyLocation(returnTo: widget.returnTo),
               extra: state.stripeUrl,
             );
             return;
@@ -196,7 +159,6 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         },
         builder: (context, state) {
           final h = DonyLayout.hPadding(context);
-          final progress = widget.progress;
           return SafeArea(
             child: DonyLayout.constrained(
               context,
@@ -205,21 +167,12 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Uniquement depuis l'onboarding : depuis le profil, une
-                    // jauge d'inscription n'aurait aucun sens.
-                    if (progress != null) ...[
-                      AuthFlowHeader.gauge(
-                        segments: progress.segments,
-                        label: OnboardingStep.identity.label(context.l10n),
-                      ),
-                      const SizedBox(height: DonySpacing.md),
-                    ] else
-                      // Depuis le profil, pas d'en-tête : le scarabée seul,
-                      // en haut à droite comme sur les autres écrans.
-                      const Align(
-                        alignment: Alignment.centerRight,
-                        child: DonyFeedbackButton(),
-                      ),
+                    // Pas d'en-tête : le scarabée seul, en haut à droite comme
+                    // sur les autres écrans.
+                    const Align(
+                      alignment: Alignment.centerRight,
+                      child: DonyFeedbackButton(),
+                    ),
                     Expanded(
                       child: LayoutBuilder(
                         builder: (context, constraints) =>
@@ -281,9 +234,6 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     void startSession() =>
         context.read<KycBloc>().add(const KycSessionRequested());
 
-    // Depuis le profil (progress null), il n'y a pas d'étape à passer.
-    final skip = widget.progress != null ? _leaveIdentityStep : null;
-
     if (state is KycError) {
       return AuthFlowActions(
         primary: DonyButton(
@@ -291,7 +241,6 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           onPressed: _loadStatus,
           variant: DonyButtonVariant.ghost,
         ),
-        onSkip: skip,
       );
     }
     if (state is! KycStatusLoaded) {
@@ -308,14 +257,12 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           label: l.kycStatusRetryAction,
           onPressed: startSession,
         ),
-        onSkip: skip,
       ),
       'NOT_STARTED' => AuthFlowActions(
         primary: DonyButton(
           label: l.kycStatusStartAction,
           onPressed: startSession,
         ),
-        onSkip: skip,
       ),
       // Passé le délai d'attente, la reprise passe devant : une session que
       // Stripe n'a jamais reçue ne bougera plus jamais d'elle-même.
@@ -325,7 +272,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           onPressed: startSession,
         ),
         skipLabel: l.kycStatusBackToApp,
-        onSkip: _leaveIdentityStep,
+        onSkip: _leave,
       ),
       // En cours. La vérification peut être en examen chez Stripe, mais elle
       // peut tout aussi bien n'avoir jamais été soumise, l'utilisateur ayant
@@ -343,7 +290,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         skipLabel: l.kycStatusContinueLater,
         onSkip: () {
           _stopPolling();
-          _leaveIdentityStep();
+          _leave();
         },
       ),
     };
