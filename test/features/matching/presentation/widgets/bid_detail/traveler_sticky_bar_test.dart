@@ -291,42 +291,67 @@ void main() {
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
-  // ACCEPTED : confirmé ou non × avant ou après la date limite × absence de
-  // l'expéditeur signalée ou contestée. Passé la date limite (ou une absence
-  // signalée), la présence n'est plus à confirmer mais le colis peut encore
-  // être remis : « Lire le QR du colis », le héros d'alerte reste dans
-  // « À traiter ».
+  // ACCEPTED : confirmé ou non × avant ou après la date limite × état de la
+  // déclaration d'absence de l'expéditeur. Passé la date limite, la présence
+  // n'est plus à confirmer mais le colis peut encore être remis : « Lire le
+  // QR du colis », le héros d'alerte reste dans « À traiter ».
   group('ACCEPTED : présence, date limite, absence signalée', () {
     final past = DateTime.now().subtract(const Duration(hours: 1));
     final future = DateTime.now().add(const Duration(hours: 2));
     // (confirmé / non confirmé) × (avant / après la date limite) ×
-    // (déclaration d'absence de l'expéditeur ouverte / aucune).
-    // Déclaration ouverte, présence non confirmée : jamais de scan. Le back ne
-    // regarde pas la déclaration au scan de départ et ne la clôt pas : sans
-    // réponse sous 24 h, l'absence serait confirmée, le séquestre remboursé et
-    // l'expéditeur pénalisé alors que le colis voyage.
-    // Déclaration ouverte, présence confirmée : scan proposé, comme avant la
-    // branche (risque connu, à traiter côté back).
+    // (PENDING_CONFIRMATION / CONTESTED / CONFIRMED / RESOLVED / aucune).
+    // Déclaration en attente (PENDING_CONFIRMATION) : le scan est proposé, le
+    // back la lève au scan de départ (RESOLVED). Contestée ou confirmée :
+    // jamais de scan, le back le refuserait (409
+    // `handover-sender-noshow-pending`) tant que l'équipe n'a pas tranché.
+    // Avant la date limite, la présence reste à confirmer quoi qu'il arrive.
+    const statuses = [
+      null,
+      'PENDING_CONFIRMATION',
+      'CONTESTED',
+      'CONFIRMED',
+      'RESOLVED',
+    ];
+    const presence = 'presence';
+    const scan = 'scan';
+    const none = 'none';
+    // (présence confirmée, date limite passée, déclaration) → action attendue.
+    const table = <(bool, bool, String?, String)>[
+      (false, false, null, presence),
+      (false, false, 'PENDING_CONFIRMATION', presence),
+      (false, false, 'CONTESTED', presence),
+      (false, false, 'CONFIRMED', presence),
+      (false, false, 'RESOLVED', presence),
+      (false, true, null, scan),
+      (false, true, 'PENDING_CONFIRMATION', scan),
+      (false, true, 'CONTESTED', none),
+      (false, true, 'CONFIRMED', none),
+      (false, true, 'RESOLVED', scan),
+      (true, false, null, scan),
+      (true, false, 'PENDING_CONFIRMATION', scan),
+      (true, false, 'CONTESTED', none),
+      (true, false, 'CONFIRMED', none),
+      (true, false, 'RESOLVED', scan),
+      (true, true, null, scan),
+      (true, true, 'PENDING_CONFIRMATION', scan),
+      (true, true, 'CONTESTED', none),
+      (true, true, 'CONFIRMED', none),
+      (true, true, 'RESOLVED', scan),
+    ];
     final cases = <String, (BidModel, String)>{
-      'non confirmé, sans date limite': (_bid(status: 'ACCEPTED'), 'presence'),
-      for (final confirmed in [false, true])
-        for (final (moment, deadline) in [('avant', future), ('après', past)])
-          for (final ns in [null, 'PENDING_CONFIRMATION', 'CONTESTED'])
-            '${confirmed ? 'confirmé' : 'non confirmé'}, $moment la date '
-                'limite, ${ns == null ? 'aucune déclaration' : 'absence $ns'}': (
-              _bid(
-                status: 'ACCEPTED',
-                voyageurConfirmed: confirmed,
-                windowEnd: deadline,
-                cancellationNoShowStatus: ns,
-              ),
-              switch ((confirmed, deadline == past, ns != null)) {
-                (true, _, _) => 'scan',
-                (false, false, _) => 'presence',
-                (false, true, false) => 'scan',
-                (false, true, true) => 'none',
-              },
-            ),
+      'non confirmé, sans date limite': (_bid(status: 'ACCEPTED'), presence),
+      for (final (confirmed, expired, ns, expected) in table)
+        '${confirmed ? 'confirmé' : 'non confirmé'}, '
+            '${expired ? 'après' : 'avant'} la date limite, '
+            '${ns == null ? 'aucune déclaration' : 'absence $ns'}': (
+          _bid(
+            status: 'ACCEPTED',
+            voyageurConfirmed: confirmed,
+            windowEnd: expired ? past : future,
+            cancellationNoShowStatus: ns,
+          ),
+          expected,
+        ),
     };
     for (final MapEntry(key: name, value: (bid, expected)) in cases.entries) {
       testWidgets('$name → $expected', (tester) async {
@@ -349,6 +374,18 @@ void main() {
         }
       });
     }
+
+    test('scanBlockedBySenderNoShow : contestée ou confirmée seulement', () {
+      for (final ns in statuses) {
+        expect(
+          TravelerStickyBar.scanBlockedBySenderNoShow(
+            _bid(status: 'ACCEPTED', cancellationNoShowStatus: ns),
+          ),
+          ns == 'CONTESTED' || ns == 'CONFIRMED',
+          reason: '$ns',
+        );
+      }
+    });
 
     testWidgets('en anglais : date limite dépassée → « Scan the parcel QR »', (
       tester,

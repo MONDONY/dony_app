@@ -5454,6 +5454,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.suiviRecentScanStepByNumber(placeholderMarker('step')),
   'suiviHelpTooltip': (l) => l.suiviHelpTooltip,
   'suiviPendingScans': (l) => l.suiviPendingScans(intPlaceholderValue),
+  'suiviPendingScansAwaitingDecision': (l) =>
+      l.suiviPendingScansAwaitingDecision(intPlaceholderValue),
   'suiviOtherTripTitle': (l) => l.suiviOtherTripTitle,
   'suiviOtherTripBody': (l) => l.suiviOtherTripBody(
     placeholderMarker('parcel'),
@@ -6681,6 +6683,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripPosterPricePerKgShort(placeholderMarker('price')),
   'suiviPhotoLost': (l) => l.suiviPhotoLost(placeholderMarker('step')),
   'suiviPhotoLostDismiss': (l) => l.suiviPhotoLostDismiss,
+  'suiviScanClosedBeforeSync': (l) => l.suiviScanClosedBeforeSync,
+  'suiviScanClosedBeforeSyncDismiss': (l) => l.suiviScanClosedBeforeSyncDismiss,
   'authRequiredFlightAlertSubtitle': (l) => l.authRequiredFlightAlertSubtitle,
   'authRequiredFlightAlertBody': (l) => l.authRequiredFlightAlertBody,
   'flightsTitle': (l) => l.flightsTitle,
@@ -7763,6 +7767,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorHandoverAmendmentPendingTitle,
   'errorHandoverAmendmentPendingMessage': (l) =>
       l.errorHandoverAmendmentPendingMessage,
+  'errorHandoverSenderNoShowPendingTitle': (l) =>
+      l.errorHandoverSenderNoShowPendingTitle,
+  'errorHandoverSenderNoShowPendingMessage': (l) =>
+      l.errorHandoverSenderNoShowPendingMessage,
+  'bidDetailSenderHandoverBlockedByNoShow': (l) =>
+      l.bidDetailSenderHandoverBlockedByNoShow,
+  'errorNoShowAlreadyDecidedTitle': (l) => l.errorNoShowAlreadyDecidedTitle,
+  'errorNoShowAlreadyDecidedMessage': (l) => l.errorNoShowAlreadyDecidedMessage,
   'amendmentEntryButton': (l) => l.amendmentEntryButton,
   'amendmentSheetTitle': (l) => l.amendmentSheetTitle,
   'amendmentSheetKgLabel': (l) => l.amendmentSheetKgLabel(

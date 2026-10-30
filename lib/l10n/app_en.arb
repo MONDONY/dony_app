@@ -8234,6 +8234,7 @@
     "description": "Bouton « ? » de l'en-tête de l'onglet Suivi, ouvre le tutoriel de la remise par QR (suivi_header.dart, SuiviHelpButton)."
   },
   "suiviPendingScans": "{count, plural, =1{1 scan waiting. It will be sent as soon as you're back online.} other{{count} scans waiting. They will be sent as soon as you're back online.}}",
+  "suiviPendingScansAwaitingDecision": "{count, plural, =1{1 handover is waiting for the Yadony team's decision.} other{{count} handovers are waiting for the Yadony team's decision.}}",
   "@suiviPendingScans": {
     "description": "Bannière hors ligne de la feuille Valider (suivi_validate_content.dart, SuiviPendingScansBanner).",
     "placeholders": {
@@ -9875,6 +9876,8 @@
   "@suiviPhotoLost": {"description": "Onglet Suivi : une étape de la file hors ligne est partie sans sa photo, dont le fichier local a disparu (cache purgé, FLUTTER-MJ). step = libellé d'étape traduit.", "placeholders": {"step": {"type": "String"}}},
   "suiviPhotoLostDismiss": "Close the lost photo message",
   "@suiviPhotoLostDismiss": {"description": "Libellé d'accessibilité du bouton qui ferme le message de photo perdue (onglet Suivi)"},
+  "suiviScanClosedBeforeSync": "This parcel was closed before your scan synced. If you have the parcel, contact support.",
+  "suiviScanClosedBeforeSyncDismiss": "Close the unsynced scan message",
   "authRequiredFlightAlertSubtitle": "Get an alert when the price drops",
   "@authRequiredFlightAlertSubtitle": {"description": "Feuille compte requis : un visiteur veut créer ou voir des alertes prix de billets."},
   "authRequiredFlightAlertBody": "Price alerts are tied to your account: create one in a minute to be notified as soon as a ticket drops below your price.",
@@ -11093,6 +11096,11 @@
   "errorAmendmentNotFoundMessage": "This edit no longer exists.",
   "errorHandoverAmendmentPendingTitle": "Edit pending",
   "errorHandoverAmendmentPendingMessage": "An edit to the parcel is awaiting the traveler's reply. Scan the parcel once they've replied.",
+  "errorHandoverSenderNoShowPendingTitle": "Handover blocked",
+  "errorHandoverSenderNoShowPendingMessage": "Your absence report is being reviewed by the Yadony team: the handover is waiting for its decision. Contact support if the sender did show up.",
+  "bidDetailSenderHandoverBlockedByNoShow": "The Yadony team is reviewing the dispute: the handover is waiting for its decision.",
+  "errorNoShowAlreadyDecidedTitle": "Report already handled",
+  "errorNoShowAlreadyDecidedMessage": "This report has already been handled.",
   "amendmentEntryButton": "Add kilos or items",
   "amendmentSheetTitle": "Edit my parcel",
   "amendmentSheetKgLabel": "EXTRA KILOS · {price}/KG · {free} KG FREE",

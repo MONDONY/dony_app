@@ -535,6 +535,26 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_top_rounded,
     ),
+    // Scan DEPART refusé tant que la déclaration d'absence de l'expéditeur
+    // est contestée ou confirmée : l'équipe tranche, rien à attendre de
+    // l'expéditeur (d'où le marteau, pas le sablier). Une déclaration encore
+    // en attente, elle, est levée par le scan. La file hors ligne garde
+    // l'étape et la renvoie plus tard (`handoverRetryLaterCodes`).
+    'handover-sender-noshow-pending': _Entry(
+      title: (l) => l.errorHandoverSenderNoShowPendingTitle,
+      message: (l) => l.errorHandoverSenderNoShowPendingMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.gavel_rounded,
+    ),
+    // Contestation d'une déclaration d'absence déjà levée (scan de départ)
+    // ou tranchée par l'équipe : la fiche du colis est relue
+    // (`BidDetailScreen`).
+    'noshow-already-decided': _Entry(
+      title: (l) => l.errorNoShowAlreadyDecidedTitle,
+      message: (l) => l.errorNoShowAlreadyDecidedMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.task_alt_rounded,
+    ),
     'already-bid': _Entry(
       title: (l) => l.errorAlreadyBidTitle,
       message: (l) => l.errorAlreadyBidMessage,

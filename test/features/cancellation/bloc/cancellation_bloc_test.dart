@@ -269,6 +269,34 @@ void main() {
       act: (b) => b.add(NoShowContestRequested('bid-x')),
       expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
+
+    // Déclaration levée par le scan de départ ou déjà tranchée par l'équipe
+    // pendant que l'expéditeur regardait la fiche : le code atteint l'écran,
+    // qui affiche le message et relit le colis.
+    blocTest<CancellationBloc, CancellationState>(
+      '409 noshow-already-decided : erreur avec son code',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.contestNoShow(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(),
+            error: const ConflictException(
+              'déjà traitée',
+              code: 'noshow-already-decided',
+            ),
+          ),
+        );
+      },
+      act: (b) => b.add(NoShowContestRequested('bid-x')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<CancellationError>().having(
+          (s) => s.error.code,
+          'code',
+          'noshow-already-decided',
+        ),
+      ],
+    );
   });
 
   // ── DeliveryNoShowReportRequested (arrivée) ─────────────────────────────────

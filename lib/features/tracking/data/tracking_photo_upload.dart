@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/app_log.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
@@ -14,10 +15,25 @@ typedef TrackingPhotoUpload = ({String? key, bool dropped, bool lost});
 /// Codes par lesquels le back refuse une étape POUR L'INSTANT : la même
 /// requête passera plus tard. `handover-supplement-pending` : un supplément
 /// de prix attend la réponse de l'expéditeur, le scan de remise (DEPART)
-/// est bloqué jusqu'à sa réponse (2 h au plus).
+/// est bloqué jusqu'à sa réponse (2 h au plus). `handover-amendment-pending` :
+/// une modification attend le voyageur. `handover-sender-noshow-pending` : la
+/// déclaration d'absence de l'expéditeur est contestée ou confirmée, l'équipe
+/// tranche ; déclaration rejetée, le rejeu passe ; absence confirmée, il
+/// reçoit un 422 `bid-not-accepted` (refus définitif).
 const handoverRetryLaterCodes = {
   'handover-supplement-pending',
   'handover-amendment-pending',
+  'handover-sender-noshow-pending',
+};
+
+/// Événement analytics d'une remise refusée pour l'instant, par code
+/// ([handoverRetryLaterCodes]). `null` pour tout autre code.
+String? handoverBlockedEvent(String? code) => switch (code) {
+  'handover-supplement-pending' => AnalyticsEvents.handoverBlockedSupplement,
+  'handover-amendment-pending' => AnalyticsEvents.handoverBlockedAmendment,
+  'handover-sender-noshow-pending' =>
+    AnalyticsEvents.handoverBlockedSenderNoShow,
+  _ => null,
 };
 
 /// Vrai quand le back a refusé l'étape pour l'instant seulement

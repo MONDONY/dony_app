@@ -1977,4 +1977,75 @@ void main() {
       }
     });
   });
+
+  group('ErrorCatalog — remise bloquée par une absence contestée', () {
+    // 409 du scan DEPART quand la déclaration d'absence de l'expéditeur est
+    // contestée ou confirmée : c'est l'équipe qui tranche, rien à attendre
+    // de l'expéditeur (pas le sablier du supplément).
+    const error = ConflictException(
+      'd',
+      code: 'handover-sender-noshow-pending',
+    );
+
+    test('titre et message en français', () {
+      expect(ErrorCatalog.isKnown(error), isTrue);
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+      expect(p.title, 'Remise bloquée');
+      expect(
+        p.message,
+        "Votre déclaration d'absence est examinée par l'équipe Yadony : la "
+        'remise attend sa décision. Contactez le support si '
+        "l'expéditeur est venu.",
+      );
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('titre et message en anglais', () {
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(p.title, 'Handover blocked');
+      expect(
+        p.message,
+        'Your absence report is being reviewed by the Yadony team: the '
+        'handover is waiting for its decision. Contact support if the '
+        'sender did show up.',
+      );
+    });
+
+    test('icône de décision, pas le sablier du supplément', () {
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+      expect(p.icon, Icons.gavel_rounded);
+      expect(p.icon, isNot(Icons.hourglass_top_rounded));
+    });
+  });
+
+  group('ErrorCatalog — déclaration d\'absence déjà traitée', () {
+    // 409 de la contestation quand la déclaration a été levée par le scan
+    // de départ ou tranchée par l'équipe entre-temps.
+    const error = ConflictException('d', code: 'noshow-already-decided');
+
+    test('message en français et en anglais', () {
+      expect(ErrorCatalog.isKnown(error), isTrue);
+      final fr = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+      expect(fr.message, 'Cette déclaration a déjà été traitée.');
+      expect(fr.severity, ErrorSeverity.info);
+      final en = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(en.message, 'This report has already been handled.');
+      expect(en.title, isNot(fr.title));
+    });
+  });
 }

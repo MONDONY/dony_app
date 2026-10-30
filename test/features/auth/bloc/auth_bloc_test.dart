@@ -13,6 +13,7 @@ import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -452,6 +453,31 @@ void main() {
       wait: const Duration(milliseconds: 50),
       expect: () => [isA<AuthInitial>()],
       verify: (_) => expectHiveUserDataCleared(),
+    );
+
+    // Messages de la file hors ligne propres au compte (remise refusée car
+    // colis clos, photo perdue) : le compte suivant sur le téléphone ne les
+    // voit jamais.
+    blocTest<AuthBloc, AuthState>(
+      'déconnexion → oublie les messages de la file hors ligne du compte',
+      setUp: () => Hive.box('user_prefs').putAll({
+        OfflineSyncService.closedScansKey: ['bid-123'],
+        OfflineSyncService.lostPhotosKey: [
+          {'bidId': 'bid-123', 'eventType': 'DEPART'},
+        ],
+      }),
+      build: () {
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthLogoutRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthInitial>()],
+      verify: (_) {
+        final prefs = Hive.box('user_prefs');
+        expect(prefs.containsKey(OfflineSyncService.closedScansKey), isFalse);
+        expect(prefs.containsKey(OfflineSyncService.lostPhotosKey), isFalse);
+      },
     );
   });
 

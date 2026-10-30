@@ -347,6 +347,39 @@ void main() {
       );
       await tester.pumpAndSettle(const Duration(seconds: 5));
     });
+
+    testWidgets('contestation d\'une déclaration déjà traitée : message puis '
+        'relecture du colis', (tester) async {
+      await pump(tester, _bid(status: 'COMPLETED'));
+      expect(detailRequests(), 1);
+
+      cancellationStates.add(
+        CancellationError(
+          const ConflictException('x', code: 'noshow-already-decided'),
+        ),
+      );
+      await settle(tester);
+
+      expect(
+        find.text('Cette déclaration a déjà été traitée.'),
+        findsOneWidget,
+      );
+      expect(detailRequests(), 1, reason: 'relecture après le message');
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    testWidgets('autre erreur : pas de relecture du colis', (tester) async {
+      await pump(tester, _bid(status: 'COMPLETED'));
+      expect(detailRequests(), 1);
+
+      cancellationStates.add(
+        CancellationError(const ConflictException('x', code: 'other')),
+      );
+      await settle(tester);
+
+      verifyNever(() => bidBloc.add(any(that: isA<BidDetailRequested>())));
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
   });
 
   group('écouteur ConversationOpenBloc', () {

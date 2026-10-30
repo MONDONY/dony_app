@@ -15432,6 +15432,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String suiviPendingScansAwaitingDecision(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count handovers are waiting for the Yadony team\'s decision.',
+      one: '1 handover is waiting for the Yadony team\'s decision.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get suiviOtherTripTitle => 'This parcel isn\'t on this trip';
 
   @override
@@ -18993,6 +19004,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suiviPhotoLostDismiss => 'Close the lost photo message';
 
   @override
+  String get suiviScanClosedBeforeSync =>
+      'This parcel was closed before your scan synced. If you have the parcel, contact support.';
+
+  @override
+  String get suiviScanClosedBeforeSyncDismiss =>
+      'Close the unsynced scan message';
+
+  @override
   String get authRequiredFlightAlertSubtitle =>
       'Get an alert when the price drops';
 
@@ -22204,6 +22223,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorHandoverAmendmentPendingMessage =>
       'An edit to the parcel is awaiting the traveler\'s reply. Scan the parcel once they\'ve replied.';
+
+  @override
+  String get errorHandoverSenderNoShowPendingTitle => 'Handover blocked';
+
+  @override
+  String get errorHandoverSenderNoShowPendingMessage =>
+      'Your absence report is being reviewed by the Yadony team: the handover is waiting for its decision. Contact support if the sender did show up.';
+
+  @override
+  String get bidDetailSenderHandoverBlockedByNoShow =>
+      'The Yadony team is reviewing the dispute: the handover is waiting for its decision.';
+
+  @override
+  String get errorNoShowAlreadyDecidedTitle => 'Report already handled';
+
+  @override
+  String get errorNoShowAlreadyDecidedMessage =>
+      'This report has already been handled.';
 
   @override
   String get amendmentEntryButton => 'Add kilos or items';

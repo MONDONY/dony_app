@@ -15541,6 +15541,17 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String suiviPendingScansAwaitingDecision(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count remises attendent la décision de l\'équipe Yadony.',
+      one: '1 remise attend la décision de l\'équipe Yadony.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get suiviOtherTripTitle => 'Ce colis n\'est pas sur ce trajet';
 
   @override
@@ -19135,6 +19146,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get suiviPhotoLostDismiss => 'Fermer le message sur la photo perdue';
 
   @override
+  String get suiviScanClosedBeforeSync =>
+      'Ce colis a été clos avant la synchronisation de votre scan. Si vous avez le colis, contactez le support.';
+
+  @override
+  String get suiviScanClosedBeforeSyncDismiss =>
+      'Fermer le message sur le scan non synchronisé';
+
+  @override
   String get authRequiredFlightAlertSubtitle =>
       'Recevez une alerte quand le prix baisse';
 
@@ -22356,6 +22375,24 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorHandoverAmendmentPendingMessage =>
       'Une modification du colis attend la réponse du voyageur. Scannez le colis une fois qu\'il a répondu.';
+
+  @override
+  String get errorHandoverSenderNoShowPendingTitle => 'Remise bloquée';
+
+  @override
+  String get errorHandoverSenderNoShowPendingMessage =>
+      'Votre déclaration d\'absence est examinée par l\'équipe Yadony : la remise attend sa décision. Contactez le support si l\'expéditeur est venu.';
+
+  @override
+  String get bidDetailSenderHandoverBlockedByNoShow =>
+      'L\'équipe Yadony examine la contestation : la remise attend sa décision.';
+
+  @override
+  String get errorNoShowAlreadyDecidedTitle => 'Déclaration déjà traitée';
+
+  @override
+  String get errorNoShowAlreadyDecidedMessage =>
+      'Cette déclaration a déjà été traitée.';
 
   @override
   String get amendmentEntryButton => 'Ajouter des kilos ou des articles';

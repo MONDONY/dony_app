@@ -31,6 +31,30 @@ void main() {
     }
   });
 
+  // Déclaration d'absence de l'expéditeur levée par le scan de départ
+  // (expéditeur) : la fiche du colis, comme le lien `bids/{id}` du back.
+  group('resolveNotificationRoute — absence levée par le scan', () {
+    test('SENDER_NOSHOW_WITHDRAWN ouvre la fiche du colis', () {
+      expect(
+        resolveNotificationRoute('SENDER_NOSHOW_WITHDRAWN', {
+          'bidId': bidId,
+          'cancellationId': cancellationId,
+        }),
+        '/bids/$bidId',
+      );
+    });
+
+    test('sans bidId valide : aucune route', () {
+      expect(resolveNotificationRoute('SENDER_NOSHOW_WITHDRAWN', {}), isNull);
+      expect(
+        resolveNotificationRoute('SENDER_NOSHOW_WITHDRAWN', {
+          'bidId': '../admin',
+        }),
+        isNull,
+      );
+    });
+  });
+
   // Notifications qui ouvrent la fiche colis du voyageur : sans bidId valide,
   // aucune cible (jamais une fiche vide).
   group('resolveNotificationRoute — fiche colis voyageur', () {

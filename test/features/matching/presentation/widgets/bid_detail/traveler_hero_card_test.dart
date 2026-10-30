@@ -213,6 +213,69 @@ void main() {
     );
   });
 
+  // Le scan de départ lève une déclaration encore en attente : le back la
+  // passe en RESOLVED et le colis, relu au retour du scan, n'affiche plus
+  // l'alerte.
+  testWidgets('absence levée par le scan (RESOLVED) → plus d\'alerte', (
+    tester,
+  ) async {
+    for (final status in ['HANDED_OVER', 'IN_TRANSIT', 'ACCEPTED']) {
+      final bid = _bid(
+        status: status,
+        voyageurConfirmed: true,
+        cancellationNoShowStatus: 'RESOLVED',
+      );
+      await _pump(tester, bid);
+      expect(find.textContaining('Absence signalée'), findsNothing);
+      expect(find.textContaining('Absence contestée'), findsNothing);
+      expect(TravelerHeroCard.senderNoShowOpen(bid), isFalse, reason: status);
+      expect(TravelerHeroCard.isShown(bid), isFalse, reason: status);
+    }
+  });
+
+  // Une seule déclaration d'absence au dépôt par colis (UNIQUE(bid, HANDOVER)
+  // côté back) : une fois levée (RESOLVED) ou tranchée (CONFIRMED), en
+  // signaler une autre répondrait 409 `noshow-already-reported`. Le champ
+  // `cancellationNoShowStatus` est celui de la déclaration HANDOVER.
+  for (final ns in ['RESOLVED', 'CONFIRMED']) {
+    testWidgets('date limite passée, déclaration $ns → pas de « Signaler '
+        "l'absence de l'expéditeur »", (tester) async {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        windowEnd: DateTime.now().subtract(const Duration(hours: 1)),
+        cancellationNoShowStatus: ns,
+      );
+      await _pump(tester, bid);
+      expect(
+        find.textContaining("Signaler l'absence de l'expéditeur"),
+        findsNothing,
+      );
+      expect(
+        find.textContaining('Date limite de dépôt dépassée'),
+        findsNothing,
+      );
+      expect(TravelerHeroCard.hasAction(bid), isFalse);
+      expect(TravelerHeroCard.isShown(bid), isFalse);
+      // Le footer lit toujours la date limite : la présence n'est plus à
+      // confirmer.
+      expect(TravelerHeroCard.windowExpired(bid), isTrue);
+    });
+  }
+
+  testWidgets('date limite passée, aucune déclaration → « Signaler l\'absence '
+      "de l'expéditeur »", (tester) async {
+    final bid = _bid(
+      status: 'ACCEPTED',
+      windowEnd: DateTime.now().subtract(const Duration(hours: 1)),
+    );
+    await _pump(tester, bid);
+    expect(
+      find.textContaining("Signaler l'absence de l'expéditeur"),
+      findsOneWidget,
+    );
+    expect(TravelerHeroCard.hasAction(bid), isTrue);
+  });
+
   testWidgets('REJECTED → rien (SizedBox.shrink)', (tester) async {
     await _pump(tester, _bid(status: 'REJECTED'));
     expect(
@@ -661,7 +724,7 @@ void main() {
     final past = DateTime.now().subtract(const Duration(hours: 2));
     final future = DateTime.now().add(const Duration(days: 1));
 
-    // Prédicats lus aussi par le footer (`TravelerStickyBar`).
+    // `windowExpired` est lu aussi par le footer (`TravelerStickyBar`).
     test('senderNoShowOpen : absence de l\'expéditeur en attente ou '
         'contestée', () {
       for (final status in ['PENDING_CONFIRMATION', 'CONTESTED']) {
@@ -673,7 +736,7 @@ void main() {
           reason: status,
         );
       }
-      for (final status in [null, 'CONFIRMED', 'REJECTED']) {
+      for (final status in [null, 'CONFIRMED', 'REJECTED', 'RESOLVED']) {
         expect(
           TravelerHeroCard.senderNoShowOpen(
             heroBid('ACCEPTED', cancellationNoShowStatus: status),

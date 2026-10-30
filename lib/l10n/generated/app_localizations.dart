@@ -25537,6 +25537,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 scan en attente. Il part tout seul dès le retour du réseau.} other{{count} scans en attente. Ils partent tout seuls dès le retour du réseau.}}'**
   String suiviPendingScans(int count);
 
+  /// Bannière des scans en attente de la feuille Valider (SuiviPendingScansBanner) : remises refusées pour l'instant parce que la déclaration d'absence de l'expéditeur est examinée par l'équipe (409 handover-sender-noshow-pending) ; la file les renvoie de plus en plus espacées.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 remise attend la décision de l\'équipe Yadony.} other{{count} remises attendent la décision de l\'équipe Yadony.}}'**
+  String suiviPendingScansAwaitingDecision(int count);
+
   /// Titre de la feuille d'un colis lu sur un autre trajet (suivi_parcel_sheets.dart).
   ///
   /// In fr, this message translates to:
@@ -31021,6 +31027,18 @@ abstract class AppLocalizations {
   /// **'Fermer le message sur la photo perdue'**
   String get suiviPhotoLostDismiss;
 
+  /// Onglet Suivi : une remise (DEPART) scannée hors ligne a été refusée à la synchronisation (422 bid-not-accepted) parce que le colis a été clos entre-temps (absence confirmée, annulation). Ne jamais promettre une alerte de l'équipe : le back n'alerte que dans quelques cas (suivi_closed_scans_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis a été clos avant la synchronisation de votre scan. Si vous avez le colis, contactez le support.'**
+  String get suiviScanClosedBeforeSync;
+
+  /// Libellé d'accessibilité du bouton qui ferme le message de remise refusée à la synchronisation (onglet Suivi)
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer le message sur le scan non synchronisé'**
+  String get suiviScanClosedBeforeSyncDismiss;
+
   /// Feuille compte requis : un visiteur veut créer ou voir des alertes prix de billets.
   ///
   /// In fr, this message translates to:
@@ -36029,6 +36047,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Une modification du colis attend la réponse du voyageur. Scannez le colis une fois qu\'il a répondu.'**
   String get errorHandoverAmendmentPendingMessage;
+
+  /// ErrorCatalog handover-sender-noshow-pending : scan DEPART refusé (409), la déclaration d'absence de l'expéditeur est contestée ou confirmée, l'équipe tranche
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise bloquée'**
+  String get errorHandoverSenderNoShowPendingTitle;
+
+  /// ErrorCatalog handover-sender-noshow-pending : message du scan DEPART refusé, déclaration d'absence contestée ou confirmée. Formulation neutre qui couvre les deux cas, alignée sur le detail du back
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre déclaration d\'absence est examinée par l\'équipe Yadony : la remise attend sa décision. Contactez le support si l\'expéditeur est venu.'**
+  String get errorHandoverSenderNoShowPendingMessage;
+
+  /// Carte d'information du corps de la fiche colis (vue expéditeur, sender_info_cards.dart) : la déclaration d'absence est contestée ou confirmée, colis encore ACCEPTED ; ni QR au footer ni au talon
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'équipe Yadony examine la contestation : la remise attend sa décision.'**
+  String get bidDetailSenderHandoverBlockedByNoShow;
+
+  /// ErrorCatalog noshow-already-decided : l'expéditeur conteste une déclaration d'absence déjà levée par le scan de départ ou tranchée par l'équipe (409). La fiche du colis est relue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déclaration déjà traitée'**
+  String get errorNoShowAlreadyDecidedTitle;
+
+  /// ErrorCatalog noshow-already-decided : message de la contestation refusée, déclaration déjà levée ou tranchée
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette déclaration a déjà été traitée.'**
+  String get errorNoShowAlreadyDecidedMessage;
 
   /// Bouton d'entrée de la modification
   ///

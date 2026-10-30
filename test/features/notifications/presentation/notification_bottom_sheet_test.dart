@@ -238,6 +238,10 @@ void main() {
         'circle-check',
       );
       expect(await iconAssetFor(tester, 'RECIPIENT_CONFIRMED'), 'badge-check');
+      expect(
+        await iconAssetFor(tester, 'SENDER_NOSHOW_WITHDRAWN'),
+        'circle-check',
+      );
       expect(await iconAssetFor(tester, 'RECIPIENT_DECLINED'), 'user-x');
       expect(
         await iconAssetFor(tester, 'RECIPIENT_REPLACEMENT_REQUESTED'),

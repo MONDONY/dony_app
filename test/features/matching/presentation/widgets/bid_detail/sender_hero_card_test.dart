@@ -419,6 +419,22 @@ void main() {
     },
   );
 
+  // Déclaration levée par le scan de départ (RESOLVED) : plus de
+  // contestation à proposer, la carte ne s'affiche plus.
+  testWidgets('6b · absence levée par le scan (RESOLVED) → plus de '
+      'contestation', (tester) async {
+    for (final status in ['HANDED_OVER', 'ACCEPTED']) {
+      final bid = _bid(status: status, cancellationNoShowStatus: 'RESOLVED');
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      expect(find.textContaining('Absence signalée'), findsNothing);
+      expect(find.textContaining('Je conteste'), findsNothing);
+      expect(find.textContaining('Je confirme'), findsNothing);
+      expect(SenderHeroCard.hasAction(bid), isFalse, reason: status);
+    }
+  });
+
   // ── Test 7: HANDED_OVER ──────────────────────────────────────────────────────
 
   testWidgets('7 · HANDED_OVER avant le départ → "Embarquement prévu"', (

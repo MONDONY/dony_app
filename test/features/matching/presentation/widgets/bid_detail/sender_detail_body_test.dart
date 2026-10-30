@@ -364,6 +364,20 @@ void main() {
         payment,
         false,
       ),
+      (
+        'absence contestée, paiement introuvable',
+        _bid(cancellationNoShowStatus: 'CONTESTED'),
+        true,
+        null,
+        false,
+      ),
+      (
+        'absence confirmée, colis encore accepté',
+        _bid(cancellationNoShowStatus: 'CONFIRMED'),
+        true,
+        null,
+        false,
+      ),
     ]) {
       testWidgets('$label → ${expected ? 'QR au talon' : 'pas de QR'}', (
         tester,
@@ -382,6 +396,69 @@ void main() {
         expect(talonQr, expected ? findsOneWidget : findsNothing);
       });
     }
+  });
+
+  // Remise bloquée par une déclaration d'absence contestée ou confirmée : ni
+  // QR au footer ni au talon, une carte d'information le dit.
+  group('remise bloquée par une absence examinée', () {
+    const text =
+        "L'équipe Yadony examine la contestation : la remise attend sa "
+        'décision.';
+    for (final (label, bid, shown) in [
+      ('contestée', _bid(cancellationNoShowStatus: 'CONTESTED'), true),
+      (
+        'confirmée, colis encore accepté',
+        _bid(cancellationNoShowStatus: 'CONFIRMED'),
+        true,
+      ),
+      (
+        'confirmée, colis annulé',
+        _bid(status: 'CANCELLED', cancellationNoShowStatus: 'CONFIRMED'),
+        false,
+      ),
+      (
+        'en attente',
+        _bid(cancellationNoShowStatus: 'PENDING_CONFIRMATION'),
+        false,
+      ),
+      ('levée', _bid(cancellationNoShowStatus: 'RESOLVED'), false),
+      ('aucune', _bid(), false),
+    ]) {
+      testWidgets('$label → ${shown ? 'carte' : 'pas de carte'}', (
+        tester,
+      ) async {
+        sizeView(tester);
+        await tester.pumpWidget(
+          _host(bid, cancellationBloc, conversationOpenBloc),
+        );
+        await tester.pump(const Duration(seconds: 1));
+        expect(
+          find.byKey(const Key('sender-handover-blocked-card')),
+          shown ? findsOneWidget : findsNothing,
+        );
+        expect(find.text(text), shown ? findsOneWidget : findsNothing);
+      });
+    }
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(cancellationNoShowStatus: 'CONTESTED'),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      expect(
+        find.text(
+          'The Yadony team is reviewing the dispute: the handover is waiting '
+          'for its decision.',
+        ),
+        findsOneWidget,
+      );
+    });
   });
 
   // ── Test 1: ACCEPTED → billet, voyageur, paiement, tuiles ───────────────────

@@ -13,6 +13,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detai
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_info_cards.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tile_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tiles.dart';
@@ -370,6 +371,10 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     ];
 
     final infos = <(String, Widget)>[
+      // Remise bloquée par une déclaration d'absence examinée par l'équipe :
+      // ni QR au footer ni au talon, la carte dit pourquoi.
+      if (SenderHandoverBlockedCard.shouldShow(bid))
+        ('info-handover-blocked', const SenderHandoverBlockedCard()),
       if (supplement != null && !supplementReply)
         ('info-supplement', supplement),
       if (amendment != null) ('info-amendment', amendment),

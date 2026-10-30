@@ -850,9 +850,12 @@ Widget _suiviHarness(List<String> roles, {SuiviMode? mode}) {
   ).thenAnswer((_) async => [_suiviBid('bid-9', 'IN_TRANSIT')]);
   final offlineSync = _SuiviMockOfflineSync();
   when(() => offlineSync.pendingCountFor(any())).thenReturn(2);
+  when(() => offlineSync.awaitingDecisionCountFor(any())).thenReturn(1);
   when(() => offlineSync.queueChanges).thenReturn(ChangeNotifier());
   when(() => offlineSync.lostPhotoChanges).thenReturn(ChangeNotifier());
   when(() => offlineSync.lostPhotosFor(any())).thenReturn(const []);
+  when(() => offlineSync.closedScanChanges).thenReturn(ChangeNotifier());
+  when(() => offlineSync.closedScansFor(any())).thenReturn(const []);
 
   void register<T extends Object>(T Function() factory) {
     if (getIt.isRegistered<T>()) getIt.unregister<T>();

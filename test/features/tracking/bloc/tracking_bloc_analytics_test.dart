@@ -134,6 +134,48 @@ void main() {
       },
     );
 
+    test(
+      '409 handover-sender-noshow-pending → handover_blocked_sender_noshow',
+      () async {
+        when(() => repo.postScan(bidId: 'bid1', eventType: 'DEPART')).thenThrow(
+          const ConflictException('x', code: 'handover-sender-noshow-pending'),
+        );
+        final bloc = online();
+        bloc.add(QrScanSubmitRequested(bidId: 'bid1', eventType: 'DEPART'));
+        await bloc.stream.firstWhere((s) => s is QrScanError);
+
+        verify(
+          () => backend.capture(
+            AnalyticsEvents.handoverBlockedSenderNoShow,
+            any(that: containsPair('channel', 'direct')),
+          ),
+        ).called(1);
+        verifyNever(
+          () =>
+              backend.capture(AnalyticsEvents.handoverBlockedSupplement, any()),
+        );
+      },
+    );
+
+    test(
+      '409 handover-amendment-pending → handover_blocked_amendment',
+      () async {
+        when(() => repo.postScan(bidId: 'bid1', eventType: 'DEPART')).thenThrow(
+          const ConflictException('x', code: 'handover-amendment-pending'),
+        );
+        final bloc = online();
+        bloc.add(QrScanSubmitRequested(bidId: 'bid1', eventType: 'DEPART'));
+        await bloc.stream.firstWhere((s) => s is QrScanError);
+
+        verify(
+          () => backend.capture(
+            AnalyticsEvents.handoverBlockedAmendment,
+            any(that: containsPair('channel', 'direct')),
+          ),
+        ).called(1);
+      },
+    );
+
     test('autre refus : aucun événement de supplément', () async {
       when(
         () => repo.postScan(bidId: 'bid1', eventType: 'DEPART'),

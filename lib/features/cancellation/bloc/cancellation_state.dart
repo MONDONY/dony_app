@@ -52,6 +52,10 @@ class ReturnCodeLoaded extends CancellationState {
 class CancellationError extends CancellationState {
   final AppException error;
   CancellationError(this.error);
+
+  /// 409 `noshow-already-decided` : la déclaration d'absence a déjà été
+  /// levée (scan de départ) ou tranchée par l'équipe. L'écran relit le colis.
+  bool get noShowAlreadyDecided => error.code == 'noshow-already-decided';
 }
 
 /// L'expéditeur a gardé son colis sur le trajet reporté.
