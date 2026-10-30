@@ -2,9 +2,9 @@
 
 > **Pour les agents :** SOUS-COMPÉTENCE REQUISE : utiliser superpowers:subagent-driven-development (recommandé) ou superpowers:executing-plans pour exécuter ce plan tâche par tâche. Les étapes utilisent des cases à cocher (`- [ ]`).
 
-**Objectif :** réduire l'inscription à code reçu → « Faisons connaissance » (facultatif) → « Par quoi commencer ? », reporter pays, nom, mesure d'usage, parrainage et identité au moment du besoin, et ouvrir l'accueil sur le mode choisi.
+**Objectif :** réduire l'inscription à code reçu → « Faisons connaissance » (facultatif) → « Par quoi voulez-vous commencer ? », reporter pays, nom, mesure d'usage, parrainage et identité au moment du besoin, et ouvrir l'accueil sur le mode choisi.
 
-**Architecture :** les étapes obligatoires de l'ancien parcours (jauge `OnboardingStep`, écrans consentement, pays, « Votre projet », nom, parrainage) sont supprimées. Un seul écran facultatif les remplace pour le nom et le pays. Le choix de « Par quoi commencer ? » enregistre l'intention côté serveur (`PUT /users/me/intent`), et l'accueil en déduit son mode par défaut (`SearchMode`). Aucun stockage local ni migration backend nouveaux.
+**Architecture :** les étapes obligatoires de l'ancien parcours (jauge `OnboardingStep`, écrans consentement, pays, « Votre projet », nom, parrainage) sont supprimées. Un seul écran facultatif les remplace pour le nom et le pays. Le choix de « Par quoi voulez-vous commencer ? » enregistre l'intention côté serveur (`PUT /users/me/intent`), et l'accueil en déduit son mode par défaut (`SearchMode`). Aucun stockage local ni migration backend nouveaux.
 
 **Stack :** Flutter, flutter_bloc, GoRouter, GetIt, Hive. Fiches de l'assistant dans `dony-back` (Markdown).
 
@@ -56,7 +56,7 @@
 
 - [ ] **Step 1: tests qui échouent** dans `intent_cubit_test.dart` : `isValid est vrai avec une intention et sans destination` ; `submit envoie destinationCountry null quand aucune destination n'est choisie` (mock `ActivationRepository.declareIntent` appelé avec `destinationCountry: null`, `source: IntentSource.signup`) ; `submit reste inactif sans intention`.
 - [ ] **Step 2:** `flutter test test/features/activation/bloc/intent_cubit_test.dart` doit échouer.
-- [ ] **Step 3:** modifier `isValid` en `intent != null`. Dans `IntentForm`, la destination reste proposée mais son titre précise qu'elle est facultative (clé ARB). Sous-titre de Réglages › « Vous utilisez Yadony pour… » : FR « Choisit aussi l'écran d'accueil. », EN équivalent.
+- [ ] **Step 3:** modifier `isValid` en `intent != null`. Dans `IntentForm`, la destination reste proposée mais son titre précise qu'elle est facultative (clé ARB). Sous-titre de Réglages › « Ce que je fais sur Yadony » : FR « Choisit aussi l'écran d'accueil. », EN équivalent.
 - [ ] **Step 4:** relancer ce fichier et `test/features/settings` : tout au vert.
 - [ ] **Step 5:** commit `feat(activation): le pays visé devient facultatif dans l'intention`.
 
@@ -81,7 +81,7 @@
 
 ---
 
-### Task 3: « Par quoi commencer ? » enregistre l'intention
+### Task 3: « Par quoi voulez-vous commencer ? » enregistre l'intention
 
 **Files:**
 - Modify: `lib/features/auth/presentation/screens/first_steps_screen.dart`
@@ -209,7 +209,7 @@
 - Test: tests existants de la base de connaissances de l'assistant (`grep -rl KnowledgeBase dony-back/src/test`)
 
 - [ ] **Step 1:** écrire la modification dans un worktree du back créé depuis `origin/main` (le checkout courant peut être en retard sur `main`), branche `feature/fiches-onboarding-sans-friction`.
-- [ ] **Step 2:** contenu à refléter : l'inscription s'arrête au code ; nom et pays sont facultatifs et se complètent plus tard ; le code de parrainage d'un lien s'applique tout seul, sinon saisie dans Profil › Parrainage ; l'accueil s'ouvre sur « Je voyage » seulement après le choix « Voyager avec des colis », modifiable dans Réglages › « Vous utilisez Yadony pour… » ; l'identité est demandée avant d'envoyer un colis ou de publier un trajet.
+- [ ] **Step 2:** contenu à refléter : l'inscription s'arrête au code ; nom et pays sont facultatifs et se complètent plus tard ; le code de parrainage d'un lien s'applique tout seul, sinon saisie dans Profil › Parrainage ; l'accueil s'ouvre sur « Je voyage » seulement après le choix « Voyager avec des colis », modifiable dans Réglages › « Ce que je fais sur Yadony » ; l'identité est demandée avant d'envoyer un colis ou de publier un trajet.
 - [ ] **Step 3:** `./mvnw test -Dtest='*KnowledgeBase*'` au vert (un seul Maven à la fois), puis la suite complète.
 - [ ] **Step 4:** commit `docs(assistant): fiches de l'inscription sans friction`, ouvrir la PR, fusionner dès la CI verte. Un déploiement du back est nécessaire pour que les fiches servent (propriétaire).
 
@@ -224,5 +224,5 @@
 - [ ] **Step 1:** dans la table des événements : retirer `onboarding_step_viewed`, `onboarding_step_completed`, `onboarding_step_skipped`, `onboarding_completed` ; corriger `signup_completed` (émis par `OtpVerificationScreen._continueAfterSignup`, pas `PinSetupScreen`) ; ajouter `profile_basics_viewed`, `profile_basics_completed`, `profile_basics_skipped`, `referral_auto_applied` ; mettre à jour `first_steps_choice` (valeurs `send`, `travel`, `browse`, `later`) et retirer `gp_pro_application_submitted` avec `source: signup` si la section a été supprimée.
 - [ ] **Step 2:** `flutter analyze` sans erreur ni avertissement, `dart run tool/check_hardcoded_strings.dart` à 0, `flutter test test/app/router_screen_names_test.dart` au vert. Vérifier deux comportements que le design suppose déjà acquis, et ajouter un test s'il n'existe pas : (a) un compte sans prénom s'affiche avec son nom d'utilisateur, jamais son téléphone ni son e-mail (`UserModel.displayName` côté app, `UserEntity.publicDisplayName` côté back) ; (b) le refus 403 `contact-kyc-required` d'une offre ouvre `KycRequiredBottomSheet` et non une erreur brute.
 - [ ] **Step 3:** `flutter test --coverage` entier au vert, couverture globale ≥ 90 % (`genhtml coverage/lcov.info -o coverage/html`).
-- [ ] **Step 4:** recette sur simulateur iOS (le propriétaire valide avant tout build de recette) : inscription par téléphone → code → « Faisons connaissance » passé → « Voyager avec des colis » → l'accueil s'ouvre sur « Je voyage » ; relancer l'app : toujours « Je voyage » ; Réglages › « Vous utilisez Yadony pour… » → « Envoyer des colis » : l'accueil repasse sur « J'envoie un colis » ; thème sombre et 360 dp sur chacun des écrans touchés.
+- [ ] **Step 4:** recette sur simulateur iOS (le propriétaire valide avant tout build de recette) : inscription par téléphone → code → « Faisons connaissance » passé → « Voyager avec des colis » → l'accueil s'ouvre sur « Je voyage » ; relancer l'app : toujours « Je voyage » ; Réglages › « Ce que je fais sur Yadony » → « Envoyer des colis » : l'accueil repasse sur « J'envoie un colis » ; thème sombre et 360 dp sur chacun des écrans touchés.
 - [ ] **Step 5:** commit `docs(app): table des événements de l'inscription sans friction`, ouvrir la PR app citant la PR back, fusion après la PR back et une CI verte.

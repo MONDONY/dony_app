@@ -5,13 +5,13 @@ Périmètre : `dony_app` (Flutter) + fiches de l'assistant dans `dony-back`.
 
 ## Intention
 
-Aujourd'hui, une personne qui s'inscrit traverse jusqu'à 11 écrans avant d'atteindre l'accueil : carrousel, méthode, téléphone, code, consentement analytics, pays, « Votre projet », nom, parrainage, identité (KYC), « Par quoi commencer ? ». La plupart ne servent pas à entrer dans l'app : ils servent à Yadony.
+Aujourd'hui, une personne qui s'inscrit traverse jusqu'à 11 écrans avant d'atteindre l'accueil : carrousel, méthode, téléphone, code, consentement analytics, pays, « Votre projet », nom, parrainage, identité (KYC), « Par quoi voulez-vous commencer ? ». La plupart ne servent pas à entrer dans l'app : ils servent à Yadony.
 
 Principe voulu par le propriétaire : **zéro friction à l'inscription**. Une information ou une action qui n'est pas indispensable pour créer le compte n'est demandée **qu'au moment où l'utilisateur en a besoin pour une action précise**, jamais avant.
 
 ## Objectifs
 
-1. Parcours d'inscription réduit à : **carrousel d'1 écran → méthode → téléphone ou e-mail → code → écran final « Par quoi commencer ? »** (puis accueil).
+1. Parcours d'inscription réduit à : **carrousel d'1 écran → méthode → téléphone ou e-mail → code → écran final « Par quoi voulez-vous commencer ? »** (puis accueil).
 2. Chaque donnée retirée de l'inscription est redemandée **au bon moment** (tableau ci-dessous), sans nouvelle porte inutile.
 3. Aucune perte de conformité : CGU mentionnées, consentement analytics respecté, vérification d'identité toujours exigée avant d'envoyer un colis ou de publier un trajet.
 4. L'entonnoir reste mesurable dans PostHog (événements remplacés, pas simplement supprimés).
@@ -59,7 +59,7 @@ Les décisions marquées **[propriétaire]** viennent de lui ; les autres sont m
 | CGU | **Inchangées** (mon choix : question juridique, on ne la touche pas dans ce lot). Le back n'enregistre aucune acceptation des CGU (aucun champ ni `audit_log` trouvé), donc rien ne casse ; l'assouplir plus tard reste possible. | — |
 | Consentement analytics | Écran supprimé. **Zone RGPD ou pays inconnu** : feuille discrète affichée à la première arrivée sur l'accueil. **Hors RGPD** : accordé automatiquement comme aujourd'hui (`GdprHelper.resolveConsentAction`). Aucun suivi tant que la réponse manque. La feuille est **ignorable** (valeur par défaut : refus) et revient à l'ouverture suivante. `signup_completed` et `first_steps_choice` ne sont émis que si le consentement est accordé : on accepte de les perdre pour qui ne répond pas. `AnalyticsConsentGate` cesse de renvoyer vers `/auth/analytics-consent` à chaque connexion. | À la première arrivée sur l'accueil, puis Réglages › Confidentialité (existant) |
 | Pays | Écran supprimé. L'indicatif du téléphone ne vaut pas résidence : **rien n'est écrit sur le serveur automatiquement**. L'indicatif ne sert qu'à **préremplir** l'écran quand il sera demandé. Pays vide tant qu'il n'est pas confirmé. | Demandé à la première action qui en dépend : publier un trajet (redirection existante vers `/auth/country-selection`, qui devient un écran hors parcours), activer les paiements Connect, ajouter un compte de versement mobile money. Aussi Réglages › Préférences. |
-| Votre projet (intention) | Écran supprimé, **fusionné** dans « Par quoi commencer ? » : le choix fait à cet écran enregistre l'intention (`intent_declared`, `source: SIGNUP`). « Plus tard » n'enregistre rien. Le pays visé et la case GP Pro quittent l'inscription. | GP Pro : Profil › GP Pro (existant). Pays visé : à la création d'une alerte ou d'une demande. |
+| Votre projet (intention) | Écran supprimé, **fusionné** dans « Par quoi voulez-vous commencer ? » : le choix fait à cet écran enregistre l'intention (`intent_declared`, `source: SIGNUP`). « Plus tard » n'enregistre rien. Le pays visé et la case GP Pro quittent l'inscription. | GP Pro : Profil › GP Pro (existant). Pays visé : à la création d'une alerte ou d'une demande. |
 | Nom et prénom | Écran supprimé. | Demandé dans une feuille à la **première action qui l'expose aux autres** : première offre, premier message, première publication. Le nom légal arrive aussi de la vérification d'identité. Affichage de repli quand le nom manque (voir questions). |
 | Parrainage | Écran supprimé. | Un code issu d'un lien (`PendingReferralCodeStore`) est appliqué automatiquement juste après `register`, via `POST /referral/redeem` (aucune limite de délai côté back). En cas de refus (404 inconnu, 409 `already-referred` ou auto-parrainage), message neutre et le code est oublié. Sinon saisie dans Profil › Parrainage (existant). |
 | Identité (KYC) | Retirée de l'inscription. | Le **back fait foi** : publication de trajet (`yadony.kyc.enforce`, vrai par défaut), paiements, et offre quand le voyageur n'accepte que les contacts vérifiés (403 `contact-kyc-required`). Côté app : `KycRequiredBottomSheet` avant d'envoyer un colis (`package_request_actions.dart`) et à l'intro de publication (`publish_intro_screen.dart`). **À faire** : vérifier que le 403 `contact-kyc-required` d'une offre ouvre cette même feuille et non une erreur brute. |
@@ -89,7 +89,7 @@ La bannière « complétez votre profil » (`effectiveStripeStatus` et progressi
 
 ## Décisions prises après la relecture (mes choix, à relire)
 
-- **`onboarding_seen_at`** : posé à l'**affichage** de « Par quoi commencer ? » (via `markOnboardingSeen()`). Le back ne fait que le stocker et l'exposer (`AuthService.markOnboardingSeen`, `UserResponse`), aucun autre usage. Les appels des écrans parrainage, KYC et paiements disparaissent avec eux. `nextStep` et la jauge sont supprimés ; la bannière de complétion calcule ses deux items elle-même.
+- **`onboarding_seen_at`** : posé à l'**affichage** de « Par quoi voulez-vous commencer ? » (via `markOnboardingSeen()`). Le back ne fait que le stocker et l'exposer (`AuthService.markOnboardingSeen`, `UserResponse`), aucun autre usage. Les appels des écrans parrainage, KYC et paiements disparaissent avec eux. `nextStep` et la jauge sont supprimés ; la bannière de complétion calcule ses deux items elle-même.
 - **Comptes en cours d'ancien parcours** : `/auth/personal-info`, `/auth/referral-code`, `/auth/analytics-consent` et l'étape « Votre projet » redirigent vers `/home`. `/auth/country-selection` et `/kyc/verify` restent (entrées hors parcours) ; le paramètre `?from=onboarding` est ignoré.
 - **`signup_completed`** est émis dans `OtpVerificationScreen._continueAfterSignup` (la table du CLAUDE.md citant `PinSetupScreen` est périmée : à corriger).
 - **Carrousel** : le choix de la page n'a aucun impact légal ni analytics.
@@ -97,21 +97,21 @@ La bannière « complétez votre profil » (`effectiveStripeStatus` et progressi
 ## Mise à jour du 30/10 : décisions du propriétaire (elles priment sur le tableau ci-dessus)
 
 - **Introduction et méthode** : ne changent pas. Le carrousel n'est pas raccourci dans ce lot ; seuls les écrans à partir du code reçu bougent.
-- **Un seul écran facultatif « Faisons connaissance »**, juste après le code et avant « Par quoi commencer ? » : prénom, nom et pays ensemble, avec « Continuer » et « Passer pour l'instant ». Rien n'y est obligatoire. Le pays est prérempli d'après l'indicatif (modifiable, jamais écrit sans que la personne continue).
+- **Un seul écran facultatif « Faisons connaissance »**, juste après le code et avant « Par quoi voulez-vous commencer ? » : prénom, nom et pays ensemble, avec « Continuer » et « Passer pour l'instant ». Rien n'y est obligatoire. Le pays est prérempli d'après l'indicatif (modifiable, jamais écrit sans que la personne continue).
 - **Le prénom n'est plus exigé nulle part.** Il n'y a plus de feuille « Comment vous appelez-vous ? » avant la première offre. Il faut donc un affichage de repli côté voyageur et destinataire quand le nom manque.
 - **Le pays reste demandé en feuille** à la publication d'un trajet, aux paiements Connect et aux comptes de versement, **uniquement si la personne l'a passé** à « Faisons connaissance ».
-- Écrans du parcours : code, « Faisons connaissance », « Par quoi commencer ? ». Maquettes : https://claude.ai/artifact/W8DDaysZuvXQu3zX2bbJag
-- `onboarding_seen_at` reste posé à l'affichage de « Par quoi commencer ? ». Événements à prévoir pour « Faisons connaissance » : vue, `completed`, `skipped` (sans PII).
+- Écrans du parcours : code, « Faisons connaissance », « Par quoi voulez-vous commencer ? ». Maquettes : https://claude.ai/artifact/W8DDaysZuvXQu3zX2bbJag
+- `onboarding_seen_at` reste posé à l'affichage de « Par quoi voulez-vous commencer ? ». Événements à prévoir pour « Faisons connaissance » : vue, `completed`, `skipped` (sans PII).
 - **Mode d'accueil par défaut** (le sélecteur « J'envoie un colis » / « Je voyage » de l'accueil, `SearchMode.trips` / `SearchMode.parcels`) :
   - « Voyager avec des colis » : l'accueil s'ouvre sur **Je voyage** (`SearchMode.parcels`).
   - « Envoyer un colis », « Je regarde d'abord », « Plus tard » ou aucun choix : l'accueil s'ouvre sur **J'envoie un colis** (`SearchMode.trips`). C'est déjà le défaut codé en dur (`home_screen.dart`, initialisation de `_mode`).
-  - Source de vérité : l'intention déclarée côté serveur (`intent`), enregistrée par le choix de « Par quoi commencer ? » (`intent_declared`, `source: SIGNUP`). `TRAVELER` donne `parcels` ; `SENDER`, `BOTH` ou absente donnent `trips`. Pas de nouveau stockage local.
-  - Modifiable dans Réglages › « Vous utilisez Yadony pour… » (écran existant `IntentPromptSheet`), dont le sous-titre précise désormais « Choisit aussi l'écran d'accueil ». Cette feuille ne doit plus exiger le pays visé (`IntentFormState.isValid` exige aujourd'hui intention **et** destination : à assouplir, le pays visé quittant l'inscription).
+  - Source de vérité : l'intention déclarée côté serveur (`intent`), enregistrée par le choix de « Par quoi voulez-vous commencer ? » (`intent_declared`, `source: SIGNUP`). `TRAVELER` donne `parcels` ; `SENDER`, `BOTH` ou absente donnent `trips`. Pas de nouveau stockage local.
+  - Modifiable dans Réglages › « Ce que je fais sur Yadony » (écran existant `IntentPromptSheet`), dont le sous-titre précise désormais « Choisit aussi l'écran d'accueil ». Cette feuille ne doit plus exiger le pays visé (`IntentFormState.isValid` exige aujourd'hui intention **et** destination : à assouplir, le pays visé quittant l'inscription).
   - La bascule manuelle du sélecteur reste valable pour la session ; à chaque ouverture de l'app, retour au défaut.
   - Ne touche pas à `ActiveRoleCubit` : le rôle voyageur réel (publier, encaisser) reste lié au rôle `TRAVELER` du compte.
 
 ## Mesure du succès
 
-- Écrans entre « code validé » et « accueil » : de 6 à 1 (« Par quoi commencer ? »).
+- Écrans entre « code validé » et « accueil » : de 6 à 1 (« Par quoi voulez-vous commencer ? »).
 - Taux de passage `signup_completed` → première action métier (publication ou demande) : au moins stable, à comparer sur 2 semaines.
 - Taux de réussite de la vérification d'identité au moment de l'action : pas de baisse.
