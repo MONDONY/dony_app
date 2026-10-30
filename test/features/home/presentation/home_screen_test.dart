@@ -11,6 +11,8 @@ import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/activation/bloc/activation_cubit.dart';
+import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -154,6 +156,9 @@ class MockActiveRoleCubit extends MockCubit<ActiveRole>
 
 class MockFavoriteIdsCubit extends MockCubit<FavoriteIdsState>
     implements FavoriteIdsCubit {}
+
+class MockActivationCubit extends MockCubit<ActivationState>
+    implements ActivationCubit {}
 
 class MockHiveService extends Mock implements HiveService {}
 
@@ -862,6 +867,103 @@ void main() {
   });
 
   tearDown(getIt.reset);
+
+  group("HomeScreen — mode d'ouverture selon l'intention", () {
+    late MockActivationCubit activation;
+    late StreamController<ActivationState> activationStream;
+
+    Future<void> pumpAvec(WidgetTester tester, ActivationState initial) async {
+      activation = MockActivationCubit();
+      activationStream = StreamController<ActivationState>.broadcast();
+      addTearDown(activationStream.close);
+      whenListen(activation, activationStream.stream, initialState: initial);
+      when(() => activation.load()).thenAnswer((_) async {});
+      getIt.registerSingleton<ActivationCubit>(activation);
+      await tester.pumpWidget(_buildHome());
+      await tester.pump(const Duration(milliseconds: 1000));
+    }
+
+    SearchMode modeAffiche(WidgetTester tester) =>
+        tester.widget<SearchModeSelector>(find.byType(SearchModeSelector)).mode;
+
+    Future<void> emettre(WidgetTester tester, ActivationState state) async {
+      activationStream.add(state);
+      await tester.pumpAndSettle();
+    }
+
+    ActivationLoaded charge(UserIntent? intent) =>
+        ActivationLoaded(ActivationStatus(intent: intent));
+
+    testWidgets('voyageur : « Je voyage » est actif', (tester) async {
+      await pumpAvec(tester, charge(UserIntent.traveler));
+      expect(modeAffiche(tester), SearchMode.parcels);
+    });
+
+    for (final etat in <String, ActivationState>{
+      'les deux': charge(UserIntent.both),
+      'expéditeur': charge(UserIntent.sender),
+      'indisponible': const ActivationUnavailable(),
+      'erreur': const ActivationError(),
+      'initial': const ActivationInitial(),
+    }.entries) {
+      testWidgets("${etat.key} : « J'envoie un colis » est actif", (
+        tester,
+      ) async {
+        await pumpAvec(tester, etat.value);
+        expect(modeAffiche(tester), SearchMode.trips);
+      });
+    }
+
+    testWidgets("un changement d'intention applique le nouveau mode", (
+      tester,
+    ) async {
+      await pumpAvec(tester, const ActivationInitial());
+      expect(modeAffiche(tester), SearchMode.trips);
+
+      await emettre(tester, charge(UserIntent.traveler));
+      expect(modeAffiche(tester), SearchMode.parcels);
+
+      await emettre(tester, charge(UserIntent.sender));
+      expect(modeAffiche(tester), SearchMode.trips);
+    });
+
+    testWidgets(
+      'un rechargement avec la même intention ne réinitialise pas un mode '
+      'choisi à la main',
+      (tester) async {
+        await pumpAvec(tester, charge(UserIntent.traveler));
+        expect(modeAffiche(tester), SearchMode.parcels);
+
+        tester
+            .widget<SearchModeSelector>(find.byType(SearchModeSelector))
+            .onChanged(SearchMode.trips);
+        await tester.pumpAndSettle();
+        expect(modeAffiche(tester), SearchMode.trips);
+
+        await emettre(
+          tester,
+          const ActivationLoaded(
+            ActivationStatus(intent: UserIntent.traveler, kycVerified: true),
+          ),
+        );
+        expect(modeAffiche(tester), SearchMode.trips);
+      },
+    );
+
+    testWidgets("le mode automatique n'émet pas home_search_mode_changed", (
+      tester,
+    ) async {
+      await pumpAvec(tester, const ActivationInitial());
+      await emettre(tester, charge(UserIntent.traveler));
+      expect(modeAffiche(tester), SearchMode.parcels);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeSearchModeChanged,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+  });
 
   group('HomeScreen — Map sender view', () {
     testWidgets('shows corridor label in search bar', (tester) async {
