@@ -22370,7 +22370,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorHandoverSenderNoShowPendingMessage =>
-      'L\'expéditeur a contesté votre déclaration d\'absence : l\'équipe Yadony doit trancher avant la remise. Contactez le support si l\'expéditeur est venu.';
+      'Votre déclaration d\'absence est examinée par l\'équipe Yadony : la remise attend sa décision. Contactez le support si l\'expéditeur est venu.';
 
   @override
   String get errorNoShowAlreadyDecidedTitle => 'Déclaration déjà traitée';

@@ -22218,7 +22218,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorHandoverSenderNoShowPendingMessage =>
-      'The sender contested your absence report: the Yadony team must decide before the handover. Contact support if the sender did show up.';
+      'Your absence report is being reviewed by the Yadony team: the handover is waiting for its decision. Contact support if the sender did show up.';
 
   @override
   String get errorNoShowAlreadyDecidedTitle => 'Report already handled';

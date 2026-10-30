@@ -1996,8 +1996,8 @@ void main() {
       expect(p.title, 'Remise bloquée');
       expect(
         p.message,
-        "L'expéditeur a contesté votre déclaration d'absence : l'équipe "
-        'Yadony doit trancher avant la remise. Contactez le support si '
+        "Votre déclaration d'absence est examinée par l'équipe Yadony : la "
+        'remise attend sa décision. Contactez le support si '
         "l'expéditeur est venu.",
       );
       expect(p.severity, ErrorSeverity.warning);
@@ -2011,9 +2011,9 @@ void main() {
       expect(p.title, 'Handover blocked');
       expect(
         p.message,
-        'The sender contested your absence report: the Yadony team must '
-        'decide before the handover. Contact support if the sender did '
-        'show up.',
+        'Your absence report is being reviewed by the Yadony team: the '
+        'handover is waiting for its decision. Contact support if the '
+        'sender did show up.',
       );
     });
 

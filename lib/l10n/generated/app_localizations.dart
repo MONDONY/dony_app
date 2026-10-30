@@ -36048,10 +36048,10 @@ abstract class AppLocalizations {
   /// **'Remise bloquée'**
   String get errorHandoverSenderNoShowPendingTitle;
 
-  /// ErrorCatalog handover-sender-noshow-pending : message du scan DEPART refusé, déclaration d'absence contestée ou confirmée
+  /// ErrorCatalog handover-sender-noshow-pending : message du scan DEPART refusé, déclaration d'absence contestée ou confirmée. Formulation neutre qui couvre les deux cas, alignée sur le detail du back
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur a contesté votre déclaration d\'absence : l\'équipe Yadony doit trancher avant la remise. Contactez le support si l\'expéditeur est venu.'**
+  /// **'Votre déclaration d\'absence est examinée par l\'équipe Yadony : la remise attend sa décision. Contactez le support si l\'expéditeur est venu.'**
   String get errorHandoverSenderNoShowPendingMessage;
 
   /// ErrorCatalog noshow-already-decided : l'expéditeur conteste une déclaration d'absence déjà levée par le scan de départ ou tranchée par l'équipe (409). La fiche du colis est relue.
