@@ -12,14 +12,22 @@ import 'package:flutter/material.dart';
 /// Carte « Demandes » du corps de l'écran du trajet (vue du voyageur) :
 /// combien de demandes attendent sa réponse, et l'accès à leur liste.
 ///
-/// Toujours affichée pour un trajet publié ou passé ([shownFor] : ACTIVE,
-/// FULL, IN_PROGRESS, COMPLETED), jamais grisée, même sans demande
-/// (PROD-1N : une entrée éteinte laissait croire à une panne). Un brouillon,
-/// un trajet annulé ou retiré par l'équipe n'en a pas.
+/// Où elle s'affiche ([shownFor], phase de [tripRequestsPhaseFor]) : toujours
+/// pour un trajet publié ou complet, jamais grisée, même sans demande
+/// (PROD-1N : une entrée éteinte laissait croire à une panne). Pour un trajet
+/// parti ou terminé, seulement s'il reste des demandes à traiter : le back
+/// les expire au départ et refuse tout nouveau colis, la carte n'aurait rien
+/// à promettre. Un brouillon, un trajet annulé ou retiré par l'équipe n'en a
+/// pas.
 ///
 /// Le compte ([tripPendingRequestCount]) : demandes `PENDING` /
 /// `PAYMENT_ESCROWED` des colis chargés par l'écran ([bids]), à défaut
-/// `pendingBidCount` du modèle tant que la liste n'a pas répondu.
+/// `pendingBidCount` du modèle tant que la liste n'a pas répondu. Compte
+/// inconnu ([tripPendingRequestCountKnown] faux) : une ligne neutre, jamais
+/// « Aucune demande à traiter ».
+///
+/// La sous-ligne dépend du statut : ACTIVE, ce qui arrive ensuite ; FULL,
+/// plus de nouvelle demande ; parti ou terminé, idem.
 ///
 /// Un tap ouvre Activité › Demandes « À traiter » de ce trajet, puis relit
 /// les colis et le trajet au retour ([openTripRequests]).
@@ -32,11 +40,14 @@ class TripRequestsCard extends StatelessWidget {
   /// n'a pas répondu.
   final List<BidModel>? bids;
 
-  static const _statuses = {'ACTIVE', 'FULL', 'IN_PROGRESS', 'COMPLETED'};
-
-  /// Statuts où la carte s'affiche. DRAFT (invisible des expéditeurs),
-  /// CANCELLED, REMOVED_BY_ADMIN et un statut inconnu de l'app : pas de carte.
-  static bool shownFor(String status) => _statuses.contains(status);
+  /// La carte s'affiche-t-elle pour [trip] et ses colis [bids] ?
+  static bool shownFor(AnnouncementModel trip, List<BidModel>? bids) =>
+      switch (tripRequestsPhaseFor(trip.status)) {
+        TripRequestsPhase.open || TripRequestsPhase.full => true,
+        TripRequestsPhase.departed ||
+        TripRequestsPhase.ended => tripPendingRequestCount(trip, bids) > 0,
+        null => false,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +55,21 @@ class TripRequestsCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final count = tripPendingRequestCount(trip, bids);
+    final known = tripPendingRequestCountKnown(trip, bids);
+    final title = !known
+        ? l.tripRequestsCardUnknown
+        : count > 0
+        ? l.tripRequestsCardPending(count)
+        : l.tripRequestsCardEmpty;
+    final hint = switch (tripRequestsPhaseFor(trip.status)) {
+      TripRequestsPhase.open when !known => null,
+      TripRequestsPhase.open =>
+        count > 0 ? l.tripRequestsCardPendingHint : l.tripRequestsCardEmptyHint,
+      TripRequestsPhase.full => l.tripRequestsCardFullHint,
+      TripRequestsPhase.departed => l.tripRequestsCardDepartedHint,
+      TripRequestsPhase.ended => l.tripRequestsCardEndedHint,
+      null => null,
+    };
     return DetailCard(
       key: const Key('trip-requests-card'),
       title: l.tripOwnerRequestsTile,
@@ -55,9 +81,7 @@ class TripRequestsCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  count > 0
-                      ? l.tripRequestsCardPending(count)
-                      : l.tripRequestsCardEmpty,
+                  title,
                   key: const Key('trip-requests-card-count'),
                   style: tt.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
@@ -65,13 +89,14 @@ class TripRequestsCard extends StatelessWidget {
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
-                const SizedBox(height: DonySpacing.xxs),
-                Text(
-                  count > 0
-                      ? l.tripRequestsCardPendingHint
-                      : l.tripRequestsCardEmptyHint,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
+                if (hint != null) ...[
+                  const SizedBox(height: DonySpacing.xxs),
+                  Text(
+                    hint,
+                    key: const Key('trip-requests-card-hint'),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ],
               ],
             ),
           ),

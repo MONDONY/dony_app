@@ -10,6 +10,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/close_sheet_when_resolved.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
@@ -335,12 +336,8 @@ class _TripTileButton extends StatelessWidget {
   /// Ferme le sheet avant d'agir. Faux quand il n'est plus au premier plan
   /// (second appui pendant l'animation de sortie, confirmation par-dessus)
   /// ou que l'écran n'est plus monté : l'action n'est pas rejouée.
-  bool _closeForAction(BuildContext sheetContext) {
-    final route = ModalRoute.of(sheetContext);
-    if (route == null || !route.isCurrent) return false;
-    Navigator.of(sheetContext).pop();
-    return screenContext.mounted;
-  }
+  bool _closeForAction(BuildContext sheetContext) =>
+      closeSheetIfOnTop(sheetContext) && screenContext.mounted;
 
   /// Édition du trajet, relu au retour s'il a été enregistré.
   Future<void> _edit(BuildContext sheetContext) async {

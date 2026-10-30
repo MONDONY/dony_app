@@ -205,9 +205,6 @@ class AnnouncementModel {
   /// public classique. `> 0` ⇒ trajet dédié (cf. [isDedicated]).
   final double reservedKg;
 
-  /// La négociation liée a été payée → le voyageur peut ouvrir le surplus.
-  final bool surplusEligible;
-
   /// Le surplus a déjà été ouvert au public (action définitive, non répétable).
   final bool surplusPublished;
 
@@ -336,7 +333,6 @@ class AnnouncementModel {
     this.pricingMode = 'KG',
     this.priceGridItems = const [],
     this.reservedKg = 0,
-    this.surplusEligible = false,
     this.surplusPublished = false,
     this.handoverDeadline,
     this.isFavorite = false,

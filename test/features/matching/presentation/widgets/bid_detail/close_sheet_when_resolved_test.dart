@@ -127,9 +127,20 @@ void main() {
     await tester.tap(find.text('sheet'));
     await tester.pumpAndSettle();
 
-    closeSheetIfOnTop(sheetContext);
+    expect(closeSheetIfOnTop(sheetContext), isFalse);
     await tester.pumpAndSettle();
     expect(find.text('confirmation'), findsOneWidget);
     expect(find.text('sheet'), findsOneWidget);
+  });
+
+  testWidgets('closeSheetIfOnTop rend vrai à la fermeture, faux au second '
+      'appel (sheet déjà quitté)', (tester) async {
+    await openSheet(tester);
+    final sheetContext = tester.element(find.text('sheet'));
+
+    expect(closeSheetIfOnTop(sheetContext), isTrue);
+    expect(closeSheetIfOnTop(sheetContext), isFalse);
+    await tester.pumpAndSettle();
+    expect(find.text('sheet'), findsNothing);
   });
 }

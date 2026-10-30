@@ -84,6 +84,13 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
     );
   }
 
+  /// Fiche du colis [bidId], ouverte depuis le contexte de la section (qui
+  /// vit autant que l'écran), jamais celui d'une ligne qu'une liste relue
+  /// peut démonter.
+  void _openParcel(String bidId) => unawaited(
+    openTripParcel(context, tripId: widget.announcementId, bidId: bidId),
+  );
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -99,11 +106,19 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
           if (!hasParcels) return const SizedBox.shrink();
           return TextButton(
             key: const Key('trip-parcels-see-list'),
-            onPressed: () =>
-                unawaited(openTripParcelsList(context, widget.announcementId)),
+            // Contexte de la section (vit autant que l'écran), pas celui du
+            // lien, que la liste relue peut démonter.
+            onPressed: () => unawaited(
+              openTripParcelsList(this.context, widget.announcementId),
+            ),
+            // Aligné sur le bord droit du contenu de la carte (sans la marge
+            // intérieure du bouton), cible tactile de 44 dp gardée.
             style: TextButton.styleFrom(
               foregroundColor: cs.primary,
               textStyle: tt.labelLarge,
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(44, 44),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(
               context.l10n.tripParcelsSeeList,
@@ -205,7 +220,7 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
                           if (i > 0) const SizedBox(height: DonySpacing.sm),
                           _ColisRow(
                             bid: visible[i],
-                            announcementId: widget.announcementId,
+                            onTap: () => _openParcel(visible[i].id),
                           ),
                         ],
                       ],
@@ -324,10 +339,10 @@ class TripParcelsSummary extends StatelessWidget {
 /// expéditeur et chip de statut. Tap → détail de l'offre (`/bids/:bidId`),
 /// colis et trajet relus au retour.
 class _ColisRow extends StatelessWidget {
-  const _ColisRow({required this.bid, required this.announcementId});
+  const _ColisRow({required this.bid, required this.onTap});
 
   final BidModel bid;
-  final String announcementId;
+  final VoidCallback onTap;
 
   String? get _weightLabel {
     final w = bid.displayWeightKg;
@@ -355,9 +370,7 @@ class _ColisRow extends StatelessWidget {
       color: cs.surface,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
-        onTap: () => unawaited(
-          openTripParcel(context, tripId: announcementId, bidId: bid.id),
-        ),
+        onTap: onTap,
         borderRadius: BorderRadius.circular(DonyRadius.card),
         child: Container(
           padding: const EdgeInsets.all(DonySpacing.base),

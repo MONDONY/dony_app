@@ -89,7 +89,14 @@ class AnnouncementListRequested extends AnnouncementEvent {}
 
 class AnnouncementDetailRequested extends AnnouncementEvent {
   final String id;
-  AnnouncementDetailRequested(this.id);
+
+  /// Relecture silencieuse d'un trajet déjà affiché (retour d'un autre
+  /// écran que l'utilisateur n'a pas ouvert pour le modifier) : ni
+  /// `AnnouncementLoading`, ni erreur, ni `AnnouncementNotFound`. Un échec
+  /// garde le trajet affiché, sans message ni sortie de l'écran.
+  final bool silent;
+
+  AnnouncementDetailRequested(this.id, {this.silent = false});
 }
 
 /// Page suivante de la dernière recherche (défilement en bas de la liste

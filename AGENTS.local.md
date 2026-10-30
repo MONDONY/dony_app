@@ -317,7 +317,6 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `trip_owner_detail_opened` | TripOwnerDetailScreen.initState — ouverture de l'écran détail trajet par le propriétaire (propriété `status`) |
 | `trip_parcels_viewed` | TripParcelsSection — chargement de la liste des colis embarqués (propriété `count`) |
 | `trip_parcels_filtered` | TripParcelsSection — chip de filtre statut tapée dans « Colis dans le trajet » (propriété `status`, `all` si « Tous ») |
-| `surplus_opened` | AnnouncementBloc._onSurplusOpenRequested() |
 | `bid_submitted` | BidBloc._onCreateRequested() |
 | `bid_accepted` | BidAcceptanceBloc._handleResponse() |
 | `bid_rejected` | BidBloc._onRejectRequested() |

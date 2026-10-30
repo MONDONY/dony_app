@@ -7,8 +7,10 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
-// Routes ouvertes depuis l'écran du trajet vu par son voyageur (grille
-// d'actions, tuiles « À traiter », cartes directes du corps).
+// Routes ouvertes depuis l'écran du trajet vu par son voyageur (pied collant,
+// tuiles « À traiter », cartes directes du corps). Chacune ignore un second
+// appui tant que sa page n'est pas refermée, et relit l'écran en silence au
+// retour.
 
 /// Activité › Demandes, onglet « À traiter », restreint au trajet [tripId]
 /// (`/demandes?filter=aTraiter&announcement=<id>`).
@@ -17,10 +19,10 @@ String tripRequestsLocation(String tripId) => Uri(
   queryParameters: {'filter': 'aTraiter', 'announcement': tripId},
 ).toString();
 
-/// Ouvre les demandes à traiter du trajet [tripId] depuis [context] (l'écran
-/// du trajet), puis relit ses colis et le trajet au retour : une demande
-/// acceptée ou refusée là-bas change les compteurs de l'écran. `/demandes`
-/// ne rend pas de résultat : la relecture est inconditionnelle.
+/// Ouvre les demandes à traiter du trajet [tripId] depuis [context] (sous
+/// l'écran du trajet), puis relit ses colis et le trajet au retour : une
+/// demande acceptée ou refusée là-bas change les compteurs de l'écran.
+/// `/demandes` ne rend pas de résultat : la relecture est inconditionnelle.
 Future<void> openTripRequests(BuildContext context, String tripId) =>
     _pushThenReload(context, tripId, tripRequestsLocation(tripId));
 
@@ -43,20 +45,41 @@ Future<void> openTripParcel(
   required String bidId,
 }) => _pushThenReload(context, tripId, '/bids/$bidId');
 
+/// Écrans (routes) qui ont déjà une page ouverte par [_pushThenReload] et pas
+/// encore refermée : un second appui avant que la page ne couvre l'écran
+/// (double appui, `push` de GoRouter appliqué à l'image suivante) n'en
+/// empile pas une deuxième. La clé est la route de l'écran : si elle
+/// disparaît sans que la page ne rende la main, l'entrée part avec elle.
+final _pushInFlight = Expando<bool>('tripPushInFlight');
+
 Future<void> _pushThenReload(
   BuildContext context,
   String tripId,
   String location, {
   Object? extra,
 }) async {
+  final route = ModalRoute.of(context);
+  if (route != null) {
+    if (_pushInFlight[route] ?? false) return;
+    _pushInFlight[route] = true;
+  }
   // Blocs lus avant la navigation : le contexte peut être démonté au retour.
   final bids = maybeRead<BidBloc>(context);
   final announcement = maybeRead<AnnouncementBloc>(context);
-  await context.push<void>(location, extra: extra);
-  // Écran quitté entre-temps : ses blocs sont fermés.
-  if (!context.mounted) return;
-  // Relecture silencieuse : l'écran garde ses colis affichés, ni indicateur
-  // de chargement ni tuile qui disparaît le temps de la réponse.
+  try {
+    await context.push<void>(location, extra: extra);
+  } finally {
+    if (route != null) _pushInFlight[route] = null;
+  }
+  // La relecture suit l'écran (sa route), pas le widget touché : une ligne de
+  // colis ou une carte démontée pendant l'absence (liste relue, carte
+  // masquée) n'empêche pas de relire l'écran resté ouvert. Écran quitté
+  // entre-temps : ses blocs sont fermés, rien n'est relu.
+  final screenAlive = route != null ? route.isActive : context.mounted;
+  if (!screenAlive) return;
+  // Relecture silencieuse : l'écran garde ses colis et son trajet affichés,
+  // ni indicateur de chargement, ni tuile qui disparaît le temps de la
+  // réponse, ni message d'erreur ou sortie de l'écran si elle échoue.
   bids?.add(BidListRequested(tripId, silent: true));
-  announcement?.add(AnnouncementDetailRequested(tripId));
+  announcement?.add(AnnouncementDetailRequested(tripId, silent: true));
 }

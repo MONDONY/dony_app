@@ -23145,6 +23145,21 @@ class AppLocalizationsFr extends AppLocalizations {
       'Elles arrivent ici dès qu\'un expéditeur propose un colis.';
 
   @override
+  String get tripRequestsCardUnknown => 'Voir les demandes de ce trajet';
+
+  @override
+  String get tripRequestsCardFullHint =>
+      'Trajet complet : plus de nouvelle demande.';
+
+  @override
+  String get tripRequestsCardDepartedHint =>
+      'Trajet parti : plus de nouvelle demande.';
+
+  @override
+  String get tripRequestsCardEndedHint =>
+      'Trajet terminé : plus de nouvelle demande.';
+
+  @override
   String get tripParcelsSeeList => 'Voir la liste';
 
   @override

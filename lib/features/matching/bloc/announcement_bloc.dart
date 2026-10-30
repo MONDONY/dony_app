@@ -232,11 +232,13 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     AnnouncementDetailRequested event,
     Emitter<AnnouncementState> emit,
   ) async {
-    emit(AnnouncementLoading());
+    if (!event.silent) emit(AnnouncementLoading());
     try {
       final announcement = await _repository.getAnnouncementDetail(event.id);
       emit(AnnouncementDetailLoaded(announcement));
     } catch (e) {
+      // Relecture silencieuse en échec : le trajet affiché reste.
+      if (event.silent) return;
       final wrapped = unwrapDioError(e);
       if (wrapped is NotFoundException) {
         emit(AnnouncementNotFound());

@@ -408,6 +408,47 @@ void main() {
       expect((details.single as AnnouncementDetailRequested).id, 'trip-1');
     });
 
+    testWidgets('double appui sur « Voir les demandes » : une seule page', (
+      tester,
+    ) async {
+      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
+
+      await tester.tap(requestsButton());
+      await tester.tap(requestsButton(), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('demandes:filter=aTraiter&announcement=trip-1'),
+        findsOneWidget,
+      );
+
+      // Un seul retour suffit : aucune seconde page empilée dessous.
+      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+      await tester.pumpAndSettle();
+      expect(
+        find.text('demandes:filter=aTraiter&announcement=trip-1'),
+        findsNothing,
+      );
+      verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+    });
+
+    testWidgets('double appui sur « Ajouter la carte » : une seule édition', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        trip: _cashTrip(),
+        tile: TripTodoTile.card,
+        stripe: _ready,
+      );
+
+      await tester.tap(enableCard());
+      await tester.tap(enableCard(), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+      await tester.pumpAndSettle();
+      expect(find.text('save-trip'), findsNothing);
+    });
+
     testWidgets('les demandes relues sont reprises par le sheet', (
       tester,
     ) async {

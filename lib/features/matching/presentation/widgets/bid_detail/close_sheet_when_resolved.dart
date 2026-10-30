@@ -6,9 +6,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Ferme le sheet de [context] s'il est au premier plan : une confirmation ou
 /// une erreur ouverte par-dessus n'est jamais refermée à sa place.
-void closeSheetIfOnTop(BuildContext context) {
+///
+/// Rend `true` si le sheet a été fermé par cet appel : un bouton du pied qui
+/// enchaîne une action après la fermeture s'arrête sur `false` (second appui
+/// pendant l'animation de sortie, sheet déjà quitté).
+bool closeSheetIfOnTop(BuildContext context) {
   final route = ModalRoute.of(context);
-  if (route != null && route.isCurrent) Navigator.of(context).pop();
+  if (route == null || !route.isCurrent) return false;
+  Navigator.of(context).pop();
+  return true;
 }
 
 /// Ferme le sheet d'une tuile « À traiter » dès que le colis courant (dernier

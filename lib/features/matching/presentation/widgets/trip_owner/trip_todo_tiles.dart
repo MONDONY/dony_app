@@ -29,9 +29,47 @@ enum TripTodoTile {
   card,
 }
 
-/// Statuts où une demande en attente se traite encore (le back refuse
-/// d'accepter une demande sur un trajet terminé, annulé ou retiré).
-const _requestStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
+/// Place des demandes des expéditeurs selon le statut du trajet. Source
+/// unique de la tuile « À traiter » [TripTodoTile.requests] et de la carte
+/// « Demandes » du corps (`TripRequestsCard`).
+enum TripRequestsPhase {
+  /// ACTIVE : le trajet reçoit des demandes.
+  open,
+
+  /// FULL : plus de nouvelle demande ; celles déjà reçues se traitent
+  /// encore.
+  full,
+
+  /// IN_PROGRESS : le trajet est parti. Le back expire les demandes en
+  /// attente au départ et refuse tout nouveau colis : il n'en reste qu'en
+  /// cas de retard de cette expiration, et elles se traitent encore.
+  departed,
+
+  /// COMPLETED : terminé, le back n'accepte plus aucune demande.
+  ended,
+}
+
+/// [TripRequestsPhase] du statut [status] ; `null` pour un brouillon (pas
+/// encore visible des expéditeurs), un trajet annulé, retiré par l'équipe ou
+/// un statut inconnu de l'app : aucune demande à y montrer.
+TripRequestsPhase? tripRequestsPhaseFor(String status) => switch (status) {
+  'ACTIVE' => TripRequestsPhase.open,
+  'FULL' => TripRequestsPhase.full,
+  'IN_PROGRESS' => TripRequestsPhase.departed,
+  'COMPLETED' => TripRequestsPhase.ended,
+  _ => null,
+};
+
+/// Une demande en attente peut-elle encore recevoir une réponse ? Oui tant
+/// que le trajet n'est pas terminé, annulé ou retiré (le back refuse alors
+/// toute acceptation).
+bool _requestsAnswerable(String status) =>
+    switch (tripRequestsPhaseFor(status)) {
+      TripRequestsPhase.open ||
+      TripRequestsPhase.full ||
+      TripRequestsPhase.departed => true,
+      TripRequestsPhase.ended || null => false,
+    };
 
 /// Statuts où « Je pars » a un sens : trajet publié, complet ou en cours.
 /// Jamais sur un trajet annulé (ses colis remis suivent la procédure de
@@ -48,6 +86,17 @@ const _cardStatuses = {'DRAFT', 'ACTIVE', 'FULL'};
 /// `GET /announcements/my` (`pendingBidCount`), comme la grille d'actions.
 int tripPendingRequestCount(AnnouncementModel trip, List<BidModel>? bids) =>
     bids != null ? bids.where(isPendingBid).length : trip.pendingBidCount;
+
+/// Le nombre de demandes à traiter est-il connu ? Oui quand la liste des
+/// colis a répondu, ou quand le compteur servi par `GET /announcements/my`
+/// en annonce. Sinon (liste en chargement, en erreur ou jamais chargée,
+/// trajet ouvert sans la liste des trajets : le détail ne sert pas
+/// `pendingBidCount`, qui vaut alors 0), un 0 ne prouve rien : ne jamais
+/// affirmer « aucune demande ».
+bool tripPendingRequestCountKnown(
+  AnnouncementModel trip,
+  List<BidModel>? bids,
+) => bids != null || trip.pendingBidCount > 0;
 
 /// Le compte de paiement par carte du voyageur est-il prêt (inscription
 /// Stripe Connect terminée) ? Tant que le statut n'est pas chargé : non.
@@ -88,7 +137,7 @@ List<TripTodoTile> tripTodoTilesFor({
   if (!isOwner) return const [];
   final summary = trip.parcelsSummary;
   return [
-    if (_requestStatuses.contains(trip.status) &&
+    if (_requestsAnswerable(trip.status) &&
         tripPendingRequestCount(trip, bids) > 0)
       TripTodoTile.requests,
     if (_departStatuses.contains(trip.status) &&

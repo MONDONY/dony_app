@@ -933,6 +933,7 @@ Les anciens noms `kGreenPrimary`, `kTextSecondary`, `kBorder`... des exemples pl
 - Handle : `Container(width: 40, height: 4, color: kBorder)`
 - `isScrollControlled: true` · `borderRadius: BorderRadius.vertical(top: Radius.circular(20))`
 - Respecter `MediaQuery.of(context).viewInsets.bottom`
+- Tout `DonyButton` d'un `DonyBottomSheet` vit dans le pied collant, jamais dans le `child` qui défile : `stickyBottom: bouton`, ou, quand le bouton apparaît et disparaît selon les données relues, `footer: DonyBottomSheetFooter(child: condition ? bouton : null)` (sans bouton, ni bordure ni ombre : seule la marge de la zone sûre reste). `stickyBottom` et `footer` s'excluent.
 - Dialogs uniquement pour actions destructives irréversibles.
 
 **Couleurs :** jamais `0xFFFFFFFF` en fond → `kBackground`. **Jamais de dégradé** (`LinearGradient`, `RadialGradient`, `SweepGradient`, `ShaderMask` coloré), ni sur les boutons ni sur les cartes héros : uniquement des couleurs unies, demande du propriétaire pour ne pas faire « généré par IA ». Voir `lib/core/design/DARK_MODE.md`.

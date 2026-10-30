@@ -297,17 +297,15 @@ class _TripTodoFooter extends StatelessWidget {
   /// Activité › Demandes « À traiter » de ce trajet, relu au retour
   /// ([openTripRequests]).
   Future<void> _openRequests(BuildContext sheetContext) async {
-    closeSheetIfOnTop(sheetContext);
-    if (!screenContext.mounted) return;
+    if (!_closeForAction(sheetContext)) return;
     await openTripRequests(screenContext, live.trip.id);
   }
 
   /// Compte de paiement prêt : l'édition du trajet propose la carte, puis le
-  /// trajet est relu pour que la tuile disparaisse (Sentry FLUTTER-DH), comme
-  /// l'encart du corps du trajet ([openTripEdit]).
+  /// trajet est relu pour que la tuile disparaisse (Sentry FLUTTER-DH)
+  /// ([openTripEdit]).
   Future<void> _openEditToEnableCard(BuildContext sheetContext) async {
-    closeSheetIfOnTop(sheetContext);
-    if (!screenContext.mounted) return;
+    if (!_closeForAction(sheetContext)) return;
     await openTripEdit(screenContext, live.trip);
   }
 
@@ -315,8 +313,13 @@ class _TripTodoFooter extends StatelessWidget {
   /// par toute l'app et relu par le parcours d'activation lui-même : rien à
   /// recharger au retour.
   Future<void> _openCardOnboarding(BuildContext sheetContext) async {
-    closeSheetIfOnTop(sheetContext);
-    if (!screenContext.mounted) return;
+    if (!_closeForAction(sheetContext)) return;
     await screenContext.push<void>('/connect/onboarding/intro');
   }
+
+  /// Ferme le sheet avant d'agir. Faux quand il n'est plus au premier plan
+  /// (second appui pendant l'animation de sortie, confirmation par-dessus)
+  /// ou que l'écran n'est plus monté : l'action n'est pas rejouée.
+  bool _closeForAction(BuildContext sheetContext) =>
+      closeSheetIfOnTop(sheetContext) && screenContext.mounted;
 }

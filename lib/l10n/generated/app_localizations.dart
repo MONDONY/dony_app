@@ -37134,6 +37134,30 @@ abstract class AppLocalizations {
   /// **'Elles arrivent ici dès qu\'un expéditeur propose un colis.'**
   String get tripRequestsCardEmptyHint;
 
+  /// Carte « Demandes » de l'écran du trajet : titre quand le nombre de demandes à traiter n'est pas encore connu (liste des colis en chargement, en échec ou jamais chargée) ; ne jamais affirmer « aucune » (trip_requests_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les demandes de ce trajet'**
+  String get tripRequestsCardUnknown;
+
+  /// Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet complet (FULL), qui ne reçoit plus de nouvelle demande ; celles déjà reçues se traitent encore (trip_requests_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet complet : plus de nouvelle demande.'**
+  String get tripRequestsCardFullHint;
+
+  /// Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet parti (IN_PROGRESS) ; la carte n'est affichée que s'il reste des demandes à traiter, le back refusant tout nouveau colis (trip_requests_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet parti : plus de nouvelle demande.'**
+  String get tripRequestsCardDepartedHint;
+
+  /// Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet terminé (COMPLETED) ; la carte n'est affichée que s'il reste des demandes à traiter (trip_requests_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet terminé : plus de nouvelle demande.'**
+  String get tripRequestsCardEndedHint;
+
   /// Lien de l'en-tête de la carte « Colis dans le trajet » : ouvre la liste des colis du trajet (/announcements/:id/bids), affiché dès qu'un colis est embarqué ; une ligne, sans icône (trip_parcels_section.dart).
   ///
   /// In fr, this message translates to:

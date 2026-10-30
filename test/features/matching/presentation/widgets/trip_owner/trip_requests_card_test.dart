@@ -9,6 +9,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_requests_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -28,7 +29,20 @@ void main() {
       .data!;
 
   group('statuts', () {
-    const expected = {
+    // ACTIVE et FULL : toujours (PROD-1N). Parti ou terminé : seulement
+    // s'il reste des demandes (le back les expire au départ et refuse tout
+    // nouveau colis). Brouillon, annulé, retiré, inconnu : jamais.
+    const withoutRequests = {
+      'DRAFT': false,
+      'ACTIVE': true,
+      'FULL': true,
+      'IN_PROGRESS': false,
+      'COMPLETED': false,
+      'CANCELLED': false,
+      'REMOVED_BY_ADMIN': false,
+      'SOMETHING_NEW': false,
+    };
+    const withRequests = {
       'DRAFT': false,
       'ACTIVE': true,
       'FULL': true,
@@ -38,11 +52,189 @@ void main() {
       'REMOVED_BY_ADMIN': false,
       'SOMETHING_NEW': false,
     };
-    for (final MapEntry(key: status, value: shown) in expected.entries) {
-      test('$status : ${shown ? 'affichée' : 'absente'}', () {
-        expect(TripRequestsCard.shownFor(status), shown);
+    for (final MapEntry(key: status, value: shown) in withoutRequests.entries) {
+      test('$status sans demande : ${shown ? 'affichée' : 'absente'}', () {
+        expect(
+          TripRequestsCard.shownFor(tripFixture(status: status), const []),
+          shown,
+        );
       });
     }
+    for (final MapEntry(key: status, value: shown) in withRequests.entries) {
+      test('$status avec une demande : ${shown ? 'affichée' : 'absente'}', () {
+        expect(
+          TripRequestsCard.shownFor(tripFixture(status: status), [
+            bidFixture('b1', 'PENDING'),
+          ]),
+          shown,
+        );
+      });
+    }
+
+    test('parti, liste pas chargée : le compte du modèle décide', () {
+      expect(
+        TripRequestsCard.shownFor(
+          tripFixture(status: 'IN_PROGRESS', pendingBidCount: 1),
+          null,
+        ),
+        isTrue,
+      );
+      expect(
+        TripRequestsCard.shownFor(tripFixture(status: 'IN_PROGRESS'), null),
+        isFalse,
+      );
+    });
+
+    test('même source que la tuile « À traiter »', () {
+      expect(tripRequestsPhaseFor('ACTIVE'), TripRequestsPhase.open);
+      expect(tripRequestsPhaseFor('FULL'), TripRequestsPhase.full);
+      expect(tripRequestsPhaseFor('IN_PROGRESS'), TripRequestsPhase.departed);
+      expect(tripRequestsPhaseFor('COMPLETED'), TripRequestsPhase.ended);
+      for (final status in const [
+        'DRAFT',
+        'CANCELLED',
+        'REMOVED_BY_ADMIN',
+        'SOMETHING_NEW',
+      ]) {
+        expect(tripRequestsPhaseFor(status), isNull, reason: status);
+      }
+    });
+  });
+
+  group('sous-ligne selon le statut', () {
+    String? hint(WidgetTester tester) {
+      final f = find.byKey(const Key('trip-requests-card-hint'));
+      return f.evaluate().isEmpty ? null : tester.widget<Text>(f).data;
+    }
+
+    testWidgets('complet : plus de nouvelle demande, avec ou sans demande', (
+      tester,
+    ) async {
+      await pumpTripCard(
+        tester,
+        TripRequestsCard(
+          trip: tripFixture(status: 'FULL'),
+          bids: const [],
+        ),
+      );
+      expect(countText(tester), 'Aucune demande à traiter');
+      expect(hint(tester), 'Trajet complet : plus de nouvelle demande.');
+
+      await pumpTripCard(
+        tester,
+        TripRequestsCard(
+          trip: tripFixture(status: 'FULL'),
+          bids: [bidFixture('b1', 'PENDING')],
+        ),
+      );
+      expect(countText(tester), '1 demande à traiter');
+      expect(hint(tester), 'Trajet complet : plus de nouvelle demande.');
+      // Jamais « Répondez pour remplir votre trajet » : il est plein.
+      expect(find.text('Répondez pour remplir votre trajet.'), findsNothing);
+    });
+
+    testWidgets('parti : aucune promesse de demandes à venir', (tester) async {
+      await pumpTripCard(
+        tester,
+        TripRequestsCard(
+          trip: tripFixture(status: 'IN_PROGRESS'),
+          bids: [bidFixture('b1', 'PENDING')],
+        ),
+      );
+      expect(countText(tester), '1 demande à traiter');
+      expect(hint(tester), 'Trajet parti : plus de nouvelle demande.');
+      expect(
+        find.text("Elles arrivent ici dès qu'un expéditeur propose un colis."),
+        findsNothing,
+      );
+    });
+
+    testWidgets('terminé', (tester) async {
+      await pumpTripCard(
+        tester,
+        TripRequestsCard(
+          trip: tripFixture(status: 'COMPLETED'),
+          bids: [bidFixture('b1', 'PAYMENT_ESCROWED')],
+        ),
+      );
+      expect(hint(tester), 'Trajet terminé : plus de nouvelle demande.');
+    });
+
+    testWidgets('en anglais', (tester) async {
+      Future<String?> render(String status) async {
+        await pumpTripCard(
+          tester,
+          TripRequestsCard(
+            trip: tripFixture(status: status),
+            bids: [bidFixture('b1', 'PENDING')],
+          ),
+          locale: const Locale('en'),
+        );
+        return hint(tester);
+      }
+
+      expect(await render('FULL'), 'Trip full: no new requests.');
+      expect(await render('IN_PROGRESS'), 'Trip underway: no new requests.');
+      expect(await render('COMPLETED'), 'Trip completed: no new requests.');
+    });
+  });
+
+  group('compte inconnu', () {
+    // Ouvert par une notification (sans la liste des trajets), liste des
+    // colis en chargement ou en échec : un 0 ne prouve rien.
+    testWidgets('jamais « Aucune demande à traiter »', (tester) async {
+      await pumpTripCard(
+        tester,
+        TripRequestsCard(trip: tripFixture(), bids: null),
+      );
+
+      expect(countText(tester), 'Voir les demandes de ce trajet');
+      expect(find.text('Aucune demande à traiter'), findsNothing);
+      expect(
+        find.text("Elles arrivent ici dès qu'un expéditeur propose un colis."),
+        findsNothing,
+      );
+      expect(find.byKey(const Key('trip-requests-card-hint')), findsNothing);
+      // Toujours tappable.
+      final ink = tester.widget<InkWell>(
+        find.descendant(of: card(), matching: find.byType(InkWell)),
+      );
+      expect(ink.onTap, isNotNull);
+    });
+
+    testWidgets('complet : ligne neutre, sous-ligne du statut', (tester) async {
+      await pumpTripCard(
+        tester,
+        TripRequestsCard(trip: tripFixture(status: 'FULL'), bids: null),
+      );
+
+      expect(countText(tester), 'Voir les demandes de ce trajet');
+      expect(
+        find.text('Trajet complet : plus de nouvelle demande.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('en anglais', (tester) async {
+      await pumpTripCard(
+        tester,
+        TripRequestsCard(trip: tripFixture(), bids: null),
+        locale: const Locale('en'),
+      );
+
+      expect(countText(tester), "See this trip's requests");
+      expect(find.text('No requests to review'), findsNothing);
+    });
+
+    test('connu dès que la liste a répondu ou que le modèle annonce un '
+        'compte', () {
+      expect(tripPendingRequestCountKnown(tripFixture(), null), isFalse);
+      expect(tripPendingRequestCountKnown(tripFixture(), const []), isTrue);
+      expect(
+        tripPendingRequestCountKnown(tripFixture(pendingBidCount: 2), null),
+        isTrue,
+      );
+    });
   });
 
   group('compte des demandes à traiter', () {
@@ -201,6 +393,45 @@ void main() {
           verify(() => annBloc.add(captureAny())).captured.single
               as AnnouncementDetailRequested;
       expect(annEvent.id, 'trip-1');
+    });
+
+    testWidgets('double appui : une seule page ouverte', (tester) async {
+      final pushed = await pumpTripCard(
+        tester,
+        TripRequestsCard(trip: tripFixture(), bids: const []),
+        bids: bidBloc,
+        announcement: annBloc,
+      );
+
+      await tester.tap(card());
+      await tester.tap(card());
+      await tester.pumpAndSettle();
+      expect(pushed, hasLength(1));
+
+      // Revenue, la carte rouvre la page.
+      await tester.tap(find.text('back'));
+      await tester.pumpAndSettle();
+      await tester.tap(card());
+      await tester.pumpAndSettle();
+      expect(pushed, hasLength(2));
+    });
+
+    testWidgets('relecture du trajet silencieuse', (tester) async {
+      await pumpTripCard(
+        tester,
+        TripRequestsCard(trip: tripFixture(), bids: const []),
+        bids: bidBloc,
+        announcement: annBloc,
+      );
+
+      await tester.tap(card());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('back'));
+      await tester.pumpAndSettle();
+      final annEvent =
+          verify(() => annBloc.add(captureAny())).captured.single
+              as AnnouncementDetailRequested;
+      expect(annEvent.silent, isTrue);
     });
 
     testWidgets('sans blocs à l\'écran : la navigation suffit', (tester) async {

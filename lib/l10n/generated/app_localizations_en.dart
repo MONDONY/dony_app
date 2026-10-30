@@ -22979,6 +22979,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'They show up here as soon as a sender offers a parcel.';
 
   @override
+  String get tripRequestsCardUnknown => 'See this trip\'s requests';
+
+  @override
+  String get tripRequestsCardFullHint => 'Trip full: no new requests.';
+
+  @override
+  String get tripRequestsCardDepartedHint => 'Trip underway: no new requests.';
+
+  @override
+  String get tripRequestsCardEndedHint => 'Trip completed: no new requests.';
+
+  @override
   String get tripParcelsSeeList => 'See list';
 
   @override

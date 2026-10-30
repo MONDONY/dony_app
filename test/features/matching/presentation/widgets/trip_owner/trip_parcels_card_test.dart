@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -187,6 +188,18 @@ void main() {
       expect(find.text('Voir la liste'), findsOneWidget);
     });
 
+    testWidgets('aligné sur le bord droit du contenu, cible de 44 dp', (
+      tester,
+    ) async {
+      await pump(tester, BidListLoaded(_mixed));
+
+      expect(tester.getSize(seeList()).height, 44);
+      expect(
+        tester.getTopRight(seeList()).dx,
+        tester.getTopRight(find.byKey(const Key('trip-parcels-summary'))).dx,
+      );
+    });
+
     testWidgets('aucun colis embarqué : état vide, pas de lien', (
       tester,
     ) async {
@@ -253,6 +266,77 @@ void main() {
             as BidListRequested;
     expect(event.announcementId, 'trip-1');
     expect(event.silent, isTrue);
+  });
+
+  group('états de la liste', () {
+    testWidgets('jamais chargée (BidInitial) : indicateur, ni lien ni vide', (
+      tester,
+    ) async {
+      await pump(tester, BidInitial());
+
+      expect(find.text('Colis dans le trajet'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Aucun colis embarqué'), findsNothing);
+      expect(seeList(), findsNothing);
+    });
+
+    testWidgets('échec (BidError) : rien sous le titre, pas d\'« aucun »', (
+      tester,
+    ) async {
+      await pump(tester, BidError(const OfflineException()));
+
+      expect(find.text('Colis dans le trajet'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('Aucun colis embarqué'), findsNothing);
+      expect(seeList(), findsNothing);
+    });
+
+    testWidgets('échec après une liste : le lien reste', (tester) async {
+      await pump(tester, BidListLoaded(_mixed));
+
+      bidStates.add(BidError(const OfflineException()));
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(seeList(), findsOneWidget);
+    });
+  });
+
+  group('double appui et relecture', () {
+    testWidgets('« Voir la liste » : une seule page', (tester) async {
+      final pushed = await pump(tester, BidListLoaded(_mixed));
+
+      await tester.tap(seeList());
+      await tester.tap(seeList());
+      await tester.pumpAndSettle();
+      expect(pushed, hasLength(1));
+    });
+
+    testWidgets('ligne : une seule fiche', (tester) async {
+      final pushed = await pump(tester, BidListLoaded(_mixed));
+
+      await tester.tap(find.text('Article C'));
+      await tester.tap(find.text('Article C'));
+      await tester.pumpAndSettle();
+      expect(pushed, hasLength(1));
+    });
+
+    testWidgets('ligne démontée pendant la fiche : l\'écran est relu, en '
+        'silence', (tester) async {
+      await pump(tester, BidListLoaded(_mixed));
+
+      await tester.tap(find.text('Article C'));
+      await tester.pumpAndSettle();
+      // Liste relue pendant la fiche : la ligne touchée n'existe plus.
+      bidStates.add(BidListLoaded([bidFixture('b1', 'COMPLETED')]));
+      await tester.pump();
+      await tester.tap(find.text('back'));
+      await tester.pumpAndSettle();
+
+      verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+      final annEvent =
+          verify(() => annBloc.add(captureAny())).captured.single
+              as AnnouncementDetailRequested;
+      expect(annEvent.silent, isTrue);
+    });
   });
 
   testWidgets('en anglais : titre, lien, résumé', (tester) async {

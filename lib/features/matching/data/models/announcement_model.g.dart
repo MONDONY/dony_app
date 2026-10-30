@@ -94,7 +94,6 @@ AnnouncementModel _$AnnouncementModelFromJson(
       ? const []
       : _gridItemsFromJson(json['priceGridItems'] as List?),
   reservedKg: (json['reservedKg'] as num?)?.toDouble() ?? 0,
-  surplusEligible: json['surplusEligible'] as bool? ?? false,
   surplusPublished: json['surplusPublished'] as bool? ?? false,
   handoverDeadline: json['handoverDeadline'] == null
       ? null
@@ -162,7 +161,6 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'pricingMode': instance.pricingMode,
       'priceGridItems': _gridItemsToJson(instance.priceGridItems),
       'reservedKg': instance.reservedKg,
-      'surplusEligible': instance.surplusEligible,
       'surplusPublished': instance.surplusPublished,
       'handoverDeadline': instance.handoverDeadline?.toIso8601String(),
       'isFavorite': instance.isFavorite,
