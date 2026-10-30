@@ -15,8 +15,9 @@ String? resolveReferralCodeDeepLink(Uri uri) {
 
 /// Traite un lien d'invitation : le code est gardé pour l'inscription, et un
 /// compte connecté ouvre l'écran Parrainage, qui propose la saisie
-/// pré-remplie s'il n'a pas encore de parrain. Le code n'est jamais appliqué
-/// sans action de la personne.
+/// pré-remplie s'il n'a pas encore de parrain. Pour une nouvelle inscription,
+/// `PendingReferralRedeemer` applique le code gardé sans action de la
+/// personne.
 ///
 /// Rend `false` si [uri] n'est pas un lien d'invitation.
 bool handleReferralDeepLink(
@@ -36,7 +37,7 @@ bool handleReferralDeepLink(
     ),
   );
   // Sans compte, rien à ouvrir : l'inscription en cours (ou à venir)
-  // retrouvera le code à l'étape du parrainage.
+  // retrouvera le code à la création du compte.
   if (signedIn) dispatch('/profile/referral?code=$code');
   return true;
 }
