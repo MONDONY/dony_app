@@ -166,6 +166,11 @@ class _ThreadViewState extends State<_ThreadView> {
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          // L'écran n'a aucun champ texte : le clavier ne s'ouvre que pour la
+          // sheet de contre-offre, posée par-dessus. Sans ce drapeau, le body
+          // rétrécissait derrière elle et la colonne fixe (en-tête, tuto,
+          // trajet, barre d'action) débordait de 77 px (FLUTTER-WK).
+          resizeToAvoidBottomInset: false,
           appBar: _buildAppBar(context, thread),
           body: thread == null
               ? const DonyChatSkeleton()
