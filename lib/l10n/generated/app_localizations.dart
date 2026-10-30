@@ -37139,6 +37139,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Voir la liste'**
   String get tripParcelsSeeList;
+
+  /// Écran du trajet (propriétaire) : libellé d'accessibilité et info-bulle du bouton ⋮ de la barre d'application, qui ouvre le menu des actions du trajet (trip_owner_options_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Options du trajet'**
+  String get tripOwnerMenuTooltip;
+
+  /// Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Modifier », présente tant qu'aucune demande n'engage le trajet (trip_owner_options_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Villes, dates, kilos, prix et conditions'**
+  String get tripMenuEditSubtitle;
+
+  /// Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Rendre ce trajet récurrent » (trajet direct actif ou terminé), qui ouvre le calendrier du trajet récurrent (trip_owner_options_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le même trajet à d\'autres dates'**
+  String get tripMenuRecurringSubtitle;
+
+  /// Menu ⋮ de l'écran du trajet : entrée qui enregistre le trajet comme modèle de trajet (POST /trip-templates), trajet actif ou terminé (trip_owner_options_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer en modèle'**
+  String get tripMenuSaveTemplate;
+
+  /// Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Enregistrer en modèle » (trip_owner_options_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour le republier en quelques gestes'**
+  String get tripMenuSaveTemplateSubtitle;
+
+  /// Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Supprimer » (trajet modifiable ou annulé), suivie d'une confirmation (trip_owner_options_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le trajet disparaît de vos trajets'**
+  String get tripMenuDeleteSubtitle;
 }
 
 class _AppLocalizationsDelegate

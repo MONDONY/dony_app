@@ -22980,4 +22980,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripParcelsSeeList => 'See list';
+
+  @override
+  String get tripOwnerMenuTooltip => 'Trip options';
+
+  @override
+  String get tripMenuEditSubtitle =>
+      'Cities, dates, kilos, price and conditions';
+
+  @override
+  String get tripMenuRecurringSubtitle => 'The same trip on other dates';
+
+  @override
+  String get tripMenuSaveTemplate => 'Save as template';
+
+  @override
+  String get tripMenuSaveTemplateSubtitle =>
+      'To publish it again in a few taps';
+
+  @override
+  String get tripMenuDeleteSubtitle => 'The trip disappears from your trips';
 }

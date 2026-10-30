@@ -23146,4 +23146,23 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripParcelsSeeList => 'Voir la liste';
+
+  @override
+  String get tripOwnerMenuTooltip => 'Options du trajet';
+
+  @override
+  String get tripMenuEditSubtitle => 'Villes, dates, kilos, prix et conditions';
+
+  @override
+  String get tripMenuRecurringSubtitle => 'Le même trajet à d\'autres dates';
+
+  @override
+  String get tripMenuSaveTemplate => 'Enregistrer en modèle';
+
+  @override
+  String get tripMenuSaveTemplateSubtitle =>
+      'Pour le republier en quelques gestes';
+
+  @override
+  String get tripMenuDeleteSubtitle => 'Le trajet disparaît de vos trajets';
 }

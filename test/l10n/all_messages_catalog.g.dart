@@ -8053,6 +8053,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripRequestsCardEmpty': (l) => l.tripRequestsCardEmpty,
   'tripRequestsCardEmptyHint': (l) => l.tripRequestsCardEmptyHint,
   'tripParcelsSeeList': (l) => l.tripParcelsSeeList,
+  'tripOwnerMenuTooltip': (l) => l.tripOwnerMenuTooltip,
+  'tripMenuEditSubtitle': (l) => l.tripMenuEditSubtitle,
+  'tripMenuRecurringSubtitle': (l) => l.tripMenuRecurringSubtitle,
+  'tripMenuSaveTemplate': (l) => l.tripMenuSaveTemplate,
+  'tripMenuSaveTemplateSubtitle': (l) => l.tripMenuSaveTemplateSubtitle,
+  'tripMenuDeleteSubtitle': (l) => l.tripMenuDeleteSubtitle,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

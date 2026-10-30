@@ -22934,5 +22934,17 @@
   "tripRequestsCardEmptyHint": "Elles arrivent ici dès qu'un expéditeur propose un colis.",
   "@tripRequestsCardEmptyHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne sans demande à traiter (trip_requests_card.dart)."},
   "tripParcelsSeeList": "Voir la liste",
-  "@tripParcelsSeeList": {"description": "Lien de l'en-tête de la carte « Colis dans le trajet » : ouvre la liste des colis du trajet (/announcements/:id/bids), affiché dès qu'un colis est embarqué ; une ligne, sans icône (trip_parcels_section.dart)."}
+  "@tripParcelsSeeList": {"description": "Lien de l'en-tête de la carte « Colis dans le trajet » : ouvre la liste des colis du trajet (/announcements/:id/bids), affiché dès qu'un colis est embarqué ; une ligne, sans icône (trip_parcels_section.dart)."},
+  "tripOwnerMenuTooltip": "Options du trajet",
+  "@tripOwnerMenuTooltip": {"description": "Écran du trajet (propriétaire) : libellé d'accessibilité et info-bulle du bouton ⋮ de la barre d'application, qui ouvre le menu des actions du trajet (trip_owner_options_sheet.dart)."},
+  "tripMenuEditSubtitle": "Villes, dates, kilos, prix et conditions",
+  "@tripMenuEditSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Modifier », présente tant qu'aucune demande n'engage le trajet (trip_owner_options_sheet.dart)."},
+  "tripMenuRecurringSubtitle": "Le même trajet à d'autres dates",
+  "@tripMenuRecurringSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Rendre ce trajet récurrent » (trajet direct actif ou terminé), qui ouvre le calendrier du trajet récurrent (trip_owner_options_sheet.dart)."},
+  "tripMenuSaveTemplate": "Enregistrer en modèle",
+  "@tripMenuSaveTemplate": {"description": "Menu ⋮ de l'écran du trajet : entrée qui enregistre le trajet comme modèle de trajet (POST /trip-templates), trajet actif ou terminé (trip_owner_options_sheet.dart)."},
+  "tripMenuSaveTemplateSubtitle": "Pour le republier en quelques gestes",
+  "@tripMenuSaveTemplateSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Enregistrer en modèle » (trip_owner_options_sheet.dart)."},
+  "tripMenuDeleteSubtitle": "Le trajet disparaît de vos trajets",
+  "@tripMenuDeleteSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Supprimer » (trajet modifiable ou annulé), suivie d'une confirmation (trip_owner_options_sheet.dart)."}
 }
