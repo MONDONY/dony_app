@@ -24,6 +24,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_todo_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_todo_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
@@ -158,7 +159,7 @@ void main() {
     double textScale = 1,
     Size? size,
     bool withBloc = true,
-    TravelerTodoSource source = TravelerTodoSource.tile,
+    TodoSource source = TodoSource.tile,
   }) async {
     if (size != null) {
       tester.view.physicalSize = size;
@@ -767,7 +768,7 @@ void main() {
     });
 
     testWidgets('source link (?action=supplement)', (tester) async {
-      await openTodo(tester, source: TravelerTodoSource.link);
+      await openTodo(tester, source: TodoSource.link);
       verify(
         () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
           'tile': 'supplement',

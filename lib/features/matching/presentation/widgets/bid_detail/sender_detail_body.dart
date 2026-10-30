@@ -177,7 +177,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
           context,
           bid,
           SenderTodoTile.amendment,
-          source: SenderTodoSource.link,
+          source: TodoSource.link,
         ),
       );
     });

@@ -3,6 +3,18 @@ import 'dart:async';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_service.dart';
 
+/// D'où s'ouvre le sheet d'une tuile « À traiter » (vues expéditeur et
+/// voyageur) : propriété `source` de `bid_detail_tile_opened` (son `name`).
+enum TodoSource {
+  /// Tuile touchée dans la grille.
+  tile,
+
+  /// Lien d'une notification (`?action=amendment` côté expéditeur,
+  /// `?action=supplement` côté voyageur) : le sheet s'ouvre de lui-même à
+  /// l'affichage de la fiche.
+  link,
+}
+
 /// Mesure d'affichage d'une tuile « À traiter » de la fiche colis :
 /// l'événement à émettre, ses propriétés, et le [status] qui sert à le
 /// dédoublonner (statut du colis, ou de la demande quand elle en a un).

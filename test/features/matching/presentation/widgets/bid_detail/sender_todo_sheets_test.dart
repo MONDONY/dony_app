@@ -30,6 +30,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_todo_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_todo_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -187,7 +188,7 @@ void main() {
     double textScale = 1,
     Size? size,
     bool withBlocs = true,
-    SenderTodoSource source = SenderTodoSource.tile,
+    TodoSource source = TodoSource.tile,
   }) async {
     if (size != null) {
       tester.view.physicalSize = size;
@@ -1006,7 +1007,7 @@ void main() {
         tester,
         withAmendment(_amendment()),
         SenderTodoTile.amendment,
-        source: SenderTodoSource.link,
+        source: TodoSource.link,
       );
 
       verify(

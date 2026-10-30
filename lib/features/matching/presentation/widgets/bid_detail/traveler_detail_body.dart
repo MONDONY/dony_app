@@ -171,7 +171,7 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
           context,
           bid,
           TravelerTodoTile.supplement,
-          source: TravelerTodoSource.link,
+          source: TodoSource.link,
         ),
       );
     });
