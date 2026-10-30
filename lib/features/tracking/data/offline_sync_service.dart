@@ -87,7 +87,8 @@ class OfflineSyncService {
   static const lostPhotosKey = 'tracking_lost_photos';
 
   /// Clé des colis dont la remise resynchronisée a été refusée parce qu'ils
-  /// ont été clos entre-temps, dans `user_prefs`.
+  /// ont été clos entre-temps, dans `user_prefs`. Propre au compte : vidée
+  /// avec la box à la déconnexion (`AuthBloc._clearHiveAccountData`).
   static const closedScansKey = 'tracking_closed_before_sync';
 
   StreamSubscription<List<ConnectivityResult>>? _sub;
