@@ -17,6 +17,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_ti
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_todo_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_todo_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_action_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
@@ -264,48 +265,20 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
   Widget _todoTileFor(SenderTodoTile tile) {
     final bid = widget.bid;
     final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final iconName = switch (tile) {
-      SenderTodoTile.amendment => 'scale',
-      SenderTodoTile.reschedule => 'calendar-sync',
-      SenderTodoTile.recipient => 'user-plus',
-    };
-    return DonyActionTile(
-      key: Key('sender-todo-${tile.name}'),
-      iconName: iconName,
+    return todoActionTile(
+      context,
+      role: 'sender',
+      tile: tile.name,
+      iconName: switch (tile) {
+        SenderTodoTile.amendment => 'scale',
+        SenderTodoTile.reschedule => 'calendar-sync',
+        SenderTodoTile.recipient => 'user-plus',
+      },
       label: senderTodoTitle(l, tile),
       subtitle: senderTodoSummary(l, bid, tile),
-      color: cs.primary,
-      badge: _badge(senderTodoBadge(l, bid, tile), ToolStatusTone.news),
+      badge: senderTodoBadge(l, bid, tile),
       onTap: () => unawaited(openSenderTodoSheet(context, bid, tile)),
     );
-  }
-
-  /// Compte l'affichage des tuiles « À traiter » après l'image, une seule fois
-  /// par colis, tuile et statut ([TodoTileViewLog]) ; plus la mesure de la
-  /// carte reprise par la tuile ([senderTodoViewed]), une fois par statut de
-  /// la demande.
-  void _logTodoShown(List<SenderTodoTile> tiles) {
-    if (tiles.isEmpty) return;
-    final bid = widget.bid;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      for (final tile in tiles) {
-        _todoViews.logOnce(
-          bidId: bid.id,
-          tile: tile.name,
-          shown: senderTodoShown(tile, bid),
-        );
-        final viewed = senderTodoViewed(tile, bid);
-        if (viewed != null) {
-          _todoViews.logOnce(
-            bidId: bid.id,
-            tile: '${tile.name}|card',
-            shown: viewed,
-          );
-        }
-      }
-    });
   }
 
   Widget _badge(String label, ToolStatusTone tone) => ToolStatusBadge(
@@ -353,7 +326,14 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     // Demandes qui attendent une réponse : une tuile chacune (modification,
     // report, destinataire à remplacer), sous les cartes d'alerte.
     final todoTiles = senderTodoTilesFor(bid);
-    _logTodoShown(todoTiles);
+    // Mesure d'affichage de chaque tuile, plus celle de la carte qu'elle
+    // reprend ([senderTodoViewed]), une fois chacune pour cet écran.
+    _todoViews.logAll(context, bid.id, [
+      for (final tile in todoTiles) ...[
+        senderTodoShown(tile, bid),
+        ?senderTodoViewed(tile, bid),
+      ],
+    ]);
 
     // « À traiter » ne réunit que ce qui attend une réponse ou une action :
     // les cartes d'alerte, puis la grille des tuiles.

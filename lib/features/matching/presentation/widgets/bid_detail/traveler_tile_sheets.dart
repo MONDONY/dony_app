@@ -1,9 +1,6 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/get_it_safe.dart';
-import 'package:dony/core/services/analytics_events.dart';
-import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -13,6 +10,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detai
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/live_bid.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/recipient_contact.dart';
@@ -46,15 +44,10 @@ Future<void> openTravelerTileSheet(
   TravelerTileSource source = TravelerTileSource.tile,
 }) {
   final l = context.l10n;
-  unawaited(
-    getItSafe<AnalyticsService>()?.logEvent(
-      AnalyticsEvents.bidDetailTileOpened,
-      properties: {
-        'tile': tile.name,
-        'role': 'traveler',
-        'source': source.name,
-      },
-    ),
+  logBidDetailTileOpened(
+    tile: tile.name,
+    role: 'traveler',
+    source: source.name,
   );
 
   final bidBloc = maybeRead<BidBloc>(context);

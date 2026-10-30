@@ -55,7 +55,12 @@ String travelerTodoSummary(
 TodoTileShown travelerTodoShown(TravelerTodoTile tile, BidModel bid) =>
     TodoTileShown(
       AnalyticsEvents.bidDetailTodoTileShown,
-      {'tile': tile.name, 'role': 'traveler', 'status': bid.status},
+      tile: tile.name,
+      properties: () => {
+        'tile': tile.name,
+        'role': 'traveler',
+        'status': bid.status,
+      },
       status: switch (tile) {
         TravelerTodoTile.supplement => '${bid.status}|${bid.supplement?.id}',
       },
@@ -74,7 +79,12 @@ TodoTileShown? travelerTodoViewed(TravelerTodoTile tile, BidModel bid) {
   return switch (tile) {
     TravelerTodoTile.supplement => TodoTileShown(
       AnalyticsEvents.bidSupplementViewed,
-      {'role': 'traveler', 'status': s.status.name, 'surface': 'tile'},
+      tile: tile.name,
+      properties: () => {
+        'role': 'traveler',
+        'status': s.status.name,
+        'surface': 'tile',
+      },
       status: '${s.id}|${s.status.name}',
     ),
   };

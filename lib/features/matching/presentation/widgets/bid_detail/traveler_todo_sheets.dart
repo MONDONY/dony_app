@@ -1,11 +1,8 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/services/analytics_events.dart';
-import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -50,15 +47,10 @@ Future<void> openTravelerTodoSheet(
   TodoSource source = TodoSource.tile,
   SupplementRequestAuthorizer? authorize,
 }) {
-  unawaited(
-    getItSafe<AnalyticsService>()?.logEvent(
-      AnalyticsEvents.bidDetailTileOpened,
-      properties: {
-        'tile': tile.name,
-        'role': 'traveler',
-        'source': source.name,
-      },
-    ),
+  logBidDetailTileOpened(
+    tile: tile.name,
+    role: 'traveler',
+    source: source.name,
   );
 
   final screenBidBloc = maybeRead<BidBloc>(context);

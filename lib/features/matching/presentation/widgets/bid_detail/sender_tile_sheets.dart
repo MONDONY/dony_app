@@ -16,6 +16,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_lo
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tiles.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -39,13 +40,8 @@ Future<void> openSenderTileSheet(
   SenderTile tile,
 ) {
   final l = context.l10n;
-  unawaited(
-    getItSafe<AnalyticsService>()?.logEvent(
-      AnalyticsEvents.bidDetailTileOpened,
-      // `source` comme les tuiles « À traiter » (`openSenderTodoSheet`).
-      properties: {'tile': tile.name, 'role': 'sender', 'source': 'tile'},
-    ),
-  );
+  // `source` comme les tuiles « À traiter » (`openSenderTodoSheet`).
+  logBidDetailTileOpened(tile: tile.name, role: 'sender', source: 'tile');
 
   final bidBloc = maybeRead<BidBloc>(context);
 

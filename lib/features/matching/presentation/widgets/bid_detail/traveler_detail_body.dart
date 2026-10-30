@@ -10,6 +10,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteu
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart'
     show RatingDoneBadge;
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_action_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
@@ -20,7 +21,6 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_transport_section.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
-import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -205,52 +205,18 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
   Widget _todoTileFor(TravelerTodoTile tile) {
     final bid = widget.bid;
     final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final iconName = switch (tile) {
-      TravelerTodoTile.supplement => 'credit-card',
-    };
-    final badge = l.todoTileBadgeReplyNeeded;
-    return DonyActionTile(
-      key: Key('traveler-todo-${tile.name}'),
-      iconName: iconName,
+    return todoActionTile(
+      context,
+      role: 'traveler',
+      tile: tile.name,
+      iconName: switch (tile) {
+        TravelerTodoTile.supplement => 'credit-card',
+      },
       label: travelerTodoTitle(l, tile),
       subtitle: travelerTodoSummary(l, bid, tile),
-      color: cs.primary,
-      badge: ToolStatusBadge(
-        ready: false,
-        tone: ToolStatusTone.news,
-        label: badge,
-        semanticsLabel: badge,
-      ),
+      badge: l.todoTileBadgeReplyNeeded,
       onTap: () => unawaited(openTravelerTodoSheet(context, bid, tile)),
     );
-  }
-
-  /// Compte l'affichage des tuiles « À traiter » après l'image, une seule fois
-  /// par colis, tuile et statut ([TodoTileViewLog]) ; plus la mesure de la
-  /// carte reprise par la tuile ([travelerTodoViewed]), une fois par demande
-  /// et statut de la demande.
-  void _logTodoShown(List<TravelerTodoTile> tiles) {
-    if (tiles.isEmpty) return;
-    final bid = widget.bid;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      for (final tile in tiles) {
-        _todoViews.logOnce(
-          bidId: bid.id,
-          tile: tile.name,
-          shown: travelerTodoShown(tile, bid),
-        );
-        final viewed = travelerTodoViewed(tile, bid);
-        if (viewed != null) {
-          _todoViews.logOnce(
-            bidId: bid.id,
-            tile: '${tile.name}|card',
-            shown: viewed,
-          );
-        }
-      }
-    });
   }
 
   @override
@@ -305,7 +271,14 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
     // Demandes qui attendent une réponse : une tuile chacune (frais du
     // supplément à valider), sous les cartes d'alerte.
     final todoTiles = travelerTodoTilesFor(bid);
-    _logTodoShown(todoTiles);
+    // Mesure d'affichage de chaque tuile, plus celle de la carte qu'elle
+    // reprend ([travelerTodoViewed]), une fois chacune pour cet écran.
+    _todoViews.logAll(context, bid.id, [
+      for (final tile in todoTiles) ...[
+        travelerTodoShown(tile, bid),
+        ?travelerTodoViewed(tile, bid),
+      ],
+    ]);
 
     // « À traiter » ne réunit que ce qui attend une réponse ou un geste, et
     // seulement ce qui rend toujours un contenu (jamais un titre seul) : les

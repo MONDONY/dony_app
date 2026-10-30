@@ -112,7 +112,12 @@ String _amendmentSummary(AppLocalizations l, BidModel bid) {
 TodoTileShown senderTodoShown(SenderTodoTile tile, BidModel bid) =>
     TodoTileShown(
       AnalyticsEvents.bidDetailTodoTileShown,
-      {'tile': tile.name, 'role': 'sender', 'status': bid.status},
+      tile: tile.name,
+      properties: () => {
+        'tile': tile.name,
+        'role': 'sender',
+        'status': bid.status,
+      },
       status: switch (tile) {
         SenderTodoTile.amendment =>
           '${bid.status}|${AmendmentSenderCard.openRequest(bid)?.id}',
@@ -134,9 +139,14 @@ TodoTileShown? senderTodoViewed(SenderTodoTile tile, BidModel bid) {
   if (tile != SenderTodoTile.amendment) return null;
   final a = AmendmentSenderCard.openRequest(bid);
   if (a == null) return null;
-  return TodoTileShown(AnalyticsEvents.bidAmendmentViewed, {
-    'role': 'sender',
-    'status': a.status.wire,
-    'surface': 'tile',
-  }, status: '${a.id}|${a.status.wire}');
+  return TodoTileShown(
+    AnalyticsEvents.bidAmendmentViewed,
+    tile: tile.name,
+    properties: () => {
+      'role': 'sender',
+      'status': a.status.wire,
+      'surface': 'tile',
+    },
+    status: '${a.id}|${a.status.wire}',
+  );
 }
