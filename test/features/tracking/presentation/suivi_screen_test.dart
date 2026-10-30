@@ -311,6 +311,8 @@ void main() {
     when(() => offlineSync.queueChanges).thenReturn(queue);
     when(() => offlineSync.lostPhotoChanges).thenReturn(queue);
     when(() => offlineSync.lostPhotosFor(any())).thenReturn(const []);
+    when(() => offlineSync.closedScanChanges).thenReturn(queue);
+    when(() => offlineSync.closedScansFor(any())).thenReturn(const []);
 
     _unregisterAll();
     getIt
@@ -1225,6 +1227,38 @@ void main() {
       await settle(tester);
       expect(find.byKey(const Key('suivi-undo-1')), findsNothing);
       expect(cameraPaused?.value, isFalse);
+    });
+
+    testWidgets('remise hors ligne refusée car colis clos → message, même '
+        'si le colis n\'est plus à valider', (tester) async {
+      stubTrips(
+        [_trip('trip-a', 'IN_PROGRESS', 'Paris', 'Dakar')],
+        {
+          'trip-a': [
+            _bid('gone', 'CANCELLED', name: 'Awa'),
+            _bid('todo', 'ACCEPTED', name: 'Ali'),
+          ],
+        },
+      );
+      when(() => offlineSync.closedScansFor(any())).thenAnswer(
+        (invocation) =>
+            (invocation.positionalArguments.single as Set<String>).contains(
+              'gone',
+            )
+            ? const ['gone']
+            : const [],
+      );
+      await pump(tester);
+
+      expect(find.byKey(const Key('suivi-closed-scan-gone')), findsOneWidget);
+      expect(
+        text(
+          'Ce colis a été clos avant la synchronisation de votre scan. '
+          "L'équipe Yadony a été prévenue.",
+        ),
+        findsOneWidget,
+      );
+      await settle(tester, rounds: 12);
     });
 
     testWidgets('QR d\'un colis livré → message, pas de parcours', (

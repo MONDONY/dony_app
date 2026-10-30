@@ -79,6 +79,7 @@ void main() {
       AnalyticsEvents.bidAmendmentActionFailed,
       AnalyticsEvents.bidAmendmentPaymentStarted,
       AnalyticsEvents.handoverBlockedAmendment,
+      AnalyticsEvents.handoverBlockedSenderNoShow,
       AnalyticsEvents.blocError,
     ];
     for (final e in events) {
@@ -118,6 +119,13 @@ void main() {
     expect(
       AnalyticsEvents.handoverBlockedAmendment,
       'handover_blocked_amendment',
+    );
+  });
+
+  test('nom exact de la remise bloquée par une absence contestée', () {
+    expect(
+      AnalyticsEvents.handoverBlockedSenderNoShow,
+      'handover_blocked_sender_noshow',
     );
   });
 }

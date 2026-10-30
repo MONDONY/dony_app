@@ -5,7 +5,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/report_severity.dart';
-import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -87,6 +86,10 @@ class OfflineSyncService {
   /// Clé des étapes parties sans leur photo disparue, dans `user_prefs`.
   static const lostPhotosKey = 'tracking_lost_photos';
 
+  /// Clé des colis dont la remise resynchronisée a été refusée parce qu'ils
+  /// ont été clos entre-temps, dans `user_prefs`.
+  static const closedScansKey = 'tracking_closed_before_sync';
+
   StreamSubscription<List<ConnectivityResult>>? _sub;
   bool _syncing = false;
 
@@ -119,7 +122,8 @@ class OfflineSyncService {
 
   AppLifecycleListener? _lifecycle;
 
-  /// Événement `handover_blocked_supplement`. `null` en test.
+  /// Événements `handover_blocked_*` ([handoverBlockedEvent]). `null` en
+  /// test.
   final AnalyticsService? _analytics;
 
   OfflineSyncService(
@@ -274,6 +278,42 @@ class OfflineSyncService {
     final raw = _hive.userPrefs.get(lostPhotosKey);
     if (raw is! List) return const [];
     return [for (final item in raw) ?LostTrackingPhoto.fromJson(item)];
+  }
+
+  /// Colis parmi [bidIds] dont la remise resynchronisée a été refusée : clos
+  /// (absence confirmée, annulation) avant que le scan hors ligne parte.
+  List<String> closedScansFor(Set<String> bidIds) => [
+    for (final bidId in _closedScans())
+      if (bidIds.contains(bidId)) bidId,
+  ];
+
+  /// Notifie chaque colis ajouté ou message fermé.
+  Listenable get closedScanChanges =>
+      _hive.userPrefs.listenable(keys: [closedScansKey]);
+
+  /// Le voyageur a lu le message : il disparaît.
+  Future<void> dismissClosedScan(String bidId) =>
+      _hive.userPrefs.put(closedScansKey, [
+        for (final other in _closedScans())
+          if (other != bidId) other,
+      ]);
+
+  List<String> _closedScans() {
+    final raw = _hive.userPrefs.get(closedScansKey);
+    if (raw is! List) return const [];
+    return [
+      for (final item in raw)
+        if (item is String) item,
+    ];
+  }
+
+  /// Remise (DEPART) hors ligne arrivée après la clôture du colis : le back
+  /// la refuse (422 `bid-not-accepted`) et prévient l'équipe. Le voyageur en
+  /// est prévenu dans l'onglet Suivi, une fois par colis.
+  Future<void> _reportClosedScan(String bidId) async {
+    final known = _closedScans();
+    if (known.contains(bidId)) return;
+    await _hive.userPrefs.put(closedScansKey, [...known, bidId]);
   }
 
   /// FLUTTER-MJ : le fichier de la photo n'existe plus. L'entrée oublie sa
@@ -532,10 +572,11 @@ class OfflineSyncService {
     } catch (error) {
       final cause = unwrapDioError(error);
       if (isRetryLaterTrackingRejection(cause)) {
-        // Un supplément attend l'expéditeur (409
-        // `handover-supplement-pending`). Personne pour lire le motif (scan
-        // hors ligne, onglet quitté, app fermée) : l'étape reste en file,
-        // comptée parmi les scans en attente, et repart dans
+        // Remise refusée pour l'instant ([handoverRetryLaterCodes]) : un
+        // supplément attend l'expéditeur, une modification le voyageur, ou
+        // l'équipe tranche une absence contestée. Personne pour lire le motif
+        // (scan hors ligne, onglet quitté, app fermée) : l'étape reste en
+        // file, comptée parmi les scans en attente, et repart dans
         // [retryLaterDelay]. Envoi de l'onglet Suivi affiché
         // ([canShowRefusal]) : le voyageur voit le message et rescanne une
         // fois la réponse venue.
@@ -546,10 +587,11 @@ class OfflineSyncService {
         } else {
           await _postpone(key, entry);
         }
-        if (firstBlock) {
+        final blocked = handoverBlockedEvent(cause.code);
+        if (firstBlock && blocked != null) {
           unawaited(
             _analytics?.logEvent(
-              AnalyticsEvents.handoverBlockedSupplement,
+              blocked,
               properties: {'channel': deferred ? 'offline' : 'direct'},
             ),
           );
@@ -562,6 +604,15 @@ class OfflineSyncService {
         // gonflait Sentry côté back d'un 500 par tentative
         // (YADONY-BACK-STAGING-8, deux évènements à 8 s d'écart).
         await _delete(key, entry);
+        // Remise hors ligne rejouée après la clôture du colis (absence
+        // confirmée pendant l'attente) : personne ne lit le motif, le
+        // voyageur en est prévenu dans l'onglet Suivi.
+        if (deferred &&
+            eventType == 'DEPART' &&
+            cause is ValidationException &&
+            cause.code == 'bid-not-accepted') {
+          await _reportClosedScan(bidId);
+        }
       }
       rethrow;
     }

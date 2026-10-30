@@ -13,6 +13,7 @@ import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
+import 'package:dony/features/tracking/presentation/widgets/suivi_closed_scans_banner.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_lost_photos_banner.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
@@ -85,6 +86,12 @@ class SuiviValidateContent extends StatelessWidget {
         children: [
           SuiviPendingScansBanner(bidIds: {for (final b in bids) b.id}),
           SuiviLostPhotosBanner(bidIds: {for (final b in bids) b.id}),
+          SuiviClosedScansBanner(
+            bidIds: {
+              for (final b in hub.bidsByTrip[hub.selectedTripId] ?? const [])
+                b.id,
+            },
+          ),
           _TripRow(hub: hub, onChangeTrip: onChangeTrip),
           if (isExpanded) ...[
             const SizedBox(height: DonySpacing.sm),

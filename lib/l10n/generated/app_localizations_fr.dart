@@ -19135,6 +19135,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get suiviPhotoLostDismiss => 'Fermer le message sur la photo perdue';
 
   @override
+  String get suiviScanClosedBeforeSync =>
+      'Ce colis a été clos avant la synchronisation de votre scan. L\'équipe Yadony a été prévenue.';
+
+  @override
+  String get suiviScanClosedBeforeSyncDismiss =>
+      'Fermer le message sur le scan non synchronisé';
+
+  @override
   String get authRequiredFlightAlertSubtitle =>
       'Recevez une alerte quand le prix baisse';
 

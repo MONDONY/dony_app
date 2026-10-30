@@ -1776,6 +1776,226 @@ void main() {
     );
   });
 
+  group('remise bloquée : absence contestée ou modification en attente', () {
+    final t0 = DateTime.utc(2026, 10, 30, 9);
+    late DateTime now;
+    late _MockAnalytics analytics;
+    late OfflineSyncService timed;
+
+    DioException conflict(String code) => DioException(
+      requestOptions: RequestOptions(path: '/tracking/events'),
+      error: ConflictException('Remise bloquée', code: code),
+    );
+
+    void stubPost(Future<TrackingEventModel> Function() answer) => when(
+      () => mockRepo.postScan(
+        bidId: any(named: 'bidId'),
+        eventType: any(named: 'eventType'),
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        photoUrl: any(named: 'photoUrl'),
+        scanMethod: any(named: 'scanMethod'),
+        trackingNumber: any(named: 'trackingNumber'),
+        offlineTimestamp: any(named: 'offlineTimestamp'),
+      ),
+    ).thenAnswer((_) => answer());
+
+    setUp(() {
+      now = t0;
+      analytics = _MockAnalytics();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      timed = OfflineSyncService(
+        _hiveService,
+        mockRepo,
+        null,
+        () => now,
+        null,
+        null,
+        analytics,
+      );
+    });
+
+    tearDown(() => timed.dispose());
+
+    test('absence contestée, hors ligne : étape gardée, renvoyée plus tard, '
+        'événement dédié', () async {
+      stubPost(() async => throw conflict('handover-sender-noshow-pending'));
+      final key = await timed.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+
+      await timed.syncAll();
+
+      final entry = Map<String, dynamic>.from(
+        _hiveService.offlineQueue.get(key)!,
+      );
+      expect(entry['notBefore'], '2026-10-30T09:05:00.000Z');
+      expect(timed.pendingCountFor({'bid-1'}), 1);
+      expect(timed.nextRetryDelay, isNull, reason: 'pas une panne');
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.handoverBlockedSenderNoShow,
+          properties: {'channel': 'offline'},
+        ),
+      ).called(1);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.handoverBlockedSupplement,
+          properties: any(named: 'properties'),
+        ),
+      );
+
+      // L'équipe rejette la déclaration : le rejeu passe.
+      stubPost(() async => _fakeEvent());
+      now = t0.add(const Duration(minutes: 6));
+      await timed.syncAll();
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+    });
+
+    test('absence contestée, onglet Suivi affiché : étape retirée, motif '
+        'remonté', () async {
+      stubPost(() async => throw conflict('handover-sender-noshow-pending'));
+      final key = await timed.queueScan(
+        bidId: 'bid-1',
+        eventType: 'DEPART',
+        notBefore: t0.add(const Duration(seconds: 7)),
+      );
+
+      await expectLater(
+        timed.sendScheduled(key),
+        throwsA(
+          isA<DioException>().having(
+            (e) => (e.error as ConflictException?)?.code,
+            'code',
+            'handover-sender-noshow-pending',
+          ),
+        ),
+      );
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.handoverBlockedSenderNoShow,
+          properties: {'channel': 'direct'},
+        ),
+      ).called(1);
+    });
+
+    test('modification en attente : son propre événement', () async {
+      stubPost(() async => throw conflict('handover-amendment-pending'));
+      await timed.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+
+      await timed.syncAll();
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.handoverBlockedAmendment,
+          properties: {'channel': 'offline'},
+        ),
+      ).called(1);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.handoverBlockedSupplement,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+  });
+
+  group('colis clos avant la synchronisation (422 bid-not-accepted)', () {
+    DioException closed() => DioException(
+      requestOptions: RequestOptions(path: '/tracking/events'),
+      error: const ValidationException('Colis clos', code: 'bid-not-accepted'),
+    );
+
+    void stubPost(Future<TrackingEventModel> Function() answer) => when(
+      () => mockRepo.postScan(
+        bidId: any(named: 'bidId'),
+        eventType: any(named: 'eventType'),
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        photoUrl: any(named: 'photoUrl'),
+        scanMethod: any(named: 'scanMethod'),
+        trackingNumber: any(named: 'trackingNumber'),
+        offlineTimestamp: any(named: 'offlineTimestamp'),
+      ),
+    ).thenAnswer((_) => answer());
+
+    setUp(() async {
+      await _hiveService.userPrefs.delete(OfflineSyncService.closedScansKey);
+    });
+
+    test('remise resynchronisée refusée : étape retirée, voyageur prévenu une '
+        'fois', () async {
+      stubPost(() async => throw closed());
+      await service.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+      await service.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+      var calls = 0;
+      void listener() => calls++;
+      service.closedScanChanges.addListener(listener);
+      addTearDown(() => service.closedScanChanges.removeListener(listener));
+
+      await service.syncAll();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      expect(service.closedScansFor({'bid-1', 'bid-2'}), ['bid-1']);
+      expect(service.closedScansFor({'bid-2'}), isEmpty);
+      expect(calls, greaterThan(0));
+    });
+
+    test('le voyageur ferme le message', () async {
+      stubPost(() async => throw closed());
+      await service.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+      await service.syncAll();
+
+      await service.dismissClosedScan('bid-1');
+
+      expect(service.closedScansFor({'bid-1'}), isEmpty);
+    });
+
+    test('envoi direct de l\'onglet Suivi : motif remonté, pas de message '
+        'différé', () async {
+      stubPost(() async => throw closed());
+      final key = await service.queueScan(
+        bidId: 'bid-1',
+        eventType: 'DEPART',
+        notBefore: DateTime.now().add(const Duration(seconds: 7)),
+      );
+
+      await expectLater(service.sendScheduled(key), throwsA(anything));
+
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      expect(service.closedScansFor({'bid-1'}), isEmpty);
+    });
+
+    test('autre étape refusée en 422 : pas de message', () async {
+      stubPost(() async => throw closed());
+      await service.queueScan(bidId: 'bid-1', eventType: 'TRANSIT');
+
+      await service.syncAll();
+
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      expect(service.closedScansFor({'bid-1'}), isEmpty);
+    });
+
+    test('autre refus définitif de la remise : pas de message', () async {
+      stubPost(
+        () async => throw DioException(
+          requestOptions: RequestOptions(path: '/tracking/events'),
+          error: const ForbiddenException('x'),
+        ),
+      );
+      await service.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+
+      await service.syncAll();
+
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      expect(service.closedScansFor({'bid-1'}), isEmpty);
+    });
+  });
+
   group('dispose', () {
     test('cancel does not throw when not started', () {
       final s = OfflineSyncService(_hiveService, mockRepo);

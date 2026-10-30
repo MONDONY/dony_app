@@ -50,12 +50,40 @@ class _LostPhotoNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    return SuiviSyncNotice(
+      key: Key('suivi-lost-photo-${lost.bidId}-${lost.eventType}'),
+      iconAsset: 'image-off',
+      message: l.suiviPhotoLost(trackingStepLabel(l, lost.eventType)),
+      dismissTooltip: l.suiviPhotoLostDismiss,
+      onDismiss: onDismiss,
+    );
+  }
+}
+
+/// Message de la file hors ligne affiché dans l'onglet Suivi jusqu'à ce que
+/// l'utilisateur le ferme (photo perdue, remise refusée à la
+/// synchronisation).
+class SuiviSyncNotice extends StatelessWidget {
+  const SuiviSyncNotice({
+    super.key,
+    required this.iconAsset,
+    required this.message,
+    required this.dismissTooltip,
+    required this.onDismiss,
+  });
+
+  final String iconAsset;
+  final String message;
+  final String dismissTooltip;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: DonySpacing.base),
       child: Material(
-        key: Key('suivi-lost-photo-${lost.bidId}-${lost.eventType}'),
         color: cs.surfaceWarm,
         borderRadius: BorderRadius.circular(DonyRadius.lg),
         child: Padding(
@@ -66,16 +94,16 @@ class _LostPhotoNotice extends StatelessWidget {
           ),
           child: Row(
             children: [
-              DonyIcon('image-off', size: 18, color: cs.onSurface),
+              DonyIcon(iconAsset, size: 18, color: cs.onSurface),
               const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: Text(
-                  l.suiviPhotoLost(trackingStepLabel(l, lost.eventType)),
+                  message,
                   style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                 ),
               ),
               IconButton(
-                tooltip: l.suiviPhotoLostDismiss,
+                tooltip: dismissTooltip,
                 onPressed: onDismiss,
                 icon: DonyIcon('x', size: 16, color: cs.onSurfaceVariant),
               ),

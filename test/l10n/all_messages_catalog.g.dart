@@ -6681,6 +6681,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripPosterPricePerKgShort(placeholderMarker('price')),
   'suiviPhotoLost': (l) => l.suiviPhotoLost(placeholderMarker('step')),
   'suiviPhotoLostDismiss': (l) => l.suiviPhotoLostDismiss,
+  'suiviScanClosedBeforeSync': (l) => l.suiviScanClosedBeforeSync,
+  'suiviScanClosedBeforeSyncDismiss': (l) => l.suiviScanClosedBeforeSyncDismiss,
   'authRequiredFlightAlertSubtitle': (l) => l.authRequiredFlightAlertSubtitle,
   'authRequiredFlightAlertBody': (l) => l.authRequiredFlightAlertBody,
   'flightsTitle': (l) => l.flightsTitle,

@@ -18993,6 +18993,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suiviPhotoLostDismiss => 'Close the lost photo message';
 
   @override
+  String get suiviScanClosedBeforeSync =>
+      'This parcel was closed before your scan synced. The Yadony team has been notified.';
+
+  @override
+  String get suiviScanClosedBeforeSyncDismiss =>
+      'Close the unsynced scan message';
+
+  @override
   String get authRequiredFlightAlertSubtitle =>
       'Get an alert when the price drops';
 

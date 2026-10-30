@@ -632,6 +632,12 @@ abstract final class AnalyticsEvents {
   /// Scan de remise refusé par le serveur (409 `handover-amendment-pending`) : une modification attend le voyageur.
   /// Propriété `channel` (`direct`/`offline`).
   static const handoverBlockedAmendment = 'handover_blocked_amendment';
+
+  /// Scan de remise refusé par le serveur (409
+  /// `handover-sender-noshow-pending`) : la déclaration d'absence de
+  /// l'expéditeur est contestée ou confirmée, l'équipe tranche.
+  /// Propriété `channel` (`direct`/`offline`).
+  static const handoverBlockedSenderNoShow = 'handover_blocked_sender_noshow';
   static const rematchAccepted = 'rematch_accepted';
   static const rematchAlternativesOpened = 'rematch_alternatives_opened';
   static const noShowReportedBySender = 'no_show_reported_by_sender';

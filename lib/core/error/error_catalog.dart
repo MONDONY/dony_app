@@ -538,7 +538,8 @@ abstract final class ErrorCatalog {
     // Scan DEPART refusé tant que la déclaration d'absence de l'expéditeur
     // est contestée ou confirmée : l'équipe tranche, rien à attendre de
     // l'expéditeur (d'où le marteau, pas le sablier). Une déclaration encore
-    // en attente, elle, est levée par le scan.
+    // en attente, elle, est levée par le scan. La file hors ligne garde
+    // l'étape et la renvoie plus tard (`handoverRetryLaterCodes`).
     'handover-sender-noshow-pending': _Entry(
       title: (l) => l.errorHandoverSenderNoShowPendingTitle,
       message: (l) => l.errorHandoverSenderNoShowPendingMessage,
