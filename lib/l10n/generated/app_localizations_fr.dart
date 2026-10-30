@@ -22358,6 +22358,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une modification du colis attend la réponse du voyageur. Scannez le colis une fois qu\'il a répondu.';
 
   @override
+  String get errorHandoverSenderNoShowPendingTitle => 'Remise bloquée';
+
+  @override
+  String get errorHandoverSenderNoShowPendingMessage =>
+      'L\'expéditeur a contesté votre déclaration d\'absence : l\'équipe Yadony doit trancher avant la remise. Contactez le support si l\'expéditeur est venu.';
+
+  @override
   String get amendmentEntryButton => 'Ajouter des kilos ou des articles';
 
   @override

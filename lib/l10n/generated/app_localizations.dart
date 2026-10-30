@@ -36030,6 +36030,18 @@ abstract class AppLocalizations {
   /// **'Une modification du colis attend la réponse du voyageur. Scannez le colis une fois qu\'il a répondu.'**
   String get errorHandoverAmendmentPendingMessage;
 
+  /// ErrorCatalog handover-sender-noshow-pending : scan DEPART refusé (409), la déclaration d'absence de l'expéditeur est contestée ou confirmée, l'équipe tranche
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise bloquée'**
+  String get errorHandoverSenderNoShowPendingTitle;
+
+  /// ErrorCatalog handover-sender-noshow-pending : message du scan DEPART refusé, déclaration d'absence contestée ou confirmée
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur a contesté votre déclaration d\'absence : l\'équipe Yadony doit trancher avant la remise. Contactez le support si l\'expéditeur est venu.'**
+  String get errorHandoverSenderNoShowPendingMessage;
+
   /// Bouton d'entrée de la modification
   ///
   /// In fr, this message translates to:

@@ -7763,6 +7763,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorHandoverAmendmentPendingTitle,
   'errorHandoverAmendmentPendingMessage': (l) =>
       l.errorHandoverAmendmentPendingMessage,
+  'errorHandoverSenderNoShowPendingTitle': (l) =>
+      l.errorHandoverSenderNoShowPendingTitle,
+  'errorHandoverSenderNoShowPendingMessage': (l) =>
+      l.errorHandoverSenderNoShowPendingMessage,
   'amendmentEntryButton': (l) => l.amendmentEntryButton,
   'amendmentSheetTitle': (l) => l.amendmentSheetTitle,
   'amendmentSheetKgLabel': (l) => l.amendmentSheetKgLabel(

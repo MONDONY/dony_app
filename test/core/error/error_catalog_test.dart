@@ -1977,4 +1977,53 @@ void main() {
       }
     });
   });
+
+  group('ErrorCatalog — remise bloquée par une absence contestée', () {
+    // 409 du scan DEPART quand la déclaration d'absence de l'expéditeur est
+    // contestée ou confirmée : c'est l'équipe qui tranche, rien à attendre
+    // de l'expéditeur (pas le sablier du supplément).
+    const error = ConflictException(
+      'd',
+      code: 'handover-sender-noshow-pending',
+    );
+
+    test('titre et message en français', () {
+      expect(ErrorCatalog.isKnown(error), isTrue);
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+      expect(p.title, 'Remise bloquée');
+      expect(
+        p.message,
+        "L'expéditeur a contesté votre déclaration d'absence : l'équipe "
+        'Yadony doit trancher avant la remise. Contactez le support si '
+        "l'expéditeur est venu.",
+      );
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('titre et message en anglais', () {
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(p.title, 'Handover blocked');
+      expect(
+        p.message,
+        'The sender contested your absence report: the Yadony team must '
+        'decide before the handover. Contact support if the sender did '
+        'show up.',
+      );
+    });
+
+    test('icône de décision, pas le sablier du supplément', () {
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+      expect(p.icon, Icons.gavel_rounded);
+      expect(p.icon, isNot(Icons.hourglass_top_rounded));
+    });
+  });
 }

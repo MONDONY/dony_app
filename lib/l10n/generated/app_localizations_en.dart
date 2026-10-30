@@ -22206,6 +22206,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'An edit to the parcel is awaiting the traveler\'s reply. Scan the parcel once they\'ve replied.';
 
   @override
+  String get errorHandoverSenderNoShowPendingTitle => 'Handover blocked';
+
+  @override
+  String get errorHandoverSenderNoShowPendingMessage =>
+      'The sender contested your absence report: the Yadony team must decide before the handover. Contact support if the sender did show up.';
+
+  @override
   String get amendmentEntryButton => 'Add kilos or items';
 
   @override

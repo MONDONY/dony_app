@@ -535,6 +535,16 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_top_rounded,
     ),
+    // Scan DEPART refusé tant que la déclaration d'absence de l'expéditeur
+    // est contestée ou confirmée : l'équipe tranche, rien à attendre de
+    // l'expéditeur (d'où le marteau, pas le sablier). Une déclaration encore
+    // en attente, elle, est levée par le scan.
+    'handover-sender-noshow-pending': _Entry(
+      title: (l) => l.errorHandoverSenderNoShowPendingTitle,
+      message: (l) => l.errorHandoverSenderNoShowPendingMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.gavel_rounded,
+    ),
     'already-bid': _Entry(
       title: (l) => l.errorAlreadyBidTitle,
       message: (l) => l.errorAlreadyBidMessage,

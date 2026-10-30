@@ -11093,6 +11093,8 @@
   "errorAmendmentNotFoundMessage": "This edit no longer exists.",
   "errorHandoverAmendmentPendingTitle": "Edit pending",
   "errorHandoverAmendmentPendingMessage": "An edit to the parcel is awaiting the traveler's reply. Scan the parcel once they've replied.",
+  "errorHandoverSenderNoShowPendingTitle": "Handover blocked",
+  "errorHandoverSenderNoShowPendingMessage": "The sender contested your absence report: the Yadony team must decide before the handover. Contact support if the sender did show up.",
   "amendmentEntryButton": "Add kilos or items",
   "amendmentSheetTitle": "Edit my parcel",
   "amendmentSheetKgLabel": "EXTRA KILOS · {price}/KG · {free} KG FREE",
