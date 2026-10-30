@@ -4787,44 +4787,62 @@ abstract class AppLocalizations {
   /// Titre de l'écran de fin d'inscription.
   ///
   /// In fr, this message translates to:
-  /// **'Votre compte est prêt'**
+  /// **'Par quoi voulez-vous commencer ?'**
   String get firstStepsTitle;
 
   /// Sous-titre de l'écran de fin d'inscription.
   ///
   /// In fr, this message translates to:
-  /// **'Par quoi voulez-vous commencer ? Vous pourrez toujours faire l\'autre plus tard.'**
+  /// **'Votre choix personnalise l\'accueil. Vous pourrez en changer à tout moment.'**
   String get firstStepsSubtitle;
-
-  /// Carte de choix voyageur, fin d'inscription.
-  ///
-  /// In fr, this message translates to:
-  /// **'Je voyage'**
-  String get firstStepsTripTitle;
-
-  /// Détail de la carte voyageur, fin d'inscription.
-  ///
-  /// In fr, this message translates to:
-  /// **'Publiez votre trajet et rentabilisez vos kilos libres.'**
-  String get firstStepsTripSubtitle;
-
-  /// Carte de choix expéditeur, fin d'inscription.
-  ///
-  /// In fr, this message translates to:
-  /// **'J\'envoie un colis'**
-  String get firstStepsParcelTitle;
-
-  /// Détail de la carte expéditeur, fin d'inscription.
-  ///
-  /// In fr, this message translates to:
-  /// **'Trouvez un voyageur ou publiez votre demande d\'envoi.'**
-  String get firstStepsParcelSubtitle;
 
   /// Bouton discret pour ignorer le choix et aller à l'accueil.
   ///
   /// In fr, this message translates to:
   /// **'Plus tard, aller à l\'accueil'**
   String get firstStepsLater;
+
+  /// Carte de choix expéditeur, fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer un colis'**
+  String get firstStepsSendTitle;
+
+  /// Détail de la carte expéditeur, fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trouvez un voyageur sur votre trajet.'**
+  String get firstStepsSendSubtitle;
+
+  /// Carte de choix voyageur, fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyager avec des colis'**
+  String get firstStepsTravelTitle;
+
+  /// Détail de la carte voyageur, fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiez votre trajet et vendez vos kilos libres.'**
+  String get firstStepsTravelSubtitle;
+
+  /// Bouton pour explorer l'accueil sans déclarer d'intention.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je regarde d\'abord'**
+  String get firstStepsBrowseTitle;
+
+  /// Bouton discret pour passer le choix de fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get firstStepsLaterShort;
+
+  /// Rassurance sous les choix de fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre identité n\'est vérifiée qu\'au moment d\'envoyer un colis ou de publier un trajet.'**
+  String get firstStepsIdentityNote;
 
   /// Encart vert de l'intro quand l'identité est déjà vérifiée, rôle voyageur
   ///

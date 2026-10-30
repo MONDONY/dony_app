@@ -2803,28 +2803,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get firstStepsDoneLabel => 'Sign-up complete';
 
   @override
-  String get firstStepsTitle => 'Your account is ready';
+  String get firstStepsTitle => 'What would you like to start with?';
 
   @override
   String get firstStepsSubtitle =>
-      'What would you like to do first? You can always do the other one later.';
-
-  @override
-  String get firstStepsTripTitle => 'I\'m traveling';
-
-  @override
-  String get firstStepsTripSubtitle =>
-      'Post your trip and earn from your spare luggage space.';
-
-  @override
-  String get firstStepsParcelTitle => 'I\'m sending a parcel';
-
-  @override
-  String get firstStepsParcelSubtitle =>
-      'Find a traveler or post your shipping request.';
+      'Your choice personalizes your home. You can change it at any time.';
 
   @override
   String get firstStepsLater => 'Later, go to home';
+
+  @override
+  String get firstStepsSendTitle => 'Send a parcel';
+
+  @override
+  String get firstStepsSendSubtitle => 'Find a traveler on your route.';
+
+  @override
+  String get firstStepsTravelTitle => 'Travel with parcels';
+
+  @override
+  String get firstStepsTravelSubtitle =>
+      'Post your trip and sell your spare kilos.';
+
+  @override
+  String get firstStepsBrowseTitle => 'I\'ll just look around';
+
+  @override
+  String get firstStepsLaterShort => 'Later';
+
+  @override
+  String get firstStepsIdentityNote =>
+      'Your identity is only verified when you send a parcel or post a trip.';
 
   @override
   String get tripPublishIntroVerifiedTextTrip =>

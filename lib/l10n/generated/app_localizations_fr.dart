@@ -2817,28 +2817,37 @@ class AppLocalizationsFr extends AppLocalizations {
   String get firstStepsDoneLabel => 'Inscription terminée';
 
   @override
-  String get firstStepsTitle => 'Votre compte est prêt';
+  String get firstStepsTitle => 'Par quoi voulez-vous commencer ?';
 
   @override
   String get firstStepsSubtitle =>
-      'Par quoi voulez-vous commencer ? Vous pourrez toujours faire l\'autre plus tard.';
-
-  @override
-  String get firstStepsTripTitle => 'Je voyage';
-
-  @override
-  String get firstStepsTripSubtitle =>
-      'Publiez votre trajet et rentabilisez vos kilos libres.';
-
-  @override
-  String get firstStepsParcelTitle => 'J\'envoie un colis';
-
-  @override
-  String get firstStepsParcelSubtitle =>
-      'Trouvez un voyageur ou publiez votre demande d\'envoi.';
+      'Votre choix personnalise l\'accueil. Vous pourrez en changer à tout moment.';
 
   @override
   String get firstStepsLater => 'Plus tard, aller à l\'accueil';
+
+  @override
+  String get firstStepsSendTitle => 'Envoyer un colis';
+
+  @override
+  String get firstStepsSendSubtitle => 'Trouvez un voyageur sur votre trajet.';
+
+  @override
+  String get firstStepsTravelTitle => 'Voyager avec des colis';
+
+  @override
+  String get firstStepsTravelSubtitle =>
+      'Publiez votre trajet et vendez vos kilos libres.';
+
+  @override
+  String get firstStepsBrowseTitle => 'Je regarde d\'abord';
+
+  @override
+  String get firstStepsLaterShort => 'Plus tard';
+
+  @override
+  String get firstStepsIdentityNote =>
+      'Votre identité n\'est vérifiée qu\'au moment d\'envoyer un colis ou de publier un trajet.';
 
   @override
   String get tripPublishIntroVerifiedTextTrip =>

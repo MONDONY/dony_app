@@ -989,7 +989,11 @@ final GoRouter appRouter = GoRouter(
     // Fin d'inscription : choix de la première action (voir FirstStepsScreen).
     GoRoute(
       path: firstStepsRoute,
-      builder: (context, state) => const FirstStepsScreen(),
+      builder: (context, state) => BlocProvider(
+        create: (_) =>
+            getIt<IntentCubit>(param1: (intent: null, destination: null)),
+        child: const FirstStepsScreen(),
+      ),
     ),
     GoRoute(
       path: '/payments/onboarding',
