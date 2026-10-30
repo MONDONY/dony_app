@@ -3,6 +3,8 @@
 // confirmés, annulation avec les colis remis, instructions de retrait,
 // trajet récurrent et modèle), bouton de la barre d'application, FR / EN,
 // 360 dp × 1,3.
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -15,9 +17,12 @@ import 'package:dony/features/cancellation/presentation/widgets/cancellation_bot
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_legs_info.dart';
+import 'package:dony/features/matching/data/models/trip_series_result.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_actions.dart';
@@ -40,6 +45,9 @@ class _MockCancellationBloc
 class _MockAnnouncements extends Mock implements AnnouncementRepository {}
 
 class _MockTemplates extends Mock implements TripTemplateRepository {}
+
+class _MockTripGroupCubit extends MockCubit<TripGroupState>
+    implements TripGroupCubit {}
 
 List<TripMenuEntry> _entries(
   AnnouncementModel trip,
@@ -275,6 +283,7 @@ void main() {
     late _MockCancellationBloc cancelBloc;
     late MockAnalyticsBackend backend;
     late _MockTemplates templates;
+    late _MockAnnouncements announcements;
     late List<TripSeriesCubit> cubits;
 
     setUpAll(() async {
@@ -308,6 +317,7 @@ void main() {
       final analytics = makeEnabledAnalytics(backend);
       await analytics.onConfigured();
       templates = _MockTemplates();
+      announcements = _MockAnnouncements();
       cubits = [];
       await getIt.reset();
       getIt
@@ -318,7 +328,7 @@ void main() {
         ) {
           final cubit = TripSeriesCubit(
             a,
-            _MockAnnouncements(),
+            announcements,
             templates,
             analytics,
             now: () => DateTime(2026, 10, 15),
@@ -338,12 +348,14 @@ void main() {
       Locale locale = const Locale('fr'),
       double textScale = 1,
       Size size = const Size(360, 800),
+      TripGroupCubit? group,
     }) async {
       final pushed = await pumpTripOwnerScreen(
         tester,
         announcement: annBloc,
         bids: bidBloc,
         cancellation: cancelBloc,
+        group: group,
         locale: locale,
         textScale: textScale,
         size: size,
@@ -687,6 +699,286 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
     });
 
+    group('Supprimer une étape d\'un voyage (FLUTTER-4D)', () {
+      final legs = TripLegsInfo.fromJson(const {
+        'tripGroupId': 'g',
+        'legCount': 3,
+        'legs': [
+          {'id': 'trip-1', 'legIndex': 1, 'departureDate': '2026-11-12'},
+          {'id': 'leg-2', 'legIndex': 2, 'departureDate': '2026-11-14'},
+          {'id': 'leg-3', 'legIndex': 3, 'departureDate': '2026-11-20'},
+        ],
+      });
+
+      TripGroupCubit groupCubit() {
+        final cubit = _MockTripGroupCubit();
+        whenListen(
+          cubit,
+          const Stream<TripGroupState>.empty(),
+          initialState: TripGroupState(
+            status: TripGroupStatus.loaded,
+            info: legs,
+          ),
+        );
+        return cubit;
+      }
+
+      Future<void> deleteAndConfirm(WidgetTester tester) async {
+        await openMenu(
+          tester,
+          trip: ownerTrip(tripGroupId: 'g'),
+          group: groupCubit(),
+        );
+        await tester.tap(entry(TripMenuEntry.delete));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: find.byType(Dialog),
+            matching: find.text('Supprimer'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        // Puis la question des étapes suivantes, après la confirmation.
+        expect(
+          find.text('Annuler aussi les étapes suivantes ?'),
+          findsOneWidget,
+        );
+        verifyNever(() => annBloc.add(any()));
+      }
+
+      testWidgets('« Annuler les suivantes » : leurs identifiants', (
+        tester,
+      ) async {
+        await deleteAndConfirm(tester);
+        await tester.tap(find.text('Annuler les suivantes'));
+        await tester.pumpAndSettle();
+        final event =
+            verify(() => annBloc.add(captureAny())).captured.single
+                as AnnouncementDeleteRequested;
+        expect(event.id, 'trip-1');
+        expect(event.followingLegIds, ['leg-2', 'leg-3']);
+      });
+
+      testWidgets('« Les garder » : aucune étape en plus', (tester) async {
+        await deleteAndConfirm(tester);
+        await tester.tap(find.text('Les garder'));
+        await tester.pumpAndSettle();
+        final event =
+            verify(() => annBloc.add(captureAny())).captured.single
+                as AnnouncementDeleteRequested;
+        expect(event.followingLegIds, isEmpty);
+      });
+
+      testWidgets('question fermée sans choisir : rien n\'est supprimé', (
+        tester,
+      ) async {
+        await deleteAndConfirm(tester);
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+        verifyNever(() => annBloc.add(any()));
+      });
+    });
+
+    group('trajet récurrent : la réponse n\'est jamais perdue', () {
+      final created = TripSeriesResult(
+        seriesId: 's1',
+        created: [ownerTrip(), ownerTrip()],
+        failed: const [],
+      );
+
+      void stubSeries(Future<TripSeriesResult> Function() answer) => when(
+        () => announcements.createSeries(
+          any(),
+          dates: any(named: 'dates'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      ).thenAnswer((_) => answer());
+
+      Future<void> pickDateAndPublish(WidgetTester tester) async {
+        await openMenu(tester, trip: ownerTrip());
+        await tester.tap(entry(TripMenuEntry.makeRecurring));
+        await tester.pumpAndSettle();
+        expect(
+          sheetRouteName(
+            tester,
+            find.text(
+              'Quand refaites-vous ce '
+              'trajet ?',
+            ),
+          ),
+          '/sheet/trip-series/calendar',
+        );
+        await tester.tap(find.byKey(const Key('trip-series-day-2026-11-20')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('trip-series-publish')));
+        await tester.pump();
+      }
+
+      testWidgets('calendrier fermé pendant l\'envoi : trip_series_created, '
+          'confirmation sur l\'écran, cubit fermé ensuite', (tester) async {
+        final reply = Completer<TripSeriesResult>();
+        stubSeries(() => reply.future);
+        await pickDateAndPublish(tester);
+
+        // Le voyageur ferme la feuille d'un geste, réponse encore en vol.
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+        expect(find.text('Quand refaites-vous ce trajet ?'), findsNothing);
+        expect(cubits.single.isClosed, isFalse);
+
+        reply.complete(created);
+        await tester.pumpAndSettle();
+        verify(
+          () => backend.capture(AnalyticsEvents.tripSeriesCreated, {
+            'count': 2,
+            'failed': 0,
+            'draft': false,
+          }),
+        ).called(1);
+        expect(find.text('2 trajets publiés'), findsOneWidget);
+        expect(cubits.single.isClosed, isTrue);
+        expect(tester.takeException(), isNull);
+        await tester.pump(const Duration(seconds: 5));
+      });
+
+      testWidgets('calendrier fermé pendant l\'envoi refusé : le motif', (
+        tester,
+      ) async {
+        final reply = Completer<TripSeriesResult>();
+        stubSeries(() => reply.future);
+        await pickDateAndPublish(tester);
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+
+        reply.completeError(Exception('offline'));
+        await tester.pumpAndSettle();
+        expect(
+          find.text(
+            "Impossible d'ajouter ces dates pour le moment. Réessayez.",
+          ),
+          findsOneWidget,
+        );
+        expect(cubits.single.isClosed, isTrue);
+        await tester.pump(const Duration(seconds: 5));
+      });
+
+      testWidgets('« Non merci » au modèle : les trajets créés restent dits', (
+        tester,
+      ) async {
+        stubSeries(() async => created);
+        await pickDateAndPublish(tester);
+        await tester.pumpAndSettle();
+        expect(find.text('En faire un modèle de trajet ?'), findsOneWidget);
+        expect(
+          sheetRouteName(tester, find.text('En faire un modèle de trajet ?')),
+          '/sheet/trip-series/template',
+        );
+
+        await tester.tap(find.byKey(const Key('trip-template-skip')));
+        await tester.pumpAndSettle();
+        expect(find.text('En faire un modèle de trajet ?'), findsNothing);
+        expect(find.text('2 trajets publiés'), findsOneWidget);
+        expect(cubits.single.isClosed, isTrue);
+        await tester.pump(const Duration(seconds: 5));
+      });
+
+      testWidgets('offre du modèle fermée d\'un geste : idem', (tester) async {
+        stubSeries(() async => created);
+        await pickDateAndPublish(tester);
+        await tester.pumpAndSettle();
+
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+        expect(find.text('2 trajets publiés'), findsOneWidget);
+        await tester.pump(const Duration(seconds: 5));
+      });
+
+      testWidgets('modèle enregistré après la série : une seule confirmation', (
+        tester,
+      ) async {
+        stubSeries(() async => created);
+        when(() => templates.create(any())).thenAnswer((_) async => _tpl);
+        await pickDateAndPublish(tester);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('trip-template-save')));
+        await tester.pumpAndSettle();
+        expect(find.text('Modèle enregistré'), findsOneWidget);
+        expect(find.text('2 trajets publiés'), findsNothing);
+        await tester.pump(const Duration(seconds: 5));
+      });
+    });
+
+    testWidgets('Enregistrer en modèle : feuille fermée pendant l\'envoi, '
+        'confirmation sur l\'écran', (tester) async {
+      final reply = Completer<TripTemplate>();
+      when(() => templates.create(any())).thenAnswer((_) => reply.future);
+      await openMenu(tester, trip: ownerTrip());
+      await tester.tap(entry(TripMenuEntry.saveTemplate));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('trip-template-save')));
+      await tester.pump();
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+      expect(cubits.single.isClosed, isFalse);
+
+      reply.complete(_tpl);
+      await tester.pumpAndSettle();
+      expect(find.text('Modèle enregistré'), findsOneWidget);
+      verify(
+        () => backend.capture(AnalyticsEvents.tripSeriesTemplateSaved, any()),
+      ).called(1);
+      expect(cubits.single.isClosed, isTrue);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('entrée verrouillée : raison à contraste normal, lue d\'un '
+        'trait, annoncée désactivée', (tester) async {
+      final handle = tester.ensureSemantics();
+      await openMenu(
+        tester,
+        trip: ownerTrip(status: 'IN_PROGRESS'),
+        bids: [ownerBid('b1', 'IN_TRANSIT')],
+      );
+      const reason =
+          'Un colis est déjà en route, arrivé ou livré : le trajet ne peut '
+          'plus être reporté.';
+      // Ni la raison ni aucun de ses parents n'est estompé.
+      expect(
+        find.ancestor(of: find.text(reason), matching: find.byType(Opacity)),
+        findsNothing,
+      );
+      // Le libellé, lui, l'est.
+      final labelOpacity = tester.widget<Opacity>(
+        find.ancestor(
+          of: find.text('Reporter'),
+          matching: find.byType(Opacity),
+        ),
+      );
+      expect(labelOpacity.opacity, 0.4);
+      expect(
+        tester.getSemantics(entry(TripMenuEntry.reschedule)),
+        matchesSemantics(
+          label: 'Reporter\n$reason',
+          isButton: true,
+          hasEnabledState: true,
+          // isEnabled faux par défaut : annoncée désactivée.
+        ),
+      );
+      await openMenu(tester, trip: ownerTrip());
+      expect(
+        tester.getSemantics(entry(TripMenuEntry.saveTemplate)),
+        matchesSemantics(
+          label: 'Enregistrer en modèle\nPour le republier en quelques gestes',
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+        ),
+      );
+      handle.dispose();
+    });
+
     testWidgets('le menu lui-même n’émet aucun événement', (tester) async {
       await openMenu(tester, trip: ownerTrip());
       verifyNever(() => backend.capture(any(), any()));
@@ -788,3 +1080,15 @@ void main() {
     });
   });
 }
+
+const _tpl = TripTemplate(
+  id: 'tpl',
+  label: 'Paris → Dakar',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  transportMode: 'PLANE',
+  capacityUnit: 'KG',
+  availableKg: 20,
+  pricePerKg: 7,
+  acceptedCategories: [],
+);

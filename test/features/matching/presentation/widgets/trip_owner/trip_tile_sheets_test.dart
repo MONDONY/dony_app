@@ -920,6 +920,13 @@ void main() {
       expect(sheet.announcementId, 'trip-1');
       expect(sheet.initialInstructions, 'Au marché');
       expect(find.text('Enregistrer'), findsOneWidget);
+      // Feuille du parcours nommée, branche « édition » (piège n°14).
+      expect(
+        ModalRoute.of(
+          tester.element(find.byType(ArrivalInstructionsBottomSheet)),
+        )?.settings.name,
+        '/sheet/trip-owner/arrival-instructions',
+      );
     });
 
     testWidgets('instructions relues après modification', (tester) async {

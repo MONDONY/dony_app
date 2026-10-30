@@ -319,7 +319,16 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
   }
 
   /// Parcours du trajet récurrent ou du modèle sur un cubit propre à ce
-  /// trajet, fermé à la fin, comme la carte de l'écran de succès.
+  /// trajet, fermé à la fin.
+  ///
+  /// Le menu n'a pas, comme la carte de l'écran de succès, de surface qui
+  /// survit au parcours et en garde le résultat : une feuille fermée d'un
+  /// geste pendant l'envoi ne doit ni perdre la réponse du serveur (le cubit
+  /// fermé trop tôt n'émettrait pas `trip_series_created`, le voyageur
+  /// recommencerait et recevrait `series-date-taken`), ni laisser le
+  /// voyageur sans trace des trajets créés. Le cubit n'est donc fermé
+  /// qu'une fois l'envoi en cours terminé, et l'écran confirme ensuite
+  /// ([_confirmSeriesOutcome]).
   Future<void> _withSeriesCubit(
     BuildContext ctx,
     Future<void> Function(BuildContext, TripSeriesCubit) flow,
@@ -327,15 +336,83 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
     final cubit = getIt<TripSeriesCubit>(param1: trip);
     try {
       await flow(ctx, cubit);
+      final pendingSeries = cubit.state.status == TripSeriesStatus.submitting;
+      final pendingTemplate =
+          cubit.state.templateStatus == TripSeriesTemplateStatus.saving;
+      final settled = pendingSeries || pendingTemplate
+          ? await cubit.stream.firstWhere(
+              (s) =>
+                  s.status != TripSeriesStatus.submitting &&
+                  s.templateStatus != TripSeriesTemplateStatus.saving,
+            )
+          : cubit.state;
+      if (ctx.mounted) {
+        _confirmSeriesOutcome(
+          ctx,
+          settled,
+          seriesShown: !pendingSeries,
+          templateConfirmed: !pendingTemplate,
+        );
+      }
     } finally {
       await cubit.close();
     }
   }
+
+  /// Confirmation laissée sur l'écran une fois le parcours refermé :
+  /// - modèle enregistré alors que sa feuille était déjà fermée : « Modèle
+  ///   enregistré » ([templateConfirmed] faux : la feuille ne l'a pas dit) ;
+  /// - trajets créés sans modèle enregistré (« Non merci », feuille du modèle
+  ///   fermée d'un geste, calendrier fermé pendant l'envoi) : « N trajets
+  ///   publiés » ou « N brouillons créés ». Avec un modèle enregistré, la
+  ///   feuille du modèle a déjà montré les deux ;
+  /// - série refusée alors que le calendrier était déjà fermé
+  ///   ([seriesShown] faux : la feuille n'a pas pu afficher le refus) : le
+  ///   motif, en erreur.
+  void _confirmSeriesOutcome(
+    BuildContext ctx,
+    TripSeriesState state, {
+    required bool seriesShown,
+    required bool templateConfirmed,
+  }) {
+    final l = ctx.l10n;
+    if (!seriesShown && state.status == TripSeriesStatus.failed) {
+      DonySnackbar.show(
+        ctx,
+        message: tripSeriesErrorText(ctx, state.errorCode),
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
+    final templateSaved =
+        state.templateStatus == TripSeriesTemplateStatus.saved;
+    if (templateSaved) {
+      if (!templateConfirmed) {
+        DonySnackbar.show(
+          ctx,
+          message: l.tripTemplateSaved,
+          type: DonySnackbarType.success,
+        );
+      }
+      return;
+    }
+    final created = state.result?.created.length ?? 0;
+    if (state.status != TripSeriesStatus.done || created == 0) return;
+    DonySnackbar.show(
+      ctx,
+      message: state.draft
+          ? l.tripSeriesBadgeDrafts(created)
+          : l.tripSeriesBadgePublished(created),
+      type: DonySnackbarType.success,
+    );
+  }
 }
 
 /// Entrée du menu : icône, libellé, sous-titre, chevron. Sans [onTap], elle
-/// est verrouillée (`opacity` 0,4, annoncée désactivée) et son sous-titre dit
-/// pourquoi.
+/// est verrouillée : annoncée désactivée, icône et libellé estompés
+/// (`opacity` 0,4), mais le sous-titre, qui dit pourquoi, garde son
+/// contraste normal (WCAG 1.4.3). Le lecteur d'écran lit l'entrée d'un
+/// trait (`MergeSemantics`) : libellé puis raison.
 class _OptionTile extends StatelessWidget {
   const _OptionTile({
     super.key,
@@ -359,11 +436,11 @@ class _OptionTile extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final enabled = onTap != null;
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.4,
+    final dim = enabled ? 1.0 : 0.4;
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        enabled: enabled,
         child: GestureDetector(
           onTap: onTap,
           child: Container(
@@ -375,22 +452,31 @@ class _OptionTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(DonySpacing.sm),
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                Opacity(
+                  opacity: dim,
+                  child: Container(
+                    padding: const EdgeInsets.all(DonySpacing.sm),
+                    decoration: BoxDecoration(
+                      color: iconBg,
+                      borderRadius: BorderRadius.circular(DonyRadius.sm),
+                    ),
+                    // Décorative : le libellé dit l'entrée.
+                    child: ExcludeSemantics(
+                      child: DonyIcon(iconAsset, color: iconColor, size: 18),
+                    ),
                   ),
-                  child: DonyIcon(iconAsset, color: iconColor, size: 18),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        label,
-                        style: tt.titleSmall?.copyWith(color: cs.onSurface),
+                      Opacity(
+                        opacity: dim,
+                        child: Text(
+                          label,
+                          style: tt.titleSmall?.copyWith(color: cs.onSurface),
+                        ),
                       ),
                       Text(
                         subtitle,
@@ -402,10 +488,12 @@ class _OptionTile extends StatelessWidget {
                   ),
                 ),
                 if (enabled)
-                  DonyIcon(
-                    'chevron-right',
-                    color: cs.onSurfaceVariant,
-                    size: 18,
+                  ExcludeSemantics(
+                    child: DonyIcon(
+                      'chevron-right',
+                      color: cs.onSurfaceVariant,
+                      size: 18,
+                    ),
                   ),
               ],
             ),

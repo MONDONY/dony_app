@@ -30,6 +30,7 @@ abstract final class TripSeriesFlow {
     final created = await DonyBottomSheet.show<bool>(
       context,
       title: context.l10n.tripSeriesSheetTitle,
+      analyticsName: 'trip-series/calendar',
       subtitle: context.l10n.tripSeriesSheetSubtitle(
         a.departureCity,
         a.arrivalCity,
@@ -57,6 +58,7 @@ abstract final class TripSeriesFlow {
   }) async {
     final saved = await DonyBottomSheet.show<bool>(
       context,
+      analyticsName: 'trip-series/template',
       wrapper: (child) => BlocProvider.value(value: cubit, child: child),
       stickyBottom: _TemplateButtons(canSkip: canSkip),
       child: const _TemplateOffer(),
