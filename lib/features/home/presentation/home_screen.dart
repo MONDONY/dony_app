@@ -9,6 +9,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
+import 'package:dony/core/services/consent_prompt.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -1924,6 +1925,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
     ActivationState state,
   ) async {
     if (state is! ActivationLoaded || state.status.intent != null) return;
+    // Jamais deux feuilles empilées : on attend la réponse au consentement, et
+    // on ne s'ouvre pas par-dessus une autre route.
+    if (getItSafe<ConsentPrompt>()?.wanted.value ?? false) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
     final policy = IntentPromptPolicy(getIt<HiveService>().userPrefs);
     final now = DateTime.now();
     if (!policy.shouldShow(now)) return;

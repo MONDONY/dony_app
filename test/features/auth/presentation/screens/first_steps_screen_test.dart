@@ -2,9 +2,11 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
 import 'package:dony/features/activation/data/activation_repository.dart';
+import 'package:dony/features/activation/data/intent_prompt_policy.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
@@ -13,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mock_analytics_backend.dart';
@@ -20,6 +23,19 @@ import '../../../../helpers/mock_analytics_backend.dart';
 class _MockActivationRepository extends Mock implements ActivationRepository {}
 
 class _MockAuthRepository extends Mock implements AuthRepository {}
+
+class _MockHiveService extends Mock implements HiveService {}
+
+class _MemoryBox extends Fake implements Box<dynamic> {
+  final Map<dynamic, dynamic> data = {};
+
+  @override
+  dynamic get(dynamic key, {dynamic defaultValue}) =>
+      data.containsKey(key) ? data[key] : defaultValue;
+
+  @override
+  Future<void> put(dynamic key, dynamic value) async => data[key] = value;
+}
 
 class _MockActivationCubit extends MockCubit<ActivationState>
     implements ActivationCubit {}
@@ -35,6 +51,7 @@ void main() {
   late AnalyticsService analytics;
   late _MockActivationRepository repo;
   late _MockAuthRepository auth;
+  late _MemoryBox prefs;
 
   setUp(() async {
     backend = MockAnalyticsBackend();
@@ -61,9 +78,15 @@ void main() {
       getIt.unregister<ActivationCubit>();
     }
     getIt.registerSingleton<ActivationCubit>(activation);
+    prefs = _MemoryBox();
+    final hive = _MockHiveService();
+    when(() => hive.userPrefs).thenReturn(prefs);
+    if (getIt.isRegistered<HiveService>()) getIt.unregister<HiveService>();
+    getIt.registerSingleton<HiveService>(hive);
   });
 
   tearDown(() {
+    if (getIt.isRegistered<HiveService>()) getIt.unregister<HiveService>();
     if (getIt.isRegistered<AuthRepository>()) {
       getIt.unregister<AuthRepository>();
     }
@@ -192,6 +215,23 @@ void main() {
       }),
     ).called(1);
   });
+
+  for (final key in const ['first-steps-browse', 'first-steps-later']) {
+    testWidgets('$key repousse la question d\'intention de 7 jours', (
+      tester,
+    ) async {
+      await pump(tester);
+      final policy = IntentPromptPolicy(prefs);
+      expect(policy.shouldShow(DateTime.now()), isTrue);
+
+      await tester.tap(find.byKey(Key(key)));
+      await tester.pumpAndSettle();
+
+      final now = DateTime.now();
+      expect(policy.shouldShow(now), isFalse);
+      expect(policy.shouldShow(now.add(const Duration(days: 8))), isTrue);
+    });
+  }
 
   testWidgets('« Je regarde d\'abord » et « Plus tard » ne déclarent rien', (
     tester,

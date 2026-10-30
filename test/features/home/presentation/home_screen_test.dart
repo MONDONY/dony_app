@@ -8,10 +8,13 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
+import 'package:dony/core/services/consent_prompt.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
+import 'package:dony/features/activation/bloc/intent_cubit.dart';
+import 'package:dony/features/activation/data/activation_repository.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -161,6 +164,8 @@ class MockActivationCubit extends MockCubit<ActivationState>
     implements ActivationCubit {}
 
 class MockHiveService extends Mock implements HiveService {}
+
+class _MockActivationRepository extends Mock implements ActivationRepository {}
 
 class MockCityRepository extends Mock implements CityRepository {}
 
@@ -949,6 +954,53 @@ void main() {
         expect(modeAffiche(tester), SearchMode.trips);
       },
     );
+
+    group("question d'intention (comptes sans intention)", () {
+      const titre = 'Que faites-vous sur Yadony ?';
+
+      setUp(() {
+        getIt.registerFactoryParam<
+          IntentCubit,
+          ({UserIntent? intent, String? destination}),
+          void
+        >(
+          (initial, _) => IntentCubit(
+            _MockActivationRepository(),
+            analytics,
+            initialIntent: initial.intent,
+            initialDestination: initial.destination,
+          ),
+        );
+      });
+
+      testWidgets('contrôle : posée quand rien ne la gêne', (tester) async {
+        await pumpAvec(tester, const ActivationInitial());
+        await emettre(tester, charge(null));
+        expect(find.text(titre), findsOneWidget);
+      });
+
+      testWidgets('jamais empilée sur la feuille de consentement', (
+        tester,
+      ) async {
+        getIt.registerSingleton<ConsentPrompt>(ConsentPrompt()..request());
+        await pumpAvec(tester, const ActivationInitial());
+        await emettre(tester, charge(null));
+        expect(find.text(titre), findsNothing);
+      });
+
+      testWidgets('jamais posée par-dessus une autre route', (tester) async {
+        await pumpAvec(tester, const ActivationInitial());
+        unawaited(
+          showDialog<void>(
+            context: tester.element(find.byType(HomeScreen)),
+            builder: (_) => const AlertDialog(content: Text('Autre route')),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await emettre(tester, charge(null));
+        expect(find.text(titre), findsNothing);
+      });
+    });
 
     testWidgets("le mode automatique n'émet pas home_search_mode_changed", (
       tester,

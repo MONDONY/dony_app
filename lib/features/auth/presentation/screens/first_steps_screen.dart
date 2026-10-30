@@ -5,9 +5,11 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
+import 'package:dony/features/activation/data/intent_prompt_policy.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/activation/presentation/widgets/first_steps_personalized.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -58,8 +60,18 @@ class _FirstStepsScreenState extends State<FirstStepsScreen> {
   }
 
   /// Choix sans intention (« Je regarde d'abord », « Plus tard »).
-  void _skip(BuildContext context, String choice) =>
-      _track(choice, null, () => context.go('/home'));
+  void _skip(BuildContext context, String choice) {
+    _deferIntentPrompt();
+    _track(choice, null, () => context.go('/home'));
+  }
+
+  /// La personne vient de passer la question : l'accueil ne la repose pas
+  /// aussitôt, elle attend son délai normal (7 jours).
+  void _deferIntentPrompt() {
+    final hive = getItSafe<HiveService>();
+    if (hive == null) return;
+    IntentPromptPolicy(hive.userPrefs).markShown(DateTime.now());
+  }
 
   /// Choix qui déclare une intention : l'écran suit l'état du cubit et part
   /// vers l'accueil dès `saved` ou `error` (le serveur ne bloque jamais).
