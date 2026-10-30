@@ -1,11 +1,10 @@
 import 'package:dony/core/currency/country_catalog.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/activation/presentation/screens/intent_step_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
-import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/auth/presentation/next_route.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -15,9 +14,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class CountrySelectionScreen extends StatefulWidget {
-  const CountrySelectionScreen({super.key, required this.progress});
+  const CountrySelectionScreen({super.key, this.next});
 
-  final OnboardingProgress progress;
+  /// Destination après le choix d'un pays (valeur brute de `?next=`, validée
+  /// par [sanitizeNextRoute]). « Passer » ignore toujours [next] : la garde
+  /// de `/trips/create` renverrait sinon ici, en boucle.
+  final String? next;
 
   @override
   State<CountrySelectionScreen> createState() => _CountrySelectionScreenState();
@@ -25,12 +27,9 @@ class CountrySelectionScreen extends StatefulWidget {
 
 class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
   // Cet écran a trois sorties : `select` (un pays choisi), `skip` et
-  // `continueAsSenderOnly` (aucun pays). Les deux dernières n'ont rien à
-  // faire préparer sur `/auth/personal-info` (le nom légal ne sert qu'à
-  // ouvrir le compte de paiement voyageur) : elles doivent filer
-  // directement au parrainage. `CountryOnboardingSuccess` ne porte aucune
-  // information permettant de distinguer ces trois chemins, mais
-  // `CountryOnboardingSaving.countryCode` — toujours émis juste avant — si :
+  // `continueAsSenderOnly` (aucun pays). `CountryOnboardingSuccess` ne porte
+  // aucune information permettant de les distinguer, mais
+  // `CountryOnboardingSaving.countryCode`, toujours émis juste avant, si :
   // non nul pour `select`, nul pour les deux autres. `listenWhen` capture ce
   // code à chaque transition, avant que `listener` ne route sur le succès.
   String? _lastAttemptedCountryCode;
@@ -53,32 +52,13 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
           if (_lastAttemptedCountryCode != null) {
             // Le backend vient d'écrire `users.country` (`select()`) : sans
             // ce refresh, le `UserModel` mis en cache par `AuthBloc` reste
-            // périmé jusqu'au prochain `AuthCheckRequested`, et l'étape
-            // « pays » regresserait sur `/auth/referral-code`, plusieurs
-            // écrans plus loin, faute de source fraîche (`nextStep`,
-            // correction 1 de la revue finale). `skip()` et
-            // `continueAsSenderOnly()` n'écrivent rien côté serveur : pas de
-            // refresh à déclencher pour eux.
+            // périmé jusqu'au prochain `AuthCheckRequested`.
             context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
-            // Passe le code fraîchement choisi en `extra` : c'est la valeur
-            // la plus à jour possible, celle que l'utilisateur vient de
-            // sélectionner — plus fraîche qu'une relecture de
-            // `BusinessPrefsBloc`, dont le singleton app-wide est construit
-            // avant cet écran et ne se resynchronise pas automatiquement
-            // quand ce cubit écrit directement dans Hive (voir router.dart).
-            // Étape « Votre projet » (intention + pays visé) avant la suite.
-            context.go(
-              intentStepRoute,
-              extra: IntentStepArgs(
-                next: '/auth/personal-info',
-                nextExtra: _lastAttemptedCountryCode,
-              ),
-            );
+            context.go(sanitizeNextRoute(widget.next));
           } else {
-            context.go(
-              intentStepRoute,
-              extra: const IntentStepArgs(next: '/auth/referral-code'),
-            );
+            // Passer ou continuer sans pays : jamais `next`, pour que la
+            // garde de `/trips/create` ne renvoie pas ici en boucle.
+            context.go(kNextRouteFallback);
           }
         } else if (state is CountryOnboardingError) {
           DonySnackbar.show(
@@ -116,10 +96,7 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        AuthFlowHeader.gauge(
-                          segments: widget.progress.segments,
-                          label: OnboardingStep.country.label(context.l10n),
-                        ),
+                        const AuthFlowHeader.plain(),
                         SizedBox(
                           height: (media.size.height * 0.018).clamp(
                             DonySpacing.sm,

@@ -327,6 +327,21 @@ String? resolveAuthRedirect({
   return '/auth/method';
 }
 
+/// Garde pays de la publication d'un trajet : le pays est demandé au moment
+/// où il sert. Renvoie la sélection de pays avec `next` (la route à retrouver
+/// ensuite), ou `null` si la navigation peut aboutir. Fonction pure, testée
+/// sans monter le routeur.
+@visibleForTesting
+String? resolveCountryGuardRedirect({
+  required String path,
+  required bool countryEmpty,
+  required bool travelerCountryUnsupported,
+}) {
+  if (path != '/trips/create') return null;
+  if (!countryEmpty && !travelerCountryUnsupported) return null;
+  return '/auth/country-selection?next=${Uri.encodeQueryComponent(path)}';
+}
+
 /// Route d'entrée, calculée par `resolveInitialLocation()` avant `runApp`
 /// (cf. `lib/app/initial_location.dart`).
 ///
@@ -404,9 +419,22 @@ final GoRouter appRouter = GoRouter(
                 defaultValue: false,
               ) ==
               true;
-      if (travelerCountryUnsupported) {
-        return '/auth/country-selection';
-      }
+      // Vide = ni le cache Hive ni les préférences synchronisées avec le
+      // serveur ne connaissent le pays (une réinstallation peut vider Hive
+      // alors que le serveur le sait : pas de détour dans ce cas).
+      final hiveCountry = getIt.isRegistered<HiveService>()
+          ? getIt<HiveService>().userPrefs.get(HiveService.kCountryCode)
+          : null;
+      final syncedCountry = context.read<BusinessPrefsBloc>().state.country;
+      final countryEmpty =
+          (hiveCountry is! String || hiveCountry.isEmpty) &&
+          (syncedCountry == null || syncedCountry.isEmpty);
+      final countryRedirect = resolveCountryGuardRedirect(
+        path: state.matchedLocation,
+        countryEmpty: countryEmpty,
+        travelerCountryUnsupported: travelerCountryUnsupported,
+      );
+      if (countryRedirect != null) return countryRedirect;
       final accountState = context.read<StripeAccountBloc>().state;
       if (accountState is StripeAccountReady) {
         if (accountState.accountStatus.isDisabled) return '/account/disabled';
@@ -470,12 +498,7 @@ final GoRouter appRouter = GoRouter(
       path: '/auth/country-selection',
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<CountryOnboardingCubit>(),
-        child: CountrySelectionScreen(
-          progress: readOnboardingProgress(
-            context,
-            current: OnboardingStep.country,
-          ),
-        ),
+        child: CountrySelectionScreen(next: state.uri.queryParameters['next']),
       ),
     ),
     GoRoute(
