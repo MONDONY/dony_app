@@ -29,6 +29,9 @@ class DeliveryWindow {
       ? departure
       : DateTime(departure.year, departure.month, departure.day + 1);
 
+  /// La livraison peut-elle être confirmée à [now] ? À partir de [opensAt].
+  bool isOpenAt(DateTime now) => !now.isBefore(opensAt);
+
   /// Fenêtre d'un bid, ou `null` si aucune date de départ n'est connue : le
   /// bouton reste alors actif et seul le serveur tranche.
   ///
@@ -84,7 +87,7 @@ class _DeliveryDepartureGateState extends State<DeliveryDepartureGate>
   bool _computeLocked() {
     final window = widget.window;
     if (window == null) return false;
-    return widget.now().isBefore(window.opensAt);
+    return !window.isOpenAt(widget.now());
   }
 
   @override

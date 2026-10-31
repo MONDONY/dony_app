@@ -43,12 +43,14 @@ class TravelerHeroCard extends StatelessWidget {
       bid.deliveryNoShowStatus == 'CONTESTED';
 
   /// Priorité 2 : colis accepté dont la date limite de dépôt est dépassée.
-  /// Lue aussi par le footer (« Confirmer ma présence » avant, plus après).
-  static bool windowExpired(BidModel bid) {
+  /// Lue aussi par le footer (« Confirmer ma présence » avant, plus après) et
+  /// par « À traiter » de l'écran du trajet (`tripTodoFor`), qui passe son
+  /// horloge [now] (par défaut l'heure de l'appareil).
+  static bool windowExpired(BidModel bid, {DateTime? now}) {
     final deadline = bid.handoverDeadline;
     return bid.status == 'ACCEPTED' &&
         deadline != null &&
-        DateTime.now().isAfter(deadline);
+        (now ?? DateTime.now()).isAfter(deadline);
   }
 
   /// Priorité 2 : date limite passée et aucune déclaration d'absence au dépôt
@@ -56,8 +58,8 @@ class TravelerHeroCard extends StatelessWidget {
   /// HANDOVER, la seule possible par colis (UNIQUE(bid, scope) côté back) :
   /// levée (`RESOLVED`) ou tranchée (`CONFIRMED`), en signaler une autre
   /// répondrait 409 `noshow-already-reported`.
-  static bool canReportSenderNoShow(BidModel bid) =>
-      windowExpired(bid) && bid.cancellationNoShowStatus == null;
+  static bool canReportSenderNoShow(BidModel bid, {DateTime? now}) =>
+      windowExpired(bid, now: now) && bid.cancellationNoShowStatus == null;
 
   /// La carte rend quelque chose (sinon `SizedBox.shrink`) : un signalement en
   /// cours, la date limite dépassée ou un contenu de priorité 3

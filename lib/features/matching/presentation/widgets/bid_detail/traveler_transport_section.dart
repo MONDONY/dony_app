@@ -93,11 +93,12 @@ class TravelerTransportSection extends StatelessWidget {
   /// peut demander un autre destinataire : colis en cours de transport, et
   /// pas de demande envoyée depuis moins de 12 h. Le geste vit dans le sheet
   /// Colis (`RecipientDeclinedPanel`) : la tuile porte alors une pastille,
-  /// sinon il resterait invisible.
-  static bool recipientNeedsReplacement(BidModel bid) {
+  /// sinon il resterait invisible. [now] : horloge de « À traiter » de
+  /// l'écran du trajet (`tripTodoFor`), par défaut l'heure de l'appareil.
+  static bool recipientNeedsReplacement(BidModel bid, {DateTime? now}) {
     if (!bid.recipientDeclined || !bid.canChangeRecipient) return false;
     final next = bid.nextRecipientReplacementAllowedAt;
-    return next == null || !next.isAfter(DateTime.now());
+    return next == null || !next.isAfter(now ?? DateTime.now());
   }
 
   Widget _tileFor(BuildContext context, TravelerTile tile) {

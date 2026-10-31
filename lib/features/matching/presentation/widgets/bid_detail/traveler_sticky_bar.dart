@@ -72,7 +72,22 @@ class TravelerStickyBar extends StatelessWidget {
       bid.status == 'AWAITING_PAYMENT' &&
       bid.paymentMethod == BidPaymentMethod.mobileMoney;
 
-  static _TravelerAction? _resolve(BidModel bid) {
+  /// Le pied propose « Confirmer ma présence » à [now] (par défaut l'heure de
+  /// l'appareil) : colis accepté, présence pas encore confirmée, date limite
+  /// de dépôt pas encore passée. Lu par « À traiter » de l'écran du trajet.
+  static bool awaitsPresence(BidModel bid, {DateTime? now}) =>
+      _resolve(bid, now: now) == _TravelerAction.confirmPresence;
+
+  /// Le pied propose « Lire le QR du colis » à [now] et le back accepterait
+  /// le scan de départ : ni supplément ni modification qui bloque la remise
+  /// (`blocksHandover`), ni déclaration d'absence contestée ou confirmée.
+  /// Lu par « À traiter » de l'écran du trajet.
+  static bool canScanHandover(BidModel bid, {DateTime? now}) =>
+      _resolve(bid, now: now) == _TravelerAction.scan &&
+      !(bid.supplement?.blocksHandover ?? false) &&
+      !bid.amendments.any((a) => a.blocksHandover);
+
+  static _TravelerAction? _resolve(BidModel bid, {DateTime? now}) {
     switch (bid.status) {
       // PENDING (cash / Mobile Money) ET PAYMENT_ESCROWED (carte, paiement
       // séquestré) : le voyageur doit pouvoir accepter/refuser depuis le détail,
@@ -90,7 +105,8 @@ class TravelerStickyBar extends StatelessWidget {
       // le scan de départ la lève. Contestée ou confirmée, rien
       // ([scanBlockedBySenderNoShow]).
       case 'ACCEPTED':
-        if (!bid.voyageurConfirmed && !TravelerHeroCard.windowExpired(bid)) {
+        if (!bid.voyageurConfirmed &&
+            !TravelerHeroCard.windowExpired(bid, now: now)) {
           return _TravelerAction.confirmPresence;
         }
         return scanBlockedBySenderNoShow(bid) ? null : _TravelerAction.scan;
