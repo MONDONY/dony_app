@@ -110,6 +110,17 @@ class BidMyListAutoRefreshRequested extends BidEvent {
   const BidMyListAutoRefreshRequested({this.force = false});
 }
 
+/// Oublie tout ce que porte le bloc : la session a changé de compte.
+///
+/// L'instance globale (`app.dart`) survit à la déconnexion. Sans ce reset, le
+/// compte suivant héritait de « mes colis » du précédent : la carte d'un
+/// trajet rappelait le colis de l'ancien compte et l'ouvrait en vue voyageur,
+/// boutons Accepter / Refuser compris (Sentry FLUTTER-XF, refusé par le back
+/// en 403).
+class BidSessionReset extends BidEvent {
+  const BidSessionReset();
+}
+
 class BidDetailRequested extends BidEvent {
   final String bidId;
   BidDetailRequested(this.bidId);

@@ -655,6 +655,56 @@ void main() {
       expect(find.byType(TravelerStickyBar), findsNothing);
     });
   });
+
+  // FLUTTER-XF : colis d'un ancien compte resté en cache après un changement
+  // de compte. Le lecteur n'est ni l'expéditeur ni le voyageur : jamais la
+  // vue voyageur et ses boutons Accepter / Refuser.
+  group('lecteur étranger au colis', () {
+    BidModel bidWithTraveler() => BidModel(
+      id: 'bid-001',
+      announcementId: 'ann-001',
+      senderId: _kSenderId,
+      travelerId: _kTravelerId,
+      senderName: 'Mariama D.',
+      recipientName: 'Awa',
+      weightKg: 3,
+      totalAmountEur: 48,
+      status: 'PENDING',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
+    );
+
+    testWidgets('ni expéditeur ni voyageur → « demande indisponible »', (
+      tester,
+    ) async {
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user('compte-tiers')));
+      await pumpScreen(tester, bidWithTraveler());
+
+      expect(find.text("Cette demande n'existe plus"), findsOneWidget);
+      expect(find.byType(TravelerStickyBar), findsNothing);
+      expect(find.text('Accepter'), findsNothing);
+      expect(find.text('Refuser'), findsNothing);
+    });
+
+    testWidgets('le voyageur du colis garde sa vue et ses boutons', (
+      tester,
+    ) async {
+      await pumpScreen(tester, bidWithTraveler());
+
+      expect(find.text("Cette demande n'existe plus"), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(TravelerStickyBar),
+          matching: find.text('Accepter'),
+        ),
+        findsOneWidget,
+      );
+    });
+  });
 }
 
 class _Scenario {

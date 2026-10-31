@@ -71,6 +71,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidDeleteRequested>(_onDeleteRequested);
     on<BidTravelerDismissRequested>(_onTravelerDismissRequested);
     on<BidQuoteRequested>(_onQuoteRequested);
+    on<BidSessionReset>((_, emit) => emit(BidInitial()));
   }
 
   Future<void> _onCheckoutRequested(
@@ -198,7 +199,10 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       emit(BidDetailLoaded(bid));
     } catch (e) {
       final wrapped = unwrapDioError(e);
-      if (wrapped is NotFoundException) {
+      // 403 : le colis n'appartient pas au compte courant (ni expéditeur ni
+      // voyageur). Même traitement qu'un 404 : l'écran ne garde jamais un
+      // colis reçu en `extra` avec ses actions (FLUTTER-XF).
+      if (wrapped is NotFoundException || wrapped is ForbiddenException) {
         emit(BidNotFound());
       }
       // Autres erreurs réseau : silence intentionnel

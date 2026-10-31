@@ -622,6 +622,65 @@ void main() {
       act: (bloc) => bloc.add(BidDetailRequested('bid-999')),
       expect: () => [],
     );
+
+    // FLUTTER-XF : colis d'un autre compte (resté en cache après un
+    // changement de compte). Le back répond 403 : l'écran doit basculer sur
+    // « colis indisponible », jamais garder le colis et ses boutons.
+    blocTest<BidBloc, BidState>(
+      '403 sur le détail → [BidNotFound], comme un 404',
+      build: () {
+        when(() => mockRepo.getBidById(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/bids/bid-autre'),
+            error: const ForbiddenException('Accès refusé', 'forbidden'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/bids/bid-autre'),
+              statusCode: 403,
+            ),
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidDetailRequested('bid-autre')),
+      expect: () => [isA<BidNotFound>()],
+    );
+  });
+
+  // ─── BidSessionReset (FLUTTER-XF) ────────────────────────────────────────────
+
+  group('BidSessionReset', () {
+    blocTest<BidBloc, BidState>(
+      'liste du compte précédent → [BidInitial]',
+      build: () => buildBloc(),
+      seed: () => BidListLoaded([buildBid(id: 'colis-ancien-compte')]),
+      act: (bloc) => bloc.add(const BidSessionReset()),
+      expect: () => [isA<BidInitial>()],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'après le reset, le rafraîchissement non forcé relit la liste '
+      '(plus de cache frais hérité du compte précédent)',
+      build: () {
+        when(
+          () => mockRepo.getMyBids(),
+        ).thenAnswer((_) async => [buildBid(id: 'colis-nouveau-compte')]);
+        return buildBloc();
+      },
+      seed: () => BidListLoaded([
+        buildBid(id: 'colis-ancien-compte'),
+      ], fetchedAt: DateTime.now()),
+      act: (bloc) => bloc
+        ..add(const BidSessionReset())
+        ..add(const BidMyListAutoRefreshRequested()),
+      expect: () => [
+        isA<BidInitial>(),
+        isA<BidLoading>(),
+        predicate<BidState>(
+          (s) =>
+              s is BidListLoaded && s.bids.single.id == 'colis-nouveau-compte',
+        ),
+      ],
+    );
   });
 
   // ─── BidDetailExternalChangeDetected (FLUTTER-FN) ────────────────────────────

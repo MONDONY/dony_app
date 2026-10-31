@@ -43,6 +43,7 @@ import 'package:dony/features/maintenance/bloc/maintenance_cubit.dart';
 import 'package:dony/features/maintenance/presentation/maintenance_gate.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
@@ -512,6 +513,10 @@ class _DonyAppState extends State<DonyApp> {
                       const StripeAccountReset(),
                     );
                     context.read<ActivationCubit>().reset();
+                    // « Mes colis » de l'instance globale : sans ce reset, le
+                    // compte suivant voyait le colis du précédent sur la carte
+                    // d'un trajet, ouvert en vue voyageur (FLUTTER-XF).
+                    context.read<BidBloc>().add(const BidSessionReset());
                   }
                   // Garde-fou de démarrage : session Firebase valide mais
                   // compte absent côté backend (404 → AuthInitial). On ne peut
