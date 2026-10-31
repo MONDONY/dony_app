@@ -80,11 +80,13 @@ abstract interface class TripBidAnswerController {
   /// Refuser reste possible.
   ValueListenable<Map<String, AppException>> get refused;
 
-  /// Accepte [bid] par le parcours habituel du voyageur.
-  void accept(BidModel bid);
+  /// Accepte [bid] par le parcours habituel du voyageur. [from] : contexte
+  /// du bouton touché, d'où partent les messages de la réponse (au-dessus du
+  /// sheet des demandes quand il en vient).
+  void accept(BidModel bid, {BuildContext? from});
 
-  /// Refuse [bid] après la feuille du motif.
-  void reject(BidModel bid);
+  /// Refuse [bid] après la feuille du motif. [from] : comme [accept].
+  void reject(BidModel bid, {BuildContext? from});
 }
 
 /// Tient la réponse aux demandes du trajet [tripId] pour tout ce qui est
@@ -104,9 +106,13 @@ abstract interface class TripBidAnswerController {
 ///   portefeuille, carte de commission), relances comprises ;
 /// - carte de commission refusée : [showBidCardDeclinedSheet] ;
 /// - refus du serveur (409, 422…) : son message ([ErrorPresenter], ou le
-///   message du catalogue de `BidFailed`), la demande reste ; un refus
-///   définitif (trajet complet…) éteint « Accepter » de cette demande
-///   ([TripBidAnswerController.refused]) et relit la liste ;
+///   message du catalogue de `BidFailed`) ; un refus définitif (trajet
+///   complet…) éteint « Accepter » de cette demande
+///   ([TripBidAnswerController.refused]). Un refus qui montre que la demande
+///   a changé (déjà traitée ailleurs, annulée, expirée : 409, 404, 422) fait
+///   relire en silence les colis et le trajet : la carte passe à la suivante
+///   au lieu de rester bloquée sur une demande qui n'attend plus. Une erreur
+///   réseau garde la demande, sans relecture ;
 /// - succès : « Demande acceptée ! » ou « Demande refusée. », le
 ///   consentement au suivi après une acceptation, puis relecture silencieuse
 ///   des colis et du trajet de l'écran.
@@ -115,8 +121,12 @@ abstract interface class TripBidAnswerController {
 /// `BidBloc` de l'écran : ses états de réponse (chargement, acceptation,
 /// erreur) remplaceraient la liste des colis que tout l'écran affiche.
 ///
-/// Les feuilles s'ouvrent depuis le contexte du scope (stable), jamais celui
-/// d'un bouton que la réponse fait disparaître. Requiert, au-dessus, le
+/// Les feuilles s'ouvrent depuis le contexte du scope (stable, navigateur
+/// racine), jamais celui d'un bouton que la réponse fait disparaître. Les
+/// messages (succès, erreurs) partent, eux, du bouton touché tant qu'il est
+/// monté : depuis le sheet des demandes, ils s'affichent au-dessus du sheet
+/// (`DonySnackbar` d'une feuille au premier plan) au lieu du `Scaffold` de
+/// l'écran qu'il recouvre (FLUTTER-4W, FLUTTER-7N). Requiert, au-dessus, le
 /// `BidBloc` et l'`AnnouncementBloc` de l'écran pour la relecture (absents :
 /// rien n'est relu).
 class TripBidAnswerScope extends StatefulWidget {
@@ -191,6 +201,17 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
   /// `BidAcceptanceBloc` ne porte pas d'identifiant.
   String? _cashBidId;
 
+  /// Bouton de la dernière réponse lancée ([accept], [reject]).
+  BuildContext? _from;
+
+  /// Contexte des messages de la réponse en cours : le bouton touché tant
+  /// qu'il est monté (sheet des demandes au premier plan : message
+  /// au-dessus du sheet), sinon le scope.
+  BuildContext get _messages {
+    final from = _from;
+    return from != null && from.mounted ? from : context;
+  }
+
   @override
   ValueListenable<TripBidAnswering?> get answering => _answering;
 
@@ -213,21 +234,23 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
   }
 
   @override
-  void accept(BidModel bid) => _guarded(() async {
+  void accept(BidModel bid, {BuildContext? from}) => _guarded(() async {
     // Espèces réparties sur plusieurs portefeuilles ou converties : le
     // voyageur voit d'où partira la commission avant de s'engager.
     if (!await confirmCashCommissionAllocation(context, bid) || !mounted) {
       return;
     }
+    _from = from;
     _answering.value = (bidId: bid.id, action: TripBidAnswerAction.accept);
     if (bid.paymentMethod == BidPaymentMethod.cash) _cashBidId = bid.id;
     dispatchBidAccept(context, bid, bids: _bids, acceptance: _acceptance);
   });
 
   @override
-  void reject(BidModel bid) => _guarded(() async {
+  void reject(BidModel bid, {BuildContext? from}) => _guarded(() async {
     final reason = await RejectReasonSheet.show(context);
     if (reason == null || !mounted) return;
+    _from = from;
     _answering.value = (bidId: bid.id, action: TripBidAnswerAction.reject);
     // bid_rejected est tracé par le BidBloc au succès.
     _bids.add(BidRejectRequested(bid.id, reason: reason.code));
@@ -248,7 +271,8 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
         _answeredOk(bid.id, accepted: false);
       case BidError(:final error):
         _answering.value = null;
-        unawaited(ErrorPresenter.show(context, error));
+        unawaited(ErrorPresenter.show(_messages, error));
+        if (_requestChanged(error)) _reload();
       default:
         break;
     }
@@ -282,18 +306,21 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
           showBidCardDeclinedSheet(context, message);
         } else {
           DonySnackbar.show(
-            context,
+            _messages,
             message: message,
             type: DonySnackbarType.error,
           );
         }
         // Refus définitif (trajet complet, fermé…) : « Accepter » de cette
         // demande s'éteint (le bloc rejouerait le même refus), et la liste
-        // est sans doute périmée.
+        // est sans doute périmée. Un refus du serveur qui montre que la
+        // demande a changé la rend périmée aussi.
         if (s.definitive) {
           if ((s.bidId, s.error) case (final id?, final error?)) {
             _refused.value = {..._refused.value, id: error};
           }
+          _reload();
+        } else if (_requestChanged(s.error)) {
           _reload();
         }
       default:
@@ -304,17 +331,26 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
   /// Demande [bidId] traitée : elle quitte les demandes à traiter, le
   /// voyageur en est prévenu, l'écran relit ses colis et le trajet.
   void _answeredOk(String bidId, {required bool accepted}) {
-    _answering.value = null;
-    _answered.value = {..._answered.value, bidId};
+    // Message d'abord : le bouton touché (sa ligne) est encore monté.
     final l = context.l10n;
     DonySnackbar.show(
-      context,
+      _messages,
       message: accepted ? l.bidListAcceptedSnackbar : l.bidListRejectedSnackbar,
       type: accepted ? DonySnackbarType.success : DonySnackbarType.info,
     );
+    _answering.value = null;
+    _answered.value = {..._answered.value, bidId};
     if (accepted) askTrackingConsentAfterAccept(context);
     _reload();
   }
+
+  /// L'erreur [error] vient-elle du serveur et montre-t-elle que la demande
+  /// a changé (409 « n'est plus en attente », 404 introuvable, 422 refusée
+  /// en l'état) ? Une erreur réseau ou serveur ne prouve rien.
+  static bool _requestChanged(Object? error) =>
+      error is ConflictException ||
+      error is NotFoundException ||
+      error is ValidationException;
 
   /// Relecture silencieuse des colis et du trajet de l'écran : la liste
   /// affichée reste en place, ni indicateur ni erreur.

@@ -9,6 +9,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -169,6 +170,74 @@ void main() {
         find.text('Aucune demande à traiter pour le moment.'),
         findsOneWidget,
       );
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    // Message affiché au-dessus d'une feuille au premier plan
+    // (`DonySnackbar`, overlay racine), jamais dans le `Scaffold` de l'écran
+    // que le sheet recouvre.
+    Finder aboveSheet(String text) => find.descendant(
+      of: find.byWidgetPredicate((w) => '${w.runtimeType}' == '_ModalToast'),
+      matching: find.text(text),
+    );
+
+    testWidgets('succès depuis le sheet : « Demande acceptée ! » au-dessus '
+        'du sheet', (tester) async {
+      await open(tester, TripActivity.requests, bids: answerRequests(2));
+      await tester.tap(accept('r1'));
+      await tester.pump();
+      await tester.pump();
+      h.answerStates.add(BidAccepted(answerBid('r1', status: 'ACCEPTED')));
+      await tester.pump();
+      await tester.pump();
+      expect(aboveSheet('Demande acceptée !'), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('409 depuis le sheet : message au-dessus du sheet, liste '
+        'relue, la demande traitée ailleurs sort', (tester) async {
+      await open(tester, TripActivity.requests, bids: answerRequests(2));
+      await tester.tap(accept('r1'));
+      await tester.pump();
+      await tester.pump();
+      h.answerStates.add(
+        BidError(const ConflictException('x', code: 'bid-not-pending')),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.byWidgetPredicate((w) => '${w.runtimeType}' == '_ModalToast'),
+        findsOneWidget,
+      );
+      expect(find.byType(SnackBar), findsNothing);
+      expect((h.screenEvents.single as BidListRequested).silent, isTrue);
+      h.screenStates.add(BidListLoaded(answerRequests(2).sublist(1)));
+      await _settle(tester);
+      expect(find.byKey(const Key('trip-activity-request-r1')), findsNothing);
+      expect(find.byKey(const Key('trip-activity-request-r2')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('refus d\'espèces non définitif depuis le sheet : message '
+        'au-dessus du sheet', (tester) async {
+      await open(
+        tester,
+        TripActivity.requests,
+        bids: answerRequests(1, method: BidPaymentMethod.cash),
+      );
+      await tester.tap(accept('r1'));
+      await _settle(tester);
+      h.acceptanceStates.add(
+        acs.BidFailed(reason: acs.BidFailureReason.confirmFailed),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.byWidgetPredicate((w) => '${w.runtimeType}' == '_ModalToast'),
+        findsOneWidget,
+      );
+      expect(find.byType(SnackBar), findsNothing);
       await tester.pump(const Duration(seconds: 5));
     });
 

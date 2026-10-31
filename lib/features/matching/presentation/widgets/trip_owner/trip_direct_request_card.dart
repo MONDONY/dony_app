@@ -237,7 +237,9 @@ class TripRequestAnswerButtons extends StatelessWidget {
                         label: l.bidDetailDeclineRequestButton,
                         variant: DonyButtonVariant.destructiveGhost,
                         isLoading: spinning(TripBidAnswerAction.reject),
-                        onPressed: busy ? null : () => controller.reject(bid),
+                        onPressed: busy
+                            ? null
+                            : () => controller.reject(bid, from: context),
                       ),
                     ),
                     const SizedBox(width: DonySpacing.md),
@@ -249,7 +251,7 @@ class TripRequestAnswerButtons extends StatelessWidget {
                         isLoading: spinning(TripBidAnswerAction.accept),
                         onPressed: busy || refusal != null
                             ? null
-                            : () => controller.accept(bid),
+                            : () => controller.accept(bid, from: context),
                       ),
                     ),
                   ],

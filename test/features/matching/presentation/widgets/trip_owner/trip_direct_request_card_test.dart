@@ -563,22 +563,87 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
     });
 
-    testWidgets('erreur du serveur (409) : message, la demande reste, rien '
-        'n\'est relu', (tester) async {
+    for (final (name, error) in [
+      (
+        '409 n\'est plus en attente',
+        const ConflictException('x', code: 'bid-not-pending'),
+      ),
+      ('404 introuvable', const NotFoundException()),
+      ('422 refusée en l\'état', const ValidationException('x')),
+    ]) {
+      testWidgets('demande changée ailleurs ($name) : message, colis et '
+          'trajet relus en silence, la carte passe à la suivante', (
+        tester,
+      ) async {
+        await pumpCard(tester, bids: answerRequests(2));
+        await tester.tap(accept('r1'));
+        await tester.pump();
+        await tester.pump();
+        h.answerStates.add(BidError(error));
+        await tester.pump();
+        await tester.pump();
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(button(tester, accept('r1')).isLoading, isFalse);
+        final reload = h.screenEvents.single as BidListRequested;
+        expect(reload.silent, isTrue);
+        expect(
+          h.annEvents.whereType<AnnouncementDetailRequested>().single.silent,
+          isTrue,
+        );
+        // La relecture ne montre plus r1 : la carte passe à r2.
+        h.screenStates.add(BidListLoaded(answerRequests(2).sublist(1)));
+        await tester.pump();
+        expect(find.byKey(const Key('trip-direct-request-r2')), findsOneWidget);
+        expect(find.text('Demande 1 sur 1'), findsOneWidget);
+        await tester.pump(const Duration(seconds: 5));
+      });
+    }
+
+    testWidgets('erreur réseau : message, la demande reste, rien n\'est '
+        'relu', (tester) async {
       await pumpCard(tester, bids: answerRequests(1));
       await tester.tap(accept('r1'));
       await tester.pump();
       await tester.pump();
-      h.answerStates.add(
-        BidError(const ConflictException('x', code: 'bid-not-pending')),
+      h.answerStates.add(BidError(const NetworkException('offline')));
+      await tester.pump();
+      await tester.pump();
+      expect(card(), findsOneWidget);
+      expect(button(tester, accept('r1')).onPressed, isNotNull);
+      expect(h.screenEvents, isEmpty);
+      expect(h.annEvents, isEmpty);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('espèces, refus non définitif du serveur (409) : relecture ; '
+        'sans erreur du serveur : rien relu', (tester) async {
+      await pumpCard(
+        tester,
+        bids: answerRequests(2, method: BidPaymentMethod.cash),
+      );
+      await tester.tap(accept('r1'));
+      await tester.pump();
+      await tester.pump();
+      h.acceptanceStates.add(
+        acs.BidFailed(reason: acs.BidFailureReason.confirmFailed),
       );
       await tester.pump();
       await tester.pump();
-      expect(find.byType(SnackBar), findsOneWidget);
-      expect(card(), findsOneWidget);
-      expect(button(tester, accept('r1')).isLoading, isFalse);
-      expect(button(tester, accept('r1')).onPressed, isNotNull);
       expect(h.screenEvents, isEmpty);
+
+      await tester.tap(accept('r1'));
+      await tester.pump();
+      await tester.pump();
+      h.acceptanceStates.add(
+        acs.BidFailed(
+          reason: acs.BidFailureReason.refused,
+          bidId: 'r1',
+          error: const ConflictException('x', code: 'bid-not-pending'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect((h.screenEvents.single as BidListRequested).silent, isTrue);
       await tester.pump(const Duration(seconds: 5));
     });
 
