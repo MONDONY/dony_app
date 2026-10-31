@@ -4,6 +4,7 @@
 // 360 dp × 1,3.
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -38,28 +39,30 @@ void main() {
   group('tripActivityFor : visibilité par statut', () {
     // Attendu par statut : sans demande ni colis, avec une demande, puis
     // avec des colis remis (résumé servi par le détail).
+    // Gain : seulement quand les colis récupérés rapportent quelque chose
+    // (ici le résumé du détail de la troisième colonne).
     const expected = {
       'DRAFT': ([], [], []),
       'ACTIVE': (
-        [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
-        [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
+        [TripActivity.requests, TripActivity.parcels],
+        [TripActivity.requests, TripActivity.parcels],
         [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
       ),
       'FULL': (
-        [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
-        [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
+        [TripActivity.requests, TripActivity.parcels],
+        [TripActivity.requests, TripActivity.parcels],
         [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
       ),
       // Parti : Demandes seulement s'il reste des demandes à traiter.
       'IN_PROGRESS': (
-        [TripActivity.parcels, TripActivity.gain],
-        [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
+        [TripActivity.parcels],
+        [TripActivity.requests, TripActivity.parcels],
         [TripActivity.parcels, TripActivity.gain],
       ),
       // Terminé : jamais Demandes (le back refuse toute acceptation).
       'COMPLETED': (
-        [TripActivity.parcels, TripActivity.gain],
-        [TripActivity.parcels, TripActivity.gain],
+        [TripActivity.parcels],
+        [TripActivity.parcels],
         [TripActivity.parcels, TripActivity.gain],
       ),
       // Annulé : rien sans colis ; ses colis remis suivent la procédure de
@@ -67,8 +70,8 @@ void main() {
       'CANCELLED': ([], [], [TripActivity.parcels, TripActivity.gain]),
       'REMOVED_BY_ADMIN': ([], [], []),
       'SOMETHING_NEW': (
-        [TripActivity.parcels, TripActivity.gain],
-        [TripActivity.parcels, TripActivity.gain],
+        [TripActivity.parcels],
+        [TripActivity.parcels],
         [TripActivity.parcels, TripActivity.gain],
       ),
     };
@@ -151,6 +154,25 @@ void main() {
       );
     });
 
+    test('colis remis payés en espèces, sans résumé : Gain calculé par '
+        'l\'app', () {
+      final cells = cancelled(
+        bids: [
+          answerBid(
+            'h1',
+            status: 'HANDED_OVER',
+            method: BidPaymentMethod.cash,
+            net: 30,
+          ),
+        ],
+      );
+      expect(_kinds(cells), [TripActivity.parcels, TripActivity.gain]);
+      expect(
+        cells.last.value,
+        CurrencyFormatter.format(30, SupportedCurrency.eur),
+      );
+    });
+
     test('liste pas chargée, colis comptés par le détail : Colis à « - »', () {
       final cells = cancelled(confirmed: 1);
       expect(_kinds(cells), [TripActivity.parcels]);
@@ -227,7 +249,7 @@ void main() {
         l: _fr,
         answered: {'r1'},
       );
-      expect(_kinds(departed), [TripActivity.parcels, TripActivity.gain]);
+      expect(_kinds(departed), [TripActivity.parcels]);
     });
 
     test('demande acceptée depuis l\'écran et relue acceptée : comptée '
@@ -344,35 +366,86 @@ void main() {
   });
 
   group('tripActivityFor : Gain', () {
-    TripActivityCell gain(TripParcelsSummary? s, {String status = 'ACTIVE'}) =>
-        tripActivityFor(
-          trip: answerTrip(status: status, parcelsSummary: s),
-          bids: const [],
-          l: _fr,
-        ).last;
-
-    test('gain net servi par le détail, dans sa devise', () {
-      final c = gain(_summary);
-      expect(c.activity, TripActivity.gain);
-      expect(
-        c.value,
-        CurrencyFormatter.format(
-          84,
-          SupportedCurrency.fromCodeOrDefault('EUR'),
+    TripActivityCell? gain({
+      TripParcelsSummary? summary,
+      List<BidModel>? bids = const [],
+      String status = 'ACTIVE',
+      String currency = 'EUR',
+      bool en = false,
+    }) {
+      final cells = tripActivityFor(
+        trip: answerTrip(
+          status: status,
+          parcelsSummary: summary,
+          currency: currency,
         ),
+        bids: bids,
+        l: en ? _en : _fr,
       );
-      expect(c.label, 'gain');
+      for (final c in cells) {
+        if (c.activity == TripActivity.gain) return c;
+      }
+      return null;
+    }
+
+    String eur(double v) => CurrencyFormatter.format(v, SupportedCurrency.eur);
+
+    test('liste pas chargée : net servi par le détail, « estimé »', () {
+      final c = gain(summary: _summary, bids: null)!;
+      expect(c.value, eur(84));
+      expect(c.label, 'estimé');
+      expect(c.dot, isFalse);
     });
 
-    test('XOF', () {
+    test('colis en ligne seulement', () {
       final c = gain(
-        const TripParcelsSummary(
-          count: 1,
-          totalKg: 3,
-          netAmount: 25000,
-          currency: 'XOF',
-        ),
-      );
+        bids: [
+          answerBid('t', status: 'IN_TRANSIT', net: 30),
+          answerBid('d', status: 'COMPLETED', net: 12),
+        ],
+      )!;
+      expect(c.value, eur(42));
+    });
+
+    test('colis en espèces seulement : la case apparaît', () {
+      final c = gain(
+        bids: [
+          answerBid(
+            'e',
+            status: 'HANDED_OVER',
+            method: BidPaymentMethod.cash,
+            net: 40,
+            gross: 45,
+          ),
+        ],
+      )!;
+      // Net du voyageur, pas l'argent remis (commission avancée à part).
+      expect(c.value, eur(40));
+    });
+
+    test('mix en ligne et espèces : total estimé', () {
+      final c = gain(
+        summary: _summary,
+        bids: [
+          answerBid('t', status: 'IN_TRANSIT', net: 84),
+          answerBid(
+            'e',
+            status: 'ARRIVED',
+            method: BidPaymentMethod.cash,
+            net: 16,
+          ),
+        ],
+      )!;
+      expect(c.value, eur(100));
+    });
+
+    test('XOF : devise du trajet', () {
+      final c = gain(
+        currency: 'XOF',
+        bids: [
+          answerBid('t', status: 'IN_TRANSIT', net: 25000, currency: 'XOF'),
+        ],
+      )!;
       expect(
         c.value,
         CurrencyFormatter.format(
@@ -382,19 +455,36 @@ void main() {
       );
     });
 
-    test('sans résumé, ou gain nul (espèces) : un trait', () {
-      expect(gain(null).value, kTripActivityUnknown);
+    test('sans gain : case absente, jamais un trait', () {
+      expect(gain(), isNull);
+      expect(gain(bids: null), isNull);
       expect(
         gain(
-          const TripParcelsSummary(
+          summary: const TripParcelsSummary(
             count: 1,
             totalKg: 3,
             netAmount: 0,
             currency: 'EUR',
           ),
-        ).value,
-        kTripActivityUnknown,
+        ),
+        isNull,
       );
+      // Pas encore récupérés, ou clos sans livraison : rien de gagné.
+      expect(
+        gain(
+          bids: [
+            answerBid('a', status: 'ACCEPTED', net: 30),
+            answerBid('w', status: 'AWAITING_PAYMENT', net: 30),
+            answerBid('x', status: 'CANCELLED', net: 30),
+            answerBid('r', status: 'REJECTED', net: 30),
+          ],
+        ),
+        isNull,
+      );
+    });
+
+    test('anglais : « estimated »', () {
+      expect(gain(summary: _summary, en: true)!.label, 'estimated');
     });
   });
 
@@ -423,16 +513,17 @@ void main() {
       double textScale = 1,
       Size size = const Size(400, 1000),
       bool withCard = false,
+      TripParcelsSummary? summary = _summary,
     }) => h
         .pump(
           tester,
-          trip: answerTrip(status: status, parcelsSummary: _summary),
+          trip: answerTrip(status: status, parcelsSummary: summary),
           bids: bids,
           locale: locale,
           textScale: textScale,
           size: size,
           body: (context) => TripTodoLive(
-            trip: answerTrip(status: status, parcelsSummary: _summary),
+            trip: answerTrip(status: status, parcelsSummary: summary),
             blocs: TripTodoBlocs.of(context),
             builder: (context, live) => Column(
               children: [
@@ -490,6 +581,50 @@ void main() {
       await pumpRow(tester, bids: [answerBid('r1')]);
       expect(find.bySemanticsLabel('Demandes : 1 à traiter'), findsOneWidget);
       expect(find.bySemanticsLabel('Colis : 0 colis'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(
+          'Gain estimé : ${CurrencyFormatter.format(84, SupportedCurrency.eur)}',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    group('largeur des cases', () {
+      double width(WidgetTester tester, String key) =>
+          tester.getSize(find.byKey(Key(key))).width;
+
+      testWidgets('sans gain, deux cases : une moitié chacune', (tester) async {
+        await pumpRow(tester, bids: [answerBid('r1')], summary: null);
+        expect(find.byKey(const Key('trip-activity-gain')), findsNothing);
+        final row = width(tester, 'trip-activity-row');
+        final half = (row - DonySpacing.sm) / 2;
+        expect(width(tester, 'trip-activity-requests'), closeTo(half, 1));
+        expect(width(tester, 'trip-activity-parcels'), closeTo(half, 1));
+      });
+
+      testWidgets('une seule case : toute la largeur', (tester) async {
+        await pumpRow(
+          tester,
+          status: 'IN_PROGRESS',
+          bids: const [],
+          summary: null,
+        );
+        expect(find.byKey(const Key('trip-activity-requests')), findsNothing);
+        expect(find.byKey(const Key('trip-activity-gain')), findsNothing);
+        expect(
+          width(tester, 'trip-activity-parcels'),
+          closeTo(width(tester, 'trip-activity-row'), 1),
+        );
+      });
+
+      testWidgets('trois cases : un tiers chacune', (tester) async {
+        await pumpRow(tester, bids: [answerBid('r1')]);
+        final third =
+            (width(tester, 'trip-activity-row') - 2 * DonySpacing.sm) / 3;
+        for (final a in TripActivity.values) {
+          expect(width(tester, 'trip-activity-${a.name}'), closeTo(third, 1));
+        }
+      });
     });
 
     testWidgets('sans pastille quand rien n\'attend', (tester) async {

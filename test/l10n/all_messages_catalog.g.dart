@@ -7964,9 +7964,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.trackingConsentSettingsOffSnackbar,
   'trackingConsentSettingsOpenSystemSnackbar': (l) =>
       l.trackingConsentSettingsOpenSystemSnackbar,
-  'tripSummaryTitle': (l) => l.tripSummaryTitle,
-  'tripSummaryParcels': (l) => l.tripSummaryParcels(intPlaceholderValue),
-  'tripSummaryWeight': (l) => l.tripSummaryWeight(placeholderMarker('kg')),
   'tripSummaryEarningsLabel': (l) => l.tripSummaryEarningsLabel,
   'tripSummaryEarningsNote': (l) => l.tripSummaryEarningsNote,
   'tripDepartButton': (l) => l.tripDepartButton,
@@ -8063,7 +8060,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
   ),
   'tripActivityRequestsEmpty': (l) => l.tripActivityRequestsEmpty,
   'tripActivityParcelsOpenList': (l) => l.tripActivityParcelsOpenList,
-  'tripActivityGainEmpty': (l) => l.tripActivityGainEmpty,
+  'tripGainOnlineLabel': (l) => l.tripGainOnlineLabel,
+  'tripGainCashLabel': (l) => l.tripGainCashLabel,
+  'tripGainCashNote': (l) => l.tripGainCashNote,
+  'tripGainCashGrossNote': (l) => l.tripGainCashGrossNote(
+    placeholderMarker('gross'),
+    placeholderMarker('commission'),
+  ),
+  'tripGainTotalLabel': (l) => l.tripGainTotalLabel,
   'tripOwnerParcelsFilterAll': (l) => l.tripOwnerParcelsFilterAll,
 };
 
@@ -8743,7 +8747,6 @@ const textParameters = <String, List<String>>{
   'commissionAllocationIntro': ['amount'],
   'commissionAllocationLine': ['wallet', 'amount'],
   'commissionAllocationConverted': ['covered', 'unit', 'rate'],
-  'tripSummaryWeight': ['kg'],
   'travelerTrackingBadgeStale': ['age'],
   'travelerTrackingNearCity': ['city'],
   'travelerTrackingUpdated': ['age'],
@@ -8752,4 +8755,5 @@ const textParameters = <String, List<String>>{
   'tripTileItineraryDelivery': ['place'],
   'tripTilePaymentsCashOnlyNote': ['section'],
   'tripActivityCellSemantics': ['title', 'value'],
+  'tripGainCashGrossNote': ['gross', 'commission'],
 };

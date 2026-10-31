@@ -19,6 +19,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_row.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_direct_request_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_gain.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcel_rows.dart';
@@ -63,7 +64,8 @@ enum TripActivitySource {
 ///   filtre par statut dès deux statuts, une ligne par colis vers sa fiche,
 ///   et « Ouvrir la liste des colis » dans le pied ; `trip_parcels_viewed`
 ///   part à l'ouverture ;
-/// - [TripActivity.gain] : le détail du gain, en lecture seule.
+/// - [TripActivity.gain] : le gain estimé des colis récupérés, en ligne,
+///   en espèces et au total ([tripGainOf]), en lecture seule.
 ///
 /// Les actions qui mènent à un autre écran ferment d'abord le sheet, puis
 /// poussent la route depuis [context] (l'écran, contexte stable) et relisent
@@ -111,7 +113,7 @@ Future<void> openTripActivitySheet(
     context,
     titleWidget: follow(
       (sheetContext, live) =>
-          Text(_activitySheetTitle(sheetContext.l10n, activity, live.trip)),
+          Text(_activitySheetTitle(sheetContext.l10n, activity)),
     ),
     analyticsName: 'trip-owner/activity-${activity.name}',
     wrapper: (content) {
@@ -169,7 +171,10 @@ Future<void> openTripActivitySheet(
                 bids: tripBidsAfterAnswers(live.bids, answered),
                 onOpenParcel: (id) => openParcel(sheetContext, id),
               ),
-              TripActivity.gain => _GainContent(trip: live.trip),
+              TripActivity.gain => _GainContent(
+                trip: live.trip,
+                bids: live.bids,
+              ),
             },
           ),
         ),
@@ -178,18 +183,12 @@ Future<void> openTripActivitySheet(
   );
 }
 
-String _activitySheetTitle(
-  AppLocalizations l,
-  TripActivity activity,
-  AnnouncementModel trip,
-) => switch (activity) {
-  TripActivity.requests => l.tripTodoRequestsTitle,
-  TripActivity.parcels => l.tripOwnerParcelsSectionTitle,
-  TripActivity.gain =>
-    (trip.parcelsSummary?.netAmount ?? 0) > 0 || trip.parcelsSummary == null
-        ? l.tripSummaryEarningsLabel
-        : l.tripSummaryTitle,
-};
+String _activitySheetTitle(AppLocalizations l, TripActivity activity) =>
+    switch (activity) {
+      TripActivity.requests => l.tripTodoRequestsTitle,
+      TripActivity.parcels => l.tripOwnerParcelsSectionTitle,
+      TripActivity.gain => l.tripSummaryEarningsLabel,
+    };
 
 /// Suit les demandes traitées depuis l'écran quand le scope de réponse est
 /// là, sinon aucune.
@@ -476,27 +475,18 @@ class _BidsNotLoaded extends StatelessWidget {
   }
 }
 
-/// Détail du gain ([TripGainContent]), ou ce qu'il faut attendre pour en
-/// avoir un.
+/// Détail du gain ([TripGainContent]) des colis récupérés, espèces
+/// comprises ([tripGainOf], même calcul que la case Gain). Le sheet n'existe
+/// qu'avec un gain : sa case disparaît sans gain, et il se ferme alors seul.
 class _GainContent extends StatelessWidget {
-  const _GainContent({required this.trip});
+  const _GainContent({required this.trip, required this.bids});
 
   final AnnouncementModel trip;
+  final List<BidModel>? bids;
 
   @override
-  Widget build(BuildContext context) {
-    final summary = trip.parcelsSummary;
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: DonySpacing.base),
-      child: summary != null && summary.count > 0
-          ? TripGainContent(summary: summary)
-          : Text(
-              context.l10n.tripActivityGainEmpty,
-              key: const Key('trip-activity-gain-empty'),
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: DonySpacing.base),
+    child: TripGainContent(gain: tripGainOf(trip, bids)),
+  );
 }

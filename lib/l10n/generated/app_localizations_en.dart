@@ -22670,30 +22670,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Location is denied in your phone. Allow it in system settings to turn sharing on.';
 
   @override
-  String get tripSummaryTitle => 'Trip summary';
-
-  @override
-  String tripSummaryParcels(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count parcels in your possession',
-      one: '$count parcel in your possession',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String tripSummaryWeight(String kg) {
-    return '$kg kg carried';
-  }
-
-  @override
   String get tripSummaryEarningsLabel => 'Estimated earnings';
 
   @override
   String get tripSummaryEarningsNote =>
-      'Payment follows the delivery of each parcel.';
+      'Paid out after each parcel is delivered.';
 
   @override
   String get tripDepartButton => 'I\'m leaving';
@@ -22968,7 +22949,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tripActivityGainLabel => 'earnings';
+  String get tripActivityGainLabel => 'estimated';
 
   @override
   String tripActivityCellSemantics(String title, String value) {
@@ -22982,8 +22963,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripActivityParcelsOpenList => 'Open parcel list';
 
   @override
-  String get tripActivityGainEmpty =>
-      'Your earnings show once a parcel is handed over to you.';
+  String get tripGainOnlineLabel => 'Online';
+
+  @override
+  String get tripGainCashLabel => 'In cash';
+
+  @override
+  String get tripGainCashNote => 'To collect from the sender in person.';
+
+  @override
+  String tripGainCashGrossNote(String gross, String commission) {
+    return '$gross to collect from the sender in person, including $commission in service fees advanced from your Yadony balance.';
+  }
+
+  @override
+  String get tripGainTotalLabel => 'Estimated total';
 
   @override
   String get tripOwnerParcelsFilterAll => 'All';

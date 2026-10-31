@@ -36726,34 +36726,16 @@ abstract class AppLocalizations {
   /// **'La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.'**
   String get trackingConsentSettingsOpenSystemSnackbar;
 
-  /// Carte de résumé du trajet du voyageur (colis en sa possession).
-  ///
-  /// In fr, this message translates to:
-  /// **'Résumé du trajet'**
-  String get tripSummaryTitle;
-
-  /// Résumé du trajet : nombre de colis scannés.
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{{count} colis en votre possession} other{{count} colis en votre possession}}'**
-  String tripSummaryParcels(int count);
-
-  /// Résumé du trajet : total des kilos transportés.
-  ///
-  /// In fr, this message translates to:
-  /// **'{kg} kg transportés'**
-  String tripSummaryWeight(String kg);
-
-  /// Résumé du trajet : net estimé du voyageur.
+  /// Gain estimé du trajet du voyageur : titre du sheet « Gain » de l'activité du trajet et nom de la case pour le lecteur d'écran (trip_activity_sheets.dart, trip_activity_row.dart).
   ///
   /// In fr, this message translates to:
   /// **'Gain estimé'**
   String get tripSummaryEarningsLabel;
 
-  /// Résumé du trajet : précise que le gain est versé après la livraison.
+  /// Sheet « Gain » de l'activité du trajet : note sous la ligne « En ligne », le net des colis payés dans l'app est versé après la livraison de chacun (trip_gain_content.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le paiement suit la livraison de chaque colis.'**
+  /// **'Versé après la livraison de chaque colis.'**
   String get tripSummaryEarningsNote;
 
   /// Écran du trajet voyageur : confirme le départ (position approximative facultative).
@@ -37146,10 +37128,10 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{colis} other{colis}}'**
   String tripActivityParcelsLabel(int count);
 
-  /// Compteur « Gain » de l'activité du trajet : libellé sous le gain estimé (trip_activity_row.dart).
+  /// Case « Gain » de l'activité du trajet : libellé sous le gain estimé des colis récupérés, espèces comprises (trip_activity_row.dart).
   ///
   /// In fr, this message translates to:
-  /// **'gain'**
+  /// **'estimé'**
   String get tripActivityGainLabel;
 
   /// Lecteur d'écran, compteur de l'activité du trajet : nom du compteur (Demandes, Colis, Gain estimé) puis sa valeur et son libellé (trip_activity_row.dart).
@@ -37170,11 +37152,35 @@ abstract class AppLocalizations {
   /// **'Ouvrir la liste des colis'**
   String get tripActivityParcelsOpenList;
 
-  /// Sheet « Gain » de l'activité du trajet : aucun colis remis, en transit ou arrivé, donc pas encore de gain estimé (trip_activity_sheets.dart).
+  /// Sheet « Gain » de l'activité du trajet : ligne du net des colis récupérés payés dans l'app (carte, mobile money) (trip_gain_content.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le gain s\'affiche dès qu\'un colis vous est remis.'**
-  String get tripActivityGainEmpty;
+  /// **'En ligne'**
+  String get tripGainOnlineLabel;
+
+  /// Sheet « Gain » de l'activité du trajet : ligne du net des colis récupérés payés en espèces (trip_gain_content.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En espèces'**
+  String get tripGainCashLabel;
+
+  /// Sheet « Gain » de l'activité du trajet : note sous la ligne « En espèces » quand le back ne sert pas le montant remis distinct du net (trip_gain_content.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'À recevoir de l\'expéditeur en main propre.'**
+  String get tripGainCashNote;
+
+  /// Sheet « Gain » de l'activité du trajet : note sous la ligne « En espèces ». L'expéditeur remet le brut, la commission n'en est pas déduite : le voyageur l'a avancée à part (FLUTTER-R8, même logique que traveler_gain_card.dart) (trip_gain_content.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{gross} à recevoir de l\'expéditeur en main propre, dont {commission} de frais de service avancés sur votre solde Yadony.'**
+  String tripGainCashGrossNote(String gross, String commission);
+
+  /// Sheet « Gain » de l'activité du trajet : ligne du total estimé, en ligne plus espèces (trip_gain_content.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Total estimé'**
+  String get tripGainTotalLabel;
 
   /// Puce de filtre « Tous » du sheet « Colis » de l'activité du trajet, avec le total des colis embarqués (trip_activity_sheets.dart).
   ///

@@ -387,16 +387,17 @@ void main() {
 
   group('sans demande ni colis', () {
     // (activité, case Demandes, case Colis, case Gain, audience, Affiche)
+    // Aucun colis récupéré : jamais de case Gain.
     const expected = {
       'DRAFT': (false, false, false, false, false, false),
-      'ACTIVE': (true, true, true, true, true, true),
-      'FULL': (true, true, true, true, true, false),
+      'ACTIVE': (true, true, true, false, true, true),
+      'FULL': (true, true, true, false, true, false),
       // Parti sans demande : la case Demandes n'a rien à promettre.
-      'IN_PROGRESS': (true, false, true, true, true, false),
-      'COMPLETED': (true, false, true, true, true, false),
+      'IN_PROGRESS': (true, false, true, false, true, false),
+      'COMPLETED': (true, false, true, false, true, false),
       'CANCELLED': (false, false, false, false, false, false),
       'REMOVED_BY_ADMIN': (false, false, false, false, false, false),
-      'SOMETHING_NEW': (true, false, true, true, true, false),
+      'SOMETHING_NEW': (true, false, true, false, true, false),
     };
     for (final MapEntry(key: status, value: e) in expected.entries) {
       testWidgets(status, (tester) async {
@@ -424,13 +425,13 @@ void main() {
       });
     }
 
-    testWidgets('ACTIVE : « 0 demande », sans pastille ; colis à 0 ; gain '
-        'inconnu', (tester) async {
+    testWidgets('ACTIVE : « 0 demande », sans pastille ; colis à 0 ; pas '
+        'de case Gain', (tester) async {
       await pump(tester, trip: _trip());
       expect(cellValue(tester, 'requests'), '0');
       expect(key('trip-activity-requests-dot'), findsNothing);
       expect(cellValue(tester, 'parcels'), '0');
-      expect(cellValue(tester, 'gain'), '-');
+      expect(key('trip-activity-gain'), findsNothing);
       expect(find.text('12 personnes ont vu votre trajet'), findsOneWidget);
     });
   });
@@ -560,7 +561,7 @@ void main() {
       expect(shown(activitySection()), isTrue);
       expect(cellValue(tester, 'parcels'), '2');
       expect(key('trip-activity-requests'), findsNothing);
-      // Aucun colis remis compté par le détail : pas de gain à montrer.
+      // Colis sans net connu ni résumé du détail : pas de gain à montrer.
       expect(key('trip-activity-gain'), findsNothing);
       expect(key('trip-audience-card'), findsNothing);
 
@@ -591,7 +592,7 @@ void main() {
       await tester.tap(key('trip-activity-gain'));
       await settle(tester);
       expect(key('trip-activity-gain-content'), findsOneWidget);
-      expect(key('trip-activity-gain-empty'), findsNothing);
+      expect(key('trip-gain-total'), findsOneWidget);
     });
   });
 

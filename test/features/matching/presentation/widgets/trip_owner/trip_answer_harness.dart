@@ -69,6 +69,7 @@ AnnouncementModel answerTrip({
   String? tripGroupId,
   int confirmedParcelCount = 0,
   double availableKg = 20,
+  String currency = 'EUR',
 }) => AnnouncementModel(
   id: 'trip-1',
   travelerId: 'trav-1',
@@ -83,6 +84,7 @@ AnnouncementModel answerTrip({
   parcelsSummary: parcelsSummary,
   tripGroupId: tripGroupId,
   confirmedParcelCount: confirmedParcelCount,
+  currency: currency,
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
 );
@@ -96,6 +98,7 @@ BidModel answerBid(
   String? description,
   double? weightKg = 3,
   double? net,
+  double? gross,
   String currency = 'EUR',
 }) => BidModel(
   id: id,
@@ -106,6 +109,7 @@ BidModel answerBid(
   contentCategory: category,
   description: description,
   totalAmountEur: net,
+  totalSenderAmountEur: gross,
   currency: currency,
   status: status,
   paymentMethod: method,

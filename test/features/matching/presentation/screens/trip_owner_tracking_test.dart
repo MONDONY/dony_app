@@ -269,51 +269,35 @@ void main() {
       await settle(tester);
     }
 
-    testWidgets('tripSummaryShowsParcelCountKgAndEarnings', (tester) async {
+    testWidgets('gainFromDetailSummaryWhileListIsEmpty', (tester) async {
       await pump(tester, _ann(summary: _summary));
       expect(find.byKey(const Key('trip-summary-card')), findsNothing);
       expect(gainValue(tester), contains('42'));
       await openGain(tester);
-      expect(find.text('Gain estimé'), findsOneWidget);
-      expect(find.textContaining('2 colis'), findsWidgets);
-      expect(find.textContaining('7,5'), findsWidgets);
-      expect(find.byKey(const Key('trip-summary-earnings')), findsOneWidget);
-      expect(find.textContaining('paiement suit la livraison'), findsOneWidget);
-    });
-
-    testWidgets('tripSummaryHidesGainWhenNetIsZero', (tester) async {
-      await pump(
-        tester,
-        _ann(
-          summary: const TripParcelsSummary(
-            count: 1,
-            totalKg: 3,
-            netAmount: 0,
-            currency: 'EUR',
-          ),
-        ),
+      expect(find.text('Gain estimé'), findsWidgets);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('trip-gain-online-amount')))
+            .data,
+        contains('42'),
       );
-      expect(gainValue(tester), '-');
-      await openGain(tester);
-      expect(find.text('Résumé du trajet'), findsOneWidget);
-      expect(find.text('Gain estimé'), findsNothing);
-      expect(find.byKey(const Key('trip-summary-earnings')), findsNothing);
-      expect(find.textContaining('1 colis'), findsWidgets);
+      expect(
+        find.text('Versé après la livraison de chaque colis.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('trip-gain-total')), findsOneWidget);
     });
 
-    testWidgets('summaryHiddenWhenNoScannedParcel', (tester) async {
+    testWidgets('gainCellHiddenWhenNothingIsEarned', (tester) async {
       for (final summary in const [
         null,
         TripParcelsSummary(count: 0, totalKg: 0, netAmount: 0, currency: 'EUR'),
+        // Colis remis payés en espèces, liste encore vide : rien de connu.
+        TripParcelsSummary(count: 1, totalKg: 3, netAmount: 0, currency: 'EUR'),
       ]) {
         await pump(tester, _ann(summary: summary));
-        expect(gainValue(tester), '-');
-        await openGain(tester);
-        expect(
-          find.byKey(const Key('trip-activity-gain-empty')),
-          findsOneWidget,
-        );
-        expect(find.byKey(const Key('trip-summary-earnings')), findsNothing);
+        expect(gainCell, findsNothing);
+        expect(find.byKey(const Key('trip-activity-parcels')), findsOneWidget);
       }
     });
 

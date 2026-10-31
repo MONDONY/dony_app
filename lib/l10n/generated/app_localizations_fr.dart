@@ -22833,30 +22833,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.';
 
   @override
-  String get tripSummaryTitle => 'Résumé du trajet';
-
-  @override
-  String tripSummaryParcels(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count colis en votre possession',
-      one: '$count colis en votre possession',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String tripSummaryWeight(String kg) {
-    return '$kg kg transportés';
-  }
-
-  @override
   String get tripSummaryEarningsLabel => 'Gain estimé';
 
   @override
   String get tripSummaryEarningsNote =>
-      'Le paiement suit la livraison de chaque colis.';
+      'Versé après la livraison de chaque colis.';
 
   @override
   String get tripDepartButton => 'Je pars';
@@ -23131,7 +23112,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get tripActivityGainLabel => 'gain';
+  String get tripActivityGainLabel => 'estimé';
 
   @override
   String tripActivityCellSemantics(String title, String value) {
@@ -23146,8 +23127,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripActivityParcelsOpenList => 'Ouvrir la liste des colis';
 
   @override
-  String get tripActivityGainEmpty =>
-      'Le gain s\'affiche dès qu\'un colis vous est remis.';
+  String get tripGainOnlineLabel => 'En ligne';
+
+  @override
+  String get tripGainCashLabel => 'En espèces';
+
+  @override
+  String get tripGainCashNote => 'À recevoir de l\'expéditeur en main propre.';
+
+  @override
+  String tripGainCashGrossNote(String gross, String commission) {
+    return '$gross à recevoir de l\'expéditeur en main propre, dont $commission de frais de service avancés sur votre solde Yadony.';
+  }
+
+  @override
+  String get tripGainTotalLabel => 'Total estimé';
 
   @override
   String get tripOwnerParcelsFilterAll => 'Tous';

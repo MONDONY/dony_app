@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_gain.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcel_rows.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -22,13 +23,13 @@ enum TripActivity {
   /// Colis embarqués : le sheet les liste tous, filtrables par statut.
   parcels,
 
-  /// Gain estimé du trajet : le sheet en donne le détail.
+  /// Gain estimé des colis récupérés, espèces comprises : le sheet en donne
+  /// le détail (en ligne, en espèces, total).
   gain,
 }
 
 /// Valeur d'un compteur quand elle n'est pas connue (liste des colis pas
-/// encore chargée, aucun gain) : un trait, jamais un zéro qui affirmerait
-/// « rien ».
+/// encore chargée) : un trait, jamais un zéro qui affirmerait « rien ».
 const kTripActivityUnknown = '-';
 
 /// Une case « Activité du trajet » : son gros chiffre [value], son libellé
@@ -68,9 +69,11 @@ const _noActivityStatuses = {'DRAFT', 'REMOVED_BY_ADMIN'};
 ///   liste, ou comptés par le détail : `confirmedParcelCount`,
 ///   `parcelsSummary`) : ses colis remis suivent la procédure de retour, la
 ///   case reste leur chemin ;
-/// - Gain : gain estimé net servi par le détail (`parcelsSummary`) quand il
-///   est positif, sinon [kTripActivityUnknown]. Sur un trajet annulé,
-///   seulement si des colis ont été remis (`parcelsSummary.count > 0`).
+/// - Gain : total estimé des colis récupérés, espèces comprises
+///   ([tripGainOf] : nets calculés sur les colis chargés, rapprochés du
+///   résumé du détail), libellé « estimé ». Affichée seulement quand ce
+///   total est positif, quel que soit le statut (trajet annulé compris) :
+///   sans gain, la case n'existe pas et les autres se partagent la ligne.
 List<TripActivityCell> tripActivityFor({
   required AnnouncementModel trip,
   required List<BidModel>? bids,
@@ -83,14 +86,13 @@ List<TripActivityCell> tripActivityFor({
   final pendingKnown = tripPendingRequestCountKnown(trip, visible);
   final embarked = tripEmbarkedParcels(visible);
   final counts = embarked == null ? null : tripParcelsCounts(embarked);
-  final summary = trip.parcelsSummary;
-  final handedOver = (summary?.count ?? 0) > 0;
   final cancelled = trip.status == 'CANCELLED';
   final parcelsShown =
       !cancelled ||
       (embarked?.isNotEmpty ?? false) ||
       trip.confirmedParcelCount > 0 ||
-      handedOver;
+      (trip.parcelsSummary?.count ?? 0) > 0;
+  final gain = tripGainOf(trip, bids);
   return [
     if (tripRequestsShown(trip, visible))
       (
@@ -112,15 +114,13 @@ List<TripActivityCell> tripActivityFor({
             : l.tripActivityParcelsLabel(embarked?.length ?? 0),
         dot: false,
       ),
-    if (!cancelled || handedOver)
+    if (gain.hasGain)
       (
         activity: TripActivity.gain,
-        value: summary != null && summary.netAmount > 0
-            ? CurrencyFormatter.format(
-                summary.netAmount,
-                SupportedCurrency.fromCodeOrDefault(summary.currency),
-              )
-            : kTripActivityUnknown,
+        value: CurrencyFormatter.format(
+          gain.total,
+          SupportedCurrency.fromCodeOrDefault(gain.currency),
+        ),
         label: l.tripActivityGainLabel,
         dot: false,
       ),
@@ -136,8 +136,9 @@ String _activityTitle(AppLocalizations l, TripActivity activity) =>
     };
 
 /// Ligne « Activité du trajet » : trois cases côte à côte au plus
-/// ([tripActivityFor]), gros chiffre et libellé, pastille sur Demandes quand
-/// des demandes attendent. Un tap appelle [onOpen], qui ouvre le sheet de la
+/// ([tripActivityFor]), de même largeur (deux cases : une moitié chacune,
+/// une seule : toute la largeur), gros chiffre et libellé, pastille sur
+/// Demandes quand des demandes attendent. Un tap appelle [onOpen], qui ouvre le sheet de la
 /// case (`openTripActivitySheet`) avec le contexte du corps.
 ///
 /// Suit les demandes traitées depuis l'écran quand un [TripBidAnswerScope]
@@ -211,7 +212,12 @@ class _ActivityCell extends StatelessWidget {
       button: true,
       label: l.tripActivityCellSemantics(
         _activityTitle(l, cell.activity),
-        known ? '${cell.value} ${cell.label}' : cell.label,
+        // Gain : le titre (« Gain estimé ») dit déjà le libellé.
+        cell.activity == TripActivity.gain
+            ? cell.value
+            : known
+            ? '${cell.value} ${cell.label}'
+            : cell.label,
       ),
       excludeSemantics: true,
       child: Material(

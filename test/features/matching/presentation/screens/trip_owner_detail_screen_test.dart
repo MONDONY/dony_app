@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_app_bar.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
@@ -1839,12 +1841,52 @@ void main() {
       verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
     });
 
-    testWidgets('case Gain : son sheet, en lecture seule', (tester) async {
-      ownerOn(_makeAnnouncement());
+    testWidgets('case Gain : absente sans colis récupéré', (tester) async {
+      ownerOn(
+        _makeAnnouncement(),
+        bids: [_makeBid(status: 'ACCEPTED', id: 'c1')],
+      );
       await pumpScreen(tester);
+      expect(find.byKey(const Key('trip-activity-parcels')), findsOneWidget);
+      expect(find.byKey(const Key('trip-activity-gain')), findsNothing);
+    });
+
+    testWidgets('case Gain : colis payé en espèces compté, son sheet en '
+        'lecture seule', (tester) async {
+      ownerOn(
+        _makeAnnouncement(),
+        bids: [
+          BidModel(
+            id: 'g1',
+            announcementId: 'ann-trip-001',
+            senderId: 'sender-001',
+            status: 'IN_TRANSIT',
+            paymentMethod: BidPaymentMethod.cash,
+            totalAmountEur: 40,
+            totalSenderAmountEur: 45,
+            createdAt: DateTime(2026, 6),
+            updatedAt: DateTime(2026, 6),
+          ),
+        ],
+      );
+      await pumpScreen(tester);
+      final eur40 = CurrencyFormatter.format(40, SupportedCurrency.eur);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('trip-activity-gain-value')))
+            .data,
+        eur40,
+      );
       await tester.tap(find.byKey(const Key('trip-activity-gain')));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('trip-activity-gain-empty')), findsOneWidget);
+      expect(find.byKey(const Key('trip-gain-online')), findsNothing);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('trip-gain-cash-amount')))
+            .data,
+        eur40,
+      );
+      expect(find.byKey(const Key('trip-gain-total')), findsOneWidget);
     });
 
     group('voyage à étapes (FLUTTER-4D)', () {
