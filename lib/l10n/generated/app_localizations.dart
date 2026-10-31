@@ -908,6 +908,18 @@ abstract class AppLocalizations {
   /// **'Cette conversation est fermée, l\'appel n\'est plus possible.'**
   String get errorCallConversationClosedMessage;
 
+  /// No description provided for @errorConversationCounterpartDeletedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation indisponible'**
+  String get errorConversationCounterpartDeletedTitle;
+
+  /// No description provided for @errorConversationCounterpartDeletedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce membre a supprimé son compte : vous ne pouvez plus lui écrire.'**
+  String get errorConversationCounterpartDeletedMessage;
+
   /// No description provided for @errorCallNotParticipantMessage.
   ///
   /// In fr, this message translates to:

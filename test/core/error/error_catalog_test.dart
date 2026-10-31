@@ -1501,6 +1501,30 @@ void main() {
     }
   });
 
+  // YADONY-BACK-STAGING-1R / FLUTTER-XE (yadony-back #690) : l'autre partie
+  // a supprimé son compte, le fil ne peut plus naître. 404 + code dédié.
+  test('conversation-counterpart-deleted (404) en français et en anglais', () {
+    const error = NotFoundException(
+      message: 'x',
+      apiCode: 'conversation-counterpart-deleted',
+    );
+    expect(ErrorCatalog.isKnown(error), isTrue);
+
+    final pFr = ErrorCatalog.lookup(error);
+    expect(pFr.title, 'Conversation indisponible');
+    expect(
+      pFr.message,
+      'Ce membre a supprimé son compte : vous ne pouvez plus lui écrire.',
+    );
+    expect(pFr.severity, ErrorSeverity.warning);
+
+    final pEn = ErrorCatalog.lookup(
+      error,
+      l10n: lookupAppLocalizations(AppL10n.en),
+    );
+    expect(pEn.title, 'Conversation unavailable');
+  });
+
   // FLUTTER-CB (yadony-back #419) : code de livraison saisi avant le départ
   // du trajet. Le back répond 422 au lieu de terminer le colis.
   group('ErrorCatalog — codes de livraison', () {

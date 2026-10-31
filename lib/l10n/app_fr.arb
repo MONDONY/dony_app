@@ -165,6 +165,8 @@
   "errorCallCalleeUnavailableMessage": "Cette personne ne peut pas être appelée pour le moment. Écrivez-lui dans la conversation.",
   "errorCallConversationClosedTitle": "Conversation fermée",
   "errorCallConversationClosedMessage": "Cette conversation est fermée, l'appel n'est plus possible.",
+  "errorConversationCounterpartDeletedTitle": "Conversation indisponible",
+  "errorConversationCounterpartDeletedMessage": "Ce membre a supprimé son compte : vous ne pouvez plus lui écrire.",
   "errorCallNotParticipantMessage": "Vous ne participez pas à cette conversation.",
   "errorCallProviderUnavailableTitle": "Appel momentanément indisponible",
   "errorCallProviderUnavailableMessage": "L'appel n'a pas pu être lancé. Réessayez dans un instant.",
