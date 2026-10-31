@@ -521,11 +521,13 @@ void main() {
   });
 
   group('colis en route (résumé servi par le détail)', () {
+    // Annulé après remise : le gain reste atteignable (colis en retour).
     const withActivity = {
       'ACTIVE',
       'FULL',
       'IN_PROGRESS',
       'COMPLETED',
+      'CANCELLED',
       'SOMETHING_NEW',
     };
     for (final status in _statuses) {
@@ -545,6 +547,52 @@ void main() {
         },
       );
     }
+  });
+
+  group('trajet annulé (colis remis en procédure de retour)', () {
+    testWidgets('deux colis remis : case Colis, son sheet et « Ouvrir la '
+        'liste des colis » ; ni Demandes ni audience', (tester) async {
+      final pushed = await pump(
+        tester,
+        trip: _trip(status: 'CANCELLED'),
+        bids: _parcels(2, 'HANDED_OVER'),
+      );
+      expect(shown(activitySection()), isTrue);
+      expect(cellValue(tester, 'parcels'), '2');
+      expect(key('trip-activity-requests'), findsNothing);
+      // Aucun colis remis compté par le détail : pas de gain à montrer.
+      expect(key('trip-activity-gain'), findsNothing);
+      expect(key('trip-audience-card'), findsNothing);
+
+      await tester.tap(key('trip-activity-parcels'));
+      await settle(tester);
+      expect(key('trip-activity-parcel-p1'), findsOneWidget);
+      expect(key('trip-activity-parcel-p2'), findsOneWidget);
+      await tester.tap(key('trip-activity-parcels-open-list'));
+      await settle(tester);
+      expect(pushed, ['/announcements/trip-1/bids']);
+    });
+
+    testWidgets('sans colis : aucune ligne d\'activité', (tester) async {
+      await pump(tester, trip: _trip(status: 'CANCELLED'));
+      expect(activitySection(), findsNothing);
+      expect(key('trip-activity-row'), findsNothing);
+    });
+
+    testWidgets('résumé servi par le détail : case Gain et son sheet', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        trip: _trip(status: 'CANCELLED', summary: _summary),
+        bids: _parcels(1, 'HANDED_OVER'),
+      );
+      expect(cellValue(tester, 'gain'), contains('21'));
+      await tester.tap(key('trip-activity-gain'));
+      await settle(tester);
+      expect(key('trip-activity-gain-content'), findsOneWidget);
+      expect(key('trip-activity-gain-empty'), findsNothing);
+    });
   });
 
   group('arrivée : instructions ou colis arrivé → tuile « Arrivée »', () {
@@ -802,6 +850,45 @@ void main() {
       expect(directCard(), findsNothing);
       expect(todoSection(), findsNothing);
       expect(cellValue(tester, 'requests'), '0');
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('demande acceptée puis relue acceptée : la case Colis passe '
+        'de 2 à 3 et colle au sheet Colis', (tester) async {
+      final accepted = [_bid('a1', 'ACCEPTED'), _bid('a2', 'ACCEPTED')];
+      await pump(tester, trip: _trip(), bids: [...accepted, ..._requests(2)]);
+      expect(cellValue(tester, 'parcels'), '2');
+
+      await tester.tap(key('trip-request-accept-r1'));
+      await tester.pump();
+      await tester.pump();
+      h.answerStates.add(BidAccepted(_requests(1).first));
+      await tester.pump();
+      await tester.pump();
+      // Relecture pas revenue : r1 n'est pas encore un colis.
+      expect(cellValue(tester, 'parcels'), '2');
+
+      h.screenStates.add(
+        BidListLoaded([...accepted, _bid('r1', 'ACCEPTED'), _requests(2).last]),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(cellValue(tester, 'parcels'), '3');
+      expect(find.text('3 à récupérer'), findsOneWidget);
+      expect(cellValue(tester, 'requests'), '1');
+
+      await tester.tap(key('trip-activity-parcels'));
+      await settle(tester);
+      expect(key('trip-activity-parcel-r1'), findsOneWidget);
+      expect(find.text('Tous · 3'), findsNothing);
+      // Un seul statut : pas de puces, mais trois lignes, comme la case.
+      expect(
+        find.descendant(
+          of: key('trip-activity-parcels-content'),
+          matching: find.byType(TripParcelRow),
+        ),
+        findsNWidgets(3),
+      );
       await tester.pump(const Duration(seconds: 5));
     });
 

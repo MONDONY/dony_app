@@ -8,7 +8,6 @@ import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
-import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -152,7 +151,8 @@ Future<void> openTripActivitySheet(
               ),
               TripActivity.parcels => _ParcelsContent(
                 tripId: live.trip.id,
-                bids: live.bids,
+                // Même source que la case Colis ([tripActivityFor]).
+                bids: tripBidsAfterAnswers(live.bids, answered),
                 onOpenParcel: (id) => openParcel(sheetContext, id),
               ),
               TripActivity.gain => _GainContent(trip: live.trip),
@@ -348,7 +348,7 @@ class _ParcelsContentState extends State<_ParcelsContent> {
             : spinner,
       );
     }
-    final embarked = bids.where(isAcceptedTabBid).toList(growable: false);
+    final embarked = tripEmbarkedParcels(bids)!;
     _logViewed(embarked.length);
     if (embarked.isEmpty) {
       return DonyEmptyState(

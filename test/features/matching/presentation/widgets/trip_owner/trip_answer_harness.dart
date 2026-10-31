@@ -67,6 +67,7 @@ AnnouncementModel answerTrip({
   int pendingBidCount = 0,
   TripParcelsSummary? parcelsSummary,
   String? tripGroupId,
+  int confirmedParcelCount = 0,
 }) => AnnouncementModel(
   id: 'trip-1',
   travelerId: 'trav-1',
@@ -80,6 +81,7 @@ AnnouncementModel answerTrip({
   pendingBidCount: pendingBidCount,
   parcelsSummary: parcelsSummary,
   tripGroupId: tripGroupId,
+  confirmedParcelCount: confirmedParcelCount,
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
 );

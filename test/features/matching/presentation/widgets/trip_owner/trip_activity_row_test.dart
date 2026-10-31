@@ -36,14 +36,17 @@ List<TripActivity> _kinds(List<TripActivityCell> cells) => [
 
 void main() {
   group('tripActivityFor : visibilité par statut', () {
-    // Attendu par statut : sans demande ni colis, puis avec une demande.
+    // Attendu par statut : sans demande ni colis, avec une demande, puis
+    // avec des colis remis (résumé servi par le détail).
     const expected = {
-      'DRAFT': ([], []),
+      'DRAFT': ([], [], []),
       'ACTIVE': (
+        [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
         [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
         [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
       ),
       'FULL': (
+        [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
         [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
         [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
       ),
@@ -51,22 +54,27 @@ void main() {
       'IN_PROGRESS': (
         [TripActivity.parcels, TripActivity.gain],
         [TripActivity.requests, TripActivity.parcels, TripActivity.gain],
+        [TripActivity.parcels, TripActivity.gain],
       ),
       // Terminé : jamais Demandes (le back refuse toute acceptation).
       'COMPLETED': (
         [TripActivity.parcels, TripActivity.gain],
         [TripActivity.parcels, TripActivity.gain],
+        [TripActivity.parcels, TripActivity.gain],
       ),
-      'CANCELLED': ([], []),
-      'REMOVED_BY_ADMIN': ([], []),
+      // Annulé : rien sans colis ; ses colis remis suivent la procédure de
+      // retour, Colis et Gain restent leur chemin. Jamais Demandes.
+      'CANCELLED': ([], [], [TripActivity.parcels, TripActivity.gain]),
+      'REMOVED_BY_ADMIN': ([], [], []),
       'SOMETHING_NEW': (
+        [TripActivity.parcels, TripActivity.gain],
         [TripActivity.parcels, TripActivity.gain],
         [TripActivity.parcels, TripActivity.gain],
       ),
     };
     for (final status in kTripStatuses) {
       test(status, () {
-        final (empty, withRequest) = expected[status]!;
+        final (empty, withRequest, withParcels) = expected[status]!;
         expect(
           _kinds(
             tripActivityFor(
@@ -89,7 +97,6 @@ void main() {
           withRequest,
           reason: 'avec une demande',
         );
-        // Des colis ne changent pas les cases présentes.
         expect(
           _kinds(
             tripActivityFor(
@@ -98,11 +105,66 @@ void main() {
               l: _fr,
             ),
           ),
-          empty,
+          withParcels,
           reason: 'avec des colis',
         );
       });
     }
+  });
+
+  group('tripActivityFor : trajet annulé', () {
+    List<TripActivityCell> cancelled({
+      List<BidModel>? bids,
+      TripParcelsSummary? summary,
+      int confirmed = 0,
+    }) => tripActivityFor(
+      trip: answerTrip(
+        status: 'CANCELLED',
+        parcelsSummary: summary,
+        confirmedParcelCount: confirmed,
+      ),
+      bids: bids,
+      l: _fr,
+    );
+
+    test('deux colis remis en retour : case Colis, sans Gain sans résumé', () {
+      final cells = cancelled(
+        bids: [
+          answerBid('h1', status: 'HANDED_OVER'),
+          answerBid('h2', status: 'HANDED_OVER'),
+        ],
+      );
+      expect(_kinds(cells), [TripActivity.parcels]);
+      expect(cells.single.value, '2');
+      expect(cells.single.label, '2 en route');
+    });
+
+    test('résumé servi par le détail : Colis et Gain avec son montant', () {
+      final cells = cancelled(
+        bids: [answerBid('h1', status: 'HANDED_OVER')],
+        summary: _summary,
+      );
+      expect(_kinds(cells), [TripActivity.parcels, TripActivity.gain]);
+      expect(
+        cells.last.value,
+        CurrencyFormatter.format(84, SupportedCurrency.eur),
+      );
+    });
+
+    test('liste pas chargée, colis comptés par le détail : Colis à « - »', () {
+      final cells = cancelled(confirmed: 1);
+      expect(_kinds(cells), [TripActivity.parcels]);
+      expect(cells.single.value, kTripActivityUnknown);
+    });
+
+    test('sans colis, ou demandes seules : aucune case', () {
+      expect(cancelled(bids: const []), isEmpty);
+      expect(cancelled(bids: [answerBid('r1')]), isEmpty);
+      expect(cancelled(), isEmpty);
+      // Colis clôturés ou annulés automatiquement : comptés seulement s'ils
+      // sont embarqués (isAcceptedTabBid), comme le sheet.
+      expect(cancelled(bids: [answerBid('x', status: 'REJECTED')]), isEmpty);
+    });
   });
 
   group('tripActivityFor : Demandes', () {
@@ -166,6 +228,47 @@ void main() {
         answered: {'r1'},
       );
       expect(_kinds(departed), [TripActivity.parcels, TripActivity.gain]);
+    });
+
+    test('demande acceptée depuis l\'écran et relue acceptée : comptée '
+        'dans Colis (même source que le sheet)', () {
+      final before = tripActivityFor(
+        trip: answerTrip(),
+        bids: [
+          answerBid('a1', status: 'ACCEPTED'),
+          answerBid('a2', status: 'ACCEPTED'),
+          answerBid('r1'),
+        ],
+        l: _fr,
+      );
+      expect(before[1].value, '2');
+      // Relecture pas revenue : r1 encore en attente, ôtée des demandes.
+      final pending = tripActivityFor(
+        trip: answerTrip(),
+        bids: [
+          answerBid('a1', status: 'ACCEPTED'),
+          answerBid('a2', status: 'ACCEPTED'),
+          answerBid('r1'),
+        ],
+        l: _fr,
+        answered: {'r1'},
+      );
+      expect(pending.first.value, '0');
+      expect(pending[1].value, '2');
+      // Relecture revenue : r1 acceptée, 3 colis à récupérer.
+      final relu = tripActivityFor(
+        trip: answerTrip(),
+        bids: [
+          answerBid('a1', status: 'ACCEPTED'),
+          answerBid('a2', status: 'ACCEPTED'),
+          answerBid('r1', status: 'ACCEPTED'),
+        ],
+        l: _fr,
+        answered: {'r1'},
+      );
+      expect(relu.first.value, '0');
+      expect(relu[1].value, '3');
+      expect(relu[1].label, '3 à récupérer');
     });
 
     test('anglais', () {

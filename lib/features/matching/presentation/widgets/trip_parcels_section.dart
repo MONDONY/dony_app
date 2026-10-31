@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -9,6 +10,14 @@ import 'package:flutter/material.dart';
 // Pièces des colis du trajet vu par son voyageur, reprises par le sheet
 // « Colis » de l'activité du trajet (`openTripActivitySheet`) : résumé par
 // étape du cycle, ligne d'un colis, ordre et libellés des statuts.
+
+/// Colis embarqués du trajet parmi [bids] (onglet « Acceptées » de la liste
+/// des colis, [isAcceptedTabBid]) : total et libellé du compteur Colis de
+/// l'activité du trajet, contenu du sheet « Colis ». Une seule source pour
+/// les deux : la case et son sheet ne se contredisent jamais. `null` tant que
+/// la liste n'a pas répondu.
+List<BidModel>? tripEmbarkedParcels(List<BidModel>? bids) =>
+    bids?.where(isAcceptedTabBid).toList(growable: false);
 
 /// Répartition des colis embarqués par étape du cycle réel, pour le résumé
 /// du sheet « Colis » et le compteur Colis de l'activité du trajet

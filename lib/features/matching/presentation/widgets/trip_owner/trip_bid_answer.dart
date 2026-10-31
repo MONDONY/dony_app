@@ -31,16 +31,35 @@ enum TripBidAnswerAction { accept, reject }
 /// Demande [bidId] dont la réponse [action] est partie au serveur.
 typedef TripBidAnswering = ({String bidId, TripBidAnswerAction action});
 
+/// Colis du trajet [bids] tels que l'écran les montre après les réponses
+/// données depuis l'écran ([answered], [TripBidAnswerController.answered]) :
+/// une demande traitée que la liste montre encore en attente (relecture pas
+/// revenue, ancienne liste en vol) en est retirée. Une demande traitée que la
+/// liste relue montre acceptée y reste : c'est un colis du trajet (compteur
+/// Colis, sheet Colis). `null` tant que la liste n'a pas répondu.
+///
+/// Source unique des compteurs « Activité du trajet », de la carte de réponse
+/// directe, du sheet des demandes et du pied « Voir les demandes (N) ».
+List<BidModel>? tripBidsAfterAnswers(
+  List<BidModel>? bids,
+  Set<String> answered,
+) => answered.isEmpty
+    ? bids
+    : bids
+          ?.where((b) => !(isPendingBid(b) && answered.contains(b.id)))
+          .toList(growable: false);
+
 /// Demandes à traiter de [bids] (`PENDING`, `PAYMENT_ESCROWED`,
 /// [isPendingBid]), dans l'ordre reçu, sans celles que le voyageur vient de
-/// traiter depuis l'écran ([answered]) : la liste relue ne les a pas encore
-/// retirées. `null` tant que la liste n'a pas répondu.
+/// traiter depuis l'écran ([answered], [tripBidsAfterAnswers]). `null` tant
+/// que la liste n'a pas répondu.
 List<BidModel>? tripRequestsToAnswer(
   List<BidModel>? bids, [
   Set<String> answered = const {},
-]) => bids
-    ?.where((b) => isPendingBid(b) && !answered.contains(b.id))
-    .toList(growable: false);
+]) => tripBidsAfterAnswers(
+  bids,
+  answered,
+)?.where(isPendingBid).toList(growable: false);
 
 /// Répondre aux demandes du trajet depuis son écran (carte « réponse
 /// directe » de « À traiter », sheet des demandes), sans passer par la liste

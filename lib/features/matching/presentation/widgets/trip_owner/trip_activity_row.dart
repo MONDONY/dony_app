@@ -1,7 +1,6 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
@@ -42,8 +41,9 @@ typedef TripActivityCell = ({
 });
 
 /// Statuts sans compteur du tout : un brouillon (pas encore visible des
-/// expéditeurs), un trajet annulé ou retiré par l'équipe.
-const _noActivityStatuses = {'DRAFT', 'CANCELLED', 'REMOVED_BY_ADMIN'};
+/// expéditeurs), un trajet retiré par l'équipe (le back refuse de retirer un
+/// trajet qui a des colis en vol).
+const _noActivityStatuses = {'DRAFT', 'REMOVED_BY_ADMIN'};
 
 /// Cases « Activité du trajet » de [trip], dans l'ordre de la ligne.
 /// Fonction pure : l'écran la rappelle à chaque rechargement, et un sheet
@@ -51,20 +51,26 @@ const _noActivityStatuses = {'DRAFT', 'CANCELLED', 'REMOVED_BY_ADMIN'};
 ///
 /// - [bids] : colis chargés par l'écran (`BidListLoaded`), `null` tant que
 ///   la liste n'a pas répondu ;
-/// - [answered] : demandes traitées depuis l'écran, pas encore retirées par
-///   la liste relue ([TripBidAnswerController.answered]).
+/// - [answered] : demandes traitées depuis l'écran
+///   ([TripBidAnswerController.answered]) : celles que la liste montre
+///   encore en attente sont ôtées ([tripBidsAfterAnswers]).
 ///
 /// Règles :
-/// - aucune case pour DRAFT, CANCELLED, REMOVED_BY_ADMIN ;
+/// - aucune case pour DRAFT et REMOVED_BY_ADMIN ;
 /// - Demandes : nombre de demandes à traiter ([tripPendingRequestCount],
 ///   repli `pendingBidCount` sans liste), pastille dès qu'il y en a une ;
-///   statuts de [tripRequestsShown] (absente d'un trajet terminé, d'un
-///   trajet parti sans demande, d'un statut inconnu) ;
-/// - Colis : total des colis embarqués ([isAcceptedTabBid]), libellé « N en
-///   route » (remis ou en transit), sinon « N à récupérer » (acceptés pas
-///   encore remis), sinon « colis » ;
+///   statuts de [tripRequestsShown] (absente d'un trajet terminé, annulé,
+///   d'un trajet parti sans demande, d'un statut inconnu) ;
+/// - Colis : total des colis embarqués ([tripEmbarkedParcels], même source
+///   que le sheet « Colis »), libellé « N en route » (remis ou en transit),
+///   sinon « N à récupérer » (acceptés pas encore remis), sinon « colis ».
+///   Sur un trajet annulé, seulement s'il a des colis (embarqués dans la
+///   liste, ou comptés par le détail : `confirmedParcelCount`,
+///   `parcelsSummary`) : ses colis remis suivent la procédure de retour, la
+///   case reste leur chemin ;
 /// - Gain : gain estimé net servi par le détail (`parcelsSummary`) quand il
-///   est positif, sinon [kTripActivityUnknown].
+///   est positif, sinon [kTripActivityUnknown]. Sur un trajet annulé,
+///   seulement si des colis ont été remis (`parcelsSummary.count > 0`).
 List<TripActivityCell> tripActivityFor({
   required AnnouncementModel trip,
   required List<BidModel>? bids,
@@ -72,12 +78,19 @@ List<TripActivityCell> tripActivityFor({
   Set<String> answered = const {},
 }) {
   if (_noActivityStatuses.contains(trip.status)) return const [];
-  final visible = bids?.where((b) => !answered.contains(b.id)).toList();
+  final visible = tripBidsAfterAnswers(bids, answered);
   final pending = tripPendingRequestCount(trip, visible);
   final pendingKnown = tripPendingRequestCountKnown(trip, visible);
-  final embarked = visible?.where(isAcceptedTabBid).toList();
+  final embarked = tripEmbarkedParcels(visible);
   final counts = embarked == null ? null : tripParcelsCounts(embarked);
   final summary = trip.parcelsSummary;
+  final handedOver = (summary?.count ?? 0) > 0;
+  final cancelled = trip.status == 'CANCELLED';
+  final parcelsShown =
+      !cancelled ||
+      (embarked?.isNotEmpty ?? false) ||
+      trip.confirmedParcelCount > 0 ||
+      handedOver;
   return [
     if (tripRequestsShown(trip, visible))
       (
@@ -88,27 +101,29 @@ List<TripActivityCell> tripActivityFor({
             : l.tripActivityRequestsNone,
         dot: pending > 0,
       ),
-    (
-      activity: TripActivity.parcels,
-      value: embarked == null ? kTripActivityUnknown : '${embarked.length}',
-      label: counts != null && counts.inTransit > 0
-          ? l.tripActivityParcelsInTransit(counts.inTransit)
-          : counts != null && counts.toCollect > 0
-          ? l.tripActivityParcelsToCollect(counts.toCollect)
-          : l.tripActivityParcelsLabel(embarked?.length ?? 0),
-      dot: false,
-    ),
-    (
-      activity: TripActivity.gain,
-      value: summary != null && summary.netAmount > 0
-          ? CurrencyFormatter.format(
-              summary.netAmount,
-              SupportedCurrency.fromCodeOrDefault(summary.currency),
-            )
-          : kTripActivityUnknown,
-      label: l.tripActivityGainLabel,
-      dot: false,
-    ),
+    if (parcelsShown)
+      (
+        activity: TripActivity.parcels,
+        value: embarked == null ? kTripActivityUnknown : '${embarked.length}',
+        label: counts != null && counts.inTransit > 0
+            ? l.tripActivityParcelsInTransit(counts.inTransit)
+            : counts != null && counts.toCollect > 0
+            ? l.tripActivityParcelsToCollect(counts.toCollect)
+            : l.tripActivityParcelsLabel(embarked?.length ?? 0),
+        dot: false,
+      ),
+    if (!cancelled || handedOver)
+      (
+        activity: TripActivity.gain,
+        value: summary != null && summary.netAmount > 0
+            ? CurrencyFormatter.format(
+                summary.netAmount,
+                SupportedCurrency.fromCodeOrDefault(summary.currency),
+              )
+            : kTripActivityUnknown,
+        label: l.tripActivityGainLabel,
+        dot: false,
+      ),
   ];
 }
 

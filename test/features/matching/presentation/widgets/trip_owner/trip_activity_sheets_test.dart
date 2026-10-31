@@ -621,7 +621,17 @@ void main() {
       expect(find.byKey(const Key('trip-summary-earnings')), findsNothing);
     });
 
-    testWidgets('trajet annulé pendant l\'ouverture : le sheet se ferme seul', (
+    testWidgets('trajet annulé sans colis remis pendant l\'ouverture : le '
+        'sheet se ferme seul', (tester) async {
+      await open(tester, TripActivity.gain, bids: const []);
+      h.annStates.add(
+        AnnouncementDetailLoaded(answerTrip(status: 'CANCELLED')),
+      );
+      await _settle(tester);
+      expect(find.byKey(const Key('trip-activity-gain-content')), findsNothing);
+    });
+
+    testWidgets('trajet annulé après remise : le sheet reste, le gain aussi', (
       tester,
     ) async {
       await open(tester, TripActivity.gain, bids: const []);
@@ -631,7 +641,11 @@ void main() {
         ),
       );
       await _settle(tester);
-      expect(find.byKey(const Key('trip-activity-gain-content')), findsNothing);
+      expect(
+        find.byKey(const Key('trip-activity-gain-content')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('trip-activity-gain-empty')), findsNothing);
     });
   });
 

@@ -39,8 +39,9 @@ import 'package:flutter/material.dart';
 ///    ([TripTodoRows] : « Je pars », « Ajouter la carte ») ;
 /// 4. « Activité du trajet » : compteurs Demandes, Colis, Gain
 ///    ([TripActivityRow], [tripActivityFor]) et ligne d'audience
-///    ([TripAudienceLine]), absents d'un brouillon, d'un trajet annulé ou
-///    retiré par l'équipe ;
+///    ([TripAudienceLine]), absents d'un brouillon ou d'un trajet retiré par
+///    l'équipe (un trajet annulé garde ses cases Colis et Gain s'il a des
+///    colis) ;
 /// 5. « Votre trajet » ([tripTilesFor], chaque tuile ouvrant son sheet ; les
 ///    étapes d'un voyage à plusieurs étapes sont dans celui de l'itinéraire).
 ///
@@ -159,7 +160,12 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
         live.tiles.contains(TripTodoTile.requests) &&
         (tripRequestsToAnswer(bids, answered)?.isNotEmpty ?? false);
     final rows = tripTodoRowTiles(live).isNotEmpty;
-    final activity = tripActivityFor(trip: trip, bids: bids, l: l).isNotEmpty;
+    final activity = tripActivityFor(
+      trip: trip,
+      bids: bids,
+      l: l,
+      answered: answered,
+    ).isNotEmpty;
     final tiles = tripTilesFor(trip: trip, bids: bids, isOwner: true);
 
     return [
