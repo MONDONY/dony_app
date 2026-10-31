@@ -16,12 +16,13 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/close_she
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_gain_content.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_row.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_direct_request_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_gain.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_parcels_line.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcel_rows.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
@@ -29,10 +30,28 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// D'où s'ouvre un sheet « Activité du trajet » : valeur `source` de
+/// Sheets de l'activité du trajet vu par son voyageur, ouverts par
+/// `openTripActivitySheet`.
+///
+/// Le nom sert de valeur `tile` à `bid_detail_tile_opened` (`role:
+/// trip_owner`) et au nom du sheet (`trip-owner/activity-` suivi du nom) : ne
+/// pas le renommer sans migrer PostHog.
+enum TripActivity {
+  /// Demandes à traiter : le sheet les liste, avec Refuser et Accepter.
+  /// Ouvert par le lien « Voir les N demandes » de la carte de réponse
+  /// directe.
+  requests,
+
+  /// Colis embarqués : le gain estimé en tête, puis tous les colis,
+  /// filtrables par statut. Ouvert par la ligne Colis du corps
+  /// (`TripParcelsLine`).
+  parcels,
+}
+
+/// D'où s'ouvre un sheet de l'activité du trajet : valeur `source` de
 /// `bid_detail_tile_opened`. Ne pas renommer sans migrer PostHog.
 enum TripActivitySource {
-  /// Case des compteurs (`TripActivityRow`).
+  /// Ligne Colis du corps (`TripParcelsLine`).
   tile,
 
   /// Lien « Voir les N demandes » de la carte de réponse directe
@@ -40,12 +59,11 @@ enum TripActivitySource {
   card,
 }
 
-/// Ouvre le bottom sheet de la case « Activité du trajet » [activity] du
-/// trajet [trip] (écran du trajet, vue du voyageur propriétaire) et compte
-/// l'ouverture (`bid_detail_tile_opened`, `role: trip_owner`, `source` :
-/// [source], `tile` pour une case, `card` pour le lien de la carte de
-/// réponse directe). Nom du sheet : `trip-owner/activity-` suivi du nom de
-/// [activity].
+/// Ouvre le bottom sheet [activity] du trajet [trip] (écran du trajet, vue
+/// du voyageur propriétaire) et compte l'ouverture (`bid_detail_tile_opened`,
+/// `role: trip_owner`, `source` : [source], `tile` pour la ligne Colis,
+/// `card` pour le lien de la carte de réponse directe). Nom du sheet :
+/// `trip-owner/activity-` suivi du nom de [activity].
 ///
 /// Comme les sheets « À traiter » (`openTripTodoSheet`) : le sheet s'ouvre
 /// sur le navigateur racine, les blocs de l'écran trouvés sous [context]
@@ -54,18 +72,18 @@ enum TripActivitySource {
 /// (exigé pour [TripActivity.requests]). Contenu et titre suivent les mêmes
 /// données que l'écran ([TripTodoLive] ; [bids] : derniers colis connus de
 /// l'écran, repris pendant un rechargement), et les demandes traitées depuis
-/// l'écran. Le sheet se ferme seul quand sa case disparaît
-/// ([tripActivityFor]), jamais par-dessus une confirmation.
+/// l'écran. Le sheet se ferme seul quand il n'a plus lieu d'être
+/// ([tripActivityShown] : plus de demandes sur le trajet, ligne Colis
+/// disparue), jamais par-dessus une confirmation.
 ///
 /// - [TripActivity.requests] : une ligne par demande à traiter, avec Refuser
 ///   et Accepter (même réponse que la carte directe) ; la ligne ouvre la
 ///   fiche du colis ;
-/// - [TripActivity.parcels] : tous les colis embarqués, résumé, puces de
-///   filtre par statut dès deux statuts, une ligne par colis vers sa fiche,
-///   et « Ouvrir la liste des colis » dans le pied ; `trip_parcels_viewed`
-///   part à l'ouverture ;
-/// - [TripActivity.gain] : le gain estimé des colis récupérés, en ligne,
-///   en espèces et au total ([tripGainOf]), en lecture seule.
+/// - [TripActivity.parcels] : en tête, le gain estimé des colis récupérés
+///   (en ligne, en espèces, total, [tripGainOf]) quand il est positif ; puis
+///   tous les colis embarqués, résumé, puces de filtre par statut dès deux
+///   statuts, une ligne par colis vers sa fiche, et « Ouvrir la liste des
+///   colis » dans le pied ; `trip_parcels_viewed` part à l'ouverture.
 ///
 /// Les actions qui mènent à un autre écran ferment d'abord le sheet, puis
 /// poussent la route depuis [context] (l'écran, contexte stable) et relisent
@@ -151,12 +169,7 @@ Future<void> openTripActivitySheet(
       (sheetContext, live) => _FollowAnswered(
         answer: answer,
         builder: (sheetContext, answered) => CloseTripSheetWhenGone(
-          gone: !tripActivityFor(
-            trip: live.trip,
-            bids: live.bids,
-            l: sheetContext.l10n,
-            answered: answered,
-          ).any((cell) => cell.activity == activity),
+          gone: !tripActivityShown(activity, live, answered),
           child: KeyedSubtree(
             key: Key('trip-activity-${activity.name}-content'),
             child: switch (activity) {
@@ -167,13 +180,10 @@ Future<void> openTripActivitySheet(
               ),
               TripActivity.parcels => _ParcelsContent(
                 tripId: live.trip.id,
-                // Même source que la case Colis ([tripActivityFor]).
+                // Mêmes colis embarqués que la ligne Colis du corps.
                 bids: tripBidsAfterAnswers(live.bids, answered),
+                gain: tripGainOf(live.trip, live.bids),
                 onOpenParcel: (id) => openParcel(sheetContext, id),
-              ),
-              TripActivity.gain => _GainContent(
-                trip: live.trip,
-                bids: live.bids,
               ),
             },
           ),
@@ -187,8 +197,28 @@ String _activitySheetTitle(AppLocalizations l, TripActivity activity) =>
     switch (activity) {
       TripActivity.requests => l.tripTodoRequestsTitle,
       TripActivity.parcels => l.tripOwnerParcelsSectionTitle,
-      TripActivity.gain => l.tripSummaryEarningsLabel,
     };
+
+/// Le sheet [activity] a-t-il encore lieu d'être sur les données [live] ?
+/// Fonction pure, rappelée à chaque relecture : faux, le sheet se ferme seul.
+///
+/// - [TripActivity.requests] : les demandes ont leur place sur le trajet
+///   ([tripRequestsShown], après les demandes traitées depuis l'écran,
+///   [answered]) : toujours pour un trajet publié ou complet, pour un trajet
+///   parti seulement s'il en reste ;
+/// - [TripActivity.parcels] : la ligne Colis du corps s'affiche
+///   ([tripParcelsLineShown]).
+bool tripActivityShown(
+  TripActivity activity,
+  TripTodoLiveData live,
+  Set<String> answered,
+) => switch (activity) {
+  TripActivity.requests => tripRequestsShown(
+    live.trip,
+    tripBidsAfterAnswers(live.bids, answered),
+  ),
+  TripActivity.parcels => tripParcelsLineShown(live.trip, live.bids),
+};
 
 /// Suit les demandes traitées depuis l'écran quand le scope de réponse est
 /// là, sinon aucune.
@@ -281,7 +311,9 @@ class _RequestsContent extends StatelessWidget {
   }
 }
 
-/// Tous les colis embarqués du trajet : résumé (sur tous, jamais sur le
+/// Contenu du sheet « Colis » : le gain estimé en tête ([gain], seulement
+/// s'il est positif : en ligne, en espèces, total, [TripGainContent]), puis
+/// tous les colis embarqués du trajet : résumé (sur tous, jamais sur le
 /// filtre, FLUTTER-GS), puces de filtre par statut dès deux statuts, une
 /// ligne par colis. Mesure l'ouverture une fois la liste connue
 /// (`trip_parcels_viewed`, total des colis embarqués) et chaque filtre
@@ -294,11 +326,16 @@ class _ParcelsContent extends StatefulWidget {
   const _ParcelsContent({
     required this.tripId,
     required this.bids,
+    required this.gain,
     required this.onOpenParcel,
   });
 
   final String tripId;
   final List<BidModel>? bids;
+
+  /// Gain estimé des colis récupérés ([tripGainOf]), même calcul que le
+  /// titre de la ligne Colis.
+  final TripGain gain;
   final ValueChanged<String> onOpenParcel;
 
   @override
@@ -345,6 +382,19 @@ class _ParcelsContentState extends State<_ParcelsContent> {
 
   @override
   Widget build(BuildContext context) {
+    final gain = widget.gain;
+    final parcels = _parcels(context);
+    if (!gain.hasGain) return parcels;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _GainBlock(gain: gain),
+        parcels,
+      ],
+    );
+  }
+
+  Widget _parcels(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
     final bids = widget.bids;
@@ -475,18 +525,36 @@ class _BidsNotLoaded extends StatelessWidget {
   }
 }
 
-/// Détail du gain ([TripGainContent]) des colis récupérés, espèces
-/// comprises ([tripGainOf], même calcul que la case Gain). Le sheet n'existe
-/// qu'avec un gain : sa case disparaît sans gain, et il se ferme alors seul.
-class _GainContent extends StatelessWidget {
-  const _GainContent({required this.trip, required this.bids});
+/// Bloc « Gain estimé » en tête du sheet « Colis » : son titre, le détail
+/// ([TripGainContent] : en ligne, en espèces, total, seulement les lignes
+/// positives), puis un séparateur avant les colis. Monté seulement quand le
+/// gain est positif.
+class _GainBlock extends StatelessWidget {
+  const _GainBlock({required this.gain});
 
-  final AnnouncementModel trip;
-  final List<BidModel>? bids;
+  final TripGain gain;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: DonySpacing.base),
-    child: TripGainContent(gain: tripGainOf(trip, bids)),
-  );
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      key: const Key('trip-activity-parcels-gain'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          context.l10n.tripSummaryEarningsLabel,
+          style: tt.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: cs.onSurface,
+          ),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        TripGainContent(gain: gain),
+        const SizedBox(height: DonySpacing.base),
+        Divider(height: 1, color: cs.outline),
+        const SizedBox(height: DonySpacing.base),
+      ],
+    );
+  }
 }

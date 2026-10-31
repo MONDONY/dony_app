@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/maybe_read.dart';
+import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_row.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
@@ -13,6 +14,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_dire
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_header.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_parcels_line.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_status_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_tile_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_tiles.dart';
@@ -22,6 +24,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Corps de l'écran du trajet vu par son voyageur, en « tableau de bord »
 /// (redesign du 31/10), en sections comme le corps de la fiche colis
@@ -37,13 +40,18 @@ import 'package:flutter/material.dart';
 ///    carte de réponse directe à la première demande ([TripDirectRequestCard],
 ///    tuile [TripTodoTile.requests]) puis une ligne par autre geste
 ///    ([TripTodoRows] : « Je pars », « Ajouter la carte ») ;
-/// 4. « Activité du trajet » : compteurs Demandes, Colis, Gain
-///    ([TripActivityRow], [tripActivityFor]) et ligne d'audience
-///    ([TripAudienceLine]), absents d'un brouillon ou d'un trajet retiré par
-///    l'équipe (un trajet annulé garde ses cases Colis et Gain s'il a des
-///    colis) ;
+/// 4. la ligne Colis ([TripParcelsLine] : avatars, « N colis · gain »,
+///    résumé, vers le sheet « Colis » qui détaille le gain en tête),
+///    toujours sur un trajet publié, complet ou parti, seulement avec des
+///    colis sur un trajet terminé ou annulé, jamais sur un brouillon ni un
+///    trajet retiré par l'équipe ([tripParcelsLineShown]) ;
 /// 5. « Votre trajet » ([tripTilesFor], chaque tuile ouvrant son sheet ; les
-///    étapes d'un voyage à plusieurs étapes sont dans celui de l'itinéraire).
+///    étapes d'un voyage à plusieurs étapes sont dans celui de l'itinéraire,
+///    l'audience du trajet est le sous-titre de la tuile « Affiche »).
+///
+/// L'audience est chargée ici pour le seul propriétaire confirmé
+/// ([TripAudienceLoader], hors brouillon, trajet annulé ou retiré), comme le
+/// faisait la ligne d'audience retirée du corps.
 ///
 /// Le pied collant et le menu ⋮ sont posés par l'écran, hors du défilement.
 ///
@@ -56,7 +64,7 @@ import 'package:flutter/material.dart';
 /// ([TripTodoLive] : dernier trajet relu, derniers colis chargés, compte de
 /// paiement, départ confirmé), plus les demandes que le voyageur vient de
 /// traiter ([TripBidAnswerController.answered]) : un rechargement garde
-/// l'affichage, une case et son sheet ne divergent jamais.
+/// l'affichage, une ligne et son sheet ne divergent jamais.
 ///
 /// Chaque section porte une clé (`KeyedSubtree`) : l'apparition ou la
 /// disparition d'une section ne remonte pas les autres.
@@ -96,7 +104,7 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
   final _todoViews = TodoTileViewLog();
 
   /// Un sheet ouvert depuis le corps n'est pas encore affiché : un second
-  /// appui (double tap sur une case, une ligne ou « Voir les N demandes »)
+  /// appui (double tap sur la ligne Colis, une ligne ou « Voir les N demandes »)
   /// n'en ouvre pas un autre par-dessus.
   bool _opening = false;
 
@@ -114,9 +122,13 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
       column = TripTodoLive(
         trip: widget.trip,
         blocs: TripTodoBlocs.of(context),
-        builder: (context, live) => ValueListenableBuilder<Set<String>>(
-          valueListenable: answered,
-          builder: (context, ids, _) => _column(_ownerSections(live, ids)),
+        builder: (context, live) => TripAudienceLoader(
+          announcementId: live.trip.id,
+          status: live.trip.status,
+          child: ValueListenableBuilder<Set<String>>(
+            valueListenable: answered,
+            builder: (context, ids, _) => _column(_ownerSections(live, ids)),
+          ),
         ),
       );
     }
@@ -160,12 +172,6 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
         live.tiles.contains(TripTodoTile.requests) &&
         (tripRequestsToAnswer(bids, answered)?.isNotEmpty ?? false);
     final rows = tripTodoRowsFor(live).isNotEmpty;
-    final activity = tripActivityFor(
-      trip: trip,
-      bids: bids,
-      l: l,
-      answered: answered,
-    ).isNotEmpty;
     final tiles = tripTilesFor(trip: trip, bids: bids, isOwner: true);
 
     return [
@@ -200,24 +206,13 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
             ],
           ),
         ),
-      if (activity)
+      if (tripParcelsLineShown(trip, bids))
         (
-          'activity',
-          BidDetailSection(
-            title: l.tripSectionActivity,
-            spacing: 0,
-            children: [
-              TripActivityRow(
-                trip: trip,
-                bids: bids,
-                onOpen: (activity) => _openActivity(live, activity),
-              ),
-              if (TripAudienceLine.shownFor(trip.status))
-                TripAudienceLine(
-                  announcementId: trip.id,
-                  padding: const EdgeInsets.only(top: DonySpacing.md),
-                ),
-            ],
+          'parcels',
+          TripParcelsLine(
+            trip: trip,
+            bids: bids,
+            onOpen: () => _openActivity(live, TripActivity.parcels),
           ),
         ),
       if (tiles.isNotEmpty)
@@ -260,8 +255,8 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
     unawaited(show().whenComplete(() => _opening = false));
   }
 
-  /// Sheet de la case [activity], sur les derniers colis connus ;
-  /// [source] : case des compteurs, ou lien de la carte de réponse directe.
+  /// Sheet [activity], sur les derniers colis connus ; [source] : ligne
+  /// Colis, ou lien de la carte de réponse directe.
   void _openActivity(
     TripTodoLiveData live,
     TripActivity activity, {
@@ -277,14 +272,30 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
   );
 
   /// Tuile « Votre trajet » : ouvre la feuille de lecture, avec son bouton
-  /// « Modifier » quand le trajet est modifiable.
+  /// « Modifier » quand le trajet est modifiable. La tuile « Affiche » suit
+  /// l'audience chargée (son sous-titre).
   Widget _tripTile(TripTodoLiveData live, TripTile tile) {
+    final audience = tile == TripTile.poster
+        ? maybeRead<TripAudienceCubit>(context)
+        : null;
+    if (audience == null) return _tripTileFor(live, tile, null);
+    return BlocBuilder<TripAudienceCubit, TripAudienceState>(
+      bloc: audience,
+      builder: (context, state) => _tripTileFor(live, tile, state),
+    );
+  }
+
+  Widget _tripTileFor(
+    TripTodoLiveData live,
+    TripTile tile,
+    TripAudienceState? audience,
+  ) {
     final l = context.l10n;
     return DonyActionTile(
       key: Key('trip-tile-${tile.name}'),
       iconName: tripTileIcon(tile),
       label: tripTileTitle(l, tile),
-      subtitle: tripTileSubtitle(l, tile, live.trip),
+      subtitle: tripTileSubtitle(l, tile, live.trip, audience: audience),
       color: Theme.of(context).colorScheme.primary,
       onTap: () => _open(
         () => openTripTileSheet(context, live.trip, tile, bids: live.bids),

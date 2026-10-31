@@ -4,8 +4,10 @@
 // seules ; voyage à étapes ; instructions ; retrait par l'équipe) → blocs
 // présents ou absents, écrite à la main (pas recalculée par les fonctions de
 // production) ; ordre des sections ; visiteur ; mesure de « À traiter » ;
-// réponse à une demande qui passe à la suivante ; chaque sheet ouvert depuis
-// le corps ; FR / EN, 360 dp × 1,3.
+// réponse à une demande qui passe à la suivante ; ligne Colis (« une ligne
+// colis » du 31/10 au soir : plus de section « Activité du trajet », ni case
+// Demandes ni case Gain, audience dans la tuile « Affiche ») ; chaque sheet
+// ouvert depuis le corps ; FR / EN, 360 dp × 1,3.
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/models/connect_account_status.dart';
@@ -126,6 +128,9 @@ final _legs = TripLegsInfo.fromJson(const {
 void main() {
   late AnswerHarness h;
 
+  /// Audience du dernier corps monté (12 personnes, chargée).
+  late MockTripAudienceCubit audience;
+
   setUpAll(() async {
     AnswerHarness.registerFallbacks();
     await initializeDateFormatting('fr');
@@ -152,6 +157,9 @@ void main() {
     Locale locale = const Locale('fr'),
     double textScale = 1,
     Size size = const Size(400, 3200),
+    TripAudienceState audienceState = const TripAudienceState.loaded(
+      TripAudienceModel(uniqueViewerCount: 12, shareViewCount: 3),
+    ),
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -173,13 +181,11 @@ void main() {
       h.acceptanceStates.stream,
       initialState: acs.BidAcceptanceInitial(),
     );
-    final audience = MockTripAudienceCubit();
+    audience = MockTripAudienceCubit();
     whenListen(
       audience,
       const Stream<TripAudienceState>.empty(),
-      initialState: const TripAudienceState.loaded(
-        TripAudienceModel(uniqueViewerCount: 12, shareViewCount: 0),
-      ),
+      initialState: audienceState,
     );
     when(() => audience.load(any())).thenAnswer((_) async {});
     final depart = _MockDepart();
@@ -275,10 +281,28 @@ void main() {
   bool shown(Finder f) => f.evaluate().isNotEmpty;
   Finder key(String k) => find.byKey(Key(k));
   Finder todoSection() => find.text('À traiter');
+
+  /// Ancienne section « Activité du trajet » : plus jamais affichée.
   Finder activitySection() => find.text('Activité du trajet');
   Finder directCard() => key('trip-direct-request-card');
-  String cellValue(WidgetTester tester, String activity) =>
-      tester.widget<Text>(key('trip-activity-$activity-value')).data!;
+  Finder parcelsLine() => key('trip-parcels-line');
+  String lineTitle(WidgetTester tester) =>
+      tester.widget<Text>(key('trip-parcels-line-title')).data!;
+  String? lineSubtitle(WidgetTester tester) {
+    final f = key('trip-parcels-line-subtitle');
+    return f.evaluate().isEmpty ? null : tester.widget<Text>(f).data;
+  }
+
+  /// Ni section « Activité du trajet », ni cases Demandes, Colis, Gain, ni
+  /// ligne d'audience dans le corps.
+  void expectNoActivity() {
+    expect(activitySection(), findsNothing);
+    expect(key('trip-activity-row'), findsNothing);
+    for (final a in const ['requests', 'parcels', 'gain']) {
+      expect(key('trip-activity-$a'), findsNothing);
+    }
+    expect(key('trip-audience-card'), findsNothing);
+  }
 
   // ── Table statut × situation ─────────────────────────────────────────────
   // Attendus écrits à la main, ligne par ligne (cible du 31/10, inventaire).
@@ -386,29 +410,30 @@ void main() {
   });
 
   group('sans demande ni colis', () {
-    // (activité, case Demandes, case Colis, case Gain, audience, Affiche)
-    // Aucun colis récupéré : jamais de case Gain.
+    // (ligne Colis, audience chargée, tuile Affiche)
+    // Ligne Colis : toujours sur un trajet publié, complet ou parti ; jamais
+    // sans colis sur un trajet terminé, annulé, retiré ou inconnu.
     const expected = {
-      'DRAFT': (false, false, false, false, false, false),
-      'ACTIVE': (true, true, true, false, true, true),
-      'FULL': (true, true, true, false, true, false),
-      // Parti sans demande : la case Demandes n'a rien à promettre.
-      'IN_PROGRESS': (true, false, true, false, true, false),
-      'COMPLETED': (true, false, true, false, true, false),
-      'CANCELLED': (false, false, false, false, false, false),
-      'REMOVED_BY_ADMIN': (false, false, false, false, false, false),
-      'SOMETHING_NEW': (true, false, true, false, true, false),
+      'DRAFT': (false, false, false),
+      'ACTIVE': (true, true, true),
+      'FULL': (true, true, false),
+      'IN_PROGRESS': (true, true, false),
+      'COMPLETED': (false, true, false),
+      'CANCELLED': (false, false, false),
+      'REMOVED_BY_ADMIN': (false, false, false),
+      'SOMETHING_NEW': (false, true, false),
     };
     for (final MapEntry(key: status, value: e) in expected.entries) {
       testWidgets(status, (tester) async {
         await pump(tester, trip: _trip(status: status));
-        expect(shown(activitySection()), e.$1, reason: 'section');
-        expect(shown(key('trip-activity-row')), e.$1, reason: 'compteurs');
-        expect(shown(key('trip-activity-requests')), e.$2, reason: 'demandes');
-        expect(shown(key('trip-activity-parcels')), e.$3, reason: 'colis');
-        expect(shown(key('trip-activity-gain')), e.$4, reason: 'gain');
-        expect(shown(key('trip-audience-card')), e.$5, reason: 'audience');
-        expect(shown(key('trip-tile-poster')), e.$6, reason: 'affiche');
+        expect(shown(parcelsLine()), e.$1, reason: 'ligne Colis');
+        if (e.$2) {
+          verify(() => audience.load('trip-1')).called(1);
+        } else {
+          verifyNever(() => audience.load(any()));
+        }
+        expect(shown(key('trip-tile-poster')), e.$3, reason: 'affiche');
+        expectNoActivity();
         // Rien à traiter.
         expect(todoSection(), findsNothing);
         expect(directCard(), findsNothing);
@@ -425,30 +450,37 @@ void main() {
       });
     }
 
-    testWidgets('ACTIVE : « 0 demande », sans pastille ; colis à 0 ; pas '
-        'de case Gain', (tester) async {
+    testWidgets('ACTIVE : « Aucun colis », icône, sans gain ; audience en '
+        'sous-titre de la tuile « Affiche »', (tester) async {
       await pump(tester, trip: _trip());
-      expect(cellValue(tester, 'requests'), '0');
-      expect(key('trip-activity-requests-dot'), findsNothing);
-      expect(cellValue(tester, 'parcels'), '0');
-      expect(key('trip-activity-gain'), findsNothing);
-      expect(find.text('12 personnes ont vu votre trajet'), findsOneWidget);
+      expect(lineTitle(tester), 'Aucun colis');
+      expect(lineSubtitle(tester), 'Les colis acceptés apparaîtront ici.');
+      expect(key('trip-parcels-line-icon'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: key('trip-tile-poster'),
+          matching: find.text('12 personnes ont vu votre trajet'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Partager le trajet'), findsNothing);
     });
   });
 
   group('une demande à traiter', () {
-    // (« À traiter » et carte directe, case Demandes)
+    // « À traiter » et carte directe ; jamais de case Demandes (la carte et
+    // son lien « Voir les N demandes » suffisent).
     const expected = {
-      'DRAFT': (false, false),
-      'ACTIVE': (true, true),
-      'FULL': (true, true),
-      'IN_PROGRESS': (true, true),
-      // Le back refuse toute acceptation sur un trajet terminé : ni carte
-      // ni case qui promettrait une réponse.
-      'COMPLETED': (false, false),
-      'CANCELLED': (false, false),
-      'REMOVED_BY_ADMIN': (false, false),
-      'SOMETHING_NEW': (false, false),
+      'DRAFT': false,
+      'ACTIVE': true,
+      'FULL': true,
+      'IN_PROGRESS': true,
+      // Le back refuse toute acceptation sur un trajet terminé : pas de
+      // carte qui promettrait une réponse.
+      'COMPLETED': false,
+      'CANCELLED': false,
+      'REMOVED_BY_ADMIN': false,
+      'SOMETHING_NEW': false,
     };
     for (final MapEntry(key: status, value: e) in expected.entries) {
       testWidgets(status, (tester) async {
@@ -457,9 +489,9 @@ void main() {
           trip: _trip(status: status),
           bids: _requests(1),
         );
-        expect(shown(todoSection()), e.$1, reason: 'section');
-        expect(shown(directCard()), e.$1, reason: 'carte directe');
-        expect(shown(key('trip-activity-requests')), e.$2, reason: 'case');
+        expect(shown(todoSection()), e, reason: 'section');
+        expect(shown(directCard()), e, reason: 'carte directe');
+        expectNoActivity();
         // La demande n'est plus une tuile de grille.
         expect(key('trip_owner-todo-requests'), findsNothing);
       });
@@ -467,12 +499,12 @@ void main() {
   });
 
   group('0, 1, 3, 8 demandes (trajet publié)', () {
-    // (carte directe, « Voir les N demandes », valeur de la case, pastille)
+    // (carte directe, « Voir les N demandes »)
     const expected = {
-      0: (false, false, '0', false),
-      1: (true, false, '1', true),
-      3: (true, true, '3', true),
-      8: (true, true, '8', true),
+      0: (false, false),
+      1: (true, false),
+      3: (true, true),
+      8: (true, true),
     };
     for (final MapEntry(key: n, value: e) in expected.entries) {
       testWidgets('$n demande(s)', (tester) async {
@@ -488,33 +520,49 @@ void main() {
         }
         expect(shown(key('trip-direct-request-see-all')), e.$2, reason: 'lien');
         if (e.$2) expect(find.text('Voir les $n demandes'), findsOneWidget);
-        expect(cellValue(tester, 'requests'), e.$3);
-        expect(shown(key('trip-activity-requests-dot')), e.$4, reason: 'dot');
+        // Les demandes ne sont jamais des colis : la ligne compte a1 seul.
+        expect(lineTitle(tester), '1 colis');
+        expectNoActivity();
         expect(tester.takeException(), isNull);
       });
     }
 
     testWidgets('liste des colis en chargement : ni carte ni « À traiter », '
-        'case Demandes à « - »', (tester) async {
+        'ligne « Colis » sans nombre', (tester) async {
       await pump(tester, trip: _trip(), bids: null);
       expect(directCard(), findsNothing);
       expect(todoSection(), findsNothing);
-      expect(cellValue(tester, 'requests'), '-');
-      expect(find.text('0'), findsNothing);
+      expect(lineTitle(tester), 'Colis');
+      expect(lineSubtitle(tester), isNull);
+      expect(find.text('Aucun colis'), findsNothing);
     });
   });
 
   group('0, 2, 10 colis embarqués (trajet en cours)', () {
     for (final n in const [0, 2, 10]) {
-      testWidgets('$n colis : la case Colis compte, aucune ligne de colis '
+      testWidgets('$n colis : la ligne Colis compte, aucune ligne de colis '
           'dans le corps', (tester) async {
         await pump(
           tester,
           trip: _trip(status: 'IN_PROGRESS', summary: n > 0 ? _summary : null),
           bids: _parcels(n),
         );
-        expect(cellValue(tester, 'parcels'), '$n');
-        if (n > 0) expect(find.text('$n en route'), findsOneWidget);
+        expect(
+          lineTitle(tester),
+          n == 0 ? 'Aucun colis' : startsWith('$n colis'),
+        );
+        if (n > 0) expect(lineSubtitle(tester), '$n colis en route');
+        // Trois avatars au plus.
+        expect(
+          find.byWidgetPredicate(
+            (w) =>
+                w.key is ValueKey<String> &&
+                (w.key! as ValueKey<String>).value.startsWith(
+                  'trip-parcels-line-face-',
+                ),
+          ),
+          findsNWidgets(n > 3 ? 3 : n),
+        );
         expect(find.byType(TripParcelRow), findsNothing);
         expect(tester.takeException(), isNull);
       });
@@ -523,6 +571,7 @@ void main() {
 
   group('colis en route (résumé servi par le détail)', () {
     // Annulé après remise : le gain reste atteignable (colis en retour).
+    // Le gain est au titre de la ligne Colis.
     const withActivity = {
       'ACTIVE',
       'FULL',
@@ -534,15 +583,19 @@ void main() {
     for (final status in _statuses) {
       final has = withActivity.contains(status);
       testWidgets(
-        '$status : case Gain ${has ? 'avec le montant' : 'absente'}',
+        '$status : gain ${has ? 'au titre de la ligne Colis' : 'absent'}',
         (tester) async {
           await pump(
             tester,
             trip: _trip(status: status, summary: _summary),
             bids: _parcels(1),
           );
-          expect(shown(key('trip-activity-gain')), has);
-          if (has) expect(cellValue(tester, 'gain'), contains('21'));
+          expect(shown(parcelsLine()), has);
+          if (has) {
+            expect(lineTitle(tester), startsWith('1 colis · '));
+            expect(lineTitle(tester), contains('21'));
+          }
+          expect(key('trip-activity-gain'), findsNothing);
           // « Arrivé à destination » est au pied (écran), jamais dans le corps.
           expect(find.text('Arrivé à destination'), findsNothing);
         },
@@ -551,22 +604,22 @@ void main() {
   });
 
   group('trajet annulé (colis remis en procédure de retour)', () {
-    testWidgets('deux colis remis : case Colis, son sheet et « Ouvrir la '
-        'liste des colis » ; ni Demandes ni audience', (tester) async {
+    testWidgets('deux colis remis : ligne Colis, son sheet et « Ouvrir la '
+        'liste des colis » ; ni demandes ni audience', (tester) async {
       final pushed = await pump(
         tester,
         trip: _trip(status: 'CANCELLED'),
         bids: _parcels(2, 'HANDED_OVER'),
       );
-      expect(shown(activitySection()), isTrue);
-      expect(cellValue(tester, 'parcels'), '2');
-      expect(key('trip-activity-requests'), findsNothing);
       // Colis sans net connu ni résumé du détail : pas de gain à montrer.
-      expect(key('trip-activity-gain'), findsNothing);
-      expect(key('trip-audience-card'), findsNothing);
+      expect(lineTitle(tester), '2 colis');
+      expect(lineSubtitle(tester), '2 colis en route');
+      expectNoActivity();
+      verifyNever(() => audience.load(any()));
 
-      await tester.tap(key('trip-activity-parcels'));
+      await tester.tap(parcelsLine());
       await settle(tester);
+      expect(key('trip-activity-parcels-gain'), findsNothing);
       expect(key('trip-activity-parcel-p1'), findsOneWidget);
       expect(key('trip-activity-parcel-p2'), findsOneWidget);
       await tester.tap(key('trip-activity-parcels-open-list'));
@@ -574,25 +627,25 @@ void main() {
       expect(pushed, ['/announcements/trip-1/bids']);
     });
 
-    testWidgets('sans colis : aucune ligne d\'activité', (tester) async {
+    testWidgets('sans colis : pas de ligne Colis', (tester) async {
       await pump(tester, trip: _trip(status: 'CANCELLED'));
-      expect(activitySection(), findsNothing);
-      expect(key('trip-activity-row'), findsNothing);
+      expect(parcelsLine(), findsNothing);
+      expectNoActivity();
     });
 
-    testWidgets('résumé servi par le détail : case Gain et son sheet', (
-      tester,
-    ) async {
+    testWidgets('résumé servi par le détail : gain au titre, détaillé en '
+        'tête du sheet Colis', (tester) async {
       await pump(
         tester,
         trip: _trip(status: 'CANCELLED', summary: _summary),
         bids: _parcels(1, 'HANDED_OVER'),
       );
-      expect(cellValue(tester, 'gain'), contains('21'));
-      await tester.tap(key('trip-activity-gain'));
+      expect(lineTitle(tester), contains('21'));
+      await tester.tap(parcelsLine());
       await settle(tester);
-      expect(key('trip-activity-gain-content'), findsOneWidget);
+      expect(key('trip-activity-parcels-gain'), findsOneWidget);
       expect(key('trip-gain-total'), findsOneWidget);
+      expect(key('trip-activity-parcel-p1'), findsOneWidget);
     });
   });
 
@@ -741,8 +794,8 @@ void main() {
     expect(key('trip-status-card-removedByAdmin'), findsOneWidget);
     expect(key('trip-status-card-support'), findsOneWidget);
     expect(todoSection(), findsNothing);
-    expect(activitySection(), findsNothing);
-    expect(key('trip-audience-card'), findsNothing);
+    expect(parcelsLine(), findsNothing);
+    expectNoActivity();
   });
 
   testWidgets('ordre des sections (tableau de bord)', (tester) async {
@@ -757,9 +810,7 @@ void main() {
       todoSection(),
       directCard(),
       key('trip-todo-rows'),
-      activitySection(),
-      key('trip-activity-row'),
-      key('trip-audience-card'),
+      parcelsLine(),
       find.text('Votre trajet'),
     ];
     final ys = [for (final f in order) tester.getTopLeft(f.first).dy];
@@ -781,9 +832,11 @@ void main() {
     expect(key('trip-status-card-full'), findsOneWidget);
     expect(todoSection(), findsNothing);
     expect(directCard(), findsNothing);
-    expect(activitySection(), findsNothing);
-    expect(key('trip-audience-card'), findsNothing);
+    expect(parcelsLine(), findsNothing);
+    expectNoActivity();
     expect(find.text('Votre trajet'), findsNothing);
+    // Un visiteur ne déclenche jamais la route d'audience (404 côté back).
+    verifyNever(() => audience.load(any()));
   });
 
   testWidgets('mesure de « À traiter » : carte directe et ligne carte, '
@@ -816,11 +869,10 @@ void main() {
   });
 
   group('répondre depuis l\'écran', () {
-    testWidgets('accepter : la carte passe à la suivante, la case Demandes '
-        'baisse, l\'écran est relu en silence', (tester) async {
+    testWidgets('accepter : la carte passe à la suivante, l\'écran est relu '
+        'en silence', (tester) async {
       await pump(tester, trip: _trip(), bids: _requests(3));
       expect(find.text('Demande 1 sur 3'), findsOneWidget);
-      expect(cellValue(tester, 'requests'), '3');
 
       await tester.tap(key('trip-request-accept-r1'));
       await tester.pump();
@@ -834,7 +886,6 @@ void main() {
       await tester.pump();
       expect(find.text('Demande 1 sur 2'), findsOneWidget);
       expect(key('trip-direct-request-r2'), findsOneWidget);
-      expect(cellValue(tester, 'requests'), '2');
       expect((h.screenEvents.single as BidListRequested).silent, isTrue);
       await tester.pump(const Duration(seconds: 5));
     });
@@ -850,15 +901,16 @@ void main() {
       await tester.pump();
       expect(directCard(), findsNothing);
       expect(todoSection(), findsNothing);
-      expect(cellValue(tester, 'requests'), '0');
+      // Pas encore relue : la demande n'est pas encore un colis.
+      expect(lineTitle(tester), 'Aucun colis');
       await tester.pump(const Duration(seconds: 5));
     });
 
-    testWidgets('demande acceptée puis relue acceptée : la case Colis passe '
+    testWidgets('demande acceptée puis relue acceptée : la ligne Colis passe '
         'de 2 à 3 et colle au sheet Colis', (tester) async {
       final accepted = [_bid('a1', 'ACCEPTED'), _bid('a2', 'ACCEPTED')];
       await pump(tester, trip: _trip(), bids: [...accepted, ..._requests(2)]);
-      expect(cellValue(tester, 'parcels'), '2');
+      expect(lineTitle(tester), '2 colis');
 
       await tester.tap(key('trip-request-accept-r1'));
       await tester.pump();
@@ -867,18 +919,18 @@ void main() {
       await tester.pump();
       await tester.pump();
       // Relecture pas revenue : r1 n'est pas encore un colis.
-      expect(cellValue(tester, 'parcels'), '2');
+      expect(lineTitle(tester), '2 colis');
 
       h.screenStates.add(
         BidListLoaded([...accepted, _bid('r1', 'ACCEPTED'), _requests(2).last]),
       );
       await tester.pump();
       await tester.pump();
-      expect(cellValue(tester, 'parcels'), '3');
-      expect(find.text('3 à récupérer'), findsOneWidget);
-      expect(cellValue(tester, 'requests'), '1');
+      expect(lineTitle(tester), '3 colis');
+      expect(lineSubtitle(tester), '3 à récupérer');
+      expect(find.text('Demande 1 sur 1'), findsOneWidget);
 
-      await tester.tap(key('trip-activity-parcels'));
+      await tester.tap(parcelsLine());
       await settle(tester);
       expect(key('trip-activity-parcel-r1'), findsOneWidget);
       expect(find.text('Tous · 3'), findsNothing);
@@ -925,7 +977,7 @@ void main() {
       for (final id in ['r1', 'r2', 'r3']) {
         expect(key('trip-activity-request-$id'), findsOneWidget);
       }
-      // Distinct de la case Demandes (`source: tile`).
+      // Le lien est le seul chemin vers ce sheet (`source: card`).
       verify(
         () => h.backend.capture(AnalyticsEvents.bidDetailTileOpened, {
           'tile': 'requests',
@@ -942,33 +994,36 @@ void main() {
       );
     });
 
-    for (final (activity, content) in const [
-      ('requests', 'trip-activity-requests-content'),
-      ('parcels', 'trip-activity-parcels-content'),
-      ('gain', 'trip-activity-gain-content'),
-    ]) {
-      testWidgets('case $activity : son sheet, une seule fois au double '
-          'appui', (tester) async {
-        await pump(
-          tester,
-          trip: _trip(summary: _summary),
-          bids: [..._requests(1), ..._parcels(2, 'HANDED_OVER')],
-        );
-        await tester.tap(key('trip-activity-$activity'));
-        await tester.tap(key('trip-activity-$activity'), warnIfMissed: false);
-        await settle(tester);
-        expect(key(content), findsOneWidget);
-        verify(
-          () => h.backend.capture(AnalyticsEvents.bidDetailTileOpened, {
-            'tile': activity,
-            'role': 'trip_owner',
-            'source': 'tile',
-          }),
-        ).called(1);
-      });
-    }
+    testWidgets('ligne Colis : son sheet, une seule fois au double appui, '
+        'mesuré parcels / tile', (tester) async {
+      await pump(
+        tester,
+        trip: _trip(summary: _summary),
+        bids: [..._requests(1), ..._parcels(2, 'HANDED_OVER')],
+      );
+      await tester.tap(parcelsLine());
+      await tester.tap(parcelsLine(), warnIfMissed: false);
+      await settle(tester);
+      expect(key('trip-activity-parcels-content'), findsOneWidget);
+      // Le gain est en tête du sheet.
+      expect(key('trip-activity-parcels-gain'), findsOneWidget);
+      verify(
+        () => h.backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'parcels',
+          'role': 'trip_owner',
+          'source': 'tile',
+        }),
+      ).called(1);
+      // Plus de sheet Gain.
+      verifyNever(
+        () => h.backend.capture(
+          AnalyticsEvents.bidDetailTileOpened,
+          any(that: containsPair('tile', 'gain')),
+        ),
+      );
+    });
 
-    testWidgets('case Colis : tous les colis, une ligne vers la fiche', (
+    testWidgets('ligne Colis : tous les colis, une ligne vers la fiche', (
       tester,
     ) async {
       final pushed = await pump(
@@ -977,7 +1032,7 @@ void main() {
         bids: _parcels(10),
         size: const Size(400, 2400),
       );
-      await tester.tap(key('trip-activity-parcels'));
+      await tester.tap(parcelsLine());
       await settle(tester);
       expect(find.byType(TripParcelRow), findsNWidgets(10));
       await tester.tap(key('trip-activity-parcel-p3'));
@@ -1007,6 +1062,52 @@ void main() {
       expect(key('trip-todo-depart-content'), findsOneWidget);
     });
 
+    testWidgets('tuile « Affiche » : audience chargée en sous-titre, et la '
+        'ligne complète dans son sheet', (tester) async {
+      await pump(tester, trip: _trip());
+      await tester.tap(key('trip-tile-poster'));
+      await settle(tester);
+      final content = key('trip-tile-poster-content');
+      expect(content, findsOneWidget);
+      final line = find.descendant(
+        of: content,
+        matching: key('trip-audience-card'),
+      );
+      expect(line, findsOneWidget);
+      expect(
+        find.descendant(
+          of: line,
+          matching: find.text(
+            '12 personnes ont vu votre trajet · 3 vues de votre affiche '
+            'partagée',
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(key('trip-tile-poster-button'), findsOneWidget);
+    });
+
+    for (final (name, state) in const [
+      ('en chargement', TripAudienceState.loading()),
+      ('en échec', TripAudienceState.hidden()),
+    ]) {
+      testWidgets('tuile « Affiche », audience $name : texte habituel, rien '
+          'dans le sheet', (tester) async {
+        await pump(tester, trip: _trip(), audienceState: state);
+        expect(
+          find.descendant(
+            of: key('trip-tile-poster'),
+            matching: find.text('Partager le trajet'),
+          ),
+          findsOneWidget,
+        );
+        await tester.tap(key('trip-tile-poster'));
+        await settle(tester);
+        expect(key('trip-tile-poster-content'), findsOneWidget);
+        expect(key('trip-audience-card'), findsNothing);
+      });
+    }
+
     testWidgets('tuile « Itinéraire et lieux » : sheet de lecture', (
       tester,
     ) async {
@@ -1028,8 +1129,16 @@ void main() {
     expect(find.text('To do'), findsOneWidget);
     expect(find.text('Request 1 of 3'), findsOneWidget);
     expect(find.text('See all 3 requests'), findsOneWidget);
-    expect(find.text('Trip activity'), findsOneWidget);
-    expect(find.text('to review'), findsOneWidget);
+    expect(find.text('Trip activity'), findsNothing);
+    expect(find.text('No parcels'), findsOneWidget);
+    expect(find.text('Accepted parcels will appear here.'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: key('trip-tile-poster'),
+        matching: find.text('12 people have seen your trip'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Your trip'), findsOneWidget);
   });
 
@@ -1056,7 +1165,13 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         expect(directCard(), findsOneWidget);
-        expect(key('trip-activity-row'), findsOneWidget);
+        expect(parcelsLine(), findsOneWidget);
+        expect(
+          lineTitle(tester),
+          startsWith(
+            locale.languageCode == 'fr' ? '10 colis · ' : '10 parcels · ',
+          ),
+        );
       });
     }
   });

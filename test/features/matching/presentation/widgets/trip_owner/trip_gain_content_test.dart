@@ -1,10 +1,10 @@
-// Détail du gain du trajet (`TripGainContent`), contenu du sheet « Gain » de
-// l'activité du trajet : lignes « En ligne », « En espèces » et « Total
+// Détail du gain du trajet (`TripGainContent`), bloc « Gain estimé » en tête
+// du sheet « Colis » : lignes « En ligne », « En espèces » et « Total
 // estimé », chacune seulement si elle est positive, notes de versement et
 // d'argent remis en main propre (commission non déduite), devise du trajet,
-// FR / EN, 360 dp × 1,3. Le titre du sheet et quand la case Gain s'affiche
-// sont testés par `trip_activity_sheets_test.dart` et
-// `trip_activity_row_test.dart` ; le calcul par `trip_gain_test.dart`.
+// FR / EN, 360 dp × 1,3. Le titre du bloc et quand il s'affiche sont testés
+// par `trip_activity_sheets_test.dart`, le gain au titre de la ligne Colis
+// par `trip_parcels_line_test.dart` ; le calcul par `trip_gain_test.dart`.
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_gain_content.dart';

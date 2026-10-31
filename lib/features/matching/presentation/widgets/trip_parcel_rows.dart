@@ -8,21 +8,42 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 // Pièces des colis du trajet vu par son voyageur, reprises par le sheet
-// « Colis » de l'activité du trajet (`openTripActivitySheet`) et le compteur
-// Colis : colis embarqués, résumé par étape du cycle, contenu et ligne d'un
-// colis, ordre et libellés des statuts.
+// « Colis » (`openTripActivitySheet`) et la ligne Colis de l'écran
+// (`TripParcelsLine`) : colis embarqués, résumé par étape du cycle, contenu
+// et ligne d'un colis, ordre et libellés des statuts.
 
 /// Colis embarqués du trajet parmi [bids] (onglet « Acceptées » de la liste
-/// des colis, [isAcceptedTabBid]) : total et libellé du compteur Colis de
-/// l'activité du trajet, contenu du sheet « Colis ». Une seule source pour
-/// les deux : la case et son sheet ne se contredisent jamais. `null` tant que
+/// des colis, [isAcceptedTabBid]) : nombre, avatars et résumé de la ligne
+/// Colis de l'écran, contenu du sheet « Colis ». Une seule source pour les
+/// deux : la ligne et son sheet ne se contredisent jamais. `null` tant que
 /// la liste n'a pas répondu.
 List<BidModel>? tripEmbarkedParcels(List<BidModel>? bids) =>
     bids?.where(isAcceptedTabBid).toList(growable: false);
 
+/// Statuts où le colis attend encore un geste du voyageur : à récupérer
+/// (`ACCEPTED`), en route (`HANDED_OVER`, `IN_TRANSIT`), à remettre
+/// (`ARRIVED`). Ce sont les segments « à récupérer », « en route » et
+/// « arrivés » du résumé ([tripParcelsCounts]) ; un colis livré, clôturé ou
+/// dont le paiement est attendu (`AWAITING_PAYMENT`, rien à aller chercher)
+/// ne demande rien au voyageur.
+const _kAwaitingTravelerStatuses = {
+  'ACCEPTED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'ARRIVED',
+};
+
+/// [embarked] avec d'abord les colis qui attendent un geste du voyageur
+/// ([_kAwaitingTravelerStatuses]), puis les autres ; l'ordre reçu est gardé
+/// à l'intérieur de chaque groupe (tri stable). Ordre des avatars de la
+/// ligne Colis de l'écran.
+List<BidModel> tripParcelsActionFirst(List<BidModel> embarked) => [
+  ...embarked.where((b) => _kAwaitingTravelerStatuses.contains(b.status)),
+  ...embarked.where((b) => !_kAwaitingTravelerStatuses.contains(b.status)),
+];
+
 /// Répartition des colis embarqués par étape du cycle réel, pour le résumé
-/// du sheet « Colis » et le compteur Colis de l'activité du trajet
-/// (FLUTTER-GS).
+/// du sheet « Colis » et la ligne Colis de l'écran (FLUTTER-GS).
 ///
 /// - en route : remis au voyageur ou en transit (`HANDED_OVER`, `IN_TRANSIT`) ;
 /// - à récupérer : acceptés, pas encore remis (`ACCEPTED`). Un
@@ -61,9 +82,27 @@ TripParcelsCounts tripParcelsCounts(Iterable<BidModel> bids) {
   );
 }
 
+/// Segments non vides du résumé des colis [c], dans l'ordre du cycle : le
+/// nombre et son libellé (« colis en route », « à récupérer », « arrivés »,
+/// « livrés »). Repris par le résumé du sheet « Colis »
+/// ([TripParcelsSummary]) et le sous-titre de la ligne Colis de l'écran.
+List<(int, String)> tripParcelsSummarySegments(
+  AppLocalizations l,
+  TripParcelsCounts c,
+) => [
+  if (c.inTransit > 0)
+    (c.inTransit, l.tripParcelsSummaryInTransit(c.inTransit)),
+  if (c.toCollect > 0)
+    (c.toCollect, l.tripParcelsSummaryToCollect(c.toCollect)),
+  if (c.arrived > 0) (c.arrived, l.tripParcelsSummaryArrived(c.arrived)),
+  if (c.delivered > 0)
+    (c.delivered, l.tripParcelsSummaryDelivered(c.delivered)),
+];
+
 /// Ligne de résumé en tête du sheet « Colis » : « 3 colis en route
-/// · 1 à récupérer · 2 livrés ». Segments vides omis ; rien si tous le sont.
-/// Chiffres tabulaires en gras, lue d'un seul tenant par le lecteur d'écran.
+/// · 1 à récupérer · 2 livrés » ([tripParcelsSummarySegments]). Segments
+/// vides omis ; rien si tous le sont. Chiffres tabulaires en gras, lue d'un
+/// seul tenant par le lecteur d'écran.
 class TripParcelsSummary extends StatelessWidget {
   const TripParcelsSummary({super.key, required this.bids});
 
@@ -74,16 +113,7 @@ class TripParcelsSummary extends StatelessWidget {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final c = tripParcelsCounts(bids);
-    final segments = <(int, String)>[
-      if (c.inTransit > 0)
-        (c.inTransit, l.tripParcelsSummaryInTransit(c.inTransit)),
-      if (c.toCollect > 0)
-        (c.toCollect, l.tripParcelsSummaryToCollect(c.toCollect)),
-      if (c.arrived > 0) (c.arrived, l.tripParcelsSummaryArrived(c.arrived)),
-      if (c.delivered > 0)
-        (c.delivered, l.tripParcelsSummaryDelivered(c.delivered)),
-    ];
+    final segments = tripParcelsSummarySegments(l, tripParcelsCounts(bids));
     if (segments.isEmpty) {
       return const SizedBox.shrink();
     }

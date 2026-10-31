@@ -42,7 +42,7 @@ import 'package:go_router/go_router.dart';
 /// Lignes concernées ([TripTodoRow], rendues par `TripTodoRows`) : « Je
 /// pars » et « Ajouter la carte ». Les demandes à traiter n'ont pas de
 /// ligne : la carte de réponse directe (`TripDirectRequestCard`) et le sheet
-/// d'activité (`openTripActivitySheet`) les portent.
+/// des demandes (`openTripActivitySheet`) les portent.
 ///
 /// Le sheet se ferme seul dès que les données relues ne justifient plus la
 /// tuile de [row] ([tripTodoTilesFor]) : départ confirmé, carte ajoutée. Une

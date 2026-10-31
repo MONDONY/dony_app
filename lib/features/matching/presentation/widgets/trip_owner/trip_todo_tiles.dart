@@ -32,8 +32,8 @@ enum TripTodoTile {
 
 /// Place des demandes des expéditeurs selon le statut du trajet. Source
 /// unique de la tuile « À traiter » [TripTodoTile.requests] (carte de
-/// réponse directe) et du compteur « Demandes » de l'activité du trajet
-/// (`tripActivityFor`), absents tous deux d'un trajet terminé.
+/// réponse directe) et du sheet des demandes (`tripActivityShown`), absents
+/// tous deux d'un trajet terminé.
 enum TripRequestsPhase {
   /// ACTIVE : le trajet reçoit des demandes.
   open,
@@ -62,8 +62,8 @@ TripRequestsPhase? tripRequestsPhaseFor(String status) => switch (status) {
   _ => null,
 };
 
-/// Les demandes du trajet ont-elles leur place sur l'écran (compteur
-/// « Demandes » de l'activité du trajet) ? Toujours pour un trajet publié ou complet, même sans
+/// Les demandes du trajet ont-elles leur place sur l'écran (sheet des
+/// demandes, ouvert par « Voir les N demandes ») ? Toujours pour un trajet publié ou complet, même sans
 /// demande (PROD-1N : une entrée absente ou éteinte laissait croire à une
 /// panne) ; pour un trajet parti, seulement s'il reste des demandes à
 /// traiter ([tripPendingRequestCount] de [bids]) : le back les expire au

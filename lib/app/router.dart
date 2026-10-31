@@ -1421,7 +1421,7 @@ final GoRouter appRouter = GoRouter(
               create: (_) => getIt<BidBloc>()..add(BidListRequested(id)),
             ),
             BlocProvider(create: (_) => getIt<CancellationBloc>()),
-            // Chargé par TripAudienceLine, monté pour le seul propriétaire.
+            // Chargé par TripAudienceLoader (corps du trajet), pour le seul propriétaire.
             BlocProvider(create: (_) => getIt<TripAudienceCubit>()),
             // Étapes du voyage (FLUTTER-4D) : étapes du sheet « Itinéraire et
             // lieux » et proposition d'annuler les étapes suivantes. Créé à

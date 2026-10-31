@@ -8989,7 +8989,7 @@
   },
   "tripAudienceViewers": "{count, plural, =0{Personne n'a encore vu votre trajet} =1{{count} personne a vu votre trajet} other{{count} personnes ont vu votre trajet}}",
   "@tripAudienceViewers": {
-    "description": "Ligne d'audience de l'écran propriétaire d'un trajet, sous « Activité du trajet » : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_line.dart)",
+    "description": "Audience du trajet vue par son voyageur : personnes distinctes qui l'ont ouvert dans l'app. Sous-titre de la tuile « Affiche » et ligne d'audience de son sheet (trip_tiles.dart, trip_audience_line.dart)",
     "placeholders": {
       "count": {
         "type": "int"
@@ -8998,7 +8998,7 @@
   },
   "tripAudiencePosterViews": "{count, plural, =1{{count} vue de votre affiche partagée} other{{count} vues de votre affiche partagée}}",
   "@tripAudiencePosterViews": {
-    "description": "Ligne d'audience : consultations de la page web publique de l'affiche du trajet (trip_audience_line.dart)",
+    "description": "Ligne d'audience du sheet de la tuile « Affiche » : consultations de la page web publique de l'affiche du trajet ; sous-titre de la tuile quand personne ne l'a vu dans l'app (trip_audience_line.dart)",
     "placeholders": {
       "count": {
         "type": "int"
@@ -9140,7 +9140,7 @@
   },
   "tripOwnerParcelsEmptyDescription": "Les colis acceptés apparaîtront ici.",
   "@tripOwnerParcelsEmptyDescription": {
-    "description": "Description de l'état vide du sheet « Colis » de l'activité du trajet (trip_activity_sheets.dart)."
+    "description": "État vide du sheet « Colis » de l'écran du trajet, et sous-titre de la ligne Colis du corps tant qu'aucun colis n'est embarqué (trip_activity_sheets.dart, trip_parcels_line.dart)."
   },
   "tripOwnerParcelsStatusAccepted": "Accepté",
   "@tripOwnerParcelsStatusAccepted": {
@@ -20171,7 +20171,7 @@
   "requestPublicSenderRowSemantics": "Expéditeur : {name}. Voir son profil",
   "@requestPublicSenderRowSemantics": {"description": "Lecture d'écran de la ligne expéditeur en tête de la fiche publique d'une demande (request_sender_row.dart, FLUTTER-GF).", "placeholders": {"name": {"type": "String"}}},
   "tripParcelsSummaryInTransit": "{count, plural, =1{colis en route} other{colis en route}}",
-  "@tripParcelsSummaryInTransit": {"description": "Segment du résumé de la section Colis du trajet (trip_parcel_rows.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.", "placeholders": {"count": {"type": "int"}}},
+  "@tripParcelsSummaryInTransit": {"description": "Segment du résumé des colis du trajet (sheet « Colis » et sous-titre de la ligne Colis de l'écran, trip_parcel_rows.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.", "placeholders": {"count": {"type": "int"}}},
   "tripParcelsSummaryToCollect": "{count, plural, =1{à récupérer} other{à récupérer}}",
   "@tripParcelsSummaryToCollect": {"description": "Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis acceptés pas encore remis au voyageur (ACCEPTED). Le chiffre est affiché à part.", "placeholders": {"count": {"type": "int"}}},
   "tripParcelsSummaryArrived": "{count, plural, =1{arrivé} other{arrivés}}",
@@ -22704,9 +22704,9 @@
   "trackingConsentSettingsOpenSystemSnackbar": "La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.",
   "@trackingConsentSettingsOpenSystemSnackbar": {"description": "Message avant d'ouvrir les réglages système quand l'autorisation est refusée définitivement."},
   "tripSummaryEarningsLabel": "Gain estimé",
-  "@tripSummaryEarningsLabel": {"description": "Gain estimé du trajet du voyageur : titre du sheet « Gain » de l'activité du trajet et nom de la case pour le lecteur d'écran (trip_activity_sheets.dart, trip_activity_row.dart)."},
+  "@tripSummaryEarningsLabel": {"description": "Gain estimé du trajet du voyageur : titre du bloc de gain en tête du sheet « Colis » de l'écran du trajet (trip_activity_sheets.dart)."},
   "tripSummaryEarningsNote": "Versé après la livraison de chaque colis.",
-  "@tripSummaryEarningsNote": {"description": "Sheet « Gain » de l'activité du trajet : note sous la ligne « En ligne », le net des colis payés dans l'app est versé après la livraison de chacun (trip_gain_content.dart)."},
+  "@tripSummaryEarningsNote": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : note sous la ligne « En ligne », le net des colis payés dans l'app est versé après la livraison de chacun (trip_gain_content.dart)."},
   "tripDepartButton": "Je pars",
   "@tripDepartButton": {"description": "Écran du trajet voyageur : confirme le départ (position approximative facultative)."},
   "tripDepartConfirmedSnackbar": "C'est noté, bon voyage !",
@@ -22855,7 +22855,7 @@
   "tripTileConditionsRefused": "{count, plural, =1{1 type refusé} other{{count} types refusés}}",
   "@tripTileConditionsRefused": {"description": "Résumé de la tuile « Conditions » : nombre de types de contenu refusés par le voyageur (trip_tiles.dart).", "placeholders": {"count": {"type": "int"}}},
   "tripTilePosterSubtitle": "Partager le trajet",
-  "@tripTilePosterSubtitle": {"description": "Résumé de la tuile « Affiche » de l'écran du trajet (propriétaire) (trip_tiles.dart)."},
+  "@tripTilePosterSubtitle": {"description": "Résumé de la tuile « Affiche » de l'écran du trajet (propriétaire), tant que l'audience du trajet n'est pas chargée ; ensuite « N personnes ont vu votre trajet » (trip_tiles.dart)."},
   "tripTilePosterIntro": "Votre trajet en image, avec un lien et une légende prêts à envoyer sur WhatsApp ou les réseaux sociaux.",
   "@tripTilePosterIntro": {"description": "Sheet de la tuile « Affiche » : ce que contient l'affiche partageable du trajet, avant le bouton « Partager l'affiche » (trip_tile_sheets.dart)."},
   "tripTileArrivalEmpty": "Aucune instruction de retrait pour l'instant. Dites aux destinataires où et quand récupérer leur colis.",
@@ -22868,8 +22868,6 @@
   "@tripTileArrivalEditButton": {"description": "Sheet de la tuile « Arrivée » de l'écran du trajet (propriétaire) : bouton du pied qui ouvre l'édition des instructions de retrait, libellé court pour tenir sur une ligne à 360 dp (trip_tile_sheets.dart)."},
   "tripSectionYourTrip": "Votre trajet",
   "@tripSectionYourTrip": {"description": "Écran du trajet vu par son voyageur : titre de la grille de tuiles (itinéraire et lieux, paiements, conditions, affiche, arrivée), chacune ouvrant un bottom sheet (trip_owner_body.dart)."},
-  "tripSectionActivity": "Activité du trajet",
-  "@tripSectionActivity": {"description": "Écran du trajet vu par son voyageur : titre de la section des compteurs Demandes, Colis et Gain (chacun ouvrant un bottom sheet) et de la ligne d'audience, sous « À traiter » ; absente d'un brouillon, d'un trajet annulé ou retiré par l'équipe (trip_owner_body.dart)."},
   "tripOwnerMenuTooltip": "Options du trajet",
   "@tripOwnerMenuTooltip": {"description": "Écran du trajet (propriétaire) : libellé d'accessibilité et info-bulle du bouton ⋮ de la barre d'application, qui ouvre le menu des actions du trajet (trip_owner_options_sheet.dart)."},
   "tripMenuEditSubtitle": "Villes, dates, kilos, prix et conditions",
@@ -22888,34 +22886,22 @@
   "@tripDirectRequestLabel": {"description": "Écran du trajet vu par son voyageur, « À traiter » : titre de la carte de réponse directe, la première demande à traiter sur leur nombre total (trip_direct_request_card.dart).", "placeholders": {"count": {"type": "int"}}},
   "tripDirectRequestSeeAll": "Voir les {count} demandes",
   "@tripDirectRequestSeeAll": {"description": "Carte de réponse directe de l'écran du trajet : lien qui ouvre le sheet de toutes les demandes à traiter, affiché dès deux demandes (trip_direct_request_card.dart).", "placeholders": {"count": {"type": "int"}}},
-  "tripActivityRequestsPending": "à traiter",
-  "@tripActivityRequestsPending": {"description": "Compteur « Demandes » de l'activité du trajet : libellé sous le nombre de demandes qui attendent la réponse du voyageur (trip_activity_row.dart)."},
-  "tripActivityRequestsNone": "demande",
-  "@tripActivityRequestsNone": {"description": "Compteur « Demandes » de l'activité du trajet : libellé sous « 0 » quand aucune demande n'attend de réponse (trip_activity_row.dart)."},
-  "tripActivityParcelsInTransit": "{count} en route",
-  "@tripActivityParcelsInTransit": {"description": "Compteur « Colis » de l'activité du trajet : libellé sous le total des colis embarqués, nombre de colis remis ou en transit (HANDED_OVER, IN_TRANSIT) (trip_activity_row.dart).", "placeholders": {"count": {"type": "int"}}},
-  "tripActivityParcelsToCollect": "{count} à récupérer",
-  "@tripActivityParcelsToCollect": {"description": "Compteur « Colis » de l'activité du trajet : libellé sous le total, nombre de colis acceptés pas encore remis (ACCEPTED), quand aucun n'est en route (trip_activity_row.dart).", "placeholders": {"count": {"type": "int"}}},
-  "tripActivityParcelsLabel": "{count, plural, =1{colis} other{colis}}",
-  "@tripActivityParcelsLabel": {"description": "Compteur « Colis » de l'activité du trajet : libellé sous le total des colis embarqués quand aucun n'est en route ni à récupérer (trip_activity_row.dart).", "placeholders": {"count": {"type": "int"}}},
-  "tripActivityGainLabel": "estimé",
-  "@tripActivityGainLabel": {"description": "Case « Gain » de l'activité du trajet : libellé sous le gain estimé des colis récupérés, espèces comprises (trip_activity_row.dart)."},
-  "tripActivityCellSemantics": "{title} : {value}",
-  "@tripActivityCellSemantics": {"description": "Lecteur d'écran, compteur de l'activité du trajet : nom du compteur (Demandes, Colis, Gain estimé) puis sa valeur et son libellé (trip_activity_row.dart).", "placeholders": {"title": {"type": "String"}, "value": {"type": "String"}}},
+  "tripParcelsLineTitle": "{count, plural, =0{Aucun colis} =1{1 colis} other{{count} colis}}",
+  "@tripParcelsLineTitle": {"description": "Écran du trajet vu par son voyageur : titre en gras de la ligne Colis (sous « À traiter »), nombre de colis embarqués ; suivi de « · gain estimé » quand il y a un gain. Sans colis : « Aucun colis » (trip_parcels_line.dart).", "placeholders": {"count": {"type": "int"}}},
   "tripActivityRequestsEmpty": "Aucune demande à traiter pour le moment.",
-  "@tripActivityRequestsEmpty": {"description": "Sheet des demandes de l'activité du trajet : plus aucune demande n'attend de réponse (trip_activity_sheets.dart)."},
+  "@tripActivityRequestsEmpty": {"description": "Sheet des demandes de l'écran du trajet (lien « Voir les N demandes ») : plus aucune demande n'attend de réponse (trip_activity_sheets.dart)."},
   "tripActivityParcelsOpenList": "Ouvrir la liste des colis",
-  "@tripActivityParcelsOpenList": {"description": "Sheet « Colis » de l'activité du trajet : bouton du pied qui ouvre la liste des colis du trajet (/announcements/:id/bids) (trip_activity_sheets.dart)."},
+  "@tripActivityParcelsOpenList": {"description": "Sheet « Colis » de l'écran du trajet : bouton du pied qui ouvre la liste des colis du trajet (/announcements/:id/bids) (trip_activity_sheets.dart)."},
   "tripGainOnlineLabel": "En ligne",
-  "@tripGainOnlineLabel": {"description": "Sheet « Gain » de l'activité du trajet : ligne du net des colis récupérés payés dans l'app (carte, mobile money) (trip_gain_content.dart)."},
+  "@tripGainOnlineLabel": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : ligne du net des colis récupérés payés dans l'app (carte, mobile money) (trip_gain_content.dart)."},
   "tripGainCashLabel": "En espèces",
-  "@tripGainCashLabel": {"description": "Sheet « Gain » de l'activité du trajet : ligne du net des colis récupérés payés en espèces (trip_gain_content.dart)."},
+  "@tripGainCashLabel": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : ligne du net des colis récupérés payés en espèces (trip_gain_content.dart)."},
   "tripGainCashNote": "À recevoir de l'expéditeur en main propre.",
-  "@tripGainCashNote": {"description": "Sheet « Gain » de l'activité du trajet : note sous la ligne « En espèces » quand le back ne sert pas le montant remis distinct du net (trip_gain_content.dart)."},
+  "@tripGainCashNote": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : note sous la ligne « En espèces » quand le back ne sert pas le montant remis distinct du net (trip_gain_content.dart)."},
   "tripGainCashGrossNote": "{gross} à recevoir de l'expéditeur en main propre, dont {commission} de frais de service avancés sur votre solde Yadony.",
-  "@tripGainCashGrossNote": {"description": "Sheet « Gain » de l'activité du trajet : note sous la ligne « En espèces ». L'expéditeur remet le brut, la commission n'en est pas déduite : le voyageur l'a avancée à part (FLUTTER-R8, même logique que traveler_gain_card.dart) (trip_gain_content.dart).", "placeholders": {"gross": {"type": "String"}, "commission": {"type": "String"}}},
+  "@tripGainCashGrossNote": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : note sous la ligne « En espèces ». L'expéditeur remet le brut, la commission n'en est pas déduite : le voyageur l'a avancée à part (FLUTTER-R8, même logique que traveler_gain_card.dart) (trip_gain_content.dart).", "placeholders": {"gross": {"type": "String"}, "commission": {"type": "String"}}},
   "tripGainTotalLabel": "Total estimé",
-  "@tripGainTotalLabel": {"description": "Sheet « Gain » de l'activité du trajet : ligne du total estimé, en ligne plus espèces (trip_gain_content.dart)."},
+  "@tripGainTotalLabel": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : ligne du total estimé, en ligne plus espèces (trip_gain_content.dart)."},
   "tripOwnerParcelsFilterAll": "Tous",
   "@tripOwnerParcelsFilterAll": {"description": "Puce de filtre « Tous » du sheet « Colis » de l'activité du trajet, avec le total des colis embarqués (trip_activity_sheets.dart)."}
 }

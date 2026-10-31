@@ -1,13 +1,16 @@
 // « Votre trajet » de l'écran du trajet (vue du voyageur propriétaire) :
 // fonction pure des tuiles pour chaque statut du trajet, avec ou sans
 // adresses, date limite, moyens de paiement, conditions, instructions de
-// retrait et colis arrivés ; icônes, titres et résumés FR / EN.
+// retrait et colis arrivés ; icônes, titres et résumés FR / EN (audience
+// chargée en sous-titre de la tuile « Affiche »).
 import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_tiles.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -488,6 +491,34 @@ void main() {
         'Partager le trajet',
       );
       expect(tripTileSubtitle(en, TripTile.poster, _trip()), 'Share the trip');
+      // Audience chargée : « N personnes ont vu votre trajet » ; pas encore
+      // sûre (chargement, échec) : le texte habituel.
+      const audience = TripAudienceState.loaded(
+        TripAudienceModel(uniqueViewerCount: 12, shareViewCount: 4),
+      );
+      expect(
+        tripTileSubtitle(fr, TripTile.poster, _trip(), audience: audience),
+        '12 personnes ont vu votre trajet',
+      );
+      expect(
+        tripTileSubtitle(en, TripTile.poster, _trip(), audience: audience),
+        '12 people have seen your trip',
+      );
+      for (final state in const [
+        TripAudienceState.initial(),
+        TripAudienceState.loading(),
+        TripAudienceState.hidden(),
+      ]) {
+        expect(
+          tripTileSubtitle(fr, TripTile.poster, _trip(), audience: state),
+          'Partager le trajet',
+        );
+      }
+      // L'audience ne change que la tuile « Affiche ».
+      expect(
+        tripTileSubtitle(fr, TripTile.arrival, _trip(), audience: audience),
+        'Instructions de retrait',
+      );
       expect(
         tripTileSubtitle(fr, TripTile.arrival, _trip()),
         'Instructions de retrait',

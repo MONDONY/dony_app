@@ -1,12 +1,15 @@
-// Ligne d'audience de l'écran du trajet, sous les compteurs « Activité du
-// trajet » : statuts où elle s'affiche, chargement, textes (personnes, vues
-// de l'affiche, « personne »), texte discret, clé `trip-audience-card`,
-// FR / EN, 360 dp × 1,3.
+// Audience du trajet vue par son voyageur : statuts où elle a un sens,
+// chargement par TripAudienceLoader (montage, brouillon publié, autre
+// trajet), sous-titre de la tuile « Affiche » (TripAudience.tileSubtitle),
+// ligne du sheet « Affiche » (textes : personnes, vues de l'affiche,
+// « personne », texte discret, clé `trip-audience-card`), FR / EN,
+// 360 dp × 1,3.
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
+import 'package:dony/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,8 +40,8 @@ void main() {
     return BlocProvider<TripAudienceCubit>.value(
       value: cubit,
       child: padding == null
-          ? const TripAudienceLine(announcementId: 'trip-1')
-          : TripAudienceLine(announcementId: 'trip-1', padding: padding),
+          ? const TripAudienceLine()
+          : TripAudienceLine(padding: padding),
     );
   }
 
@@ -59,14 +62,150 @@ void main() {
     };
     for (final status in kTripStatuses) {
       test(status, () {
-        expect(TripAudienceLine.shownFor(status), expected[status]);
+        expect(TripAudience.shownFor(status), expected[status]);
       });
     }
   });
 
-  testWidgets('charge l\'audience du trajet au montage', (tester) async {
+  group('TripAudienceLoader', () {
+    final status = ValueNotifier('ACTIVE');
+    final id = ValueNotifier('trip-1');
+
+    setUp(() {
+      status.value = 'ACTIVE';
+      id.value = 'trip-1';
+    });
+
+    Widget loader() {
+      whenListen(
+        cubit,
+        const Stream<TripAudienceState>.empty(),
+        initialState: const TripAudienceState.initial(),
+      );
+      return BlocProvider<TripAudienceCubit>.value(
+        value: cubit,
+        child: ValueListenableBuilder<String>(
+          valueListenable: id,
+          builder: (context, trip, _) => ValueListenableBuilder<String>(
+            valueListenable: status,
+            builder: (context, s, _) => TripAudienceLoader(
+              announcementId: trip,
+              status: s,
+              child: const Text('contenu'),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('charge l\'audience au montage et rend son enfant', (
+      tester,
+    ) async {
+      await pumpTripCard(tester, loader());
+      verify(() => cubit.load('trip-1')).called(1);
+      expect(find.text('contenu'), findsOneWidget);
+    });
+
+    for (final hidden in const ['DRAFT', 'CANCELLED', 'REMOVED_BY_ADMIN']) {
+      testWidgets('$hidden : rien n\'est chargé', (tester) async {
+        status.value = hidden;
+        await pumpTripCard(tester, loader());
+        verifyNever(() => cubit.load(any()));
+        expect(find.text('contenu'), findsOneWidget);
+      });
+    }
+
+    testWidgets('brouillon publié : chargé une fois à la publication', (
+      tester,
+    ) async {
+      status.value = 'DRAFT';
+      await pumpTripCard(tester, loader());
+      verifyNever(() => cubit.load(any()));
+      status.value = 'ACTIVE';
+      await tester.pump();
+      verify(() => cubit.load('trip-1')).called(1);
+      // Passer complet ne recharge pas.
+      status.value = 'FULL';
+      await tester.pump();
+      verifyNever(() => cubit.load(any()));
+    });
+
+    testWidgets('autre trajet : rechargé pour lui', (tester) async {
+      await pumpTripCard(tester, loader());
+      verify(() => cubit.load('trip-1')).called(1);
+      id.value = 'trip-2';
+      await tester.pump();
+      verify(() => cubit.load('trip-2')).called(1);
+    });
+
+    testWidgets('sans cubit : rien ne casse', (tester) async {
+      await pumpTripCard(
+        tester,
+        const TripAudienceLoader(
+          announcementId: 'trip-1',
+          status: 'ACTIVE',
+          child: Text('contenu'),
+        ),
+      );
+      expect(find.text('contenu'), findsOneWidget);
+    });
+  });
+
+  group('TripAudience.tileSubtitle (tuile « Affiche »)', () {
+    final fr = lookupAppLocalizations(const Locale('fr'));
+    final en = lookupAppLocalizations(const Locale('en'));
+
+    test('chargée : le nombre de personnes', () {
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(12, 7)),
+        '12 personnes ont vu votre trajet',
+      );
+      expect(
+        TripAudience.tileSubtitle(en, loaded(12, 7)),
+        '12 people have seen your trip',
+      );
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(1, 0)),
+        '1 personne a vu votre trajet',
+      );
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(0, 0)),
+        'Personne n\'a encore vu votre trajet',
+      );
+    });
+
+    test('personne dans l\'app, affiche vue : les vues de l\'affiche', () {
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(0, 3)),
+        '3 vues de votre affiche partagée',
+      );
+    });
+
+    test('pas chargée, en échec, cubit absent : null', () {
+      expect(
+        TripAudience.tileSubtitle(fr, const TripAudienceState.initial()),
+        isNull,
+      );
+      expect(
+        TripAudience.tileSubtitle(fr, const TripAudienceState.loading()),
+        isNull,
+      );
+      expect(
+        TripAudience.tileSubtitle(fr, const TripAudienceState.hidden()),
+        isNull,
+      );
+      expect(TripAudience.tileSubtitle(fr, null), isNull);
+    });
+  });
+
+  testWidgets('la ligne ne charge rien elle-même', (tester) async {
     await pumpTripCard(tester, line(const TripAudienceState.initial()));
-    verify(() => cubit.load('trip-1')).called(1);
+    verifyNever(() => cubit.load(any()));
+  });
+
+  testWidgets('sans cubit : rien', (tester) async {
+    await pumpTripCard(tester, const TripAudienceLine());
+    expect(find.byKey(const Key('trip-audience-card')), findsNothing);
   });
 
   testWidgets('vues et affiche sur une ligne discrète, sans carte', (

@@ -8033,7 +8033,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripTilePaymentsCashOnlyNote(placeholderMarker('section')),
   'tripTileArrivalEditButton': (l) => l.tripTileArrivalEditButton,
   'tripSectionYourTrip': (l) => l.tripSectionYourTrip,
-  'tripSectionActivity': (l) => l.tripSectionActivity,
   'tripOwnerMenuTooltip': (l) => l.tripOwnerMenuTooltip,
   'tripMenuEditSubtitle': (l) => l.tripMenuEditSubtitle,
   'tripMenuRecurringSubtitle': (l) => l.tripMenuRecurringSubtitle,
@@ -8045,19 +8044,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripDirectRequestLabel(intPlaceholderValue),
   'tripDirectRequestSeeAll': (l) =>
       l.tripDirectRequestSeeAll(intPlaceholderValue),
-  'tripActivityRequestsPending': (l) => l.tripActivityRequestsPending,
-  'tripActivityRequestsNone': (l) => l.tripActivityRequestsNone,
-  'tripActivityParcelsInTransit': (l) =>
-      l.tripActivityParcelsInTransit(intPlaceholderValue),
-  'tripActivityParcelsToCollect': (l) =>
-      l.tripActivityParcelsToCollect(intPlaceholderValue),
-  'tripActivityParcelsLabel': (l) =>
-      l.tripActivityParcelsLabel(intPlaceholderValue),
-  'tripActivityGainLabel': (l) => l.tripActivityGainLabel,
-  'tripActivityCellSemantics': (l) => l.tripActivityCellSemantics(
-    placeholderMarker('title'),
-    placeholderMarker('value'),
-  ),
+  'tripParcelsLineTitle': (l) => l.tripParcelsLineTitle(intPlaceholderValue),
   'tripActivityRequestsEmpty': (l) => l.tripActivityRequestsEmpty,
   'tripActivityParcelsOpenList': (l) => l.tripActivityParcelsOpenList,
   'tripGainOnlineLabel': (l) => l.tripGainOnlineLabel,
@@ -8754,6 +8741,5 @@ const textParameters = <String, List<String>>{
   'tripTileItineraryPickup': ['place'],
   'tripTileItineraryDelivery': ['place'],
   'tripTilePaymentsCashOnlyNote': ['section'],
-  'tripActivityCellSemantics': ['title', 'value'],
   'tripGainCashGrossNote': ['gross', 'commission'],
 };

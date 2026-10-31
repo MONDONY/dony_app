@@ -22,10 +22,12 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/mobile_money_network.dart';
+import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
@@ -49,6 +51,9 @@ class _MockAnnouncementBloc
     implements AnnouncementBloc {}
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
+
+class _MockTripAudienceCubit extends MockCubit<TripAudienceState>
+    implements TripAudienceCubit {}
 
 const _notReady = StripeAccountReady(
   ConnectAccountStatus(status: 'NOT_CREATED'),
@@ -217,6 +222,7 @@ void main() {
     Size? size,
     TileSource source = TileSource.tile,
     List<BidModel>? screenBids,
+    TripAudienceCubit? audience,
   }) async {
     if (size != null) {
       tester.view.physicalSize = size;
@@ -256,6 +262,8 @@ void main() {
           BlocProvider<AnnouncementBloc>.value(value: annBloc),
           BlocProvider<BidBloc>.value(value: bidBloc),
           BlocProvider<StripeAccountBloc>.value(value: stripeBloc),
+          if (audience != null)
+            BlocProvider<TripAudienceCubit>.value(value: audience),
         ],
         child: opener,
       );
@@ -783,6 +791,89 @@ void main() {
   });
 
   group('affiche', () {
+    final audienceLine = find.byKey(const Key('trip-audience-card'));
+
+    _MockTripAudienceCubit audienceCubit(
+      TripAudienceState initial, [
+      Stream<TripAudienceState> states = const Stream.empty(),
+    ]) {
+      final cubit = _MockTripAudienceCubit();
+      whenListen(cubit, states, initialState: initial);
+      when(() => cubit.load(any())).thenAnswer((_) async {});
+      return cubit;
+    }
+
+    testWidgets('audience chargée par l\'écran : sa ligne sous l\'aperçu, '
+        'sans la recharger', (tester) async {
+      final cubit = audienceCubit(
+        const TripAudienceState.loaded(
+          TripAudienceModel(uniqueViewerCount: 12, shareViewCount: 3),
+        ),
+      );
+      await open(tester, trip: _trip(), tile: TripTile.poster, audience: cubit);
+      expect(audienceLine, findsOneWidget);
+      expect(
+        find.text(
+          '12 personnes ont vu votre trajet · 3 vues de votre affiche partagée',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getTopLeft(audienceLine).dy,
+        greaterThan(
+          tester.getTopLeft(find.textContaining('Votre trajet en image')).dy,
+        ),
+      );
+      verifyNever(() => cubit.load(any()));
+    });
+
+    testWidgets('audience qui arrive pendant l\'ouverture : la ligne suit', (
+      tester,
+    ) async {
+      final states = StreamController<TripAudienceState>.broadcast();
+      addTearDown(states.close);
+      final cubit = audienceCubit(
+        const TripAudienceState.loading(),
+        states.stream,
+      );
+      await open(tester, trip: _trip(), tile: TripTile.poster, audience: cubit);
+      expect(audienceLine, findsNothing);
+      states.add(
+        const TripAudienceState.loaded(
+          TripAudienceModel(uniqueViewerCount: 1, shareViewCount: 0),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('1 personne a vu votre trajet'), findsOneWidget);
+    });
+
+    testWidgets('audience en échec ou absente : pas de ligne', (tester) async {
+      await open(
+        tester,
+        trip: _trip(),
+        tile: TripTile.poster,
+        audience: audienceCubit(const TripAudienceState.hidden()),
+      );
+      expect(audienceLine, findsNothing);
+      expect(find.textContaining('Votre trajet en image'), findsOneWidget);
+    });
+
+    testWidgets('anglais', (tester) async {
+      await open(
+        tester,
+        trip: _trip(),
+        tile: TripTile.poster,
+        locale: const Locale('en'),
+        audience: audienceCubit(
+          const TripAudienceState.loaded(
+            TripAudienceModel(uniqueViewerCount: 12, shareViewCount: 0),
+          ),
+        ),
+      );
+      expect(find.text('12 people have seen your trip'), findsOneWidget);
+    });
+
     testWidgets('aperçu et « Partager l\'affiche » dans le pied', (
       tester,
     ) async {

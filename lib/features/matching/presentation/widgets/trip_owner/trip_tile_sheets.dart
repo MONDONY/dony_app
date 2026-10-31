@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -15,6 +16,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/close_she
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_detail_sections.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
@@ -35,7 +37,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// navigateur racine, les blocs de l'écran trouvés sous [context] y sont
 /// reposés par le `wrapper` (`BlocProvider.value`) : `AnnouncementBloc`
 /// (trajet relu), `BidBloc` (colis du trajet), `StripeAccountBloc` (renvoi
-/// vers « À traiter » d'un trajet en espèces seules). Le contenu suit le
+/// vers « À traiter » d'un trajet en espèces seules), `TripGroupCubit`
+/// (étapes du voyage), `TripAudienceCubit` (audience, sheet « Affiche »). Le contenu suit le
 /// trajet et les colis relus ; il se ferme seul quand [tripTilesFor] ne
 /// contient plus [tile] (trajet complet pour l'affiche, par exemple), jamais
 /// par-dessus une confirmation.
@@ -47,7 +50,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// - `itinerary`, `conditions` : « Modifier » si le trajet est modifiable
 ///   ([canEditTrip]) ;
 /// - `payments` : aucun pied (l'action « carte » est dans « À traiter ») ;
-/// - `poster` : « Partager l'affiche » ([openTripPoster]) ;
+/// - `poster` : « Partager l'affiche » ([openTripPoster]), sous l'audience
+///   du trajet quand l'écran l'a chargée ([TripAudienceLine]) ;
 /// - `arrival` : « Modifier les instructions » dès qu'un colis est
 ///   arrivé ([tripHasArrivedParcel], ce que le back exige pour les modifier)
 ///   et que l'écran fournit son `AnnouncementBloc`.
@@ -79,6 +83,7 @@ Future<void> openTripTileSheet(
     bids: maybeRead<BidBloc>(context),
     stripe: maybeRead<StripeAccountBloc>(context),
     group: maybeRead<TripGroupCubit>(context),
+    audience: maybeRead<TripAudienceCubit>(context),
   );
   final opening = _TripTileLiveData(
     trip: switch (blocs.announcement?.state) {
@@ -106,6 +111,8 @@ Future<void> openTripTileSheet(
           BlocProvider<StripeAccountBloc>.value(value: b),
         if (blocs.group case final g?)
           BlocProvider<TripGroupCubit>.value(value: g),
+        if (blocs.audience case final a?)
+          BlocProvider<TripAudienceCubit>.value(value: a),
       ];
       return providers.isEmpty
           ? content
@@ -156,6 +163,7 @@ class _TripTileBlocs {
     required this.bids,
     required this.stripe,
     required this.group,
+    required this.audience,
   });
 
   final AnnouncementBloc? announcement;
@@ -165,6 +173,10 @@ class _TripTileBlocs {
   /// Étapes du voyage (FLUTTER-4D), montrées par le sheet « Itinéraire et
   /// lieux » d'un voyage à plusieurs étapes.
   final TripGroupCubit? group;
+
+  /// Audience du trajet, chargée par l'écran, montrée par le sheet
+  /// « Affiche » ([TripAudienceLine]).
+  final TripAudienceCubit? audience;
 }
 
 /// Données courantes d'un sheet « Votre trajet ».
@@ -315,7 +327,12 @@ class _TripTileContent extends StatelessWidget {
             ),
         ],
         TripTile.conditions => [TripConditionsSection(trip: trip)],
-        TripTile.poster => [Text(l.tripTilePosterIntro, style: tt.bodyMedium)],
+        TripTile.poster => [
+          Text(l.tripTilePosterIntro, style: tt.bodyMedium),
+          // Audience chargée par l'écran (le sous-titre de la tuile) : rien
+          // tant qu'elle n'est pas sûre.
+          const TripAudienceLine(padding: EdgeInsets.only(top: DonySpacing.md)),
+        ],
         TripTile.arrival => [
           if (ArrivalInstructionsCard.hasText(trip.arrivalInstructions))
             ArrivalInstructionsCard(instructions: trip.arrivalInstructions!)

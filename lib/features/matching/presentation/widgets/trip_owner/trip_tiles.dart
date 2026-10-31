@@ -1,6 +1,8 @@
+import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_detail_sections.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -88,13 +90,16 @@ String tripTileTitle(AppLocalizations l, TripTile tile) => switch (tile) {
 /// - `payments` : les moyens acceptés (« Carte, Espèces, Mobile money ») ;
 /// - `conditions` : « 3 types acceptés · 2 types refusés », à défaut ce qui
 ///   existe, ou « Note aux expéditeurs » s'il n'y a que la note ;
-/// - `poster` : « Partager le trajet » ;
+/// - `poster` : l'audience du trajet une fois chargée ([audience], « 12
+///   personnes ont vu votre trajet », [TripAudience.tileSubtitle]), sinon
+///   « Partager le trajet » ;
 /// - `arrival` : « Instructions de retrait ».
 String? tripTileSubtitle(
   AppLocalizations l,
   TripTile tile,
-  AnnouncementModel trip,
-) {
+  AnnouncementModel trip, {
+  TripAudienceState? audience,
+}) {
   switch (tile) {
     case TripTile.itinerary:
       final pickup = trip.pickupAddress;
@@ -126,7 +131,7 @@ String? tripTileSubtitle(
           ? l.listingSenderNoteTitle
           : null;
     case TripTile.poster:
-      return l.tripTilePosterSubtitle;
+      return TripAudience.tileSubtitle(l, audience) ?? l.tripTilePosterSubtitle;
     case TripTile.arrival:
       return l.tripOwnerArrivalEditingTitle;
   }

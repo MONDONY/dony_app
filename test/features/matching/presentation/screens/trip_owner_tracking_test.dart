@@ -257,24 +257,29 @@ void main() {
 
   const departKey = Key('trip-depart-button');
 
-  // Gain du trajet : case « Gain » de l'activité du trajet, détail dans
-  // son sheet (plus de carte dans le corps).
+  // Gain du trajet : au titre de la ligne Colis, détaillé en tête du sheet
+  // « Colis » (ni case Gain ni carte dans le corps).
   group('résumé du trajet', () {
-    final gainCell = find.byKey(const Key('trip-activity-gain'));
-    String gainValue(WidgetTester tester) => tester
-        .widget<Text>(find.byKey(const Key('trip-activity-gain-value')))
+    final line = find.byKey(const Key('trip-parcels-line'));
+    final gainBlock = find.byKey(const Key('trip-activity-parcels-gain'));
+    String lineTitle(WidgetTester tester) => tester
+        .widget<Text>(find.byKey(const Key('trip-parcels-line-title')))
         .data!;
-    Future<void> openGain(WidgetTester tester) async {
-      await tester.tap(gainCell);
+    Future<void> openParcels(WidgetTester tester) async {
+      await tester.tap(line);
       await settle(tester);
     }
 
     testWidgets('gainFromDetailSummaryWhileListIsEmpty', (tester) async {
       await pump(tester, _ann(summary: _summary));
       expect(find.byKey(const Key('trip-summary-card')), findsNothing);
-      expect(gainValue(tester), contains('42'));
-      await openGain(tester);
-      expect(find.text('Gain estimé'), findsWidgets);
+      expect(find.byKey(const Key('trip-activity-gain')), findsNothing);
+      expect(lineTitle(tester), contains('42'));
+      await openParcels(tester);
+      expect(
+        find.descendant(of: gainBlock, matching: find.text('Gain estimé')),
+        findsOneWidget,
+      );
       expect(
         tester
             .widget<Text>(find.byKey(const Key('trip-gain-online-amount')))
@@ -288,7 +293,7 @@ void main() {
       expect(find.byKey(const Key('trip-gain-total')), findsOneWidget);
     });
 
-    testWidgets('gainCellHiddenWhenNothingIsEarned', (tester) async {
+    testWidgets('gainHiddenWhenNothingIsEarned', (tester) async {
       for (final summary in const [
         null,
         TripParcelsSummary(count: 0, totalKg: 0, netAmount: 0, currency: 'EUR'),
@@ -296,23 +301,25 @@ void main() {
         TripParcelsSummary(count: 1, totalKg: 3, netAmount: 0, currency: 'EUR'),
       ]) {
         await pump(tester, _ann(summary: summary));
-        expect(gainCell, findsNothing);
-        expect(find.byKey(const Key('trip-activity-parcels')), findsOneWidget);
+        expect(line, findsOneWidget);
+        expect(lineTitle(tester), isNot(contains('·')));
+        await openParcels(tester);
+        expect(gainBlock, findsNothing);
       }
     });
 
-    // La liste des colis s'ouvre depuis le sheet « Colis » : le sheet du
-    // gain est en lecture seule.
-    testWidgets('summaryHasNoParcelsButton', (tester) async {
+    // La liste des colis s'ouvre par le pied du sheet « Colis » ; le bloc
+    // du gain est en lecture seule.
+    testWidgets('gainBlockHasNoButton', (tester) async {
       await pump(tester, _ann(summary: _summary));
-      await openGain(tester);
-      expect(find.byKey(const Key('donyBottomSheetFooter')), findsNothing);
+      await openParcels(tester);
       expect(
-        find.descendant(
-          of: find.byKey(const Key('trip-activity-gain-content')),
-          matching: find.byType(DonyButton),
-        ),
+        find.descendant(of: gainBlock, matching: find.byType(DonyButton)),
         findsNothing,
+      );
+      expect(
+        find.byKey(const Key('trip-activity-parcels-open-list')),
+        findsOneWidget,
       );
       expect(find.text('Voir mes colis'), findsNothing);
     });

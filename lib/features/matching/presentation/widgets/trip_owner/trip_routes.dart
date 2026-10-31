@@ -11,7 +11,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 // Routes ouvertes depuis l'écran du trajet vu par son voyageur (pied collant,
-// sheets « À traiter », « Activité du trajet » et « Votre trajet », menu ⋮). Chacune ignore un
+// sheets « À traiter », des demandes, des colis et « Votre trajet », menu ⋮). Chacune ignore un
 // second appui tant qu'une page ouverte depuis l'écran n'est pas refermée
 // ([pushOncePerScreen]) ; celles qui peuvent changer le trajet ou ses colis
 // relisent l'écran en silence au retour.

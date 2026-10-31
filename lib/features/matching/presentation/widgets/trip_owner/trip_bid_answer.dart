@@ -37,11 +37,11 @@ typedef TripBidAnswering = ({String bidId, TripBidAnswerAction action});
 /// données depuis l'écran ([answered], [TripBidAnswerController.answered]) :
 /// une demande traitée que la liste montre encore en attente (relecture pas
 /// revenue, ancienne liste en vol) en est retirée. Une demande traitée que la
-/// liste relue montre acceptée y reste : c'est un colis du trajet (compteur
-/// Colis, sheet Colis). `null` tant que la liste n'a pas répondu.
+/// liste relue montre acceptée y reste : c'est un colis du trajet (sheet
+/// Colis). `null` tant que la liste n'a pas répondu.
 ///
-/// Source unique des compteurs « Activité du trajet », de la carte de réponse
-/// directe, du sheet des demandes et du pied « Voir les demandes (N) ».
+/// Source unique de la carte de réponse directe, des sheets des demandes et
+/// des colis, et du pied « Voir les demandes (N) ».
 List<BidModel>? tripBidsAfterAnswers(
   List<BidModel>? bids,
   Set<String> answered,

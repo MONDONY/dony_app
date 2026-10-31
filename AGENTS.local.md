@@ -315,8 +315,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `announcement_created` | AnnouncementBloc._onCreateRequested() |
 | `announcement_viewed` | AnnouncementDetailScreen (BlocListener) |
 | `trip_owner_detail_opened` | TripOwnerDetailScreen.initState — ouverture de l'écran détail trajet par le propriétaire (propriété `status`) |
-| `trip_parcels_viewed` | Sheet « Colis » de l'activité du trajet (`openTripActivitySheet`, `trip_owner/trip_activity_sheets.dart`, ouvert par la case Colis des compteurs « Activité du trajet » de l'écran du trajet vu par son voyageur), seul émetteur depuis que la carte « Colis dans le trajet » a quitté le corps : une fois par ouverture du sheet, dès que la liste est connue (une relecture pendant l'ouverture ne réémet pas ; une liste en échec puis rechargée par « Réessayer » émet à son arrivée). Propriété `count` : total des colis embarqués (`isAcceptedTabBid`) |
-| `trip_parcels_filtered` | Sheet « Colis » de l'activité du trajet (`openTripActivitySheet`) — puce de filtre par statut touchée (puces affichées dès deux statuts). Propriété `status` : statut du colis (`ACCEPTED`, `IN_TRANSIT`…), `all` pour « Tous » |
+| `trip_parcels_viewed` | Sheet « Colis » de l'écran du trajet vu par son voyageur (`openTripActivitySheet`, `trip_owner/trip_activity_sheets.dart`, ouvert par la ligne Colis du corps, `TripParcelsLine`), seul émetteur depuis que la carte « Colis dans le trajet » a quitté le corps : une fois par ouverture du sheet, dès que la liste est connue (une relecture pendant l'ouverture ne réémet pas ; une liste en échec puis rechargée par « Réessayer » émet à son arrivée). Propriété `count` : total des colis embarqués (`isAcceptedTabBid`) |
+| `trip_parcels_filtered` | Sheet « Colis » de l'écran du trajet (`openTripActivitySheet`) — puce de filtre par statut touchée (puces affichées dès deux statuts). Propriété `status` : statut du colis (`ACCEPTED`, `IN_TRANSIT`…), `all` pour « Tous » |
 | `bid_submitted` | BidBloc._onCreateRequested() |
 | `bid_accepted` | BidAcceptanceBloc._handleResponse() |
 | `bid_rejected` | BidBloc._onRejectRequested() |

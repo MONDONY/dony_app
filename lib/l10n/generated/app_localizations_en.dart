@@ -22886,9 +22886,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripSectionYourTrip => 'Your trip';
 
   @override
-  String get tripSectionActivity => 'Trip activity';
-
-  @override
   String get tripOwnerMenuTooltip => 'Trip options';
 
   @override
@@ -22922,38 +22919,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tripActivityRequestsPending => 'to review';
-
-  @override
-  String get tripActivityRequestsNone => 'requests';
-
-  @override
-  String tripActivityParcelsInTransit(int count) {
-    return '$count in transit';
-  }
-
-  @override
-  String tripActivityParcelsToCollect(int count) {
-    return '$count to pick up';
-  }
-
-  @override
-  String tripActivityParcelsLabel(int count) {
+  String tripParcelsLineTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'parcels',
-      one: 'parcel',
+      other: '$count parcels',
+      one: '1 parcel',
+      zero: 'No parcels',
     );
     return '$_temp0';
-  }
-
-  @override
-  String get tripActivityGainLabel => 'estimated';
-
-  @override
-  String tripActivityCellSemantics(String title, String value) {
-    return '$title: $value';
   }
 
   @override

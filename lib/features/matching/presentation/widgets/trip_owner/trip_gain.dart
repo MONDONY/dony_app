@@ -55,8 +55,8 @@ class TripGain {
   bool get hasCash => cash > _kEpsilon;
   bool get hasCashCommission => cashCommission > _kEpsilon;
 
-  /// Le trajet rapporte-t-il quelque chose ? Sinon la case Gain n'est pas
-  /// affichée.
+  /// Le trajet rapporte-t-il quelque chose ? Sinon ni « · gain » au titre
+  /// de la ligne Colis, ni bloc « Gain estimé » dans son sheet.
   bool get hasGain => total > _kEpsilon;
 }
 
@@ -94,7 +94,8 @@ TripGain tripGainFor(List<BidModel> bids, String currency) {
   );
 }
 
-/// Gain du trajet [trip] affiché par la case Gain et son sheet : le calcul
+/// Gain du trajet [trip] affiché au titre de la ligne Colis et en tête de son
+/// sheet (bloc « Gain estimé ») : le calcul
 /// de l'app sur les colis chargés ([tripGainFor]), rapproché du résumé servi
 /// par le détail (`parcelsSummary.netAmount`).
 ///

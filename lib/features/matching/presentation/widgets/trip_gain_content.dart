@@ -5,8 +5,8 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_gain
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
-/// Détail du gain estimé du trajet du voyageur, contenu du sheet « Gain » de
-/// l'activité du trajet (`openTripActivitySheet`), d'après [TripGain]
+/// Détail du gain estimé du trajet du voyageur, bloc « Gain estimé » en tête
+/// du sheet « Colis » (`openTripActivitySheet`), d'après [TripGain]
 /// (`tripGainOf`) : les colis récupérés, espèces comprises.
 ///
 /// Trois lignes au plus, chacune seulement si son montant est positif :
@@ -18,7 +18,7 @@ import 'package:flutter/material.dart';
 ///   dit la carte de gain de la fiche colis (FLUTTER-R8) ;
 /// - « Total estimé » : les deux.
 ///
-/// Rien sans gain (la case Gain n'existe alors pas). Lecture seule.
+/// Rien sans gain (le bloc n'est alors pas monté). Lecture seule.
 class TripGainContent extends StatelessWidget {
   const TripGainContent({super.key, required this.gain});
 

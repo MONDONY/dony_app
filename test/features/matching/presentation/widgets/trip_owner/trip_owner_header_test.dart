@@ -3,9 +3,9 @@
 // Les sections déplacées sont testées sur leur nouvelle surface :
 // lieux, dépôt (PROD-1R), paiements, conditions dans `trip_tile_sheets_test`,
 // l'encart « espèces seules » dans `trip_todo_tiles_test` /
-// `trip_todo_sheets_test`, les compteurs de colis (FLUTTER-HK) par les cases
-// Demandes et Colis de l'activité du trajet (`trip_activity_row_test`) et le
-// sheet « Colis » (`trip_activity_sheets_test`).
+// `trip_todo_sheets_test`, les compteurs de colis (FLUTTER-HK) par la ligne
+// Colis (`trip_parcels_line_test`) et le sheet « Colis »
+// (`trip_activity_sheets_test`).
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';

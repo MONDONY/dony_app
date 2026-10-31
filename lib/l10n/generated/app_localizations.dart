@@ -14250,13 +14250,13 @@ abstract class AppLocalizations {
   /// **'Ce trajet est un brouillon'**
   String get tripOwnerDraftBannerTitle;
 
-  /// Ligne d'audience de l'écran propriétaire d'un trajet, sous « Activité du trajet » : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_line.dart)
+  /// Audience du trajet vue par son voyageur : personnes distinctes qui l'ont ouvert dans l'app. Sous-titre de la tuile « Affiche » et ligne d'audience de son sheet (trip_tiles.dart, trip_audience_line.dart)
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =0{Personne n\'a encore vu votre trajet} =1{{count} personne a vu votre trajet} other{{count} personnes ont vu votre trajet}}'**
   String tripAudienceViewers(int count);
 
-  /// Ligne d'audience : consultations de la page web publique de l'affiche du trajet (trip_audience_line.dart)
+  /// Ligne d'audience du sheet de la tuile « Affiche » : consultations de la page web publique de l'affiche du trajet ; sous-titre de la tuile quand personne ne l'a vu dans l'app (trip_audience_line.dart)
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =1{{count} vue de votre affiche partagée} other{{count} vues de votre affiche partagée}}'**
@@ -14454,7 +14454,7 @@ abstract class AppLocalizations {
   /// **'Colis dans le trajet'**
   String get tripOwnerParcelsSectionTitle;
 
-  /// Description de l'état vide du sheet « Colis » de l'activité du trajet (trip_activity_sheets.dart).
+  /// État vide du sheet « Colis » de l'écran du trajet, et sous-titre de la ligne Colis du corps tant qu'aucun colis n'est embarqué (trip_activity_sheets.dart, trip_parcels_line.dart).
   ///
   /// In fr, this message translates to:
   /// **'Les colis acceptés apparaîtront ici.'**
@@ -29545,7 +29545,7 @@ abstract class AppLocalizations {
   /// **'Expéditeur : {name}. Voir son profil'**
   String requestPublicSenderRowSemantics(String name);
 
-  /// Segment du résumé de la section Colis du trajet (trip_parcel_rows.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.
+  /// Segment du résumé des colis du trajet (sheet « Colis » et sous-titre de la ligne Colis de l'écran, trip_parcel_rows.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =1{colis en route} other{colis en route}}'**
@@ -36726,13 +36726,13 @@ abstract class AppLocalizations {
   /// **'La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.'**
   String get trackingConsentSettingsOpenSystemSnackbar;
 
-  /// Gain estimé du trajet du voyageur : titre du sheet « Gain » de l'activité du trajet et nom de la case pour le lecteur d'écran (trip_activity_sheets.dart, trip_activity_row.dart).
+  /// Gain estimé du trajet du voyageur : titre du bloc de gain en tête du sheet « Colis » de l'écran du trajet (trip_activity_sheets.dart).
   ///
   /// In fr, this message translates to:
   /// **'Gain estimé'**
   String get tripSummaryEarningsLabel;
 
-  /// Sheet « Gain » de l'activité du trajet : note sous la ligne « En ligne », le net des colis payés dans l'app est versé après la livraison de chacun (trip_gain_content.dart).
+  /// Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : note sous la ligne « En ligne », le net des colis payés dans l'app est versé après la livraison de chacun (trip_gain_content.dart).
   ///
   /// In fr, this message translates to:
   /// **'Versé après la livraison de chaque colis.'**
@@ -36996,7 +36996,7 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 type refusé} other{{count} types refusés}}'**
   String tripTileConditionsRefused(int count);
 
-  /// Résumé de la tuile « Affiche » de l'écran du trajet (propriétaire) (trip_tiles.dart).
+  /// Résumé de la tuile « Affiche » de l'écran du trajet (propriétaire), tant que l'audience du trajet n'est pas chargée ; ensuite « N personnes ont vu votre trajet » (trip_tiles.dart).
   ///
   /// In fr, this message translates to:
   /// **'Partager le trajet'**
@@ -37037,12 +37037,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Votre trajet'**
   String get tripSectionYourTrip;
-
-  /// Écran du trajet vu par son voyageur : titre de la section des compteurs Demandes, Colis et Gain (chacun ouvrant un bottom sheet) et de la ligne d'audience, sous « À traiter » ; absente d'un brouillon, d'un trajet annulé ou retiré par l'équipe (trip_owner_body.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Activité du trajet'**
-  String get tripSectionActivity;
 
   /// Écran du trajet (propriétaire) : libellé d'accessibilité et info-bulle du bouton ⋮ de la barre d'application, qui ouvre le menu des actions du trajet (trip_owner_options_sheet.dart).
   ///
@@ -37098,85 +37092,49 @@ abstract class AppLocalizations {
   /// **'Voir les {count} demandes'**
   String tripDirectRequestSeeAll(int count);
 
-  /// Compteur « Demandes » de l'activité du trajet : libellé sous le nombre de demandes qui attendent la réponse du voyageur (trip_activity_row.dart).
+  /// Écran du trajet vu par son voyageur : titre en gras de la ligne Colis (sous « À traiter »), nombre de colis embarqués ; suivi de « · gain estimé » quand il y a un gain. Sans colis : « Aucun colis » (trip_parcels_line.dart).
   ///
   /// In fr, this message translates to:
-  /// **'à traiter'**
-  String get tripActivityRequestsPending;
+  /// **'{count, plural, =0{Aucun colis} =1{1 colis} other{{count} colis}}'**
+  String tripParcelsLineTitle(int count);
 
-  /// Compteur « Demandes » de l'activité du trajet : libellé sous « 0 » quand aucune demande n'attend de réponse (trip_activity_row.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'demande'**
-  String get tripActivityRequestsNone;
-
-  /// Compteur « Colis » de l'activité du trajet : libellé sous le total des colis embarqués, nombre de colis remis ou en transit (HANDED_OVER, IN_TRANSIT) (trip_activity_row.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count} en route'**
-  String tripActivityParcelsInTransit(int count);
-
-  /// Compteur « Colis » de l'activité du trajet : libellé sous le total, nombre de colis acceptés pas encore remis (ACCEPTED), quand aucun n'est en route (trip_activity_row.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count} à récupérer'**
-  String tripActivityParcelsToCollect(int count);
-
-  /// Compteur « Colis » de l'activité du trajet : libellé sous le total des colis embarqués quand aucun n'est en route ni à récupérer (trip_activity_row.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{colis} other{colis}}'**
-  String tripActivityParcelsLabel(int count);
-
-  /// Case « Gain » de l'activité du trajet : libellé sous le gain estimé des colis récupérés, espèces comprises (trip_activity_row.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'estimé'**
-  String get tripActivityGainLabel;
-
-  /// Lecteur d'écran, compteur de l'activité du trajet : nom du compteur (Demandes, Colis, Gain estimé) puis sa valeur et son libellé (trip_activity_row.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'{title} : {value}'**
-  String tripActivityCellSemantics(String title, String value);
-
-  /// Sheet des demandes de l'activité du trajet : plus aucune demande n'attend de réponse (trip_activity_sheets.dart).
+  /// Sheet des demandes de l'écran du trajet (lien « Voir les N demandes ») : plus aucune demande n'attend de réponse (trip_activity_sheets.dart).
   ///
   /// In fr, this message translates to:
   /// **'Aucune demande à traiter pour le moment.'**
   String get tripActivityRequestsEmpty;
 
-  /// Sheet « Colis » de l'activité du trajet : bouton du pied qui ouvre la liste des colis du trajet (/announcements/:id/bids) (trip_activity_sheets.dart).
+  /// Sheet « Colis » de l'écran du trajet : bouton du pied qui ouvre la liste des colis du trajet (/announcements/:id/bids) (trip_activity_sheets.dart).
   ///
   /// In fr, this message translates to:
   /// **'Ouvrir la liste des colis'**
   String get tripActivityParcelsOpenList;
 
-  /// Sheet « Gain » de l'activité du trajet : ligne du net des colis récupérés payés dans l'app (carte, mobile money) (trip_gain_content.dart).
+  /// Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : ligne du net des colis récupérés payés dans l'app (carte, mobile money) (trip_gain_content.dart).
   ///
   /// In fr, this message translates to:
   /// **'En ligne'**
   String get tripGainOnlineLabel;
 
-  /// Sheet « Gain » de l'activité du trajet : ligne du net des colis récupérés payés en espèces (trip_gain_content.dart).
+  /// Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : ligne du net des colis récupérés payés en espèces (trip_gain_content.dart).
   ///
   /// In fr, this message translates to:
   /// **'En espèces'**
   String get tripGainCashLabel;
 
-  /// Sheet « Gain » de l'activité du trajet : note sous la ligne « En espèces » quand le back ne sert pas le montant remis distinct du net (trip_gain_content.dart).
+  /// Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : note sous la ligne « En espèces » quand le back ne sert pas le montant remis distinct du net (trip_gain_content.dart).
   ///
   /// In fr, this message translates to:
   /// **'À recevoir de l\'expéditeur en main propre.'**
   String get tripGainCashNote;
 
-  /// Sheet « Gain » de l'activité du trajet : note sous la ligne « En espèces ». L'expéditeur remet le brut, la commission n'en est pas déduite : le voyageur l'a avancée à part (FLUTTER-R8, même logique que traveler_gain_card.dart) (trip_gain_content.dart).
+  /// Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : note sous la ligne « En espèces ». L'expéditeur remet le brut, la commission n'en est pas déduite : le voyageur l'a avancée à part (FLUTTER-R8, même logique que traveler_gain_card.dart) (trip_gain_content.dart).
   ///
   /// In fr, this message translates to:
   /// **'{gross} à recevoir de l\'expéditeur en main propre, dont {commission} de frais de service avancés sur votre solde Yadony.'**
   String tripGainCashGrossNote(String gross, String commission);
 
-  /// Sheet « Gain » de l'activité du trajet : ligne du total estimé, en ligne plus espèces (trip_gain_content.dart).
+  /// Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : ligne du total estimé, en ligne plus espèces (trip_gain_content.dart).
   ///
   /// In fr, this message translates to:
   /// **'Total estimé'**

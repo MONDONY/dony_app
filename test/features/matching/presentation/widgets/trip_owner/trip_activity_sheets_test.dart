@@ -1,10 +1,10 @@
-// Sheets « Activité du trajet » (Demandes, Colis, Gain) : contenu, réponse
+// Sheets de l'activité du trajet (Demandes, Colis) : contenu, réponse
 // depuis le sheet des demandes, filtre par statut des colis, retour de fiche
 // qui relit l'écran, liste des colis en échec (« Réessayer »), fermeture
 // seule, mesures (`bid_detail_tile_opened`,
 // `trip_parcels_viewed`, `trip_parcels_filtered`), nom du sheet, bouton du
-// pied à taille nominale en FR et EN à 360 dp × 1,3 ; gain en ligne, en
-// espèces et total.
+// pied à taille nominale en FR et EN à 360 dp × 1,3 ; bloc « Gain estimé »
+// en tête du sheet Colis (en ligne, en espèces, total).
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -19,7 +19,6 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_row.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_sheets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -686,10 +685,11 @@ void main() {
     });
   });
 
-  group('Gain', () {
+  group('Colis : bloc « Gain estimé » en tête', () {
     String amount(WidgetTester tester, String id) =>
         tester.widget<Text>(find.byKey(Key('trip-gain-$id-amount'))).data!;
     String eur(double v) => CurrencyFormatter.format(v, SupportedCurrency.eur);
+    final gainBlock = find.byKey(const Key('trip-activity-parcels-gain'));
     final mixed = [
       answerBid('t', status: 'IN_TRANSIT', net: 30),
       answerBid(
@@ -703,25 +703,39 @@ void main() {
       answerBid('a', status: 'ACCEPTED', net: 50),
     ];
 
-    testWidgets('« Gain estimé », lecture seule, sans pied', (tester) async {
-      await open(tester, TripActivity.gain, bids: const []);
-      expect(find.text('Gain estimé'), findsOneWidget);
-      // Liste vide : la part en ligne vient du résumé du détail.
-      expect(amount(tester, 'online'), eur(84));
-      expect(find.byKey(const Key('trip-gain-cash')), findsNothing);
-      expect(amount(tester, 'total'), eur(84));
-      expect(footer(), findsNothing);
+    testWidgets('« Gain estimé » au-dessus du résumé et des colis, le pied '
+        'reste celui de la liste', (tester) async {
+      await open(tester, TripActivity.parcels, trip: answerTrip(), bids: mixed);
+      expect(gainBlock, findsOneWidget);
       expect(
-        find.descendant(
-          of: find.byKey(const Key('trip-activity-gain-content')),
-          matching: find.byType(DonyButton),
+        find.descendant(of: gainBlock, matching: find.text('Gain estimé')),
+        findsOneWidget,
+      );
+      expect(
+        tester.getBottomLeft(gainBlock).dy,
+        lessThanOrEqualTo(
+          tester.getTopLeft(find.byKey(const Key('trip-parcels-summary'))).dy,
         ),
+      );
+      expect(
+        tester.getBottomLeft(gainBlock).dy,
+        lessThanOrEqualTo(
+          tester.getTopLeft(find.byKey(const Key('trip-activity-parcel-t'))).dy,
+        ),
+      );
+      // Aucun bouton dans le bloc : le seul bouton est le pied de la liste.
+      expect(
+        find.descendant(of: gainBlock, matching: find.byType(DonyButton)),
         findsNothing,
+      );
+      expect(
+        find.byKey(const Key('trip-activity-parcels-open-list')),
+        findsOneWidget,
       );
     });
 
     testWidgets('colis en ligne et en espèces : trois lignes', (tester) async {
-      await open(tester, TripActivity.gain, trip: answerTrip(), bids: mixed);
+      await open(tester, TripActivity.parcels, trip: answerTrip(), bids: mixed);
       expect(amount(tester, 'online'), eur(30));
       expect(amount(tester, 'cash'), eur(20));
       expect(
@@ -737,7 +751,7 @@ void main() {
     testWidgets('espèces seulement : sans ligne « En ligne »', (tester) async {
       await open(
         tester,
-        TripActivity.gain,
+        TripActivity.parcels,
         trip: answerTrip(),
         bids: [mixed[1]],
       );
@@ -746,10 +760,52 @@ void main() {
       expect(amount(tester, 'total'), eur(20));
     });
 
-    testWidgets('liste relue pendant l\'ouverture : le détail suit', (
+    testWidgets('liste pas chargée : la part en ligne vient du résumé du '
+        'détail, au-dessus de l\'indicateur', (tester) async {
+      await open(tester, TripActivity.parcels);
+      expect(amount(tester, 'online'), eur(84));
+      expect(find.byKey(const Key('trip-gain-cash')), findsNothing);
+      expect(amount(tester, 'total'), eur(84));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('sans gain : pas de bloc (colis acceptés seulement, aucun '
+        'colis, résumé à 0)', (tester) async {
+      await open(
+        tester,
+        TripActivity.parcels,
+        trip: answerTrip(),
+        bids: [mixed[2]],
+      );
+      expect(gainBlock, findsNothing);
+      expect(find.byKey(const Key('trip-activity-parcel-a')), findsOneWidget);
+    });
+
+    testWidgets('aucun colis, aucun gain : état vide sans bloc', (
       tester,
     ) async {
-      await open(tester, TripActivity.gain, trip: answerTrip(), bids: mixed);
+      await open(
+        tester,
+        TripActivity.parcels,
+        trip: answerTrip(),
+        bids: const [],
+      );
+      expect(gainBlock, findsNothing);
+      expect(
+        find.byKey(const Key('trip-activity-parcels-empty')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('liste relue pendant l\'ouverture : le détail suit, le bloc '
+        'apparaît', (tester) async {
+      await open(
+        tester,
+        TripActivity.parcels,
+        trip: answerTrip(),
+        bids: [mixed[2]],
+      );
+      expect(gainBlock, findsNothing);
       h.screenStates.add(
         BidListLoaded([...mixed, answerBid('d', status: 'COMPLETED', net: 10)]),
       );
@@ -758,31 +814,32 @@ void main() {
       expect(amount(tester, 'total'), eur(60));
     });
 
-    testWidgets('plus aucun gain pendant l\'ouverture : le sheet se ferme '
-        'seul', (tester) async {
-      await open(tester, TripActivity.gain, bids: const []);
+    testWidgets('trajet annulé sans colis pendant l\'ouverture : le sheet se '
+        'ferme seul', (tester) async {
+      await open(tester, TripActivity.parcels, bids: const []);
       h.annStates.add(
         AnnouncementDetailLoaded(answerTrip(status: 'CANCELLED')),
       );
       await _settle(tester);
-      expect(find.byKey(const Key('trip-activity-gain-content')), findsNothing);
+      expect(
+        find.byKey(const Key('trip-activity-parcels-content')),
+        findsNothing,
+      );
     });
 
     testWidgets('trajet annulé après remise : le sheet reste, le gain aussi', (
       tester,
     ) async {
-      await open(tester, TripActivity.gain, bids: const []);
+      await open(tester, TripActivity.parcels, trip: answerTrip(), bids: mixed);
       h.annStates.add(
-        AnnouncementDetailLoaded(
-          answerTrip(status: 'CANCELLED', parcelsSummary: _summary),
-        ),
+        AnnouncementDetailLoaded(answerTrip(status: 'CANCELLED')),
       );
       await _settle(tester);
       expect(
-        find.byKey(const Key('trip-activity-gain-content')),
+        find.byKey(const Key('trip-activity-parcels-content')),
         findsOneWidget,
       );
-      expect(amount(tester, 'total'), eur(84));
+      expect(amount(tester, 'total'), eur(50));
     });
 
     for (final (locale, title) in const [
@@ -793,7 +850,7 @@ void main() {
           'lignes, aucune exception', (tester) async {
         await open(
           tester,
-          TripActivity.gain,
+          TripActivity.parcels,
           trip: answerTrip(),
           bids: mixed,
           locale: locale,
@@ -801,7 +858,10 @@ void main() {
           size: const Size(360, 800),
         );
         expect(tester.takeException(), isNull);
-        expect(find.text(title), findsOneWidget);
+        expect(
+          find.descendant(of: gainBlock, matching: find.text(title)),
+          findsOneWidget,
+        );
         for (final id in const ['online', 'cash', 'total']) {
           expect(find.byKey(Key('trip-gain-$id')), findsOneWidget);
         }

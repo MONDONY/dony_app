@@ -853,16 +853,17 @@ void main() {
     expect(find.text('Gare routière'), findsOneWidget);
   });
 
-  testWidgets('proprietaire : la ligne d’audience du trajet est montée', (
-    tester,
-  ) async {
+  testWidgets('proprietaire : l’audience du trajet est chargée, sans ligne '
+      'dans le corps (sous-titre de la tuile « Affiche »)', (tester) async {
     await pumpOwnerWith(
       tester,
       announcement: _makeAnnouncement(),
       auth: const AuthAuthenticated(_owner),
     );
 
-    expect(find.byType(TripAudienceLine), findsOneWidget);
+    expect(find.byType(TripAudienceLoader), findsOneWidget);
+    expect(find.byType(TripAudienceLine), findsNothing);
+    expect(find.text('Activité du trajet'), findsNothing);
   });
 
   testWidgets('proprietaire sans instructions : aucun encart', (tester) async {
@@ -1698,8 +1699,8 @@ void main() {
       expect(find.byKey(const Key('trip-owner-share-button')), findsNothing);
       // Ni demandes ni colis à montrer.
       expect(find.byKey(const Key('trip-direct-request-card')), findsNothing);
-      expect(find.byKey(const Key('trip-activity-row')), findsNothing);
-      expect(find.byType(TripAudienceLine), findsNothing);
+      expect(find.byKey(const Key('trip-parcels-line')), findsNothing);
+      expect(find.byKey(const Key('trip-audience-card')), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
@@ -1862,13 +1863,15 @@ void main() {
       expect(created, 0);
     });
 
-    testWidgets('case Demandes : sheet des demandes, la ligne ouvre la fiche, '
-        'relue en silence au retour', (tester) async {
+    testWidgets('« Voir les N demandes » : sheet des demandes, la ligne ouvre '
+        'la fiche, relue en silence au retour', (tester) async {
       ownerOn(_makeAnnouncement(), bids: [request('r1'), request('r2')]);
       await pumpScreen(tester);
       clearInteractions(bidBloc);
+      // Plus de case Demandes : le lien de la carte directe est le chemin.
+      expect(find.byKey(const Key('trip-activity-requests')), findsNothing);
 
-      await tester.tap(find.byKey(const Key('trip-activity-requests')));
+      await tester.tap(find.byKey(const Key('trip-direct-request-see-all')));
       await tester.pumpAndSettle();
       expect(
         find.byKey(const Key('trip-activity-requests-content')),
@@ -1894,7 +1897,7 @@ void main() {
       expect(find.byKey(const Key('trip-activity-request-r2')), findsOneWidget);
     });
 
-    testWidgets('case Colis : tous les colis, « Ouvrir la liste des colis » '
+    testWidgets('ligne Colis : tous les colis, « Ouvrir la liste des colis » '
         'puis relecture au retour', (tester) async {
       ownerOn(
         _makeAnnouncement(),
@@ -1906,7 +1909,8 @@ void main() {
       await pumpScreen(tester);
       clearInteractions(bidBloc);
 
-      await tester.tap(find.byKey(const Key('trip-activity-parcels')));
+      expect(find.text('2 colis'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('trip-parcels-line')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('trip-activity-parcel-c1')), findsOneWidget);
       expect(find.byKey(const Key('trip-activity-parcel-c2')), findsOneWidget);
@@ -1920,18 +1924,22 @@ void main() {
       verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
     });
 
-    testWidgets('case Gain : absente sans colis récupéré', (tester) async {
+    testWidgets('gain absent sans colis récupéré : ni au titre de la ligne '
+        'Colis, ni dans son sheet', (tester) async {
       ownerOn(
         _makeAnnouncement(),
         bids: [_makeBid(status: 'ACCEPTED', id: 'c1')],
       );
       await pumpScreen(tester);
-      expect(find.byKey(const Key('trip-activity-parcels')), findsOneWidget);
+      expect(find.text('1 colis'), findsOneWidget);
       expect(find.byKey(const Key('trip-activity-gain')), findsNothing);
+      await tester.tap(find.byKey(const Key('trip-parcels-line')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-activity-parcels-gain')), findsNothing);
     });
 
-    testWidgets('case Gain : colis payé en espèces compté, son sheet en '
-        'lecture seule', (tester) async {
+    testWidgets('colis payé en espèces compté : gain au titre de la ligne '
+        'Colis, détaillé en tête de son sheet', (tester) async {
       ownerOn(
         _makeAnnouncement(),
         bids: [
@@ -1950,14 +1958,13 @@ void main() {
       );
       await pumpScreen(tester);
       final eur40 = CurrencyFormatter.format(40, SupportedCurrency.eur);
-      expect(
-        tester
-            .widget<Text>(find.byKey(const Key('trip-activity-gain-value')))
-            .data,
-        eur40,
-      );
-      await tester.tap(find.byKey(const Key('trip-activity-gain')));
+      expect(find.text('1 colis · $eur40'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('trip-parcels-line')));
       await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('trip-activity-parcels-gain')),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('trip-gain-online')), findsNothing);
       expect(
         tester

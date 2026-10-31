@@ -50,7 +50,7 @@ import 'package:share_plus/share_plus.dart';
 /// Barre d'application : retour, icône de partage de l'affiche (trajet
 /// ouvert), menu ⋮ ([TripOwnerOptionsButton]), scarabée. Corps en tableau de
 /// bord ([TripOwnerBody] : billet, carte de statut, « À traiter » avec la
-/// réponse directe aux demandes, « Activité du trajet », « Votre trajet ») ;
+/// réponse directe aux demandes, ligne Colis, « Votre trajet ») ;
 /// pied collant hors du défilement ([TripOwnerStickyBar], un ou deux
 /// boutons). Le [TripBidAnswerScope] est posé au-dessus des trois.
 ///
