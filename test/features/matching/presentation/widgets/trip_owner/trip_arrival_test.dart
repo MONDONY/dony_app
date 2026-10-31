@@ -1,22 +1,23 @@
-// Règles d'arrivée de l'écran du trajet : « Arrivé à destination »
-// (`tripCanMarkArrived`, scan Transit facultatif) et colis à restituer à
-// l'annulation (`tripHandedOverParcelCount`).
+// Règles d'arrivée de l'écran du trajet : colis à bord
+// (`tripHasParcelsOnBoard`, scan Transit facultatif), « Arrivé à destination »
+// seulement sur un trajet parti (`tripCanMarkArrived`, IN_PROGRESS) et colis
+// à restituer à l'annulation (`tripHandedOverParcelCount`).
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'trip_owner_harness.dart';
 
 void main() {
-  group('tripCanMarkArrived', () {
+  group('tripHasParcelsOnBoard', () {
     test('tous IN_TRANSIT : oui', () {
-      expect(tripCanMarkArrived([ownerBid('b1', 'IN_TRANSIT')]), isTrue);
+      expect(tripHasParcelsOnBoard([ownerBid('b1', 'IN_TRANSIT')]), isTrue);
     });
     test('tous ARRIVED : non (arrivée déjà marquée)', () {
-      expect(tripCanMarkArrived([ownerBid('b1', 'ARRIVED')]), isFalse);
+      expect(tripHasParcelsOnBoard([ownerBid('b1', 'ARRIVED')]), isFalse);
     });
     test('ARRIVED restant + COMPLETED : non', () {
       expect(
-        tripCanMarkArrived([
+        tripHasParcelsOnBoard([
           ownerBid('b1', 'ARRIVED'),
           ownerBid('b2', 'COMPLETED'),
         ]),
@@ -28,7 +29,7 @@ void main() {
     // transit passent en ARRIVED).
     test('un colis encore HANDED_OVER + un IN_TRANSIT : oui', () {
       expect(
-        tripCanMarkArrived([
+        tripHasParcelsOnBoard([
           ownerBid('b1', 'HANDED_OVER'),
           ownerBid('b2', 'IN_TRANSIT'),
         ]),
@@ -37,7 +38,7 @@ void main() {
     });
     test('ARRIVED + un colis resté ACCEPTED : non', () {
       expect(
-        tripCanMarkArrived([
+        tripHasParcelsOnBoard([
           ownerBid('b1', 'ARRIVED'),
           ownerBid('b2', 'ACCEPTED'),
         ]),
@@ -46,7 +47,7 @@ void main() {
     });
     test('ARRIVED + un colis passé en transit plus tard : oui', () {
       expect(
-        tripCanMarkArrived([
+        tripHasParcelsOnBoard([
           ownerBid('b1', 'ARRIVED'),
           ownerBid('b2', 'IN_TRANSIT'),
         ]),
@@ -56,7 +57,7 @@ void main() {
     test('colis récupéré sans transit + un ACCEPTED : oui (transit '
         'facultatif, yadony-back #336)', () {
       expect(
-        tripCanMarkArrived([
+        tripHasParcelsOnBoard([
           ownerBid('b1', 'HANDED_OVER'),
           ownerBid('b2', 'ACCEPTED'),
         ]),
@@ -64,11 +65,44 @@ void main() {
       );
     });
     test('aucun colis récupéré ni arrivé : non', () {
-      expect(tripCanMarkArrived([ownerBid('b1', 'ACCEPTED')]), isFalse);
+      expect(tripHasParcelsOnBoard([ownerBid('b1', 'ACCEPTED')]), isFalse);
     });
     test('aucun colis actif : non', () {
-      expect(tripCanMarkArrived([ownerBid('b1', 'COMPLETED')]), isFalse);
-      expect(tripCanMarkArrived(const []), isFalse);
+      expect(tripHasParcelsOnBoard([ownerBid('b1', 'COMPLETED')]), isFalse);
+      expect(tripHasParcelsOnBoard(const []), isFalse);
+    });
+  });
+
+  // Recette du propriétaire : « Arrivé à destination » s'affichait pendant
+  // l'étape de remise (colis HANDED_OVER, trajet pas encore parti). Seul un
+  // trajet IN_PROGRESS le propose.
+  group('tripCanMarkArrived', () {
+    final onBoard = <String, List<String>>{
+      'HANDED_OVER': ['HANDED_OVER'],
+      'IN_TRANSIT': ['IN_TRANSIT'],
+      'HANDED_OVER + ACCEPTED': ['HANDED_OVER', 'ACCEPTED'],
+      'ARRIVED + IN_TRANSIT': ['ARRIVED', 'IN_TRANSIT'],
+    };
+    for (final MapEntry(key: label, value: statuses) in onBoard.entries) {
+      final bids = [for (final (i, s) in statuses.indexed) ownerBid('b$i', s)];
+      test('IN_PROGRESS + $label : oui', () {
+        expect(tripCanMarkArrived('IN_PROGRESS', bids), isTrue);
+      });
+      for (final status in kTripStatuses.where((s) => s != 'IN_PROGRESS')) {
+        test('$status + $label : non (trajet pas parti ou soldé)', () {
+          expect(tripCanMarkArrived(status, bids), isFalse);
+        });
+      }
+    }
+    test('IN_PROGRESS sans colis à bord : non', () {
+      for (final s in ['ACCEPTED', 'ARRIVED', 'COMPLETED']) {
+        expect(
+          tripCanMarkArrived('IN_PROGRESS', [ownerBid('b1', s)]),
+          isFalse,
+          reason: s,
+        );
+      }
+      expect(tripCanMarkArrived('IN_PROGRESS', const []), isFalse);
     });
   });
 

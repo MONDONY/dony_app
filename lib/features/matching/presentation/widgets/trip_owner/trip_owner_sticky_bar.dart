@@ -19,7 +19,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Bouton du pied collant de l'écran du trajet vu par son voyageur.
 enum TripFooterButton {
-  /// « Arrivé à destination » : un colis est remis ou en transit.
+  /// « Arrivé à destination » : trajet parti (`IN_PROGRESS`), un colis est
+  /// remis ou en transit.
   markArrived,
 
   /// « Prévenir les destinataires (N) » : l'arrivée est marquée.
@@ -47,10 +48,13 @@ const _travellingStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
 
 /// Pied collant de [trip] pour son voyageur, ou `null` s'il n'a rien à
 /// proposer. Fonction pure, la première règle qui s'applique l'emporte :
-/// 1. un colis remis ou en transit sur un trajet ACTIVE, FULL ou IN_PROGRESS
-///    ([tripCanMarkArrived]) : « Arrivé à destination » ;
-/// 2. sur ces mêmes trajets, l'arrivée est marquée (un colis `ARRIVED`, plus
-///    aucun remis ni en transit) : « Prévenir les destinataires (N) » ;
+/// 1. trajet IN_PROGRESS (parti) avec un colis remis ou en transit
+///    ([tripCanMarkArrived]) : « Arrivé à destination ». Sur un trajet
+///    ACTIVE ou FULL, des colis déjà remis (étape de remise, avant le
+///    départ) ne le proposent pas : le pied passe aux règles suivantes ;
+/// 2. trajet ACTIVE, FULL ou IN_PROGRESS dont l'arrivée est marquée (un
+///    colis `ARRIVED`, plus aucun remis ni en transit,
+///    [tripHasParcelsOnBoard] faux) : « Prévenir les destinataires (N) » ;
 /// 3. brouillon : « Modifier » | « Publier » ;
 /// 4. ACTIVE ou FULL avec des demandes à traiter
 ///    ([tripPendingRequestCount]) : « Voir les demandes (N) » ;
@@ -58,15 +62,16 @@ const _travellingStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
 ///    « Modifier » seulement si le trajet est modifiable ([canEditTrip] : des
 ///    colis acceptés le ferment, l'affiche reste) ;
 /// 6. sinon (COMPLETED, CANCELLED, REMOVED_BY_ADMIN, FULL sans demande,
-///    IN_PROGRESS sans colis à faire avancer, statut inconnu) : aucun pied.
+///    colis remis compris, IN_PROGRESS sans colis à faire avancer, statut
+///    inconnu) : aucun pied.
 ///
 /// [bids] : colis du trajet chargés par l'écran (`BidListLoaded`), `null`
 /// tant que la liste n'a pas répondu ; les règles 1 et 2 attendent alors la
 /// liste, les compteurs du modèle servent aux autres.
 ///
 /// Le départ confirmé (« Je pars », drapeau local de `TripDepartCubit`)
-/// n'entre pas dans la règle : il n'est possible qu'avec des colis remis
-/// (`parcelsSummary`), donc la règle 1 ou 2 s'applique déjà.
+/// n'entre pas dans la règle : il ne change pas le statut du trajet côté
+/// back, seul `IN_PROGRESS` ouvre « Arrivé à destination ».
 ///
 /// [answered] : demandes traitées depuis l'écran
 /// ([TripBidAnswerController.answered]) ; celles que la liste montre encore
@@ -82,10 +87,12 @@ TripFooter? tripFooterFor({
 }) {
   if (!isOwner) return null;
   if (bids != null && _travellingStatuses.contains(trip.status)) {
-    if (tripCanMarkArrived(bids)) {
+    if (tripCanMarkArrived(trip.status, bids)) {
       return (primary: TripFooterButton.markArrived, secondary: null);
     }
-    if (tripHasArrivedParcel(bids) && recipientsToNotify(bids).isNotEmpty) {
+    if (!tripHasParcelsOnBoard(bids) &&
+        tripHasArrivedParcel(bids) &&
+        recipientsToNotify(bids).isNotEmpty) {
       return (primary: TripFooterButton.notifyRecipients, secondary: null);
     }
   }

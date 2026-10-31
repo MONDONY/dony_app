@@ -477,7 +477,8 @@ void main() {
   testWidgets('shows arrival button when all active bids are IN_TRANSIT', (
     tester,
   ) async {
-    final announcement = _makeAnnouncement();
+    // Trajet parti : seul IN_PROGRESS propose « Arrivé à destination ».
+    final announcement = _makeAnnouncement(status: 'IN_PROGRESS');
     when(
       () => annBloc.state,
     ).thenReturn(AnnouncementDetailLoaded(announcement));
@@ -545,7 +546,7 @@ void main() {
     ) async {
       ownerWithBids([
         _makeBid(status: 'IN_TRANSIT', recipientPhone: '+221700000000'),
-      ]);
+      ], announcement: _makeAnnouncement(status: 'IN_PROGRESS'));
       await _pump(
         tester,
         annBloc: annBloc,
@@ -874,11 +875,12 @@ void main() {
     expect(find.byKey(const Key('arrival-instructions-card')), findsNothing);
   });
 
-  // Scan Transit facultatif : un colis récupéré suffit à marquer l'arrivée.
+  // Scan Transit facultatif : un colis récupéré suffit à marquer l'arrivée,
+  // une fois le trajet parti (IN_PROGRESS).
   testWidgets(
     'shows arrival button when a parcel is picked up without transit',
     (tester) async {
-      final announcement = _makeAnnouncement();
+      final announcement = _makeAnnouncement(status: 'IN_PROGRESS');
       when(
         () => annBloc.state,
       ).thenReturn(AnnouncementDetailLoaded(announcement));
@@ -915,6 +917,81 @@ void main() {
       expect(find.text('Arrivé à destination'), findsOneWidget);
     },
   );
+
+  // Recette du propriétaire : pendant l'étape de remise (colis HANDED_OVER,
+  // trajet pas encore parti), le pied proposait « Arrivé à destination ».
+  // Sur un trajet ACTIVE ou FULL, il passe aux règles suivantes.
+  group('étape de remise, trajet pas encore parti', () {
+    Future<void> pumpHandover(
+      WidgetTester tester,
+      String status,
+      List<BidModel> bids,
+    ) async {
+      final announcement = _makeAnnouncement(status: status);
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(announcement));
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
+        initialState: AnnouncementDetailLoaded(announcement),
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+      when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
+      whenListen(
+        bidBloc,
+        Stream<BidState>.value(BidListLoaded(bids)),
+        initialState: BidListLoaded(bids),
+      );
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('ACTIVE + colis remis : « Partager l\'affiche », pas '
+        '« Arrivé à destination »', (tester) async {
+      await pumpHandover(tester, 'ACTIVE', [_makeBid(status: 'HANDED_OVER')]);
+      expect(find.byKey(const Key('trip-footer-markArrived')), findsNothing);
+      expect(find.text('Arrivé à destination'), findsNothing);
+      expect(find.byKey(const Key('trip-footer-sharePoster')), findsOneWidget);
+    });
+
+    testWidgets('ACTIVE + colis remis + demande : « Voir les demandes »', (
+      tester,
+    ) async {
+      await pumpHandover(tester, 'ACTIVE', [
+        _makeBid(status: 'HANDED_OVER'),
+        _makeBid(status: 'PENDING', id: 'bid-002'),
+      ]);
+      expect(find.byKey(const Key('trip-footer-markArrived')), findsNothing);
+      expect(find.byKey(const Key('trip-footer-seeRequests')), findsOneWidget);
+    });
+
+    testWidgets('FULL + colis remis : aucun pied', (tester) async {
+      await pumpHandover(tester, 'FULL', [_makeBid(status: 'HANDED_OVER')]);
+      expect(find.byKey(const Key('trip-owner-sticky-bar')), findsNothing);
+      expect(find.text('Arrivé à destination'), findsNothing);
+    });
+
+    testWidgets('IN_PROGRESS + même colis remis : « Arrivé à destination »', (
+      tester,
+    ) async {
+      await pumpHandover(tester, 'IN_PROGRESS', [
+        _makeBid(status: 'HANDED_OVER'),
+      ]);
+      expect(find.byKey(const Key('trip-footer-markArrived')), findsOneWidget);
+    });
+  });
 
   testWidgets(
     'reloads bids after AnnouncementTripArrived so the CTA can switch mode',
@@ -1283,7 +1360,7 @@ void main() {
       tester,
     ) async {
       useEnglish();
-      final announcement = _makeAnnouncement();
+      final announcement = _makeAnnouncement(status: 'IN_PROGRESS');
       when(
         () => annBloc.state,
       ).thenReturn(AnnouncementDetailLoaded(announcement));
@@ -1420,7 +1497,9 @@ void main() {
   });
 
   // Les cas de « Arrivé à destination » (`tripCanMarkArrived`, ex-
-  // `tripArrivalCtaFor`) sont dans `trip_owner/trip_arrival_test.dart`.
+  // `tripArrivalCtaFor`, seulement sur un trajet IN_PROGRESS) sont dans
+  // `trip_owner/trip_arrival_test.dart`, la table statut du trajet × colis du
+  // pied dans `trip_owner/trip_owner_sticky_bar_test.dart`.
 
   // ── Annulation du trajet (FLUTTER-FH) ─────────────────────────────────────
   //

@@ -31,7 +31,7 @@ enum TripStatusCardKind {
 /// n'a pas répondu. « Arrivé à destination » laisse le trajet IN_PROGRESS
 /// jusqu'au dernier colis livré : dès qu'un colis est `ARRIVED`
 /// ([tripHasArrivedParcel]) et qu'aucun n'est plus remis ou en transit
-/// ([tripCanMarkArrived] faux, ce que le pied traduit par « Prévenir les
+/// ([tripHasParcelsOnBoard] faux, ce que le pied traduit par « Prévenir les
 /// destinataires »), la carte dit que les colis attendent leurs
 /// destinataires. Sinon, ou tant que la liste n'a pas répondu : aucune.
 TripStatusCardKind? tripStatusCardKindFor(
@@ -43,7 +43,7 @@ TripStatusCardKind? tripStatusCardKindFor(
   'IN_PROGRESS'
       when bids != null &&
           tripHasArrivedParcel(bids) &&
-          !tripCanMarkArrived(bids) =>
+          !tripHasParcelsOnBoard(bids) =>
     TripStatusCardKind.arrived,
   'CANCELLED' => TripStatusCardKind.cancelled,
   'REMOVED_BY_ADMIN' => TripStatusCardKind.removedByAdmin,

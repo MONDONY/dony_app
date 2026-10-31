@@ -85,23 +85,27 @@ const _posterEdit = (
 const _poster = (primary: TripFooterButton.sharePoster, secondary: null);
 
 /// Pied attendu pour un trajet [status] dont les colis sont [p].
+///
+/// « Arrivé à destination » seulement sur un trajet parti (IN_PROGRESS) : sur
+/// un trajet ACTIVE ou FULL, des colis remis (étape de remise, avant le
+/// départ) laissent le pied aux règles suivantes.
 TripFooter? _expected(String status, _Parcels p) {
   const travelling = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
-  if (travelling.contains(status)) {
-    switch (p) {
-      case _Parcels.handedOver ||
-          _Parcels.inTransit ||
-          _Parcels.arrivedAndHandedOver ||
-          _Parcels.handedOverAndPending:
-        return _arrived;
-      case _Parcels.arrived || _Parcels.arrivedAndPending:
-        return _notify;
-      default:
-    }
+  const onBoard = {
+    _Parcels.handedOver,
+    _Parcels.inTransit,
+    _Parcels.arrivedAndHandedOver,
+    _Parcels.handedOverAndPending,
+  };
+  if (status == 'IN_PROGRESS' && onBoard.contains(p)) return _arrived;
+  if (travelling.contains(status) &&
+      (p == _Parcels.arrived || p == _Parcels.arrivedAndPending)) {
+    return _notify;
   }
   final pending = const {
     _Parcels.pending,
     _Parcels.escrowed,
+    _Parcels.handedOverAndPending,
     _Parcels.notLoadedWithPending,
   }.contains(p);
   final empty = p == _Parcels.none || p == _Parcels.notLoaded;
@@ -136,9 +140,24 @@ void main() {
           tripFooterFor(trip: _tripFor(s, p), bids: _bidsFor(p), isOwner: true);
       // Priorités : l'arrivée l'emporte sur « Prévenir » et sur les demandes,
       // « Prévenir » sur les demandes.
-      expect(f('ACTIVE', _Parcels.handedOverAndPending), _arrived);
-      expect(f('FULL', _Parcels.arrivedAndHandedOver), _arrived);
+      expect(f('IN_PROGRESS', _Parcels.handedOverAndPending), _arrived);
+      expect(f('IN_PROGRESS', _Parcels.arrivedAndHandedOver), _arrived);
       expect(f('ACTIVE', _Parcels.arrivedAndPending), _notify);
+      // Trajet parti : colis remis (transit facultatif) ou en transit.
+      expect(f('IN_PROGRESS', _Parcels.handedOver), _arrived);
+      expect(f('IN_PROGRESS', _Parcels.inTransit), _arrived);
+      // Étape de remise (recette du propriétaire) : trajet pas encore parti,
+      // colis remis, jamais « Arrivé à destination ».
+      expect(f('ACTIVE', _Parcels.handedOver), _poster);
+      expect(f('ACTIVE', _Parcels.handedOverAndPending), _requests);
+      expect(f('FULL', _Parcels.handedOver), isNull);
+      expect(f('FULL', _Parcels.handedOverAndPending), _requests);
+      expect(f('FULL', _Parcels.arrivedAndHandedOver), isNull);
+      for (final s in ['ACTIVE', 'FULL']) {
+        for (final p in [_Parcels.handedOver, _Parcels.inTransit]) {
+          expect(f(s, p)?.primary, isNot(TripFooterButton.markArrived));
+        }
+      }
       expect(f('IN_PROGRESS', _Parcels.arrived), _notify);
       // Brouillon, trajet ouvert sans demande, trajet complet.
       expect(f('DRAFT', _Parcels.none), _publishEdit);
@@ -317,7 +336,7 @@ void main() {
 
       await pumpBar(
         tester,
-        trip: ownerTrip(status: 'FULL'),
+        trip: ownerTrip(status: 'IN_PROGRESS'),
         bids: [ownerBid('b1', 'IN_TRANSIT')],
       );
       expect(find.text('Arrivé à destination'), findsOneWidget);
@@ -352,7 +371,7 @@ void main() {
       expect(find.text('See requests (1)'), findsOneWidget);
       await pumpBar(
         tester,
-        trip: ownerTrip(),
+        trip: ownerTrip(status: 'IN_PROGRESS'),
         bids: [ownerBid('b1', 'HANDED_OVER')],
         locale: en,
       );
@@ -433,7 +452,7 @@ void main() {
     ) async {
       await pumpBar(
         tester,
-        trip: ownerTrip(arrivalInstructions: 'Rue 10'),
+        trip: ownerTrip(status: 'IN_PROGRESS', arrivalInstructions: 'Rue 10'),
         bids: [ownerBid('b1', 'HANDED_OVER')],
       );
       await tester.tap(key(TripFooterButton.markArrived));
@@ -536,7 +555,11 @@ void main() {
           ownerTrip(),
           [for (var i = 0; i < 12; i++) ownerBid('p$i', 'PENDING')],
         ),
-        ('arrivée', ownerTrip(), [ownerBid('b1', 'IN_TRANSIT')]),
+        (
+          'arrivée',
+          ownerTrip(status: 'IN_PROGRESS'),
+          [ownerBid('b1', 'IN_TRANSIT')],
+        ),
         (
           'prévenir',
           ownerTrip(status: 'IN_PROGRESS'),
