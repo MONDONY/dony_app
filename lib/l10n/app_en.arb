@@ -141,6 +141,8 @@
   "errorCallCalleeUnavailableMessage": "This person can't be called right now. Send them a message instead.",
   "errorCallConversationClosedTitle": "Conversation closed",
   "errorCallConversationClosedMessage": "This conversation is closed, calling is no longer possible.",
+  "errorConversationCounterpartDeletedTitle": "Conversation unavailable",
+  "errorConversationCounterpartDeletedMessage": "This member deleted their account, so you can no longer message them.",
   "errorCallNotParticipantMessage": "You're not part of this conversation.",
   "errorCallProviderUnavailableTitle": "Calling temporarily unavailable",
   "errorCallProviderUnavailableMessage": "The call couldn't be started. Try again in a moment.",

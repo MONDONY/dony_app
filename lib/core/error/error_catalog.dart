@@ -988,6 +988,15 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.lock_outline_rounded,
     ),
+    // GET /conversations/bid/{bidId} : l'autre partie a supprimé son compte
+    // avant qu'un fil existe (yadony-back #690, YADONY-BACK-STAGING-1R).
+    // 404 côté back : sans cette entrée, le générique « introuvable ».
+    'conversation-counterpart-deleted': _Entry(
+      title: (l) => l.errorConversationCounterpartDeletedTitle,
+      message: (l) => l.errorConversationCounterpartDeletedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.person_off_outlined,
+    ),
     'call-not-participant': _Entry(
       title: (l) => l.errorCallBlockedTitle,
       message: (l) => l.errorCallNotParticipantMessage,

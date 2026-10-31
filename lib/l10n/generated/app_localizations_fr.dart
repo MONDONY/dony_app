@@ -486,6 +486,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette conversation est fermée, l\'appel n\'est plus possible.';
 
   @override
+  String get errorConversationCounterpartDeletedTitle =>
+      'Conversation indisponible';
+
+  @override
+  String get errorConversationCounterpartDeletedMessage =>
+      'Ce membre a supprimé son compte : vous ne pouvez plus lui écrire.';
+
+  @override
   String get errorCallNotParticipantMessage =>
       'Vous ne participez pas à cette conversation.';
 
