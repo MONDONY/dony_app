@@ -7,8 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Audience du trajet en une ligne discrète, sous les compteurs « Activité
 /// du trajet » : combien de personnes l'ont vu dans l'app, et combien de
-/// fois son affiche partagée a été consultée. Mêmes données, mêmes textes et
-/// mêmes conditions que la carte d'audience d'avant (`TripAudienceCubit`,
+/// fois son affiche partagée a été consultée (`TripAudienceCubit`,
 /// `tripAudienceViewers`, `tripAudiencePosterViews`), sans carte.
 ///
 /// Monté seulement pour le propriétaire confirmé : c'est lui qui déclenche le

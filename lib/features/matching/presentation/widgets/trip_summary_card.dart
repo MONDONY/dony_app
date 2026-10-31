@@ -1,50 +1,16 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
-import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// Carte « argent » du trajet du voyageur, comme la carte de gain de la
-/// fiche colis : gain estimé (net, dans la devise du trajet) en grand, puis
-/// les colis en sa possession et les kilos transportés. Le gain n'apparaît
-/// que s'il est positif (les colis payés en espèces comptent pour 0) : la
-/// carte reste alors le résumé du trajet (colis et kilos).
-///
-/// Sans bouton : la liste des colis s'ouvre depuis la carte Colis (« Voir la
-/// liste »).
-class TripSummaryCard extends StatelessWidget {
-  const TripSummaryCard({super.key, required this.summary});
-
-  final TripParcelsSummary summary;
-
-  /// La carte s'affiche pour le propriétaire confirmé quand le détail sert un
-  /// résumé d'au moins un colis remis, en transit ou arrivé
-  /// (`parcelsSummary`, servi au seul propriétaire).
-  static bool shownFor({
-    required bool isOwner,
-    required AnnouncementModel trip,
-  }) => isOwner && (trip.parcelsSummary?.count ?? 0) > 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    return DetailCard(
-      key: const Key('trip-summary-card'),
-      title: summary.netAmount > 0
-          ? l.tripSummaryEarningsLabel
-          : l.tripSummaryTitle,
-      child: TripGainContent(summary: summary),
-    );
-  }
-}
-
-/// Contenu de la carte de gain du trajet ([TripSummaryCard]), repris tel
-/// quel par le sheet « Gain » de l'activité du trajet : gain estimé en grand
-/// quand il est positif, colis en possession, kilos transportés, note sur le
+/// Détail du gain du trajet du voyageur, contenu du sheet « Gain » de
+/// l'activité du trajet (`openTripActivitySheet`), comme la carte de gain de
+/// la fiche colis : gain estimé (net, dans la devise du trajet) en grand
+/// quand il est positif (les colis payés en espèces comptent pour 0), puis
+/// les colis en sa possession, les kilos transportés et la note sur le
 /// versement. Lecture seule.
 class TripGainContent extends StatelessWidget {
   const TripGainContent({super.key, required this.summary});

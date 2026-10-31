@@ -1,9 +1,11 @@
 // Sheets « Activité du trajet » (Demandes, Colis, Gain) : contenu, réponse
 // depuis le sheet des demandes, filtre par statut des colis, retour de fiche
-// qui relit l'écran, fermeture seule, mesures (`bid_detail_tile_opened`,
+// qui relit l'écran, liste des colis en échec (« Réessayer »), fermeture
+// seule, mesures (`bid_detail_tile_opened`,
 // `trip_parcels_viewed`, `trip_parcels_filtered`), nom du sheet, bouton du
 // pied à taille nominale en FR et EN à 360 dp × 1,3.
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -419,6 +421,14 @@ void main() {
       expect((h.screenEvents.single as BidListRequested).silent, isTrue);
     });
 
+    testWidgets('ligne : double appui, une seule fiche', (tester) async {
+      final pushed = await open(tester, TripActivity.parcels, bids: mixed);
+      await tester.tap(row('t1'));
+      await tester.tap(row('t1'), warnIfMissed: false);
+      await _settle(tester);
+      expect(pushed, hasLength(1));
+    });
+
     testWidgets('« Ouvrir la liste des colis » : /announcements/:id/bids, '
         'relecture au retour, double appui ignoré', (tester) async {
       final pushed = await open(tester, TripActivity.parcels, bids: mixed);
@@ -449,6 +459,111 @@ void main() {
         findsNothing,
       );
     });
+
+    testWidgets('dix colis : une ligne par colis, résumé et puces sur les '
+        'dix', (tester) async {
+      final ten = [
+        for (var i = 0; i < 6; i++)
+          answerBid('t$i', status: 'IN_TRANSIT', description: 'Colis T$i'),
+        for (var i = 0; i < 4; i++)
+          answerBid('c$i', status: 'COMPLETED', description: 'Colis C$i'),
+      ];
+      await open(
+        tester,
+        TripActivity.parcels,
+        bids: ten,
+        size: const Size(400, 2400),
+      );
+      for (final b in ten) {
+        expect(row(b.id), findsOneWidget, reason: b.id);
+      }
+      expect(find.text('Tous · 10'), findsOneWidget);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('trip-parcels-summary')))
+            .textSpan!
+            .toPlainText(),
+        '6 colis en route  ·  4 livrés',
+      );
+    });
+
+    Finder loadError() =>
+        find.byKey(const Key('trip-activity-parcels-load-error'));
+
+    testWidgets('premier chargement en échec : « Réessayer », jamais '
+        '« aucun colis »', (tester) async {
+      await open(tester, TripActivity.parcels);
+      h.screenStates.add(BidError(const NetworkException('offline')));
+      await _settle(tester);
+      expect(loadError(), findsOneWidget);
+      expect(find.text('Erreur de chargement'), findsOneWidget);
+      expect(find.text('Réessayer'), findsOneWidget);
+      expect(find.text('Aucun colis embarqué'), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      // Le pied reste : la liste complète s'ouvre quand même.
+      expect(
+        find.byKey(const Key('trip-activity-parcels-open-list')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('« Réessayer » redemande la liste, puis la montre', (
+      tester,
+    ) async {
+      await open(tester, TripActivity.parcels);
+      h.screenStates.add(BidError(const NetworkException('offline')));
+      await _settle(tester);
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+      final retry = h.screenEvents.single as BidListRequested;
+      expect(retry.announcementId, 'trip-1');
+      // Rechargement visible : l'indicateur revient le temps de la réponse.
+      expect(retry.silent, isFalse);
+      h.screenStates.add(BidLoading());
+      await tester.pump();
+      expect(loadError(), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      h.screenStates.add(BidListLoaded(mixed));
+      await _settle(tester);
+      expect(row('a1'), findsOneWidget);
+      verify(
+        () =>
+            h.backend.capture(AnalyticsEvents.tripParcelsViewed, {'count': 4}),
+      ).called(1);
+    });
+
+    testWidgets('échec après une liste reçue : la liste reste', (tester) async {
+      await open(tester, TripActivity.parcels, bids: mixed);
+      h.screenStates.add(BidError(const NetworkException('offline')));
+      await _settle(tester);
+      expect(loadError(), findsNothing);
+      expect(row('a1'), findsOneWidget);
+      expect(find.text('Tous · 4'), findsOneWidget);
+    });
+
+    testWidgets('échec en anglais : « Try again »', (tester) async {
+      await open(tester, TripActivity.parcels, locale: const Locale('en'));
+      h.screenStates.add(BidError(const NetworkException('offline')));
+      await _settle(tester);
+      expect(find.text('Try again'), findsOneWidget);
+    });
+
+    for (final locale in const [Locale('fr'), Locale('en')]) {
+      testWidgets('échec à 360 dp × 1,3 (${locale.languageCode}) : rien ne '
+          'déborde', (tester) async {
+        await open(
+          tester,
+          TripActivity.parcels,
+          locale: locale,
+          textScale: 1.3,
+          size: const Size(360, 800),
+        );
+        h.screenStates.add(BidError(const NetworkException('offline')));
+        await _settle(tester);
+        expect(tester.takeException(), isNull);
+        expect(loadError(), findsOneWidget);
+      });
+    }
 
     testWidgets('anglais', (tester) async {
       await open(

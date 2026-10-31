@@ -1,27 +1,15 @@
-import 'package:bloc_test/bloc_test.dart';
+// Pièces des colis du trajet vu par son voyageur, reprises par le sheet
+// « Colis » de l'activité du trajet : résumé par étape du cycle
+// (`TripParcelsSummary`, `tripParcelsCounts`, FLUTTER-GS) et ligne d'un colis
+// (`TripParcelRow` : contenu, expéditeur, statut traduit). Le sheet lui-même
+// (filtre des colis embarqués, vide, chargement, erreur) est testé par
+// `trip_owner/trip_activity_sheets_test.dart`.
 import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/core/design/widgets/dony_empty_state.dart';
-import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/matching/bloc/bid_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_event.dart';
-import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
-import 'package:mocktail/mocktail.dart';
-
-import '../../../../helpers/l10n_test_helpers.dart';
-
-// ── Mocks ─────────────────────────────────────────────────────────────────────
-
-class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
-
-class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 // ── Fixture ───────────────────────────────────────────────────────────────────
 
@@ -44,226 +32,97 @@ BidModel _makeBid({
 
 // ── Pump helper ───────────────────────────────────────────────────────────────
 
-Future<void> _pump(WidgetTester tester, _MockBidBloc bidBloc) async {
+Future<void> _pump(
+  WidgetTester tester,
+  Widget child, {
+  Locale locale = const Locale('fr'),
+}) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
-
-  final router = GoRouter(
-    initialLocation: '/',
-    routes: [
-      GoRoute(
-        path: '/',
-        builder: (ctx, _) => BlocProvider<BidBloc>.value(
-          value: bidBloc,
-          child: const Scaffold(
-            body: SingleChildScrollView(
-              child: TripParcelsSection(announcementId: 'ann-1'),
-            ),
-          ),
-        ),
-      ),
-      GoRoute(
-        path: '/bids/:bidId',
-        builder: (_, state) =>
-            Scaffold(body: Text('Bid detail ${state.pathParameters['bidId']}')),
-      ),
-    ],
-  );
-
   await tester.pumpWidget(
-    MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+    MaterialApp(
+      theme: AppTheme.light(),
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(body: SingleChildScrollView(child: child)),
+    ),
   );
   await tester.pump(const Duration(milliseconds: 300));
 }
 
+Widget _rows(List<BidModel> bids, {ValueChanged<String>? onTap}) => Column(
+  children: [
+    for (final b in bids) TripParcelRow(bid: b, onTap: () => onTap?.call(b.id)),
+  ],
+);
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 void main() {
-  late _MockBidBloc bidBloc;
-  late _MockAnalyticsService analytics;
-
-  setUp(() {
-    bidBloc = _MockBidBloc();
-    analytics = _MockAnalyticsService();
-
-    when(
-      () => analytics.logEvent(any(), properties: any(named: 'properties')),
-    ).thenAnswer((_) async {});
-
-    if (getIt.isRegistered<AnalyticsService>()) {
-      getIt.unregister<AnalyticsService>();
-    }
-    getIt.registerLazySingleton<AnalyticsService>(() => analytics);
-  });
-
-  tearDown(() {
-    if (getIt.isRegistered<AnalyticsService>()) {
-      getIt.unregister<AnalyticsService>();
-    }
-    bidBloc.close();
-  });
-
-  void stub(BidState state) {
-    when(() => bidBloc.state).thenReturn(state);
-    whenListen(bidBloc, Stream<BidState>.value(state), initialState: state);
-  }
-
-  testWidgets('liste vide → affiche l\'état vide « Aucun colis embarqué »', (
-    tester,
-  ) async {
-    stub(BidListLoaded(const []));
-
-    await _pump(tester, bidBloc);
-    await tester.pump();
-
-    expect(find.byType(DonyEmptyState), findsOneWidget);
-    expect(find.text('Aucun colis embarqué'), findsOneWidget);
-  });
-
-  testWidgets(
-    'seuls les colis embarqués (acceptés) sont affichés, les PENDING masqués',
-    (tester) async {
-      final accepted = _makeBid(
-        status: 'ACCEPTED',
-        id: 'bid-accepted',
-        senderName: 'Aïssa Camara',
-        contentCategory: 'Documents',
+  group('ligne d\'un colis', () {
+    testWidgets('contenu, expéditeur et poids', (tester) async {
+      await _pump(
+        tester,
+        _rows([
+          _makeBid(
+            status: 'ACCEPTED',
+            senderName: 'Aïssa Camara',
+            contentCategory: 'Documents',
+          ),
+        ]),
       );
-      final pending = _makeBid(
-        status: 'PENDING',
-        id: 'bid-pending',
-        senderName: 'Karim Sow',
-        contentCategory: 'Électronique',
-      );
-      stub(BidListLoaded([accepted, pending]));
 
-      await _pump(tester, bidBloc);
-      await tester.pump();
-
-      // Le colis accepté est rendu (contenu + expéditeur visibles).
       expect(find.text('Documents'), findsOneWidget);
-      expect(find.textContaining('Aïssa Camara'), findsOneWidget);
-
-      // Le colis PENDING n'apparaît pas (filtré par isAcceptedTabBid).
-      expect(find.text('Électronique'), findsNothing);
-      expect(find.textContaining('Karim Sow'), findsNothing);
-
-      // Aucun état vide quand au moins un colis est embarqué.
-      expect(find.byType(DonyEmptyState), findsNothing);
-    },
-  );
-
-  testWidgets('état de chargement → CircularProgressIndicator', (tester) async {
-    stub(BidLoading());
-
-    await _pump(tester, bidBloc);
-    await tester.pump();
-
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-  });
-
-  testWidgets('trois colis de statuts mêlés → deux lignes, total au titre, '
-      'bouton « Voir 1 autre colis », aucune puce de filtre', (tester) async {
-    stub(
-      BidListLoaded([
-        _makeBid(status: 'ACCEPTED', id: 'b1', contentCategory: 'Documents'),
-        _makeBid(
-          status: 'IN_TRANSIT',
-          id: 'b2',
-          contentCategory: 'Électronique',
-        ),
-        _makeBid(status: 'CANCELLED', id: 'b3', contentCategory: 'Bijoux'),
-      ]),
-    );
-
-    await _pump(tester, bidBloc);
-    await tester.pump();
-
-    expect(find.text('Colis dans le trajet · 3'), findsOneWidget);
-    expect(find.byType(StatusChipsRow<String?>), findsNothing);
-    expect(find.text('Tous · 3'), findsNothing);
-    // Les deux colis qui attendent le voyageur ; le colis annulé passe
-    // dans la liste complète.
-    expect(find.text('Documents'), findsOneWidget);
-    expect(find.text('Électronique'), findsOneWidget);
-    expect(find.text('Bijoux'), findsNothing);
-    expect(find.text('Voir 1 autre colis'), findsOneWidget);
-  });
-
-  // Régression : sans entrée ARRIVED, _statusMeta retombait sur le défaut et
-  // affichait la chaîne brute anglaise « ARRIVED » au voyageur.
-  testWidgets('ARRIVED → libellé français « Arrivé », jamais la chaîne brute', (
-    tester,
-  ) async {
-    stub(BidListLoaded([_makeBid(status: 'ARRIVED', id: 'b1')]));
-
-    await _pump(tester, bidBloc);
-    await tester.pump();
-
-    expect(find.text('Arrivé'), findsOneWidget);
-    expect(find.text('ARRIVED'), findsNothing);
-  });
-
-  // Régression staging : un bid accepté en mobile money passe en
-  // AWAITING_PAYMENT (30 min pour le séquestre côté expéditeur). Avant le
-  // fix, isAcceptedTabBid le filtrait purement et simplement de cette
-  // section (colis invisible) ; une fois rendu visible, _statusMeta
-  // retombait sur le défaut et affichait la chaîne brute anglaise.
-  testWidgets('AWAITING_PAYMENT (mobile money) → colis visible avec le libellé '
-      'français « Paiement en attente », jamais la chaîne brute', (
-    tester,
-  ) async {
-    stub(BidListLoaded([_makeBid(status: 'AWAITING_PAYMENT', id: 'b1')]));
-
-    await _pump(tester, bidBloc);
-    await tester.pump();
-
-    expect(find.text('Paiement en attente'), findsOneWidget);
-    expect(find.text('AWAITING_PAYMENT'), findsNothing);
-    expect(find.byType(DonyEmptyState), findsNothing);
-  });
-
-  testWidgets('deux colis → deux lignes, pas de bouton', (tester) async {
-    stub(
-      BidListLoaded([
-        _makeBid(status: 'ACCEPTED', id: 'b1'),
-        _makeBid(status: 'ACCEPTED', id: 'b2', senderName: 'Autre Expéditeur'),
-      ]),
-    );
-
-    await _pump(tester, bidBloc);
-    await tester.pump();
-
-    expect(find.byType(StatusChipsRow<String?>), findsNothing);
-    expect(find.textContaining('Moussa Traoré'), findsOneWidget);
-    expect(find.textContaining('Autre Expéditeur'), findsOneWidget);
-    expect(find.byKey(const Key('trip-parcels-see-more')), findsNothing);
-  });
-
-  group('traductions', () {
-    testWidgets('en anglais : titre, état vide et statut traduits', (
-      tester,
-    ) async {
-      useEnglish();
-      stub(BidListLoaded(const []));
-
-      await _pump(tester, bidBloc);
-      await tester.pump();
-
-      expect(find.text('Parcels on this trip'), findsOneWidget);
-      expect(find.text('No parcels on board'), findsOneWidget);
-      expect(find.text('Colis dans le trajet'), findsNothing);
+      expect(find.text('Aïssa Camara · 3 kg'), findsOneWidget);
+      expect(find.text('Accepté'), findsOneWidget);
     });
 
-    testWidgets('en anglais : statut « Payment pending »', (tester) async {
-      useEnglish();
-      stub(BidListLoaded([_makeBid(status: 'AWAITING_PAYMENT', id: 'b1')]));
+    testWidgets('tap : la ligne appelle son action', (tester) async {
+      final tapped = <String>[];
+      await _pump(
+        tester,
+        _rows([_makeBid(status: 'ACCEPTED', id: 'b1')], onTap: tapped.add),
+      );
 
-      await _pump(tester, bidBloc);
-      await tester.pump();
+      await tester.tap(find.byType(TripParcelRow));
+      expect(tapped, ['b1']);
+    });
+
+    // Régression : sans entrée ARRIVED, le libellé retombait sur le défaut et
+    // affichait la chaîne brute anglaise « ARRIVED » au voyageur.
+    testWidgets('ARRIVED → libellé français « Arrivé », jamais la chaîne '
+        'brute', (tester) async {
+      await _pump(tester, _rows([_makeBid(status: 'ARRIVED')]));
+
+      expect(find.text('Arrivé'), findsOneWidget);
+      expect(find.text('ARRIVED'), findsNothing);
+    });
+
+    // Régression staging : un colis accepté en mobile money passe en
+    // AWAITING_PAYMENT (30 min pour le séquestre côté expéditeur) ; sans
+    // entrée dédiée, la chaîne brute anglaise s'affichait.
+    testWidgets('AWAITING_PAYMENT (mobile money) → « Paiement en attente », '
+        'jamais la chaîne brute', (tester) async {
+      await _pump(tester, _rows([_makeBid(status: 'AWAITING_PAYMENT')]));
+
+      expect(find.text('Paiement en attente'), findsOneWidget);
+      expect(find.text('AWAITING_PAYMENT'), findsNothing);
+    });
+
+    testWidgets('en anglais : statuts traduits', (tester) async {
+      await _pump(
+        tester,
+        _rows([
+          _makeBid(status: 'AWAITING_PAYMENT', id: 'b1'),
+          _makeBid(status: 'ARRIVED', id: 'b2'),
+        ]),
+        locale: const Locale('en'),
+      );
 
       expect(find.text('Payment pending'), findsOneWidget);
+      expect(find.text('Paiement en attente'), findsNothing);
     });
   });
 
@@ -292,19 +151,19 @@ void main() {
     });
 
     testWidgets('pluriels FR, ordre fixe, segments vides omis', (tester) async {
-      stub(
-        BidListLoaded([
-          _makeBid(status: 'IN_TRANSIT', id: 'b1'),
-          _makeBid(status: 'IN_TRANSIT', id: 'b2'),
-          _makeBid(status: 'HANDED_OVER', id: 'b3'),
-          _makeBid(status: 'ACCEPTED', id: 'b4'),
-          _makeBid(status: 'COMPLETED', id: 'b5'),
-          _makeBid(status: 'COMPLETED', id: 'b6'),
-        ]),
+      await _pump(
+        tester,
+        TripParcelsSummary(
+          bids: [
+            _makeBid(status: 'IN_TRANSIT', id: 'b1'),
+            _makeBid(status: 'IN_TRANSIT', id: 'b2'),
+            _makeBid(status: 'HANDED_OVER', id: 'b3'),
+            _makeBid(status: 'ACCEPTED', id: 'b4'),
+            _makeBid(status: 'COMPLETED', id: 'b5'),
+            _makeBid(status: 'COMPLETED', id: 'b6'),
+          ],
+        ),
       );
-
-      await _pump(tester, bidBloc);
-      await tester.pump();
 
       expect(
         summaryText(tester),
@@ -317,40 +176,42 @@ void main() {
     });
 
     testWidgets('singuliers FR et colis arrivé', (tester) async {
-      stub(
-        BidListLoaded([
-          _makeBid(status: 'ARRIVED', id: 'b1'),
-          _makeBid(status: 'COMPLETED', id: 'b2'),
-        ]),
+      await _pump(
+        tester,
+        TripParcelsSummary(
+          bids: [
+            _makeBid(status: 'ARRIVED', id: 'b1'),
+            _makeBid(status: 'COMPLETED', id: 'b2'),
+          ],
+        ),
       );
-
-      await _pump(tester, bidBloc);
-      await tester.pump();
 
       expect(summaryText(tester), '1 arrivé  ·  1 livré');
     });
 
     testWidgets('anglais : pluriels ICU', (tester) async {
-      useEnglish();
-      stub(
-        BidListLoaded([
-          _makeBid(status: 'IN_TRANSIT', id: 'b1'),
-          _makeBid(status: 'ACCEPTED', id: 'b2'),
-          _makeBid(status: 'ACCEPTED', id: 'b3'),
-        ]),
+      await _pump(
+        tester,
+        TripParcelsSummary(
+          bids: [
+            _makeBid(status: 'IN_TRANSIT', id: 'b1'),
+            _makeBid(status: 'ACCEPTED', id: 'b2'),
+            _makeBid(status: 'ACCEPTED', id: 'b3'),
+          ],
+        ),
+        locale: const Locale('en'),
       );
-
-      await _pump(tester, bidBloc);
-      await tester.pump();
 
       expect(summaryText(tester), '1 parcel in transit  ·  2 to pick up');
     });
 
     testWidgets('chiffres tabulaires', (tester) async {
-      stub(BidListLoaded([_makeBid(status: 'ACCEPTED', id: 'b1')]));
-
-      await _pump(tester, bidBloc);
-      await tester.pump();
+      await _pump(
+        tester,
+        TripParcelsSummary(
+          bids: [_makeBid(status: 'ACCEPTED', id: 'b1')],
+        ),
+      );
 
       final root =
           tester
@@ -366,34 +227,13 @@ void main() {
       );
     });
 
-    testWidgets('compte tous les colis, pas seulement les deux lignes', (
-      tester,
-    ) async {
-      stub(
-        BidListLoaded([
-          _makeBid(status: 'ACCEPTED', id: 'b1'),
-          _makeBid(status: 'IN_TRANSIT', id: 'b2'),
-          _makeBid(status: 'COMPLETED', id: 'b3'),
-          _makeBid(status: 'COMPLETED', id: 'b4'),
-        ]),
-      );
-
-      await _pump(tester, bidBloc);
-      await tester.pump();
-
-      // Les deux livrés ne sont pas en ligne, ils comptent au résumé.
-      expect(find.text('Livré'), findsNothing);
-      expect(
-        summaryText(tester),
-        '1 colis en route  ·  1 à récupérer  ·  2 livrés',
-      );
-    });
-
     testWidgets('que des clôturés → pas de résumé', (tester) async {
-      stub(BidListLoaded([_makeBid(status: 'NO_SHOW', id: 'b1')]));
-
-      await _pump(tester, bidBloc);
-      await tester.pump();
+      await _pump(
+        tester,
+        TripParcelsSummary(
+          bids: [_makeBid(status: 'NO_SHOW', id: 'b1')],
+        ),
+      );
 
       expect(find.byKey(const Key('trip-parcels-summary')), findsNothing);
     });

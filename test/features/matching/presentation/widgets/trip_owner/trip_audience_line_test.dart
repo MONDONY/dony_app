@@ -1,12 +1,11 @@
 // Ligne d'audience de l'écran du trajet, sous les compteurs « Activité du
-// trajet » : mêmes conditions et mêmes textes que la carte d'audience
-// d'avant, en texte discret, clé `trip-audience-card` gardée, FR / EN,
-// 360 dp × 1,3.
+// trajet » : statuts où elle s'affiche, chargement, textes (personnes, vues
+// de l'affiche, « personne »), texte discret, clé `trip-audience-card`,
+// FR / EN, 360 dp × 1,3.
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,7 +46,7 @@ void main() {
     TripAudienceModel(uniqueViewerCount: viewers, shareViewCount: shares),
   );
 
-  group('statuts : même règle que la carte d\'avant', () {
+  group('statuts : masquée si les expéditeurs ne voient pas le trajet', () {
     const expected = {
       'DRAFT': false,
       'ACTIVE': true,
@@ -61,10 +60,6 @@ void main() {
     for (final status in kTripStatuses) {
       test(status, () {
         expect(TripAudienceLine.shownFor(status), expected[status]);
-        expect(
-          TripAudienceSection.shownFor(status),
-          TripAudienceLine.shownFor(status),
-        );
       });
     }
   });

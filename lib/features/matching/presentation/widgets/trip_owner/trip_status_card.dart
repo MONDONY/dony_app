@@ -9,23 +9,23 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// États du trajet qui ont une carte d'explication sur l'écran du
-/// propriétaire, sous le billet. Un trajet `ACTIVE` n'en a pas.
+/// propriétaire, sous le billet : seulement ceux où le voyageur a quelque
+/// chose à savoir que le badge du billet ne dit pas. Un trajet `ACTIVE`, en
+/// cours (colis encore en route) ou terminé n'en a pas : le badge suffit.
 enum TripStatusCardKind {
   draft,
   full,
-  inProgress,
 
   /// IN_PROGRESS après l'arrivée : des colis attendent leurs destinataires
   /// et plus aucun n'est en route.
   arrived,
-  completed,
   cancelled,
   removedByAdmin,
 }
 
 /// Carte à montrer pour le statut back [status] d'un trajet, `null` pour
-/// `ACTIVE` et pour un statut inconnu de l'app (aucune carte plutôt qu'un
-/// texte faux).
+/// `ACTIVE`, `COMPLETED`, un trajet en cours et un statut inconnu de l'app
+/// (aucune carte plutôt qu'un texte faux).
 ///
 /// [bids] : colis du trajet chargés par l'écran, `null` tant que la liste
 /// n'a pas répondu. « Arrivé à destination » laisse le trajet IN_PROGRESS
@@ -33,7 +33,7 @@ enum TripStatusCardKind {
 /// ([tripHasArrivedParcel]) et qu'aucun n'est plus remis ou en transit
 /// ([tripCanMarkArrived] faux, ce que le pied traduit par « Prévenir les
 /// destinataires »), la carte dit que les colis attendent leurs
-/// destinataires. Sinon, ou tant que la liste n'a pas répondu : « en cours ».
+/// destinataires. Sinon, ou tant que la liste n'a pas répondu : aucune.
 TripStatusCardKind? tripStatusCardKindFor(
   String status, {
   List<BidModel>? bids,
@@ -45,8 +45,6 @@ TripStatusCardKind? tripStatusCardKindFor(
           tripHasArrivedParcel(bids) &&
           !tripCanMarkArrived(bids) =>
     TripStatusCardKind.arrived,
-  'IN_PROGRESS' => TripStatusCardKind.inProgress,
-  'COMPLETED' => TripStatusCardKind.completed,
   'CANCELLED' => TripStatusCardKind.cancelled,
   'REMOVED_BY_ADMIN' => TripStatusCardKind.removedByAdmin,
   _ => null,
@@ -89,16 +87,12 @@ class TripStatusCard extends StatelessWidget {
         TripStatusCardKind.full ||
         TripStatusCardKind.cancelled ||
         TripStatusCardKind.removedByAdmin => DonyStatusBannerType.warning,
-        TripStatusCardKind.inProgress ||
-        TripStatusCardKind.arrived ||
-        TripStatusCardKind.completed => DonyStatusBannerType.info,
+        TripStatusCardKind.arrived => DonyStatusBannerType.info,
       },
       iconAsset: switch (kind) {
         TripStatusCardKind.draft => null,
         TripStatusCardKind.full => 'calendar-sync',
-        TripStatusCardKind.inProgress => 'plane',
         TripStatusCardKind.arrived => 'flag',
-        TripStatusCardKind.completed => 'circle-check',
         TripStatusCardKind.cancelled => 'circle-x',
         TripStatusCardKind.removedByAdmin => 'triangle-alert',
       },
@@ -111,9 +105,7 @@ class TripStatusCard extends StatelessWidget {
           canReschedule
               ? l.tripStatusFullMessage
               : l.tripStatusFullNoRescheduleMessage,
-        TripStatusCardKind.inProgress => l.tripStatusInProgressMessage,
         TripStatusCardKind.arrived => l.tripStatusArrivedMessage,
-        TripStatusCardKind.completed => l.tripStatusCompletedMessage,
         TripStatusCardKind.cancelled => l.tripStatusCancelledMessage,
         TripStatusCardKind.removedByAdmin => l.tripStatusRemovedMessage,
       },

@@ -22879,10 +22879,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get tripTodoRequestsHint =>
-      'Vous acceptez ou refusez chaque demande depuis la liste des demandes.';
-
-  @override
   String get tripTodoDepartSummary => 'Confirmez le départ de votre trajet';
 
   @override
@@ -22906,16 +22902,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Trajet complet : plus de demande possible. Pour annuler, contactez le support.';
 
   @override
-  String get tripStatusInProgressMessage =>
-      'Trajet en cours : vos colis voyagent avec vous.';
-
-  @override
   String get tripStatusArrivedMessage =>
       'Trajet arrivé : vos colis attendent leurs destinataires.';
-
-  @override
-  String get tripStatusCompletedMessage =>
-      'Trajet terminé : il ne reçoit plus de demande.';
 
   @override
   String get tripStatusCancelledMessage =>
@@ -23078,55 +23066,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripTileArrivalEditButton => 'Modifier les instructions';
 
   @override
-  String tripRequestsCardPending(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count demandes à traiter',
-      one: '1 demande à traiter',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get tripRequestsCardPendingHint =>
-      'Répondez pour remplir votre trajet.';
-
-  @override
-  String get tripRequestsCardEmpty => 'Aucune demande à traiter';
-
-  @override
-  String get tripRequestsCardEmptyHint =>
-      'Elles arrivent ici dès qu\'un expéditeur propose un colis.';
-
-  @override
-  String get tripRequestsCardUnknown => 'Voir les demandes de ce trajet';
-
-  @override
-  String get tripRequestsCardDepartedHint =>
-      'Trajet parti : plus de nouvelle demande.';
-
-  @override
   String get tripSectionYourTrip => 'Votre trajet';
 
   @override
-  String get tripParcelsSeeList => 'Voir la liste';
-
-  @override
-  String tripParcelsCardTitle(int count) {
-    return 'Colis dans le trajet · $count';
-  }
-
-  @override
-  String tripParcelsSeeMore(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Voir les $count autres colis',
-      one: 'Voir 1 autre colis',
-    );
-    return '$_temp0';
-  }
+  String get tripSectionActivity => 'Activité du trajet';
 
   @override
   String get tripOwnerMenuTooltip => 'Options du trajet';

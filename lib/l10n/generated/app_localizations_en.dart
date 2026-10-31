@@ -22716,10 +22716,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tripTodoRequestsHint =>
-      'You accept or decline each request from the requests list.';
-
-  @override
   String get tripTodoDepartSummary => 'Confirm that your trip has started';
 
   @override
@@ -22742,16 +22738,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Trip full: no more requests can come in. To cancel, contact support.';
 
   @override
-  String get tripStatusInProgressMessage =>
-      'Trip in progress: your parcels are traveling with you.';
-
-  @override
   String get tripStatusArrivedMessage =>
       'Trip arrived: your parcels are waiting for their recipients.';
-
-  @override
-  String get tripStatusCompletedMessage =>
-      'Trip completed: it no longer receives requests.';
 
   @override
   String get tripStatusCancelledMessage =>
@@ -22914,53 +22902,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripTileArrivalEditButton => 'Edit instructions';
 
   @override
-  String tripRequestsCardPending(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count requests to review',
-      one: '1 request to review',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get tripRequestsCardPendingHint => 'Reply to fill your trip.';
-
-  @override
-  String get tripRequestsCardEmpty => 'No requests to review';
-
-  @override
-  String get tripRequestsCardEmptyHint =>
-      'They show up here as soon as a sender offers a parcel.';
-
-  @override
-  String get tripRequestsCardUnknown => 'See this trip\'s requests';
-
-  @override
-  String get tripRequestsCardDepartedHint => 'Trip underway: no new requests.';
-
-  @override
   String get tripSectionYourTrip => 'Your trip';
 
   @override
-  String get tripParcelsSeeList => 'See list';
-
-  @override
-  String tripParcelsCardTitle(int count) {
-    return 'Parcels on this trip · $count';
-  }
-
-  @override
-  String tripParcelsSeeMore(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'See the $count other parcels',
-      one: 'See 1 other parcel',
-    );
-    return '$_temp0';
-  }
+  String get tripSectionActivity => 'Trip activity';
 
   @override
   String get tripOwnerMenuTooltip => 'Trip options';

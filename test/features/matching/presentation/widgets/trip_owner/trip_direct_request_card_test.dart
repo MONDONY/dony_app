@@ -6,6 +6,7 @@
 // dernière, mesure de la tuile `requests`, textes FR et EN à 360 dp × 1,3.
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -18,6 +19,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_direct_request_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -456,7 +458,90 @@ void main() {
     });
 
     testWidgets('refus définitif (trajet complet) : message, la demande '
-        'reste, liste relue', (tester) async {
+        'reste, « Accepter » éteint avec le motif, liste relue', (
+      tester,
+    ) async {
+      const refusal = ConflictException(
+        'capacity',
+        code: 'capacity-insufficient',
+      );
+      await pumpCard(
+        tester,
+        bids: answerRequests(2, method: BidPaymentMethod.cash),
+      );
+      await tester.tap(accept('r1'));
+      await tester.pump();
+      await tester.pump();
+      h.acceptanceStates.add(
+        acs.BidFailed(
+          reason: acs.BidFailureReason.refused,
+          bidId: 'r1',
+          definitive: true,
+          error: refusal,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(card(), findsOneWidget);
+      // Comme la liste des demandes (`DemandesScreen`) : le bloc rejouerait
+      // le même refus, « Accepter » s'éteint et le motif reste affiché ;
+      // « Refuser » reste possible.
+      expect(button(tester, accept('r1')).onPressed, isNull);
+      expect(button(tester, reject('r1')).onPressed, isNotNull);
+      final message = ErrorCatalog.lookup(
+        refusal,
+        l10n: lookupAppLocalizations(const Locale('fr')),
+      ).message;
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('trip-request-refused-r1')),
+          matching: find.text(message),
+        ),
+        findsOneWidget,
+      );
+      expect(h.screenEvents.single, isA<BidListRequested>());
+      // Un nouvel appui ne relance rien.
+      await tester.tap(accept('r1'), warnIfMissed: false);
+      await tester.pump();
+      expect(h.acceptanceEvents, hasLength(1));
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('refus définitif, liste relue sans la demande : la suivante '
+        'garde « Accepter »', (tester) async {
+      await pumpCard(
+        tester,
+        bids: answerRequests(2, method: BidPaymentMethod.cash),
+      );
+      await tester.tap(accept('r1'));
+      await tester.pump();
+      await tester.pump();
+      h.acceptanceStates.add(
+        acs.BidFailed(
+          reason: acs.BidFailureReason.refused,
+          bidId: 'r1',
+          definitive: true,
+          error: const ConflictException('x', code: 'bid-not-found'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      // La relecture retire la demande refusée (expirée côté serveur).
+      h.screenStates.add(
+        BidListLoaded(
+          answerRequests(2, method: BidPaymentMethod.cash).sublist(1),
+        ),
+      );
+      await tester.pump();
+      expect(find.byKey(const Key('trip-direct-request-r2')), findsOneWidget);
+      expect(button(tester, accept('r2')).onPressed, isNotNull);
+      expect(find.byKey(const Key('trip-request-refused-r2')), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('refus non définitif (solde, réseau) : « Accepter » reste '
+        'actif', (tester) async {
       await pumpCard(
         tester,
         bids: answerRequests(1, method: BidPaymentMethod.cash),
@@ -468,19 +553,13 @@ void main() {
         acs.BidFailed(
           reason: acs.BidFailureReason.refused,
           bidId: 'r1',
-          definitive: true,
-          error: const ConflictException(
-            'capacity',
-            code: 'capacity-insufficient',
-          ),
+          error: const ConflictException('x', code: 'something-transient'),
         ),
       );
       await tester.pump();
       await tester.pump();
-      expect(find.byType(SnackBar), findsOneWidget);
-      expect(card(), findsOneWidget);
       expect(button(tester, accept('r1')).onPressed, isNotNull);
-      expect(h.screenEvents.single, isA<BidListRequested>());
+      expect(find.byKey(const Key('trip-request-refused-r1')), findsNothing);
       await tester.pump(const Duration(seconds: 5));
     });
 
@@ -567,6 +646,138 @@ void main() {
       expect(card(), findsOneWidget);
       expect(button(tester, reject('r1')).isLoading, isFalse);
       await tester.pump(const Duration(seconds: 5));
+    });
+  });
+
+  // Lignes reprises par le sheet des demandes : même identité
+  // (`TripRequestIdentity`, `tripRequestDetails`), cas hors nominal.
+  group('identité d\'une demande hors cas nominal', () {
+    BidModel bid(
+      String id, {
+      String? senderName,
+      String? category,
+      String? description,
+      double? weightKg,
+      double? net,
+      double? pricePerKg,
+      String currency = 'EUR',
+    }) => BidModel(
+      id: id,
+      announcementId: 'trip-1',
+      senderId: 'sender-$id',
+      senderName: senderName,
+      status: 'PENDING',
+      contentCategory: category,
+      description: description,
+      weightKg: weightKg,
+      totalAmountEur: net,
+      pricePerKg: pricePerKg,
+      currency: currency,
+      createdAt: DateTime(2026, 10),
+      updatedAt: DateTime(2026, 10),
+    );
+
+    Future<void> pumpIdentity(
+      WidgetTester tester,
+      List<BidModel> bids, {
+      Locale locale = const Locale('fr'),
+    }) => h.pump(
+      tester,
+      trip: answerTrip(),
+      bids: bids,
+      locale: locale,
+      body: (_) => Column(
+        children: [
+          for (final b in bids)
+            TripRequestIdentity(key: Key('identity-${b.id}'), bid: b),
+        ],
+      ),
+    );
+
+    /// Textes de l'identité, sans les initiales de l'avatar.
+    String text(WidgetTester tester, String id) {
+      final identity = find.byKey(Key('identity-$id'));
+      final initials = tester
+          .widgetList<Text>(
+            find.descendant(
+              of: find.descendant(
+                of: identity,
+                matching: find.byType(DonyAvatar),
+              ),
+              matching: find.byType(Text),
+            ),
+          )
+          .toSet();
+      return tester
+          .widgetList<Text>(
+            find.descendant(of: identity, matching: find.byType(Text)),
+          )
+          .where((t) => !initials.contains(t))
+          .map((t) => t.data)
+          .join(' | ');
+    }
+
+    testWidgets('catégories traduites, prioritaires sur la description', (
+      tester,
+    ) async {
+      await pumpIdentity(tester, locale: const Locale('en'), [
+        bid(
+          'c1',
+          senderName: 'Awa',
+          category: 'Documents & administratif,Vêtements & tissus',
+          description: 'Mes papiers',
+        ),
+      ]);
+      expect(
+        text(tester, 'c1'),
+        'Awa | Documents & paperwork, Clothing & fabrics',
+      );
+      expect(find.text('Mes papiers'), findsNothing);
+    });
+
+    testWidgets('ni catégorie ni description (ou vides) : « Colis »', (
+      tester,
+    ) async {
+      await pumpIdentity(tester, [
+        bid('d1', senderName: 'Awa'),
+        bid('d2', senderName: 'Awa', category: '', description: '  '),
+      ]);
+      expect(text(tester, 'd1'), 'Awa | Colis');
+      expect(text(tester, 'd2'), 'Awa | Colis');
+    });
+
+    testWidgets('expéditeur nommé ou anonyme, poids absent ou décimal', (
+      tester,
+    ) async {
+      await pumpIdentity(tester, [
+        bid('s1', senderName: 'Awa', description: 'Livres', weightKg: 2.5),
+        bid('s2', description: 'Livres'),
+      ]);
+      expect(text(tester, 's1'), 'Awa | Livres · 2.5 kg');
+      // Sans nom : le libellé générique ; sans poids : pas de « · ».
+      expect(text(tester, 's2'), 'Expéditeur | Livres');
+    });
+
+    testWidgets('net : servi, sinon prix au kilo × poids, sinon rien', (
+      tester,
+    ) async {
+      await pumpIdentity(tester, [
+        bid('n1', senderName: 'A', net: 42, pricePerKg: 99, weightKg: 1),
+        bid('n2', senderName: 'A', pricePerKg: 8, weightKg: 3),
+        bid('n3', senderName: 'A', weightKg: 3),
+      ]);
+      expect(text(tester, 'n1'), endsWith(formatPriceIn(42, 'EUR')));
+      // Même repli que la liste des demandes (`travelerNetAmount`).
+      expect(text(tester, 'n2'), endsWith(formatPriceIn(24, 'EUR')));
+      expect(text(tester, 'n3'), endsWith('3 kg'));
+    });
+
+    testWidgets('devise du colis (XOF)', (tester) async {
+      await pumpIdentity(tester, [
+        bid('x1', senderName: 'A', net: 25000, weightKg: 5, currency: 'XOF'),
+      ]);
+      expect(text(tester, 'x1'), endsWith(formatPriceIn(25000, 'XOF')));
+      expect(text(tester, 'x1'), contains('CFA'));
     });
   });
 

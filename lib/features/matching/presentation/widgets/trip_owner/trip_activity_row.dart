@@ -58,8 +58,8 @@ const _noActivityStatuses = {'DRAFT', 'CANCELLED', 'REMOVED_BY_ADMIN'};
 /// - aucune case pour DRAFT, CANCELLED, REMOVED_BY_ADMIN ;
 /// - Demandes : nombre de demandes à traiter ([tripPendingRequestCount],
 ///   repli `pendingBidCount` sans liste), pastille dès qu'il y en a une ;
-///   mêmes statuts que la carte Demandes ([tripRequestsShown] : absente d'un
-///   trajet terminé, d'un trajet parti sans demande, d'un statut inconnu) ;
+///   statuts de [tripRequestsShown] (absente d'un trajet terminé, d'un
+///   trajet parti sans demande, d'un statut inconnu) ;
 /// - Colis : total des colis embarqués ([isAcceptedTabBid]), libellé « N en
 ///   route » (remis ou en transit), sinon « N à récupérer » (acceptés pas
 ///   encore remis), sinon « colis » ;

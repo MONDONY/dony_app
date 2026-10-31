@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -53,6 +54,13 @@ abstract interface class TripBidAnswerController {
   /// ([tripRequestsToAnswer]) sans attendre la liste relue.
   ValueListenable<Set<String>> get answered;
 
+  /// Demandes dont l'acceptation est refusée pour de bon (trajet complet,
+  /// fermé…), avec l'erreur du serveur : « Accepter » y est éteint et le
+  /// motif affiché, comme dans `DemandesScreen` (`BidAcceptanceBloc.refusals`,
+  /// que le bloc rejouerait sans rappeler le serveur).
+  /// Refuser reste possible.
+  ValueListenable<Map<String, AppException>> get refused;
+
   /// Accepte [bid] par le parcours habituel du voyageur.
   void accept(BidModel bid);
 
@@ -78,7 +86,8 @@ abstract interface class TripBidAnswerController {
 /// - carte de commission refusée : [showBidCardDeclinedSheet] ;
 /// - refus du serveur (409, 422…) : son message ([ErrorPresenter], ou le
 ///   message du catalogue de `BidFailed`), la demande reste ; un refus
-///   définitif (trajet complet…) relit la liste ;
+///   définitif (trajet complet…) éteint « Accepter » de cette demande
+///   ([TripBidAnswerController.refused]) et relit la liste ;
 /// - succès : « Demande acceptée ! » ou « Demande refusée. », le
 ///   consentement au suivi après une acceptation, puis relecture silencieuse
 ///   des colis et du trajet de l'écran.
@@ -153,6 +162,7 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
 
   final _answering = ValueNotifier<TripBidAnswering?>(null);
   final _answered = ValueNotifier<Set<String>>(const {});
+  final _refused = ValueNotifier<Map<String, AppException>>(const {});
 
   /// Une feuille (motif, commission répartie) est ouverte avant l'envoi : un
   /// second appui n'en ouvre pas une autre.
@@ -168,6 +178,9 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
   @override
   ValueListenable<Set<String>> get answered => _answered;
 
+  @override
+  ValueListenable<Map<String, AppException>> get refused => _refused;
+
   bool get _busy => _choosing || _answering.value != null;
 
   @override
@@ -176,6 +189,7 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
     if (widget.acceptanceBloc == null) _acceptance.close();
     _answering.dispose();
     _answered.dispose();
+    _refused.dispose();
     super.dispose();
   }
 
@@ -254,9 +268,15 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
             type: DonySnackbarType.error,
           );
         }
-        // Refus définitif (trajet complet, fermé…) : la liste est sans
-        // doute périmée.
-        if (s.definitive) _reload();
+        // Refus définitif (trajet complet, fermé…) : « Accepter » de cette
+        // demande s'éteint (le bloc rejouerait le même refus), et la liste
+        // est sans doute périmée.
+        if (s.definitive) {
+          if ((s.bidId, s.error) case (final id?, final error?)) {
+            _refused.value = {..._refused.value, id: error};
+          }
+          _reload();
+        }
       default:
         break;
     }

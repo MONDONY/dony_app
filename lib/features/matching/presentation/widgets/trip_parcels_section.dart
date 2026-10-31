@@ -1,232 +1,18 @@
-import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/services/analytics_events.dart';
-import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
-import 'package:dony/features/matching/bloc/bid_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_event.dart';
-import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
-import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
-import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Nombre de colis montrés en ligne par la carte « Colis dans le trajet » :
-/// au-delà, « Voir les N autres colis » ouvre la liste complète (un trajet de
-/// dix colis rendait l'écran trop long).
-const kTripParcelsPreviewCount = 2;
-
-/// Statuts où le colis attend encore un geste du voyageur : à récupérer
-/// (`ACCEPTED`), en route (`HANDED_OVER`, `IN_TRANSIT`), à remettre
-/// (`ARRIVED`). Ce sont les segments « à récupérer », « en route » et
-/// « arrivés » du résumé ([tripParcelsCounts]) ; un colis livré, clôturé ou
-/// dont le paiement est attendu (`AWAITING_PAYMENT`, rien à aller chercher)
-/// ne demande rien au voyageur.
-const _kAwaitingTravelerStatuses = {
-  'ACCEPTED',
-  'HANDED_OVER',
-  'IN_TRANSIT',
-  'ARRIVED',
-};
-
-/// Les [kTripParcelsPreviewCount] colis montrés par la carte parmi
-/// [embarked] : d'abord ceux qui attendent un geste du voyageur
-/// ([_kAwaitingTravelerStatuses]), puis les autres ; l'ordre reçu est gardé
-/// à l'intérieur de chaque groupe (tri stable).
-List<BidModel> tripParcelsPreview(List<BidModel> embarked) => [
-  ...embarked.where((b) => _kAwaitingTravelerStatuses.contains(b.status)),
-  ...embarked.where((b) => !_kAwaitingTravelerStatuses.contains(b.status)),
-].take(kTripParcelsPreviewCount).toList(growable: false);
-
-/// Carte « Colis dans le trajet » de l'écran détail trajet (propriétaire),
-/// carte du corps comme celles de la fiche colis ([DetailCard]).
-///
-/// Consomme le [BidBloc] fourni par la route (`BidListRequested(announcementId)`).
-/// Le titre porte le total des colis embarqués (« Colis dans le trajet · 7 »).
-/// Le résumé ([TripParcelsSummary]) compte tous les colis ; seules les
-/// [kTripParcelsPreviewCount] premières lignes sont rendues
-/// ([tripParcelsPreview]), suivies au-delà de « Voir les N autres colis ».
-/// Ce bouton et le lien « Voir la liste » de l'en-tête (dès qu'un colis est
-/// embarqué) ouvrent la liste des colis du trajet (`/announcements/:id/bids`) ;
-/// une ligne ouvre la fiche du colis (`/bids/:id`). Au retour de l'une ou de
-/// l'autre, les colis et le trajet sont relus ([openTripParcelsList],
-/// [openTripParcel]). Liste en échec (`BidError`) : « Réessayer » la
-/// redemande.
-/// Filtre les offres réellement embarquées via [isAcceptedTabBid] (source de
-/// vérité du projet : ACCEPTED / HANDED_OVER / IN_TRANSIT / ARRIVED / COMPLETED,
-/// moins les
-/// auto-annulés). Émet une fois l'event analytics `trip_parcels_viewed` au
-/// premier chargement de la liste (total des colis embarqués, aucune PII).
-class TripParcelsSection extends StatefulWidget {
-  const TripParcelsSection({super.key, required this.announcementId});
-
-  /// Trajet dont les colis sont affichés, relus au retour d'un écran ouvert
-  /// depuis la carte.
-  final String announcementId;
-
-  @override
-  State<TripParcelsSection> createState() => _TripParcelsSectionState();
-}
-
-class _TripParcelsSectionState extends State<TripParcelsSection> {
-  /// Garde l'event analytics à un seul tir (pas à chaque rebuild). Mutée hors
-  /// `setState` — elle ne déclenche aucun rendu, juste l'idempotence du log.
-  bool _logged = false;
-
-  void _logOnce(int count) {
-    if (_logged) {
-      return;
-    }
-    _logged = true;
-    unawaited(
-      getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.tripParcelsViewed,
-        properties: {'count': count},
-      ),
-    );
-  }
-
-  /// Liste complète des colis du trajet, ouverte depuis le contexte de la
-  /// section (qui vit autant que l'écran), jamais celui du lien ou du bouton,
-  /// que la liste relue peut démonter.
-  void _openList() =>
-      unawaited(openTripParcelsList(context, widget.announcementId));
-
-  /// Fiche du colis [bidId], ouverte depuis le contexte de la section, jamais
-  /// celui d'une ligne qu'une liste relue peut démonter.
-  void _openParcel(String bidId) => unawaited(
-    openTripParcel(context, tripId: widget.announcementId, bidId: bidId),
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    // Titre et lien suivent la dernière liste reçue : gardés pendant un
-    // rechargement ou après un échec.
-    return BlocBuilder<BidBloc, BidState>(
-      buildWhen: (previous, state) => state is BidListLoaded,
-      builder: (context, state) {
-        final total = state is BidListLoaded
-            ? state.bids.where(isAcceptedTabBid).length
-            : 0;
-        return DetailCard(
-          title: total > 0
-              ? context.l10n.tripParcelsCardTitle(total)
-              : context.l10n.tripOwnerParcelsSectionTitle,
-          trailing: total > 0
-              ? TextButton(
-                  key: const Key('trip-parcels-see-list'),
-                  onPressed: _openList,
-                  // Aligné sur le bord droit du contenu de la carte (sans la
-                  // marge intérieure du bouton), cible tactile de 44 dp gardée.
-                  style: TextButton.styleFrom(
-                    foregroundColor: cs.primary,
-                    textStyle: tt.labelLarge,
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(44, 44),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    context.l10n.tripParcelsSeeList,
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                )
-              : const SizedBox.shrink(),
-          child: BlocBuilder<BidBloc, BidState>(
-            builder: (context, state) {
-              if (state is BidInitial || state is BidLoading) {
-                return Padding(
-                  padding: const EdgeInsets.all(DonySpacing.lg),
-                  child: Center(
-                    child: CircularProgressIndicator(color: cs.primary),
-                  ),
-                );
-              }
-              if (state is BidListLoaded) {
-                final embarked = state.bids
-                    .where(isAcceptedTabBid)
-                    .toList(growable: false);
-
-                // Premier rendu de la liste chargée → tir analytics unique.
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _logOnce(embarked.length);
-                });
-
-                if (embarked.isEmpty) {
-                  return DonyEmptyState(
-                    iconAsset: 'inbox',
-                    title: context.l10n.tripOwnerNoParcelsMessage,
-                    description: context.l10n.tripOwnerParcelsEmptyDescription,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: DonySpacing.xl,
-                    ),
-                  );
-                }
-
-                final preview = tripParcelsPreview(embarked);
-                final hidden = embarked.length - preview.length;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Résumé sur tous les colis, jamais sur les seules lignes
-                    // montrées (FLUTTER-GS).
-                    TripParcelsSummary(bids: embarked),
-                    for (var i = 0; i < preview.length; i++) ...[
-                      if (i > 0) const SizedBox(height: DonySpacing.sm),
-                      TripParcelRow(
-                        bid: preview[i],
-                        onTap: () => _openParcel(preview[i].id),
-                      ),
-                    ],
-                    if (hidden > 0) ...[
-                      const SizedBox(height: DonySpacing.md),
-                      DonyButton(
-                        key: const Key('trip-parcels-see-more'),
-                        label: context.l10n.tripParcelsSeeMore(hidden),
-                        variant: DonyButtonVariant.secondary,
-                        onPressed: _openList,
-                      ),
-                    ],
-                  ],
-                );
-              }
-              // Liste en échec (hors ligne au premier chargement, ou
-              // rechargement visible qui échoue) : sans « Réessayer », plus
-              // aucun chemin ne mènerait aux colis du trajet.
-              if (state is BidError) {
-                return DonyEmptyState(
-                  key: const Key('trip-parcels-load-error'),
-                  type: DonyEmptyStateType.error,
-                  iconAsset: 'circle-alert',
-                  title: context.l10n.commonLoadError,
-                  actionLabel: context.l10n.commonRetry,
-                  onAction: () => context.read<BidBloc>().add(
-                    BidListRequested(widget.announcementId),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        );
-      },
-    );
-  }
-}
+// Pièces des colis du trajet vu par son voyageur, reprises par le sheet
+// « Colis » de l'activité du trajet (`openTripActivitySheet`) : résumé par
+// étape du cycle, ligne d'un colis, ordre et libellés des statuts.
 
 /// Répartition des colis embarqués par étape du cycle réel, pour le résumé
-/// de tête de section (FLUTTER-GS).
+/// du sheet « Colis » et le compteur Colis de l'activité du trajet
+/// (FLUTTER-GS).
 ///
 /// - en route : remis au voyageur ou en transit (`HANDED_OVER`, `IN_TRANSIT`) ;
 /// - à récupérer : acceptés, pas encore remis (`ACCEPTED`). Un
@@ -265,7 +51,7 @@ TripParcelsCounts tripParcelsCounts(Iterable<BidModel> bids) {
   );
 }
 
-/// Ligne de résumé en tête de « Colis dans le trajet » : « 3 colis en route
+/// Ligne de résumé en tête du sheet « Colis » : « 3 colis en route
 /// · 1 à récupérer · 2 livrés ». Segments vides omis ; rien si tous le sont.
 /// Chiffres tabulaires en gras, lue d'un seul tenant par le lecteur d'écran.
 class TripParcelsSummary extends StatelessWidget {
@@ -325,8 +111,8 @@ class TripParcelsSummary extends StatelessWidget {
 
 /// Ligne compacte d'un colis embarqué : miniature optionnelle, contenu, poids,
 /// expéditeur et chip de statut. Tap → détail de l'offre (`/bids/:bidId`),
-/// colis et trajet relus au retour. Reprise par le sheet « Colis » de
-/// l'activité du trajet.
+/// colis et trajet relus au retour (`openTripParcel`), depuis le sheet
+/// « Colis » de l'activité du trajet.
 class TripParcelRow extends StatelessWidget {
   const TripParcelRow({super.key, required this.bid, required this.onTap});
 

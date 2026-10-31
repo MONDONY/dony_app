@@ -36,6 +36,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/map_backed_box.dart';
 import '../../../../helpers/stripe_account_test_doubles.dart';
+import '../../../../helpers/trip_answer_blocs.dart';
 
 class _MockAnnBloc extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
@@ -180,6 +181,7 @@ void main() {
     }
     getIt.registerLazySingleton<AnalyticsService>(() => analytics);
     getIt.registerSingleton<TrackingConsentCubit>(consent);
+    registerInertTripAnswerBlocs();
     getIt.registerFactoryParam<TripDepartCubit, String, void>(
       (id, _) => TripDepartCubit(
         announcementId: id,
@@ -255,14 +257,27 @@ void main() {
 
   const departKey = Key('trip-depart-button');
 
+  // Gain du trajet : case « Gain » de l'activité du trajet, détail dans
+  // son sheet (plus de carte dans le corps).
   group('résumé du trajet', () {
+    final gainCell = find.byKey(const Key('trip-activity-gain'));
+    String gainValue(WidgetTester tester) => tester
+        .widget<Text>(find.byKey(const Key('trip-activity-gain-value')))
+        .data!;
+    Future<void> openGain(WidgetTester tester) async {
+      await tester.tap(gainCell);
+      await settle(tester);
+    }
+
     testWidgets('tripSummaryShowsParcelCountKgAndEarnings', (tester) async {
       await pump(tester, _ann(summary: _summary));
-      expect(find.byKey(const Key('trip-summary-card')), findsOneWidget);
+      expect(find.byKey(const Key('trip-summary-card')), findsNothing);
+      expect(gainValue(tester), contains('42'));
+      await openGain(tester);
+      expect(find.text('Gain estimé'), findsOneWidget);
       expect(find.textContaining('2 colis'), findsWidgets);
       expect(find.textContaining('7,5'), findsWidgets);
-      expect(find.text('Gain estimé'), findsOneWidget);
-      expect(find.textContaining('42'), findsWidgets);
+      expect(find.byKey(const Key('trip-summary-earnings')), findsOneWidget);
       expect(find.textContaining('paiement suit la livraison'), findsOneWidget);
     });
 
@@ -278,36 +293,41 @@ void main() {
           ),
         ),
       );
-      expect(find.byKey(const Key('trip-summary-card')), findsOneWidget);
+      expect(gainValue(tester), '-');
+      await openGain(tester);
+      expect(find.text('Résumé du trajet'), findsOneWidget);
       expect(find.text('Gain estimé'), findsNothing);
+      expect(find.byKey(const Key('trip-summary-earnings')), findsNothing);
       expect(find.textContaining('1 colis'), findsWidgets);
     });
 
     testWidgets('summaryHiddenWhenNoScannedParcel', (tester) async {
-      await pump(tester, _ann());
-      expect(find.byKey(const Key('trip-summary-card')), findsNothing);
-      await pump(
-        tester,
-        _ann(
-          summary: const TripParcelsSummary(
-            count: 0,
-            totalKg: 0,
-            netAmount: 0,
-            currency: 'EUR',
-          ),
-        ),
-      );
-      expect(find.byKey(const Key('trip-summary-card')), findsNothing);
+      for (final summary in const [
+        null,
+        TripParcelsSummary(count: 0, totalKg: 0, netAmount: 0, currency: 'EUR'),
+      ]) {
+        await pump(tester, _ann(summary: summary));
+        expect(gainValue(tester), '-');
+        await openGain(tester);
+        expect(
+          find.byKey(const Key('trip-activity-gain-empty')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('trip-summary-earnings')), findsNothing);
+      }
     });
 
-    // La liste des colis s'ouvre depuis la carte Colis (« Voir la liste ») :
-    // la carte du gain n'a plus de bouton.
+    // La liste des colis s'ouvre depuis le sheet « Colis » : le sheet du
+    // gain est en lecture seule.
     testWidgets('summaryHasNoParcelsButton', (tester) async {
       await pump(tester, _ann(summary: _summary));
-      final card = find.byKey(const Key('trip-summary-card'));
-      expect(card, findsOneWidget);
+      await openGain(tester);
+      expect(find.byKey(const Key('donyBottomSheetFooter')), findsNothing);
       expect(
-        find.descendant(of: card, matching: find.byType(DonyButton)),
+        find.descendant(
+          of: find.byKey(const Key('trip-activity-gain-content')),
+          matching: find.byType(DonyButton),
+        ),
         findsNothing,
       );
       expect(find.text('Voir mes colis'), findsNothing);

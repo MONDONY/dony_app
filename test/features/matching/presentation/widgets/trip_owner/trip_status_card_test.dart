@@ -23,15 +23,15 @@ BidModel _bid(String id, String status) => BidModel(
 
 void main() {
   group('tripStatusCardKindFor', () {
-    test('une carte par état, aucune pour ACTIVE ni un statut inconnu', () {
+    // Redesign du 31/10 : plus de carte pour un trajet publié, en cours ni
+    // terminé, le badge du billet suffit.
+    test('une carte pour brouillon, complet, annulé, retiré ; aucune pour '
+        'ACTIVE, IN_PROGRESS, COMPLETED ni un statut inconnu', () {
       expect(tripStatusCardKindFor('DRAFT'), TripStatusCardKind.draft);
       expect(tripStatusCardKindFor('ACTIVE'), isNull);
       expect(tripStatusCardKindFor('FULL'), TripStatusCardKind.full);
-      expect(
-        tripStatusCardKindFor('IN_PROGRESS'),
-        TripStatusCardKind.inProgress,
-      );
-      expect(tripStatusCardKindFor('COMPLETED'), TripStatusCardKind.completed);
+      expect(tripStatusCardKindFor('IN_PROGRESS'), isNull);
+      expect(tripStatusCardKindFor('COMPLETED'), isNull);
       expect(tripStatusCardKindFor('CANCELLED'), TripStatusCardKind.cancelled);
       expect(
         tripStatusCardKindFor('REMOVED_BY_ADMIN'),
@@ -48,18 +48,15 @@ void main() {
       TripStatusCardKind? kind(List<BidModel>? bids) =>
           tripStatusCardKindFor('IN_PROGRESS', bids: bids);
 
-      test('colis pas encore chargés : en cours', () {
-        expect(kind(null), TripStatusCardKind.inProgress);
+      test('colis pas encore chargés : aucune carte', () {
+        expect(kind(null), isNull);
       });
-      test('colis en transit ou remis : en cours', () {
-        expect(kind([_bid('b1', 'IN_TRANSIT')]), TripStatusCardKind.inProgress);
-        expect(
-          kind([_bid('b1', 'HANDED_OVER')]),
-          TripStatusCardKind.inProgress,
-        );
+      test('colis en transit ou remis : aucune carte', () {
+        expect(kind([_bid('b1', 'IN_TRANSIT')]), isNull);
+        expect(kind([_bid('b1', 'HANDED_OVER')]), isNull);
       });
-      test('aucun colis : en cours', () {
-        expect(kind(const []), TripStatusCardKind.inProgress);
+      test('aucun colis : aucune carte', () {
+        expect(kind(const []), isNull);
       });
       test('colis arrivés, plus rien en route : arrivé', () {
         expect(kind([_bid('b1', 'ARRIVED')]), TripStatusCardKind.arrived);
@@ -73,25 +70,19 @@ void main() {
           TripStatusCardKind.arrived,
         );
       });
-      test('un colis arrivé, un autre encore en route : en cours', () {
-        expect(
-          kind([_bid('b1', 'ARRIVED'), _bid('b2', 'IN_TRANSIT')]),
-          TripStatusCardKind.inProgress,
-        );
+      test('un colis arrivé, un autre encore en route : aucune carte', () {
+        expect(kind([_bid('b1', 'ARRIVED'), _bid('b2', 'IN_TRANSIT')]), isNull);
         expect(
           kind([_bid('b1', 'ARRIVED'), _bid('b2', 'HANDED_OVER')]),
-          TripStatusCardKind.inProgress,
+          isNull,
         );
       });
-      test('tous livrés : en cours (le back passe ensuite COMPLETED)', () {
-        expect(kind([_bid('b1', 'COMPLETED')]), TripStatusCardKind.inProgress);
+      test('tous livrés : aucune carte (le back passe ensuite COMPLETED)', () {
+        expect(kind([_bid('b1', 'COMPLETED')]), isNull);
       });
       test('colis arrivé sur un autre statut : la carte du statut', () {
         final arrived = [_bid('b1', 'ARRIVED')];
-        expect(
-          tripStatusCardKindFor('COMPLETED', bids: arrived),
-          TripStatusCardKind.completed,
-        );
+        expect(tripStatusCardKindFor('COMPLETED', bids: arrived), isNull);
         expect(
           tripStatusCardKindFor('CANCELLED', bids: arrived),
           TripStatusCardKind.cancelled,
@@ -197,13 +188,6 @@ void main() {
       expect(support, findsOneWidget);
     });
 
-    testWidgets('en cours', (tester) async {
-      await pump(tester, TripStatusCardKind.inProgress);
-      expect(find.text(fr.tripStatusInProgressMessage), findsOneWidget);
-      expect(banner(tester).type, DonyStatusBannerType.info);
-      expect(support, findsNothing);
-    });
-
     testWidgets('arrivé : les colis attendent leurs destinataires', (
       tester,
     ) async {
@@ -212,16 +196,9 @@ void main() {
         find.text('Trajet arrivé : vos colis attendent leurs destinataires.'),
         findsOneWidget,
       );
-      expect(find.text(fr.tripStatusInProgressMessage), findsNothing);
       expect(banner(tester).type, DonyStatusBannerType.info);
       expect(banner(tester).iconAsset, 'flag');
       expect(support, findsNothing);
-    });
-
-    testWidgets('terminé', (tester) async {
-      await pump(tester, TripStatusCardKind.completed);
-      expect(find.text(fr.tripStatusCompletedMessage), findsOneWidget);
-      expect(banner(tester).type, DonyStatusBannerType.info);
     });
 
     testWidgets('annulé : procédure de retour des colis remis', (tester) async {
@@ -267,7 +244,7 @@ void main() {
 
     for (final kind in [
       TripStatusCardKind.draft,
-      TripStatusCardKind.completed,
+      TripStatusCardKind.arrived,
       TripStatusCardKind.cancelled,
     ]) {
       testWidgets('${kind.name} : pas de lien vers le support', (tester) async {
@@ -313,9 +290,7 @@ void main() {
       for (final text in [
         l.tripStatusFullMessage,
         l.tripStatusFullNoRescheduleMessage,
-        l.tripStatusInProgressMessage,
         l.tripStatusArrivedMessage,
-        l.tripStatusCompletedMessage,
         l.tripStatusCancelledMessage,
         l.tripStatusRemovedMessage,
       ]) {

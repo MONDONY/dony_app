@@ -28,6 +28,7 @@ import 'package:dony/features/matching/presentation/widgets/recipient_contact/no
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_body.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_options_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_sticky_bar.dart';
@@ -46,9 +47,10 @@ import 'package:share_plus/share_plus.dart';
 /// Écran plein écran « Trajet » côté propriétaire (voyageur).
 ///
 /// Barre d'application : retour, icône de partage de l'affiche (trajet
-/// ouvert), menu ⋮ ([TripOwnerOptionsButton]), scarabée. Corps en sections
-/// ([TripOwnerBody] : billet, carte de statut, « À traiter », étapes et
-/// audience, Demandes, Colis, Gain, « Votre trajet »), pied collant hors du
+/// ouvert), menu ⋮ ([TripOwnerOptionsButton]), scarabée. Corps en tableau de
+/// bord ([TripOwnerBody] : billet, carte de statut, « À traiter » avec la
+/// réponse directe aux demandes, « Activité du trajet », « Votre trajet »),
+/// sous le [TripBidAnswerScope] du propriétaire ; pied collant hors du
 /// défilement ([TripOwnerStickyBar], un ou deux boutons).
 ///
 /// L'écran possède les blocs de la route et en écoute les suites : les
@@ -304,14 +306,18 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               return _OwnerOf(
                 trip: a,
                 builder: (context, isOwner) {
-                  if (isOwner) {
-                    _askTrackingConsentOnce(a);
-                  }
-                  return TripOwnerBody(
+                  final body = TripOwnerBody(
                     trip: a,
                     isOwner: isOwner,
                     bottomPadding: safeBottom,
                   );
+                  if (!isOwner) return body;
+                  _askTrackingConsentOnce(a);
+                  // Réponse directe aux demandes (carte « Demande 1 sur N »,
+                  // sheet des demandes) : au-dessus du corps, sous les blocs
+                  // de la route qu'elle relit après chaque réponse. Le
+                  // contrôleur survit à la disparition de la carte.
+                  return TripBidAnswerScope(tripId: id, child: body);
                 },
               );
             },

@@ -14250,13 +14250,13 @@ abstract class AppLocalizations {
   /// **'Ce trajet est un brouillon'**
   String get tripOwnerDraftBannerTitle;
 
-  /// Carte d'audience de l'écran propriétaire d'un trajet : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_section.dart)
+  /// Ligne d'audience de l'écran propriétaire d'un trajet, sous « Activité du trajet » : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_line.dart)
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =0{Personne n\'a encore vu votre trajet} =1{{count} personne a vu votre trajet} other{{count} personnes ont vu votre trajet}}'**
   String tripAudienceViewers(int count);
 
-  /// Carte d'audience : consultations de la page web publique de l'affiche du trajet (trip_audience_section.dart)
+  /// Ligne d'audience : consultations de la page web publique de l'affiche du trajet (trip_audience_line.dart)
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =1{{count} vue de votre affiche partagée} other{{count} vues de votre affiche partagée}}'**
@@ -14424,7 +14424,7 @@ abstract class AppLocalizations {
   /// **'Colis'**
   String get tripOwnerParcelsTile;
 
-  /// Tooltip de la tuile « Colis » désactivée (écran du trajet, ex-grille d’actions) ; réutilisé comme titre de l'état vide de la section Colis (trip_parcels_section.dart, même préfixe, texte identique).
+  /// Tooltip de la tuile « Colis » désactivée (écran du trajet, ex-grille d’actions) ; réutilisé comme titre de l'état vide du sheet « Colis » de l'activité du trajet (trip_activity_sheets.dart, même préfixe, texte identique).
   ///
   /// In fr, this message translates to:
   /// **'Aucun colis embarqué'**
@@ -14448,73 +14448,73 @@ abstract class AppLocalizations {
   /// **'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.'**
   String get tripOwnerDeleteActiveMessage;
 
-  /// Titre de la section colis embarqués (trip_parcels_section.dart).
+  /// Titre du sheet « Colis » de l’activité du trajet : tous les colis embarqués (trip_activity_sheets.dart).
   ///
   /// In fr, this message translates to:
   /// **'Colis dans le trajet'**
   String get tripOwnerParcelsSectionTitle;
 
-  /// Description de l'état vide de la section (trip_parcels_section.dart).
+  /// Description de l'état vide du sheet « Colis » de l'activité du trajet (trip_activity_sheets.dart).
   ///
   /// In fr, this message translates to:
   /// **'Les colis acceptés apparaîtront ici.'**
   String get tripOwnerParcelsEmptyDescription;
 
-  /// Statut compact de la section colis embarqués (trip_parcels_section.dart _statusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté.
+  /// Statut compact de la section colis embarqués (trip_parcels_section.dart tripParcelStatusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté.
   ///
   /// In fr, this message translates to:
   /// **'Accepté'**
   String get tripOwnerParcelsStatusAccepted;
 
-  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Paiement en attente'**
   String get tripOwnerParcelsStatusAwaitingPayment;
 
-  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Remis'**
   String get tripOwnerParcelsStatusHandedOver;
 
-  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'En transit'**
   String get tripOwnerParcelsStatusInTransit;
 
-  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Arrivé'**
   String get tripOwnerParcelsStatusArrived;
 
-  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Livré'**
   String get tripOwnerParcelsStatusDelivered;
 
-  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Absent'**
   String get tripOwnerParcelsStatusNoShow;
 
-  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Refusé'**
   String get tripOwnerParcelsStatusParcelRefused;
 
-  /// Statut compact (trip_parcels_section.dart _statusMeta). Orthographe américaine (R38).
+  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta). Orthographe américaine (R38).
   ///
   /// In fr, this message translates to:
   /// **'Annulé'**
   String get tripOwnerParcelsStatusCancelled;
 
-  /// Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcels_section.dart _ColisRow).
+  /// Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcels_section.dart TripParcelRow).
   ///
   /// In fr, this message translates to:
   /// **'Colis'**
@@ -36780,12 +36780,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Une demande attend votre réponse} other{{count} demandes attendent votre réponse}}'**
   String tripTodoRequestsSummary(int count);
 
-  /// Sheet « Demandes à traiter » de l'écran du trajet : phrase sous la liste des demandes (trip_todo_sheets.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Vous acceptez ou refusez chaque demande depuis la liste des demandes.'**
-  String get tripTodoRequestsHint;
-
   /// Écran du trajet (propriétaire), « À traiter » : résumé de la tuile « Je pars » (trip_todo_tiles.dart).
   ///
   /// In fr, this message translates to:
@@ -36822,23 +36816,11 @@ abstract class AppLocalizations {
   /// **'Trajet complet : plus de demande possible. Pour annuler, contactez le support.'**
   String get tripStatusFullNoRescheduleMessage;
 
-  /// Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS dont des colis sont encore en route, ou colis pas encore chargés (trip_status_card.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Trajet en cours : vos colis voyagent avec vous.'**
-  String get tripStatusInProgressMessage;
-
   /// Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS après « Arrivé à destination » : un colis est ARRIVED et plus aucun n'est remis ou en transit ; le trajet ne passe COMPLETED qu'au dernier colis livré (trip_status_card.dart).
   ///
   /// In fr, this message translates to:
   /// **'Trajet arrivé : vos colis attendent leurs destinataires.'**
   String get tripStatusArrivedMessage;
-
-  /// Carte de statut de l'écran du trajet (propriétaire), trajet COMPLETED (trip_status_card.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Trajet terminé : il ne reçoit plus de demande.'**
-  String get tripStatusCompletedMessage;
 
   /// Carte de statut de l'écran du trajet (propriétaire), trajet CANCELLED (trip_status_card.dart).
   ///
@@ -37068,65 +37050,17 @@ abstract class AppLocalizations {
   /// **'Modifier les instructions'**
   String get tripTileArrivalEditButton;
 
-  /// Carte « Demandes » de l'écran du trajet (propriétaire) : nombre de demandes PENDING / PAYMENT_ESCROWED qui attendent la réponse du voyageur, count ≥ 1 (trip_requests_card.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{1 demande à traiter} other{{count} demandes à traiter}}'**
-  String tripRequestsCardPending(int count);
-
-  /// Carte « Demandes » de l'écran du trajet : sous-ligne quand des demandes attendent une réponse (trip_requests_card.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Répondez pour remplir votre trajet.'**
-  String get tripRequestsCardPendingHint;
-
-  /// Carte « Demandes » de l'écran du trajet : aucune demande n'attend de réponse ; la carte reste affichée et tappable (PROD-1N, trip_requests_card.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucune demande à traiter'**
-  String get tripRequestsCardEmpty;
-
-  /// Carte « Demandes » de l'écran du trajet : sous-ligne sans demande à traiter (trip_requests_card.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Elles arrivent ici dès qu\'un expéditeur propose un colis.'**
-  String get tripRequestsCardEmptyHint;
-
-  /// Carte « Demandes » de l'écran du trajet : titre quand le nombre de demandes à traiter n'est pas encore connu (liste des colis en chargement, en échec ou jamais chargée) ; ne jamais affirmer « aucune » (trip_requests_card.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Voir les demandes de ce trajet'**
-  String get tripRequestsCardUnknown;
-
-  /// Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet parti (IN_PROGRESS) ; la carte n'est affichée que s'il reste des demandes à traiter, le back refusant tout nouveau colis (trip_requests_card.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Trajet parti : plus de nouvelle demande.'**
-  String get tripRequestsCardDepartedHint;
-
   /// Écran du trajet vu par son voyageur : titre de la grille de tuiles (itinéraire et lieux, paiements, conditions, affiche, arrivée), chacune ouvrant un bottom sheet (trip_owner_body.dart).
   ///
   /// In fr, this message translates to:
   /// **'Votre trajet'**
   String get tripSectionYourTrip;
 
-  /// Lien de l'en-tête de la carte « Colis dans le trajet » : ouvre la liste des colis du trajet (/announcements/:id/bids), affiché dès qu'un colis est embarqué ; une ligne, sans icône (trip_parcels_section.dart).
+  /// Écran du trajet vu par son voyageur : titre de la section des compteurs Demandes, Colis et Gain (chacun ouvrant un bottom sheet) et de la ligne d'audience, sous « À traiter » ; absente d'un brouillon, d'un trajet annulé ou retiré par l'équipe (trip_owner_body.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Voir la liste'**
-  String get tripParcelsSeeList;
-
-  /// Titre de la carte « Colis dans le trajet » de l'écran du trajet (propriétaire) quand au moins un colis est embarqué : count = nombre total de colis embarqués (isAcceptedTabBid), même quand la carte n'en montre que deux. Sans colis, ou tant que la liste n'a pas répondu, le titre seul (tripOwnerParcelsSectionTitle) (trip_parcels_section.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Colis dans le trajet · {count}'**
-  String tripParcelsCardTitle(int count);
-
-  /// Bouton secondaire pleine largeur sous les deux premiers colis de la carte « Colis dans le trajet », affiché au-delà de deux colis : count = colis non montrés (total - 2, count ≥ 1). Ouvre la liste des colis du trajet (/announcements/:id/bids), comme « Voir la liste ». Une ligne à 360 dp × 1,3 (trip_parcels_section.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{Voir 1 autre colis} other{Voir les {count} autres colis}}'**
-  String tripParcelsSeeMore(int count);
+  /// **'Activité du trajet'**
+  String get tripSectionActivity;
 
   /// Écran du trajet (propriétaire) : libellé d'accessibilité et info-bulle du bouton ⋮ de la barre d'application, qui ouvre le menu des actions du trajet (trip_owner_options_sheet.dart).
   ///

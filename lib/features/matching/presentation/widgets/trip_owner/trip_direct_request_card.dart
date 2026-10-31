@@ -1,5 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -192,6 +195,11 @@ class TripRequestIdentity extends StatelessWidget {
 /// Accepter plein vert). Répond par le [TripBidAnswerScope] au-dessus : tous
 /// les boutons sont éteints pendant une réponse, celui de la demande en
 /// cours tourne.
+///
+/// Acceptation refusée pour de bon ([TripBidAnswerController.refused] :
+/// trajet complet, fermé…) : le motif du serveur s'affiche au-dessus des
+/// boutons et « Accepter » reste éteint, comme dans la liste des demandes
+/// (`DemandesScreen`) ; « Refuser » reste possible.
 class TripRequestAnswerButtons extends StatelessWidget {
   const TripRequestAnswerButtons({super.key, required this.bid});
 
@@ -201,36 +209,92 @@ class TripRequestAnswerButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final controller = TripBidAnswerScope.of(context);
-    return ValueListenableBuilder<TripBidAnswering?>(
-      valueListenable: controller.answering,
-      builder: (context, answering, _) {
-        final busy = answering != null;
-        bool spinning(TripBidAnswerAction action) =>
-            answering?.bidId == bid.id && answering?.action == action;
-        return Row(
-          children: [
-            Expanded(
-              child: DonyButton(
-                key: Key('trip-request-reject-${bid.id}'),
-                label: l.bidDetailDeclineRequestButton,
-                variant: DonyButtonVariant.destructiveGhost,
-                isLoading: spinning(TripBidAnswerAction.reject),
-                onPressed: busy ? null : () => controller.reject(bid),
-              ),
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: DonyButton(
-                key: Key('trip-request-accept-${bid.id}'),
-                label: l.bidDetailAcceptRequestButton,
-                variant: DonyButtonVariant.success,
-                isLoading: spinning(TripBidAnswerAction.accept),
-                onPressed: busy ? null : () => controller.accept(bid),
-              ),
-            ),
-          ],
+    return ValueListenableBuilder<Map<String, AppException>>(
+      valueListenable: controller.refused,
+      builder: (context, refused, _) {
+        final refusal = refused[bid.id];
+        return ValueListenableBuilder<TripBidAnswering?>(
+          valueListenable: controller.answering,
+          builder: (context, answering, _) {
+            final busy = answering != null;
+            bool spinning(TripBidAnswerAction action) =>
+                answering?.bidId == bid.id && answering?.action == action;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (refusal != null) ...[
+                  _RefusalNote(
+                    key: Key('trip-request-refused-${bid.id}'),
+                    message: ErrorCatalog.lookup(refusal, l10n: l).message,
+                  ),
+                  const SizedBox(height: DonySpacing.sm),
+                ],
+                Row(
+                  children: [
+                    Expanded(
+                      child: DonyButton(
+                        key: Key('trip-request-reject-${bid.id}'),
+                        label: l.bidDetailDeclineRequestButton,
+                        variant: DonyButtonVariant.destructiveGhost,
+                        isLoading: spinning(TripBidAnswerAction.reject),
+                        onPressed: busy ? null : () => controller.reject(bid),
+                      ),
+                    ),
+                    const SizedBox(width: DonySpacing.md),
+                    Expanded(
+                      child: DonyButton(
+                        key: Key('trip-request-accept-${bid.id}'),
+                        label: l.bidDetailAcceptRequestButton,
+                        variant: DonyButtonVariant.success,
+                        isLoading: spinning(TripBidAnswerAction.accept),
+                        onPressed: busy || refusal != null
+                            ? null
+                            : () => controller.accept(bid),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
         );
       },
+    );
+  }
+}
+
+/// Motif d'un refus définitif de l'acceptation, au style de celui de la
+/// liste des demandes (bandeau d'alerte discret).
+class _RefusalNote extends StatelessWidget {
+  const _RefusalNote({super.key, required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: cs.warningLight,
+        borderRadius: BorderRadius.circular(DonyRadius.sm),
+      ),
+      child: Row(
+        children: [
+          DonyIcon('circle-alert', size: 14, color: cs.warning),
+          const SizedBox(width: DonySpacing.xs),
+          Flexible(
+            child: Text(
+              message,
+              style: tt.labelMedium?.copyWith(color: cs.warning),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 // Bottom sheets des tuiles « À traiter » de l'écran du trajet (vue du
-// voyageur propriétaire) : demandes à traiter, « Je pars », carte à ajouter.
+// voyageur propriétaire) : « Je pars », carte à ajouter (les demandes ont
+// leur carte de réponse directe et leur sheet d'activité).
 // Contenu, bouton dans le pied, blocs de l'écran reposés, navigation et
 // rechargement au retour, fermeture seule quand la tuile n'a plus lieu
 // d'être (jamais par-dessus une confirmation), mesure d'ouverture, libellés
@@ -12,7 +13,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -337,7 +337,6 @@ void main() {
 
   Finder footer() => find.byKey(const Key('donyBottomSheetFooter'));
   Finder inFooter(Finder f) => find.descendant(of: footer(), matching: f);
-  Finder requestsButton() => find.byKey(const Key('trip-todo-requests-button'));
   Finder departButton() => find.byKey(const Key('trip-depart-button'));
   Finder enableCard() => find.byKey(const Key('enable-card-on-trip-cta'));
   Finder activateCard() => find.byKey(const Key('activate-card-payments-cta'));
@@ -348,101 +347,11 @@ void main() {
     expect(find.byType(DonyButton), findsOneWidget);
   }
 
-  group('demandes à traiter', () {
-    testWidgets('une ligne par demande en attente, bouton dans le pied', (
-      tester,
-    ) async {
-      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
-
-      expect(tester.takeException(), isNull);
-      expect(find.text('Demandes à traiter'), findsOneWidget);
-      expect(find.byKey(const Key('trip-todo-request-b1')), findsOneWidget);
-      expect(find.byKey(const Key('trip-todo-request-b2')), findsOneWidget);
-      // Un colis déjà accepté n'est pas une demande à traiter.
-      expect(find.byKey(const Key('trip-todo-request-b3')), findsNothing);
-      expect(find.text('Vêtements'), findsOneWidget);
-      expect(find.textContaining('3 kg'), findsOneWidget);
-      expect(find.textContaining('1.5 kg'), findsOneWidget);
-      // Net du voyageur quand le back le sert, rien sinon.
-      expect(find.textContaining('42'), findsOneWidget);
-      expect(
-        find.text(
-          'Vous acceptez ou refusez chaque demande depuis la liste des '
-          'demandes.',
-        ),
-        findsOneWidget,
-      );
-      expectSingleFooterButton(requestsButton());
-      expect(find.text('Voir les demandes (2)'), findsOneWidget);
-    });
-
-    testWidgets('liste pas encore chargée : nombre servi par le trajet', (
-      tester,
-    ) async {
-      await open(
-        tester,
-        trip: _trip(pendingBidCount: 2),
-        tile: TripTodoTile.requests,
-        bidState: BidLoading(),
-      );
-
-      expect(tester.takeException(), isNull);
-      expect(find.text('2 demandes attendent votre réponse'), findsOneWidget);
-      expect(find.byKey(const Key('trip-todo-request-b1')), findsNothing);
-      expect(find.text('Voir les demandes (2)'), findsOneWidget);
-    });
-
-    testWidgets('« Voir les demandes » : sheet fermé, demandes du trajet, '
-        'écran relu au retour', (tester) async {
-      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
-
-      await tester.tap(requestsButton());
-      await tester.pumpAndSettle();
-
-      expect(find.text('Demandes à traiter'), findsNothing);
-      expect(
-        find.text('demandes:filter=aTraiter&announcement=trip-1'),
-        findsOneWidget,
-      );
-      verifyNever(() => bidBloc.add(any()));
-
-      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
-      await tester.pumpAndSettle();
-
-      final reloads = verify(() => bidBloc.add(captureAny())).captured;
-      expect(reloads.single, isA<BidListRequested>());
-      final reload = reloads.single as BidListRequested;
-      expect(reload.announcementId, 'trip-1');
-      // Relecture silencieuse : ni indicateur de chargement ni tuile qui
-      // retombe sur `pendingBidCount` le temps de la réponse.
-      expect(reload.silent, isTrue);
-      final details = verify(() => annBloc.add(captureAny())).captured;
-      expect((details.single as AnnouncementDetailRequested).id, 'trip-1');
-    });
-
-    testWidgets('double appui sur « Voir les demandes » : une seule page', (
-      tester,
-    ) async {
-      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
-
-      await tester.tap(requestsButton());
-      await tester.tap(requestsButton(), warnIfMissed: false);
-      await tester.pumpAndSettle();
-      expect(
-        find.text('demandes:filter=aTraiter&announcement=trip-1'),
-        findsOneWidget,
-      );
-
-      // Un seul retour suffit : aucune seconde page empilée dessous.
-      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
-      await tester.pumpAndSettle();
-      expect(
-        find.text('demandes:filter=aTraiter&announcement=trip-1'),
-        findsNothing,
-      );
-      verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
-    });
-
+  // Les demandes à traiter n'ouvrent plus ce sheet : carte de réponse
+  // directe et sheet d'activité « Demandes » (trip_direct_request_card_test,
+  // trip_activity_sheets_test). La mécanique commune du sheet est vérifiée
+  // sur la tuile « carte ».
+  group('mécanique du sheet', () {
     testWidgets('double appui sur « Ajouter la carte » : une seule édition', (
       tester,
     ) async {
@@ -461,59 +370,13 @@ void main() {
       expect(find.text('save-trip'), findsNothing);
     });
 
-    testWidgets('les demandes relues sont reprises par le sheet', (
-      tester,
-    ) async {
-      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
-
-      bidStates.add(
-        BidListLoaded([
-          ..._pendingBids,
-          _bid('b4', 'PENDING', description: 'Livres', weightKg: 4),
-        ]),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('trip-todo-request-b4')), findsOneWidget);
-      expect(find.text('Voir les demandes (3)'), findsOneWidget);
-    });
-
-    testWidgets('un rechargement en cours garde les dernières demandes', (
-      tester,
-    ) async {
-      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
-
-      bidStates.add(BidLoading());
-      await tester.pumpAndSettle();
-
-      expect(find.text('Demandes à traiter'), findsOneWidget);
-      expect(find.byKey(const Key('trip-todo-request-b1')), findsOneWidget);
-    });
-
-    testWidgets('dernière demande traitée : le sheet se ferme seul', (
-      tester,
-    ) async {
-      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
-
-      bidStates.add(BidListLoaded([_bid('b1', 'ACCEPTED')]));
-      await tester.pumpAndSettle();
-
-      expect(tester.takeException(), isNull);
-      expect(find.text('Demandes à traiter'), findsNothing);
-      expect(find.text('open-todo'), findsOneWidget);
-    });
-
-    testWidgets('trajet relu terminé : le sheet se ferme seul', (tester) async {
-      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
-
-      annStates.add(AnnouncementDetailLoaded(_trip(status: 'COMPLETED')));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Demandes à traiter'), findsNothing);
-    });
-
     testWidgets('un autre trajet relu ne change rien', (tester) async {
-      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
+      await open(
+        tester,
+        trip: _cashTrip(),
+        tile: TripTodoTile.card,
+        stripe: _ready,
+      );
 
       final other = AnnouncementModel(
         id: 'trip-2',
@@ -530,14 +393,38 @@ void main() {
       annStates.add(AnnouncementDetailLoaded(other));
       await tester.pumpAndSettle();
 
-      expect(find.text('Demandes à traiter'), findsOneWidget);
+      expect(enableCard(), findsOneWidget);
+    });
+
+    testWidgets('un rechargement en cours ou en échec garde le sheet', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        trip: _cashTrip(),
+        tile: TripTodoTile.card,
+        stripe: _ready,
+      );
+
+      bidStates.add(BidLoading());
+      await tester.pumpAndSettle();
+      expect(enableCard(), findsOneWidget);
+
+      bidStates.add(BidError(const NetworkException('x')));
+      await tester.pumpAndSettle();
+      expect(enableCard(), findsOneWidget);
     });
 
     testWidgets('jamais refermé par-dessus une confirmation : fermé à son '
         'retour au premier plan', (tester) async {
-      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
+      await open(
+        tester,
+        trip: _cashTrip(),
+        tile: TripTodoTile.card,
+        stripe: _ready,
+      );
 
-      final sheetContext = tester.element(requestsButton());
+      final sheetContext = tester.element(enableCard());
       unawaited(
         showDialog<void>(
           context: sheetContext,
@@ -546,16 +433,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      bidStates.add(BidListLoaded(const []));
+      // Un colis accepté : le back refuserait la modification, la tuile
+      // n'a plus lieu d'être.
+      bidStates.add(BidListLoaded([_bid('b9', 'ACCEPTED')]));
       await tester.pumpAndSettle();
       expect(find.text('confirmation'), findsOneWidget);
-      expect(find.text('Demandes à traiter'), findsOneWidget);
+      expect(enableCard(), findsOneWidget);
 
       tester.state<NavigatorState>(find.byType(Navigator).first).pop();
       await tester.pumpAndSettle();
 
       expect(find.text('confirmation'), findsNothing);
-      expect(find.text('Demandes à traiter'), findsNothing);
+      expect(enableCard(), findsNothing);
     });
 
     testWidgets('sans blocs à l\'écran : contenu de l\'ouverture', (
@@ -563,142 +452,14 @@ void main() {
     ) async {
       await open(
         tester,
-        trip: _trip(pendingBidCount: 1),
-        tile: TripTodoTile.requests,
+        trip: _cashTrip(),
+        tile: TripTodoTile.card,
         withBlocs: false,
       );
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Une demande attend votre réponse'), findsOneWidget);
-      expectSingleFooterButton(requestsButton());
-    });
-  });
-
-  group('lignes de demande hors cas nominal', () {
-    Future<void> openWith(
-      WidgetTester tester,
-      List<BidModel> bids, {
-      Locale locale = const Locale('fr'),
-    }) => open(
-      tester,
-      trip: _trip(),
-      tile: TripTodoTile.requests,
-      bidState: BidListLoaded(bids),
-      locale: locale,
-    );
-
-    String rowText(WidgetTester tester, String id) => tester
-        .widgetList<Text>(
-          find.descendant(
-            of: find.byKey(Key('trip-todo-request-$id')),
-            matching: find.byType(Text),
-          ),
-        )
-        .map((t) => t.data)
-        .join(' | ');
-
-    testWidgets('catégories traduites, prioritaires sur la description', (
-      tester,
-    ) async {
-      await openWith(tester, locale: const Locale('en'), [
-        _bid(
-          'c1',
-          'PENDING',
-          contentCategory: 'Documents & administratif,Vêtements & tissus',
-          description: 'Mes papiers',
-        ),
-      ]);
-
-      expect(
-        rowText(tester, 'c1'),
-        startsWith('Documents & paperwork, Clothing & fabrics | '),
-      );
-      expect(find.text('Mes papiers'), findsNothing);
-    });
-
-    testWidgets('ni catégorie ni description (ou vides) : « Colis »', (
-      tester,
-    ) async {
-      await openWith(tester, [
-        _bid('d1', 'PENDING'),
-        _bid('d2', 'PENDING', contentCategory: '', description: '  '),
-      ]);
-
-      expect(rowText(tester, 'd1'), startsWith('Colis | '));
-      expect(rowText(tester, 'd2'), startsWith('Colis | '));
-    });
-
-    testWidgets('expéditeur nommé ou anonyme, poids absent ou décimal', (
-      tester,
-    ) async {
-      await openWith(tester, [
-        _bid('s1', 'PENDING', senderName: 'Awa', weightKg: 2.5),
-        _bid('s2', 'PENDING'),
-      ]);
-
-      expect(rowText(tester, 's1'), contains('Awa · 2.5 kg'));
-      // Sans nom : le libellé générique ; sans poids : pas de « · ».
-      expect(rowText(tester, 's2'), endsWith('| Expéditeur'));
-    });
-
-    testWidgets('net : servi, sinon prix au kilo × poids, sinon rien', (
-      tester,
-    ) async {
-      await openWith(tester, [
-        _bid('n1', 'PENDING', net: 42, pricePerKg: 99, weightKg: 1),
-        _bid('n2', 'PENDING', pricePerKg: 8, weightKg: 3),
-        _bid('n3', 'PENDING', weightKg: 3),
-      ]);
-
-      expect(rowText(tester, 'n1'), endsWith(formatPriceIn(42, 'EUR')));
-      // Même repli que la liste des demandes (`travelerNetAmount`).
-      expect(rowText(tester, 'n2'), endsWith(formatPriceIn(24, 'EUR')));
-      expect(rowText(tester, 'n3'), endsWith('3 kg'));
-    });
-
-    testWidgets('devise du colis (XOF)', (tester) async {
-      await openWith(tester, [
-        _bid('x1', 'PENDING', net: 25000, weightKg: 5, currency: 'XOF'),
-      ]);
-
-      expect(rowText(tester, 'x1'), endsWith(formatPriceIn(25000, 'XOF')));
-      expect(rowText(tester, 'x1'), contains('CFA'));
-    });
-  });
-
-  group('dernières données gardées', () {
-    testWidgets('ouvert pendant un rechargement : colis de la tuile repris, '
-        'pas de repli sur pendingBidCount ni de fermeture', (tester) async {
-      await open(
-        tester,
-        // Le détail ne sert pas pendingBidCount (0).
-        trip: _trip(),
-        tile: TripTodoTile.requests,
-        bidState: BidLoading(),
-        bids: _pendingBids,
-      );
-
-      expect(tester.takeException(), isNull);
-      expect(find.text('Demandes à traiter'), findsOneWidget);
-      expect(find.byKey(const Key('trip-todo-request-b1')), findsOneWidget);
-      expect(find.text('Voir les demandes (2)'), findsOneWidget);
-
-      // La relecture répond : le sheet la suit.
-      bidStates.add(BidListLoaded([_pendingBids.first]));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('trip-todo-request-b2')), findsNothing);
-      expect(find.text('Voir les demandes (1)'), findsOneWidget);
-    });
-
-    testWidgets('une erreur de relecture garde les dernières demandes', (
-      tester,
-    ) async {
-      await open(tester, trip: _trip(), tile: TripTodoTile.requests);
-
-      bidStates.add(BidError(const NetworkException('x')));
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('trip-todo-request-b1')), findsOneWidget);
+      expect(find.byKey(const Key('trip-todo-card-content')), findsOneWidget);
+      expect(find.byType(DonyButton), findsOneWidget);
     });
   });
 
@@ -972,17 +733,13 @@ void main() {
   });
 
   group('mesures', () {
-    for (final tile in TripTodoTile.values) {
+    for (final tile in [TripTodoTile.depart, TripTodoTile.card]) {
       testWidgets('bid_detail_tile_opened ${tile.name}, role trip_owner', (
         tester,
       ) async {
         await open(
           tester,
-          trip: switch (tile) {
-            TripTodoTile.requests => _trip(),
-            TripTodoTile.depart => _departTrip(),
-            TripTodoTile.card => _cashTrip(),
-          },
+          trip: tile == TripTodoTile.depart ? _departTrip() : _cashTrip(),
           tile: tile,
         );
         verify(
@@ -1023,14 +780,6 @@ void main() {
               String,
             )
           >[
-            (
-              'demandes',
-              TripTodoTile.requests,
-              _trip(),
-              _notReady,
-              requestsButton,
-              l.listingSeeRequestsButton(2),
-            ),
             (
               'départ',
               TripTodoTile.depart,

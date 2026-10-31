@@ -4,9 +4,12 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
@@ -21,6 +24,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_summary_card.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,8 +35,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// tile`). Nom du sheet : `trip-owner/activity-` suivi du nom de [activity].
 ///
 /// Comme les sheets « À traiter » (`openTripTodoSheet`) : le sheet s'ouvre
-/// sur le navigateur racine, les blocs de l'écran trouvés sous [context] y
-/// sont reposés par le `wrapper`, avec le [TripBidAnswerScope] de l'écran
+/// sur le navigateur racine, les blocs de l'écran trouvés sous [context]
+/// (trajet, colis, compte de paiement, `TripDepartCubit`) y sont reposés par
+/// le `wrapper`, avec le [TripBidAnswerScope] de l'écran
 /// (exigé pour [TripActivity.requests]). Contenu et titre suivent les mêmes
 /// données que l'écran ([TripTodoLive] ; [bids] : derniers colis connus de
 /// l'écran, repris pendant un rechargement), et les demandes traitées depuis
@@ -103,6 +108,10 @@ Future<void> openTripActivitySheet(
         if (blocs.bids case final b?) BlocProvider<BidBloc>.value(value: b),
         if (blocs.stripe case final b?)
           BlocProvider<StripeAccountBloc>.value(value: b),
+        // Suivi par `TripTodoLive` dès que l'écran le fournit : sans lui
+        // sous le navigateur racine, le contenu ne se construirait pas.
+        if (blocs.depart case final b?)
+          BlocProvider<TripDepartCubit>.value(value: b),
       ];
       final provided = providers.isEmpty
           ? content
@@ -142,6 +151,7 @@ Future<void> openTripActivitySheet(
                 onOpenParcel: (id) => openParcel(sheetContext, id),
               ),
               TripActivity.parcels => _ParcelsContent(
+                tripId: live.trip.id,
                 bids: live.bids,
                 onOpenParcel: (id) => openParcel(sheetContext, id),
               ),
@@ -253,9 +263,19 @@ class _RequestsContent extends StatelessWidget {
 /// ligne par colis. Mesure l'ouverture une fois la liste connue
 /// (`trip_parcels_viewed`, total des colis embarqués) et chaque filtre
 /// choisi (`trip_parcels_filtered`).
+///
+/// Liste jamais reçue et chargement en échec (`BidError` du `BidBloc` de
+/// l'écran : hors ligne au premier chargement) : « Réessayer » la redemande,
+/// sans quoi plus aucun chemin ne mènerait aux colis du trajet. Après une
+/// liste déjà reçue, un échec de relecture garde cette liste.
 class _ParcelsContent extends StatefulWidget {
-  const _ParcelsContent({required this.bids, required this.onOpenParcel});
+  const _ParcelsContent({
+    required this.tripId,
+    required this.bids,
+    required this.onOpenParcel,
+  });
 
+  final String tripId;
   final List<BidModel>? bids;
   final ValueChanged<String> onOpenParcel;
 
@@ -307,9 +327,25 @@ class _ParcelsContentState extends State<_ParcelsContent> {
     final l = context.l10n;
     final bids = widget.bids;
     if (bids == null) {
-      return Padding(
+      final spinner = Padding(
         padding: const EdgeInsets.all(DonySpacing.lg),
         child: Center(child: CircularProgressIndicator(color: cs.primary)),
+      );
+      final bloc = maybeRead<BidBloc>(context);
+      if (bloc == null) return spinner;
+      return BlocBuilder<BidBloc, BidState>(
+        bloc: bloc,
+        builder: (context, state) => state is BidError
+            ? DonyEmptyState(
+                key: const Key('trip-activity-parcels-load-error'),
+                type: DonyEmptyStateType.error,
+                iconAsset: 'circle-alert',
+                title: l.commonLoadError,
+                actionLabel: l.commonRetry,
+                onAction: () => bloc.add(BidListRequested(widget.tripId)),
+                padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
+              )
+            : spinner,
       );
     }
     final embarked = bids.where(isAcceptedTabBid).toList(growable: false);

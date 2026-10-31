@@ -7974,7 +7974,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripTodoRequestsTitle': (l) => l.tripTodoRequestsTitle,
   'tripTodoRequestsSummary': (l) =>
       l.tripTodoRequestsSummary(intPlaceholderValue),
-  'tripTodoRequestsHint': (l) => l.tripTodoRequestsHint,
   'tripTodoDepartSummary': (l) => l.tripTodoDepartSummary,
   'tripTodoDepartIntro': (l) => l.tripTodoDepartIntro,
   'tripTodoCardReadySummary': (l) => l.tripTodoCardReadySummary,
@@ -7982,9 +7981,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripStatusFullMessage': (l) => l.tripStatusFullMessage,
   'tripStatusFullNoRescheduleMessage': (l) =>
       l.tripStatusFullNoRescheduleMessage,
-  'tripStatusInProgressMessage': (l) => l.tripStatusInProgressMessage,
   'tripStatusArrivedMessage': (l) => l.tripStatusArrivedMessage,
-  'tripStatusCompletedMessage': (l) => l.tripStatusCompletedMessage,
   'tripStatusCancelledMessage': (l) => l.tripStatusCancelledMessage,
   'tripStatusRemovedMessage': (l) => l.tripStatusRemovedMessage,
   'travelerTrackingBadgeEnRoute': (l) => l.travelerTrackingBadgeEnRoute,
@@ -8038,17 +8035,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripTilePaymentsCashOnlyNote': (l) =>
       l.tripTilePaymentsCashOnlyNote(placeholderMarker('section')),
   'tripTileArrivalEditButton': (l) => l.tripTileArrivalEditButton,
-  'tripRequestsCardPending': (l) =>
-      l.tripRequestsCardPending(intPlaceholderValue),
-  'tripRequestsCardPendingHint': (l) => l.tripRequestsCardPendingHint,
-  'tripRequestsCardEmpty': (l) => l.tripRequestsCardEmpty,
-  'tripRequestsCardEmptyHint': (l) => l.tripRequestsCardEmptyHint,
-  'tripRequestsCardUnknown': (l) => l.tripRequestsCardUnknown,
-  'tripRequestsCardDepartedHint': (l) => l.tripRequestsCardDepartedHint,
   'tripSectionYourTrip': (l) => l.tripSectionYourTrip,
-  'tripParcelsSeeList': (l) => l.tripParcelsSeeList,
-  'tripParcelsCardTitle': (l) => l.tripParcelsCardTitle(intPlaceholderValue),
-  'tripParcelsSeeMore': (l) => l.tripParcelsSeeMore(intPlaceholderValue),
+  'tripSectionActivity': (l) => l.tripSectionActivity,
   'tripOwnerMenuTooltip': (l) => l.tripOwnerMenuTooltip,
   'tripMenuEditSubtitle': (l) => l.tripMenuEditSubtitle,
   'tripMenuRecurringSubtitle': (l) => l.tripMenuRecurringSubtitle,

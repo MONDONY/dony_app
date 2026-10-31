@@ -8989,7 +8989,7 @@
   },
   "tripAudienceViewers": "{count, plural, =0{Personne n'a encore vu votre trajet} =1{{count} personne a vu votre trajet} other{{count} personnes ont vu votre trajet}}",
   "@tripAudienceViewers": {
-    "description": "Carte d'audience de l'écran propriétaire d'un trajet : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_section.dart)",
+    "description": "Ligne d'audience de l'écran propriétaire d'un trajet, sous « Activité du trajet » : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_line.dart)",
     "placeholders": {
       "count": {
         "type": "int"
@@ -8998,7 +8998,7 @@
   },
   "tripAudiencePosterViews": "{count, plural, =1{{count} vue de votre affiche partagée} other{{count} vues de votre affiche partagée}}",
   "@tripAudiencePosterViews": {
-    "description": "Carte d'audience : consultations de la page web publique de l'affiche du trajet (trip_audience_section.dart)",
+    "description": "Ligne d'audience : consultations de la page web publique de l'affiche du trajet (trip_audience_line.dart)",
     "placeholders": {
       "count": {
         "type": "int"
@@ -9120,7 +9120,7 @@
   },
   "tripOwnerNoParcelsMessage": "Aucun colis embarqué",
   "@tripOwnerNoParcelsMessage": {
-    "description": "Tooltip de la tuile « Colis » désactivée (écran du trajet, ex-grille d’actions) ; réutilisé comme titre de l'état vide de la section Colis (trip_parcels_section.dart, même préfixe, texte identique)."
+    "description": "Tooltip de la tuile « Colis » désactivée (écran du trajet, ex-grille d’actions) ; réutilisé comme titre de l'état vide du sheet « Colis » de l'activité du trajet (trip_activity_sheets.dart, même préfixe, texte identique)."
   },
   "tripOwnerDeleteDialogTitle": "Supprimer ce trajet ?",
   "@tripOwnerDeleteDialogTitle": {
@@ -9136,51 +9136,51 @@
   },
   "tripOwnerParcelsSectionTitle": "Colis dans le trajet",
   "@tripOwnerParcelsSectionTitle": {
-    "description": "Titre de la section colis embarqués (trip_parcels_section.dart)."
+    "description": "Titre du sheet « Colis » de l’activité du trajet : tous les colis embarqués (trip_activity_sheets.dart)."
   },
   "tripOwnerParcelsEmptyDescription": "Les colis acceptés apparaîtront ici.",
   "@tripOwnerParcelsEmptyDescription": {
-    "description": "Description de l'état vide de la section (trip_parcels_section.dart)."
+    "description": "Description de l'état vide du sheet « Colis » de l'activité du trajet (trip_activity_sheets.dart)."
   },
   "tripOwnerParcelsStatusAccepted": "Accepté",
   "@tripOwnerParcelsStatusAccepted": {
-    "description": "Statut compact de la section colis embarqués (trip_parcels_section.dart _statusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté."
+    "description": "Statut compact de la section colis embarqués (trip_parcels_section.dart tripParcelStatusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté."
   },
   "tripOwnerParcelsStatusAwaitingPayment": "Paiement en attente",
   "@tripOwnerParcelsStatusAwaitingPayment": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusHandedOver": "Remis",
   "@tripOwnerParcelsStatusHandedOver": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusInTransit": "En transit",
   "@tripOwnerParcelsStatusInTransit": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusArrived": "Arrivé",
   "@tripOwnerParcelsStatusArrived": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusDelivered": "Livré",
   "@tripOwnerParcelsStatusDelivered": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusNoShow": "Absent",
   "@tripOwnerParcelsStatusNoShow": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusParcelRefused": "Refusé",
   "@tripOwnerParcelsStatusParcelRefused": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusCancelled": "Annulé",
   "@tripOwnerParcelsStatusCancelled": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta). Orthographe américaine (R38)."
+    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta). Orthographe américaine (R38)."
   },
   "tripOwnerParcelsDefaultContent": "Colis",
   "@tripOwnerParcelsDefaultContent": {
-    "description": "Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcels_section.dart _ColisRow)."
+    "description": "Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcels_section.dart TripParcelRow)."
   },
   "tripOwnerArrivalEditingTitle": "Instructions de retrait",
   "@tripOwnerArrivalEditingTitle": {
@@ -22721,8 +22721,6 @@
   "@tripTodoRequestsTitle": {"description": "Écran du trajet (propriétaire), « À traiter » : titre de la tuile et du sheet des demandes en attente de réponse (trip_todo_tiles.dart)."},
   "tripTodoRequestsSummary": "{count, plural, =1{Une demande attend votre réponse} other{{count} demandes attendent votre réponse}}",
   "@tripTodoRequestsSummary": {"description": "Écran du trajet (propriétaire), « À traiter » : résumé de la tuile des demandes, avec leur nombre (trip_todo_tiles.dart).", "placeholders": {"count": {"type": "int"}}},
-  "tripTodoRequestsHint": "Vous acceptez ou refusez chaque demande depuis la liste des demandes.",
-  "@tripTodoRequestsHint": {"description": "Sheet « Demandes à traiter » de l'écran du trajet : phrase sous la liste des demandes (trip_todo_sheets.dart)."},
   "tripTodoDepartSummary": "Confirmez le départ de votre trajet",
   "@tripTodoDepartSummary": {"description": "Écran du trajet (propriétaire), « À traiter » : résumé de la tuile « Je pars » (trip_todo_tiles.dart)."},
   "tripTodoDepartIntro": "Confirmez votre départ : vos expéditeurs voient que le trajet est lancé.",
@@ -22735,12 +22733,8 @@
   "@tripStatusFullMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet FULL dont le report est encore possible ; le back refuse l'annulation d'un trajet complet, un lien « Contacter le support » suit (trip_status_card.dart)."},
   "tripStatusFullNoRescheduleMessage": "Trajet complet : plus de demande possible. Pour annuler, contactez le support.",
   "@tripStatusFullNoRescheduleMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet FULL qui ne peut plus être reporté (deux reports faits, colis en route) ; le back refuse l'annulation d'un trajet complet, un lien « Contacter le support » suit (trip_status_card.dart)."},
-  "tripStatusInProgressMessage": "Trajet en cours : vos colis voyagent avec vous.",
-  "@tripStatusInProgressMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS dont des colis sont encore en route, ou colis pas encore chargés (trip_status_card.dart)."},
   "tripStatusArrivedMessage": "Trajet arrivé : vos colis attendent leurs destinataires.",
   "@tripStatusArrivedMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS après « Arrivé à destination » : un colis est ARRIVED et plus aucun n'est remis ou en transit ; le trajet ne passe COMPLETED qu'au dernier colis livré (trip_status_card.dart)."},
-  "tripStatusCompletedMessage": "Trajet terminé : il ne reçoit plus de demande.",
-  "@tripStatusCompletedMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet COMPLETED (trip_status_card.dart)."},
   "tripStatusCancelledMessage": "Trajet annulé. Les colis déjà remis suivent la procédure de retour.",
   "@tripStatusCancelledMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet CANCELLED (trip_status_card.dart)."},
   "tripStatusRemovedMessage": "Ce trajet a été retiré par l'équipe Yadony.",
@@ -22878,26 +22872,10 @@
   "@tripTilePaymentsCashOnlyNote": {"description": "Sheet de la tuile « Paiements » : trajet en espèces seules où la carte est possible, renvoi vers la tuile de la section « À traiter » qui porte l'action (trip_tile_sheets.dart). {section} : titre réel de cette section (bidDetailSectionTodo), pour que le renvoi suive son nom.", "placeholders": {"section": {"type": "String"}}},
   "tripTileArrivalEditButton": "Modifier les instructions",
   "@tripTileArrivalEditButton": {"description": "Sheet de la tuile « Arrivée » de l'écran du trajet (propriétaire) : bouton du pied qui ouvre l'édition des instructions de retrait, libellé court pour tenir sur une ligne à 360 dp (trip_tile_sheets.dart)."},
-  "tripRequestsCardPending": "{count, plural, =1{1 demande à traiter} other{{count} demandes à traiter}}",
-  "@tripRequestsCardPending": {"description": "Carte « Demandes » de l'écran du trajet (propriétaire) : nombre de demandes PENDING / PAYMENT_ESCROWED qui attendent la réponse du voyageur, count ≥ 1 (trip_requests_card.dart).", "placeholders": {"count": {"type": "int"}}},
-  "tripRequestsCardPendingHint": "Répondez pour remplir votre trajet.",
-  "@tripRequestsCardPendingHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne quand des demandes attendent une réponse (trip_requests_card.dart)."},
-  "tripRequestsCardEmpty": "Aucune demande à traiter",
-  "@tripRequestsCardEmpty": {"description": "Carte « Demandes » de l'écran du trajet : aucune demande n'attend de réponse ; la carte reste affichée et tappable (PROD-1N, trip_requests_card.dart)."},
-  "tripRequestsCardEmptyHint": "Elles arrivent ici dès qu'un expéditeur propose un colis.",
-  "@tripRequestsCardEmptyHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne sans demande à traiter (trip_requests_card.dart)."},
-  "tripRequestsCardUnknown": "Voir les demandes de ce trajet",
-  "@tripRequestsCardUnknown": {"description": "Carte « Demandes » de l'écran du trajet : titre quand le nombre de demandes à traiter n'est pas encore connu (liste des colis en chargement, en échec ou jamais chargée) ; ne jamais affirmer « aucune » (trip_requests_card.dart)."},
-  "tripRequestsCardDepartedHint": "Trajet parti : plus de nouvelle demande.",
-  "@tripRequestsCardDepartedHint": {"description": "Carte « Demandes » de l'écran du trajet : sous-ligne d'un trajet parti (IN_PROGRESS) ; la carte n'est affichée que s'il reste des demandes à traiter, le back refusant tout nouveau colis (trip_requests_card.dart)."},
   "tripSectionYourTrip": "Votre trajet",
   "@tripSectionYourTrip": {"description": "Écran du trajet vu par son voyageur : titre de la grille de tuiles (itinéraire et lieux, paiements, conditions, affiche, arrivée), chacune ouvrant un bottom sheet (trip_owner_body.dart)."},
-  "tripParcelsSeeList": "Voir la liste",
-  "@tripParcelsSeeList": {"description": "Lien de l'en-tête de la carte « Colis dans le trajet » : ouvre la liste des colis du trajet (/announcements/:id/bids), affiché dès qu'un colis est embarqué ; une ligne, sans icône (trip_parcels_section.dart)."},
-  "tripParcelsCardTitle": "Colis dans le trajet · {count}",
-  "@tripParcelsCardTitle": {"description": "Titre de la carte « Colis dans le trajet » de l'écran du trajet (propriétaire) quand au moins un colis est embarqué : count = nombre total de colis embarqués (isAcceptedTabBid), même quand la carte n'en montre que deux. Sans colis, ou tant que la liste n'a pas répondu, le titre seul (tripOwnerParcelsSectionTitle) (trip_parcels_section.dart).", "placeholders": {"count": {"type": "int"}}},
-  "tripParcelsSeeMore": "{count, plural, =1{Voir 1 autre colis} other{Voir les {count} autres colis}}",
-  "@tripParcelsSeeMore": {"description": "Bouton secondaire pleine largeur sous les deux premiers colis de la carte « Colis dans le trajet », affiché au-delà de deux colis : count = colis non montrés (total - 2, count ≥ 1). Ouvre la liste des colis du trajet (/announcements/:id/bids), comme « Voir la liste ». Une ligne à 360 dp × 1,3 (trip_parcels_section.dart).", "placeholders": {"count": {"type": "int"}}},
+  "tripSectionActivity": "Activité du trajet",
+  "@tripSectionActivity": {"description": "Écran du trajet vu par son voyageur : titre de la section des compteurs Demandes, Colis et Gain (chacun ouvrant un bottom sheet) et de la ligne d'audience, sous « À traiter » ; absente d'un brouillon, d'un trajet annulé ou retiré par l'équipe (trip_owner_body.dart)."},
   "tripOwnerMenuTooltip": "Options du trajet",
   "@tripOwnerMenuTooltip": {"description": "Écran du trajet (propriétaire) : libellé d'accessibilité et info-bulle du bouton ⋮ de la barre d'application, qui ouvre le menu des actions du trajet (trip_owner_options_sheet.dart)."},
   "tripMenuEditSubtitle": "Villes, dates, kilos, prix et conditions",

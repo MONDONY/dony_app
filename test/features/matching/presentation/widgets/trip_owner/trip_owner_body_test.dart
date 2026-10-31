@@ -1,18 +1,18 @@
-// Corps assemblé de l'écran du trajet vu par son voyageur (TripOwnerBody) :
-// table statut du trajet × situations (demandes, colis en route, arrivée,
-// voyage à étapes, espèces seules, instructions) → sections présentes ou
-// absentes, écrite à la main (pas recalculée par les fonctions de
-// production) ; ordre des sections ; visiteur ; mesure des tuiles « À
-// traiter » ; tuiles qui ouvrent leur sheet.
+// Corps assemblé de l'écran du trajet vu par son voyageur (TripOwnerBody),
+// « tableau de bord » du 31/10 : table statut du trajet × situations
+// (demandes 0, 1, 3, 8 ; colis 0, 2, 10 ; colis en route, arrivés ; espèces
+// seules ; voyage à étapes ; instructions ; retrait par l'équipe) → blocs
+// présents ou absents, écrite à la main (pas recalculée par les fonctions de
+// production) ; ordre des sections ; visiteur ; mesure de « À traiter » ;
+// réponse à une demande qui passe à la suivante ; chaque sheet ouvert depuis
+// le corps ; FR / EN, 360 dp × 1,3.
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/analytics_events.dart';
-import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
-import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -21,12 +21,13 @@ import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_body.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart'
-    show TripParcelsSection;
+    show TripParcelRow;
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -37,15 +38,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../../../../../helpers/mock_analytics_backend.dart';
 import '../../../../../helpers/stripe_account_test_doubles.dart';
-import 'trip_card_harness.dart'
-    show MockAnnouncementBloc, MockBidBloc, loadAppFonts;
-
-class _MockAudience extends MockCubit<TripAudienceState>
-    implements TripAudienceCubit {}
-
-class _MockGroup extends MockCubit<TripGroupState> implements TripGroupCubit {}
+import 'trip_answer_harness.dart';
 
 class _MockDepart extends MockCubit<TripDepartState>
     implements TripDepartCubit {}
@@ -95,14 +89,23 @@ BidModel _bid(String id, String status) => BidModel(
   id: id,
   announcementId: 'trip-1',
   senderId: 'sender-$id',
-  senderName: 'Awa Diop',
+  senderName: 'Expéditeur $id',
   weightKg: 3,
+  description: 'Contenu $id',
   status: status,
   recipientName: 'Fatou',
   recipientPhone: '+221770000000',
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
 );
+
+List<BidModel> _requests(int n) => [
+  for (var i = 1; i <= n; i++) _bid('r$i', 'PENDING'),
+];
+
+List<BidModel> _parcels(int n, [String status = 'IN_TRANSIT']) => [
+  for (var i = 1; i <= n; i++) _bid('p$i', status),
+];
 
 const _summary = TripParcelsSummary(
   count: 1,
@@ -121,55 +124,63 @@ final _legs = TripLegsInfo.fromJson(const {
 });
 
 void main() {
-  late MockAnalyticsBackend backend;
-  late List<String> opened;
+  late AnswerHarness h;
 
   setUpAll(() async {
-    registerFallbackValue(AnnouncementDetailRequested('fallback'));
-    registerFallbackValue(BidListRequested('fallback'));
+    AnswerHarness.registerFallbacks();
     await initializeDateFormatting('fr');
+    await initializeDateFormatting('en');
     await loadAppFonts();
   });
 
   setUp(() async {
-    backend = MockAnalyticsBackend();
-    final analytics = makeEnabledAnalytics(backend);
-    await analytics.onConfigured();
-    await getIt.reset();
-    getIt.registerSingleton<AnalyticsService>(analytics);
-    DonySnackbar.clearDedup();
-    opened = [];
+    h = AnswerHarness();
+    await h.setUp();
   });
 
-  tearDown(() async => getIt.reset());
+  tearDown(() => h.tearDown());
 
-  /// Monte le corps sous les blocs de la route du trajet.
-  Future<void> pump(
+  /// Monte le corps sous les blocs de la route du trajet et le scope de
+  /// réponse, comme l'écran. Les écrans poussés sont notés.
+  Future<List<String>> pump(
     WidgetTester tester, {
     required AnnouncementModel trip,
     List<BidModel>? bids = const [],
     bool isOwner = true,
     bool group = false,
     bool stripeReady = false,
+    Locale locale = const Locale('fr'),
+    double textScale = 1,
+    Size size = const Size(400, 3200),
   }) async {
-    tester.view.physicalSize = const Size(400, 3200);
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    final ann = MockAnnouncementBloc();
     whenListen(
-      ann,
-      const Stream<AnnouncementState>.empty(),
+      h.annBloc,
+      h.annStates.stream,
       initialState: AnnouncementDetailLoaded(trip),
     );
-    final bidBloc = MockBidBloc();
     whenListen(
-      bidBloc,
-      const Stream<BidState>.empty(),
+      h.screenBids,
+      h.screenStates.stream,
       initialState: bids == null ? BidLoading() : BidListLoaded(bids),
     );
-    final audience = _MockAudience();
-    when(() => audience.state).thenReturn(const TripAudienceState.hidden());
+    whenListen(h.answerBids, h.answerStates.stream, initialState: BidInitial());
+    whenListen(
+      h.acceptance,
+      h.acceptanceStates.stream,
+      initialState: acs.BidAcceptanceInitial(),
+    );
+    final audience = MockTripAudienceCubit();
+    whenListen(
+      audience,
+      const Stream<TripAudienceState>.empty(),
+      initialState: const TripAudienceState.loaded(
+        TripAudienceModel(uniqueViewerCount: 12, shareViewCount: 0),
+      ),
+    );
     when(() => audience.load(any())).thenAnswer((_) async {});
     final depart = _MockDepart();
     whenListen(
@@ -177,7 +188,7 @@ void main() {
       const Stream<TripDepartState>.empty(),
       initialState: const TripDepartState(),
     );
-    final groupCubit = _MockGroup();
+    final groupCubit = MockTripGroupCubit();
     whenListen(
       groupCubit,
       const Stream<TripGroupState>.empty(),
@@ -186,14 +197,25 @@ void main() {
           : const TripGroupState(),
     );
 
+    final pushed = <String>[];
+    Widget stub(BuildContext context, GoRouterState state) {
+      pushed.add(state.uri.toString());
+      return Scaffold(
+        body: TextButton(
+          onPressed: () => context.pop(),
+          child: const Text('back'),
+        ),
+      );
+    }
+
     final router = GoRouter(
       routes: [
         GoRoute(
           path: '/',
           builder: (context, _) => MultiBlocProvider(
             providers: [
-              BlocProvider<AnnouncementBloc>.value(value: ann),
-              BlocProvider<BidBloc>.value(value: bidBloc),
+              BlocProvider<AnnouncementBloc>.value(value: h.annBloc),
+              BlocProvider<BidBloc>.value(value: h.screenBids),
               BlocProvider<TripAudienceCubit>.value(value: audience),
               BlocProvider<TripGroupCubit>.value(value: groupCubit),
               BlocProvider<TripDepartCubit>.value(value: depart),
@@ -208,45 +230,67 @@ void main() {
               ),
             ],
             child: Scaffold(
-              body: TripOwnerBody(trip: trip, isOwner: isOwner),
+              body: TripBidAnswerScope(
+                tripId: trip.id,
+                bidBloc: h.answerBids,
+                acceptanceBloc: h.acceptance,
+                child: TripOwnerBody(trip: trip, isOwner: isOwner),
+              ),
             ),
           ),
         ),
-        GoRoute(
-          path: '/demandes',
-          builder: (context, state) {
-            opened.add(state.uri.toString());
-            return const Scaffold(body: Text('demandes'));
-          },
-        ),
+        GoRoute(path: '/bids/:bidId', builder: stub),
+        GoRoute(path: '/announcements/:id/bids', builder: stub),
+        GoRoute(path: '/announcements/:id/trip', builder: stub),
+        GoRoute(path: '/support', builder: stub),
       ],
     );
     addTearDown(router.dispose);
     await tester.pumpWidget(
       MaterialApp.router(
         theme: AppTheme.light(),
-        locale: const Locale('fr'),
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         routerConfig: router,
       ),
     );
     await tester.pump(const Duration(milliseconds: 400));
+    return pushed;
+  }
+
+  /// Laisse passer l'ouverture ou la fermeture d'un sheet.
+  Future<void> settle(WidgetTester tester) async {
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
   }
 
   bool shown(Finder f) => f.evaluate().isNotEmpty;
   Finder key(String k) => find.byKey(Key(k));
+  Finder todoSection() => find.text('À traiter');
+  Finder activitySection() => find.text('Activité du trajet');
+  Finder directCard() => key('trip-direct-request-card');
+  String cellValue(WidgetTester tester, String activity) =>
+      tester.widget<Text>(key('trip-activity-$activity-value')).data!;
 
   // ── Table statut × situation ─────────────────────────────────────────────
-  // Attendus écrits à la main, ligne par ligne (cible validée et inventaire).
+  // Attendus écrits à la main, ligne par ligne (cible du 31/10, inventaire).
 
-  group('carte de statut', () {
+  group('carte de statut (brouillon, complet, arrivé, annulé, retiré)', () {
     const expected = {
       'DRAFT': 'draft',
       'ACTIVE': null,
       'FULL': 'full',
-      'IN_PROGRESS': 'inProgress',
-      'COMPLETED': 'completed',
+      // En cours ou terminé : le badge du billet suffit.
+      'IN_PROGRESS': null,
+      'COMPLETED': null,
       'CANCELLED': 'cancelled',
       'REMOVED_BY_ADMIN': 'removedByAdmin',
       'SOMETHING_NEW': null,
@@ -255,7 +299,13 @@ void main() {
       testWidgets('$status : ${kind ?? 'aucune'}', (tester) async {
         await pump(tester, trip: _trip(status: status));
         expect(key('trip-billet-card'), findsOneWidget);
-        for (final k in expected.values.whereType<String>()) {
+        for (final k in const [
+          'draft',
+          'full',
+          'arrived',
+          'cancelled',
+          'removedByAdmin',
+        ]) {
           expect(
             key('trip-status-card-$k'),
             k == kind ? findsOneWidget : findsNothing,
@@ -273,37 +323,31 @@ void main() {
       await pump(
         tester,
         trip: _trip(status: 'IN_PROGRESS', summary: _summary),
-        bids: [_bid('b1', 'ARRIVED'), _bid('b2', 'ARRIVED')],
+        bids: _parcels(2, 'ARRIVED'),
       );
       expect(key('trip-status-card-arrived'), findsOneWidget);
-      expect(key('trip-status-card-inProgress'), findsNothing);
       expect(
         find.text('Trajet arrivé : vos colis attendent leurs destinataires.'),
         findsOneWidget,
       );
     });
 
-    testWidgets('IN_PROGRESS, colis en transit : en cours', (tester) async {
+    testWidgets('IN_PROGRESS, colis en transit ou en chargement : aucune', (
+      tester,
+    ) async {
       await pump(
         tester,
         trip: _trip(status: 'IN_PROGRESS', summary: _summary),
-        bids: [_bid('b1', 'IN_TRANSIT')],
+        bids: _parcels(1),
       );
-      expect(key('trip-status-card-inProgress'), findsOneWidget);
-      expect(key('trip-status-card-arrived'), findsNothing);
-      expect(
-        find.text('Trajet en cours : vos colis voyagent avec vous.'),
-        findsOneWidget,
-      );
-    });
+      expect(find.byType(DonyStatusBanner), findsNothing);
 
-    testWidgets('IN_PROGRESS, colis en chargement : en cours', (tester) async {
       await pump(
         tester,
         trip: _trip(status: 'IN_PROGRESS', summary: _summary),
         bids: null,
       );
-      expect(key('trip-status-card-inProgress'), findsOneWidget);
+      expect(find.byType(DonyStatusBanner), findsNothing);
     });
 
     // Même règle que l'entrée « Reporter » du menu ⋮.
@@ -327,7 +371,6 @@ void main() {
       );
       expect(key('trip-status-card-full'), findsOneWidget);
       expect(find.textContaining('reporter'), findsNothing);
-      expect(key('trip-status-card-support'), findsOneWidget);
     });
 
     testWidgets('FULL avec un colis en transit : pas de report promis', (
@@ -336,57 +379,71 @@ void main() {
       await pump(
         tester,
         trip: _trip(status: 'FULL', summary: _summary),
-        bids: [_bid('b1', 'IN_TRANSIT')],
+        bids: _parcels(1),
       );
       expect(find.textContaining('reporter'), findsNothing);
-    });
-
-    testWidgets('REMOVED_BY_ADMIN : lien vers le support', (tester) async {
-      await pump(tester, trip: _trip(status: 'REMOVED_BY_ADMIN'));
-      expect(key('trip-status-card-support'), findsOneWidget);
-      expect(find.text('Contacter le support'), findsOneWidget);
     });
   });
 
   group('sans demande ni colis', () {
-    // (audience, Demandes, Colis, tuile Affiche)
+    // (activité, case Demandes, case Colis, case Gain, audience, Affiche)
     const expected = {
-      'DRAFT': (false, false, false, false),
-      'ACTIVE': (true, true, true, true),
-      'FULL': (true, true, true, false),
-      'IN_PROGRESS': (true, false, true, false),
-      'COMPLETED': (true, false, true, false),
-      'CANCELLED': (false, false, true, false),
-      'REMOVED_BY_ADMIN': (false, false, false, false),
-      'SOMETHING_NEW': (true, false, true, false),
+      'DRAFT': (false, false, false, false, false, false),
+      'ACTIVE': (true, true, true, true, true, true),
+      'FULL': (true, true, true, true, true, false),
+      // Parti sans demande : la case Demandes n'a rien à promettre.
+      'IN_PROGRESS': (true, false, true, true, true, false),
+      'COMPLETED': (true, false, true, true, true, false),
+      'CANCELLED': (false, false, false, false, false, false),
+      'REMOVED_BY_ADMIN': (false, false, false, false, false, false),
+      'SOMETHING_NEW': (true, false, true, true, true, false),
     };
     for (final MapEntry(key: status, value: e) in expected.entries) {
       testWidgets(status, (tester) async {
         await pump(tester, trip: _trip(status: status));
-        expect(shown(find.byType(TripAudienceSection)), e.$1, reason: 'aud');
-        expect(shown(key('trip-requests-card')), e.$2, reason: 'demandes');
-        expect(shown(find.byType(TripParcelsSection)), e.$3, reason: 'colis');
-        expect(shown(key('trip-tile-poster')), e.$4, reason: 'affiche');
-        // Rien à traiter, aucun gain.
-        expect(find.text('À traiter'), findsNothing);
+        expect(shown(activitySection()), e.$1, reason: 'section');
+        expect(shown(key('trip-activity-row')), e.$1, reason: 'compteurs');
+        expect(shown(key('trip-activity-requests')), e.$2, reason: 'demandes');
+        expect(shown(key('trip-activity-parcels')), e.$3, reason: 'colis');
+        expect(shown(key('trip-activity-gain')), e.$4, reason: 'gain');
+        expect(shown(key('trip-audience-card')), e.$5, reason: 'audience');
+        expect(shown(key('trip-tile-poster')), e.$6, reason: 'affiche');
+        // Rien à traiter.
+        expect(todoSection(), findsNothing);
+        expect(directCard(), findsNothing);
+        expect(key('trip-todo-rows'), findsNothing);
+        // Plus aucune carte directe dans le corps.
+        expect(key('trip-requests-card'), findsNothing);
         expect(key('trip-summary-card'), findsNothing);
+        expect(key('trip-legs-card'), findsNothing);
+        expect(find.byType(TripParcelRow), findsNothing);
         // Lieux et paiements renseignés : leurs tuiles, à tous les statuts.
         expect(key('trip-tile-itinerary'), findsOneWidget);
         expect(key('trip-tile-payments'), findsOneWidget);
         expect(find.text('Votre trajet'), findsOneWidget);
       });
     }
+
+    testWidgets('ACTIVE : « 0 demande », sans pastille ; colis à 0 ; gain '
+        'inconnu', (tester) async {
+      await pump(tester, trip: _trip());
+      expect(cellValue(tester, 'requests'), '0');
+      expect(key('trip-activity-requests-dot'), findsNothing);
+      expect(cellValue(tester, 'parcels'), '0');
+      expect(cellValue(tester, 'gain'), '-');
+      expect(find.text('12 personnes ont vu votre trajet'), findsOneWidget);
+    });
   });
 
   group('une demande à traiter', () {
-    // (tuile « À traiter » requests, carte Demandes)
+    // (« À traiter » et carte directe, case Demandes)
     const expected = {
       'DRAFT': (false, false),
       'ACTIVE': (true, true),
       'FULL': (true, true),
       'IN_PROGRESS': (true, true),
-      // Le back refuse toute acceptation sur un trajet terminé : ni tuile ni
-      // carte qui promettrait une réponse.
+      // Le back refuse toute acceptation sur un trajet terminé : ni carte
+      // ni case qui promettrait une réponse.
       'COMPLETED': (false, false),
       'CANCELLED': (false, false),
       'REMOVED_BY_ADMIN': (false, false),
@@ -397,27 +454,96 @@ void main() {
         await pump(
           tester,
           trip: _trip(status: status),
-          bids: [_bid('b1', 'PENDING')],
+          bids: _requests(1),
         );
-        expect(shown(key('trip_owner-todo-requests')), e.$1, reason: 'tuile');
-        expect(shown(find.text('À traiter')), e.$1, reason: 'section');
-        expect(shown(key('trip-requests-card')), e.$2, reason: 'carte');
+        expect(shown(todoSection()), e.$1, reason: 'section');
+        expect(shown(directCard()), e.$1, reason: 'carte directe');
+        expect(shown(key('trip-activity-requests')), e.$2, reason: 'case');
+        // La demande n'est plus une tuile de grille.
+        expect(key('trip_owner-todo-requests'), findsNothing);
+      });
+    }
+  });
+
+  group('0, 1, 3, 8 demandes (trajet publié)', () {
+    // (carte directe, « Voir les N demandes », valeur de la case, pastille)
+    const expected = {
+      0: (false, false, '0', false),
+      1: (true, false, '1', true),
+      3: (true, true, '3', true),
+      8: (true, true, '8', true),
+    };
+    for (final MapEntry(key: n, value: e) in expected.entries) {
+      testWidgets('$n demande(s)', (tester) async {
+        await pump(
+          tester,
+          trip: _trip(),
+          bids: [..._requests(n), _bid('a1', 'ACCEPTED')],
+        );
+        expect(shown(directCard()), e.$1, reason: 'carte');
+        if (e.$1) {
+          expect(find.text('Demande 1 sur $n'), findsOneWidget);
+          expect(key('trip-direct-request-r1'), findsOneWidget);
+        }
+        expect(shown(key('trip-direct-request-see-all')), e.$2, reason: 'lien');
+        if (e.$2) expect(find.text('Voir les $n demandes'), findsOneWidget);
+        expect(cellValue(tester, 'requests'), e.$3);
+        expect(shown(key('trip-activity-requests-dot')), e.$4, reason: 'dot');
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('liste des colis en chargement : ni carte ni « À traiter », '
+        'case Demandes à « - »', (tester) async {
+      await pump(tester, trip: _trip(), bids: null);
+      expect(directCard(), findsNothing);
+      expect(todoSection(), findsNothing);
+      expect(cellValue(tester, 'requests'), '-');
+      expect(find.text('0'), findsNothing);
+    });
+  });
+
+  group('0, 2, 10 colis embarqués (trajet en cours)', () {
+    for (final n in const [0, 2, 10]) {
+      testWidgets('$n colis : la case Colis compte, aucune ligne de colis '
+          'dans le corps', (tester) async {
+        await pump(
+          tester,
+          trip: _trip(status: 'IN_PROGRESS', summary: n > 0 ? _summary : null),
+          bids: _parcels(n),
+        );
+        expect(cellValue(tester, 'parcels'), '$n');
+        if (n > 0) expect(find.text('$n en route'), findsOneWidget);
+        expect(find.byType(TripParcelRow), findsNothing);
+        expect(tester.takeException(), isNull);
       });
     }
   });
 
   group('colis en route (résumé servi par le détail)', () {
+    const withActivity = {
+      'ACTIVE',
+      'FULL',
+      'IN_PROGRESS',
+      'COMPLETED',
+      'SOMETHING_NEW',
+    };
     for (final status in _statuses) {
-      testWidgets('$status : carte Gain', (tester) async {
-        await pump(
-          tester,
-          trip: _trip(status: status, summary: _summary),
-          bids: [_bid('b1', 'IN_TRANSIT')],
-        );
-        expect(key('trip-summary-card'), findsOneWidget);
-        // « Arrivé à destination » est au pied (écran), jamais dans le corps.
-        expect(find.text('Arrivé à destination'), findsNothing);
-      });
+      final has = withActivity.contains(status);
+      testWidgets(
+        '$status : case Gain ${has ? 'avec le montant' : 'absente'}',
+        (tester) async {
+          await pump(
+            tester,
+            trip: _trip(status: status, summary: _summary),
+            bids: _parcels(1),
+          );
+          expect(shown(key('trip-activity-gain')), has);
+          if (has) expect(cellValue(tester, 'gain'), contains('21'));
+          // « Arrivé à destination » est au pied (écran), jamais dans le corps.
+          expect(find.text('Arrivé à destination'), findsNothing);
+        },
+      );
     }
   });
 
@@ -427,10 +553,10 @@ void main() {
         await pump(
           tester,
           trip: _trip(status: status, instructions: 'Gare routière'),
-          bids: [_bid('b1', 'ARRIVED')],
+          bids: _parcels(1, 'ARRIVED'),
         );
         expect(key('trip-tile-arrival'), findsOneWidget);
-        // L'encart a quitté le corps : seulement dans le sheet.
+        // L'encart n'est que dans le sheet.
         expect(key('arrival-instructions-card'), findsNothing);
         expect(find.text('Gare routière'), findsNothing);
       });
@@ -439,22 +565,35 @@ void main() {
     testWidgets('ni instructions ni colis arrivé : pas de tuile', (
       tester,
     ) async {
-      await pump(tester, trip: _trip(), bids: [_bid('b1', 'IN_TRANSIT')]);
+      await pump(tester, trip: _trip(), bids: _parcels(1));
       expect(key('trip-tile-arrival'), findsNothing);
     });
   });
 
-  group('voyage à étapes (FLUTTER-4D)', () {
+  group('voyage à étapes (FLUTTER-4D) : dans le sheet Itinéraire', () {
     for (final status in _statuses) {
-      testWidgets('$status : carte des étapes', (tester) async {
-        await pump(tester, trip: _trip(status: status), group: true);
-        expect(key('trip-legs-card'), findsOneWidget);
+      testWidgets('$status : pas de carte des étapes dans le corps', (
+        tester,
+      ) async {
+        await pump(
+          tester,
+          trip: _trip(status: status, groupId: 'g'),
+          group: true,
+        );
+        expect(key('trip-legs-card'), findsNothing);
+        expect(key('trip-tile-itinerary'), findsOneWidget);
       });
     }
 
-    testWidgets('trajet isolé : pas de carte', (tester) async {
-      await pump(tester, trip: _trip());
-      expect(key('trip-legs-card'), findsNothing);
+    testWidgets('tuile « Itinéraire et lieux » : les étapes, une étape '
+        'ouvre son trajet', (tester) async {
+      final pushed = await pump(tester, trip: _trip(groupId: 'g'), group: true);
+      await tester.tap(key('trip-tile-itinerary'));
+      await settle(tester);
+      expect(key('trip-legs-card'), findsOneWidget);
+      await tester.tap(key('trip-leg-open-leg-2'));
+      await settle(tester);
+      expect(pushed, ['/announcements/leg-2/trip']);
     });
   });
 
@@ -470,7 +609,7 @@ void main() {
       'SOMETHING_NEW': false,
     };
     for (final MapEntry(key: status, value: card) in expected.entries) {
-      testWidgets('$status : tuile carte ${card ? 'présente' : 'absente'}', (
+      testWidgets('$status : ligne carte ${card ? 'présente' : 'absente'}', (
         tester,
       ) async {
         await pump(
@@ -479,6 +618,8 @@ void main() {
           stripeReady: true,
         );
         expect(shown(key('trip_owner-todo-card')), card);
+        expect(shown(key('trip-todo-rows')), card);
+        expect(shown(todoSection()), card);
         // L'ancien encart du corps n'existe plus (pas de doublon de clés).
         expect(key('enable-card-on-trip-cta'), findsNothing);
         expect(key('activate-card-payments-cta'), findsNothing);
@@ -486,71 +627,90 @@ void main() {
     }
 
     // Le back refuse la modification dès qu'un colis est accepté (409
-    // `modification-impossible`) : la tuile mènerait à un refus certain.
+    // `modification-impossible`) : la ligne mènerait à un refus certain.
     for (final status in const ['ACTIVE', 'FULL']) {
-      testWidgets('$status avec un colis accepté : tuile carte absente', (
-        tester,
-      ) async {
+      testWidgets('$status avec un colis accepté : ligne carte absente, '
+          'carte directe seule', (tester) async {
         await pump(
           tester,
           trip: _trip(status: status, methods: const {BidPaymentMethod.cash}),
-          bids: [_bid('b1', 'PENDING'), _bid('b2', 'ACCEPTED')],
+          bids: [_bid('r1', 'PENDING'), _bid('b2', 'ACCEPTED')],
           stripeReady: true,
         );
         expect(key('trip_owner-todo-card'), findsNothing);
-        expect(key('trip_owner-todo-requests'), findsOneWidget);
+        expect(directCard(), findsOneWidget);
       });
     }
 
-    testWidgets('ACTIVE avec seulement des demandes : tuile carte', (
-      tester,
-    ) async {
+    testWidgets('ACTIVE avec seulement des demandes : carte directe puis '
+        'ligne carte', (tester) async {
       await pump(
         tester,
         trip: _trip(methods: const {BidPaymentMethod.cash}),
-        bids: [_bid('b1', 'PENDING')],
+        bids: _requests(1),
         stripeReady: true,
       );
+      expect(directCard(), findsOneWidget);
       expect(key('trip_owner-todo-card'), findsOneWidget);
+      expect(
+        tester.getTopLeft(directCard()).dy,
+        lessThan(tester.getTopLeft(key('trip-todo-rows')).dy),
+      );
     });
   });
 
-  testWidgets('« Je pars » : tuile quand le détail sert trackingActive', (
+  testWidgets('« Je pars » : ligne quand le détail sert trackingActive', (
     tester,
   ) async {
     await pump(
       tester,
       trip: _trip(summary: _summary, trackingActive: true),
-      bids: [_bid('b1', 'HANDED_OVER')],
+      bids: _parcels(1, 'HANDED_OVER'),
     );
     expect(key('trip_owner-todo-depart'), findsOneWidget);
+    expect(todoSection(), findsOneWidget);
 
-    // Contrat ancien (détail sans trackingActive) : pas de tuile, rien ne
+    // Contrat ancien (détail sans trackingActive) : pas de ligne, rien ne
     // casse.
     await pump(
       tester,
       trip: _trip(summary: _summary),
-      bids: [_bid('b1', 'HANDED_OVER')],
+      bids: _parcels(1, 'HANDED_OVER'),
     );
     expect(key('trip_owner-todo-depart'), findsNothing);
+    expect(todoSection(), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('ordre des sections (cible validée)', (tester) async {
+  testWidgets('REMOVED_BY_ADMIN avec une demande et des colis : carte et '
+      'support seuls, ni « À traiter » ni activité', (tester) async {
     await pump(
       tester,
-      trip: _trip(status: 'FULL', summary: _summary, groupId: 'g'),
-      bids: [_bid('b1', 'PENDING'), _bid('b2', 'IN_TRANSIT')],
-      group: true,
+      trip: _trip(status: 'REMOVED_BY_ADMIN', summary: _summary),
+      bids: [_bid('r1', 'PENDING'), _bid('p1', 'IN_TRANSIT')],
+    );
+    expect(key('trip-status-card-removedByAdmin'), findsOneWidget);
+    expect(key('trip-status-card-support'), findsOneWidget);
+    expect(todoSection(), findsNothing);
+    expect(activitySection(), findsNothing);
+    expect(key('trip-audience-card'), findsNothing);
+  });
+
+  testWidgets('ordre des sections (tableau de bord)', (tester) async {
+    await pump(
+      tester,
+      trip: _trip(status: 'FULL', summary: _summary, trackingActive: true),
+      bids: [_bid('r1', 'PENDING'), _bid('p1', 'HANDED_OVER')],
     );
     final order = [
       key('trip-billet-card'),
       key('trip-status-card-full'),
-      find.text('À traiter'),
-      key('trip-legs-card'),
-      key('trip-requests-card'),
-      find.byType(TripParcelsSection),
-      key('trip-summary-card'),
+      todoSection(),
+      directCard(),
+      key('trip-todo-rows'),
+      activitySection(),
+      key('trip-activity-row'),
+      key('trip-audience-card'),
       find.text('Votre trajet'),
     ];
     final ys = [for (final f in order) tester.getTopLeft(f.first).dy];
@@ -559,73 +719,46 @@ void main() {
     }
   });
 
-  testWidgets('dix colis : carte Colis à deux lignes, total et bouton', (
-    tester,
-  ) async {
-    await pump(
-      tester,
-      trip: _trip(status: 'IN_PROGRESS', summary: _summary),
-      bids: [for (var i = 0; i < 10; i++) _bid('b$i', 'IN_TRANSIT')],
-    );
-    expect(find.text('Colis dans le trajet · 10'), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byType(TripParcelsSection),
-        matching: find.textContaining('Awa Diop'),
-      ),
-      findsNWidgets(2),
-    );
-    expect(find.text('Voir les 8 autres colis'), findsOneWidget);
-    expect(key('trip-parcels-see-list'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('liste des colis en chargement : carte Demandes neutre', (
-    tester,
-  ) async {
-    await pump(tester, trip: _trip(), bids: null);
-    expect(key('trip-requests-card'), findsOneWidget);
-    expect(find.text('Aucune demande à traiter'), findsNothing);
-  });
-
   testWidgets('visiteur (propriété pas tranchée) : billet et statut seuls', (
     tester,
   ) async {
     await pump(
       tester,
       trip: _trip(status: 'FULL', summary: _summary),
-      bids: [_bid('b1', 'PENDING')],
+      bids: _requests(1),
       isOwner: false,
     );
     expect(key('trip-billet-card'), findsOneWidget);
     expect(key('trip-status-card-full'), findsOneWidget);
-    expect(find.text('À traiter'), findsNothing);
-    expect(find.byType(TripAudienceSection), findsNothing);
-    expect(key('trip-requests-card'), findsNothing);
-    expect(find.byType(TripParcelsSection), findsNothing);
-    expect(key('trip-summary-card'), findsNothing);
+    expect(todoSection(), findsNothing);
+    expect(directCard(), findsNothing);
+    expect(activitySection(), findsNothing);
+    expect(key('trip-audience-card'), findsNothing);
     expect(find.text('Votre trajet'), findsNothing);
   });
 
-  testWidgets('mesure des tuiles « À traiter » : role trip_owner, une fois', (
-    tester,
-  ) async {
+  testWidgets('mesure de « À traiter » : carte directe et ligne carte, '
+      'role trip_owner, une fois', (tester) async {
     await pump(
       tester,
       trip: _trip(methods: const {BidPaymentMethod.cash}),
-      bids: [_bid('b1', 'PENDING')],
+      bids: _requests(1),
       stripeReady: true,
     );
     await tester.pump();
+    // Une relecture identique ne remesure rien.
+    h.screenStates.add(BidListLoaded(_requests(1)));
+    await tester.pump();
+    await tester.pump();
     verify(
-      () => backend.capture(AnalyticsEvents.bidDetailTodoTileShown, {
+      () => h.backend.capture(AnalyticsEvents.bidDetailTodoTileShown, {
         'tile': 'requests',
         'role': 'trip_owner',
         'status': 'ACTIVE',
       }),
     ).called(1);
     verify(
-      () => backend.capture(AnalyticsEvents.bidDetailTodoTileShown, {
+      () => h.backend.capture(AnalyticsEvents.bidDetailTodoTileShown, {
         'tile': 'card',
         'role': 'trip_owner',
         'status': 'ACTIVE',
@@ -633,44 +766,194 @@ void main() {
     ).called(1);
   });
 
-  testWidgets('tuile « Demandes à traiter » : sheet, puis les demandes', (
-    tester,
-  ) async {
-    await pump(tester, trip: _trip(), bids: [_bid('b1', 'PENDING')]);
-    await tester.tap(key('trip_owner-todo-requests'));
-    await tester.pumpAndSettle();
-    expect(key('trip-todo-request-b1'), findsOneWidget);
-    await tester.tap(key('trip-todo-requests-button'));
-    await tester.pumpAndSettle();
-    expect(opened, ['/demandes?filter=aTraiter&announcement=trip-1']);
+  group('répondre depuis l\'écran', () {
+    testWidgets('accepter : la carte passe à la suivante, la case Demandes '
+        'baisse, l\'écran est relu en silence', (tester) async {
+      await pump(tester, trip: _trip(), bids: _requests(3));
+      expect(find.text('Demande 1 sur 3'), findsOneWidget);
+      expect(cellValue(tester, 'requests'), '3');
+
+      await tester.tap(key('trip-request-accept-r1'));
+      await tester.pump();
+      await tester.pump();
+      expect(h.answerEvents.single, isA<BidAcceptRequested>());
+      // Jamais sur le bloc des colis de l'écran.
+      expect(h.screenEvents, isEmpty);
+
+      h.answerStates.add(BidAccepted(_requests(1).first));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Demande 1 sur 2'), findsOneWidget);
+      expect(key('trip-direct-request-r2'), findsOneWidget);
+      expect(cellValue(tester, 'requests'), '2');
+      expect((h.screenEvents.single as BidListRequested).silent, isTrue);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('dernière demande acceptée : « À traiter » disparaît sans '
+        'attendre la relecture', (tester) async {
+      await pump(tester, trip: _trip(), bids: _requests(1));
+      await tester.tap(key('trip-request-accept-r1'));
+      await tester.pump();
+      await tester.pump();
+      h.answerStates.add(BidAccepted(_requests(1).first));
+      await tester.pump();
+      await tester.pump();
+      expect(directCard(), findsNothing);
+      expect(todoSection(), findsNothing);
+      expect(cellValue(tester, 'requests'), '0');
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('accepter depuis le sheet des demandes : la carte du corps '
+        'suit', (tester) async {
+      await pump(tester, trip: _trip(), bids: _requests(3));
+      await tester.tap(key('trip-direct-request-see-all'));
+      await settle(tester);
+      final inSheet = find.descendant(
+        of: key('trip-activity-requests-content'),
+        matching: key('trip-request-accept-r2'),
+      );
+      await tester.tap(inSheet);
+      await tester.pump();
+      await tester.pump();
+      h.answerStates.add(BidAccepted(_requests(2).last));
+      await tester.pump();
+      await tester.pump();
+      expect(key('trip-activity-request-r2'), findsNothing);
+      // Sous le sheet, la carte montre toujours r1, sur 2.
+      expect(find.text('Demande 1 sur 2'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+    });
   });
 
-  testWidgets('tuile « Itinéraire et lieux » : sheet de lecture', (
-    tester,
-  ) async {
-    await pump(tester, trip: _trip());
-    await tester.tap(key('trip-tile-itinerary'));
-    await tester.pumpAndSettle();
-    expect(key('trip-tile-itinerary-content'), findsOneWidget);
-    expect(find.text('12 rue de Paris'), findsOneWidget);
+  group('sheets ouverts depuis le corps', () {
+    testWidgets('« Voir les N demandes » : sheet des demandes', (tester) async {
+      await pump(tester, trip: _trip(), bids: _requests(3));
+      await tester.tap(key('trip-direct-request-see-all'));
+      await settle(tester);
+      expect(key('trip-activity-requests-content'), findsOneWidget);
+      for (final id in ['r1', 'r2', 'r3']) {
+        expect(key('trip-activity-request-$id'), findsOneWidget);
+      }
+    });
+
+    for (final (activity, content) in const [
+      ('requests', 'trip-activity-requests-content'),
+      ('parcels', 'trip-activity-parcels-content'),
+      ('gain', 'trip-activity-gain-content'),
+    ]) {
+      testWidgets('case $activity : son sheet, une seule fois au double '
+          'appui', (tester) async {
+        await pump(
+          tester,
+          trip: _trip(summary: _summary),
+          bids: [..._requests(1), ..._parcels(2, 'HANDED_OVER')],
+        );
+        await tester.tap(key('trip-activity-$activity'));
+        await tester.tap(key('trip-activity-$activity'), warnIfMissed: false);
+        await settle(tester);
+        expect(key(content), findsOneWidget);
+        verify(
+          () => h.backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+            'tile': activity,
+            'role': 'trip_owner',
+            'source': 'tile',
+          }),
+        ).called(1);
+      });
+    }
+
+    testWidgets('case Colis : tous les colis, une ligne vers la fiche', (
+      tester,
+    ) async {
+      final pushed = await pump(
+        tester,
+        trip: _trip(status: 'IN_PROGRESS', summary: _summary),
+        bids: _parcels(10),
+        size: const Size(400, 2400),
+      );
+      await tester.tap(key('trip-activity-parcels'));
+      await settle(tester);
+      expect(find.byType(TripParcelRow), findsNWidgets(10));
+      await tester.tap(key('trip-activity-parcel-p3'));
+      await settle(tester);
+      expect(pushed, ['/bids/p3']);
+    });
+
+    testWidgets('ligne « Ajouter la carte » : son sheet', (tester) async {
+      await pump(
+        tester,
+        trip: _trip(methods: const {BidPaymentMethod.cash}),
+        stripeReady: true,
+      );
+      await tester.tap(key('trip_owner-todo-card'));
+      await settle(tester);
+      expect(key('trip-todo-card-content'), findsOneWidget);
+    });
+
+    testWidgets('ligne « Je pars » : son sheet', (tester) async {
+      await pump(
+        tester,
+        trip: _trip(summary: _summary, trackingActive: true),
+        bids: _parcels(1, 'HANDED_OVER'),
+      );
+      await tester.tap(key('trip_owner-todo-depart'));
+      await settle(tester);
+      expect(key('trip-todo-depart-content'), findsOneWidget);
+    });
+
+    testWidgets('tuile « Itinéraire et lieux » : sheet de lecture', (
+      tester,
+    ) async {
+      await pump(tester, trip: _trip());
+      await tester.tap(key('trip-tile-itinerary'));
+      await settle(tester);
+      expect(key('trip-tile-itinerary-content'), findsOneWidget);
+      expect(find.text('12 rue de Paris'), findsOneWidget);
+    });
   });
 
-  testWidgets('360 dp : aucun débordement', (tester) async {
-    tester.view.physicalSize = const Size(360, 3200);
+  testWidgets('anglais : titres des sections et carte directe', (tester) async {
     await pump(
       tester,
-      trip: _trip(
-        status: 'FULL',
-        summary: _summary,
-        instructions: 'Gare',
-        methods: const {BidPaymentMethod.cash},
-      ),
-      bids: [_bid('b1', 'PENDING'), _bid('b2', 'ARRIVED')],
-      group: true,
-      stripeReady: true,
+      trip: _trip(),
+      bids: _requests(3),
+      locale: const Locale('en'),
     );
-    tester.view.physicalSize = const Size(360, 3200);
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
+    expect(find.text('To do'), findsOneWidget);
+    expect(find.text('Request 1 of 3'), findsOneWidget);
+    expect(find.text('See all 3 requests'), findsOneWidget);
+    expect(find.text('Trip activity'), findsOneWidget);
+    expect(find.text('to review'), findsOneWidget);
+    expect(find.text('Your trip'), findsOneWidget);
+  });
+
+  group('360 dp × 1,3, vraies polices', () {
+    for (final locale in const [Locale('fr'), Locale('en')]) {
+      testWidgets('${locale.languageCode} : 8 demandes, 10 colis, espèces, '
+          'instructions, étapes : aucun débordement', (tester) async {
+        await pump(
+          tester,
+          trip: _trip(
+            status: 'FULL',
+            summary: _summary,
+            instructions: 'Gare',
+            methods: const {BidPaymentMethod.cash},
+            trackingActive: true,
+            groupId: 'g',
+          ),
+          bids: [..._requests(8), ..._parcels(10, 'HANDED_OVER')],
+          group: true,
+          stripeReady: true,
+          locale: locale,
+          textScale: 1.3,
+          size: const Size(360, 3200),
+        );
+        expect(tester.takeException(), isNull);
+        expect(directCard(), findsOneWidget);
+        expect(key('trip-activity-row'), findsOneWidget);
+      });
+    }
   });
 }

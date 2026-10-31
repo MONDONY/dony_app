@@ -21,6 +21,9 @@ import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -30,8 +33,9 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,6 +46,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/stripe_account_test_doubles.dart';
+import '../../../../helpers/trip_answer_blocs.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -70,6 +75,16 @@ TripAudienceCubit _hiddenAudience() {
 }
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
+/// Réponse directe aux demandes (`TripBidAnswerScope`) : blocs propres au
+/// scope, fournis par getIt dans l'app.
+class _MockBidAcceptanceBloc
+    extends MockBloc<ace.BidAcceptanceEvent, acs.BidAcceptanceState>
+    implements BidAcceptanceBloc {}
+
+class _MockTrackingConsent extends Mock implements TrackingConsentCubit {}
+
+class _FakeContext extends Fake implements BuildContext {}
 
 /// « Je pars » : l'écran fournit son cubit (getIt) ; ces tests ne partent pas.
 class _MockTripDepartCubit extends MockCubit<TripDepartState>
@@ -198,6 +213,26 @@ Future<void> _pump(
           ),
         ),
       ),
+      // Fiche d'un colis et liste des colis du trajet (sheets « Activité du
+      // trajet ») : `back` revient à l'écran.
+      GoRoute(
+        path: '/bids/:bidId',
+        builder: (ctx, state) => Scaffold(
+          body: TextButton(
+            onPressed: () => ctx.pop(),
+            child: Text('BID:${state.pathParameters['bidId']}'),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/announcements/:id/bids',
+        builder: (ctx, state) => Scaffold(
+          body: TextButton(
+            onPressed: () => ctx.pop(),
+            child: Text('PARCELS:${state.pathParameters['id']}'),
+          ),
+        ),
+      ),
       // Affiche partageable : même destination pour la tuile « Affiche » et
       // l'icône de partage de l'en-tête.
       GoRoute(
@@ -277,10 +312,14 @@ void main() {
   late _MockCancellationBloc cancelBloc;
   late _MockAuthBloc authBloc;
   late _MockAnalyticsService analytics;
+  late _MockBidBloc answerBids;
+  late StreamController<BidState> answerStates;
+  late List<BidEvent> answerEvents;
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
     registerFallbackValue(BidListRequested('fallback'));
+    registerFallbackValue(_FakeContext());
   });
 
   setUp(() {
@@ -336,9 +375,31 @@ void main() {
       );
       return cubit;
     });
+
+    // Scope de réponse du propriétaire : son BidBloc (piloté par
+    // `answerStates`) et son BidAcceptanceBloc, jamais ceux de la route.
+    answerStates = StreamController<BidState>.broadcast();
+    answerEvents = [];
+    answerBids = _MockBidBloc();
+    whenListen(answerBids, answerStates.stream, initialState: BidInitial());
+    when(() => answerBids.add(any())).thenAnswer(
+      (i) => answerEvents.add(i.positionalArguments.first as BidEvent),
+    );
+    final acceptance = _MockBidAcceptanceBloc();
+    whenListen(
+      acceptance,
+      const Stream<acs.BidAcceptanceState>.empty(),
+      initialState: acs.BidAcceptanceInitial(),
+    );
+    unregisterTripAnswerBlocs();
+    getIt
+      ..registerFactory<BidBloc>(() => answerBids)
+      ..registerFactory<BidAcceptanceBloc>(() => acceptance);
   });
 
   tearDown(() {
+    unawaited(answerStates.close());
+    unregisterTripAnswerBlocs();
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
     }
@@ -781,7 +842,7 @@ void main() {
     expect(find.text('Gare routière'), findsOneWidget);
   });
 
-  testWidgets('proprietaire : la section d’audience du trajet est montée', (
+  testWidgets('proprietaire : la ligne d’audience du trajet est montée', (
     tester,
   ) async {
     await pumpOwnerWith(
@@ -790,7 +851,7 @@ void main() {
       auth: const AuthAuthenticated(_owner),
     );
 
-    expect(find.byType(TripAudienceSection), findsOneWidget);
+    expect(find.byType(TripAudienceLine), findsOneWidget);
   });
 
   testWidgets('proprietaire sans instructions : aucun encart', (tester) async {
@@ -1547,8 +1608,9 @@ void main() {
       expect(menuButton, findsNothing);
       expect(find.byKey(const Key('trip-owner-share-button')), findsNothing);
       // Ni demandes ni colis à montrer.
-      expect(find.byKey(const Key('trip-requests-card')), findsNothing);
-      expect(find.textContaining('Colis dans le trajet'), findsNothing);
+      expect(find.byKey(const Key('trip-direct-request-card')), findsNothing);
+      expect(find.byKey(const Key('trip-activity-row')), findsNothing);
+      expect(find.byType(TripAudienceLine), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
@@ -1609,19 +1671,114 @@ void main() {
       expect(annEvent.silent, isTrue);
     });
 
-    testWidgets('carte Demandes : même relecture au retour', (tester) async {
-      ownerOn(_makeAnnouncement(), bids: [_makeBid(status: 'PENDING')]);
+    BidModel request(String id) => BidModel(
+      id: id,
+      announcementId: 'ann-trip-001',
+      senderId: 'sender-$id',
+      senderName: 'Expéditeur $id',
+      weightKg: 2,
+      status: 'PENDING',
+      createdAt: DateTime(2026, 6),
+      updatedAt: DateTime(2026, 6),
+    );
+
+    testWidgets('réponse directe : accepter passe à la demande suivante, '
+        'l\'écran est relu en silence', (tester) async {
+      final consent = _MockTrackingConsent();
+      when(
+        () => consent.onParcelAccepted(any()),
+      ).thenAnswer((_) async => false);
+      getIt.registerSingleton<TrackingConsentCubit>(consent);
+      addTearDown(() => getIt.unregister<TrackingConsentCubit>());
+      ownerOn(_makeAnnouncement(), bids: [request('r1'), request('r2')]);
+      await pumpScreen(tester);
+      clearInteractions(bidBloc);
+      clearInteractions(annBloc);
+
+      expect(find.text('Demande 1 sur 2'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('trip-request-accept-r1')));
+      await tester.pump();
+      await tester.pump();
+      expect(answerEvents.single, isA<BidAcceptRequested>());
+      // La réponse ne passe jamais par le BidBloc de la route.
+      verifyNever(() => bidBloc.add(any(that: isA<BidAcceptRequested>())));
+
+      answerStates.add(BidAccepted(request('r1')));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Demande 1 sur 1'), findsOneWidget);
+      expect(find.byKey(const Key('trip-direct-request-r2')), findsOneWidget);
+      final reload =
+          verify(() => bidBloc.add(captureAny())).captured.single
+              as BidListRequested;
+      expect(reload.silent, isTrue);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('case Demandes : sheet des demandes, la ligne ouvre la fiche, '
+        'relue en silence au retour', (tester) async {
+      ownerOn(_makeAnnouncement(), bids: [request('r1'), request('r2')]);
       await pumpScreen(tester);
       clearInteractions(bidBloc);
 
-      final card = find.byKey(const Key('trip-requests-card'));
-      await tester.ensureVisible(card);
+      await tester.tap(find.byKey(const Key('trip-activity-requests')));
       await tester.pumpAndSettle();
-      await tester.tap(card);
+      expect(
+        find.byKey(const Key('trip-activity-requests-content')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('trip-activity-request-r2')));
       await tester.pumpAndSettle();
-      await tester.tap(find.textContaining('DEMANDES:'));
+      expect(find.text('BID:r2'), findsOneWidget);
+      await tester.tap(find.text('BID:r2'));
+      await tester.pumpAndSettle();
+      final reload =
+          verify(() => bidBloc.add(captureAny())).captured.single
+              as BidListRequested;
+      expect(reload.silent, isTrue);
+    });
+
+    testWidgets('« Voir les N demandes » : même sheet', (tester) async {
+      ownerOn(_makeAnnouncement(), bids: [request('r1'), request('r2')]);
+      await pumpScreen(tester);
+      await tester.tap(find.byKey(const Key('trip-direct-request-see-all')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-activity-request-r1')), findsOneWidget);
+      expect(find.byKey(const Key('trip-activity-request-r2')), findsOneWidget);
+    });
+
+    testWidgets('case Colis : tous les colis, « Ouvrir la liste des colis » '
+        'puis relecture au retour', (tester) async {
+      ownerOn(
+        _makeAnnouncement(),
+        bids: [
+          _makeBid(status: 'ACCEPTED', id: 'c1'),
+          _makeBid(status: 'IN_TRANSIT', id: 'c2'),
+        ],
+      );
+      await pumpScreen(tester);
+      clearInteractions(bidBloc);
+
+      await tester.tap(find.byKey(const Key('trip-activity-parcels')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-activity-parcel-c1')), findsOneWidget);
+      expect(find.byKey(const Key('trip-activity-parcel-c2')), findsOneWidget);
+      await tester.tap(
+        find.byKey(const Key('trip-activity-parcels-open-list')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('PARCELS:ann-trip-001'), findsOneWidget);
+      await tester.tap(find.text('PARCELS:ann-trip-001'));
       await tester.pumpAndSettle();
       verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+    });
+
+    testWidgets('case Gain : son sheet, en lecture seule', (tester) async {
+      ownerOn(_makeAnnouncement());
+      await pumpScreen(tester);
+      await tester.tap(find.byKey(const Key('trip-activity-gain')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-activity-gain-empty')), findsOneWidget);
     });
 
     testWidgets('détail en échec sans trajet : erreur et « Réessayer », '

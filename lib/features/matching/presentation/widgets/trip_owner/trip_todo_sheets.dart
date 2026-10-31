@@ -1,21 +1,15 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/close_sheet_when_resolved.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_depart_action.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -45,9 +39,13 @@ import 'package:go_router/go_router.dart';
 /// si le `BidBloc` est en plein rechargement à l'ouverture. Le bouton vit
 /// dans le `stickyBottom`.
 ///
+/// Tuiles concernées : [TripTodoTile.depart] et [TripTodoTile.card], rendues
+/// en lignes par `TripTodoRows`. [TripTodoTile.requests] n'y passe jamais
+/// (carte de réponse directe `TripDirectRequestCard`, sheet d'activité
+/// `openTripActivitySheet`).
+///
 /// Le sheet se ferme seul dès que les données relues ne justifient plus
-/// [tile] ([tripTodoTilesFor]) : départ confirmé, dernière demande traitée,
-/// carte ajoutée. Une confirmation ou une erreur ouverte par-dessus n'est
+/// [tile] ([tripTodoTilesFor]) : départ confirmé, carte ajoutée. Une confirmation ou une erreur ouverte par-dessus n'est
 /// jamais refermée à sa place.
 ///
 /// Les boutons qui mènent à un autre écran ferment d'abord le sheet, puis
@@ -59,6 +57,12 @@ Future<void> openTripTodoSheet(
   TripTodoTile tile, {
   List<BidModel>? bids,
 }) {
+  // Les demandes à traiter ne passent jamais par ce sheet : la carte de
+  // réponse directe et le sheet d'activité « Demandes » les portent.
+  assert(
+    tile != TripTodoTile.requests,
+    'requests: TripDirectRequestCard / openTripActivitySheet',
+  );
   final blocs = TripTodoBlocs.of(context);
   // La tuile « Je pars » se calcule avec le TripDepartCubit de l'écran : il
   // doit être fourni au-dessus de [context].
@@ -128,32 +132,12 @@ class _TripTodoContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final muted = tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant);
     return Padding(
       padding: const EdgeInsets.only(bottom: DonySpacing.base),
       child: switch (tile) {
-        TripTodoTile.requests => Column(
-          key: const Key('trip-todo-requests-content'),
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Liste pas encore chargée : le nombre servi par la liste des
-            // trajets, sans les lignes.
-            if (live.bids case final bids?)
-              for (final bid in bids.where(isPendingBid)) ...[
-                _RequestRow(bid: bid),
-                const SizedBox(height: DonySpacing.sm),
-              ]
-            else ...[
-              Text(
-                l.tripTodoRequestsSummary(live.pendingCount),
-                style: tt.bodyMedium,
-              ),
-              const SizedBox(height: DonySpacing.sm),
-            ],
-            Text(l.tripTodoRequestsHint, style: muted),
-          ],
-        ),
+        // Jamais ouvert ici : les demandes ont leur carte de réponse directe
+        // et leur sheet d'activité (`openTripActivitySheet`).
+        TripTodoTile.requests => const SizedBox.shrink(),
         TripTodoTile.depart => Column(
           key: const Key('trip-todo-depart-content'),
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,86 +155,6 @@ class _TripTodoContent extends StatelessWidget {
           style: tt.bodyMedium,
         ),
       },
-    );
-  }
-}
-
-/// Une demande à traiter : contenu, expéditeur · poids, net du voyageur
-/// ([travelerNetAmount], même montant que la liste des demandes).
-class _RequestRow extends StatelessWidget {
-  const _RequestRow({required this.bid});
-
-  final BidModel bid;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    // Catégories, sinon description, sinon « Colis » : une valeur vide du
-    // back ne laisse jamais la ligne sans titre.
-    final category = bid.contentCategory;
-    final categories = category == null
-        ? ''
-        : contentCategoriesDisplayName(l, category);
-    final description = bid.description?.trim() ?? '';
-    final content = categories.isNotEmpty
-        ? categories
-        : description.isNotEmpty
-        ? description
-        : l.tripOwnerParcelsDefaultContent;
-    final sender = bid.senderDisplayName(l);
-    final w = bid.displayWeightKg;
-    final weight = w == null
-        ? null
-        : '${w.toStringAsFixed(w % 1 == 0 ? 0 : 1)} kg';
-    final net = travelerNetAmount(bid);
-    return Container(
-      key: Key('trip-todo-request-${bid.id}'),
-      padding: const EdgeInsets.all(DonySpacing.md),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  content,
-                  style: tt.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  weight != null ? '$sender · $weight' : sender,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          if (net != null) ...[
-            const SizedBox(width: DonySpacing.sm),
-            Text(
-              formatPriceIn(net, bid.currency),
-              style: tt.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: cs.onSurface,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 }
@@ -273,11 +177,7 @@ class _TripTodoFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     return switch (tile) {
-      TripTodoTile.requests => DonyButton(
-        key: const Key('trip-todo-requests-button'),
-        label: l.listingSeeRequestsButton(live.pendingCount),
-        onPressed: () => unawaited(_openRequests(context)),
-      ),
+      TripTodoTile.requests => const SizedBox.shrink(),
       TripTodoTile.depart => const TripDepartAction(),
       TripTodoTile.card =>
         live.cardReady
@@ -292,13 +192,6 @@ class _TripTodoFooter extends StatelessWidget {
                 onPressed: () => unawaited(_openCardOnboarding(context)),
               ),
     };
-  }
-
-  /// Activité › Demandes « À traiter » de ce trajet, relu au retour
-  /// ([openTripRequests]).
-  Future<void> _openRequests(BuildContext sheetContext) async {
-    if (!_closeForAction(sheetContext)) return;
-    await openTripRequests(screenContext, live.trip.id);
   }
 
   /// Compte de paiement prêt : l'édition du trajet propose la carte, puis le

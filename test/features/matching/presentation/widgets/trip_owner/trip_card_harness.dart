@@ -1,6 +1,6 @@
-// Harnais commun des tests des cartes directes et d'information de l'écran
-// du trajet (Demandes, Colis, Gain, audience, étapes) : vraies polices,
-// blocs simulés, routeur qui note les écrans ouverts et sait revenir.
+// Harnais commun des tests des pièces de l'écran du trajet (gain, audience,
+// étapes, routes) : vraies polices, blocs simulés, routeur qui note les
+// écrans ouverts et sait revenir.
 import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
@@ -12,7 +12,6 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -72,24 +71,6 @@ AnnouncementModel tripFixture({
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
   pendingBidCount: pendingBidCount,
-);
-
-BidModel bidFixture(
-  String id,
-  String status, {
-  String? category,
-  String senderName = 'Moussa Traoré',
-  double weightKg = 3,
-}) => BidModel(
-  id: id,
-  announcementId: 'trip-1',
-  senderId: 'sender-$id',
-  senderName: senderName,
-  weightKg: weightKg,
-  contentCategory: category,
-  status: status,
-  createdAt: DateTime(2026, 10),
-  updatedAt: DateTime(2026, 10),
 );
 
 /// Monte [card] sous les blocs de l'écran ([bids], [announcement] : absents

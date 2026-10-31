@@ -1,7 +1,8 @@
-// Carte « argent » du trajet (`TripSummaryCard`) : quand elle s'affiche,
-// gain estimé en grand s'il est positif, colis et kilos, sans bouton (la
-// liste des colis s'ouvre depuis la carte Colis), FR / EN, 360 dp × 1,3.
-import 'package:dony/features/matching/data/models/announcement_model.dart';
+// Détail du gain du trajet (`TripGainContent`), contenu du sheet « Gain » de
+// l'activité du trajet : gain estimé en grand s'il est positif, colis et
+// kilos, sans bouton, FR / EN, 360 dp × 1,3. Le titre du sheet (« Gain
+// estimé » ou « Résumé du trajet ») et quand la case Gain s'affiche sont
+// testés par `trip_activity_sheets_test.dart` et `trip_activity_row_test.dart`.
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_summary_card.dart';
 import 'package:flutter/material.dart';
@@ -23,21 +24,6 @@ const _cashOnly = TripParcelsSummary(
   currency: 'EUR',
 );
 
-AnnouncementModel _trip(String status, TripParcelsSummary? summary) =>
-    AnnouncementModel(
-      id: 'trip-1',
-      travelerId: 'trav-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 11, 12),
-      availableKg: 20,
-      totalKg: 20,
-      status: status,
-      createdAt: DateTime(2026, 10),
-      updatedAt: DateTime(2026, 10),
-      parcelsSummary: summary,
-    );
-
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
@@ -45,62 +31,11 @@ void main() {
     await loadAppFonts();
   });
 
-  Finder card() => find.byKey(const Key('trip-summary-card'));
+  Finder content() => find.byType(TripGainContent);
 
-  group('affichage (conditions inchangées)', () {
-    const statuses = [
-      'DRAFT',
-      'ACTIVE',
-      'FULL',
-      'IN_PROGRESS',
-      'COMPLETED',
-      'CANCELLED',
-      'REMOVED_BY_ADMIN',
-      'SOMETHING_NEW',
-    ];
-    for (final status in statuses) {
-      test('$status : propriétaire et résumé servi → carte', () {
-        expect(
-          TripSummaryCard.shownFor(isOwner: true, trip: _trip(status, _paid)),
-          isTrue,
-        );
-      });
-    }
+  testWidgets('gain positif : montant, colis, kilos, note', (tester) async {
+    await pumpTripCard(tester, const TripGainContent(summary: _paid));
 
-    test('sans résumé, résumé à 0 colis ou visiteur : pas de carte', () {
-      expect(
-        TripSummaryCard.shownFor(isOwner: true, trip: _trip('ACTIVE', null)),
-        isFalse,
-      );
-      expect(
-        TripSummaryCard.shownFor(
-          isOwner: true,
-          trip: _trip(
-            'ACTIVE',
-            const TripParcelsSummary(
-              count: 0,
-              totalKg: 0,
-              netAmount: 0,
-              currency: 'EUR',
-            ),
-          ),
-        ),
-        isFalse,
-      );
-      expect(
-        TripSummaryCard.shownFor(isOwner: false, trip: _trip('ACTIVE', _paid)),
-        isFalse,
-      );
-    });
-  });
-
-  testWidgets('gain positif : « Gain estimé », montant, colis, kilos, note', (
-    tester,
-  ) async {
-    await pumpTripCard(tester, const TripSummaryCard(summary: _paid));
-
-    expect(find.text('Gain estimé'), findsOneWidget);
-    expect(find.text('Résumé du trajet'), findsNothing);
     expect(
       tester.widget<Text>(find.byKey(const Key('trip-summary-earnings'))).data,
       contains('126'),
@@ -116,20 +51,18 @@ void main() {
   testWidgets('colis payés en espèces (gain nul) : résumé sans montant', (
     tester,
   ) async {
-    await pumpTripCard(tester, const TripSummaryCard(summary: _cashOnly));
+    await pumpTripCard(tester, const TripGainContent(summary: _cashOnly));
 
-    expect(find.text('Résumé du trajet'), findsOneWidget);
-    expect(find.text('Gain estimé'), findsNothing);
     expect(find.byKey(const Key('trip-summary-earnings')), findsNothing);
     expect(find.text('1 colis en votre possession'), findsOneWidget);
     expect(find.text('3 kg transportés'), findsOneWidget);
   });
 
-  testWidgets('aucun bouton : « Voir mes colis » a disparu', (tester) async {
-    await pumpTripCard(tester, const TripSummaryCard(summary: _paid));
+  testWidgets('aucun bouton : lecture seule', (tester) async {
+    await pumpTripCard(tester, const TripGainContent(summary: _paid));
 
     expect(
-      find.descendant(of: card(), matching: find.byType(ButtonStyleButton)),
+      find.descendant(of: content(), matching: find.byType(ButtonStyleButton)),
       findsNothing,
     );
     expect(find.byKey(const Key('trip-summary-view-parcels')), findsNothing);
@@ -138,7 +71,7 @@ void main() {
   testWidgets('devise du trajet (XOF)', (tester) async {
     await pumpTripCard(
       tester,
-      const TripSummaryCard(
+      const TripGainContent(
         summary: TripParcelsSummary(
           count: 2,
           totalKg: 5,
@@ -158,11 +91,14 @@ void main() {
   testWidgets('en anglais', (tester) async {
     await pumpTripCard(
       tester,
-      const TripSummaryCard(summary: _paid),
+      const TripGainContent(summary: _paid),
       locale: const Locale('en'),
     );
 
-    expect(find.text('Estimated earnings'), findsOneWidget);
+    expect(
+      find.text('Payment follows the delivery of each parcel.'),
+      findsOneWidget,
+    );
     expect(find.text('3 parcels in your possession'), findsOneWidget);
     expect(find.text('12.5 kg carried'), findsOneWidget);
   });
@@ -174,14 +110,14 @@ void main() {
             'aucun débordement', (tester) async {
           await pumpTripCard(
             tester,
-            TripSummaryCard(summary: summary),
+            TripGainContent(summary: summary),
             locale: locale,
             textScale: 1.3,
             size: kTripCardSmallPhone,
           );
 
           expect(tester.takeException(), isNull);
-          expect(card(), findsOneWidget);
+          expect(content(), findsOneWidget);
         });
       }
     }

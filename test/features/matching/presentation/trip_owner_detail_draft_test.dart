@@ -43,6 +43,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/stripe_account_test_doubles.dart';
+import '../../../helpers/trip_answer_blocs.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -220,6 +221,7 @@ void main() {
       getIt.unregister<AnalyticsService>();
     }
     getIt.registerLazySingleton<AnalyticsService>(() => analytics);
+    registerInertTripAnswerBlocs();
     if (getIt.isRegistered<TripDepartCubit>()) {
       getIt.unregister<TripDepartCubit>();
     }

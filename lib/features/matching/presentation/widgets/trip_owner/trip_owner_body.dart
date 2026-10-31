@@ -4,38 +4,47 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_action_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_row.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_sheets.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_direct_request_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_header.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_requests_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_status_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_tile_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_rows.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_summary_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-/// Corps de l'écran du trajet vu par son voyageur, en sections, comme le
-/// corps de la fiche colis (`TravelerDetailBody`).
+/// Corps de l'écran du trajet vu par son voyageur, en « tableau de bord »
+/// (redesign du 31/10), en sections comme le corps de la fiche colis
+/// (`TravelerDetailBody`).
 ///
-/// Ordre : tête ([TripOwnerHeader] : billet, ligne surplus, pastilles kilos
-/// et prix, jauge des valises) ; carte de statut ([TripStatusCard], si l'état
-/// en a une) ; « À traiter » (seulement s'il y a une tuile,
-/// [tripTodoTilesFor], chacune ouvrant son bottom sheet) ; cartes
-/// d'information sans titre (étapes du voyage [TripLegsCard], audience
-/// [TripAudienceSection]) ; cartes directes Demandes ([TripRequestsCard]),
-/// Colis ([TripParcelsSection]) et Gain ([TripSummaryCard]) ; tuiles « Votre
-/// trajet » ([tripTilesFor], chacune ouvrant son bottom sheet). Le pied
-/// collant et le menu ⋮ sont posés par l'écran, hors du défilement.
+/// Ordre :
+/// 1. tête ([TripOwnerHeader] : billet, ligne surplus, pastilles kilos et
+///    prix, jauge des valises) ;
+/// 2. carte de statut ([TripStatusCard]) pour un brouillon, un trajet
+///    complet, arrivé, annulé ou retiré par l'équipe ; ailleurs le badge du
+///    billet suffit ;
+/// 3. « À traiter », seulement si quelque chose attend le voyageur : la
+///    carte de réponse directe à la première demande ([TripDirectRequestCard],
+///    tuile [TripTodoTile.requests]) puis une ligne par autre geste
+///    ([TripTodoRows] : « Je pars », « Ajouter la carte ») ;
+/// 4. « Activité du trajet » : compteurs Demandes, Colis, Gain
+///    ([TripActivityRow], [tripActivityFor]) et ligne d'audience
+///    ([TripAudienceLine]), absents d'un brouillon, d'un trajet annulé ou
+///    retiré par l'équipe ;
+/// 5. « Votre trajet » ([tripTilesFor], chaque tuile ouvrant son sheet ; les
+///    étapes d'un voyage à plusieurs étapes sont dans celui de l'itinéraire).
+///
+/// Le pied collant et le menu ⋮ sont posés par l'écran, hors du défilement.
 ///
 /// Tant que la propriété n'est pas tranchée ([isOwner] faux : démarrage à
 /// froid par un lien, visiteur sur le point d'être renvoyé vers la feuille
@@ -44,16 +53,20 @@ import 'package:go_router/go_router.dart';
 ///
 /// Toutes les sections lisent les mêmes données que les sheets et le pied
 /// ([TripTodoLive] : dernier trajet relu, derniers colis chargés, compte de
-/// paiement, départ confirmé) : un rechargement garde l'affichage, une tuile
-/// et son sheet ne divergent jamais.
+/// paiement, départ confirmé), plus les demandes que le voyageur vient de
+/// traiter ([TripBidAnswerController.answered]) : un rechargement garde
+/// l'affichage, une case et son sheet ne divergent jamais.
 ///
 /// Chaque section porte une clé (`KeyedSubtree`) : l'apparition ou la
 /// disparition d'une section ne remonte pas les autres.
 ///
-/// Les sheets s'ouvrent avec le contexte de ce `State` (stable), jamais celui
-/// d'une tuile qui disparaît dès que la demande est traitée.
+/// Les sheets s'ouvrent avec le contexte de ce `State` (stable, sous le
+/// [TripBidAnswerScope]), jamais celui d'une carte ou d'une ligne qui
+/// disparaît dès que la demande est traitée. Un second appui pendant
+/// l'ouverture d'un sheet du corps est ignoré.
 ///
-/// Requiert les blocs de la route du trajet : `AnnouncementBloc`, `BidBloc`,
+/// Requiert, au-dessus, un [TripBidAnswerScope] (posé par l'écran) et les
+/// blocs de la route du trajet : `AnnouncementBloc`, `BidBloc`,
 /// `TripAudienceCubit`, `TripGroupCubit` (facultatif), `StripeAccountBloc`
 /// (global) et le `TripDepartCubit` fourni par l'écran.
 class TripOwnerBody extends StatefulWidget {
@@ -76,10 +89,15 @@ class TripOwnerBody extends StatefulWidget {
 }
 
 class _TripOwnerBodyState extends State<TripOwnerBody> {
-  /// Mesure d'affichage des tuiles « À traiter », une fois par tuile et par
-  /// statut du trajet (et par nombre de demandes pour `requests`) pour cet
-  /// écran ([tripTodoShown]).
+  /// Mesure d'affichage de « À traiter » (carte de réponse directe et
+  /// lignes), une fois par tuile et par statut du trajet (et par nombre de
+  /// demandes pour `requests`) pour cet écran ([tripTodoShown]).
   final _todoViews = TodoTileViewLog();
+
+  /// Un sheet ouvert depuis le corps n'est pas encore affiché : un second
+  /// appui (double tap sur une case, une ligne ou « Voir les N demandes »)
+  /// n'en ouvre pas un autre par-dessus.
+  bool _opening = false;
 
   @override
   Widget build(BuildContext context) {
@@ -91,10 +109,14 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
         if (_statusCard(widget.trip, null) case final card?) ('status', card),
       ]);
     } else {
+      final answered = TripBidAnswerScope.of(context).answered;
       column = TripTodoLive(
         trip: widget.trip,
         blocs: TripTodoBlocs.of(context),
-        builder: (context, live) => _column(_ownerSections(live)),
+        builder: (context, live) => ValueListenableBuilder<Set<String>>(
+          valueListenable: answered,
+          builder: (context, ids, _) => _column(_ownerSections(live, ids)),
+        ),
       );
     }
     return SingleChildScrollView(
@@ -114,72 +136,80 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
       for (final (name, child) in sections)
         KeyedSubtree(
           key: ValueKey(name),
-          // Les cartes qui peuvent ne rien rendre (étapes, audience) posent
-          // leur marge elles-mêmes, seulement quand elles s'affichent.
-          child: _selfSpaced.contains(name)
-              ? child
-              : Padding(
-                  padding: const EdgeInsets.only(bottom: DonySpacing.base),
-                  child: child,
-                ),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: DonySpacing.base),
+            child: child,
+          ),
         ),
     ],
   );
 
-  static const _selfSpaced = {'legs', 'audience'};
-
-  List<(String, Widget)> _ownerSections(TripTodoLiveData live) {
+  List<(String, Widget)> _ownerSections(
+    TripTodoLiveData live,
+    Set<String> answered,
+  ) {
     final l = context.l10n;
     final trip = live.trip;
     final bids = live.bids;
 
-    final todoTiles = live.tiles;
-    _todoViews.logAll(context, trip.id, [
-      for (final tile in todoTiles)
-        tripTodoShown(tile, trip, pendingCount: live.pendingCount),
-    ]);
+    // Carte de réponse directe : la tuile `requests` (trajet où une demande
+    // se traite encore) et au moins une demande pas encore traitée depuis
+    // l'écran dans la liste chargée. Sans liste, aucune demande à montrer.
+    final direct =
+        live.tiles.contains(TripTodoTile.requests) &&
+        (tripRequestsToAnswer(bids, answered)?.isNotEmpty ?? false);
+    final rows = tripTodoRowTiles(live).isNotEmpty;
+    final activity = tripActivityFor(trip: trip, bids: bids, l: l).isNotEmpty;
     final tiles = tripTilesFor(trip: trip, bids: bids, isOwner: true);
-    const spacing = EdgeInsets.only(bottom: DonySpacing.base);
 
     return [
       ('header', TripOwnerHeader(a: trip)),
       if (_statusCard(trip, bids) case final card?) ('status', card),
-      if (todoTiles.isNotEmpty)
+      if (direct || rows)
         (
           'todo',
           BidDetailSection(
             title: l.bidDetailSectionTodo,
+            spacing: DonySpacing.md,
             children: [
-              DonyActionTileGrid(
-                tiles: [for (final tile in todoTiles) _todoTile(live, tile)],
-              ),
+              if (direct)
+                TripDirectRequestCard(
+                  trip: trip,
+                  bids: bids,
+                  views: _todoViews,
+                  onSeeAll: () => _openActivity(live, TripActivity.requests),
+                ),
+              if (rows)
+                TripTodoRows(
+                  live: live,
+                  views: _todoViews,
+                  onOpen: (tile) => _open(
+                    () => openTripTodoSheet(context, trip, tile, bids: bids),
+                  ),
+                ),
             ],
           ),
         ),
-      // Voyage à plusieurs étapes (FLUTTER-4D), puis audience : cartes
-      // d'information sans titre.
-      (
-        'legs',
-        TripLegsCard(
-          announcementId: trip.id,
-          padding: spacing,
-          onOpenLeg: (leg) =>
-              unawaited(context.push<void>('/announcements/${leg.id}/trip')),
-        ),
-      ),
-      if (TripAudienceSection.shownFor(trip.status))
+      if (activity)
         (
-          'audience',
-          TripAudienceSection(announcementId: trip.id, padding: spacing),
+          'activity',
+          BidDetailSection(
+            title: l.tripSectionActivity,
+            spacing: 0,
+            children: [
+              TripActivityRow(
+                trip: trip,
+                bids: bids,
+                onOpen: (activity) => _openActivity(live, activity),
+              ),
+              if (TripAudienceLine.shownFor(trip.status))
+                TripAudienceLine(
+                  announcementId: trip.id,
+                  padding: const EdgeInsets.only(top: DonySpacing.md),
+                ),
+            ],
+          ),
         ),
-      if (TripRequestsCard.shownFor(trip, bids))
-        ('requests', TripRequestsCard(trip: trip, bids: bids)),
-      // Un brouillon n'a pas encore de colis ; un trajet retiré par l'équipe
-      // n'en montre plus.
-      if (!_noParcelsCard.contains(trip.status))
-        ('parcels', TripParcelsSection(announcementId: trip.id)),
-      if (TripSummaryCard.shownFor(isOwner: true, trip: trip))
-        ('gain', TripSummaryCard(summary: trip.parcelsSummary!)),
       if (tiles.isNotEmpty)
         (
           'tiles',
@@ -195,8 +225,6 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
         ),
     ];
   }
-
-  static const _noParcelsCard = {'DRAFT', 'REMOVED_BY_ADMIN'};
 
   /// Carte de statut de [trip] ([tripStatusCardKindFor]) d'après ses colis
   /// chargés ([bids], `null` tant que la liste n'a pas répondu). Le report
@@ -214,28 +242,18 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
     );
   }
 
-  /// Tuile « À traiter » : pastille « Réponse attendue », résumé de ce qui
-  /// est attendu ; le sheet part des colis de la tuile ([TripTodoLiveData]).
-  Widget _todoTile(TripTodoLiveData live, TripTodoTile tile) {
-    final l = context.l10n;
-    return todoActionTile(
-      context,
-      role: 'trip_owner',
-      tile: tile.name,
-      iconName: tripTodoIcon(tile),
-      label: tripTodoTitle(l, tile, cardReady: live.cardReady),
-      subtitle: tripTodoSummary(
-        l,
-        tile,
-        pendingCount: live.pendingCount,
-        cardReady: live.cardReady,
-      ),
-      badge: l.todoTileBadgeReplyNeeded,
-      onTap: () => unawaited(
-        openTripTodoSheet(context, live.trip, tile, bids: live.bids),
-      ),
-    );
+  /// Ouvre un sheet du corps ([show]), sauf si un autre est déjà en train de
+  /// s'ouvrir ou ouvert depuis le corps.
+  void _open(Future<void> Function() show) {
+    if (_opening) return;
+    _opening = true;
+    unawaited(show().whenComplete(() => _opening = false));
   }
+
+  /// Sheet de la case [activity], sur les derniers colis connus.
+  void _openActivity(TripTodoLiveData live, TripActivity activity) => _open(
+    () => openTripActivitySheet(context, live.trip, activity, bids: live.bids),
+  );
 
   /// Tuile « Votre trajet » : ouvre la feuille de lecture, avec son bouton
   /// « Modifier » quand le trajet est modifiable.
@@ -247,8 +265,8 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
       label: tripTileTitle(l, tile),
       subtitle: tripTileSubtitle(l, tile, live.trip),
       color: Theme.of(context).colorScheme.primary,
-      onTap: () => unawaited(
-        openTripTileSheet(context, live.trip, tile, bids: live.bids),
+      onTap: () => _open(
+        () => openTripTileSheet(context, live.trip, tile, bids: live.bids),
       ),
     );
   }
