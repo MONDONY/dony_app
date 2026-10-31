@@ -1,5 +1,5 @@
 // « À traiter » complet de l'écran du trajet vu par son voyageur (phase 1,
-// app seule) : fonction pure `tripTodoFor` (16 types, urgence, échéances,
+// app seule) : fonction pure `tripTodoFor` (18 types, urgence, échéances,
 // tri), compte des actions, colis distincts pour la ligne Colis, liste pas
 // encore chargée, statuts du trajet, visiteur, et mesure d'affichage.
 import 'package:dony/core/models/connect_account_status.dart';
@@ -84,6 +84,10 @@ BidModel _bid(
   DateTime? recipientReplacementRequestedAt,
   bool travelerHasRated = false,
   DateTime? updatedAt,
+  String? deliveryNoShowStatus,
+  bool? deliveryNoShowReportedByTraveler,
+  DateTime? deliveryNoShowContestationDeadline,
+  bool pickupCodeRenewalNeeded = false,
 }) => BidModel(
   id: id,
   announcementId: 'trip-1',
@@ -104,6 +108,10 @@ BidModel _bid(
   recipientDeclined: recipientDeclined,
   recipientReplacementRequestedAt: recipientReplacementRequestedAt,
   travelerHasRated: travelerHasRated,
+  deliveryNoShowStatus: deliveryNoShowStatus,
+  deliveryNoShowReportedByTraveler: deliveryNoShowReportedByTraveler,
+  deliveryNoShowContestationDeadline: deliveryNoShowContestationDeadline,
+  pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
   recipientName: 'Fatou',
   recipientPhone: '+221770000000',
 );
@@ -163,9 +171,11 @@ void main() {
       'amendment',
       'supplement',
       'senderAbsence',
+      'deliveryNoShowContest',
       'returnParcel',
       'arrive',
       'depart',
+      'pickupCodeRenewal',
       'deliver',
       'notify',
       'recipientDeclined',
@@ -187,6 +197,7 @@ void main() {
       TripTodoKind.amendment,
       TripTodoKind.supplement,
       TripTodoKind.senderAbsence,
+      TripTodoKind.deliveryNoShowContest,
       TripTodoKind.returnParcel,
     ]);
   });
@@ -198,7 +209,9 @@ void main() {
       TripTodoKind.amendment,
       TripTodoKind.supplement,
       TripTodoKind.senderAbsence,
+      TripTodoKind.deliveryNoShowContest,
       TripTodoKind.returnParcel,
+      TripTodoKind.pickupCodeRenewal,
       TripTodoKind.deliver,
       TripTodoKind.recipientDeclined,
       TripTodoKind.rate,
@@ -638,6 +651,117 @@ void main() {
         bids: [_bid('b1', 'HANDED_OVER', handoverDeadline: _past)],
       );
       expect(_kinds(items), isNot(contains(TripTodoKind.senderAbsence)));
+    });
+  });
+
+  group('#27 contester « le voyageur ne livre pas »', () {
+    final deadline = _now.add(const Duration(hours: 20));
+    BidModel reported({
+      String status = 'PENDING_CONFIRMATION',
+      bool? byTraveler = false,
+    }) => _bid(
+      'b1',
+      'ARRIVED',
+      departureAt: _past,
+      deliveryNoShowStatus: status,
+      deliveryNoShowReportedByTraveler: byTraveler,
+      deliveryNoShowContestationDeadline: deadline,
+    );
+
+    test('signalé par l\'expéditeur, pas contesté : urgent, échéance de '
+        'contestation, en tête', () {
+      final items = _todo(
+        _trip(status: 'IN_PROGRESS', arrivalInstructions: 'Gare'),
+        bids: [reported()],
+      );
+      final contest = _item(items, TripTodoKind.deliveryNoShowContest)!;
+      expect(items.first, contest);
+      expect(contest.urgency, TripTodoUrgency.urgent);
+      expect(contest.dueAt, deadline);
+      expect(contest.bidIds, ['b1']);
+      expect(tripTodoParcelIds(items), contains('b1'));
+      // Drapeau absent (back antérieur) : l'expéditeur, comme la fiche.
+      expect(
+        _kinds(
+          _todo(
+            _trip(status: 'IN_PROGRESS'),
+            bids: [reported(byTraveler: null)],
+          ),
+        ),
+        contains(TripTodoKind.deliveryNoShowContest),
+      );
+    });
+
+    test('déjà contesté, signalé par le voyageur lui-même, ou rien : non', () {
+      for (final bid in [
+        reported(status: 'CONTESTED'),
+        reported(byTraveler: true),
+        reported(status: 'CONFIRMED'),
+        _bid('b1', 'ARRIVED', departureAt: _past),
+      ]) {
+        expect(
+          _kinds(_todo(_trip(status: 'IN_PROGRESS'), bids: [bid])),
+          isNot(contains(TripTodoKind.deliveryNoShowContest)),
+        );
+      }
+    });
+  });
+
+  group('#23 code de retrait à renouveler', () {
+    test('colis remis, en route ou arrivé dont le code est bloqué : '
+        'important, par colis, sans échéance', () {
+      for (final status in const ['HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+        final items = _todo(
+          _trip(status: 'FULL'),
+          bids: [
+            _bid(
+              'b1',
+              status,
+              departureAt: _future,
+              pickupCodeRenewalNeeded: true,
+            ),
+          ],
+        );
+        final renew = _item(items, TripTodoKind.pickupCodeRenewal)!;
+        expect(renew.urgency, TripTodoUrgency.important, reason: status);
+        expect(renew.dueAt, isNull, reason: status);
+        expect(renew.bidIds, ['b1'], reason: status);
+        expect(tripTodoParcelIds(items), {'b1'}, reason: status);
+      }
+    });
+
+    test('code valide, ou colis pas encore remis ou livré : non', () {
+      for (final bid in [
+        _bid('b1', 'HANDED_OVER', departureAt: _future),
+        _bid('b2', 'ACCEPTED', pickupCodeRenewalNeeded: true),
+        _bid('b3', 'COMPLETED', pickupCodeRenewalNeeded: true),
+      ]) {
+        expect(
+          _kinds(_todo(_trip(status: 'FULL'), bids: [bid])),
+          isNot(contains(TripTodoKind.pickupCodeRenewal)),
+          reason: bid.id,
+        );
+      }
+    });
+
+    test('avant la remise dans la file, jamais au pied', () {
+      final items = _todo(
+        _trip(status: 'IN_PROGRESS', arrivalInstructions: 'Gare'),
+        bids: [
+          _bid(
+            'b1',
+            'ARRIVED',
+            departureAt: _past,
+            pickupCodeRenewalNeeded: true,
+          ),
+        ],
+      );
+      expect(_kinds(items).take(2), [
+        TripTodoKind.pickupCodeRenewal,
+        TripTodoKind.deliver,
+      ]);
+      expect(TripTodoKind.pickupCodeRenewal.drivesFooter, isFalse);
+      expect(tripFooterTodo(items)!.kind, TripTodoKind.deliver);
     });
   });
 
@@ -1306,6 +1430,7 @@ void main() {
         TripTodoKind.addCard,
         TripTodoKind.rate,
         TripTodoKind.recipientDeclined,
+        TripTodoKind.pickupCodeRenewal,
       ]) {
         expect(kind.drivesFooter, isFalse, reason: kind.name);
       }

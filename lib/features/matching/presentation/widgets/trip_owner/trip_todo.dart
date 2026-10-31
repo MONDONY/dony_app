@@ -8,6 +8,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_transport_section.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
 import 'package:dony/features/matching/presentation/widgets/rating_pending_pill.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
@@ -57,6 +58,10 @@ enum TripTodoKind {
   /// Signaler l'absence de l'expéditeur (#16).
   senderAbsence(TripTodoUrgency.urgent, perParcel: true),
 
+  /// Contester le signalement « le voyageur ne livre pas » de l'expéditeur
+  /// (#27).
+  deliveryNoShowContest(TripTodoUrgency.urgent, perParcel: true),
+
   /// Rendre un colis après annulation (#28).
   returnParcel(TripTodoUrgency.urgent, perParcel: true),
 
@@ -66,6 +71,10 @@ enum TripTodoKind {
 
   /// « Je pars » (#37).
   depart(TripTodoUrgency.important, perParcel: false),
+
+  /// Code de retrait bloqué ou expiré : en demander un nouveau à
+  /// l'expéditeur (#23). Avant la remise, qu'il rend possible.
+  pickupCodeRenewal(TripTodoUrgency.important, perParcel: true),
 
   /// Valider la remise au destinataire (#25).
   deliver(TripTodoUrgency.important, perParcel: true),
@@ -97,8 +106,9 @@ enum TripTodoKind {
   /// action urgente, et les gestes du trajet « Arrivé à destination », « Je
   /// pars », « Valider la remise », « Prévenir les destinataires »,
   /// « Instructions de retrait », « Publier ». Les suggestions facultatives
-  /// (« Ajouter la carte », « Noter ») et le destinataire refusé ne le
-  /// prennent jamais : le pied garde alors ses
+  /// (« Ajouter la carte », « Noter »), le destinataire refusé et le code de
+  /// retrait à renouveler (une demande à l'expéditeur, depuis la fiche du
+  /// colis) ne le prennent jamais : le pied garde alors ses
   /// règles (« Modifier » | « Partager l'affiche »...).
   bool get drivesFooter =>
       urgency == TripTodoUrgency.urgent ||
@@ -269,6 +279,12 @@ TripTodoItem? _collect(
 /// - #16 [TripTodoKind.senderAbsence] :
 ///   [TravelerHeroCard.canReportSenderNoShow] ; échéance `handoverDeadline`
 ///   + [tripTravelerNoShowGrace] ;
+/// - #27 [TripTodoKind.deliveryNoShowContest] :
+///   [TravelerHeroCard.canContestDeliveryNoShow] ; échéance
+///   `deliveryNoShowContestationDeadline` ;
+/// - #23 [TripTodoKind.pickupCodeRenewal] :
+///   [BilletTalon.travelerMustRequestPickupCode] ; sans échéance (celle du
+///   code n'est pas servie) ;
 /// - #28 [TripTodoKind.returnParcel] : [BidModel.isAwaitingReturn], colis
 ///   annulés compris ; échéance `returnDeadline` ;
 /// - #37 [TripTodoKind.depart], #34 [TripTodoKind.addCard] : règles de
@@ -344,7 +360,12 @@ List<TripTodoItem> tripTodoFor({
         when: (b) => TravelerHeroCard.canReportSenderNoShow(b, now: now),
         dueOf: afterGrace,
       ),
-
+      ?_collect(
+        TripTodoKind.deliveryNoShowContest,
+        bids,
+        when: TravelerHeroCard.canContestDeliveryNoShow,
+        dueOf: (b) => b.deliveryNoShowContestationDeadline,
+      ),
       ?_collect(
         TripTodoKind.returnParcel,
         bids,
@@ -352,6 +373,11 @@ List<TripTodoItem> tripTodoFor({
         dueOf: (b) => b.returnDeadline,
       ),
       if (arrive) const TripTodoItem(kind: TripTodoKind.arrive, count: 1),
+      ?_collect(
+        TripTodoKind.pickupCodeRenewal,
+        bids,
+        when: BilletTalon.travelerMustRequestPickupCode,
+      ),
       ?_collect(TripTodoKind.deliver, bids, when: (b) => _canDeliver(b, now)),
       if (tripRecipientsToNotifyDue(trip.status, bids))
         TripTodoItem(

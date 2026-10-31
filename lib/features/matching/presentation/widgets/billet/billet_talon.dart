@@ -99,7 +99,15 @@ class BilletTalon extends StatelessWidget {
   /// retrait est à renouveler.
   static bool _hasTravelerAction(BidModel bid) =>
       _actionStatuses.contains(bid.status) ||
-      (_handedOverStatuses.contains(bid.status) && bid.pickupCodeRenewalNeeded);
+      travelerMustRequestPickupCode(bid);
+
+  /// Vue voyageur : colis remis (HANDED_OVER à ARRIVED) dont le code de
+  /// retrait est bloqué ou expiré (`pickupCodeRenewalNeeded`, FLUTTER-G2) :
+  /// le talon propose de demander un nouveau code à l'expéditeur
+  /// ([TalonCodeRenewalRequestBlock]). Lu aussi par « À traiter » de l'écran
+  /// du trajet (`tripTodoFor`, inventaire #23).
+  static bool travelerMustRequestPickupCode(BidModel bid) =>
+      _handedOverStatuses.contains(bid.status) && bid.pickupCodeRenewalNeeded;
 
   @override
   Widget build(BuildContext context) {

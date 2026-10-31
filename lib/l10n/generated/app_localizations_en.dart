@@ -23260,6 +23260,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripTodoPublishSubtitle => 'Senders can\'t see it yet';
 
   @override
+  String tripTodoDeliveryContestTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Contest $count reports',
+      one: 'Contest 1 report',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoDeliveryContestSubtitle =>
+      'The sender says you are not delivering';
+
+  @override
+  String tripTodoDeliveryContestButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'See the reports',
+      one: 'See the report',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoConsequenceDeliveryContest =>
+      'the team decides without your side of the story';
+
+  @override
+  String tripTodoPickupCodeTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pickup codes need renewing',
+      one: 'Pickup code needs renewing',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoPickupCodeSubtitle => 'Ask the sender for a new code';
+
+  @override
+  String tripTodoPickupCodeButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'See the parcels',
+      one: 'See the parcel',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String tripParcelsLineAwaiting(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

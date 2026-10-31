@@ -8130,6 +8130,18 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripTodoRateButton': (l) => l.tripTodoRateButton(intPlaceholderValue),
   'tripTodoPublishTitle': (l) => l.tripTodoPublishTitle,
   'tripTodoPublishSubtitle': (l) => l.tripTodoPublishSubtitle,
+  'tripTodoDeliveryContestTitle': (l) =>
+      l.tripTodoDeliveryContestTitle(intPlaceholderValue),
+  'tripTodoDeliveryContestSubtitle': (l) => l.tripTodoDeliveryContestSubtitle,
+  'tripTodoDeliveryContestButton': (l) =>
+      l.tripTodoDeliveryContestButton(intPlaceholderValue),
+  'tripTodoConsequenceDeliveryContest': (l) =>
+      l.tripTodoConsequenceDeliveryContest,
+  'tripTodoPickupCodeTitle': (l) =>
+      l.tripTodoPickupCodeTitle(intPlaceholderValue),
+  'tripTodoPickupCodeSubtitle': (l) => l.tripTodoPickupCodeSubtitle,
+  'tripTodoPickupCodeButton': (l) =>
+      l.tripTodoPickupCodeButton(intPlaceholderValue),
   'tripParcelsLineAwaiting': (l) =>
       l.tripParcelsLineAwaiting(intPlaceholderValue),
   'tripParcelAwaitingSemantics': (l) => l.tripParcelAwaitingSemantics,

@@ -86,12 +86,17 @@ class TravelerHeroCard extends StatelessWidget {
   ///   information seule, sans bouton → `false`.
   static bool hasAction(BidModel bid) {
     if (senderNoShowOpen(bid)) return false;
-    if (_deliveryNoShowOpen(bid)) {
-      return bid.deliveryNoShowReportedByTraveler != true &&
-          bid.deliveryNoShowStatus != 'CONTESTED';
-    }
+    if (_deliveryNoShowOpen(bid)) return canContestDeliveryNoShow(bid);
     return canReportSenderNoShow(bid);
   }
+
+  /// Priorité 1b avec bouton : l'expéditeur a signalé que le voyageur ne
+  /// livre pas, signalement encore ouvert et pas contesté : « Contester ce
+  /// signalement » (échéance `deliveryNoShowContestationDeadline`). Lu aussi
+  /// par « À traiter » de l'écran du trajet (`tripTodoFor`, inventaire #27).
+  static bool canContestDeliveryNoShow(BidModel bid) =>
+      bid.deliveryNoShowStatus == 'PENDING_CONFIRMATION' &&
+      bid.deliveryNoShowReportedByTraveler != true;
 
   @override
   Widget build(BuildContext context) {

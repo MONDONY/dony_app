@@ -72,6 +72,10 @@ BidModel todoBid(
   String? senderName,
   String? cancellationNoShowStatus,
   DateTime? updatedAt,
+  String? deliveryNoShowStatus,
+  bool? deliveryNoShowReportedByTraveler,
+  DateTime? deliveryNoShowContestationDeadline,
+  bool pickupCodeRenewalNeeded = false,
 }) => BidModel(
   id: id,
   announcementId: 'trip-1',
@@ -89,6 +93,10 @@ BidModel todoBid(
   recipientDeclined: recipientDeclined,
   departureDate: departureDate ?? kTodoDeparture,
   cancellationNoShowStatus: cancellationNoShowStatus,
+  deliveryNoShowStatus: deliveryNoShowStatus,
+  deliveryNoShowReportedByTraveler: deliveryNoShowReportedByTraveler,
+  deliveryNoShowContestationDeadline: deliveryNoShowContestationDeadline,
+  pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
   recipientName: 'Fatou',
   recipientPhone: '+221770000000',
   createdAt: DateTime(2026, 10),
@@ -180,6 +188,20 @@ TodoScenario todoScenarioFor(TripTodoKind kind) {
         ),
       ),
     ]),
+    // L'expéditeur dit que le voyageur ne livre pas : à contester avant
+    // l'échéance (#27), devant la remise et les instructions.
+    TripTodoKind.deliveryNoShowContest =>
+      _s(todoTrip(status: 'IN_PROGRESS', instructions: 'Gare routière'), [
+        todoBid(
+          'b1',
+          'ARRIVED',
+          deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+          deliveryNoShowReportedByTraveler: false,
+          deliveryNoShowContestationDeadline: now.add(
+            const Duration(hours: 20),
+          ),
+        ),
+      ]),
     TripTodoKind.returnParcel => _s(todoTrip(status: 'CANCELLED'), [
       todoBid(
         'b1',
@@ -193,6 +215,11 @@ TodoScenario todoScenarioFor(TripTodoKind kind) {
     ),
     TripTodoKind.arrive => _s(todoTrip(status: 'IN_PROGRESS'), [
       todoBid('b1', 'IN_TRANSIT'),
+    ]),
+    // Code de retrait bloqué sur un colis remis, trajet pas encore parti
+    // (ni « Arrivé », ni remise ouverte) : #23 en tête.
+    TripTodoKind.pickupCodeRenewal => _s(todoTrip(status: 'FULL'), [
+      todoBid('b1', 'HANDED_OVER', pickupCodeRenewalNeeded: true),
     ]),
     TripTodoKind.deliver => _s(
       todoTrip(status: 'IN_PROGRESS', instructions: 'Gare routière'),

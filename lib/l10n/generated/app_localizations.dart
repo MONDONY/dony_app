@@ -37482,6 +37482,48 @@ abstract class AppLocalizations {
   /// **'Les expéditeurs ne le voient pas encore'**
   String get tripTodoPublishSubtitle;
 
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « contester le signalement “le voyageur ne livre pas” » de l'expéditeur (inventaire #27) (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Contester 1 signalement} other{Contester {count} signalements}}'**
+  String tripTodoDeliveryContestTitle(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « contester le signalement de non-livraison » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur dit que vous ne livrez pas'**
+  String get tripTodoDeliveryContestSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : bouton de l'action « contester le signalement de non-livraison », ouvre la liste des colis concernés (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Voir le signalement} other{Voir les signalements}}'**
+  String tripTodoDeliveryContestButton(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : suite de « Avant …, sinon … » pour contester un signalement de non-livraison (back DeliveryNoShowUncontestedScheduler : litige non contesté) (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'l\'équipe tranche sans votre version'**
+  String get tripTodoConsequenceDeliveryContest;
+
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « code de retrait bloqué ou expiré » (inventaire #23) (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Code de retrait à renouveler} other{{count} codes de retrait à renouveler}}'**
+  String tripTodoPickupCodeTitle(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « code de retrait à renouveler » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez un nouveau code à l\'expéditeur'**
+  String get tripTodoPickupCodeSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : bouton de l'action « code de retrait à renouveler », ouvre la liste des colis concernés (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Voir le colis} other{Voir les colis}}'**
+  String tripTodoPickupCodeButton(int count);
+
   /// Écran du trajet (propriétaire), ligne Colis : colis distincts qui attendent un geste du voyageur, en orange sous le résumé (trip_parcels_line.dart).
   ///
   /// In fr, this message translates to:

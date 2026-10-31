@@ -138,7 +138,9 @@ Future<void> _open(
         TripTodoKind.amendment ||
         TripTodoKind.supplement ||
         TripTodoKind.senderAbsence ||
+        TripTodoKind.deliveryNoShowContest ||
         TripTodoKind.returnParcel ||
+        TripTodoKind.pickupCodeRenewal ||
         TripTodoKind.deliver ||
         TripTodoKind.recipientDeclined ||
         TripTodoKind.rate:

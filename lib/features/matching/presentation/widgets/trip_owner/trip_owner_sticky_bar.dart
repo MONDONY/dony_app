@@ -45,8 +45,8 @@ typedef TripFooter = ({TripFooterButton primary, TripFooterButton? secondary});
 /// proposer. Fonction pure, la première règle qui s'applique l'emporte :
 /// 1. une action « À traiter » qui peut porter le pied ([todo], déjà triée,
 ///    `tripTodoFor` ; la première selon [tripFooterTodo] : jamais « Ajouter
-///    la carte », « Noter » ni le destinataire refusé, qui laissent les
-///    règles suivantes s'appliquer) : le
+///    la carte », « Noter », le destinataire refusé ni le code de retrait à
+///    renouveler, qui laissent les règles suivantes s'appliquer) : le
 ///    bouton principal est celle-là ([TripFooterButton.todo]). Le second
 ///    reste celui des règles d'avant : « Modifier » (si [canEditTrip]) sur
 ///    un brouillon, ou sur un trajet ACTIVE sans demande à traiter ; aucun

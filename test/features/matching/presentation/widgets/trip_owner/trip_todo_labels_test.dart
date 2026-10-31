@@ -1,6 +1,6 @@
 // Textes et icônes des actions « À traiter » de l'écran du trajet
 // (`trip_todo_labels.dart`) : libellés existants repris au mot près, textes
-// des 16 types en FR et EN (pluriels, sans tiret cadratin), icônes
+// des 18 types en FR et EN (pluriels, sans tiret cadratin), icônes
 // présentes dans les assets, échéances (durée, heure, date, fuseau du
 // trajet, délai dépassé) et bandeau des sheets par colis.
 import 'dart:io';
@@ -127,7 +127,7 @@ void main() {
     });
   });
 
-  group('16 types, FR et EN', () {
+  group('18 types, FR et EN', () {
     for (final l in [fr, en]) {
       for (final kind in TripTodoKind.values) {
         for (final n in const [1, 3]) {
@@ -180,6 +180,50 @@ void main() {
       expect(fr.tripTodoBadgeSemantics(5), '5 choses à traiter');
       expect(fr.tripParcelsLineAwaiting(1), '1 attend votre geste');
       expect(fr.tripParcelsLineAwaiting(3), '3 attendent votre geste');
+    });
+
+    test('#27 et #23 : titres, boutons, conséquence', () {
+      final contest = _item(TripTodoKind.deliveryNoShowContest);
+      expect(
+        tripTodoTitle(fr, contest, cardReady: false),
+        'Contester 1 signalement',
+      );
+      expect(
+        tripTodoButton(fr, contest, cardReady: false),
+        'Voir le signalement',
+      );
+      expect(tripTodoButton(en, contest, cardReady: false), 'See the report');
+      expect(
+        tripTodoDueBanner(
+          fr,
+          _item(
+            TripTodoKind.deliveryNoShowContest,
+            dueAt: DateTime(2026, 11, 1, 19),
+          ),
+          now: kTodoNow,
+          trip: todoTrip(),
+          bids: const [],
+        ),
+        'Avant 19:00, sinon l\'équipe tranche sans votre version.',
+      );
+      final code = _item(TripTodoKind.pickupCodeRenewal, count: 2);
+      expect(
+        tripTodoTitle(fr, code, cardReady: false),
+        '2 codes de retrait à renouveler',
+      );
+      expect(
+        tripTodoTitle(
+          fr,
+          _item(TripTodoKind.pickupCodeRenewal),
+          cardReady: false,
+        ),
+        fr.travelerPickupCodeRenewalTitle,
+      );
+      expect(tripTodoButton(fr, code, cardReady: false), 'Voir les colis');
+      expect(
+        tripTodoSubtitle(en, code, cardReady: false),
+        'Ask the sender for a new code',
+      );
     });
 
     test('une icône par type, présente dans les assets', () {
