@@ -23082,6 +23082,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get tripParcelsLineInTransit => 'en route';
+
+  @override
   String tripParcelsLineTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

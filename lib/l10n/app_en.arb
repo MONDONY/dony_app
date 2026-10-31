@@ -11378,6 +11378,7 @@
   "@tripDirectRequestLabel": {"description": "Écran du trajet vu par son voyageur, « À traiter » : titre de la carte de réponse directe, la première demande à traiter sur leur nombre total (trip_direct_request_card.dart).", "placeholders": {"count": {"type": "int"}}},
   "tripDirectRequestSeeAll": "See all {count} requests",
   "@tripDirectRequestSeeAll": {"description": "Carte de réponse directe de l'écran du trajet : lien qui ouvre le sheet de toutes les demandes à traiter, affiché dès deux demandes (trip_direct_request_card.dart).", "placeholders": {"count": {"type": "int"}}},
+  "tripParcelsLineInTransit": "in transit",
   "tripParcelsLineTitle": "{count, plural, =0{No parcels} =1{1 parcel} other{{count} parcels}}",
   "@tripParcelsLineTitle": {"description": "Écran du trajet vu par son voyageur : titre en gras de la ligne Colis (sous « À traiter »), nombre de colis embarqués ; suivi de « · gain estimé » quand il y a un gain. Sans colis : « Aucun colis » (trip_parcels_line.dart).", "placeholders": {"count": {"type": "int"}}},
   "tripActivityRequestsEmpty": "No requests to review for now.",

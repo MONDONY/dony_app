@@ -50,7 +50,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///    l'audience du trajet est le sous-titre de la tuile « Affiche »).
 ///
 /// L'audience est chargée ici pour le seul propriétaire confirmé
-/// ([TripAudienceLoader], hors brouillon, trajet annulé ou retiré), comme le
+/// ([TripAudienceLoader], seulement tant que la tuile « Affiche » existe,
+/// donc ACTIVE : aucun appel inutile ailleurs), comme le
 /// faisait la ligne d'audience retirée du corps.
 ///
 /// Le pied collant et le menu ⋮ sont posés par l'écran, hors du défilement.

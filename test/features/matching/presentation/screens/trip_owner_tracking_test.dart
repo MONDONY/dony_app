@@ -270,27 +270,15 @@ void main() {
       await settle(tester);
     }
 
-    testWidgets('gainFromDetailSummaryWhileListIsEmpty', (tester) async {
+    // Liste chargée et vide alors que le détail sert un net (données
+    // incohérentes) : jamais « Aucun colis · 42 € » au titre.
+    testWidgets('gainNotInTitleWhileLoadedListIsEmpty', (tester) async {
       await pump(tester, _ann(summary: _summary));
       expect(find.byKey(const Key('trip-summary-card')), findsNothing);
       expect(find.byKey(const Key('trip-activity-gain')), findsNothing);
-      expect(lineTitle(tester), contains('42'));
-      await openParcels(tester);
-      expect(
-        find.descendant(of: gainBlock, matching: find.text('Gain estimé')),
-        findsOneWidget,
-      );
-      expect(
-        tester
-            .widget<Text>(find.byKey(const Key('trip-gain-online-amount')))
-            .data,
-        contains('42'),
-      );
-      expect(
-        find.text('Versé après la livraison de chaque colis.'),
-        findsOneWidget,
-      );
-      expect(find.byKey(const Key('trip-gain-total')), findsOneWidget);
+      expect(lineTitle(tester), 'Aucun colis');
+      expect(lineTitle(tester), isNot(contains('42')));
+      expect(lineTitle(tester), isNot(contains('·')));
     });
 
     testWidgets('gainHiddenWhenNothingIsEarned', (tester) async {

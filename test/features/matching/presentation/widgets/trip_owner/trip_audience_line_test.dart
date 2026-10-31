@@ -49,16 +49,16 @@ void main() {
     TripAudienceModel(uniqueViewerCount: viewers, shareViewCount: shares),
   );
 
-  group('statuts : masquée si les expéditeurs ne voient pas le trajet', () {
+  group('statuts : chargée seulement quand la tuile « Affiche » existe', () {
     const expected = {
       'DRAFT': false,
       'ACTIVE': true,
-      'FULL': true,
-      'IN_PROGRESS': true,
-      'COMPLETED': true,
+      'FULL': false,
+      'IN_PROGRESS': false,
+      'COMPLETED': false,
       'CANCELLED': false,
       'REMOVED_BY_ADMIN': false,
-      'SOMETHING_NEW': true,
+      'SOMETHING_NEW': false,
     };
     for (final status in kTripStatuses) {
       test(status, () {
@@ -106,7 +106,15 @@ void main() {
       expect(find.text('contenu'), findsOneWidget);
     });
 
-    for (final hidden in const ['DRAFT', 'CANCELLED', 'REMOVED_BY_ADMIN']) {
+    for (final hidden in const [
+      'DRAFT',
+      'FULL',
+      'IN_PROGRESS',
+      'COMPLETED',
+      'CANCELLED',
+      'REMOVED_BY_ADMIN',
+      'SOMETHING_NEW',
+    ]) {
       testWidgets('$hidden : rien n\'est chargé', (tester) async {
         status.value = hidden;
         await pumpTripCard(tester, loader());

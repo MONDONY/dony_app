@@ -18,12 +18,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// propriétaire confirmé ([TripAudienceLoader]) : un visiteur n'appelle
 /// jamais la route (404 côté back).
 abstract final class TripAudience {
-  static const _hiddenStatuses = {'DRAFT', 'CANCELLED', 'REMOVED_BY_ADMIN'};
-
-  /// L'audience a-t-elle un sens pour ce statut ? Non pour un brouillon
-  /// (invisible des expéditeurs), un trajet annulé ou retiré par l'équipe :
-  /// elle n'y est pas chargée.
-  static bool shownFor(String status) => !_hiddenStatuses.contains(status);
+  /// L'audience est-elle utile pour ce statut ? Seulement tant que la tuile
+  /// « Affiche » existe, qui est son seul affichage (ACTIVE, même règle que
+  /// [canShareTripPoster]) : ailleurs (brouillon, complet, en cours, terminé,
+  /// annulé, retiré par l'équipe) elle n'est pas chargée, pour éviter un appel
+  /// inutile.
+  static bool shownFor(String status) => status == 'ACTIVE';
 
   /// Morceaux de la ligne d'audience, dans l'ordre : personnes qui ont vu le
   /// trajet dans l'app, puis vues de l'affiche partagée.

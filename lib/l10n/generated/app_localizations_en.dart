@@ -22919,6 +22919,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get tripParcelsLineInTransit => 'in transit';
+
+  @override
   String tripParcelsLineTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

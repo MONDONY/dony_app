@@ -413,15 +413,16 @@ void main() {
     // (ligne Colis, audience chargée, tuile Affiche)
     // Ligne Colis : toujours sur un trajet publié, complet ou parti ; jamais
     // sans colis sur un trajet terminé, annulé, retiré ou inconnu.
+    // L'audience n'est chargée que là où la tuile « Affiche » existe (ACTIVE).
     const expected = {
       'DRAFT': (false, false, false),
       'ACTIVE': (true, true, true),
-      'FULL': (true, true, false),
-      'IN_PROGRESS': (true, true, false),
-      'COMPLETED': (false, true, false),
+      'FULL': (true, false, false),
+      'IN_PROGRESS': (true, false, false),
+      'COMPLETED': (false, false, false),
       'CANCELLED': (false, false, false),
       'REMOVED_BY_ADMIN': (false, false, false),
-      'SOMETHING_NEW': (false, true, false),
+      'SOMETHING_NEW': (false, false, false),
     };
     for (final MapEntry(key: status, value: e) in expected.entries) {
       testWidgets(status, (tester) async {
@@ -551,7 +552,7 @@ void main() {
           lineTitle(tester),
           n == 0 ? 'Aucun colis' : startsWith('$n colis'),
         );
-        if (n > 0) expect(lineSubtitle(tester), '$n colis en route');
+        if (n > 0) expect(lineSubtitle(tester), '$n en route');
         // Trois avatars au plus.
         expect(
           find.byWidgetPredicate(
@@ -613,7 +614,7 @@ void main() {
       );
       // Colis sans net connu ni résumé du détail : pas de gain à montrer.
       expect(lineTitle(tester), '2 colis');
-      expect(lineSubtitle(tester), '2 colis en route');
+      expect(lineSubtitle(tester), '2 en route');
       expectNoActivity();
       verifyNever(() => audience.load(any()));
 

@@ -34,6 +34,13 @@ const _neverShownStatuses = {'DRAFT', 'REMOVED_BY_ADMIN'};
 ///   par le détail (`confirmedParcelCount`, `parcelsSummary`). Les colis
 ///   remis d'un trajet annulé suivent la procédure de retour : la ligne
 ///   reste leur chemin.
+///
+/// Limite connue (choix du 31/10) : tant que la liste est chargée et vide,
+/// la ligne n'apparaît pas sur un trajet terminé ou annulé, même si
+/// `confirmedParcelCount` ou `parcelsSummary` disent qu'il y a des colis. La
+/// liste chargée prime sur des compteurs du détail qui peuvent être périmés
+/// ou incohérents ; la ligne revient dès que la liste contient un colis
+/// embarqué.
 bool tripParcelsLineShown(AnnouncementModel trip, List<BidModel>? bids) {
   if (_neverShownStatuses.contains(trip.status)) return false;
   if (_alwaysShownStatuses.contains(trip.status)) return true;
@@ -42,17 +49,33 @@ bool tripParcelsLineShown(AnnouncementModel trip, List<BidModel>? bids) {
   return trip.confirmedParcelCount > 0 || (trip.parcelsSummary?.count ?? 0) > 0;
 }
 
+/// Segments du sous-titre de la ligne Colis : comme ceux du résumé du sheet
+/// ([tripParcelsSummarySegments]) mais sans le mot « colis » du premier
+/// (« 4 en route » et non « 4 colis en route »), le titre de la ligne le dit
+/// déjà. Mêmes comptes, même ordre, segments vides omis.
+List<(int, String)> tripParcelsLineSegments(
+  AppLocalizations l,
+  TripParcelsCounts c,
+) => [
+  if (c.inTransit > 0) (c.inTransit, l.tripParcelsLineInTransit),
+  // Les autres segments du résumé sont déjà courts (« à récupérer »,
+  // « arrivés », « livrés »), le premier (en route) est remplacé ci-dessus.
+  ...tripParcelsSummarySegments(l, c).skip(c.inTransit > 0 ? 1 : 0),
+];
+
 /// Ce que montre la ligne Colis ([tripParcelsLineFor]).
 typedef TripParcelsLineContent = ({
   /// Nombre de colis embarqués, `null` tant que la liste n'a pas répondu.
   int? count,
 
   /// Titre en gras : « N colis » (« Aucun colis », « Colis » sans liste),
-  /// suivi de « · {gain estimé} » quand le gain est positif.
+  /// suivi de « · {gain estimé} » quand le gain est positif ET que la liste
+  /// chargée contient au moins un colis (jamais « Aucun colis · 42 € »).
   String title,
 
-  /// Sous-titre : segments non vides du résumé (« 4 colis en route · 2 à
-  /// récupérer · 1 arrivé · 2 livrés ») ; sans colis, « Les colis acceptés
+  /// Sous-titre court, sans répéter « colis » (le titre le dit) : segments
+  /// non vides (« 4 en route · 2 à récupérer · 1 arrivé · 2 livrés ») ;
+  /// sans colis, « Les colis acceptés
   /// apparaîtront ici. » ; `null` sans liste ou quand aucun segment ne
   /// s'applique (colis seulement en attente de paiement ou clôturés).
   String? subtitle,
@@ -81,7 +104,10 @@ TripParcelsLineContent? tripParcelsLineFor({
   final base = embarked == null
       ? l.tripOwnerParcelsTile
       : l.tripParcelsLineTitle(embarked.length);
-  final title = gain.hasGain
+  // Le gain ne s'affiche que s'il y a un colis dans la liste chargée : un net
+  // servi par le détail à côté d'une liste vide serait incohérent.
+  final showGain = gain.hasGain && (embarked == null || embarked.isNotEmpty);
+  final title = showGain
       ? '$base · ${CurrencyFormatter.format(gain.total, SupportedCurrency.fromCodeOrDefault(gain.currency))}'
       : base;
   String? subtitle;
@@ -89,10 +115,7 @@ TripParcelsLineContent? tripParcelsLineFor({
     if (embarked.isEmpty) {
       subtitle = l.tripOwnerParcelsEmptyDescription;
     } else {
-      final segments = tripParcelsSummarySegments(
-        l,
-        tripParcelsCounts(embarked),
-      );
+      final segments = tripParcelsLineSegments(l, tripParcelsCounts(embarked));
       subtitle = segments.isEmpty
           ? null
           : segments.map((s) => '${s.$1} ${s.$2}').join(' · ');

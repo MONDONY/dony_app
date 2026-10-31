@@ -37092,6 +37092,12 @@ abstract class AppLocalizations {
   /// **'Voir les {count} demandes'**
   String tripDirectRequestSeeAll(int count);
 
+  /// Écran du trajet vu par son voyageur : segment court du sous-titre de la ligne Colis (« 4 en route · 2 à récupérer · 1 arrivé · 2 livrés »), colis remis ou en transit. Le chiffre est affiché devant, le titre dit déjà « colis » (trip_parcels_line.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'en route'**
+  String get tripParcelsLineInTransit;
+
   /// Écran du trajet vu par son voyageur : titre en gras de la ligne Colis (sous « À traiter »), nombre de colis embarqués ; suivi de « · gain estimé » quand il y a un gain. Sans colis : « Aucun colis » (trip_parcels_line.dart).
   ///
   /// In fr, this message translates to:

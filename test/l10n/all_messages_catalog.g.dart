@@ -8044,6 +8044,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripDirectRequestLabel(intPlaceholderValue),
   'tripDirectRequestSeeAll': (l) =>
       l.tripDirectRequestSeeAll(intPlaceholderValue),
+  'tripParcelsLineInTransit': (l) => l.tripParcelsLineInTransit,
   'tripParcelsLineTitle': (l) => l.tripParcelsLineTitle(intPlaceholderValue),
   'tripActivityRequestsEmpty': (l) => l.tripActivityRequestsEmpty,
   'tripActivityParcelsOpenList': (l) => l.tripActivityParcelsOpenList,

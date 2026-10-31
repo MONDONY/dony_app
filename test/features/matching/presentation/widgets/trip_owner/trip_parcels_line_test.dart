@@ -1,6 +1,6 @@
 // Ligne Colis de l'écran du trajet (choix « Une ligne colis » du 31/10) :
 // visibilité par statut (tripParcelsLineShown), titre « N colis · gain »,
-// sous-titre (segments du résumé, état vide), avatars (trois au plus, ceux
+// sous-titre court (« 4 en route · 2 à récupérer », état vide), avatars (trois au plus, ceux
 // qui attendent un geste d'abord, tripParcelsActionFirst), rendu (hauteur,
 // une ligne, lecteur d'écran, tap), FR et EN à 360 dp × 1,3.
 import 'package:dony/core/currency/currency_formatter.dart';
@@ -111,6 +111,37 @@ void main() {
     );
   });
 
+  test('liste chargée vide + compteurs du détail : pas de ligne sur un '
+      'trajet terminé, annulé ou inconnu (limite documentée)', () {
+    for (final status in ['COMPLETED', 'CANCELLED', 'SOMETHING_NEW']) {
+      expect(
+        tripParcelsLineShown(
+          answerTrip(
+            status: status,
+            confirmedParcelCount: 3,
+            parcelsSummary: _summary,
+          ),
+          const [],
+        ),
+        isFalse,
+        reason: status,
+      );
+      // Liste pas chargée : les compteurs du détail décident.
+      expect(
+        tripParcelsLineShown(
+          answerTrip(
+            status: status,
+            confirmedParcelCount: 3,
+            parcelsSummary: _summary,
+          ),
+          null,
+        ),
+        isTrue,
+        reason: status,
+      );
+    }
+  });
+
   group('tripParcelsLineFor : titre', () {
     TripParcelsLineContent line(
       List<BidModel>? bids, {
@@ -173,6 +204,31 @@ void main() {
       );
     });
 
+    test(
+      'liste vide : jamais de gain au titre, même si le détail en sert un',
+      () {
+        const net = TripParcelsSummary(
+          count: 2,
+          totalKg: 6,
+          netAmount: 42,
+          currency: 'EUR',
+        );
+        for (final status in ['ACTIVE', 'FULL', 'IN_PROGRESS']) {
+          expect(
+            line(const [], status: status, summary: net).title,
+            'Aucun colis',
+          );
+        }
+        // Liste pas chargée : le gain du détail reste affiché.
+        expect(line(null, summary: net).title, 'Colis · ${_eur(42)}');
+        // Dès qu'un colis est dans la liste, le gain revient.
+        expect(
+          line([answerBid('t', status: 'IN_TRANSIT', net: 42)]).title,
+          '1 colis · ${_eur(42)}',
+        );
+      },
+    );
+
     test('liste pas chargée : « Colis », gain servi par le détail', () {
       final content = line(null, summary: _summary);
       expect(content.count, isNull);
@@ -223,23 +279,52 @@ void main() {
           for (var i = 0; i < 3; i++) answerBid('t$i', status: 'IN_TRANSIT'),
           answerBid('h', status: 'HANDED_OVER'),
         ]),
-        '4 colis en route · 2 à récupérer · 1 arrivé · 2 livrés',
+        '4 en route · 2 à récupérer · 1 arrivé · 2 livrés',
       );
       expect(subtitle(_parcels(2)), '2 à récupérer');
     });
 
-    test('mêmes segments que le résumé du sheet Colis', () {
+    test('mêmes comptes que le résumé du sheet Colis, sans « colis »', () {
       final bids = [
         answerBid('t', status: 'IN_TRANSIT'),
         answerBid('d', status: 'COMPLETED'),
       ];
+      final counts = tripParcelsCounts(bids);
+      final summary = tripParcelsSummarySegments(_fr, counts);
+      final short = tripParcelsLineSegments(_fr, counts);
+      expect(short.map((s) => s.$1), summary.map((s) => s.$1));
+      expect(short.map((s) => s.$2), ['en route', 'livré']);
+      expect(summary.first.$2, 'colis en route');
+      expect(subtitle(bids), '1 en route · 1 livré');
+    });
+
+    test('singulier et pluriel : arrivé(s), livré(s)', () {
       expect(
-        subtitle(bids),
-        tripParcelsSummarySegments(
-          _fr,
-          tripParcelsCounts(bids),
-        ).map((s) => '${s.$1} ${s.$2}').join(' · '),
+        subtitle([
+          answerBid('ar', status: 'ARRIVED'),
+          answerBid('d', status: 'COMPLETED'),
+        ]),
+        '1 arrivé · 1 livré',
       );
+      expect(
+        subtitle([
+          for (var i = 0; i < 2; i++) answerBid('ar$i', status: 'ARRIVED'),
+          for (var i = 0; i < 3; i++) answerBid('d$i', status: 'COMPLETED'),
+        ]),
+        '2 arrivés · 3 livrés',
+      );
+    });
+
+    test('jamais le mot « colis » au sous-titre', () {
+      for (final bids in [
+        [answerBid('t', status: 'IN_TRANSIT')],
+        [
+          answerBid('a', status: 'ACCEPTED'),
+          answerBid('d', status: 'COMPLETED'),
+        ],
+      ]) {
+        expect(subtitle(bids), isNot(contains('colis')));
+      }
     });
 
     test('colis sans segment (paiement attendu, absence) : pas de '
@@ -257,7 +342,14 @@ void main() {
           answerBid('t', status: 'IN_TRANSIT'),
           answerBid('a', status: 'ACCEPTED'),
         ]),
-        '1 parcel in transit · 1 to pick up',
+        '1 in transit · 1 to pick up',
+      );
+      expect(
+        en([
+          for (var i = 0; i < 2; i++) answerBid('ar$i', status: 'ARRIVED'),
+          answerBid('d', status: 'COMPLETED'),
+        ]),
+        '2 arrived · 1 delivered',
       );
     });
   });
@@ -374,7 +466,7 @@ void main() {
       expect(find.byKey(const Key('trip-parcels-line-face-t')), findsOneWidget);
       expect(find.byKey(const Key('trip-parcels-line-face-a')), findsOneWidget);
       expect(find.text('2 colis · ${_eur(30)}'), findsOneWidget);
-      expect(find.text('1 colis en route · 1 à récupérer'), findsOneWidget);
+      expect(find.text('1 en route · 1 à récupérer'), findsOneWidget);
     });
 
     testWidgets('dix colis : trois avatars', (tester) async {
@@ -457,7 +549,7 @@ void main() {
         ],
       );
       expect(find.text('2 colis'), findsOneWidget);
-      expect(find.text('2 colis en route'), findsOneWidget);
+      expect(find.text('2 en route'), findsOneWidget);
     });
 
     testWidgets('liste pas chargée : « Colis », icône, sans sous-titre', (
@@ -476,7 +568,7 @@ void main() {
         locale: const Locale('en'),
       );
       expect(find.text('1 parcel · ${_eur(30)}'), findsOneWidget);
-      expect(find.text('1 parcel in transit'), findsOneWidget);
+      expect(find.text('1 in transit'), findsOneWidget);
     });
 
     for (final locale in const [Locale('fr'), Locale('en')]) {
