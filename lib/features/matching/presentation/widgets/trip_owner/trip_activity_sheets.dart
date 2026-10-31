@@ -328,6 +328,11 @@ class _RequestsContent extends StatelessWidget {
 /// des colis embarqués), chaque filtre choisi (`trip_parcels_filtered`) et
 /// chaque recherche après une pause de saisie (`trip_parcels_searched`).
 ///
+/// Tant que la recherche est en cours (le champ a le focus ou contient du
+/// texte), le bloc gain et le résumé des statuts se replient ([_Collapsible]) :
+/// restent le champ, le compteur, les puces et la liste. Ils reviennent quand
+/// le champ est vide et sans focus.
+///
 /// Liste jamais reçue : un indicateur, ou « Réessayer » si son chargement
 /// est en échec ([_BidsNotLoaded]). Après une liste déjà reçue, un échec de
 /// relecture garde cette liste.
@@ -360,6 +365,14 @@ class _ParcelsContentState extends State<_ParcelsContent> {
   /// prochaine ouverture.
   final _search = TextEditingController();
 
+  /// Suit le focus du champ de recherche (lui ou un descendant). Ne prend
+  /// jamais le focus et reste hors parcours clavier : un simple témoin.
+  final _searchFocus = FocusNode(
+    debugLabel: 'trip-parcels-search',
+    canRequestFocus: false,
+    skipTraversal: true,
+  );
+
   /// Dernier texte vu par [_onSearchChanged] : un simple déplacement du
   /// curseur ne relance pas la mesure.
   String _searchText = '';
@@ -385,6 +398,7 @@ class _ParcelsContentState extends State<_ParcelsContent> {
   void dispose() {
     _searchLog?.cancel();
     _search.dispose();
+    _searchFocus.dispose();
     _filter.dispose();
     super.dispose();
   }
@@ -445,12 +459,23 @@ class _ParcelsContentState extends State<_ParcelsContent> {
   @override
   Widget build(BuildContext context) {
     final gain = widget.gain;
+    final hasParcels = tripEmbarkedParcels(widget.bids)?.isNotEmpty ?? false;
     // Même arbre avec ou sans gain : un gain qui apparaît à une relecture ne
     // recrée pas le champ de recherche (saisie et clavier gardés).
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (gain.hasGain) _GainBlock(gain: gain),
+        // Masqué tant que la recherche est en cours (focus ou texte) : le
+        // clavier et le bloc prendraient la place de la liste.
+        ListenableBuilder(
+          listenable: Listenable.merge([_search, _searchFocus]),
+          builder: (context, _) => _Collapsible(
+            visible: gain.hasGain && !(hasParcels && _searching),
+            child: gain.hasGain
+                ? _GainBlock(gain: gain)
+                : const SizedBox.shrink(),
+          ),
+        ),
         KeyedSubtree(
           key: const ValueKey('trip-activity-parcels-list'),
           child: _parcels(context),
@@ -458,6 +483,11 @@ class _ParcelsContentState extends State<_ParcelsContent> {
       ],
     );
   }
+
+  /// Recherche en cours : le champ a le focus ou contient du texte (même des
+  /// espaces). Le bloc gain et le résumé des statuts se replient alors, ils
+  /// reviennent quand le champ est vide ET sans focus.
+  bool get _searching => _search.text.isNotEmpty || _searchFocus.hasFocus;
 
   Widget _parcels(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -486,7 +516,7 @@ class _ParcelsContentState extends State<_ParcelsContent> {
     }
     final tt = Theme.of(context).textTheme;
     return ListenableBuilder(
-      listenable: Listenable.merge([_search, _filter]),
+      listenable: Listenable.merge([_search, _filter, _searchFocus]),
       builder: (context, _) {
         final query = _search.text.trim();
         final searching = tripParcelsSearchKey(query).isNotEmpty;
@@ -517,11 +547,17 @@ class _ParcelsContentState extends State<_ParcelsContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TripParcelsSummary(bids: embarked),
-              DonySearchField(
-                key: const Key('trip-activity-parcels-search'),
-                controller: _search,
-                hint: l.tripParcelsSearchHint,
+              _Collapsible(
+                visible: !_searching,
+                child: TripParcelsSummary(bids: embarked),
+              ),
+              Focus(
+                focusNode: _searchFocus,
+                child: DonySearchField(
+                  key: const Key('trip-activity-parcels-search'),
+                  controller: _search,
+                  hint: l.tripParcelsSearchHint,
+                ),
               ),
               // Pendant une recherche, la zone sous le champ (compteur,
               // résultats) garde la plus grande hauteur atteinte : la feuille
@@ -709,6 +745,43 @@ class _GainBlock extends StatelessWidget {
         Divider(height: 1, color: cs.outline),
         const SizedBox(height: DonySpacing.base),
       ],
+    );
+  }
+}
+
+/// Montre [child] ou le replie en douceur (hauteur et opacité, 180 ms ; d'un
+/// coup quand le système réduit les animations). Replié, [child] n'est plus
+/// dans l'arbre. Sert à ranger le bloc gain et le résumé des statuts pendant
+/// la recherche du sheet « Colis » : le contenu sous le champ ne bouge pas, et
+/// la feuille, collée au bas de l'écran, ne fait pas descendre le champ.
+class _Collapsible extends StatelessWidget {
+  const _Collapsible({required this.visible, required this.child});
+
+  final bool visible;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: visible ? 1 : 0),
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      child: child,
+      builder: (context, t, child) {
+        if (t == 0) return const SizedBox.shrink();
+        return ExcludeSemantics(
+          excluding: !visible,
+          child: ClipRect(
+            child: Align(
+              alignment: Alignment.topCenter,
+              heightFactor: t,
+              child: Opacity(opacity: t, child: child),
+            ),
+          ),
+        );
+      },
     );
   }
 }

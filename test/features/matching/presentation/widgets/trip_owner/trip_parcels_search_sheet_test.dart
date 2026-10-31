@@ -4,7 +4,8 @@
 // remise), combinaison avec les puces de statut, compteur, état vide et
 // « Effacer la recherche », bouton d'effacement du champ, saisie qui survit à
 // une relecture des colis (et à l'arrivée du bloc gain), sheet rouvert vide,
-// hauteur gardée pendant la recherche, mesure `trip_parcels_searched` après
+// hauteur gardée pendant la recherche, bloc gain et résumé repliés pendant la
+// recherche (focus ou texte) et de retour champ vide sans focus, mesure `trip_parcels_searched` après
 // une pause de saisie et sans PII, FR et EN, 360 dp × 1,3, clavier ouvert.
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -215,8 +216,13 @@ void main() {
       await type(tester, 'TRAORE');
       expectRows(['a1'], ['t1', 'a2', 't2', 'p1']);
       expect(plain(tester, counter), '1 colis trouvé');
-      expect(plain(tester, summary), before);
       expect(find.text('Colis dans le trajet'), findsOneWidget);
+      // Le résumé se replie pendant la recherche, mais il compte toujours
+      // tous les colis : de retour, il dit la même chose.
+      await tester.tap(find.byTooltip('Effacer'));
+      FocusManager.instance.primaryFocus?.unfocus();
+      await _settle(tester);
+      expect(plain(tester, summary), before);
     });
 
     testWidgets('destinataire, sous-chaîne', (tester) async {
@@ -391,7 +397,7 @@ void main() {
     });
 
     testWidgets('bloc gain apparu à une relecture : saisie et clavier '
-        'gardés', (tester) async {
+        'gardés, bloc replié tant que la recherche dure', (tester) async {
       await open(tester, bids: [for (final b in _parcels) b]);
       await tester.showKeyboard(field);
       await type(tester, 'awa');
@@ -400,15 +406,21 @@ void main() {
         BidListLoaded([..._parcels, _parcel('g1', sender: 'Gora', net: 40)]),
       );
       await _settle(tester);
-      expect(
-        find.byKey(const Key('trip-activity-parcels-gain')),
-        findsOneWidget,
-      );
+      // Le gain existe maintenant, mais la recherche le garde replié.
+      expect(find.byKey(const Key('trip-activity-parcels-gain')), findsNothing);
       expect(fieldText(tester), 'awa');
       final editable = tester.widget<EditableText>(
         find.descendant(of: field, matching: find.byType(EditableText)),
       );
       expect(editable.focusNode.hasFocus, isTrue);
+      // Recherche finie : le bloc apparu entre-temps se montre.
+      await tester.tap(find.byTooltip('Effacer'));
+      FocusManager.instance.primaryFocus?.unfocus();
+      await _settle(tester);
+      expect(
+        find.byKey(const Key('trip-activity-parcels-gain')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('fermer puis rouvrir : le champ repart vide', (tester) async {
@@ -447,6 +459,308 @@ void main() {
       await _settle(tester);
       expectRows(['m0', 'm5'], []);
     });
+  });
+
+  group('recherche en cours : gain et résumé repliés', () {
+    final gainBlock = find.byKey(const Key('trip-activity-parcels-gain'));
+    // Un colis en transit avec un gain : le bloc « Gain estimé » existe.
+    final withGain = [..._parcels, _parcel('g1', sender: 'Gora', net: 40)];
+
+    EditableText editable(WidgetTester tester) => tester.widget<EditableText>(
+      find.descendant(of: field, matching: find.byType(EditableText)),
+    );
+
+    Future<void> unfocus(WidgetTester tester) async {
+      FocusManager.instance.primaryFocus?.unfocus();
+      await _settle(tester);
+    }
+
+    testWidgets('au départ : gain et résumé visibles, champ sans focus', (
+      tester,
+    ) async {
+      await open(tester, bids: withGain);
+      expect(gainBlock, findsOneWidget);
+      expect(summary, findsOneWidget);
+      expect(editable(tester).focusNode.hasFocus, isFalse);
+    });
+
+    testWidgets('focus sans texte : gain et résumé masqués ; champ, puces et '
+        'lignes restent', (tester) async {
+      await open(tester, bids: withGain);
+      await tester.showKeyboard(field);
+      await _settle(tester);
+      expect(gainBlock, findsNothing);
+      expect(summary, findsNothing);
+      expect(field, findsOneWidget);
+      expect(chips, findsOneWidget);
+      expectRows(['a1', 't1', 'a2', 't2', 'g1'], ['p1']);
+      expect(editable(tester).focusNode.hasFocus, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('du texte, focus perdu : toujours masqués', (tester) async {
+      await open(tester, bids: withGain);
+      await type(tester, 'awa');
+      await unfocus(tester);
+      expect(editable(tester).focusNode.hasFocus, isFalse);
+      expect(fieldText(tester), 'awa');
+      expect(gainBlock, findsNothing);
+      expect(summary, findsNothing);
+      // Compteur et lignes restent.
+      expect(plain(tester, counter), '2 colis trouvés');
+      expectRows(['t1', 'a2'], ['a1', 't2']);
+    });
+
+    testWidgets('des espaces seuls comptent comme du texte', (tester) async {
+      await open(tester, bids: withGain);
+      await type(tester, '   ');
+      await unfocus(tester);
+      expect(gainBlock, findsNothing);
+      expect(summary, findsNothing);
+    });
+
+    testWidgets('champ vidé mais focus gardé : toujours masqués', (
+      tester,
+    ) async {
+      await open(tester, bids: withGain);
+      await tester.showKeyboard(field);
+      await type(tester, 'awa');
+      await type(tester, '');
+      await _settle(tester);
+      expect(editable(tester).focusNode.hasFocus, isTrue);
+      expect(gainBlock, findsNothing);
+      expect(summary, findsNothing);
+    });
+
+    testWidgets('vide ET sans focus : gain et résumé reviennent', (
+      tester,
+    ) async {
+      await open(tester, bids: withGain);
+      await tester.showKeyboard(field);
+      await type(tester, 'awa');
+      await _settle(tester);
+      expect(gainBlock, findsNothing);
+      // Effacer par le bouton du champ, puis fermer le clavier.
+      await tester.tap(find.byTooltip('Effacer'));
+      await unfocus(tester);
+      expect(fieldText(tester), '');
+      expect(gainBlock, findsOneWidget);
+      expect(summary, findsOneWidget);
+      expectRows(['a1', 't1', 'a2', 't2', 'g1'], []);
+    });
+
+    testWidgets('touche ailleurs que le champ, champ vide : reviennent', (
+      tester,
+    ) async {
+      await open(tester, bids: withGain);
+      await tester.tap(field);
+      await _settle(tester);
+      expect(gainBlock, findsNothing);
+      // Toucher hors du champ ferme le clavier (DonySearchField).
+      await tester.tap(find.text('Colis dans le trajet'));
+      await _settle(tester);
+      expect(gainBlock, findsOneWidget);
+      expect(summary, findsOneWidget);
+    });
+
+    testWidgets('le champ garde focus, texte et curseur quand les blocs '
+        'se replient', (tester) async {
+      await open(tester, bids: withGain);
+      await tester.showKeyboard(field);
+      await type(tester, 'awa');
+      await _settle(tester);
+      final e = editable(tester);
+      expect(e.focusNode.hasFocus, isTrue);
+      expect(e.controller.text, 'awa');
+      expect(e.controller.selection.baseOffset, 3);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('focus et texte survivent aux relectures des colis', (
+      tester,
+    ) async {
+      await open(tester, bids: withGain);
+      await tester.showKeyboard(field);
+      await type(tester, 'awa');
+      h.screenStates.add(
+        BidListLoaded([
+          ...withGain,
+          _parcel('n1', status: 'ACCEPTED', sender: 'Awa Cissé'),
+        ]),
+      );
+      await _settle(tester);
+      expect(editable(tester).focusNode.hasFocus, isTrue);
+      expect(fieldText(tester), 'awa');
+      expect(gainBlock, findsNothing);
+      expect(summary, findsNothing);
+      expectRows(['t1', 'a2', 'n1'], ['a1', 't2']);
+    });
+
+    testWidgets('feuille qui épouse son contenu : le champ ne bouge pas au '
+        'focus (image par image), à la frappe, à l\'effacement ni au retour '
+        'des blocs', (tester) async {
+      final short = [
+        _parcel('g1', sender: 'Gora', net: 40),
+        _parcel('g2', sender: 'Awa'),
+      ];
+      await open(tester, bids: short);
+      expect(gainBlock, findsOneWidget);
+      final top = tester.getTopLeft(field).dy;
+      await tester.showKeyboard(field);
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 20));
+        expect(tester.getTopLeft(field).dy, closeTo(top, 0.5), reason: '$i');
+      }
+      expect(gainBlock, findsNothing);
+      await type(tester, 'gora');
+      await _settle(tester);
+      expect(tester.getTopLeft(field).dy, closeTo(top, 0.5));
+      // L'état « aucun résultat » est plus haut que la liste de deux colis :
+      // la feuille grandit vers le haut, le champ ne descend jamais.
+      await type(tester, 'zzz');
+      await _settle(tester);
+      expect(tester.getTopLeft(field).dy, lessThanOrEqualTo(top + 0.5));
+      await type(tester, '');
+      await unfocus(tester);
+      expect(gainBlock, findsOneWidget);
+      expect(tester.getTopLeft(field).dy, closeTo(top, 0.5));
+    });
+
+    testWidgets('feuille déjà à sa hauteur maximale (longue liste) : le champ '
+        'ne descend jamais, il remonte puis ne bouge plus pendant la '
+        'frappe', (tester) async {
+      await open(tester, bids: withGain);
+      final top = tester.getTopLeft(field).dy;
+      await tester.showKeyboard(field);
+      var last = top;
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 20));
+        final y = tester.getTopLeft(field).dy;
+        expect(y, lessThanOrEqualTo(last + 0.5), reason: '$i');
+        last = y;
+      }
+      expect(editable(tester).focusNode.hasFocus, isTrue);
+      await _settle(tester);
+      final settled = tester.getTopLeft(field).dy;
+      expect(settled, lessThanOrEqualTo(top + 0.5));
+      for (final q in ['g', 'go', 'gor', 'gora', 'zzz', '']) {
+        await type(tester, q);
+        await _settle(tester);
+        expect(tester.getTopLeft(field).dy, closeTo(settled, 0.5), reason: q);
+        expect(editable(tester).focusNode.hasFocus, isTrue, reason: q);
+      }
+    });
+
+    testWidgets('transition courte : repli en 180 ms, pas d\'un coup', (
+      tester,
+    ) async {
+      await open(tester, bids: withGain);
+      final clip = find
+          .ancestor(of: gainBlock, matching: find.byType(ClipRect))
+          .first;
+      final gainHeight = tester.getSize(clip).height;
+      await tester.showKeyboard(field);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 90));
+      // À mi-course : encore là, plus petit.
+      expect(gainBlock, findsOneWidget);
+      expect(tester.getSize(clip).height, lessThan(gainHeight));
+      expect(tester.getSize(clip).height, greaterThan(0));
+      await tester.pump(const Duration(milliseconds: 120));
+      expect(gainBlock, findsNothing);
+    });
+
+    testWidgets('animations réduites par le système : repli immédiat', (
+      tester,
+    ) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      await open(tester, bids: withGain);
+      expect(gainBlock, findsOneWidget);
+      await tester.showKeyboard(field);
+      await tester.pump();
+      await tester.pump();
+      expect(gainBlock, findsNothing);
+      expect(summary, findsNothing);
+    });
+
+    testWidgets('sans gain : seul le résumé se replie', (tester) async {
+      await open(tester, bids: _parcels);
+      expect(gainBlock, findsNothing);
+      await tester.showKeyboard(field);
+      await _settle(tester);
+      expect(summary, findsNothing);
+      expect(gainBlock, findsNothing);
+      await unfocus(tester);
+      expect(summary, findsOneWidget);
+    });
+
+    testWidgets('aucun résultat : champ, état vide et lien restent, blocs '
+        'repliés', (tester) async {
+      await open(tester, bids: withGain);
+      await type(tester, 'zzz');
+      await _settle(tester);
+      expect(emptyState, findsOneWidget);
+      expect(clearLink, findsOneWidget);
+      expect(gainBlock, findsNothing);
+      expect(summary, findsNothing);
+      await tester.tap(clearLink);
+      await unfocus(tester);
+      expect(gainBlock, findsOneWidget);
+      expect(summary, findsOneWidget);
+    });
+
+    testWidgets('dernier colis retiré pendant la recherche : le champ part '
+        'avec son focus, l\'état vide habituel s\'affiche', (tester) async {
+      await open(tester, bids: withGain);
+      await tester.showKeyboard(field);
+      await _settle(tester);
+      expect(gainBlock, findsNothing);
+      h.screenStates.add(BidListLoaded([_parcel('p1', status: 'PENDING')]));
+      await _settle(tester);
+      expect(field, findsNothing);
+      expect(
+        find.byKey(const Key('trip-activity-parcels-empty')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    for (final locale in const [Locale('fr'), Locale('en')]) {
+      testWidgets('${locale.languageCode} : 360 dp × 1,3, clavier ouvert, '
+          'blocs repliés puis de retour sans exception', (tester) async {
+        await open(
+          tester,
+          bids: withGain,
+          locale: locale,
+          textScale: 1.3,
+          size: const Size(360, 800),
+        );
+        expect(gainBlock, findsOneWidget);
+        expect(summary, findsOneWidget);
+        await tester.showKeyboard(field);
+        tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+        addTearDown(tester.view.resetViewInsets);
+        await _settle(tester);
+        expect(gainBlock, findsNothing);
+        expect(summary, findsNothing);
+        expect(tester.takeException(), isNull);
+        await type(tester, 'nom');
+        await _settle(tester);
+        expect(tester.takeException(), isNull);
+        tester.view.resetViewInsets();
+        await tester.tap(
+          find.byTooltip(locale.languageCode == 'fr' ? 'Effacer' : 'Clear'),
+        );
+        await unfocus(tester);
+        expect(gainBlock, findsOneWidget);
+        expect(summary, findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 
   group('mesure trip_parcels_searched', () {
