@@ -36,6 +36,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/map_backed_box.dart';
 import '../../../../helpers/stripe_account_test_doubles.dart';
+import '../../../../helpers/trip_answer_blocs.dart';
 
 class _MockAnnBloc extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
@@ -72,6 +73,7 @@ const _owner = UserModel(
 AnnouncementModel _ann({
   bool trackingActive = false,
   TripParcelsSummary? summary,
+  String status = 'ACTIVE',
 }) => AnnouncementModel(
   id: 'ann-trip-001',
   travelerId: _ownerId,
@@ -81,7 +83,7 @@ AnnouncementModel _ann({
   availableKg: 10,
   totalKg: 23,
   pricePerKg: 8,
-  status: 'ACTIVE',
+  status: status,
   bidsCount: 0,
   createdAt: DateTime(2026, 6),
   updatedAt: DateTime(2026, 6),
@@ -179,6 +181,7 @@ void main() {
     }
     getIt.registerLazySingleton<AnalyticsService>(() => analytics);
     getIt.registerSingleton<TrackingConsentCubit>(consent);
+    registerInertTripAnswerBlocs();
     getIt.registerFactoryParam<TripDepartCubit, String, void>(
       (id, _) => TripDepartCubit(
         announcementId: id,
@@ -254,74 +257,90 @@ void main() {
 
   const departKey = Key('trip-depart-button');
 
+  // Gain du trajet : au titre de la ligne Colis, détaillé en tête du sheet
+  // « Colis » (ni case Gain ni carte dans le corps).
   group('résumé du trajet', () {
-    testWidgets('tripSummaryShowsParcelCountKgAndEarnings', (tester) async {
-      await pump(tester, _ann(summary: _summary));
-      expect(find.byKey(const Key('trip-summary-card')), findsOneWidget);
-      expect(find.textContaining('2 colis'), findsWidgets);
-      expect(find.textContaining('7,5'), findsWidgets);
-      expect(find.text('Gain estimé'), findsOneWidget);
-      expect(find.textContaining('42'), findsWidgets);
-      expect(find.textContaining('paiement suit la livraison'), findsOneWidget);
-    });
-
-    testWidgets('tripSummaryHidesGainWhenNetIsZero', (tester) async {
-      await pump(
-        tester,
-        _ann(
-          summary: const TripParcelsSummary(
-            count: 1,
-            totalKg: 3,
-            netAmount: 0,
-            currency: 'EUR',
-          ),
-        ),
-      );
-      expect(find.byKey(const Key('trip-summary-card')), findsOneWidget);
-      expect(find.text('Gain estimé'), findsNothing);
-      expect(find.textContaining('1 colis'), findsWidgets);
-    });
-
-    testWidgets('summaryHiddenWhenNoScannedParcel', (tester) async {
-      await pump(tester, _ann());
-      expect(find.byKey(const Key('trip-summary-card')), findsNothing);
-      await pump(
-        tester,
-        _ann(
-          summary: const TripParcelsSummary(
-            count: 0,
-            totalKg: 0,
-            netAmount: 0,
-            currency: 'EUR',
-          ),
-        ),
-      );
-      expect(find.byKey(const Key('trip-summary-card')), findsNothing);
-    });
-
-    testWidgets('summaryButtonOpensTripParcels', (tester) async {
-      await pump(tester, _ann(summary: _summary));
-      final button = find.byKey(const Key('trip-summary-view-parcels'));
-      await tester.ensureVisible(button);
-      await tester.tap(button);
+    final line = find.byKey(const Key('trip-parcels-line'));
+    final gainBlock = find.byKey(const Key('trip-activity-parcels-gain'));
+    String lineTitle(WidgetTester tester) => tester
+        .widget<Text>(find.byKey(const Key('trip-parcels-line-title')))
+        .data!;
+    Future<void> openParcels(WidgetTester tester) async {
+      await tester.tap(line);
       await settle(tester);
-      expect(find.text('BIDS:ann-trip-001'), findsOneWidget);
+    }
+
+    // Liste chargée et vide alors que le détail sert un net (données
+    // incohérentes) : jamais « Aucun colis · 42 € » au titre.
+    testWidgets('gainNotInTitleWhileLoadedListIsEmpty', (tester) async {
+      await pump(tester, _ann(summary: _summary));
+      expect(find.byKey(const Key('trip-summary-card')), findsNothing);
+      expect(find.byKey(const Key('trip-activity-gain')), findsNothing);
+      expect(lineTitle(tester), 'Aucun colis');
+      expect(lineTitle(tester), isNot(contains('42')));
+      expect(lineTitle(tester), isNot(contains('·')));
+    });
+
+    testWidgets('gainHiddenWhenNothingIsEarned', (tester) async {
+      for (final summary in const [
+        null,
+        TripParcelsSummary(count: 0, totalKg: 0, netAmount: 0, currency: 'EUR'),
+        // Colis remis payés en espèces, liste encore vide : rien de connu.
+        TripParcelsSummary(count: 1, totalKg: 3, netAmount: 0, currency: 'EUR'),
+      ]) {
+        await pump(tester, _ann(summary: summary));
+        expect(line, findsOneWidget);
+        expect(lineTitle(tester), isNot(contains('·')));
+        await openParcels(tester);
+        expect(gainBlock, findsNothing);
+      }
+    });
+
+    // La liste des colis s'ouvre par le pied du sheet « Colis » ; le bloc
+    // du gain est en lecture seule.
+    testWidgets('gainBlockHasNoButton', (tester) async {
+      await pump(tester, _ann(summary: _summary));
+      await openParcels(tester);
+      expect(
+        find.descendant(of: gainBlock, matching: find.byType(DonyButton)),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('trip-activity-parcels-open-list')),
+        findsOneWidget,
+      );
+      expect(find.text('Voir mes colis'), findsNothing);
     });
   });
 
+  // « Je pars » : tuile « À traiter » de l'écran, qui ouvre son sheet ; le
+  // bouton du pied du sheet part sur le TripDepartCubit fourni par l'écran.
   group('je pars', () {
+    const departTile = Key('trip_owner-todo-depart');
+
+    Future<void> openDepart(WidgetTester tester) async {
+      await tester.ensureVisible(find.byKey(departTile));
+      await tester.tap(find.byKey(departTile));
+      await settle(tester);
+      expect(find.byKey(departKey), findsOneWidget);
+    }
+
     testWidgets('departSendsPositionWhenGranted', (tester) async {
       when(
         () => consent.ensureAsked(any(), source: any(named: 'source')),
       ).thenAnswer((_) async => true);
       await pump(tester, _ann(trackingActive: true, summary: _summary));
-      await tester.ensureVisible(find.byKey(departKey));
+      await openDepart(tester);
       await tester.tap(find.byKey(departKey));
       await settle(tester);
       verify(
         () => tracking.depart('ann-trip-001', lat: 48.85, lon: 2.35),
       ).called(1);
+      // Départ confirmé : confirmation, le sheet se ferme et la tuile
+      // disparaît (même cubit pour l'écran et le sheet).
+      expect(find.text("C'est noté, bon voyage !"), findsOneWidget);
       expect(find.byKey(departKey), findsNothing);
+      expect(find.byKey(departTile), findsNothing);
     });
 
     testWidgets('departWithoutPositionStillCallsApi', (tester) async {
@@ -332,7 +351,7 @@ void main() {
         () => locator.captureCoordinatesIfGranted(),
       ).thenAnswer((_) async => null);
       await pump(tester, _ann(trackingActive: true, summary: _summary));
-      await tester.ensureVisible(find.byKey(departKey));
+      await openDepart(tester);
       await tester.tap(find.byKey(departKey));
       await settle(tester);
       verify(() => tracking.depart('ann-trip-001')).called(1);
@@ -346,7 +365,7 @@ void main() {
         () => locator.captureCoordinatesIfGranted(),
       ).thenAnswer((_) async => null);
       await pump(tester, _ann(trackingActive: true, summary: _summary));
-      await tester.ensureVisible(find.byKey(departKey));
+      await openDepart(tester);
       await tester.tap(find.byKey(departKey));
       await settle(tester);
       verify(
@@ -355,20 +374,55 @@ void main() {
       verify(() => tracking.depart('ann-trip-001')).called(1);
     });
 
-    testWidgets('departButtonHiddenAfterConfirmation', (tester) async {
+    testWidgets('sheetClosedDuringDepartStillConfirmsOnScreen', (tester) async {
+      final reply = Completer<void>();
+      when(
+        () => tracking.depart(
+          any(),
+          lat: any(named: 'lat'),
+          lon: any(named: 'lon'),
+        ),
+      ).thenAnswer((_) => reply.future);
+      await pump(tester, _ann(trackingActive: true, summary: _summary));
+      await openDepart(tester);
+      await tester.tap(find.byKey(departKey));
+      await tester.pump();
+      // Le voyageur referme le sheet, réponse encore en vol.
+      await tester.tapAt(const Offset(5, 5));
+      await settle(tester);
+      expect(find.byKey(departKey), findsNothing);
+
+      reply.complete();
+      await settle(tester);
+      expect(find.text("C'est noté, bon voyage !"), findsOneWidget);
+      expect(find.byKey(departTile), findsNothing);
+    });
+
+    testWidgets('departTileHiddenAfterConfirmation', (tester) async {
       stored['${HiveService.kTripDepartedPrefix}ann-trip-001'] = true;
       await pump(tester, _ann(trackingActive: true, summary: _summary));
-      expect(find.byKey(departKey), findsNothing);
+      expect(find.byKey(departTile), findsNothing);
     });
 
-    testWidgets('departButtonHiddenWithoutTrackingActive', (tester) async {
+    testWidgets('departTileHiddenWithoutTrackingActive', (tester) async {
       await pump(tester, _ann(summary: _summary));
-      expect(find.byKey(departKey), findsNothing);
+      expect(find.byKey(departTile), findsNothing);
     });
 
-    testWidgets('departButtonHiddenWithoutParcelsSummary', (tester) async {
+    testWidgets('departTileHiddenWithoutParcelsSummary', (tester) async {
       await pump(tester, _ann(trackingActive: true));
-      expect(find.byKey(departKey), findsNothing);
+      expect(find.byKey(departTile), findsNothing);
+    });
+
+    // Piège n°1 de l'inventaire : un back antérieur à la PR jumelle ne sert
+    // pas `trackingActive` dans le détail (contrat ancien). Un détail relu
+    // sans lui retire la tuile, rien ne casse.
+    testWidgets('detailWithoutTrackingActiveHidesTileWithoutError', (
+      tester,
+    ) async {
+      await pump(tester, _ann(summary: _summary));
+      expect(find.byKey(departTile), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 
@@ -386,6 +440,44 @@ void main() {
     await pump(tester, _ann(summary: _summary));
     verifyNever(() => consent.ensureAsked(any(), source: any(named: 'source')));
   });
+
+  // Le back sert la fenêtre de suivi sans regarder le statut : un trajet
+  // annulé dont un colis remis suit la procédure de retour la verrait encore
+  // ouverte. Le consentement suit la règle de « Je pars ».
+  for (final status in const ['FULL', 'IN_PROGRESS']) {
+    testWidgets('consentement proposé sur un trajet $status', (tester) async {
+      await pump(
+        tester,
+        _ann(trackingActive: true, summary: _summary, status: status),
+      );
+      verify(
+        () => consent.ensureAsked(
+          any(),
+          source: TrackingConsentSource.tripScreen,
+        ),
+      ).called(1);
+    });
+  }
+
+  for (final status in const [
+    'CANCELLED',
+    'COMPLETED',
+    'DRAFT',
+    'REMOVED_BY_ADMIN',
+  ]) {
+    testWidgets('consentement jamais proposé sur un trajet $status', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        _ann(trackingActive: true, summary: _summary, status: status),
+      );
+      verifyNever(
+        () => consent.ensureAsked(any(), source: any(named: 'source')),
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
 
 TripAudienceCubit _hiddenAudience() {

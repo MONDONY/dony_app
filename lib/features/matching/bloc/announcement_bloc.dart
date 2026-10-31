@@ -53,7 +53,6 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     on<AnnouncementDeleteRequested>(_onDeleteRequested);
     on<AnnouncementSearchRequested>(_onSearchRequested);
     on<AnnouncementSearchMoreRequested>(_onSearchMoreRequested);
-    on<AnnouncementSurplusOpenRequested>(_onSurplusOpenRequested);
     on<AnnouncementTripMarkArrivedRequested>(_onTripMarkArrivedRequested);
     on<AnnouncementRescheduleRequested>(_onRescheduleRequested);
     on<AnnouncementArrivalInstructionsUpdateRequested>(
@@ -233,11 +232,13 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     AnnouncementDetailRequested event,
     Emitter<AnnouncementState> emit,
   ) async {
-    emit(AnnouncementLoading());
+    if (!event.silent) emit(AnnouncementLoading());
     try {
       final announcement = await _repository.getAnnouncementDetail(event.id);
       emit(AnnouncementDetailLoaded(announcement));
     } catch (e) {
+      // Relecture silencieuse en échec : le trajet affiché reste.
+      if (event.silent) return;
       final wrapped = unwrapDioError(e);
       if (wrapped is NotFoundException) {
         emit(AnnouncementNotFound());
@@ -493,37 +494,6 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       } else {
         emit(AnnouncementError(error));
       }
-    }
-  }
-
-  Future<void> _onSurplusOpenRequested(
-    AnnouncementSurplusOpenRequested event,
-    Emitter<AnnouncementState> emit,
-  ) async {
-    // Anti double-soumission : même garde que la création/màj (le bouton se
-    // désactive à la frame suivante seulement).
-    if (state is AnnouncementLoading) return;
-    emit(AnnouncementLoading());
-    try {
-      final announcement = await _repository.openSurplus(
-        announcementId: event.announcementId,
-        surplusKg: event.surplusKg,
-        pricePerKg: event.pricePerKg,
-      );
-      emit(AnnouncementSurplusOpened(announcement));
-      // PII : aucun id utilisateur, aucune ville exacte — uniquement les
-      // valeurs métier de l'ouverture.
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.surplusOpened,
-          properties: {
-            'surplus_kg': event.surplusKg,
-            'price_per_kg': event.pricePerKg,
-          },
-        ),
-      );
-    } catch (e) {
-      emit(AnnouncementError(unwrapDioError(e)));
     }
   }
 

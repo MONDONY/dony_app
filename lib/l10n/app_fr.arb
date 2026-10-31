@@ -4170,11 +4170,11 @@
   },
   "listingPickupLocationsTitle": "Lieux de remise",
   "@listingPickupLocationsTitle": {
-    "description": "Titre de la section adresses de remise/récupération (announcement_detail_screen.dart, announcement_detail_body.dart)"
+    "description": "Titre de la section adresses de remise/récupération (announcement_detail_screen.dart, écran du trajet, ex-corps de détail)"
   },
   "listingHandoverDeadlineTitle": "Dépôt des colis",
   "@listingHandoverDeadlineTitle": {
-    "description": "Titre de la section date limite de dépôt (announcement_detail_screen.dart, announcement_detail_body.dart)"
+    "description": "Titre de la section date limite de dépôt (announcement_detail_screen.dart, écran du trajet, ex-corps de détail)"
   },
   "listingCapacityAvailableLabel": "Capacité dispo.",
   "@listingCapacityAvailableLabel": {
@@ -4190,7 +4190,7 @@
   },
   "listingPriceGridShort": "Par article",
   "@listingPriceGridShort": {
-    "description": "Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, announcement_detail_body.dart, marker_bitmap_factory.dart via announcement_map_view.dart)"
+    "description": "Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, écran du trajet, ex-corps de détail, marker_bitmap_factory.dart via announcement_map_view.dart)"
   },
   "listingPriceUnavailableShort": "Indisponible",
   "@listingPriceUnavailableShort": {
@@ -4239,7 +4239,7 @@
   },
   "listingHandoverUntil": "Jusqu'au {date}",
   "@listingHandoverUntil": {
-    "description": "Date limite de dépôt affichée en toutes lettres (announcement_detail_screen.dart, announcement_detail_body.dart)",
+    "description": "Date limite de dépôt affichée en toutes lettres (announcement_detail_screen.dart, écran du trajet, ex-corps de détail)",
     "placeholders": {
       "date": {
         "type": "String"
@@ -4340,66 +4340,35 @@
   },
   "listingHeroTripLabelCaps": "TRAJET",
   "@listingHeroTripLabelCaps": {
-    "description": "Petit libellé capitalisé au-dessus du corridor (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)"
+    "description": "Petit libellé capitalisé au-dessus du corridor (écran du trajet, ex-corps de détail, traveler_announcement_bottom_sheet.dart)"
   },
   "listingCapacityAvailableSuffix": "disponibles",
   "@listingCapacityAvailableSuffix": {
-    "description": "Libellé secondaire de la pastille capacité disponible (announcement_detail_body.dart)"
+    "description": "Libellé secondaire de la pastille capacité disponible (écran du trajet, ex-corps de détail)"
   },
   "listingPricingSuffixTarifaire": "prix",
   "@listingPricingSuffixTarifaire": {
-    "description": "Libellé secondaire de la pastille prix en mode grille (announcement_detail_body.dart)"
+    "description": "Libellé secondaire de la pastille prix en mode grille (écran du trajet, ex-corps de détail)"
   },
   "listingPricingSuffixPrix": "prix",
   "@listingPricingSuffixPrix": {
-    "description": "Libellé secondaire de la pastille prix au kilo (announcement_detail_body.dart)"
-  },
-  "listingAcceptedParcels": "{count, plural, =1{colis accepté} other{colis acceptés}}",
-  "@listingAcceptedParcels": {
-    "description": "Nombre de colis acceptés sur le trajet (announcement_detail_body.dart)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "listingPendingParcelsLabel": "en attente",
-  "@listingPendingParcelsLabel": {
-    "description": "Libellé secondaire du compteur de demandes en attente (announcement_detail_body.dart)"
-  },
-  "listingAcceptedParcelsSemantics": "{count, plural, =1{Voir le colis accepté} other{Voir les {count} colis acceptés}}",
-  "@listingAcceptedParcelsSemantics": {
-    "description": "Libellé d'accessibilité de la tuile tappable des colis acceptés, ouvre la liste des colis du trajet (announcement_detail_body.dart, FLUTTER-HK)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "listingPendingParcelsSemantics": "{count, plural, =1{Voir la demande en attente} other{Voir les {count} demandes en attente}}",
-  "@listingPendingParcelsSemantics": {
-    "description": "Libellé d'accessibilité de la tuile tappable des demandes en attente, ouvre l'écran des demandes à traiter (announcement_detail_body.dart, FLUTTER-HK)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
+    "description": "Libellé secondaire de la pastille prix au kilo (écran du trajet, ex-corps de détail)"
   },
   "listingPaymentsAcceptedTitle": "Paiements acceptés",
   "@listingPaymentsAcceptedTitle": {
-    "description": "Titre de la section moyens de paiement acceptés (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)"
+    "description": "Titre de la section moyens de paiement acceptés (écran du trajet, ex-corps de détail, traveler_announcement_bottom_sheet.dart)"
   },
   "listingCashOnlyNudgeMessage": "Trajet en espèces uniquement. Beaucoup d'expéditeurs préfèrent payer par carte, activez cette option pour augmenter vos chances de recevoir des colis.",
   "@listingCashOnlyNudgeMessage": {
-    "description": "Message incitant le voyageur à activer la carte quand seul le cash est accepté (announcement_detail_body.dart)"
+    "description": "Message incitant le voyageur à activer la carte quand seul le cash est accepté (écran du trajet, ex-corps de détail)"
   },
   "listingActivateCardPaymentsButton": "Activer les paiements par carte",
   "@listingActivateCardPaymentsButton": {
-    "description": "Bouton d'activation des paiements par carte (announcement_detail_body.dart)"
+    "description": "Bouton d'activation des paiements par carte (écran du trajet, ex-corps de détail)"
   },
   "listingCashOnlyCardReadyMessage": "Le paiement par carte est activé sur votre compte, mais ce trajet n'accepte encore que les espèces.",
   "@listingCashOnlyCardReadyMessage": {
-    "description": "Encart d'un trajet en espèces seulement quand le compte Stripe est déjà activé (announcement_detail_body.dart, Sentry FLUTTER-DH)."
+    "description": "Encart d'un trajet en espèces seulement quand le compte Stripe est déjà activé (écran du trajet, ex-corps de détail, Sentry FLUTTER-DH)."
   },
   "listingEnableCardOnTripButton": "Ajouter la carte à ce trajet",
   "@listingEnableCardOnTripButton": {
@@ -4407,43 +4376,43 @@
   },
   "listingAcceptedContentTitle": "Ce que j'accepte",
   "@listingAcceptedContentTitle": {
-    "description": "Titre de la section contenus acceptés (announcement_detail_body.dart)"
+    "description": "Titre de la section contenus acceptés (écran du trajet, ex-corps de détail)"
   },
   "listingRefusedContentTitle": "Ce que je refuse",
   "@listingRefusedContentTitle": {
-    "description": "Titre de la section contenus refusés (announcement_detail_body.dart)"
+    "description": "Titre de la section contenus refusés (écran du trajet, ex-corps de détail)"
   },
   "listingSenderNoteTitle": "Note aux expéditeurs",
   "@listingSenderNoteTitle": {
-    "description": "Titre de la note libre du voyageur à destination des expéditeurs (announcement_detail_body.dart)"
+    "description": "Titre de la note libre du voyageur à destination des expéditeurs (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeActive": "● ACTIF",
   "@listingBadgeActive": {
-    "description": "Badge de statut compact ACTIVE (announcement_detail_body.dart)"
+    "description": "Badge de statut compact ACTIVE (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeDraft": "✎ BROUILLON",
   "@listingBadgeDraft": {
-    "description": "Badge de statut compact DRAFT (announcement_detail_body.dart)"
+    "description": "Badge de statut compact DRAFT (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeFull": "● COMPLET",
   "@listingBadgeFull": {
-    "description": "Badge de statut compact FULL (announcement_detail_body.dart)"
+    "description": "Badge de statut compact FULL (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeInProgress": "● EN COURS",
   "@listingBadgeInProgress": {
-    "description": "Badge de statut compact IN_PROGRESS (announcement_detail_body.dart)"
+    "description": "Badge de statut compact IN_PROGRESS (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeCompleted": "✓ TERMINÉ",
   "@listingBadgeCompleted": {
-    "description": "Badge de statut compact COMPLETED (announcement_detail_body.dart)"
+    "description": "Badge de statut compact COMPLETED (écran du trajet, ex-corps de détail)"
   },
   "listingBadgeCancelled": "✕ ANNULÉ",
   "@listingBadgeCancelled": {
-    "description": "Badge de statut compact CANCELLED (announcement_detail_body.dart)"
+    "description": "Badge de statut compact CANCELLED (écran du trajet, ex-corps de détail)"
   },
   "listingReservedKgLabel": "{kg} kg réservés",
   "@listingReservedKgLabel": {
-    "description": "Répartition kg réservés d'un trajet dédié au surplus (announcement_detail_body.dart)",
+    "description": "Répartition kg réservés d'un trajet dédié au surplus (écran du trajet, ex-corps de détail)",
     "placeholders": {
       "kg": {
         "type": "String"
@@ -4452,7 +4421,7 @@
   },
   "listingOpenKgLabel": "{kg} kg ouverts",
   "@listingOpenKgLabel": {
-    "description": "Répartition kg ouverts au public d'un trajet dédié au surplus (announcement_detail_body.dart)",
+    "description": "Répartition kg ouverts au public d'un trajet dédié au surplus (écran du trajet, ex-corps de détail)",
     "placeholders": {
       "kg": {
         "type": "String"
@@ -4461,11 +4430,11 @@
   },
   "listingPickupParcelTitleShort": "Remise colis",
   "@listingPickupParcelTitleShort": {
-    "description": "Libellé court de la ligne remise du colis (announcement_detail_body.dart)"
+    "description": "Libellé court de la ligne remise du colis (écran du trajet, ex-corps de détail)"
   },
   "listingDeliveryPickupTitle": "Récupération",
   "@listingDeliveryPickupTitle": {
-    "description": "Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)"
+    "description": "Libellé de la ligne récupération du colis (écran du trajet, ex-corps de détail, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)"
   },
   "listingAlreadyHasParcelMessage": "Vous avez déjà un colis sur ce trajet",
   "@listingAlreadyHasParcelMessage": {
@@ -4988,7 +4957,7 @@
   },
   "listingDeadlineLabel": "Date limite",
   "@listingDeadlineLabel": {
-    "description": "Libellé de la ligne date limite de dépôt (announcement_detail_body.dart)"
+    "description": "Libellé de la ligne date limite de dépôt (écran du trajet, ex-corps de détail)"
   },
   "listingInstructionsCardTitle": "Instructions du voyageur",
   "@listingInstructionsCardTitle": {
@@ -9020,7 +8989,7 @@
   },
   "tripAudienceViewers": "{count, plural, =0{Personne n'a encore vu votre trajet} =1{{count} personne a vu votre trajet} other{{count} personnes ont vu votre trajet}}",
   "@tripAudienceViewers": {
-    "description": "Carte d'audience de l'écran propriétaire d'un trajet : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_section.dart)",
+    "description": "Audience du trajet vue par son voyageur : personnes distinctes qui l'ont ouvert dans l'app. Sous-titre de la tuile « Affiche » et ligne d'audience de son sheet (trip_tiles.dart, trip_audience_line.dart)",
     "placeholders": {
       "count": {
         "type": "int"
@@ -9029,7 +8998,7 @@
   },
   "tripAudiencePosterViews": "{count, plural, =1{{count} vue de votre affiche partagée} other{{count} vues de votre affiche partagée}}",
   "@tripAudiencePosterViews": {
-    "description": "Carte d'audience : consultations de la page web publique de l'affiche du trajet (trip_audience_section.dart)",
+    "description": "Ligne d'audience du sheet de la tuile « Affiche » : consultations de la page web publique de l'affiche du trajet ; sous-titre de la tuile quand personne ne l'a vu dans l'app (trip_audience_line.dart)",
     "placeholders": {
       "count": {
         "type": "int"
@@ -9043,10 +9012,6 @@
   "tripOwnerMarkArrivedButton": "Arrivé à destination",
   "@tripOwnerMarkArrivedButton": {
     "description": "Bouton CTA d'arrivée (trip_owner_detail_screen.dart) ; réutilisé comme titre de ArrivalInstructionsBottomSheet en mode création (arrival_instructions_bottom_sheet.dart, même préfixe tripOwner, texte identique)."
-  },
-  "tripOwnerEditInstructionsButton": "Modifier les instructions de retrait",
-  "@tripOwnerEditInstructionsButton": {
-    "description": "Bouton CTA d'édition des instructions déjà arrivées (trip_owner_detail_screen.dart)."
   },
   "tripOwnerDeleteBlockedTitle": "Suppression impossible",
   "@tripOwnerDeleteBlockedTitle": {
@@ -9131,176 +9096,91 @@
   },
   "tripOwnerPublishTile": "Publier",
   "@tripOwnerPublishTile": {
-    "description": "Tuile « Publier » (owner_action_grid.dart) ; réutilisée pour le libellé actif du bouton de OpenSurplusBottomSheet (même préfixe tripOwner, texte identique)."
-  },
-  "tripOwnerPosterTile": "Affiche",
-  "@tripOwnerPosterTile": {
-    "description": "Tuile « Affiche » (owner_action_grid.dart)."
+    "description": "Tuile « Publier » (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerUnpublishTile": "Dépublier",
   "@tripOwnerUnpublishTile": {
-    "description": "Tuile + confirmLabel « Dépublier » (owner_action_grid.dart)."
+    "description": "Tuile + confirmLabel « Dépublier » (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerUnpublishDialogTitle": "Dépublier ce trajet ?",
   "@tripOwnerUnpublishDialogTitle": {
-    "description": "Titre du dialogue de dépublication (owner_action_grid.dart)."
+    "description": "Titre du dialogue de dépublication (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerUnpublishDialogMessage": "Le trajet ne sera plus visible et restera dans vos brouillons.",
   "@tripOwnerUnpublishDialogMessage": {
-    "description": "Message du dialogue de dépublication (owner_action_grid.dart)."
+    "description": "Message du dialogue de dépublication (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerRequestsTile": "Demandes",
   "@tripOwnerRequestsTile": {
-    "description": "Tuile « Demandes » (owner_action_grid.dart). Clé dédiée (R40) : distincte de bidListDemandesTitle."
+    "description": "Tuile « Demandes » (écran du trajet, ex-grille d’actions). Clé dédiée (R40) : distincte de bidListDemandesTitle."
   },
   "tripOwnerParcelsTile": "Colis",
   "@tripOwnerParcelsTile": {
-    "description": "Tuile « Colis » (owner_action_grid.dart), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur)."
+    "description": "Tuile « Colis » (écran du trajet, ex-grille d’actions), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur)."
   },
   "tripOwnerNoParcelsMessage": "Aucun colis embarqué",
   "@tripOwnerNoParcelsMessage": {
-    "description": "Tooltip de la tuile « Colis » désactivée (owner_action_grid.dart) ; réutilisé comme titre de l'état vide de la section Colis (trip_parcels_section.dart, même préfixe, texte identique)."
-  },
-  "tripOwnerEditDisabledMessage": "Modifiable tant qu'aucune demande",
-  "@tripOwnerEditDisabledMessage": {
-    "description": "Tooltip de la tuile « Modifier » désactivée (owner_action_grid.dart)."
+    "description": "Tooltip de la tuile « Colis » désactivée (écran du trajet, ex-grille d’actions) ; réutilisé comme titre de l'état vide du sheet « Colis » de l'activité du trajet (trip_activity_sheets.dart, même préfixe, texte identique)."
   },
   "tripOwnerDeleteDialogTitle": "Supprimer ce trajet ?",
   "@tripOwnerDeleteDialogTitle": {
-    "description": "Titre du dialogue de suppression du trajet (owner_action_grid.dart)."
+    "description": "Titre du dialogue de suppression du trajet (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerDeleteCancelledMessage": "Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.",
   "@tripOwnerDeleteCancelledMessage": {
-    "description": "Message de suppression d'un trajet déjà annulé (owner_action_grid.dart)."
+    "description": "Message de suppression d'un trajet déjà annulé (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerDeleteActiveMessage": "Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.",
   "@tripOwnerDeleteActiveMessage": {
-    "description": "Message de suppression d'un trajet actif (owner_action_grid.dart)."
-  },
-  "tripOwnerCancelTile": "Annuler",
-  "@tripOwnerCancelTile": {
-    "description": "Tuile « Annuler » quand le trajet actif n'est plus supprimable (owner_action_grid.dart)."
+    "description": "Message de suppression d'un trajet actif (écran du trajet, ex-grille d’actions)."
   },
   "tripOwnerParcelsSectionTitle": "Colis dans le trajet",
   "@tripOwnerParcelsSectionTitle": {
-    "description": "Titre de la section colis embarqués (trip_parcels_section.dart)."
+    "description": "Titre du sheet « Colis » de l’activité du trajet : tous les colis embarqués (trip_activity_sheets.dart)."
   },
   "tripOwnerParcelsEmptyDescription": "Les colis acceptés apparaîtront ici.",
   "@tripOwnerParcelsEmptyDescription": {
-    "description": "Description de l'état vide de la section (trip_parcels_section.dart)."
-  },
-  "tripOwnerParcelsFilterAll": "Tous",
-  "@tripOwnerParcelsFilterAll": {
-    "description": "Chip de filtre « Tous » de la section colis embarqués (trip_parcels_section.dart)."
+    "description": "État vide du sheet « Colis » de l'écran du trajet, et sous-titre de la ligne Colis du corps tant qu'aucun colis n'est embarqué (trip_activity_sheets.dart, trip_parcels_line.dart)."
   },
   "tripOwnerParcelsStatusAccepted": "Accepté",
   "@tripOwnerParcelsStatusAccepted": {
-    "description": "Statut compact de la section colis embarqués (trip_parcels_section.dart _statusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté."
+    "description": "Statut compact de la section colis embarqués (trip_parcel_rows.dart tripParcelStatusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté."
   },
   "tripOwnerParcelsStatusAwaitingPayment": "Paiement en attente",
   "@tripOwnerParcelsStatusAwaitingPayment": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusHandedOver": "Remis",
   "@tripOwnerParcelsStatusHandedOver": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusInTransit": "En transit",
   "@tripOwnerParcelsStatusInTransit": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusArrived": "Arrivé",
   "@tripOwnerParcelsStatusArrived": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusDelivered": "Livré",
   "@tripOwnerParcelsStatusDelivered": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusNoShow": "Absent",
   "@tripOwnerParcelsStatusNoShow": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusParcelRefused": "Refusé",
   "@tripOwnerParcelsStatusParcelRefused": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusCancelled": "Annulé",
   "@tripOwnerParcelsStatusCancelled": {
-    "description": "Statut compact (trip_parcels_section.dart _statusMeta). Orthographe américaine (R38)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta). Orthographe américaine (R38)."
   },
   "tripOwnerParcelsDefaultContent": "Colis",
   "@tripOwnerParcelsDefaultContent": {
-    "description": "Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcels_section.dart _ColisRow)."
-  },
-  "tripOwnerSurplusTitle": "Ouvrir les kg restants",
-  "@tripOwnerSurplusTitle": {
-    "description": "Titre de la sheet (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusSubtitle": "Mettez votre capacité libre à disposition du public",
-  "@tripOwnerSurplusSubtitle": {
-    "description": "Sous-titre de la sheet (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusPublishingButton": "Publication…",
-  "@tripOwnerSurplusPublishingButton": {
-    "description": "Libellé du bouton pendant la publication (open_surplus_bottom_sheet.dart) ; l'état actif réutilise tripOwnerPublishTile."
-  },
-  "tripOwnerSurplusKgValidatorEmpty": "Entrez un nombre de kg",
-  "@tripOwnerSurplusKgValidatorEmpty": {
-    "description": "Erreur du validateur kg quand le champ est vide/invalide (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusKgValidatorMin": "Minimum 1 kg",
-  "@tripOwnerSurplusKgValidatorMin": {
-    "description": "Erreur du validateur kg quand la valeur est < 1 (open_surplus_bottom_sheet.dart) — identique en anglais (chiffre + unité)."
-  },
-  "tripOwnerSurplusOpenedSnackbar": "Capacité ouverte au public",
-  "@tripOwnerSurplusOpenedSnackbar": {
-    "description": "Snackbar de succès à l'ouverture du surplus (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusReservedLabel": "Réservé à votre expéditeur",
-  "@tripOwnerSurplusReservedLabel": {
-    "description": "Libellé du bandeau de capacité réservée (open_surplus_bottom_sheet.dart _ReservedBanner)."
-  },
-  "tripOwnerSurplusReservedKgValue": "{kg} kg verrouillés",
-  "@tripOwnerSurplusReservedKgValue": {
-    "description": "Valeur du bandeau de capacité réservée, {kg} déjà formaté (open_surplus_bottom_sheet.dart).",
-    "placeholders": {
-      "kg": {
-        "type": "String"
-      }
-    }
-  },
-  "tripOwnerSurplusKgSectionLabel": "KG À OUVRIR",
-  "@tripOwnerSurplusKgSectionLabel": {
-    "description": "Libellé de section, en majuscules dans le code (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusPriceSectionLabel": "PRIX PAR KG",
-  "@tripOwnerSurplusPriceSectionLabel": {
-    "description": "Libellé de section, en majuscules dans le code (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusKgHint": "Ex. 8",
-  "@tripOwnerSurplusKgHint": {
-    "description": "Hint du champ kg à ouvrir (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusOtherPriceChip": "Autre",
-  "@tripOwnerSurplusOtherPriceChip": {
-    "description": "Chip de prix « Autre » (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusCustomPriceHint": "Votre prix",
-  "@tripOwnerSurplusCustomPriceHint": {
-    "description": "Hint du champ de prix libre (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusCustomPriceInvalid": "Prix invalide",
-  "@tripOwnerSurplusCustomPriceInvalid": {
-    "description": "Erreur du validateur de prix libre (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusDisclaimerText": "Action définitive : une fois publiée, votre capacité libre devient visible dans la recherche et ne peut plus être refermée.",
-  "@tripOwnerSurplusDisclaimerText": {
-    "description": "Texte d'avertissement en bas de la sheet (open_surplus_bottom_sheet.dart)."
-  },
-  "tripOwnerSurplusPublicPriceLabel": "Prix affiché aux expéditeurs",
-  "@tripOwnerSurplusPublicPriceLabel": {
-    "description": "Libellé de l'aperçu du prix public (open_surplus_bottom_sheet.dart _PublicPricePreview)."
+    "description": "Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcel_rows.dart TripParcelRow)."
   },
   "tripOwnerArrivalEditingTitle": "Instructions de retrait",
   "@tripOwnerArrivalEditingTitle": {
@@ -18249,7 +18129,7 @@
   },
   "tripRescheduleTile": "Reporter",
   "@tripRescheduleTile": {
-    "description": "Tuile du trajet propriétaire (owner_action_grid.dart)"
+    "description": "Tuile du trajet propriétaire (écran du trajet, ex-grille d’actions)"
   },
   "tripRescheduleTitle": "Reporter le trajet",
   "@tripRescheduleTitle": {
@@ -18489,7 +18369,7 @@
   },
   "tripRescheduleLimitReachedMessage": "Déjà reporté 2 fois : annulez et publiez un nouveau trajet",
   "@tripRescheduleLimitReachedMessage": {
-    "description": "Tuile Reporter grisée (owner_action_grid.dart)"
+    "description": "Tuile Reporter grisée (écran du trajet, ex-grille d’actions)"
   },
   "profilePublicLastSeenToday": "Actif aujourd'hui",
   "@profilePublicLastSeenToday": {
@@ -20291,7 +20171,7 @@
   "requestPublicSenderRowSemantics": "Expéditeur : {name}. Voir son profil",
   "@requestPublicSenderRowSemantics": {"description": "Lecture d'écran de la ligne expéditeur en tête de la fiche publique d'une demande (request_sender_row.dart, FLUTTER-GF).", "placeholders": {"name": {"type": "String"}}},
   "tripParcelsSummaryInTransit": "{count, plural, =1{colis en route} other{colis en route}}",
-  "@tripParcelsSummaryInTransit": {"description": "Segment du résumé de la section Colis du trajet (trip_parcels_section.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.", "placeholders": {"count": {"type": "int"}}},
+  "@tripParcelsSummaryInTransit": {"description": "Segment du résumé des colis du trajet (sheet « Colis » et sous-titre de la ligne Colis de l'écran, trip_parcel_rows.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.", "placeholders": {"count": {"type": "int"}}},
   "tripParcelsSummaryToCollect": "{count, plural, =1{à récupérer} other{à récupérer}}",
   "@tripParcelsSummaryToCollect": {"description": "Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis acceptés pas encore remis au voyageur (ACCEPTED). Le chiffre est affiché à part.", "placeholders": {"count": {"type": "int"}}},
   "tripParcelsSummaryArrived": "{count, plural, =1{arrivé} other{arrivés}}",
@@ -22823,22 +22703,36 @@
   "@trackingConsentSettingsOffSnackbar": {"description": "Message après avoir coupé le partage de l'avancée du trajet."},
   "trackingConsentSettingsOpenSystemSnackbar": "La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.",
   "@trackingConsentSettingsOpenSystemSnackbar": {"description": "Message avant d'ouvrir les réglages système quand l'autorisation est refusée définitivement."},
-  "tripSummaryTitle": "Résumé du trajet",
-  "@tripSummaryTitle": {"description": "Carte de résumé du trajet du voyageur (colis en sa possession)."},
-  "tripSummaryParcels": "{count, plural, =1{{count} colis en votre possession} other{{count} colis en votre possession}}",
-  "@tripSummaryParcels": {"description": "Résumé du trajet : nombre de colis scannés.", "placeholders": {"count": {"type": "int"}}},
-  "tripSummaryWeight": "{kg} kg transportés",
-  "@tripSummaryWeight": {"description": "Résumé du trajet : total des kilos transportés.", "placeholders": {"kg": {"type": "String"}}},
   "tripSummaryEarningsLabel": "Gain estimé",
-  "@tripSummaryEarningsLabel": {"description": "Résumé du trajet : net estimé du voyageur."},
-  "tripSummaryEarningsNote": "Le paiement suit la livraison de chaque colis.",
-  "@tripSummaryEarningsNote": {"description": "Résumé du trajet : précise que le gain est versé après la livraison."},
-  "tripSummaryViewParcels": "Voir mes colis",
-  "@tripSummaryViewParcels": {"description": "Résumé du trajet : ouvre la liste des colis du trajet."},
+  "@tripSummaryEarningsLabel": {"description": "Gain estimé du trajet du voyageur : titre du bloc de gain en tête du sheet « Colis » de l'écran du trajet (trip_activity_sheets.dart)."},
+  "tripSummaryEarningsNote": "Versé après la livraison de chaque colis.",
+  "@tripSummaryEarningsNote": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : note sous la ligne « En ligne », le net des colis payés dans l'app est versé après la livraison de chacun (trip_gain_content.dart)."},
   "tripDepartButton": "Je pars",
   "@tripDepartButton": {"description": "Écran du trajet voyageur : confirme le départ (position approximative facultative)."},
   "tripDepartConfirmedSnackbar": "C'est noté, bon voyage !",
   "@tripDepartConfirmedSnackbar": {"description": "Confirmation après le bouton « Je pars »."},
+  "tripTodoRequestsTitle": "Demandes à traiter",
+  "@tripTodoRequestsTitle": {"description": "Écran du trajet (propriétaire), « À traiter » : titre de la tuile et du sheet des demandes en attente de réponse (trip_todo_tiles.dart)."},
+  "tripTodoRequestsSummary": "{count, plural, =1{Une demande attend votre réponse} other{{count} demandes attendent votre réponse}}",
+  "@tripTodoRequestsSummary": {"description": "Écran du trajet (propriétaire), « À traiter » : résumé de la tuile des demandes, avec leur nombre (trip_todo_tiles.dart).", "placeholders": {"count": {"type": "int"}}},
+  "tripTodoDepartSummary": "Confirmez le départ de votre trajet",
+  "@tripTodoDepartSummary": {"description": "Écran du trajet (propriétaire), « À traiter » : résumé de la tuile « Je pars » (trip_todo_tiles.dart)."},
+  "tripTodoDepartIntro": "Confirmez votre départ : vos expéditeurs voient que le trajet est lancé.",
+  "@tripTodoDepartIntro": {"description": "Sheet « Je pars » de l'écran du trajet : première phrase, avant l'explication du partage de l'avancée (trip_todo_sheets.dart)."},
+  "tripTodoCardReadySummary": "Acceptez aussi la carte sur ce trajet",
+  "@tripTodoCardReadySummary": {"description": "Écran du trajet (propriétaire), « À traiter » : résumé de la tuile « Ajouter la carte à ce trajet », trajet en espèces seules et paiements par carte déjà activés sur le compte (trip_todo_tiles.dart)."},
+  "tripTodoCardActivateSummary": "Recevez plus de colis grâce à la carte",
+  "@tripTodoCardActivateSummary": {"description": "Écran du trajet (propriétaire), « À traiter » : résumé de la tuile « Activer les paiements par carte », trajet en espèces seules et paiements par carte pas encore activés (trip_todo_tiles.dart)."},
+  "tripStatusFullMessage": "Trajet complet : plus de demande possible. Vous pouvez reporter le départ. Pour annuler, contactez le support.",
+  "@tripStatusFullMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet FULL dont le report est encore possible ; le back refuse l'annulation d'un trajet complet, un lien « Contacter le support » suit (trip_status_card.dart)."},
+  "tripStatusFullNoRescheduleMessage": "Trajet complet : plus de demande possible. Pour annuler, contactez le support.",
+  "@tripStatusFullNoRescheduleMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet FULL qui ne peut plus être reporté (deux reports faits, colis en route) ; le back refuse l'annulation d'un trajet complet, un lien « Contacter le support » suit (trip_status_card.dart)."},
+  "tripStatusArrivedMessage": "Trajet arrivé : vos colis attendent leurs destinataires.",
+  "@tripStatusArrivedMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet IN_PROGRESS après « Arrivé à destination » : un colis est ARRIVED et plus aucun n'est remis ou en transit ; le trajet ne passe COMPLETED qu'au dernier colis livré (trip_status_card.dart)."},
+  "tripStatusCancelledMessage": "Trajet annulé. Les colis déjà remis suivent la procédure de retour.",
+  "@tripStatusCancelledMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet CANCELLED (trip_status_card.dart)."},
+  "tripStatusRemovedMessage": "Ce trajet a été retiré par l'équipe Yadony.",
+  "@tripStatusRemovedMessage": {"description": "Carte de statut de l'écran du trajet (propriétaire), trajet REMOVED_BY_ADMIN, retiré par la modération ; un lien « Contacter le support » (/support) suit (trip_status_card.dart)."},
   "travelerTrackingBadgeEnRoute": "En route",
   "@travelerTrackingBadgeEnRoute": {
     "description": "Pastille verte : le voyageur est en route. Carte « Suivi du voyageur » de la fiche colis (vue expéditeur, traveler_tracking_card.dart)."
@@ -22941,5 +22835,83 @@
   "walletTxTypeTopupDisputed": "Recharge contestée",
   "@walletTxTypeTopupDisputed": {"description": "Historique du solde : montant repris parce que la recharge par carte est contestée auprès de la banque (TOPUP_DISPUTED, wallet_tx_label.dart)."},
   "walletTxTypeTopupDisputeReversed": "Contestation close en votre faveur",
-  "@walletTxTypeTopupDisputeReversed": {"description": "Historique du solde : montant rendu quand la contestation bancaire d'une recharge est close en faveur de Yadony (TOPUP_DISPUTE_REVERSED, wallet_tx_label.dart)."}
+  "@walletTxTypeTopupDisputeReversed": {"description": "Historique du solde : montant rendu quand la contestation bancaire d'une recharge est close en faveur de Yadony (TOPUP_DISPUTE_REVERSED, wallet_tx_label.dart)."},
+  "tripTileItinerary": "Itinéraire et lieux",
+  "@tripTileItinerary": {"description": "Écran du trajet (propriétaire), section « Votre trajet » : titre de la tuile et du sheet des lieux de remise et de la date limite de dépôt (trip_tiles.dart)."},
+  "tripTilePayments": "Paiements",
+  "@tripTilePayments": {"description": "Écran du trajet (propriétaire), section « Votre trajet » : titre de la tuile et du sheet des moyens de paiement acceptés (trip_tiles.dart)."},
+  "tripTileConditions": "Conditions",
+  "@tripTileConditions": {"description": "Écran du trajet (propriétaire), section « Votre trajet » : titre de la tuile et du sheet des contenus acceptés, refusés et de la note aux expéditeurs (trip_tiles.dart)."},
+  "tripTilePoster": "Affiche",
+  "@tripTilePoster": {"description": "Écran du trajet (propriétaire), section « Votre trajet » : titre de la tuile et du sheet de l'affiche partageable (trip_tiles.dart)."},
+  "tripTileArrival": "Arrivée",
+  "@tripTileArrival": {"description": "Écran du trajet (propriétaire), section « Votre trajet » : titre de la tuile et du sheet des instructions de retrait à l'arrivée (trip_tiles.dart)."},
+  "tripTileItineraryPickup": "Remise : {place}",
+  "@tripTileItineraryPickup": {"description": "Résumé de la tuile « Itinéraire et lieux » : ville (à défaut libellé) du lieu où l'expéditeur remet son colis au voyageur (trip_tiles.dart).", "placeholders": {"place": {"type": "String"}}},
+  "tripTileItineraryDelivery": "Retrait : {place}",
+  "@tripTileItineraryDelivery": {"description": "Résumé de la tuile « Itinéraire et lieux » : ville (à défaut libellé) du lieu où le destinataire récupère son colis (trip_tiles.dart).", "placeholders": {"place": {"type": "String"}}},
+  "tripTileConditionsAccepted": "{count, plural, =1{1 type accepté} other{{count} types acceptés}}",
+  "@tripTileConditionsAccepted": {"description": "Résumé de la tuile « Conditions » : nombre de types de contenu acceptés par le voyageur (trip_tiles.dart).", "placeholders": {"count": {"type": "int"}}},
+  "tripTileConditionsRefused": "{count, plural, =1{1 type refusé} other{{count} types refusés}}",
+  "@tripTileConditionsRefused": {"description": "Résumé de la tuile « Conditions » : nombre de types de contenu refusés par le voyageur (trip_tiles.dart).", "placeholders": {"count": {"type": "int"}}},
+  "tripTilePosterSubtitle": "Partager le trajet",
+  "@tripTilePosterSubtitle": {"description": "Résumé de la tuile « Affiche » de l'écran du trajet (propriétaire), tant que l'audience du trajet n'est pas chargée ; ensuite « N personnes ont vu votre trajet » (trip_tiles.dart)."},
+  "tripTilePosterIntro": "Votre trajet en image, avec un lien et une légende prêts à envoyer sur WhatsApp ou les réseaux sociaux.",
+  "@tripTilePosterIntro": {"description": "Sheet de la tuile « Affiche » : ce que contient l'affiche partageable du trajet, avant le bouton « Partager l'affiche » (trip_tile_sheets.dart)."},
+  "tripTileArrivalEmpty": "Aucune instruction de retrait pour l'instant. Dites aux destinataires où et quand récupérer leur colis.",
+  "@tripTileArrivalEmpty": {"description": "Sheet de la tuile « Arrivée » : un colis est arrivé mais le voyageur n'a pas laissé d'instructions de retrait (trip_tile_sheets.dart)."},
+  "tripTilePaymentsNetworksTitle": "Réseaux mobile money",
+  "@tripTilePaymentsNetworksTitle": {"description": "Sheet de la tuile « Paiements » : titre des pastilles des réseaux mobile money acceptés par le voyageur, affiché en majuscules (trip_detail_sections.dart)."},
+  "tripTilePaymentsCashOnlyNote": "Ce trajet n'accepte que les espèces. Pour ajouter la carte, voyez « {section} ».",
+  "@tripTilePaymentsCashOnlyNote": {"description": "Sheet de la tuile « Paiements » : trajet en espèces seules où la carte est possible, renvoi vers la tuile de la section « À traiter » qui porte l'action (trip_tile_sheets.dart). {section} : titre réel de cette section (bidDetailSectionTodo), pour que le renvoi suive son nom.", "placeholders": {"section": {"type": "String"}}},
+  "tripTileArrivalEditButton": "Modifier les instructions",
+  "@tripTileArrivalEditButton": {"description": "Sheet de la tuile « Arrivée » de l'écran du trajet (propriétaire) : bouton du pied qui ouvre l'édition des instructions de retrait, libellé court pour tenir sur une ligne à 360 dp (trip_tile_sheets.dart)."},
+  "tripSectionYourTrip": "Votre trajet",
+  "@tripSectionYourTrip": {"description": "Écran du trajet vu par son voyageur : titre de la grille de tuiles (itinéraire et lieux, paiements, conditions, affiche, arrivée), chacune ouvrant un bottom sheet (trip_owner_body.dart)."},
+  "tripOwnerMenuTooltip": "Options du trajet",
+  "@tripOwnerMenuTooltip": {"description": "Écran du trajet (propriétaire) : libellé d'accessibilité et info-bulle du bouton ⋮ de la barre d'application, qui ouvre le menu des actions du trajet (trip_owner_options_sheet.dart)."},
+  "tripMenuEditSubtitle": "Villes, dates, kilos, prix et conditions",
+  "@tripMenuEditSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Modifier », présente tant qu'aucune demande n'engage le trajet (trip_owner_options_sheet.dart)."},
+  "tripMenuRecurringSubtitle": "Le même trajet à d'autres dates",
+  "@tripMenuRecurringSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Rendre ce trajet récurrent » (trajet direct actif ou terminé), qui ouvre le calendrier du trajet récurrent (trip_owner_options_sheet.dart)."},
+  "tripMenuSaveTemplate": "Enregistrer en modèle",
+  "@tripMenuSaveTemplate": {"description": "Menu ⋮ de l'écran du trajet : entrée qui enregistre le trajet comme modèle de trajet (POST /trip-templates), trajet actif ou terminé (trip_owner_options_sheet.dart)."},
+  "tripMenuSaveTemplateSubtitle": "Pour le republier en quelques gestes",
+  "@tripMenuSaveTemplateSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Enregistrer en modèle » (trip_owner_options_sheet.dart)."},
+  "tripMenuDeleteSubtitle": "Le trajet disparaît de vos trajets",
+  "@tripMenuDeleteSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Supprimer » (trajet modifiable ou annulé), suivie d'une confirmation (trip_owner_options_sheet.dart)."},
+  "tripMenuArrivalReadSubtitle": "Ce que voient les destinataires",
+  "@tripMenuArrivalReadSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Instructions de retrait » quand le sheet ne fait que les montrer (aucun colis arrivé : avant l'arrivée, trajet terminé ou annulé) ; après l'arrivée, le sous-titre invite à les saisir (trip_owner_options_sheet.dart)."},
+  "tripDirectRequestLabel": "Demande 1 sur {count}",
+  "@tripDirectRequestLabel": {"description": "Écran du trajet vu par son voyageur, « À traiter » : titre de la carte de réponse directe, la première demande à traiter sur leur nombre total (trip_direct_request_card.dart).", "placeholders": {"count": {"type": "int"}}},
+  "tripDirectRequestSeeAll": "Voir les {count} demandes",
+  "@tripDirectRequestSeeAll": {"description": "Carte de réponse directe de l'écran du trajet : lien qui ouvre le sheet de toutes les demandes à traiter, affiché dès deux demandes (trip_direct_request_card.dart).", "placeholders": {"count": {"type": "int"}}},
+  "tripParcelsLineInTransit": "en route",
+  "@tripParcelsLineInTransit": {"description": "Écran du trajet vu par son voyageur : segment court du sous-titre de la ligne Colis (« 4 en route · 2 à récupérer · 1 arrivé · 2 livrés »), colis remis ou en transit. Le chiffre est affiché devant, le titre dit déjà « colis » (trip_parcels_line.dart)."},
+  "tripParcelsLineTitle": "{count, plural, =0{Aucun colis} =1{1 colis} other{{count} colis}}",
+  "@tripParcelsLineTitle": {"description": "Écran du trajet vu par son voyageur : titre en gras de la ligne Colis (sous « À traiter »), nombre de colis embarqués ; suivi de « · gain estimé » quand il y a un gain. Sans colis : « Aucun colis » (trip_parcels_line.dart).", "placeholders": {"count": {"type": "int"}}},
+  "tripParcelsSearchHint": "Rechercher un colis, un nom, un suivi",
+  "@tripParcelsSearchHint": {"description": "Sheet « Colis » de l'écran du trajet vu par son voyageur : texte indicatif du champ de recherche au-dessus des puces de filtre (nom de l'expéditeur, nom du destinataire, numéro de suivi visible) (trip_activity_sheets.dart)."},
+  "tripParcelsSearchResults": "{count, plural, =1{1 colis trouvé} other{{count} colis trouvés}}",
+  "@tripParcelsSearchResults": {"description": "Sheet « Colis » de l'écran du trajet : petit texte sous le champ de recherche quand une recherche est active, nombre de colis qui y répondent (avant le filtre par statut) (trip_activity_sheets.dart).", "placeholders": {"count": {"type": "int"}}},
+  "tripParcelsSearchEmpty": "Aucun colis ne correspond à « {query} »",
+  "@tripParcelsSearchEmpty": {"description": "Sheet « Colis » de l'écran du trajet : état vide quand aucun colis ne répond à la recherche ; {query} est le texte saisi, sans espaces de bord (trip_activity_sheets.dart).", "placeholders": {"query": {"type": "String"}}},
+  "tripParcelsSearchClear": "Effacer la recherche",
+  "@tripParcelsSearchClear": {"description": "Sheet « Colis » de l'écran du trajet : lien sous l'état vide de la recherche, vide le champ (trip_activity_sheets.dart)."},
+  "tripActivityRequestsEmpty": "Aucune demande à traiter pour le moment.",
+  "@tripActivityRequestsEmpty": {"description": "Sheet des demandes de l'écran du trajet (lien « Voir les N demandes ») : plus aucune demande n'attend de réponse (trip_activity_sheets.dart)."},
+  "tripActivityParcelsOpenList": "Ouvrir la liste des colis",
+  "@tripActivityParcelsOpenList": {"description": "Sheet « Colis » de l'écran du trajet : bouton du pied qui ouvre la liste des colis du trajet (/announcements/:id/bids) (trip_activity_sheets.dart)."},
+  "tripGainOnlineLabel": "En ligne",
+  "@tripGainOnlineLabel": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : ligne du net des colis récupérés payés dans l'app (carte, mobile money) (trip_gain_content.dart)."},
+  "tripGainCashLabel": "En espèces",
+  "@tripGainCashLabel": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : ligne du net des colis récupérés payés en espèces (trip_gain_content.dart)."},
+  "tripGainCashNote": "À recevoir de l'expéditeur en main propre.",
+  "@tripGainCashNote": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : note sous la ligne « En espèces » quand le back ne sert pas le montant remis distinct du net (trip_gain_content.dart)."},
+  "tripGainCashGrossNote": "{gross} à recevoir de l'expéditeur en main propre, dont {commission} de frais de service avancés sur votre solde Yadony.",
+  "@tripGainCashGrossNote": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : note sous la ligne « En espèces ». L'expéditeur remet le brut, la commission n'en est pas déduite : le voyageur l'a avancée à part (FLUTTER-R8, même logique que traveler_gain_card.dart) (trip_gain_content.dart).", "placeholders": {"gross": {"type": "String"}, "commission": {"type": "String"}}},
+  "tripGainTotalLabel": "Total estimé",
+  "@tripGainTotalLabel": {"description": "Bloc « Gain estimé » du sheet « Colis » de l'écran du trajet : ligne du total estimé, en ligne plus espèces (trip_gain_content.dart)."},
+  "tripOwnerParcelsFilterAll": "Tous",
+  "@tripOwnerParcelsFilterAll": {"description": "Puce de filtre « Tous » du sheet « Colis » de l'activité du trajet, avec le total des colis embarqués (trip_activity_sheets.dart)."}
 }

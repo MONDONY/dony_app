@@ -172,7 +172,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     BidListRequested event,
     Emitter<BidState> emit,
   ) async {
-    emit(BidLoading());
+    if (!event.silent) emit(BidLoading());
     try {
       final bids = await _repository.getBidsForAnnouncement(
         event.announcementId,
@@ -182,9 +182,10 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       final wrapped = unwrapDioError(e);
       if (wrapped is NotFoundException) {
         emit(BidNotFound());
-      } else {
+      } else if (!event.silent) {
         emit(BidError(wrapped));
       }
+      // Relecture silencieuse en échec : la dernière liste reste affichée.
     }
   }
 

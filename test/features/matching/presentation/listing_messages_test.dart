@@ -1,6 +1,6 @@
 // Couvre les messages ICU de la tâche C1 (détail d'annonce, cartes et
 // feuilles de trajet) : pour chacun, on compare le rendu du nouveau message
-// (fr et en) à l'ancien calcul concaténé — les six imposés par la fiche
+// (fr et en) à l'ancien calcul concaténé — ceux imposés par la fiche
 // (0, 1, 2 et 12), plus `listingSearchButton` (0, 1 et 3), fusionné en un
 // seul message ICU lors de la relecture (search_form_bottom_sheet.dart).
 //
@@ -13,25 +13,6 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final fr = lookupAppLocalizations(AppL10n.fr);
   final en = lookupAppLocalizations(AppL10n.en);
-
-  group('listingAcceptedParcels', () {
-    // Ancien code (announcement_detail_body.dart) :
-    // accepted > 1 ? 'colis acceptés' : 'colis accepté'
-    String oldFr(int n) => n > 1 ? 'colis acceptés' : 'colis accepté';
-
-    for (final n in [0, 1, 2, 12]) {
-      test('fr count=$n identique à l\'ancien calcul', () {
-        expect(fr.listingAcceptedParcels(n), oldFr(n));
-      });
-    }
-
-    test('en count=1 singulier, sinon pluriel', () {
-      expect(en.listingAcceptedParcels(1), 'parcel accepted');
-      expect(en.listingAcceptedParcels(0), 'parcels accepted');
-      expect(en.listingAcceptedParcels(2), 'parcels accepted');
-      expect(en.listingAcceptedParcels(12), 'parcels accepted');
-    });
-  });
 
   group('listingRouteTrips', () {
     // Ancien code (route_bottom_sheet.dart) :

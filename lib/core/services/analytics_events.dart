@@ -68,7 +68,6 @@ abstract final class AnalyticsEvents {
   /// Trajet récurrent créé, modifié ou supprimé. Propriété `action`.
   static const tripRecurrenceSaved = 'trip_recurrence_saved';
   static const announcementViewed = 'announcement_viewed';
-  static const surplusOpened = 'surplus_opened';
   static const tripCreateStarted = 'trip_create_started';
 
   /// Brouillon local d'un formulaire de publication (trajet ou demande
@@ -276,12 +275,13 @@ abstract final class AnalyticsEvents {
   static const packageRequestCreated = 'package_request_created';
   static const packageRequestUpdated = 'package_request_updated';
 
-  /// Brouillon publié (DRAFT → OPEN) depuis la grille d'actions propriétaire
-  /// de « Ma demande » (écran ou sheet).
+  /// Brouillon publié (DRAFT → OPEN) depuis le bouton « Publier » de la
+  /// barre fixe de « Ma demande » (écran ou sheet).
   static const packageRequestPublished = 'package_request_published';
 
   /// Demande retirée de la circulation sans l'annuler (OPEN → DRAFT), avant
-  /// la première offre — même origine que ci-dessus.
+  /// la première offre, depuis l'entrée « Dépublier » du menu « … » de « Ma
+  /// demande ».
   static const packageRequestUnpublished = 'package_request_unpublished';
 
   /// Partage texte de la demande depuis la barre fixe de « Ma demande ».
@@ -863,6 +863,12 @@ abstract final class AnalyticsEvents {
   static const tripAudienceLoaded = 'trip_audience_loaded';
   static const tripParcelsViewed = 'trip_parcels_viewed';
   static const tripParcelsFiltered = 'trip_parcels_filtered';
+
+  /// Recherche d'un colis dans le sheet « Colis » de l'écran du trajet, après
+  /// une pause de saisie (`kTripParcelsSearchLogDelay`), une fois par terme
+  /// stabilisé. Propriétés `matches` (colis trouvés) et `total` (colis
+  /// embarqués). Jamais le texte saisi, un nom ni un numéro.
+  static const tripParcelsSearched = 'trip_parcels_searched';
 
   /// Bascule du sélecteur de mode de la recherche. Propriété `mode` : trips / parcels.
   static const homeSearchModeChanged = 'home_search_mode_changed';

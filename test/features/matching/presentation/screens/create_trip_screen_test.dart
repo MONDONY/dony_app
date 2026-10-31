@@ -2576,9 +2576,9 @@ void main() {
         expect(find.byType(DonySuccessScreen), findsOneWidget);
 
         // Tap le CTA — ne doit pas jeter (bug de contexte désactivé, fix
-        // task 4 feb86b71) et doit préserver le contrat bool pour les 3
-        // appelants (announcement_list_screen.dart, owner_action_grid.dart,
-        // trip_owner_detail_screen.dart). La carte du trajet récurrent
+        // task 4 feb86b71) et doit préserver le contrat bool de ses
+        // appelants (announcement_list_screen.dart, trip_owner/trip_edit.dart
+        // depuis l'écran du trajet). La carte du trajet récurrent
         // peut pousser le bouton sous la ligne de flottaison.
         await tester.ensureVisible(find.text('Voir mon trajet'));
         await tester.pumpAndSettle();

@@ -22,12 +22,11 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/traveler_bids_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_accept_follow_ups.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
 import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
-import 'package:dony/features/payments/wallet/presentation/commission_funding_options.dart';
-import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/tracking/presentation/tracking_consent_prompt.dart';
@@ -375,107 +374,17 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
 
   /// Solde wallet insuffisant pour la commission d'un accept cash : même
   /// parcours de sortie que sur PendingBidsScreen — recharger, ou payer par
-  /// carte si une carte existe, sinon en ajouter une.
+  /// carte si une carte existe, sinon en ajouter une. La carte ajoutée ne
+  /// change pas la demande, mais l'écran repart de l'état réel du serveur.
   void _showWalletInsufficientSheet(
     BuildContext context,
     acs.BidWalletInsufficient state,
-  ) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
-    DonyBottomSheet.show<void>(
-      context,
-      title: l.bidListWalletInsufficientTitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final (i, line) in commissionShortfallLines(
-            l,
-            breakdown: state.breakdown,
-            requiredCommission: state.requiredCommission,
-            availableBalance: state.availableBalance,
-            currency: state.currency,
-            fundingDetail: state.fundingDetail,
-          ).indexed) ...[
-            if (i > 0) const SizedBox(height: 4),
-            Text(
-              line,
-              style: i == 0
-                  ? tt.bodyMedium?.copyWith(color: cs.onSurface)
-                  : tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-          const SizedBox(height: 8),
-          Text(
-            l.bidListWalletInsufficientHint,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          CommissionFundingOptions(
-            alternatives: state.alternatives,
-            onSelected: (currency) {
-              context.pop();
-              context.read<BidAcceptanceBloc>().add(
-                ace.BidAcceptRequested(state.bidId, fundingCurrency: currency),
-              );
-            },
-          ),
-        ],
-      ),
-      stickyBottom: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DonyButton(
-            label: commissionTopupLabel(
-              l,
-              tripCurrency: commissionTripCurrency(
-                bidCurrency: state.bidCurrency,
-                breakdown: state.breakdown,
-                currency: state.currency,
-              ),
-              fallback: l.bidListWalletTopupButton,
-            ),
-            onPressed: () async {
-              context.pop();
-              final recharged = await context.push<bool>(
-                '/payments/wallet/topup/method',
-              );
-              if ((recharged ?? false) && context.mounted) {
-                context.read<BidAcceptanceBloc>().add(
-                  ace.BidAcceptRequested(state.bidId),
-                );
-              }
-            },
-          ),
-          if (state.hasCard) ...[
-            const SizedBox(height: 8),
-            DonyButton(
-              label: l.bidListPayByCardButton,
-              variant: DonyButtonVariant.secondary,
-              onPressed: () {
-                context.pop();
-                context.read<BidAcceptanceBloc>().add(
-                  ace.BidAcceptWithCardRequested(state.bidId),
-                );
-              },
-            ),
-          ] else ...[
-            const SizedBox(height: 8),
-            DonyButton(
-              label: l.bidListAddCardButton,
-              variant: DonyButtonVariant.secondary,
-              onPressed: () async {
-                context.pop();
-                await context.push('/payments/commission-method');
-                // La carte ajoutée ne change pas la demande, mais l'écran
-                // doit repartir de l'état réel du serveur.
-                if (context.mounted) _reload();
-              },
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+  ) => showBidWalletInsufficientSheet(
+    context,
+    state,
+    acceptance: context.read<BidAcceptanceBloc>(),
+    onCardAdded: _reload,
+  );
 
   // ── Build ──────────────────────────────────────────────────────────────────
 

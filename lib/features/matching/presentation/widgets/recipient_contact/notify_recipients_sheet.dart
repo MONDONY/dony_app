@@ -89,6 +89,7 @@ class NotifyRecipientsSheet extends StatelessWidget {
       context,
       title: l.notifyRecipientsTitle,
       subtitle: l.notifyRecipientsSubtitle,
+      analyticsName: 'trip-owner/notify-recipients',
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
           label: l.commonClose,

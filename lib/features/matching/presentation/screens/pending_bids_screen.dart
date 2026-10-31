@@ -6,7 +6,6 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -14,12 +13,11 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_accept_follow_ups.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
 import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
-import 'package:dony/features/payments/wallet/presentation/commission_funding_options.dart';
-import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -200,145 +198,18 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
 
   // ── Sheets ───────────────────────────────────────────────────────────────
 
-  void _showCardDeclinedSheet(BuildContext context, String message) {
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-    DonyBottomSheet.show<void>(
-      context,
-      title: l.bidListCardDeclinedSheetTitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            message,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l.bidListCardDeclinedHint,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ],
-      ),
-      stickyBottom: DonyButton(
-        label: l.bidListChangeCommissionCardButton,
-        onPressed: () {
-          context.pop();
-          context.push('/payments/commission-method');
-        },
-      ),
-    );
-  }
+  void _showCardDeclinedSheet(BuildContext context, String message) =>
+      showBidCardDeclinedSheet(context, message);
 
   void _showWalletInsufficientSheet(
     BuildContext context,
     acs.BidWalletInsufficient state,
-  ) {
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-    DonyBottomSheet.show<void>(
-      context,
-      title: l.bidListWalletInsufficientTitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final (i, line) in commissionShortfallLines(
-            l,
-            breakdown: state.breakdown,
-            requiredCommission: state.requiredCommission,
-            availableBalance: state.availableBalance,
-            currency: state.currency,
-            fundingDetail: state.fundingDetail,
-          ).indexed) ...[
-            if (i > 0) const SizedBox(height: 4),
-            Text(
-              line,
-              style: i == 0
-                  ? Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: cs.onSurface)
-                  : Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-          const SizedBox(height: 8),
-          Text(
-            l.bidListWalletInsufficientHint,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          CommissionFundingOptions(
-            alternatives: state.alternatives,
-            onSelected: (currency) {
-              context.pop();
-              _lastCashAcceptBidId = state.bidId;
-              context.read<BidAcceptanceBloc>().add(
-                ace.BidAcceptRequested(state.bidId, fundingCurrency: currency),
-              );
-            },
-          ),
-        ],
-      ),
-      stickyBottom: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DonyButton(
-            label: commissionTopupLabel(
-              l,
-              tripCurrency: commissionTripCurrency(
-                bidCurrency: state.bidCurrency,
-                breakdown: state.breakdown,
-                currency: state.currency,
-              ),
-              fallback: l.bidListWalletTopupButton,
-            ),
-            onPressed: () async {
-              context.pop();
-              final recharged = await context.push<bool>(
-                '/payments/wallet/topup/method',
-              );
-              if ((recharged ?? false) && context.mounted) {
-                _lastCashAcceptBidId = state.bidId;
-                context.read<BidAcceptanceBloc>().add(
-                  ace.BidAcceptRequested(state.bidId),
-                );
-              }
-            },
-          ),
-          if (state.hasCard) ...[
-            const SizedBox(height: 8),
-            DonyButton(
-              label: l.bidListPayByCardButton,
-              variant: DonyButtonVariant.secondary,
-              onPressed: () {
-                context.pop();
-                _lastCashAcceptBidId = state.bidId;
-                context.read<BidAcceptanceBloc>().add(
-                  ace.BidAcceptWithCardRequested(state.bidId),
-                );
-              },
-            ),
-          ] else ...[
-            const SizedBox(height: 8),
-            DonyButton(
-              label: l.bidListAddCardButton,
-              variant: DonyButtonVariant.secondary,
-              onPressed: () async {
-                context.pop();
-                await context.push('/payments/commission-method');
-              },
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+  ) => showBidWalletInsufficientSheet(
+    context,
+    state,
+    acceptance: context.read<BidAcceptanceBloc>(),
+    onRetry: () => _lastCashAcceptBidId = state.bidId,
+  );
 
   Future<void> _showRejectDialog(BuildContext context, String bidId) async {
     final reason = await RejectReasonSheet.show(context);

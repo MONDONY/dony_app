@@ -438,6 +438,51 @@ void main() {
       act: (bloc) => bloc.add(BidListRequested('ann-001')),
       expect: () => [isA<BidLoading>(), isA<BidError>()],
     );
+
+    blocTest<BidBloc, BidState>(
+      'relecture silencieuse → [BidListLoaded] sans BidLoading',
+      build: () {
+        when(
+          () => mockRepo.getBidsForAnnouncement('ann-001'),
+        ).thenAnswer((_) async => [buildBid()]);
+        return buildBloc();
+      },
+      seed: () => BidListLoaded([buildBid(id: 'bid-old')]),
+      act: (bloc) => bloc.add(BidListRequested('ann-001', silent: true)),
+      expect: () => [
+        predicate<BidState>(
+          (s) => s is BidListLoaded && s.bids.single.id == buildBid().id,
+        ),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'relecture silencieuse en échec → rien, la dernière liste reste',
+      build: () {
+        when(
+          () => mockRepo.getBidsForAnnouncement(any()),
+        ).thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      seed: () => BidListLoaded([buildBid()]),
+      act: (bloc) => bloc.add(BidListRequested('ann-001', silent: true)),
+      expect: () => <BidState>[],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'relecture silencieuse sur un trajet supprimé → [BidNotFound]',
+      build: () {
+        when(() => mockRepo.getBidsForAnnouncement(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/announcements/x/bids'),
+            error: const NotFoundException(),
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidListRequested('ann-001', silent: true)),
+      expect: () => [isA<BidNotFound>()],
+    );
   });
 
   // ─── BidMyListRequested ──────────────────────────────────────────────────────

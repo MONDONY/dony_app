@@ -99,7 +99,7 @@ class TripDepartCubit extends Cubit<TripDepartState> {
       } catch (_) {
         // Drapeau de confort : au pire le bouton reste affiché.
       }
-      emit(const TripDepartState(departed: true));
+      _emitIfOpen(const TripDepartState(departed: true));
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.tripDepartureConfirmed,
@@ -107,7 +107,15 @@ class TripDepartCubit extends Cubit<TripDepartState> {
         ),
       );
     } catch (e) {
-      emit(TripDepartState(error: unwrapDioError(e)));
+      _emitIfOpen(TripDepartState(error: unwrapDioError(e)));
     }
+  }
+
+  /// L'écran (ou le sheet) qui fournit le cubit a pu se fermer pendant
+  /// l'appel : le départ est fait côté serveur et le drapeau local posé, il
+  /// n'y a plus personne à prévenir (un `emit` après `close` lève une
+  /// `StateError`).
+  void _emitIfOpen(TripDepartState next) {
+    if (!isClosed) emit(next);
   }
 }

@@ -57,6 +57,11 @@ class ArrivalInstructionsBottomSheet extends StatefulWidget {
           ? l.tripOwnerArrivalEditingTitle
           : l.tripOwnerMarkArrivedButton,
       subtitle: l.tripOwnerArrivalSubtitle,
+      // Deux étapes distinctes du parcours : marquer l'arrivée, puis
+      // corriger les instructions.
+      analyticsName: isEditing
+          ? 'trip-owner/arrival-instructions'
+          : 'trip-owner/mark-arrived',
       wrapper: (child) =>
           BlocProvider.value(value: announcementBloc, child: child),
       stickyBottom: ValueListenableBuilder<bool>(

@@ -119,5 +119,35 @@ void main() {
         verifyNever(() => accBloc.add(any()));
       },
     );
+
+    testWidgets('blocs passés explicitement : ils priment sur ceux du '
+        'contexte, pour chaque moyen de paiement', (tester) async {
+      await pumpProviders(tester);
+      final ownBids = MockBidBloc();
+      final ownAcceptance = MockBidAcceptanceBloc();
+      addTearDown(ownBids.close);
+      addTearDown(ownAcceptance.close);
+
+      for (final method in BidPaymentMethod.values) {
+        dispatchBidAccept(
+          capturedContext,
+          _makeBid(method),
+          bids: ownBids,
+          acceptance: ownAcceptance,
+        );
+      }
+
+      verify(
+        () => ownAcceptance.add(any(that: isA<ace.BidAcceptRequested>())),
+      ).called(1);
+      verify(
+        () => ownBids.add(any(that: isA<BidAcceptMobileMoneyRequested>())),
+      ).called(1);
+      verify(
+        () => ownBids.add(any(that: isA<BidAcceptRequested>())),
+      ).called(BidPaymentMethod.values.length - 2);
+      verifyNever(() => bidBloc.add(any()));
+      verifyNever(() => accBloc.add(any()));
+    });
   });
 }

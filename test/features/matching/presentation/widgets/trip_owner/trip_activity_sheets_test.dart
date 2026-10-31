@@ -1,0 +1,934 @@
+// Sheets de l'activité du trajet (Demandes, Colis) : contenu, réponse
+// depuis le sheet des demandes, filtre par statut des colis, retour de fiche
+// qui relit l'écran, liste des colis en échec (« Réessayer »), fermeture
+// seule, mesures (`bid_detail_tile_opened`,
+// `trip_parcels_viewed`, `trip_parcels_filtered`), nom du sheet, bouton du
+// pied à taille nominale en FR et EN à 360 dp × 1,3 ; bloc « Gain estimé »
+// en tête du sheet Colis (en ligne, en espèces, total).
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
+import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_sheets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+import 'trip_answer_harness.dart';
+
+const _summary = TripParcelsSummary(
+  count: 2,
+  totalKg: 6,
+  netAmount: 84,
+  currency: 'EUR',
+);
+
+Future<void> _settle(WidgetTester tester) async {
+  for (var i = 0; i < 10; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
+void main() {
+  late AnswerHarness h;
+
+  setUpAll(() async {
+    AnswerHarness.registerFallbacks();
+    await loadAppFonts();
+  });
+
+  setUp(() async {
+    h = AnswerHarness();
+    await h.setUp();
+  });
+
+  tearDown(() => h.tearDown());
+
+  /// Ouvre le sheet [activity] depuis le contexte de l'écran, sous ses blocs
+  /// et le scope de réponse. [bids] : colis de l'écran (`null` : liste en
+  /// chargement) ; [initialBids] : derniers colis connus passés à
+  /// l'ouverture.
+  Future<List<AnswerPushedRoute>> open(
+    WidgetTester tester,
+    TripActivity activity, {
+    AnnouncementModel? trip,
+    List<BidModel>? bids,
+    List<BidModel>? initialBids,
+    Locale locale = const Locale('fr'),
+    double textScale = 1,
+    Size size = const Size(400, 900),
+  }) async {
+    final t = trip ?? answerTrip(parcelsSummary: _summary);
+    final pushed = await h.pump(
+      tester,
+      trip: t,
+      bids: bids,
+      locale: locale,
+      textScale: textScale,
+      size: size,
+      body: (context) => TextButton(
+        onPressed: () =>
+            openTripActivitySheet(context, t, activity, bids: initialBids),
+        child: const Text('open-activity'),
+      ),
+    );
+    await tester.tap(find.text('open-activity'));
+    await _settle(tester);
+    return pushed;
+  }
+
+  Finder footer() => find.byKey(const Key('donyBottomSheetFooter'));
+  String? sheetName(WidgetTester tester, Finder f) =>
+      ModalRoute.of(tester.element(f))?.settings.name;
+
+  group('ouverture', () {
+    for (final activity in TripActivity.values) {
+      testWidgets('${activity.name} : nom du sheet et mesure d\'ouverture', (
+        tester,
+      ) async {
+        await open(tester, activity, bids: answerRequests(1));
+        final content = find.byKey(
+          Key('trip-activity-${activity.name}-content'),
+        );
+        expect(content, findsOneWidget);
+        expect(
+          sheetName(tester, content),
+          '/sheet/trip-owner/activity-${activity.name}',
+        );
+        verify(
+          () => h.backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+            'tile': activity.name,
+            'role': 'trip_owner',
+            'source': 'tile',
+          }),
+        ).called(1);
+      });
+    }
+  });
+
+  group('Demandes', () {
+    Finder accept(String id) => find.byKey(Key('trip-request-accept-$id'));
+
+    testWidgets('une ligne par demande, Refuser et Accepter sous chacune, '
+        'sans pied', (tester) async {
+      await open(
+        tester,
+        TripActivity.requests,
+        bids: [
+          ...answerRequests(3),
+          answerBid('a1', status: 'ACCEPTED'),
+        ],
+      );
+      expect(find.text('Demandes à traiter'), findsOneWidget);
+      for (final id in ['r1', 'r2', 'r3']) {
+        expect(find.byKey(Key('trip-activity-request-$id')), findsOneWidget);
+        expect(accept(id), findsOneWidget);
+        expect(find.byKey(Key('trip-request-reject-$id')), findsOneWidget);
+        // Boutons sous la ligne.
+        expect(
+          tester.getTopLeft(accept(id)).dy,
+          greaterThan(
+            tester
+                .getBottomLeft(find.byKey(Key('trip-activity-request-$id')))
+                .dy,
+          ),
+        );
+      }
+      expect(find.byKey(const Key('trip-activity-request-a1')), findsNothing);
+      expect(footer(), findsNothing);
+    });
+
+    testWidgets('accepter depuis le sheet : la ligne part, le sheet reste, '
+        'puis « Aucune demande » après la dernière', (tester) async {
+      await open(tester, TripActivity.requests, bids: answerRequests(2));
+      await tester.tap(accept('r1'));
+      await tester.pump();
+      await tester.pump();
+      expect((h.answerEvents.single as BidAcceptRequested).bidId, 'r1');
+      expect(tester.widget<DonyButton>(accept('r2')).onPressed, isNull);
+      h.answerStates.add(BidAccepted(answerBid('r1', status: 'ACCEPTED')));
+      await _settle(tester);
+      expect(find.byKey(const Key('trip-activity-request-r1')), findsNothing);
+      expect(find.byKey(const Key('trip-activity-request-r2')), findsOneWidget);
+      expect(h.screenEvents.single, isA<BidListRequested>());
+
+      await tester.tap(accept('r2'));
+      await tester.pump();
+      await tester.pump();
+      h.answerStates.add(BidAccepted(answerBid('r2', status: 'ACCEPTED')));
+      await _settle(tester);
+      // Trajet ouvert : la case Demandes reste, le sheet aussi.
+      expect(
+        find.text('Aucune demande à traiter pour le moment.'),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    // Message affiché au-dessus d'une feuille au premier plan
+    // (`DonySnackbar`, overlay racine), jamais dans le `Scaffold` de l'écran
+    // que le sheet recouvre.
+    Finder aboveSheet(String text) => find.descendant(
+      of: find.byWidgetPredicate((w) => '${w.runtimeType}' == '_ModalToast'),
+      matching: find.text(text),
+    );
+
+    testWidgets('succès depuis le sheet : « Demande acceptée ! » au-dessus '
+        'du sheet', (tester) async {
+      await open(tester, TripActivity.requests, bids: answerRequests(2));
+      await tester.tap(accept('r1'));
+      await tester.pump();
+      await tester.pump();
+      h.answerStates.add(BidAccepted(answerBid('r1', status: 'ACCEPTED')));
+      await tester.pump();
+      await tester.pump();
+      expect(aboveSheet('Demande acceptée !'), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('409 depuis le sheet : message au-dessus du sheet, liste '
+        'relue, la demande traitée ailleurs sort', (tester) async {
+      await open(tester, TripActivity.requests, bids: answerRequests(2));
+      await tester.tap(accept('r1'));
+      await tester.pump();
+      await tester.pump();
+      h.answerStates.add(
+        BidError(const ConflictException('x', code: 'bid-not-pending')),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.byWidgetPredicate((w) => '${w.runtimeType}' == '_ModalToast'),
+        findsOneWidget,
+      );
+      expect(find.byType(SnackBar), findsNothing);
+      expect((h.screenEvents.single as BidListRequested).silent, isTrue);
+      h.screenStates.add(BidListLoaded(answerRequests(2).sublist(1)));
+      await _settle(tester);
+      expect(find.byKey(const Key('trip-activity-request-r1')), findsNothing);
+      expect(find.byKey(const Key('trip-activity-request-r2')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('refus d\'espèces non définitif depuis le sheet : message '
+        'au-dessus du sheet', (tester) async {
+      await open(
+        tester,
+        TripActivity.requests,
+        bids: answerRequests(1, method: BidPaymentMethod.cash),
+      );
+      await tester.tap(accept('r1'));
+      await _settle(tester);
+      h.acceptanceStates.add(
+        acs.BidFailed(reason: acs.BidFailureReason.confirmFailed),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.byWidgetPredicate((w) => '${w.runtimeType}' == '_ModalToast'),
+        findsOneWidget,
+      );
+      expect(find.byType(SnackBar), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('liste relue pendant l\'ouverture : les lignes suivent', (
+      tester,
+    ) async {
+      await open(tester, TripActivity.requests, bids: answerRequests(1));
+      h.screenStates.add(BidListLoaded(answerRequests(3)));
+      await _settle(tester);
+      expect(find.byKey(const Key('trip-activity-request-r3')), findsOneWidget);
+      // Un rechargement garde les lignes.
+      h.screenStates.add(BidLoading());
+      await _settle(tester);
+      expect(find.byKey(const Key('trip-activity-request-r3')), findsOneWidget);
+    });
+
+    testWidgets('trajet parti, dernière demande traitée : le sheet se '
+        'ferme seul', (tester) async {
+      await open(
+        tester,
+        TripActivity.requests,
+        trip: answerTrip(status: 'IN_PROGRESS'),
+        bids: answerRequests(1),
+      );
+      expect(
+        find.byKey(const Key('trip-activity-requests-content')),
+        findsOneWidget,
+      );
+      h.screenStates.add(BidListLoaded(const []));
+      await _settle(tester);
+      expect(
+        find.byKey(const Key('trip-activity-requests-content')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('ligne touchée : sheet fermé, fiche du colis, relecture '
+        'silencieuse au retour', (tester) async {
+      final pushed = await open(
+        tester,
+        TripActivity.requests,
+        bids: answerRequests(1),
+      );
+      await tester.tap(find.byKey(const Key('trip-activity-request-r1')));
+      await _settle(tester);
+      expect(pushed.single.location, '/bids/r1');
+      expect(h.screenEvents, isEmpty);
+      await tester.tap(find.text('back'));
+      await _settle(tester);
+      expect(
+        find.byKey(const Key('trip-activity-requests-content')),
+        findsNothing,
+      );
+      expect((h.screenEvents.single as BidListRequested).silent, isTrue);
+      expect(
+        (h.annEvents.single as AnnouncementDetailRequested).silent,
+        isTrue,
+      );
+    });
+
+    testWidgets('liste pas chargée : le nombre servi par la liste des '
+        'trajets, sinon un indicateur', (tester) async {
+      await open(
+        tester,
+        TripActivity.requests,
+        trip: answerTrip(pendingBidCount: 2),
+      );
+      expect(find.text('2 demandes attendent votre réponse'), findsOneWidget);
+    });
+
+    testWidgets('liste pas chargée et compte inconnu : indicateur, jamais '
+        '« aucune »', (tester) async {
+      await open(tester, TripActivity.requests);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(
+        find.text('Aucune demande à traiter pour le moment.'),
+        findsNothing,
+      );
+    });
+
+    for (final count in [0, 2]) {
+      testWidgets(
+        'premier chargement en échec (compte $count) : « Réessayer », '
+        'jamais un indicateur sans fin',
+        (tester) async {
+          await open(
+            tester,
+            TripActivity.requests,
+            trip: answerTrip(pendingBidCount: count),
+          );
+          h.screenStates.add(BidError(const NetworkException('offline')));
+          await _settle(tester);
+          expect(
+            find.byKey(const Key('trip-activity-requests-load-error')),
+            findsOneWidget,
+          );
+          expect(find.byType(CircularProgressIndicator), findsNothing);
+          expect(
+            find.text('Aucune demande à traiter pour le moment.'),
+            findsNothing,
+          );
+          await tester.tap(find.text('Réessayer'));
+          await tester.pump();
+          final retry = h.screenEvents.single as BidListRequested;
+          expect(retry.announcementId, 'trip-1');
+          expect(retry.silent, isFalse);
+          h.screenStates.add(BidListLoaded(answerRequests(1)));
+          await _settle(tester);
+          expect(
+            find.byKey(const Key('trip-activity-request-r1')),
+            findsOneWidget,
+          );
+        },
+      );
+    }
+
+    testWidgets('anglais', (tester) async {
+      await open(
+        tester,
+        TripActivity.requests,
+        bids: const [],
+        locale: const Locale('en'),
+      );
+      expect(find.text('Requests to review'), findsOneWidget);
+      expect(find.text('No requests to review for now.'), findsOneWidget);
+    });
+  });
+
+  group('Colis', () {
+    final mixed = [
+      answerBid('a1', status: 'ACCEPTED', description: 'Article A'),
+      answerBid('t1', status: 'IN_TRANSIT', description: 'Article T'),
+      answerBid('a2', status: 'ACCEPTED', description: 'Article B'),
+      answerBid('d1', status: 'COMPLETED', description: 'Article D'),
+      answerBid('p1', description: 'Demande'),
+    ];
+    Finder row(String id) => find.byKey(Key('trip-activity-parcel-$id'));
+
+    testWidgets('résumé, puces dès deux statuts, une ligne par colis, '
+        'trip_parcels_viewed à l\'ouverture', (tester) async {
+      await open(tester, TripActivity.parcels, bids: mixed);
+      expect(find.text('Colis dans le trajet'), findsOneWidget);
+      expect(find.byKey(const Key('trip-parcels-summary')), findsOneWidget);
+      expect(find.byType(StatusChipsRow<String?>), findsOneWidget);
+      expect(find.text('Tous · 4'), findsOneWidget);
+      for (final id in ['a1', 't1', 'a2', 'd1']) {
+        expect(row(id), findsOneWidget);
+      }
+      expect(row('p1'), findsNothing);
+      verify(
+        () =>
+            h.backend.capture(AnalyticsEvents.tripParcelsViewed, {'count': 4}),
+      ).called(1);
+      // Une relecture n'en réémet pas.
+      h.screenStates.add(BidListLoaded(mixed));
+      await _settle(tester);
+      verifyNever(
+        () => h.backend.capture(AnalyticsEvents.tripParcelsViewed, any()),
+      );
+    });
+
+    testWidgets('filtre : seules les lignes du statut, résumé inchangé, '
+        'trip_parcels_filtered ; « Tous » revient', (tester) async {
+      await open(tester, TripActivity.parcels, bids: mixed);
+      final summaryBefore = tester
+          .widget<Text>(find.byKey(const Key('trip-parcels-summary')))
+          .textSpan!
+          .toPlainText();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(StatusChipsRow<String?>),
+          matching: find.textContaining('Accepté'),
+        ),
+      );
+      await _settle(tester);
+      expect(row('a1'), findsOneWidget);
+      expect(row('a2'), findsOneWidget);
+      expect(row('t1'), findsNothing);
+      expect(row('d1'), findsNothing);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('trip-parcels-summary')))
+            .textSpan!
+            .toPlainText(),
+        summaryBefore,
+      );
+      verify(
+        () => h.backend.capture(AnalyticsEvents.tripParcelsFiltered, {
+          'status': 'ACCEPTED',
+        }),
+      ).called(1);
+      await tester.tap(find.text('Tous · 4'));
+      await _settle(tester);
+      expect(row('t1'), findsOneWidget);
+      verify(
+        () => h.backend.capture(AnalyticsEvents.tripParcelsFiltered, {
+          'status': 'all',
+        }),
+      ).called(1);
+    });
+
+    testWidgets('statut filtré disparu de la liste relue : retour à « Tous »', (
+      tester,
+    ) async {
+      await open(tester, TripActivity.parcels, bids: mixed);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(StatusChipsRow<String?>),
+          matching: find.textContaining('En transit'),
+        ),
+      );
+      await _settle(tester);
+      expect(row('a1'), findsNothing);
+      h.screenStates.add(
+        BidListLoaded([
+          for (final b in mixed)
+            if (b.id != 't1') b,
+        ]),
+      );
+      await _settle(tester);
+      expect(row('a1'), findsOneWidget);
+      expect(row('d1'), findsOneWidget);
+    });
+
+    testWidgets('un seul statut : pas de puces', (tester) async {
+      await open(
+        tester,
+        TripActivity.parcels,
+        bids: [
+          answerBid('a1', status: 'ACCEPTED'),
+          answerBid('a2', status: 'ACCEPTED'),
+        ],
+      );
+      expect(find.byType(StatusChipsRow<String?>), findsNothing);
+      expect(row('a1'), findsOneWidget);
+    });
+
+    testWidgets('aucun colis : état vide, bouton du pied gardé', (
+      tester,
+    ) async {
+      await open(tester, TripActivity.parcels, bids: [answerBid('p1')]);
+      expect(
+        find.byKey(const Key('trip-activity-parcels-empty')),
+        findsOneWidget,
+      );
+      expect(find.text('Aucun colis embarqué'), findsOneWidget);
+      expect(
+        find.byKey(const Key('trip-activity-parcels-open-list')),
+        findsOneWidget,
+      );
+      verify(
+        () =>
+            h.backend.capture(AnalyticsEvents.tripParcelsViewed, {'count': 0}),
+      ).called(1);
+    });
+
+    testWidgets('liste pas chargée : indicateur, mesure à l\'arrivée de la '
+        'liste', (tester) async {
+      await open(tester, TripActivity.parcels);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      verifyNever(
+        () => h.backend.capture(AnalyticsEvents.tripParcelsViewed, any()),
+      );
+      h.screenStates.add(BidListLoaded(mixed));
+      await _settle(tester);
+      expect(row('a1'), findsOneWidget);
+      verify(
+        () =>
+            h.backend.capture(AnalyticsEvents.tripParcelsViewed, {'count': 4}),
+      ).called(1);
+    });
+
+    testWidgets('ligne : sheet fermé, fiche du colis, relecture au retour', (
+      tester,
+    ) async {
+      final pushed = await open(tester, TripActivity.parcels, bids: mixed);
+      await tester.tap(row('t1'));
+      await _settle(tester);
+      expect(pushed.single.location, '/bids/t1');
+      await tester.tap(find.text('back'));
+      await _settle(tester);
+      expect(
+        find.byKey(const Key('trip-activity-parcels-content')),
+        findsNothing,
+      );
+      expect((h.screenEvents.single as BidListRequested).silent, isTrue);
+    });
+
+    testWidgets('ligne : double appui, une seule fiche', (tester) async {
+      final pushed = await open(tester, TripActivity.parcels, bids: mixed);
+      await tester.tap(row('t1'));
+      await tester.tap(row('t1'), warnIfMissed: false);
+      await _settle(tester);
+      expect(pushed, hasLength(1));
+    });
+
+    testWidgets('« Ouvrir la liste des colis » : /announcements/:id/bids, '
+        'relecture au retour, double appui ignoré', (tester) async {
+      final pushed = await open(tester, TripActivity.parcels, bids: mixed);
+      final button = find.byKey(const Key('trip-activity-parcels-open-list'));
+      expect(find.descendant(of: footer(), matching: button), findsOneWidget);
+      await tester.tap(button);
+      await tester.tap(button, warnIfMissed: false);
+      await _settle(tester);
+      expect(pushed, hasLength(1));
+      expect(pushed.single.location, '/announcements/trip-1/bids');
+      expect(pushed.single.extra, {'title': 'Colis'});
+      expect(h.screenEvents, isEmpty);
+      await tester.tap(find.text('back'));
+      await _settle(tester);
+      expect((h.screenEvents.single as BidListRequested).silent, isTrue);
+      expect(h.annEvents.single, isA<AnnouncementDetailRequested>());
+    });
+
+    testWidgets('trajet retiré par l\'équipe pendant l\'ouverture : le sheet '
+        'se ferme seul', (tester) async {
+      await open(tester, TripActivity.parcels, bids: mixed);
+      h.annStates.add(
+        AnnouncementDetailLoaded(answerTrip(status: 'REMOVED_BY_ADMIN')),
+      );
+      await _settle(tester);
+      expect(
+        find.byKey(const Key('trip-activity-parcels-content')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('dix colis : une ligne par colis, résumé et puces sur les '
+        'dix', (tester) async {
+      final ten = [
+        for (var i = 0; i < 6; i++)
+          answerBid('t$i', status: 'IN_TRANSIT', description: 'Colis T$i'),
+        for (var i = 0; i < 4; i++)
+          answerBid('c$i', status: 'COMPLETED', description: 'Colis C$i'),
+      ];
+      await open(
+        tester,
+        TripActivity.parcels,
+        bids: ten,
+        size: const Size(400, 2400),
+      );
+      for (final b in ten) {
+        expect(row(b.id), findsOneWidget, reason: b.id);
+      }
+      expect(find.text('Tous · 10'), findsOneWidget);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('trip-parcels-summary')))
+            .textSpan!
+            .toPlainText(),
+        '6 colis en route  ·  4 livrés',
+      );
+    });
+
+    Finder loadError() =>
+        find.byKey(const Key('trip-activity-parcels-load-error'));
+
+    testWidgets('premier chargement en échec : « Réessayer », jamais '
+        '« aucun colis »', (tester) async {
+      await open(tester, TripActivity.parcels);
+      h.screenStates.add(BidError(const NetworkException('offline')));
+      await _settle(tester);
+      expect(loadError(), findsOneWidget);
+      expect(find.text('Erreur de chargement'), findsOneWidget);
+      expect(find.text('Réessayer'), findsOneWidget);
+      expect(find.text('Aucun colis embarqué'), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      // Le pied reste : la liste complète s'ouvre quand même.
+      expect(
+        find.byKey(const Key('trip-activity-parcels-open-list')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('« Réessayer » redemande la liste, puis la montre', (
+      tester,
+    ) async {
+      await open(tester, TripActivity.parcels);
+      h.screenStates.add(BidError(const NetworkException('offline')));
+      await _settle(tester);
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+      final retry = h.screenEvents.single as BidListRequested;
+      expect(retry.announcementId, 'trip-1');
+      // Rechargement visible : l'indicateur revient le temps de la réponse.
+      expect(retry.silent, isFalse);
+      h.screenStates.add(BidLoading());
+      await tester.pump();
+      expect(loadError(), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      h.screenStates.add(BidListLoaded(mixed));
+      await _settle(tester);
+      expect(row('a1'), findsOneWidget);
+      verify(
+        () =>
+            h.backend.capture(AnalyticsEvents.tripParcelsViewed, {'count': 4}),
+      ).called(1);
+    });
+
+    testWidgets('échec après une liste reçue : la liste reste', (tester) async {
+      await open(tester, TripActivity.parcels, bids: mixed);
+      h.screenStates.add(BidError(const NetworkException('offline')));
+      await _settle(tester);
+      expect(loadError(), findsNothing);
+      expect(row('a1'), findsOneWidget);
+      expect(find.text('Tous · 4'), findsOneWidget);
+    });
+
+    testWidgets('échec en anglais : « Try again »', (tester) async {
+      await open(tester, TripActivity.parcels, locale: const Locale('en'));
+      h.screenStates.add(BidError(const NetworkException('offline')));
+      await _settle(tester);
+      expect(find.text('Try again'), findsOneWidget);
+    });
+
+    for (final locale in const [Locale('fr'), Locale('en')]) {
+      testWidgets('échec à 360 dp × 1,3 (${locale.languageCode}) : rien ne '
+          'déborde', (tester) async {
+        await open(
+          tester,
+          TripActivity.parcels,
+          locale: locale,
+          textScale: 1.3,
+          size: const Size(360, 800),
+        );
+        h.screenStates.add(BidError(const NetworkException('offline')));
+        await _settle(tester);
+        expect(tester.takeException(), isNull);
+        expect(loadError(), findsOneWidget);
+      });
+    }
+
+    testWidgets('anglais', (tester) async {
+      await open(
+        tester,
+        TripActivity.parcels,
+        bids: mixed,
+        locale: const Locale('en'),
+      );
+      expect(find.text('Parcels on this trip'), findsOneWidget);
+      expect(find.text('All · 4'), findsOneWidget);
+      expect(find.text('Open parcel list'), findsOneWidget);
+    });
+  });
+
+  group('Colis : bloc « Gain estimé » en tête', () {
+    String amount(WidgetTester tester, String id) =>
+        tester.widget<Text>(find.byKey(Key('trip-gain-$id-amount'))).data!;
+    String eur(double v) => CurrencyFormatter.format(v, SupportedCurrency.eur);
+    final gainBlock = find.byKey(const Key('trip-activity-parcels-gain'));
+    final mixed = [
+      answerBid('t', status: 'IN_TRANSIT', net: 30),
+      answerBid(
+        'e',
+        status: 'HANDED_OVER',
+        method: BidPaymentMethod.cash,
+        net: 20,
+        gross: 22,
+      ),
+      // Pas encore récupéré : hors du gain.
+      answerBid('a', status: 'ACCEPTED', net: 50),
+    ];
+
+    testWidgets('« Gain estimé » au-dessus du résumé et des colis, le pied '
+        'reste celui de la liste', (tester) async {
+      await open(tester, TripActivity.parcels, trip: answerTrip(), bids: mixed);
+      expect(gainBlock, findsOneWidget);
+      expect(
+        find.descendant(of: gainBlock, matching: find.text('Gain estimé')),
+        findsOneWidget,
+      );
+      expect(
+        tester.getBottomLeft(gainBlock).dy,
+        lessThanOrEqualTo(
+          tester.getTopLeft(find.byKey(const Key('trip-parcels-summary'))).dy,
+        ),
+      );
+      expect(
+        tester.getBottomLeft(gainBlock).dy,
+        lessThanOrEqualTo(
+          tester.getTopLeft(find.byKey(const Key('trip-activity-parcel-t'))).dy,
+        ),
+      );
+      // Aucun bouton dans le bloc : le seul bouton est le pied de la liste.
+      expect(
+        find.descendant(of: gainBlock, matching: find.byType(DonyButton)),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('trip-activity-parcels-open-list')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('colis en ligne et en espèces : trois lignes', (tester) async {
+      await open(tester, TripActivity.parcels, trip: answerTrip(), bids: mixed);
+      expect(amount(tester, 'online'), eur(30));
+      expect(amount(tester, 'cash'), eur(20));
+      expect(
+        find.text(
+          '${eur(22)} à recevoir de l\'expéditeur en main propre, dont '
+          '${eur(2)} de frais de service avancés sur votre solde Yadony.',
+        ),
+        findsOneWidget,
+      );
+      expect(amount(tester, 'total'), eur(50));
+    });
+
+    testWidgets('espèces seulement : sans ligne « En ligne »', (tester) async {
+      await open(
+        tester,
+        TripActivity.parcels,
+        trip: answerTrip(),
+        bids: [mixed[1]],
+      );
+      expect(find.byKey(const Key('trip-gain-online')), findsNothing);
+      expect(amount(tester, 'cash'), eur(20));
+      expect(amount(tester, 'total'), eur(20));
+    });
+
+    testWidgets('liste pas chargée : la part en ligne vient du résumé du '
+        'détail, au-dessus de l\'indicateur', (tester) async {
+      await open(tester, TripActivity.parcels);
+      expect(amount(tester, 'online'), eur(84));
+      expect(find.byKey(const Key('trip-gain-cash')), findsNothing);
+      expect(amount(tester, 'total'), eur(84));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('sans gain : pas de bloc (colis acceptés seulement, aucun '
+        'colis, résumé à 0)', (tester) async {
+      await open(
+        tester,
+        TripActivity.parcels,
+        trip: answerTrip(),
+        bids: [mixed[2]],
+      );
+      expect(gainBlock, findsNothing);
+      expect(find.byKey(const Key('trip-activity-parcel-a')), findsOneWidget);
+    });
+
+    testWidgets('aucun colis, aucun gain : état vide sans bloc', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        TripActivity.parcels,
+        trip: answerTrip(),
+        bids: const [],
+      );
+      expect(gainBlock, findsNothing);
+      expect(
+        find.byKey(const Key('trip-activity-parcels-empty')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('liste relue pendant l\'ouverture : le détail suit, le bloc '
+        'apparaît', (tester) async {
+      await open(
+        tester,
+        TripActivity.parcels,
+        trip: answerTrip(),
+        bids: [mixed[2]],
+      );
+      expect(gainBlock, findsNothing);
+      h.screenStates.add(
+        BidListLoaded([...mixed, answerBid('d', status: 'COMPLETED', net: 10)]),
+      );
+      await _settle(tester);
+      expect(amount(tester, 'online'), eur(40));
+      expect(amount(tester, 'total'), eur(60));
+    });
+
+    testWidgets('trajet annulé sans colis pendant l\'ouverture : le sheet se '
+        'ferme seul', (tester) async {
+      await open(tester, TripActivity.parcels, bids: const []);
+      h.annStates.add(
+        AnnouncementDetailLoaded(answerTrip(status: 'CANCELLED')),
+      );
+      await _settle(tester);
+      expect(
+        find.byKey(const Key('trip-activity-parcels-content')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('trajet annulé après remise : le sheet reste, le gain aussi', (
+      tester,
+    ) async {
+      await open(tester, TripActivity.parcels, trip: answerTrip(), bids: mixed);
+      h.annStates.add(
+        AnnouncementDetailLoaded(answerTrip(status: 'CANCELLED')),
+      );
+      await _settle(tester);
+      expect(
+        find.byKey(const Key('trip-activity-parcels-content')),
+        findsOneWidget,
+      );
+      expect(amount(tester, 'total'), eur(50));
+    });
+
+    for (final (locale, title) in const [
+      (Locale('fr'), 'Gain estimé'),
+      (Locale('en'), 'Estimated earnings'),
+    ]) {
+      testWidgets('${locale.languageCode} à 360 dp × 1,3 : titre, trois '
+          'lignes, aucune exception', (tester) async {
+        await open(
+          tester,
+          TripActivity.parcels,
+          trip: answerTrip(),
+          bids: mixed,
+          locale: locale,
+          textScale: 1.3,
+          size: const Size(360, 800),
+        );
+        expect(tester.takeException(), isNull);
+        expect(
+          find.descendant(of: gainBlock, matching: find.text(title)),
+          findsOneWidget,
+        );
+        for (final id in const ['online', 'cash', 'total']) {
+          expect(find.byKey(Key('trip-gain-$id')), findsOneWidget);
+        }
+      });
+    }
+  });
+
+  group('360 dp × 1,3, vraies polices', () {
+    for (final (locale, label) in [
+      (const Locale('fr'), 'Ouvrir la liste des colis'),
+      (const Locale('en'), 'Open parcel list'),
+    ]) {
+      testWidgets('${locale.languageCode} : pied à taille nominale, sheets '
+          'sans exception', (tester) async {
+        await open(
+          tester,
+          TripActivity.parcels,
+          bids: [
+            for (var i = 0; i < 10; i++)
+              answerBid(
+                'p$i',
+                status: i.isEven ? 'IN_TRANSIT' : 'ACCEPTED',
+                description: 'Vêtements, chaussures et produits de beauté',
+              ),
+          ],
+          locale: locale,
+          textScale: 1.3,
+          size: const Size(360, 800),
+        );
+        expect(tester.takeException(), isNull);
+        final text = find.text(label);
+        final fitted = find.ancestor(
+          of: text,
+          matching: find.byType(FittedBox),
+        );
+        expect(
+          tester.getSize(fitted.first).width / tester.getSize(text).width,
+          closeTo(1, 0.01),
+        );
+      });
+
+      testWidgets('${locale.languageCode} : demandes, Refuser et Accepter à '
+          'taille nominale', (tester) async {
+        await open(
+          tester,
+          TripActivity.requests,
+          bids: answerRequests(3),
+          locale: locale,
+          textScale: 1.3,
+          size: const Size(360, 800),
+        );
+        expect(tester.takeException(), isNull);
+        final text = find
+            .descendant(
+              of: find.byKey(const Key('trip-request-accept-r1')),
+              matching: find.byType(Text),
+            )
+            .first;
+        final fitted = find.ancestor(
+          of: text,
+          matching: find.byType(FittedBox),
+        );
+        expect(
+          tester.getSize(fitted.first).width / tester.getSize(text).width,
+          closeTo(1, 0.01),
+        );
+      });
+    }
+  });
+}

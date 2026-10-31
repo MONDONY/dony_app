@@ -21,7 +21,8 @@ String tripSeriesErrorText(BuildContext context, String? code) {
 
 /// Calendrier du trajet récurrent puis, si des trajets ont été créés, offre
 /// d'en faire un modèle. Le cubit appartient à l'appelant (carte de l'écran
-/// de succès), qui reflète le résultat.
+/// de succès, menu ⋮ de l'écran du trajet), qui reflète le résultat et le
+/// ferme.
 abstract final class TripSeriesFlow {
   static Future<void> start(BuildContext context, TripSeriesCubit cubit) async {
     cubit.trackOpened();
@@ -29,6 +30,7 @@ abstract final class TripSeriesFlow {
     final created = await DonyBottomSheet.show<bool>(
       context,
       title: context.l10n.tripSeriesSheetTitle,
+      analyticsName: 'trip-series/calendar',
       subtitle: context.l10n.tripSeriesSheetSubtitle(
         a.departureCity,
         a.arrivalCity,
@@ -38,10 +40,27 @@ abstract final class TripSeriesFlow {
       child: const _SeriesBody(),
     );
     if (created != true || !context.mounted) return;
+    await _offerTemplate(context, cubit, canSkip: true);
+  }
+
+  /// Feuille du modèle seule, sans calendrier : « Enregistrer en modèle » du
+  /// menu ⋮ de l'écran du trajet. Le voyageur l'a demandée, donc pas de
+  /// « Non merci » (le geste de fermeture suffit).
+  static Future<void> saveTemplate(
+    BuildContext context,
+    TripSeriesCubit cubit,
+  ) => _offerTemplate(context, cubit, canSkip: false);
+
+  static Future<void> _offerTemplate(
+    BuildContext context,
+    TripSeriesCubit cubit, {
+    required bool canSkip,
+  }) async {
     final saved = await DonyBottomSheet.show<bool>(
       context,
+      analyticsName: 'trip-series/template',
       wrapper: (child) => BlocProvider.value(value: cubit, child: child),
-      stickyBottom: const _TemplateButtons(),
+      stickyBottom: _TemplateButtons(canSkip: canSkip),
       child: const _TemplateOffer(),
     );
     if (saved == true && context.mounted) {
@@ -214,46 +233,50 @@ class _TemplateOfferState extends State<_TemplateOffer> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.md,
-                  vertical: DonySpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.lg),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DonyIcon('check', size: 14, color: cs.primary),
-                    const SizedBox(width: DonySpacing.xs),
-                    Text(
-                      state.draft
-                          ? l10n.tripSeriesBadgeDrafts(created)
-                          : l10n.tripSeriesBadgePublished(created),
-                      key: const Key('trip-series-badge'),
-                      style: tt.labelLarge?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w700,
+            // Sans série (feuille ouverte seule, depuis le menu ⋮), pas de
+            // pastille « N trajets publiés ».
+            if (result != null) ...[
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.md,
+                    vertical: DonySpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(DonyRadius.lg),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DonyIcon('check', size: 14, color: cs.primary),
+                      const SizedBox(width: DonySpacing.xs),
+                      Text(
+                        state.draft
+                            ? l10n.tripSeriesBadgeDrafts(created)
+                            : l10n.tripSeriesBadgePublished(created),
+                        key: const Key('trip-series-badge'),
+                        style: tt.labelLarge?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (failed > 0) ...[
-              const SizedBox(height: DonySpacing.sm),
-              Text(
-                '${l10n.tripSeriesSomeFailed(failed)} '
-                '${tripSeriesErrorText(context, result!.failed.first.code)}',
-                key: const Key('trip-series-partial'),
-                textAlign: TextAlign.center,
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
+              if (failed > 0) ...[
+                const SizedBox(height: DonySpacing.sm),
+                Text(
+                  '${l10n.tripSeriesSomeFailed(failed)} '
+                  '${tripSeriesErrorText(context, result.failed.first.code)}',
+                  key: const Key('trip-series-partial'),
+                  textAlign: TextAlign.center,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+              const SizedBox(height: DonySpacing.lg),
             ],
-            const SizedBox(height: DonySpacing.lg),
             Center(
               child: Container(
                 width: 56,
@@ -302,7 +325,11 @@ class _TemplateOfferState extends State<_TemplateOffer> {
 }
 
 class _TemplateButtons extends StatelessWidget {
-  const _TemplateButtons();
+  const _TemplateButtons({required this.canSkip});
+
+  /// « Non merci » sous le bouton : offre faite après une série, pas
+  /// demandée.
+  final bool canSkip;
 
   @override
   Widget build(BuildContext context) {
@@ -323,13 +350,17 @@ class _TemplateButtons extends StatelessWidget {
                   ? null
                   : context.read<TripSeriesCubit>().saveTemplate,
             ),
-            const SizedBox(height: DonySpacing.xs),
-            DonyButton(
-              key: const Key('trip-template-skip'),
-              label: l10n.tripTemplateSkip,
-              variant: DonyButtonVariant.ghost,
-              onPressed: saving ? null : () => Navigator.of(context).pop(false),
-            ),
+            if (canSkip) ...[
+              const SizedBox(height: DonySpacing.xs),
+              DonyButton(
+                key: const Key('trip-template-skip'),
+                label: l10n.tripTemplateSkip,
+                variant: DonyButtonVariant.ghost,
+                onPressed: saving
+                    ? null
+                    : () => Navigator.of(context).pop(false),
+              ),
+            ],
           ],
         );
       },
