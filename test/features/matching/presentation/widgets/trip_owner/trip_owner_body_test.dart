@@ -26,7 +26,7 @@ import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_body.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart'
+import 'package:dony/features/matching/presentation/widgets/trip_parcel_rows.dart'
     show TripParcelRow;
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
@@ -915,7 +915,8 @@ void main() {
   });
 
   group('sheets ouverts depuis le corps', () {
-    testWidgets('« Voir les N demandes » : sheet des demandes', (tester) async {
+    testWidgets('« Voir les N demandes » : sheet des demandes, mesuré avec '
+        'source card', (tester) async {
       await pump(tester, trip: _trip(), bids: _requests(3));
       await tester.tap(key('trip-direct-request-see-all'));
       await settle(tester);
@@ -923,6 +924,21 @@ void main() {
       for (final id in ['r1', 'r2', 'r3']) {
         expect(key('trip-activity-request-$id'), findsOneWidget);
       }
+      // Distinct de la case Demandes (`source: tile`).
+      verify(
+        () => h.backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'requests',
+          'role': 'trip_owner',
+          'source': 'card',
+        }),
+      ).called(1);
+      verifyNever(
+        () => h.backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'requests',
+          'role': 'trip_owner',
+          'source': 'tile',
+        }),
+      );
     });
 
     for (final (activity, content) in const [

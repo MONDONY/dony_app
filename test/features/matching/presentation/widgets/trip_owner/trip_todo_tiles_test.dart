@@ -463,55 +463,27 @@ void main() {
       final l = lookupAppLocalizations(locale);
       test('${locale.languageCode} : libellés existants repris', () {
         expect(
-          tripTodoTitle(l, TripTodoTile.requests, cardReady: false),
-          l.tripTodoRequestsTitle,
-        );
-        expect(
-          tripTodoTitle(l, TripTodoTile.depart, cardReady: false),
+          tripTodoTitle(l, TripTodoRow.depart, cardReady: false),
           l.tripDepartButton,
         );
         expect(
-          tripTodoTitle(l, TripTodoTile.card, cardReady: true),
+          tripTodoTitle(l, TripTodoRow.card, cardReady: true),
           l.listingEnableCardOnTripButton,
         );
         expect(
-          tripTodoTitle(l, TripTodoTile.card, cardReady: false),
+          tripTodoTitle(l, TripTodoRow.card, cardReady: false),
           l.listingActivateCardPaymentsButton,
         );
         expect(
-          tripTodoSummary(
-            l,
-            TripTodoTile.requests,
-            pendingCount: 2,
-            cardReady: false,
-          ),
-          l.tripTodoRequestsSummary(2),
-        );
-        expect(
-          tripTodoSummary(
-            l,
-            TripTodoTile.depart,
-            pendingCount: 0,
-            cardReady: false,
-          ),
+          tripTodoSummary(l, TripTodoRow.depart, cardReady: false),
           l.tripTodoDepartSummary,
         );
         expect(
-          tripTodoSummary(
-            l,
-            TripTodoTile.card,
-            pendingCount: 0,
-            cardReady: true,
-          ),
+          tripTodoSummary(l, TripTodoRow.card, cardReady: true),
           l.tripTodoCardReadySummary,
         );
         expect(
-          tripTodoSummary(
-            l,
-            TripTodoTile.card,
-            pendingCount: 0,
-            cardReady: false,
-          ),
+          tripTodoSummary(l, TripTodoRow.card, cardReady: false),
           l.tripTodoCardActivateSummary,
         );
       });
@@ -526,12 +498,8 @@ void main() {
       );
     });
 
-    test('une icône par tuile', () {
-      expect(TripTodoTile.values.map(tripTodoIcon), [
-        'package',
-        'plane',
-        'credit-card',
-      ]);
+    test('une icône par ligne', () {
+      expect(TripTodoRow.values.map(tripTodoIcon), ['plane', 'credit-card']);
     });
   });
 

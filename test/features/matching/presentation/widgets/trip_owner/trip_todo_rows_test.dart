@@ -67,7 +67,7 @@ TripTodoLiveData _live({
 
 void main() {
   late AnswerHarness h;
-  late List<TripTodoTile> opened;
+  late List<TripTodoRow> opened;
   late TodoTileViewLog views;
 
   setUpAll(() async {
@@ -90,7 +90,7 @@ void main() {
     Locale locale = const Locale('fr'),
     double textScale = 1,
     Size size = const Size(400, 1000),
-    ValueChanged<TripTodoTile>? onOpen,
+    ValueChanged<TripTodoRow>? onOpen,
   }) => h
       .pump(
         tester,
@@ -107,12 +107,20 @@ void main() {
       )
       .then((_) {});
 
-  test('tripTodoRowTiles : jamais la tuile requests', () {
+  test('tripTodoRowsFor : jamais les demandes, une ligne par autre tuile', () {
     final withRequests = _live(cash: true, bids: [answerBid('r1')]);
     expect(withRequests.tiles, [TripTodoTile.requests, TripTodoTile.card]);
-    expect(tripTodoRowTiles(withRequests), [TripTodoTile.card]);
-    expect(tripTodoRowTiles(_live(bids: [answerBid('r1')])), isEmpty);
-    expect(tripTodoRowTiles(_live(depart: true)), [TripTodoTile.depart]);
+    expect(tripTodoRowsFor(withRequests), [TripTodoRow.card]);
+    expect(tripTodoRowsFor(_live(bids: [answerBid('r1')])), isEmpty);
+    expect(tripTodoRowsFor(_live(depart: true)), [TripTodoRow.depart]);
+    expect(tripTodoRowsOf(TripTodoTile.values), [
+      TripTodoRow.depart,
+      TripTodoRow.card,
+    ]);
+    expect(
+      [for (final row in TripTodoRow.values) row.tile],
+      [TripTodoTile.depart, TripTodoTile.card],
+    );
   });
 
   testWidgets('aucune ligne : rien', (tester) async {
@@ -133,7 +141,7 @@ void main() {
         .map((i) => i.name);
     expect(icons, containsAll(['plane', 'chevron-right']));
     await tester.tap(find.byKey(const Key('trip_owner-todo-depart')));
-    expect(opened, [TripTodoTile.depart]);
+    expect(opened, [TripTodoRow.depart]);
   });
 
   testWidgets('résumés et titres existants (tripTodoTitle/Summary)', (
@@ -143,13 +151,11 @@ void main() {
     final context = tester.element(find.byType(TripTodoRows));
     final l = context.l10n;
     expect(
-      find.text(tripTodoTitle(l, TripTodoTile.card, cardReady: true)),
+      find.text(tripTodoTitle(l, TripTodoRow.card, cardReady: true)),
       findsOneWidget,
     );
     expect(
-      find.text(
-        tripTodoSummary(l, TripTodoTile.card, pendingCount: 0, cardReady: true),
-      ),
+      find.text(tripTodoSummary(l, TripTodoRow.card, cardReady: true)),
       findsOneWidget,
     );
     expect(find.text('Ajouter la carte à ce trajet'), findsOneWidget);
@@ -161,7 +167,7 @@ void main() {
     await pumpRows(tester, _live(cash: true));
     expect(find.text('Activer les paiements par carte'), findsOneWidget);
     await tester.tap(find.byKey(const Key('trip_owner-todo-card')));
-    expect(opened, [TripTodoTile.card]);
+    expect(opened, [TripTodoRow.card]);
   });
 
   testWidgets('tap : openTripTodoSheet inchangé (sheet de la tuile)', (
@@ -178,7 +184,7 @@ void main() {
         return TripTodoRows(
           live: live,
           views: views,
-          onOpen: (tile) => openTripTodoSheet(screen, live.trip, tile),
+          onOpen: (row) => openTripTodoSheet(screen, live.trip, row),
         );
       },
     );

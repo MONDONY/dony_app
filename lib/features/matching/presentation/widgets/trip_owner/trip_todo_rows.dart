@@ -6,17 +6,15 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
-/// Tuiles « À traiter » rendues en lignes par [TripTodoRows] : toutes sauf
-/// [TripTodoTile.requests], que porte la carte de réponse directe
-/// (`TripDirectRequestCard`).
-List<TripTodoTile> tripTodoRowTiles(TripTodoLiveData live) => [
-  for (final tile in live.tiles)
-    if (tile != TripTodoTile.requests) tile,
-];
+/// Lignes « À traiter » de [live] rendues par [TripTodoRows]
+/// ([tripTodoRowsOf] : toutes les tuiles sauf les demandes, que porte la
+/// carte de réponse directe `TripDirectRequestCard`).
+List<TripTodoRow> tripTodoRowsFor(TripTodoLiveData live) =>
+    tripTodoRowsOf(live.tiles);
 
 /// « Autres choses à traiter » de l'écran du trajet vu par son voyageur
-/// (« Je pars », « Ajouter la carte ») : une seule carte, une ligne par tuile
-/// ([tripTodoRowTiles]) avec son icône en pastille, son titre et son résumé
+/// (« Je pars », « Ajouter la carte ») : une seule carte, une ligne par geste
+/// ([tripTodoRowsFor]) avec son icône en pastille, son titre et son résumé
 /// ([tripTodoTitle], [tripTodoSummary]), puis un chevron. Un tap appelle
 /// [onOpen], qui ouvre le sheet de la tuile (`openTripTodoSheet`) avec le
 /// contexte du corps.
@@ -35,15 +33,15 @@ class TripTodoRows extends StatelessWidget {
 
   final TripTodoLiveData live;
   final TodoTileViewLog views;
-  final ValueChanged<TripTodoTile> onOpen;
+  final ValueChanged<TripTodoRow> onOpen;
 
   @override
   Widget build(BuildContext context) {
-    final tiles = tripTodoRowTiles(live);
-    if (tiles.isEmpty) return const SizedBox.shrink();
+    final rows = tripTodoRowsFor(live);
+    if (rows.isEmpty) return const SizedBox.shrink();
     views.logAll(context, live.trip.id, [
-      for (final tile in tiles)
-        tripTodoShown(tile, live.trip, pendingCount: live.pendingCount),
+      for (final row in rows)
+        tripTodoShown(row.tile, live.trip, pendingCount: live.pendingCount),
     ]);
     final cs = Theme.of(context).colorScheme;
     final radius = BorderRadius.circular(DonyRadius.card);
@@ -60,9 +58,9 @@ class TripTodoRows extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final (i, tile) in tiles.indexed) ...[
+            for (final (i, row) in rows.indexed) ...[
               if (i > 0) Divider(height: 1, color: cs.outline),
-              _TodoRow(live: live, tile: tile, onTap: () => onOpen(tile)),
+              _TodoRow(live: live, row: row, onTap: () => onOpen(row)),
             ],
           ],
         ),
@@ -72,10 +70,10 @@ class TripTodoRows extends StatelessWidget {
 }
 
 class _TodoRow extends StatelessWidget {
-  const _TodoRow({required this.live, required this.tile, required this.onTap});
+  const _TodoRow({required this.live, required this.row, required this.onTap});
 
   final TripTodoLiveData live;
-  final TripTodoTile tile;
+  final TripTodoRow row;
   final VoidCallback onTap;
 
   @override
@@ -83,19 +81,14 @@ class _TodoRow extends StatelessWidget {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final title = tripTodoTitle(l, tile, cardReady: live.cardReady);
-    final summary = tripTodoSummary(
-      l,
-      tile,
-      pendingCount: live.pendingCount,
-      cardReady: live.cardReady,
-    );
+    final title = tripTodoTitle(l, row, cardReady: live.cardReady);
+    final summary = tripTodoSummary(l, row, cardReady: live.cardReady);
     return Semantics(
       button: true,
       label: '$title. $summary',
       excludeSemantics: true,
       child: InkWell(
-        key: Key('trip_owner-todo-${tile.name}'),
+        key: Key('trip_owner-todo-${row.name}'),
         onTap: onTap,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 56),
@@ -107,7 +100,7 @@ class _TodoRow extends StatelessWidget {
             child: Row(
               children: [
                 DonyIconContainer(
-                  iconAsset: tripTodoIcon(tile),
+                  iconAsset: tripTodoIcon(row),
                   size: DonyIconContainerSize.sm,
                 ),
                 const SizedBox(width: DonySpacing.md),

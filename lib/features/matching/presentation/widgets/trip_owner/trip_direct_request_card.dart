@@ -3,7 +3,6 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
@@ -12,28 +11,14 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_parcel_rows.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
-/// Contenu d'une demande, tel que la liste des colis du trajet le montre :
-/// catégories déclarées, sinon description, sinon « Colis » (une valeur
-/// vide du back ne laisse jamais la ligne sans titre).
-String tripRequestContent(AppLocalizations l, BidModel bid) {
-  final category = bid.contentCategory;
-  final categories = category == null
-      ? ''
-      : contentCategoriesDisplayName(l, category);
-  final description = bid.description?.trim() ?? '';
-  return categories.isNotEmpty
-      ? categories
-      : description.isNotEmpty
-      ? description
-      : l.tripOwnerParcelsDefaultContent;
-}
-
-/// « contenu · poids » d'une demande (poids omis s'il n'est pas connu).
+/// « contenu · poids » d'une demande ([tripParcelContent], comme la ligne
+/// d'un colis du sheet « Colis ») ; poids omis s'il n'est pas connu.
 String tripRequestDetails(AppLocalizations l, BidModel bid) {
-  final content = tripRequestContent(l, bid);
+  final content = tripParcelContent(l, bid);
   final w = bid.displayWeightKg;
   if (w == null) return content;
   return '$content · ${w.toStringAsFixed(w % 1 == 0 ? 0 : 1)} kg';

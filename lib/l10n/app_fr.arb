@@ -9144,43 +9144,43 @@
   },
   "tripOwnerParcelsStatusAccepted": "Accepté",
   "@tripOwnerParcelsStatusAccepted": {
-    "description": "Statut compact de la section colis embarqués (trip_parcels_section.dart tripParcelStatusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté."
+    "description": "Statut compact de la section colis embarqués (trip_parcel_rows.dart tripParcelStatusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté."
   },
   "tripOwnerParcelsStatusAwaitingPayment": "Paiement en attente",
   "@tripOwnerParcelsStatusAwaitingPayment": {
-    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusHandedOver": "Remis",
   "@tripOwnerParcelsStatusHandedOver": {
-    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusInTransit": "En transit",
   "@tripOwnerParcelsStatusInTransit": {
-    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusArrived": "Arrivé",
   "@tripOwnerParcelsStatusArrived": {
-    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusDelivered": "Livré",
   "@tripOwnerParcelsStatusDelivered": {
-    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusNoShow": "Absent",
   "@tripOwnerParcelsStatusNoShow": {
-    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusParcelRefused": "Refusé",
   "@tripOwnerParcelsStatusParcelRefused": {
-    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta)."
   },
   "tripOwnerParcelsStatusCancelled": "Annulé",
   "@tripOwnerParcelsStatusCancelled": {
-    "description": "Statut compact (trip_parcels_section.dart tripParcelStatusMeta). Orthographe américaine (R38)."
+    "description": "Statut compact (trip_parcel_rows.dart tripParcelStatusMeta). Orthographe américaine (R38)."
   },
   "tripOwnerParcelsDefaultContent": "Colis",
   "@tripOwnerParcelsDefaultContent": {
-    "description": "Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcels_section.dart TripParcelRow)."
+    "description": "Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcel_rows.dart TripParcelRow)."
   },
   "tripOwnerArrivalEditingTitle": "Instructions de retrait",
   "@tripOwnerArrivalEditingTitle": {
@@ -20171,7 +20171,7 @@
   "requestPublicSenderRowSemantics": "Expéditeur : {name}. Voir son profil",
   "@requestPublicSenderRowSemantics": {"description": "Lecture d'écran de la ligne expéditeur en tête de la fiche publique d'une demande (request_sender_row.dart, FLUTTER-GF).", "placeholders": {"name": {"type": "String"}}},
   "tripParcelsSummaryInTransit": "{count, plural, =1{colis en route} other{colis en route}}",
-  "@tripParcelsSummaryInTransit": {"description": "Segment du résumé de la section Colis du trajet (trip_parcels_section.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.", "placeholders": {"count": {"type": "int"}}},
+  "@tripParcelsSummaryInTransit": {"description": "Segment du résumé de la section Colis du trajet (trip_parcel_rows.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.", "placeholders": {"count": {"type": "int"}}},
   "tripParcelsSummaryToCollect": "{count, plural, =1{à récupérer} other{à récupérer}}",
   "@tripParcelsSummaryToCollect": {"description": "Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis acceptés pas encore remis au voyageur (ACCEPTED). Le chiffre est affiché à part.", "placeholders": {"count": {"type": "int"}}},
   "tripParcelsSummaryArrived": "{count, plural, =1{arrivé} other{arrivés}}",

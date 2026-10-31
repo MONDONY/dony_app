@@ -5,7 +5,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_parcel_rows.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 

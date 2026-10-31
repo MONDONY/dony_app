@@ -6,7 +6,7 @@
 // `trip_owner/trip_activity_sheets_test.dart`.
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_parcel_rows.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -77,6 +77,32 @@ void main() {
       expect(find.text('Documents'), findsOneWidget);
       expect(find.text('Aïssa Camara · 3 kg'), findsOneWidget);
       expect(find.text('Accepté'), findsOneWidget);
+    });
+
+    testWidgets('contenu : même règle que la carte de réponse directe '
+        '(description, sinon « Colis » ; jamais une ligne vide)', (
+      tester,
+    ) async {
+      BidModel bid(String id, {String? description}) => BidModel(
+        id: id,
+        announcementId: 'ann-1',
+        senderId: 'sender-1',
+        senderName: 'Moussa Traoré',
+        weightKg: 3,
+        description: description,
+        status: 'ACCEPTED',
+        createdAt: DateTime(2026, 5),
+        updatedAt: DateTime(2026, 5),
+      );
+      await _pump(
+        tester,
+        _rows([bid('d', description: 'Livres'), bid('e', description: '  ')]),
+      );
+      expect(find.text('Livres'), findsOneWidget);
+      expect(find.text('Colis'), findsOneWidget);
+      final l = lookupAppLocalizations(const Locale('fr'));
+      expect(tripParcelContent(l, bid('x')), 'Colis');
+      expect(tripParcelContent(l, bid('y', description: ' Livres ')), 'Livres');
     });
 
     testWidgets('tap : la ligne appelle son action', (tester) async {

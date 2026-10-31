@@ -14,24 +14,37 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/close_sheet_when_resolved.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_gain_content.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_row.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_direct_request_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_summary_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_parcel_rows.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// D'où s'ouvre un sheet « Activité du trajet » : valeur `source` de
+/// `bid_detail_tile_opened`. Ne pas renommer sans migrer PostHog.
+enum TripActivitySource {
+  /// Case des compteurs (`TripActivityRow`).
+  tile,
+
+  /// Lien « Voir les N demandes » de la carte de réponse directe
+  /// (`TripDirectRequestCard`), qui ouvre le sheet des demandes.
+  card,
+}
+
 /// Ouvre le bottom sheet de la case « Activité du trajet » [activity] du
 /// trajet [trip] (écran du trajet, vue du voyageur propriétaire) et compte
-/// l'ouverture (`bid_detail_tile_opened`, `role: trip_owner`, `source:
-/// tile`). Nom du sheet : `trip-owner/activity-` suivi du nom de [activity].
+/// l'ouverture (`bid_detail_tile_opened`, `role: trip_owner`, `source` :
+/// [source], `tile` pour une case, `card` pour le lien de la carte de
+/// réponse directe). Nom du sheet : `trip-owner/activity-` suivi du nom de
+/// [activity].
 ///
 /// Comme les sheets « À traiter » (`openTripTodoSheet`) : le sheet s'ouvre
 /// sur le navigateur racine, les blocs de l'écran trouvés sous [context]
@@ -61,6 +74,7 @@ Future<void> openTripActivitySheet(
   AnnouncementModel trip,
   TripActivity activity, {
   List<BidModel>? bids,
+  TripActivitySource source = TripActivitySource.tile,
 }) {
   final blocs = TripTodoBlocs.of(context);
   final answer = TripBidAnswerScope.maybeOf(context);
@@ -71,7 +85,7 @@ Future<void> openTripActivitySheet(
   logBidDetailTileOpened(
     tile: activity.name,
     role: 'trip_owner',
-    source: TodoSource.tile.name,
+    source: source.name,
   );
 
   Widget follow(Widget Function(BuildContext, TripTodoLiveData) builder) =>

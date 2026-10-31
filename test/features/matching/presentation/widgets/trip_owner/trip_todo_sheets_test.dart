@@ -217,7 +217,7 @@ void main() {
   Future<void> open(
     WidgetTester tester, {
     required AnnouncementModel trip,
-    required TripTodoTile tile,
+    required TripTodoRow tile,
     BidState? bidState,
     StripeAccountState stripe = _notReady,
     TripDepartState departState = const TripDepartState(),
@@ -246,7 +246,7 @@ void main() {
       initialState:
           bidState ??
           BidListLoaded(
-            tile == TripTodoTile.card ? _requestsOnlyBids : _pendingBids,
+            tile == TripTodoRow.card ? _requestsOnlyBids : _pendingBids,
           ),
     );
     whenListen(departCubit, departStates.stream, initialState: departState);
@@ -358,7 +358,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoTile.card,
+        tile: TripTodoRow.card,
         stripe: _ready,
       );
 
@@ -374,7 +374,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoTile.card,
+        tile: TripTodoRow.card,
         stripe: _ready,
       );
 
@@ -402,7 +402,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoTile.card,
+        tile: TripTodoRow.card,
         stripe: _ready,
       );
 
@@ -420,7 +420,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoTile.card,
+        tile: TripTodoRow.card,
         stripe: _ready,
       );
 
@@ -453,7 +453,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoTile.card,
+        tile: TripTodoRow.card,
         withBlocs: false,
       );
 
@@ -467,7 +467,7 @@ void main() {
     testWidgets('explication du partage de l\'avancée, « Je pars » au pied', (
       tester,
     ) async {
-      await open(tester, trip: _departTrip(), tile: TripTodoTile.depart);
+      await open(tester, trip: _departTrip(), tile: TripTodoRow.depart);
 
       expect(tester.takeException(), isNull);
       expect(find.text('Je pars'), findsWidgets);
@@ -483,7 +483,7 @@ void main() {
     });
 
     testWidgets('« Je pars » appelle TripDepartCubit.depart', (tester) async {
-      await open(tester, trip: _departTrip(), tile: TripTodoTile.depart);
+      await open(tester, trip: _departTrip(), tile: TripTodoRow.depart);
 
       await tester.tap(departButton());
       await tester.pump();
@@ -501,7 +501,7 @@ void main() {
       await open(
         tester,
         trip: _departTrip(),
-        tile: TripTodoTile.depart,
+        tile: TripTodoRow.depart,
         departState: const TripDepartState(loading: true),
         settle: false,
       );
@@ -514,7 +514,7 @@ void main() {
     testWidgets('départ confirmé : confirmation et fermeture du sheet', (
       tester,
     ) async {
-      await open(tester, trip: _departTrip(), tile: TripTodoTile.depart);
+      await open(tester, trip: _departTrip(), tile: TripTodoRow.depart);
 
       departStates.add(const TripDepartState(departed: true));
       await tester.pumpAndSettle();
@@ -529,7 +529,7 @@ void main() {
       await open(
         tester,
         trip: _departTrip(),
-        tile: TripTodoTile.depart,
+        tile: TripTodoRow.depart,
         withDepart: false,
       );
 
@@ -539,7 +539,7 @@ void main() {
 
     testWidgets('sheet fermé pendant le départ : le cubit de l\'écran reste '
         'ouvert, la réponse arrive sans plantage', (tester) async {
-      await open(tester, trip: _departTrip(), tile: TripTodoTile.depart);
+      await open(tester, trip: _departTrip(), tile: TripTodoRow.depart);
 
       departStates.add(const TripDepartState(loading: true));
       await tester.pump();
@@ -557,7 +557,7 @@ void main() {
     testWidgets('fenêtre de suivi refermée par le trajet relu : fermeture', (
       tester,
     ) async {
-      await open(tester, trip: _departTrip(), tile: TripTodoTile.depart);
+      await open(tester, trip: _departTrip(), tile: TripTodoRow.depart);
 
       annStates.add(AnnouncementDetailLoaded(_trip(parcelsSummary: _summary)));
       await tester.pumpAndSettle();
@@ -573,7 +573,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoTile.card,
+        tile: TripTodoRow.card,
         stripe: _ready,
       );
 
@@ -596,7 +596,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoTile.card,
+        tile: TripTodoRow.card,
         stripe: _ready,
       );
 
@@ -621,7 +621,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoTile.card,
+        tile: TripTodoRow.card,
         stripe: _ready,
       );
 
@@ -636,7 +636,7 @@ void main() {
     testWidgets('compte pas prêt : « Activer les paiements par carte »', (
       tester,
     ) async {
-      await open(tester, trip: _cashTrip(), tile: TripTodoTile.card);
+      await open(tester, trip: _cashTrip(), tile: TripTodoRow.card);
 
       expect(tester.takeException(), isNull);
       expect(
@@ -657,7 +657,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoTile.card,
+        tile: TripTodoRow.card,
         stripe: _ready,
       );
 
@@ -678,7 +678,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoTile.card,
+        tile: TripTodoRow.card,
         stripe: const StripeAccountInitial(),
         liveStripe: true,
       );
@@ -703,7 +703,7 @@ void main() {
     });
 
     testWidgets('trajet relu annulé : fermeture', (tester) async {
-      await open(tester, trip: _cashTrip(), tile: TripTodoTile.card);
+      await open(tester, trip: _cashTrip(), tile: TripTodoRow.card);
 
       annStates.add(AnnouncementDetailLoaded(_cashTrip(status: 'CANCELLED')));
       await tester.pumpAndSettle();
@@ -719,7 +719,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoTile.card,
+        tile: TripTodoRow.card,
         stripe: _ready,
       );
       expect(enableCard(), findsOneWidget);
@@ -733,13 +733,13 @@ void main() {
   });
 
   group('mesures', () {
-    for (final tile in [TripTodoTile.depart, TripTodoTile.card]) {
+    for (final tile in [TripTodoRow.depart, TripTodoRow.card]) {
       testWidgets('bid_detail_tile_opened ${tile.name}, role trip_owner', (
         tester,
       ) async {
         await open(
           tester,
-          trip: tile == TripTodoTile.depart ? _departTrip() : _cashTrip(),
+          trip: tile == TripTodoRow.depart ? _departTrip() : _cashTrip(),
           tile: tile,
         );
         verify(
@@ -773,7 +773,7 @@ void main() {
           <
             (
               String,
-              TripTodoTile,
+              TripTodoRow,
               AnnouncementModel,
               StripeAccountState,
               Finder Function(),
@@ -782,7 +782,7 @@ void main() {
           >[
             (
               'départ',
-              TripTodoTile.depart,
+              TripTodoRow.depart,
               _departTrip(),
               _notReady,
               departButton,
@@ -790,7 +790,7 @@ void main() {
             ),
             (
               'ajout de la carte',
-              TripTodoTile.card,
+              TripTodoRow.card,
               _cashTrip(),
               _ready,
               enableCard,
@@ -798,7 +798,7 @@ void main() {
             ),
             (
               'activation de la carte',
-              TripTodoTile.card,
+              TripTodoRow.card,
               _cashTrip(),
               _notReady,
               activateCard,

@@ -20,7 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Ouvre le bottom sheet de la tuile « À traiter » [tile] du trajet [trip]
+/// Ouvre le bottom sheet de la ligne « À traiter » [row] du trajet [trip]
 /// (écran du trajet, vue du voyageur propriétaire) et compte l'ouverture
 /// (`bid_detail_tile_opened`, `role: trip_owner`, `source: tile`).
 ///
@@ -29,7 +29,7 @@ import 'package:go_router/go_router.dart';
 /// (`BlocProvider.value`) quand [context] les fournit ([TripTodoBlocs]) :
 /// `AnnouncementBloc` (trajet relu), `BidBloc` (colis du trajet),
 /// `StripeAccountBloc` (compte de paiement par carte) et `TripDepartCubit`
-/// (« Je pars »). La tuile [TripTodoTile.depart] exige le `TripDepartCubit`
+/// (« Je pars »). La ligne [TripTodoRow.depart] exige le `TripDepartCubit`
 /// de l'écran, celui dont la section « À traiter » lit `departed` : le sheet
 /// n'en crée jamais (un cubit propre au sheet serait fermé au glissement du
 /// sheet, réponse du départ encore en vol).
@@ -39,14 +39,15 @@ import 'package:go_router/go_router.dart';
 /// si le `BidBloc` est en plein rechargement à l'ouverture. Le bouton vit
 /// dans le `stickyBottom`.
 ///
-/// Tuiles concernées : [TripTodoTile.depart] et [TripTodoTile.card], rendues
-/// en lignes par `TripTodoRows`. [TripTodoTile.requests] n'y passe jamais
-/// (carte de réponse directe `TripDirectRequestCard`, sheet d'activité
-/// `openTripActivitySheet`).
+/// Lignes concernées ([TripTodoRow], rendues par `TripTodoRows`) : « Je
+/// pars » et « Ajouter la carte ». Les demandes à traiter n'ont pas de
+/// ligne : la carte de réponse directe (`TripDirectRequestCard`) et le sheet
+/// d'activité (`openTripActivitySheet`) les portent.
 ///
-/// Le sheet se ferme seul dès que les données relues ne justifient plus
-/// [tile] ([tripTodoTilesFor]) : départ confirmé, carte ajoutée. Une confirmation ou une erreur ouverte par-dessus n'est
-/// jamais refermée à sa place.
+/// Le sheet se ferme seul dès que les données relues ne justifient plus la
+/// tuile de [row] ([tripTodoTilesFor]) : départ confirmé, carte ajoutée. Une
+/// confirmation ou une erreur ouverte par-dessus n'est jamais refermée à sa
+/// place.
 ///
 /// Les boutons qui mènent à un autre écran ferment d'abord le sheet, puis
 /// poussent la route depuis [context] (l'écran, jamais la tuile qui peut
@@ -54,24 +55,18 @@ import 'package:go_router/go_router.dart';
 Future<void> openTripTodoSheet(
   BuildContext context,
   AnnouncementModel trip,
-  TripTodoTile tile, {
+  TripTodoRow row, {
   List<BidModel>? bids,
 }) {
-  // Les demandes à traiter ne passent jamais par ce sheet : la carte de
-  // réponse directe et le sheet d'activité « Demandes » les portent.
-  assert(
-    tile != TripTodoTile.requests,
-    'requests: TripDirectRequestCard / openTripActivitySheet',
-  );
   final blocs = TripTodoBlocs.of(context);
-  // La tuile « Je pars » se calcule avec le TripDepartCubit de l'écran : il
+  // La ligne « Je pars » se calcule avec le TripDepartCubit de l'écran : il
   // doit être fourni au-dessus de [context].
   assert(
-    tile != TripTodoTile.depart || blocs.depart != null,
+    row != TripTodoRow.depart || blocs.depart != null,
     'TripDepartCubit missing above context',
   );
   logBidDetailTileOpened(
-    tile: tile.name,
+    tile: row.name,
     role: 'trip_owner',
     source: TodoSource.tile.name,
   );
@@ -90,10 +85,10 @@ Future<void> openTripTodoSheet(
     // suit les données comme le corps et le bouton.
     titleWidget: follow(
       (sheetContext, live) => Text(
-        tripTodoTitle(sheetContext.l10n, tile, cardReady: live.cardReady),
+        tripTodoTitle(sheetContext.l10n, row, cardReady: live.cardReady),
       ),
     ),
-    analyticsName: 'trip-owner/todo-${tile.name}',
+    analyticsName: 'trip-owner/todo-${row.name}',
     wrapper: (content) {
       final providers = [
         if (blocs.announcement case final b?)
@@ -110,12 +105,12 @@ Future<void> openTripTodoSheet(
     },
     stickyBottom: follow(
       (sheetContext, live) =>
-          _TripTodoFooter(tile: tile, live: live, screenContext: context),
+          _TripTodoFooter(row: row, live: live, screenContext: context),
     ),
     child: follow(
       (sheetContext, live) => CloseTripSheetWhenGone(
-        gone: !live.tiles.contains(tile),
-        child: _TripTodoContent(tile: tile, live: live),
+        gone: !live.tiles.contains(row.tile),
+        child: _TripTodoContent(row: row, live: live),
       ),
     ),
   );
@@ -123,9 +118,9 @@ Future<void> openTripTodoSheet(
 
 /// Contenu du sheet, sur les données courantes.
 class _TripTodoContent extends StatelessWidget {
-  const _TripTodoContent({required this.tile, required this.live});
+  const _TripTodoContent({required this.row, required this.live});
 
-  final TripTodoTile tile;
+  final TripTodoRow row;
   final TripTodoLiveData live;
 
   @override
@@ -134,11 +129,8 @@ class _TripTodoContent extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: DonySpacing.base),
-      child: switch (tile) {
-        // Jamais ouvert ici : les demandes ont leur carte de réponse directe
-        // et leur sheet d'activité (`openTripActivitySheet`).
-        TripTodoTile.requests => const SizedBox.shrink(),
-        TripTodoTile.depart => Column(
+      child: switch (row) {
+        TripTodoRow.depart => Column(
           key: const Key('trip-todo-depart-content'),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -147,7 +139,7 @@ class _TripTodoContent extends StatelessWidget {
             const TrackingConsentExplainer(),
           ],
         ),
-        TripTodoTile.card => Text(
+        TripTodoRow.card => Text(
           live.cardReady
               ? l.listingCashOnlyCardReadyMessage
               : l.listingCashOnlyNudgeMessage,
@@ -164,22 +156,21 @@ class _TripTodoContent extends StatelessWidget {
 /// fermé.
 class _TripTodoFooter extends StatelessWidget {
   const _TripTodoFooter({
-    required this.tile,
+    required this.row,
     required this.live,
     required this.screenContext,
   });
 
-  final TripTodoTile tile;
+  final TripTodoRow row;
   final TripTodoLiveData live;
   final BuildContext screenContext;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    return switch (tile) {
-      TripTodoTile.requests => const SizedBox.shrink(),
-      TripTodoTile.depart => const TripDepartAction(),
-      TripTodoTile.card =>
+    return switch (row) {
+      TripTodoRow.depart => const TripDepartAction(),
+      TripTodoRow.card =>
         live.cardReady
             ? DonyButton(
                 key: const Key('enable-card-on-trip-cta'),

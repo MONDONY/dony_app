@@ -7,9 +7,10 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 
-/// Gestes qui attendent le voyageur sur l'écran de son trajet et prennent la
-/// forme d'une tuile dans la section « À traiter ». Chaque tuile ouvre un
-/// bottom sheet (`openTripTodoSheet`).
+/// Gestes qui attendent le voyageur sur l'écran de son trajet, dans la
+/// section « À traiter » : les demandes à traiter (carte de réponse directe)
+/// puis une ligne par autre geste ([TripTodoRow], chacune ouvrant son sheet
+/// `openTripTodoSheet`).
 ///
 /// Le nom sert de valeur `tile` aux mesures (`bid_detail_tile_opened`,
 /// `bid_detail_todo_tile_shown`, `role: trip_owner`) : ne pas le renommer
@@ -219,39 +220,62 @@ List<TripTodoTile> tripTodoTilesFor({
   ];
 }
 
-/// Icône de la tuile (`assets/icons/<nom>.svg`).
-String tripTodoIcon(TripTodoTile tile) => switch (tile) {
-  TripTodoTile.requests => 'package',
-  TripTodoTile.depart => 'plane',
-  TripTodoTile.card => 'credit-card',
+/// Lignes « À traiter » rendues sous la carte de réponse directe
+/// (`TripTodoRows`), chacune ouvrant son sheet (`openTripTodoSheet`) : les
+/// tuiles [tile] autres que [TripTodoTile.requests], que porte la carte de
+/// réponse directe (`TripDirectRequestCard`) et le sheet d'activité des
+/// demandes.
+///
+/// Le nom est celui de la tuile : valeur `tile` des mesures et nom du sheet
+/// (`trip-owner/todo-<nom>`), à ne pas renommer sans migrer PostHog.
+enum TripTodoRow {
+  /// « Je pars » ([TripTodoTile.depart]).
+  depart(TripTodoTile.depart),
+
+  /// Ajouter la carte au trajet ([TripTodoTile.card]).
+  card(TripTodoTile.card);
+
+  const TripTodoRow(this.tile);
+
+  /// Tuile « À traiter » dont la ligne vient.
+  final TripTodoTile tile;
+}
+
+/// Lignes de [tiles] ([tripTodoTilesFor]), dans l'ordre de la section.
+List<TripTodoRow> tripTodoRowsOf(List<TripTodoTile> tiles) => [
+  for (final row in TripTodoRow.values)
+    if (tiles.contains(row.tile)) row,
+];
+
+/// Icône de la ligne (`assets/icons/<nom>.svg`).
+String tripTodoIcon(TripTodoRow row) => switch (row) {
+  TripTodoRow.depart => 'plane',
+  TripTodoRow.card => 'credit-card',
 };
 
-/// Titre de la tuile et de son sheet. [cardReady] : compte de paiement prêt
-/// ([tripCardPaymentsReady]), qui change le geste de la tuile [TripTodoTile.card].
+/// Titre de la ligne et de son sheet. [cardReady] : compte de paiement prêt
+/// ([tripCardPaymentsReady]), qui change le geste de la ligne
+/// [TripTodoRow.card].
 String tripTodoTitle(
   AppLocalizations l,
-  TripTodoTile tile, {
+  TripTodoRow row, {
   required bool cardReady,
-}) => switch (tile) {
-  TripTodoTile.requests => l.tripTodoRequestsTitle,
-  TripTodoTile.depart => l.tripDepartButton,
-  TripTodoTile.card =>
+}) => switch (row) {
+  TripTodoRow.depart => l.tripDepartButton,
+  TripTodoRow.card =>
     cardReady
         ? l.listingEnableCardOnTripButton
         : l.listingActivateCardPaymentsButton,
 };
 
-/// Résumé de la tuile : ce qui est attendu, en une ou deux lignes.
-/// [pendingCount] : [tripPendingRequestCount].
+/// Résumé de la ligne : ce qui est attendu, en une ou deux lignes.
 String tripTodoSummary(
   AppLocalizations l,
-  TripTodoTile tile, {
-  required int pendingCount,
+  TripTodoRow row, {
   required bool cardReady,
-}) => switch (tile) {
-  TripTodoTile.requests => l.tripTodoRequestsSummary(pendingCount),
-  TripTodoTile.depart => l.tripTodoDepartSummary,
-  TripTodoTile.card =>
+}) => switch (row) {
+  TripTodoRow.depart => l.tripTodoDepartSummary,
+  TripTodoRow.card =>
     cardReady ? l.tripTodoCardReadySummary : l.tripTodoCardActivateSummary,
 };
 

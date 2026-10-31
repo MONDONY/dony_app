@@ -4,7 +4,7 @@
 // estimé » ou « Résumé du trajet ») et quand la case Gain s'affiche sont
 // testés par `trip_activity_sheets_test.dart` et `trip_activity_row_test.dart`.
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_summary_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_gain_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';

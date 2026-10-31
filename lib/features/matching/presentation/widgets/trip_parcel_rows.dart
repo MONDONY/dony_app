@@ -8,8 +8,9 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 // Pièces des colis du trajet vu par son voyageur, reprises par le sheet
-// « Colis » de l'activité du trajet (`openTripActivitySheet`) : résumé par
-// étape du cycle, ligne d'un colis, ordre et libellés des statuts.
+// « Colis » de l'activité du trajet (`openTripActivitySheet`) et le compteur
+// Colis : colis embarqués, résumé par étape du cycle, contenu et ligne d'un
+// colis, ordre et libellés des statuts.
 
 /// Colis embarqués du trajet parmi [bids] (onglet « Acceptées » de la liste
 /// des colis, [isAcceptedTabBid]) : total et libellé du compteur Colis de
@@ -118,6 +119,23 @@ class TripParcelsSummary extends StatelessWidget {
   }
 }
 
+/// Contenu d'un colis ou d'une demande, tel que les listes du trajet le
+/// montrent (ligne du sheet « Colis », carte de réponse directe, sheet des
+/// demandes) : catégories déclarées, sinon description, sinon « Colis ». Une
+/// valeur vide du back ne laisse jamais la ligne sans titre.
+String tripParcelContent(AppLocalizations l, BidModel bid) {
+  final category = bid.contentCategory;
+  final categories = category == null
+      ? ''
+      : contentCategoriesDisplayName(l, category);
+  final description = bid.description?.trim() ?? '';
+  return categories.isNotEmpty
+      ? categories
+      : description.isNotEmpty
+      ? description
+      : l.tripOwnerParcelsDefaultContent;
+}
+
 /// Ligne compacte d'un colis embarqué : miniature optionnelle, contenu, poids,
 /// expéditeur et chip de statut. Tap → détail de l'offre (`/bids/:bidId`),
 /// colis et trajet relus au retour (`openTripParcel`), depuis le sheet
@@ -141,12 +159,7 @@ class TripParcelRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final content =
-        (bid.contentCategory != null
-            ? contentCategoriesDisplayName(context.l10n, bid.contentCategory!)
-            : null) ??
-        bid.description ??
-        context.l10n.tripOwnerParcelsDefaultContent;
+    final content = tripParcelContent(context.l10n, bid);
     final sender = bid.senderDisplayName(context.l10n);
     final weight = _weightLabel;
 

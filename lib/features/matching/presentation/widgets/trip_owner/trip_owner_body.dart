@@ -159,7 +159,7 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
     final direct =
         live.tiles.contains(TripTodoTile.requests) &&
         (tripRequestsToAnswer(bids, answered)?.isNotEmpty ?? false);
-    final rows = tripTodoRowTiles(live).isNotEmpty;
+    final rows = tripTodoRowsFor(live).isNotEmpty;
     final activity = tripActivityFor(
       trip: trip,
       bids: bids,
@@ -183,14 +183,18 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
                   trip: trip,
                   bids: bids,
                   views: _todoViews,
-                  onSeeAll: () => _openActivity(live, TripActivity.requests),
+                  onSeeAll: () => _openActivity(
+                    live,
+                    TripActivity.requests,
+                    source: TripActivitySource.card,
+                  ),
                 ),
               if (rows)
                 TripTodoRows(
                   live: live,
                   views: _todoViews,
-                  onOpen: (tile) => _open(
-                    () => openTripTodoSheet(context, trip, tile, bids: bids),
+                  onOpen: (row) => _open(
+                    () => openTripTodoSheet(context, trip, row, bids: bids),
                   ),
                 ),
             ],
@@ -256,9 +260,20 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
     unawaited(show().whenComplete(() => _opening = false));
   }
 
-  /// Sheet de la case [activity], sur les derniers colis connus.
-  void _openActivity(TripTodoLiveData live, TripActivity activity) => _open(
-    () => openTripActivitySheet(context, live.trip, activity, bids: live.bids),
+  /// Sheet de la case [activity], sur les derniers colis connus ;
+  /// [source] : case des compteurs, ou lien de la carte de réponse directe.
+  void _openActivity(
+    TripTodoLiveData live,
+    TripActivity activity, {
+    TripActivitySource source = TripActivitySource.tile,
+  }) => _open(
+    () => openTripActivitySheet(
+      context,
+      live.trip,
+      activity,
+      bids: live.bids,
+      source: source,
+    ),
   );
 
   /// Tuile « Votre trajet » : ouvre la feuille de lecture, avec son bouton

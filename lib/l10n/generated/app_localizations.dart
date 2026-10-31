@@ -14460,61 +14460,61 @@ abstract class AppLocalizations {
   /// **'Les colis acceptés apparaîtront ici.'**
   String get tripOwnerParcelsEmptyDescription;
 
-  /// Statut compact de la section colis embarqués (trip_parcels_section.dart tripParcelStatusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté.
+  /// Statut compact de la section colis embarqués (trip_parcel_rows.dart tripParcelStatusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté.
   ///
   /// In fr, this message translates to:
   /// **'Accepté'**
   String get tripOwnerParcelsStatusAccepted;
 
-  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
+  /// Statut compact (trip_parcel_rows.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Paiement en attente'**
   String get tripOwnerParcelsStatusAwaitingPayment;
 
-  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
+  /// Statut compact (trip_parcel_rows.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Remis'**
   String get tripOwnerParcelsStatusHandedOver;
 
-  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
+  /// Statut compact (trip_parcel_rows.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'En transit'**
   String get tripOwnerParcelsStatusInTransit;
 
-  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
+  /// Statut compact (trip_parcel_rows.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Arrivé'**
   String get tripOwnerParcelsStatusArrived;
 
-  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
+  /// Statut compact (trip_parcel_rows.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Livré'**
   String get tripOwnerParcelsStatusDelivered;
 
-  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
+  /// Statut compact (trip_parcel_rows.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Absent'**
   String get tripOwnerParcelsStatusNoShow;
 
-  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta).
+  /// Statut compact (trip_parcel_rows.dart tripParcelStatusMeta).
   ///
   /// In fr, this message translates to:
   /// **'Refusé'**
   String get tripOwnerParcelsStatusParcelRefused;
 
-  /// Statut compact (trip_parcels_section.dart tripParcelStatusMeta). Orthographe américaine (R38).
+  /// Statut compact (trip_parcel_rows.dart tripParcelStatusMeta). Orthographe américaine (R38).
   ///
   /// In fr, this message translates to:
   /// **'Annulé'**
   String get tripOwnerParcelsStatusCancelled;
 
-  /// Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcels_section.dart TripParcelRow).
+  /// Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcel_rows.dart TripParcelRow).
   ///
   /// In fr, this message translates to:
   /// **'Colis'**
@@ -29545,7 +29545,7 @@ abstract class AppLocalizations {
   /// **'Expéditeur : {name}. Voir son profil'**
   String requestPublicSenderRowSemantics(String name);
 
-  /// Segment du résumé de la section Colis du trajet (trip_parcels_section.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.
+  /// Segment du résumé de la section Colis du trajet (trip_parcel_rows.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =1{colis en route} other{colis en route}}'**

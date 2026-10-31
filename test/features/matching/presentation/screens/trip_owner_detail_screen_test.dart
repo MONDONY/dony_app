@@ -210,8 +210,8 @@ Future<void> _pump(
         path: '/profile/upgrade-to-pro',
         builder: (ctx, _) => const Scaffold(body: Text('UPGRADE_TO_PRO')),
       ),
-      // Demandes à traiter du trajet (carte Demandes, tuile « À traiter »,
-      // pied) : `back` revient à l'écran.
+      // Demandes à traiter du trajet (pied « Voir les demandes (N) ») :
+      // `back` revient à l'écran.
       GoRoute(
         path: '/demandes',
         builder: (ctx, state) => Scaffold(

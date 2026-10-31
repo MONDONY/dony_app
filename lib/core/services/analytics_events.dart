@@ -275,12 +275,13 @@ abstract final class AnalyticsEvents {
   static const packageRequestCreated = 'package_request_created';
   static const packageRequestUpdated = 'package_request_updated';
 
-  /// Brouillon publié (DRAFT → OPEN) depuis la grille d'actions propriétaire
-  /// de « Ma demande » (écran ou sheet).
+  /// Brouillon publié (DRAFT → OPEN) depuis le bouton « Publier » de la
+  /// barre fixe de « Ma demande » (écran ou sheet).
   static const packageRequestPublished = 'package_request_published';
 
   /// Demande retirée de la circulation sans l'annuler (OPEN → DRAFT), avant
-  /// la première offre — même origine que ci-dessus.
+  /// la première offre, depuis l'entrée « Dépublier » du menu « … » de « Ma
+  /// demande ».
   static const packageRequestUnpublished = 'package_request_unpublished';
 
   /// Partage texte de la demande depuis la barre fixe de « Ma demande ».
