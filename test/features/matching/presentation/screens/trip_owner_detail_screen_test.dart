@@ -28,12 +28,15 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_mobile_money_networks_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_actions.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
@@ -151,6 +154,7 @@ Future<void> _pump(
   required _MockCancellationBloc cancelBloc,
   required _MockAuthBloc authBloc,
   StripeAccountState? stripeState,
+  TripGroupCubit Function()? tripGroup,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1.0;
@@ -175,6 +179,10 @@ Future<void> _pump(
                   ? stubStripeAccountBloc()
                   : stubStripeAccountBloc(state: stripeState),
             ),
+            // Comme la route (`router.dart`) : provider paresseux, créé à
+            // sa première lecture, jamais un cubit déjà chargé.
+            if (tripGroup != null)
+              BlocProvider<TripGroupCubit>(create: (_) => tripGroup()),
           ],
           child: const TripOwnerDetailScreen(announcementId: 'ann-trip-001'),
         ),
@@ -1779,6 +1787,132 @@ void main() {
       await tester.tap(find.byKey(const Key('trip-activity-gain')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('trip-activity-gain-empty')), findsOneWidget);
+    });
+
+    group('voyage à étapes (FLUTTER-4D)', () {
+      final legs = TripLegsInfo.fromJson(const {
+        'tripGroupId': 'g',
+        'legCount': 3,
+        'legs': [
+          {'id': 'ann-trip-001', 'legIndex': 1, 'departureDate': '2026-07-01'},
+          {'id': 'leg-2', 'legIndex': 2, 'departureDate': '2026-07-03'},
+          {'id': 'leg-3', 'legIndex': 3, 'departureDate': '2026-07-05'},
+        ],
+      });
+
+      AnnouncementModel leg() => AnnouncementModel(
+        id: 'ann-trip-001',
+        travelerId: _ownerId,
+        departureCity: 'Paris',
+        arrivalCity: 'Casablanca',
+        departureDate: DateTime(2026, 7),
+        availableKg: 10,
+        totalKg: 23,
+        pricePerKg: 8,
+        status: 'ACTIVE',
+        bidsCount: 0,
+        tripGroupId: 'g',
+        createdAt: DateTime(2026, 6),
+        updatedAt: DateTime(2026, 6),
+      );
+
+      Future<void> deleteFromMenu(
+        WidgetTester tester,
+        TripGroupCubit Function() tripGroup, {
+        VoidCallback? beforeMenu,
+      }) async {
+        registerFallbackValue(AnnouncementDetailRequested('fallback'));
+        ownerOn(leg());
+        await _pump(
+          tester,
+          annBloc: annBloc,
+          bidBloc: bidBloc,
+          cancelBloc: cancelBloc,
+          authBloc: authBloc,
+          tripGroup: tripGroup,
+        );
+        await tester.pumpAndSettle();
+        beforeMenu?.call();
+        await tester.tap(menuButton);
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('trip-menu-delete')));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: find.byType(Dialog),
+            matching: find.text('Supprimer'),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('« Supprimer » sans avoir ouvert « Itinéraire et lieux » : '
+          'la question des étapes suivantes est posée', (tester) async {
+        final repo = _MockAnnouncementRepository();
+        when(() => repo.getTripLegs(any())).thenAnswer((_) async => legs);
+        await deleteFromMenu(
+          tester,
+          () => TripGroupCubit(repo)..load('ann-trip-001'),
+          // Étapes lues dès l'ouverture de l'écran, avant tout geste : ni
+          // le sheet Itinéraire ni « Supprimer » ne les ont demandées.
+          beforeMenu: () =>
+              verify(() => repo.getTripLegs('ann-trip-001')).called(1),
+        );
+
+        expect(
+          find.text('Annuler aussi les étapes suivantes ?'),
+          findsOneWidget,
+        );
+        await tester.tap(find.text('Annuler les suivantes'));
+        await tester.pumpAndSettle();
+        final event = verify(
+          () => annBloc.add(captureAny()),
+        ).captured.whereType<AnnouncementDeleteRequested>().single;
+        expect(event.followingLegIds, ['leg-2', 'leg-3']);
+      });
+
+      testWidgets('étapes encore en chargement : la question attend leur '
+          'réponse', (tester) async {
+        final repo = _MockAnnouncementRepository();
+        final answer = Completer<TripLegsInfo>();
+        when(() => repo.getTripLegs(any())).thenAnswer((_) => answer.future);
+        await deleteFromMenu(
+          tester,
+          () => TripGroupCubit(repo)..load('ann-trip-001'),
+        );
+
+        // Rien supprimé tant que les étapes ne sont pas connues.
+        expect(find.text('Annuler aussi les étapes suivantes ?'), findsNothing);
+        verifyNever(
+          () => annBloc.add(any(that: isA<AnnouncementDeleteRequested>())),
+        );
+        answer.complete(legs);
+        await tester.pumpAndSettle();
+        expect(
+          find.text('Annuler aussi les étapes suivantes ?'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('étapes qui ne répondent pas : suppression de cette étape '
+          'seule après l\'attente bornée', (tester) async {
+        final repo = _MockAnnouncementRepository();
+        when(
+          () => repo.getTripLegs(any()),
+        ).thenAnswer((_) => Completer<TripLegsInfo>().future);
+        await deleteFromMenu(
+          tester,
+          () => TripGroupCubit(repo)..load('ann-trip-001'),
+        );
+
+        await tester.pump(kTripLegsSettleTimeout);
+        await tester.pumpAndSettle();
+        expect(find.text('Annuler aussi les étapes suivantes ?'), findsNothing);
+        final event = verify(
+          () => annBloc.add(captureAny()),
+        ).captured.whereType<AnnouncementDeleteRequested>().single;
+        expect(event.followingLegIds, isEmpty);
+      });
     });
 
     testWidgets('détail en échec sans trajet : erreur et « Réessayer », '

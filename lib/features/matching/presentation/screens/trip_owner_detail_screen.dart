@@ -22,6 +22,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
@@ -110,6 +111,12 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   void initState() {
     super.initState();
     _current = widget.initial;
+    // Étapes du voyage (FLUTTER-4D) lues dès l'ouverture : le cubit de la
+    // route est paresseux, et la carte des étapes qui le créait a rejoint le
+    // sheet « Itinéraire et lieux ». Sans cette lecture, « Supprimer » ne
+    // proposait plus d'annuler les étapes suivantes tant que ce sheet
+    // n'avait pas été ouvert.
+    maybeRead<TripGroupCubit>(context);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final a = _current;
       if (mounted && a != null) {

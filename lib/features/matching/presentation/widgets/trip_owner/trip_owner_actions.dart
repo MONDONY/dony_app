@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -124,23 +127,32 @@ Future<void> openTripCancellation(
   handedOverParcels: tripHandedOverParcelCount(bids),
 );
 
+/// Attente bornée des étapes du voyage avant la question des étapes
+/// suivantes ([askCancelFollowingLegs]) : au-delà, la question se pose sur ce
+/// qui est connu.
+const kTripLegsSettleTimeout = Duration(seconds: 5);
+
 /// Voyage à plusieurs étapes (FLUTTER-4D) : avant d'annuler une étape,
 /// propose d'annuler aussi les suivantes encore ouvertes.
 ///
 /// Rend les identifiants à annuler en plus (vide : les garder), ou `null` si
 /// le voyageur a fermé la question sans choisir. Sans [TripGroupCubit] dans
 /// l'arbre, ou pour un trajet isolé, rend une liste vide sans rien demander.
+///
+/// Les étapes ne sont lues qu'une fois tranchées (`loaded` ou `hidden`) : un
+/// cubit pas encore chargé (créé à la volée, réseau lent) aurait encore
+/// l'état vide de départ, et la question serait sautée sans bruit (les étapes
+/// suivantes restaient publiées). Un cubit jamais chargé est lancé sur
+/// [announcementId] ; l'attente est bornée par [kTripLegsSettleTimeout].
 Future<List<String>?> askCancelFollowingLegs(
   BuildContext context,
   String announcementId,
 ) async {
-  TripGroupCubit? cubit;
-  try {
-    cubit = context.read<TripGroupCubit>();
-  } on ProviderNotFoundException {
-    cubit = null;
-  }
-  final following = cubit?.state.info.openLegsAfter(announcementId) ?? const [];
+  final cubit = maybeRead<TripGroupCubit>(context);
+  if (cubit == null) return const [];
+  final state = await _settledLegs(cubit, announcementId);
+  if (!context.mounted) return null;
+  final following = state.info.openLegsAfter(announcementId);
   if (following.isEmpty) return const [];
   final l = context.l10n;
   final cancelThem = await DonyDialog.show(
@@ -154,4 +166,28 @@ Future<List<String>?> askCancelFollowingLegs(
   );
   if (cancelThem == null) return null;
   return cancelThem ? following.map((leg) => leg.id).toList() : const [];
+}
+
+/// État des étapes de [cubit] une fois tranché, ou le dernier connu après
+/// [kTripLegsSettleTimeout] (ou si le cubit se ferme avant).
+Future<TripGroupState> _settledLegs(
+  TripGroupCubit cubit,
+  String announcementId,
+) async {
+  bool settled(TripGroupState s) =>
+      s.status == TripGroupStatus.loaded || s.status == TripGroupStatus.hidden;
+  if (settled(cubit.state)) return cubit.state;
+  if (cubit.state.status == TripGroupStatus.initial) {
+    unawaited(cubit.load(announcementId));
+  }
+  try {
+    return await cubit.stream
+        .firstWhere(settled)
+        .timeout(kTripLegsSettleTimeout);
+  } on TimeoutException {
+    return cubit.state;
+  } on StateError {
+    // Flux fermé sans état tranché.
+    return cubit.state;
+  }
 }
