@@ -18,12 +18,25 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// `demandes_screen.dart`, `bid_detail_action_bars.dart`) — chaque site garde
 /// son propre effet de bord (indicateur de traitement, etc.) autour de cet
 /// appel, seul le choix de branche est partagé.
-void dispatchBidAccept(BuildContext context, BidModel bid) {
+///
+/// Les blocs sont ceux de [context], sauf [bids] et [acceptance] passés
+/// explicitement : l'écran du trajet répond aux demandes sur ses propres
+/// instances, sans toucher au `BidBloc` qui porte la liste de ses colis.
+void dispatchBidAccept(
+  BuildContext context,
+  BidModel bid, {
+  BidBloc? bids,
+  BidAcceptanceBloc? acceptance,
+}) {
   if (bid.paymentMethod == BidPaymentMethod.cash) {
-    context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bid.id));
+    (acceptance ?? context.read<BidAcceptanceBloc>()).add(
+      ace.BidAcceptRequested(bid.id),
+    );
   } else if (bid.paymentMethod == BidPaymentMethod.mobileMoney) {
-    context.read<BidBloc>().add(BidAcceptMobileMoneyRequested(bid.id));
+    (bids ?? context.read<BidBloc>()).add(
+      BidAcceptMobileMoneyRequested(bid.id),
+    );
   } else {
-    context.read<BidBloc>().add(BidAcceptRequested(bid.id));
+    (bids ?? context.read<BidBloc>()).add(BidAcceptRequested(bid.id));
   }
 }
