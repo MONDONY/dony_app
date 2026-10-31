@@ -37284,6 +37284,30 @@ abstract class AppLocalizations {
   /// **'l\'équipe Yadony est alertée'**
   String get tripTodoConsequenceReturn;
 
+  /// Écran du trajet (propriétaire), « À traiter » : suite de « Avant 19:00, sinon … » pour récupérer un colis payé en espèces ou signaler l'absence de son expéditeur (back NoShowScheduler : colis espèces annulé sans fautif) (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'le colis est annulé'**
+  String get tripTodoConsequenceCancelled;
+
+  /// Écran du trajet (propriétaire), « À traiter » : suite de « Avant 19:00, sinon … » quand l'action mêle colis payés en espèces (annulés) et colis payés par carte ou mobile money (voyageur déclaré absent) (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'le colis est annulé ou vous êtes déclaré absent'**
+  String get tripTodoConsequenceCancelledOrAbsent;
+
+  /// Écran du trajet (propriétaire), sheet d'une action par colis qui mêle les paiements : conséquence courte sur la ligne d'un colis payé en espèces (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sinon le colis est annulé'**
+  String get tripTodoParcelConsequenceCancelled;
+
+  /// Écran du trajet (propriétaire), sheet d'une action par colis qui mêle les paiements : conséquence courte sur la ligne d'un colis payé par carte ou mobile money (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sinon vous êtes déclaré absent'**
+  String get tripTodoParcelConsequenceAbsent;
+
   /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « confirmer sa présence au dépôt » (trip_todo_labels.dart).
   ///
   /// In fr, this message translates to:

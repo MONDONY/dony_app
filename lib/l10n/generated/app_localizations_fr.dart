@@ -23230,6 +23230,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripTodoConsequenceReturn => 'l\'équipe Yadony est alertée';
 
   @override
+  String get tripTodoConsequenceCancelled => 'le colis est annulé';
+
+  @override
+  String get tripTodoConsequenceCancelledOrAbsent =>
+      'le colis est annulé ou vous êtes déclaré absent';
+
+  @override
+  String get tripTodoParcelConsequenceCancelled => 'Sinon le colis est annulé';
+
+  @override
+  String get tripTodoParcelConsequenceAbsent =>
+      'Sinon vous êtes déclaré absent';
+
+  @override
   String get tripTodoPresenceTitle => 'Confirmer votre présence';
 
   @override

@@ -18,10 +18,11 @@ import 'package:flutter/material.dart';
 
 /// Bouton du pied collant de l'écran du trajet vu par son voyageur.
 enum TripFooterButton {
-  /// L'action « À traiter » la plus urgente (`tripTodoFor`, en tête de la
-  /// file) : même libellé et même geste que le bouton de sa grosse carte
-  /// ([tripTodoButton], [openTripTodoAction]). « Arrivé à destination »,
-  /// « Prévenir les destinataires », « Publier », « Je pars »... en sont.
+  /// L'action « À traiter » la plus urgente qui peut porter le pied
+  /// ([tripFooterTodo] : une urgente, ou « Arrivé à destination », « Je
+  /// pars », « Valider la remise », « Prévenir les destinataires », les
+  /// instructions de retrait, « Publier ») : même libellé et même geste que
+  /// le bouton de sa carte ([tripTodoButton], [openTripTodoAction]).
   todo,
 
   /// « Modifier » : trajet modifiable ([canEditTrip]).
@@ -42,8 +43,11 @@ typedef TripFooter = ({TripFooterButton primary, TripFooterButton? secondary});
 
 /// Pied collant de [trip] pour son voyageur, ou `null` s'il n'a rien à
 /// proposer. Fonction pure, la première règle qui s'applique l'emporte :
-/// 1. une action « À traiter » ([todo], déjà triée, `tripTodoFor`) : le
-///    bouton principal est la première ([TripFooterButton.todo]). Le second
+/// 1. une action « À traiter » qui peut porter le pied ([todo], déjà triée,
+///    `tripTodoFor` ; la première selon [tripFooterTodo] : jamais « Ajouter
+///    la carte », « Noter » ni le destinataire refusé, qui laissent les
+///    règles suivantes s'appliquer) : le
+///    bouton principal est celle-là ([TripFooterButton.todo]). Le second
 ///    reste celui des règles d'avant : « Modifier » (si [canEditTrip]) sur
 ///    un brouillon, ou sur un trajet ACTIVE sans demande à traiter ; aucun
 ///    quand l'arrivée est à marquer ou les destinataires à prévenir
@@ -84,7 +88,7 @@ TripFooter? tripFooterFor({
   );
   final requestsWaiting =
       (trip.status == 'ACTIVE' || trip.status == 'FULL') && pending > 0;
-  if (todo.isNotEmpty) {
+  if (tripFooterTodo(todo) != null) {
     final arrivalStep =
         bids != null &&
         (tripCanMarkArrived(trip.status, bids) ||
@@ -181,7 +185,7 @@ class TripOwnerStickyBar extends StatelessWidget {
       trip,
       tripBidsAfterAnswers(bids, answered),
     );
-    final first = todo.isEmpty ? null : todo.first;
+    final first = tripFooterTodo(todo);
     String label(TripFooterButton button) => _label(
       context.l10n,
       button,

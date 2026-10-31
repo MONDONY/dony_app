@@ -5,6 +5,7 @@
 // trajet, délai dépassé) et bandeau des sheets par colis.
 import 'dart:io';
 
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -19,7 +20,14 @@ TripTodoItem _item(
   int count = 1,
   List<String> bidIds = const [],
   DateTime? dueAt,
-}) => TripTodoItem(kind: kind, count: count, bidIds: bidIds, dueAt: dueAt);
+  Map<String, DateTime> dueAtByBid = const {},
+}) => TripTodoItem(
+  kind: kind,
+  count: count,
+  bidIds: bidIds,
+  dueAt: dueAt,
+  dueAtByBid: dueAtByBid,
+);
 
 void main() {
   setUpAll(() async {
@@ -258,12 +266,49 @@ void main() {
   group('bandeau du sheet par colis', () {
     final trip = todoTrip();
     final now = kTodoNow;
-    String? banner(TripTodoKind kind, DateTime? dueAt) => tripTodoDueBanner(
-      fr,
-      _item(kind, dueAt: dueAt),
-      now: now,
-      trip: trip,
+    // Colis payé par carte : à la date limite + 1 h, le voyageur est déclaré
+    // absent (back `recordTravelerNoShow`).
+    final card = todoBid(
+      'card',
+      'ACCEPTED',
+      paymentMethod: BidPaymentMethod.stripe,
     );
+    final mobile = todoBid(
+      'mm',
+      'ACCEPTED',
+      paymentMethod: BidPaymentMethod.mobileMoney,
+    );
+    // Colis payé en espèces : il est annulé, sans fautif
+    // (`expireUnconfirmedCashHandover`).
+    final cash = todoBid('cash', 'ACCEPTED');
+    TripTodoItem threatened(
+      TripTodoKind kind,
+      DateTime dueAt,
+      List<BidModel> bids,
+    ) => _item(
+      kind,
+      count: bids.length,
+      bidIds: [for (final b in bids) b.id],
+      dueAt: dueAt,
+      dueAtByBid: {for (final b in bids) b.id: dueAt},
+    );
+    String? banner(
+      TripTodoKind kind,
+      DateTime? dueAt, {
+      List<BidModel>? bids,
+      AppLocalizations? l,
+    }) {
+      final parcels = bids ?? [card];
+      return tripTodoDueBanner(
+        l ?? fr,
+        dueAt == null
+            ? _item(kind, bidIds: [for (final b in parcels) b.id])
+            : threatened(kind, dueAt, parcels),
+        now: now,
+        trip: trip,
+        bids: parcels,
+      );
+    }
 
     test('échéance et conséquence', () {
       expect(
@@ -291,6 +336,124 @@ void main() {
       }
     });
 
+    test('espèces : le colis est annulé, jamais « déclaré absent »', () {
+      for (final kind in const [
+        TripTodoKind.scan,
+        TripTodoKind.senderAbsence,
+      ]) {
+        expect(
+          banner(kind, DateTime(2026, 11, 1, 19), bids: [cash]),
+          'Avant 19:00, sinon le colis est annulé.',
+          reason: kind.name,
+        );
+        expect(
+          banner(kind, DateTime(2026, 11, 1, 19), bids: [cash], l: en),
+          'Before 7:00\u202fPM, otherwise the parcel is cancelled.',
+          reason: kind.name,
+        );
+      }
+    });
+
+    test('carte et mobile money : déclaré absent', () {
+      expect(
+        banner(TripTodoKind.scan, DateTime(2026, 11, 1, 19), bids: [mobile]),
+        'Avant 19:00, sinon vous êtes déclaré absent.',
+      );
+      expect(
+        banner(
+          TripTodoKind.scan,
+          DateTime(2026, 11, 1, 19),
+          bids: [card, mobile],
+        ),
+        'Avant 19:00, sinon vous êtes déclaré absent.',
+      );
+    });
+
+    test('espèces et carte mêlés : les deux, et une conséquence par ligne', () {
+      for (final kind in const [
+        TripTodoKind.scan,
+        TripTodoKind.senderAbsence,
+      ]) {
+        expect(
+          banner(kind, DateTime(2026, 11, 1, 19), bids: [cash, card]),
+          'Avant 19:00, sinon le colis est annulé ou vous êtes déclaré '
+          'absent.',
+          reason: kind.name,
+        );
+      }
+      final item = threatened(TripTodoKind.scan, DateTime(2026, 11, 1, 19), [
+        cash,
+        card,
+      ]);
+      expect(
+        tripTodoParcelConsequence(fr, item, cash, bids: [cash, card]),
+        'Sinon le colis est annulé',
+      );
+      expect(
+        tripTodoParcelConsequence(fr, item, card, bids: [cash, card]),
+        'Sinon vous êtes déclaré absent',
+      );
+      expect(
+        tripTodoParcelConsequence(en, item, cash, bids: [cash, card]),
+        'Otherwise the parcel is cancelled',
+      );
+      // Un seul moyen de paiement : le bandeau suffit, rien sur la ligne.
+      final cardOnly = threatened(
+        TripTodoKind.scan,
+        DateTime(2026, 11, 1, 19),
+        [card],
+      );
+      expect(
+        tripTodoParcelConsequence(fr, cardOnly, card, bids: [card]),
+        isNull,
+      );
+    });
+
+    test(
+      'colis déjà déclaré absent (sans échéance) : ni bandeau ni menace',
+      () {
+        final declared = todoBid(
+          'declared',
+          'ACCEPTED',
+          paymentMethod: BidPaymentMethod.stripe,
+          cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+        );
+        final item = _item(TripTodoKind.scan, bidIds: const ['declared']);
+        expect(
+          tripTodoDueBanner(fr, item, now: now, trip: trip, bids: [declared]),
+          isNull,
+        );
+        // Mêlé à un colis espèces menacé : le bandeau ne parle que de lui, et
+        // la ligne du colis déclaré ne porte aucune conséquence.
+        final mixed = TripTodoItem(
+          kind: TripTodoKind.scan,
+          count: 2,
+          bidIds: const ['cash', 'declared'],
+          dueAt: DateTime(2026, 11, 1, 19),
+          dueAtByBid: {'cash': DateTime(2026, 11, 1, 19)},
+        );
+        expect(
+          tripTodoDueBanner(
+            fr,
+            mixed,
+            now: now,
+            trip: trip,
+            bids: [cash, declared],
+          ),
+          'Avant 19:00, sinon le colis est annulé.',
+        );
+        expect(
+          tripTodoParcelConsequence(
+            fr,
+            mixed,
+            declared,
+            bids: [cash, declared],
+          ),
+          isNull,
+        );
+      },
+    );
+
     test('délai dépassé', () {
       expect(
         banner(TripTodoKind.scan, now.subtract(const Duration(minutes: 1))),
@@ -311,12 +474,7 @@ void main() {
 
     test('anglais', () {
       expect(
-        tripTodoDueBanner(
-          en,
-          _item(TripTodoKind.scan, dueAt: DateTime(2026, 11, 1, 19)),
-          now: now,
-          trip: trip,
-        ),
+        banner(TripTodoKind.scan, DateTime(2026, 11, 1, 19), l: en),
         'Before 7:00\u202fPM, otherwise you are marked as absent.',
       );
     });

@@ -70,6 +70,8 @@ BidModel todoBid(
   bool recipientDeclined = false,
   DateTime? departureDate,
   String? senderName,
+  String? cancellationNoShowStatus,
+  DateTime? updatedAt,
 }) => BidModel(
   id: id,
   announcementId: 'trip-1',
@@ -86,11 +88,16 @@ BidModel todoBid(
   returnDeadline: returnDeadline,
   recipientDeclined: recipientDeclined,
   departureDate: departureDate ?? kTodoDeparture,
+  cancellationNoShowStatus: cancellationNoShowStatus,
   recipientName: 'Fatou',
   recipientPhone: '+221770000000',
   createdAt: DateTime(2026, 10),
-  updatedAt: DateTime(2026, 10),
+  updatedAt: updatedAt ?? DateTime(2026, 10),
 );
+
+/// Livré il y a un jour : la notation est encore ouverte (7 jours après
+/// `updatedAt`, back `RatingService`).
+final kTodoDeliveredRecently = kTodoNow.subtract(const Duration(days: 1));
 
 /// Situation d'écran : trajet, colis, compte de paiement, départ confirmé.
 typedef TodoScenario = ({
@@ -205,7 +212,7 @@ TodoScenario todoScenarioFor(TripTodoKind kind) {
       todoBid('b2', 'HANDED_OVER'),
     ]),
     TripTodoKind.rate => _s(todoTrip(status: 'COMPLETED'), [
-      todoBid('b1', 'COMPLETED'),
+      todoBid('b1', 'COMPLETED', updatedAt: kTodoDeliveredRecently),
     ]),
     TripTodoKind.publish => _s(todoTrip(status: 'DRAFT'), const []),
     TripTodoKind.addCard => _s(
@@ -269,7 +276,12 @@ Map<String, TodoScenario> todoMockupScenarios() {
     'arrivé': _s(todoTrip(status: 'IN_PROGRESS'), [
       todoBid('d1', 'ARRIVED', departureDate: kTodoDeparted),
       todoBid('d2', 'ARRIVED', departureDate: kTodoDeparted),
-      todoBid('c1', 'COMPLETED', departureDate: kTodoDeparted),
+      todoBid(
+        'c1',
+        'COMPLETED',
+        departureDate: kTodoDeparted,
+        updatedAt: kTodoDeliveredRecently,
+      ),
     ]),
     'très chargé': (
       trip: todoTrip(trackingActive: true, summary: kTodoSummary),

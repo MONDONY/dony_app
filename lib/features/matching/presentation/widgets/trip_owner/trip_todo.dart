@@ -32,7 +32,8 @@ enum TripTodoUrgency {
 }
 
 /// Types d'action « À traiter » de l'écran du trajet, dans l'ordre fixe de la
-/// file (à urgence et échéance égales).
+/// file (à urgence et échéance égales ; les demandes passent toujours en tête
+/// des urgentes, [tripTodoFor]).
 ///
 /// Le nom sert de valeur `tile` à `bid_detail_todo_tile_shown` (`role:
 /// trip_owner`, [tripTodoItemShown]) : ne pas le renommer sans migrer
@@ -59,11 +60,12 @@ enum TripTodoKind {
   /// Rendre un colis après annulation (#28).
   returnParcel(TripTodoUrgency.urgent, perParcel: true),
 
+  /// « Arrivé à destination » (#38). Avant « Je pars » : l'arrivée implique
+  /// le départ.
+  arrive(TripTodoUrgency.important, perParcel: false),
+
   /// « Je pars » (#37).
   depart(TripTodoUrgency.important, perParcel: false),
-
-  /// « Arrivé à destination » (#38).
-  arrive(TripTodoUrgency.important, perParcel: false),
 
   /// Valider la remise au destinataire (#25).
   deliver(TripTodoUrgency.important, perParcel: true),
@@ -89,6 +91,26 @@ enum TripTodoKind {
   const TripTodoKind(this.urgency, {required this.perParcel});
 
   final TripTodoUrgency urgency;
+
+  /// L'action peut porter le bouton principal du pied collant quand elle est
+  /// la plus urgente de la file pouvant le faire ([tripFooterTodo]) : toute
+  /// action urgente, et les gestes du trajet « Arrivé à destination », « Je
+  /// pars », « Valider la remise », « Prévenir les destinataires »,
+  /// « Instructions de retrait », « Publier ». Les suggestions facultatives
+  /// (« Ajouter la carte », « Noter ») et le destinataire refusé ne le
+  /// prennent jamais : le pied garde alors ses
+  /// règles (« Modifier » | « Partager l'affiche »...).
+  bool get drivesFooter =>
+      urgency == TripTodoUrgency.urgent ||
+      switch (this) {
+        TripTodoKind.arrive ||
+        TripTodoKind.depart ||
+        TripTodoKind.deliver ||
+        TripTodoKind.notify ||
+        TripTodoKind.instructions ||
+        TripTodoKind.publish => true,
+        _ => false,
+      };
 
   /// Action sur des colis (un sheet qui liste les colis concernés, ouvrant
   /// chacun sa fiche) plutôt qu'un geste du trajet. Seules ces actions
@@ -214,8 +236,11 @@ TripTodoItem? _collect(
 }
 
 /// File « À traiter » de [trip] pour son voyageur, TRIÉE : urgentes d'abord,
-/// puis à urgence égale l'échéance la plus proche (connue avant inconnue),
-/// puis l'ordre fixe de [TripTodoKind]. Fonction pure : ni bloc ni horloge
+/// les demandes toujours en tête des urgentes (elles expirent sous 24 h et
+/// c'est de l'argent : la carte « Demande 1 sur N » reste la grosse carte),
+/// puis les autres urgentes par échéance la plus proche (connue avant
+/// inconnue), puis les importantes ; à égalité, l'ordre fixe de
+/// [TripTodoKind]. Fonction pure : ni bloc ni horloge
 /// globale, [now] fait foi.
 ///
 /// - [bids] : colis du trajet chargés par l'écran (`BidListLoaded`), `null`
@@ -234,7 +259,9 @@ TripTodoItem? _collect(
 /// - #7 [TripTodoKind.presence] : [TravelerStickyBar.awaitsPresence] ;
 ///   échéance `handoverDeadline` du colis ;
 /// - #8 [TripTodoKind.scan] : [TravelerStickyBar.canScanHandover] ;
-///   échéance `handoverDeadline` + [tripTravelerNoShowGrace] ;
+///   échéance `handoverDeadline` + [tripTravelerNoShowGrace], sauf pour un
+///   colis qui a déjà une déclaration d'absence (#17 en attente, #19 levée) :
+///   pas d'échéance ;
 /// - #11, #12 [TripTodoKind.amendment] : [AmendmentTravelerCard.needsReply] ;
 ///   échéance `expiresAt` de la modification ouverte ;
 /// - #10 [TripTodoKind.supplement] : [SupplementTravelerCard.needsReply] ;
@@ -245,7 +272,8 @@ TripTodoItem? _collect(
 /// - #28 [TripTodoKind.returnParcel] : [BidModel.isAwaitingReturn], colis
 ///   annulés compris ; échéance `returnDeadline` ;
 /// - #37 [TripTodoKind.depart], #34 [TripTodoKind.addCard] : règles de
-///   [tripTodoTilesFor] ;
+///   [tripTodoTilesFor] ; « Je pars » disparaît dès que « Arrivé à
+///   destination » est proposé ;
 /// - #38 [TripTodoKind.arrive] : [tripCanMarkArrived] ;
 /// - #25 [TripTodoKind.deliver] : étape de remise et trajet parti
 ///   ([DeliveryWindow]) ;
@@ -255,7 +283,9 @@ TripTodoItem? _collect(
 ///   [TravelerTransportSection.recipientNeedsReplacement] ;
 /// - #39 [TripTodoKind.instructions] : trajet ACTIVE, FULL ou IN_PROGRESS
 ///   arrivé ([tripHasArrivedParcel]) et instructions de retrait vides ;
-/// - #30 [TripTodoKind.rate] : [bidAwaitsRating] côté voyageur ;
+/// - #30 [TripTodoKind.rate] : [bidAwaitsRating] côté voyageur, dans la
+///   fenêtre de notation du back ([bidRatingWindowOpen], 7 jours après
+///   `updatedAt`) ; échéance [bidRatingDeadline] ;
 /// - #32 [TripTodoKind.publish] : brouillon.
 List<TripTodoItem> tripTodoFor({
   required AnnouncementModel trip,
@@ -275,6 +305,7 @@ List<TripTodoItem> tripTodoFor({
   );
   DateTime? afterGrace(BidModel b) =>
       b.handoverDeadline?.add(tripTravelerNoShowGrace);
+  final arrive = bids != null && tripCanMarkArrived(trip.status, bids);
   final items = <TripTodoItem>[
     if (bids != null) ...[
       if (_requestsAcceptable(trip, now))
@@ -289,7 +320,11 @@ List<TripTodoItem> tripTodoFor({
         TripTodoKind.scan,
         bids,
         when: (b) => TravelerStickyBar.canScanHandover(b, now: now),
-        dueOf: afterGrace,
+        // Une déclaration d'absence existe déjà (en attente, ou levée) : le
+        // back ne fait pas passer ce colis en absence à la date limite + 1 h
+        // (`findNoShowBids`), et la levée laisse 24 h dont l'heure n'est pas
+        // servie : aucune échéance, aucune menace.
+        dueOf: (b) => b.cancellationNoShowStatus == null ? afterGrace(b) : null,
       ),
       ?_collect(
         TripTodoKind.amendment,
@@ -309,14 +344,14 @@ List<TripTodoItem> tripTodoFor({
         when: (b) => TravelerHeroCard.canReportSenderNoShow(b, now: now),
         dueOf: afterGrace,
       ),
+
       ?_collect(
         TripTodoKind.returnParcel,
         bids,
         when: (b) => b.isAwaitingReturn,
         dueOf: (b) => b.returnDeadline,
       ),
-      if (tripCanMarkArrived(trip.status, bids))
-        const TripTodoItem(kind: TripTodoKind.arrive, count: 1),
+      if (arrive) const TripTodoItem(kind: TripTodoKind.arrive, count: 1),
       ?_collect(TripTodoKind.deliver, bids, when: (b) => _canDeliver(b, now)),
       if (tripRecipientsToNotifyDue(trip.status, bids))
         TripTodoItem(
@@ -337,10 +372,14 @@ List<TripTodoItem> tripTodoFor({
       ?_collect(
         TripTodoKind.rate,
         bids,
-        when: (b) => bidAwaitsRating(b, asSender: false),
+        when: (b) =>
+            bidAwaitsRating(b, asSender: false) && bidRatingWindowOpen(b, now),
+        dueOf: bidRatingDeadline,
       ),
     ],
-    if (tiles.contains(TripTodoTile.depart))
+    // « Arrivé à destination » proposé : le départ a déjà eu lieu, même si
+    // « Je pars » n'a jamais été touché sur cet appareil (drapeau local).
+    if (tiles.contains(TripTodoTile.depart) && !arrive)
       const TripTodoItem(kind: TripTodoKind.depart, count: 1),
     if (trip.status == 'DRAFT')
       const TripTodoItem(kind: TripTodoKind.publish, count: 1),
@@ -350,11 +389,20 @@ List<TripTodoItem> tripTodoFor({
   return items..sort(_compare);
 }
 
-/// Urgence, puis échéance (connue avant inconnue, la plus proche d'abord),
-/// puis ordre fixe des types.
+/// Urgence, puis, parmi les urgentes, les demandes en tête et l'échéance
+/// (connue avant inconnue, la plus proche d'abord), puis l'ordre fixe des
+/// types. Les importantes suivent l'ordre fixe seul (décision du 31/10) :
+/// l'échéance d'une notation (7 jours) ne la fait pas passer devant
+/// « Valider la remise ».
 int _compare(TripTodoItem a, TripTodoItem b) {
   final byUrgency = a.urgency.index.compareTo(b.urgency.index);
   if (byUrgency != 0) return byUrgency;
+  if (a.urgency == TripTodoUrgency.important) {
+    return a.kind.index.compareTo(b.kind.index);
+  }
+  final aRequests = a.kind == TripTodoKind.requests;
+  final bRequests = b.kind == TripTodoKind.requests;
+  if (aRequests != bRequests) return aRequests ? -1 : 1;
   final da = a.dueAt;
   final db = b.dueAt;
   if (da != null && db != null && da != db) return da.compareTo(db);
@@ -364,12 +412,77 @@ int _compare(TripTodoItem a, TripTodoItem b) {
 }
 
 /// Nombre d'actions à traiter de [items] (pastille « À traiter · N » du
-/// billet) : somme des [TripTodoItem.count].
-int tripTodoCount(List<TripTodoItem> items) =>
-    items.fold(0, (sum, item) => sum + item.count);
+/// billet) : somme des [TripTodoItem.count], sauf qu'un colis en retard à la
+/// fois à récupérer et dont l'absence de l'expéditeur peut être signalée
+/// (deux gestes qui s'excluent : le scan ou le signalement) ne compte
+/// qu'une fois.
+int tripTodoCount(List<TripTodoItem> items) {
+  final sum = items.fold(0, (sum, item) => sum + item.count);
+  Set<String> idsOf(TripTodoKind kind) => {
+    for (final item in items)
+      if (item.kind == kind) ...item.bidIds,
+  };
+  final both = idsOf(
+    TripTodoKind.scan,
+  ).intersection(idsOf(TripTodoKind.senderAbsence));
+  return sum - both.length;
+}
+
+/// Première action de [items] (déjà triés, [tripTodoFor]) qui peut porter le
+/// bouton principal du pied collant ([TripTodoKind.drivesFooter]), `null`
+/// s'il n'y en a aucune : le pied garde alors ses règles d'avant.
+TripTodoItem? tripFooterTodo(List<TripTodoItem> items) {
+  for (final item in items) {
+    if (item.kind.drivesFooter) return item;
+  }
+  return null;
+}
+
+/// Ce qui arrive à un colis à récupérer ([TripTodoKind.scan]) ou dont
+/// l'absence de l'expéditeur peut être signalée ([TripTodoKind.senderAbsence])
+/// si rien n'est fait à la date limite + 1 h (back `NoShowScheduler`).
+enum TripNoShowOutcome {
+  /// Espèces : le colis est annulé, sans fautif
+  /// (`expireUnconfirmedCashHandover`, commission rendue).
+  cancelled,
+
+  /// Carte, mobile money : le voyageur est déclaré absent
+  /// (`recordTravelerNoShow`).
+  travelerAbsent,
+
+  /// Des colis des deux sortes dans la même action.
+  mixed,
+}
+
+/// Issue d'un colis [bid] s'il n'est ni récupéré ni signalé à temps.
+TripNoShowOutcome tripNoShowOutcomeOfBid(BidModel bid) =>
+    bid.paymentMethod == BidPaymentMethod.cash
+    ? TripNoShowOutcome.cancelled
+    : TripNoShowOutcome.travelerAbsent;
+
+/// Issue de l'action [item] ([TripTodoKind.scan] ou
+/// [TripTodoKind.senderAbsence]) sur ses colis menacés, ceux qui ont une
+/// échéance ([TripTodoItem.dueAtByBid] : un colis qui a déjà une déclaration
+/// d'absence n'en a pas), lus dans [bids]. `null` pour un autre type ou sans
+/// colis menacé.
+TripNoShowOutcome? tripNoShowOutcomeOf(
+  TripTodoItem item,
+  List<BidModel>? bids,
+) {
+  if (item.kind != TripTodoKind.scan &&
+      item.kind != TripTodoKind.senderAbsence) {
+    return null;
+  }
+  final outcomes = {
+    for (final b in bids ?? const <BidModel>[])
+      if (item.dueAtByBid.containsKey(b.id)) tripNoShowOutcomeOfBid(b),
+  };
+  if (outcomes.isEmpty) return null;
+  return outcomes.length == 1 ? outcomes.single : TripNoShowOutcome.mixed;
+}
 
 /// Colis distincts qui attendent un geste du voyageur (ligne Colis : « N
-/// attendent ton geste ») : ceux des actions sur des colis
+/// attendent votre geste ») : ceux des actions sur des colis
 /// ([TripTodoKind.perParcel]). Les demandes et les gestes du trajet
 /// (« Prévenir les destinataires » compris) n'en marquent aucun.
 Set<String> tripTodoParcelIds(List<TripTodoItem> items) => {

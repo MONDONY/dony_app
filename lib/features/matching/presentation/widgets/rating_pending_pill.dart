@@ -13,6 +13,22 @@ bool bidAwaitsRating(BidModel bid, {required bool asSender}) {
   return asSender ? !bid.senderHasRated : !bid.travelerHasRated;
 }
 
+/// Fenêtre de notation après la livraison (back `RatingService`,
+/// `RATING_WINDOW_DAYS`) : passé ce délai, la note répond 422
+/// `rating-window-expired`.
+const kBidRatingWindow = Duration(days: 7);
+
+/// Fin de la fenêtre de notation de [bid] : le back la mesure sur
+/// `updatedAt` du colis (refus quand `updatedAt` est avant `now - 7 j`),
+/// l'app fait de même.
+DateTime bidRatingDeadline(BidModel bid) => bid.updatedAt.add(kBidRatingWindow);
+
+/// La note de [bid] est encore acceptée par le back à [now] :
+/// `updatedAt + 7 j` pas encore dépassé (même borne que `RatingService`,
+/// qui refuse seulement `updatedAt < now - 7 j`).
+bool bidRatingWindowOpen(BidModel bid, DateTime now) =>
+    !now.isAfter(bidRatingDeadline(bid));
+
 /// Pastille « À noter » des cartes de colis (FLUTTER-P2) : rappel discret
 /// d'une note en attente, la feuille de notation ne s'ouvrant plus d'elle-même
 /// qu'une fois par colis.

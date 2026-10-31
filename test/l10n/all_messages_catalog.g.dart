@@ -8089,6 +8089,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripTodoConsequenceSupplement': (l) => l.tripTodoConsequenceSupplement,
   'tripTodoConsequenceSenderAbsence': (l) => l.tripTodoConsequenceSenderAbsence,
   'tripTodoConsequenceReturn': (l) => l.tripTodoConsequenceReturn,
+  'tripTodoConsequenceCancelled': (l) => l.tripTodoConsequenceCancelled,
+  'tripTodoConsequenceCancelledOrAbsent': (l) =>
+      l.tripTodoConsequenceCancelledOrAbsent,
+  'tripTodoParcelConsequenceCancelled': (l) =>
+      l.tripTodoParcelConsequenceCancelled,
+  'tripTodoParcelConsequenceAbsent': (l) => l.tripTodoParcelConsequenceAbsent,
   'tripTodoPresenceTitle': (l) => l.tripTodoPresenceTitle,
   'tripTodoPresenceSubtitle': (l) =>
       l.tripTodoPresenceSubtitle(intPlaceholderValue),

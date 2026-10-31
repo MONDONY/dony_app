@@ -1,5 +1,6 @@
 import 'package:dony/core/utils/trip_local_time.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:intl/intl.dart';
@@ -179,13 +180,29 @@ String? tripTodoDueLabel(
 }
 
 /// Ce qui arrive si le voyageur ne fait rien avant l'échéance (inventaire du
-/// 31/10), pour les seules actions qui en ont une.
-String? _consequence(AppLocalizations l, TripTodoKind kind) => switch (kind) {
+/// 31/10), pour les seules actions qui en ont une. Récupérer un colis et
+/// signaler l'absence de l'expéditeur dépendent du paiement de leurs colis
+/// ([tripNoShowOutcomeOf], back `NoShowScheduler`) : espèces, le colis est
+/// annulé ; carte ou mobile money, le voyageur est déclaré absent ; les
+/// deux à la fois, une phrase qui dit les deux.
+String? _consequence(
+  AppLocalizations l,
+  TripTodoItem item,
+  List<BidModel>? bids,
+) => switch (item.kind) {
   TripTodoKind.presence => l.tripTodoConsequencePresence,
-  TripTodoKind.scan => l.tripTodoConsequenceScan,
+  TripTodoKind.scan ||
+  TripTodoKind.senderAbsence => switch (tripNoShowOutcomeOf(item, bids)) {
+    TripNoShowOutcome.cancelled => l.tripTodoConsequenceCancelled,
+    TripNoShowOutcome.travelerAbsent =>
+      item.kind == TripTodoKind.scan
+          ? l.tripTodoConsequenceScan
+          : l.tripTodoConsequenceSenderAbsence,
+    TripNoShowOutcome.mixed => l.tripTodoConsequenceCancelledOrAbsent,
+    null => null,
+  },
   TripTodoKind.amendment => l.tripTodoConsequenceAmendment,
   TripTodoKind.supplement => l.tripTodoConsequenceSupplement,
-  TripTodoKind.senderAbsence => l.tripTodoConsequenceSenderAbsence,
   TripTodoKind.returnParcel => l.tripTodoConsequenceReturn,
   _ => null,
 };
@@ -193,15 +210,38 @@ String? _consequence(AppLocalizations l, TripTodoKind kind) => switch (kind) {
 /// Bandeau d'échéance du sheet d'une action par colis : « Avant 19:00,
 /// sinon vous êtes déclaré absent. » ; « Délai dépassé. » une fois passée ;
 /// `null` sans échéance ([TripTodoItem.dueAt]) ou sans conséquence connue.
+/// [bids] : colis de l'écran, dont le paiement décide de la conséquence de
+/// la récupération et du signalement de l'absence ([_consequence]).
 String? tripTodoDueBanner(
   AppLocalizations l,
   TripTodoItem item, {
   required DateTime now,
   required AnnouncementModel trip,
+  required List<BidModel>? bids,
 }) {
   final due = item.dueAt;
-  final consequence = _consequence(l, item.kind);
+  final consequence = _consequence(l, item, bids);
   if (due == null || consequence == null) return null;
   if (!due.isAfter(now)) return l.tripTodoDuePassedBanner;
   return l.tripTodoDueBanner(_before(l, due, now, trip), consequence);
+}
+
+/// Conséquence courte propre au colis [bid] sur la ligne du sheet de
+/// l'action [item], seulement quand l'action mêle colis payés en espèces et
+/// colis payés autrement ([TripNoShowOutcome.mixed]) : le bandeau dit alors
+/// « le colis est annulé ou vous êtes déclaré absent », chaque ligne dit
+/// lequel. `null` ailleurs, et pour un colis sans échéance (déclaration
+/// d'absence déjà faite).
+String? tripTodoParcelConsequence(
+  AppLocalizations l,
+  TripTodoItem item,
+  BidModel bid, {
+  required List<BidModel>? bids,
+}) {
+  if (tripNoShowOutcomeOf(item, bids) != TripNoShowOutcome.mixed) return null;
+  if (!item.dueAtByBid.containsKey(bid.id)) return null;
+  return switch (tripNoShowOutcomeOfBid(bid)) {
+    TripNoShowOutcome.cancelled => l.tripTodoParcelConsequenceCancelled,
+    _ => l.tripTodoParcelConsequenceAbsent,
+  };
 }

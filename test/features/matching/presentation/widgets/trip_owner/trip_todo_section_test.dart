@@ -290,9 +290,14 @@ void main() {
             findsOneWidget,
           );
         }
-        // Le pied suit l'action : même libellé que le bouton de la carte.
-        expect(inBar(key('trip-footer-todo-${kind.name}')), findsOneWidget);
-        expect(inBar(find.text(button)), findsOneWidget);
+        // Le pied suit l'action quand elle peut le porter : même libellé que
+        // le bouton de la carte. Sinon il garde ses règles d'avant.
+        if (kind.drivesFooter) {
+          expect(inBar(key('trip-footer-todo-${kind.name}')), findsOneWidget);
+          expect(inBar(find.text(button)), findsOneWidget);
+        } else {
+          expect(inBar(key('trip-footer-todo-${kind.name}')), findsNothing);
+        }
         expect(tester.takeException(), isNull);
       });
     }
@@ -373,14 +378,12 @@ void main() {
       expect(hidden, greaterThan(0));
       expect(find.text('+ $hidden autres à traiter'), findsOneWidget);
       expect(find.text('Voir toute la liste'), findsOneWidget);
-      // Compteur des 8 demandes.
-      expect(
-        find.descendant(
-          of: key('trip-todo-row-count-requests'),
-          matching: find.text('8'),
-        ),
-        findsOneWidget,
-      );
+      // Les 8 demandes passent en tête des urgents, devant la récupération
+      // dans 3 h : la grosse carte est la carte de réponse directe.
+      expect(todo.first.kind, TripTodoKind.requests);
+      expect(key('trip-direct-request-card'), findsOneWidget);
+      expect(find.text(fr.tripDirectRequestLabel(8)), findsOneWidget);
+      expect(key('trip-todo-row-requests'), findsNothing);
     });
 
     testWidgets('« + N autres » : toute la liste, une ligne ouvre son geste', (
@@ -433,12 +436,18 @@ void main() {
       verifyOpened('requests', 'footer');
     });
 
-    testWidgets('demandes dans la file : sheet des demandes, source list', (
-      tester,
-    ) async {
+    testWidgets('demandes dans toute la liste : sheet des demandes, source '
+        'list', (tester) async {
       await pump(tester, todoMockupScenarios()['très chargé']!);
-      await tester.ensureVisible(key('trip-todo-row-requests'));
-      await tester.tap(key('trip-todo-row-requests'));
+      await tester.ensureVisible(key('trip-todo-more'));
+      await tester.tap(key('trip-todo-more'));
+      await settle(tester);
+      final row = find.descendant(
+        of: key('trip-todo-all'),
+        matching: key('trip-todo-row-requests'),
+      );
+      await tester.ensureVisible(row);
+      await tester.tap(row);
       await settle(tester);
       expect(key('trip-activity-requests-content'), findsOneWidget);
       verifyOpened('requests', 'list');
@@ -542,7 +551,13 @@ void main() {
         for (final id in item.bidIds) {
           expect(key('trip-todo-parcel-$id'), findsOneWidget);
         }
-        final banner = tripTodoDueBanner(fr, item, now: kTodoNow, trip: s.trip);
+        final banner = tripTodoDueBanner(
+          fr,
+          item,
+          now: kTodoNow,
+          trip: s.trip,
+          bids: s.bids,
+        );
         expect(
           key('trip-todo-parcels-banner'),
           banner == null ? findsNothing : findsOneWidget,
@@ -564,8 +579,10 @@ void main() {
       final pushed = await pump(tester, todoScenarioFor(TripTodoKind.scan));
       await tester.tap(key('trip-todo-next-button'));
       await settle(tester);
+      // Colis payé en espèces : annulé à la date limite + 1 h, jamais
+      // « déclaré absent » (back `expireUnconfirmedCashHandover`).
       expect(
-        find.text('Avant 15:00, sinon vous êtes déclaré absent.'),
+        find.text('Avant 15:00, sinon le colis est annulé.'),
         findsOneWidget,
       );
       final row = key('trip-todo-parcel-b1');
@@ -598,6 +615,68 @@ void main() {
       expect(
         h.annEvents.whereType<AnnouncementDetailRequested>().single.silent,
         isTrue,
+      );
+    });
+
+    testWidgets('récupérer, paiements mêlés : bandeau des deux issues, une '
+        'conséquence par ligne, rien sur un colis déjà déclaré', (
+      tester,
+    ) async {
+      final deadline = kTodoNow.add(const Duration(hours: 2));
+      await pump(tester, (
+        trip: todoTrip(status: 'FULL'),
+        bids: [
+          todoBid(
+            'cash',
+            'ACCEPTED',
+            voyageurConfirmed: true,
+            handoverDeadline: deadline,
+          ),
+          todoBid(
+            'card',
+            'ACCEPTED',
+            paymentMethod: BidPaymentMethod.stripe,
+            voyageurConfirmed: true,
+            handoverDeadline: deadline,
+          ),
+          todoBid(
+            'declared',
+            'ACCEPTED',
+            paymentMethod: BidPaymentMethod.stripe,
+            handoverDeadline: kTodoNow.subtract(const Duration(minutes: 20)),
+            cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+          ),
+        ],
+        stripe: const StripeAccountInitial(),
+        departed: false,
+      ));
+      await tester.tap(key('trip-todo-next-button'));
+      await settle(tester);
+      expect(key('trip-todo-parcels-scan'), findsOneWidget);
+      expect(
+        find.text(
+          'Avant 15:00, sinon le colis est annulé ou vous êtes déclaré absent.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<Text>(key('trip-todo-parcel-consequence-cash')).data,
+        'Sinon le colis est annulé',
+      );
+      expect(
+        tester.widget<Text>(key('trip-todo-parcel-consequence-card')).data,
+        'Sinon vous êtes déclaré absent',
+      );
+      // Déclaration d'absence en attente : listé (le scan la lève), sans
+      // échéance ni menace (back `findNoShowBids` l'exclut).
+      expect(key('trip-todo-parcel-declared'), findsOneWidget);
+      expect(key('trip-todo-parcel-consequence-declared'), findsNothing);
+      expect(
+        find.descendant(
+          of: key('trip-todo-parcel-declared'),
+          matching: find.textContaining('Délai'),
+        ),
+        findsNothing,
       );
     });
 
@@ -730,7 +809,7 @@ void main() {
       'jour du départ': TripTodoKind.scan,
       'en route': TripTodoKind.arrive,
       'arrivé': TripTodoKind.deliver,
-      'très chargé': TripTodoKind.scan,
+      'très chargé': TripTodoKind.requests,
     };
     for (final MapEntry(key: name, value: s) in todoMockupScenarios().entries) {
       for (final locale in const [Locale('fr'), Locale('en')]) {
@@ -857,9 +936,16 @@ void main() {
             item,
             cardReady: s.stripe == kTodoStripeReady,
           );
+          // Pied : seulement les actions qui le portent (urgentes et gestes
+          // du trajet, `drivesFooter`) ; jamais « Ajouter la carte »,
+          // « Noter » ni le destinataire refusé.
           final footer = inBar(key('trip-footer-todo-${kind.name}'));
-          expect(tester.getSize(footer).height, 52, reason: label);
-          expect(labelScale(tester, footer, label), closeTo(1, 0.001));
+          if (kind.drivesFooter) {
+            expect(tester.getSize(footer).height, 52, reason: label);
+            expect(labelScale(tester, footer, label), closeTo(1, 0.001));
+          } else {
+            expect(footer, findsNothing, reason: kind.name);
+          }
           // La grosse carte (sauf les demandes : la carte de réponse directe,
           // vérifiée par son propre test).
           if (kind != TripTodoKind.requests) {

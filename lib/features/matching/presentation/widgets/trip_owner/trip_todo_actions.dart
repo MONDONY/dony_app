@@ -36,6 +36,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// - les actions par colis ([TripTodoKind.perParcel]) : le sheet qui liste
 ///   les colis concernés ([openTripTodoParcelsSheet]).
 ///
+/// Un seul geste à la fois par écran : tant que le sheet ou la feuille
+/// ouvert ici n'est pas refermé, un second appui (double tap sur le pied, la
+/// carte ou une ligne) ne fait rien. Le corps et le pied partagent ce verrou,
+/// porté par la route de l'écran ([ModalRoute]). « Publier » ne l'attend pas :
+/// `AnnouncementBloc` ignore déjà une publication pendant la précédente.
+///
 /// Mesure : `bid_detail_tile_opened` (`tile` = nom du type, `role:
 /// trip_owner`, `source` = [source]) à l'ouverture de chaque sheet. Les
 /// sheets des demandes, de « Je pars », de la carte et des colis la posent
@@ -44,6 +50,29 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// gardent en plus leurs propres événements. « Publier » n'ouvre pas de
 /// sheet : rien de plus que les événements de la publication.
 Future<void> openTripTodoAction(
+  BuildContext context,
+  TripTodoLiveData live,
+  TripTodoItem item, {
+  required TripTodoSource source,
+}) async {
+  final route = ModalRoute.of(context);
+  if (route != null) {
+    if (_actionInFlight[route] ?? false) return;
+    _actionInFlight[route] = true;
+  }
+  try {
+    await _open(context, live, item, source: source);
+  } finally {
+    if (route != null) _actionInFlight[route] = null;
+  }
+}
+
+/// Écrans (routes) dont un geste « À traiter » est en cours d'ouverture ou
+/// ouvert ([openTripTodoAction]). L'entrée part avec la route si elle
+/// disparaît sans rendre la main.
+final _actionInFlight = Expando<bool>('tripTodoActionInFlight');
+
+Future<void> _open(
   BuildContext context,
   TripTodoLiveData live,
   TripTodoItem item, {

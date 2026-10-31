@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,6 +41,9 @@ AnnouncementModel ownerTrip({
   int? remainingReschedules,
   String? arrivalInstructions,
   String? tripGroupId,
+  Set<BidPaymentMethod> methods = const {BidPaymentMethod.stripe},
+  bool trackingActive = false,
+  TripParcelsSummary? parcelsSummary,
 }) => AnnouncementModel(
   id: 'trip-1',
   travelerId: 'trav-1',
@@ -56,6 +60,9 @@ AnnouncementModel ownerTrip({
   remainingReschedules: remainingReschedules,
   arrivalInstructions: arrivalInstructions,
   tripGroupId: tripGroupId,
+  acceptedPaymentMethods: methods,
+  trackingActive: trackingActive,
+  parcelsSummary: parcelsSummary,
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
 );

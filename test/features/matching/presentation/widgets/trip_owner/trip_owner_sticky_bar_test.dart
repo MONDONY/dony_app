@@ -7,6 +7,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -15,6 +16,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
@@ -136,7 +138,7 @@ TripFooter? _expected(String status, _Parcels p) {
   }.contains(p);
   final requestsWaiting = (status == 'ACTIVE' || status == 'FULL') && pending;
   final empty = p == _Parcels.none || p == _Parcels.notLoaded;
-  if (_todoFor(_tripFor(status, p), _bidsFor(p)).isNotEmpty) {
+  if (tripFooterTodo(_todoFor(_tripFor(status, p), _bidsFor(p))) != null) {
     final keepsEdit =
         empty &&
         !arrivalStep &&
@@ -234,6 +236,44 @@ void main() {
         ),
         isNull,
         reason: 'un brouillon a toujours son action « Publier »',
+      );
+    });
+
+    test('suggestions facultatives (carte, notation) : jamais au pied', () {
+      const ready = StripeAccountReady(
+        ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+      );
+      // Trajet espèces seules tout juste publié : « Ajouter la carte » est
+      // en tête de « À traiter », le pied garde « Modifier » | « Partager
+      // l'affiche ».
+      final cashOnly = ownerTrip(methods: const {BidPaymentMethod.cash});
+      final todo = tripTodoFor(
+        trip: cashOnly,
+        bids: const [],
+        isOwner: true,
+        now: _now,
+        departed: false,
+        stripe: ready,
+      );
+      expect(todo.map((i) => i.kind), [TripTodoKind.addCard]);
+      expect(
+        tripFooterFor(
+          trip: cashOnly,
+          bids: const [],
+          isOwner: true,
+          todo: todo,
+        ),
+        _posterEdit,
+      );
+      // Trajet terminé, seulement des notes à donner : aucun pied.
+      expect(
+        tripFooterFor(
+          trip: ownerTrip(status: 'COMPLETED'),
+          bids: const [],
+          isOwner: true,
+          todo: const [TripTodoItem(kind: TripTodoKind.rate, count: 2)],
+        ),
+        isNull,
       );
     });
 
@@ -545,6 +585,74 @@ void main() {
       final event = added.last as AnnouncementTripMarkArrivedRequested;
       expect(event.announcementId, 'trip-1');
       expect(event.arrivalInstructions, 'Rue 10');
+    });
+
+    testWidgets('trajet parti, suivi ouvert, « Je pars » jamais touché : le '
+        'pied dit « Arrivé à destination », jamais « Je pars »', (
+      tester,
+    ) async {
+      await pumpBar(
+        tester,
+        trip: ownerTrip(
+          status: 'IN_PROGRESS',
+          trackingActive: true,
+          parcelsSummary: const TripParcelsSummary(
+            count: 2,
+            totalKg: 6,
+            netAmount: 40,
+            currency: 'EUR',
+          ),
+        ),
+        bids: [ownerBid('b1', 'HANDED_OVER'), ownerBid('b2', 'HANDED_OVER')],
+      );
+      expect(todoKey(TripTodoKind.arrive), findsOneWidget);
+      expect(find.text('Arrivé à destination'), findsOneWidget);
+      expect(todoKey(TripTodoKind.depart), findsNothing);
+      expect(find.text('Je pars'), findsNothing);
+    });
+
+    testWidgets('double appui sur le pied : une seule feuille', (tester) async {
+      await pumpBar(
+        tester,
+        trip: ownerTrip(status: 'IN_PROGRESS', arrivalInstructions: 'Rue 10'),
+        bids: [ownerBid('b1', 'HANDED_OVER')],
+      );
+      // Deux appuis dans la même image (avant que la feuille ne couvre le
+      // pied) : le second ne doit rien ouvrir.
+      final press = tester
+          .widget<DonyButton>(todoKey(TripTodoKind.arrive))
+          .onPressed!;
+      press();
+      press();
+      await tester.pumpAndSettle();
+      expect(find.byType(ArrivalInstructionsBottomSheet), findsOneWidget);
+      verify(
+        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'arrive',
+          'role': 'trip_owner',
+          'source': 'footer',
+        }),
+      ).called(1);
+    });
+
+    testWidgets('trajet espèces seules : « Modifier » | « Partager '
+        'l\'affiche », pas « Ajouter la carte »', (tester) async {
+      await pumpTripOwnerScreen(
+        tester,
+        bottomBar: TripOwnerStickyBar(
+          trip: ownerTrip(methods: const {BidPaymentMethod.cash}),
+          bids: const [],
+          isOwner: true,
+          stripe: const StripeAccountReady(
+            ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+          ),
+        ),
+        announcement: annBloc,
+        bids: bidBloc,
+      );
+      expect(key(TripFooterButton.sharePoster), findsOneWidget);
+      expect(key(TripFooterButton.edit), findsOneWidget);
+      expect(todoKey(TripTodoKind.addCard), findsNothing);
     });
 
     testWidgets('Prévenir ouvre la feuille des destinataires (manual)', (

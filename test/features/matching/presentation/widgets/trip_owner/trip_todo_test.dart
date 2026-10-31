@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
+import 'package:dony/features/matching/presentation/widgets/rating_pending_pill.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
@@ -82,13 +83,15 @@ BidModel _bid(
   bool recipientDeclined = false,
   DateTime? recipientReplacementRequestedAt,
   bool travelerHasRated = false,
+  DateTime? updatedAt,
 }) => BidModel(
   id: id,
   announcementId: 'trip-1',
   senderId: 'sender-$id',
   status: status,
   createdAt: DateTime(2026, 10),
-  updatedAt: DateTime(2026, 10),
+  // Par défaut livré la veille : la notation reste ouverte (7 jours).
+  updatedAt: updatedAt ?? _now.subtract(const Duration(days: 1)),
   paymentMethod: paymentMethod,
   voyageurConfirmed: voyageurConfirmed,
   handoverDeadline: handoverDeadline,
@@ -161,8 +164,8 @@ void main() {
       'supplement',
       'senderAbsence',
       'returnParcel',
-      'depart',
       'arrive',
+      'depart',
       'deliver',
       'notify',
       'recipientDeclined',
@@ -404,6 +407,55 @@ void main() {
         ),
         contains(TripTodoKind.scan),
       );
+    });
+
+    test('déclaration d\'absence en attente ou levée : récupérer reste, sans '
+        'échéance (le back n\'en fait pas passer le colis en absence)', () {
+      for (final noShow in const ['PENDING_CONFIRMATION', 'RESOLVED']) {
+        // Date limite passée de 20 min : sans déclaration, l'échéance serait
+        // dans 40 min (« Expire dans 40 min »).
+        final items = _todo(
+          _trip(),
+          bids: [
+            _bid(
+              'b1',
+              'ACCEPTED',
+              handoverDeadline: _now.subtract(const Duration(minutes: 20)),
+              cancellationNoShowStatus: noShow,
+            ),
+          ],
+        );
+        final scan = _item(items, TripTodoKind.scan)!;
+        expect(scan.dueAt, isNull, reason: noShow);
+        expect(scan.dueAtByBid, isEmpty, reason: noShow);
+        // Déclaration déjà faite : plus de signalement possible.
+        expect(_kinds(items), isNot(contains(TripTodoKind.senderAbsence)));
+      }
+    });
+
+    test('déclaré et non déclaré dans le même item : seule l\'échéance du '
+        'colis menacé compte', () {
+      final items = _todo(
+        _trip(),
+        bids: [
+          _bid(
+            'declared',
+            'ACCEPTED',
+            handoverDeadline: _past,
+            cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+          ),
+          _bid(
+            'free',
+            'ACCEPTED',
+            voyageurConfirmed: true,
+            handoverDeadline: _future,
+          ),
+        ],
+      );
+      final scan = _item(items, TripTodoKind.scan)!;
+      expect(scan.bidIds, ['free', 'declared']);
+      expect(scan.dueAt, _future.add(const Duration(hours: 1)));
+      expect(scan.dueAtByBid.keys, ['free']);
     });
 
     test('plusieurs colis : un seul item, échéance la plus proche', () {
@@ -761,6 +813,67 @@ void main() {
       );
       expect(items, isEmpty);
     });
+
+    test('fenêtre de 7 jours après updatedAt (back RatingService) : '
+        'échéance = sa fin, rien au-delà', () {
+      final delivered = _now.subtract(const Duration(days: 3));
+      final rate = _item(
+        _todo(
+          _trip(status: 'COMPLETED'),
+          bids: [_bid('b1', 'COMPLETED', updatedAt: delivered)],
+        ),
+        TripTodoKind.rate,
+      )!;
+      expect(rate.dueAt, delivered.add(const Duration(days: 7)));
+      expect(
+        bidRatingDeadline(_bid('x', 'COMPLETED', updatedAt: delivered)),
+        delivered.add(kBidRatingWindow),
+      );
+      // Pile 7 jours : le back accepte encore (il ne refuse que
+      // `updatedAt < now - 7 j`) ; une seconde de plus : fermé.
+      final edge = _now.subtract(const Duration(days: 7));
+      expect(
+        _kinds(
+          _todo(
+            _trip(status: 'COMPLETED'),
+            bids: [_bid('b1', 'COMPLETED', updatedAt: edge)],
+          ),
+        ),
+        [TripTodoKind.rate],
+      );
+      expect(
+        _todo(
+          _trip(status: 'COMPLETED'),
+          bids: [
+            _bid(
+              'b1',
+              'COMPLETED',
+              updatedAt: edge.subtract(const Duration(seconds: 1)),
+            ),
+          ],
+        ),
+        isEmpty,
+      );
+      // Trajet terminé il y a trois semaines : plus rien à noter.
+      expect(
+        _todo(
+          _trip(status: 'COMPLETED'),
+          bids: [
+            _bid(
+              'b1',
+              'COMPLETED',
+              updatedAt: _now.subtract(const Duration(days: 21)),
+            ),
+            _bid(
+              'b2',
+              'DELIVERED',
+              updatedAt: _now.subtract(const Duration(days: 21)),
+            ),
+          ],
+        ),
+        isEmpty,
+      );
+    });
   });
 
   group('#32 publier', () {
@@ -846,6 +959,30 @@ void main() {
       );
       expect(_kinds(items), isNot(contains(TripTodoKind.arrive)));
     });
+
+    test('IN_PROGRESS, fenêtre de suivi ouverte, « Je pars » jamais touché '
+        'sur cet appareil : « Arrivé à destination » en tête, jamais « Je '
+        'pars »', () {
+      final items = _todo(
+        _trip(
+          status: 'IN_PROGRESS',
+          trackingActive: true,
+          parcelsSummary: _summary,
+          arrivalInstructions: 'Gare',
+        ),
+        bids: [
+          _bid('b1', 'HANDED_OVER', departureAt: _future),
+          _bid('b2', 'IN_TRANSIT', departureAt: _future),
+        ],
+      );
+      expect(items.first.kind, TripTodoKind.arrive);
+      expect(_kinds(items), isNot(contains(TripTodoKind.depart)));
+      expect(tripFooterTodo(items)!.kind, TripTodoKind.arrive);
+    });
+
+    test('ordre fixe : « Arrivé » avant « Je pars »', () {
+      expect(TripTodoKind.arrive.index, lessThan(TripTodoKind.depart.index));
+    });
   });
 
   group('#39 instructions de retrait', () {
@@ -922,14 +1059,33 @@ void main() {
           ),
         ],
       );
-      // Échéances connues d'abord (modification 30 min, présence 5 h,
-      // restitution 2 j), puis la demande sans échéance.
+      // Les demandes en tête des urgents (elles expirent sous 24 h), puis
+      // les échéances connues (modification 30 min, présence 5 h,
+      // restitution 2 j).
       expect(_kinds(items), [
+        TripTodoKind.requests,
         TripTodoKind.amendment,
         TripTodoKind.presence,
         TripTodoKind.returnParcel,
-        TripTodoKind.requests,
       ]);
+    });
+
+    test('demandes du matin et présence à confirmer dans 4 jours : la '
+        'carte « Demande 1 sur N » reste en tête', () {
+      final items = _todo(
+        _trip(),
+        bids: [
+          _bid('r1', 'PENDING'),
+          _bid('r2', 'PENDING'),
+          _bid(
+            'a1',
+            'ACCEPTED',
+            handoverDeadline: _now.add(const Duration(days: 4)),
+          ),
+        ],
+      );
+      expect(_kinds(items), [TripTodoKind.requests, TripTodoKind.presence]);
+      expect(tripFooterTodo(items)!.kind, TripTodoKind.requests);
     });
 
     test('à échéance égale, ordre fixe des types', () {
@@ -962,21 +1118,31 @@ void main() {
         _trip(trackingActive: true, parcelsSummary: _summary),
         bids: bids,
       );
-      // Urgents à échéance (date limite passée + 1 h, puis retour), urgents
-      // sans échéance dans l'ordre fixe (demandes, supplément), puis
+      // Demandes en tête des urgents, urgents à échéance (date limite
+      // passée + 1 h, puis retour), urgents sans échéance (supplément), puis
       // « Je pars ».
       expect(_kinds(items), [
+        TripTodoKind.requests,
         TripTodoKind.scan,
         TripTodoKind.senderAbsence,
         TripTodoKind.returnParcel,
-        TripTodoKind.requests,
         TripTodoKind.supplement,
         TripTodoKind.depart,
       ]);
-      // 2 demandes + scan a1, a2 + absence a1 + supplément a2 + retour r1
-      // + « Je pars ».
-      expect(tripTodoCount(items), 2 + 2 + 1 + 1 + 1 + 1);
+      // 2 demandes + scan a1, a2 + supplément a2 + retour r1 + « Je pars » ;
+      // l'absence de a1 n'ajoute rien : a1 est déjà à récupérer (deux
+      // gestes qui s'excluent pour un même colis).
+      expect(tripTodoCount(items), 2 + 2 + 1 + 1 + 1);
       expect(tripTodoParcelIds(items), {'a1', 'a2', 'r1'});
+    });
+
+    test('colis en retard (récupérer ou signaler) : compté une fois', () {
+      final items = _todo(
+        _trip(),
+        bids: [_bid('late', 'ACCEPTED', handoverDeadline: _past)],
+      );
+      expect(_kinds(items), [TripTodoKind.scan, TripTodoKind.senderAbsence]);
+      expect(tripTodoCount(items), 1);
     });
 
     test('rien à traiter : 0 et aucun colis', () {
@@ -1120,6 +1286,126 @@ void main() {
       expect(more.status, isNot(same.status));
       // Le statut du trajet n'entre pas dans la clé.
       expect(otherTripStatus.status, same.status);
+    });
+  });
+
+  group('pied collant (tripFooterTodo)', () {
+    test('urgentes et gestes du trajet seulement', () {
+      expect(TripTodoKind.values.where((k) => k.drivesFooter).toList(), [
+        ...TripTodoKind.values.where(
+          (k) => k.urgency == TripTodoUrgency.urgent,
+        ),
+        TripTodoKind.arrive,
+        TripTodoKind.depart,
+        TripTodoKind.deliver,
+        TripTodoKind.notify,
+        TripTodoKind.instructions,
+        TripTodoKind.publish,
+      ]);
+      for (final kind in const [
+        TripTodoKind.addCard,
+        TripTodoKind.rate,
+        TripTodoKind.recipientDeclined,
+      ]) {
+        expect(kind.drivesFooter, isFalse, reason: kind.name);
+      }
+    });
+
+    test('trajet espèces seules : « Ajouter la carte » en tête, mais pas au '
+        'pied', () {
+      final items = _todo(_trip(methods: const {BidPaymentMethod.cash}));
+      expect(_kinds(items), [TripTodoKind.addCard]);
+      expect(tripFooterTodo(items), isNull);
+    });
+
+    test('la première action qui peut le porter, pas la première de la '
+        'file', () {
+      // Trajet terminé, un colis à noter seulement : aucun pied d'action.
+      final rateOnly = _todo(
+        _trip(status: 'COMPLETED'),
+        bids: [_bid('b1', 'COMPLETED')],
+      );
+      expect(_kinds(rateOnly), [TripTodoKind.rate]);
+      expect(tripFooterTodo(rateOnly), isNull);
+      expect(
+        tripFooterTodo(const [
+          TripTodoItem(kind: TripTodoKind.recipientDeclined, count: 1),
+          TripTodoItem(kind: TripTodoKind.rate, count: 1),
+          TripTodoItem(kind: TripTodoKind.publish, count: 1),
+          TripTodoItem(kind: TripTodoKind.addCard, count: 1),
+        ])!.kind,
+        TripTodoKind.publish,
+      );
+    });
+  });
+
+  group('issue sans geste (espèces, carte, mobile money)', () {
+    TripTodoItem item(TripTodoKind kind, List<BidModel> bids) => TripTodoItem(
+      kind: kind,
+      count: bids.length,
+      bidIds: [for (final b in bids) b.id],
+      dueAt: _future,
+      dueAtByBid: {for (final b in bids) b.id: _future},
+    );
+    final cash = _bid('cash', 'ACCEPTED');
+    final card = _bid(
+      'card',
+      'ACCEPTED',
+      paymentMethod: BidPaymentMethod.stripe,
+    );
+    final mm = _bid(
+      'mm',
+      'ACCEPTED',
+      paymentMethod: BidPaymentMethod.mobileMoney,
+    );
+
+    test('par colis', () {
+      expect(tripNoShowOutcomeOfBid(cash), TripNoShowOutcome.cancelled);
+      expect(tripNoShowOutcomeOfBid(card), TripNoShowOutcome.travelerAbsent);
+      expect(tripNoShowOutcomeOfBid(mm), TripNoShowOutcome.travelerAbsent);
+    });
+
+    test('par action, sur les colis menacés seulement', () {
+      for (final kind in const [
+        TripTodoKind.scan,
+        TripTodoKind.senderAbsence,
+      ]) {
+        expect(
+          tripNoShowOutcomeOf(item(kind, [cash]), [cash]),
+          TripNoShowOutcome.cancelled,
+        );
+        expect(
+          tripNoShowOutcomeOf(item(kind, [card, mm]), [card, mm]),
+          TripNoShowOutcome.travelerAbsent,
+        );
+        expect(
+          tripNoShowOutcomeOf(item(kind, [cash, card]), [cash, card]),
+          TripNoShowOutcome.mixed,
+        );
+      }
+      // Colis sans échéance (déclaration déjà faite) : ignoré.
+      final declaredCard = TripTodoItem(
+        kind: TripTodoKind.scan,
+        count: 2,
+        bidIds: const ['cash', 'card'],
+        dueAt: _future,
+        dueAtByBid: {'cash': _future},
+      );
+      expect(
+        tripNoShowOutcomeOf(declaredCard, [cash, card]),
+        TripNoShowOutcome.cancelled,
+      );
+      expect(
+        tripNoShowOutcomeOf(
+          const TripTodoItem(kind: TripTodoKind.scan, count: 1),
+          [cash],
+        ),
+        isNull,
+      );
+      expect(
+        tripNoShowOutcomeOf(item(TripTodoKind.presence, [cash]), [cash]),
+        isNull,
+      );
     });
   });
 

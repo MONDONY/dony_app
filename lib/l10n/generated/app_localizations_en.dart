@@ -23066,6 +23066,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripTodoConsequenceReturn => 'the Yadony team is alerted';
 
   @override
+  String get tripTodoConsequenceCancelled => 'the parcel is cancelled';
+
+  @override
+  String get tripTodoConsequenceCancelledOrAbsent =>
+      'the parcel is cancelled or you are marked as absent';
+
+  @override
+  String get tripTodoParcelConsequenceCancelled =>
+      'Otherwise the parcel is cancelled';
+
+  @override
+  String get tripTodoParcelConsequenceAbsent =>
+      'Otherwise you are marked as absent';
+
+  @override
   String get tripTodoPresenceTitle => 'Confirm your presence';
 
   @override

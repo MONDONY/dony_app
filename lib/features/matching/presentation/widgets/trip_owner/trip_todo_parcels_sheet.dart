@@ -152,7 +152,13 @@ class _ParcelsTodoContent extends StatelessWidget {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final now = tripTodoNow();
-    final banner = tripTodoDueBanner(l, item, now: now, trip: live.trip);
+    final banner = tripTodoDueBanner(
+      l,
+      item,
+      now: now,
+      trip: live.trip,
+      bids: live.bids,
+    );
     final byId = {for (final b in live.bids ?? const <BidModel>[]) b.id: b};
     final parcels = [for (final id in item.bidIds) ?byId[id]];
     return Padding(
@@ -180,6 +186,12 @@ class _ParcelsTodoContent extends StatelessWidget {
                 now: now,
                 trip: live.trip,
               ),
+              consequence: tripTodoParcelConsequence(
+                l,
+                item,
+                bid,
+                bids: live.bids,
+              ),
               onTap: () => onOpenParcel(bid.id),
             ),
           ],
@@ -190,17 +202,20 @@ class _ParcelsTodoContent extends StatelessWidget {
 }
 
 /// Un colis de l'action : avatar (initiales), expéditeur, « contenu ·
-/// poids » ([tripRequestDetails]), son échéance en orange, chevron. Lue
-/// d'un seul tenant ; un tap ouvre la fiche du colis.
+/// poids » ([tripRequestDetails]), son échéance en orange et, dans une
+/// action qui mêle les paiements, sa conséquence ([tripTodoParcelConsequence]),
+/// chevron. Lue d'un seul tenant ; un tap ouvre la fiche du colis.
 class _ParcelTodoRow extends StatelessWidget {
   const _ParcelTodoRow({
     required this.bid,
     required this.due,
+    required this.consequence,
     required this.onTap,
   });
 
   final BidModel bid;
   final String? due;
+  final String? consequence;
   final VoidCallback onTap;
 
   @override
@@ -211,9 +226,10 @@ class _ParcelTodoRow extends StatelessWidget {
     final name = bid.senderDisplayName(l);
     final details = tripRequestDetails(l, bid);
     final due = this.due;
+    final consequence = this.consequence;
     return Semantics(
       button: true,
-      label: [name, details, ?due].join('. '),
+      label: [name, details, ?due, ?consequence].join('. '),
       excludeSemantics: true,
       child: InkWell(
         key: Key('trip-todo-parcel-${bid.id}'),
@@ -256,6 +272,16 @@ class _ParcelTodoRow extends StatelessWidget {
                           style: tt.labelMedium?.copyWith(
                             color: cs.warning,
                             fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                      if (consequence != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          consequence,
+                          key: Key('trip-todo-parcel-consequence-${bid.id}'),
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                       ],
