@@ -10,6 +10,7 @@ import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -506,6 +507,76 @@ void main() {
       await tester.pump();
       expect(h.acceptanceEvents, hasLength(1));
       await tester.pump(const Duration(seconds: 5));
+    });
+
+    group('refus définitif mémorisé', () {
+      Future<void> refuseR1(WidgetTester tester) async {
+        await pumpCard(
+          tester,
+          bids: answerRequests(2, method: BidPaymentMethod.cash),
+        );
+        await tester.tap(accept('r1'));
+        await tester.pump();
+        await tester.pump();
+        h.acceptanceStates.add(
+          acs.BidFailed(
+            reason: acs.BidFailureReason.refused,
+            bidId: 'r1',
+            definitive: true,
+            error: const ConflictException('x', code: 'capacity-insufficient'),
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
+        expect(button(tester, accept('r1')).onPressed, isNull);
+      }
+
+      testWidgets('relecture identique : le refus reste', (tester) async {
+        await refuseR1(tester);
+        h.screenStates.add(
+          BidListLoaded(answerRequests(2, method: BidPaymentMethod.cash)),
+        );
+        h.annStates.add(AnnouncementDetailLoaded(answerTrip()));
+        await tester.pump();
+        await tester.pump();
+        expect(button(tester, accept('r1')).onPressed, isNull);
+        expect(
+          h.acceptanceEvents.whereType<ace.BidAcceptanceRefusalsCleared>(),
+          isEmpty,
+        );
+        await tester.pump(const Duration(seconds: 5));
+      });
+
+      testWidgets('un colis annulé dans la relecture : refus oublié, ici et '
+          'dans le bloc d\'acceptation', (tester) async {
+        await refuseR1(tester);
+        h.screenStates.add(
+          BidListLoaded([
+            ...answerRequests(2, method: BidPaymentMethod.cash),
+            answerBid('a1', status: 'CANCELLED'),
+          ]),
+        );
+        await tester.pump();
+        await tester.pump();
+        expect(button(tester, accept('r1')).onPressed, isNotNull);
+        expect(find.byKey(const Key('trip-request-refused-r1')), findsNothing);
+        expect(
+          h.acceptanceEvents.whereType<ace.BidAcceptanceRefusalsCleared>(),
+          hasLength(1),
+        );
+        await tester.pump(const Duration(seconds: 5));
+      });
+
+      testWidgets('kilos libérés dans le trajet relu : refus oublié', (
+        tester,
+      ) async {
+        await refuseR1(tester);
+        h.annStates.add(AnnouncementDetailLoaded(answerTrip(availableKg: 25)));
+        await tester.pump();
+        await tester.pump();
+        expect(button(tester, accept('r1')).onPressed, isNotNull);
+        await tester.pump(const Duration(seconds: 5));
+      });
     });
 
     testWidgets('refus définitif, liste relue sans la demande : la suivante '

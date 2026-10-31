@@ -198,7 +198,8 @@ class _FollowAnswered extends StatelessWidget {
 
 /// Demandes à traiter, une par ligne : qui, quoi, combien, puis Refuser et
 /// Accepter. Vide : une phrase. Liste pas encore chargée : le nombre servi
-/// par la liste des trajets s'il en annonce, sinon un indicateur.
+/// par la liste des trajets s'il en annonce, sinon un indicateur ; liste en
+/// échec ([_BidsNotLoaded]) : « Réessayer ».
 class _RequestsContent extends StatelessWidget {
   const _RequestsContent({
     required this.live,
@@ -218,12 +219,21 @@ class _RequestsContent extends StatelessWidget {
     final pending = tripRequestsToAnswer(live.bids, answered);
     final Widget body;
     if (pending == null) {
-      body = live.trip.pendingBidCount > 0
-          ? Text(
-              l.tripTodoRequestsSummary(live.trip.pendingBidCount),
-              style: tt.bodyMedium,
-            )
-          : Center(child: CircularProgressIndicator(color: cs.primary));
+      body = _BidsNotLoaded(
+        tripId: live.trip.id,
+        errorKey: const Key('trip-activity-requests-load-error'),
+        loading: live.trip.pendingBidCount > 0
+            ? Text(
+                l.tripTodoRequestsSummary(live.trip.pendingBidCount),
+                style: tt.bodyMedium,
+              )
+            : Padding(
+                padding: const EdgeInsets.all(DonySpacing.lg),
+                child: Center(
+                  child: CircularProgressIndicator(color: cs.primary),
+                ),
+              ),
+      );
     } else if (pending.isEmpty) {
       body = Text(
         l.tripActivityRequestsEmpty,
@@ -264,10 +274,9 @@ class _RequestsContent extends StatelessWidget {
 /// (`trip_parcels_viewed`, total des colis embarqués) et chaque filtre
 /// choisi (`trip_parcels_filtered`).
 ///
-/// Liste jamais reçue et chargement en échec (`BidError` du `BidBloc` de
-/// l'écran : hors ligne au premier chargement) : « Réessayer » la redemande,
-/// sans quoi plus aucun chemin ne mènerait aux colis du trajet. Après une
-/// liste déjà reçue, un échec de relecture garde cette liste.
+/// Liste jamais reçue : un indicateur, ou « Réessayer » si son chargement
+/// est en échec ([_BidsNotLoaded]). Après une liste déjà reçue, un échec de
+/// relecture garde cette liste.
 class _ParcelsContent extends StatefulWidget {
   const _ParcelsContent({
     required this.tripId,
@@ -327,25 +336,13 @@ class _ParcelsContentState extends State<_ParcelsContent> {
     final l = context.l10n;
     final bids = widget.bids;
     if (bids == null) {
-      final spinner = Padding(
-        padding: const EdgeInsets.all(DonySpacing.lg),
-        child: Center(child: CircularProgressIndicator(color: cs.primary)),
-      );
-      final bloc = maybeRead<BidBloc>(context);
-      if (bloc == null) return spinner;
-      return BlocBuilder<BidBloc, BidState>(
-        bloc: bloc,
-        builder: (context, state) => state is BidError
-            ? DonyEmptyState(
-                key: const Key('trip-activity-parcels-load-error'),
-                type: DonyEmptyStateType.error,
-                iconAsset: 'circle-alert',
-                title: l.commonLoadError,
-                actionLabel: l.commonRetry,
-                onAction: () => bloc.add(BidListRequested(widget.tripId)),
-                padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
-              )
-            : spinner,
+      return _BidsNotLoaded(
+        tripId: widget.tripId,
+        errorKey: const Key('trip-activity-parcels-load-error'),
+        loading: Padding(
+          padding: const EdgeInsets.all(DonySpacing.lg),
+          child: Center(child: CircularProgressIndicator(color: cs.primary)),
+        ),
       );
     }
     final embarked = tripEmbarkedParcels(bids)!;
@@ -421,6 +418,46 @@ class _ParcelsContentState extends State<_ParcelsContent> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Liste des colis du trajet jamais reçue par l'écran ([TripTodoLive]) :
+/// [loading] tant qu'elle peut encore arriver ; chargement en échec
+/// (`BidError` du `BidBloc` de l'écran : hors ligne au premier chargement) :
+/// « Erreur de chargement » et « Réessayer », qui la redemande en
+/// rechargement visible. Sans quoi le sheet tournerait sans fin et plus
+/// aucun chemin ne mènerait aux demandes ni aux colis du trajet (l'écran
+/// n'a pas de « tirer pour rafraîchir »).
+class _BidsNotLoaded extends StatelessWidget {
+  const _BidsNotLoaded({
+    required this.tripId,
+    required this.errorKey,
+    required this.loading,
+  });
+
+  final String tripId;
+  final Key errorKey;
+  final Widget loading;
+
+  @override
+  Widget build(BuildContext context) {
+    final bloc = maybeRead<BidBloc>(context);
+    if (bloc == null) return loading;
+    final l = context.l10n;
+    return BlocBuilder<BidBloc, BidState>(
+      bloc: bloc,
+      builder: (context, state) => state is BidError
+          ? DonyEmptyState(
+              key: errorKey,
+              type: DonyEmptyStateType.error,
+              iconAsset: 'circle-alert',
+              title: l.commonLoadError,
+              actionLabel: l.commonRetry,
+              onAction: () => bloc.add(BidListRequested(tripId)),
+              padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
+            )
+          : loading,
     );
   }
 }

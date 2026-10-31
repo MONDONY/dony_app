@@ -1723,6 +1723,64 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
     });
 
+    testWidgets('pied « Voir les demandes (N) » : suit les réponses données '
+        'depuis l\'écran, sans attendre la relecture', (tester) async {
+      final consent = _MockTrackingConsent();
+      when(
+        () => consent.onParcelAccepted(any()),
+      ).thenAnswer((_) async => false);
+      getIt.registerSingleton<TrackingConsentCubit>(consent);
+      addTearDown(() => getIt.unregister<TrackingConsentCubit>());
+      ownerOn(_makeAnnouncement(), bids: [request('r1'), request('r2')]);
+      await pumpScreen(tester);
+      expect(find.text('Voir les demandes (2)'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('trip-request-accept-r1')));
+      await tester.pump();
+      await tester.pump();
+      answerStates.add(BidAccepted(request('r1')));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Voir les demandes (1)'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('trip-request-accept-r2')));
+      await tester.pump();
+      await tester.pump();
+      answerStates.add(BidAccepted(request('r2')));
+      await tester.pump();
+      await tester.pump();
+      // Plus rien à traiter : le pied du trajet ouvert sans demande, même si
+      // la relecture n'est pas revenue (hors ligne).
+      expect(find.byKey(const Key('trip-footer-seeRequests')), findsNothing);
+      expect(find.byKey(const Key('trip-footer-sharePoster')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('visiteur : aucun bloc de réponse créé', (tester) async {
+      var created = 0;
+      unregisterTripAnswerBlocs();
+      getIt
+        ..registerFactory<BidBloc>(() {
+          created++;
+          return answerBids;
+        })
+        ..registerFactory<BidAcceptanceBloc>(() {
+          created++;
+          return _MockBidAcceptanceBloc();
+        });
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(_makeAnnouncement()));
+      whenListen(
+        annBloc,
+        const Stream<AnnouncementState>.empty(),
+        initialState: AnnouncementDetailLoaded(_makeAnnouncement()),
+      );
+      await pumpScreen(tester);
+      expect(find.byKey(const Key('trip-direct-request-card')), findsNothing);
+      expect(created, 0);
+    });
+
     testWidgets('case Demandes : sheet des demandes, la ligne ouvre la fiche, '
         'relue en silence au retour', (tester) async {
       ownerOn(_makeAnnouncement(), bids: [request('r1'), request('r2')]);

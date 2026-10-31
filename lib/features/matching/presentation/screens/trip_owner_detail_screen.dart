@@ -50,9 +50,9 @@ import 'package:share_plus/share_plus.dart';
 /// Barre d'application : retour, icône de partage de l'affiche (trajet
 /// ouvert), menu ⋮ ([TripOwnerOptionsButton]), scarabée. Corps en tableau de
 /// bord ([TripOwnerBody] : billet, carte de statut, « À traiter » avec la
-/// réponse directe aux demandes, « Activité du trajet », « Votre trajet »),
-/// sous le [TripBidAnswerScope] du propriétaire ; pied collant hors du
-/// défilement ([TripOwnerStickyBar], un ou deux boutons).
+/// réponse directe aux demandes, « Activité du trajet », « Votre trajet ») ;
+/// pied collant hors du défilement ([TripOwnerStickyBar], un ou deux
+/// boutons). Le [TripBidAnswerScope] est posé au-dessus des trois.
 ///
 /// L'écran possède les blocs de la route et en écoute les suites : les
 /// actions lancées depuis le pied, le menu ou les sheets (publier, dépublier,
@@ -232,111 +232,114 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     // pied.
     return BlocProvider<TripDepartCubit>(
       create: (_) => getIt<TripDepartCubit>(param1: id),
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: DonyAppBar(
-          title: context.l10n.listingHeroTripLabel,
-          // Partage à portée de pouce, puis le menu ⋮ ; le scarabée suit.
-          // Toujours montés une fois le trajet connu : chacun décide de se
-          // masquer, son contexte (d'où partent ses actions) reste stable.
-          actions: [
-            _LiveTrip(
-              tripId: id,
-              known: _known,
-              builder: (context, live, isOwner) =>
-                  isOwner && canShareTripPoster(live.trip)
-                  ? IconButton(
-                      key: const Key('trip-owner-share-button'),
-                      tooltip: context.l10n.tripPosterShareButton,
-                      icon: const DonyIcon('share-2', size: 22),
-                      onPressed: () => openTripPoster(context, live.trip),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            _LiveTrip(
-              tripId: id,
-              known: _known,
-              builder: (context, live, isOwner) => TripOwnerOptionsButton(
-                trip: live.trip,
-                bids: live.bids,
-                isOwner: isOwner,
+      // Réponse directe aux demandes (carte « Demande 1 sur N », sheet des
+      // demandes) : au-dessus de la barre, du corps et du pied, sous les
+      // blocs de la route qu'elle relit après chaque réponse. Le pied
+      // « Voir les demandes (N) » suit ainsi les réponses données depuis
+      // l'écran. Ses blocs ne sont créés qu'à la première réponse : un
+      // visiteur n'en crée aucun.
+      child: TripBidAnswerScope(
+        tripId: id,
+        child: Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: DonyAppBar(
+            title: context.l10n.listingHeroTripLabel,
+            // Partage à portée de pouce, puis le menu ⋮ ; le scarabée suit.
+            // Toujours montés une fois le trajet connu : chacun décide de se
+            // masquer, son contexte (d'où partent ses actions) reste stable.
+            actions: [
+              _LiveTrip(
+                tripId: id,
+                known: _known,
+                builder: (context, live, isOwner) =>
+                    isOwner && canShareTripPoster(live.trip)
+                    ? IconButton(
+                        key: const Key('trip-owner-share-button'),
+                        tooltip: context.l10n.tripPosterShareButton,
+                        icon: const DonyIcon('share-2', size: 22),
+                        onPressed: () => openTripPoster(context, live.trip),
+                      )
+                    : const SizedBox.shrink(),
               ),
-            ),
-          ],
-        ),
-        body: MultiBlocListener(
-          listeners: [
-            BlocListener<AuthBloc, AuthState>(
-              listener: (context, _) {
-                final a = _current;
-                if (a != null) {
-                  _evaluateViewer(context, a);
+              _LiveTrip(
+                tripId: id,
+                known: _known,
+                builder: (context, live, isOwner) => TripOwnerOptionsButton(
+                  trip: live.trip,
+                  bids: live.bids,
+                  isOwner: isOwner,
+                ),
+              ),
+            ],
+          ),
+          body: MultiBlocListener(
+            listeners: [
+              BlocListener<AuthBloc, AuthState>(
+                listener: (context, _) {
+                  final a = _current;
+                  if (a != null) {
+                    _evaluateViewer(context, a);
+                  }
+                },
+              ),
+              BlocListener<BidBloc, BidState>(listener: _onBidState),
+              BlocListener<CancellationBloc, CancellationState>(
+                listener: _onCancellationState,
+              ),
+              // « Je pars » confirmé, sheet ouvert ou déjà refermé pendant
+              // l'appel : la confirmation part de l'écran (le message est
+              // dédoublonné avec celle du bouton du sheet).
+              BlocListener<TripDepartCubit, TripDepartState>(
+                listenWhen: (a, b) => !a.departed && b.departed,
+                listener: (context, _) => DonySnackbar.show(
+                  context,
+                  message: context.l10n.tripDepartConfirmedSnackbar,
+                  type: DonySnackbarType.success,
+                ),
+              ),
+            ],
+            child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
+              listener: _onAnnouncementState,
+              builder: (context, state) {
+                final a = state is AnnouncementDetailLoaded
+                    ? state.announcement
+                    : _known();
+                if (a == null) {
+                  // Détail en échec sans trajet à montrer (ouvert par une
+                  // notification ou un lien, sans `extra`) : un état d'erreur
+                  // avec « Réessayer » plutôt qu'un squelette sans fin.
+                  if (state is AnnouncementError) {
+                    return _LoadError(
+                      error: state.error,
+                      onRetry: () => context.read<AnnouncementBloc>().add(
+                        AnnouncementDetailRequested(id),
+                      ),
+                    );
+                  }
+                  return const DonyDetailSkeleton();
                 }
+                return _OwnerOf(
+                  trip: a,
+                  builder: (context, isOwner) {
+                    if (isOwner) _askTrackingConsentOnce(a);
+                    return TripOwnerBody(
+                      trip: a,
+                      isOwner: isOwner,
+                      bottomPadding: safeBottom,
+                    );
+                  },
+                );
               },
             ),
-            BlocListener<BidBloc, BidState>(listener: _onBidState),
-            BlocListener<CancellationBloc, CancellationState>(
-              listener: _onCancellationState,
-            ),
-            // « Je pars » confirmé, sheet ouvert ou déjà refermé pendant
-            // l'appel : la confirmation part de l'écran (le message est
-            // dédoublonné avec celle du bouton du sheet).
-            BlocListener<TripDepartCubit, TripDepartState>(
-              listenWhen: (a, b) => !a.departed && b.departed,
-              listener: (context, _) => DonySnackbar.show(
-                context,
-                message: context.l10n.tripDepartConfirmedSnackbar,
-                type: DonySnackbarType.success,
-              ),
-            ),
-          ],
-          child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
-            listener: _onAnnouncementState,
-            builder: (context, state) {
-              final a = state is AnnouncementDetailLoaded
-                  ? state.announcement
-                  : _known();
-              if (a == null) {
-                // Détail en échec sans trajet à montrer (ouvert par une
-                // notification ou un lien, sans `extra`) : un état d'erreur
-                // avec « Réessayer » plutôt qu'un squelette sans fin.
-                if (state is AnnouncementError) {
-                  return _LoadError(
-                    error: state.error,
-                    onRetry: () => context.read<AnnouncementBloc>().add(
-                      AnnouncementDetailRequested(id),
-                    ),
-                  );
-                }
-                return const DonyDetailSkeleton();
-              }
-              return _OwnerOf(
-                trip: a,
-                builder: (context, isOwner) {
-                  final body = TripOwnerBody(
-                    trip: a,
-                    isOwner: isOwner,
-                    bottomPadding: safeBottom,
-                  );
-                  if (!isOwner) return body;
-                  _askTrackingConsentOnce(a);
-                  // Réponse directe aux demandes (carte « Demande 1 sur N »,
-                  // sheet des demandes) : au-dessus du corps, sous les blocs
-                  // de la route qu'elle relit après chaque réponse. Le
-                  // contrôleur survit à la disparition de la carte.
-                  return TripBidAnswerScope(tripId: id, child: body);
-                },
-              );
-            },
           ),
-        ),
-        bottomNavigationBar: _LiveTrip(
-          tripId: id,
-          known: _known,
-          builder: (context, live, isOwner) => TripOwnerStickyBar(
-            trip: live.trip,
-            bids: live.bids,
-            isOwner: isOwner,
+          bottomNavigationBar: _LiveTrip(
+            tripId: id,
+            known: _known,
+            builder: (context, live, isOwner) => TripOwnerStickyBar(
+              trip: live.trip,
+              bids: live.bids,
+              isOwner: isOwner,
+            ),
           ),
         ),
       ),

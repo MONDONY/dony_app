@@ -8,6 +8,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_tiles.dart';
@@ -67,11 +68,17 @@ const _travellingStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
 /// n'entre pas dans la règle : il n'est possible qu'avec des colis remis
 /// (`parcelsSummary`), donc la règle 1 ou 2 s'applique déjà.
 ///
+/// [answered] : demandes traitées depuis l'écran
+/// ([TripBidAnswerController.answered]) ; celles que la liste montre encore
+/// en attente ne comptent plus dans « Voir les demandes (N) »
+/// ([tripBidsAfterAnswers], même règle que la carte et la case Demandes).
+///
 /// [isOwner] faux : aucun pied, comme « À traiter » et « Votre trajet ».
 TripFooter? tripFooterFor({
   required AnnouncementModel trip,
   required List<BidModel>? bids,
   required bool isOwner,
+  Set<String> answered = const {},
 }) {
   if (!isOwner) return null;
   if (bids != null && _travellingStatuses.contains(trip.status)) {
@@ -87,7 +94,10 @@ TripFooter? tripFooterFor({
   if (trip.status == 'DRAFT') {
     return (primary: TripFooterButton.publish, secondary: edit);
   }
-  final pending = tripPendingRequestCount(trip, bids);
+  final pending = tripPendingRequestCount(
+    trip,
+    tripBidsAfterAnswers(bids, answered),
+  );
   if ((trip.status == 'ACTIVE' || trip.status == 'FULL') && pending > 0) {
     return (primary: TripFooterButton.seeRequests, secondary: null);
   }
@@ -135,11 +145,38 @@ class TripOwnerStickyBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final footer = tripFooterFor(trip: trip, bids: bids, isOwner: isOwner);
+    // Suit les demandes traitées depuis l'écran quand le scope de réponse
+    // est au-dessus (posé par l'écran au-dessus du Scaffold).
+    final answered = TripBidAnswerScope.maybeOf(context)?.answered;
+    if (answered == null) return _bar(context, const {});
+    return ValueListenableBuilder<Set<String>>(
+      valueListenable: answered,
+      builder: (context, ids, _) => _bar(context, ids),
+    );
+  }
+
+  Widget _bar(BuildContext context, Set<String> answered) {
+    final footer = tripFooterFor(
+      trip: trip,
+      bids: bids,
+      isOwner: isOwner,
+      answered: answered,
+    );
     if (footer == null) return const SizedBox.shrink();
+    final pending = tripPendingRequestCount(
+      trip,
+      tripBidsAfterAnswers(bids, answered),
+    );
+    String label(TripFooterButton button) =>
+        _label(context.l10n, button, pending: pending);
     final cs = Theme.of(context).colorScheme;
     final h = DonyLayout.hPadding(context);
-    final primary = _button(context, footer.primary, primary: true);
+    final primary = _button(
+      context,
+      footer.primary,
+      label: label(footer.primary),
+      primary: true,
+    );
     final secondaryButton = footer.secondary;
     return Container(
       key: const Key('trip-owner-sticky-bar'),
@@ -157,13 +194,14 @@ class TripOwnerStickyBar extends StatelessWidget {
                 final secondary = _button(
                   context,
                   secondaryButton,
+                  label: label(secondaryButton),
                   primary: false,
                 );
                 if (_fitSideBySide(
                   context,
                   constraints.maxWidth,
-                  primary: _label(context.l10n, footer.primary),
-                  secondary: _label(context.l10n, secondaryButton),
+                  primary: label(footer.primary),
+                  secondary: label(secondaryButton),
                 )) {
                   return Row(
                     children: [
@@ -217,27 +255,30 @@ class TripOwnerStickyBar extends StatelessWidget {
         measure(primary) <= row * 2 / 3 - inner;
   }
 
-  String _label(AppLocalizations l, TripFooterButton button) =>
-      switch (button) {
-        TripFooterButton.markArrived => l.tripOwnerMarkArrivedButton,
-        TripFooterButton.notifyRecipients => l.notifyRecipientsButton(
-          recipientsToNotify(bids ?? const []).length,
-        ),
-        TripFooterButton.edit => l.commonEdit,
-        TripFooterButton.publish => l.tripOwnerPublishTile,
-        TripFooterButton.seeRequests => l.listingSeeRequestsButton(
-          tripPendingRequestCount(trip, bids),
-        ),
-        TripFooterButton.sharePoster => l.tripPosterShareButton,
-      };
+  /// Libellé de [button] ; [pending] : demandes à traiter affichées.
+  String _label(
+    AppLocalizations l,
+    TripFooterButton button, {
+    required int pending,
+  }) => switch (button) {
+    TripFooterButton.markArrived => l.tripOwnerMarkArrivedButton,
+    TripFooterButton.notifyRecipients => l.notifyRecipientsButton(
+      recipientsToNotify(bids ?? const []).length,
+    ),
+    TripFooterButton.edit => l.commonEdit,
+    TripFooterButton.publish => l.tripOwnerPublishTile,
+    TripFooterButton.seeRequests => l.listingSeeRequestsButton(pending),
+    TripFooterButton.sharePoster => l.tripPosterShareButton,
+  };
 
   Widget _button(
     BuildContext context,
     TripFooterButton button, {
+    required String label,
     required bool primary,
   }) => DonyButton(
     key: Key('trip-footer-${button.name}'),
-    label: _label(context.l10n, button),
+    label: label,
     // Icône seulement sur un bouton seul (« Prévenir… ») : à 1/3 ou 2/3 de
     // ligne, elle ferait rétrécir le libellé.
     iconAsset: button == TripFooterButton.notifyRecipients

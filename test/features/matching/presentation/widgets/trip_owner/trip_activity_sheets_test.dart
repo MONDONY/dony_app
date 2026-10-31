@@ -318,6 +318,42 @@ void main() {
       );
     });
 
+    for (final count in [0, 2]) {
+      testWidgets(
+        'premier chargement en échec (compte $count) : « Réessayer », '
+        'jamais un indicateur sans fin',
+        (tester) async {
+          await open(
+            tester,
+            TripActivity.requests,
+            trip: answerTrip(pendingBidCount: count),
+          );
+          h.screenStates.add(BidError(const NetworkException('offline')));
+          await _settle(tester);
+          expect(
+            find.byKey(const Key('trip-activity-requests-load-error')),
+            findsOneWidget,
+          );
+          expect(find.byType(CircularProgressIndicator), findsNothing);
+          expect(
+            find.text('Aucune demande à traiter pour le moment.'),
+            findsNothing,
+          );
+          await tester.tap(find.text('Réessayer'));
+          await tester.pump();
+          final retry = h.screenEvents.single as BidListRequested;
+          expect(retry.announcementId, 'trip-1');
+          expect(retry.silent, isFalse);
+          h.screenStates.add(BidListLoaded(answerRequests(1)));
+          await _settle(tester);
+          expect(
+            find.byKey(const Key('trip-activity-request-r1')),
+            findsOneWidget,
+          );
+        },
+      );
+    }
+
     testWidgets('anglais', (tester) async {
       await open(
         tester,

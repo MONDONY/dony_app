@@ -7,7 +7,9 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -19,11 +21,11 @@ import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.
 import 'package:dony/features/matching/presentation/widgets/bid_accept_follow_ups.dart';
 import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
 import 'package:dony/features/tracking/presentation/tracking_consent_prompt.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Réponse en cours à une demande : laquelle, et quel geste.
 enum TripBidAnswerAction { accept, reject }
@@ -77,7 +79,8 @@ abstract interface class TripBidAnswerController {
   /// fermé…), avec l'erreur du serveur : « Accepter » y est éteint et le
   /// motif affiché, comme dans `DemandesScreen` (`BidAcceptanceBloc.refusals`,
   /// que le bloc rejouerait sans rappeler le serveur).
-  /// Refuser reste possible.
+  /// Refuser reste possible. Oublié dès que l'écran relit des colis ou un
+  /// trajet différents (kilos libérés, statut changé).
   ValueListenable<Map<String, AppException>> get refused;
 
   /// Accepte [bid] par le parcours habituel du voyageur. [from] : contexte
@@ -141,8 +144,10 @@ class TripBidAnswerScope extends StatefulWidget {
   final String tripId;
   final Widget child;
 
-  /// Blocs de réponse fournis par l'appelant (tests) ; sinon créés par le
-  /// scope (`getIt`) et fermés avec lui.
+  /// Blocs de réponse fournis par l'appelant (tests), suivis dès le montage ;
+  /// sinon créés par le scope (`getIt`) à la première réponse, et fermés avec
+  /// lui. Posé au-dessus de tout l'écran (barre, corps, pied), le scope ne
+  /// crée donc aucun bloc pour un visiteur, qui n'a rien à répondre.
   @visibleForTesting
   final BidBloc? bidBloc;
   @visibleForTesting
@@ -185,9 +190,18 @@ class _TripBidAnswerInherited extends InheritedWidget {
 
 class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
     implements TripBidAnswerController {
-  late final BidBloc _bids = widget.bidBloc ?? getIt<BidBloc>();
-  late final BidAcceptanceBloc _acceptance =
-      widget.acceptanceBloc ?? getIt<BidAcceptanceBloc>();
+  /// Blocs de réponse, créés à la première réponse ([_ensureBlocs]).
+  BidBloc? _bidsOrNull;
+  BidAcceptanceBloc? _acceptanceOrNull;
+
+  /// Suivi des blocs de réponse et des blocs de l'écran.
+  final _subscriptions = <StreamSubscription<Object?>>[];
+
+  /// Empreinte des dernières données de l'écran (colis et statuts, statut et
+  /// kilos libres du trajet) : un refus définitif mémorisé ([refused]) est
+  /// oublié dès qu'elles changent ([_onScreenData]).
+  String? _parcelsPrint;
+  String? _tripPrint;
 
   final _answering = ValueNotifier<TripBidAnswering?>(null);
   final _answered = ValueNotifier<Set<String>>(const {});
@@ -223,10 +237,99 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
 
   bool get _busy => _choosing || _answering.value != null;
 
+  BidBloc get _bids {
+    _ensureBlocs();
+    return _bidsOrNull!;
+  }
+
+  BidAcceptanceBloc get _acceptance {
+    _ensureBlocs();
+    return _acceptanceOrNull!;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.bidBloc != null || widget.acceptanceBloc != null) {
+      _ensureBlocs();
+    }
+    // Données de l'écran : un refus définitif mémorisé n'est vrai que pour
+    // les colis et le trajet qui l'ont vu naître.
+    final screenBids = maybeRead<BidBloc>(context);
+    if (screenBids != null) {
+      _parcelsPrint = _parcelsPrintOf(screenBids.state);
+      _subscriptions.add(
+        screenBids.stream.listen((state) {
+          final next = _parcelsPrintOf(state);
+          if (next == null || next == _parcelsPrint) return;
+          _parcelsPrint = next;
+          _onScreenData();
+        }),
+      );
+    }
+    final trips = maybeRead<AnnouncementBloc>(context);
+    if (trips != null) {
+      _tripPrint = _tripPrintOf(trips.state);
+      _subscriptions.add(
+        trips.stream.listen((state) {
+          final next = _tripPrintOf(state);
+          if (next == null || next == _tripPrint) return;
+          _tripPrint = next;
+          _onScreenData();
+        }),
+      );
+    }
+  }
+
+  /// Crée (une fois) les blocs de réponse et les suit, comme un
+  /// `BlocListener` : seuls les états émis ensuite comptent.
+  void _ensureBlocs() {
+    if (_bidsOrNull != null) return;
+    final bids = _bidsOrNull = widget.bidBloc ?? getIt<BidBloc>();
+    final acceptance = _acceptanceOrNull =
+        widget.acceptanceBloc ?? getIt<BidAcceptanceBloc>();
+    _subscriptions
+      ..add(
+        bids.stream.listen((state) {
+          if (mounted) _onBidState(state);
+        }),
+      )
+      ..add(
+        acceptance.stream.listen((state) {
+          if (mounted) _onAcceptanceState(state);
+        }),
+      );
+  }
+
+  /// Empreinte des colis d'un `BidListLoaded`, `null` pour un autre état.
+  static String? _parcelsPrintOf(BidState state) => state is BidListLoaded
+      ? [for (final b in state.bids) '${b.id}:${b.status}'].join(',')
+      : null;
+
+  /// Empreinte du trajet relu, `null` pour un état qui n'en porte pas.
+  String? _tripPrintOf(AnnouncementState state) {
+    final trip = tripAnnouncementIn(state, widget.tripId);
+    return trip == null ? null : '${trip.status}|${trip.availableKg}';
+  }
+
+  /// Colis ou trajet relus différents (un colis annulé libère des kilos,
+  /// un statut change…) : les refus définitifs mémorisés sont oubliés, ici
+  /// et dans le `BidAcceptanceBloc` qui les rejouerait sans appeler le
+  /// serveur (comme le « tirer pour rafraîchir » de `DemandesScreen`).
+  /// Le serveur redira non si rien n'a changé pour la demande.
+  void _onScreenData() {
+    if (!mounted) return;
+    if (_refused.value.isNotEmpty) _refused.value = const {};
+    _acceptanceOrNull?.add(ace.BidAcceptanceRefusalsCleared());
+  }
+
   @override
   void dispose() {
-    if (widget.bidBloc == null) _bids.close();
-    if (widget.acceptanceBloc == null) _acceptance.close();
+    for (final subscription in _subscriptions) {
+      unawaited(subscription.cancel());
+    }
+    if (widget.bidBloc == null) _bidsOrNull?.close();
+    if (widget.acceptanceBloc == null) _acceptanceOrNull?.close();
     _answering.dispose();
     _answered.dispose();
     _refused.dispose();
@@ -263,7 +366,7 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
     unawaited(run().whenComplete(() => _choosing = false));
   }
 
-  void _onBidState(BuildContext context, BidState state) {
+  void _onBidState(BidState state) {
     switch (state) {
       case BidAccepted(:final bid):
         _answeredOk(bid.id, accepted: true);
@@ -278,7 +381,7 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
     }
   }
 
-  void _onAcceptanceState(BuildContext context, acs.BidAcceptanceState state) {
+  void _onAcceptanceState(acs.BidAcceptanceState state) {
     switch (state) {
       case acs.BidAccepted():
         final id = _cashBidId ?? _answering.value?.bidId;
@@ -364,14 +467,6 @@ class _TripBidAnswerScopeState extends State<TripBidAnswerScope>
   }
 
   @override
-  Widget build(BuildContext context) => MultiBlocListener(
-    listeners: [
-      BlocListener<BidBloc, BidState>(bloc: _bids, listener: _onBidState),
-      BlocListener<BidAcceptanceBloc, acs.BidAcceptanceState>(
-        bloc: _acceptance,
-        listener: _onAcceptanceState,
-      ),
-    ],
-    child: _TripBidAnswerInherited(controller: this, child: widget.child),
-  );
+  Widget build(BuildContext context) =>
+      _TripBidAnswerInherited(controller: this, child: widget.child);
 }
