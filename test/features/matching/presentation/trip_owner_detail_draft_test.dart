@@ -272,7 +272,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('brouillon'), findsWidgets);
-      expect(find.text('Publier'), findsOneWidget);
+      // Pied collant, et grosse carte « À traiter » (« Publier » en tête).
+      expect(_inFooter(find.text('Publier')), findsOneWidget);
+      expect(find.text('Publier'), findsNWidgets(2));
     },
   );
 
@@ -324,7 +326,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Publier'));
+    await tester.tap(_inFooter(find.text('Publier')));
     await tester.pump();
 
     verify(
@@ -437,7 +439,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('brouillon'), findsWidgets);
-      expect(find.text('Publier'), findsOneWidget);
+      // Pied collant, et grosse carte « À traiter » (« Publier » en tête).
+      expect(_inFooter(find.text('Publier')), findsOneWidget);
+      expect(find.text('Publier'), findsNWidgets(2));
 
       // Le bloc émet l'état intermédiaire AnnouncementPublished (ACTIVE), sans
       // que le AnnouncementDetailLoaded du reload ne suive (ex. erreur réseau
@@ -504,3 +508,9 @@ void main() {
     },
   );
 }
+
+/// [f] dans le pied collant de l'écran.
+Finder _inFooter(Finder f) => find.descendant(
+  of: find.byKey(const Key('trip-owner-sticky-bar')),
+  matching: f,
+);

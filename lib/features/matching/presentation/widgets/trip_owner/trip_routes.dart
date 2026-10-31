@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip_validation.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
@@ -68,6 +69,12 @@ Future<void> openTripParcel(
   required String tripId,
   required String bidId,
 }) => _pushThenReload(context, tripId, '/bids/$bidId');
+
+/// Ouvre Suivi › Valider sur le trajet [tripId] (lecture du QR d'un colis à
+/// la remise, comme le pied de la fiche colis), puis relit ses colis et le
+/// trajet au retour : la remise fait avancer les colis.
+Future<void> openTripScan(BuildContext context, String tripId) =>
+    _pushThenReload(context, tripId, tripValidationLocation(tripId));
 
 /// Écrans (routes) qui ont déjà une page ouverte par [pushOncePerScreen] et
 /// pas encore refermée : un second appui avant que la page ne couvre l'écran

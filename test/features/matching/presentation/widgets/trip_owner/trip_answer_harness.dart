@@ -283,6 +283,7 @@ class AnswerHarness {
         GoRoute(path: '/announcements/:id/trip', builder: stub),
         GoRoute(path: '/payments/wallet/topup/method', builder: stub),
         GoRoute(path: '/payments/commission-method', builder: stub),
+        GoRoute(path: '/tracking/validate', builder: stub),
       ],
     );
     addTearDown(router.dispose);

@@ -1,4 +1,6 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_tiles.dart';
 
 // Règles d'arrivée de l'écran du trajet vu par son voyageur : pied collant,
 // carte de statut et annulation.
@@ -32,6 +34,21 @@ bool tripHasParcelsOnBoard(List<BidModel> bids) =>
 /// se modifient depuis la tuile « Arrivée » (`TripTile.arrival`).
 bool tripCanMarkArrived(String tripStatus, List<BidModel> bids) =>
     tripStatus == 'IN_PROGRESS' && tripHasParcelsOnBoard(bids);
+
+/// Statuts d'un trajet dont les colis voyagent encore.
+const _travellingStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
+
+/// Faut-il prévenir les destinataires ? Trajet ACTIVE, FULL ou IN_PROGRESS
+/// ([tripStatus]) dont l'arrivée est marquée : un colis `ARRIVED`
+/// ([tripHasArrivedParcel]), plus aucun remis ni en transit
+/// ([tripHasParcelsOnBoard] faux), et des destinataires à prévenir
+/// ([recipientsToNotify]). Règle de l'action « À traiter » « Prévenir les
+/// destinataires » (`TripTodoKind.notify`), donc du pied qui la suit.
+bool tripRecipientsToNotifyDue(String tripStatus, List<BidModel> bids) =>
+    _travellingStatuses.contains(tripStatus) &&
+    !tripHasParcelsOnBoard(bids) &&
+    tripHasArrivedParcel(bids) &&
+    recipientsToNotify(bids).isNotEmpty;
 
 /// Colis du trajet déjà remis au voyageur (remis, en transit, arrivés) : leur
 /// retour s'ouvre à l'annulation, la feuille d'annulation le signale.

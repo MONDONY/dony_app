@@ -6,12 +6,14 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:flutter/widgets.dart';
 
-/// Blocs de l'écran du trajet dont dépendent les tuiles « À traiter » :
+/// Blocs de l'écran du trajet dont dépend « À traiter » :
 /// trajet relu, colis du trajet, compte de paiement par carte, « Je pars ».
 /// Chacun peut manquer (tests, écran sans ce bloc) : la valeur de départ
 /// tient alors lieu de donnée.
@@ -37,7 +39,7 @@ class TripTodoBlocs {
   final TripDepartCubit? depart;
 }
 
-/// Dernières données connues des tuiles « À traiter » du trajet.
+/// Dernières données connues de « À traiter » du trajet.
 class TripTodoLiveData {
   const TripTodoLiveData({
     required this.trip,
@@ -51,19 +53,24 @@ class TripTodoLiveData {
 
   /// Derniers colis chargés (`BidListLoaded`), `null` tant que la liste n'a
   /// jamais répondu. Un rechargement (`BidLoading`, erreur) garde la
-  /// dernière liste : la tuile `requests` ne retombe pas sur
-  /// `pendingBidCount`, que le détail ne sert pas.
+  /// dernière liste : les demandes ne retombent pas sur `pendingBidCount`,
+  /// que le détail ne sert pas.
   final List<BidModel>? bids;
   final bool departed;
   final StripeAccountState stripe;
 
-  int get pendingCount => tripPendingRequestCount(trip, bids);
   bool get cardReady => tripCardPaymentsReady(stripe);
 
-  List<TripTodoTile> get tiles => tripTodoTilesFor(
+  /// File « À traiter » de ces données ([tripTodoFor]) à l'heure de
+  /// [tripTodoNow], sans les demandes que le voyageur vient de traiter
+  /// depuis l'écran ([answered], [tripBidsAfterAnswers]). Source unique de
+  /// la section, du pied, de la pastille du billet, de la ligne Colis et des
+  /// sheets.
+  List<TripTodoItem> todo({Set<String> answered = const {}}) => tripTodoFor(
     trip: trip,
-    bids: bids,
+    bids: tripBidsAfterAnswers(bids, answered),
     isOwner: true,
+    now: tripTodoNow(),
     departed: departed,
     stripe: stripe,
   );

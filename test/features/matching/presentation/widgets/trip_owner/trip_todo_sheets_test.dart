@@ -25,8 +25,8 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_sheets.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_consent_sheet.dart';
@@ -217,7 +217,8 @@ void main() {
   Future<void> open(
     WidgetTester tester, {
     required AnnouncementModel trip,
-    required TripTodoRow tile,
+    required TripTodoKind tile,
+    TripTodoSource source = TripTodoSource.card,
     BidState? bidState,
     StripeAccountState stripe = _notReady,
     TripDepartState departState = const TripDepartState(),
@@ -246,7 +247,7 @@ void main() {
       initialState:
           bidState ??
           BidListLoaded(
-            tile == TripTodoRow.card ? _requestsOnlyBids : _pendingBids,
+            tile == TripTodoKind.addCard ? _requestsOnlyBids : _pendingBids,
           ),
     );
     whenListen(departCubit, departStates.stream, initialState: departState);
@@ -263,7 +264,13 @@ void main() {
       final opener = Scaffold(
         body: Builder(
           builder: (context) => TextButton(
-            onPressed: () => openTripTodoSheet(context, trip, tile, bids: bids),
+            onPressed: () => openTripTodoSheet(
+              context,
+              trip,
+              tile,
+              source: source,
+              bids: bids,
+            ),
             child: const Text('open-todo'),
           ),
         ),
@@ -358,7 +365,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoRow.card,
+        tile: TripTodoKind.addCard,
         stripe: _ready,
       );
 
@@ -374,7 +381,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoRow.card,
+        tile: TripTodoKind.addCard,
         stripe: _ready,
       );
 
@@ -402,7 +409,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoRow.card,
+        tile: TripTodoKind.addCard,
         stripe: _ready,
       );
 
@@ -420,7 +427,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoRow.card,
+        tile: TripTodoKind.addCard,
         stripe: _ready,
       );
 
@@ -453,7 +460,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoRow.card,
+        tile: TripTodoKind.addCard,
         withBlocs: false,
       );
 
@@ -467,7 +474,7 @@ void main() {
     testWidgets('explication du partage de l\'avancée, « Je pars » au pied', (
       tester,
     ) async {
-      await open(tester, trip: _departTrip(), tile: TripTodoRow.depart);
+      await open(tester, trip: _departTrip(), tile: TripTodoKind.depart);
 
       expect(tester.takeException(), isNull);
       expect(find.text('Je pars'), findsWidgets);
@@ -483,7 +490,7 @@ void main() {
     });
 
     testWidgets('« Je pars » appelle TripDepartCubit.depart', (tester) async {
-      await open(tester, trip: _departTrip(), tile: TripTodoRow.depart);
+      await open(tester, trip: _departTrip(), tile: TripTodoKind.depart);
 
       await tester.tap(departButton());
       await tester.pump();
@@ -501,7 +508,7 @@ void main() {
       await open(
         tester,
         trip: _departTrip(),
-        tile: TripTodoRow.depart,
+        tile: TripTodoKind.depart,
         departState: const TripDepartState(loading: true),
         settle: false,
       );
@@ -514,7 +521,7 @@ void main() {
     testWidgets('départ confirmé : confirmation et fermeture du sheet', (
       tester,
     ) async {
-      await open(tester, trip: _departTrip(), tile: TripTodoRow.depart);
+      await open(tester, trip: _departTrip(), tile: TripTodoKind.depart);
 
       departStates.add(const TripDepartState(departed: true));
       await tester.pumpAndSettle();
@@ -529,7 +536,7 @@ void main() {
       await open(
         tester,
         trip: _departTrip(),
-        tile: TripTodoRow.depart,
+        tile: TripTodoKind.depart,
         withDepart: false,
       );
 
@@ -539,7 +546,7 @@ void main() {
 
     testWidgets('sheet fermé pendant le départ : le cubit de l\'écran reste '
         'ouvert, la réponse arrive sans plantage', (tester) async {
-      await open(tester, trip: _departTrip(), tile: TripTodoRow.depart);
+      await open(tester, trip: _departTrip(), tile: TripTodoKind.depart);
 
       departStates.add(const TripDepartState(loading: true));
       await tester.pump();
@@ -557,7 +564,7 @@ void main() {
     testWidgets('fenêtre de suivi refermée par le trajet relu : fermeture', (
       tester,
     ) async {
-      await open(tester, trip: _departTrip(), tile: TripTodoRow.depart);
+      await open(tester, trip: _departTrip(), tile: TripTodoKind.depart);
 
       annStates.add(AnnouncementDetailLoaded(_trip(parcelsSummary: _summary)));
       await tester.pumpAndSettle();
@@ -573,7 +580,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoRow.card,
+        tile: TripTodoKind.addCard,
         stripe: _ready,
       );
 
@@ -596,7 +603,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoRow.card,
+        tile: TripTodoKind.addCard,
         stripe: _ready,
       );
 
@@ -621,7 +628,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoRow.card,
+        tile: TripTodoKind.addCard,
         stripe: _ready,
       );
 
@@ -636,7 +643,7 @@ void main() {
     testWidgets('compte pas prêt : « Activer les paiements par carte »', (
       tester,
     ) async {
-      await open(tester, trip: _cashTrip(), tile: TripTodoRow.card);
+      await open(tester, trip: _cashTrip(), tile: TripTodoKind.addCard);
 
       expect(tester.takeException(), isNull);
       expect(
@@ -657,7 +664,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoRow.card,
+        tile: TripTodoKind.addCard,
         stripe: _ready,
       );
 
@@ -678,7 +685,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoRow.card,
+        tile: TripTodoKind.addCard,
         stripe: const StripeAccountInitial(),
         liveStripe: true,
       );
@@ -703,7 +710,7 @@ void main() {
     });
 
     testWidgets('trajet relu annulé : fermeture', (tester) async {
-      await open(tester, trip: _cashTrip(), tile: TripTodoRow.card);
+      await open(tester, trip: _cashTrip(), tile: TripTodoKind.addCard);
 
       annStates.add(AnnouncementDetailLoaded(_cashTrip(status: 'CANCELLED')));
       await tester.pumpAndSettle();
@@ -719,7 +726,7 @@ void main() {
       await open(
         tester,
         trip: _cashTrip(),
-        tile: TripTodoRow.card,
+        tile: TripTodoKind.addCard,
         stripe: _ready,
       );
       expect(enableCard(), findsOneWidget);
@@ -733,23 +740,25 @@ void main() {
   });
 
   group('mesures', () {
-    for (final tile in [TripTodoRow.depart, TripTodoRow.card]) {
-      testWidgets('bid_detail_tile_opened ${tile.name}, role trip_owner', (
-        tester,
-      ) async {
-        await open(
-          tester,
-          trip: tile == TripTodoRow.depart ? _departTrip() : _cashTrip(),
-          tile: tile,
-        );
-        verify(
-          () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
-            'tile': tile.name,
-            'role': 'trip_owner',
-            'source': 'tile',
-          }),
-        ).called(1);
-      });
+    for (final tile in [TripTodoKind.depart, TripTodoKind.addCard]) {
+      for (final source in TripTodoSource.values) {
+        testWidgets('bid_detail_tile_opened ${tile.name}, role trip_owner, '
+            'source ${source.name}', (tester) async {
+          await open(
+            tester,
+            trip: tile == TripTodoKind.depart ? _departTrip() : _cashTrip(),
+            tile: tile,
+            source: source,
+          );
+          verify(
+            () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+              'tile': tile.name,
+              'role': 'trip_owner',
+              'source': source.name,
+            }),
+          ).called(1);
+        });
+      }
     }
   });
 
@@ -773,7 +782,7 @@ void main() {
           <
             (
               String,
-              TripTodoRow,
+              TripTodoKind,
               AnnouncementModel,
               StripeAccountState,
               Finder Function(),
@@ -782,7 +791,7 @@ void main() {
           >[
             (
               'départ',
-              TripTodoRow.depart,
+              TripTodoKind.depart,
               _departTrip(),
               _notReady,
               departButton,
@@ -790,7 +799,7 @@ void main() {
             ),
             (
               'ajout de la carte',
-              TripTodoRow.card,
+              TripTodoKind.addCard,
               _cashTrip(),
               _ready,
               enableCard,
@@ -798,7 +807,7 @@ void main() {
             ),
             (
               'activation de la carte',
-              TripTodoRow.card,
+              TripTodoKind.addCard,
               _cashTrip(),
               _notReady,
               activateCard,

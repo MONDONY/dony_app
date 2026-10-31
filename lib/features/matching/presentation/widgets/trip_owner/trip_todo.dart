@@ -11,7 +11,6 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/matching/presentation/widgets/rating_pending_pill.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -129,6 +128,26 @@ class TripTodoItem {
   TripTodoUrgency get urgency => kind.urgency;
 }
 
+/// Horloge de « À traiter » sur l'écran du trajet (section, pied, ligne
+/// Colis, sheets) : `DateTime.now` en production ; seuls les tests la
+/// remplacent (et la remettent dans leur `tearDown`).
+DateTime Function() tripTodoNow = DateTime.now;
+
+/// D'où s'ouvre le geste d'une action « À traiter » de l'écran du trajet :
+/// valeur `source` de `bid_detail_tile_opened` (son `name`). Ne pas renommer
+/// sans migrer PostHog.
+enum TripTodoSource {
+  /// Bouton de la grosse carte « Prochaine action » (ou lien « Voir les N
+  /// demandes » de la carte de réponse directe).
+  card,
+
+  /// Ligne de la file sous la grosse carte, ou du sheet « toute la liste ».
+  list,
+
+  /// Bouton principal du pied collant, qui suit l'action la plus urgente.
+  footer,
+}
+
 /// Délai entre la date limite de dépôt et la déclaration automatique du
 /// voyageur absent (back `NoShowScheduler`, date limite + 1 h) : échéance de
 /// la récupération et du signalement de l'absence de l'expéditeur.
@@ -230,8 +249,8 @@ TripTodoItem? _collect(
 /// - #38 [TripTodoKind.arrive] : [tripCanMarkArrived] ;
 /// - #25 [TripTodoKind.deliver] : étape de remise et trajet parti
 ///   ([DeliveryWindow]) ;
-/// - #24 [TripTodoKind.notify] : règle 2 du pied ([tripFooterFor]), colis de
-///   [recipientsToNotify] ;
+/// - #24 [TripTodoKind.notify] : arrivée marquée et destinataires à prévenir
+///   ([tripRecipientsToNotifyDue]), colis de [recipientsToNotify] ;
 /// - #21 [TripTodoKind.recipientDeclined] :
 ///   [TravelerTransportSection.recipientNeedsReplacement] ;
 /// - #39 [TripTodoKind.instructions] : trajet ACTIVE, FULL ou IN_PROGRESS
@@ -299,8 +318,7 @@ List<TripTodoItem> tripTodoFor({
       if (tripCanMarkArrived(trip.status, bids))
         const TripTodoItem(kind: TripTodoKind.arrive, count: 1),
       ?_collect(TripTodoKind.deliver, bids, when: (b) => _canDeliver(b, now)),
-      if (tripFooterFor(trip: trip, bids: bids, isOwner: true)?.primary ==
-          TripFooterButton.notifyRecipients)
+      if (tripRecipientsToNotifyDue(trip.status, bids))
         TripTodoItem(
           kind: TripTodoKind.notify,
           count: 1,

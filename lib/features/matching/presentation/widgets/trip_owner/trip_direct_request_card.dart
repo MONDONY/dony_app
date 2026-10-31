@@ -3,14 +3,11 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcel_rows.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -37,25 +34,19 @@ String tripRequestDetails(AppLocalizations l, BidModel bid) {
 ///
 /// Ne rend rien quand aucune demande n'est à traiter, ou tant que la liste
 /// des colis n'a pas répondu ([bids] `null`) : il n'y a pas de demande à
-/// montrer. Son affichage mesure la tuile `requests` de « À traiter »
-/// (`bid_detail_todo_tile_shown`, [tripTodoShown]) dans [views], le journal
-/// du corps, avec la même clé de dédoublonnage (statut du trajet et nombre
-/// de demandes).
+/// montrer. C'est la grosse carte de « À traiter » quand les demandes sont
+/// l'action la plus urgente (`TripTodoSection`), qui en mesure l'affichage
+/// (`bid_detail_todo_tile_shown`, action `requests`).
 class TripDirectRequestCard extends StatelessWidget {
   const TripDirectRequestCard({
     super.key,
-    required this.trip,
     required this.bids,
-    required this.views,
     required this.onSeeAll,
   });
-
-  final AnnouncementModel trip;
 
   /// Colis chargés par l'écran (`BidListLoaded`), `null` tant que la liste
   /// n'a pas répondu.
   final List<BidModel>? bids;
-  final TodoTileViewLog views;
   final VoidCallback onSeeAll;
 
   @override
@@ -66,13 +57,6 @@ class TripDirectRequestCard extends StatelessWidget {
       builder: (context, answered, _) {
         final pending = tripRequestsToAnswer(bids, answered) ?? const [];
         if (pending.isEmpty) return const SizedBox.shrink();
-        views.logAll(context, trip.id, [
-          tripTodoShown(
-            TripTodoTile.requests,
-            trip,
-            pendingCount: pending.length,
-          ),
-        ]);
         final l = context.l10n;
         final bid = pending.first;
         return DetailCard(

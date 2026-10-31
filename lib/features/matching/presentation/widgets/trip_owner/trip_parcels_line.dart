@@ -135,12 +135,17 @@ TripParcelsLineContent? tripParcelsLineFor({
 
 /// Ligne Colis de l'écran du trajet vu par son voyageur, sous « À traiter »
 /// (choix « Une ligne colis » du 31/10) : une carte d'une ligne, bordure et
-/// surface des cartes du corps (comme les lignes `TripTodoRows`). À gauche
+/// surface des cartes du corps (comme la file « À traiter »). À gauche
 /// les avatars des expéditeurs (initiales, jusqu'à trois, ceux qui
 /// attendent un geste d'abord) ou une icône de colis sans colis ; le titre
 /// « N colis · gain » et le résumé, chacun sur une ligne ; un chevron. Un
 /// tap appelle [onOpen], qui ouvre le sheet « Colis » (gain détaillé en
 /// tête, tous les colis).
+///
+/// Des colis attendent un geste du voyageur ([awaiting] > 0, colis
+/// distincts de « À traiter », `tripTodoParcelIds`) : bordure orange,
+/// compteur orange avant le chevron et « N attendent votre geste » sous le
+/// résumé. Le tap ne change pas.
 ///
 /// Ne rend rien quand la ligne n'a pas lieu d'être ([tripParcelsLineShown]).
 class TripParcelsLine extends StatelessWidget {
@@ -149,6 +154,7 @@ class TripParcelsLine extends StatelessWidget {
     required this.trip,
     required this.bids,
     required this.onOpen,
+    this.awaiting = 0,
   });
 
   final AnnouncementModel trip;
@@ -156,6 +162,9 @@ class TripParcelsLine extends StatelessWidget {
   /// Colis chargés par l'écran, `null` tant que la liste n'a pas répondu.
   final List<BidModel>? bids;
   final VoidCallback onOpen;
+
+  /// Colis distincts qui attendent un geste du voyageur.
+  final int awaiting;
 
   @override
   Widget build(BuildContext context) {
@@ -166,9 +175,12 @@ class TripParcelsLine extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final radius = BorderRadius.circular(DonyRadius.card);
     final subtitle = content.subtitle;
+    final awaitingLabel = awaiting > 0
+        ? l.tripParcelsLineAwaiting(awaiting)
+        : null;
     return Semantics(
       button: true,
-      label: subtitle == null ? content.title : '${content.title}. $subtitle',
+      label: [content.title, ?subtitle, ?awaitingLabel].join('. '),
       excludeSemantics: true,
       child: Material(
         color: cs.surface,
@@ -185,7 +197,9 @@ class TripParcelsLine extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               borderRadius: radius,
-              border: Border.all(color: cs.outline),
+              border: Border.all(
+                color: awaitingLabel != null ? cs.warning : cs.outline,
+              ),
             ),
             child: Row(
               children: [
@@ -226,9 +240,44 @@ class TripParcelsLine extends StatelessWidget {
                           ),
                         ),
                       ],
+                      if (awaitingLabel != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          awaitingLabel,
+                          key: const Key('trip-parcels-line-awaiting'),
+                          style: tt.labelMedium?.copyWith(
+                            color: cs.warning,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
+                if (awaitingLabel != null) ...[
+                  const SizedBox(width: DonySpacing.sm),
+                  Container(
+                    key: const Key('trip-parcels-line-awaiting-count'),
+                    constraints: const BoxConstraints(minWidth: 24),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.sm,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: cs.warningLight,
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                    ),
+                    child: Text(
+                      '$awaiting',
+                      textAlign: TextAlign.center,
+                      style: tt.labelMedium?.copyWith(
+                        color: cs.warning,
+                        fontWeight: FontWeight.w800,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(width: DonySpacing.sm),
                 DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
               ],

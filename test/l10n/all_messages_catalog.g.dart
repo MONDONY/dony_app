@@ -3179,7 +3179,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripOwnerUnpublishTile': (l) => l.tripOwnerUnpublishTile,
   'tripOwnerUnpublishDialogTitle': (l) => l.tripOwnerUnpublishDialogTitle,
   'tripOwnerUnpublishDialogMessage': (l) => l.tripOwnerUnpublishDialogMessage,
-  'tripOwnerRequestsTile': (l) => l.tripOwnerRequestsTile,
   'tripOwnerParcelsTile': (l) => l.tripOwnerParcelsTile,
   'tripOwnerNoParcelsMessage': (l) => l.tripOwnerNoParcelsMessage,
   'tripOwnerDeleteDialogTitle': (l) => l.tripOwnerDeleteDialogTitle,
@@ -8063,6 +8062,71 @@ final allMessages = <String, String Function(AppLocalizations)>{
   ),
   'tripGainTotalLabel': (l) => l.tripGainTotalLabel,
   'tripOwnerParcelsFilterAll': (l) => l.tripOwnerParcelsFilterAll,
+  'tripTodoUrgentLabel': (l) => l.tripTodoUrgentLabel,
+  'tripTodoNextLabel': (l) => l.tripTodoNextLabel,
+  'tripTodoMoreRow': (l) => l.tripTodoMoreRow(intPlaceholderValue),
+  'tripTodoMoreRowSubtitle': (l) => l.tripTodoMoreRowSubtitle,
+  'tripTodoBadge': (l) => l.tripTodoBadge(intPlaceholderValue),
+  'tripTodoBadgeSemantics': (l) =>
+      l.tripTodoBadgeSemantics(intPlaceholderValue),
+  'tripTodoDuePassed': (l) => l.tripTodoDuePassed,
+  'tripTodoDueInMinutes': (l) => l.tripTodoDueInMinutes(intPlaceholderValue),
+  'tripTodoDueInHours': (l) => l.tripTodoDueInHours(intPlaceholderValue),
+  'tripTodoDueBeforeTime': (l) =>
+      l.tripTodoDueBeforeTime(placeholderMarker('time')),
+  'tripTodoDueBeforeDate': (l) => l.tripTodoDueBeforeDate(
+    placeholderMarker('date'),
+    placeholderMarker('time'),
+  ),
+  'tripTodoDueBanner': (l) => l.tripTodoDueBanner(
+    placeholderMarker('due'),
+    placeholderMarker('consequence'),
+  ),
+  'tripTodoDuePassedBanner': (l) => l.tripTodoDuePassedBanner,
+  'tripTodoConsequencePresence': (l) => l.tripTodoConsequencePresence,
+  'tripTodoConsequenceScan': (l) => l.tripTodoConsequenceScan,
+  'tripTodoConsequenceAmendment': (l) => l.tripTodoConsequenceAmendment,
+  'tripTodoConsequenceSupplement': (l) => l.tripTodoConsequenceSupplement,
+  'tripTodoConsequenceSenderAbsence': (l) => l.tripTodoConsequenceSenderAbsence,
+  'tripTodoConsequenceReturn': (l) => l.tripTodoConsequenceReturn,
+  'tripTodoPresenceTitle': (l) => l.tripTodoPresenceTitle,
+  'tripTodoPresenceSubtitle': (l) =>
+      l.tripTodoPresenceSubtitle(intPlaceholderValue),
+  'tripTodoScanTitle': (l) => l.tripTodoScanTitle(intPlaceholderValue),
+  'tripTodoScanSubtitle': (l) => l.tripTodoScanSubtitle,
+  'tripTodoAmendmentTitle': (l) =>
+      l.tripTodoAmendmentTitle(intPlaceholderValue),
+  'tripTodoAmendmentSubtitle': (l) => l.tripTodoAmendmentSubtitle,
+  'tripTodoAmendmentButton': (l) =>
+      l.tripTodoAmendmentButton(intPlaceholderValue),
+  'tripTodoSupplementTitle': (l) =>
+      l.tripTodoSupplementTitle(intPlaceholderValue),
+  'tripTodoSupplementSubtitle': (l) => l.tripTodoSupplementSubtitle,
+  'tripTodoSenderAbsenceSubtitle': (l) => l.tripTodoSenderAbsenceSubtitle,
+  'tripTodoSenderAbsenceButton': (l) => l.tripTodoSenderAbsenceButton,
+  'tripTodoReturnTitle': (l) => l.tripTodoReturnTitle(intPlaceholderValue),
+  'tripTodoReturnSubtitle': (l) => l.tripTodoReturnSubtitle,
+  'tripTodoReturnButton': (l) => l.tripTodoReturnButton,
+  'tripTodoArriveSubtitle': (l) => l.tripTodoArriveSubtitle,
+  'tripTodoDeliverTitle': (l) => l.tripTodoDeliverTitle(intPlaceholderValue),
+  'tripTodoDeliverSubtitle': (l) => l.tripTodoDeliverSubtitle,
+  'tripTodoNotifyTitle': (l) => l.tripTodoNotifyTitle(intPlaceholderValue),
+  'tripTodoNotifySubtitle': (l) => l.tripTodoNotifySubtitle,
+  'tripTodoRecipientDeclinedTitle': (l) =>
+      l.tripTodoRecipientDeclinedTitle(intPlaceholderValue),
+  'tripTodoRecipientDeclinedSubtitle': (l) =>
+      l.tripTodoRecipientDeclinedSubtitle,
+  'tripTodoRecipientDeclinedButton': (l) => l.tripTodoRecipientDeclinedButton,
+  'tripTodoInstructionsSubtitle': (l) => l.tripTodoInstructionsSubtitle,
+  'tripTodoInstructionsButton': (l) => l.tripTodoInstructionsButton,
+  'tripTodoRateTitle': (l) => l.tripTodoRateTitle(intPlaceholderValue),
+  'tripTodoRateSubtitle': (l) => l.tripTodoRateSubtitle,
+  'tripTodoRateButton': (l) => l.tripTodoRateButton(intPlaceholderValue),
+  'tripTodoPublishTitle': (l) => l.tripTodoPublishTitle,
+  'tripTodoPublishSubtitle': (l) => l.tripTodoPublishSubtitle,
+  'tripParcelsLineAwaiting': (l) =>
+      l.tripParcelsLineAwaiting(intPlaceholderValue),
+  'tripParcelAwaitingSemantics': (l) => l.tripParcelAwaitingSemantics,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8750,4 +8814,7 @@ const textParameters = <String, List<String>>{
   'tripTilePaymentsCashOnlyNote': ['section'],
   'tripParcelsSearchEmpty': ['query'],
   'tripGainCashGrossNote': ['gross', 'commission'],
+  'tripTodoDueBeforeTime': ['time'],
+  'tripTodoDueBeforeDate': ['date', 'time'],
+  'tripTodoDueBanner': ['due', 'consequence'],
 };

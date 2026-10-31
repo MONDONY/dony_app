@@ -15,6 +15,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -61,11 +62,14 @@ AnnouncementModel _trip({
   );
 }
 
+/// Colis payé en espèces : une demande PENDING par carte n'est pas encore
+/// payée par l'expéditeur, donc pas à traiter.
 BidModel _bid(String id, String status) => BidModel(
   id: id,
   announcementId: 'trip-1',
   senderId: 'sender-$id',
   status: status,
+  paymentMethod: BidPaymentMethod.cash,
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
 );
@@ -129,7 +133,7 @@ void main() {
         builder: (context, data) {
           seen.add(data);
           return Text(
-            data.tiles.map((tile) => tile.name).join(','),
+            data.todo().map((item) => item.kind.name).join(','),
             textDirection: TextDirection.ltr,
           );
         },
@@ -151,6 +155,9 @@ void main() {
   }
 
   TripTodoLiveData last() => seen.last;
+
+  int pending(TripTodoLiveData data) =>
+      tripPendingRequestCount(data.trip, data.bids);
 
   testWidgets('TripTodoBlocs.of : blocs fournis au-dessus du contexte', (
     tester,
@@ -184,13 +191,13 @@ void main() {
 
     expect(last().trip.id, 'trip-1');
     expect(last().bids?.single.id, 'b1');
-    expect(last().pendingCount, 1);
+    expect(pending(last()), 1);
     expect(last().cardReady, isTrue);
     expect(last().departed, isFalse);
     expect(find.text('requests'), findsOneWidget);
   });
 
-  testWidgets('colis en rechargement : la tuile demandes ne clignote pas', (
+  testWidgets('colis en rechargement : l\'action demandes ne clignote pas', (
     tester,
   ) async {
     // Le détail ne sert pas pendingBidCount : un repli donnerait 0.
@@ -207,7 +214,7 @@ void main() {
 
     bidStates.add(BidListLoaded([_bid('b1', 'ACCEPTED')]));
     await tester.pumpAndSettle();
-    expect(last().pendingCount, 0);
+    expect(pending(last()), 0);
     expect(find.text('requests'), findsNothing);
   });
 
@@ -220,12 +227,12 @@ void main() {
       initialBids: [_bid('b1', 'PENDING'), _bid('b2', 'PENDING')],
     );
 
-    expect(last().pendingCount, 2);
+    expect(pending(last()), 2);
     expect(find.text('requests'), findsOneWidget);
 
     bidStates.add(BidListLoaded(const []));
     await tester.pumpAndSettle();
-    expect(last().pendingCount, 0);
+    expect(pending(last()), 0);
   });
 
   testWidgets('monté pendant un rechargement, sans colis connus : repli sur '
@@ -233,7 +240,7 @@ void main() {
     await pump(tester, trip: _trip(pendingBidCount: 3), bidState: BidLoading());
 
     expect(last().bids, isNull);
-    expect(last().pendingCount, 3);
+    expect(pending(last()), 3);
   });
 
   testWidgets('compte Stripe relu : chargement et erreur gardent le dernier '
@@ -250,7 +257,7 @@ void main() {
     stripeStates.add(const StripeAccountLoadError());
     await tester.pumpAndSettle();
     expect(last().cardReady, isTrue);
-    expect(find.text('requests,card'), findsOneWidget);
+    expect(find.text('requests,addCard'), findsOneWidget);
   });
 
   testWidgets('trajet relu suivi, autre trajet ou chargement ignorés', (
@@ -267,7 +274,7 @@ void main() {
     annStates.add(AnnouncementUpdated(_trip(status: 'COMPLETED')));
     await tester.pumpAndSettle();
     expect(last().trip.status, 'COMPLETED');
-    expect(last().tiles, isEmpty);
+    expect(last().todo(), isEmpty);
   });
 
   testWidgets('départ confirmé suivi', (tester) async {
@@ -281,9 +288,25 @@ void main() {
     await pump(tester, trip: _trip(pendingBidCount: 2), withBlocs: false);
 
     expect(last().bids, isNull);
-    expect(last().pendingCount, 2);
+    expect(pending(last()), 2);
     expect(last().stripe, isA<StripeAccountInitial>());
     expect(last().departed, isFalse);
-    expect(last().tiles, [TripTodoTile.requests]);
+    // Aucune demande déduite de pendingBidCount : il compte aussi les cartes
+    // pas encore payées et les expéditeurs bloqués.
+    expect(last().todo(), isEmpty);
+  });
+
+  testWidgets('todo : demandes traitées depuis l\'écran retirées', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      bidState: BidListLoaded([_bid('b1', 'PENDING'), _bid('b2', 'PENDING')]),
+    );
+    final item = last().todo().single;
+    expect(item.kind, TripTodoKind.requests);
+    expect(item.count, 2);
+    expect(last().todo(answered: {'b1'}).single.bidIds, ['b2']);
+    expect(last().todo(answered: {'b1', 'b2'}), isEmpty);
   });
 }

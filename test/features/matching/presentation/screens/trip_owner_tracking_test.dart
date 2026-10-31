@@ -22,6 +22,7 @@ import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
@@ -118,6 +119,8 @@ void main() {
 
   setUp(() {
     DonySnackbar.clearDedup();
+    // Avant le départ du trajet de test (1er juillet).
+    tripTodoNow = () => DateTime(2026, 6, 20, 12);
     annBloc = _MockAnnBloc();
     bidBloc = _MockBidBloc();
     cancelBloc = _MockCancelBloc();
@@ -195,6 +198,7 @@ void main() {
   });
 
   tearDown(() {
+    tripTodoNow = DateTime.now;
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
     }
@@ -313,14 +317,16 @@ void main() {
     });
   });
 
-  // « Je pars » : tuile « À traiter » de l'écran, qui ouvre son sheet ; le
-  // bouton du pied du sheet part sur le TripDepartCubit fourni par l'écran.
+  // « Je pars » : action « À traiter » de l'écran (ici la grosse carte), dont
+  // le bouton ouvre son sheet ; le bouton du pied du sheet part sur le
+  // TripDepartCubit fourni par l'écran.
   group('je pars', () {
-    const departTile = Key('trip_owner-todo-depart');
+    const departTile = Key('trip-todo-next-depart');
+    const departButton = Key('trip-todo-next-button');
 
     Future<void> openDepart(WidgetTester tester) async {
-      await tester.ensureVisible(find.byKey(departTile));
-      await tester.tap(find.byKey(departTile));
+      await tester.ensureVisible(find.byKey(departButton));
+      await tester.tap(find.byKey(departButton));
       await settle(tester);
       expect(find.byKey(departKey), findsOneWidget);
     }

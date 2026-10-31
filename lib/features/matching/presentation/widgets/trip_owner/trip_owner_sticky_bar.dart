@@ -1,38 +1,35 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/matching/bloc/announcement_bloc.dart';
-import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_tiles.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_actions.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_labels.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Bouton du pied collant de l'écran du trajet vu par son voyageur.
 enum TripFooterButton {
-  /// « Arrivé à destination » : trajet parti (`IN_PROGRESS`), un colis est
-  /// remis ou en transit.
-  markArrived,
-
-  /// « Prévenir les destinataires (N) » : l'arrivée est marquée.
-  notifyRecipients,
+  /// L'action « À traiter » la plus urgente (`tripTodoFor`, en tête de la
+  /// file) : même libellé et même geste que le bouton de sa grosse carte
+  /// ([tripTodoButton], [openTripTodoAction]). « Arrivé à destination »,
+  /// « Prévenir les destinataires », « Publier », « Je pars »... en sont.
+  todo,
 
   /// « Modifier » : trajet modifiable ([canEditTrip]).
   edit,
 
-  /// « Publier » : brouillon.
-  publish,
-
-  /// « Voir les demandes (N) » : des demandes attendent une réponse.
+  /// « Voir les demandes (N) » : des demandes attendent une réponse sans
+  /// être une action « À traiter » (cartes pas encore payées, date limite de
+  /// dépôt passée, liste pas encore chargée avec `pendingBidCount`).
   seeRequests,
 
   /// « Partager l'affiche » : trajet ouvert aux demandes.
@@ -43,35 +40,27 @@ enum TripFooterButton {
 /// ligne, ou dessous quand les libellés ne tiennent pas côte à côte).
 typedef TripFooter = ({TripFooterButton primary, TripFooterButton? secondary});
 
-/// Statuts d'un trajet dont les colis voyagent encore.
-const _travellingStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
-
 /// Pied collant de [trip] pour son voyageur, ou `null` s'il n'a rien à
 /// proposer. Fonction pure, la première règle qui s'applique l'emporte :
-/// 1. trajet IN_PROGRESS (parti) avec un colis remis ou en transit
-///    ([tripCanMarkArrived]) : « Arrivé à destination ». Sur un trajet
-///    ACTIVE ou FULL, des colis déjà remis (étape de remise, avant le
-///    départ) ne le proposent pas : le pied passe aux règles suivantes ;
-/// 2. trajet ACTIVE, FULL ou IN_PROGRESS dont l'arrivée est marquée (un
-///    colis `ARRIVED`, plus aucun remis ni en transit,
-///    [tripHasParcelsOnBoard] faux) : « Prévenir les destinataires (N) » ;
-/// 3. brouillon : « Modifier » | « Publier » ;
-/// 4. ACTIVE ou FULL avec des demandes à traiter
-///    ([tripPendingRequestCount]) : « Voir les demandes (N) » ;
-/// 5. ACTIVE sans demande à traiter : « Modifier » | « Partager l'affiche »,
-///    « Modifier » seulement si le trajet est modifiable ([canEditTrip] : des
-///    colis acceptés le ferment, l'affiche reste) ;
-/// 6. sinon (COMPLETED, CANCELLED, REMOVED_BY_ADMIN, FULL sans demande,
-///    colis remis compris, IN_PROGRESS sans colis à faire avancer, statut
-///    inconnu) : aucun pied.
+/// 1. une action « À traiter » ([todo], déjà triée, `tripTodoFor`) : le
+///    bouton principal est la première ([TripFooterButton.todo]). Le second
+///    reste celui des règles d'avant : « Modifier » (si [canEditTrip]) sur
+///    un brouillon, ou sur un trajet ACTIVE sans demande à traiter ; aucun
+///    quand l'arrivée est à marquer ou les destinataires à prévenir
+///    ([tripCanMarkArrived], [tripRecipientsToNotifyDue]) ni quand des
+///    demandes attendent ;
+/// 2. ACTIVE ou FULL avec des demandes à traiter
+///    ([tripPendingRequestCount]) qui ne sont pas une action « À traiter »
+///    (cartes pas encore payées, date limite de dépôt passée, liste pas
+///    encore chargée) : « Voir les demandes (N) » ;
+/// 3. ACTIVE : « Modifier » | « Partager l'affiche », « Modifier » seulement
+///    si le trajet est modifiable ([canEditTrip] : des colis acceptés le
+///    ferment, l'affiche reste) ;
+/// 4. sinon (FULL, COMPLETED, CANCELLED, REMOVED_BY_ADMIN, IN_PROGRESS sans
+///    rien à traiter, statut inconnu) : aucun pied.
 ///
 /// [bids] : colis du trajet chargés par l'écran (`BidListLoaded`), `null`
-/// tant que la liste n'a pas répondu ; les règles 1 et 2 attendent alors la
-/// liste, les compteurs du modèle servent aux autres.
-///
-/// Le départ confirmé (« Je pars », drapeau local de `TripDepartCubit`)
-/// n'entre pas dans la règle : il ne change pas le statut du trajet côté
-/// back, seul `IN_PROGRESS` ouvre « Arrivé à destination ».
+/// tant que la liste n'a pas répondu.
 ///
 /// [answered] : demandes traitées depuis l'écran
 /// ([TripBidAnswerController.answered]) ; celles que la liste montre encore
@@ -84,28 +73,29 @@ TripFooter? tripFooterFor({
   required List<BidModel>? bids,
   required bool isOwner,
   Set<String> answered = const {},
+  List<TripTodoItem> todo = const [],
 }) {
   if (!isOwner) return null;
-  if (bids != null && _travellingStatuses.contains(trip.status)) {
-    if (tripCanMarkArrived(trip.status, bids)) {
-      return (primary: TripFooterButton.markArrived, secondary: null);
-    }
-    if (!tripHasParcelsOnBoard(bids) &&
-        tripHasArrivedParcel(bids) &&
-        recipientsToNotify(bids).isNotEmpty) {
-      return (primary: TripFooterButton.notifyRecipients, secondary: null);
-    }
-  }
   final canEdit = canEditTrip(trip, tripHasBids(trip, bids));
   final edit = canEdit ? TripFooterButton.edit : null;
-  if (trip.status == 'DRAFT') {
-    return (primary: TripFooterButton.publish, secondary: edit);
-  }
   final pending = tripPendingRequestCount(
     trip,
     tripBidsAfterAnswers(bids, answered),
   );
-  if ((trip.status == 'ACTIVE' || trip.status == 'FULL') && pending > 0) {
+  final requestsWaiting =
+      (trip.status == 'ACTIVE' || trip.status == 'FULL') && pending > 0;
+  if (todo.isNotEmpty) {
+    final arrivalStep =
+        bids != null &&
+        (tripCanMarkArrived(trip.status, bids) ||
+            tripRecipientsToNotifyDue(trip.status, bids));
+    final keepsEdit =
+        !arrivalStep &&
+        (trip.status == 'DRAFT' ||
+            (!requestsWaiting && canShareTripPoster(trip)));
+    return (primary: TripFooterButton.todo, secondary: keepsEdit ? edit : null);
+  }
+  if (requestsWaiting) {
     return (primary: TripFooterButton.seeRequests, secondary: null);
   }
   if (canShareTripPoster(trip)) {
@@ -125,23 +115,24 @@ TripFooter? tripFooterFor({
 /// `DonyButton`).
 ///
 /// Les actions partent du contexte de la barre, sous les blocs de l'écran :
-/// - « Arrivé à destination » : `ArrivalInstructionsBottomSheet`
-///   (`isEditing: false`), qui envoie `AnnouncementTripMarkArrivedRequested`
-///   (position approximative jointe par le bloc) ; l'écran ouvre ensuite
-///   « Prévenir les destinataires » de lui-même ;
-/// - « Prévenir les destinataires (N) » : `NotifyRecipientsSheet`
-///   (`source: manual`) ;
+/// - l'action « À traiter » en tête : [openTripTodoAction] (`source:
+///   footer`), le geste de sa grosse carte ;
 /// - « Modifier » : [openTripEdit] (relecture si l'édition enregistre) ;
-/// - « Publier » : `AnnouncementPublishRequested`. KYC, date passée, limite
-///   PRO et écran de succès restent gérés par l'écouteur de l'écran ;
 /// - « Voir les demandes (N) » : [openTripRequests] (relecture au retour) ;
 /// - « Partager l'affiche » : [openTripPoster].
+///
+/// La file « À traiter » est recalculée ici sur les mêmes données que le
+/// corps ([TripTodoLiveData.todo] : trajet, colis, [departed], [stripe],
+/// demandes traitées depuis l'écran) : le pied et la grosse carte suivent
+/// toujours la même action.
 class TripOwnerStickyBar extends StatelessWidget {
   const TripOwnerStickyBar({
     super.key,
     required this.trip,
     required this.bids,
     required this.isOwner,
+    this.departed = false,
+    this.stripe = const StripeAccountInitial(),
   });
 
   final AnnouncementModel trip;
@@ -149,6 +140,12 @@ class TripOwnerStickyBar extends StatelessWidget {
   /// Colis chargés par l'écran, `null` tant que la liste n'a pas répondu.
   final List<BidModel>? bids;
   final bool isOwner;
+
+  /// « Je pars » déjà confirmé depuis cet appareil (`TripDepartCubit`).
+  final bool departed;
+
+  /// Compte de paiement par carte (`StripeAccountBloc`).
+  final StripeAccountState stripe;
 
   @override
   Widget build(BuildContext context) {
@@ -163,26 +160,45 @@ class TripOwnerStickyBar extends StatelessWidget {
   }
 
   Widget _bar(BuildContext context, Set<String> answered) {
+    final live = TripTodoLiveData(
+      trip: trip,
+      bids: bids,
+      departed: departed,
+      stripe: stripe,
+    );
+    final todo = isOwner
+        ? live.todo(answered: answered)
+        : const <TripTodoItem>[];
     final footer = tripFooterFor(
       trip: trip,
       bids: bids,
       isOwner: isOwner,
       answered: answered,
+      todo: todo,
     );
     if (footer == null) return const SizedBox.shrink();
     final pending = tripPendingRequestCount(
       trip,
       tripBidsAfterAnswers(bids, answered),
     );
-    String label(TripFooterButton button) =>
-        _label(context.l10n, button, pending: pending);
+    final first = todo.isEmpty ? null : todo.first;
+    String label(TripFooterButton button) => _label(
+      context.l10n,
+      button,
+      pending: pending,
+      todo: first,
+      cardReady: live.cardReady,
+    );
+    void act(TripFooterButton button) =>
+        _act(context, button, live: live, todo: first);
     final cs = Theme.of(context).colorScheme;
     final h = DonyLayout.hPadding(context);
     final primary = _button(
-      context,
       footer.primary,
       label: label(footer.primary),
       primary: true,
+      todo: first,
+      onPressed: () => act(footer.primary),
     );
     final secondaryButton = footer.secondary;
     return Container(
@@ -199,10 +215,11 @@ class TripOwnerStickyBar extends StatelessWidget {
           : LayoutBuilder(
               builder: (context, constraints) {
                 final secondary = _button(
-                  context,
                   secondaryButton,
                   label: label(secondaryButton),
                   primary: false,
+                  todo: first,
+                  onPressed: () => act(secondaryButton),
                 );
                 if (_fitSideBySide(
                   context,
@@ -262,65 +279,63 @@ class TripOwnerStickyBar extends StatelessWidget {
         measure(primary) <= row * 2 / 3 - inner;
   }
 
-  /// Libellé de [button] ; [pending] : demandes à traiter affichées.
+  /// Libellé de [button] ; [pending] : demandes à traiter affichées ;
+  /// [todo] : action en tête de la file.
   String _label(
     AppLocalizations l,
     TripFooterButton button, {
     required int pending,
+    required TripTodoItem? todo,
+    required bool cardReady,
   }) => switch (button) {
-    TripFooterButton.markArrived => l.tripOwnerMarkArrivedButton,
-    TripFooterButton.notifyRecipients => l.notifyRecipientsButton(
-      recipientsToNotify(bids ?? const []).length,
-    ),
+    TripFooterButton.todo => tripTodoButton(l, todo!, cardReady: cardReady),
     TripFooterButton.edit => l.commonEdit,
-    TripFooterButton.publish => l.tripOwnerPublishTile,
     TripFooterButton.seeRequests => l.listingSeeRequestsButton(pending),
     TripFooterButton.sharePoster => l.tripPosterShareButton,
   };
 
   Widget _button(
-    BuildContext context,
     TripFooterButton button, {
     required String label,
     required bool primary,
+    required TripTodoItem? todo,
+    required VoidCallback onPressed,
   }) => DonyButton(
-    key: Key('trip-footer-${button.name}'),
+    key: Key(
+      button == TripFooterButton.todo
+          ? 'trip-footer-todo-${todo!.kind.name}'
+          : 'trip-footer-${button.name}',
+    ),
     label: label,
-    // Icône seulement sur un bouton seul (« Prévenir… ») : à 1/3 ou 2/3 de
-    // ligne, elle ferait rétrécir le libellé.
-    iconAsset: button == TripFooterButton.notifyRecipients
+    // Icône seulement sur « Prévenir les destinataires », toujours seul : à
+    // 1/3 ou 2/3 de ligne, elle ferait rétrécir le libellé.
+    iconAsset:
+        button == TripFooterButton.todo && todo?.kind == TripTodoKind.notify
         ? 'message-circle'
         : null,
     variant: primary ? DonyButtonVariant.primary : DonyButtonVariant.secondary,
     flat: true,
-    onPressed: () => _act(context, button),
+    onPressed: onPressed,
   );
 
-  void _act(BuildContext context, TripFooterButton button) {
+  void _act(
+    BuildContext context,
+    TripFooterButton button, {
+    required TripTodoLiveData live,
+    required TripTodoItem? todo,
+  }) {
     switch (button) {
-      case TripFooterButton.markArrived:
+      case TripFooterButton.todo:
         unawaited(
-          ArrivalInstructionsBottomSheet.show(
+          openTripTodoAction(
             context,
-            announcementId: trip.id,
-            initialInstructions: trip.arrivalInstructions,
-          ),
-        );
-      case TripFooterButton.notifyRecipients:
-        unawaited(
-          NotifyRecipientsSheet.show(
-            context,
-            bids: bids ?? const [],
-            source: NotifyRecipientsSource.manual,
-            instructions: trip.arrivalInstructions,
+            live,
+            todo!,
+            source: TripTodoSource.footer,
           ),
         );
       case TripFooterButton.edit:
         unawaited(openTripEdit(context, trip));
-      case TripFooterButton.publish:
-        context.read<AnnouncementBloc>().add(
-          AnnouncementPublishRequested(trip.id),
-        );
       case TripFooterButton.seeRequests:
         unawaited(openTripRequests(context, trip.id));
       case TripFooterButton.sharePoster:

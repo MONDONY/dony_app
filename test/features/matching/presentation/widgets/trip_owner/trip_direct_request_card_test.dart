@@ -8,7 +8,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
@@ -16,7 +15,6 @@ import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_direct_request_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
@@ -38,7 +36,6 @@ Future<void> settle(WidgetTester tester) async {
 void main() {
   late AnswerHarness h;
   late int seeAll;
-  late TodoTileViewLog views;
 
   setUpAll(() async {
     AnswerHarness.registerFallbacks();
@@ -49,7 +46,6 @@ void main() {
     h = AnswerHarness();
     await h.setUp();
     seeAll = 0;
-    views = TodoTileViewLog();
   });
 
   tearDown(() => h.tearDown());
@@ -73,12 +69,8 @@ void main() {
     body: (context) => TripTodoLive(
       trip: answerTrip(status: status),
       blocs: TripTodoBlocs.of(context),
-      builder: (context, live) => TripDirectRequestCard(
-        trip: live.trip,
-        bids: live.bids,
-        views: views,
-        onSeeAll: () => seeAll++,
-      ),
+      builder: (context, live) =>
+          TripDirectRequestCard(bids: live.bids, onSeeAll: () => seeAll++),
     ),
   );
 
@@ -185,39 +177,6 @@ void main() {
       expect(find.text('Decline'), findsOneWidget);
       expect(find.text('Accept'), findsOneWidget);
     });
-  });
-
-  group('mesure de la tuile requests', () {
-    testWidgets(
-      'bid_detail_todo_tile_shown à l\'affichage, une fois par nombre',
-      (tester) async {
-        await pumpCard(tester, bids: answerRequests(2));
-        await tester.pump();
-        verify(
-          () => h.backend.capture(AnalyticsEvents.bidDetailTodoTileShown, {
-            'tile': 'requests',
-            'role': 'trip_owner',
-            'status': 'ACTIVE',
-          }),
-        ).called(1);
-        // Rechargement à l'identique : rien de plus.
-        h.screenStates.add(BidListLoaded(answerRequests(2)));
-        await tester.pump();
-        await tester.pump();
-        verifyNever(
-          () =>
-              h.backend.capture(AnalyticsEvents.bidDetailTodoTileShown, any()),
-        );
-        // Une demande de plus : remesurée.
-        h.screenStates.add(BidListLoaded(answerRequests(3)));
-        await tester.pump();
-        await tester.pump();
-        verify(
-          () =>
-              h.backend.capture(AnalyticsEvents.bidDetailTodoTileShown, any()),
-        ).called(1);
-      },
-    );
   });
 
   group('Accepter', () {

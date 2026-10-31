@@ -39,6 +39,7 @@ import 'package:dony/features/matching/data/repositories/announcement_repository
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_actions.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
@@ -132,6 +133,10 @@ AnnouncementModel _makeAnnouncement({
   updatedAt: DateTime(2026, 6),
 );
 
+/// Colis de test, payé par carte : `PENDING` y est une carte pas encore
+/// payée par l'expéditeur (pas une action « À traiter »), une demande à
+/// traiter est `PAYMENT_ESCROWED`. Départ du colis = départ du trajet : la
+/// remise au destinataire ne s'ouvre qu'après.
 BidModel _makeBid({
   required String status,
   String id = 'bid-001',
@@ -143,6 +148,7 @@ BidModel _makeBid({
   announcementId: 'ann-trip-001',
   senderId: 'sender-001',
   status: status,
+  departureDate: DateTime(2026, 7),
   createdAt: DateTime(2026, 6),
   updatedAt: DateTime(2026, 6),
 );
@@ -333,6 +339,8 @@ void main() {
   });
 
   setUp(() {
+    // Avant le départ du trajet de test (1er juillet).
+    tripTodoNow = () => DateTime(2026, 6, 20, 12);
     annBloc = _MockAnnouncementBloc();
     bidBloc = _MockBidBloc();
     cancelBloc = _MockCancellationBloc();
@@ -408,6 +416,7 @@ void main() {
   });
 
   tearDown(() {
+    tripTodoNow = DateTime.now;
     unawaited(answerStates.close());
     unregisterTripAnswerBlocs();
     if (getIt.isRegistered<AnalyticsService>()) {
@@ -512,7 +521,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Arrivé à destination'), findsOneWidget);
+    // Bouton du pied (l'action en tête de « À traiter » dit la même chose).
+    expect(find.byKey(const Key('trip-footer-todo-arrive')), findsOneWidget);
   });
 
   group('Prévenir les destinataires (lot 3B)', () {
@@ -556,11 +566,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('trip-footer-markArrived')), findsOneWidget);
-      expect(
-        find.byKey(const Key('trip-footer-notifyRecipients')),
-        findsNothing,
-      );
+      expect(find.byKey(const Key('trip-footer-todo-arrive')), findsOneWidget);
+      expect(find.byKey(const Key('trip-footer-todo-notify')), findsNothing);
     });
 
     testWidgets('arrivée marquée : bouton du pied, ouvre la feuille', (
@@ -568,7 +575,10 @@ void main() {
     ) async {
       ownerWithBids([
         _makeBid(status: 'ARRIVED', recipientPhone: '+221700000000'),
-        _makeBid(status: 'ACCEPTED', id: 'bid-002'),
+        // Colis annulé : ni destinataire à prévenir, ni geste attendu (un
+        // colis accepté passerait « Confirmer ma présence », urgent, en
+        // tête).
+        _makeBid(status: 'CANCELLED', id: 'bid-002'),
       ]);
       await _pump(
         tester,
@@ -579,16 +589,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final button = find.text('Prévenir les destinataires (1)');
-      expect(button, findsOneWidget);
-      // Pied collant, hors du défilement.
-      expect(
-        find.descendant(
-          of: find.byKey(const Key('trip-owner-sticky-bar')),
-          matching: button,
-        ),
-        findsOneWidget,
+      // Pied collant, hors du défilement (la grosse carte « À traiter » porte
+      // le même bouton).
+      final button = find.descendant(
+        of: find.byKey(const Key('trip-owner-sticky-bar')),
+        matching: find.text('Prévenir les destinataires (1)'),
       );
+      expect(button, findsOneWidget);
+      expect(find.text('Prévenir les destinataires (1)'), findsNWidgets(2));
       await tester.tap(button);
       await tester.pumpAndSettle();
 
@@ -615,10 +623,7 @@ void main() {
         authBloc: authBloc,
       );
       await tester.pumpAndSettle();
-      expect(
-        find.byKey(const Key('trip-footer-notifyRecipients')),
-        findsNothing,
-      );
+      expect(find.byKey(const Key('trip-footer-todo-notify')), findsNothing);
     });
 
     testWidgets('visiteur non propriétaire : pas de bouton', (tester) async {
@@ -637,10 +642,7 @@ void main() {
         authBloc: authBloc,
       );
       await tester.pumpAndSettle();
-      expect(
-        find.byKey(const Key('trip-footer-notifyRecipients')),
-        findsNothing,
-      );
+      expect(find.byKey(const Key('trip-footer-todo-notify')), findsNothing);
     });
 
     Future<(StreamController<AnnouncementState>, StreamController<BidState>)>
@@ -783,12 +785,13 @@ void main() {
         stripeState: const StripeAccountReady(
           ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
         ),
-        bids: [_makeBid(status: 'PENDING')],
+        bids: [_makeBid(status: 'PAYMENT_ESCROWED')],
       );
       clearInteractions(annBloc);
 
-      // L'encart est devenu la tuile « À traiter », qui ouvre son sheet.
-      final tile = find.byKey(const Key('trip_owner-todo-card'));
+      // L'encart est devenu l'action « Ajouter la carte », qui ouvre son
+      // sheet (ligne de la file sous la demande à traiter).
+      final tile = find.byKey(const Key('trip-todo-row-addCard'));
       await tester.ensureVisible(tile);
       await tester.pumpAndSettle();
       await tester.tap(tile);
@@ -825,7 +828,8 @@ void main() {
         ),
         bids: [_makeBid(status: status)],
       );
-      expect(find.byKey(const Key('trip_owner-todo-card')), findsNothing);
+      expect(find.byKey(const Key('trip-todo-next-addCard')), findsNothing);
+      expect(find.byKey(const Key('trip-todo-row-addCard')), findsNothing);
       expect(find.byKey(const Key('enable-card-on-trip-cta')), findsNothing);
     });
   }
@@ -915,7 +919,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Arrivé à destination'), findsOneWidget);
+      expect(find.byKey(const Key('trip-footer-todo-arrive')), findsOneWidget);
     },
   );
 
@@ -962,7 +966,7 @@ void main() {
     testWidgets('ACTIVE + colis remis : « Partager l\'affiche », pas '
         '« Arrivé à destination »', (tester) async {
       await pumpHandover(tester, 'ACTIVE', [_makeBid(status: 'HANDED_OVER')]);
-      expect(find.byKey(const Key('trip-footer-markArrived')), findsNothing);
+      expect(find.byKey(const Key('trip-footer-todo-arrive')), findsNothing);
       expect(find.text('Arrivé à destination'), findsNothing);
       expect(find.byKey(const Key('trip-footer-sharePoster')), findsOneWidget);
     });
@@ -974,7 +978,7 @@ void main() {
         _makeBid(status: 'HANDED_OVER'),
         _makeBid(status: 'PENDING', id: 'bid-002'),
       ]);
-      expect(find.byKey(const Key('trip-footer-markArrived')), findsNothing);
+      expect(find.byKey(const Key('trip-footer-todo-arrive')), findsNothing);
       expect(find.byKey(const Key('trip-footer-seeRequests')), findsOneWidget);
     });
 
@@ -990,7 +994,7 @@ void main() {
       await pumpHandover(tester, 'IN_PROGRESS', [
         _makeBid(status: 'HANDED_OVER'),
       ]);
-      expect(find.byKey(const Key('trip-footer-markArrived')), findsOneWidget);
+      expect(find.byKey(const Key('trip-footer-todo-arrive')), findsOneWidget);
     });
   });
 
@@ -1396,7 +1400,15 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Trip'), findsOneWidget);
-      expect(find.text('Arrived at destination'), findsOneWidget);
+      // Pied, et l'action en tête de « À traiter » (titre et bouton).
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('trip-owner-sticky-bar')),
+          matching: find.text('Arrived at destination'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Arrived at destination'), findsNWidgets(3));
       expect(find.text('Trajet'), findsNothing);
     });
 
@@ -1709,7 +1721,7 @@ void main() {
     ) async {
       ownerOn(_makeAnnouncement(status: 'DRAFT'));
       await pumpScreen(tester);
-      expect(find.byKey(const Key('trip-footer-publish')), findsOneWidget);
+      expect(find.byKey(const Key('trip-footer-todo-publish')), findsOneWidget);
       expect(find.byKey(const Key('trip-footer-edit')), findsOneWidget);
       expect(
         find.descendant(of: find.byType(AppBar), matching: menuButton),
@@ -1767,7 +1779,8 @@ void main() {
       senderId: 'sender-$id',
       senderName: 'Expéditeur $id',
       weightKg: 2,
-      status: 'PENDING',
+      // Carte payée (séquestrée) : une demande à traiter.
+      status: 'PAYMENT_ESCROWED',
       createdAt: DateTime(2026, 6),
       updatedAt: DateTime(2026, 6),
     );

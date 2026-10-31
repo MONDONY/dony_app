@@ -14412,12 +14412,6 @@ abstract class AppLocalizations {
   /// **'Le trajet ne sera plus visible et restera dans vos brouillons.'**
   String get tripOwnerUnpublishDialogMessage;
 
-  /// Tuile « Demandes » (écran du trajet, ex-grille d’actions). Clé dédiée (R40) : distincte de bidListDemandesTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Demandes'**
-  String get tripOwnerRequestsTile;
-
   /// Tuile « Colis » (écran du trajet, ex-grille d’actions), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur).
   ///
   /// In fr, this message translates to:
@@ -37175,6 +37169,306 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Tous'**
   String get tripOwnerParcelsFilterAll;
+
+  /// Écran du trajet (propriétaire), « À traiter » : étiquette orange de la grosse carte quand l'action la plus urgente est urgente (trip_todo_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Urgent'**
+  String get tripTodoUrgentLabel;
+
+  /// Écran du trajet (propriétaire), « À traiter » : étiquette de la grosse carte quand l'action en tête est importante sans être urgente (trip_todo_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prochaine action'**
+  String get tripTodoNextLabel;
+
+  /// Écran du trajet (propriétaire), « À traiter » : dernière ligne de la file quand plus de trois actions suivent la grosse carte ; ouvre toute la liste (trip_todo_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{+ 1 autre à traiter} other{+ {count} autres à traiter}}'**
+  String tripTodoMoreRow(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de la ligne « + N autres à traiter » (trip_todo_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir toute la liste'**
+  String get tripTodoMoreRowSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : pastille orange de l'en-tête du billet et titre du sheet « toute la liste », avec le nombre d'actions (trip_todo_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'À traiter · {count}'**
+  String tripTodoBadge(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : lecture d'écran de la pastille « À traiter · N » du billet (trip_todo_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 chose à traiter} other{{count} choses à traiter}}'**
+  String tripTodoBadgeSemantics(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : échéance d'une action déjà passée (carte, ligne, colis) (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Délai dépassé'**
+  String get tripTodoDuePassed;
+
+  /// Écran du trajet (propriétaire), « À traiter » : échéance d'une action à moins d'une heure (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Expire dans {minutes} min'**
+  String tripTodoDueInMinutes(int minutes);
+
+  /// Écran du trajet (propriétaire), « À traiter » : échéance d'une action à moins de six heures (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Expire dans {hours} h'**
+  String tripTodoDueInHours(int hours);
+
+  /// Écran du trajet (propriétaire), « À traiter » : échéance d'une action le jour même, heure dans le fuseau du trajet (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avant {time}'**
+  String tripTodoDueBeforeTime(String time);
+
+  /// Écran du trajet (propriétaire), « À traiter » : échéance d'une action un autre jour : date courte et heure dans le fuseau du trajet (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avant le {date} à {time}'**
+  String tripTodoDueBeforeDate(String date, String time);
+
+  /// Écran du trajet (propriétaire), « À traiter » : bandeau orange du sheet d'une action par colis : échéance (« Avant 19:00 ») et ce qui arrive sans rien faire (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{due}, sinon {consequence}.'**
+  String tripTodoDueBanner(String due, String consequence);
+
+  /// Écran du trajet (propriétaire), « À traiter » : bandeau orange du sheet d'une action par colis dont l'échéance est passée (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Délai dépassé.'**
+  String get tripTodoDuePassedBanner;
+
+  /// Écran du trajet (propriétaire), « À traiter » : suite de « Avant 19:00, sinon … » pour confirmer sa présence (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'l\'expéditeur ne sait pas si vous serez au rendez-vous'**
+  String get tripTodoConsequencePresence;
+
+  /// Écran du trajet (propriétaire), « À traiter » : suite de « Avant 19:00, sinon … » pour récupérer un colis (back NoShowScheduler, date limite + 1 h) (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'vous êtes déclaré absent'**
+  String get tripTodoConsequenceScan;
+
+  /// Écran du trajet (propriétaire), « À traiter » : suite de « Avant …, sinon … » pour répondre à une modification (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'la modification expire'**
+  String get tripTodoConsequenceAmendment;
+
+  /// Écran du trajet (propriétaire), « À traiter » : suite de « Avant …, sinon … » pour valider les frais d'un supplément (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'le supplément est perdu'**
+  String get tripTodoConsequenceSupplement;
+
+  /// Écran du trajet (propriétaire), « À traiter » : suite de « Avant …, sinon … » pour signaler l'absence de l'expéditeur (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'c\'est vous qui êtes déclaré absent'**
+  String get tripTodoConsequenceSenderAbsence;
+
+  /// Écran du trajet (propriétaire), « À traiter » : suite de « Avant …, sinon … » pour rendre un colis après annulation (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'l\'équipe Yadony est alertée'**
+  String get tripTodoConsequenceReturn;
+
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « confirmer sa présence au dépôt » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer votre présence'**
+  String get tripTodoPresenceTitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « confirmer sa présence » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 colis : rassurez l\'expéditeur} other{{count} colis : rassurez les expéditeurs}}'**
+  String tripTodoPresenceSubtitle(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « récupérer le colis » (scan de départ) (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Récupérer 1 colis} other{Récupérer {count} colis}}'**
+  String tripTodoScanTitle(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « récupérer le colis » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lisez le QR du colis à la remise'**
+  String get tripTodoScanSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « modification proposée par l'expéditeur » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Modification à traiter} other{{count} modifications à traiter}}'**
+  String tripTodoAmendmentTitle(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « modification » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La remise attend votre réponse'**
+  String get tripTodoAmendmentSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : bouton de l'action « modification », qui ouvre le sheet des colis concernés (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Voir la modification} other{Voir les modifications}}'**
+  String tripTodoAmendmentButton(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « frais de service d'un supplément » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Frais du supplément à valider} other{Frais de {count} suppléments à valider}}'**
+  String tripTodoSupplementTitle(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « frais du supplément » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Validez le paiement des frais de service'**
+  String get tripTodoSupplementSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « signaler l'absence de l'expéditeur » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt est passée'**
+  String get tripTodoSenderAbsenceSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : bouton de l'action « signaler l'absence de l'expéditeur », version courte du titre pour tenir sur une ligne (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler l\'absence'**
+  String get tripTodoSenderAbsenceButton;
+
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « rendre un colis après annulation » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Rendre 1 colis} other{Rendre {count} colis}}'**
+  String tripTodoReturnTitle(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « rendre un colis » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le code de retour de l\'expéditeur'**
+  String get tripTodoReturnSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : bouton de l'action « rendre un colis » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisir le code de retour'**
+  String get tripTodoReturnButton;
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « Arrivé à destination » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez où retirer les colis'**
+  String get tripTodoArriveSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « valider la remise au destinataire » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Valider 1 remise} other{Valider {count} remises}}'**
+  String tripTodoDeliverTitle(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « valider la remise » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo et code de retrait du destinataire'**
+  String get tripTodoDeliverSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « prévenir les destinataires » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Prévenir 1 destinataire} other{Prévenir {count} destinataires}}'**
+  String tripTodoNotifyTitle(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « prévenir les destinataires » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dites-leur que leur colis est arrivé'**
+  String get tripTodoNotifySubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « destinataire refusé » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Destinataire refusé} other{{count} destinataires refusés}}'**
+  String tripTodoRecipientDeclinedTitle(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « destinataire refusé » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez un autre destinataire à l\'expéditeur'**
+  String get tripTodoRecipientDeclinedSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : bouton de l'action « destinataire refusé », qui ouvre le sheet des colis concernés (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le destinataire'**
+  String get tripTodoRecipientDeclinedButton;
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « instructions de retrait » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'À renseigner pour les destinataires'**
+  String get tripTodoInstructionsSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : bouton de l'action « instructions de retrait », qui ouvre leur édition (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter les instructions'**
+  String get tripTodoInstructionsButton;
+
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « noter l'expéditeur » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Noter 1 expéditeur} other{Noter {count} expéditeurs}}'**
+  String tripTodoRateTitle(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « noter l'expéditeur » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre avis aide les autres voyageurs'**
+  String get tripTodoRateSubtitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : bouton de l'action « noter l'expéditeur » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Noter l\'expéditeur} other{Noter les expéditeurs}}'**
+  String tripTodoRateButton(int count);
+
+  /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « publier le brouillon » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier le trajet'**
+  String get tripTodoPublishTitle;
+
+  /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « publier le brouillon » (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les expéditeurs ne le voient pas encore'**
+  String get tripTodoPublishSubtitle;
+
+  /// Écran du trajet (propriétaire), ligne Colis : colis distincts qui attendent un geste du voyageur, en orange sous le résumé (trip_parcels_line.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 attend votre geste} other{{count} attendent votre geste}}'**
+  String tripParcelsLineAwaiting(int count);
+
+  /// Sheet « Colis » de l'écran du trajet : lecture d'écran du point orange d'un colis qui attend un geste du voyageur (trip_parcel_rows.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Attend votre geste'**
+  String get tripParcelAwaitingSemantics;
 }
 
 class _AppLocalizationsDelegate

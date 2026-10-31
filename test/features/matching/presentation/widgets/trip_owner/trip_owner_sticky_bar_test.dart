@@ -1,5 +1,6 @@
 // Pied collant de l'écran du trajet vu par son voyageur : règle pure
-// (`tripFooterFor`, statut × demandes × colis, priorités), libellés FR / EN,
+// (`tripFooterFor`, statut × demandes × colis × action « À traiter » en
+// tête, priorités), libellés FR / EN,
 // actions de chaque bouton, disposition (deux boutons sur une ligne ou
 // empilés) et libellés à taille nominale à 360 dp × 1,3 avec les vraies
 // polices.
@@ -18,6 +19,9 @@ import 'package:dony/features/matching/presentation/screens/create_trip_screen.d
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_sticky_bar.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_labels.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -70,25 +74,47 @@ AnnouncementModel _tripFor(String status, _Parcels p) => ownerTrip(
   pendingBidCount: p == _Parcels.notLoadedWithPending ? 2 : 0,
 );
 
-const _arrived = (primary: TripFooterButton.markArrived, secondary: null);
-const _notify = (primary: TripFooterButton.notifyRecipients, secondary: null);
+/// Horloge figée des tests : avant le départ du trajet de test (12 nov.).
+final _now = DateTime(2026, 11, 1, 12);
+
 const _requests = (primary: TripFooterButton.seeRequests, secondary: null);
-const _publishEdit = (
-  primary: TripFooterButton.publish,
-  secondary: TripFooterButton.edit,
-);
-const _publish = (primary: TripFooterButton.publish, secondary: null);
 const _posterEdit = (
   primary: TripFooterButton.sharePoster,
   secondary: TripFooterButton.edit,
 );
 const _poster = (primary: TripFooterButton.sharePoster, secondary: null);
+const _todo = (primary: TripFooterButton.todo, secondary: null);
+const _todoEdit = (
+  primary: TripFooterButton.todo,
+  secondary: TripFooterButton.edit,
+);
 
-/// Pied attendu pour un trajet [status] dont les colis sont [p].
-///
-/// « Arrivé à destination » seulement sur un trajet parti (IN_PROGRESS) : sur
-/// un trajet ACTIVE ou FULL, des colis remis (étape de remise, avant le
-/// départ) laissent le pied aux règles suivantes.
+List<TripTodoItem> _todoFor(AnnouncementModel trip, List<BidModel>? bids) =>
+    tripTodoFor(
+      trip: trip,
+      bids: bids,
+      isOwner: true,
+      now: _now,
+      departed: false,
+      stripe: const StripeAccountInitial(),
+    );
+
+TripFooter? _footer(String status, _Parcels p) {
+  final trip = _tripFor(status, p);
+  final bids = _bidsFor(p);
+  return tripFooterFor(
+    trip: trip,
+    bids: bids,
+    isOwner: true,
+    todo: _todoFor(trip, bids),
+  );
+}
+
+/// Pied attendu pour un trajet [status] dont les colis sont [p] : l'action
+/// « À traiter » en tête quand il y en a une (« Modifier » à côté seulement
+/// sur un brouillon ou un trajet ouvert sans demande, jamais pendant
+/// l'arrivée), sinon les règles d'avant (« Voir les demandes » pour des
+/// demandes qui ne sont pas une action, l'affiche sur un trajet ouvert).
 TripFooter? _expected(String status, _Parcels p) {
   const travelling = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
   const onBoard = {
@@ -97,83 +123,89 @@ TripFooter? _expected(String status, _Parcels p) {
     _Parcels.arrivedAndHandedOver,
     _Parcels.handedOverAndPending,
   };
-  if (status == 'IN_PROGRESS' && onBoard.contains(p)) return _arrived;
-  if (travelling.contains(status) &&
-      (p == _Parcels.arrived || p == _Parcels.arrivedAndPending)) {
-    return _notify;
-  }
+  final arrivalStep =
+      (status == 'IN_PROGRESS' && onBoard.contains(p)) ||
+      (travelling.contains(status) &&
+          (p == _Parcels.arrived || p == _Parcels.arrivedAndPending));
   final pending = const {
     _Parcels.pending,
     _Parcels.escrowed,
+    _Parcels.arrivedAndPending,
     _Parcels.handedOverAndPending,
     _Parcels.notLoadedWithPending,
   }.contains(p);
+  final requestsWaiting = (status == 'ACTIVE' || status == 'FULL') && pending;
   final empty = p == _Parcels.none || p == _Parcels.notLoaded;
-  return switch (status) {
-    'DRAFT' => empty ? _publishEdit : _publish,
-    'ACTIVE' when pending => _requests,
-    'ACTIVE' => empty ? _posterEdit : _poster,
-    'FULL' when pending => _requests,
-    _ => null,
-  };
+  if (_todoFor(_tripFor(status, p), _bidsFor(p)).isNotEmpty) {
+    final keepsEdit =
+        empty &&
+        !arrivalStep &&
+        (status == 'DRAFT' || (!requestsWaiting && status == 'ACTIVE'));
+    return keepsEdit ? _todoEdit : _todo;
+  }
+  if (requestsWaiting) return _requests;
+  if (status == 'ACTIVE') return empty ? _posterEdit : _poster;
+  return null;
 }
 
 void main() {
+  setUp(() => tripTodoNow = () => _now);
+  tearDown(() => tripTodoNow = DateTime.now);
+
   group('tripFooterFor', () {
     for (final status in kTripStatuses) {
       for (final p in _Parcels.values) {
         test('$status × ${p.name}', () {
-          expect(
-            tripFooterFor(
-              trip: _tripFor(status, p),
-              bids: _bidsFor(p),
-              isOwner: true,
-            ),
-            _expected(status, p),
-          );
+          expect(_footer(status, p), _expected(status, p));
         });
       }
     }
 
     test('table : cas clés écrits en clair', () {
-      TripFooter? f(String s, _Parcels p) =>
-          tripFooterFor(trip: _tripFor(s, p), bids: _bidsFor(p), isOwner: true);
-      // Priorités : l'arrivée l'emporte sur « Prévenir » et sur les demandes,
-      // « Prévenir » sur les demandes.
-      expect(f('IN_PROGRESS', _Parcels.handedOverAndPending), _arrived);
-      expect(f('IN_PROGRESS', _Parcels.arrivedAndHandedOver), _arrived);
-      expect(f('ACTIVE', _Parcels.arrivedAndPending), _notify);
-      // Trajet parti : colis remis (transit facultatif) ou en transit.
-      expect(f('IN_PROGRESS', _Parcels.handedOver), _arrived);
-      expect(f('IN_PROGRESS', _Parcels.inTransit), _arrived);
-      // Étape de remise (recette du propriétaire) : trajet pas encore parti,
-      // colis remis, jamais « Arrivé à destination ».
-      expect(f('ACTIVE', _Parcels.handedOver), _poster);
-      expect(f('ACTIVE', _Parcels.handedOverAndPending), _requests);
-      expect(f('FULL', _Parcels.handedOver), isNull);
-      expect(f('FULL', _Parcels.handedOverAndPending), _requests);
-      expect(f('FULL', _Parcels.arrivedAndHandedOver), isNull);
+      TripTodoKind? first(String s, _Parcels p) {
+        final todo = _todoFor(_tripFor(s, p), _bidsFor(p));
+        return todo.isEmpty ? null : todo.first.kind;
+      }
+
+      // Brouillon : « Publier » est l'action, « Modifier » reste à côté.
+      expect(_footer('DRAFT', _Parcels.none), _todoEdit);
+      expect(first('DRAFT', _Parcels.none), TripTodoKind.publish);
+      expect(first('DRAFT', _Parcels.notLoaded), TripTodoKind.publish);
+      // Demande à traiter : le pied suit l'action, sans « Modifier ».
+      expect(_footer('ACTIVE', _Parcels.escrowed), _todo);
+      expect(first('ACTIVE', _Parcels.escrowed), TripTodoKind.requests);
+      expect(first('FULL', _Parcels.escrowed), TripTodoKind.requests);
+      // Carte pas encore payée (PENDING carte) : pas une action, le pied
+      // garde « Voir les demandes (N) » ; idem pour le compteur du modèle.
+      expect(_footer('ACTIVE', _Parcels.pending), _requests);
+      expect(_footer('FULL', _Parcels.pending), _requests);
+      expect(_footer('ACTIVE', _Parcels.notLoadedWithPending), _requests);
+      // Trajet parti avec des colis à bord : « Arrivé à destination » en tête.
+      expect(_footer('IN_PROGRESS', _Parcels.handedOver), _todo);
+      expect(first('IN_PROGRESS', _Parcels.handedOver), TripTodoKind.arrive);
+      expect(first('IN_PROGRESS', _Parcels.inTransit), TripTodoKind.arrive);
+      expect(
+        first('IN_PROGRESS', _Parcels.handedOverAndPending),
+        TripTodoKind.arrive,
+      );
+      // Étape de remise avant le départ : jamais « Arrivé à destination ».
       for (final s in ['ACTIVE', 'FULL']) {
         for (final p in [_Parcels.handedOver, _Parcels.inTransit]) {
-          expect(f(s, p)?.primary, isNot(TripFooterButton.markArrived));
+          expect(first(s, p), isNot(TripTodoKind.arrive), reason: '$s $p');
         }
       }
-      expect(f('IN_PROGRESS', _Parcels.arrived), _notify);
-      // Brouillon, trajet ouvert sans demande, trajet complet.
-      expect(f('DRAFT', _Parcels.none), _publishEdit);
-      expect(f('ACTIVE', _Parcels.none), _posterEdit);
-      expect(f('ACTIVE', _Parcels.pending), _requests);
-      expect(f('FULL', _Parcels.escrowed), _requests);
-      expect(f('FULL', _Parcels.accepted), isNull);
-      expect(f('IN_PROGRESS', _Parcels.pending), isNull);
-      // Trajets soldés : jamais de pied, même avec des colis arrivés.
-      for (final s in ['COMPLETED', 'CANCELLED', 'REMOVED_BY_ADMIN']) {
-        expect(f(s, _Parcels.arrived), isNull, reason: s);
-        expect(f(s, _Parcels.handedOver), isNull, reason: s);
+      // Colis accepté : confirmer sa présence (urgent).
+      expect(first('FULL', _Parcels.accepted), TripTodoKind.presence);
+      // Trajets sans rien à traiter : aucun pied.
+      for (final s in ['COMPLETED', 'CANCELLED', 'REMOVED_BY_ADMIN', 'FULL']) {
+        expect(_footer(s, _Parcels.none), isNull, reason: s);
       }
+      expect(_footer('IN_PROGRESS', _Parcels.none), isNull);
+      // Ouvert sans rien : « Modifier » | « Partager l'affiche ».
+      expect(_footer('ACTIVE', _Parcels.none), _posterEdit);
     });
 
-    test('colis acceptés seulement : affiche sans « Modifier »', () {
+    test('sans file : les règles d\'avant (affiche, demandes)', () {
       expect(
         tripFooterFor(
           trip: ownerTrip(),
@@ -182,16 +214,10 @@ void main() {
         ),
         _poster,
       );
-    });
-
-    test('demandes comptées par le back (bidsCount) : affiche seule', () {
       expect(
         tripFooterFor(trip: ownerTrip(bidsCount: 1), bids: null, isOwner: true),
         _poster,
       );
-    });
-
-    test('une liste chargée prime sur le compteur du modèle', () {
       expect(
         tripFooterFor(
           trip: ownerTrip(pendingBidCount: 3),
@@ -200,42 +226,44 @@ void main() {
         ),
         _posterEdit,
       );
-    });
-
-    test('colis arrivé, liste pas encore chargée : pas de « Prévenir »', () {
-      // La règle d'arrivée attend la liste des colis.
       expect(
         tripFooterFor(
-          trip: ownerTrip(status: 'IN_PROGRESS'),
-          bids: null,
+          trip: ownerTrip(status: 'DRAFT'),
+          bids: const [],
           isOwner: true,
         ),
         isNull,
+        reason: 'un brouillon a toujours son action « Publier »',
       );
     });
 
-    test('colis refusé, annulé ou livré seulement : rien à faire avancer', () {
-      for (final s in ['NO_SHOW', 'PARCEL_REFUSED', 'CANCELLED', 'COMPLETED']) {
-        expect(
-          tripFooterFor(
-            trip: ownerTrip(status: 'IN_PROGRESS'),
-            bids: [ownerBid('b1', s)],
-            isOwner: true,
-          ),
-          isNull,
-          reason: s,
-        );
-      }
+    test('demandes traitées depuis l\'écran : plus comptées', () {
+      final bids = [ownerBid('b1', 'PENDING')];
+      expect(
+        tripFooterFor(trip: ownerTrip(), bids: bids, isOwner: true),
+        _requests,
+      );
+      expect(
+        tripFooterFor(
+          trip: ownerTrip(),
+          bids: bids,
+          isOwner: true,
+          answered: {'b1'},
+        ),
+        _poster,
+      );
     });
 
     test('visiteur : aucun pied, quel que soit le trajet', () {
       for (final status in kTripStatuses) {
         for (final p in _Parcels.values) {
+          final trip = _tripFor(status, p);
           expect(
             tripFooterFor(
-              trip: _tripFor(status, p),
+              trip: trip,
               bids: _bidsFor(p),
               isOwner: false,
+              todo: _todoFor(trip, _bidsFor(p)),
             ),
             isNull,
           );
@@ -313,6 +341,14 @@ void main() {
       expect(find.byType(DonyButton), findsNothing);
     });
 
+    Finder todoKey(TripTodoKind kind) =>
+        find.byKey(Key('trip-footer-todo-${kind.name}'));
+
+    /// Colis arrivé dont la remise n'est pas encore ouverte (départ du
+    /// colis dans le futur) : « Prévenir » passe en tête.
+    BidModel arrivedNotDeliverable(String id) =>
+        ownerBid(id, 'ARRIVED', departureDate: DateTime(2026, 11, 20));
+
     testWidgets('libellés FR', (tester) async {
       await pumpBar(
         tester,
@@ -326,13 +362,23 @@ void main() {
       expect(find.text("Partager l'affiche"), findsOneWidget);
       expect(find.text('Modifier'), findsOneWidget);
 
+      // Une carte pas encore payée ne compte pas : seule la demande payée.
       await pumpBar(
         tester,
         trip: ownerTrip(),
         bids: [ownerBid('b1', 'PENDING'), ownerBid('b2', 'PAYMENT_ESCROWED')],
       );
-      expect(find.text('Voir les demandes (2)'), findsOneWidget);
+      expect(find.text('Voir les demandes (1)'), findsOneWidget);
       expect(find.byType(DonyButton), findsOneWidget);
+
+      // Cartes pas encore payées seules : « Voir les demandes (N) » d'avant.
+      await pumpBar(
+        tester,
+        trip: ownerTrip(),
+        bids: [ownerBid('b1', 'PENDING'), ownerBid('b2', 'PENDING')],
+      );
+      expect(find.text('Voir les demandes (2)'), findsOneWidget);
+      expect(key(TripFooterButton.seeRequests), findsOneWidget);
 
       await pumpBar(
         tester,
@@ -345,9 +391,25 @@ void main() {
       await pumpBar(
         tester,
         trip: ownerTrip(status: 'IN_PROGRESS'),
-        bids: [ownerBid('b1', 'ARRIVED'), ownerBid('b2', 'ARRIVED')],
+        bids: [arrivedNotDeliverable('b1'), arrivedNotDeliverable('b2')],
       );
       expect(find.text('Prévenir les destinataires (2)'), findsOneWidget);
+
+      // Remise ouverte : « Valider la remise » passe avant « Prévenir ».
+      await pumpBar(
+        tester,
+        trip: ownerTrip(status: 'IN_PROGRESS'),
+        bids: [ownerBid('b1', 'ARRIVED')],
+      );
+      expect(find.text('Valider la remise'), findsOneWidget);
+
+      // Présence confirmée : récupérer le colis.
+      await pumpBar(
+        tester,
+        trip: ownerTrip(status: 'FULL'),
+        bids: [ownerBid('b1', 'ACCEPTED', voyageurConfirmed: true)],
+      );
+      expect(find.text('Lire le QR du colis'), findsOneWidget);
     });
 
     testWidgets('libellés EN', (tester) async {
@@ -365,7 +427,7 @@ void main() {
       await pumpBar(
         tester,
         trip: ownerTrip(),
-        bids: [ownerBid('b1', 'PENDING')],
+        bids: [ownerBid('b1', 'PAYMENT_ESCROWED')],
         locale: en,
       );
       expect(find.text('See requests (1)'), findsOneWidget);
@@ -379,7 +441,7 @@ void main() {
       await pumpBar(
         tester,
         trip: ownerTrip(),
-        bids: [ownerBid('b1', 'ARRIVED')],
+        bids: [arrivedNotDeliverable('b1')],
         locale: en,
       );
       expect(find.text('Notify recipients (1)'), findsOneWidget);
@@ -391,11 +453,14 @@ void main() {
         trip: ownerTrip(status: 'DRAFT'),
         bids: const [],
       );
-      await tester.tap(key(TripFooterButton.publish));
+      await tester.tap(todoKey(TripTodoKind.publish));
       await tester.pump();
       final added = verify(() => annBloc.add(captureAny())).captured;
       expect(added.single, isA<AnnouncementPublishRequested>());
       expect((added.single as AnnouncementPublishRequested).id, 'trip-1');
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, any()),
+      );
     });
 
     testWidgets('Modifier ouvre l’édition et relit si elle enregistre', (
@@ -455,7 +520,7 @@ void main() {
         trip: ownerTrip(status: 'IN_PROGRESS', arrivalInstructions: 'Rue 10'),
         bids: [ownerBid('b1', 'HANDED_OVER')],
       );
-      await tester.tap(key(TripFooterButton.markArrived));
+      await tester.tap(todoKey(TripTodoKind.arrive));
       await tester.pumpAndSettle();
       final sheet = find.byType(ArrivalInstructionsBottomSheet);
       expect(sheet, findsOneWidget);
@@ -464,6 +529,13 @@ void main() {
       expect(widget.announcementId, 'trip-1');
       expect(widget.initialInstructions, 'Rue 10');
       expect(sheetRouteName(tester, sheet), '/sheet/trip-owner/mark-arrived');
+      verify(
+        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'arrive',
+          'role': 'trip_owner',
+          'source': 'footer',
+        }),
+      ).called(1);
 
       // Confirmer envoie le marquage (la position est jointe par le bloc).
       await tester.tap(find.text("Confirmer l'arrivée"));
@@ -481,9 +553,11 @@ void main() {
       await pumpBar(
         tester,
         trip: ownerTrip(status: 'IN_PROGRESS'),
-        bids: [ownerBid('b1', 'ARRIVED'), ownerBid('b2', 'COMPLETED')],
+        bids: [arrivedNotDeliverable('b1'), ownerBid('b2', 'COMPLETED')],
       );
-      await tester.tap(key(TripFooterButton.notifyRecipients));
+      // Le colis livré attend une note : « Prévenir » reste en tête
+      // (important, ordre fixe des types).
+      await tester.tap(todoKey(TripTodoKind.notify));
       await tester.pumpAndSettle();
       final sheet = find.byType(NotifyRecipientsSheet);
       expect(sheet, findsOneWidget);
@@ -498,6 +572,38 @@ void main() {
           'source': 'manual',
         }),
       ).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'notify',
+          'role': 'trip_owner',
+          'source': 'footer',
+        }),
+      ).called(1);
+    });
+
+    testWidgets('Lire le QR : sheet des colis à récupérer, puis Suivi', (
+      tester,
+    ) async {
+      final pushed = await pumpBar(
+        tester,
+        trip: ownerTrip(status: 'FULL'),
+        bids: [ownerBid('b1', 'ACCEPTED', voyageurConfirmed: true)],
+      );
+      await tester.tap(todoKey(TripTodoKind.scan));
+      await tester.pumpAndSettle();
+      final sheet = find.byKey(const Key('trip-todo-parcels-scan-button'));
+      expect(sheet, findsOneWidget);
+      expect(sheetRouteName(tester, sheet), '/sheet/trip-owner/todo-scan');
+      verify(
+        () => backend.capture(AnalyticsEvents.bidDetailTileOpened, {
+          'tile': 'scan',
+          'role': 'trip_owner',
+          'source': 'footer',
+        }),
+      ).called(1);
+      await tester.tap(sheet);
+      await tester.pumpAndSettle();
+      expect(pushed.single.location, '/tracking/validate?trip=trip-1');
     });
 
     group('disposition', () {
@@ -510,7 +616,7 @@ void main() {
           bids: const [],
         );
         final edit = tester.getRect(key(TripFooterButton.edit));
-        final publish = tester.getRect(key(TripFooterButton.publish));
+        final publish = tester.getRect(todoKey(TripTodoKind.publish));
         expect(edit.top, publish.top);
         expect(edit.right, lessThan(publish.left));
         // Secondaire 1/3, principal 2/3.
@@ -553,6 +659,11 @@ void main() {
         (
           'demandes',
           ownerTrip(),
+          [for (var i = 0; i < 12; i++) ownerBid('p$i', 'PAYMENT_ESCROWED')],
+        ),
+        (
+          'cartes pas encore payées',
+          ownerTrip(),
           [for (var i = 0; i < 12; i++) ownerBid('p$i', 'PENDING')],
         ),
         (
@@ -563,8 +674,17 @@ void main() {
         (
           'prévenir',
           ownerTrip(status: 'IN_PROGRESS'),
-          [for (var i = 0; i < 12; i++) ownerBid('a$i', 'ARRIVED')],
+          [
+            for (var i = 0; i < 12; i++)
+              ownerBid('a$i', 'ARRIVED', departureDate: DateTime(2026, 11, 20)),
+          ],
         ),
+        (
+          'récupérer',
+          ownerTrip(status: 'FULL'),
+          [ownerBid('b1', 'ACCEPTED', voyageurConfirmed: true)],
+        ),
+        ('présence', ownerTrip(status: 'FULL'), [ownerBid('b1', 'ACCEPTED')]),
       ];
 
       for (final locale in const [Locale('fr'), Locale('en')]) {
@@ -584,27 +704,34 @@ void main() {
                 );
                 expect(tester.takeException(), isNull);
                 final l = lookupAppLocalizations(locale);
+                final todo = _todoFor(trip, bids);
                 final footer = tripFooterFor(
                   trip: trip,
                   bids: bids,
                   isOwner: true,
+                  todo: todo,
                 )!;
                 for (final b in [footer.primary, ?footer.secondary]) {
                   final label = switch (b) {
-                    TripFooterButton.markArrived =>
-                      l.tripOwnerMarkArrivedButton,
-                    TripFooterButton.notifyRecipients =>
-                      l.notifyRecipientsButton(12),
+                    TripFooterButton.todo => tripTodoButton(
+                      l,
+                      todo.first,
+                      cardReady: false,
+                    ),
                     TripFooterButton.edit => l.commonEdit,
-                    TripFooterButton.publish => l.tripOwnerPublishTile,
                     TripFooterButton.seeRequests => l.listingSeeRequestsButton(
                       12,
                     ),
                     TripFooterButton.sharePoster => l.tripPosterShareButton,
                   };
-                  expect(tester.getSize(key(b)).height, 52, reason: label);
+                  final finder = b == TripFooterButton.todo
+                      ? find.byKey(
+                          Key('trip-footer-todo-${todo.first.kind.name}'),
+                        )
+                      : key(b);
+                  expect(tester.getSize(finder).height, 52, reason: label);
                   expect(
-                    labelScale(tester, key(b), label),
+                    labelScale(tester, finder, label),
                     closeTo(1, 0.001),
                     reason: label,
                   );

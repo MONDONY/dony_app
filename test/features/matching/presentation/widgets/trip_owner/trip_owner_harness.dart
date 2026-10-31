@@ -60,13 +60,25 @@ AnnouncementModel ownerTrip({
   updatedAt: DateTime(2026, 10),
 );
 
-BidModel ownerBid(String id, String status) => BidModel(
+/// Colis de test. Par défaut payé par carte : une demande `PENDING` y est
+/// une carte pas encore payée par l'expéditeur (pas une action « À
+/// traiter »), `PAYMENT_ESCROWED` une demande à traiter.
+BidModel ownerBid(
+  String id,
+  String status, {
+  BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+  bool voyageurConfirmed = false,
+  DateTime? departureDate,
+}) => BidModel(
   id: id,
   announcementId: 'trip-1',
   senderId: 'sender-$id',
   senderName: 'Awa Diop',
   weightKg: 3,
   status: status,
+  paymentMethod: paymentMethod,
+  voyageurConfirmed: voyageurConfirmed,
+  departureDate: departureDate,
   recipientName: 'Fatou',
   recipientPhone: '+221770000000',
   createdAt: DateTime(2026, 10),
@@ -131,6 +143,8 @@ Future<List<PushedRoute>> pumpTripOwnerScreen(
       GoRoute(path: '/demandes', builder: stub),
       GoRoute(path: '/trips/create', builder: stub),
       GoRoute(path: '/announcements/:id/affiche', builder: stub),
+      GoRoute(path: '/bids/:bidId', builder: stub),
+      GoRoute(path: '/tracking/validate', builder: stub),
     ],
   );
   addTearDown(router.dispose);

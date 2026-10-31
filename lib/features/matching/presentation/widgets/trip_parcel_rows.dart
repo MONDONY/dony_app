@@ -170,11 +170,21 @@ String tripParcelContent(AppLocalizations l, BidModel bid) {
 /// expéditeur et chip de statut. Tap → détail de l'offre (`/bids/:bidId`),
 /// colis et trajet relus au retour (`openTripParcel`), depuis le sheet
 /// « Colis » de l'activité du trajet.
+///
+/// [awaitsAction] : le colis attend un geste du voyageur (« À traiter » de
+/// l'écran du trajet) : un point orange avant la puce de statut, lu « attend
+/// votre geste ».
 class TripParcelRow extends StatelessWidget {
-  const TripParcelRow({super.key, required this.bid, required this.onTap});
+  const TripParcelRow({
+    super.key,
+    required this.bid,
+    required this.onTap,
+    this.awaitsAction = false,
+  });
 
   final BidModel bid;
   final VoidCallback onTap;
+  final bool awaitsAction;
 
   String? get _weightLabel {
     final w = bid.displayWeightKg;
@@ -256,6 +266,21 @@ class TripParcelRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: DonySpacing.sm),
+              if (awaitsAction) ...[
+                Semantics(
+                  label: context.l10n.tripParcelAwaitingSemantics,
+                  child: Container(
+                    key: Key('trip-parcel-awaiting-${bid.id}'),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: cs.warning,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+              ],
               _StatusChip(status: bid.status),
             ],
           ),

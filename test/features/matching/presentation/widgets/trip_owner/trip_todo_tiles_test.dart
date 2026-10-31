@@ -1,16 +1,13 @@
-// « À traiter » de l'écran du trajet (vue du voyageur propriétaire) :
-// fonction pure des tuiles pour chaque statut du trajet, demandes en attente,
-// fenêtre de suivi, départ déjà confirmé et encart « espèces seules » ;
-// titres, résumés et mesure d'affichage (`role: trip_owner`).
+// Gestes « Je pars » et « carte » de l'écran du trajet (vue du voyageur
+// propriétaire), repris par « À traiter » (`tripTodoFor`) : fonction pure
+// pour chaque statut du trajet, demandes en attente, fenêtre de suivi,
+// départ déjà confirmé et encart « espèces seules ».
 import 'package:dony/core/models/connect_account_status.dart';
-import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
-import 'package:dony/l10n/l10n.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _statuses = [
@@ -96,11 +93,7 @@ List<TripTodoTile> _tiles(
 
 void main() {
   test('les noms des tuiles sont figés (valeur `tile` des mesures)', () {
-    expect(TripTodoTile.values.map((t) => t.name), [
-      'requests',
-      'depart',
-      'card',
-    ]);
+    expect(TripTodoTile.values.map((t) => t.name), ['depart', 'card']);
   });
 
   group('demandes à traiter', () {
@@ -112,33 +105,19 @@ void main() {
       _bid('b6', 'IN_TRANSIT'),
     ];
 
+    // Les demandes ne sont plus une tuile : l'action « À traiter »
+    // `requests` de `tripTodoFor` les porte (trip_todo_test.dart).
     for (final status in _statuses) {
-      final open = const {'ACTIVE', 'FULL', 'IN_PROGRESS'}.contains(status);
-      test('$status avec une demande PENDING : ${open ? 'tuile' : 'rien'}', () {
+      test('$status avec des demandes : aucune tuile', () {
+        expect(_tiles(_trip(status: status), bids: pending), isEmpty);
+        expect(_tiles(_trip(status: status), bids: escrowed), isEmpty);
+        expect(_tiles(_trip(status: status), bids: none), isEmpty);
         expect(
-          _tiles(_trip(status: status), bids: pending),
-          open ? [TripTodoTile.requests] : isEmpty,
+          _tiles(_trip(status: status, pendingBidCount: 2), bids: null),
+          isEmpty,
         );
       });
-      test('$status sans demande en attente : rien', () {
-        expect(_tiles(_trip(status: status), bids: none), isEmpty);
-      });
     }
-
-    test('PAYMENT_ESCROWED compte comme une demande à traiter', () {
-      expect(_tiles(_trip(), bids: escrowed), [TripTodoTile.requests]);
-    });
-
-    test('liste pas encore chargée : repli sur pendingBidCount', () {
-      expect(_tiles(_trip(pendingBidCount: 2), bids: null), [
-        TripTodoTile.requests,
-      ]);
-      expect(_tiles(_trip(), bids: null), isEmpty);
-    });
-
-    test('liste chargée : elle prime sur pendingBidCount', () {
-      expect(_tiles(_trip(pendingBidCount: 3), bids: none), isEmpty);
-    });
 
     test('nombre de demandes à traiter', () {
       expect(tripPendingRequestCount(_trip(), [...pending, ...escrowed]), 2);
@@ -199,13 +178,13 @@ void main() {
       });
     }
 
-    test('après les demandes', () {
+    test('avec des demandes', () {
       expect(
         _tiles(
           _trip(trackingActive: true, parcelsSummary: _summary),
           bids: [_bid('b1', 'PENDING')],
         ),
-        [TripTodoTile.requests, TripTodoTile.depart],
+        [TripTodoTile.depart],
       );
     });
 
@@ -222,7 +201,7 @@ void main() {
           bids: [_bid('b1', 'PENDING')],
           stripe: _ready,
         ),
-        [TripTodoTile.requests, TripTodoTile.depart],
+        [TripTodoTile.depart],
       );
     });
   });
@@ -253,9 +232,8 @@ void main() {
       });
     }
 
-    test('après les demandes', () {
+    test('avec des demandes', () {
       expect(_tiles(cashTrip(), bids: [_bid('b1', 'PENDING')]), [
-        TripTodoTile.requests,
         TripTodoTile.card,
       ]);
     });
@@ -281,7 +259,7 @@ void main() {
                 bids: [_bid('b1', 'PENDING'), _bid('b2', locking)],
                 stripe: stripe,
               ),
-              [TripTodoTile.requests],
+              isEmpty,
             );
           });
         }
@@ -302,7 +280,7 @@ void main() {
               bids: [_bid('b1', 'PENDING'), _bid('b2', 'PAYMENT_ESCROWED')],
               stripe: stripe,
             ),
-            [TripTodoTile.requests, TripTodoTile.card],
+            [TripTodoTile.card],
           );
         });
         test('DRAFT sans colis ($variant) : tuile', () {
@@ -456,111 +434,5 @@ void main() {
       ),
       isEmpty,
     );
-  });
-
-  group('titres, résumés, icônes', () {
-    for (final locale in const [Locale('fr'), Locale('en')]) {
-      final l = lookupAppLocalizations(locale);
-      test('${locale.languageCode} : libellés existants repris', () {
-        expect(
-          tripTodoTitle(l, TripTodoRow.depart, cardReady: false),
-          l.tripDepartButton,
-        );
-        expect(
-          tripTodoTitle(l, TripTodoRow.card, cardReady: true),
-          l.listingEnableCardOnTripButton,
-        );
-        expect(
-          tripTodoTitle(l, TripTodoRow.card, cardReady: false),
-          l.listingActivateCardPaymentsButton,
-        );
-        expect(
-          tripTodoSummary(l, TripTodoRow.depart, cardReady: false),
-          l.tripTodoDepartSummary,
-        );
-        expect(
-          tripTodoSummary(l, TripTodoRow.card, cardReady: true),
-          l.tripTodoCardReadySummary,
-        );
-        expect(
-          tripTodoSummary(l, TripTodoRow.card, cardReady: false),
-          l.tripTodoCardActivateSummary,
-        );
-      });
-    }
-
-    test('résumé des demandes au singulier et au pluriel', () {
-      final fr = lookupAppLocalizations(const Locale('fr'));
-      expect(fr.tripTodoRequestsSummary(1), 'Une demande attend votre réponse');
-      expect(
-        fr.tripTodoRequestsSummary(3),
-        '3 demandes attendent votre réponse',
-      );
-    });
-
-    test('une icône par ligne', () {
-      expect(TripTodoRow.values.map(tripTodoIcon), ['plane', 'credit-card']);
-    });
-  });
-
-  group('mesure d\'affichage', () {
-    test('bid_detail_todo_tile_shown, role trip_owner, statut du trajet', () {
-      final shown = tripTodoShown(
-        TripTodoTile.requests,
-        _trip(status: 'FULL'),
-        pendingCount: 2,
-      );
-      expect(shown.event, AnalyticsEvents.bidDetailTodoTileShown);
-      expect(shown.tile, 'requests');
-      expect(shown.properties, {
-        'tile': 'requests',
-        'role': 'trip_owner',
-        'status': 'FULL',
-      });
-    });
-
-    test('dédoublonnée par statut du trajet et nombre de demandes', () {
-      final a = tripTodoShown(TripTodoTile.requests, _trip(), pendingCount: 1);
-      final same = tripTodoShown(
-        TripTodoTile.requests,
-        _trip(),
-        pendingCount: 1,
-      );
-      final more = tripTodoShown(
-        TripTodoTile.requests,
-        _trip(),
-        pendingCount: 2,
-      );
-      final full = tripTodoShown(
-        TripTodoTile.requests,
-        _trip(status: 'FULL'),
-        pendingCount: 1,
-      );
-      expect(a.status, same.status);
-      expect(a.status, isNot(more.status));
-      expect(a.status, isNot(full.status));
-    });
-
-    for (final tile in [TripTodoTile.depart, TripTodoTile.card]) {
-      test('${tile.name} : dédoublonnée par statut du trajet seulement', () {
-        final a = tripTodoShown(tile, _trip(), pendingCount: 0);
-        final more = tripTodoShown(tile, _trip(), pendingCount: 3);
-        final full = tripTodoShown(
-          tile,
-          _trip(status: 'FULL'),
-          pendingCount: 0,
-        );
-        // Une demande reçue ou traitée ne remesure ni « Je pars » ni la
-        // carte.
-        expect(a.status, more.status);
-        expect(a.status, 'ACTIVE');
-        expect(a.status, isNot(full.status));
-        expect(a.properties, {
-          'tile': tile.name,
-          'role': 'trip_owner',
-          'status': 'ACTIVE',
-        });
-      });
-    }
   });
 }

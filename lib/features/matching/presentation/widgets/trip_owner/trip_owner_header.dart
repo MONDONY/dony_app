@@ -4,13 +4,14 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/trip_capacity.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/trip_billet_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_section.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_suitcase_gauge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 /// Tête de l'écran du trajet vu par son voyageur : le billet (badge d'état,
-/// badge Urgent), la ligne surplus d'un trajet dédié, les deux pastilles
+/// badge Urgent, pastille « À traiter · N »), la ligne surplus d'un trajet dédié, les deux pastilles
 /// kilos et prix, la jauge des valises. Rendu inchangé de l'ancien corps de
 /// détail ; les lieux, les paiements et les conditions vivent dans les
 /// sheets « Votre trajet », les compteurs de colis dans les cartes Demandes
@@ -20,7 +21,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 class TripOwnerHeader extends StatelessWidget {
   final AnnouncementModel a;
 
-  const TripOwnerHeader({super.key, required this.a});
+  /// Actions « À traiter » du voyageur (`tripTodoCount`) : pastille orange
+  /// « À traiter · N » ([TripTodoBadge]) à côté du badge d'état, rien à 0.
+  final int todoCount;
+
+  const TripOwnerHeader({super.key, required this.a, this.todoCount = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -39,20 +44,27 @@ class TripOwnerHeader extends StatelessWidget {
           announcement: a,
           showKg: false,
           notchColor: Theme.of(context).scaffoldBackgroundColor,
-          trailing: Padding(
-            padding: const EdgeInsets.only(
-              top: DonySpacing.xs,
-              right: DonySpacing.xs,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (a.isUrgent) ...[
-                  const DonyUrgentBadge(),
-                  const SizedBox(width: DonySpacing.xs),
+          // Trois quarts du bandeau, calés à droite : badge Urgent, pastille
+          // « À traiter · N » et badge d'état passent à la ligne quand ils ne
+          // tiennent pas (texte agrandi, 360 dp), au lieu de déborder.
+          trailing: Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                top: DonySpacing.xs,
+                right: DonySpacing.xs,
+              ),
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: DonySpacing.xs,
+                runSpacing: DonySpacing.xs,
+                children: [
+                  if (a.isUrgent) const DonyUrgentBadge(),
+                  if (todoCount > 0) TripTodoBadge(count: todoCount),
+                  _StatusBadge(status: a.status),
                 ],
-                _StatusBadge(status: a.status),
-              ],
+              ),
             ),
           ),
         ).animate().fadeIn(duration: 250.ms),

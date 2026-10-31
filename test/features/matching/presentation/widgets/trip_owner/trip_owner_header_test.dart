@@ -11,6 +11,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_header.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +19,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import 'trip_card_harness.dart' show loadAppFonts;
 
 AnnouncementModel _full() => AnnouncementModel(
   id: 'ann-1',
@@ -389,5 +391,109 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('REMOVED_BY_ADMIN'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  group('pastille « À traiter · N » du billet', () {
+    AnnouncementModel urgentTrip(String status) => AnnouncementModel(
+      id: 'ann-todo',
+      travelerId: 'trav-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime.now().add(const Duration(days: 1)),
+      availableKg: 10,
+      totalKg: 10,
+      pricePerKg: 7,
+      status: status,
+      createdAt: DateTime(2026, 7),
+      updatedAt: DateTime(2026, 7),
+      acceptedPaymentMethods: const <BidPaymentMethod>{},
+    );
+
+    Future<void> pumpTodo(
+      WidgetTester tester, {
+      required int count,
+      String status = 'ACTIVE',
+      Locale locale = const Locale('fr'),
+      double textScale = 1,
+    }) async {
+      tester.view.physicalSize = const Size(360, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: TripOwnerHeader(a: urgentTrip(status), todoCount: count),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    setUpAll(() async {
+      await initializeDateFormatting('en');
+      await loadAppFonts();
+    });
+
+    testWidgets('0 : masquée', (tester) async {
+      await pumpTodo(tester, count: 0);
+      expect(find.byKey(const Key('trip-todo-badge')), findsNothing);
+    });
+
+    testWidgets('1 et N : dans l\'en-tête, avant le badge d\'état', (
+      tester,
+    ) async {
+      await pumpTodo(tester, count: 1);
+      expect(find.text('À traiter · 1'), findsOneWidget);
+      await pumpTodo(tester, count: 7);
+      final pill = find.text('À traiter · 7');
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('trip-billet-header')),
+          matching: pill,
+        ),
+        findsOneWidget,
+      );
+      final status = find.text('● ACTIF');
+      expect(
+        tester.getTopLeft(pill).dx,
+        lessThan(tester.getTopLeft(status).dx),
+      );
+      // Badge d'état toujours calé à droite du bandeau.
+      expect(
+        tester.getTopRight(find.byKey(const Key('trip-billet-header'))).dx -
+            tester.getTopRight(status).dx,
+        lessThan(40),
+      );
+    });
+
+    for (final locale in const [Locale('fr'), Locale('en')]) {
+      for (final status in const ['ACTIVE', 'IN_PROGRESS', 'COMPLETED']) {
+        testWidgets('${locale.languageCode} $status, urgent, 12 actions, '
+            '360 dp × 1,3 : sans débordement', (tester) async {
+          await pumpTodo(
+            tester,
+            count: 12,
+            status: status,
+            locale: locale,
+            textScale: 1.3,
+          );
+          expect(tester.takeException(), isNull);
+          expect(find.byKey(const Key('trip-todo-badge')), findsOneWidget);
+        });
+      }
+    }
   });
 }

@@ -115,6 +115,7 @@ const _sameInBothLanguages = <String>{
   'moneyChannelMobileMoney', // nom de service, FLUTTER-P3
   'flightsRouteTitle', // « {origin} → {destination} » : le trajet, sans mot
   'flightsStopsDirect', // « Direct » se dit pareil
+  'tripTodoUrgentLabel', // « Urgent » se dit pareil (« À traiter » du trajet)
   'flightsAlertAtMost', // « ≤ {price} » : symbole et montant
   'flightsAlertMaxShort', // « max {price} » : abréviation commune
   'flightsFieldDestination', // « Destination » se dit pareil

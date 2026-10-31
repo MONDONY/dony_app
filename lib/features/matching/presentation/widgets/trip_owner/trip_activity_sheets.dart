@@ -24,6 +24,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_gain
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_parcels_line.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_parcels_search.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcel_rows.dart';
@@ -61,12 +62,21 @@ enum TripActivitySource {
   /// Lien « Voir les N demandes » de la carte de réponse directe
   /// (`TripDirectRequestCard`), qui ouvre le sheet des demandes.
   card,
+
+  /// Ligne « Demandes à traiter » de la file « À traiter » (ou de son sheet
+  /// « toute la liste »).
+  list,
+
+  /// Bouton principal du pied collant, quand les demandes sont l'action la
+  /// plus urgente.
+  footer,
 }
 
 /// Ouvre le bottom sheet [activity] du trajet [trip] (écran du trajet, vue
 /// du voyageur propriétaire) et compte l'ouverture (`bid_detail_tile_opened`,
 /// `role: trip_owner`, `source` : [source], `tile` pour la ligne Colis,
-/// `card` pour le lien de la carte de réponse directe). Nom du sheet :
+/// `card` pour le lien de la carte de réponse directe, `list` pour la ligne
+/// de la file « À traiter », `footer` pour le pied collant). Nom du sheet :
 /// `trip-owner/activity-` suivi du nom de [activity].
 ///
 /// Comme les sheets « À traiter » (`openTripTodoSheet`) : le sheet s'ouvre
@@ -87,9 +97,10 @@ enum TripActivitySource {
 ///   (en ligne, en espèces, total, [tripGainOf]) quand il est positif ; puis
 ///   tous les colis embarqués, résumé, champ de recherche (expéditeur,
 ///   destinataire, numéro de suivi visible, [tripParcelMatches]), puces de
-///   filtre par statut dès deux statuts, une ligne par colis vers sa fiche,
-///   et « Ouvrir la liste des colis » dans le pied ; `trip_parcels_viewed`
-///   part à l'ouverture.
+///   filtre par statut dès deux statuts, une ligne par colis vers sa fiche
+///   (point orange sur celles qui attendent un geste du voyageur,
+///   [tripTodoParcelIds]), et « Ouvrir la liste des colis » dans le pied ;
+///   `trip_parcels_viewed` part à l'ouverture.
 ///
 /// Les actions qui mènent à un autre écran ferment d'abord le sheet, puis
 /// poussent la route depuis [context] (l'écran, contexte stable) et relisent
@@ -188,6 +199,8 @@ Future<void> openTripActivitySheet(
                 tripId: live.trip.id,
                 // Mêmes colis embarqués que la ligne Colis du corps.
                 bids: tripBidsAfterAnswers(live.bids, answered),
+                // Mêmes colis « attendent votre geste » que la ligne Colis.
+                awaiting: tripTodoParcelIds(live.todo(answered: answered)),
                 gain: tripGainOf(live.trip, live.bids),
                 onOpenParcel: (id) => openParcel(sheetContext, id),
               ),
@@ -342,10 +355,15 @@ class _ParcelsContent extends StatefulWidget {
     required this.bids,
     required this.gain,
     required this.onOpenParcel,
+    this.awaiting = const {},
   });
 
   final String tripId;
   final List<BidModel>? bids;
+
+  /// Colis qui attendent un geste du voyageur ([tripTodoParcelIds]) : leur
+  /// ligne porte un point orange.
+  final Set<String> awaiting;
 
   /// Gain estimé des colis récupérés ([tripGainOf]), même calcul que le
   /// titre de la ligne Colis.
@@ -616,6 +634,7 @@ class _ParcelsContentState extends State<_ParcelsContent> {
                         TripParcelRow(
                           key: Key('trip-activity-parcel-${bid.id}'),
                           bid: bid,
+                          awaitsAction: widget.awaiting.contains(bid.id),
                           onTap: () => widget.onOpenParcel(bid.id),
                         ),
                       ],

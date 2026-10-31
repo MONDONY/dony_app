@@ -49,17 +49,18 @@ import 'package:share_plus/share_plus.dart';
 ///
 /// Barre d'application : retour, icône de partage de l'affiche (trajet
 /// ouvert), menu ⋮ ([TripOwnerOptionsButton]), scarabée. Corps en tableau de
-/// bord ([TripOwnerBody] : billet, carte de statut, « À traiter » avec la
-/// réponse directe aux demandes, ligne Colis, « Votre trajet ») ;
-/// pied collant hors du défilement ([TripOwnerStickyBar], un ou deux
-/// boutons). Le [TripBidAnswerScope] est posé au-dessus des trois.
+/// bord ([TripOwnerBody] : billet avec la pastille « À traiter · N », carte
+/// de statut, « À traiter » en « Prochaine action », ligne Colis, « Votre
+/// trajet ») ; pied collant hors du défilement ([TripOwnerStickyBar], un ou
+/// deux boutons, le principal suit l'action la plus urgente). Le
+/// [TripBidAnswerScope] est posé au-dessus des trois.
 ///
 /// L'écran possède les blocs de la route et en écoute les suites : les
 /// actions lancées depuis le pied, le menu ou les sheets (publier, dépublier,
 /// reporter, annuler, supprimer, marquer l'arrivée) aboutissent ici
 /// (snackbars, écran de succès, relectures, sortie). Il fournit aussi le
-/// `TripDepartCubit` du trajet, partagé par la tuile « Je pars » et son
-/// sheet.
+/// `TripDepartCubit` du trajet, partagé par l'action « Je pars », son sheet
+/// et le pied.
 class TripOwnerDetailScreen extends StatefulWidget {
   const TripOwnerDetailScreen({
     super.key,
@@ -339,6 +340,8 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               trip: live.trip,
               bids: live.bids,
               isOwner: isOwner,
+              departed: live.departed,
+              stripe: live.stripe,
             ),
           ),
         ),
