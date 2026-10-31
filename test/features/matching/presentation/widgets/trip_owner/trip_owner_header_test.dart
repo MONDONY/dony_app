@@ -13,6 +13,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_header.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -492,6 +493,11 @@ void main() {
           );
           expect(tester.takeException(), isNull);
           expect(find.byKey(const Key('trip-todo-badge')), findsOneWidget);
+          // « TRAJET » / « TRIP » : une ligne, en entier.
+          final label = tester.renderObject<RenderParagraph>(
+            find.byKey(const Key('trip-billet-label')),
+          );
+          expect(label.didExceedMaxLines, isFalse);
         });
       }
     }

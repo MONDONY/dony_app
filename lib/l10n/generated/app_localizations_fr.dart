@@ -23244,7 +23244,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Sinon vous êtes déclaré absent';
 
   @override
-  String get tripTodoPresenceTitle => 'Confirmer votre présence';
+  String get tripTodoPresenceTitle => 'Présence à confirmer';
 
   @override
   String tripTodoPresenceSubtitle(int count) {
@@ -23373,8 +23373,8 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count destinataires refusés',
-      one: 'Destinataire refusé',
+      other: '$count destinataires ont refusé',
+      one: 'Le destinataire a refusé',
     );
     return '$_temp0';
   }

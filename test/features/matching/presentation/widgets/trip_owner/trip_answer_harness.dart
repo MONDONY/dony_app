@@ -123,7 +123,17 @@ List<BidModel> answerRequests(
   BidPaymentMethod method = BidPaymentMethod.stripe,
 }) => [
   for (var i = 1; i <= n; i++)
-    answerBid('r$i', method: method, description: 'Contenu $i', net: 10.0 * i),
+    answerBid(
+      'r$i',
+      // Carte : demande déjà séquestrée (une carte `PENDING` n'est pas
+      // encore payée, ni acceptable ni refusable).
+      status: method == BidPaymentMethod.stripe
+          ? 'PAYMENT_ESCROWED'
+          : 'PENDING',
+      method: method,
+      description: 'Contenu $i',
+      net: 10.0 * i,
+    ),
 ];
 
 /// Blocs simulés de l'écran et de la réponse, pilotés par des flux.

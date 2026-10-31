@@ -30,8 +30,10 @@ enum TripRequestsPhase {
   full,
 
   /// IN_PROGRESS : le trajet est parti. Le back expire les demandes en
-  /// attente au départ et refuse tout nouveau colis : il n'en reste qu'en
-  /// cas de retard de cette expiration, et elles se traitent encore.
+  /// attente au départ et refuse toute acceptation (`BidService`) : il n'en
+  /// reste qu'en cas de retard de cette expiration, et elles ne sont plus une
+  /// action « À traiter » (`tripTodoFor`) ; le sheet des demandes les montre
+  /// encore ([tripRequestsShown]).
   departed,
 
   /// COMPLETED : terminé, le back n'accepte plus aucune demande.

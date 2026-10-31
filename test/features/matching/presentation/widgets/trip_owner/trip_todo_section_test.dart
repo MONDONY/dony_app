@@ -27,6 +27,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owne
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_section.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -46,6 +47,20 @@ class _MockDepart extends MockCubit<TripDepartState>
 
 void main() {
   late AnswerHarness h;
+
+  test('carte de réponse directe : les demandes de l\'action elle-même', () {
+    final s = todoMockupScenarios()['3 demandes + 2 présences']!;
+    final requests = todoOf(s).first;
+    expect(requests.kind, TripTodoKind.requests);
+    // Les colis acceptés ne sont jamais montrés comme des demandes, même
+    // si la carte les refiltrait autrement.
+    expect(tripRequestCardBids(requests, s.bids)!.map((b) => b.id), [
+      'r1',
+      'r2',
+      'r3',
+    ]);
+    expect(tripRequestCardBids(requests, null), isNull);
+  });
 
   setUpAll(() async {
     AnswerHarness.registerFallbacks();

@@ -30,13 +30,15 @@ const kTripTodoQueueRows = 3;
 typedef TripTodoActCallback =
     void Function(TripTodoItem item, TripTodoSource source);
 
-/// Colis de [bids] dont la demande se traite depuis la carte de réponse
-/// directe : sans les cartes pas encore payées par l'expéditeur
-/// ([BidModel.isAwaitingSenderCardPayment], « Accepter » répondrait 409),
-/// comme l'action « À traiter » des demandes (`tripTodoFor`) : « Demande 1
-/// sur N » et la pastille du billet comptent les mêmes demandes.
-List<BidModel>? tripAnswerableBids(List<BidModel>? bids) =>
-    bids?.where((b) => !b.isAwaitingSenderCardPayment).toList(growable: false);
+/// Demandes de la carte de réponse directe : celles de l'action « À
+/// traiter » [item] elle-même ([TripTodoItem.bidIds], `tripTodoFor` : sans
+/// les cartes pas encore payées, sans celles traitées depuis l'écran), lues
+/// dans [bids] dans l'ordre de la liste. La carte, sa mesure, la pastille du
+/// billet et le pied comptent ainsi toujours les mêmes demandes.
+List<BidModel>? tripRequestCardBids(TripTodoItem item, List<BidModel>? bids) {
+  final ids = item.bidIds.toSet();
+  return bids?.where((b) => ids.contains(b.id)).toList(growable: false);
+}
 
 /// Section « À traiter » de l'écran du trajet vu par son voyageur, rangée en
 /// « Prochaine action » (décision du 31/10) : la grosse carte de l'action la
@@ -84,7 +86,7 @@ class TripTodoSection extends StatelessWidget {
       children: [
         if (first.kind == TripTodoKind.requests)
           TripDirectRequestCard(
-            bids: tripAnswerableBids(live.bids),
+            bids: tripRequestCardBids(first, live.bids),
             onSeeAll: () => onAct(first, TripTodoSource.card),
           )
         else

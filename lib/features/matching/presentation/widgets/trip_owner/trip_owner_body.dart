@@ -204,7 +204,7 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
           TripParcelsLine(
             trip: trip,
             bids: bids,
-            awaiting: tripTodoParcelIds(items).length,
+            awaiting: tripTodoParcelIds(items),
             onOpen: () => _openActivity(live, TripActivity.parcels),
           ),
         ),

@@ -355,11 +355,15 @@ void main() {
   });
 
   group('tripParcelsLineFor : avatars', () {
-    List<String> faces(List<BidModel> bids) => [
+    List<String> faces(
+      List<BidModel> bids, {
+      Set<String> awaiting = const {},
+    }) => [
       for (final b in tripParcelsLineFor(
         trip: answerTrip(),
         bids: bids,
         l: _fr,
+        awaiting: awaiting,
       )!.faces)
         b.id,
     ];
@@ -377,39 +381,59 @@ void main() {
       expect(faces(_parcels(10)), ['c0', 'c1', 'c2']);
     });
 
-    test('ceux qui attendent un geste d\'abord, ordre reçu gardé', () {
+    test('ceux qui attendent un geste d\'abord (colis de « À traiter »), '
+        'ordre reçu gardé', () {
       expect(
-        faces([
-          answerBid('d1', status: 'COMPLETED'),
-          answerBid('w', status: 'AWAITING_PAYMENT'),
-          answerBid('a1', status: 'ACCEPTED'),
-          answerBid('d2', status: 'COMPLETED'),
-          answerBid('ar', status: 'ARRIVED'),
-          answerBid('t', status: 'IN_TRANSIT'),
-        ]),
+        faces(
+          [
+            answerBid('d1', status: 'COMPLETED'),
+            answerBid('w', status: 'AWAITING_PAYMENT'),
+            answerBid('a1', status: 'ACCEPTED'),
+            answerBid('d2', status: 'COMPLETED'),
+            answerBid('ar', status: 'ARRIVED'),
+            answerBid('t', status: 'IN_TRANSIT'),
+          ],
+          awaiting: {'a1', 'ar', 't'},
+        ),
         ['a1', 'ar', 't'],
       );
+      // Un colis livré à noter compte en orange : son avatar passe devant
+      // un colis en route sans geste à faire.
+      expect(
+        faces(
+          [
+            answerBid('t', status: 'IN_TRANSIT'),
+            answerBid('d1', status: 'COMPLETED'),
+          ],
+          awaiting: {'d1'},
+        ),
+        ['d1', 't'],
+      );
+      // Rien à traiter : l'ordre reçu.
       expect(
         faces([
           answerBid('d1', status: 'COMPLETED'),
           answerBid('a1', status: 'ACCEPTED'),
         ]),
-        ['a1', 'd1'],
+        ['d1', 'a1'],
       );
     });
 
     test('tripParcelsActionFirst : tous gardés, les autres ensuite', () {
       expect(
         [
-          for (final b in tripParcelsActionFirst([
-            answerBid('d', status: 'COMPLETED'),
-            answerBid('h', status: 'HANDED_OVER'),
-            answerBid('n', status: 'NO_SHOW'),
-            answerBid('a', status: 'ACCEPTED'),
-          ]))
+          for (final b in tripParcelsActionFirst(
+            [
+              answerBid('d', status: 'COMPLETED'),
+              answerBid('h', status: 'HANDED_OVER'),
+              answerBid('n', status: 'NO_SHOW'),
+              answerBid('a', status: 'ACCEPTED'),
+            ],
+            {'a', 'd'},
+          ))
             b.id,
         ],
-        ['h', 'a', 'd', 'n'],
+        ['d', 'a', 'h', 'n'],
       );
     });
   });

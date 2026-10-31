@@ -81,7 +81,8 @@ typedef TripParcelsLineContent = ({
   String? subtitle,
 
   /// Colis dont l'avatar s'affiche (au plus [kTripParcelsLineFaces]), ceux
-  /// qui attendent un geste du voyageur d'abord ([tripParcelsActionFirst]).
+  /// qui attendent un geste du voyageur d'abord ([tripParcelsActionFirst] sur
+  /// les colis de « À traiter »).
   /// Vide : une icône de colis à la place.
   List<BidModel> faces,
 });
@@ -92,11 +93,14 @@ typedef TripParcelsLineContent = ({
 ///
 /// [bids] : colis chargés par l'écran (`BidListLoaded`), `null` tant que la
 /// liste n'a pas répondu. Le gain ([tripGainOf]) compte les colis récupérés,
-/// espèces comprises ; sans liste, le net servi par le détail.
+/// espèces comprises ; sans liste, le net servi par le détail. [awaiting] :
+/// colis qui attendent un geste du voyageur (`tripTodoParcelIds`), dont les
+/// avatars passent en tête.
 TripParcelsLineContent? tripParcelsLineFor({
   required AnnouncementModel trip,
   required List<BidModel>? bids,
   required AppLocalizations l,
+  Set<String> awaiting = const {},
 }) {
   if (!tripParcelsLineShown(trip, bids)) return null;
   final embarked = tripEmbarkedParcels(bids);
@@ -129,6 +133,7 @@ TripParcelsLineContent? tripParcelsLineFor({
         ? const []
         : tripParcelsActionFirst(
             embarked,
+            awaiting,
           ).take(kTripParcelsLineFaces).toList(growable: false),
   );
 }
@@ -142,8 +147,9 @@ TripParcelsLineContent? tripParcelsLineFor({
 /// tap appelle [onOpen], qui ouvre le sheet « Colis » (gain détaillé en
 /// tête, tous les colis).
 ///
-/// Des colis attendent un geste du voyageur ([awaiting] > 0, colis
-/// distincts de « À traiter », `tripTodoParcelIds`) : bordure orange,
+/// Des colis attendent un geste du voyageur ([awaiting] non vide, colis
+/// distincts de « À traiter », `tripTodoParcelIds`) : leurs avatars d'abord,
+/// bordure orange,
 /// compteur orange avant le chevron et « N attendent votre geste » sous le
 /// résumé. Le tap ne change pas.
 ///
@@ -154,7 +160,7 @@ class TripParcelsLine extends StatelessWidget {
     required this.trip,
     required this.bids,
     required this.onOpen,
-    this.awaiting = 0,
+    this.awaiting = const {},
   });
 
   final AnnouncementModel trip;
@@ -164,19 +170,24 @@ class TripParcelsLine extends StatelessWidget {
   final VoidCallback onOpen;
 
   /// Colis distincts qui attendent un geste du voyageur.
-  final int awaiting;
+  final Set<String> awaiting;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final content = tripParcelsLineFor(trip: trip, bids: bids, l: l);
+    final content = tripParcelsLineFor(
+      trip: trip,
+      bids: bids,
+      l: l,
+      awaiting: awaiting,
+    );
     if (content == null) return const SizedBox.shrink();
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final radius = BorderRadius.circular(DonyRadius.card);
     final subtitle = content.subtitle;
-    final awaitingLabel = awaiting > 0
-        ? l.tripParcelsLineAwaiting(awaiting)
+    final awaitingLabel = awaiting.isNotEmpty
+        ? l.tripParcelsLineAwaiting(awaiting.length)
         : null;
     return Semantics(
       button: true,
@@ -268,7 +279,7 @@ class TripParcelsLine extends StatelessWidget {
                       borderRadius: BorderRadius.circular(DonyRadius.full),
                     ),
                     child: Text(
-                      '$awaiting',
+                      '${awaiting.length}',
                       textAlign: TextAlign.center,
                       style: tt.labelMedium?.copyWith(
                         color: cs.warning,

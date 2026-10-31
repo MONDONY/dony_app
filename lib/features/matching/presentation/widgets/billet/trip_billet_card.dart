@@ -84,8 +84,15 @@ class TripBilletCard extends StatelessWidget {
                 DonyIcon('plane', size: 16, color: cs.onPrimaryContainer),
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
+                  // Toujours sur une ligne : jamais coupé au milieu du mot
+                  // quand un `trailing` large (badges de l'écran du trajet)
+                  // lui laisse peu de place.
                   child: Text(
                     l.listingHeroTripLabelCaps,
+                    key: const Key('trip-billet-label'),
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
                     style: tt.bodySmall?.copyWith(
                       color: cs.onPrimaryContainer,
                       fontWeight: FontWeight.w800,

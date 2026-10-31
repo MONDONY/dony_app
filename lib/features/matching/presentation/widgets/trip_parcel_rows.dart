@@ -20,26 +20,17 @@ import 'package:flutter/material.dart';
 List<BidModel>? tripEmbarkedParcels(List<BidModel>? bids) =>
     bids?.where(isAcceptedTabBid).toList(growable: false);
 
-/// Statuts où le colis attend encore un geste du voyageur : à récupérer
-/// (`ACCEPTED`), en route (`HANDED_OVER`, `IN_TRANSIT`), à remettre
-/// (`ARRIVED`). Ce sont les segments « à récupérer », « en route » et
-/// « arrivés » du résumé ([tripParcelsCounts]) ; un colis livré, clôturé ou
-/// dont le paiement est attendu (`AWAITING_PAYMENT`, rien à aller chercher)
-/// ne demande rien au voyageur.
-const _kAwaitingTravelerStatuses = {
-  'ACCEPTED',
-  'HANDED_OVER',
-  'IN_TRANSIT',
-  'ARRIVED',
-};
-
 /// [embarked] avec d'abord les colis qui attendent un geste du voyageur
-/// ([_kAwaitingTravelerStatuses]), puis les autres ; l'ordre reçu est gardé
-/// à l'intérieur de chaque groupe (tri stable). Ordre des avatars de la
-/// ligne Colis de l'écran.
-List<BidModel> tripParcelsActionFirst(List<BidModel> embarked) => [
-  ...embarked.where((b) => _kAwaitingTravelerStatuses.contains(b.status)),
-  ...embarked.where((b) => !_kAwaitingTravelerStatuses.contains(b.status)),
+/// ([awaiting] : colis de « À traiter », `tripTodoParcelIds`, ceux que la
+/// ligne compte en orange), puis les autres ; l'ordre reçu est gardé à
+/// l'intérieur de chaque groupe (tri stable). Ordre des avatars de la ligne
+/// Colis de l'écran.
+List<BidModel> tripParcelsActionFirst(
+  List<BidModel> embarked,
+  Set<String> awaiting,
+) => [
+  ...embarked.where((b) => awaiting.contains(b.id)),
+  ...embarked.where((b) => !awaiting.contains(b.id)),
 ];
 
 /// Répartition des colis embarqués par étape du cycle réel, pour le résumé

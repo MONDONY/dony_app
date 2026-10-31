@@ -148,6 +148,32 @@ void main() {
       expect(footer(), findsNothing);
     });
 
+    testWidgets('carte pas encore payée : listée avec « Paiement de '
+        'l\'expéditeur en attente », sans Refuser ni Accepter', (tester) async {
+      await open(
+        tester,
+        TripActivity.requests,
+        bids: [
+          answerBid('cash', method: BidPaymentMethod.cash),
+          answerBid('unpaid'),
+        ],
+      );
+      expect(
+        find.byKey(const Key('trip-activity-request-unpaid')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('trip-activity-request-awaiting-payment-unpaid')),
+        findsOneWidget,
+      );
+      expect(find.text("Paiement de l'expéditeur en attente"), findsOneWidget);
+      expect(accept('unpaid'), findsNothing);
+      expect(find.byKey(const Key('trip-request-reject-unpaid')), findsNothing);
+      // La demande en espèces garde ses deux boutons.
+      expect(accept('cash'), findsOneWidget);
+      expect(find.byKey(const Key('trip-request-reject-cash')), findsOneWidget);
+    });
+
     testWidgets('accepter depuis le sheet : la ligne part, le sheet reste, '
         'puis « Aucune demande » après la dernière', (tester) async {
       await open(tester, TripActivity.requests, bids: answerRequests(2));

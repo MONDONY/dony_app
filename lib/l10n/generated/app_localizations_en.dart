@@ -23081,7 +23081,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Otherwise you are marked as absent';
 
   @override
-  String get tripTodoPresenceTitle => 'Confirm your presence';
+  String get tripTodoPresenceTitle => 'Presence to confirm';
 
   @override
   String tripTodoPresenceSubtitle(int count) {
@@ -23179,8 +23179,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Confirm $count drop-offs',
-      one: 'Confirm 1 drop-off',
+      other: 'Confirm $count deliveries',
+      one: 'Confirm 1 delivery',
     );
     return '$_temp0';
   }
@@ -23209,7 +23209,7 @@ class AppLocalizationsEn extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count recipients declined',
-      one: 'Recipient declined',
+      one: 'The recipient declined',
     );
     return '$_temp0';
   }
@@ -23264,8 +23264,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count need you',
-      one: '1 needs you',
+      other: '$count need your action',
+      one: '1 needs your action',
     );
     return '$_temp0';
   }

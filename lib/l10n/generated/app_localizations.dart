@@ -37311,7 +37311,7 @@ abstract class AppLocalizations {
   /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « confirmer sa présence au dépôt » (trip_todo_labels.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Confirmer votre présence'**
+  /// **'Présence à confirmer'**
   String get tripTodoPresenceTitle;
 
   /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « confirmer sa présence » (trip_todo_labels.dart).
@@ -37425,7 +37425,7 @@ abstract class AppLocalizations {
   /// Écran du trajet (propriétaire), « À traiter » : titre de l'action « destinataire refusé » (trip_todo_labels.dart).
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{Destinataire refusé} other{{count} destinataires refusés}}'**
+  /// **'{count, plural, =1{Le destinataire a refusé} other{{count} destinataires ont refusé}}'**
   String tripTodoRecipientDeclinedTitle(int count);
 
   /// Écran du trajet (propriétaire), « À traiter » : sous-titre de l'action « destinataire refusé » (trip_todo_labels.dart).

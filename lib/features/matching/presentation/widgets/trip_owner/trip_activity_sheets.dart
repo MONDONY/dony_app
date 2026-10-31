@@ -259,7 +259,11 @@ class _FollowAnswered extends StatelessWidget {
 }
 
 /// Demandes à traiter, une par ligne : qui, quoi, combien, puis Refuser et
-/// Accepter. Vide : une phrase. Liste pas encore chargée : le nombre servi
+/// Accepter. Une carte pas encore payée par l'expéditeur
+/// ([BidModel.isAwaitingSenderCardPayment]) reste listée avec « Paiement de
+/// l'expéditeur en attente », sans bouton : le back refuse aussi bien de
+/// l'accepter que de la refuser tant qu'elle n'est pas séquestrée (409,
+/// `requireBidStatus PAYMENT_ESCROWED`). Vide : une phrase. Liste pas encore chargée : le nombre servi
 /// par la liste des trajets s'il en annonce, sinon un indicateur ; liste en
 /// échec ([_BidsNotLoaded]) : « Réessayer ».
 class _RequestsContent extends StatelessWidget {
@@ -318,7 +322,12 @@ class _RequestsContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: DonySpacing.sm),
-            TripRequestAnswerButtons(bid: bid),
+            if (bid.isAwaitingSenderCardPayment)
+              _AwaitingSenderPaymentNote(
+                key: Key('trip-activity-request-awaiting-payment-${bid.id}'),
+              )
+            else
+              TripRequestAnswerButtons(bid: bid),
           ],
         ],
       );
@@ -326,6 +335,30 @@ class _RequestsContent extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: DonySpacing.base),
       child: body,
+    );
+  }
+}
+
+/// « Paiement de l'expéditeur en attente » sous une carte pas encore payée
+/// du sheet des demandes, à la place de Refuser et Accepter.
+class _AwaitingSenderPaymentNote extends StatelessWidget {
+  const _AwaitingSenderPaymentNote({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        DonyIcon('clock', size: 16, color: cs.onSurfaceVariant),
+        const SizedBox(width: DonySpacing.xs),
+        Expanded(
+          child: Text(
+            context.l10n.bidDetailTravelerAwaitingPaymentTitle,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }
