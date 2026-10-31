@@ -8046,6 +8046,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripDirectRequestSeeAll(intPlaceholderValue),
   'tripParcelsLineInTransit': (l) => l.tripParcelsLineInTransit,
   'tripParcelsLineTitle': (l) => l.tripParcelsLineTitle(intPlaceholderValue),
+  'tripParcelsSearchHint': (l) => l.tripParcelsSearchHint,
+  'tripParcelsSearchResults': (l) =>
+      l.tripParcelsSearchResults(intPlaceholderValue),
+  'tripParcelsSearchEmpty': (l) =>
+      l.tripParcelsSearchEmpty(placeholderMarker('query')),
+  'tripParcelsSearchClear': (l) => l.tripParcelsSearchClear,
   'tripActivityRequestsEmpty': (l) => l.tripActivityRequestsEmpty,
   'tripActivityParcelsOpenList': (l) => l.tripActivityParcelsOpenList,
   'tripGainOnlineLabel': (l) => l.tripGainOnlineLabel,
@@ -8742,5 +8748,6 @@ const textParameters = <String, List<String>>{
   'tripTileItineraryPickup': ['place'],
   'tripTileItineraryDelivery': ['place'],
   'tripTilePaymentsCashOnlyNote': ['section'],
+  'tripParcelsSearchEmpty': ['query'],
   'tripGainCashGrossNote': ['gross', 'commission'],
 };

@@ -37104,6 +37104,30 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{Aucun colis} =1{1 colis} other{{count} colis}}'**
   String tripParcelsLineTitle(int count);
 
+  /// Sheet « Colis » de l'écran du trajet vu par son voyageur : texte indicatif du champ de recherche au-dessus des puces de filtre (nom de l'expéditeur, nom du destinataire, numéro de suivi visible) (trip_activity_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un colis, un nom, un suivi'**
+  String get tripParcelsSearchHint;
+
+  /// Sheet « Colis » de l'écran du trajet : petit texte sous le champ de recherche quand une recherche est active, nombre de colis qui y répondent (avant le filtre par statut) (trip_activity_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 colis trouvé} other{{count} colis trouvés}}'**
+  String tripParcelsSearchResults(int count);
+
+  /// Sheet « Colis » de l'écran du trajet : état vide quand aucun colis ne répond à la recherche ; {query} est le texte saisi, sans espaces de bord (trip_activity_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis ne correspond à « {query} »'**
+  String tripParcelsSearchEmpty(String query);
+
+  /// Sheet « Colis » de l'écran du trajet : lien sous l'état vide de la recherche, vide le champ (trip_activity_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer la recherche'**
+  String get tripParcelsSearchClear;
+
   /// Sheet des demandes de l'écran du trajet (lien « Voir les N demandes ») : plus aucune demande n'attend de réponse (trip_activity_sheets.dart).
   ///
   /// In fr, this message translates to:

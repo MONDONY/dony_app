@@ -864,6 +864,12 @@ abstract final class AnalyticsEvents {
   static const tripParcelsViewed = 'trip_parcels_viewed';
   static const tripParcelsFiltered = 'trip_parcels_filtered';
 
+  /// Recherche d'un colis dans le sheet « Colis » de l'écran du trajet, après
+  /// une pause de saisie (`kTripParcelsSearchLogDelay`), une fois par terme
+  /// stabilisé. Propriétés `matches` (colis trouvés) et `total` (colis
+  /// embarqués). Jamais le texte saisi, un nom ni un numéro.
+  static const tripParcelsSearched = 'trip_parcels_searched';
+
   /// Bascule du sélecteur de mode de la recherche. Propriété `mode` : trips / parcels.
   static const homeSearchModeChanged = 'home_search_mode_changed';
 

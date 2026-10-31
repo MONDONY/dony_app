@@ -23097,6 +23097,28 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get tripParcelsSearchHint => 'Rechercher un colis, un nom, un suivi';
+
+  @override
+  String tripParcelsSearchResults(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis trouvés',
+      one: '1 colis trouvé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripParcelsSearchEmpty(String query) {
+    return 'Aucun colis ne correspond à « $query »';
+  }
+
+  @override
+  String get tripParcelsSearchClear => 'Effacer la recherche';
+
+  @override
   String get tripActivityRequestsEmpty =>
       'Aucune demande à traiter pour le moment.';
 

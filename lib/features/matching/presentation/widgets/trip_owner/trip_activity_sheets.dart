@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/maybe_read.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -20,6 +22,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_direct_request_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_gain.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_parcels_line.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_parcels_search.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
@@ -28,6 +31,7 @@ import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Sheets de l'activité du trajet vu par son voyageur, ouverts par
@@ -81,9 +85,11 @@ enum TripActivitySource {
 ///   fiche du colis ;
 /// - [TripActivity.parcels] : en tête, le gain estimé des colis récupérés
 ///   (en ligne, en espèces, total, [tripGainOf]) quand il est positif ; puis
-///   tous les colis embarqués, résumé, puces de filtre par statut dès deux
-///   statuts, une ligne par colis vers sa fiche, et « Ouvrir la liste des
-///   colis » dans le pied ; `trip_parcels_viewed` part à l'ouverture.
+///   tous les colis embarqués, résumé, champ de recherche (expéditeur,
+///   destinataire, numéro de suivi visible, [tripParcelMatches]), puces de
+///   filtre par statut dès deux statuts, une ligne par colis vers sa fiche,
+///   et « Ouvrir la liste des colis » dans le pied ; `trip_parcels_viewed`
+///   part à l'ouverture.
 ///
 /// Les actions qui mènent à un autre écran ferment d'abord le sheet, puis
 /// poussent la route depuis [context] (l'écran, contexte stable) et relisent
@@ -314,10 +320,13 @@ class _RequestsContent extends StatelessWidget {
 /// Contenu du sheet « Colis » : le gain estimé en tête ([gain], seulement
 /// s'il est positif : en ligne, en espèces, total, [TripGainContent]), puis
 /// tous les colis embarqués du trajet : résumé (sur tous, jamais sur le
-/// filtre, FLUTTER-GS), puces de filtre par statut dès deux statuts, une
-/// ligne par colis. Mesure l'ouverture une fois la liste connue
-/// (`trip_parcels_viewed`, total des colis embarqués) et chaque filtre
-/// choisi (`trip_parcels_filtered`).
+/// filtre ni la recherche, FLUTTER-GS), champ de recherche dès un colis
+/// (filtrage local, [tripParcelsMatching] ; « N colis trouvés » ; aucun
+/// résultat : une phrase et « Effacer la recherche »), puces de filtre par
+/// statut dès deux statuts parmi les colis trouvés, une ligne par colis.
+/// Mesure l'ouverture une fois la liste connue (`trip_parcels_viewed`, total
+/// des colis embarqués), chaque filtre choisi (`trip_parcels_filtered`) et
+/// chaque recherche après une pause de saisie (`trip_parcels_searched`).
 ///
 /// Liste jamais reçue : un indicateur, ou « Réessayer » si son chargement
 /// est en échec ([_BidsNotLoaded]). Après une liste déjà reçue, un échec de
@@ -346,14 +355,67 @@ class _ParcelsContentState extends State<_ParcelsContent> {
   /// Statut filtré, `null` pour « Tous ». Seul le contenu se reconstruit.
   final _filter = ValueNotifier<String?>(null);
 
+  /// Texte de la recherche. Vit ici, jamais dans le `whenComplete` du
+  /// sheet : il survit aux relectures des colis et repart à vide à la
+  /// prochaine ouverture.
+  final _search = TextEditingController();
+
+  /// Dernier texte vu par [_onSearchChanged] : un simple déplacement du
+  /// curseur ne relance pas la mesure.
+  String _searchText = '';
+
+  /// Mesure de la recherche en attente d'une pause de saisie.
+  Timer? _searchLog;
+
+  /// Dernier terme mesuré (`trip_parcels_searched`), oublié quand le champ
+  /// est vidé : un même terme n'est mesuré qu'une fois de suite.
+  String? _searchLogged;
+
   /// `trip_parcels_viewed` ne part qu'une fois par ouverture du sheet, même
   /// si la liste est relue pendant qu'il est ouvert.
   bool _viewed = false;
 
   @override
+  void initState() {
+    super.initState();
+    _search.addListener(_onSearchChanged);
+  }
+
+  @override
   void dispose() {
+    _searchLog?.cancel();
+    _search.dispose();
     _filter.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final text = _search.text;
+    if (text == _searchText) return;
+    _searchText = text;
+    _searchLog?.cancel();
+    final key = tripParcelsSearchKey(text);
+    if (key.isEmpty) {
+      _searchLogged = null;
+      return;
+    }
+    _searchLog = Timer(kTripParcelsSearchLogDelay, () => _logSearch(key));
+  }
+
+  /// `trip_parcels_searched` après une pause de saisie : nombre de colis
+  /// trouvés et total, jamais le texte, un nom ni un numéro.
+  void _logSearch(String key) {
+    if (!mounted || key == _searchLogged) return;
+    final embarked = tripEmbarkedParcels(widget.bids);
+    if (embarked == null) return;
+    _searchLogged = key;
+    final matches = tripParcelsMatching(context.l10n, embarked, key).length;
+    unawaited(
+      getItSafe<AnalyticsService>()?.logEvent(
+        AnalyticsEvents.tripParcelsSearched,
+        properties: {'matches': matches, 'total': embarked.length},
+      ),
+    );
   }
 
   void _logViewed(int count) {
@@ -383,13 +445,16 @@ class _ParcelsContentState extends State<_ParcelsContent> {
   @override
   Widget build(BuildContext context) {
     final gain = widget.gain;
-    final parcels = _parcels(context);
-    if (!gain.hasGain) return parcels;
+    // Même arbre avec ou sans gain : un gain qui apparaît à une relecture ne
+    // recrée pas le champ de recherche (saisie et clavier gardés).
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _GainBlock(gain: gain),
-        parcels,
+        if (gain.hasGain) _GainBlock(gain: gain),
+        KeyedSubtree(
+          key: const ValueKey('trip-activity-parcels-list'),
+          child: _parcels(context),
+        ),
       ],
     );
   }
@@ -419,68 +484,157 @@ class _ParcelsContentState extends State<_ParcelsContent> {
         padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
       );
     }
-    final counts = <String, int>{};
-    for (final b in embarked) {
-      counts[b.status] = (counts[b.status] ?? 0) + 1;
-    }
-    final present = [
-      for (final s in kTripParcelStatusOrder)
-        if (counts.containsKey(s)) s,
-      for (final s in counts.keys)
-        if (!kTripParcelStatusOrder.contains(s)) s,
-    ];
-    return ValueListenableBuilder<String?>(
-      valueListenable: _filter,
-      builder: (context, filter, _) {
-        // Filtre dont le statut a disparu (liste relue) : retour à « Tous ».
+    final tt = Theme.of(context).textTheme;
+    return ListenableBuilder(
+      listenable: Listenable.merge([_search, _filter]),
+      builder: (context, _) {
+        final query = _search.text.trim();
+        final searching = tripParcelsSearchKey(query).isNotEmpty;
+        // Recherche ET statut : les puces comptent les colis trouvés ; le
+        // résumé, lui, compte toujours tous les colis (FLUTTER-GS).
+        final matched = tripParcelsMatching(l, embarked, query);
+        final counts = <String, int>{};
+        for (final b in matched) {
+          counts[b.status] = (counts[b.status] ?? 0) + 1;
+        }
+        final present = [
+          for (final s in kTripParcelStatusOrder)
+            if (counts.containsKey(s)) s,
+          for (final s in counts.keys)
+            if (!kTripParcelStatusOrder.contains(s)) s,
+        ];
+        // Filtre dont le statut a disparu (liste relue, recherche) : retour
+        // à « Tous ».
+        final filter = _filter.value;
         final active = filter != null && counts.containsKey(filter)
             ? filter
             : null;
         final visible = active == null
-            ? embarked
-            : embarked.where((b) => b.status == active).toList();
+            ? matched
+            : matched.where((b) => b.status == active).toList();
         return Padding(
           padding: const EdgeInsets.only(bottom: DonySpacing.base),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TripParcelsSummary(bids: embarked),
-              if (present.length >= 2) ...[
-                StatusChipsRow<String?>(
-                  selected: active,
-                  onSelected: _onFilter,
-                  chips: [
-                    StatusChipData<String?>(
-                      label: l.tripOwnerParcelsFilterAll,
-                      value: null,
-                      count: embarked.length,
-                    ),
-                    for (final s in present)
-                      () {
-                        final (label, color) = tripParcelStatusMeta(s, cs, l);
-                        return StatusChipData<String?>(
-                          label: label,
-                          value: s,
-                          count: counts[s],
-                          dotColor: color,
-                        );
-                      }(),
+              DonySearchField(
+                key: const Key('trip-activity-parcels-search'),
+                controller: _search,
+                hint: l.tripParcelsSearchHint,
+              ),
+              // Pendant une recherche, la zone sous le champ (compteur,
+              // résultats) garde la plus grande hauteur atteinte : la feuille
+              // ne rapetisse pas sous le doigt à chaque lettre, le champ ne
+              // bouge pas.
+              _KeepHeight(
+                hold: searching,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (searching && matched.isNotEmpty) ...[
+                      const SizedBox(height: DonySpacing.sm),
+                      Text(
+                        l.tripParcelsSearchResults(matched.length),
+                        key: const Key('trip-activity-parcels-search-count'),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: DonySpacing.md),
+                    if (matched.isEmpty)
+                      _SearchEmpty(query: query, onClear: _search.clear)
+                    else ...[
+                      if (present.length >= 2) ...[
+                        StatusChipsRow<String?>(
+                          selected: active,
+                          onSelected: _onFilter,
+                          chips: [
+                            StatusChipData<String?>(
+                              label: l.tripOwnerParcelsFilterAll,
+                              value: null,
+                              count: matched.length,
+                            ),
+                            for (final s in present)
+                              () {
+                                final (label, color) = tripParcelStatusMeta(
+                                  s,
+                                  cs,
+                                  l,
+                                );
+                                return StatusChipData<String?>(
+                                  label: label,
+                                  value: s,
+                                  count: counts[s],
+                                  dotColor: color,
+                                );
+                              }(),
+                          ],
+                        ),
+                        const SizedBox(height: DonySpacing.md),
+                      ],
+                      for (final (i, bid) in visible.indexed) ...[
+                        if (i > 0) const SizedBox(height: DonySpacing.sm),
+                        TripParcelRow(
+                          key: Key('trip-activity-parcel-${bid.id}'),
+                          bid: bid,
+                          onTap: () => widget.onOpenParcel(bid.id),
+                        ),
+                      ],
+                    ],
                   ],
                 ),
-                const SizedBox(height: DonySpacing.md),
-              ],
-              for (final (i, bid) in visible.indexed) ...[
-                if (i > 0) const SizedBox(height: DonySpacing.sm),
-                TripParcelRow(
-                  key: Key('trip-activity-parcel-${bid.id}'),
-                  bid: bid,
-                  onTap: () => widget.onOpenParcel(bid.id),
-                ),
-              ],
+              ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+/// Aucun colis ne répond à la recherche [query] : une phrase qui la cite et
+/// le lien « Effacer la recherche » ([onClear]). Lien texte, pas de
+/// `DonyButton` : le seul bouton du sheet reste celui du pied.
+class _SearchEmpty extends StatelessWidget {
+  const _SearchEmpty({required this.query, required this.onClear});
+
+  final String query;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Padding(
+      key: const Key('trip-activity-parcels-search-empty'),
+      padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
+      child: Column(
+        children: [
+          DonyIcon('search-x', size: 32, color: cs.onSurfaceVariant),
+          const SizedBox(height: DonySpacing.md),
+          Text(
+            l.tripParcelsSearchEmpty(query),
+            style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          TextButton(
+            key: const Key('trip-activity-parcels-search-clear'),
+            onPressed: onClear,
+            style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
+            child: Text(
+              l.tripParcelsSearchClear,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -556,5 +710,60 @@ class _GainBlock extends StatelessWidget {
         const SizedBox(height: DonySpacing.base),
       ],
     );
+  }
+}
+
+/// Garde à [child] la plus grande hauteur atteinte tant que [hold] est vrai
+/// (recherche en cours dans le sheet « Colis ») : la feuille, qui épouse son
+/// contenu et reste collée au bas de l'écran, ne rapetisse pas à chaque
+/// lettre. [hold] faux : la hauteur du contenu, de nouveau mémorisée.
+class _KeepHeight extends SingleChildRenderObjectWidget {
+  const _KeepHeight({required this.hold, required super.child});
+
+  final bool hold;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderKeepHeight(hold);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderKeepHeight renderObject,
+  ) {
+    renderObject.hold = hold;
+  }
+}
+
+class _RenderKeepHeight extends RenderProxyBox {
+  _RenderKeepHeight(this._hold);
+
+  bool _hold;
+  double _kept = 0;
+
+  set hold(bool value) {
+    if (value == _hold) return;
+    _hold = value;
+    markNeedsLayout();
+  }
+
+  double _height(double child) => _hold ? math.max(child, _kept) : child;
+
+  @override
+  Size computeDryLayout(covariant BoxConstraints constraints) {
+    final s = child?.getDryLayout(constraints) ?? constraints.smallest;
+    return constraints.constrain(Size(s.width, _height(s.height)));
+  }
+
+  @override
+  void performLayout() {
+    final c = child;
+    if (c == null) {
+      size = constraints.smallest;
+      return;
+    }
+    c.layout(constraints, parentUsesSize: true);
+    _kept = _height(c.size.height);
+    size = constraints.constrain(Size(c.size.width, _kept));
   }
 }

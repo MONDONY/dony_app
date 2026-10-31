@@ -22934,6 +22934,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get tripParcelsSearchHint => 'Search parcels, names, tracking';
+
+  @override
+  String tripParcelsSearchResults(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels found',
+      one: '1 parcel found',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripParcelsSearchEmpty(String query) {
+    return 'No parcel matches “$query”';
+  }
+
+  @override
+  String get tripParcelsSearchClear => 'Clear search';
+
+  @override
   String get tripActivityRequestsEmpty => 'No requests to review for now.';
 
   @override
