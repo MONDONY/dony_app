@@ -733,6 +733,18 @@ class _BidDetailViewState extends State<_BidDetailView>
                   context.watch<AuthBloc>().state,
                 );
                 final isSender = viewerId != null && viewerId == _bid.senderId;
+                // Ni l'expéditeur ni le voyageur connu : jamais la vue
+                // voyageur et ses boutons Accepter / Refuser (FLUTTER-XF,
+                // colis d'un ancien compte resté en cache). Voyageur inconnu
+                // (`travelerId` absent du colis en `extra`) : la lecture du
+                // détail tranche, un 403 bascule sur la même vue.
+                final travelerId = _bid.travelerId;
+                if (!isSender &&
+                    viewerId != null &&
+                    travelerId != null &&
+                    viewerId != travelerId) {
+                  return const _BidGoneView();
+                }
 
                 // Code du titre : numéro de suivi quand le lecteur peut le voir
                 // (le voyageur, à partir de la remise seulement), sinon début
