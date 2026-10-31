@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,11 +30,9 @@ class TripAudienceSection extends StatefulWidget {
   /// (comme `TripLegsCard`).
   final EdgeInsetsGeometry padding;
 
-  static const _hiddenStatuses = {'DRAFT', 'CANCELLED', 'REMOVED_BY_ADMIN'};
-
-  /// L'audience a-t-elle un sens pour ce statut ? Non pour un brouillon
-  /// (invisible des expéditeurs), un trajet annulé ou retiré par l'équipe.
-  static bool shownFor(String status) => !_hiddenStatuses.contains(status);
+  /// L'audience a-t-elle un sens pour ce statut ? Même règle que la ligne
+  /// d'audience ([TripAudienceLine.shownFor]).
+  static bool shownFor(String status) => TripAudienceLine.shownFor(status);
 
   @override
   State<TripAudienceSection> createState() => _TripAudienceSectionState();

@@ -49,6 +49,7 @@ AnnouncementModel _trip({
   List<String>? refused,
   String? description,
   String? instructions,
+  String? tripGroupId,
 }) {
   final now = DateTime(2026, 10, 30);
   return AnnouncementModel(
@@ -71,6 +72,7 @@ AnnouncementModel _trip({
     refusedTypes: refused,
     description: description,
     arrivalInstructions: instructions,
+    tripGroupId: tripGroupId,
   );
 }
 
@@ -213,6 +215,22 @@ void main() {
       expect(
         tripTilesFor(isOwner: true, trip: _trip(status: 'FULL'), bids: null),
         isNot(contains(TripTile.itinerary)),
+      );
+    });
+    test('voyage à étapes sans lieu ni date limite : tuile (ses étapes '
+        'vivent dans le sheet)', () {
+      final trip = _trip(status: 'FULL', tripGroupId: 'g');
+      expect(
+        tripTilesFor(isOwner: true, trip: trip, bids: null),
+        contains(TripTile.itinerary),
+      );
+      expect(
+        tripTileSubtitle(
+          lookupAppLocalizations(const Locale('fr')),
+          TripTile.itinerary,
+          trip,
+        ),
+        isNull,
       );
     });
   });

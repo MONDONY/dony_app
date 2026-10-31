@@ -28,8 +28,8 @@ bool tripHasArrivedParcel(List<BidModel>? bids) =>
 ///
 /// Une tuile n'apparaît que si son sheet a quelque chose à montrer :
 /// - `itinerary` : un lieu de remise (dépôt ou récupération) ou une date
-///   limite de dépôt ([TripPlacesSection.hasContent]). Les étapes d'un
-///   voyage à plusieurs étapes restent une carte du corps, pas ce sheet ;
+///   limite de dépôt ([TripPlacesSection.hasContent]), ou un voyage à
+///   plusieurs étapes (`tripGroupId`) : ses étapes vivent dans ce sheet ;
 /// - `payments` : au moins un moyen de paiement accepté
 ///   ([TripPaymentsSection.hasContent]) ;
 /// - `conditions` : un type accepté, un type refusé ou une note aux
@@ -52,7 +52,8 @@ List<TripTile> tripTilesFor({
 }) {
   if (!isOwner) return const [];
   return [
-    if (TripPlacesSection.hasContent(trip)) TripTile.itinerary,
+    if (TripPlacesSection.hasContent(trip) || trip.tripGroupId != null)
+      TripTile.itinerary,
     if (TripPaymentsSection.hasContent(trip)) TripTile.payments,
     if (TripConditionsSection.hasContent(trip)) TripTile.conditions,
     if (canShareTripPoster(trip)) TripTile.poster,

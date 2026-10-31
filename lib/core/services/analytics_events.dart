@@ -861,6 +861,7 @@ abstract final class AnalyticsEvents {
   static const tripOwnerDetailOpened = 'trip_owner_detail_opened';
   static const tripAudienceLoaded = 'trip_audience_loaded';
   static const tripParcelsViewed = 'trip_parcels_viewed';
+  static const tripParcelsFiltered = 'trip_parcels_filtered';
 
   /// Bascule du sélecteur de mode de la recherche. Propriété `mode` : trips / parcels.
   static const homeSearchModeChanged = 'home_search_mode_changed';

@@ -315,7 +315,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `announcement_created` | AnnouncementBloc._onCreateRequested() |
 | `announcement_viewed` | AnnouncementDetailScreen (BlocListener) |
 | `trip_owner_detail_opened` | TripOwnerDetailScreen.initState — ouverture de l'écran détail trajet par le propriétaire (propriété `status`) |
-| `trip_parcels_viewed` | TripParcelsSection — premier chargement de la liste des colis embarqués de la carte « Colis dans le trajet » (propriété `count` : total des colis embarqués, `isAcceptedTabBid`, même quand la carte n'en montre que deux ; le bouton « Voir les N autres colis » n'émet rien de plus). Une seule fois tant que la carte reste affichée (un rechargement ne réémet pas) |
+| `trip_parcels_viewed` | Deux émetteurs, propriété `count` : total des colis embarqués (`isAcceptedTabBid`). Sheet « Colis » de l'activité du trajet (`openTripActivitySheet`, `trip_owner/trip_activity_sheets.dart`) : une fois par ouverture du sheet, dès que la liste est connue (une relecture pendant l'ouverture ne réémet pas). Carte « Colis dans le trajet » du corps (`TripParcelsSection`, appelée à disparaître du corps au profit du sheet) : premier chargement de la liste, une fois tant que la carte reste affichée, même quand elle ne montre que deux colis |
+| `trip_parcels_filtered` | Sheet « Colis » de l'activité du trajet (`openTripActivitySheet`) — puce de filtre par statut touchée (puces affichées dès deux statuts). Propriété `status` : statut du colis (`ACCEPTED`, `IN_TRANSIT`…), `all` pour « Tous » |
 | `bid_submitted` | BidBloc._onCreateRequested() |
 | `bid_accepted` | BidAcceptanceBloc._handleResponse() |
 | `bid_rejected` | BidBloc._onRejectRequested() |

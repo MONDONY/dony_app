@@ -45,11 +45,7 @@ class TripRequestsCard extends StatelessWidget {
 
   /// La carte s'affiche-t-elle pour [trip] et ses colis [bids] ?
   static bool shownFor(AnnouncementModel trip, List<BidModel>? bids) =>
-      switch (tripRequestsPhaseFor(trip.status)) {
-        TripRequestsPhase.open || TripRequestsPhase.full => true,
-        TripRequestsPhase.departed => tripPendingRequestCount(trip, bids) > 0,
-        TripRequestsPhase.ended || null => false,
-      };
+      tripRequestsShown(trip, bids);
 
   @override
   Widget build(BuildContext context) {

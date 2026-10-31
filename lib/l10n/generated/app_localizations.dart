@@ -37169,6 +37169,84 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce que voient les destinataires'**
   String get tripMenuArrivalReadSubtitle;
+
+  /// Écran du trajet vu par son voyageur, « À traiter » : titre de la carte de réponse directe, la première demande à traiter sur leur nombre total (trip_direct_request_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande 1 sur {count}'**
+  String tripDirectRequestLabel(int count);
+
+  /// Carte de réponse directe de l'écran du trajet : lien qui ouvre le sheet de toutes les demandes à traiter, affiché dès deux demandes (trip_direct_request_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les {count} demandes'**
+  String tripDirectRequestSeeAll(int count);
+
+  /// Compteur « Demandes » de l'activité du trajet : libellé sous le nombre de demandes qui attendent la réponse du voyageur (trip_activity_row.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'à traiter'**
+  String get tripActivityRequestsPending;
+
+  /// Compteur « Demandes » de l'activité du trajet : libellé sous « 0 » quand aucune demande n'attend de réponse (trip_activity_row.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'demande'**
+  String get tripActivityRequestsNone;
+
+  /// Compteur « Colis » de l'activité du trajet : libellé sous le total des colis embarqués, nombre de colis remis ou en transit (HANDED_OVER, IN_TRANSIT) (trip_activity_row.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} en route'**
+  String tripActivityParcelsInTransit(int count);
+
+  /// Compteur « Colis » de l'activité du trajet : libellé sous le total, nombre de colis acceptés pas encore remis (ACCEPTED), quand aucun n'est en route (trip_activity_row.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} à récupérer'**
+  String tripActivityParcelsToCollect(int count);
+
+  /// Compteur « Colis » de l'activité du trajet : libellé sous le total des colis embarqués quand aucun n'est en route ni à récupérer (trip_activity_row.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{colis} other{colis}}'**
+  String tripActivityParcelsLabel(int count);
+
+  /// Compteur « Gain » de l'activité du trajet : libellé sous le gain estimé (trip_activity_row.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'gain'**
+  String get tripActivityGainLabel;
+
+  /// Lecteur d'écran, compteur de l'activité du trajet : nom du compteur (Demandes, Colis, Gain estimé) puis sa valeur et son libellé (trip_activity_row.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{title} : {value}'**
+  String tripActivityCellSemantics(String title, String value);
+
+  /// Sheet des demandes de l'activité du trajet : plus aucune demande n'attend de réponse (trip_activity_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande à traiter pour le moment.'**
+  String get tripActivityRequestsEmpty;
+
+  /// Sheet « Colis » de l'activité du trajet : bouton du pied qui ouvre la liste des colis du trajet (/announcements/:id/bids) (trip_activity_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir la liste des colis'**
+  String get tripActivityParcelsOpenList;
+
+  /// Sheet « Gain » de l'activité du trajet : aucun colis remis, en transit ou arrivé, donc pas encore de gain estimé (trip_activity_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le gain s\'affiche dès qu\'un colis vous est remis.'**
+  String get tripActivityGainEmpty;
+
+  /// Puce de filtre « Tous » du sheet « Colis » de l'activité du trajet, avec le total des colis embarqués (trip_activity_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous'**
+  String get tripOwnerParcelsFilterAll;
 }
 
 class _AppLocalizationsDelegate

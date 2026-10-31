@@ -61,6 +61,21 @@ TripRequestsPhase? tripRequestsPhaseFor(String status) => switch (status) {
   _ => null,
 };
 
+/// Les demandes du trajet ont-elles leur place sur l'écran (carte ou compteur
+/// « Demandes ») ? Toujours pour un trajet publié ou complet, même sans
+/// demande (PROD-1N : une entrée absente ou éteinte laissait croire à une
+/// panne) ; pour un trajet parti, seulement s'il reste des demandes à
+/// traiter ([tripPendingRequestCount] de [bids]) : le back les expire au
+/// départ et refuse tout nouveau colis. Jamais pour un trajet terminé (le
+/// back y refuse toute acceptation), un brouillon, un trajet annulé, retiré
+/// par l'équipe ou d'un statut inconnu.
+bool tripRequestsShown(AnnouncementModel trip, List<BidModel>? bids) =>
+    switch (tripRequestsPhaseFor(trip.status)) {
+      TripRequestsPhase.open || TripRequestsPhase.full => true,
+      TripRequestsPhase.departed => tripPendingRequestCount(trip, bids) > 0,
+      TripRequestsPhase.ended || null => false,
+    };
+
 /// Une demande en attente peut-elle encore recevoir une réponse ? Oui tant
 /// que le trajet n'est pas terminé, annulé ou retiré (le back refuse alors
 /// toute acceptation).

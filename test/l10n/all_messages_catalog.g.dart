@@ -8056,6 +8056,27 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripMenuSaveTemplateSubtitle': (l) => l.tripMenuSaveTemplateSubtitle,
   'tripMenuDeleteSubtitle': (l) => l.tripMenuDeleteSubtitle,
   'tripMenuArrivalReadSubtitle': (l) => l.tripMenuArrivalReadSubtitle,
+  'tripDirectRequestLabel': (l) =>
+      l.tripDirectRequestLabel(intPlaceholderValue),
+  'tripDirectRequestSeeAll': (l) =>
+      l.tripDirectRequestSeeAll(intPlaceholderValue),
+  'tripActivityRequestsPending': (l) => l.tripActivityRequestsPending,
+  'tripActivityRequestsNone': (l) => l.tripActivityRequestsNone,
+  'tripActivityParcelsInTransit': (l) =>
+      l.tripActivityParcelsInTransit(intPlaceholderValue),
+  'tripActivityParcelsToCollect': (l) =>
+      l.tripActivityParcelsToCollect(intPlaceholderValue),
+  'tripActivityParcelsLabel': (l) =>
+      l.tripActivityParcelsLabel(intPlaceholderValue),
+  'tripActivityGainLabel': (l) => l.tripActivityGainLabel,
+  'tripActivityCellSemantics': (l) => l.tripActivityCellSemantics(
+    placeholderMarker('title'),
+    placeholderMarker('value'),
+  ),
+  'tripActivityRequestsEmpty': (l) => l.tripActivityRequestsEmpty,
+  'tripActivityParcelsOpenList': (l) => l.tripActivityParcelsOpenList,
+  'tripActivityGainEmpty': (l) => l.tripActivityGainEmpty,
+  'tripOwnerParcelsFilterAll': (l) => l.tripOwnerParcelsFilterAll,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8742,4 +8763,5 @@ const textParameters = <String, List<String>>{
   'tripTileItineraryPickup': ['place'],
   'tripTileItineraryDelivery': ['place'],
   'tripTilePaymentsCashOnlyNote': ['section'],
+  'tripActivityCellSemantics': ['title', 'value'],
 };

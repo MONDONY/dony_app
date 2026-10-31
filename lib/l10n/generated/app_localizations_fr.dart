@@ -23149,4 +23149,63 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripMenuArrivalReadSubtitle => 'Ce que voient les destinataires';
+
+  @override
+  String tripDirectRequestLabel(int count) {
+    return 'Demande 1 sur $count';
+  }
+
+  @override
+  String tripDirectRequestSeeAll(int count) {
+    return 'Voir les $count demandes';
+  }
+
+  @override
+  String get tripActivityRequestsPending => 'à traiter';
+
+  @override
+  String get tripActivityRequestsNone => 'demande';
+
+  @override
+  String tripActivityParcelsInTransit(int count) {
+    return '$count en route';
+  }
+
+  @override
+  String tripActivityParcelsToCollect(int count) {
+    return '$count à récupérer';
+  }
+
+  @override
+  String tripActivityParcelsLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'colis',
+      one: 'colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripActivityGainLabel => 'gain';
+
+  @override
+  String tripActivityCellSemantics(String title, String value) {
+    return '$title : $value';
+  }
+
+  @override
+  String get tripActivityRequestsEmpty =>
+      'Aucune demande à traiter pour le moment.';
+
+  @override
+  String get tripActivityParcelsOpenList => 'Ouvrir la liste des colis';
+
+  @override
+  String get tripActivityGainEmpty =>
+      'Le gain s\'affiche dès qu\'un colis vous est remis.';
+
+  @override
+  String get tripOwnerParcelsFilterAll => 'Tous';
 }

@@ -6,12 +6,14 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/close_sheet_when_resolved.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_detail_sections.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
@@ -76,6 +78,7 @@ Future<void> openTripTileSheet(
     announcement: maybeRead<AnnouncementBloc>(context),
     bids: maybeRead<BidBloc>(context),
     stripe: maybeRead<StripeAccountBloc>(context),
+    group: maybeRead<TripGroupCubit>(context),
   );
   final opening = _TripTileLiveData(
     trip: switch (blocs.announcement?.state) {
@@ -101,6 +104,8 @@ Future<void> openTripTileSheet(
         if (blocs.bids case final b?) BlocProvider<BidBloc>.value(value: b),
         if (blocs.stripe case final b?)
           BlocProvider<StripeAccountBloc>.value(value: b),
+        if (blocs.group case final g?)
+          BlocProvider<TripGroupCubit>.value(value: g),
       ];
       return providers.isEmpty
           ? content
@@ -126,7 +131,7 @@ Future<void> openTripTileSheet(
       blocs: blocs,
       builder: (sheetContext, live) => CloseTripSheetWhenGone(
         gone: _gone(tile, live),
-        child: _TripTileContent(tile: tile, live: live),
+        child: _TripTileContent(tile: tile, live: live, screenContext: context),
       ),
     ),
   );
@@ -150,11 +155,16 @@ class _TripTileBlocs {
     required this.announcement,
     required this.bids,
     required this.stripe,
+    required this.group,
   });
 
   final AnnouncementBloc? announcement;
   final BidBloc? bids;
   final StripeAccountBloc? stripe;
+
+  /// Étapes du voyage (FLUTTER-4D), montrées par le sheet « Itinéraire et
+  /// lieux » d'un voyage à plusieurs étapes.
+  final TripGroupCubit? group;
 }
 
 /// Données courantes d'un sheet « Votre trajet ».
@@ -251,12 +261,20 @@ class _LiveTripTile extends StatelessWidget {
 }
 
 /// Contenu du sheet, sur les données courantes : les sections du trajet
-/// reprises telles quelles du corps de détail.
+/// reprises telles quelles du corps de détail. « Itinéraire et lieux » y
+/// ajoute les étapes d'un voyage à plusieurs étapes ([TripLegsCard], rien
+/// pour un trajet isolé), dont chacune ouvre son trajet une fois le sheet
+/// fermé, depuis [screenContext].
 class _TripTileContent extends StatelessWidget {
-  const _TripTileContent({required this.tile, required this.live});
+  const _TripTileContent({
+    required this.tile,
+    required this.live,
+    required this.screenContext,
+  });
 
   final TripTile tile;
   final _TripTileLiveData live;
+  final BuildContext screenContext;
 
   @override
   Widget build(BuildContext context) {
@@ -268,7 +286,24 @@ class _TripTileContent extends StatelessWidget {
       key: Key('trip-tile-${tile.name}-content'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: switch (tile) {
-        TripTile.itinerary => [TripPlacesSection(trip: trip)],
+        TripTile.itinerary => [
+          TripPlacesSection(trip: trip),
+          TripLegsCard(
+            announcementId: trip.id,
+            padding: const EdgeInsets.only(bottom: DonySpacing.base),
+            onOpenLeg: (leg) {
+              if (!closeSheetIfOnTop(context) || !screenContext.mounted) {
+                return;
+              }
+              unawaited(
+                pushOncePerScreen<void>(
+                  screenContext,
+                  '/announcements/${leg.id}/trip',
+                ),
+              );
+            },
+          ),
+        ],
         TripTile.payments => [
           TripPaymentsSection(trip: trip),
           TripMobileMoneyNetworksSection(trip: trip),

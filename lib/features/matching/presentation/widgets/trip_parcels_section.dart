@@ -183,7 +183,7 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
                     TripParcelsSummary(bids: embarked),
                     for (var i = 0; i < preview.length; i++) ...[
                       if (i > 0) const SizedBox(height: DonySpacing.sm),
-                      _ColisRow(
+                      TripParcelRow(
                         bid: preview[i],
                         onTap: () => _openParcel(preview[i].id),
                       ),
@@ -325,9 +325,10 @@ class TripParcelsSummary extends StatelessWidget {
 
 /// Ligne compacte d'un colis embarqué : miniature optionnelle, contenu, poids,
 /// expéditeur et chip de statut. Tap → détail de l'offre (`/bids/:bidId`),
-/// colis et trajet relus au retour.
-class _ColisRow extends StatelessWidget {
-  const _ColisRow({required this.bid, required this.onTap});
+/// colis et trajet relus au retour. Reprise par le sheet « Colis » de
+/// l'activité du trajet.
+class TripParcelRow extends StatelessWidget {
+  const TripParcelRow({super.key, required this.bid, required this.onTap});
 
   final BidModel bid;
   final VoidCallback onTap;
@@ -426,8 +427,23 @@ class _ColisRow extends StatelessWidget {
   }
 }
 
-/// Libellé traduit + couleur d'un statut de colis embarqué.
-(String, Color) _statusMeta(
+/// Ordre métier des statuts de colis embarqués : celui des puces de filtre
+/// du sheet « Colis » ; un statut inconnu passe après.
+const kTripParcelStatusOrder = <String>[
+  'ACCEPTED',
+  'AWAITING_PAYMENT',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'ARRIVED',
+  'COMPLETED',
+  'NO_SHOW',
+  'PARCEL_REFUSED',
+  'CANCELLED',
+];
+
+/// Libellé traduit + couleur d'un statut de colis embarqué (pastille d'une
+/// ligne, puce de filtre).
+(String, Color) tripParcelStatusMeta(
   String status,
   ColorScheme cs,
   AppLocalizations l,
@@ -456,7 +472,7 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final (label, color) = _statusMeta(status, cs, context.l10n);
+    final (label, color) = tripParcelStatusMeta(status, cs, context.l10n);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,

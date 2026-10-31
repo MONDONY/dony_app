@@ -32,50 +32,68 @@ class TripSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    return DetailCard(
+      key: const Key('trip-summary-card'),
+      title: summary.netAmount > 0
+          ? l.tripSummaryEarningsLabel
+          : l.tripSummaryTitle,
+      child: TripGainContent(summary: summary),
+    );
+  }
+}
+
+/// Contenu de la carte de gain du trajet ([TripSummaryCard]), repris tel
+/// quel par le sheet « Gain » de l'activité du trajet : gain estimé en grand
+/// quand il est positif, colis en possession, kilos transportés, note sur le
+/// versement. Lecture seule.
+class TripGainContent extends StatelessWidget {
+  const TripGainContent({super.key, required this.summary});
+
+  final TripParcelsSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final kg = NumberFormat('#,##0.#', l.localeName).format(summary.totalKg);
     final hasEarnings = summary.netAmount > 0;
-    return DetailCard(
-      key: const Key('trip-summary-card'),
-      title: hasEarnings ? l.tripSummaryEarningsLabel : l.tripSummaryTitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (hasEarnings) ...[
-            // Montant sur une ligne : il rétrécit plutôt que de passer à la
-            // ligne à texte agrandi, comme la carte de gain de la fiche colis.
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                CurrencyFormatter.format(
-                  summary.netAmount,
-                  SupportedCurrency.fromCodeOrDefault(summary.currency),
-                ),
-                key: const Key('trip-summary-earnings'),
-                maxLines: 1,
-                style: tt.titleLarge?.copyWith(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w800,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (hasEarnings) ...[
+          // Montant sur une ligne : il rétrécit plutôt que de passer à la
+          // ligne à texte agrandi, comme la carte de gain de la fiche colis.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              CurrencyFormatter.format(
+                summary.netAmount,
+                SupportedCurrency.fromCodeOrDefault(summary.currency),
+              ),
+              key: const Key('trip-summary-earnings'),
+              maxLines: 1,
+              style: tt.titleLarge?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w800,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
-            const SizedBox(height: DonySpacing.xs),
-          ],
-          Text(l.tripSummaryParcels(summary.count), style: tt.bodyMedium),
-          const SizedBox(height: DonySpacing.xxs),
-          Text(l.tripSummaryWeight(kg), style: tt.bodyMedium),
-          if (hasEarnings) ...[
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              l.tripSummaryEarningsNote,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
+          ),
+          const SizedBox(height: DonySpacing.xs),
         ],
-      ),
+        Text(l.tripSummaryParcels(summary.count), style: tt.bodyMedium),
+        const SizedBox(height: DonySpacing.xxs),
+        Text(l.tripSummaryWeight(kg), style: tt.bodyMedium),
+        if (hasEarnings) ...[
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            l.tripSummaryEarningsNote,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ],
     );
   }
 }

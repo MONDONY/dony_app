@@ -22984,4 +22984,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripMenuArrivalReadSubtitle => 'What recipients see';
+
+  @override
+  String tripDirectRequestLabel(int count) {
+    return 'Request 1 of $count';
+  }
+
+  @override
+  String tripDirectRequestSeeAll(int count) {
+    return 'See all $count requests';
+  }
+
+  @override
+  String get tripActivityRequestsPending => 'to review';
+
+  @override
+  String get tripActivityRequestsNone => 'requests';
+
+  @override
+  String tripActivityParcelsInTransit(int count) {
+    return '$count in transit';
+  }
+
+  @override
+  String tripActivityParcelsToCollect(int count) {
+    return '$count to pick up';
+  }
+
+  @override
+  String tripActivityParcelsLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'parcels',
+      one: 'parcel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripActivityGainLabel => 'earnings';
+
+  @override
+  String tripActivityCellSemantics(String title, String value) {
+    return '$title: $value';
+  }
+
+  @override
+  String get tripActivityRequestsEmpty => 'No requests to review for now.';
+
+  @override
+  String get tripActivityParcelsOpenList => 'Open parcel list';
+
+  @override
+  String get tripActivityGainEmpty =>
+      'Your earnings show once a parcel is handed over to you.';
+
+  @override
+  String get tripOwnerParcelsFilterAll => 'All';
 }
