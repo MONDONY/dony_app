@@ -158,6 +158,11 @@ class OfflineSyncService {
     _lifecycle?.dispose();
   }
 
+  /// Programme un nouvel essai de la file, chaque fois plus espacé : pour un
+  /// envoi direct tombé sur un réseau affiché mais inutilisable, que
+  /// `connectivity_plus` ne signalera pas (même réseau, FLUTTER-KZ).
+  void scheduleRetry() => _scheduleRetry();
+
   /// Programme un nouvel essai, chaque fois plus espacé.
   void _scheduleRetry() {
     final previous = _retryDelay;

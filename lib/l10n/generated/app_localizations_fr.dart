@@ -10755,16 +10755,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get scanQrPickerHint => 'Pointez vers le QR code du colis';
 
   @override
-  String get scanOfflineEventPickupLabel => 'départ';
-
-  @override
-  String get scanOfflineEventTransitLabel => 'transit';
-
-  @override
   String get scanOfflineEventDefaultLabel => 'file';
 
   @override
-  String get scanOfflineDescPickup => 'Départ enregistré';
+  String get scanOfflineDescPickup => 'Récupération enregistrée';
 
   @override
   String get scanOfflineDescTransit => 'En transit sauvegardé';

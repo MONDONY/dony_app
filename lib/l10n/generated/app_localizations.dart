@@ -17685,18 +17685,6 @@ abstract class AppLocalizations {
   /// **'Pointez vers le QR code du colis'**
   String get scanQrPickerHint;
 
-  /// Libellé court de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'départ'**
-  String get scanOfflineEventPickupLabel;
-
-  /// Libellé court de l'étape TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart), identique dans les deux langues (voir _sameInBothLanguages).
-  ///
-  /// In fr, this message translates to:
-  /// **'transit'**
-  String get scanOfflineEventTransitLabel;
-
   /// Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///
   /// In fr, this message translates to:
@@ -17706,7 +17694,7 @@ abstract class AppLocalizations {
   /// Description de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Départ enregistré'**
+  /// **'Récupération enregistrée'**
   String get scanOfflineDescPickup;
 
   /// Description de l'étape TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).

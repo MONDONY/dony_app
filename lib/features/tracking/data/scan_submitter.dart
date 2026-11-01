@@ -1,5 +1,4 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
@@ -31,7 +30,7 @@ final class ScanSubmitQueued extends ScanSubmitResult {
 /// ([OfflineSyncService]) au lieu d'échouer : téléphone sans aucun réseau,
 /// mais aussi réseau affiché sur lequel rien ne passe (forfait épuisé,
 /// signal trop faible, wifi d'aéroport), quand l'envoi échoue en route
-/// ([isQueueableScanFailure]).
+/// ([isQueueableTrackingFailure]).
 ///
 /// Utilisé par [TrackingBloc] (parcours photo puis confirmation). La
 /// validation rapide de l'onglet Suivi passe, elle, par la file dès le
@@ -65,18 +64,22 @@ class ScanSubmitter {
     ScanMethod? scanMethod,
     String? trackingNumber,
   }) async {
-    var photoSettled = false;
-    Future<ScanSubmitResult> queue({String? photoKey}) async {
+    // Photo de l'étape une fois réglée (envoyée, refusée ou perdue) ;
+    // `null` tant qu'elle ne l'est pas.
+    TrackingPhotoUpload? photo;
+
+    Future<ScanSubmitResult> queue() async {
       await _offlineSync.queueScan(
         bidId: bidId,
         eventType: eventType,
         gpsLat: gpsLat,
         gpsLon: gpsLon,
         gpsLabel: gpsLabel,
-        // Photo déjà réglée (envoyée, refusée ou perdue) : la file ne la
-        // renvoie pas, elle reprend sa clé quand elle existe.
-        photoPath: photoSettled ? null : photoPath,
-        photoKey: photoKey,
+        // Photo déjà envoyée : la file reprend sa clé sans la renvoyer.
+        // Refusée : l'étape part sans elle. Perdue : son chemin repasse par
+        // la file, qui prévient le voyageur (photo introuvable).
+        photoPath: photo?.lost ?? true ? photoPath : null,
+        photoKey: photo?.key,
         scanMethod: scanMethod,
         trackingNumber: trackingNumber,
       );
@@ -85,55 +88,47 @@ class ScanSubmitter {
 
     if (!await _isOnline()) return queue();
 
-    // Même verrou que la file : la même étape envoyée au même moment par la
-    // file ou l'onglet Suivi ne part qu'une fois (FLUTTER-JV), et un « déjà
-    // enregistré » du back est un succès.
-    var photoDropped = false;
-    String? photoKey;
     try {
+      // Même verrou que la file : la même étape envoyée au même moment par
+      // la file ou l'onglet Suivi ne part qu'une fois (FLUTTER-JV), et un
+      // « déjà enregistré » du back est un succès.
       final event = await _guard.postStepOnce(
         bidId: bidId,
         eventType: eventType,
         repository: _repository,
         post: () async {
-          final photo = await uploadTrackingPhotoOrDrop(
+          final sent = photo = await uploadTrackingPhotoOrDrop(
             _repository,
             bidId: bidId,
             photoPath: photoPath,
           );
-          photoDropped = photo.dropped || photo.lost;
-          photoKey = photo.key;
-          photoSettled = true;
           return _repository.postScan(
             bidId: bidId,
             eventType: eventType,
             gpsLat: gpsLat,
             gpsLon: gpsLon,
             gpsLabel: gpsLabel,
-            photoUrl: photoKey,
+            photoUrl: sent.key,
             scanMethod: scanMethod,
             trackingNumber: trackingNumber,
           );
         },
       );
-      return ScanSubmitSent(event, photoDropped: photoDropped);
+      return ScanSubmitSent(
+        event,
+        photoDropped: photo?.dropped == true || photo?.lost == true,
+      );
     } catch (error) {
       // Réseau affiché mais rien ne passe : l'étape est gardée au lieu
       // d'afficher une erreur et de faire tout recommencer au voyageur. Un
       // renvoi d'une étape que le back avait reçue (réponse perdue) revient
       // en « déjà enregistré », compté comme un succès ([ScanSendGuard]).
-      if (!isQueueableScanFailure(unwrapDioError(error))) rethrow;
-      return queue(photoKey: photoKey);
+      if (!isQueueableTrackingFailure(error)) rethrow;
+      final queued = await queue();
+      // Le téléphone reste sur le même réseau : aucun changement ne
+      // relancera la file, d'où un nouvel essai programmé.
+      _offlineSync.scheduleRetry();
+      return queued;
     }
   }
 }
-
-/// Vrai quand l'envoi d'une étape a échoué faute de réseau exploitable :
-/// aucune connexion, délai dépassé, ou API injoignable (502, 503, 504,
-/// connexion refusée). La même requête passera plus tard : l'étape va dans
-/// la file. Un refus du serveur (409, 422, 403, 404) ou une erreur 500
-/// reste affiché.
-bool isQueueableScanFailure(AppException error) =>
-    error is OfflineException ||
-    error is TimeoutException ||
-    error is ServiceUnavailableException;

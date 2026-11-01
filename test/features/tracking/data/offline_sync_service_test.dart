@@ -213,6 +213,15 @@ void main() {
   });
 
   group('syncAll', () {
+    test('scheduleRetry : nouvel essai programmé, de plus en plus espacé', () {
+      expect(service.nextRetryDelay, isNull);
+      service.scheduleRetry();
+      expect(service.nextRetryDelay, service.retryBase);
+      service.scheduleRetry();
+      expect(service.nextRetryDelay, service.retryBase * 2);
+      service.dispose();
+    });
+
     test('photo déjà envoyée : rejouée sans renvoyer la photo', () async {
       when(
         () => mockRepo.postScan(

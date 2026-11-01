@@ -11608,19 +11608,11 @@
   "@scanQrPickerHint": {
     "description": "Texte d'aide de l'écran de lecture QR générique (qr_picker_screen.dart)."
   },
-  "scanOfflineEventPickupLabel": "départ",
-  "@scanOfflineEventPickupLabel": {
-    "description": "Libellé court de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
-  },
-  "scanOfflineEventTransitLabel": "transit",
-  "@scanOfflineEventTransitLabel": {
-    "description": "Libellé court de l'étape TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart), identique dans les deux langues (voir _sameInBothLanguages)."
-  },
   "scanOfflineEventDefaultLabel": "file",
   "@scanOfflineEventDefaultLabel": {
     "description": "Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
   },
-  "scanOfflineDescPickup": "Départ enregistré",
+  "scanOfflineDescPickup": "Récupération enregistrée",
   "@scanOfflineDescPickup": {
     "description": "Description de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
   },

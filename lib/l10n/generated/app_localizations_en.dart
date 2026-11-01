@@ -10680,16 +10680,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanQrPickerHint => 'Point at the parcel\'s QR code';
 
   @override
-  String get scanOfflineEventPickupLabel => 'departure';
-
-  @override
-  String get scanOfflineEventTransitLabel => 'transit';
-
-  @override
   String get scanOfflineEventDefaultLabel => 'queued';
 
   @override
-  String get scanOfflineDescPickup => 'Departure recorded';
+  String get scanOfflineDescPickup => 'Collection recorded';
 
   @override
   String get scanOfflineDescTransit => 'Transit saved';

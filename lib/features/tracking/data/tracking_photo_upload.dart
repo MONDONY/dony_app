@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/app_log.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
 /// Issue de l'envoi de la photo d'une étape : sa clé de stockage, ou
@@ -51,6 +52,15 @@ bool isDefinitiveTrackingRejection(AppException error) =>
         error is ValidationException ||
         error is NotFoundException ||
         error is ForbiddenException);
+
+/// Vrai quand l'envoi d'une étape a échoué faute de réseau exploitable :
+/// coupure sans réponse du serveur ([isTransportThrowable] : hors ligne,
+/// délai dépassé, socket fermée), ou API injoignable (502, 503, 504,
+/// connexion refusée). La même requête passera plus tard : l'envoi direct
+/// garde l'étape en file. Un refus du serveur ou une 500 reste affiché.
+bool isQueueableTrackingFailure(Object error) =>
+    isTransportThrowable(error) ||
+    unwrapDioError(error) is ServiceUnavailableException;
 
 /// Codes par lesquels le serveur refuse la photo elle-même : la renvoyer
 /// échouerait à l'identique.

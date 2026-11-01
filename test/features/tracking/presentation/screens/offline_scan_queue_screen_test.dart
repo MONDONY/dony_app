@@ -145,9 +145,10 @@ void main() {
     ) async {
       await tester.pumpWidget(_buildApp());
       await tester.pump();
-      expect(find.text('départ'), findsOneWidget);
-      expect(find.text('transit'), findsOneWidget);
-      expect(find.textContaining('Départ enregistré'), findsOneWidget);
+      // Même vocabulaire que le reste du suivi (trackingStepLabel).
+      expect(find.text('Récupération'), findsOneWidget);
+      expect(find.text('Transit'), findsOneWidget);
+      expect(find.textContaining('Récupération enregistrée'), findsOneWidget);
       expect(find.textContaining('En transit sauvegardé'), findsOneWidget);
       // Jamais le libellé de repli pour une étape connue.
       expect(find.text('file'), findsNothing);
