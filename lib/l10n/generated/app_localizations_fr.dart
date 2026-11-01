@@ -10755,25 +10755,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get scanQrPickerHint => 'Pointez vers le QR code du colis';
 
   @override
-  String get scanOfflineEventPickupLabel => 'collecte';
-
-  @override
-  String get scanOfflineEventTransitLabel => 'transit';
-
-  @override
-  String get scanOfflineEventDeliveredLabel => 'livré';
-
-  @override
   String get scanOfflineEventDefaultLabel => 'file';
 
   @override
-  String get scanOfflineDescPickup => 'Collecte enregistrée';
+  String get scanOfflineDescPickup => 'Récupération enregistrée';
 
   @override
   String get scanOfflineDescTransit => 'En transit sauvegardé';
-
-  @override
-  String get scanOfflineDescDelivered => 'Livraison sauvegardée';
 
   @override
   String get scanOfflineDescDefault => 'Lecture sauvegardée';

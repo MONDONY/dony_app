@@ -22,23 +22,19 @@ class OfflineScanQueueScreen extends StatelessWidget {
     return scanRelativeTime(l, diff);
   }
 
-  static String _eventLabel(AppLocalizations l, String eventType) {
-    return switch (eventType.toUpperCase()) {
-      'PICKUP' => l.scanOfflineEventPickupLabel,
-      'IN_TRANSIT' => l.scanOfflineEventTransitLabel,
-      'DELIVERED' => l.scanOfflineEventDeliveredLabel,
-      _ => l.scanOfflineEventDefaultLabel,
-    };
-  }
-
-  static String _eventDescription(AppLocalizations l, String eventType) {
-    return switch (eventType.toUpperCase()) {
-      'PICKUP' => l.scanOfflineDescPickup,
-      'IN_TRANSIT' => l.scanOfflineDescTransit,
-      'DELIVERED' => l.scanOfflineDescDelivered,
-      _ => l.scanOfflineDescDefault,
-    };
-  }
+  /// Nom de l'étape (même vocabulaire que le reste du suivi) et phrase de la
+  /// ligne. La file ne contient que DEPART et TRANSIT, les étapes du back
+  /// (`TrackingEventType`) : l'arrivée (ARRIVEE) passe par la confirmation
+  /// de livraison, en ligne seulement.
+  static (String, String) _eventTexts(AppLocalizations l, String eventType) =>
+      switch (eventType) {
+        'DEPART' => (trackingStepLabel(l, eventType), l.scanOfflineDescPickup),
+        'TRANSIT' => (
+          trackingStepLabel(l, eventType),
+          l.scanOfflineDescTransit,
+        ),
+        _ => (l.scanOfflineEventDefaultLabel, l.scanOfflineDescDefault),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -232,8 +228,10 @@ class _QueueItemCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final label = OfflineScanQueueScreen._eventLabel(l, eventType);
-    final description = OfflineScanQueueScreen._eventDescription(l, eventType);
+    final (label, description) = OfflineScanQueueScreen._eventTexts(
+      l,
+      eventType,
+    );
     final relTime = OfflineScanQueueScreen._relativeTime(l, timestamp);
 
     return Container(

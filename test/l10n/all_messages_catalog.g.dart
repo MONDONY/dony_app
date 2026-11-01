@@ -196,6 +196,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorCallConversationClosedTitle': (l) => l.errorCallConversationClosedTitle,
   'errorCallConversationClosedMessage': (l) =>
       l.errorCallConversationClosedMessage,
+  'errorConversationCounterpartDeletedTitle': (l) =>
+      l.errorConversationCounterpartDeletedTitle,
+  'errorConversationCounterpartDeletedMessage': (l) =>
+      l.errorConversationCounterpartDeletedMessage,
   'errorCallNotParticipantMessage': (l) => l.errorCallNotParticipantMessage,
   'errorCallProviderUnavailableTitle': (l) =>
       l.errorCallProviderUnavailableTitle,
@@ -3863,13 +3867,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'scanTorchTurnOffTooltip': (l) => l.scanTorchTurnOffTooltip,
   'scanTorchUnavailableTooltip': (l) => l.scanTorchUnavailableTooltip,
   'scanQrPickerHint': (l) => l.scanQrPickerHint,
-  'scanOfflineEventPickupLabel': (l) => l.scanOfflineEventPickupLabel,
-  'scanOfflineEventTransitLabel': (l) => l.scanOfflineEventTransitLabel,
-  'scanOfflineEventDeliveredLabel': (l) => l.scanOfflineEventDeliveredLabel,
   'scanOfflineEventDefaultLabel': (l) => l.scanOfflineEventDefaultLabel,
   'scanOfflineDescPickup': (l) => l.scanOfflineDescPickup,
   'scanOfflineDescTransit': (l) => l.scanOfflineDescTransit,
-  'scanOfflineDescDelivered': (l) => l.scanOfflineDescDelivered,
   'scanOfflineDescDefault': (l) => l.scanOfflineDescDefault,
   'scanOfflineQueueTitle': (l) => l.scanOfflineQueueTitle,
   'scanOfflineBadge': (l) => l.scanOfflineBadge,

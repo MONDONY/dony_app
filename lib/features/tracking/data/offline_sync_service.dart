@@ -158,6 +158,11 @@ class OfflineSyncService {
     _lifecycle?.dispose();
   }
 
+  /// Programme un nouvel essai de la file, chaque fois plus espacé : pour un
+  /// envoi direct tombé sur un réseau affiché mais inutilisable, que
+  /// `connectivity_plus` ne signalera pas (même réseau, FLUTTER-KZ).
+  void scheduleRetry() => _scheduleRetry();
+
   /// Programme un nouvel essai, chaque fois plus espacé.
   void _scheduleRetry() {
     final previous = _retryDelay;
@@ -209,7 +214,9 @@ class OfflineSyncService {
 
   /// Met l'étape en file et rend sa clé. Avec [notBefore], [syncAll] ne
   /// l'envoie pas avant cette échéance (délai d'annulation de l'onglet
-  /// Suivi) ; sans, elle part au prochain [syncAll].
+  /// Suivi) ; sans, elle part au prochain [syncAll]. [photoKey] : photo déjà
+  /// envoyée par un envoi direct qui a échoué ensuite, reprise sans être
+  /// renvoyée (sa clé de stockage, comme [photoKeyField]).
   Future<int> queueScan({
     required String bidId,
     required String eventType,
@@ -217,6 +224,7 @@ class OfflineSyncService {
     double? gpsLon,
     String? gpsLabel,
     String? photoPath,
+    String? photoKey,
     ScanMethod? scanMethod,
     String? trackingNumber,
     DateTime? notBefore,
@@ -242,6 +250,7 @@ class OfflineSyncService {
         'photoFile': photoFile
       else if (photos == null)
         'photoPath': ?photoPath,
+      photoKeyField: ?photoKey,
       // Absent des entrées mises en file avant la provenance : rien n'est
       // alors envoyé au back.
       'scanMethod': ?scanMethod?.wire,

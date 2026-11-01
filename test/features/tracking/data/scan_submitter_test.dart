@@ -6,6 +6,7 @@ import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_send_guard.dart';
 import 'package:dony/features/tracking/data/scan_submitter.dart';
+import 'package:dony/features/tracking/data/tracking_photo_upload.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -39,6 +40,7 @@ void main() {
         gpsLon: any(named: 'gpsLon'),
         gpsLabel: any(named: 'gpsLabel'),
         photoPath: any(named: 'photoPath'),
+        photoKey: any(named: 'photoKey'),
       ),
     ).thenAnswer((_) async => 1);
     when(
@@ -58,6 +60,17 @@ void main() {
 
   ScanSubmitter build() =>
       ScanSubmitter(repo, offline, isOnline: () async => online);
+
+  void postFails(Object error) => when(
+    () => repo.postScan(
+      bidId: any(named: 'bidId'),
+      eventType: any(named: 'eventType'),
+      gpsLat: any(named: 'gpsLat'),
+      gpsLon: any(named: 'gpsLon'),
+      gpsLabel: any(named: 'gpsLabel'),
+      photoUrl: any(named: 'photoUrl'),
+    ),
+  ).thenThrow(error);
 
   void verifyQueued() => verify(
     () => offline.queueScan(
@@ -146,6 +159,8 @@ void main() {
     expect(result, isA<ScanSubmitQueued>());
     verifyQueued();
     verifyNever(() => repo.uploadTrackingPhoto(any(), any()));
+    // Aucune interface : le retour du réseau relancera la file.
+    verifyNever(() => offline.scheduleRetry());
   });
 
   test(
@@ -217,31 +232,148 @@ void main() {
     expect((result as ScanSubmitSent).photoDropped, isFalse);
   });
 
-  test('réseau coupé pendant l\'envoi : l\'erreur remonte', () async {
-    when(
-      () => repo.uploadTrackingPhoto(any(), any()),
-    ).thenThrow(const TimeoutException());
-    await expectLater(
-      build().submit(
+  group('réseau affiché mais rien ne passe : étape gardée en file', () {
+    test('délai dépassé pendant l\'envoi de la photo : en file avec la '
+        'photo à envoyer', () async {
+      when(
+        () => repo.uploadTrackingPhoto(any(), any()),
+      ).thenThrow(const TimeoutException());
+
+      final result = await build().submit(
         bidId: 'bid-1',
         eventType: 'TRANSIT',
         photoPath: '/tmp/p.jpg',
-      ),
-      throwsA(isA<TimeoutException>()),
-    );
+        gpsLat: 14.7,
+      );
+
+      expect(result, isA<ScanSubmitQueued>());
+      verify(() => offline.scheduleRetry()).called(1);
+      verifyQueued();
+      verifyNever(
+        () => repo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+        ),
+      );
+    });
+
+    test('photo envoyée puis étape coupée : en file avec la clé de la photo, '
+        'sans la renvoyer', () async {
+      postFails(const OfflineException());
+
+      final result = await build().submit(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+        photoPath: '/tmp/p.jpg',
+        gpsLat: 14.7,
+      );
+
+      expect(result, isA<ScanSubmitQueued>());
+      verify(() => offline.scheduleRetry()).called(1);
+      verify(
+        () => offline.queueScan(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          gpsLat: 14.7,
+          photoKey: 'tracking/bid-1/photo.jpg',
+        ),
+      ).called(1);
+    });
+
+    test('photo refusée par le serveur puis étape coupée : en file sans '
+        'photo', () async {
+      when(() => repo.uploadTrackingPhoto(any(), any())).thenThrow(
+        const ValidationException('Trop lourd', code: 'file-too-large'),
+      );
+      postFails(const TimeoutException());
+
+      final result = await build().submit(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+        photoPath: '/tmp/p.jpg',
+        gpsLat: 14.7,
+      );
+
+      expect(result, isA<ScanSubmitQueued>());
+      verify(() => offline.scheduleRetry()).called(1);
+      verify(
+        () => offline.queueScan(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          gpsLat: 14.7,
+        ),
+      ).called(1);
+    });
+
+    test('photo disparue puis étape coupée : son chemin repasse par la '
+        'file, qui prévient le voyageur', () async {
+      when(
+        () => repo.uploadTrackingPhoto(any(), any()),
+      ).thenThrow(const PathNotFoundException('/tmp/p.jpg', OSError()));
+      postFails(const OfflineException());
+
+      final result = await build().submit(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+        photoPath: '/tmp/p.jpg',
+        gpsLat: 14.7,
+      );
+
+      expect(result, isA<ScanSubmitQueued>());
+      verifyQueued();
+    });
+
+    test('API injoignable (502, 503, 504) : en file', () async {
+      postFails(const ServiceUnavailableException());
+
+      final result = await build().submit(bidId: 'bid-1', eventType: 'DEPART');
+
+      expect(result, isA<ScanSubmitQueued>());
+      verify(() => offline.scheduleRetry()).called(1);
+      verify(
+        () => offline.queueScan(bidId: 'bid-1', eventType: 'DEPART'),
+      ).called(1);
+    });
+
+    test('erreur 500 : l\'erreur remonte, rien en file', () async {
+      postFails(const ServerException());
+
+      await expectLater(
+        build().submit(bidId: 'bid-1', eventType: 'DEPART'),
+        throwsA(isA<ServerException>()),
+      );
+      verifyNever(() => offline.scheduleRetry());
+      verifyNever(
+        () => offline.queueScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+        ),
+      );
+    });
+
+    test('isQueueableTrackingFailure : refus, 500 et annulation restent '
+        'affichés ; socket coupée brute gardée', () {
+      expect(isQueueableTrackingFailure(const ServerException()), isFalse);
+      expect(isQueueableTrackingFailure(const ConflictException('x')), isFalse);
+      expect(
+        isQueueableTrackingFailure(const ValidationException('x')),
+        isFalse,
+      );
+      expect(
+        isQueueableTrackingFailure(
+          const NetworkException('annulée', code: 'CANCELLED'),
+        ),
+        isFalse,
+      );
+      expect(
+        isQueueableTrackingFailure(const SocketException('coupée')),
+        isTrue,
+      );
+    });
   });
 
   test('refus du back : jamais mis en file', () async {
-    when(
-      () => repo.postScan(
-        bidId: any(named: 'bidId'),
-        eventType: any(named: 'eventType'),
-        gpsLat: any(named: 'gpsLat'),
-        gpsLon: any(named: 'gpsLon'),
-        gpsLabel: any(named: 'gpsLabel'),
-        photoUrl: any(named: 'photoUrl'),
-      ),
-    ).thenThrow(const ConflictException('déjà scanné'));
+    postFails(const ConflictException('déjà scanné'));
     await expectLater(
       build().submit(bidId: 'bid-1', eventType: 'DEPART'),
       throwsA(isA<ConflictException>()),
@@ -261,16 +393,7 @@ void main() {
   test(
     'FLUTTER-JV : 409 « déjà enregistré » du back = étape envoyée',
     () async {
-      when(
-        () => repo.postScan(
-          bidId: any(named: 'bidId'),
-          eventType: any(named: 'eventType'),
-          gpsLat: any(named: 'gpsLat'),
-          gpsLon: any(named: 'gpsLon'),
-          gpsLabel: any(named: 'gpsLabel'),
-          photoUrl: any(named: 'photoUrl'),
-        ),
-      ).thenThrow(const ConflictException('x', code: 'depart-already-scanned'));
+      postFails(const ConflictException('x', code: 'depart-already-scanned'));
       when(() => repo.getEvents('bid-1')).thenAnswer((_) async => [_event]);
 
       final result = await ScanSubmitter(
