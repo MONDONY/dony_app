@@ -205,9 +205,6 @@ class AnnouncementModel {
   /// public classique. `> 0` ⇒ trajet dédié (cf. [isDedicated]).
   final double reservedKg;
 
-  /// La négociation liée a été payée → le voyageur peut ouvrir le surplus.
-  final bool surplusEligible;
-
   /// Le surplus a déjà été ouvert au public (action définitive, non répétable).
   final bool surplusPublished;
 
@@ -283,8 +280,9 @@ class AnnouncementModel {
   final String? departureTimezone;
 
   /// La fenêtre de suivi du trajet est ouverte : l'app peut envoyer la
-  /// position du voyageur à la reprise. Servi par « Mes trajets » ; `false`
-  /// sur un back antérieur.
+  /// position du voyageur à la reprise. Servi par « Mes trajets » et, au seul
+  /// voyageur propriétaire, par le détail du trajet ; `false` pour tout autre
+  /// lecteur ou sur un back antérieur.
   @JsonKey(defaultValue: false)
   final bool trackingActive;
 
@@ -336,7 +334,6 @@ class AnnouncementModel {
     this.pricingMode = 'KG',
     this.priceGridItems = const [],
     this.reservedKg = 0,
-    this.surplusEligible = false,
     this.surplusPublished = false,
     this.handoverDeadline,
     this.isFavorite = false,
@@ -363,10 +360,6 @@ class AnnouncementModel {
 
   /// Trajet dédié : une part de la capacité est réservée à une négociation.
   bool get isDedicated => reservedKg > 0;
-
-  /// Le voyageur peut ouvrir le surplus : la négo est payée mais le surplus
-  /// n'a pas encore été publié.
-  bool get canOpenSurplus => surplusEligible && !surplusPublished;
 
   /// Trajet vendu au kilo sans capacité fixe totale (mode "kilo libre").
   /// Toujours vrai quand `capacityUnit == 'KG_FREE'`.

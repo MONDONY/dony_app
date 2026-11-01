@@ -43,12 +43,14 @@ class TravelerHeroCard extends StatelessWidget {
       bid.deliveryNoShowStatus == 'CONTESTED';
 
   /// Priorité 2 : colis accepté dont la date limite de dépôt est dépassée.
-  /// Lue aussi par le footer (« Confirmer ma présence » avant, plus après).
-  static bool windowExpired(BidModel bid) {
+  /// Lue aussi par le footer (« Confirmer ma présence » avant, plus après) et
+  /// par « À traiter » de l'écran du trajet (`tripTodoFor`), qui passe son
+  /// horloge [now] (par défaut l'heure de l'appareil).
+  static bool windowExpired(BidModel bid, {DateTime? now}) {
     final deadline = bid.handoverDeadline;
     return bid.status == 'ACCEPTED' &&
         deadline != null &&
-        DateTime.now().isAfter(deadline);
+        (now ?? DateTime.now()).isAfter(deadline);
   }
 
   /// Priorité 2 : date limite passée et aucune déclaration d'absence au dépôt
@@ -56,8 +58,8 @@ class TravelerHeroCard extends StatelessWidget {
   /// HANDOVER, la seule possible par colis (UNIQUE(bid, scope) côté back) :
   /// levée (`RESOLVED`) ou tranchée (`CONFIRMED`), en signaler une autre
   /// répondrait 409 `noshow-already-reported`.
-  static bool canReportSenderNoShow(BidModel bid) =>
-      windowExpired(bid) && bid.cancellationNoShowStatus == null;
+  static bool canReportSenderNoShow(BidModel bid, {DateTime? now}) =>
+      windowExpired(bid, now: now) && bid.cancellationNoShowStatus == null;
 
   /// La carte rend quelque chose (sinon `SizedBox.shrink`) : un signalement en
   /// cours, la date limite dépassée ou un contenu de priorité 3
@@ -84,12 +86,17 @@ class TravelerHeroCard extends StatelessWidget {
   ///   information seule, sans bouton → `false`.
   static bool hasAction(BidModel bid) {
     if (senderNoShowOpen(bid)) return false;
-    if (_deliveryNoShowOpen(bid)) {
-      return bid.deliveryNoShowReportedByTraveler != true &&
-          bid.deliveryNoShowStatus != 'CONTESTED';
-    }
+    if (_deliveryNoShowOpen(bid)) return canContestDeliveryNoShow(bid);
     return canReportSenderNoShow(bid);
   }
+
+  /// Priorité 1b avec bouton : l'expéditeur a signalé que le voyageur ne
+  /// livre pas, signalement encore ouvert et pas contesté : « Contester ce
+  /// signalement » (échéance `deliveryNoShowContestationDeadline`). Lu aussi
+  /// par « À traiter » de l'écran du trajet (`tripTodoFor`, inventaire #27).
+  static bool canContestDeliveryNoShow(BidModel bid) =>
+      bid.deliveryNoShowStatus == 'PENDING_CONFIRMATION' &&
+      bid.deliveryNoShowReportedByTraveler != true;
 
   @override
   Widget build(BuildContext context) {

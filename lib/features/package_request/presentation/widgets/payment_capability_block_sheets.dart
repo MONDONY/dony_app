@@ -106,7 +106,8 @@ CardCapabilityGap? knownCardCapabilityGap(
 /// `payment-method/card-capability-required` : le colis n'accepte que la
 /// carte et le voyageur n'a pas encore activé les paiements par carte
 /// (onboarding Stripe Connect). Réutilise le flux d'onboarding existant
-/// (`/connect/onboarding/intro`, cf. `announcement_detail_body.dart`).
+/// (`/connect/onboarding/intro`, cf. le sheet « carte » de « À traiter » du
+/// trajet, `trip_owner/trip_todo_sheets.dart`).
 ///
 /// Ouverte à deux moments : en amont, depuis la fiche du colis, et en filet
 /// de sécurité quand le serveur renvoie le 422 à l'envoi.

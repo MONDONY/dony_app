@@ -7,16 +7,14 @@ import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
-import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_depart_button.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_summary_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_depart_action.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_consent_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _MockDepart extends MockCubit<TripDepartState>
@@ -224,60 +222,15 @@ void main() {
             const Stream<TripDepartState>.empty(),
             initialState: const TripDepartState(),
           );
-          if (getIt.isRegistered<TripDepartCubit>()) {
-            getIt.unregister<TripDepartCubit>();
-          }
-          getIt.registerFactoryParam<TripDepartCubit, String, void>(
-            (_, _) => cubit,
-          );
-          addTearDown(() {
-            if (getIt.isRegistered<TripDepartCubit>()) {
-              getIt.unregister<TripDepartCubit>();
-            }
-          });
           await tester.pumpWidget(
             app(
-              const Scaffold(
+              Scaffold(
                 body: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: TripDepartButton(announcementId: 'ann-1'),
-                ),
-              ),
-              locale,
-              scale,
-            ),
-          );
-          await settle(tester);
-          final m = _measure(
-            tester,
-            find.byKey(const Key('trip-depart-button')),
-          );
-          expectRule(m, ref);
-          expect(tester.takeException(), isNull);
-          debugPrint('[$tag] $m');
-        });
-
-        testWidgets('Voir mes colis / View my parcels', (tester) async {
-          phone360(tester);
-          final ref = await referenceHeight(
-            tester,
-            locale,
-            scale,
-            variant: DonyButtonVariant.secondary,
-          );
-          await tester.pumpWidget(
-            app(
-              const Scaffold(
-                body: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: TripSummaryCard(
-                    announcementId: 'ann-1',
-                    summary: TripParcelsSummary(
-                      count: 3,
-                      totalKg: 12.5,
-                      netAmount: 4200,
-                      currency: 'EUR',
-                    ),
+                  padding: const EdgeInsets.all(16),
+                  // Pied du sheet « Je pars », sur le cubit de l'écran.
+                  child: BlocProvider<TripDepartCubit>.value(
+                    value: cubit,
+                    child: const TripDepartAction(),
                   ),
                 ),
               ),
@@ -288,7 +241,7 @@ void main() {
           await settle(tester);
           final m = _measure(
             tester,
-            find.byKey(const Key('trip-summary-view-parcels')),
+            find.byKey(const Key('trip-depart-button')),
           );
           expectRule(m, ref);
           expect(tester.takeException(), isNull);

@@ -14,13 +14,15 @@ Future<void> openTripValidation(BuildContext context, BidModel bid) async {
   if (bloc != null && !bloc.isClosed) bloc.add(BidDetailRequested(bid.id));
 }
 
-/// Pousse Suivi › Valider sur le trajet [tripId] (`/tracking/validate`),
-/// par-dessus l'écran courant : le retour y ramène. Un [tripId] vide laisse
-/// le Suivi choisir le trajet.
-Future<void> pushTripValidation(BuildContext context, String tripId) {
-  final location = Uri(
-    path: '/tracking/validate',
-    queryParameters: tripId.isEmpty ? null : {'trip': tripId},
-  ).toString();
-  return context.push<void>(location);
-}
+/// Suivi › Valider sur le trajet [tripId] (`/tracking/validate`). Un
+/// [tripId] vide laisse le Suivi choisir le trajet.
+String tripValidationLocation(String tripId) => Uri(
+  path: '/tracking/validate',
+  queryParameters: tripId.isEmpty ? null : {'trip': tripId},
+).toString();
+
+/// Pousse Suivi › Valider sur le trajet [tripId]
+/// ([tripValidationLocation]), par-dessus l'écran courant : le retour y
+/// ramène.
+Future<void> pushTripValidation(BuildContext context, String tripId) =>
+    context.push<void>(tripValidationLocation(tripId));

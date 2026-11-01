@@ -50,6 +50,134 @@ void main() {
     expect(find.byType(DonyFeedbackButton), findsNothing);
   });
 
+  testWidgets('titleWidget : en-tête, style du titre et croix', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => DonyBottomSheet.show<void>(
+                context,
+                titleWidget: const Text('Titre vivant'),
+                child: const SizedBox(height: 40),
+              ),
+              child: const Text('ouvrir'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('ouvrir'));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.text('Titre vivant'));
+    expect(
+      DefaultTextStyle.of(context).style.fontSize,
+      Theme.of(context).textTheme.headlineSmall?.fontSize,
+    );
+    expect(find.byTooltip('Fermer'), findsOneWidget);
+  });
+
+  group('footer qui suit des données', () {
+    Future<ValueNotifier<bool>> openWithFooter(
+      WidgetTester tester, {
+      bool initial = true,
+    }) async {
+      final show = ValueNotifier<bool>(initial);
+      addTearDown(show.dispose);
+      tester.view.devicePixelRatio = 1;
+      tester.view.padding = const FakeViewPadding(bottom: 34);
+      tester.view.viewPadding = const FakeViewPadding(bottom: 34);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => DonyBottomSheet.show<void>(
+                  context,
+                  title: 'Titre',
+                  footer: ValueListenableBuilder<bool>(
+                    valueListenable: show,
+                    builder: (context, visible, _) => DonyBottomSheetFooter(
+                      child: visible
+                          ? const SizedBox(key: Key('cta'), height: 52)
+                          : null,
+                    ),
+                  ),
+                  child: const SizedBox(key: Key('content'), height: 40),
+                ),
+                child: const Text('ouvrir'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+      return show;
+    }
+
+    Finder frame() => find.byKey(const Key('donyBottomSheetFooter'));
+
+    testWidgets('bouton présent : pied encadré, bouton dedans', (tester) async {
+      await openWithFooter(tester);
+
+      expect(
+        find.descendant(of: frame(), matching: find.byKey(const Key('cta'))),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('le bouton disparaît : plus aucun conteneur de pied, la '
+        'marge de la zone sûre reste', (tester) async {
+      final show = await openWithFooter(tester);
+      final contentBottom = tester.getBottomLeft(
+        find.byKey(const Key('content')),
+      );
+
+      show.value = false;
+      await tester.pumpAndSettle();
+      expect(frame(), findsNothing);
+      expect(find.byKey(const Key('cta')), findsNothing);
+      // Le contenu reste au-dessus de la zone sûre (34 dp) : la feuille ne
+      // le colle pas au bord de l'écran.
+      final screenBottom = tester.getSize(find.byType(MaterialApp)).height;
+      final newBottom = tester.getBottomLeft(find.byKey(const Key('content')));
+      expect(newBottom.dy, lessThan(screenBottom - 34));
+      expect(newBottom.dy, greaterThan(contentBottom.dy));
+    });
+
+    testWidgets('le bouton apparaît après l\'ouverture : pied encadré', (
+      tester,
+    ) async {
+      final show = await openWithFooter(tester, initial: false);
+      expect(frame(), findsNothing);
+
+      show.value = true;
+      await tester.pumpAndSettle();
+      expect(frame(), findsOneWidget);
+    });
+
+    testWidgets('stickyBottom et footer ensemble : refusés', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(theme: AppTheme.light(), home: const SizedBox()),
+      );
+      final context = tester.element(find.byType(SizedBox));
+      expect(
+        () => DonyBottomSheet.show<void>(
+          context,
+          stickyBottom: const SizedBox(),
+          footer: const SizedBox(),
+          child: const SizedBox(),
+        ),
+        throwsAssertionError,
+      );
+    });
+  });
+
   group('hauteur fixe (heightFraction)', () {
     Widget fixedHarness({bool withFooter = true}) => MaterialApp(
       theme: AppTheme.light(),

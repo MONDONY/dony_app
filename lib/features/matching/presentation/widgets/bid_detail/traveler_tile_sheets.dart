@@ -18,11 +18,6 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// D'où part l'ouverture d'une feuille de tuile : la tuile de la grille
-/// « Votre transport » ou une entrée du menu Options. Part en propriété
-/// `source` de `bid_detail_tile_opened`.
-enum TravelerTileSource { tile, menu }
-
 /// Ouvre le bottom sheet de [tile] pour [bid] (grille « Votre transport » de
 /// la fiche colis, vue voyageur) et compte l'ouverture.
 ///
@@ -41,7 +36,7 @@ Future<void> openTravelerTileSheet(
   BuildContext context,
   BidModel bid,
   TravelerTile tile, {
-  TravelerTileSource source = TravelerTileSource.tile,
+  TileSource source = TileSource.tile,
 }) {
   final l = context.l10n;
   logBidDetailTileOpened(

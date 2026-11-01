@@ -51,6 +51,7 @@ class CancellationBottomSheet extends StatefulWidget {
       context,
       isDanger: true,
       title: l.cancellationConfirmTitle,
+      analyticsName: 'trip-owner/cancel',
       subtitle: l.cancellationIrreversibleSubtitle,
       wrapper: (child) =>
           BlocProvider.value(value: cancellationBloc, child: child),

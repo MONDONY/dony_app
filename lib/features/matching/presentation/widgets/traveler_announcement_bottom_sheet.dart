@@ -38,9 +38,9 @@ import 'package:dony/features/matching/presentation/widgets/address_location_row
 import 'package:dony/features/matching/presentation/widgets/billet/trip_billet_card.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart'
-    show canShareTripPoster;
 import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart'
+    show canShareTripPoster;
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -876,7 +876,7 @@ class _SafetyButton extends StatelessWidget {
 }
 
 /// Carte héro navy du corridor — même dégradé que la carte du détail
-/// propriétaire ([AnnouncementDetailBody]) pour garder un seul langage visuel
+/// propriétaire (`TripOwnerHeader`) pour garder un seul langage visuel
 /// entre les deux faces du trajet.
 /// Carte héro surmontée du cœur des favoris.
 ///

@@ -284,31 +284,6 @@ void main() {
     },
   );
 
-  test('openSurplus delegates correctly to datasource', () async {
-    when(
-      () => mockDs.openSurplus(
-        announcementId: any(named: 'announcementId'),
-        surplusKg: any(named: 'surplusKg'),
-        pricePerKg: any(named: 'pricePerKg'),
-      ),
-    ).thenAnswer((_) async => _ann());
-
-    final result = await repo.openSurplus(
-      announcementId: 'ann-1',
-      surplusKg: 8.0,
-      pricePerKg: 7.0,
-    );
-
-    expect(result.id, 'ann-1');
-    verify(
-      () => mockDs.openSurplus(
-        announcementId: 'ann-1',
-        surplusKg: 8.0,
-        pricePerKg: 7.0,
-      ),
-    ).called(1);
-  });
-
   test('deleteAnnouncement delegates correctly', () async {
     when(() => mockDs.deleteAnnouncement('ann-1')).thenAnswer((_) async {});
 

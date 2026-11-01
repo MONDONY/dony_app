@@ -89,7 +89,14 @@ class AnnouncementListRequested extends AnnouncementEvent {}
 
 class AnnouncementDetailRequested extends AnnouncementEvent {
   final String id;
-  AnnouncementDetailRequested(this.id);
+
+  /// Relecture silencieuse d'un trajet déjà affiché (retour d'un autre
+  /// écran que l'utilisateur n'a pas ouvert pour le modifier) : ni
+  /// `AnnouncementLoading`, ni erreur, ni `AnnouncementNotFound`. Un échec
+  /// garde le trajet affiché, sans message ni sortie de l'écran.
+  final bool silent;
+
+  AnnouncementDetailRequested(this.id, {this.silent = false});
 }
 
 /// Page suivante de la dernière recherche (défilement en bas de la liste
@@ -173,19 +180,6 @@ class AnnouncementTripCreateRequested extends AnnouncementEvent {
   final List<TripLegDraft> legs;
 
   AnnouncementTripCreateRequested({required this.first, required this.legs});
-}
-
-/// Ouverture de la capacité excédentaire d'un trajet dédié au public.
-class AnnouncementSurplusOpenRequested extends AnnouncementEvent {
-  final String announcementId;
-  final double surplusKg;
-  final double pricePerKg;
-
-  AnnouncementSurplusOpenRequested({
-    required this.announcementId,
-    required this.surplusKg,
-    required this.pricePerKg,
-  });
 }
 
 /// Marquage groupé « Arrivé à destination » : passe le trajet à ARRIVED et

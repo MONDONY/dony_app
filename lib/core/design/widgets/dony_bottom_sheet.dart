@@ -15,13 +15,21 @@ import 'package:flutter/material.dart';
 ///   child: SortOptions(),
 /// );
 /// ```
+///
+/// Pied qui suit des données (un bouton qui apparaît ou disparaît pendant que
+/// la feuille est ouverte) : [footer] au lieu de [stickyBottom], un widget qui
+/// rend [DonyBottomSheetFooter] et lui passe son bouton, ou `null` quand il
+/// n'y en a pas. Sans bouton, aucune bande (bordure, ombre) ne reste au bas
+/// de la feuille : seule la marge de la zone sûre est gardée.
 abstract final class DonyBottomSheet {
   static Future<T?> show<T>(
     BuildContext context, {
     required Widget child,
     String? title,
+    Widget? titleWidget,
     String? subtitle,
     Widget? stickyBottom,
+    Widget? footer,
     bool isDismissible = true,
     bool enableDrag = true,
     bool showHandle = true,
@@ -32,6 +40,10 @@ abstract final class DonyBottomSheet {
     bool showFeedback = false,
     String? analyticsName,
   }) {
+    assert(
+      stickyBottom == null || footer == null,
+      'stickyBottom and footer are exclusive',
+    );
     final screenHeight = MediaQuery.of(context).size.height;
     return showModalBottomSheet<T>(
       context: context,
@@ -59,11 +71,13 @@ abstract final class DonyBottomSheet {
         final Widget content = DonyReplayMask(
           child: _DonyBottomSheetContent(
             title: title,
+            titleWidget: titleWidget,
             subtitle: subtitle,
             showHandle: showHandle,
             isDanger: isDanger,
             expand: heightFraction != null,
             stickyBottom: stickyBottom,
+            footer: footer,
             showFeedback: showFeedback,
             child: child,
           ),
@@ -78,8 +92,10 @@ class _DonyBottomSheetContent extends StatelessWidget {
   const _DonyBottomSheetContent({
     required this.child,
     this.title,
+    this.titleWidget,
     this.subtitle,
     this.stickyBottom,
+    this.footer,
     this.showHandle = true,
     this.isDanger = false,
     this.expand = false,
@@ -88,8 +104,17 @@ class _DonyBottomSheetContent extends StatelessWidget {
 
   final Widget child;
   final String? title;
+
+  /// Titre qui suit des données (un `BlocBuilder` qui rend un `Text`), à la
+  /// place de [title] : même en-tête, même style (`headlineSmall`). Le
+  /// `wrapper` de `show` l'enveloppe comme le contenu.
+  final Widget? titleWidget;
   final String? subtitle;
   final Widget? stickyBottom;
+
+  /// Pied fourni tout entier par l'appelant ([DonyBottomSheet.show]) : il rend
+  /// [DonyBottomSheetFooter], cadre compris, ou sa seule marge basse.
+  final Widget? footer;
   final bool showHandle;
   final bool isDanger;
   final bool expand;
@@ -118,6 +143,11 @@ class _DonyBottomSheetContent extends StatelessWidget {
         ? mq.viewPadding.top + DonySpacing.sm
         : mq.size.height * 0.1;
 
+    final hasHeader = title != null || titleWidget != null;
+    final titleStyle = tt.headlineSmall?.copyWith(
+      color: isDanger ? cs.error : null,
+    );
+
     final bgColor = isDanger ? cs.errorContainer : cs.surface;
     final handleColor = isDanger
         ? cs.error.withValues(alpha: 0.35)
@@ -130,9 +160,12 @@ class _DonyBottomSheetContent extends StatelessWidget {
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
-        title != null ? 0 : DonySpacing.sm,
+        hasHeader ? 0 : DonySpacing.sm,
         DonySpacing.lg,
-        stickyBottom != null ? DonySpacing.xl : DonySpacing.xl + bottomInset,
+        // Le pied ([stickyBottom] ou [footer]) porte la marge de la zone sûre.
+        stickyBottom != null || footer != null
+            ? DonySpacing.xl
+            : DonySpacing.xl + bottomInset,
       ),
       // Material ancestor so ListTiles in sheet content paint ink above
       // the sheet's colored Container (Flutter 3.44 ListTile assertion).
@@ -164,7 +197,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
                 ),
               ),
             ),
-          if (title != null) ...[
+          if (hasHeader) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 DonySpacing.lg,
@@ -178,12 +211,13 @@ class _DonyBottomSheetContent extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          title!,
-                          style: tt.headlineSmall?.copyWith(
-                            color: isDanger ? cs.error : null,
-                          ),
-                        ),
+                        if (titleWidget case final widget?)
+                          DefaultTextStyle.merge(
+                            style: titleStyle,
+                            child: widget,
+                          )
+                        else
+                          Text(title!, style: titleStyle),
                         if (subtitle != null) ...[
                           const SizedBox(height: DonySpacing.xs),
                           Text(
@@ -221,42 +255,67 @@ class _DonyBottomSheetContent extends StatelessWidget {
           // feuille, à portée de pouce. Sans hauteur fixe, la feuille épouse son
           // contenu.
           expand ? Expanded(child: scroll) : Flexible(child: scroll),
-          if (stickyBottom != null)
-            Container(
-              key: const Key('donyBottomSheetFooter'),
-              decoration: BoxDecoration(
-                color: bgColor,
-                border: Border(top: BorderSide(color: cs.outline)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 12,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              // bottomInset gère le padding vertical (viewInsets + viewPadding).
-              // SafeArea(top:false, bottom:false) protège uniquement les encoches
-              // latérales/découpes (left/right par défaut) sur foldables et certains
-              // Android ; les insets haut/bas sont gérés manuellement ci-dessus.
-              padding: EdgeInsets.fromLTRB(
-                0,
-                DonySpacing.md,
-                0,
-                bottomInset + DonySpacing.base,
-              ),
-              child: SafeArea(
-                top: false,
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.lg,
-                  ),
-                  child: stickyBottom,
-                ),
-              ),
-            ),
+          if (stickyBottom case final bottom?)
+            DonyBottomSheetFooter(isDanger: isDanger, child: bottom)
+          else
+            ?footer,
         ],
+      ),
+    );
+  }
+}
+
+/// Pied collant d'une feuille [DonyBottomSheet] : bordure haute, ombre,
+/// marges et zone sûre du bas. [child] `null` : rien d'autre que la marge de
+/// la zone sûre, pour une feuille dont le bouton a disparu (pied passé par
+/// `footer`, qui suit des données).
+class DonyBottomSheetFooter extends StatelessWidget {
+  const DonyBottomSheetFooter({super.key, this.child, this.isDanger = false});
+
+  final Widget? child;
+
+  /// Feuille d'action destructive : même fond que la feuille.
+  final bool isDanger;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final mq = MediaQuery.of(context);
+    final bottomInset = mq.viewInsets.bottom > mq.viewPadding.bottom
+        ? mq.viewInsets.bottom
+        : mq.viewPadding.bottom;
+    final content = child;
+    if (content == null) return SizedBox(height: bottomInset);
+    return Container(
+      key: const Key('donyBottomSheetFooter'),
+      decoration: BoxDecoration(
+        color: isDanger ? cs.errorContainer : cs.surface,
+        border: Border(top: BorderSide(color: cs.outline)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      // bottomInset gère le padding vertical (viewInsets + viewPadding).
+      // SafeArea(top:false, bottom:false) protège uniquement les encoches
+      // latérales/découpes (left/right par défaut) sur foldables et certains
+      // Android ; les insets haut/bas sont gérés manuellement ci-dessus.
+      padding: EdgeInsets.fromLTRB(
+        0,
+        DonySpacing.md,
+        0,
+        bottomInset + DonySpacing.base,
+      ),
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+          child: content,
+        ),
       ),
     );
   }

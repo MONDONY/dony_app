@@ -5089,42 +5089,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingPricingSuffixPrix => 'prix';
 
   @override
-  String listingAcceptedParcels(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'colis acceptés',
-      one: 'colis accepté',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get listingPendingParcelsLabel => 'en attente';
-
-  @override
-  String listingAcceptedParcelsSemantics(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Voir les $count colis acceptés',
-      one: 'Voir le colis accepté',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String listingPendingParcelsSemantics(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Voir les $count demandes en attente',
-      one: 'Voir la demande en attente',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get listingPaymentsAcceptedTitle => 'Paiements acceptés';
 
   @override
@@ -8670,10 +8634,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerMarkArrivedButton => 'Arrivé à destination';
 
   @override
-  String get tripOwnerEditInstructionsButton =>
-      'Modifier les instructions de retrait';
-
-  @override
   String get tripOwnerDeleteBlockedTitle => 'Suppression impossible';
 
   @override
@@ -8739,9 +8699,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerPublishTile => 'Publier';
 
   @override
-  String get tripOwnerPosterTile => 'Affiche';
-
-  @override
   String get tripOwnerUnpublishTile => 'Dépublier';
 
   @override
@@ -8752,17 +8709,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le trajet ne sera plus visible et restera dans vos brouillons.';
 
   @override
-  String get tripOwnerRequestsTile => 'Demandes';
-
-  @override
   String get tripOwnerParcelsTile => 'Colis';
 
   @override
   String get tripOwnerNoParcelsMessage => 'Aucun colis embarqué';
-
-  @override
-  String get tripOwnerEditDisabledMessage =>
-      'Modifiable tant qu\'aucune demande';
 
   @override
   String get tripOwnerDeleteDialogTitle => 'Supprimer ce trajet ?';
@@ -8776,17 +8726,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.';
 
   @override
-  String get tripOwnerCancelTile => 'Annuler';
-
-  @override
   String get tripOwnerParcelsSectionTitle => 'Colis dans le trajet';
 
   @override
   String get tripOwnerParcelsEmptyDescription =>
       'Les colis acceptés apparaîtront ici.';
-
-  @override
-  String get tripOwnerParcelsFilterAll => 'Tous';
 
   @override
   String get tripOwnerParcelsStatusAccepted => 'Accepté';
@@ -8817,58 +8761,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripOwnerParcelsDefaultContent => 'Colis';
-
-  @override
-  String get tripOwnerSurplusTitle => 'Ouvrir les kg restants';
-
-  @override
-  String get tripOwnerSurplusSubtitle =>
-      'Mettez votre capacité libre à disposition du public';
-
-  @override
-  String get tripOwnerSurplusPublishingButton => 'Publication…';
-
-  @override
-  String get tripOwnerSurplusKgValidatorEmpty => 'Entrez un nombre de kg';
-
-  @override
-  String get tripOwnerSurplusKgValidatorMin => 'Minimum 1 kg';
-
-  @override
-  String get tripOwnerSurplusOpenedSnackbar => 'Capacité ouverte au public';
-
-  @override
-  String get tripOwnerSurplusReservedLabel => 'Réservé à votre expéditeur';
-
-  @override
-  String tripOwnerSurplusReservedKgValue(String kg) {
-    return '$kg kg verrouillés';
-  }
-
-  @override
-  String get tripOwnerSurplusKgSectionLabel => 'KG À OUVRIR';
-
-  @override
-  String get tripOwnerSurplusPriceSectionLabel => 'PRIX PAR KG';
-
-  @override
-  String get tripOwnerSurplusKgHint => 'Ex. 8';
-
-  @override
-  String get tripOwnerSurplusOtherPriceChip => 'Autre';
-
-  @override
-  String get tripOwnerSurplusCustomPriceHint => 'Votre prix';
-
-  @override
-  String get tripOwnerSurplusCustomPriceInvalid => 'Prix invalide';
-
-  @override
-  String get tripOwnerSurplusDisclaimerText =>
-      'Action définitive : une fois publiée, votre capacité libre devient visible dans la recherche et ne peut plus être refermée.';
-
-  @override
-  String get tripOwnerSurplusPublicPriceLabel => 'Prix affiché aux expéditeurs';
 
   @override
   String get tripOwnerArrivalEditingTitle => 'Instructions de retrait';
@@ -22946,39 +22838,66 @@ class AppLocalizationsFr extends AppLocalizations {
       'La position est refusée dans votre téléphone. Autorisez-la dans les réglages du système pour activer le partage.';
 
   @override
-  String get tripSummaryTitle => 'Résumé du trajet';
-
-  @override
-  String tripSummaryParcels(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count colis en votre possession',
-      one: '$count colis en votre possession',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String tripSummaryWeight(String kg) {
-    return '$kg kg transportés';
-  }
-
-  @override
   String get tripSummaryEarningsLabel => 'Gain estimé';
 
   @override
   String get tripSummaryEarningsNote =>
-      'Le paiement suit la livraison de chaque colis.';
-
-  @override
-  String get tripSummaryViewParcels => 'Voir mes colis';
+      'Versé après la livraison de chaque colis.';
 
   @override
   String get tripDepartButton => 'Je pars';
 
   @override
   String get tripDepartConfirmedSnackbar => 'C\'est noté, bon voyage !';
+
+  @override
+  String get tripTodoRequestsTitle => 'Demandes à traiter';
+
+  @override
+  String tripTodoRequestsSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count demandes attendent votre réponse',
+      one: 'Une demande attend votre réponse',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoDepartSummary => 'Confirmez le départ de votre trajet';
+
+  @override
+  String get tripTodoDepartIntro =>
+      'Confirmez votre départ : vos expéditeurs voient que le trajet est lancé.';
+
+  @override
+  String get tripTodoCardReadySummary =>
+      'Acceptez aussi la carte sur ce trajet';
+
+  @override
+  String get tripTodoCardActivateSummary =>
+      'Recevez plus de colis grâce à la carte';
+
+  @override
+  String get tripStatusFullMessage =>
+      'Trajet complet : plus de demande possible. Vous pouvez reporter le départ. Pour annuler, contactez le support.';
+
+  @override
+  String get tripStatusFullNoRescheduleMessage =>
+      'Trajet complet : plus de demande possible. Pour annuler, contactez le support.';
+
+  @override
+  String get tripStatusArrivedMessage =>
+      'Trajet arrivé : vos colis attendent leurs destinataires.';
+
+  @override
+  String get tripStatusCancelledMessage =>
+      'Trajet annulé. Les colis déjà remis suivent la procédure de retour.';
+
+  @override
+  String get tripStatusRemovedMessage =>
+      'Ce trajet a été retiré par l\'équipe Yadony.';
 
   @override
   String get travelerTrackingBadgeEnRoute => 'En route';
@@ -23062,4 +22981,525 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get walletTxTypeTopupDisputeReversed =>
       'Contestation close en votre faveur';
+
+  @override
+  String get tripTileItinerary => 'Itinéraire et lieux';
+
+  @override
+  String get tripTilePayments => 'Paiements';
+
+  @override
+  String get tripTileConditions => 'Conditions';
+
+  @override
+  String get tripTilePoster => 'Affiche';
+
+  @override
+  String get tripTileArrival => 'Arrivée';
+
+  @override
+  String tripTileItineraryPickup(String place) {
+    return 'Remise : $place';
+  }
+
+  @override
+  String tripTileItineraryDelivery(String place) {
+    return 'Retrait : $place';
+  }
+
+  @override
+  String tripTileConditionsAccepted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count types acceptés',
+      one: '1 type accepté',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripTileConditionsRefused(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count types refusés',
+      one: '1 type refusé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTilePosterSubtitle => 'Partager le trajet';
+
+  @override
+  String get tripTilePosterIntro =>
+      'Votre trajet en image, avec un lien et une légende prêts à envoyer sur WhatsApp ou les réseaux sociaux.';
+
+  @override
+  String get tripTileArrivalEmpty =>
+      'Aucune instruction de retrait pour l\'instant. Dites aux destinataires où et quand récupérer leur colis.';
+
+  @override
+  String get tripTilePaymentsNetworksTitle => 'Réseaux mobile money';
+
+  @override
+  String tripTilePaymentsCashOnlyNote(String section) {
+    return 'Ce trajet n\'accepte que les espèces. Pour ajouter la carte, voyez « $section ».';
+  }
+
+  @override
+  String get tripTileArrivalEditButton => 'Modifier les instructions';
+
+  @override
+  String get tripSectionYourTrip => 'Votre trajet';
+
+  @override
+  String get tripOwnerMenuTooltip => 'Options du trajet';
+
+  @override
+  String get tripMenuEditSubtitle => 'Villes, dates, kilos, prix et conditions';
+
+  @override
+  String get tripMenuRecurringSubtitle => 'Le même trajet à d\'autres dates';
+
+  @override
+  String get tripMenuSaveTemplate => 'Enregistrer en modèle';
+
+  @override
+  String get tripMenuSaveTemplateSubtitle =>
+      'Pour le republier en quelques gestes';
+
+  @override
+  String get tripMenuDeleteSubtitle => 'Le trajet disparaît de vos trajets';
+
+  @override
+  String get tripMenuArrivalReadSubtitle => 'Ce que voient les destinataires';
+
+  @override
+  String tripDirectRequestLabel(int count) {
+    return 'Demande 1 sur $count';
+  }
+
+  @override
+  String tripDirectRequestSeeAll(int count) {
+    return 'Voir les $count demandes';
+  }
+
+  @override
+  String get tripParcelsLineInTransit => 'en route';
+
+  @override
+  String tripParcelsLineTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis',
+      one: '1 colis',
+      zero: 'Aucun colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripParcelsSearchHint => 'Rechercher un colis, un nom, un suivi';
+
+  @override
+  String tripParcelsSearchResults(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis trouvés',
+      one: '1 colis trouvé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripParcelsSearchEmpty(String query) {
+    return 'Aucun colis ne correspond à « $query »';
+  }
+
+  @override
+  String get tripParcelsSearchClear => 'Effacer la recherche';
+
+  @override
+  String get tripActivityRequestsEmpty =>
+      'Aucune demande à traiter pour le moment.';
+
+  @override
+  String get tripActivityParcelsOpenList => 'Ouvrir la liste des colis';
+
+  @override
+  String get tripGainOnlineLabel => 'En ligne';
+
+  @override
+  String get tripGainCashLabel => 'En espèces';
+
+  @override
+  String get tripGainCashNote => 'À recevoir de l\'expéditeur en main propre.';
+
+  @override
+  String tripGainCashGrossNote(String gross, String commission) {
+    return '$gross à recevoir de l\'expéditeur en main propre, dont $commission de frais de service avancés sur votre solde Yadony.';
+  }
+
+  @override
+  String get tripGainTotalLabel => 'Total estimé';
+
+  @override
+  String get tripOwnerParcelsFilterAll => 'Tous';
+
+  @override
+  String get tripTodoUrgentLabel => 'Urgent';
+
+  @override
+  String get tripTodoNextLabel => 'Prochaine action';
+
+  @override
+  String tripTodoMoreRow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+ $count autres à traiter',
+      one: '+ 1 autre à traiter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoMoreRowSubtitle => 'Voir toute la liste';
+
+  @override
+  String tripTodoBadge(int count) {
+    return 'À traiter · $count';
+  }
+
+  @override
+  String tripTodoBadgeSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count choses à traiter',
+      one: '1 chose à traiter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoDuePassed => 'Délai dépassé';
+
+  @override
+  String tripTodoDueInMinutes(int minutes) {
+    return 'Expire dans $minutes min';
+  }
+
+  @override
+  String tripTodoDueInHours(int hours) {
+    return 'Expire dans $hours h';
+  }
+
+  @override
+  String tripTodoDueBeforeTime(String time) {
+    return 'Avant $time';
+  }
+
+  @override
+  String tripTodoDueBeforeDate(String date, String time) {
+    return 'Avant le $date à $time';
+  }
+
+  @override
+  String tripTodoDueBanner(String due, String consequence) {
+    return '$due, sinon $consequence.';
+  }
+
+  @override
+  String get tripTodoDuePassedBanner => 'Délai dépassé.';
+
+  @override
+  String get tripTodoConsequencePresence =>
+      'l\'expéditeur ne sait pas si vous serez au rendez-vous';
+
+  @override
+  String get tripTodoConsequenceScan => 'vous êtes déclaré absent';
+
+  @override
+  String get tripTodoConsequenceAmendment => 'la modification expire';
+
+  @override
+  String get tripTodoConsequenceSupplement => 'le supplément est perdu';
+
+  @override
+  String get tripTodoConsequenceSenderAbsence =>
+      'c\'est vous qui êtes déclaré absent';
+
+  @override
+  String get tripTodoConsequenceReturn => 'l\'équipe Yadony est alertée';
+
+  @override
+  String get tripTodoConsequenceCancelled => 'le colis est annulé';
+
+  @override
+  String get tripTodoConsequenceCancelledOrAbsent =>
+      'le colis est annulé ou vous êtes déclaré absent';
+
+  @override
+  String get tripTodoParcelConsequenceCancelled => 'Sinon le colis est annulé';
+
+  @override
+  String get tripTodoParcelConsequenceAbsent =>
+      'Sinon vous êtes déclaré absent';
+
+  @override
+  String get tripTodoPresenceTitle => 'Présence à confirmer';
+
+  @override
+  String tripTodoPresenceSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis : rassurez les expéditeurs',
+      one: '1 colis : rassurez l\'expéditeur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripTodoScanTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Récupérer $count colis',
+      one: 'Récupérer 1 colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoScanSubtitle => 'Lisez le QR du colis à la remise';
+
+  @override
+  String tripTodoAmendmentTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count modifications à traiter',
+      one: 'Modification à traiter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoAmendmentSubtitle => 'La remise attend votre réponse';
+
+  @override
+  String tripTodoAmendmentButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Voir les modifications',
+      one: 'Voir la modification',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripTodoSupplementTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Frais de $count suppléments à valider',
+      one: 'Frais du supplément à valider',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoSupplementSubtitle =>
+      'Validez le paiement des frais de service';
+
+  @override
+  String get tripTodoSenderAbsenceSubtitle =>
+      'La date limite de dépôt est passée';
+
+  @override
+  String get tripTodoSenderAbsenceButton => 'Signaler l\'absence';
+
+  @override
+  String tripTodoReturnTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Rendre $count colis',
+      one: 'Rendre 1 colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoReturnSubtitle =>
+      'Saisissez le code de retour de l\'expéditeur';
+
+  @override
+  String get tripTodoReturnButton => 'Saisir le code de retour';
+
+  @override
+  String get tripTodoArriveSubtitle => 'Indiquez où retirer les colis';
+
+  @override
+  String tripTodoDeliverTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Valider $count remises',
+      one: 'Valider 1 remise',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoDeliverSubtitle =>
+      'Photo et code de retrait du destinataire';
+
+  @override
+  String tripTodoNotifyTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Prévenir $count destinataires',
+      one: 'Prévenir 1 destinataire',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoNotifySubtitle => 'Dites-leur que leur colis est arrivé';
+
+  @override
+  String tripTodoRecipientDeclinedTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count destinataires ont refusé',
+      one: 'Le destinataire a refusé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoRecipientDeclinedSubtitle =>
+      'Demandez un autre destinataire à l\'expéditeur';
+
+  @override
+  String get tripTodoRecipientDeclinedButton => 'Voir le destinataire';
+
+  @override
+  String get tripTodoInstructionsSubtitle =>
+      'À renseigner pour les destinataires';
+
+  @override
+  String get tripTodoInstructionsButton => 'Ajouter les instructions';
+
+  @override
+  String tripTodoRateTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Noter $count expéditeurs',
+      one: 'Noter 1 expéditeur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoRateSubtitle => 'Votre avis aide les autres voyageurs';
+
+  @override
+  String tripTodoRateButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Noter les expéditeurs',
+      one: 'Noter l\'expéditeur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoPublishTitle => 'Publier le trajet';
+
+  @override
+  String get tripTodoPublishSubtitle =>
+      'Les expéditeurs ne le voient pas encore';
+
+  @override
+  String tripTodoDeliveryContestTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Contester $count signalements',
+      one: 'Contester 1 signalement',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoDeliveryContestSubtitle =>
+      'L\'expéditeur dit que vous ne livrez pas';
+
+  @override
+  String tripTodoDeliveryContestButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Voir les signalements',
+      one: 'Voir le signalement',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoConsequenceDeliveryContest =>
+      'l\'équipe tranche sans votre version';
+
+  @override
+  String tripTodoPickupCodeTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count codes de retrait à renouveler',
+      one: 'Code de retrait à renouveler',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTodoPickupCodeSubtitle =>
+      'Demandez un nouveau code à l\'expéditeur';
+
+  @override
+  String tripTodoPickupCodeButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Voir les colis',
+      one: 'Voir le colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripParcelsLineAwaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attendent votre geste',
+      one: '1 attend votre geste',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripParcelAwaitingSemantics => 'Attend votre geste';
 }

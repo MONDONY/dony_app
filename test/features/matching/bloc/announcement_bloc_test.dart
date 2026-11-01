@@ -816,6 +816,51 @@ void main() {
       act: (bloc) => bloc.add(AnnouncementDetailRequested('ann-999')),
       expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
     );
+
+    // Relecture au retour d'un écran (fiche colis, liste des demandes) :
+    // l'écran du trajet garde son affichage, sans message ni sortie.
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'silencieux : pas de Loading, détail chargé',
+      build: () {
+        final ann = buildAnnouncement();
+        when(
+          () => mockRepo.getAnnouncementDetail('ann-001'),
+        ).thenAnswer((_) async => ann);
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(AnnouncementDetailRequested('ann-001', silent: true)),
+      expect: () => [isA<AnnouncementDetailLoaded>()],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'silencieux : erreur réseau avalée',
+      build: () {
+        when(
+          () => mockRepo.getAnnouncementDetail(any()),
+        ).thenThrow(Exception('offline'));
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(AnnouncementDetailRequested('ann-001', silent: true)),
+      expect: () => <AnnouncementState>[],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'silencieux : 404 avalé (pas de sortie de l\'écran)',
+      build: () {
+        when(() => mockRepo.getAnnouncementDetail(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/announcements/missing'),
+            error: const NotFoundException(),
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(AnnouncementDetailRequested('missing', silent: true)),
+      expect: () => <AnnouncementState>[],
+    );
   });
 
   // ─── AnnouncementSearchRequested ──────────────────────────────────────────────
@@ -1687,109 +1732,6 @@ void main() {
       },
       act: (bloc) => bloc.add(AnnouncementDetailRequested('ann-001')),
       expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
-    );
-  });
-
-  // ─── AnnouncementSurplusOpenRequested ────────────────────────────────────────
-
-  group('AnnouncementSurplusOpenRequested', () {
-    blocTest<AnnouncementBloc, AnnouncementState>(
-      'ouverture réussie → [Loading, AnnouncementSurplusOpened]',
-      build: () {
-        when(
-          () => mockRepo.openSurplus(
-            announcementId: any(named: 'announcementId'),
-            surplusKg: any(named: 'surplusKg'),
-            pricePerKg: any(named: 'pricePerKg'),
-          ),
-        ).thenAnswer((_) async => buildAnnouncement());
-        return buildBloc();
-      },
-      act: (bloc) => bloc.add(
-        AnnouncementSurplusOpenRequested(
-          announcementId: 'ann-001',
-          surplusKg: 8.0,
-          pricePerKg: 7.0,
-        ),
-      ),
-      expect: () => [
-        isA<AnnouncementLoading>(),
-        predicate<AnnouncementState>(
-          (s) =>
-              s is AnnouncementSurplusOpened && s.announcement.id == 'ann-001',
-        ),
-      ],
-      verify: (_) {
-        verify(
-          () => mockRepo.openSurplus(
-            announcementId: 'ann-001',
-            surplusKg: 8.0,
-            pricePerKg: 7.0,
-          ),
-        ).called(1);
-      },
-    );
-
-    blocTest<AnnouncementBloc, AnnouncementState>(
-      'erreur ouverture → [Loading, AnnouncementError]',
-      build: () {
-        when(
-          () => mockRepo.openSurplus(
-            announcementId: any(named: 'announcementId'),
-            surplusKg: any(named: 'surplusKg'),
-            pricePerKg: any(named: 'pricePerKg'),
-          ),
-        ).thenThrow(Exception('Server error'));
-        return buildBloc();
-      },
-      act: (bloc) => bloc.add(
-        AnnouncementSurplusOpenRequested(
-          announcementId: 'ann-001',
-          surplusKg: 8.0,
-          pricePerKg: 7.0,
-        ),
-      ),
-      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
-    );
-
-    blocTest<AnnouncementBloc, AnnouncementState>(
-      'double ouverture en rafale → 1 seul openSurplus',
-      build: () {
-        when(
-          () => mockRepo.openSurplus(
-            announcementId: any(named: 'announcementId'),
-            surplusKg: any(named: 'surplusKg'),
-            pricePerKg: any(named: 'pricePerKg'),
-          ),
-        ).thenAnswer((_) async {
-          await Future<void>.delayed(const Duration(milliseconds: 50));
-          return buildAnnouncement();
-        });
-        return buildBloc();
-      },
-      act: (bloc) {
-        final event = AnnouncementSurplusOpenRequested(
-          announcementId: 'ann-001',
-          surplusKg: 8.0,
-          pricePerKg: 7.0,
-        );
-        bloc.add(event);
-        bloc.add(event);
-      },
-      wait: const Duration(milliseconds: 100),
-      expect: () => [
-        isA<AnnouncementLoading>(),
-        isA<AnnouncementSurplusOpened>(),
-      ],
-      verify: (_) {
-        verify(
-          () => mockRepo.openSurplus(
-            announcementId: any(named: 'announcementId'),
-            surplusKg: any(named: 'surplusKg'),
-            pricePerKg: any(named: 'pricePerKg'),
-          ),
-        ).called(1);
-      },
     );
   });
 

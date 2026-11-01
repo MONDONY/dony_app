@@ -33,13 +33,20 @@ abstract final class TrackingConsentSheet {
           ],
         ),
       ),
-      child: const _TrackingConsentBody(),
+      child: const Padding(
+        padding: EdgeInsets.only(bottom: DonySpacing.base),
+        child: TrackingConsentExplainer(),
+      ),
     );
   }
 }
 
-class _TrackingConsentBody extends StatelessWidget {
-  const _TrackingConsentBody();
+/// Texte d'explication du partage de l'avancée du trajet : ce que voit
+/// l'expéditeur, que c'est facultatif et limité à l'usage de l'app. Corps de
+/// [TrackingConsentSheet], repris par le sheet « Je pars » de l'écran du
+/// trajet.
+class TrackingConsentExplainer extends StatelessWidget {
+  const TrackingConsentExplainer({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -52,28 +59,25 @@ class _TrackingConsentBody extends StatelessWidget {
       l.trackingConsentPointOptional,
       l.trackingConsentPointWhileUsing,
     ];
-    return Padding(
-      padding: const EdgeInsets.only(bottom: DonySpacing.base),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l.trackingConsentIntro, style: tt.bodyMedium),
-          const SizedBox(height: DonySpacing.md),
-          for (final point in points)
-            Padding(
-              padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('•  ', style: body),
-                  Expanded(child: Text(point, style: body)),
-                ],
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l.trackingConsentIntro, style: tt.bodyMedium),
+        const SizedBox(height: DonySpacing.md),
+        for (final point in points)
+          Padding(
+            padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('•  ', style: body),
+                Expanded(child: Text(point, style: body)),
+              ],
             ),
-          const SizedBox(height: DonySpacing.sm),
-          Text(l.trackingConsentChangeLater, style: body),
-        ],
-      ),
+          ),
+        const SizedBox(height: DonySpacing.sm),
+        Text(l.trackingConsentChangeLater, style: body),
+      ],
     );
   }
 }
