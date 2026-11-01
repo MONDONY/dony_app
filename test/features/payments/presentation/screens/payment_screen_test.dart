@@ -40,24 +40,6 @@ const _emptyHelpConfigJson = '''
 }
 ''';
 
-const _paymentHelpConfigJson = '''
-{
-  "schemaVersion": 1,
-  "socialLinks": [],
-  "tutorials": [
-    {
-      "id": "payment_accept_and_pay",
-      "title": "Accepter et payer",
-      "description": "Sécuriser le règlement dans Yadony.",
-      "youtubeVideoId": "M7lc1UVf-VE",
-      "order": 1,
-      "active": true,
-      "contexts": ["payment"]
-    }
-  ]
-}
-''';
-
 class _StaticHelpCenterSource implements HelpCenterConfigSource {
   const _StaticHelpCenterSource(this.json);
 
@@ -530,42 +512,6 @@ void main() {
       final label = await payLabel(tester, bidWith(pricePerKg: 5));
       expect(label, 'Payer ${formatPriceIn(5.60, 'EUR')}');
     });
-  });
-
-  group('PaymentScreen contextual tutorial card', () {
-    testWidgets(
-      'affiche la carte tutoriel paiement au-dessus du récapitulatif et navigue au tap',
-      (tester) async {
-        await tester.pumpWidget(
-          _wrap(
-            PaymentScreen(
-              bid: _testBid,
-              localAuthService: mockLocalAuth,
-              userPrefs: _mockUserPrefs(biometricEnabled: true),
-            ),
-            mockBloc,
-            helpConfigJson: _paymentHelpConfigJson,
-          ),
-        );
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 400));
-        await tester.pump(const Duration(milliseconds: 400));
-
-        final cardTop = tester
-            .getTopLeft(find.text('Besoin d\'aide ? Voir le tutoriel'))
-            .dy;
-        final summaryTop = tester.getTopLeft(find.text('Récapitulatif')).dy;
-        expect(cardTop, lessThan(summaryTop));
-
-        await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
-        await tester.pumpAndSettle();
-
-        expect(
-          find.text('TutorialStub:payment_accept_and_pay'),
-          findsOneWidget,
-        );
-      },
-    );
   });
 
   group('PaymentScreen escrow confirmed state', () {

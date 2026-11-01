@@ -93,24 +93,6 @@ const _emptyHelpConfigJson = '''
 }
 ''';
 
-const _tripPublishHelpConfigJson = '''
-{
-  "schemaVersion": 1,
-  "socialLinks": [],
-  "tutorials": [
-    {
-      "id": "trip_publish_basics",
-      "title": "Publier un trajet",
-      "description": "Les étapes pour proposer votre espace bagage.",
-      "youtubeVideoId": "dQw4w9WgXcQ",
-      "order": 1,
-      "active": true,
-      "contexts": ["tripPublish"]
-    }
-  ]
-}
-''';
-
 class _StaticHelpCenterSource implements HelpCenterConfigSource {
   const _StaticHelpCenterSource(this.json);
 
@@ -911,34 +893,6 @@ void main() {
 
       expect(find.byType(CaStepperHeader), findsOneWidget);
     });
-
-    testWidgets(
-      'carte tutoriel contextuelle affichée avant la première étape et '
-      'navigue vers le tutoriel au tap',
-      (tester) async {
-        setupViewport(tester);
-
-        await pumpAndDrain(
-          tester,
-          _wrapWithRouter(
-            const CreateTripScreen(),
-            helpConfigJson: _tripPublishHelpConfigJson,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 400));
-
-        final cardTop = tester
-            .getTopLeft(find.text('Besoin d\'aide ? Voir le tutoriel'))
-            .dy;
-        final stepperTop = tester.getTopLeft(find.byType(CaStepperHeader)).dy;
-        expect(cardTop, lessThan(stepperTop));
-
-        await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('TutorialStub:trip_publish_basics'), findsOneWidget);
-      },
-    );
 
     testWidgets('section dépôt des colis est visible à l\'étape 0', (
       tester,

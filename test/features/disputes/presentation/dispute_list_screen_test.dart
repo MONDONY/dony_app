@@ -27,24 +27,6 @@ const _emptyHelpConfigJson = '''
 }
 ''';
 
-const _disputeHelpConfigJson = '''
-{
-  "schemaVersion": 1,
-  "socialLinks": [],
-  "tutorials": [
-    {
-      "id": "dispute_open",
-      "title": "Ouvrir un litige",
-      "description": "Comprendre quand et comment contester une remise.",
-      "youtubeVideoId": "dQw4w9WgXcQ",
-      "order": 1,
-      "active": true,
-      "contexts": ["dispute"]
-    }
-  ]
-}
-''';
-
 class MockDisputeListBloc extends MockBloc<DisputeListEvent, DisputeListState>
     implements DisputeListBloc {}
 
@@ -227,28 +209,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('SupportStub'), findsOneWidget);
   });
-
-  testWidgets(
-    'affiche la carte tutoriel litige au-dessus de la liste et navigue au tap',
-    (tester) async {
-      await tester.pumpWidget(
-        _harness(
-          state: DisputeListLoaded([_dispute()]),
-          helpConfigJson: _disputeHelpConfigJson,
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      await tester.pump(const Duration(milliseconds: 400));
-
-      expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
-
-      await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('TutorialStub:dispute_open'), findsOneWidget);
-    },
-  );
 
   testWidgets('erreur → Réessayer redispatch', (tester) async {
     await tester.pumpWidget(

@@ -146,12 +146,6 @@ void main() {
     mockBox = MockBox();
     when(() => mockHive.userPrefs).thenReturn(mockBox);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
-    when(() => mockBox.keys).thenReturn(<dynamic>[
-      '${HiveService.kContextualTutorialDismissedPrefix}search_basics',
-      '${HiveService.kContextualTutorialDismissedPrefix}publish_flow',
-      HiveService.kThemeMode,
-    ]);
-    when(() => mockBox.delete(any())).thenAnswer((_) async {});
     getIt.registerSingleton<HiveService>(mockHive);
     mockAnalytics = MockAnalyticsService();
     when(
@@ -448,46 +442,8 @@ void main() {
       expect(find.text('Accessibilité', skipOffstage: false), findsOneWidget);
       expect(
         find.text('Réafficher les suggestions', skipOffstage: false),
-        findsOneWidget,
+        findsNothing,
       );
-    });
-
-    testWidgets('tap Réafficher les suggestions efface les flags Hive et logue '
-        "l'event", (tester) async {
-      await tester.pumpWidget(_wrap());
-      await tester.pumpAndSettle();
-
-      await tester.scrollUntilVisible(
-        find.text('Réafficher les suggestions'),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Réafficher les suggestions'));
-      await tester.pump();
-
-      // Toutes les ContextualTutorialCard fermées dans l'app (une clé par
-      // tutoriel) sont effacées, sans toucher aux autres préférences
-      // stockées dans la même box.
-      verify(
-        () => mockBox.delete(
-          '${HiveService.kContextualTutorialDismissedPrefix}search_basics',
-        ),
-      ).called(1);
-      verify(
-        () => mockBox.delete(
-          '${HiveService.kContextualTutorialDismissedPrefix}publish_flow',
-        ),
-      ).called(1);
-      verifyNever(() => mockBox.delete(HiveService.kThemeMode));
-      verify(
-        () =>
-            mockAnalytics.logEvent(AnalyticsEvents.settingsGuidanceCardsReset),
-      ).called(1);
-
-      await tester.pumpAndSettle();
-      expect(find.text('Suggestions et tutoriels réaffichés.'), findsOneWidget);
     });
 
     testWidgets('shows INFORMATIONS section', (tester) async {

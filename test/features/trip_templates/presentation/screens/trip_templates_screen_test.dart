@@ -3,7 +3,6 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
@@ -326,7 +325,7 @@ void main() {
     });
   });
 
-  testWidgets('affiche la carte tutoriel quand le catalogue en propose un', (
+  testWidgets('aucune carte tutoriel, même quand le catalogue en propose un', (
     tester,
   ) async {
     when(
@@ -336,25 +335,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.byType(ContextualTutorialCard), findsOneWidget);
-    expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
-  });
-
-  testWidgets('pas de carte tutoriel sans tutoriel actif pour ce contexte', (
-    tester,
-  ) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const TripTemplateState(status: TripTemplateStatus.success));
-    await tester.pumpWidget(_wrap(bloc));
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(milliseconds: 400));
-
-    expect(find.byType(ContextualTutorialCard), findsOneWidget);
     expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
   });
 
-  testWidgets('empty state s\'affiche toujours à côté de la carte tutoriel', (
+  testWidgets('empty state s\'affiche avec un catalogue de tutoriels', (
     tester,
   ) async {
     when(

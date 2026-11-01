@@ -4,8 +4,6 @@ import 'package:dony/features/disputes/bloc/dispute_list_bloc.dart';
 import 'package:dony/features/disputes/bloc/dispute_list_event.dart';
 import 'package:dony/features/disputes/bloc/dispute_list_state.dart';
 import 'package:dony/features/disputes/presentation/widgets/dispute_card.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -28,10 +26,6 @@ class DisputeListScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
-            child: ContextualTutorialCard(context: TutorialContext.dispute),
-          ),
           Expanded(
             child: BlocBuilder<DisputeListBloc, DisputeListState>(
               builder: (context, state) => switch (state) {

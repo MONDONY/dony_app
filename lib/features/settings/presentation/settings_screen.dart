@@ -5,7 +5,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
@@ -154,16 +153,8 @@ class SettingsScreen extends StatelessWidget {
                     iconBgColor: cs.primaryContainer,
                     label: l.settingsAccessibilityLabel,
                     subtitle: l.settingsAccessibilitySubtitle,
-                    onTap: () => context.push('/settings/accessibility'),
-                  ),
-                  DonyListTile(
-                    iconAsset: 'refresh-cw',
-                    iconColor: cs.primary,
-                    iconBgColor: cs.primaryContainer,
-                    label: l.settingsResetGuidanceLabel,
-                    subtitle: l.settingsResetGuidanceSubtitle,
                     showDivider: false,
-                    onTap: () => _resetGuidanceCards(context),
+                    onTap: () => context.push('/settings/accessibility'),
                   ),
                 ],
               ),
@@ -232,32 +223,6 @@ class SettingsScreen extends StatelessWidget {
     DonySnackbar.show(
       context,
       message: context.l10n.intentSaved,
-      type: DonySnackbarType.success,
-    );
-  }
-
-  /// Efface les flags de fermeture des `ContextualTutorialCard` semées dans
-  /// l'app (une clé par tutoriel) : sans ça, une fois toutes les cartes
-  /// fermées, ces zones de suggestions restent vides pour toujours, sans
-  /// moyen de revenir en arrière.
-  void _resetGuidanceCards(BuildContext context) {
-    unawaited(
-      getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.settingsGuidanceCardsReset,
-      ),
-    );
-    final hive = getIt<HiveService>();
-    final tutorialKeys = hive.userPrefs.keys.where(
-      (key) =>
-          key is String &&
-          key.startsWith(HiveService.kContextualTutorialDismissedPrefix),
-    );
-    for (final key in tutorialKeys.toList()) {
-      unawaited(hive.userPrefs.delete(key));
-    }
-    DonySnackbar.show(
-      context,
-      message: context.l10n.settingsResetGuidanceSnackbar,
       type: DonySnackbarType.success,
     );
   }

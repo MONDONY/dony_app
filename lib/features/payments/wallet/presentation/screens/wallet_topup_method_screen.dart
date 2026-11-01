@@ -17,8 +17,6 @@ import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_sta
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_selection.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_mobile_money_awaiting_args.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_topup_code_sheet.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -447,13 +445,6 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
                 DonySpacing.xxl,
               ),
               children: [
-                // Tutoriel vidéo de la recharge du solde (FLUTTER-8G), carte
-                // bancaire comme mobile money : affiché quel que soit le
-                // rail proposé (FLUTTER-AB).
-                const ContextualTutorialCard(
-                  context: TutorialContext.walletTopup,
-                  padding: EdgeInsets.only(bottom: DonySpacing.lg),
-                ),
                 Padding(
                   padding: const EdgeInsets.only(
                     left: DonySpacing.xs,

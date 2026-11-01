@@ -105,10 +105,8 @@ import '../helpers/mock_analytics_backend.dart';
 import '../helpers/money_test_doubles.dart';
 
 // Fournit un HelpCenterBloc minimal (catalogue vide) aux 3 harnais de ce
-// fichier dont l'écran embarque désormais une ContextualTutorialCard
-// (Task 7 du plan centre d'aide) : accueil, publication de trajet, paiement.
-// Sans ce provider, HelpCenterBloc n'est pas résolu dans l'arbre de
-// widgets et context.select lève ProviderNotFoundException.
+// fichier (accueil, publication de trajet, paiement), comme l'app le fournit
+// globalement (app.dart).
 const _smokeEmptyHelpConfigJson = '''
 {
   "schemaVersion": 1,

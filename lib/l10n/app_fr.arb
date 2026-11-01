@@ -13288,21 +13288,6 @@
   "@helpTutorialOpenInYoutubeButton": {
     "description": "Bouton de repli vers YouTube externe (help_tutorial_screen.dart, _PlayerErrorCard)"
   },
-  "helpContextualCardSemanticsLabel": "Besoin d’aide ? Voir le tutoriel {title}",
-  "@helpContextualCardSemanticsLabel": {
-    "description": "Semantics label de la carte suggestion de tutoriel contextuel (contextual_tutorial_card.dart)",
-    "placeholders": {
-      "title": {"type": "String"}
-    }
-  },
-  "helpContextualCardLabel": "Besoin d'aide ? Voir le tutoriel",
-  "@helpContextualCardLabel": {
-    "description": "Texte visible de la carte suggestion de tutoriel contextuel, sans le titre (contextual_tutorial_card.dart)"
-  },
-  "helpContextualCardDismissTooltip": "Masquer ce conseil",
-  "@helpContextualCardDismissTooltip": {
-    "description": "Tooltip du bouton de fermeture (X) de la carte suggestion (contextual_tutorial_card.dart)"
-  },
   "helpTutorialCardSemanticsLabel": "Lire le tutoriel {title}",
   "@helpTutorialCardSemanticsLabel": {
     "description": "Semantics label de la carte tutoriel de la Communauté (help_tutorial_card.dart)",
@@ -13440,18 +13425,6 @@
   "settingsAccessibilitySubtitle": "Contraste, taille de police",
   "@settingsAccessibilitySubtitle": {
     "description": "Sous-titre de la tuile Accessibilité (settings_screen.dart)"
-  },
-  "settingsResetGuidanceLabel": "Réafficher les suggestions",
-  "@settingsResetGuidanceLabel": {
-    "description": "Libellé de la tuile de réinitialisation des cartes de guidance (settings_screen.dart)"
-  },
-  "settingsResetGuidanceSubtitle": "Fait revenir les cartes fermées (écran Recherche)",
-  "@settingsResetGuidanceSubtitle": {
-    "description": "Sous-titre de la tuile de réinitialisation des cartes de guidance (settings_screen.dart)"
-  },
-  "settingsResetGuidanceSnackbar": "Suggestions et tutoriels réaffichés.",
-  "@settingsResetGuidanceSnackbar": {
-    "description": "Snackbar de confirmation après réinitialisation des cartes de guidance (settings_screen.dart, _resetGuidanceCards)"
   },
   "settingsSectionInformation": "INFORMATIONS",
   "@settingsSectionInformation": {

@@ -915,9 +915,6 @@ abstract final class AnalyticsEvents {
   /// `choice` : `parcel` / `trip`, et `active_role`.
   static const homePublishTapped = 'home_publish_tapped';
 
-  /// SettingsScreen._resetGuidanceCards — tuile « Réafficher les
-  /// suggestions », réaffiche les `ContextualTutorialCard` fermées.
-  static const settingsGuidanceCardsReset = 'settings_guidance_cards_reset';
   static const settingsFlightsVisibilityChanged =
       'settings_flights_visibility_changed';
 

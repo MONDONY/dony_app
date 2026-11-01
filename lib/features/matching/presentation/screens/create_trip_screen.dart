@@ -58,8 +58,6 @@ import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
@@ -520,9 +518,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                             currentStepNotifier: _currentStepNotifier,
                             onOpen: () => unawaited(_openAiDraft()),
                           ),
-                        const ContextualTutorialCard(
-                          context: TutorialContext.tripPublish,
-                        ),
                         const SizedBox(height: DonySpacing.base),
                         // L'encart de devise vit en tête de l'étape Prix &
                         // conditions, juste avant les prix (FLUTTER-RA) : il

@@ -16,7 +16,6 @@ import 'package:dony/features/package_request/presentation/screens/shared/my_neg
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -847,29 +846,17 @@ void main() {
       }
     });
 
-    testWidgets('affiche la carte tutoriel quand le catalogue en propose un', (
-      tester,
-    ) async {
-      when(() => bloc.state).thenReturn(NegotiationListState());
-      await tester.pumpWidget(wrapScreen(_hubConfigJson));
-      await tester.pump(const Duration(milliseconds: 400));
-      await tester.pump(const Duration(milliseconds: 400));
+    testWidgets(
+      'aucune carte tutoriel, même quand le catalogue en propose un',
+      (tester) async {
+        when(() => bloc.state).thenReturn(NegotiationListState());
+        await tester.pumpWidget(wrapScreen(_hubConfigJson));
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.byType(ContextualTutorialCard), findsOneWidget);
-      expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
-    });
-
-    testWidgets('pas de carte tutoriel sans tutoriel actif pour ce contexte', (
-      tester,
-    ) async {
-      when(() => bloc.state).thenReturn(NegotiationListState());
-      await tester.pumpWidget(wrapScreen(_emptyHelpConfigJson));
-      await tester.pump(const Duration(milliseconds: 400));
-      await tester.pump(const Duration(milliseconds: 400));
-
-      expect(find.byType(ContextualTutorialCard), findsOneWidget);
-      expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
-    });
+        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
+      },
+    );
 
     testWidgets('en anglais : titre de l\'écran traduit', (tester) async {
       useEnglish();

@@ -12180,17 +12180,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get helpTutorialOpenInYoutubeButton => 'Ouvrir dans YouTube';
 
   @override
-  String helpContextualCardSemanticsLabel(String title) {
-    return 'Besoin d’aide ? Voir le tutoriel $title';
-  }
-
-  @override
-  String get helpContextualCardLabel => 'Besoin d\'aide ? Voir le tutoriel';
-
-  @override
-  String get helpContextualCardDismissTooltip => 'Masquer ce conseil';
-
-  @override
   String helpTutorialCardSemanticsLabel(String title) {
     return 'Lire le tutoriel $title';
   }
@@ -12305,17 +12294,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsAccessibilitySubtitle => 'Contraste, taille de police';
-
-  @override
-  String get settingsResetGuidanceLabel => 'Réafficher les suggestions';
-
-  @override
-  String get settingsResetGuidanceSubtitle =>
-      'Fait revenir les cartes fermées (écran Recherche)';
-
-  @override
-  String get settingsResetGuidanceSnackbar =>
-      'Suggestions et tutoriels réaffichés.';
 
   @override
   String get settingsSectionInformation => 'INFORMATIONS';

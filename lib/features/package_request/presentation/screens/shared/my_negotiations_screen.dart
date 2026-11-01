@@ -19,8 +19,6 @@ import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/widgets/nego_archive_actions.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -56,15 +54,6 @@ class _MyNegotiationsScreenState extends State<MyNegotiationsScreen> {
       appBar: DonyAppBar(title: context.l10n.negotiationListTitle),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
-              DonySpacing.base,
-              DonySpacing.sm,
-              DonySpacing.base,
-              0,
-            ),
-            child: ContextualTutorialCard(context: TutorialContext.negotiation),
-          ),
           Expanded(
             child: MultiBlocProvider(
               providers: [

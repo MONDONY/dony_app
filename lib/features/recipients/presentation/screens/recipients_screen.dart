@@ -1,8 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/bloc/sent_invitations_cubit.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
@@ -57,15 +55,6 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
       // depuis la feuille de choix du destinataire d'un envoi.
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              0,
-              DonySpacing.lg,
-              DonySpacing.sm,
-            ),
-            child: ContextualTutorialCard(context: TutorialContext.recipients),
-          ),
           // Destinataire qui a l'app : retrouvé par invitation (lot 4).
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: DonySpacing.lg),
