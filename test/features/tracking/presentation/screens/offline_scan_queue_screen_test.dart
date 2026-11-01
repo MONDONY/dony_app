@@ -112,14 +112,14 @@ void main() {
       await Hive.box<Map>(HiveService.offlineQueueBox).addAll([
         {
           'bidId': 'A47C000000',
-          'eventType': 'PICKUP',
+          'eventType': 'DEPART',
           'offlineTimestamp': now
               .subtract(const Duration(minutes: 2))
               .toIso8601String(),
         },
         {
           'bidId': 'B891X00000',
-          'eventType': 'IN_TRANSIT',
+          'eventType': 'TRANSIT',
           'offlineTimestamp': now
               .subtract(const Duration(minutes: 4))
               .toIso8601String(),
@@ -138,6 +138,19 @@ void main() {
       await tester.pump();
       expect(find.textContaining('colis #A47C'), findsOneWidget);
       expect(find.textContaining('colis #B891'), findsOneWidget);
+    });
+
+    testWidgets('nomme les étapes réelles de la file (DEPART, TRANSIT)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildApp());
+      await tester.pump();
+      expect(find.text('départ'), findsOneWidget);
+      expect(find.text('transit'), findsOneWidget);
+      expect(find.textContaining('Départ enregistré'), findsOneWidget);
+      expect(find.textContaining('En transit sauvegardé'), findsOneWidget);
+      // Jamais le libellé de repli pour une étape connue.
+      expect(find.text('file'), findsNothing);
     });
 
     testWidgets('shows correct count in alert banner subtitle', (tester) async {
@@ -183,7 +196,7 @@ void main() {
       await Hive.box<Map>(HiveService.offlineQueueBox).addAll([
         {
           'bidId': 'A47C000000',
-          'eventType': 'PICKUP',
+          'eventType': 'DEPART',
           'offlineTimestamp': now
               .subtract(const Duration(minutes: 2))
               .toIso8601String(),

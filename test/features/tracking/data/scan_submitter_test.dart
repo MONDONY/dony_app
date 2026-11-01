@@ -217,18 +217,143 @@ void main() {
     expect((result as ScanSubmitSent).photoDropped, isFalse);
   });
 
-  test('réseau coupé pendant l\'envoi : l\'erreur remonte', () async {
-    when(
-      () => repo.uploadTrackingPhoto(any(), any()),
-    ).thenThrow(const TimeoutException());
-    await expectLater(
-      build().submit(
+  group('réseau affiché mais rien ne passe : étape gardée en file', () {
+    void postFails(Object error) => when(
+      () => repo.postScan(
+        bidId: any(named: 'bidId'),
+        eventType: any(named: 'eventType'),
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        photoUrl: any(named: 'photoUrl'),
+      ),
+    ).thenThrow(error);
+
+    void stubQueueWithKey() => when(
+      () => offline.queueScan(
+        bidId: any(named: 'bidId'),
+        eventType: any(named: 'eventType'),
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        photoPath: any(named: 'photoPath'),
+        photoKey: any(named: 'photoKey'),
+      ),
+    ).thenAnswer((_) async => 1);
+
+    test('délai dépassé pendant l\'envoi de la photo : en file avec la '
+        'photo à envoyer', () async {
+      when(
+        () => repo.uploadTrackingPhoto(any(), any()),
+      ).thenThrow(const TimeoutException());
+
+      final result = await build().submit(
         bidId: 'bid-1',
         eventType: 'TRANSIT',
         photoPath: '/tmp/p.jpg',
-      ),
-      throwsA(isA<TimeoutException>()),
-    );
+        gpsLat: 14.7,
+      );
+
+      expect(result, isA<ScanSubmitQueued>());
+      verifyQueued();
+      verifyNever(
+        () => repo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+        ),
+      );
+    });
+
+    test('photo envoyée puis étape coupée : en file avec la clé de la photo, '
+        'sans la renvoyer', () async {
+      stubQueueWithKey();
+      postFails(const OfflineException());
+
+      final result = await build().submit(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+        photoPath: '/tmp/p.jpg',
+        gpsLat: 14.7,
+      );
+
+      expect(result, isA<ScanSubmitQueued>());
+      verify(
+        () => offline.queueScan(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          gpsLat: 14.7,
+          photoKey: 'tracking/bid-1/photo.jpg',
+        ),
+      ).called(1);
+    });
+
+    test('photo refusée par le serveur puis étape coupée : en file sans '
+        'photo', () async {
+      when(() => repo.uploadTrackingPhoto(any(), any())).thenThrow(
+        const ValidationException('Trop lourd', code: 'file-too-large'),
+      );
+      postFails(const TimeoutException());
+
+      final result = await build().submit(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+        photoPath: '/tmp/p.jpg',
+        gpsLat: 14.7,
+      );
+
+      expect(result, isA<ScanSubmitQueued>());
+      verify(
+        () => offline.queueScan(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          gpsLat: 14.7,
+        ),
+      ).called(1);
+    });
+
+    test('API injoignable (502, 503, 504) : en file', () async {
+      postFails(const ServiceUnavailableException());
+
+      final result = await build().submit(bidId: 'bid-1', eventType: 'DEPART');
+
+      expect(result, isA<ScanSubmitQueued>());
+      verify(
+        () => offline.queueScan(bidId: 'bid-1', eventType: 'DEPART'),
+      ).called(1);
+    });
+
+    test('erreur 500 : l\'erreur remonte, rien en file', () async {
+      postFails(const ServerException());
+
+      await expectLater(
+        build().submit(bidId: 'bid-1', eventType: 'DEPART'),
+        throwsA(isA<ServerException>()),
+      );
+      verifyNever(
+        () => offline.queueScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+        ),
+      );
+    });
+
+    test('isQueueableScanFailure classe les erreurs', () {
+      expect(isQueueableScanFailure(const OfflineException()), isTrue);
+      expect(isQueueableScanFailure(const TimeoutException()), isTrue);
+      expect(
+        isQueueableScanFailure(const ServiceUnavailableException()),
+        isTrue,
+      );
+      expect(isQueueableScanFailure(const ServerException()), isFalse);
+      expect(isQueueableScanFailure(const ConflictException('x')), isFalse);
+      expect(isQueueableScanFailure(const ValidationException('x')), isFalse);
+      expect(
+        isQueueableScanFailure(
+          const NetworkException('annulée', code: 'CANCELLED'),
+        ),
+        isFalse,
+      );
+    });
   });
 
   test('refus du back : jamais mis en file', () async {

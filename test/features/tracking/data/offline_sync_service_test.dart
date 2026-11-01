@@ -193,9 +193,61 @@ void main() {
       );
       expect(entry.containsKey('trackingNumber'), isFalse);
     });
+
+    test('photo déjà envoyée : sa clé est gardée, sans chemin', () async {
+      await service.queueScan(
+        bidId: 'bid-7',
+        eventType: 'TRANSIT',
+        photoKey: 'tracking/bid-7/deja.jpg',
+      );
+      final entry = Map<String, dynamic>.from(
+        _hiveService.offlineQueue.values.first,
+      );
+      expect(
+        entry[OfflineSyncService.photoKeyField],
+        'tracking/bid-7/deja.jpg',
+      );
+      expect(entry.containsKey('photoPath'), isFalse);
+      expect(entry.containsKey('photoFile'), isFalse);
+    });
   });
 
   group('syncAll', () {
+    test('photo déjà envoyée : rejouée sans renvoyer la photo', () async {
+      when(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).thenAnswer((_) async => _fakeEvent());
+
+      await service.queueScan(
+        bidId: 'bid-7',
+        eventType: 'TRANSIT',
+        photoKey: 'tracking/bid-7/deja.jpg',
+      );
+      await service.syncAll();
+
+      expect(service.pendingCount, 0);
+      verifyNever(() => mockRepo.uploadTrackingPhoto(any(), any()));
+      verify(
+        () => mockRepo.postScan(
+          bidId: 'bid-7',
+          eventType: 'TRANSIT',
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: 'tracking/bid-7/deja.jpg',
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).called(1);
+    });
+
     test('does nothing on empty queue', () async {
       await service.syncAll();
       verifyNever(

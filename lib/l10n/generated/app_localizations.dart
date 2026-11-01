@@ -17685,23 +17685,17 @@ abstract class AppLocalizations {
   /// **'Pointez vers le QR code du colis'**
   String get scanQrPickerHint;
 
-  /// Libellé court de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  /// Libellé court de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'collecte'**
+  /// **'départ'**
   String get scanOfflineEventPickupLabel;
 
-  /// Libellé court de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart), identique dans les deux langues (voir _sameInBothLanguages).
+  /// Libellé court de l'étape TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart), identique dans les deux langues (voir _sameInBothLanguages).
   ///
   /// In fr, this message translates to:
   /// **'transit'**
   String get scanOfflineEventTransitLabel;
-
-  /// Libellé court de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'livré'**
-  String get scanOfflineEventDeliveredLabel;
 
   /// Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///
@@ -17709,23 +17703,17 @@ abstract class AppLocalizations {
   /// **'file'**
   String get scanOfflineEventDefaultLabel;
 
-  /// Description de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  /// Description de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Collecte enregistrée'**
+  /// **'Départ enregistré'**
   String get scanOfflineDescPickup;
 
-  /// Description de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  /// Description de l'étape TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'En transit sauvegardé'**
   String get scanOfflineDescTransit;
-
-  /// Description de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Livraison sauvegardée'**
-  String get scanOfflineDescDelivered;
 
   /// Description de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///

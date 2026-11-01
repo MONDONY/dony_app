@@ -22,20 +22,21 @@ class OfflineScanQueueScreen extends StatelessWidget {
     return scanRelativeTime(l, diff);
   }
 
+  // Étapes que la file peut contenir : DEPART et TRANSIT, celles du back
+  // (`TrackingEventType`). L'arrivée (ARRIVEE) passe par la confirmation de
+  // livraison, en ligne seulement : jamais en file.
   static String _eventLabel(AppLocalizations l, String eventType) {
     return switch (eventType.toUpperCase()) {
-      'PICKUP' => l.scanOfflineEventPickupLabel,
-      'IN_TRANSIT' => l.scanOfflineEventTransitLabel,
-      'DELIVERED' => l.scanOfflineEventDeliveredLabel,
+      'DEPART' => l.scanOfflineEventPickupLabel,
+      'TRANSIT' => l.scanOfflineEventTransitLabel,
       _ => l.scanOfflineEventDefaultLabel,
     };
   }
 
   static String _eventDescription(AppLocalizations l, String eventType) {
     return switch (eventType.toUpperCase()) {
-      'PICKUP' => l.scanOfflineDescPickup,
-      'IN_TRANSIT' => l.scanOfflineDescTransit,
-      'DELIVERED' => l.scanOfflineDescDelivered,
+      'DEPART' => l.scanOfflineDescPickup,
+      'TRANSIT' => l.scanOfflineDescTransit,
       _ => l.scanOfflineDescDefault,
     };
   }
