@@ -25,9 +25,8 @@ class MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
 
 class FakeRecipientEvent extends Fake implements RecipientEvent {}
 
-// ContextualTutorialCard (contexte recipients) lit HelpCenterBloc via
-// context.select : sans ce provider, context.select lève
-// ProviderNotFoundException dès le premier pump.
+// L'app fournit HelpCenterBloc globalement (app.dart) : le harnais fait de
+// même, avec un catalogue vide.
 const _emptyHelpConfigJson = '''
 {
   "schemaVersion": 1,

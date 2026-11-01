@@ -1017,14 +1017,6 @@ void main() {
     setUp(() {
       box = _MockBox();
       when(() => box.put(any<String>(), any<bool>())).thenAnswer((_) async {});
-      // Clé de fermeture du tutoriel contextuel « activités » : non fermée
-      // par défaut, sinon ContextualTutorialCard ne s'affiche jamais.
-      when(
-        () => box.get(
-          '${HiveService.kContextualTutorialDismissedPrefix}activities_intro',
-          defaultValue: any<Object?>(named: 'defaultValue'),
-        ),
-      ).thenReturn(false);
       final hive = _MockHiveService();
       when(() => hive.userPrefs).thenReturn(box);
       when(
@@ -1065,7 +1057,7 @@ void main() {
     });
 
     testWidgets(
-      'la carte tutoriel apparaît après l\'introduction et navigue au tap',
+      'aucune carte tutoriel, même quand le catalogue en propose un',
       (tester) async {
         introDismissed(value: false);
 
@@ -1074,35 +1066,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 400));
         await tester.pump(const Duration(milliseconds: 400));
 
-        final introTop = tester
-            .getTopLeft(find.textContaining('voyageurs de confiance'))
-            .dy;
-        final cardTop = tester
-            .getTopLeft(find.text('Besoin d\'aide ? Voir le tutoriel'))
-            .dy;
-        expect(cardTop, greaterThan(introTop));
-
-        await tester.ensureVisible(
-          find.text('Besoin d\'aide ? Voir le tutoriel'),
-        );
-        await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('TutorialStub:activities_intro'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'la carte tutoriel reste présente même quand l\'introduction est fermée',
-      (tester) async {
-        introDismissed(value: true);
-
-        await _pump(tester, helpConfigJson: _activitiesHelpConfigJson);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 400));
-        await tester.pump(const Duration(milliseconds: 400));
-
-        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
+        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
       },
     );
   });

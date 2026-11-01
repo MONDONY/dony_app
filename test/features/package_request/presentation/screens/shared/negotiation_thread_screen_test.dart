@@ -31,24 +31,6 @@ const _emptyHelpConfigJson = '''
 }
 ''';
 
-const _negotiationHelpConfigJson = '''
-{
-  "schemaVersion": 1,
-  "socialLinks": [],
-  "tutorials": [
-    {
-      "id": "negotiation_basics",
-      "title": "Négocier un prix",
-      "description": "Comprendre les offres et contre-offres.",
-      "youtubeVideoId": "dQw4w9WgXcQ",
-      "order": 1,
-      "active": true,
-      "contexts": ["negotiation"]
-    }
-  ]
-}
-''';
-
 class _StaticHelpCenterSource implements HelpCenterConfigSource {
   const _StaticHelpCenterSource(this.json);
 
@@ -474,28 +456,6 @@ void main() {
       expect(find.text('Awa Diop'), findsOneWidget);
       expect(find.byKey(const Key('negotiation-partner-header')), findsNothing);
     });
-  });
-
-  group('Carte tutoriel contextuelle', () {
-    testWidgets(
-      'affiche la carte au-dessus du fil et navigue vers le tutoriel au tap',
-      (tester) async {
-        when(() => bloc.state).thenReturn(NegotiationLoaded(_thread()));
-        await tester.pumpWidget(
-          wrapWithHelpCenter(helpConfigJson: _negotiationHelpConfigJson),
-        );
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 400));
-        await tester.pump(const Duration(milliseconds: 400));
-
-        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
-
-        await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('TutorialStub:negotiation_basics'), findsOneWidget);
-      },
-    );
   });
 
   group('Menu « ... » — mettre fin à la négociation', () {

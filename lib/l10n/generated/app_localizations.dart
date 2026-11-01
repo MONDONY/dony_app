@@ -20091,24 +20091,6 @@ abstract class AppLocalizations {
   /// **'Ouvrir dans YouTube'**
   String get helpTutorialOpenInYoutubeButton;
 
-  /// Semantics label de la carte suggestion de tutoriel contextuel (contextual_tutorial_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Besoin d’aide ? Voir le tutoriel {title}'**
-  String helpContextualCardSemanticsLabel(String title);
-
-  /// Texte visible de la carte suggestion de tutoriel contextuel, sans le titre (contextual_tutorial_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Besoin d\'aide ? Voir le tutoriel'**
-  String get helpContextualCardLabel;
-
-  /// Tooltip du bouton de fermeture (X) de la carte suggestion (contextual_tutorial_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Masquer ce conseil'**
-  String get helpContextualCardDismissTooltip;
-
   /// Semantics label de la carte tutoriel de la Communauté (help_tutorial_card.dart)
   ///
   /// In fr, this message translates to:
@@ -20294,24 +20276,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Contraste, taille de police'**
   String get settingsAccessibilitySubtitle;
-
-  /// Libellé de la tuile de réinitialisation des cartes de guidance (settings_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Réafficher les suggestions'**
-  String get settingsResetGuidanceLabel;
-
-  /// Sous-titre de la tuile de réinitialisation des cartes de guidance (settings_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Fait revenir les cartes fermées (écran Recherche)'**
-  String get settingsResetGuidanceSubtitle;
-
-  /// Snackbar de confirmation après réinitialisation des cartes de guidance (settings_screen.dart, _resetGuidanceCards)
-  ///
-  /// In fr, this message translates to:
-  /// **'Suggestions et tutoriels réaffichés.'**
-  String get settingsResetGuidanceSnackbar;
 
   /// En-tête de section (settings_screen.dart)
   ///

@@ -32,8 +32,6 @@ import 'package:dony/features/matching/presentation/widgets/tools_completion_car
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/payments/money/presentation/widgets/money_header_button.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -396,10 +394,6 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                       const SizedBox(height: DonySpacing.md),
                       _IntroCard(onDismiss: _dismissIntro),
                     ],
-                    const SizedBox(height: DonySpacing.md),
-                    const ContextualTutorialCard(
-                      context: TutorialContext.activities,
-                    ),
                     const SizedBox(height: DonySpacing.base),
                     Text(l.activitySectionCurrent, style: tt.titleMedium),
                     const SizedBox(height: DonySpacing.md),

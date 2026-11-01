@@ -8,8 +8,6 @@ import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.d
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_actions_sheet.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_card.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -153,17 +151,6 @@ class _CorridorAlertListView extends StatelessWidget {
       ),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.sm,
-              DonySpacing.lg,
-              0,
-            ),
-            child: ContextualTutorialCard(
-              context: TutorialContext.corridorAlerts,
-            ),
-          ),
           Expanded(
             child: BlocBuilder<CorridorAlertListBloc, CorridorAlertListState>(
               builder: (ctx, state) {

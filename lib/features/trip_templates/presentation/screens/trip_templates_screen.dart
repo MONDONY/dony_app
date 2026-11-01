@@ -4,8 +4,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
@@ -52,17 +50,6 @@ class TripTemplatesScreen extends StatelessWidget {
       ],
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.sm,
-              DonySpacing.lg,
-              0,
-            ),
-            child: ContextualTutorialCard(
-              context: TutorialContext.tripTemplates,
-            ),
-          ),
           Expanded(
             child: BlocBuilder<TripTemplateBloc, TripTemplateState>(
               builder: (context, state) {

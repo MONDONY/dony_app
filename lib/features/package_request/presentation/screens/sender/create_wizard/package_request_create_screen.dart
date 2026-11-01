@@ -37,8 +37,6 @@ import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -716,9 +714,6 @@ class _PackageRequestCreateScreenState
                                   ),
                                 ),
                         ),
-                      const ContextualTutorialCard(
-                        context: TutorialContext.requestPublish,
-                      ),
                       if (!state.isEditing) ...[
                         const SizedBox(height: DonySpacing.base),
                         // `_activeCurrency` est déjà résolue une fois pour

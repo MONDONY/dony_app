@@ -27,8 +27,6 @@ import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.da
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
 import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/tracking/presentation/tracking_consent_prompt.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -139,7 +137,6 @@ class _DemandesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final hp = DonyLayout.hPadding(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -158,17 +155,6 @@ class _DemandesView extends StatelessWidget {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              hp,
-              DonySpacing.md,
-              hp,
-              DonySpacing.sm,
-            ),
-            child: const ContextualTutorialCard(
-              context: TutorialContext.receivedRequests,
-            ),
-          ),
           // Le décompte « à traiter » vit sur les pastilles de filtre de ce
           // volet ; il n'a plus de toggle où s'afficher, et n'en a plus besoin.
           Expanded(child: _DemandesRecuesBody(focusBidId: focusBidId)),

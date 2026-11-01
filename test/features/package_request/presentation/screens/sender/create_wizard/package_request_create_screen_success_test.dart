@@ -46,24 +46,6 @@ const _emptyHelpConfigJson = '''
 }
 ''';
 
-const _requestPublishHelpConfigJson = '''
-{
-  "schemaVersion": 1,
-  "socialLinks": [],
-  "tutorials": [
-    {
-      "id": "request_publish_basics",
-      "title": "Publier une demande",
-      "description": "Décrire son colis pour recevoir des offres.",
-      "youtubeVideoId": "dQw4w9WgXcQ",
-      "order": 1,
-      "active": true,
-      "contexts": ["requestPublish"]
-    }
-  ]
-}
-''';
-
 class _StaticHelpCenterSource implements HelpCenterConfigSource {
   const _StaticHelpCenterSource(this.json);
 
@@ -459,24 +441,6 @@ void main() {
       saveAsDraft: captureAny(named: 'saveAsDraft'),
     ),
   ).captured;
-
-  testWidgets('carte tutoriel contextuelle affichée avant la première étape et '
-      'navigue vers le tutoriel au tap', (tester) async {
-    await tester.pumpWidget(
-      buildHarness(helpConfigJson: _requestPublishHelpConfigJson),
-    );
-    await tester.tap(find.byKey(const Key('open-create')));
-    await tester.pumpAndSettle();
-    await tester.pump(const Duration(milliseconds: 400));
-
-    expect(find.byType(PackageRequestCreateScreen), findsOneWidget);
-    expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
-
-    await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('TutorialStub:request_publish_basics'), findsOneWidget);
-  });
 
   testWidgets('bandeau devise invalide : ne prétend pas publier en EUR', (
     tester,

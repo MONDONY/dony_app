@@ -264,15 +264,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets(
-    'tutoriel vidéo de la recharge mobile money en tête (FLUTTER-8G)',
-    (tester) async {
-      await tester.pumpWidget(buildHarness());
-      await tester.pumpAndSettle();
+  testWidgets('aucune carte tutoriel en tête de la recharge', (tester) async {
+    await tester.pumpWidget(buildHarness());
+    await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('contextual-tutorial-card')), findsOneWidget);
-    },
-  );
+    expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
+  });
 
   testWidgets('tuile code de recharge visible même sans mobile money', (
     tester,
@@ -765,8 +762,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Mobile money'), findsNothing);
-      // Le tutoriel couvre aussi la recharge par carte (FLUTTER-AB).
-      expect(find.byKey(const Key('contextual-tutorial-card')), findsOneWidget);
       expect(find.text('Carte bancaire'), findsOneWidget);
 
       await tester.tap(find.text('Carte bancaire'));
