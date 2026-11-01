@@ -87,13 +87,25 @@ class _SuitcaseRow extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(DonyRadius.full),
               child: SizedBox(
+                key: Key('trip-suitcase-track-$index'),
                 height: 12,
                 child: Stack(
                   children: [
                     Positioned.fill(child: ColoredBox(color: cs.outline)),
-                    FractionallySizedBox(
-                      widthFactor: fraction,
-                      child: ColoredBox(color: cs.primary),
+                    // Kilos libres en bleu, calés à gauche sur toute la
+                    // hauteur de la piste. Sans `heightFactor`, le Stack
+                    // passait des contraintes lâches et la barre, sans
+                    // enfant, prenait 0 de haut : jauge toute grise.
+                    Positioned.fill(
+                      child: FractionallySizedBox(
+                        alignment: AlignmentDirectional.centerStart,
+                        widthFactor: fraction,
+                        heightFactor: 1,
+                        child: ColoredBox(
+                          key: Key('trip-suitcase-free-$index'),
+                          color: cs.primary,
+                        ),
+                      ),
                     ),
                   ],
                 ),
