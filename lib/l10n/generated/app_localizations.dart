@@ -17517,10 +17517,10 @@ abstract class AppLocalizations {
   /// **'Reprendre la photo'**
   String get scanRetakePhotoButton;
 
-  /// Corps du dialogue hors-ligne de scan_confirm_screen.dart (version courte, distincte de scanQueuedNoConnectionBodyLong).
+  /// Corps du dialogue de scan_confirm_screen.dart quand l'étape est gardée en file : aucun réseau, ou réseau affiché sur lequel rien ne passe (version courte, distincte de scanQueuedNoConnectionBodyLong).
   ///
   /// In fr, this message translates to:
-  /// **'Pas de connexion. La lecture sera synchronisée dès que vous serez en ligne.'**
+  /// **'Connexion trop faible pour l\'instant. Votre lecture est gardée et partira toute seule dès que le réseau passe.'**
   String get scanConfirmQueuedNoConnectionBody;
 
   /// CTA de l'écran de succès livraison (scan_confirm_screen.dart, DonySuccessScreen).

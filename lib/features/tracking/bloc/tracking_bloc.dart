@@ -144,10 +144,20 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
         scanMethod: event.scanMethod,
         trackingNumber: event.trackingNumber,
       );
-      if (result is! ScanSubmitSent) {
+      if (result is ScanSubmitQueued) {
         emit(QrScanQueued());
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.qrScanQueued,
+            properties: {
+              'scan_type': event.eventType,
+              'reason': result.reason.wire,
+            },
+          ),
+        );
         return;
       }
+      result as ScanSubmitSent;
       emit(QrScanSuccess(result.event, photoDropped: result.photoDropped));
       unawaited(
         _analytics.logEvent(

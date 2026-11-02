@@ -156,7 +156,7 @@ void main() {
       photoPath: '/tmp/p.jpg',
       gpsLat: 14.7,
     );
-    expect(result, isA<ScanSubmitQueued>());
+    expect((result as ScanSubmitQueued).reason, ScanQueueReason.noNetwork);
     verifyQueued();
     verifyNever(() => repo.uploadTrackingPhoto(any(), any()));
     // Aucune interface : le retour du réseau relancera la file.
@@ -328,7 +328,10 @@ void main() {
 
       final result = await build().submit(bidId: 'bid-1', eventType: 'DEPART');
 
-      expect(result, isA<ScanSubmitQueued>());
+      expect(
+        (result as ScanSubmitQueued).reason,
+        ScanQueueReason.networkFailure,
+      );
       verify(() => offline.scheduleRetry()).called(1);
       verify(
         () => offline.queueScan(bidId: 'bid-1', eventType: 'DEPART'),

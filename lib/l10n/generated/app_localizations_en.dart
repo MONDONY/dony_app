@@ -10594,7 +10594,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanConfirmQueuedNoConnectionBody =>
-      'No connection. The scan will sync once you\'re back online.';
+      'Connection too weak right now. Your scan is saved and will send automatically once the network comes through.';
 
   @override
   String get scanTerminateButton => 'Finish';

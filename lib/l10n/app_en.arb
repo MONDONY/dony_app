@@ -6063,9 +6063,9 @@
   "@scanRetakePhotoButton": {
     "description": "Bouton pour revenir reprendre la photo (scan_confirm_screen.dart)."
   },
-  "scanConfirmQueuedNoConnectionBody": "No connection. The scan will sync once you're back online.",
+  "scanConfirmQueuedNoConnectionBody": "Connection too weak right now. Your scan is saved and will send automatically once the network comes through.",
   "@scanConfirmQueuedNoConnectionBody": {
-    "description": "Corps du dialogue hors-ligne de scan_confirm_screen.dart (version courte, distincte de scanQueuedNoConnectionBodyLong)."
+    "description": "Corps du dialogue de scan_confirm_screen.dart quand l'étape est gardée en file : aucun réseau, ou réseau affiché sur lequel rien ne passe (version courte, distincte de scanQueuedNoConnectionBodyLong)."
   },
   "scanTerminateButton": "Finish",
   "@scanTerminateButton": {

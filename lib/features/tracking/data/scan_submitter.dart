@@ -22,7 +22,24 @@ final class ScanSubmitSent extends ScanSubmitResult {
 }
 
 final class ScanSubmitQueued extends ScanSubmitResult {
-  const ScanSubmitQueued();
+  const ScanSubmitQueued(this.reason);
+  final ScanQueueReason reason;
+}
+
+/// Pourquoi une étape est partie dans la file plutôt que vers le back
+/// (propriété `reason` de `qr_scan_queued`).
+enum ScanQueueReason {
+  /// Le téléphone n'avait aucun réseau.
+  noNetwork('no_network'),
+
+  /// Un réseau était affiché, mais l'envoi a échoué faute de connexion
+  /// exploitable.
+  networkFailure('network_failure');
+
+  const ScanQueueReason(this.wire);
+
+  /// Valeur envoyée à l'analytics.
+  final String wire;
 }
 
 /// Envoi d'une étape DEPART/TRANSIT (`POST /tracking/events`), photo d'abord
@@ -68,7 +85,7 @@ class ScanSubmitter {
     // `null` tant qu'elle ne l'est pas.
     TrackingPhotoUpload? photo;
 
-    Future<ScanSubmitResult> queue() async {
+    Future<ScanSubmitResult> queue(ScanQueueReason reason) async {
       await _offlineSync.queueScan(
         bidId: bidId,
         eventType: eventType,
@@ -83,10 +100,10 @@ class ScanSubmitter {
         scanMethod: scanMethod,
         trackingNumber: trackingNumber,
       );
-      return const ScanSubmitQueued();
+      return ScanSubmitQueued(reason);
     }
 
-    if (!await _isOnline()) return queue();
+    if (!await _isOnline()) return queue(ScanQueueReason.noNetwork);
 
     try {
       // Même verrou que la file : la même étape envoyée au même moment par
@@ -124,7 +141,7 @@ class ScanSubmitter {
       // renvoi d'une étape que le back avait reçue (réponse perdue) revient
       // en « déjà enregistré », compté comme un succès ([ScanSendGuard]).
       if (!isQueueableTrackingFailure(error)) rethrow;
-      final queued = await queue();
+      final queued = await queue(ScanQueueReason.networkFailure);
       // Le téléphone reste sur le même réseau : aucun changement ne
       // relancera la file, d'où un nouvel essai programmé.
       _offlineSync.scheduleRetry();

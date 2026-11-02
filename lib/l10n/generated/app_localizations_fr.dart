@@ -10668,7 +10668,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get scanConfirmQueuedNoConnectionBody =>
-      'Pas de connexion. La lecture sera synchronisée dès que vous serez en ligne.';
+      'Connexion trop faible pour l\'instant. Votre lecture est gardée et partira toute seule dès que le réseau passe.';
 
   @override
   String get scanTerminateButton => 'Terminer';

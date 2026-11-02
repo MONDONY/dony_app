@@ -101,6 +101,61 @@ void main() {
     });
   });
 
+  group('qr_scan_queued : étape gardée en file', () {
+    TrackingBloc withConnectivity({required bool online}) {
+      final a = makeEnabledAnalytics(backend)..onConfigured();
+      return TrackingBloc(
+        repo,
+        offlineSync,
+        a,
+        submitter: ScanSubmitter(
+          repo,
+          offlineSync,
+          isOnline: () async => online,
+        ),
+      );
+    }
+
+    setUp(() {
+      when(
+        () => offlineSync.queueScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+        ),
+      ).thenAnswer((_) async => 1);
+    });
+
+    test('aucun réseau → reason no_network', () async {
+      final bloc = withConnectivity(online: false);
+      bloc.add(QrScanSubmitRequested(bidId: 'bid1', eventType: 'DEPART'));
+      await bloc.stream.firstWhere((s) => s is QrScanQueued);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.qrScanQueued, {
+          'scan_type': 'DEPART',
+          'reason': 'no_network',
+        }),
+      ).called(1);
+      verifyNever(() => backend.capture(AnalyticsEvents.qrScanSuccess, any()));
+    });
+
+    test('réseau affiché, envoi coupé → reason network_failure', () async {
+      when(
+        () => repo.postScan(bidId: 'bid1', eventType: 'TRANSIT'),
+      ).thenThrow(const OfflineException());
+      final bloc = withConnectivity(online: true);
+      bloc.add(QrScanSubmitRequested(bidId: 'bid1', eventType: 'TRANSIT'));
+      await bloc.stream.firstWhere((s) => s is QrScanQueued);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.qrScanQueued, {
+          'scan_type': 'TRANSIT',
+          'reason': 'network_failure',
+        }),
+      ).called(1);
+    });
+  });
+
   group('scan bloqué par un supplément', () {
     TrackingBloc online() {
       final a = makeEnabledAnalytics(backend)..onConfigured();
