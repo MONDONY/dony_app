@@ -17517,10 +17517,10 @@ abstract class AppLocalizations {
   /// **'Reprendre la photo'**
   String get scanRetakePhotoButton;
 
-  /// Corps du dialogue hors-ligne de scan_confirm_screen.dart (version courte, distincte de scanQueuedNoConnectionBodyLong).
+  /// Corps du dialogue de scan_confirm_screen.dart quand l'étape est gardée en file : aucun réseau, ou réseau affiché sur lequel rien ne passe (version courte, distincte de scanQueuedNoConnectionBodyLong).
   ///
   /// In fr, this message translates to:
-  /// **'Pas de connexion. La lecture sera synchronisée dès que vous serez en ligne.'**
+  /// **'Connexion trop faible pour l\'instant. Votre lecture est gardée et partira toute seule dès que le réseau passe.'**
   String get scanConfirmQueuedNoConnectionBody;
 
   /// CTA de l'écran de succès livraison (scan_confirm_screen.dart, DonySuccessScreen).
@@ -17685,47 +17685,23 @@ abstract class AppLocalizations {
   /// **'Pointez vers le QR code du colis'**
   String get scanQrPickerHint;
 
-  /// Libellé court de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'collecte'**
-  String get scanOfflineEventPickupLabel;
-
-  /// Libellé court de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart), identique dans les deux langues (voir _sameInBothLanguages).
-  ///
-  /// In fr, this message translates to:
-  /// **'transit'**
-  String get scanOfflineEventTransitLabel;
-
-  /// Libellé court de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'livré'**
-  String get scanOfflineEventDeliveredLabel;
-
   /// Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'file'**
   String get scanOfflineEventDefaultLabel;
 
-  /// Description de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  /// Description de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Collecte enregistrée'**
+  /// **'Récupération enregistrée'**
   String get scanOfflineDescPickup;
 
-  /// Description de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  /// Description de l'étape TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'En transit sauvegardé'**
   String get scanOfflineDescTransit;
-
-  /// Description de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Livraison sauvegardée'**
-  String get scanOfflineDescDelivered;
 
   /// Description de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///

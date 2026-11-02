@@ -228,6 +228,11 @@ abstract final class AnalyticsEvents {
 
   // Tracking / QR
   static const qrScanSuccess = 'qr_scan_success';
+
+  /// Étape du parcours photo gardée dans la file hors ligne au lieu d'être
+  /// envoyée : `reason` `no_network` (aucun réseau) ou `network_failure`
+  /// (réseau affiché, envoi échoué faute de connexion), `scan_type`.
+  static const qrScanQueued = 'qr_scan_queued';
   static const deliveryConfirmed = 'delivery_confirmed';
 
   // Onglet Suivi unifié (« Valider une étape » | « Suivre un colis »)

@@ -10594,7 +10594,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanConfirmQueuedNoConnectionBody =>
-      'No connection. The scan will sync once you\'re back online.';
+      'Connection too weak right now. Your scan is saved and will send automatically once the network comes through.';
 
   @override
   String get scanTerminateButton => 'Finish';
@@ -10680,15 +10680,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanQrPickerHint => 'Point at the parcel\'s QR code';
 
   @override
-  String get scanOfflineEventPickupLabel => 'collection';
-
-  @override
-  String get scanOfflineEventTransitLabel => 'transit';
-
-  @override
-  String get scanOfflineEventDeliveredLabel => 'delivered';
-
-  @override
   String get scanOfflineEventDefaultLabel => 'queued';
 
   @override
@@ -10696,9 +10687,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanOfflineDescTransit => 'Transit saved';
-
-  @override
-  String get scanOfflineDescDelivered => 'Delivery saved';
 
   @override
   String get scanOfflineDescDefault => 'Scan saved';
