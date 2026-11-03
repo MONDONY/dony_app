@@ -114,6 +114,33 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.prepare.outputs.sha }}
+
+      # Le runner hébergé d'un dépôt privé n'a que ~7 Go de RAM et ~14 Go de
+      # disque libre. android/gradle.properties réserve 8 Go de tas à Gradle
+      # (réglage de poste de dev) : avec R8 et le démon Kotlin, le build de
+      # release saturait la machine, coupée en plein « Build AAB » (03/11 :
+      # « runner lost communication » à 14:27, « shutdown signal » à 19:58).
+      - name: Libérer le disque
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/share/boost \
+            /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL \
+            /usr/local/lib/node_modules
+          sudo docker image prune --all --force > /dev/null 2>&1 || true
+          df -h /
+
+      - name: Mémoire Gradle adaptée au runner
+        run: |
+          free -h
+          # La dernière valeur d'une clé l'emporte dans un .properties.
+          echo >> android/gradle.properties
+          cat >> android/gradle.properties <<'PROPS'
+          org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -XX:ReservedCodeCacheSize=256m -XX:+HeapDumpOnOutOfMemoryError
+          kotlin.daemon.jvmargs=-Xmx1536m
+          org.gradle.workers.max=2
+          PROPS
+          tail -4 android/gradle.properties
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
