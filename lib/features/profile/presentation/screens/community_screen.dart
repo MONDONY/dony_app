@@ -18,8 +18,6 @@ class CommunityScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
 
     return BlocBuilder<HelpCenterBloc, HelpCenterState>(
@@ -30,8 +28,16 @@ class CommunityScreen extends StatelessWidget {
           _ => HelpCenterConfig.empty,
         };
         final tutorials =
-            config.tutorials.where((tutorial) => tutorial.active).toList()
+            config.tutorials
+                .where(
+                  (tutorial) =>
+                      tutorial.active &&
+                      tutorial.appliesToLanguage(AppL10n.localeName),
+                )
+                .toList()
               ..sort((a, b) => a.order.compareTo(b.order));
+        final guides = tutorials.where((t) => !t.isDemo).toList();
+        final demos = tutorials.where((t) => t.isDemo).toList();
         final socialLinks = config.socialLinks
             .where((link) => link.active)
             .toList();
@@ -51,53 +57,85 @@ class CommunityScreen extends StatelessWidget {
                     if (socialLinks.isNotEmpty) ...[
                       SocialCommunitySection(links: socialLinks),
                     ],
-                    if (tutorials.isNotEmpty) ...[
+                    if (guides.isNotEmpty) ...[
                       if (socialLinks.isNotEmpty)
                         const SizedBox(height: DonySpacing.xxl),
-                      Text(
-                        l.communityTutorialsTitle,
-                        style: tt.titleLarge?.copyWith(
-                          color: cs.onSurface,
-                          fontWeight: FontWeight.w800,
-                        ),
+                      _TutorialSection(
+                        title: l.communityTutorialsTitle,
+                        subtitle: l.communityTutorialsSubtitle,
+                        tutorials: guides,
                       ),
-                      const SizedBox(height: DonySpacing.xs),
-                      Text(
-                        l.communityTutorialsSubtitle,
-                        style: tt.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
+                    ],
+                    if (demos.isNotEmpty) ...[
+                      if (socialLinks.isNotEmpty || guides.isNotEmpty)
+                        const SizedBox(height: DonySpacing.xxl),
+                      _TutorialSection(
+                        title: l.communityDemosTitle,
+                        subtitle: l.communityDemosSubtitle,
+                        tutorials: demos,
                       ),
-                      const SizedBox(height: DonySpacing.base),
-                      ...List.generate(tutorials.length, (index) {
-                        final tutorial = tutorials[index];
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            bottom: index == tutorials.length - 1
-                                ? 0
-                                : DonySpacing.base,
-                          ),
-                          child: HelpTutorialCard(
-                            tutorial: tutorial,
-                            onTap: () {
-                              context.read<HelpCenterBloc>().add(
-                                HelpTutorialOpenRequested(
-                                  tutorialId: tutorial.id,
-                                  source: null,
-                                ),
-                              );
-                              context.push(
-                                '/profile/help/tutorial/${tutorial.id}',
-                              );
-                            },
-                          ),
-                        );
-                      }),
                     ],
                   ],
                 ),
         );
       },
+    );
+  }
+}
+
+class _TutorialSection extends StatelessWidget {
+  const _TutorialSection({
+    required this.title,
+    required this.subtitle,
+    required this.tutorials,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<HelpTutorial> tutorials;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: tt.titleLarge?.copyWith(
+            color: cs.onSurface,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          subtitle,
+          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.base),
+        ...List.generate(tutorials.length, (index) {
+          final tutorial = tutorials[index];
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: index == tutorials.length - 1 ? 0 : DonySpacing.base,
+            ),
+            child: HelpTutorialCard(
+              tutorial: tutorial,
+              onTap: () {
+                context.read<HelpCenterBloc>().add(
+                  HelpTutorialOpenRequested(
+                    tutorialId: tutorial.id,
+                    source: null,
+                  ),
+                );
+                context.push('/profile/help/tutorial/${tutorial.id}');
+              },
+            ),
+          );
+        }),
+      ],
     );
   }
 }

@@ -158,6 +158,75 @@ void main() {
       expect(config.tutorials.single.id, 'payment-basics');
     });
 
+    test('lit une démo sans contexte, avec sa langue et son format', () {
+      final config = HelpCenterConfig.fromJson({
+        'schemaVersion': 1,
+        'tutorials': [
+          const {
+            'id': 'demo_fr_01',
+            'title': 'Rechercher un voyageur',
+            'description': 'La recherche.',
+            'youtubeVideoId': 'dQw4w9WgXcQ',
+            'order': 101,
+            'active': true,
+            'language': 'fr',
+            'vertical': true,
+          },
+          validTutorialsJson.last,
+        ],
+      });
+
+      final demo = config.tutorialById('demo_fr_01')!;
+      expect(demo.isDemo, isTrue);
+      expect(demo.vertical, isTrue);
+      expect(demo.appliesToLanguage('fr'), isTrue);
+      expect(demo.appliesToLanguage('en'), isFalse);
+
+      final guide = config.tutorialById('search-basics')!;
+      expect(guide.isDemo, isFalse);
+      expect(guide.vertical, isFalse);
+      expect(guide.appliesToLanguage('en'), isTrue);
+    });
+
+    test('ignore un tutoriel dont la langue ou le format est invalide', () {
+      final config = HelpCenterConfig.fromJson({
+        'schemaVersion': 1,
+        'tutorials': [
+          {...validTutorialsJson.first, 'language': 1},
+          {...validTutorialsJson.last, 'id': 'b', 'vertical': 'oui'},
+        ],
+      });
+
+      expect(config.tutorials, isEmpty);
+    });
+
+    test('le catalogue distant ne masque pas les démos embarquées', () {
+      Map<String, dynamic> withTutorials(List<Object> tutorials) => {
+        'schemaVersion': 1,
+        'tutorials': tutorials,
+      };
+      final remote = HelpCenterConfig.fromJson(
+        withTutorials([validTutorialsJson.first]),
+      );
+      final bundled = HelpCenterConfig.fromJson(
+        withTutorials([
+          {
+            'id': 'demo_fr_01',
+            'title': 'Démo',
+            'description': 'Une démo.',
+            'youtubeVideoId': 'M7lc1UVf-VE',
+            'order': 101,
+            'active': true,
+          },
+        ]),
+      );
+
+      expect(remote.completedWith(bundled).tutorials.map((t) => t.id), [
+        'payment-basics',
+        'demo_fr_01',
+      ]);
+    });
+
     test('ignore un tutoriel ayant un contexte inconnu', () {
       final config = HelpCenterConfig.fromJson({
         'schemaVersion': 1,

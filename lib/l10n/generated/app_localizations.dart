@@ -19299,6 +19299,18 @@ abstract class AppLocalizations {
   /// **'Aucun tutoriel ni espace communautaire à afficher pour le moment.'**
   String get communityEmptyDescription;
 
+  /// Titre de la section des démos vidéo (community_screen.dart, CommunityScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Démos des fonctionnalités'**
+  String get communityDemosTitle;
+
+  /// Sous-titre de la section des démos vidéo (community_screen.dart, CommunityScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque fonctionnalité de Yadony expliquée en vidéo.'**
+  String get communityDemosSubtitle;
+
   /// Titre de la section tutoriels (community_screen.dart, CommunityScreen).
   ///
   /// In fr, this message translates to:

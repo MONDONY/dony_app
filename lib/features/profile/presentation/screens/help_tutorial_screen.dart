@@ -13,6 +13,9 @@ export 'package:dony/features/profile/presentation/screens/help_tutorial_player.
 
 const _youtubeWatchHost = 'www.youtube.com';
 
+/// Un Short (9:16) en pleine largeur dépasserait l'écran : on borne sa hauteur.
+const _verticalPlayerMaxHeight = 560.0;
+
 class HelpTutorialScreen extends StatelessWidget {
   const HelpTutorialScreen({
     super.key,
@@ -194,7 +197,10 @@ class _HelpTutorialExperienceState extends State<_HelpTutorialExperience> {
   bool _restarting = false;
 
   HelpTutorialPlayerConfiguration get _configuration =>
-      HelpTutorialPlayerConfiguration(videoId: widget.tutorial.youtubeVideoId);
+      HelpTutorialPlayerConfiguration(
+        videoId: widget.tutorial.youtubeVideoId,
+        aspectRatio: widget.tutorial.vertical ? 9 / 16 : 16 / 9,
+      );
 
   @override
   void initState() {
@@ -388,43 +394,53 @@ class _HelpTutorialExperienceState extends State<_HelpTutorialExperience> {
     required _PlayerViewStatus status,
   }) {
     final cs = Theme.of(context).colorScheme;
+    final frame = AspectRatio(
+      key: const Key('help-tutorial-player-aspect-ratio'),
+      aspectRatio: _configuration.aspectRatio,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          border: Border.all(color: cs.outline),
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ?player,
+              if (status == _PlayerViewStatus.loading)
+                ColoredBox(
+                  key: const ValueKey('help-tutorial-player-loading'),
+                  color: cs.surfaceContainerHighest,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: cs.primary,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
     return Semantics(
       key: const ValueKey('help-tutorial-player-frame'),
       container: true,
       label: context.l10n.helpTutorialPlayerSemanticsLabel(
         widget.tutorial.title,
       ),
-      child: AspectRatio(
-        key: const Key('help-tutorial-player-aspect-ratio'),
-        aspectRatio: _configuration.aspectRatio,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest,
-            border: Border.all(color: cs.outline),
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                ?player,
-                if (status == _PlayerViewStatus.loading)
-                  ColoredBox(
-                    key: const ValueKey('help-tutorial-player-loading'),
-                    color: cs.surfaceContainerHighest,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: cs.primary,
-                        strokeWidth: 2,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      child: widget.tutorial.vertical
+          ? Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: _verticalPlayerMaxHeight,
+                ),
+                child: frame,
+              ),
+            )
+          : frame,
     );
   }
 

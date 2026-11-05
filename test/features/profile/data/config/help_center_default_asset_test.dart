@@ -26,7 +26,9 @@ void main() {
       'les tutoriels actifs pointent vers les vidéos de la chaîne Yadony',
       () {
         final active = {
-          for (final tutorial in config.tutorials.where((t) => t.active))
+          for (final tutorial in config.tutorials.where(
+            (t) => t.active && !t.isDemo,
+          ))
             tutorial.id: tutorial.youtubeVideoId,
         };
 
@@ -41,6 +43,23 @@ void main() {
         });
       },
     );
+
+    test('propose les 24 démos en français et en anglais, en vertical', () {
+      for (final language in ['fr', 'en']) {
+        final demos = config.tutorials
+            .where((t) => t.isDemo && t.language == language)
+            .toList();
+
+        expect(demos, hasLength(24), reason: language);
+        expect(demos.every((t) => t.active && t.vertical), isTrue);
+        expect(
+          demos.every((t) => t.durationLabel != null),
+          isTrue,
+          reason: language,
+        );
+        expect(demos.map((t) => t.youtubeVideoId).toSet(), hasLength(24));
+      }
+    });
 
     test('le lien TikTok mène au compte officiel @yadony_app', () {
       final tiktok = config.socialLinks.singleWhere(

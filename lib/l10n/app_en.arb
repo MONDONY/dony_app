@@ -6983,6 +6983,8 @@
   "profileAddBadgeAction": "Add",
   "communityEmptyTitle": "No content yet",
   "communityEmptyDescription": "No tutorials or community spaces to show right now.",
+  "communityDemosTitle": "Feature demos",
+  "communityDemosSubtitle": "Every Yadony feature explained on video.",
   "communityTutorialsTitle": "Video tutorials",
   "communityTutorialsSubtitle": "Learn the essential Yadony journeys.",
   "profileLanguageFrench": "French",
