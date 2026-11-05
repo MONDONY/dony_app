@@ -137,37 +137,16 @@ double listUnitPrice(double netUnit, String? currencyCode) =>
     ? netUnit
     : flatRateGross(netUnit);
 
-/// Taux de frais de service affiché dans les prix unitaires des cartes de
-/// recherche : celui du premier palier de la grille en vigueur (le plus
-/// élevé, appliqué aux petits montants), lu dans la grille servie par
-/// `/config/commission-grid`. Sans grille utilisable pour [currencyCode]
-/// (aucune grille, ou pas de minimum pour la devise), le taux unique
-/// ([donyCommissionRate], `/config/commission-rate`).
-double listHeadlineCommissionRate(String? currencyCode) {
-  final grid = _usableGrid(
-    null,
-    SupportedCurrency.fromCodeOrDefault(currencyCode),
-  );
-  if (grid == null || grid.tiers.isEmpty) return donyCommissionRate;
-  return grid.tiers.reduce((a, b) => a.fromEur <= b.fromEur ? a : b).rate;
-}
-
-/// Prix unitaire frais de service inclus, sans arrondi, pour les cartes de
-/// recherche : `net × (1 + taux du premier palier)` sous grille, le taux
-/// unique sinon (même résultat que [flatRateGross]). Le minimum de frais ne
-/// se ramène pas à l'unité : il n'entre pas dans ce prix, seulement dans le
-/// total calculé à la fin de la demande ou de l'offre.
-double listUnitPriceFeeIncluded(double netUnit, String? currencyCode) =>
-    netUnit * (1 + listHeadlineCommissionRate(currencyCode));
-
-/// Facteur qui passe un prix unitaire affiché à l'expéditeur
-/// (`pricePerKgDisplay`, `unitPriceDisplay`, [listUnitPrice]) à son prix
-/// frais inclus : `1 + taux du premier palier` sous grille, où ces prix sont
-/// des nets ; `1` sans grille, où ils portent déjà le taux unique.
-double feeIncludedFactor(String? currencyCode) =>
+/// Facteur qui passe un prix unitaire servi à l'expéditeur
+/// (`pricePerKgDisplay`, `unitPriceDisplay`, [listUnitPrice]) au prix du
+/// voyageur, SANS frais de service : les affiches, cartes et fiches n'en
+/// montrent jamais, ils n'apparaissent qu'au récapitulatif de paiement.
+/// `1` sous grille, où ces prix sont déjà des nets ; `1 / (1 + taux unique)`
+/// sans grille, où ils portent le taux unique.
+double netPriceFactor(String? currencyCode) =>
     commissionMinimumFor(currencyCode) == null
-    ? 1
-    : 1 + listHeadlineCommissionRate(currencyCode);
+    ? 1 / (1 + donyCommissionRate)
+    : 1;
 
 /// Brut au taux unique historique, sans arrondi : `net × (1 +
 /// donyCommissionRate)`. Aperçus locaux d'avant les paliers (prix au kilo,

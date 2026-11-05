@@ -2,6 +2,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/commission_grid_test_doubles.dart';
@@ -233,6 +234,42 @@ void main() {
       expect(flatRateGross(10), closeTo(11.2, 1e-12));
       // Inverse exact du repli de netForSenderGross au taux unique.
       expect(netForSenderGross(11.2, 'EUR', legacy: true), 11.2 / (1 + 0.12));
+    });
+  });
+
+  group('netPriceFactor (prix affichés sans frais de service)', () {
+    test('sans grille : retire le taux unique du prix servi', () {
+      expect(netPriceFactor('EUR'), closeTo(1 / 1.05, 1e-12));
+      expect(1.05 * netPriceFactor('EUR'), closeTo(1, 1e-12));
+    });
+
+    test('sous grille : le prix servi est déjà le net, facteur 1', () {
+      useTestCommissionGrid();
+      expect(netPriceFactor('EUR'), 1);
+    });
+  });
+
+  group('GridItemSearchPricing.searchPrice', () {
+    const item = AnnouncementGridItemModel(
+      id: 'g',
+      label: 'Carton',
+      unitPriceNet: 20,
+      unitPriceDisplay: 21,
+    );
+    const hidden = AnnouncementGridItemModel(
+      id: 'g',
+      label: 'Carton',
+      unitPriceDisplay: 21,
+    );
+
+    test('prend le net du voyageur quand il est servi', () {
+      expect(item.searchPrice('EUR'), 20);
+    });
+
+    test('net masqué : ramène le prix servi au net', () {
+      expect(hidden.searchPrice('EUR'), closeTo(20, 1e-12));
+      useTestCommissionGrid();
+      expect(hidden.searchPrice('EUR'), 21);
     });
   });
 }

@@ -469,8 +469,8 @@ void main() {
 
   group('frais de service sous grille de commission', () {
     // YADONY-FLUTTER-PROD-1J : même prix que la carte de recherche, un seul
-    // prix au kilo frais inclus (8 € net + 7 % du premier palier).
-    testWidgets('fiche d\'une liste : un seul prix, frais inclus', (
+    // prix au kilo du voyageur (8 € net).
+    testWidgets('fiche d\'une liste : un seul prix, sans frais', (
       tester,
     ) async {
       useTestCommissionGrid();
@@ -480,12 +480,13 @@ void main() {
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('8,56'), findsWidgets);
+      expect(find.textContaining('8,56'), findsNothing);
+      expect(find.textContaining('8'), findsWidgets);
       expect(find.textContaining('frais de service'), findsNothing);
       expect(find.textContaining('min.'), findsNothing);
     });
 
-    testWidgets('fiche ouverte depuis la carte : prix frais inclus', (
+    testWidgets('fiche ouverte depuis la carte : prix sans frais', (
       tester,
     ) async {
       useTestCommissionGrid();
@@ -498,7 +499,8 @@ void main() {
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('8,56'), findsWidgets);
+      expect(find.textContaining('8,56'), findsNothing);
+      expect(find.textContaining('8'), findsWidgets);
       expect(find.textContaining('frais de service'), findsNothing);
       expect(find.textContaining('min.'), findsNothing);
     });

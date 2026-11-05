@@ -457,7 +457,7 @@ class TripPosterCard extends StatelessWidget {
   Widget _priceTile(AppLocalizations l) {
     final a = announcement;
     final currency = a.currency;
-    // Prix frais de service inclus, comme la carte de recherche
+    // Prix du voyageur sans frais de service, comme la carte de recherche
     // (YADONY-FLUTTER-PROD-1J).
     final grid = a.searchCheapestGridPrice;
     final senderPricePerKg = a.searchCardPricePerKg;
@@ -667,7 +667,7 @@ class _ItemsGrid extends StatelessWidget {
       for (final item in shown)
         _ItemCell(
           label: item.label,
-          price: formatPriceIn(item.unitPriceDisplay, currency),
+          price: formatPriceIn(item.searchPrice(currency), currency),
         ),
       if (overflow) _MoreCell(count: hidden, label: l.tripPosterItemsMore),
     ];

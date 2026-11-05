@@ -168,7 +168,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.textContaining('dès 16,80'), findsOneWidget);
+    expect(find.textContaining('dès 16'), findsOneWidget);
   });
 
   testWidgets('renders Prix libre when pricePerKg is null', (tester) async {
@@ -322,13 +322,14 @@ void main() {
     });
   });
 
-  testWidgets('sous grille, un seul prix au kilo frais inclus', (tester) async {
+  testWidgets('sous grille, un seul prix au kilo, sans frais', (tester) async {
     useTestCommissionGrid();
     await _pump(tester, _trip());
 
-    // 9,50 € net + 7 % = 10,17 €, aucune mention séparée des frais.
+    // 9,50 € net affiché tel quel, sans les 7 %, aucune mention séparée des frais.
     expect(find.textContaining('frais de service'), findsNothing);
-    expect(find.textContaining('9,5'), findsNothing);
+    expect(find.textContaining('9,5'), findsOneWidget);
+    expect(find.textContaining('10,17'), findsNothing);
   });
 
   testWidgets('sans grille, aucune mention des frais de service', (

@@ -229,7 +229,7 @@ void main() {
     );
   });
 
-  testWidgets('la légende reprend corridor, dépôt et prix expéditeur', (
+  testWidgets('la légende reprend corridor, dépôt et prix du voyageur', (
     tester,
   ) async {
     await _pump(tester);
@@ -239,7 +239,8 @@ void main() {
     final caption = copied.single;
     expect(caption, contains('Paris vers Dakar'));
     expect(caption, contains('Dernier dépôt'));
-    expect(caption, contains(formatPriceIn(8, 'EUR')));
+    expect(caption, contains(formatPriceIn(6, 'EUR')));
+    expect(caption, isNot(contains(formatPriceIn(8, 'EUR'))));
     expect(caption, contains('12 kg'));
   });
 
@@ -273,7 +274,10 @@ void main() {
     await _tapAction(tester, 'Copier la légende');
 
     final caption = copied.single;
-    expect(caption, contains("dès ${formatPriceIn(25, 'EUR')} l'article"));
+    expect(
+      caption,
+      contains("dès ${formatPriceIn(25 / 1.05, 'EUR')} l'article"),
+    );
     expect(caption, isNot(contains('le kilo')));
   });
 
@@ -347,7 +351,8 @@ void main() {
     final caption = copied.single;
     expect(caption, contains('Paris to Dakar'));
     expect(caption, contains('Last drop-off'));
-    expect(caption, contains(formatPriceIn(8, 'EUR')));
+    expect(caption, contains(formatPriceIn(6, 'EUR')));
+    expect(caption, isNot(contains(formatPriceIn(8, 'EUR'))));
   });
 
   group('« Publier dans le groupe Yadony » (FLUTTER-G4)', () {

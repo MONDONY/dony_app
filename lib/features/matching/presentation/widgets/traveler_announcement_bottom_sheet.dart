@@ -985,7 +985,7 @@ class _StatCardsRow extends StatelessWidget {
         ? null
         : tripWallTime(deadlineInstant, announcement.departureTimezone);
     final handoverClosed = announcement.isHandoverClosed;
-    // Prix frais de service inclus, comme la carte de recherche
+    // Prix du voyageur sans frais de service, comme la carte de recherche
     // (YADONY-FLUTTER-PROD-1J) : aucune mention séparée des frais.
     // IntrinsicHeight : égalise la hauteur des deux cartes sans stretch
     // non borné (la colonne parente est dans un scrollable).
@@ -1159,9 +1159,9 @@ class _GridStatCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    final minPrice =
-        items.map((i) => i.unitPriceDisplay).reduce((a, b) => a < b ? a : b) *
-        feeIncludedFactor(currency);
+    final minPrice = items
+        .map((i) => i.searchPrice(currency))
+        .reduce((a, b) => a < b ? a : b);
     return Container(
       padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
@@ -1310,8 +1310,7 @@ class _PriceGridCardState extends State<_PriceGridCard> {
                               children: [
                                 Text(
                                   formatPriceIn(
-                                    visible[i].unitPriceDisplay *
-                                        feeIncludedFactor(widget.currency),
+                                    visible[i].searchPrice(widget.currency),
                                     widget.currency,
                                   ),
                                   style: tt.titleSmall?.copyWith(
@@ -1327,7 +1326,7 @@ class _PriceGridCardState extends State<_PriceGridCard> {
                                     l.listingApproxPrice(
                                       formatPriceIn(
                                         visible[i].convertedUnitPriceDisplay! *
-                                            feeIncludedFactor(widget.currency),
+                                            netPriceFactor(widget.currency),
                                         widget.convertedCurrency,
                                       ),
                                     ),

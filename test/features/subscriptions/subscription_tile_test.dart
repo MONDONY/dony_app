@@ -115,7 +115,7 @@ void main() {
         ),
       );
 
-      expect(find.textContaining('dès 16,80'), findsOneWidget);
+      expect(find.textContaining('dès 16'), findsOneWidget);
       expect(find.textContaining('/kg'), findsNothing);
     },
   );
@@ -340,13 +340,14 @@ void main() {
     );
   });
 
-  testWidgets('sous grille, le dernier trajet affiche un prix frais inclus', (
+  testWidgets('sous grille, le dernier trajet affiche le prix du voyageur', (
     tester,
   ) async {
     useTestCommissionGrid();
     await tester.pumpWidget(host(_item(last: trajet())));
     expect(find.textContaining('frais de service'), findsNothing);
-    expect(find.textContaining('8,56'), findsOneWidget);
+    expect(find.textContaining('8,56'), findsNothing);
+    expect(find.textContaining('8'), findsWidgets);
   });
 
   testWidgets('sans grille, aucune mention des frais de service', (
