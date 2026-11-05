@@ -12804,6 +12804,14 @@
   "@communityEmptyDescription": {
     "description": "Description de l'état vide (community_screen.dart, CommunityScreen)."
   },
+  "communityDemosTitle": "Démos des fonctionnalités",
+  "@communityDemosTitle": {
+    "description": "Titre de la section des démos vidéo (community_screen.dart, CommunityScreen)."
+  },
+  "communityDemosSubtitle": "Chaque fonctionnalité de Yadony expliquée en vidéo.",
+  "@communityDemosSubtitle": {
+    "description": "Sous-titre de la section des démos vidéo (community_screen.dart, CommunityScreen)."
+  },
   "communityTutorialsTitle": "Tutoriels vidéo",
   "@communityTutorialsTitle": {
     "description": "Titre de la section tutoriels (community_screen.dart, CommunityScreen)."

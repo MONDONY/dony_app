@@ -109,6 +109,44 @@ const _tutorialsOnlyConfigJson = '''
 }
 ''';
 
+const _demosConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": [
+    {
+      "id": "search_intro",
+      "title": "Découvrir Yadony",
+      "description": "Comprendre la recherche.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["search"]
+    },
+    {
+      "id": "demo_fr_01",
+      "title": "Démo en français",
+      "description": "La recherche.",
+      "youtubeVideoId": "M7lc1UVf-VE",
+      "order": 101,
+      "active": true,
+      "language": "fr",
+      "vertical": true
+    },
+    {
+      "id": "demo_en_01",
+      "title": "Demo in English",
+      "description": "Search.",
+      "youtubeVideoId": "2CI2z-us1H0",
+      "order": 101,
+      "active": true,
+      "language": "en",
+      "vertical": true
+    }
+  ]
+}
+''';
+
 class _StaticHelpCenterSource implements HelpCenterConfigSource {
   const _StaticHelpCenterSource(this.json, {this.failRefresh = false});
 
@@ -216,6 +254,46 @@ void main() {
     expect(find.byKey(const Key('community-empty-state')), findsNothing);
     expect(find.text('Tutoriels vidéo'), findsOneWidget);
     expect(find.text('Rejoindre la communauté'), findsNothing);
+  });
+
+  testWidgets('range les démos dans leur section, dans la langue de l\'app', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(configJson: _demosConfigJson));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Démos des fonctionnalités'), findsOneWidget);
+    expect(find.text('Démo en français'), findsOneWidget);
+    expect(find.text('Demo in English'), findsNothing);
+    expect(
+      tester.getTopLeft(find.text('Découvrir Yadony')).dy,
+      lessThan(tester.getTopLeft(find.text('Démos des fonctionnalités')).dy),
+    );
+  });
+
+  testWidgets('montre les démos anglaises quand l\'app est en anglais', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(_wrap(configJson: _demosConfigJson));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Feature demos'), findsOneWidget);
+    expect(find.text('Demo in English'), findsOneWidget);
+    expect(find.text('Démo en français'), findsNothing);
+  });
+
+  testWidgets('démos seules : pas de section tutoriels', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        configJson: _demosConfigJson.replaceAll('"contexts": ["search"]', '''
+          "contexts": ["search"], "language": "de"'''),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tutoriels vidéo'), findsNothing);
+    expect(find.text('Démos des fonctionnalités'), findsOneWidget);
   });
 
   testWidgets('ordonne les réseaux avant les tutoriels', (tester) async {

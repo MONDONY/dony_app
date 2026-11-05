@@ -33,12 +33,37 @@ const _tutorialConfigJson = '''
       "active": true,
       "contexts": ["search"],
       "durationLabel": "2:30"
+    },
+    {
+      "id": "demo_fr_01",
+      "title": "Rechercher un voyageur",
+      "description": "La recherche.",
+      "youtubeVideoId": "M7lc1UVf-VE",
+      "order": 101,
+      "active": true,
+      "language": "fr",
+      "vertical": true
     }
   ]
 }
 ''';
 
 void main() {
+  testWidgets('une démo verticale ouvre un lecteur 9:16 de hauteur bornée', (
+    tester,
+  ) async {
+    final harness = _TutorialHarness(tutorialId: 'demo_fr_01');
+
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
+
+    expect(harness.configurations.single.aspectRatio, 9 / 16);
+    final frame = find.byKey(const Key('help-tutorial-player-aspect-ratio'));
+    expect(tester.widget<AspectRatio>(frame).aspectRatio, 9 / 16);
+    expect(tester.getSize(frame).height, lessThanOrEqualTo(560));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'garde le player monté sous le chargement jusqu’à la readiness réelle',
     (tester) async {

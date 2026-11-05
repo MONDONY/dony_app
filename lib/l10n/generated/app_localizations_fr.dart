@@ -11715,6 +11715,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun tutoriel ni espace communautaire à afficher pour le moment.';
 
   @override
+  String get communityDemosTitle => 'Démos des fonctionnalités';
+
+  @override
+  String get communityDemosSubtitle =>
+      'Chaque fonctionnalité de Yadony expliquée en vidéo.';
+
+  @override
   String get communityTutorialsTitle => 'Tutoriels vidéo';
 
   @override

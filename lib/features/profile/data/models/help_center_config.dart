@@ -46,6 +46,8 @@ final class HelpTutorial extends Equatable {
     required this.active,
     required List<TutorialContext> contexts,
     this.durationLabel,
+    this.language,
+    this.vertical = false,
   }) : _contexts = contexts;
 
   final String id;
@@ -59,6 +61,19 @@ final class HelpTutorial extends Equatable {
   List<TutorialContext> get contexts => UnmodifiableListView(_contexts);
   final String? durationLabel;
 
+  /// Langue de la vidéo (`fr`, `en`). Sans langue, elle est proposée à tous.
+  final String? language;
+
+  /// Vidéo 9:16 (Short) : le lecteur s'adapte à ce format.
+  final bool vertical;
+
+  /// Démo d'une fonctionnalité : aucun écran de l'app ne la propose, elle n'est
+  /// visible que dans la liste de la page Communauté.
+  bool get isDemo => _contexts.isEmpty;
+
+  bool appliesToLanguage(String languageCode) =>
+      language == null || language == languageCode;
+
   @override
   List<Object?> get props => [
     id,
@@ -69,6 +84,8 @@ final class HelpTutorial extends Equatable {
     active,
     _contexts,
     durationLabel,
+    language,
+    vertical,
   ];
 }
 
@@ -263,13 +280,17 @@ HelpTutorial _parseTutorial(Object? value) {
   final order = json['order'];
   final active = json['active'];
   final durationLabel = json['durationLabel'];
+  final language = json['language'];
+  final vertical = json['vertical'];
 
   if (!_youtubeVideoIdPattern.hasMatch(youtubeVideoId)) {
     throw const FormatException('invalid_video_id');
   }
   if (order is! int ||
       active is! bool ||
-      (durationLabel != null && durationLabel is! String)) {
+      (durationLabel != null && durationLabel is! String) ||
+      (language != null && language is! String) ||
+      (vertical != null && vertical is! bool)) {
     throw const FormatException('invalid_tutorial');
   }
 
@@ -282,6 +303,8 @@ HelpTutorial _parseTutorial(Object? value) {
     active: active,
     contexts: _tutorialContextsFromJson(json['contexts']),
     durationLabel: durationLabel as String?,
+    language: language as String?,
+    vertical: vertical as bool? ?? false,
   );
 }
 
@@ -314,7 +337,11 @@ SocialNetwork _socialNetworkFromJson(Object? value) {
 }
 
 List<TutorialContext> _tutorialContextsFromJson(Object? value) {
-  if (value is! List || value.isEmpty) {
+  // Sans contexte : démo d'une fonctionnalité, listée seulement dans Communauté.
+  if (value == null || (value is List && value.isEmpty)) {
+    return const [];
+  }
+  if (value is! List) {
     throw const FormatException('invalid_context');
   }
 
