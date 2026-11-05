@@ -11,6 +11,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/app_badge_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/features/app_update/presentation/widgets/app_update_banner.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -360,6 +361,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               body: Column(
                 children: [
                   ?banner,
+                  const AppUpdateBanner(key: ValueKey('app-update-banner')),
                   Expanded(child: widget.navigationShell),
                 ],
               ),

@@ -15151,6 +15151,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dsEmojiParcel => 'Parcel';
 
   @override
+  String get appUpdateSoftTitle => 'New version available';
+
+  @override
+  String get appUpdateSoftMessage =>
+      'Update Yadony to enjoy the latest improvements.';
+
+  @override
+  String get appUpdateSoftAction => 'Update';
+
+  @override
   String get appUpdateTitle => 'An update is required';
 
   @override
