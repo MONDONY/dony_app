@@ -1,9 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/app_update/data/services/app_store_launcher.dart';
 import 'package:dony/l10n/l10n.dart';
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Écran bloquant affiché quand `AppUpdateService.isUpdateRequired` détecte
 /// une version trop ancienne. Aucune sortie possible en dehors du bouton :
@@ -11,21 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 /// statut de négociation inconnu ne doit jamais redevenir accessible.
 class ForceUpdateScreen extends StatelessWidget {
   const ForceUpdateScreen({super.key});
-
-  static const _androidStoreUrl =
-      'https://play.google.com/store/apps/details?id=com.yadony.yadony';
-
-  /// Fiche App Store directe (identifiant Apple de l'app dans App Store
-  /// Connect) : une recherche par nom pouvait proposer une autre app.
-  static const _iosStoreUrl = 'https://apps.apple.com/app/id6797821239';
-
-  Future<void> _openStore() async {
-    final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
-    final uri = Uri.parse(isIOS ? _iosStoreUrl : _androidStoreUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +55,7 @@ class ForceUpdateScreen extends StatelessWidget {
                   width: double.infinity,
                   child: DonyButton(
                     label: l.appUpdateButton,
-                    onPressed: _openStore,
+                    onPressed: AppStoreLauncher.open,
                   ),
                 ),
               ],

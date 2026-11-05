@@ -15259,6 +15259,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dsEmojiParcel => 'Colis';
 
   @override
+  String get appUpdateSoftTitle => 'Nouvelle version disponible';
+
+  @override
+  String get appUpdateSoftMessage =>
+      'Mettez Yadony à jour pour profiter des dernières améliorations.';
+
+  @override
+  String get appUpdateSoftAction => 'Mettre à jour';
+
+  @override
   String get appUpdateTitle => 'Une mise à jour est nécessaire';
 
   @override

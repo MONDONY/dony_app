@@ -10,6 +10,11 @@ abstract interface class AppUpdateConfigSource {
   /// n'a jamais été publiée) — jamais de réseau, jamais d'attente.
   int get minSupportedBuild;
 
+  /// Clé `recommended_build` : le `buildNumber` à partir duquel plus aucun
+  /// bandeau de mise à jour douce n'est affiché. Même contrat que
+  /// [minSupportedBuild] : `0` tant que rien n'est publié.
+  int get recommendedBuild;
+
   /// Récupère la dernière valeur publiée et l'active pour les lectures
   /// suivantes. Best-effort : toute erreur est avalée, [minSupportedBuild]
   /// retombe alors sur la dernière valeur connue.
@@ -63,6 +68,9 @@ final class AppUpdateRemoteConfigDatasource implements AppUpdateConfigSource {
   /// par défaut 0.
   static const configKey = 'min_supported_build';
 
+  /// Clé du bandeau doux : entière, valeur par défaut 0.
+  static const recommendedConfigKey = 'recommended_build';
+
   final AppUpdateRemoteConfigClient _remoteConfig;
   final bool _isDevelopment;
   bool _isConfigured = false;
@@ -71,6 +79,15 @@ final class AppUpdateRemoteConfigDatasource implements AppUpdateConfigSource {
   int get minSupportedBuild {
     try {
       return _remoteConfig.getInt(configKey);
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  @override
+  int get recommendedBuild {
+    try {
+      return _remoteConfig.getInt(recommendedConfigKey);
     } catch (_) {
       return 0;
     }

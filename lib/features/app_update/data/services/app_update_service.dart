@@ -45,6 +45,27 @@ class AppUpdateService {
     }
   }
 
+  /// `true` si le `buildNumber` installé est strictement inférieur au build
+  /// recommandé (`recommended_build`) : une mise à jour est disponible, sans
+  /// être imposée. Même garde-fous que [isUpdateRequired] : lecture locale,
+  /// jamais de réseau, et `false` au moindre doute.
+  Future<bool> isUpdateRecommended() async {
+    try {
+      final recommendedBuild = _configSource.recommendedBuild;
+      if (recommendedBuild <= 0) {
+        return false;
+      }
+      final info = await _loadPackageInfo();
+      final installedBuild = int.tryParse(info.buildNumber);
+      if (installedBuild == null) {
+        return false;
+      }
+      return installedBuild < recommendedBuild;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<PackageInfo> _loadPackageInfo() async {
     return _packageInfo ??= await _packageInfoLoader();
   }

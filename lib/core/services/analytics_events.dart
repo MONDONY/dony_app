@@ -84,6 +84,12 @@ abstract final class AnalyticsEvents {
 
   /// Trajet récurrent par dates précises : calendrier ouvert depuis l'écran
   /// de succès, série créée, modèle enregistré depuis le trajet.
+  /// Bandeau de mise à jour douce (`recommended_build` de Remote Config) :
+  /// affiché, lien vers le store touché, fermé.
+  static const appUpdateBannerShown = 'app_update_banner_shown';
+  static const appUpdateBannerTapped = 'app_update_banner_tapped';
+  static const appUpdateBannerDismissed = 'app_update_banner_dismissed';
+
   static const tripSeriesOpened = 'trip_series_opened';
   static const tripSeriesCreated = 'trip_series_created';
   static const tripSeriesTemplateSaved = 'trip_series_template_saved';

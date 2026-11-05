@@ -59,6 +59,30 @@ void main() {
       expect(datasource.minSupportedBuild, 0);
     });
 
+    test('recommendedBuild lit la clé recommended_build', () {
+      final datasource = AppUpdateRemoteConfigDatasource(
+        remoteConfig: _FakeRemoteConfigClient(
+          minSupportedBuild: 42,
+          recommendedBuild: 57,
+        ),
+      );
+
+      expect(datasource.recommendedBuild, 57);
+      expect(datasource.minSupportedBuild, 42);
+    });
+
+    test('recommendedBuild renvoie 0 quand le client échoue', () {
+      final datasource = AppUpdateRemoteConfigDatasource(
+        remoteConfig: _FakeRemoteConfigClient(
+          minSupportedBuild: 42,
+          recommendedBuild: 57,
+          getterError: StateError('unavailable'),
+        ),
+      );
+
+      expect(datasource.recommendedBuild, 0);
+    });
+
     test('fetchAndActivate avale les erreurs de configuration', () async {
       final datasource = AppUpdateRemoteConfigDatasource(
         remoteConfig: _FakeRemoteConfigClient(
@@ -88,12 +112,14 @@ void main() {
 final class _FakeRemoteConfigClient implements AppUpdateRemoteConfigClient {
   _FakeRemoteConfigClient({
     required this.minSupportedBuild,
+    this.recommendedBuild = 0,
     this.getterError,
     this.fetchError,
     this.settingsError,
   });
 
   final int minSupportedBuild;
+  final int recommendedBuild;
   final Object? getterError;
   final Object? fetchError;
   final Object? settingsError;
@@ -114,7 +140,9 @@ final class _FakeRemoteConfigClient implements AppUpdateRemoteConfigClient {
     if (getterError case final error?) {
       throw error;
     }
-    return minSupportedBuild;
+    return key == AppUpdateRemoteConfigDatasource.recommendedConfigKey
+        ? recommendedBuild
+        : minSupportedBuild;
   }
 
   @override

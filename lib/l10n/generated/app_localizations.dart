@@ -25135,6 +25135,24 @@ abstract class AppLocalizations {
   /// **'Colis'**
   String get dsEmojiParcel;
 
+  /// Titre du bandeau de mise à jour douce (app_update_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle version disponible'**
+  String get appUpdateSoftTitle;
+
+  /// Message du bandeau de mise à jour douce (app_update_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettez Yadony à jour pour profiter des dernières améliorations.'**
+  String get appUpdateSoftMessage;
+
+  /// Lien du bandeau de mise à jour douce vers le store (app_update_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre à jour'**
+  String get appUpdateSoftAction;
+
   /// Titre de l'écran bloquant de mise à jour obligatoire (force_update_screen.dart).
   ///
   /// In fr, this message translates to:
