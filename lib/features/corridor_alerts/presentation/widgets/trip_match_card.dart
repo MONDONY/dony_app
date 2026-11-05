@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -35,9 +34,9 @@ class TripMatchCard extends StatelessWidget {
   /// atténuée pour ne pas concurrencer les trajets encore réservables.
   static const double fullOpacity = 0.55;
 
-  /// Prix au kilo frais de service inclus (YADONY-FLUTTER-PROD-1J).
+  /// Prix au kilo du voyageur, sans frais de service.
   static String _priceStr(TripMatchModel match) =>
-      '${formatPriceIn(match.pricePerKg! * feeIncludedFactor(match.currency), match.currency)}/kg';
+      '${formatPriceIn(match.pricePerKg!, match.currency)}/kg';
 
   @override
   Widget build(BuildContext context) {

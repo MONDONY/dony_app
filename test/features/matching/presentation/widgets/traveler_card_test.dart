@@ -246,7 +246,8 @@ void main() {
       expect(find.text('Mamadou Diallo'), findsOneWidget);
       // Carte vue par l'expéditeur : prix au kilo affiché = net × 1,12
       // (12 €/kg net → 13,44 €/kg commission Yadony incluse).
-      expect(find.textContaining('13,44'), findsOneWidget);
+      expect(find.textContaining('12'), findsWidgets);
+      expect(find.textContaining('13,44'), findsNothing);
       expect(find.textContaining('€/kg'), findsOneWidget);
     });
 
@@ -317,11 +318,12 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.textContaining('13,44'), findsOneWidget);
+        expect(find.textContaining('13,44'), findsNothing);
         // NumberFormat insère une espace insécable entre le montant et le
         // symbole ; on vérifie donc le contenu plutôt que la chaîne exacte.
         expect(find.textContaining('environ'), findsOneWidget);
-        expect(find.textContaining('112'), findsOneWidget);
+        expect(find.textContaining('100'), findsOneWidget);
+        expect(find.textContaining('112'), findsNothing);
         expect(find.textContaining('F CFA'), findsOneWidget);
       },
     );
@@ -1174,7 +1176,7 @@ void main() {
   });
 
   group('frais de service (commission par paliers)', () {
-    testWidgets('sous grille, un seul prix au kilo frais inclus (PROD-1J)', (
+    testWidgets('sous grille, un seul prix au kilo, sans frais de service', (
       tester,
     ) async {
       useTestCommissionGrid();
@@ -1189,9 +1191,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      // Un seul prix, frais inclus au taux du premier palier de la grille
-      // (7 %) : 8 € × 1,07 = 8,56 €. Ni mention des frais ni minimum.
-      expect(find.text('8,56\u00A0€/kg'), findsOneWidget);
+      // Un seul prix, celui du voyageur, sans les frais du premier palier.
+      expect(find.text('12\u00A0€/kg'), findsOneWidget);
+      expect(find.textContaining('8,56'), findsNothing);
       expect(find.textContaining('frais de service'), findsNothing);
       expect(find.textContaining('min'), findsNothing);
     });

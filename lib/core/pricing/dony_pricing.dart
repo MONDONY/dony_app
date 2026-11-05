@@ -248,6 +248,17 @@ void setDonyReimbursementCap(double amount) {
   }
 }
 
+extension GridItemSearchPricing on AnnouncementGridItemModel {
+  /// Prix de l'article vu par l'expéditeur sur affiches, cartes et fiches : le
+  /// net du voyageur, SANS frais de service. Net masqué (lecteur anonyme) :
+  /// repli sur [unitPriceDisplay] ramené au net ([netPriceFactor]).
+  double searchPrice(String? currencyCode) {
+    final net = unitPriceNet;
+    if (net != null && net > 0) return net;
+    return unitPriceDisplay * netPriceFactor(currencyCode);
+  }
+}
+
 extension AnnouncementSenderPricing on AnnouncementModel {
   /// Prix au kilo **affiché à l'expéditeur**. Préfère le champ backend
   /// [AnnouncementModel.pricePerKgDisplay] s'il est présent, sinon
@@ -304,36 +315,35 @@ extension AnnouncementSenderPricing on AnnouncementModel {
     return converted * markupRatio;
   }
 
-  /// Prix au kilo des cartes de recherche vues par l'expéditeur : un seul
-  /// prix, frais de service inclus (YADONY-FLUTTER-PROD-1J).
-  ///
-  /// Sous grille de commission, [senderPricePerKg] est le net du voyageur :
-  /// on y applique le taux du premier palier de la grille
-  /// ([listUnitPriceFeeIncluded]). Sans grille, [senderPricePerKg] est déjà
-  /// majoré du taux unique et reste tel quel. `null` dans les mêmes cas que
-  /// [senderPricePerKg].
+  /// Prix au kilo des cartes de recherche vues par l'expéditeur : le prix du
+  /// voyageur ([pricePerKg]), SANS frais de service, qui n'apparaissent qu'au
+  /// récapitulatif de paiement. Quand le net est masqué (lecteur anonyme),
+  /// repli sur [senderPricePerKg] ramené au net ([netPriceFactor]). `null`
+  /// dans les mêmes cas que [senderPricePerKg].
   double? get searchCardPricePerKg {
+    final net = pricePerKg;
+    if (net != null && net > 0) return net;
     final sender = senderPricePerKg;
-    return sender == null ? null : sender * feeIncludedFactor(currency);
+    return sender == null ? null : sender * netPriceFactor(currency);
   }
 
-  /// Article le moins cher de la grille de prix, frais de service inclus
+  /// Article le moins cher de la grille de prix, sans frais de service
   /// comme [searchCardPricePerKg] (fiche, affiche).
-  double? get searchCheapestGridPrice {
-    final cheapest = cheapestGridPrice;
-    return cheapest == null ? null : cheapest * feeIncludedFactor(currency);
-  }
+  double? get searchCheapestGridPrice => usesPriceGrid
+      ? priceGridItems
+            .map((i) => i.searchPrice(currency))
+            .reduce((a, b) => a < b ? a : b)
+      : null;
 
   /// [AnnouncementModel.pricePerKgDisplayConverted] (servi par le détail)
-  /// porté frais de service inclus, comme [searchCardPricePerKg].
+  /// ramené au prix du voyageur sans frais, comme [searchCardPricePerKg].
   double? get searchCardPricePerKgDisplayConverted {
     final converted = pricePerKgDisplayConverted;
-    return converted == null ? null : converted * feeIncludedFactor(currency);
+    return converted == null ? null : converted * netPriceFactor(currency);
   }
 
   /// Équivalent converti de [searchCardPricePerKg] : même majoration que
-  /// [convertedSenderPricePerKg], plus celle des frais de service quand la
-  /// grille est en vigueur.
+  /// [convertedSenderPricePerKg], retrait des frais de service.
   double? get convertedSearchCardPricePerKg {
     final converted = convertedSenderPricePerKg;
     final sender = senderPricePerKg;

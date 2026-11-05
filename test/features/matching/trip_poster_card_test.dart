@@ -81,29 +81,30 @@ void main() {
     expect(find.text('DAKAR'), findsOneWidget);
   });
 
-  /// L'affiche s'adresse aux expéditeurs. `pricePerKg` est le net voyageur :
-  /// l'afficher annoncerait un prix que personne ne paie réellement.
-  testWidgets('affiche le prix expéditeur, pas le net voyageur', (
+  /// Les frais de service n'apparaissent qu'au récapitulatif de paiement :
+  /// l'affiche annonce le prix du voyageur (`pricePerKg`), jamais le prix
+  /// servi avec les frais (`pricePerKgDisplay`).
+  testWidgets('affiche le prix du voyageur, sans frais de service', (
     tester,
   ) async {
     await _pump(tester, _announcement(pricePerKg: 6, pricePerKgDisplay: 8));
 
-    expect(find.text('${formatPriceIn(8, 'EUR')}/kg'), findsOneWidget);
-    expect(find.text('${formatPriceIn(6, 'EUR')}/kg'), findsNothing);
+    expect(find.text('${formatPriceIn(6, 'EUR')}/kg'), findsOneWidget);
+    expect(find.text('${formatPriceIn(8, 'EUR')}/kg'), findsNothing);
   });
 
-  /// Sans `pricePerKgDisplay`, il faut appliquer la commission au net, pas
-  /// afficher le net tel quel : ce serait le tarif voyageur, pas celui payé.
-  testWidgets('applique la commission quand le prix affiché est absent', (
+  testWidgets('sans prix affiché, montre quand même le prix du voyageur', (
     tester,
   ) async {
     await _pump(tester, _announcement(pricePerKg: 6, pricePerKgDisplay: null));
 
-    expect(
-      find.text('${formatPriceIn(6 * (1 + donyCommissionRate), 'EUR')}/kg'),
-      findsOneWidget,
-    );
-    expect(find.text('${formatPriceIn(6, 'EUR')}/kg'), findsNothing);
+    expect(find.text('${formatPriceIn(6, 'EUR')}/kg'), findsOneWidget);
+    final texts = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data ?? '')
+        .join(' ');
+    expect(RegExp(r'\+\d{6,}').hasMatch(texts), isFalse);
+    expect(RegExp(r'\b0\d[\s.]?(\d{2}[\s.]?){4}\b').hasMatch(texts), isFalse);
   });
 
   testWidgets('affiche la date limite de dépôt quand elle existe', (
@@ -236,7 +237,7 @@ void main() {
   testWidgets('gère une devise hors euro', (tester) async {
     await _pump(
       tester,
-      _announcement(currency: 'XOF', pricePerKgDisplay: 6000),
+      _announcement(currency: 'XOF', pricePerKg: 6000, pricePerKgDisplay: 6000),
     );
 
     expect(find.text('${formatPriceIn(6000, 'XOF')}/kg'), findsOneWidget);
@@ -246,7 +247,7 @@ void main() {
   testWidgets('gère le franc CFA d\'Afrique centrale', (tester) async {
     await _pump(
       tester,
-      _announcement(currency: 'XAF', pricePerKgDisplay: 6000),
+      _announcement(currency: 'XAF', pricePerKg: 6000, pricePerKgDisplay: 6000),
     );
 
     expect(find.text('${formatPriceIn(6000, 'XAF')}/kg'), findsOneWidget);
@@ -270,7 +271,7 @@ void main() {
       ),
     );
 
-    expect(find.text('dès ${formatPriceIn(25, 'EUR')}'), findsOneWidget);
+    expect(find.text('dès ${formatPriceIn(25 / 1.05, 'EUR')}'), findsOneWidget);
     expect(find.text("l'article"), findsOneWidget);
     expect(find.text('le kilo'), findsNothing);
     expect(find.textContaining('0 €'), findsNothing);
@@ -289,10 +290,10 @@ void main() {
       ),
     );
 
-    // Le kilo mène la tuile (« 8 €/kg »), la grille ne reste qu'un « dès ».
-    expect(find.text('${formatPriceIn(8, 'EUR')}/kg'), findsOneWidget);
+    // Le kilo mène la tuile (« 6 €/kg »), la grille ne reste qu'un « dès ».
+    expect(find.text('${formatPriceIn(6, 'EUR')}/kg'), findsOneWidget);
     expect(
-      find.text("dès ${formatPriceIn(25, 'EUR')} l'article"),
+      find.text("dès ${formatPriceIn(25 / 1.05, 'EUR')} l'article"),
       findsOneWidget,
     );
   });
@@ -702,7 +703,7 @@ void main() {
       expect(find.text('PRIX PAR ARTICLE'), findsOneWidget);
       expect(find.text('2 articles'), findsOneWidget);
       expect(find.text('Téléphone'), findsOneWidget);
-      expect(find.text(formatPriceIn(15, 'EUR')), findsOneWidget);
+      expect(find.text(formatPriceIn(15 / 1.05, 'EUR')), findsOneWidget);
       expect(find.text('Chaussures'), findsOneWidget);
       expect(find.byKey(const Key('poster-items-more')), findsNothing);
     });
@@ -827,12 +828,13 @@ void main() {
     expect((tile.decoration! as BoxDecoration).color, PosterPalette.danger);
   });
 
-  testWidgets('sous grille, l\'affiche montre le prix frais inclus, sans '
-      'mention séparée', (tester) async {
+  testWidgets('sous grille, l\'affiche montre le prix du voyageur, sans '
+      'frais ni mention séparée', (tester) async {
     useTestCommissionGrid();
     await _pump(tester, _announcement(pricePerKg: 8, pricePerKgDisplay: 8));
 
-    expect(find.textContaining('8,56'), findsWidgets);
+    expect(find.text('${formatPriceIn(8, 'EUR')}/kg'), findsOneWidget);
+    expect(find.textContaining('8,56'), findsNothing);
     expect(find.textContaining('frais de service'), findsNothing);
     expect(find.byKey(const Key('poster-tile-note')), findsNothing);
   });

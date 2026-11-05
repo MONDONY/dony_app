@@ -226,7 +226,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     // senderPricePerKg n'est en pratique jamais null, mais peut valoir 0
     // (mode MIXED sans grille renseignée, cas limite) — ce 0 est la vraie
     // valeur trompeuse à écarter, pas une absence.
-    // Prix frais de service inclus, comme l'affiche et la carte de recherche
+    // Prix du voyageur sans frais de service, comme l'affiche et la carte de recherche
     // (YADONY-FLUTTER-PROD-1J) : aucune mention séparée des frais.
     final senderPricePerKg = a.searchCardPricePerKg;
     final kilo = a.hasKgPrice

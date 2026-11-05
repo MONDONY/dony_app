@@ -1,7 +1,6 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
@@ -226,9 +225,9 @@ class _LastTripLine extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final currency = SupportedCurrency.fromCodeOrDefault(last.currency);
-    // Prix au kilo frais de service inclus (YADONY-FLUTTER-PROD-1J).
+    // Prix au kilo du voyageur, sans frais de service.
     final price = CurrencyFormatter.format(
-      last.pricePerKg * feeIncludedFactor(last.currency),
+      last.pricePerKg,
       currency,
       compact: true,
     );
