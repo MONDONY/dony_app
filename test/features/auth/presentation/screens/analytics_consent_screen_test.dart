@@ -204,6 +204,29 @@ void main() {
     expect(find.text('Faisons connaissance'), findsOneWidget);
   });
 
+  testWidgets(
+    '« Accepter » est au-dessus de « Non merci », tous deux collés en bas '
+    '(barre système comprise)',
+    (tester) async {
+      tester.view.padding = const FakeViewPadding(top: 56, bottom: 96);
+      tester.view.viewPadding = const FakeViewPadding(top: 56, bottom: 96);
+      await pump(tester, size: const Size(720, 1640));
+      tester.view.devicePixelRatio = 2;
+      await tester.pumpAndSettle();
+
+      final acceptRect = tester.getRect(accept());
+      final decline = tester.getRect(
+        find.byKey(const Key('analytics-consent-decline')),
+      );
+
+      expect(acceptRect.top, lessThan(decline.top));
+      // La zone sûre n'est comptée qu'une fois : « Non merci » reste proche du
+      // bas de l'écran, au-dessus de la barre système (48 dp) et d'une marge.
+      final screenHeight = tester.view.physicalSize.height / 2;
+      expect(screenHeight - decline.bottom, lessThanOrEqualTo(48 + 24));
+    },
+  );
+
   testWidgets('en anglais : titre, points et boutons traduits', (tester) async {
     await pump(tester, locale: const Locale('en'));
 

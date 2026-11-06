@@ -82,6 +82,7 @@ class _AnalyticsConsentScreenState extends State<AnalyticsConsentScreen> {
               const AuthFlowBackground(),
               if (state is AnalyticsConsentAsk)
                 SafeArea(
+                  bottom: false,
                   child: DonyLayout.constrained(
                     context,
                     Padding(
@@ -119,22 +120,25 @@ class _AnalyticsConsentScreenState extends State<AnalyticsConsentScreen> {
                               ),
                             ),
                           ),
-                          // « Non merci » prend la place du lien « Passer »
-                          // des autres écrans du parcours : refuser la mesure
-                          // et passer l'étape sont la même intention.
-                          AuthFlowActions(
-                            primary: DonyButton(
-                              key: const Key('analytics-consent-accept'),
-                              label: l.authConsentAccept,
-                              iconAsset: 'shield-check',
-                              onPressed: () => unawaited(
-                                context.read<AnalyticsConsentCubit>().answer(
-                                  granted: true,
-                                ),
+                          // « Accepter » d'abord, « Non merci » dessous, tous
+                          // deux collés en bas, à portée du pouce.
+                          const SizedBox(height: DonySpacing.sm),
+                          DonyButton(
+                            key: const Key('analytics-consent-accept'),
+                            label: l.authConsentAccept,
+                            iconAsset: 'shield-check',
+                            onPressed: () => unawaited(
+                              context.read<AnalyticsConsentCubit>().answer(
+                                granted: true,
                               ),
                             ),
-                            skipLabel: l.authConsentDecline,
-                            onSkip: () => unawaited(
+                          ),
+                          const SizedBox(height: DonySpacing.sm),
+                          DonyButton(
+                            key: const Key('analytics-consent-decline'),
+                            label: l.authConsentDecline,
+                            variant: DonyButtonVariant.secondary,
+                            onPressed: () => unawaited(
                               context.read<AnalyticsConsentCubit>().answer(
                                 granted: false,
                               ),
