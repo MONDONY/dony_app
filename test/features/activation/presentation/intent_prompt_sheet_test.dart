@@ -21,7 +21,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(UserIntent.sender);
-    registerFallbackValue(IntentSource.prompt);
+    registerFallbackValue(IntentSource.settings);
   });
 
   setUp(() {
@@ -63,7 +63,7 @@ void main() {
                   onPressed: () async {
                     sheetResult = await IntentPromptSheet.show(
                       context,
-                      source: IntentSource.prompt,
+                      source: IntentSource.settings,
                       initialIntent: initialIntent,
                       initialDestination: initialDestination,
                     );
@@ -118,7 +118,7 @@ void main() {
       () => repo.declareIntent(
         intent: UserIntent.sender,
         destinationCountry: 'CI',
-        source: IntentSource.prompt,
+        source: IntentSource.settings,
       ),
     ).called(1);
     expect(find.byKey(const Key('intent-sheet-continue')), findsNothing);

@@ -9,15 +9,10 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
-import 'package:dony/core/services/consent_prompt.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
-import 'package:dony/features/activation/data/intent_prompt_policy.dart';
-import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/activation/presentation/widgets/first_action_card.dart';
-import 'package:dony/features/activation/presentation/widgets/intent_prompt_sheet.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
@@ -459,12 +454,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       // Retour sur l'accueil : relire le statut tant que la carte « première
-      // action » est affichée ; et poser la question d'intention si le statut
-      // était déjà chargé avant le montage de l'accueil.
+      // action » est affichée.
       _router = GoRouter.maybeOf(context);
       _router?.routerDelegate.addListener(_onRouteChanged);
-      final activation = _activationCubit?.state;
-      if (activation != null) unawaited(_maybeAskIntent(context, activation));
       _loadReceptionsPrompt(context.read<AuthBloc>().state);
     });
     _activationLifecycle = AppLifecycleListener(
@@ -1897,11 +1889,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
       listeners: [
         BlocListener<ActivationCubit, ActivationState>(
           bloc: activation,
-          listenWhen: (p, c) => c is ActivationLoaded && p is! ActivationLoaded,
-          listener: _maybeAskIntent,
-        ),
-        BlocListener<ActivationCubit, ActivationState>(
-          bloc: activation,
           listenWhen: (p, c) =>
               c is ActivationLoaded &&
               searchModeForIntent(c.status.intent) != _intentMode,
@@ -1916,31 +1903,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
       ],
       child: scaffold,
     );
-  }
-
-  /// Comptes existants sans intention : la question est posée au plus deux
-  /// fois, à 7 jours d'écart (guidage après KYC).
-  Future<void> _maybeAskIntent(
-    BuildContext context,
-    ActivationState state,
-  ) async {
-    if (state is! ActivationLoaded || state.status.intent != null) return;
-    // Jamais deux feuilles empilées : on attend la réponse au consentement, et
-    // on ne s'ouvre pas par-dessus une autre route.
-    if (getItSafe<ConsentPrompt>()?.wanted.value ?? false) return;
-    if (ModalRoute.of(context)?.isCurrent == false) return;
-    final policy = IntentPromptPolicy(getIt<HiveService>().userPrefs);
-    final now = DateTime.now();
-    if (!policy.shouldShow(now)) return;
-    policy.markShown(now);
-    unawaited(
-      getIt<AnalyticsService>().logEvent(AnalyticsEvents.intentPromptShown),
-    );
-    final saved = await IntentPromptSheet.show(
-      context,
-      source: IntentSource.prompt,
-    );
-    if (saved == true) unawaited(_activationCubit?.load());
   }
 
   Future<double?> _showMaxWeightSheet(BuildContext ctx) async {

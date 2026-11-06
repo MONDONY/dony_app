@@ -13,11 +13,6 @@ class HiveService {
   // Carte d'introduction du hub Activités, fermée manuellement (X).
   static const String kHubIntroDismissed = 'hub_intro_dismissed';
 
-  /// Question d'intention aux comptes existants : nombre d'affichages et date
-  /// du dernier (guidage après KYC, 2 affichages max à 7 jours d'écart).
-  static const String kIntentPromptCount = 'intent_prompt_count';
-  static const String kIntentPromptLastAt = 'intent_prompt_last_at';
-
   /// Colis à recevoir dont le bandeau « Un colis vous attend » de l'accueil a
   /// été fermé (liste d'identifiants de colis, YADONY-FLUTTER-PROD-12).
   static const String kReceptionsPromptDismissed =

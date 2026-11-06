@@ -155,13 +155,13 @@ void main() {
         initialDestination: kIntentOtherDestination,
       );
     },
-    act: (c) => c.submit(IntentSource.prompt),
+    act: (c) => c.submit(IntentSource.settings),
     verify: (_) {
       verify(
         () => repo.declareIntent(
           intent: UserIntent.traveler,
           destinationCountry: null,
-          source: IntentSource.prompt,
+          source: IntentSource.settings,
         ),
       ).called(1);
       verify(
@@ -170,7 +170,7 @@ void main() {
           properties: {
             'intent': 'TRAVELER',
             'destination_country': 'OTHER',
-            'source': 'PROMPT',
+            'source': 'SETTINGS',
           },
         ),
       ).called(1);
@@ -194,7 +194,7 @@ void main() {
         initialDestination: 'ML',
       );
     },
-    act: (c) => c.submit(IntentSource.prompt),
+    act: (c) => c.submit(IntentSource.settings),
     expect: () => [
       const IntentFormState(
         intent: UserIntent.both,

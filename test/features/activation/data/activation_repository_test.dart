@@ -64,7 +64,7 @@ void main() {
     await repository.declareIntent(
       intent: UserIntent.both,
       destinationCountry: null,
-      source: IntentSource.prompt,
+      source: IntentSource.settings,
     );
     verify(
       () => dio.put<dynamic>(
@@ -72,7 +72,7 @@ void main() {
         data: {
           'intent': 'BOTH',
           'destinationCountry': null,
-          'source': 'PROMPT',
+          'source': 'SETTINGS',
         },
       ),
     ).called(1);

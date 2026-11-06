@@ -20,7 +20,6 @@ enum UserIntent {
 /// Où l'intention a été déclarée (INFERRED est réservée au serveur).
 enum IntentSource {
   signup('SIGNUP'),
-  prompt('PROMPT'),
   settings('SETTINGS');
 
   const IntentSource(this.wire);
