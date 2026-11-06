@@ -368,5 +368,14 @@ jobs:
           mkdir -p ~/.appstoreconnect/private_keys
           echo "$ASC_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
           IPA=$(ls "$RUNNER_TEMP"/ipa/*.ipa | head -1)
+          # altool peut rendre 0 alors qu'Apple refuse le build : le 06/11
+          # (build 1044), « train version '1.0.2' is closed » est passé pour
+          # un succès et rien n'est arrivé sur TestFlight. Seul
+          # « UPLOAD SUCCEEDED » prouve l'envoi.
+          LOG="$RUNNER_TEMP/altool-upload.log"
           xcrun altool --upload-app --type ios -f "$IPA" \
-            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" 2>&1 | tee "$LOG"
+          if ! grep -q "UPLOAD SUCCEEDED" "$LOG"; then
+            echo "::error::Apple a refusé l'envoi TestFlight (voir la sortie d'altool ci-dessus). Version déjà validée ? Monter la version dans pubspec.yaml."
+            exit 1
+          fi
