@@ -24,7 +24,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 // Épinglage TLS de l'API de production.
 //
-// Le certificat épinglé vit dans `tls_pinned_ca.dart` plutôt que dans un
+// Les racines épinglées vivent dans `tls_pinned_ca.dart` plutôt que dans un
 // `--dart-define` : passer un PEM entier par la ligne de commande faisait
 // échouer la chaîne iOS (« File name too long »), et le remplacer par une
 // empreinte avait introduit un défaut pire encore (voir plus bas).
@@ -181,19 +181,15 @@ class ApiClient {
 
   Dio get dio => _dio;
 
-  // Rejects any connection to a server whose certificate doesn't match the
-  // pinned SHA-256 fingerprint — even if that certificate is signed by a
-  // trusted CA (MITM protection). SecurityContext(withTrustedRoots: false)
-  // means the platform's normal CA trust check never short-circuits this:
-  // badCertificateCallback fires for every connection, not just untrusted
-  // ones, so the fingerprint comparison below is the only thing deciding
-  // trust.
+  // Refuse toute connexion dont la chaîne ne remonte pas à une racine ISRG
+  // (Let's Encrypt), même signée par une autorité que le téléphone reconnaît :
+  // c'est la protection contre l'interception (MITM).
   //
-  // Pinning is intentionally skipped when:
-  //   • running in debug mode (allows Charles/mitmproxy during dev)
-  //   • _tlsCertPinSha256 is empty (env.dev.json / env.staging.json default —
-  //     staging serves a different certificate, no pin configured there)
-  //   • running on web (dart:io not available)
+  // Épinglage volontairement coupé :
+  //   • en debug (Charles ou mitmproxy pendant le développement) ;
+  //   • sans `TLS_PINNING: "on"` (dev et staging, qui servent un autre
+  //     certificat) ;
+  //   • sur le web (pas de dart:io).
   void _configureCertificatePinning() {
     if (kIsWeb || kDebugMode || _tlsPinning != 'on') return;
     (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
@@ -203,9 +199,11 @@ class ApiClient {
       // X2`), et jamais celui du serveur. Une empreinte de feuille n'y
       // correspond donc jamais, et tous les appels étaient refusés.
       //
-      // À la place, l'intermédiaire émetteur devient la seule ancre de
-      // confiance : la chaîne du serveur ne valide que si elle remonte à lui.
-      // Les racines du système sont écartées, sinon n'importe quelle autorité
+      // À la place, les quatre racines ISRG deviennent les seules ancres de
+      // confiance : la chaîne du serveur ne valide que si elle remonte à
+      // l'une d'elles. Pas un intermédiaire : Let's Encrypt en tire un parmi
+      // plusieurs à chaque renouvellement (voir `tls_pinned_ca.dart`). Les
+      // racines du système sont écartées, sinon n'importe quelle autorité
       // reconnue suffirait et il n'y aurait plus d'épinglage du tout.
       return HttpClient(
         // `false` est le défaut de Dart, mais on l'écrit : c'est lui qui
@@ -213,7 +211,7 @@ class ApiClient {
         // ignore: avoid_redundant_argument_values
         context: SecurityContext(withTrustedRoots: false)
           ..setTrustedCertificatesBytes(
-            const Utf8Encoder().convert(tlsPinnedIssuerPem),
+            const Utf8Encoder().convert(tlsPinnedRootsPem),
           ),
       );
     };
