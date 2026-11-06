@@ -10,6 +10,7 @@ import 'package:dony/features/auth/presentation/screens/profile_basics_screen.da
 /// droit à l'accueil.
 ///
 /// Fonction pure et synchrone : ni réseau, ni analytics. Le consentement
-/// analytics est demandé à part, en feuille sur l'accueil.
+/// analytics est demandé à part, en feuille sur les premiers pas puis, à
+/// défaut, sur l'accueil.
 String resolvePostSignupRoute(UserModel? user) =>
     user?.onboardingSeenAt != null ? '/home' : profileBasicsRoute;
