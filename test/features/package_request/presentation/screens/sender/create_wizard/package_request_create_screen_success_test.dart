@@ -253,9 +253,17 @@ void main() {
     unregisterFakeRecentCityStore();
   });
 
-  Widget buildHarness({String helpConfigJson = _emptyHelpConfigJson}) {
+  /// [wizardAlone] : l'assistant est la SEULE page de la pile, comme en prod
+  /// quand l'intro de publication, atteinte par un `go` (premiers pas de
+  /// l'accueil), le remplace par `pushReplacement`.
+  Widget buildHarness({
+    String helpConfigJson = _emptyHelpConfigJson,
+    bool wizardAlone = false,
+    PackageRequest? wizardExtra,
+  }) {
     final router = GoRouter(
-      initialLocation: '/',
+      initialLocation: wizardAlone ? '/wizard' : '/',
+      initialExtra: wizardAlone ? wizardExtra : null,
       routes: [
         GoRoute(
           path: '/',
@@ -340,10 +348,19 @@ void main() {
     WidgetTester tester, {
     bool editing = false,
     bool saveAsDraft = false,
+    bool wizardAlone = false,
     String helpConfigJson = _emptyHelpConfigJson,
   }) async {
-    await tester.pumpWidget(buildHarness(helpConfigJson: helpConfigJson));
-    await tester.tap(find.byKey(Key(editing ? 'open-edit' : 'open-create')));
+    await tester.pumpWidget(
+      buildHarness(
+        helpConfigJson: helpConfigJson,
+        wizardAlone: wizardAlone,
+        wizardExtra: editing ? editRequest : null,
+      ),
+    );
+    if (!wizardAlone) {
+      await tester.tap(find.byKey(Key(editing ? 'open-edit' : 'open-create')));
+    }
     await tester.pumpAndSettle();
 
     capturedBloc
@@ -550,6 +567,66 @@ void main() {
       expect(find.text('Affiche pr-created-1 pr-created-1'), findsOneWidget);
     },
   );
+
+  // YADONY-FLUTTER-PROD-2Y et 2Z (06/11/2026, 1.0.2+1041, Android) : les deux
+  // boutons de l'écran de succès faisaient `context.pop()` sur un assistant
+  // seul dans la pile, d'où « GoError: There is nothing to pop », fatal.
+  // L'état garde `success` tant que l'assistant vit : sans filtre, chaque état
+  // émis après la publication empilait un écran de succès de plus. Le second
+  // masquait aussi le crash ci-dessous dans les tests (le pop le fermait).
+  testWidgets('un seul écran de succès, même si l\'état change ensuite', (
+    tester,
+  ) async {
+    await driveToSuccess(tester);
+
+    capturedBloc.add(const PackageRequestTotalBudgetChanged(30));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonySuccessScreen, skipOffstage: false), findsOneWidget);
+  });
+
+  group('assistant seul dans la pile', () {
+    testWidgets('« Voir ma demande » ouvre le détail sans planter', (
+      tester,
+    ) async {
+      await driveToSuccess(tester, wizardAlone: true);
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+
+      await tester.tap(find.text('Voir ma demande'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(DonySuccessScreen), findsNothing);
+      expect(find.byType(PackageRequestCreateScreen), findsNothing);
+      expect(find.text('Détail pr-created-1'), findsOneWidget);
+    });
+
+    testWidgets('« Partager mon affiche » ouvre l\'affiche sans planter', (
+      tester,
+    ) async {
+      await driveToSuccess(tester, wizardAlone: true);
+
+      await tester.tap(find.text('Partager mon affiche'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(PackageRequestCreateScreen), findsNothing);
+      expect(find.text('Affiche pr-created-1 pr-created-1'), findsOneWidget);
+    });
+
+    testWidgets('édition : « Voir ma demande » ouvre le détail sans planter', (
+      tester,
+    ) async {
+      await driveToSuccess(tester, editing: true, wizardAlone: true);
+
+      await tester.tap(find.text('Voir ma demande'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(PackageRequestCreateScreen), findsNothing);
+      expect(find.text('Détail pr-edit-1'), findsOneWidget);
+    });
+  });
 
   testWidgets('édition : pas de « Partager mon affiche »', (tester) async {
     await driveToSuccess(tester, editing: true);

@@ -256,6 +256,29 @@ Widget _wrapWithRouter(
         path: '/',
         builder: (_, _) => const Scaffold(body: SizedBox()),
       ),
+      // Destinations des boutons de l'écran de succès. Ici le formulaire est
+      // SEUL dans la pile (initialLocation), comme en prod quand l'intro de
+      // publication, atteinte par un `go`, le remplace par pushReplacement.
+      GoRoute(
+        path: '/home',
+        builder: (_, _) => const Scaffold(body: Text('home-stub')),
+      ),
+      GoRoute(
+        path: '/announcements/trips',
+        builder: (_, state) => Scaffold(
+          body: Text('trips-list-${state.uri.queryParameters['filter']}'),
+        ),
+      ),
+      GoRoute(
+        path: '/announcements/:id/trip',
+        builder: (_, state) =>
+            Scaffold(body: Text('trip-detail-${state.pathParameters['id']}')),
+      ),
+      GoRoute(
+        path: '/announcements/:id/affiche',
+        builder: (_, state) =>
+            Scaffold(body: Text('trip-poster-${state.pathParameters['id']}')),
+      ),
       // Destination of the "Activer les paiements par carte" CTA.
       GoRoute(
         path: '/connect/onboarding/intro',
@@ -1608,6 +1631,105 @@ void main() {
       expect(find.byType(DonySuccessScreen), findsOneWidget);
       expect(find.byKey(const Key('success-screen-extra-0')), findsNothing);
       expect(find.text('Configurer mes paiements'), findsNothing);
+    });
+
+    // Même défaut que YADONY-FLUTTER-PROD-2Y/2Z côté demande : le formulaire
+    // seul dans la pile, `Navigator.pop(true)` retirait la dernière page
+    // (« You have popped the last page off of the stack », pile vide en
+    // release). Le harness démarre sur /trips/create : rien derrière.
+    group('formulaire seul dans la pile', () {
+      Future<void> tapAndSettle(WidgetTester tester, String label) async {
+        await tester.ensureVisible(find.text(label));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(label));
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('« Voir mon trajet » ouvre le trajet', (tester) async {
+        await emitCreated(
+          tester,
+          const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+        );
+
+        await tapAndSettle(tester, 'Voir mon trajet');
+
+        expect(tester.takeException(), isNull);
+        expect(find.byType(CreateTripScreen), findsNothing);
+        expect(find.text('trip-detail-ann-full-1'), findsOneWidget);
+      });
+
+      testWidgets('« Partager mon affiche » ouvre l\'affiche', (tester) async {
+        await emitCreated(
+          tester,
+          const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+        );
+
+        await tapAndSettle(tester, 'Partager mon affiche');
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('trip-poster-ann-full-1'), findsOneWidget);
+      });
+
+      testWidgets('« Voir les colis pour ce trajet » ouvre l\'accueil', (
+        tester,
+      ) async {
+        final notifier = PendingSearchNotifier();
+        getIt.registerSingleton<PendingSearchNotifier>(notifier);
+        addTearDown(() => getIt.unregister<PendingSearchNotifier>());
+        await emitCreated(
+          tester,
+          const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+        );
+
+        await tapAndSettle(tester, 'Voir les colis pour ce trajet');
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('home-stub'), findsOneWidget);
+      });
+
+      testWidgets('« Configurer mes paiements » ouvre la configuration', (
+        tester,
+      ) async {
+        await emitCreated(
+          tester,
+          const ConnectAccountStatus(status: 'NOT_CREATED'),
+        );
+
+        await tapAndSettle(tester, 'Configurer mes paiements');
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('stripe-onboarding-intro'), findsOneWidget);
+      });
+
+      testWidgets('brouillon : « Voir mes brouillons » ouvre la liste', (
+        tester,
+      ) async {
+        await emitCreated(
+          tester,
+          const ConnectAccountStatus(status: 'NOT_CREATED'),
+          status: 'DRAFT',
+        );
+
+        await tapAndSettle(tester, 'Voir mes brouillons');
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('trips-list-draft'), findsOneWidget);
+      });
+
+      testWidgets('brouillon : « Voir ce brouillon » ouvre le trajet', (
+        tester,
+      ) async {
+        await emitCreated(
+          tester,
+          const ConnectAccountStatus(status: 'NOT_CREATED'),
+          status: 'DRAFT',
+        );
+
+        await tapAndSettle(tester, 'Voir ce brouillon');
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('trip-detail-ann-full-1'), findsOneWidget);
+      });
     });
 
     testWidgets('création : « Voir les colis pour ce trajet » est le bouton '
