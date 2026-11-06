@@ -39,7 +39,20 @@ void main() {
     });
   });
 
+  group('resolvePostSocialLoginRoute', () {
+    test('Google ou Apple, compte existant : la question, puis le verrou', () {
+      expect(
+        resolvePostSocialLoginRoute(),
+        '/auth/analytics-consent?next=local',
+      );
+    });
+  });
+
   group('analyticsConsentDestination', () {
+    test('next=local : verrou local', () {
+      expect(analyticsConsentDestination('local'), '/auth/local');
+    });
+
     test('sans paramètre : « Faisons connaissance » (nouveau compte)', () {
       expect(analyticsConsentDestination(null), '/auth/profile-basics');
     });

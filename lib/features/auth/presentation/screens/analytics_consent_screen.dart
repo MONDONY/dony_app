@@ -23,13 +23,21 @@ const String analyticsConsentRoute = '/auth/analytics-consent';
 /// connaissance » (nouveau compte).
 const String analyticsConsentNextParam = 'next';
 
-/// Valeur de [analyticsConsentNextParam] pour un compte existant : l'accueil.
+/// Valeur de [analyticsConsentNextParam] pour un compte existant connecté par
+/// numéro ou e-mail : l'accueil.
 const String analyticsConsentNextHome = 'home';
+
+/// Valeur pour un compte existant connecté par Google ou Apple : le verrou
+/// local (`/auth/local`), qui mène ensuite à l'accueil.
+const String analyticsConsentNextLocal = 'local';
 
 /// Destination après la question. Liste fermée : une adresse venue d'un lien
 /// ne peut pas envoyer ailleurs.
-String analyticsConsentDestination(String? next) =>
-    next == analyticsConsentNextHome ? '/home' : profileBasicsRoute;
+String analyticsConsentDestination(String? next) => switch (next) {
+  analyticsConsentNextHome => '/home',
+  analyticsConsentNextLocal => '/auth/local',
+  _ => profileBasicsRoute,
+};
 
 /// Question facultative, toujours en opt-in : rien n'est mesuré tant que la
 /// personne n'a pas touché « Accepter ».

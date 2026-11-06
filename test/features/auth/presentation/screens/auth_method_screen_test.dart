@@ -449,7 +449,7 @@ void main() {
       },
     );
 
-    testWidgets('compte existant : verrouillage local, comme avant', (
+    testWidgets('compte existant : consentement, puis verrouillage local', (
       tester,
     ) async {
       final bloc = MockAuthBloc();
@@ -462,8 +462,8 @@ void main() {
       await tester.pumpWidget(_app(bloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('local-auth'), findsOneWidget);
-      expect(find.text('analytics-consent'), findsNothing);
+      expect(find.text('analytics-consent'), findsOneWidget);
+      expect(find.text('local-auth'), findsNothing);
       await bloc.close();
     });
   });

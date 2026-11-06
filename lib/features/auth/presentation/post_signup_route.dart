@@ -21,3 +21,8 @@ String resolvePostSignupRoute(UserModel? user) => user?.onboardingSeenAt != null
 /// réponse, puis l'accueil.
 String resolvePostLoginRoute() =>
     '$analyticsConsentRoute?$analyticsConsentNextParam=$analyticsConsentNextHome';
+
+/// Route à suivre juste après une connexion Google ou Apple d'un compte
+/// existant : la question de mesure d'usage, puis le verrou local.
+String resolvePostSocialLoginRoute() =>
+    '$analyticsConsentRoute?$analyticsConsentNextParam=$analyticsConsentNextLocal';

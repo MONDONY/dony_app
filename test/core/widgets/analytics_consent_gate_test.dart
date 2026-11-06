@@ -147,6 +147,50 @@ void main() {
     );
   });
 
+  testWidgets('trois relances déjà faites : la demande reste éteinte', (
+    tester,
+  ) async {
+    await tester.runAsync(
+      () => hiveService.userPrefs.put(HiveService.kConsentReminderCount, 3),
+    );
+
+    await logIn(tester, 'FR');
+
+    expect(consentPrompt.wanted.value, isFalse);
+  });
+
+  testWidgets('dernière relance il y a moins de trois jours : éteinte', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      await hiveService.userPrefs.put(HiveService.kConsentReminderCount, 1);
+      await hiveService.userPrefs.put(
+        HiveService.kConsentReminderLastAt,
+        DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
+      );
+    });
+
+    await logIn(tester, 'FR');
+
+    expect(consentPrompt.wanted.value, isFalse);
+  });
+
+  testWidgets('dernière relance il y a plus de trois jours : levée', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      await hiveService.userPrefs.put(HiveService.kConsentReminderCount, 1);
+      await hiveService.userPrefs.put(
+        HiveService.kConsentReminderLastAt,
+        DateTime.now().subtract(const Duration(days: 4)).toIso8601String(),
+      );
+    });
+
+    await logIn(tester, 'FR');
+
+    expect(consentPrompt.wanted.value, isTrue);
+  });
+
   testWidgets(
     'un compte qui a déjà répondu lève la demande laissée par un autre compte',
     (tester) async {

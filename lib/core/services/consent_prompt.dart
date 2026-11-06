@@ -4,9 +4,10 @@ import 'package:flutter/foundation.dart';
 ///
 /// [AnalyticsConsentGate] la lève à la connexion quand l'utilisateur doit
 /// répondre ; le shell de l'accueil l'écoute et ouvre la feuille de
-/// consentement. Un nouveau compte répond avant, sur l'écran qui suit le code
+/// consentement, en simple relance (`ConsentReminderPolicy` : 3 au plus, 3
+/// jours d'écart). Qui se connecte répond avant, sur l'écran qui suit le code
 /// (`AnalyticsConsentScreen`), qui retire la demande. Elle reste levée tant
-/// qu'aucune réponse n'est enregistrée.
+/// qu'aucune réponse n'est enregistrée et qu'une relance est due.
 class ConsentPrompt {
   final ValueNotifier<bool> _wanted = ValueNotifier<bool>(false);
 

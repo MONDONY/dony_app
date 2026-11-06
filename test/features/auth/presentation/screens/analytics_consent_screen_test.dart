@@ -61,6 +61,10 @@ void main() {
           ),
         ),
         GoRoute(
+          path: '/auth/local',
+          builder: (_, _) => const Scaffold(body: Text('Verrou local')),
+        ),
+        GoRoute(
           path: '/home',
           builder: (_, _) => const Scaffold(body: Text('Accueil')),
         ),
@@ -167,6 +171,18 @@ void main() {
     expect(find.text('Accueil'), findsOneWidget);
     expect(find.text('Faisons connaissance'), findsNothing);
   });
+
+  testWidgets(
+    'Google ou Apple, compte existant : « Accepter » mène au verrou',
+    (tester) async {
+      await pump(tester, next: 'local');
+
+      await tester.tap(accept());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Verrou local'), findsOneWidget);
+    },
+  );
 
   testWidgets('compte existant déjà répondu : directement l\'accueil', (
     tester,
