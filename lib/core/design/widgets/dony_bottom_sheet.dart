@@ -39,6 +39,7 @@ abstract final class DonyBottomSheet {
     Widget Function(Widget)? wrapper,
     bool showFeedback = false,
     String? analyticsName,
+    bool maskReplay = false,
   }) {
     assert(
       stickyBottom == null || footer == null,
@@ -66,22 +67,24 @@ abstract final class DonyBottomSheet {
             )
           : null,
       builder: (ctx) {
-        // Toute feuille est masquée dans le replay de session : elles portent
-        // les formulaires (offre, destinataire, adresse) et les paiements.
-        final Widget content = DonyReplayMask(
-          child: _DonyBottomSheetContent(
-            title: title,
-            titleWidget: titleWidget,
-            subtitle: subtitle,
-            showHandle: showHandle,
-            isDanger: isDanger,
-            expand: heightFraction != null,
-            stickyBottom: stickyBottom,
-            footer: footer,
-            showFeedback: showFeedback,
-            child: child,
-          ),
+        // Une feuille est visible dans le replay, ses champs de saisie étant
+        // masqués un à un. [maskReplay] la masque en entier : paiements,
+        // soldes, coordonnées bancaires.
+        final Widget sheet = _DonyBottomSheetContent(
+          title: title,
+          titleWidget: titleWidget,
+          subtitle: subtitle,
+          showHandle: showHandle,
+          isDanger: isDanger,
+          expand: heightFraction != null,
+          stickyBottom: stickyBottom,
+          footer: footer,
+          showFeedback: showFeedback,
+          child: child,
         );
+        final Widget content = maskReplay
+            ? DonyReplayMask(child: sheet)
+            : sheet;
         return wrapper != null ? wrapper(content) : content;
       },
     );

@@ -92,6 +92,7 @@ abstract final class BankPayoutSheet {
     ].join(' · ');
     return DonyBottomSheet.show<void>(
       context,
+      maskReplay: true,
       title: l.moneyBankSheetTitle,
       subtitle: subtitle.isEmpty ? null : subtitle,
       analyticsName: 'money/bank-payout', // i18n-ignore : nom analytics

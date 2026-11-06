@@ -87,6 +87,7 @@ abstract final class PayoutNumberReviewSheet {
     final l = context.l10n;
     return DonyBottomSheet.show<bool>(
       context,
+      maskReplay: true,
       title: l.mobileMoneyPayoutReviewTitle,
       analyticsName: 'payout-account/review',
       stickyBottom: _TwoButtons(
@@ -186,6 +187,7 @@ abstract final class PayoutAccountRemoveSheet {
     final name = label ?? account.providerLabel;
     return DonyBottomSheet.show<bool>(
       context,
+      maskReplay: true,
       title: l.mobileMoneyPayoutRemoveTitle(name),
       analyticsName: 'payout-account/remove',
       isDanger: true,
@@ -220,6 +222,7 @@ abstract final class PayoutAccountLockedSheet {
     final l = context.l10n;
     return DonyBottomSheet.show<void>(
       context,
+      maskReplay: true,
       analyticsName: 'payout-account/locked',
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(

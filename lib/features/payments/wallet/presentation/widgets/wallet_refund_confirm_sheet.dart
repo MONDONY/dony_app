@@ -36,6 +36,7 @@ abstract final class WalletRefundConfirmSheet {
 
     return DonyBottomSheet.show<bool>(
       context,
+      maskReplay: true,
       title: l.walletRefundConfirmTitle,
       wrapper: (child) => MultiBlocProvider(
         providers: [

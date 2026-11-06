@@ -4,22 +4,24 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 
-Widget _harness({bool showFeedback = false}) => MaterialApp(
-  theme: AppTheme.light(),
-  home: Scaffold(
-    body: Builder(
-      builder: (context) => TextButton(
-        onPressed: () => DonyBottomSheet.show<void>(
-          context,
-          title: 'Titre',
-          showFeedback: showFeedback,
-          child: const SizedBox(height: 40),
+Widget _harness({bool showFeedback = false, bool maskReplay = false}) =>
+    MaterialApp(
+      theme: AppTheme.light(),
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => DonyBottomSheet.show<void>(
+              context,
+              title: 'Titre',
+              showFeedback: showFeedback,
+              maskReplay: maskReplay,
+              child: const SizedBox(height: 40),
+            ),
+            child: const Text('ouvrir'),
+          ),
         ),
-        child: const Text('ouvrir'),
       ),
-    ),
-  ),
-);
+    );
 
 void main() {
   testWidgets('bouton fermer avec le libellé français par défaut', (
@@ -290,5 +292,24 @@ void main() {
       tester.getCenter(scarabee).dx,
       lessThan(tester.getCenter(find.byTooltip('Fermer')).dx),
     );
+  });
+
+  testWidgets('feuille visible dans le replay par défaut', (tester) async {
+    await tester.pumpWidget(_harness());
+    await tester.tap(find.text('ouvrir'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonyReplayMask), findsNothing);
+  });
+
+  testWidgets('maskReplay : toute la feuille est masquée dans le replay', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_harness(maskReplay: true));
+    await tester.tap(find.text('ouvrir'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonyReplayMask), findsOneWidget);
+    expect(find.text('Titre'), findsOneWidget);
   });
 }

@@ -27,6 +27,7 @@ class WalletTopupCodeSheet extends StatefulWidget {
     final l = context.l10n;
     return DonyBottomSheet.show<WalletTopupCodeRedemptionModel>(
       context,
+      maskReplay: true,
       title: l.walletTopupCodeSheetTitle,
       wrapper: (child) => BlocProvider(
         create: (_) => getIt<WalletTopupCodeCubit>(),

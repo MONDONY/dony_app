@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/tokens/animation_tokens.dart';
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/widgets/dony_image.dart';
+import 'package:dony/core/design/widgets/dony_replay_mask.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
@@ -104,19 +105,22 @@ class DonyAvatar extends StatelessWidget {
           height: dim,
           decoration: BoxDecoration(color: _bgColor, shape: BoxShape.circle),
           child: imageUrl != null
-              ? ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: imageUrl!,
-                    cacheKey: DonyImage.stableCacheKey(imageUrl!),
-                    width: dim,
-                    height: dim,
-                    fit: BoxFit.cover,
-                    fadeInDuration: DonyDuration.micro,
-                    fadeInCurve: DonyCurve.enter,
-                    fadeOutDuration: DonyDuration.micro,
-                    fadeOutCurve: DonyCurve.exit,
-                    placeholder: (_, _) => initials,
-                    errorWidget: (_, _, _) => initials,
+              ? DonyReplayMask(
+                  // Une photo de profil est un visage : jamais dans le replay.
+                  child: ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl!,
+                      cacheKey: DonyImage.stableCacheKey(imageUrl!),
+                      width: dim,
+                      height: dim,
+                      fit: BoxFit.cover,
+                      fadeInDuration: DonyDuration.micro,
+                      fadeInCurve: DonyCurve.enter,
+                      fadeOutDuration: DonyDuration.micro,
+                      fadeOutCurve: DonyCurve.exit,
+                      placeholder: (_, _) => initials,
+                      errorWidget: (_, _, _) => initials,
+                    ),
                   ),
                 )
               : initials,

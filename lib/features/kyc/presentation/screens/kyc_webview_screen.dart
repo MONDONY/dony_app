@@ -150,6 +150,7 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
     final l = context.l10n;
     DonyBottomSheet.show<void>(
       context,
+      maskReplay: true,
       child: const _CameraBlockedSheet(key: Key('kyc-camera-blocked-sheet')),
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
