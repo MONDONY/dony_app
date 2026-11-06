@@ -9,8 +9,7 @@ import 'package:flutter/widgets.dart';
 /// l'écran qui l'héberge est au premier plan : jamais pour un visiteur, jamais
 /// par-dessus une autre feuille, au plus une fois par lancement de l'app.
 ///
-/// Hébergée par les premiers pas (`FirstStepsScreen`, juste après
-/// l'inscription) et par le shell de l'accueil (`MainShell`).
+/// Hébergée par le shell de l'accueil (`MainShell`).
 class ConsentPromptHost extends StatefulWidget {
   const ConsentPromptHost({required this.child, super.key});
 

@@ -9,8 +9,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
-import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,8 +38,8 @@ Widget _app(AuthBloc bloc) => MaterialApp.router(
         builder: (_, _) => const Scaffold(body: Text('Recherche avec carte')),
       ),
       GoRoute(
-        path: profileBasicsRoute,
-        builder: (_, _) => const Scaffold(body: Text('profile-basics')),
+        path: analyticsConsentRoute,
+        builder: (_, _) => const Scaffold(body: Text('analytics-consent')),
       ),
       GoRoute(
         path: '/auth/local',
@@ -402,7 +402,9 @@ void main() {
       status: 'ACTIVE',
     );
 
-    testWidgets('nouveau compte : « Faisons connaissance »', (tester) async {
+    testWidgets('nouveau compte : « Une dernière chose » (consentement)', (
+      tester,
+    ) async {
       final bloc = MockAuthBloc();
       whenListen(
         bloc,
@@ -415,7 +417,7 @@ void main() {
       await tester.pumpWidget(_app(bloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('profile-basics'), findsOneWidget);
+      expect(find.text('analytics-consent'), findsOneWidget);
       await bloc.close();
     });
 
@@ -460,7 +462,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('local-auth'), findsOneWidget);
-      expect(find.text('profile-basics'), findsNothing);
+      expect(find.text('analytics-consent'), findsNothing);
       await bloc.close();
     });
   });

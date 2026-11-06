@@ -3200,6 +3200,54 @@ abstract class AppLocalizations {
   /// **'Accepter'**
   String get authConsentAccept;
 
+  /// No description provided for @authConsentTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une dernière chose'**
+  String get authConsentTitle;
+
+  /// No description provided for @authConsentBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour améliorer Yadony, on aimerait mesurer comment l\'app est utilisée et enregistrer l\'écran de façon anonymisée. Les photos, les champs que vous remplissez et les écrans de paiement, d\'identité, de messagerie et de connexion ne sont jamais enregistrés. C\'est facultatif.'**
+  String get authConsentBody;
+
+  /// No description provided for @authConsentFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jamais vos paiements, votre identité ni votre numéro. Vous pouvez changer d\'avis dans Réglages.'**
+  String get authConsentFootnote;
+
+  /// No description provided for @authConsentPointScreens.
+  ///
+  /// In fr, this message translates to:
+  /// **'Écrans visités et fonctionnalités utilisées'**
+  String get authConsentPointScreens;
+
+  /// No description provided for @authConsentPointGestures.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrement de l\'écran, sans photos ni champs remplis, pour repérer ce qui bloque'**
+  String get authConsentPointGestures;
+
+  /// No description provided for @authConsentPointNeverPersonal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jamais vos paiements, cartes bancaires, identité ni messages'**
+  String get authConsentPointNeverPersonal;
+
+  /// No description provided for @authConsentPointChangeAnytime.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifiable à tout moment dans Réglages'**
+  String get authConsentPointChangeAnytime;
+
+  /// No description provided for @authConsentDecline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non merci'**
+  String get authConsentDecline;
+
   /// No description provided for @consentSheetTitle.
   ///
   /// In fr, this message translates to:

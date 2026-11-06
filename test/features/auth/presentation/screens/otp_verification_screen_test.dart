@@ -10,8 +10,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
-import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -88,8 +88,8 @@ void main() {
           ),
         ),
         GoRoute(
-          path: profileBasicsRoute,
-          builder: (_, _) => const Scaffold(body: Text('profile-basics')),
+          path: analyticsConsentRoute,
+          builder: (_, _) => const Scaffold(body: Text('analytics-consent')),
         ),
         GoRoute(
           path: '/home',
@@ -120,7 +120,7 @@ void main() {
   );
 
   testWidgets(
-    'quand AuthNewAccountAuthenticated est émis, poursuit vers « Faisons connaissance »',
+    'quand AuthNewAccountAuthenticated est émis, poursuit vers « Une dernière chose » (consentement)',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -131,7 +131,7 @@ void main() {
         buildScreen([const AuthNewAccountAuthenticated(_testUser)]),
       );
       await tester.pumpAndSettle();
-      expect(find.text('profile-basics'), findsOneWidget);
+      expect(find.text('analytics-consent'), findsOneWidget);
     },
   );
 
@@ -149,7 +149,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('home'), findsOneWidget);
-      expect(find.text('profile-basics'), findsNothing);
+      expect(find.text('analytics-consent'), findsNothing);
     },
   );
 

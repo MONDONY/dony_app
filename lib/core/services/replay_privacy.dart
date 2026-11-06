@@ -10,9 +10,11 @@ import 'package:posthog_flutter/posthog_flutter.dart';
 /// est affiché.
 ///
 /// Les textes sont visibles dans le replay ; ces écrans affichent ou
-/// collectent des données personnelles (identité, coordonnées, paiement,
-/// messages, destinataire, codes de remise). Ajouter ici tout nouvel écran de
-/// ce type.
+/// collectent des données personnelles (identité, coordonnées, paiement par
+/// carte, messages, destinataire, codes de remise). Tout écran de paiement
+/// reste ici sans exception (`/payments`, `/payment`, `/stripe`, `/connect`,
+/// et les paiements de colis sous `/bids/<id>`). Ajouter ici tout nouvel écran
+/// de ce type.
 const kReplaySensitivePathPrefixes = <String>[
   // Connexion : numéro, code reçu, e-mail, nom.
   '/auth/phone',
@@ -50,8 +52,16 @@ const kReplaySensitivePathPrefixes = <String>[
   '/profile/recipients',
   '/profile/subscriptions',
   '/profile/upgrade-to-pro',
-  '/settings',
   '/account',
+  // Réglages : seuls ceux qui touchent à la sécurité (code PIN, appareils),
+  // aux personnes bloquées, à l'export des données ou à un texte libre
+  // restent hors replay. Réglages, notifications, préférences et accessibilité
+  // sont enregistrés.
+  '/settings/security',
+  '/settings/privacy',
+  '/settings/data',
+  '/settings/diagnostics',
+  '/settings/report-incident',
 ];
 
 /// Vrai si l'écran à [path] ne doit pas être enregistré.
