@@ -8,6 +8,9 @@ import 'package:flutter/widgets.dart';
 /// Ouvre la feuille de consentement quand [ConsentPrompt] la demande et que
 /// l'écran qui l'héberge est au premier plan : jamais pour un visiteur, jamais
 /// par-dessus une autre feuille, au plus une fois par lancement de l'app.
+///
+/// Hébergée par les premiers pas (`FirstStepsScreen`, juste après
+/// l'inscription) et par le shell de l'accueil (`MainShell`).
 class ConsentPromptHost extends StatefulWidget {
   const ConsentPromptHost({required this.child, super.key});
 
@@ -64,6 +67,11 @@ class _ConsentPromptHostState extends State<ConsentPromptHost> {
       ConsentPromptHost._shownThisLaunch = true;
       AnalyticsConsentSheet.show(context);
     });
+    // La demande arrive souvent hors de tout rafraîchissement (la connexion
+    // la tranche en tâche de fond) : sans image demandée, le rappel attendait
+    // le prochain geste, souvent celui qui quitte l'écran, et la feuille
+    // n'apparaissait jamais sur un écran immobile comme les premiers pas.
+    WidgetsBinding.instance.ensureVisualUpdate();
   }
 
   @override

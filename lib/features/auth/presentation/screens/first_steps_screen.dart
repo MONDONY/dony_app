@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/app/widgets/consent_prompt_host.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/di/injection.dart';
@@ -146,8 +147,16 @@ class _FirstStepsScreenState extends State<FirstStepsScreen> {
     );
   }
 
+  /// Fin d'inscription : la feuille de consentement de mesure d'usage s'ouvre
+  /// ici, avant le premier choix. Elle ne vivait que sur l'accueil à onglets,
+  /// et un nouvel inscrit qui partait d'ici vers une publication ne la voyait
+  /// jamais : en zone RGPD, rien n'était mesuré. Une seule ouverture par
+  /// lancement : l'accueil ne la repose pas juste après.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      ConsentPromptHost(child: _content(context));
+
+  Widget _content(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
