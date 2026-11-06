@@ -427,10 +427,39 @@ class _PackageRequestCreateScreenState
           BlocProvider<FormDraftCubit>.value(value: _draftCubit),
       ],
       child: BlocConsumer<PackageRequestFormBloc, PackageRequestFormState>(
+        // L'écran de succès s'ouvre au PASSAGE à `success`, une seule fois.
+        // L'état garde `success` et la demande créée tant que l'assistant
+        // vit : sans ce filtre, tout état émis ensuite (devise, moyens de
+        // paiement…) empilait un second écran de succès.
+        listenWhen: (previous, current) =>
+            current.submissionStatus != FormSubmissionStatus.success ||
+            previous.submissionStatus != FormSubmissionStatus.success,
         listener: _onStateChange,
         builder: _buildScaffold,
       ),
     );
+  }
+
+  /// Ferme l'assistant puis ouvre [location].
+  ///
+  /// L'assistant peut être SEUL dans la pile : l'intro de publication,
+  /// atteinte par un `go` (premiers pas de l'accueil), le remplace par
+  /// `pushReplacement`. `context.pop()` lève alors « There is nothing to pop »
+  /// (YADONY-FLUTTER-PROD-2Y et 2Z, 1.0.2+1041). Dans ce cas, la destination
+  /// remplace la pile, et son bouton retour retombe sur l'accueil.
+  void _leaveWizardTo(
+    BuildContext context,
+    GoRouter router,
+    String location, {
+    Object? extra,
+    Object? popResult,
+  }) {
+    if (context.canPop()) {
+      context.pop(popResult);
+      router.push(location, extra: extra);
+    } else {
+      router.go(location, extra: extra);
+    }
   }
 
   void _onStateChange(BuildContext context, PackageRequestFormState state) {
@@ -477,13 +506,18 @@ class _PackageRequestCreateScreenState
                 // après l'await — ne pas repousser une nouvelle route détail
                 // par-dessus, ça doublonnerait la pile de navigation (le même
                 // détail deux fois, ou un détail plein écran par-dessus une
-                // sheet restée ouverte).
-                context.pop(true);
+                // sheet restée ouverte). Seul dans la pile, il n'y a pas
+                // d'appelant : on ouvre la demande.
+                if (context.canPop()) {
+                  context.pop(true);
+                } else {
+                  router.go('/package-requests/$requestId');
+                }
               } else {
-                context.pop(); // ferme le wizard — aucune valeur attendue par
-                // les autres appelants (context.push<void>(...), refresh
-                // inconditionnel après l'await, jamais gaté sur la valeur du pop)
-                router.push('/package-requests/$requestId');
+                // Ferme le wizard — aucune valeur attendue par les autres
+                // appelants (context.push<void>(...), refresh inconditionnel
+                // après l'await, jamais gaté sur la valeur du pop).
+                _leaveWizardTo(context, router, '/package-requests/$requestId');
               }
             },
             // Pas d'onClose custom : aucun appelant ne gate son refresh sur la
@@ -508,8 +542,9 @@ class _PackageRequestCreateScreenState
                 : () {
                     final router = GoRouter.of(routeContext);
                     Navigator.of(routeContext).pop();
-                    context.pop();
-                    router.push(
+                    _leaveWizardTo(
+                      context,
+                      router,
                       '/package-requests/$requestId/affiche',
                       extra: created,
                     );

@@ -2137,6 +2137,36 @@ class _TripFormContentState extends State<_TripFormContent> {
     DonySnackbar.show(context, message: message, type: DonySnackbarType.error);
   }
 
+  /// Ferme le formulaire puis ouvre [location] : `push` par défaut, `go`
+  /// avec [replace].
+  ///
+  /// Le formulaire peut être SEUL dans la pile : l'intro de publication,
+  /// atteinte par un `go` (premiers pas de l'accueil), le remplace par
+  /// `pushReplacement`. `Navigator.pop(true)` retirait alors la dernière page
+  /// (« You have popped the last page off of the stack », pile vide en
+  /// release ; même défaut que YADONY-FLUTTER-PROD-2Y/2Z côté demande). Sans
+  /// appelant à qui rendre `true`, la destination remplace la pile, et son
+  /// bouton retour retombe sur l'accueil.
+  void _leaveFormTo(
+    BuildContext formContext,
+    GoRouter router,
+    String location, {
+    Object? extra,
+    bool replace = false,
+  }) {
+    final navigator = Navigator.of(formContext);
+    if (!navigator.canPop()) {
+      router.go(location, extra: extra);
+      return;
+    }
+    navigator.pop(true); // ferme create_trip_screen, contrat bool intact
+    if (replace) {
+      router.go(location, extra: extra);
+    } else {
+      unawaited(router.push(location, extra: extra));
+    }
+  }
+
   /// Écran de succès d'un trajet enregistré en brouillon (FLUTTER-FW).
   ///
   /// Même mécanique de pops que l'écran « Trajet publié » : le GoRouter est
@@ -2157,16 +2187,18 @@ class _TripFormContentState extends State<_TripFormContent> {
           onCta: () {
             final router = GoRouter.of(routeContext);
             Navigator.of(routeContext).pop();
-            Navigator.of(context).pop(true);
-            router.push('/announcements/trips?filter=draft');
+            _leaveFormTo(context, router, '/announcements/trips?filter=draft');
           },
           analyticsContext: 'trip_draft_saved',
           secondaryLabel: routeContext.l10n.tripDraftSavedViewDraftCta,
           onSecondary: () {
             final router = GoRouter.of(routeContext);
             Navigator.of(routeContext).pop();
-            Navigator.of(context).pop(true);
-            router.push('/announcements/${announcement.id}/trip');
+            _leaveFormTo(
+              context,
+              router,
+              '/announcements/${announcement.id}/trip',
+            );
           },
         ),
       ),
@@ -2395,47 +2427,49 @@ class _TripFormContentState extends State<_TripFormContent> {
                     // (même classe de bug que le fix bid-payé, feb86b71).
                     // Chaque action referme l'écran de succès puis le formulaire
                     // (contrat bool intact pour les 3 appelants) avant de
-                    // naviguer.
-                    void leaveTo(void Function(GoRouter router) navigate) {
+                    // naviguer, même quand le formulaire est seul dans la
+                    // pile (voir _leaveFormTo).
+                    void leaveTo(
+                      String location, {
+                      Object? extra,
+                      bool replace = false,
+                    }) {
                       final router = GoRouter.of(routeContext);
                       Navigator.of(
                         routeContext,
                       ).pop(); // ferme DonySuccessScreen
-                      Navigator.of(
+                      _leaveFormTo(
                         context,
-                      ).pop(true); // ferme create_trip_screen
-                      navigate(router);
+                        router,
+                        location,
+                        extra: extra,
+                        replace: replace,
+                      );
                     }
 
-                    void viewTrip() => leaveTo(
-                      (router) =>
-                          router.push('/announcements/${announcement.id}/trip'),
-                    );
+                    void viewTrip() =>
+                        leaveTo('/announcements/${announcement.id}/trip');
                     // Le partage de texte seul ne convertit pas : sur Facebook,
                     // c'est le visuel qui arrête le regard, et le lien doit
                     // vivre dans la légende pour rester cliquable. On envoie
                     // donc vers l'affiche, qui fournit l'image, le lien et la
                     // légende en un seul écran.
                     void sharePoster() => leaveTo(
-                      (router) => router.push(
-                        '/announcements/${announcement.id}/affiche',
-                        extra: announcement,
-                      ),
+                      '/announcements/${announcement.id}/affiche',
+                      extra: announcement,
                     );
                     // Guidage après KYC : les paiements ne sont plus demandés
                     // à l'inscription ; on les propose ici, une fois le premier
                     // trajet publié, si le compte Stripe reste à configurer.
-                    void setUpPayouts() => leaveTo(
-                      (router) => router.push('/connect/onboarding/intro'),
-                    );
+                    void setUpPayouts() => leaveTo('/connect/onboarding/intro');
                     // Médiane de 2,7 jours entre la publication d'un trajet et
                     // la première offre sur un colis : on emmène le voyageur
                     // droit vers les colis compatibles avec ses trajets.
-                    void seeParcels() => leaveTo((router) {
+                    void seeParcels() {
                       getIt<PendingSearchNotifier>()
                           .setPendingParcelsForMyTrips();
-                      router.go('/home');
-                    });
+                      leaveTo('/home', replace: true);
+                    }
 
                     final l = routeContext.l10n;
                     return DonySuccessScreen(
