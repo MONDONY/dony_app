@@ -24,6 +24,7 @@ abstract final class WalletRefundSelectionSheet {
 
     return DonyBottomSheet.show<bool>(
       context,
+      maskReplay: true,
       title: context.l10n.walletRefundSelectionTitle,
       subtitle: context.l10n.walletRefundSelectionSubtitle,
       wrapper: (child) => MultiBlocProvider(

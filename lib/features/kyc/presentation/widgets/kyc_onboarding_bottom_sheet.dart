@@ -19,6 +19,7 @@ class KycOnboardingBottomSheet extends StatelessWidget {
     // Le sheet retourne l'URL Stripe via Navigator.pop(url) quand la session est prête.
     final stripeUrl = await DonyBottomSheet.show<String>(
       context,
+      maskReplay: true,
       wrapper: (child) => BlocProvider.value(value: kycBloc, child: child),
       stickyBottom: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

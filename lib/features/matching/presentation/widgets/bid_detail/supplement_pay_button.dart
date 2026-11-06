@@ -333,6 +333,7 @@ class SupplementCashAcceptSheet extends StatelessWidget {
     );
     return DonyBottomSheet.show<void>(
       context,
+      maskReplay: true,
       analyticsName: 'bid/supplement-cash-accept',
       title: l.supplementCashConfirmTitle,
       wrapper: (child) => BlocProvider<SupplementPaymentCubit>.value(

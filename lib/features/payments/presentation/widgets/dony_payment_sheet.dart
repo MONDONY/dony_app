@@ -33,6 +33,7 @@ abstract final class DonyPaymentSheet {
   }) {
     return DonyBottomSheet.show<void>(
       context,
+      maskReplay: true,
       analyticsName: 'payment',
       isDismissible: false,
       wrapper: (child) => BlocProvider<PaymentSheetBloc>(

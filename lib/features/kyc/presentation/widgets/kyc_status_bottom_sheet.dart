@@ -39,6 +39,7 @@ class KycStatusBottomSheet extends StatefulWidget {
 
     final stripeUrl = await DonyBottomSheet.show<String>(
       context,
+      maskReplay: true,
       title: context.l10n.kycVerificationTitle,
       wrapper: (child) =>
           BlocProvider(create: (_) => getIt<KycBloc>(), child: child),

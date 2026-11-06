@@ -24,6 +24,7 @@ class GpProPiecesSection extends StatelessWidget {
     final l = context.l10n;
     final type = await DonyBottomSheet.show<GpProDocType>(
       context,
+      maskReplay: true,
       title: l.gpProPieceTypeTitle,
       child: const _ChoiceList<GpProDocType>(
         values: GpProDocType.values,
@@ -33,6 +34,7 @@ class GpProPiecesSection extends StatelessWidget {
     if (type == null || !context.mounted) return;
     final source = await DonyBottomSheet.show<ImageSource>(
       context,
+      maskReplay: true,
       title: l.gpProPieceSourceTitle,
       child: const _ChoiceList<ImageSource>(
         values: [ImageSource.camera, ImageSource.gallery],

@@ -27,6 +27,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
       bool openStatus = false;
       await DonyBottomSheet.show<void>(
         context,
+        maskReplay: true,
         stickyBottom: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,6 +59,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
     final kycBloc = context.read<KycBloc>()..add(const KycReset());
     final stripeUrl = await DonyBottomSheet.show<String>(
       context,
+      maskReplay: true,
       wrapper: (child) => BlocProvider.value(value: kycBloc, child: child),
       stickyBottom: BlocBuilder<KycBloc, KycState>(
         builder: (ctx, state) {

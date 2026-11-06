@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Garde-fou RGPD : les textes sont visibles dans le replay de session, donc
-/// tout champ de saisie doit être enveloppé dans `DonyReplayMask`.
+/// tout champ de saisie personnel doit être enveloppé dans `DonyReplayMask`.
 void main() {
   test('aucun TextField ou TextFormField brut sans DonyReplayMask', () {
     final field = RegExp(
@@ -15,6 +15,10 @@ void main() {
     const allowed = {
       'lib/core/design/widgets/dony_text_field.dart',
       'lib/core/design/widgets/dony_replay_mask.dart',
+      // Champs sans donnée personnelle : recherche dans une liste, ville.
+      'lib/core/design/widgets/dony_search_field.dart',
+      'lib/features/city/presentation/widgets/city_autocomplete_field.dart',
+      'lib/features/flights/presentation/flight_city_picker_screen.dart',
     };
     final offenders = <String>[];
     for (final f in Directory('lib').listSync(recursive: true)) {

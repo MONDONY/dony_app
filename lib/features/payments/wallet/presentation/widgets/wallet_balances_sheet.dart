@@ -102,6 +102,7 @@ class WalletBalancesSheet extends StatelessWidget {
     final selected = ValueNotifier<String?>(active);
     return DonyBottomSheet.show<String?>(
       context,
+      maskReplay: true,
       title: context.l10n.walletBalancesSheetTitle,
       heightFraction: 0.85,
       stickyBottom: ValueListenableBuilder<String?>(

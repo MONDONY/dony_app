@@ -250,6 +250,7 @@ class _LoadedView extends StatelessWidget {
                   tooltip: l.walletInfoTooltip,
                   onPressed: () => DonyBottomSheet.show(
                     context,
+                    maskReplay: true,
                     title: l.walletInfoTitle,
                     child: const _WalletInfoContent(),
                   ),

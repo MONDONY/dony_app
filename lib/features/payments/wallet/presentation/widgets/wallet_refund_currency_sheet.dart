@@ -28,6 +28,7 @@ class WalletRefundCurrencySheet extends StatelessWidget {
     final selected = ValueNotifier<WalletCurrencyBalanceModel?>(null);
     return DonyBottomSheet.show<WalletCurrencyBalanceModel?>(
       context,
+      maskReplay: true,
       title: context.l10n.walletRefundCurrencyTitle,
       stickyBottom: ValueListenableBuilder<WalletCurrencyBalanceModel?>(
         valueListenable: selected,

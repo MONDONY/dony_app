@@ -138,12 +138,12 @@ Future<void> _bootstrap() async {
       // Opt-out par défaut : on bascule en opt-in uniquement après consentement.
       ..optOut = true
       ..sessionReplay = true
-      // Textes visibles : les champs de saisie sont masqués un à un
-      // (`DonyReplayMask`), les écrans sensibles mis en pause
-      // (`ReplayPrivacyObserver`). Images toujours masquées : visages, pièces
-      // d'identité, photos de colis.
+      // Textes et images visibles : les champs de saisie personnels, les
+      // avatars, les photos plein écran et les feuilles de paiement sont
+      // masqués un à un (`DonyReplayMask`), les écrans sensibles mis en pause
+      // (`ReplayPrivacyObserver`). La carte reste noire : limite du SDK.
       ..sessionReplayConfig.maskAllTexts = false
-      ..sessionReplayConfig.maskAllImages = true;
+      ..sessionReplayConfig.maskAllImages = false;
     await Posthog().setup(config);
     // Rétablit l'état opt-in/out selon le consentement déjà stocké dans Hive.
     await getIt<AnalyticsService>().onConfigured();

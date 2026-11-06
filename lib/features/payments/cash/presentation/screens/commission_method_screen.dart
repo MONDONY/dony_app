@@ -219,6 +219,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
     final l = context.l10n;
     DonyBottomSheet.show(
       context,
+      maskReplay: true,
       stickyBottom: Row(
         children: [
           Expanded(

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/design/widgets/dony_pressable.dart';
+import 'package:dony/core/design/widgets/dony_replay_mask.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -144,7 +145,11 @@ class DonyPhotoDismissState extends State<DonyPhotoDismiss>
           ),
           child: Transform.translate(
             offset: Offset(0, offset),
-            child: Transform.scale(scale: 1 - progress * 0.1, child: child),
+            // Les photos plein écran restent hors du replay.
+            child: Transform.scale(
+              scale: 1 - progress * 0.1,
+              child: DonyReplayMask(child: child!),
+            ),
           ),
         );
       },
