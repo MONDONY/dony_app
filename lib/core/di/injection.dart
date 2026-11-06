@@ -24,6 +24,7 @@ import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/services/gallery_save_service.dart';
+import 'package:dony/core/services/gdpr_helper.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/screen_feedback_sender.dart';
@@ -44,6 +45,7 @@ import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/bloc/assistant_voice_cubit.dart';
 import 'package:dony/features/assistant/data/assistant_repository.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
+import 'package:dony/features/auth/bloc/analytics_consent_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
@@ -592,6 +594,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<BusinessPrefsRepository>(),
       getIt<HiveService>().userPrefs,
       getIt<AnalyticsService>(),
+    ),
+  );
+
+  getIt.registerFactory<AnalyticsConsentCubit>(
+    () => AnalyticsConsentCubit(
+      getIt<AnalyticsService>(),
+      getIt<ConsentPrompt>(),
+      requiresConsent: () =>
+          GdprHelper.requiresConsent(prefs: getIt<HiveService>().userPrefs),
     ),
   );
 

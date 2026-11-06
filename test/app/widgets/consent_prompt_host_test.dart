@@ -5,11 +5,13 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/consent_prompt.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/l10n_test_helpers.dart';
+import '../../helpers/mock_analytics_backend.dart';
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
@@ -28,7 +30,20 @@ void main() {
   late ConsentPrompt prompt;
   const accept = Key('consent-sheet-accept');
 
+  late Map<String, Object?> store;
+
   void register({required bool real}) {
+    final hive = MockHiveService();
+    final box = MockBox();
+    store = {};
+    when(() => hive.userPrefs).thenReturn(box);
+    when(
+      () => box.get(any<dynamic>()),
+    ).thenAnswer((i) => store[i.positionalArguments.first as String]);
+    when(() => box.put(any<dynamic>(), any<dynamic>())).thenAnswer((i) async {
+      store[i.positionalArguments[0] as String] = i.positionalArguments[1];
+    });
+    getIt.registerSingleton<HiveService>(hive);
     prompt = ConsentPrompt();
     getIt.registerSingleton<ConsentPrompt>(prompt);
     getIt.registerSingleton<AnalyticsService>(_MockAnalytics());
@@ -51,6 +66,27 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(accept), findsOneWidget);
+  });
+
+  testWidgets('chaque ouverture est comptée comme une relance', (tester) async {
+    register(real: true);
+    await mount(tester);
+
+    prompt.request();
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(accept), findsOneWidget);
+    expect(store['consent_reminder_count'], 1);
+    expect(store['consent_reminder_last_at'], isA<String>());
+  });
+
+  testWidgets('session invitée : aucune relance comptée', (tester) async {
+    register(real: false);
+    prompt.request();
+    await mount(tester);
+    await tester.pumpAndSettle();
+
+    expect(store['consent_reminder_count'], isNull);
   });
 
   testWidgets('demande levée avant le montage : ouvre au montage', (

@@ -1773,6 +1773,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authConsentAccept => 'Accept';
 
   @override
+  String get authConsentTitle => 'One last thing';
+
+  @override
+  String get authConsentBody =>
+      'To improve Yadony, we\'d like to measure how the app is used and record the screen in an anonymised way. Photos, the fields you fill in, and the payment, identity, messaging and sign-in screens are never recorded. It\'s optional.';
+
+  @override
+  String get authConsentFootnote =>
+      'Never your payments, identity or phone number. You can change your mind in Settings.';
+
+  @override
+  String get authConsentPointScreens => 'Screens visited and features used';
+
+  @override
+  String get authConsentPointGestures =>
+      'Screen recording, without photos or filled-in fields, to spot what gets in the way';
+
+  @override
+  String get authConsentPointNeverPersonal =>
+      'Never your payments, bank cards, identity or messages';
+
+  @override
+  String get authConsentPointChangeAnytime =>
+      'Can be changed anytime in Settings';
+
+  @override
+  String get authConsentDecline => 'No thanks';
+
+  @override
   String get consentSheetTitle => 'Help us improve Yadony';
 
   @override

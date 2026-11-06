@@ -73,7 +73,7 @@ void main() {
       }
     });
 
-    test('compte : profil, coordonnées, adresses, réglages', () {
+    test('compte : profil, coordonnées, adresses', () {
       for (final p in [
         '/profile',
         '/profile/edit',
@@ -81,8 +81,40 @@ void main() {
         '/profile/addresses',
         '/profile/addresses/add',
         '/profile/recipients',
-        '/settings',
-        '/settings/change-pin',
+        '/account/disabled',
+      ]) {
+        expect(isReplaySensitivePath(p), isTrue, reason: p);
+      }
+    });
+
+    test(
+      'réglages sensibles : sécurité, personnes bloquées, export, texte libre',
+      () {
+        for (final p in [
+          '/settings/security',
+          '/settings/security/change-pin',
+          '/settings/privacy',
+          '/settings/privacy/blocked-users',
+          '/settings/data',
+          '/settings/diagnostics',
+          '/settings/report-incident',
+        ]) {
+          expect(isReplaySensitivePath(p), isTrue, reason: p);
+        }
+      },
+    );
+
+    test('paiement par carte : toujours hors replay', () {
+      for (final p in [
+        '/payments/pay',
+        '/payments/wallet',
+        '/payments/wallet/topup/method',
+        '/payments/commission-method',
+        '/payments/onboarding',
+        '/stripe/onboarding/complete',
+        '/connect/onboarding/intro',
+        '/profile/upgrade-to-pro',
+        '/bids/abc/mobile-money/awaiting',
       ]) {
         expect(isReplaySensitivePath(p), isTrue, reason: p);
       }
@@ -103,6 +135,10 @@ void main() {
         '/onboarding',
         '/profile/community',
         '/profile/help/faq',
+        '/settings',
+        '/settings/notifications',
+        '/settings/preferences',
+        '/settings/accessibility',
       ]) {
         expect(isReplaySensitivePath(p), isFalse, reason: p);
       }
@@ -181,7 +217,7 @@ void main() {
     });
 
     test('un accord donné sur un écran sensible relance l\'arrêt', () async {
-      path = '/settings';
+      path = '/settings/security';
       observer.evaluate();
       expect(control.stops, 1);
       consentChanges.add(null);

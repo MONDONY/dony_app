@@ -15,6 +15,7 @@ import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/bloc/assistant_voice_cubit.dart';
 import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/assistant/presentation/screens/assistant_screen.dart';
+import 'package:dony/features/auth/bloc/analytics_consent_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
@@ -22,6 +23,7 @@ import 'package:dony/features/auth/bloc/profile_basics_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/domain/country_from_phone.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
+import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
 import 'package:dony/features/auth/presentation/screens/email_auth_screen.dart';
@@ -289,7 +291,6 @@ const _retiredSignupRoutes = [
   '/auth/intent',
   '/auth/personal-info',
   '/auth/referral-code',
-  '/auth/analytics-consent',
 ];
 
 /// Décide si une navigation doit être détournée vers l'écran de connexion, et
@@ -915,6 +916,18 @@ final GoRouter appRouter = GoRouter(
         create: (_) =>
             getIt<CommissionMethodBloc>()..add(CommissionMethodLoadRequested()),
         child: const CommissionMethodScreen(),
+      ),
+    ),
+    // Après le code d'un nouveau compte : la question de la mesure d'usage
+    // (voir AnalyticsConsentScreen), qui passe son chemin quand elle est
+    // inutile, puis « Faisons connaissance ».
+    GoRoute(
+      path: analyticsConsentRoute,
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<AnalyticsConsentCubit>(),
+        child: AnalyticsConsentScreen(
+          next: state.uri.queryParameters[analyticsConsentNextParam],
+        ),
       ),
     ),
     // Après le code : prénom, nom et pays, tout facultatif (voir

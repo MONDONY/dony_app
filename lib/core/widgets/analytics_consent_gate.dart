@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/consent_prompt.dart';
+import 'package:dony/core/services/consent_reminder_policy.dart';
 import 'package:dony/core/services/gdpr_helper.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,7 +18,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 /// - Login  → [AnalyticsService.identify] + détection pays GPS (si permission)
 ///   + tranche le consentement analytics (cf. [GdprHelper.resolveConsentAction]) :
 ///   zone RGPD (ou pays indéterminé) → demande de la feuille de consentement
-///   de l'accueil ([ConsentPrompt]) ; zone hors RGPD
+///   de l'accueil ([ConsentPrompt]), en relance (3 au plus, 3 jours d'écart,
+///   [ConsentReminderPolicy]) ; zone hors RGPD
 ///   → consentement accordé automatiquement, sans écran.
 /// - Consentement accordé en cours de session (écran RGPD, sheet, réglages,
 ///   ou l'auto-octroi ci-dessus) → ré-identifie l'utilisateur courant. Sans
@@ -145,7 +147,14 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
 
     switch (action) {
       case AnalyticsConsentAction.askConsent:
-        getIt<ConsentPrompt>().request();
+        // La feuille de l'accueil n'est qu'une relance : 3 au plus, 3 jours
+        // d'écart. Hors relance due, la demande reste éteinte (la question
+        // d'intention de l'accueil l'attend sinon).
+        if (ConsentReminderPolicy(prefs).shouldShow(DateTime.now())) {
+          getIt<ConsentPrompt>().request();
+        } else {
+          getIt<ConsentPrompt>().clear();
+        }
       case AnalyticsConsentAction.autoGrantNonGdpr:
         getIt<ConsentPrompt>().clear();
         await _analytics.setConsent(granted: true, source: 'auto_non_gdpr');

@@ -37,7 +37,7 @@ class AuthMethodScreen extends StatelessWidget {
           if (state is AuthNewAccountAuthenticated) {
             context.go(resolvePostSignupRoute(state.user));
           } else if (state is AuthAuthenticated) {
-            context.go('/auth/local');
+            context.go(resolvePostSocialLoginRoute());
           } else if (state is AuthOAuthNewUser) {
             // OAuth user not yet registered → auto-register (backend forces SENDER)
             context.read<AuthBloc>().add(
