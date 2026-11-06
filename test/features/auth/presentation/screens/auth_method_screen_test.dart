@@ -421,32 +421,33 @@ void main() {
       await bloc.close();
     });
 
-    testWidgets('nouveau compte déjà passé par la fin : accueil', (
-      tester,
-    ) async {
-      final bloc = MockAuthBloc();
-      whenListen(
-        bloc,
-        Stream.fromIterable(<AuthState>[
-          AuthNewAccountAuthenticated(
-            UserModel(
-              id: 'u1',
-              roles: const [],
-              kycStatus: 'NOT_STARTED',
-              status: 'ACTIVE',
-              onboardingSeenAt: DateTime(2026, 10, 2),
+    testWidgets(
+      'nouveau compte déjà passé par la fin : consentement, puis accueil',
+      (tester) async {
+        final bloc = MockAuthBloc();
+        whenListen(
+          bloc,
+          Stream.fromIterable(<AuthState>[
+            AuthNewAccountAuthenticated(
+              UserModel(
+                id: 'u1',
+                roles: const [],
+                kycStatus: 'NOT_STARTED',
+                status: 'ACTIVE',
+                onboardingSeenAt: DateTime(2026, 10, 2),
+              ),
             ),
-          ),
-        ]),
-        initialState: const AuthInitial(),
-      );
+          ]),
+          initialState: const AuthInitial(),
+        );
 
-      await tester.pumpWidget(_app(bloc));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(_app(bloc));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Recherche avec carte'), findsOneWidget);
-      await bloc.close();
-    });
+        expect(find.text('analytics-consent'), findsOneWidget);
+        await bloc.close();
+      },
+    );
 
     testWidgets('compte existant : verrouillage local, comme avant', (
       tester,

@@ -201,7 +201,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
             } else if (state is AuthNewAccountAuthenticated) {
               _continueAfterSignup(context, state.user);
             } else if (state is AuthAuthenticated) {
-              context.go('/home');
+              context.go(resolvePostLoginRoute());
             } else if (state is AuthError) {
               ErrorPresenter.show(context, state.error);
             }
@@ -211,7 +211,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
             } else if (state is AuthNewAccountAuthenticated) {
               _continueAfterSignup(context, state.user);
             } else if (state is AuthAuthenticated) {
-              context.go('/home');
+              context.go(resolvePostLoginRoute());
             } else if (state is AuthError) {
               ErrorPresenter.show(context, state.error);
             }

@@ -925,7 +925,9 @@ final GoRouter appRouter = GoRouter(
       path: analyticsConsentRoute,
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<AnalyticsConsentCubit>(),
-        child: const AnalyticsConsentScreen(),
+        child: AnalyticsConsentScreen(
+          next: state.uri.queryParameters[analyticsConsentNextParam],
+        ),
       ),
     ),
     // Après le code : prénom, nom et pays, tout facultatif (voir

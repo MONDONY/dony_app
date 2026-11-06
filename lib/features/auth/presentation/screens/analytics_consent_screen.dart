@@ -19,6 +19,18 @@ import 'package:go_router/go_router.dart';
 /// écran suppose un compte connecté.
 const String analyticsConsentRoute = '/auth/analytics-consent';
 
+/// Paramètre d'adresse qui dit où aller ensuite. Absent : « Faisons
+/// connaissance » (nouveau compte).
+const String analyticsConsentNextParam = 'next';
+
+/// Valeur de [analyticsConsentNextParam] pour un compte existant : l'accueil.
+const String analyticsConsentNextHome = 'home';
+
+/// Destination après la question. Liste fermée : une adresse venue d'un lien
+/// ne peut pas envoyer ailleurs.
+String analyticsConsentDestination(String? next) =>
+    next == analyticsConsentNextHome ? '/home' : profileBasicsRoute;
+
 /// Question facultative, toujours en opt-in : rien n'est mesuré tant que la
 /// personne n'a pas touché « Accepter ».
 ///
@@ -26,7 +38,11 @@ const String analyticsConsentRoute = '/auth/analytics-consent';
 /// ([AnalyticsConsentCubit.resolve]) ; sinon il passe directement à la suite
 /// de l'inscription, sans que l'utilisateur le voie.
 class AnalyticsConsentScreen extends StatefulWidget {
-  const AnalyticsConsentScreen({super.key});
+  const AnalyticsConsentScreen({super.key, this.next});
+
+  /// Valeur du paramètre [analyticsConsentNextParam] (`null` : nouveau
+  /// compte).
+  final String? next;
 
   @override
   State<AnalyticsConsentScreen> createState() => _AnalyticsConsentScreenState();
@@ -43,7 +59,8 @@ class _AnalyticsConsentScreenState extends State<AnalyticsConsentScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<AnalyticsConsentCubit, AnalyticsConsentState>(
       listenWhen: (p, c) => c is AnalyticsConsentDone,
-      listener: (context, state) => context.go(profileBasicsRoute),
+      listener: (context, state) =>
+          context.go(analyticsConsentDestination(widget.next)),
       builder: (context, state) {
         final h = DonyLayout.hPadding(context);
         final bottom = MediaQuery.paddingOf(context).bottom;

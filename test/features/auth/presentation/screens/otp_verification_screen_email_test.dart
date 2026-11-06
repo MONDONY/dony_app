@@ -193,8 +193,8 @@ void main() {
     await tester.pumpWidget(_buildEmail(bloc: mockBloc));
     await tester.pumpAndSettle();
 
-    expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Analytics consent'), findsNothing);
+    expect(find.text('Analytics consent'), findsOneWidget);
+    expect(find.text('Home'), findsNothing);
   });
 
   testWidgets('mode email — affiche le timer du state AuthEmailOtpSent', (

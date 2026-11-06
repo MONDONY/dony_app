@@ -136,7 +136,7 @@ void main() {
   );
 
   testWidgets(
-    'quand AuthAuthenticated est émis pour un compte existant, va à l’accueil',
+    'quand AuthAuthenticated est émis pour un compte existant, passe par la question de consentement avant l’accueil',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -148,8 +148,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('home'), findsOneWidget);
-      expect(find.text('analytics-consent'), findsNothing);
+      expect(find.text('analytics-consent'), findsOneWidget);
+      expect(find.text('home'), findsNothing);
     },
   );
 

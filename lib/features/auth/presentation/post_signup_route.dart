@@ -12,5 +12,12 @@ import 'package:dony/features/auth/presentation/screens/analytics_consent_screen
 /// de consentement reste le filet pour qui n'a pas encore répondu.
 ///
 /// Fonction pure et synchrone : ni réseau, ni analytics.
-String resolvePostSignupRoute(UserModel? user) =>
-    user?.onboardingSeenAt != null ? '/home' : analyticsConsentRoute;
+String resolvePostSignupRoute(UserModel? user) => user?.onboardingSeenAt != null
+    ? resolvePostLoginRoute()
+    : analyticsConsentRoute;
+
+/// Route à suivre juste après le code de vérification d'un compte existant :
+/// la même question de mesure d'usage, qui passe son chemin si elle a déjà une
+/// réponse, puis l'accueil.
+String resolvePostLoginRoute() =>
+    '$analyticsConsentRoute?$analyticsConsentNextParam=$analyticsConsentNextHome';

@@ -21,15 +21,42 @@ void main() {
       expect(analyticsConsentRoute, '/auth/analytics-consent');
     });
 
-    test('onboardingSeenAt posé : accueil', () {
+    test('onboardingSeenAt posé : consentement, puis accueil', () {
       expect(
         resolvePostSignupRoute(_user(onboardingSeenAt: DateTime(2026, 10, 2))),
-        '/home',
+        '/auth/analytics-consent?next=home',
       );
     });
 
     test('utilisateur inconnu : écran « Une dernière chose »', () {
       expect(resolvePostSignupRoute(null), analyticsConsentRoute);
+    });
+  });
+
+  group('resolvePostLoginRoute', () {
+    test('compte existant : la question passe d\'abord, puis l\'accueil', () {
+      expect(resolvePostLoginRoute(), '/auth/analytics-consent?next=home');
+    });
+  });
+
+  group('analyticsConsentDestination', () {
+    test('sans paramètre : « Faisons connaissance » (nouveau compte)', () {
+      expect(analyticsConsentDestination(null), '/auth/profile-basics');
+    });
+
+    test('next=home : accueil', () {
+      expect(analyticsConsentDestination('home'), '/home');
+    });
+
+    test('toute autre valeur retombe sur « Faisons connaissance »', () {
+      expect(
+        analyticsConsentDestination('/trips/create'),
+        '/auth/profile-basics',
+      );
+      expect(
+        analyticsConsentDestination('https://exemple.test'),
+        '/auth/profile-basics',
+      );
     });
   });
 }

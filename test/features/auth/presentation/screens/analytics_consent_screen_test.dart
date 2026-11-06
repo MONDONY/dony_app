@@ -39,6 +39,7 @@ void main() {
     WidgetTester tester, {
     Locale locale = AppL10n.fr,
     Size? size,
+    String? next,
   }) async {
     if (size != null) {
       tester.view.physicalSize = size;
@@ -56,8 +57,12 @@ void main() {
               prompt,
               requiresConsent: () => requiresConsent,
             ),
-            child: const AnalyticsConsentScreen(),
+            child: AnalyticsConsentScreen(next: next),
           ),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (_, _) => const Scaffold(body: Text('Accueil')),
         ),
         GoRoute(
           path: profileBasicsRoute,
@@ -149,6 +154,30 @@ void main() {
       verifyNever(() => analytics.setConsent(granted: any(named: 'granted')));
     },
   );
+
+  testWidgets('compte existant : « Accepter » mène à l\'accueil', (
+    tester,
+  ) async {
+    await pump(tester, next: 'home');
+
+    await tester.tap(accept());
+    await tester.pumpAndSettle();
+
+    verify(() => analytics.setConsent(granted: true)).called(1);
+    expect(find.text('Accueil'), findsOneWidget);
+    expect(find.text('Faisons connaissance'), findsNothing);
+  });
+
+  testWidgets('compte existant déjà répondu : directement l\'accueil', (
+    tester,
+  ) async {
+    when(() => analytics.hasAnswered).thenReturn(true);
+
+    await pump(tester, next: 'home');
+
+    expect(find.text('Une dernière chose'), findsNothing);
+    expect(find.text('Accueil'), findsOneWidget);
+  });
 
   testWidgets('hors zone RGPD : l\'écran passe son chemin', (tester) async {
     requiresConsent = false;
