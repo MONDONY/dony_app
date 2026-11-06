@@ -6,7 +6,6 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
 import 'package:dony/features/activation/data/activation_repository.dart';
-import 'package:dony/features/activation/data/intent_prompt_policy.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
@@ -215,23 +214,6 @@ void main() {
       }),
     ).called(1);
   });
-
-  for (final key in const ['first-steps-browse', 'first-steps-later']) {
-    testWidgets('$key repousse la question d\'intention de 7 jours', (
-      tester,
-    ) async {
-      await pump(tester);
-      final policy = IntentPromptPolicy(prefs);
-      expect(policy.shouldShow(DateTime.now()), isTrue);
-
-      await tester.tap(find.byKey(Key(key)));
-      await tester.pumpAndSettle();
-
-      final now = DateTime.now();
-      expect(policy.shouldShow(now), isFalse);
-      expect(policy.shouldShow(now.add(const Duration(days: 8))), isTrue);
-    });
-  }
 
   testWidgets('« Je regarde d\'abord » et « Plus tard » ne déclarent rien', (
     tester,

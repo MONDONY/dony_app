@@ -1245,7 +1245,6 @@ abstract final class AnalyticsEvents {
   static const profileBasicsSkipped = 'profile_basics_skipped';
   static const profileBasicsFailed = 'profile_basics_failed';
   static const intentDeclared = 'intent_declared';
-  static const intentPromptShown = 'intent_prompt_shown';
   static const firstActionCardTapped = 'first_action_card_tapped';
   static const successScreenTertiaryTapped = 'success_screen_tertiary_tapped';
 

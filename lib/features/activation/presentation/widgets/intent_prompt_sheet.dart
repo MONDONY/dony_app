@@ -10,7 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Feuille « Que faites-vous sur Yadony ? » (comptes existants, réglages).
+/// Feuille « Que faites-vous sur Yadony ? », ouverte depuis Réglages › « Ce que
+/// je fais sur Yadony ». Plus aucune ouverture automatique : l'écran « Par quoi
+/// voulez-vous commencer ? » de l'inscription pose déjà la question.
 /// Renvoie `true` quand l'intention est enregistrée.
 abstract final class IntentPromptSheet {
   static Future<bool?> show(

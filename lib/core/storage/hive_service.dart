@@ -13,11 +13,6 @@ class HiveService {
   // Carte d'introduction du hub Activités, fermée manuellement (X).
   static const String kHubIntroDismissed = 'hub_intro_dismissed';
 
-  /// Question d'intention aux comptes existants : nombre d'affichages et date
-  /// du dernier (guidage après KYC, 2 affichages max à 7 jours d'écart).
-  static const String kIntentPromptCount = 'intent_prompt_count';
-  static const String kIntentPromptLastAt = 'intent_prompt_last_at';
-
   /// Relance du consentement de mesure d'usage (feuille de l'accueil) pour un
   /// compte qui n'a pas répondu : nombre d'affichages et date du dernier
   /// (3 affichages max, 3 jours d'écart).
