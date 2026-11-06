@@ -1,6 +1,7 @@
 import 'package:dony/app/router.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -39,6 +40,7 @@ void main() {
       '/kyc/verify',
       '/kyc/status',
       '/profile/edit',
+      analyticsConsentRoute,
       profileBasicsRoute,
       '/trips/create',
     ];
@@ -168,8 +170,8 @@ void main() {
     });
   });
 
-  // Ancien parcours d'inscription (consentement, informations, parrainage,
-  // « Votre projet ») : les écrans n'existent plus, un lien ou un état
+  // Ancien parcours d'inscription (informations, parrainage, « Votre projet ») :
+  // les écrans n'existent plus, un lien ou un état
   // restauré qui les vise atterrit sur l'accueil.
   group('routes retirées de l\'inscription', () {
     tearDown(getIt.reset);
@@ -177,7 +179,6 @@ void main() {
     const retired = [
       '/auth/personal-info',
       '/auth/referral-code',
-      '/auth/analytics-consent',
       '/auth/intent',
     ];
 
@@ -238,6 +239,7 @@ void main() {
       '/payments/wallet',
       '/kyc/verify',
       '/profile/edit',
+      analyticsConsentRoute,
       profileBasicsRoute,
       '/trips/create',
       '/home',

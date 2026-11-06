@@ -13,6 +13,12 @@ class HiveService {
   // Carte d'introduction du hub Activités, fermée manuellement (X).
   static const String kHubIntroDismissed = 'hub_intro_dismissed';
 
+  /// Relance du consentement de mesure d'usage (feuille de l'accueil) pour un
+  /// compte qui n'a pas répondu : nombre d'affichages et date du dernier
+  /// (3 affichages max, 3 jours d'écart).
+  static const String kConsentReminderCount = 'consent_reminder_count';
+  static const String kConsentReminderLastAt = 'consent_reminder_last_at';
+
   /// Colis à recevoir dont le bandeau « Un colis vous attend » de l'accueil a
   /// été fermé (liste d'identifiants de colis, YADONY-FLUTTER-PROD-12).
   static const String kReceptionsPromptDismissed =

@@ -8,8 +8,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
-import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,8 +44,8 @@ Widget _buildEmail({
           ),
         ),
         GoRoute(
-          path: profileBasicsRoute,
-          builder: (_, _) => const Scaffold(body: Text('Profile basics')),
+          path: analyticsConsentRoute,
+          builder: (_, _) => const Scaffold(body: Text('Analytics consent')),
         ),
         GoRoute(
           path: '/home',
@@ -158,7 +158,7 @@ void main() {
   );
 
   testWidgets(
-    'mode email — compte nouvellement créé poursuit vers « Faisons connaissance »',
+    'mode email — compte nouvellement créé poursuit vers « Une dernière chose » (consentement)',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -174,7 +174,7 @@ void main() {
       await tester.pumpWidget(_buildEmail(bloc: mockBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Profile basics'), findsOneWidget);
+      expect(find.text('Analytics consent'), findsOneWidget);
     },
   );
 
@@ -193,8 +193,8 @@ void main() {
     await tester.pumpWidget(_buildEmail(bloc: mockBloc));
     await tester.pumpAndSettle();
 
-    expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Profile basics'), findsNothing);
+    expect(find.text('Analytics consent'), findsOneWidget);
+    expect(find.text('Home'), findsNothing);
   });
 
   testWidgets('mode email — affiche le timer du state AuthEmailOtpSent', (
@@ -275,7 +275,7 @@ void main() {
   });
 
   testWidgets(
-    'mode email — poursuit vers « Faisons connaissance », aucune étape code PIN quand nouveau compte authentifié',
+    'mode email — poursuit vers « Une dernière chose » (consentement), aucune étape code PIN quand nouveau compte authentifié',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -300,7 +300,7 @@ void main() {
       await tester.pumpWidget(_buildEmail(bloc: mockBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Profile basics'), findsOneWidget);
+      expect(find.text('Analytics consent'), findsOneWidget);
     },
   );
 

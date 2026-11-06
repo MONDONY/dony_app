@@ -1,10 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/app/widgets/consent_prompt_host.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/services/consent_prompt.dart';
-import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
@@ -42,18 +39,6 @@ class _MemoryBox extends Fake implements Box<dynamic> {
 class _MockActivationCubit extends MockCubit<ActivationState>
     implements ActivationCubit {}
 
-/// Compte réel (pas une session invitée) : la feuille de consentement peut
-/// s'ouvrir.
-class _RealSession implements FirebaseSessionProbe {
-  const _RealSession();
-  @override
-  bool get hasSession => true;
-  @override
-  bool get isAnonymous => false;
-  @override
-  bool get hasRealSession => true;
-}
-
 void main() {
   setUpAll(() {
     registerFallbackValue(UserIntent.sender);
@@ -66,17 +51,8 @@ void main() {
   late _MockActivationRepository repo;
   late _MockAuthRepository auth;
   late _MemoryBox prefs;
-  late ConsentPrompt consentPrompt;
 
   setUp(() async {
-    ConsentPromptHost.resetForTest();
-    consentPrompt = ConsentPrompt();
-    if (getIt.isRegistered<ConsentPrompt>()) getIt.unregister<ConsentPrompt>();
-    getIt.registerSingleton<ConsentPrompt>(consentPrompt);
-    if (getIt.isRegistered<FirebaseSessionProbe>()) {
-      getIt.unregister<FirebaseSessionProbe>();
-    }
-    getIt.registerSingleton<FirebaseSessionProbe>(const _RealSession());
     backend = MockAnalyticsBackend();
     analytics = makeEnabledAnalytics(backend);
     await analytics.onConfigured();
@@ -109,13 +85,6 @@ void main() {
   });
 
   tearDown(() {
-    if (getIt.isRegistered<ConsentPrompt>()) getIt.unregister<ConsentPrompt>();
-    if (getIt.isRegistered<FirebaseSessionProbe>()) {
-      getIt.unregister<FirebaseSessionProbe>();
-    }
-    if (getIt.isRegistered<AnalyticsService>()) {
-      getIt.unregister<AnalyticsService>();
-    }
     if (getIt.isRegistered<HiveService>()) getIt.unregister<HiveService>();
     if (getIt.isRegistered<AuthRepository>()) {
       getIt.unregister<AuthRepository>();
@@ -182,59 +151,6 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
-
-  // La feuille de consentement ne vivait que sur l'accueil à onglets. Un
-  // nouvel inscrit qui partait des premiers pas vers une publication ne la
-  // voyait jamais : en zone RGPD, rien n'était mesuré (06/11/2026, 30
-  // acceptations en 30 jours dans PostHog).
-  group('consentement de mesure d\'usage', () {
-    const accept = Key('consent-sheet-accept');
-
-    testWidgets('demande levée : la feuille s\'ouvre sur les premiers pas', (
-      tester,
-    ) async {
-      consentPrompt.request();
-
-      await pump(tester);
-
-      expect(find.byKey(accept), findsOneWidget);
-    });
-
-    testWidgets('demande levée après l\'ouverture : la feuille s\'ouvre', (
-      tester,
-    ) async {
-      await pump(tester);
-      expect(find.byKey(accept), findsNothing);
-
-      // La connexion tranche le consentement en tâche de fond.
-      consentPrompt.request();
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(accept), findsOneWidget);
-    });
-
-    testWidgets('aucune demande : pas de feuille', (tester) async {
-      await pump(tester);
-
-      expect(find.byKey(accept), findsNothing);
-      expect(find.text('Par quoi voulez-vous commencer ?'), findsOneWidget);
-    });
-
-    testWidgets('« Accepter » ferme la feuille et laisse choisir la suite', (
-      tester,
-    ) async {
-      getIt.registerSingleton<AnalyticsService>(analytics);
-      consentPrompt.request();
-      await pump(tester);
-
-      await tester.tap(find.byKey(accept));
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(accept), findsNothing);
-      expect(consentPrompt.wanted.value, isFalse);
-      expect(find.text('Par quoi voulez-vous commencer ?'), findsOneWidget);
-    });
-  });
 
   testWidgets('pose la question et propose les choix', (tester) async {
     await pump(tester);

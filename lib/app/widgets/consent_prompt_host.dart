@@ -1,16 +1,19 @@
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/consent_prompt.dart';
+import 'package:dony/core/services/consent_reminder_policy.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/presentation/widgets/analytics_consent_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 /// Ouvre la feuille de consentement quand [ConsentPrompt] la demande et que
 /// l'écran qui l'héberge est au premier plan : jamais pour un visiteur, jamais
-/// par-dessus une autre feuille, au plus une fois par lancement de l'app.
+/// par-dessus une autre feuille, au plus une fois par lancement de l'app. C'est
+/// une relance pour qui n'a pas répondu : chaque ouverture est comptée
+/// ([ConsentReminderPolicy], 3 au plus, 3 jours d'écart).
 ///
-/// Hébergée par les premiers pas (`FirstStepsScreen`, juste après
-/// l'inscription) et par le shell de l'accueil (`MainShell`).
+/// Hébergée par le shell de l'accueil (`MainShell`).
 class ConsentPromptHost extends StatefulWidget {
   const ConsentPromptHost({required this.child, super.key});
 
@@ -65,6 +68,9 @@ class _ConsentPromptHostState extends State<ConsentPromptHost> {
       }
       if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
       ConsentPromptHost._shownThisLaunch = true;
+      ConsentReminderPolicy(
+        getIt<HiveService>().userPrefs,
+      ).markShown(DateTime.now());
       AnalyticsConsentSheet.show(context);
     });
     // La demande arrive souvent hors de tout rafraîchissement (la connexion
