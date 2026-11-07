@@ -9,6 +9,44 @@ void main() {
   const uuid = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
 
   group('resolveAnnouncementDeepLink', () {
+    group('lien web de l\'affiche', () {
+      test('https://yadony.com/annonce/{uuid} résout comme yadony://', () {
+        expect(
+          resolveAnnouncementDeepLink(
+            Uri.parse('https://yadony.com/annonce/$uuid?c=partage'),
+          ),
+          '/announcements/$uuid/trip',
+        );
+      });
+
+      test('un autre hôte ne résout pas', () {
+        expect(
+          resolveAnnouncementDeepLink(
+            Uri.parse('https://evil.example/annonce/$uuid'),
+          ),
+          isNull,
+        );
+      });
+
+      test(
+        'rejette un autre chemin, un identifiant invalide ou un chemin plus long',
+        () {
+          for (final url in [
+            'https://yadony.com/autre/$uuid',
+            'https://yadony.com/annonce/pas-un-uuid',
+            'https://yadony.com/annonce/$uuid/../admin',
+            'https://yadony.com/annonce',
+          ]) {
+            expect(
+              resolveAnnouncementDeepLink(Uri.parse(url)),
+              isNull,
+              reason: url,
+            );
+          }
+        },
+      );
+    });
+
     test('résout un UUID valide vers le détail du trajet', () {
       expect(
         resolveAnnouncementDeepLink(Uri.parse('yadony://annonce/$uuid')),
