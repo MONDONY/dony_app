@@ -10,6 +10,44 @@ void main() {
   const uuid = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
 
   group('resolvePackageRequestDeepLink', () {
+    group('lien web de l\'affiche', () {
+      test('https://yadony.com/demande/{uuid} résout comme yadony://', () {
+        expect(
+          resolvePackageRequestDeepLink(
+            Uri.parse('https://yadony.com/demande/$uuid?c=partage'),
+          ),
+          '/package-requests/$uuid/public',
+        );
+      });
+
+      test('un autre hôte ne résout pas', () {
+        expect(
+          resolvePackageRequestDeepLink(
+            Uri.parse('https://evil.example/demande/$uuid'),
+          ),
+          isNull,
+        );
+      });
+
+      test(
+        'rejette un autre chemin, un identifiant invalide ou un chemin plus long',
+        () {
+          for (final url in [
+            'https://yadony.com/autre/$uuid',
+            'https://yadony.com/demande/pas-un-uuid',
+            'https://yadony.com/demande/$uuid/../admin',
+            'https://yadony.com/demande',
+          ]) {
+            expect(
+              resolvePackageRequestDeepLink(Uri.parse(url)),
+              isNull,
+              reason: url,
+            );
+          }
+        },
+      );
+    });
+
     test('résout un UUID valide vers le détail public de la demande', () {
       expect(
         resolvePackageRequestDeepLink(Uri.parse('yadony://demande/$uuid')),

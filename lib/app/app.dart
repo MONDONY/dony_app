@@ -277,9 +277,22 @@ class _DonyAppState extends State<DonyApp> {
     '/profile/gp-pro',
   };
 
+  void _dispatchPosterLink(Uri uri) {
+    final route =
+        resolveAnnouncementDeepLink(uri) ?? resolvePackageRequestDeepLink(uri);
+    if (route == null) {
+      return;
+    }
+    try {
+      _deepLinkGate.dispatch(route);
+    } catch (_) {
+      // Route indisponible — no-op, comme pour les autres liens profonds.
+    }
+  }
+
   void _handleDeepLink(Uri uri) {
-    // https : seul le lien universel des e-mails (`https://yadony.com/ouvrir`)
-    // est traité, par handleOpenDeepLink ; tout autre lien https sort ici.
+    // https : le lien universel des e-mails (`https://yadony.com/ouvrir`, par
+    // handleOpenDeepLink) et ceux des affiches ; tout autre lien https sort ici.
     if (uri.scheme != 'yadony' && uri.scheme != 'https') {
       return;
     }
@@ -294,6 +307,9 @@ class _DonyAppState extends State<DonyApp> {
       return;
     }
     if (uri.scheme != 'yadony') {
+      // Lien web de l'affiche (`https://yadony.com/annonce/{uuid}` ou
+      // `/demande/{uuid}`), ouvert dans l'app par le système.
+      _dispatchPosterLink(uri);
       return;
     }
 

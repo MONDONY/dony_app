@@ -128,6 +128,16 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="yadony" android:host="demande"/>
             </intent-filter>
+            <!-- Liens des affiches (https://yadony.com/annonce/{uuid} et
+                 /demande/{uuid}) : s'ouvrent dans l'app sans passer par le
+                 site. Même autoVerify / assetlinks.json que /ouvrir. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="yadony.com" android:pathPrefix="/annonce/"/>
+                <data android:scheme="https" android:host="yadony.com" android:pathPrefix="/demande/"/>
+            </intent-filter>
             <!-- Retours du back après un paiement mobile money (302 émis par
                  PawapayReturnController) : yadony://bids/{uuid}/mobile-money/awaiting,
                  yadony://negotiations/{uuid}/mobile-money/awaiting et
