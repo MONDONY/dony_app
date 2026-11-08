@@ -737,6 +737,26 @@ void main() {
     });
   });
 
+  group('resolveNotificationRoute — SEARCH_SUGGESTION (back #703)', () {
+    test('trajet publié après une recherche sans résultat → son détail', () {
+      expect(
+        resolveNotificationRoute('SEARCH_SUGGESTION', {
+          'announcementId': announcementId,
+          'corridor': 'Paris → Abidjan',
+        }),
+        '/traveler/$announcementId',
+      );
+    });
+
+    test('sans id de trajet valide → aucune route', () {
+      expect(
+        resolveNotificationRoute('SEARCH_SUGGESTION', {'announcementId': 'x'}),
+        isNull,
+      );
+      expect(resolveNotificationRoute('SEARCH_SUGGESTION', {}), isNull);
+    });
+  });
+
   group('resolveNotificationRoute — CORRIDOR_ALERT', () {
     const alertId = '0a1b2c3d-e5f6-7890-abcd-ef1234567890';
 

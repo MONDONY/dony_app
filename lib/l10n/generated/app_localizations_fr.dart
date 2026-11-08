@@ -12915,6 +12915,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Alertes de trajet et voyageurs suivis';
 
   @override
+  String get notificationSettingsSearchSuggestionsLabel =>
+      'Selon mes recherches';
+
+  @override
+  String get notificationSettingsSearchSuggestionsSubtitle =>
+      'Trajets publiés après une recherche sans résultat';
+
+  @override
   String get notificationSettingsNegotiationsLabel => 'Discussions de prix';
 
   @override
