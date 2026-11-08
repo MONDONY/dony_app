@@ -705,6 +705,11 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.phone_disabled_rounded,
     ),
+    // 503 du back quand le code SMS ne peut pas partir : SMS coupés, numéro
+    // réservé aux inscrits, ou indicatif bloqué depuis l'admin (les SMS
+    // n'arrivent pas dans ce pays). Le `detail` traduit côté back nomme le
+    // pays et oriente vers l'e-mail, Google ou Apple, d'où sa place dans
+    // `_serverDetailCodes` ; ce texte ne sert qu'en repli.
     'sms-otp-disabled': _Entry(
       title: (l) => l.errorSmsOtpDisabledTitle,
       message: (l) => l.errorSmsOtpDisabledMessage,
@@ -1960,6 +1965,12 @@ abstract final class ErrorCatalog {
     'mobile-money-account-not-found',
     'topup-amount-out-of-range',
     'topup-phone-unsupported',
+    // Envoi du code SMS refusé (503) : le back traduit son `detail` selon
+    // Accept-Language et y nomme le pays bloqué (« Les codes SMS n'arrivent
+    // pas en ce moment en Côte d'Ivoire… ») ou le motif (SMS coupés, numéro
+    // à ajouter au profil après une inscription par e-mail, Google ou Apple).
+    // Bien plus précis que le texte fixe, qui reste le repli.
+    'sms-otp-disabled',
     // `commission/confirm-failed` EXCLU (relecture finale du lot K) :
     // `ConfirmAcceptanceResponse.fail(...)` (`CashCommissionService`, back)
     // rédige une phrase ("PaymentIntent status: ...", "Erreur Stripe : ...")

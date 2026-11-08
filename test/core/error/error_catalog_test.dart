@@ -341,14 +341,86 @@ void main() {
     // l'écran de connexion par téléphone reste accessible (build client
     // périmé, deep link) — évite un "code envoyé" silencieux qui n'arrive
     // jamais.
-    test('code dédié → message clair (warning)', () {
-      const error = ServerException('unavailable', 'sms-otp-disabled');
+    const fallbackFr =
+        'La connexion par SMS n\'est pas disponible pour ce numéro. '
+        'Connectez-vous avec votre adresse e-mail, Google ou Apple.';
+
+    test('detail serveur qui nomme le pays → affiché tel quel (warning)', () {
+      // Indicatif bloqué depuis l'admin : le back traduit le detail et y
+      // nomme le pays, bien plus utile que le texte fixe.
+      const detail =
+          'Les codes SMS n\'arrivent pas en ce moment en Côte d\'Ivoire. '
+          'Connecte-toi avec ton adresse e-mail, Google ou Apple.';
+      const error = ServiceUnavailableException(detail, 'sms-otp-disabled');
 
       final p = ErrorCatalog.lookup(error);
 
-      expect(p.title, 'Indisponible');
-      expect(p.message, contains('téléphone'));
+      expect(p.title, 'SMS indisponible');
+      expect(p.message, detail);
       expect(p.severity, ErrorSeverity.warning);
+      expect(p.icon, Icons.phone_disabled_rounded);
+    });
+
+    test(
+      'detail serveur « numéro réservé aux inscrits » → affiché tel quel',
+      () {
+        const detail =
+            'Ce numéro n\'est lié à aucun compte : inscris-toi par email, '
+            'Google ou Apple, puis ajoute ton numéro à ton profil.';
+        const error = ServiceUnavailableException(detail, 'sms-otp-disabled');
+
+        expect(ErrorCatalog.lookup(error).message, detail);
+      },
+    );
+
+    test('detail serveur anglais → affiché tel quel, titre anglais', () {
+      useEnglish();
+      const detail =
+          "SMS codes aren't getting through to Côte d'Ivoire right now. "
+          'Sign in with your email address, Google or Apple.';
+      const error = ServiceUnavailableException(detail, 'sms-otp-disabled');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'SMS unavailable');
+      expect(p.message, detail);
+    });
+
+    test('detail vide → texte de repli qui oriente', () {
+      const error = ServiceUnavailableException('  ', 'sms-otp-disabled');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'SMS indisponible');
+      expect(p.message, fallbackFr);
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('detail technique → texte de repli, jamais le message brut', () {
+      for (final raw in [
+        'DioException [bad response]: status code 503',
+        'Exception: sms disabled',
+        '{"code":"sms-otp-disabled"}',
+        'ligne 1\nligne 2',
+        'x' * 201,
+      ]) {
+        final error = ServiceUnavailableException(raw, 'sms-otp-disabled');
+        expect(ErrorCatalog.lookup(error).message, fallbackFr, reason: raw);
+      }
+    });
+
+    test('texte de repli en anglais', () {
+      useEnglish();
+      const error = ServiceUnavailableException('', 'sms-otp-disabled');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'SMS unavailable');
+      expect(
+        p.message,
+        "SMS sign-in isn't available for this number. "
+        'Sign in with your email address, Google or Apple.',
+      );
     });
 
     test('isKnown reconnaît le code', () {

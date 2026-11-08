@@ -1,13 +1,14 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/core/design/widgets/dony_logo.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -18,31 +19,40 @@ import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
-GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (_, _) => BlocProvider<AuthBloc>.value(
-        value: authBloc,
-        child: const PhoneAuthScreen(),
-      ),
-    ),
-    GoRoute(
-      path: '/auth/otp',
-      builder: (_, _) => const Scaffold(body: Text('OTP Screen')),
-    ),
-    GoRoute(
-      path: '/auth/email',
-      builder: (_, _) => const Scaffold(body: Text('Email Screen')),
-    ),
-  ],
-);
+GoRouter _buildRouter(AuthBloc authBloc, {bool fromProfile = false}) =>
+    GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => BlocProvider<AuthBloc>.value(
+            value: authBloc,
+            child: PhoneAuthScreen(fromProfile: fromProfile),
+          ),
+        ),
+        GoRoute(
+          path: '/auth/method',
+          builder: (_, _) => const Scaffold(body: Text('Method Screen')),
+        ),
+        GoRoute(
+          path: '/auth/otp',
+          builder: (_, _) => const Scaffold(body: Text('OTP Screen')),
+        ),
+        GoRoute(
+          path: '/auth/email',
+          builder: (_, _) => const Scaffold(body: Text('Email Screen')),
+        ),
+      ],
+    );
 
-Future<void> _pump(WidgetTester tester, AuthBloc authBloc) async {
+Future<void> _pump(
+  WidgetTester tester,
+  AuthBloc authBloc, {
+  bool fromProfile = false,
+}) async {
   await tester.pumpWidget(
     MaterialApp.router(
       theme: AppTheme.light(),
-      routerConfig: _buildRouter(authBloc),
+      routerConfig: _buildRouter(authBloc, fromProfile: fromProfile),
     ),
   );
   await tester.pump(const Duration(milliseconds: 300));
@@ -68,6 +78,7 @@ void main() {
     when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
 
     registerFallbackValue(const AuthSendOtpRequested(''));
+    DonySnackbar.clearDedup();
   });
 
   tearDown(() async {
@@ -365,5 +376,128 @@ void main() {
     expect(find.text('Get SMS code'), findsOneWidget);
     expect(find.text('Your number'), findsOneWidget);
     expect(find.text('Continue with an email address'), findsOneWidget);
+  });
+
+  group('PhoneAuthScreen — envoi SMS refusé (sms-otp-disabled)', () {
+    const countryDetail =
+        "Les codes SMS n'arrivent pas en ce moment en Côte d'Ivoire. "
+        'Connecte-toi avec ton adresse e-mail, Google ou Apple.';
+    const blocked = AuthError(
+      ServiceUnavailableException(countryDetail, 'sms-otp-disabled'),
+    );
+
+    testWidgets('bandeau persistant avec le detail du back, sans snackbar', (
+      tester,
+    ) async {
+      whenListen(
+        mockAuthBloc,
+        Stream.fromIterable([const AuthLoading(), blocked]),
+        initialState: const AuthInitial(),
+      );
+      await _pump(tester, mockAuthBloc);
+      await tester.pump();
+
+      final banner = find.byKey(const Key('sms-otp-disabled-banner'));
+      expect(banner, findsOneWidget);
+      expect(
+        find.descendant(of: banner, matching: find.text('SMS indisponible')),
+        findsOneWidget,
+      );
+      // Une seule occurrence : le bandeau, pas de snackbar en double.
+      expect(find.text(countryDetail), findsOneWidget);
+      expect(find.text('Voir les options'), findsOneWidget);
+    });
+
+    testWidgets('le lien mène à l\'écran des moyens de connexion', (
+      tester,
+    ) async {
+      when(() => mockAuthBloc.state).thenReturn(blocked);
+      await _pump(tester, mockAuthBloc);
+
+      final link = find.byKey(const Key('sms-otp-disabled-other-methods'));
+      await tester.ensureVisible(link);
+      await tester.tap(link);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Method Screen'), findsOneWidget);
+    });
+
+    testWidgets('detail vide → texte de repli dans le bandeau', (tester) async {
+      when(() => mockAuthBloc.state).thenReturn(
+        const AuthError(ServiceUnavailableException('', 'sms-otp-disabled')),
+      );
+      await _pump(tester, mockAuthBloc);
+
+      expect(
+        find.text(
+          "La connexion par SMS n'est pas disponible pour ce numéro. "
+          'Connectez-vous avec votre adresse e-mail, Google ou Apple.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('depuis le profil : bandeau sans lien (déjà connecté)', (
+      tester,
+    ) async {
+      when(() => mockAuthBloc.state).thenReturn(blocked);
+      await _pump(tester, mockAuthBloc, fromProfile: true);
+
+      expect(find.byKey(const Key('sms-otp-disabled-banner')), findsOneWidget);
+      expect(
+        find.byKey(const Key('sms-otp-disabled-other-methods')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('autre erreur : snackbar habituelle, pas de bandeau', (
+      tester,
+    ) async {
+      whenListen(
+        mockAuthBloc,
+        Stream.fromIterable([
+          const AuthLoading(),
+          const AuthError(
+            ValidationException('x', code: 'invalid-phone-number'),
+          ),
+        ]),
+        initialState: const AuthInitial(),
+      );
+      await _pump(tester, mockAuthBloc);
+      await tester.pump();
+
+      expect(find.byKey(const Key('sms-otp-disabled-banner')), findsNothing);
+      expect(find.text('Numéro injoignable'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+    });
+
+    for (final english in [false, true]) {
+      testWidgets('lien sur une ligne, sans débordement, à 360 dp '
+          '(${english ? 'EN' : 'FR'})', (tester) async {
+        if (english) useEnglish();
+        tester.view.physicalSize = const Size(360, 780);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        when(() => mockAuthBloc.state).thenReturn(blocked);
+        await _pump(tester, mockAuthBloc);
+
+        final label = english ? 'See options' : 'Voir les options';
+        expect(tester.takeException(), isNull);
+        // Police de test Ahem (1 em par glyphe, plus large que la vraie) :
+        // si le libellé tient ici, il tient dans l'app.
+        final paragraph = tester.renderObject<RenderParagraph>(
+          find.text(label),
+        );
+        expect(
+          paragraph.getMaxIntrinsicWidth(double.infinity),
+          lessThanOrEqualTo(paragraph.size.width),
+        );
+        expect(
+          paragraph.size.height,
+          lessThan(2 * paragraph.text.style!.fontSize!),
+        );
+      });
+    }
   });
 }

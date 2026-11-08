@@ -305,11 +305,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get errorSmsOtpDisabledTitle => 'Unavailable';
+  String get errorSmsOtpDisabledTitle => 'SMS unavailable';
 
   @override
   String get errorSmsOtpDisabledMessage =>
-      'Phone sign-in isn\'t available yet.';
+      'SMS sign-in isn\'t available for this number. Sign in with your email address, Google or Apple.';
 
   @override
   String get errorInvalidPhoneNumberTitle => 'Number unreachable';
@@ -1427,6 +1427,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authPhoneContinueWithEmail => 'Continue with an email address';
+
+  @override
+  String get authPhoneSmsBlockedOtherMethod => 'See options';
 
   @override
   String get authOtpEnterSixDigits => 'Enter the 6-digit code';

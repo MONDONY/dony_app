@@ -605,13 +605,13 @@ abstract class AppLocalizations {
   /// No description provided for @errorSmsOtpDisabledTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Indisponible'**
+  /// **'SMS indisponible'**
   String get errorSmsOtpDisabledTitle;
 
   /// No description provided for @errorSmsOtpDisabledMessage.
   ///
   /// In fr, this message translates to:
-  /// **'La connexion par téléphone n\'est pas encore disponible.'**
+  /// **'La connexion par SMS n\'est pas disponible pour ce numéro. Connectez-vous avec votre adresse e-mail, Google ou Apple.'**
   String get errorSmsOtpDisabledMessage;
 
   /// No description provided for @errorInvalidPhoneNumberTitle.
@@ -2581,6 +2581,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Continuer avec une adresse email'**
   String get authPhoneContinueWithEmail;
+
+  /// No description provided for @authPhoneSmsBlockedOtherMethod.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les options'**
+  String get authPhoneSmsBlockedOtherMethod;
 
   /// No description provided for @authOtpEnterSixDigits.
   ///

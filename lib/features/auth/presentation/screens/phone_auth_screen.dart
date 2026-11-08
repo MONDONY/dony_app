@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/phone/phone_country.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -18,6 +19,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+/// Code ProblemDetail du 503 renvoyé quand le code SMS ne peut pas partir
+/// vers ce numéro (SMS coupés, numéro réservé aux inscrits, indicatif bloqué
+/// depuis l'admin parce que les SMS n'arrivent pas dans ce pays).
+const smsOtpDisabledCode = 'sms-otp-disabled';
+
+/// Vrai quand [state] est le refus d'envoi du code SMS : l'écran l'affiche
+/// alors en bandeau persistant, avec un accès aux autres moyens de connexion,
+/// plutôt qu'en snackbar éphémère.
+bool isSmsOtpDisabled(AuthState state) =>
+    state is AuthError && state.error.code == smsOtpDisabledCode;
 
 class PhoneAuthScreen extends StatefulWidget {
   const PhoneAuthScreen({super.key, this.fromProfile = false});
@@ -96,7 +108,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   'contact': state.phoneNumber,
                 },
               );
-            } else if (state is AuthError) {
+            } else if (state is AuthError && !isSmsOtpDisabled(state)) {
+              // Le refus d'envoi SMS a son bandeau dans la page (voir
+              // `_SmsOtpDisabledBanner`) : pas de snackbar en double.
               ErrorPresenter.show(context, state.error);
             }
           },
@@ -282,6 +296,14 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                       ],
                                     ),
                                   ),
+                                  if (state is AuthError &&
+                                      isSmsOtpDisabled(state)) ...[
+                                    const SizedBox(height: DonySpacing.base),
+                                    _SmsOtpDisabledBanner(
+                                      error: state.error,
+                                      showOtherMethods: !widget.fromProfile,
+                                    ),
+                                  ],
                                   const SizedBox(height: DonySpacing.base),
                                 ],
                               ),
@@ -347,6 +369,45 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+/// Refus d'envoi du code SMS : le message (detail traduit du back, qui nomme
+/// le pays, ou texte de repli du catalogue) reste affiché tant que l'état
+/// d'erreur dure, avec un lien vers l'écran des moyens de connexion (e-mail,
+/// Google, Apple). Le lien est masqué quand l'écran sert à ajouter un numéro
+/// depuis le profil : l'utilisateur y est déjà connecté.
+class _SmsOtpDisabledBanner extends StatelessWidget {
+  const _SmsOtpDisabledBanner({
+    required this.error,
+    required this.showOtherMethods,
+  });
+
+  final AppException error;
+  final bool showOtherMethods;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final presentation = ErrorPresenter.resolve(error, l10n: l);
+    return DonyStatusBanner(
+      key: const Key('sms-otp-disabled-banner'),
+      type: DonyStatusBannerType.warning,
+      icon: presentation.icon,
+      title: presentation.title,
+      message: presentation.message,
+      action: showOtherMethods
+          ? TextButton(
+              key: const Key('sms-otp-disabled-other-methods'),
+              onPressed: () => context.go('/auth/method'),
+              child: Text(
+                l.authPhoneSmsBlockedOtherMethod,
+                maxLines: 1,
+                softWrap: false,
+              ),
+            )
+          : null,
     );
   }
 }

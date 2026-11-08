@@ -517,6 +517,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'authPhoneNumberTooShort': (l) => l.authPhoneNumberTooShort,
   'authPhoneGetSmsCode': (l) => l.authPhoneGetSmsCode,
   'authPhoneContinueWithEmail': (l) => l.authPhoneContinueWithEmail,
+  'authPhoneSmsBlockedOtherMethod': (l) => l.authPhoneSmsBlockedOtherMethod,
   'authOtpEnterSixDigits': (l) => l.authOtpEnterSixDigits,
   'authOtpSessionExpired': (l) => l.authOtpSessionExpired,
   'authOtpEmailVerified': (l) => l.authOtpEmailVerified,
@@ -642,6 +643,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('currency'),
   ),
   'authConsentAccept': (l) => l.authConsentAccept,
+  'authConsentTitle': (l) => l.authConsentTitle,
+  'authConsentBody': (l) => l.authConsentBody,
+  'authConsentFootnote': (l) => l.authConsentFootnote,
+  'authConsentPointScreens': (l) => l.authConsentPointScreens,
+  'authConsentPointGestures': (l) => l.authConsentPointGestures,
+  'authConsentPointNeverPersonal': (l) => l.authConsentPointNeverPersonal,
+  'authConsentPointChangeAnytime': (l) => l.authConsentPointChangeAnytime,
+  'authConsentDecline': (l) => l.authConsentDecline,
   'consentSheetTitle': (l) => l.consentSheetTitle,
   'consentSheetBody': (l) => l.consentSheetBody,
   'consentSheetDecline': (l) => l.consentSheetDecline,
@@ -4179,6 +4188,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'profileAddBadgeAction': (l) => l.profileAddBadgeAction,
   'communityEmptyTitle': (l) => l.communityEmptyTitle,
   'communityEmptyDescription': (l) => l.communityEmptyDescription,
+  'communityDemosTitle': (l) => l.communityDemosTitle,
+  'communityDemosSubtitle': (l) => l.communityDemosSubtitle,
   'communityTutorialsTitle': (l) => l.communityTutorialsTitle,
   'communityTutorialsSubtitle': (l) => l.communityTutorialsSubtitle,
   'profileLanguageFrench': (l) => l.profileLanguageFrench,
@@ -4540,6 +4551,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.notificationSettingsCorridorLabel,
   'notificationSettingsCorridorSubtitle': (l) =>
       l.notificationSettingsCorridorSubtitle,
+  'notificationSettingsSearchSuggestionsLabel': (l) =>
+      l.notificationSettingsSearchSuggestionsLabel,
+  'notificationSettingsSearchSuggestionsSubtitle': (l) =>
+      l.notificationSettingsSearchSuggestionsSubtitle,
   'notificationSettingsNegotiationsLabel': (l) =>
       l.notificationSettingsNegotiationsLabel,
   'notificationSettingsNegotiationsSubtitle': (l) =>
@@ -5374,6 +5389,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'dsEmojiTakeoff': (l) => l.dsEmojiTakeoff,
   'dsEmojiLanding': (l) => l.dsEmojiLanding,
   'dsEmojiParcel': (l) => l.dsEmojiParcel,
+  'appUpdateSoftTitle': (l) => l.appUpdateSoftTitle,
+  'appUpdateSoftMessage': (l) => l.appUpdateSoftMessage,
+  'appUpdateSoftAction': (l) => l.appUpdateSoftAction,
   'appUpdateTitle': (l) => l.appUpdateTitle,
   'appUpdateMessage': (l) => l.appUpdateMessage,
   'appUpdateButton': (l) => l.appUpdateButton,
