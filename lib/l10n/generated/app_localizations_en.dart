@@ -12824,6 +12824,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Route alerts and followed travelers';
 
   @override
+  String get notificationSettingsSearchSuggestionsLabel =>
+      'Based on my searches';
+
+  @override
+  String get notificationSettingsSearchSuggestionsSubtitle =>
+      'Trips posted after a search with no result';
+
+  @override
   String get notificationSettingsNegotiationsLabel => 'Price discussions';
 
   @override

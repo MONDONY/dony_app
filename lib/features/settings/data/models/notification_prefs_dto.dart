@@ -30,6 +30,9 @@ class NotificationPrefsDto {
     // décisions partent toujours, sans réglage.
     'email_recaps': true,
     'email_alerts_tips': true,
+    // Suggestions selon les recherches (back #703, V362) : un trajet publié
+    // après une recherche restée sans résultat, en push et par e-mail.
+    'search_suggestions': true,
   };
 
   static const Map<String, String> uiKeyToJsonKey = {
@@ -46,6 +49,7 @@ class NotificationPrefsDto {
     'push_recipient_parcels': 'pushRecipientParcels',
     'email_recaps': 'emailRecaps',
     'email_alerts_tips': 'emailAlertsTips',
+    'search_suggestions': 'searchSuggestions',
   };
 
   static bool isSynced(String uiKey) => uiKeyToJsonKey.containsKey(uiKey);
@@ -66,7 +70,7 @@ class NotificationPrefsDto {
   /// `boolean` primitifs côté Java : un champ omis y arriverait à `false`, ce qui
   /// couperait en silence une catégorie que l'utilisateur n'a jamais touchée.
   ///
-  /// Les champs V305, V340 et V342 sont tolérés des deux côtés : un serveur antérieur
+  /// Les champs V305, V340, V342 et V362 sont tolérés des deux côtés : un serveur antérieur
   /// les ignore à l'écriture et ne les renvoie pas en lecture (la valeur locale
   /// reste alors inchangée, voir [NotificationPrefsDto.fromJson]).
   Map<String, dynamic> toJson() => {

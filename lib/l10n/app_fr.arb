@@ -14128,6 +14128,14 @@
   "@notificationSettingsCorridorSubtitle": {
     "description": "Sous-titre de la tuile push_corridor_alerts (notification_settings_screen.dart)"
   },
+  "notificationSettingsSearchSuggestionsLabel": "Selon mes recherches",
+  "@notificationSettingsSearchSuggestionsLabel": {
+    "description": "Libellé de la tuile search_suggestions : suggestions de trajets après une recherche sans résultat (back #703)"
+  },
+  "notificationSettingsSearchSuggestionsSubtitle": "Trajets publiés après une recherche sans résultat",
+  "@notificationSettingsSearchSuggestionsSubtitle": {
+    "description": "Sous-titre de la tuile search_suggestions (notification_settings_screen.dart)"
+  },
   "notificationSettingsNegotiationsLabel": "Discussions de prix",
   "@notificationSettingsNegotiationsLabel": {
     "description": "Libellé de la tuile push_activity_negotiations (notification_settings_screen.dart)"

@@ -828,6 +828,7 @@ class _NotificationIcon extends StatelessWidget {
       'SENDER_INVITE' => (cs.info, 'package'),
       'CORRIDOR_ALERT' => (cs.info, 'plane'),
       'TRIP_SPACE_FREED' => (cs.info, 'bell'),
+      'SEARCH_SUGGESTION' => (cs.info, 'search'),
       'TRAVELER_NEW_ANNOUNCEMENT' => (cs.info, 'plane'),
       'automation_capacity_free' => (cs.info, 'zap'),
       'automation_last_minute' => (cs.info, 'zap'),

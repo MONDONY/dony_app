@@ -21303,6 +21303,18 @@ abstract class AppLocalizations {
   /// **'Alertes de trajet et voyageurs suivis'**
   String get notificationSettingsCorridorSubtitle;
 
+  /// Libellé de la tuile search_suggestions : suggestions de trajets après une recherche sans résultat (back #703)
+  ///
+  /// In fr, this message translates to:
+  /// **'Selon mes recherches'**
+  String get notificationSettingsSearchSuggestionsLabel;
+
+  /// Sous-titre de la tuile search_suggestions (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets publiés après une recherche sans résultat'**
+  String get notificationSettingsSearchSuggestionsSubtitle;
+
   /// Libellé de la tuile push_activity_negotiations (notification_settings_screen.dart)
   ///
   /// In fr, this message translates to:

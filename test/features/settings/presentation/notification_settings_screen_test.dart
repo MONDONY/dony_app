@@ -155,6 +155,7 @@ void main() {
       ('Colis pour moi', 'push_recipient_parcels'),
       ('Récapitulatifs', 'email_recaps'),
       ('Alertes et conseils', 'email_alerts_tips'),
+      ('Selon mes recherches', 'search_suggestions'),
       ('Automatisations voyageur', 'push_traveler_automations'),
       ('Rappels et conseils', 'push_reminders_tips'),
       ('Appels manqués', 'push_missed_calls'),
@@ -252,6 +253,11 @@ void main() {
       expect(find.text('Mes trajets'), findsOneWidget);
       expect(find.text('Colis pour moi'), findsOneWidget);
       expect(find.text('Nouveaux trajets'), findsOneWidget);
+      expect(find.text('Selon mes recherches'), findsOneWidget);
+      expect(
+        find.text('Trajets publiés après une recherche sans résultat'),
+        findsOneWidget,
+      );
       expect(find.text('Discussions de prix'), findsOneWidget);
       expect(find.text('Messages'), findsOneWidget);
     });

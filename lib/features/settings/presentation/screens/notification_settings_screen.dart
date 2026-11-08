@@ -166,6 +166,17 @@ class _NotificationSettingsScreenState
                         prefs: state.prefs,
                         onToggle: (key) => _toggle(context, key),
                       ),
+                      // Suggestions selon les recherches (back #703) : push et
+                      // e-mail. Le serveur exige aussi « Nouveaux trajets ».
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsSearchSuggestionsLabel,
+                        subtitle:
+                            l.notificationSettingsSearchSuggestionsSubtitle,
+                        key: 'search_suggestions',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
                       _buildTile(
                         context,
                         label: l.notificationSettingsNegotiationsLabel,

@@ -7328,6 +7328,8 @@
   "notificationSettingsBidsSubtitle": "Traveler replies, drop-off, tracking of your parcels",
   "notificationSettingsCorridorLabel": "New trips",
   "notificationSettingsCorridorSubtitle": "Route alerts and followed travelers",
+  "notificationSettingsSearchSuggestionsLabel": "Based on my searches",
+  "notificationSettingsSearchSuggestionsSubtitle": "Trips posted after a search with no result",
   "notificationSettingsNegotiationsLabel": "Price discussions",
   "notificationSettingsNegotiationsSubtitle": "Offers, counteroffers, payments…",
   "notificationSettingsMessagesLabel": "Messages",

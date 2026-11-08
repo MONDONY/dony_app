@@ -466,8 +466,9 @@ void main() {
             verify(() => prefsRepo.updatePrefs(captureAny())).captured.single
                 as NotificationPrefsDto;
         final json = dto.toJson();
-        expect(json.keys, hasLength(13));
+        expect(json.keys, hasLength(14));
         expect(json['pushMessages'], isFalse);
+        expect(json['searchSuggestions'], isTrue);
         // Les champs non touchés partent avec leur valeur courante : le PUT est
         // un remplacement complet côté serveur, un champ omis y arriverait à
         // `false` et couperait une catégorie jamais désactivée par l'utilisateur.
@@ -577,9 +578,11 @@ void main() {
 
   // ─── Contrat de sérialisation ──────────────────────────────────────────────
   group('NotificationPrefsDto', () {
-    test('toJson émet toujours les treize champs, même sur une map vide', () {
+    test('toJson émet toujours les quatorze champs, même sur une map vide', () {
       final json = const NotificationPrefsDto({}).toJson();
-      expect(json.keys, hasLength(13));
+      expect(json.keys, hasLength(14));
+      // V362 (back #703) : suggestions selon les recherches, défaut true.
+      expect(json['searchSuggestions'], isTrue);
       // V305 (back #452) : défaut true, comme les colonnes.
       expect(json['pushMissedCalls'], isTrue);
       expect(json['pushTravelerAutomations'], isTrue);
@@ -621,6 +624,7 @@ void main() {
         'pushRecipientParcels': true,
         'emailRecaps': false,
         'emailAlertsTips': true,
+        'searchSuggestions': false,
       });
       expect(dto.toJson(), {
         'pushActivityBids': false,
@@ -636,7 +640,16 @@ void main() {
         'pushRecipientParcels': true,
         'emailRecaps': false,
         'emailAlertsTips': true,
+        'searchSuggestions': false,
       });
+    });
+
+    /// Serveur antérieur à V362 (back #703 pas encore déployé) : le champ est
+    /// absent, la valeur locale reste.
+    test('fromJson d\'un serveur sans V362 ne touche pas aux suggestions', () {
+      final dto = NotificationPrefsDto.fromJson({'pushCorridorAlerts': true});
+      expect(dto.values.containsKey('search_suggestions'), isFalse);
+      expect(NotificationPrefsDto.isSynced('search_suggestions'), isTrue);
     });
 
     /// Serveur antérieur à V340 : sans les réglages par rôle, la valeur locale

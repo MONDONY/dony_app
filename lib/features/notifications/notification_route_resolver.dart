@@ -236,6 +236,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // son détail, d'où l'on fait sa demande.
     'TRIP_SPACE_FREED' when _isUuid(announcementId) =>
       '/traveler/$announcementId',
+    // Suggestion selon les recherches (back #703) : un trajet publié sur un
+    // corridor cherché sans résultat → son détail, d'où l'on réserve.
+    'SEARCH_SUGGESTION' when _isUuid(announcementId) =>
+      '/traveler/$announcementId',
     // Voyageur → détail du colis qui matche son alerte (push instantané)
     'CORRIDOR_ALERT' when _isUuid(requestId) =>
       '/package-requests/$requestId/public',

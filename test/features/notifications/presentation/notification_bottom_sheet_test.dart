@@ -310,6 +310,12 @@ void main() {
       expect(await iconAssetFor(tester, 'REFERRAL_REWARD_AVAILABLE'), 'gift');
     });
 
+    testWidgets('une suggestion selon les recherches a l icône loupe', (
+      tester,
+    ) async {
+      expect(await iconAssetFor(tester, 'SEARCH_SUGGESTION'), 'search');
+    });
+
     testWidgets('un type inconnu garde la cloche neutre', (tester) async {
       expect(await iconAssetFor(tester, 'TYPE_INEXISTANT'), 'bell');
     });
