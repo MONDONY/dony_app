@@ -215,6 +215,43 @@ void main() {
     expect(find.byKey(const Key('ai-entry-cta')), findsOneWidget);
   });
 
+  testWidgets(
+    'étape 1 en création : carte IA, pas de bandeau devise, trajet visible '
+    'sans défilement à 360 x 640',
+    (tester) async {
+      tester.view
+        ..physicalSize = const Size(360, 640)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      useAiFormDraft(enabled: true);
+      await open(tester);
+
+      expect(find.byKey(const Key('ai-entry-cta')), findsOneWidget);
+      expect(find.byKey(const Key('currency-publish-banner')), findsNothing);
+      final city = find.byKey(const Key('step1-departure-city'));
+      expect(city, findsOneWidget);
+      final rect = tester.getRect(city);
+      expect(rect.top, greaterThanOrEqualTo(0));
+      expect(rect.bottom, lessThanOrEqualTo(640));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('étape 1 en mode brouillon : pas de bandeau devise', (
+    tester,
+  ) async {
+    useAiFormDraft(enabled: true);
+    await open(
+      tester,
+      extra: const PackageRequestDraftResume({
+        'step': 0,
+        'departureCity': 'Paris',
+      }),
+    );
+    expect(find.byKey(const Key('currency-publish-banner')), findsNothing);
+    expect(find.byKey(const Key('step1-departure-city')), findsOneWidget);
+  });
+
   testWidgets('carte absente si formDraftEnabled est faux ou absent', (
     tester,
   ) async {

@@ -1446,6 +1446,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
         placeholderMarker('name'),
         placeholderMarker('code'),
       ),
+  'requestCreateCurrencyLockedSemanticLabel': (l) =>
+      l.requestCreateCurrencyLockedSemanticLabel(
+        placeholderMarker('name'),
+        placeholderMarker('code'),
+      ),
   'requestCreateChangeCurrency': (l) => l.requestCreateChangeCurrency,
   'requestCreatePhotoUnsupported': (l) => l.requestCreatePhotoUnsupported,
   'requestCreateTakePhoto': (l) => l.requestCreateTakePhoto,
@@ -5362,24 +5367,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('currency'),
     placeholderMarker('description'),
   ),
-  'currencyPublishBannerTitle': (l) => l.currencyPublishBannerTitle(
-    placeholderMarker('currencyName'),
-    placeholderMarker('code'),
-  ),
-  'currencyPublishBannerTitleUnknown': (l) =>
-      l.currencyPublishBannerTitleUnknown,
-  'currencyPublishBannerDescriptionKnown': (l) =>
-      l.currencyPublishBannerDescriptionKnown,
-  'currencyPublishBannerDescriptionUnknown': (l) =>
-      l.currencyPublishBannerDescriptionUnknown,
-  'currencyPublishBannerSemanticsKnown': (l) =>
-      l.currencyPublishBannerSemanticsKnown(
-        placeholderMarker('currencyName'),
-        placeholderMarker('code'),
-        placeholderMarker('description'),
-      ),
-  'currencyPublishBannerSemanticsUnknown': (l) =>
-      l.currencyPublishBannerSemanticsUnknown,
   'currencyApprox': (l) => l.currencyApprox(placeholderMarker('amount')),
   'dialNoNumber': (l) => l.dialNoNumber,
   'dialNoPhoneApp': (l) => l.dialNoPhoneApp(placeholderMarker('phone')),
@@ -8226,6 +8213,7 @@ const textParameters = <String, List<String>>{
   'requestCreateToleranceRangeHint': ['from', 'to'],
   'requestCreateBudgetRange': ['min', 'max'],
   'requestCreateCurrencySemanticLabel': ['name', 'code'],
+  'requestCreateCurrencyLockedSemanticLabel': ['name', 'code'],
   'requestDetailCashCommissionTitle': ['name'],
   'requestTravelerAddingTrip': ['name'],
   'requestOfferWaitingFor': ['name'],
@@ -8515,12 +8503,6 @@ const textParameters = <String, List<String>>{
   'currencyCashOnlyAvailable': ['currency'],
   'currencyCashOnlyUnsupportedDescription': ['currency'],
   'currencyCashOnlyWithDescription': ['currency', 'description'],
-  'currencyPublishBannerTitle': ['currencyName', 'code'],
-  'currencyPublishBannerSemanticsKnown': [
-    'currencyName',
-    'code',
-    'description',
-  ],
   'currencyApprox': ['amount'],
   'dialNoPhoneApp': ['phone'],
   'suiviTripSummary': ['date'],

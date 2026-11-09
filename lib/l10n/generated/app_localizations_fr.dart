@@ -4072,6 +4072,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String requestCreateCurrencyLockedSemanticLabel(String name, String code) {
+    return 'Devise de la demande : $name, $code. Non modifiable.';
+  }
+
+  @override
   String get requestCreateChangeCurrency => 'Changer';
 
   @override
@@ -15244,35 +15249,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String currencyCashOnlyWithDescription(String currency, String description) {
     return 'Espèces uniquement en $currency. $description';
   }
-
-  @override
-  String currencyPublishBannerTitle(String currencyName, String code) {
-    return 'Publié en $currencyName ($code)';
-  }
-
-  @override
-  String get currencyPublishBannerTitleUnknown => 'Devise à confirmer';
-
-  @override
-  String get currencyPublishBannerDescriptionKnown =>
-      'Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.';
-
-  @override
-  String get currencyPublishBannerDescriptionUnknown =>
-      'La devise de publication est vérifiée par Yadony avant publication.';
-
-  @override
-  String currencyPublishBannerSemanticsKnown(
-    String currencyName,
-    String code,
-    String description,
-  ) {
-    return 'Publication en $currencyName, devise $code. $description';
-  }
-
-  @override
-  String get currencyPublishBannerSemanticsUnknown =>
-      'Devise de publication à confirmer par Yadony avant publication.';
 
   @override
   String currencyApprox(String amount) {

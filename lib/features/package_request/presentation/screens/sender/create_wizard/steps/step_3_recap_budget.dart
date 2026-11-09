@@ -393,14 +393,15 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 const SizedBox(height: DonySpacing.base),
 
                 // ── Devise ─────────────────────────────────────────────────
-                // Figée une fois la demande créée : elle ne se change plus en
-                // édition, exactement comme côté trajet.
-                if (!state.isEditing) ...[
-                  _FieldLabel(l10n.requestCreateCurrencyLabel),
-                  const SizedBox(height: DonySpacing.sm),
+                // Figée une fois la demande créée : en édition, simple rappel en
+                // lecture seule (ni « Changer », ni sélecteur).
+                _FieldLabel(l10n.requestCreateCurrencyLabel),
+                const SizedBox(height: DonySpacing.sm),
+                if (state.isEditing)
+                  _CurrencyLockedRow(currency: currency)
+                else
                   _CurrencySelectionRow(currency: currency),
-                  const SizedBox(height: DonySpacing.base),
-                ],
+                const SizedBox(height: DonySpacing.base),
 
                 // ── Budget ─────────────────────────────────────────────────
                 AiFieldMark(
@@ -761,6 +762,57 @@ class _CurrencySelectionRow extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Rappel en lecture seule de la devise figée d'une demande en édition : même
+/// gabarit que [_CurrencySelectionRow], sans « Changer » ni action.
+class _CurrencyLockedRow extends StatelessWidget {
+  const _CurrencyLockedRow({required this.currency});
+
+  final SupportedCurrency currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+    return Semantics(
+      container: true,
+      label: l10n.requestCreateCurrencyLockedSemanticLabel(
+        currency.name(l10n),
+        currency.code,
+      ),
+      child: ExcludeSemantics(
+        child: Container(
+          key: const Key('package-request-currency-locked-row'),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            border: Border.all(color: cs.outline),
+          ),
+          child: Row(
+            children: [
+              DonyIcon('banknote', size: 18, color: cs.primary),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  '${currency.name(l10n)} (${currency.code})',
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

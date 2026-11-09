@@ -459,26 +459,18 @@ void main() {
     ),
   ).captured;
 
-  testWidgets('bandeau devise invalide : ne prétend pas publier en EUR', (
-    tester,
-  ) async {
+  testWidgets('étape 1 en création : plus de bandeau devise', (tester) async {
     registerCurrencyPreference(42);
     await tester.pumpWidget(buildHarness());
     await tester.tap(find.byKey(const Key('open-create')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
-    expect(find.text('Devise à confirmer'), findsOneWidget);
-    expect(find.text('Publié en Euro (EUR)'), findsNothing);
-    expect(
-      tester.getTopLeft(find.byKey(const Key('currency-publish-banner'))).dy,
-      lessThan(
-        tester.getTopLeft(find.byKey(const Key('step1-departure-city'))).dy,
-      ),
-    );
+    expect(find.byKey(const Key('currency-publish-banner')), findsNothing);
+    expect(find.text('Devise à confirmer'), findsNothing);
+    expect(find.byKey(const Key('step1-departure-city')), findsOneWidget);
   });
 
-  testWidgets('bandeau devise absent en édition de demande', (tester) async {
+  testWidgets('étape 1 en édition : pas de bandeau devise', (tester) async {
     await tester.pumpWidget(buildHarness());
     await tester.tap(find.byKey(const Key('open-edit')));
     await tester.pumpAndSettle();

@@ -3031,6 +3031,18 @@
       }
     }
   },
+  "requestCreateCurrencyLockedSemanticLabel": "Devise de la demande : {name}, {code}. Non modifiable.",
+  "@requestCreateCurrencyLockedSemanticLabel": {
+    "description": "Libellé d'accessibilité de la ligne devise en lecture seule, en édition (step_3_recap_budget.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "requestCreateChangeCurrency": "Changer",
   "@requestCreateChangeCurrency": {
     "description": "Lien de modification de la devise, dans la ligne du sélecteur (step_3_recap_budget.dart)"
@@ -17113,49 +17125,6 @@
         "type": "String"
       }
     }
-  },
-  "currencyPublishBannerTitle": "Publié en {currencyName} ({code})",
-  "@currencyPublishBannerTitle": {
-    "description": "Titre de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).",
-    "placeholders": {
-      "currencyName": {
-        "type": "String"
-      },
-      "code": {
-        "type": "String"
-      }
-    }
-  },
-  "currencyPublishBannerTitleUnknown": "Devise à confirmer",
-  "@currencyPublishBannerTitleUnknown": {
-    "description": "Titre de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
-  },
-  "currencyPublishBannerDescriptionKnown": "Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.",
-  "@currencyPublishBannerDescriptionKnown": {
-    "description": "Détail de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart)."
-  },
-  "currencyPublishBannerDescriptionUnknown": "La devise de publication est vérifiée par Yadony avant publication.",
-  "@currencyPublishBannerDescriptionUnknown": {
-    "description": "Détail de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
-  },
-  "currencyPublishBannerSemanticsKnown": "Publication en {currencyName}, devise {code}. {description}",
-  "@currencyPublishBannerSemanticsKnown": {
-    "description": "Libellé d'accessibilité de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).",
-    "placeholders": {
-      "currencyName": {
-        "type": "String"
-      },
-      "code": {
-        "type": "String"
-      },
-      "description": {
-        "type": "String"
-      }
-    }
-  },
-  "currencyPublishBannerSemanticsUnknown": "Devise de publication à confirmer par Yadony avant publication.",
-  "@currencyPublishBannerSemanticsUnknown": {
-    "description": "Libellé d'accessibilité de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
   },
   "currencyApprox": "environ {amount}",
   "@currencyApprox": {

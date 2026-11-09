@@ -543,7 +543,7 @@ void main() {
     });
 
     testWidgets(
-      'devise verrouillée en édition : aucune ligne devise affichée',
+      'devise verrouillée en édition : ligne en lecture seule, sans « Changer »',
       (tester) async {
         const seed = PackageRequestFormState(
           editingRequestId: 'pr-1',
@@ -559,11 +559,36 @@ void main() {
         await tester.pump();
 
         expect(
+          find.byKey(const Key('package-request-currency-locked-row')),
+          findsOneWidget,
+        );
+        expect(find.text('Euro (EUR)'), findsOneWidget);
+        expect(find.text('Changer'), findsNothing);
+        expect(
           find.byKey(const Key('package-request-currency-selector-row')),
           findsNothing,
         );
       },
     );
+
+    testWidgets('création : sélecteur inchangé, pas de ligne verrouillée', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(currency: SupportedCurrency.eur)),
+      );
+      await tester.pump();
+
+      expect(
+        find.byKey(const Key('package-request-currency-selector-row')),
+        findsOneWidget,
+      );
+      expect(find.text('Changer'), findsOneWidget);
+      expect(
+        find.byKey(const Key('package-request-currency-locked-row')),
+        findsNothing,
+      );
+    });
 
     // M5 : bout en bout avec le bloc réel (pas de seed injecté à la main) —
     // vérifie que le post-frame de initState émet bien
