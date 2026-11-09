@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/app_update/bloc/app_update_prompt_cubit.dart';
@@ -54,7 +56,6 @@ void main() {
         locale: locale,
       ),
     );
-    await cubit.check();
     await tester.pumpAndSettle();
     return cubit;
   }
@@ -145,6 +146,104 @@ void main() {
     expect(find.text('Une mise à jour est disponible'), findsNothing);
     expect(storeOpened, 1);
     expect(store.value, isNull);
+  });
+
+  Future<void> background(WidgetTester tester) async {
+    for (final st in [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+    ]) {
+      tester.binding.handleAppLifecycleStateChanged(st);
+    }
+  }
+
+  Future<void> foreground(WidgetTester tester) async {
+    for (final st in [
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]) {
+      tester.binding.handleAppLifecycleStateChanged(st);
+    }
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('retour au premier plan : le modal réapparaît', (tester) async {
+    await pump(tester);
+    await tester.tap(find.byKey(const Key('app-update-prompt-update')));
+    await tester.pumpAndSettle();
+    expect(find.text('Une mise à jour est disponible'), findsNothing);
+
+    await background(tester);
+    await foreground(tester);
+
+    expect(find.text('Une mise à jour est disponible'), findsOneWidget);
+  });
+
+  testWidgets('réouverture : le report de 12 h est respecté', (tester) async {
+    await pump(tester);
+    await tester.tap(find.byKey(const Key('app-update-prompt-later')));
+    await tester.pumpAndSettle();
+
+    await background(tester);
+    await foreground(tester);
+
+    expect(find.text('Une mise à jour est disponible'), findsNothing);
+  });
+
+  testWidgets('retour au premier plan : pas d\'empilement', (tester) async {
+    await pump(tester);
+
+    await background(tester);
+    await foreground(tester);
+
+    expect(find.text('Une mise à jour est disponible'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('app-update-prompt-later')));
+    await tester.pumpAndSettle();
+    expect(find.text('Une mise à jour est disponible'), findsNothing);
+  });
+
+  testWidgets('retour au premier plan : rien si l\'app est à jour', (
+    tester,
+  ) async {
+    await pump(tester, recommended: 0);
+
+    await background(tester);
+    await foreground(tester);
+
+    expect(find.text('Une mise à jour est disponible'), findsNothing);
+  });
+
+  testWidgets('autre écran plein par-dessus : rien, puis le modal au retour', (
+    tester,
+  ) async {
+    store.value = now.subtract(const Duration(hours: 2));
+    await pump(tester);
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    unawaited(
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('Autre écran')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    // Le report expire pendant que le shell est recouvert.
+    store.value = null;
+
+    await background(tester);
+    await foreground(tester);
+
+    expect(find.text('Une mise à jour est disponible'), findsNothing);
+    expect(store.value, isNull);
+
+    navigator.pop();
+    await tester.pumpAndSettle();
+    await background(tester);
+    await foreground(tester);
+
+    expect(find.text('Une mise à jour est disponible'), findsOneWidget);
   });
 }
 

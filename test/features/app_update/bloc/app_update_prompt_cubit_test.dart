@@ -108,21 +108,65 @@ void main() {
     await expectLater(unreadable.snooze(now), completes);
   });
 
-  test('une seule apparition par session', () async {
+  test('pas deux fois d\'affilée sans retour au premier plan', () async {
     final cubit = cubitFor();
     addTearDown(cubit.close);
     await cubit.check();
-    expect(cubit.state, isTrue);
+    await cubit.update();
+    await cubit.check();
+    expect(cubit.state, isFalse);
     await cubit.later();
     store.value = null;
 
     await cubit.check();
 
     expect(cubit.state, isFalse);
-    expect(analytics.events, [
-      AnalyticsEvents.appUpdateBannerShown,
-      AnalyticsEvents.appUpdateBannerDismissed,
-    ]);
+  });
+
+  test('retour au premier plan : réaffiche après « Mettre à jour »', () async {
+    final cubit = cubitFor();
+    addTearDown(cubit.close);
+    await cubit.check();
+    await cubit.update();
+
+    await cubit.onForeground();
+
+    expect(cubit.state, isTrue);
+  });
+
+  test('retour au premier plan : le report de 12 h reste respecté', () async {
+    final cubit = cubitFor();
+    addTearDown(cubit.close);
+    await cubit.check();
+    await cubit.later();
+
+    await cubit.onForeground();
+
+    expect(cubit.state, isFalse);
+  });
+
+  test('pas d\'empilement : modal déjà affiché', () async {
+    final cubit = cubitFor();
+    addTearDown(cubit.close);
+    await cubit.check();
+    await cubit.onForeground();
+
+    expect(analytics.events, [AnalyticsEvents.appUpdateBannerShown]);
+  });
+
+  test('skip retire le modal sans rien mémoriser et réarme', () async {
+    final cubit = cubitFor();
+    addTearDown(cubit.close);
+    await cubit.check();
+    analytics.events.clear();
+
+    cubit.skip();
+
+    expect(cubit.state, isFalse);
+    expect(store.value, isNull);
+    expect(analytics.events, isEmpty);
+    await cubit.check();
+    expect(cubit.state, isTrue);
   });
 
   test('later mémorise l\'horloge, masque et mesure', () async {

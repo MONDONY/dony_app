@@ -13,11 +13,13 @@ const Duration kAppUpdatePromptSnooze = Duration(hours: 12);
 
 /// Faut-il montrer le modal de mise à jour recommandée : `true` quand une
 /// version recommandée plus récente existe, que l'utilisateur ne l'a pas
-/// repoussée depuis moins de [kAppUpdatePromptSnooze] et que le modal n'a pas
-/// déjà été montré pendant cette session.
+/// repoussée depuis moins de [kAppUpdatePromptSnooze].
 ///
-/// « Mettre à jour » ne mémorise rien : le modal reviendra au prochain
-/// lancement tant que l'application n'est pas à jour.
+/// Évalué au lancement ([check]) et à chaque retour au premier plan
+/// ([onForeground]). Le modal ne se montre jamais deux fois d'affilée sans que
+/// l'app ait quitté puis repris le premier plan, ni par-dessus lui-même.
+/// « Mettre à jour » ne mémorise rien : le modal reviendra à la prochaine
+/// réouverture tant que l'application n'est pas à jour.
 class AppUpdatePromptCubit extends Cubit<bool> {
   AppUpdatePromptCubit(
     this._service,
@@ -34,17 +36,38 @@ class AppUpdatePromptCubit extends Cubit<bool> {
   final AnalyticsService _analytics;
   final Future<void> Function() _openStore;
   final DateTime Function() _now;
-  bool _shownThisSession = false;
+  bool _armed = true;
+  bool _checking = false;
 
+  /// Évalue s'il faut montrer le modal. Relit `recommended_build` déjà connu
+  /// localement : aucun appel réseau.
   Future<void> check() async {
-    if (_shownThisSession) return;
-    final recommended = await _service.isUpdateRecommended();
-    if (isClosed || !recommended || _shownThisSession) return;
-    final snoozedAt = await _store.lastSnoozedAt();
-    if (isClosed || _shownThisSession || !_isSnoozeOver(snoozedAt)) return;
-    _shownThisSession = true;
-    emit(true);
-    unawaited(_analytics.logEvent(AnalyticsEvents.appUpdateBannerShown));
+    if (!_armed || state || _checking) return;
+    _checking = true;
+    try {
+      final recommended = await _service.isUpdateRecommended();
+      if (isClosed || !recommended) return;
+      final snoozedAt = await _store.lastSnoozedAt();
+      if (isClosed || state || !_isSnoozeOver(snoozedAt)) return;
+      _armed = false;
+      emit(true);
+      unawaited(_analytics.logEvent(AnalyticsEvents.appUpdateBannerShown));
+    } finally {
+      _checking = false;
+    }
+  }
+
+  /// Retour au premier plan : réarme puis réévalue.
+  Future<void> onForeground() {
+    _armed = true;
+    return check();
+  }
+
+  /// Le modal ne peut pas s'ouvrir (un autre écran plein recouvre le shell) :
+  /// on le retire sans rien mémoriser ni mesurer, il pourra revenir.
+  void skip() {
+    _armed = true;
+    if (state) emit(false);
   }
 
   /// Un horodatage absent ou dans le futur (horloge déréglée) vaut « jamais
