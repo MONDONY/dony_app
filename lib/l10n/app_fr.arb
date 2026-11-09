@@ -17203,17 +17203,21 @@
   "@dsEmojiParcel": {
     "description": "Étiquette d'accessibilité par défaut de l'emoji colis 📦 (dony_emoji.dart)."
   },
-  "appUpdateSoftTitle": "Nouvelle version disponible",
-  "@appUpdateSoftTitle": {
-    "description": "Titre du bandeau de mise à jour douce (app_update_banner.dart)."
+  "appUpdatePromptTitle": "Une mise à jour est disponible",
+  "@appUpdatePromptTitle": {
+    "description": "Titre du modal de mise à jour recommandée (app_update_prompt_sheet.dart)."
   },
-  "appUpdateSoftMessage": "Mettez Yadony à jour pour profiter des dernières améliorations.",
-  "@appUpdateSoftMessage": {
-    "description": "Message du bandeau de mise à jour douce (app_update_banner.dart)."
+  "appUpdatePromptMessage": "Cette version de Yadony apporte plus de stabilité et de nouvelles fonctions. Mettez à jour pour en profiter.",
+  "@appUpdatePromptMessage": {
+    "description": "Corps du modal de mise à jour recommandée (app_update_prompt_sheet.dart)."
   },
-  "appUpdateSoftAction": "Mettre à jour",
-  "@appUpdateSoftAction": {
-    "description": "Lien du bandeau de mise à jour douce vers le store (app_update_banner.dart)."
+  "appUpdatePromptUpdate": "Mettre à jour",
+  "@appUpdatePromptUpdate": {
+    "description": "Bouton principal du modal de mise à jour recommandée : ouvre la fiche du store (app_update_prompt_sheet.dart)."
+  },
+  "appUpdatePromptLater": "Plus tard",
+  "@appUpdatePromptLater": {
+    "description": "Bouton secondaire du modal de mise à jour recommandée : le modal ne revient qu'après 12 heures (app_update_prompt_sheet.dart)."
   },
   "appUpdateTitle": "Une mise à jour est nécessaire",
   "@appUpdateTitle": {
