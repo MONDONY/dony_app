@@ -25213,23 +25213,29 @@ abstract class AppLocalizations {
   /// **'Colis'**
   String get dsEmojiParcel;
 
-  /// Titre du bandeau de mise à jour douce (app_update_banner.dart).
+  /// Titre du modal de mise à jour recommandée (app_update_prompt_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Nouvelle version disponible'**
-  String get appUpdateSoftTitle;
+  /// **'Une mise à jour est disponible'**
+  String get appUpdatePromptTitle;
 
-  /// Message du bandeau de mise à jour douce (app_update_banner.dart).
+  /// Corps du modal de mise à jour recommandée (app_update_prompt_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Mettez Yadony à jour pour profiter des dernières améliorations.'**
-  String get appUpdateSoftMessage;
+  /// **'Cette version de Yadony apporte plus de stabilité et de nouvelles fonctions. Mettez à jour pour en profiter.'**
+  String get appUpdatePromptMessage;
 
-  /// Lien du bandeau de mise à jour douce vers le store (app_update_banner.dart).
+  /// Bouton principal du modal de mise à jour recommandée : ouvre la fiche du store (app_update_prompt_sheet.dart).
   ///
   /// In fr, this message translates to:
   /// **'Mettre à jour'**
-  String get appUpdateSoftAction;
+  String get appUpdatePromptUpdate;
+
+  /// Bouton secondaire du modal de mise à jour recommandée : le modal ne revient qu'après 12 heures (app_update_prompt_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get appUpdatePromptLater;
 
   /// Titre de l'écran bloquant de mise à jour obligatoire (force_update_screen.dart).
   ///
