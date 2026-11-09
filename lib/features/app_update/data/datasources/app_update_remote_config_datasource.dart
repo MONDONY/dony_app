@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:dony/features/app_update/data/datasources/remote_config_interval_store.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 
@@ -59,7 +62,11 @@ final class AppUpdateRemoteConfigDatasource implements AppUpdateConfigSource {
   AppUpdateRemoteConfigDatasource({
     AppUpdateRemoteConfigClient? remoteConfig,
     bool? isDevelopment,
-  }) : _remoteConfig =
+    RemoteConfigIntervalStore? intervalStore,
+    RemoteConfigIntervalRemote? intervalRemote,
+  }) : _intervalStore = intervalStore ?? SharedPrefsRemoteConfigIntervalStore(),
+       _intervalRemote = intervalRemote,
+       _remoteConfig =
            remoteConfig ??
            FirebaseAppUpdateRemoteConfigClient(FirebaseRemoteConfig.instance),
        _isDevelopment = isDevelopment ?? kDebugMode;
@@ -73,6 +80,8 @@ final class AppUpdateRemoteConfigDatasource implements AppUpdateConfigSource {
 
   final AppUpdateRemoteConfigClient _remoteConfig;
   final bool _isDevelopment;
+  final RemoteConfigIntervalStore _intervalStore;
+  final RemoteConfigIntervalRemote? _intervalRemote;
   bool _isConfigured = false;
 
   @override
@@ -97,9 +106,33 @@ final class AppUpdateRemoteConfigDatasource implements AppUpdateConfigSource {
   Future<void> fetchAndActivate() async {
     try {
       await _configure();
+      // En tâche de fond : ne bloque ni le démarrage ni la lecture.
+      unawaited(syncRefreshInterval());
       await _remoteConfig.fetchAndActivate();
     } catch (_) {
       // Best effort : la dernière valeur connue (ou 0) reste utilisable.
+    }
+  }
+
+  /// Interroge le back (`GET /config/remote-config-refresh`) et mémorise la
+  /// valeur reçue si elle est valide (entier de 5 à 1440 minutes).
+  ///
+  /// La valeur ne s'applique qu'au PROCHAIN démarrage : `setConfigSettings`
+  /// est déjà passé avec la valeur mémorisée au lancement en cours. Ne lève
+  /// jamais : un ancien back (404), une erreur réseau ou une valeur hors
+  /// bornes laissent la valeur mémorisée (ou 60 min) intacte.
+  Future<void> syncRefreshInterval() async {
+    final remote = _intervalRemote;
+    if (remote == null) {
+      return;
+    }
+    try {
+      final minutes = await remote.fetchMinutes();
+      if (isValidRemoteConfigRefreshMinutes(minutes)) {
+        await _intervalStore.write(minutes! as int);
+      }
+    } catch (_) {
+      // Best effort : on garde la valeur mémorisée.
     }
   }
 
@@ -107,12 +140,24 @@ final class AppUpdateRemoteConfigDatasource implements AppUpdateConfigSource {
     if (_isConfigured) {
       return;
     }
+    Duration interval;
+    if (_isDevelopment) {
+      interval = const Duration(minutes: 5);
+    } else {
+      int? stored;
+      try {
+        stored = await _intervalStore.read();
+      } catch (_) {
+        stored = null;
+      }
+      interval = Duration(
+        minutes: stored ?? kRemoteConfigRefreshDefaultMinutes,
+      );
+    }
     await _remoteConfig.setConfigSettings(
       RemoteConfigSettings(
         fetchTimeout: const Duration(seconds: 10),
-        minimumFetchInterval: _isDevelopment
-            ? const Duration(minutes: 5)
-            : const Duration(hours: 12),
+        minimumFetchInterval: interval,
       ),
     );
     _isConfigured = true;
