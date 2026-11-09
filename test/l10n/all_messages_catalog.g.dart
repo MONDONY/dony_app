@@ -1428,6 +1428,33 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'requestCreateKeepOnePaymentMethod': (l) =>
       l.requestCreateKeepOnePaymentMethod,
   'requestCreatePublishInfoBanner': (l) => l.requestCreatePublishInfoBanner,
+  'requestCreatePriceSectionLabel': (l) => l.requestCreatePriceSectionLabel,
+  'requestCreatePriceBasisTotal': (l) => l.requestCreatePriceBasisTotal,
+  'requestCreatePriceBasisPerKilo': (l) => l.requestCreatePriceBasisPerKilo,
+  'requestCreatePriceBasisPerKiloNeedsWeight': (l) =>
+      l.requestCreatePriceBasisPerKiloNeedsWeight,
+  'requestCreatePriceUnitTotal': (l) =>
+      l.requestCreatePriceUnitTotal(placeholderMarker('symbol')),
+  'requestCreatePriceUnitPerKilo': (l) =>
+      l.requestCreatePriceUnitPerKilo(placeholderMarker('symbol')),
+  'requestCreatePerKiloInputHint': (l) => l.requestCreatePerKiloInputHint,
+  'requestCreatePerKiloComputed': (l) => l.requestCreatePerKiloComputed(
+    placeholderMarker('weight'),
+    placeholderMarker('perKilo'),
+    placeholderMarker('total'),
+  ),
+  'requestCreateShipmentPriceLabel': (l) => l.requestCreateShipmentPriceLabel,
+  'requestCreateCurrencyLockedTag': (l) => l.requestCreateCurrencyLockedTag,
+  'requestCreateShipmentPriceWithCalc': (l) =>
+      l.requestCreateShipmentPriceWithCalc(
+        placeholderMarker('weight'),
+        placeholderMarker('perKilo'),
+      ),
+  'currencySelectorTitleRequest': (l) => l.currencySelectorTitleRequest,
+  'currencySelectorValidate': (l) => l.currencySelectorValidate,
+  'currencySelectorRowCard': (l) => l.currencySelectorRowCard,
+  'currencySelectorRowMobileMoney': (l) => l.currencySelectorRowMobileMoney,
+  'currencySelectorRowCash': (l) => l.currencySelectorRowCash,
   'requestCreateBudgetInputHint': (l) => l.requestCreateBudgetInputHint,
   'requestCreateBudgetEmpty': (l) => l.requestCreateBudgetEmpty,
   'requestCreateBudgetRange': (l) => l.requestCreateBudgetRange(
@@ -1443,6 +1470,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'requestBudgetBelowServiceFee': (l) => l.requestBudgetBelowServiceFee,
   'requestCreateCurrencySemanticLabel': (l) =>
       l.requestCreateCurrencySemanticLabel(
+        placeholderMarker('name'),
+        placeholderMarker('code'),
+      ),
+  'requestCreateCurrencyLockedSemanticLabel': (l) =>
+      l.requestCreateCurrencyLockedSemanticLabel(
         placeholderMarker('name'),
         placeholderMarker('code'),
       ),
@@ -5362,24 +5394,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('currency'),
     placeholderMarker('description'),
   ),
-  'currencyPublishBannerTitle': (l) => l.currencyPublishBannerTitle(
-    placeholderMarker('currencyName'),
-    placeholderMarker('code'),
-  ),
-  'currencyPublishBannerTitleUnknown': (l) =>
-      l.currencyPublishBannerTitleUnknown,
-  'currencyPublishBannerDescriptionKnown': (l) =>
-      l.currencyPublishBannerDescriptionKnown,
-  'currencyPublishBannerDescriptionUnknown': (l) =>
-      l.currencyPublishBannerDescriptionUnknown,
-  'currencyPublishBannerSemanticsKnown': (l) =>
-      l.currencyPublishBannerSemanticsKnown(
-        placeholderMarker('currencyName'),
-        placeholderMarker('code'),
-        placeholderMarker('description'),
-      ),
-  'currencyPublishBannerSemanticsUnknown': (l) =>
-      l.currencyPublishBannerSemanticsUnknown,
   'currencyApprox': (l) => l.currencyApprox(placeholderMarker('amount')),
   'dialNoNumber': (l) => l.dialNoNumber,
   'dialNoPhoneApp': (l) => l.dialNoPhoneApp(placeholderMarker('phone')),
@@ -8225,8 +8239,13 @@ const textParameters = <String, List<String>>{
   'requestTimeYesterday': ['verb', 'time'],
   'requestTimeOn': ['verb', 'date'],
   'requestCreateToleranceRangeHint': ['from', 'to'],
+  'requestCreatePriceUnitTotal': ['symbol'],
+  'requestCreatePriceUnitPerKilo': ['symbol'],
+  'requestCreatePerKiloComputed': ['weight', 'perKilo', 'total'],
+  'requestCreateShipmentPriceWithCalc': ['weight', 'perKilo'],
   'requestCreateBudgetRange': ['min', 'max'],
   'requestCreateCurrencySemanticLabel': ['name', 'code'],
+  'requestCreateCurrencyLockedSemanticLabel': ['name', 'code'],
   'requestDetailCashCommissionTitle': ['name'],
   'requestTravelerAddingTrip': ['name'],
   'requestOfferWaitingFor': ['name'],
@@ -8516,12 +8535,6 @@ const textParameters = <String, List<String>>{
   'currencyCashOnlyAvailable': ['currency'],
   'currencyCashOnlyUnsupportedDescription': ['currency'],
   'currencyCashOnlyWithDescription': ['currency', 'description'],
-  'currencyPublishBannerTitle': ['currencyName', 'code'],
-  'currencyPublishBannerSemanticsKnown': [
-    'currencyName',
-    'code',
-    'description',
-  ],
   'currencyApprox': ['amount'],
   'dialNoPhoneApp': ['phone'],
   'suiviTripSummary': ['date'],

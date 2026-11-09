@@ -329,13 +329,13 @@ abstract class AppLocalizations {
   /// No description provided for @errorRequestBudgetOutOfBoundsTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Budget trop élevé'**
+  /// **'Prix trop élevé'**
   String get errorRequestBudgetOutOfBoundsTitle;
 
   /// No description provided for @errorRequestBudgetOutOfBoundsMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce budget dépasse le plafond autorisé pour cette devise. Réduisez le montant puis réessayez.'**
+  /// **'Ce prix dépasse le plafond autorisé pour cette devise. Réduisez le montant puis réessayez.'**
   String get errorRequestBudgetOutOfBoundsMessage;
 
   /// No description provided for @errorRequestAlreadyAcceptedTitle.
@@ -725,7 +725,7 @@ abstract class AppLocalizations {
   /// Titre : budget sous le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum)
   ///
   /// In fr, this message translates to:
-  /// **'Budget trop faible'**
+  /// **'Prix trop faible'**
   String get errorBudgetBelowCommissionMinimumTitle;
 
   /// Message : le budget saisi ne couvre pas le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum). Sans montant ni taux.
@@ -6368,7 +6368,7 @@ abstract class AppLocalizations {
   /// Titre de l'app bar, étape 3 (package_request_create_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Le budget'**
+  /// **'Le prix'**
   String get requestCreateStepTitleBudget;
 
   /// Titre de l'écran succès après enregistrement d'un brouillon (package_request_create_screen.dart)
@@ -6650,7 +6650,7 @@ abstract class AppLocalizations {
   /// Sous-titre de l'étape 3 (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Vérifiez votre demande, puis indiquez le budget à montrer aux voyageurs.'**
+  /// **'Vérifiez votre demande, puis indiquez le prix à montrer aux voyageurs.'**
   String get requestCreateBudgetSubtitle;
 
   /// Libellé du choix du mode de prix (step_3_recap_budget.dart)
@@ -6668,7 +6668,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la carte "prix négociable" (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Les voyageurs proposent leur prix, vous choisissez.'**
+  /// **'Les voyageurs proposent leur prix'**
   String get requestCreatePriceModeOpenSubtitle;
 
   /// Titre de la carte "prix ferme" (step_3_recap_budget.dart)
@@ -6680,7 +6680,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la carte "prix ferme" (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Un montant ferme, sans négociation.'**
+  /// **'Un montant ferme'**
   String get requestCreatePriceModeFixedSubtitle;
 
   /// Libellé du sélecteur de devise (step_3_recap_budget.dart)
@@ -6692,19 +6692,19 @@ abstract class AppLocalizations {
   /// Libellé du champ budget en mode négociable (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Budget indicatif'**
+  /// **'Prix total de votre envoi'**
   String get requestCreateBudgetLabelNegotiable;
 
   /// Libellé du champ budget en mode prix ferme (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Votre prix'**
+  /// **'Prix de votre colis'**
   String get requestCreateBudgetLabelFixed;
 
   /// Texte d'aide sous le champ budget en mode négociable (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Donnez un ordre d\'idée pour attirer plus d\'offres, sans vous engager.'**
+  /// **'Pour tout votre colis, pas par kilo ni par article.'**
   String get requestCreateBudgetHintNegotiable;
 
   /// Texte d'aide sous le champ budget en mode prix ferme (step_3_recap_budget.dart)
@@ -6767,6 +6767,106 @@ abstract class AppLocalizations {
   /// **'Une fois publiée, les voyageurs sur ce trajet sont prévenus. Vous recevrez une notification à la première offre.'**
   String get requestCreatePublishInfoBanner;
 
+  /// Titre de la section prix de l'étape 3 (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix'**
+  String get requestCreatePriceSectionLabel;
+
+  /// Sélecteur : le prix saisi est le total (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix total'**
+  String get requestCreatePriceBasisTotal;
+
+  /// Sélecteur : le prix saisi est au kilo, le total est calculé (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix au kilo'**
+  String get requestCreatePriceBasisPerKilo;
+
+  /// Explication quand le prix au kilo est grisé faute de poids (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez d\'abord le poids du colis pour fixer un prix au kilo.'**
+  String get requestCreatePriceBasisPerKiloNeedsWeight;
+
+  /// Unité du champ prix en mode total (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{symbol} au total'**
+  String requestCreatePriceUnitTotal(String symbol);
+
+  /// Unité du champ prix en mode au kilo (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{symbol} / kg'**
+  String requestCreatePriceUnitPerKilo(String symbol);
+
+  /// Indication du champ prix au kilo (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. 5,00'**
+  String get requestCreatePerKiloInputHint;
+
+  /// Calcul du total en mode prix au kilo (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{weight} × {perKilo} = {total} au total'**
+  String requestCreatePerKiloComputed(
+    String weight,
+    String perKilo,
+    String total,
+  );
+
+  /// Ligne du récapitulatif vert des frais : prix de l'envoi (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix de l\'envoi'**
+  String get requestCreateShipmentPriceLabel;
+
+  /// Mention de la ligne devise figée à la modification (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'non modifiable'**
+  String get requestCreateCurrencyLockedTag;
+
+  /// Ligne du prix de l'envoi en mode prix au kilo (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix de l\'envoi ({weight} × {perKilo})'**
+  String requestCreateShipmentPriceWithCalc(String weight, String perKilo);
+
+  /// Titre du sélecteur de devise d'une demande de colis (currency_selector.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise de la demande'**
+  String get currencySelectorTitleRequest;
+
+  /// Bouton du sélecteur de devise d'une demande de colis (currency_selector.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider'**
+  String get currencySelectorValidate;
+
+  /// Moyens de paiement sous une devise (currency_selector.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte · Espèces'**
+  String get currencySelectorRowCard;
+
+  /// Moyens de paiement sous une devise (currency_selector.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mobile money · Espèces'**
+  String get currencySelectorRowMobileMoney;
+
+  /// Moyens de paiement sous une devise (currency_selector.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces uniquement'**
+  String get currencySelectorRowCash;
+
   /// Texte d'indication du champ budget total (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:
@@ -6776,13 +6876,13 @@ abstract class AppLocalizations {
   /// Erreur de validation : champ budget vide (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Indiquez un budget'**
+  /// **'Indiquez un prix'**
   String get requestCreateBudgetEmpty;
 
   /// Erreur de validation : budget hors bornes (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Entre {min} et {max}'**
+  /// **'Entre {min} et {max}.'**
   String requestCreateBudgetRange(String min, String max);
 
   /// Libellé de la ligne commission d'une décomposition de prix, le montant s'affiche à côté (step_3_recap_budget.dart, accept_offer_bottom_sheet.dart, counter_offer_bottom_sheet.dart). Sans taux (FLUTTER-R6)
@@ -6818,7 +6918,7 @@ abstract class AppLocalizations {
   /// Erreur de validation du budget d'une demande : il ne couvre pas les frais de service de la grille. Sans montant : le minimum n'est jamais cité (step_3_recap_budget.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ce budget est trop bas pour couvrir les frais de service.'**
+  /// **'Ce prix est trop bas pour couvrir les frais de service.'**
   String get requestBudgetBelowServiceFee;
 
   /// Libellé d'accessibilité du sélecteur de devise (step_3_recap_budget.dart)
@@ -6826,6 +6926,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Devise de la demande : {name}, {code}. Bouton, modifier la devise.'**
   String requestCreateCurrencySemanticLabel(String name, String code);
+
+  /// Libellé d'accessibilité de la ligne devise en lecture seule, en édition (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise de la demande : {name}, {code}. Non modifiable.'**
+  String requestCreateCurrencyLockedSemanticLabel(String name, String code);
 
   /// Lien de modification de la devise, dans la ligne du sélecteur (step_3_recap_budget.dart)
   ///
@@ -25118,46 +25224,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Espèces uniquement en {currency}. {description}'**
   String currencyCashOnlyWithDescription(String currency, String description);
-
-  /// Titre de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Publié en {currencyName} ({code})'**
-  String currencyPublishBannerTitle(String currencyName, String code);
-
-  /// Titre de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Devise à confirmer'**
-  String get currencyPublishBannerTitleUnknown;
-
-  /// Détail de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.'**
-  String get currencyPublishBannerDescriptionKnown;
-
-  /// Détail de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'La devise de publication est vérifiée par Yadony avant publication.'**
-  String get currencyPublishBannerDescriptionUnknown;
-
-  /// Libellé d'accessibilité de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Publication en {currencyName}, devise {code}. {description}'**
-  String currencyPublishBannerSemanticsKnown(
-    String currencyName,
-    String code,
-    String description,
-  );
-
-  /// Libellé d'accessibilité de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Devise de publication à confirmer par Yadony avant publication.'**
-  String get currencyPublishBannerSemanticsUnknown;
 
   /// Préfixe d'estimation devant un prix converti, jamais un montant exact (converted_price.dart). amount inclut déjà son suffixe d'unité (ex. /kg).
   ///

@@ -143,11 +143,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This payment method isn\'t recognized. Update the app.';
 
   @override
-  String get errorRequestBudgetOutOfBoundsTitle => 'Budget too high';
+  String get errorRequestBudgetOutOfBoundsTitle => 'Price too high';
 
   @override
   String get errorRequestBudgetOutOfBoundsMessage =>
-      'This budget is above the limit for this currency. Lower the amount and try again.';
+      'This price is above the limit for this currency. Lower the amount and try again.';
 
   @override
   String get errorRequestAlreadyAcceptedTitle => 'This parcel is taken';
@@ -375,7 +375,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Upgrade to Pro to create more drafts.';
 
   @override
-  String get errorBudgetBelowCommissionMinimumTitle => 'Budget too low';
+  String get errorBudgetBelowCommissionMinimumTitle => 'Price too low';
 
   @override
   String get errorBudgetBelowCommissionMinimumMessage =>
@@ -3779,7 +3779,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestCreateStepTitlePackage => 'The parcel';
 
   @override
-  String get requestCreateStepTitleBudget => 'The budget';
+  String get requestCreateStepTitleBudget => 'The price';
 
   @override
   String get requestCreateDraftSavedTitle => 'Draft saved!';
@@ -3946,7 +3946,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestCreateBudgetSubtitle =>
-      'Check your request, then enter the budget to show travelers.';
+      'Check your request, then enter the price to show travelers.';
 
   @override
   String get requestCreatePriceModeLabel => 'How do you want to set the price?';
@@ -3956,27 +3956,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestCreatePriceModeOpenSubtitle =>
-      'Travelers propose their price, you choose.';
+      'Travelers propose their price';
 
   @override
   String get requestCreatePriceModeFixedTitle => 'I set my price';
 
   @override
-  String get requestCreatePriceModeFixedSubtitle =>
-      'A fixed amount, no negotiation.';
+  String get requestCreatePriceModeFixedSubtitle => 'A fixed amount';
 
   @override
   String get requestCreateCurrencyLabel => 'Currency';
 
   @override
-  String get requestCreateBudgetLabelNegotiable => 'Estimated budget';
+  String get requestCreateBudgetLabelNegotiable =>
+      'Total price of your shipment';
 
   @override
-  String get requestCreateBudgetLabelFixed => 'Your price';
+  String get requestCreateBudgetLabelFixed => 'Your parcel price';
 
   @override
   String get requestCreateBudgetHintNegotiable =>
-      'Give a rough idea to attract more offers, without committing.';
+      'For your whole parcel, not per kilo or per item.';
 
   @override
   String get requestCreateBudgetHintFixed =>
@@ -4014,14 +4014,75 @@ class AppLocalizationsEn extends AppLocalizations {
       'Once posted, travelers on this trip are notified. You\'ll get a notification at the first offer.';
 
   @override
+  String get requestCreatePriceSectionLabel => 'Price';
+
+  @override
+  String get requestCreatePriceBasisTotal => 'Total price';
+
+  @override
+  String get requestCreatePriceBasisPerKilo => 'Price per kilo';
+
+  @override
+  String get requestCreatePriceBasisPerKiloNeedsWeight =>
+      'Enter the parcel weight first to set a price per kilo.';
+
+  @override
+  String requestCreatePriceUnitTotal(String symbol) {
+    return '$symbol total';
+  }
+
+  @override
+  String requestCreatePriceUnitPerKilo(String symbol) {
+    return '$symbol / kg';
+  }
+
+  @override
+  String get requestCreatePerKiloInputHint => 'E.g. 5.00';
+
+  @override
+  String requestCreatePerKiloComputed(
+    String weight,
+    String perKilo,
+    String total,
+  ) {
+    return '$weight × $perKilo = $total total';
+  }
+
+  @override
+  String get requestCreateShipmentPriceLabel => 'Shipment price';
+
+  @override
+  String get requestCreateCurrencyLockedTag => 'locked';
+
+  @override
+  String requestCreateShipmentPriceWithCalc(String weight, String perKilo) {
+    return 'Shipment price ($weight × $perKilo)';
+  }
+
+  @override
+  String get currencySelectorTitleRequest => 'Request currency';
+
+  @override
+  String get currencySelectorValidate => 'Confirm';
+
+  @override
+  String get currencySelectorRowCard => 'Card · Cash';
+
+  @override
+  String get currencySelectorRowMobileMoney => 'Mobile money · Cash';
+
+  @override
+  String get currencySelectorRowCash => 'Cash only';
+
+  @override
   String get requestCreateBudgetInputHint => 'E.g. 40.00';
 
   @override
-  String get requestCreateBudgetEmpty => 'Enter a budget';
+  String get requestCreateBudgetEmpty => 'Enter a price';
 
   @override
   String requestCreateBudgetRange(String min, String max) {
-    return 'Between $min and $max';
+    return 'Between $min and $max.';
   }
 
   @override
@@ -4042,11 +4103,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestBudgetBelowServiceFee =>
-      'This budget is too low to cover the service fee.';
+      'This price is too low to cover the service fee.';
 
   @override
   String requestCreateCurrencySemanticLabel(String name, String code) {
     return 'Request currency: $name, $code. Button, change the currency.';
+  }
+
+  @override
+  String requestCreateCurrencyLockedSemanticLabel(String name, String code) {
+    return 'Request currency: $name, $code. Cannot be changed.';
   }
 
   @override
@@ -15135,35 +15201,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String currencyCashOnlyWithDescription(String currency, String description) {
     return 'Cash only in $currency. $description';
   }
-
-  @override
-  String currencyPublishBannerTitle(String currencyName, String code) {
-    return 'Posted in $currencyName ($code)';
-  }
-
-  @override
-  String get currencyPublishBannerTitleUnknown => 'Currency to confirm';
-
-  @override
-  String get currencyPublishBannerDescriptionKnown =>
-      'Users viewing another currency see a converted price. Payment stays in this currency.';
-
-  @override
-  String get currencyPublishBannerDescriptionUnknown =>
-      'The posting currency is verified by Yadony before posting.';
-
-  @override
-  String currencyPublishBannerSemanticsKnown(
-    String currencyName,
-    String code,
-    String description,
-  ) {
-    return 'Posting in $currencyName, currency $code. $description';
-  }
-
-  @override
-  String get currencyPublishBannerSemanticsUnknown =>
-      'Posting currency to be confirmed by Yadony before posting.';
 
   @override
   String currencyApprox(String amount) {
