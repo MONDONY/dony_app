@@ -17114,49 +17114,6 @@
       }
     }
   },
-  "currencyPublishBannerTitle": "Publié en {currencyName} ({code})",
-  "@currencyPublishBannerTitle": {
-    "description": "Titre de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).",
-    "placeholders": {
-      "currencyName": {
-        "type": "String"
-      },
-      "code": {
-        "type": "String"
-      }
-    }
-  },
-  "currencyPublishBannerTitleUnknown": "Devise à confirmer",
-  "@currencyPublishBannerTitleUnknown": {
-    "description": "Titre de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
-  },
-  "currencyPublishBannerDescriptionKnown": "Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.",
-  "@currencyPublishBannerDescriptionKnown": {
-    "description": "Détail de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart)."
-  },
-  "currencyPublishBannerDescriptionUnknown": "La devise de publication est vérifiée par Yadony avant publication.",
-  "@currencyPublishBannerDescriptionUnknown": {
-    "description": "Détail de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
-  },
-  "currencyPublishBannerSemanticsKnown": "Publication en {currencyName}, devise {code}. {description}",
-  "@currencyPublishBannerSemanticsKnown": {
-    "description": "Libellé d'accessibilité de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).",
-    "placeholders": {
-      "currencyName": {
-        "type": "String"
-      },
-      "code": {
-        "type": "String"
-      },
-      "description": {
-        "type": "String"
-      }
-    }
-  },
-  "currencyPublishBannerSemanticsUnknown": "Devise de publication à confirmer par Yadony avant publication.",
-  "@currencyPublishBannerSemanticsUnknown": {
-    "description": "Libellé d'accessibilité de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
-  },
   "currencyApprox": "environ {amount}",
   "@currencyApprox": {
     "description": "Préfixe d'estimation devant un prix converti, jamais un montant exact (converted_price.dart). amount inclut déjà son suffixe d'unité (ex. /kg).",

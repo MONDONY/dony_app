@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dony/core/currency/active_currency.dart';
-import 'package:dony/core/currency/currency_publish_banner.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -749,17 +748,6 @@ class _PackageRequestCreateScreenState
                                   ),
                                 ),
                         ),
-                      if (!state.isEditing) ...[
-                        const SizedBox(height: DonySpacing.base),
-                        // `_activeCurrency` est déjà résolue une fois pour
-                        // tout le formulaire ; la factory `.active()` refaisait
-                        // un lookup GetIt et une lecture Hive à chaque build.
-                        // La devise du formulaire prime (duplication) : c'est
-                        // elle qui part au backend, comme à l'étape 3.
-                        CurrencyPublishBanner(
-                          currency: state.currency ?? _activeCurrency,
-                        ),
-                      ],
                     ],
                   ),
                 ),

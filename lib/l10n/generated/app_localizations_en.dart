@@ -15137,35 +15137,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String currencyPublishBannerTitle(String currencyName, String code) {
-    return 'Posted in $currencyName ($code)';
-  }
-
-  @override
-  String get currencyPublishBannerTitleUnknown => 'Currency to confirm';
-
-  @override
-  String get currencyPublishBannerDescriptionKnown =>
-      'Users viewing another currency see a converted price. Payment stays in this currency.';
-
-  @override
-  String get currencyPublishBannerDescriptionUnknown =>
-      'The posting currency is verified by Yadony before posting.';
-
-  @override
-  String currencyPublishBannerSemanticsKnown(
-    String currencyName,
-    String code,
-    String description,
-  ) {
-    return 'Posting in $currencyName, currency $code. $description';
-  }
-
-  @override
-  String get currencyPublishBannerSemanticsUnknown =>
-      'Posting currency to be confirmed by Yadony before posting.';
-
-  @override
   String currencyApprox(String amount) {
     return 'about $amount';
   }

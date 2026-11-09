@@ -25119,46 +25119,6 @@ abstract class AppLocalizations {
   /// **'Espèces uniquement en {currency}. {description}'**
   String currencyCashOnlyWithDescription(String currency, String description);
 
-  /// Titre de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Publié en {currencyName} ({code})'**
-  String currencyPublishBannerTitle(String currencyName, String code);
-
-  /// Titre de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Devise à confirmer'**
-  String get currencyPublishBannerTitleUnknown;
-
-  /// Détail de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.'**
-  String get currencyPublishBannerDescriptionKnown;
-
-  /// Détail de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'La devise de publication est vérifiée par Yadony avant publication.'**
-  String get currencyPublishBannerDescriptionUnknown;
-
-  /// Libellé d'accessibilité de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Publication en {currencyName}, devise {code}. {description}'**
-  String currencyPublishBannerSemanticsKnown(
-    String currencyName,
-    String code,
-    String description,
-  );
-
-  /// Libellé d'accessibilité de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Devise de publication à confirmer par Yadony avant publication.'**
-  String get currencyPublishBannerSemanticsUnknown;
-
   /// Préfixe d'estimation devant un prix converti, jamais un montant exact (converted_price.dart). amount inclut déjà son suffixe d'unité (ex. /kg).
   ///
   /// In fr, this message translates to:
