@@ -4,18 +4,82 @@ import 'package:dony/features/content_categories/presentation/content_category_l
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_palette.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 /// Carte récap à l'étape 3 — fond primaryContainer (bleu léger).
 class WizardSummaryCard extends StatelessWidget {
-  const WizardSummaryCard({super.key, required this.state});
+  const WizardSummaryCard({super.key, required this.state}) : compact = false;
+
+  /// Version sur une seule ligne (trajet · poids · contenu) de l'étape « Le
+  /// prix » : même information utile, une fraction de la hauteur.
+  const WizardSummaryCard.compact({super.key, required this.state})
+    : compact = true;
 
   final PackageRequestFormState state;
+  final bool compact;
+
+  Widget _compactRow(BuildContext context) {
+    final p = WizardPalette.of(context);
+    final l = context.l10n;
+    final weight = state.weightKg;
+    final style = WizardPalette.text(
+      size: 11.5,
+      weight: FontWeight.w400,
+      color: p.n600,
+    );
+    // (texte, peut céder de la place) : le trajet et le contenu s'abrègent en
+    // points de suspension, le poids garde la sienne.
+    final items = <(Widget, bool)>[
+      (
+        Text(
+          _corridorText(state),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: style.copyWith(fontWeight: FontWeight.w700, color: p.n800),
+        ),
+        true,
+      ),
+      if (weight != null)
+        (Text(formatWeightKg(l, weight), maxLines: 1, style: style), false),
+      if (state.categories.isNotEmpty)
+        (
+          Text(
+            _categoriesText(l, state),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+          true,
+        ),
+    ];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      decoration: BoxDecoration(
+        color: p.blue50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: p.summaryBorder),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text('·', style: style.copyWith(color: p.dot)),
+              ),
+            if (items[i].$2) Flexible(child: items[i].$1) else items[i].$1,
+          ],
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (compact) return _compactRow(context);
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
     return Container(

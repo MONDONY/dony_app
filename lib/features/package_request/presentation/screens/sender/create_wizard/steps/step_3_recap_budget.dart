@@ -11,11 +11,10 @@ import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/payment_setup_notice.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -24,7 +23,9 @@ import 'package:dony/features/package_request/data/models/negotiation_quote.dart
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/package_request/data/per_kilo_pricing.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_palette.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/wizard_currency.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -33,10 +34,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Étape 3 / 3 — Budget & photo (match maquette `v3/expéditeur_publie`).
+/// Étape 3 / 3 — Le prix (maquette `sorties/maquettes/demande_etape3.html`).
 ///
-/// Layout : titre "Budget" · récap · choix du mode de prix · budget requis ·
-/// aperçu net voyageur · modes de paiement · mention CGU au-dessus du CTA.
+/// Layout : résumé du colis sur une ligne · 1 devise · 2 paiement accepté ·
+/// 3 prix (mode, total ou au kilo, champ, frais) · code promo · information de
+/// publication. Devise et paiement viennent AVANT le prix : changer la devise
+/// change les moyens de paiement et l'unité du prix.
 class Step3RecapBudget extends StatefulWidget {
   const Step3RecapBudget({
     super.key,
@@ -67,6 +70,11 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   final _budgetFieldKey = GlobalKey();
   final _budgetCtrl = TextEditingController();
   final _promoCtrl = TextEditingController();
+
+  /// « Prix au kilo » choisi : l'utilisateur saisit un prix au kilo, l'app en
+  /// déduit le total (poids × prix) et n'envoie que ce total. État de pure
+  /// présentation, absent du contrat avec le back.
+  final _perKiloMode = ValueNotifier<bool>(false);
 
   // NegotiationQuote une fois chargé, String si le dernier essai de promo a
   // échoué (message affiché inline), null tant qu'aucun devis serveur n'est
@@ -287,6 +295,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     _backgroundQuoteTimer?.cancel();
     _budgetCtrl.dispose();
     _promoCtrl.dispose();
+    _perKiloMode.dispose();
     _quoteNotifier.dispose();
     _quoteLoadingNotifier.dispose();
     _frozenGridNotifier
@@ -324,10 +333,40 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     );
   }
 
+  /// Bascule entre « Prix total » et « Prix au kilo » en gardant la valeur
+  /// saisie quand c'est possible : total → au kilo si le prix au kilo qui
+  /// redonne exactement ce total existe, au kilo → total toujours (le total
+  /// calculé devient la valeur du champ).
+  void _setPriceBasis(bool perKilo, PackageRequestFormState state) {
+    if (_perKiloMode.value == perKilo) return;
+    if (perKilo && !PerKiloPricing.isAvailable(state.weightKg)) return;
+    final bloc = context.read<PackageRequestFormBloc>();
+    final total = state.totalBudgetEur;
+    _perKiloMode.value = perKilo;
+    if (perKilo) {
+      final perKiloValue = PerKiloPricing.perKiloFor(
+        total: total,
+        weightKg: state.weightKg,
+        currency: _resolveCurrency(state),
+      );
+      _budgetCtrl.text = perKiloValue == null ? '' : _plainNumber(perKiloValue);
+      // Le total ne se convertit pas exactement : on repart d'un champ vide
+      // plutôt que de changer le total en silence.
+      if (total != null && perKiloValue == null) {
+        bloc.add(const PackageRequestTotalBudgetChanged(null));
+        _invalidateQuote();
+      }
+    } else {
+      _budgetCtrl.text = total == null ? '' : _plainNumber(total);
+    }
+  }
+
+  static String _plainNumber(double v) =>
+      v == v.roundToDouble() ? v.toInt().toString() : v.toStringAsFixed(2);
+
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
+    final p = WizardPalette.of(context);
 
     return BlocBuilder<PackageRequestFormBloc, PackageRequestFormState>(
       builder: (context, state) {
@@ -337,341 +376,505 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
         final currency = _resolveCurrency(state);
         final l10n = context.l10n;
-        return SingleChildScrollView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.fromLTRB(
-            DonySpacing.lg,
-            DonySpacing.md,
-            DonySpacing.lg,
-            DonySpacing.huge,
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.requestPublicBudget,
-                  style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: cs.onSurface,
-                    letterSpacing: -0.4,
-                  ),
+        return ValueListenableBuilder<bool>(
+          valueListenable: _perKiloMode,
+          builder: (context, perKiloChosen, _) {
+            final weightKnown = PerKiloPricing.isAvailable(state.weightKg);
+            // Sans poids connu, le prix au kilo n'existe pas : on retombe sur
+            // le prix total, quoi qu'ait choisi l'utilisateur avant.
+            final perKilo = perKiloChosen && weightKnown;
+            return _buildBody(context, state, currency, l10n, p, perKilo);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    PackageRequestFormState state,
+    SupportedCurrency currency,
+    AppLocalizations l10n,
+    WizardPalette p,
+    bool perKilo,
+  ) {
+    final weight = state.weightKg;
+    final grid = _legacyPricing(state)
+        ? null
+        : _frozenGridNotifier.value ?? activeCommissionGrid;
+    return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.fromLTRB(14, 11, 14, DonySpacing.xl),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Résumé du colis, sur une ligne ─────────────────────────────
+            WizardSummaryCard.compact(state: state),
+            const SizedBox(height: 8),
+
+            // ── 1 · Devise ─────────────────────────────────────────────────
+            // Figée une fois la demande créée : en édition, simple rappel en
+            // lecture seule (ni « Changer », ni sélecteur).
+            _Zone('1 · ${l10n.requestCreateCurrencyLabel}'),
+            if (state.isEditing)
+              _CurrencyLockedRow(currency: currency)
+            else
+              _CurrencySelectionRow(currency: currency),
+
+            // ── 2 · Paiement accepté ───────────────────────────────────────
+            AiFieldMark(
+              fields: const ['acceptedPaymentMethods'],
+              child: _Zone(
+                '2 · ${l10n.requestCreatePaymentAcceptedLabel}',
+                top: 9,
+              ),
+            ),
+            _PaymentMethodChips(
+              selected: state.acceptedPaymentMethods,
+              currency: currency,
+            ),
+            if (_mobileMoneyAccountMissing(state))
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: _MobileMoneyWarning(
+                  key: const Key('request-mobile-money-setup-notice'),
+                  message: l10n.requestCreateMobileMoneyAccountRequired,
+                  ctaLabel: l10n.requestCreateMobileMoneyAccountCta,
+                  onCtaTap: () async {
+                    await context.push<void>('/payments/mobile-money/account');
+                    if (mounted) widget.onMobileMoneySetupReturned?.call();
+                  },
                 ),
-                const SizedBox(height: DonySpacing.xs),
-                Text(
-                  l10n.requestCreateBudgetSubtitle,
-                  style: tt.bodyMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
+              ),
+
+            // ── 3 · Prix ───────────────────────────────────────────────────
+            AiFieldMark(
+              fields: const ['totalBudget'],
+              child: _Zone(
+                '3 · ${l10n.requestCreatePriceSectionLabel}',
+                top: 9,
+              ),
+            ),
+            // Deux cartes plutôt qu'un interrupteur : chacune annonce sa
+            // conséquence, et c'est le choix qui porte la règle du prix
+            // obligatoire.
+            _PriceModeChoice(
+              negotiable: state.negotiable,
+              onChanged: (v) {
+                context.read<PackageRequestFormBloc>().add(
+                  PackageRequestNegotiableToggled(v),
+                );
+                WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
+              },
+            ),
+            const SizedBox(height: 7),
+            _PriceBasisSelector(
+              perKilo: perKilo,
+              perKiloAvailable: PerKiloPricing.isAvailable(weight),
+              onChanged: (v) => _setPriceBasis(v, state),
+            ),
+            if (!PerKiloPricing.isAvailable(weight))
+              Padding(
+                padding: const EdgeInsets.fromLTRB(1, 3, 1, 0),
+                child: Text(
+                  l10n.requestCreatePriceBasisPerKiloNeedsWeight,
+                  key: const Key('price-basis-per-kilo-hint'),
+                  style: WizardPalette.text(
+                    size: 11.5,
+                    weight: FontWeight.w400,
+                    color: p.n600,
                     height: 1.4,
                   ),
                 ),
-                const SizedBox(height: DonySpacing.lg),
+              ),
+            const SizedBox(height: 4),
+            _BudgetTotalInput(
+              key: _budgetFieldKey,
+              controller: _budgetCtrl,
+              onBudgetChanged: _invalidateQuote,
+              currency: currency,
+              grid: grid,
+              legacy: _legacyPricing(state),
+              perKiloWeightKg: perKilo ? weight : null,
+              semanticLabel: state.negotiable
+                  ? l10n.requestCreateBudgetLabelNegotiable
+                  : l10n.requestCreateBudgetLabelFixed,
+            ),
+            // Prix ferme : ce que les voyageurs verront. La fourchette admise
+            // n'est donnée que par l'erreur du champ : le minimum de frais de
+            // service n'est jamais cité (YADONY-FLUTTER-PROD-1J).
+            if (!state.negotiable) _Hint(l10n.requestCreateBudgetHintFixed),
 
-                // ── Récap (beige bg) ───────────────────────────────────────
-                WizardSummaryCard(state: state),
-                const SizedBox(height: DonySpacing.base),
-
-                // ── Choix du mode de prix ──────────────────────────────────
-                // Deux cartes plutôt qu'un interrupteur : chacune annonce sa
-                // conséquence, et c'est le choix qui porte la règle du budget
-                // obligatoire. Auparavant le champ était annoncé « optionnel »
-                // puis refusé à la publication.
-                _FieldLabel(l10n.requestCreatePriceModeLabel),
-                const SizedBox(height: DonySpacing.sm),
-                _PriceModeChoice(
-                  negotiable: state.negotiable,
-                  onChanged: (v) {
-                    context.read<PackageRequestFormBloc>().add(
-                      PackageRequestNegotiableToggled(v),
-                    );
-                    WidgetsBinding.instance.addPostFrameCallback(
-                      (_) => _sync(),
-                    );
-                  },
-                ),
-                const SizedBox(height: DonySpacing.base),
-
-                // ── Devise ─────────────────────────────────────────────────
-                // Figée une fois la demande créée : en édition, simple rappel en
-                // lecture seule (ni « Changer », ni sélecteur).
-                _FieldLabel(l10n.requestCreateCurrencyLabel),
-                const SizedBox(height: DonySpacing.sm),
-                if (state.isEditing)
-                  _CurrencyLockedRow(currency: currency)
-                else
-                  _CurrencySelectionRow(currency: currency),
-                const SizedBox(height: DonySpacing.base),
-
-                // ── Budget ─────────────────────────────────────────────────
-                AiFieldMark(
-                  fields: const ['totalBudget'],
-                  child: _FieldLabel(
-                    state.negotiable
-                        ? l10n.requestCreateBudgetLabelNegotiable
-                        : l10n.requestCreateBudgetLabelFixed,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                ValueListenableBuilder<CommissionGrid?>(
-                  valueListenable: _frozenGridNotifier,
-                  builder: (context, frozenGrid, _) => _BudgetTotalInput(
-                    key: _budgetFieldKey,
-                    controller: _budgetCtrl,
-                    onBudgetChanged: _invalidateQuote,
-                    currency: currency,
-                    grid: _legacyPricing(state)
-                        ? null
-                        : frozenGrid ?? activeCommissionGrid,
-                    legacy: _legacyPricing(state),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: DonySpacing.xs),
-                  child: Text(
-                    state.negotiable
-                        ? l10n.requestCreateBudgetHintNegotiable
-                        : l10n.requestCreateBudgetHintFixed,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
-
-                // ── Net voyageur : décomposition transparente ───────────────
-                if (state.totalBudgetEur != null) ...[
-                  const SizedBox(height: DonySpacing.sm),
-                  ListenableBuilder(
-                    listenable: Listenable.merge([
-                      _quoteNotifier,
-                      _frozenGridNotifier,
-                    ]),
-                    builder: (context, _) {
-                      final quoteVal = _quoteNotifier.value;
-                      final quote = quoteVal is NegotiationQuote
-                          ? quoteVal
-                          : null;
-                      return _BudgetBreakdown(
-                        budgetEur: state.totalBudgetEur!,
-                        quote: quote,
-                        currency: currency,
-                        grid: _requestGrid,
-                        editing: state.isEditing,
-                      );
-                    },
-                  ),
-                  const SizedBox(height: DonySpacing.base),
-
-                  // ── Code promo ────────────────────────────────────────────
-                  _FieldLabel(l10n.requestCreatePromoLabel),
-                  const SizedBox(height: DonySpacing.sm),
-                  ListenableBuilder(
-                    listenable: Listenable.merge([
-                      _quoteNotifier,
-                      _quoteLoadingNotifier,
-                    ]),
-                    builder: (context, _) {
-                      final loading = _quoteLoadingNotifier.value;
-                      final quoteVal = _quoteNotifier.value;
-                      final quote = quoteVal is NegotiationQuote
-                          ? quoteVal
-                          : null;
-                      final promoError = quoteVal is String ? quoteVal : null;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: DonyReplayMask(
-                                  child: TextFormField(
-                                    key: const Key('promo-code-input'),
-                                    controller: _promoCtrl,
-                                    scrollPadding: kDonyKeyboardScrollPadding,
-                                    textCapitalization:
-                                        TextCapitalization.characters,
-                                    decoration: InputDecoration(
-                                      hintText: l10n.requestCreatePromoHint,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: DonySpacing.base,
-                                            vertical: DonySpacing.md,
-                                          ),
-                                      suffixIcon: loading
-                                          ? const Padding(
-                                              padding: EdgeInsets.all(12),
-                                              child: SizedBox(
-                                                width: 20,
-                                                height: 20,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                    ),
-                                              ),
-                                            )
-                                          : null,
-                                    ),
-                                    onFieldSubmitted: (_) => _applyPromoCode(),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: DonySpacing.sm),
-                              SizedBox(
-                                height: 52,
-                                width: 110,
-                                child: FilledButton(
-                                  key: const Key('apply-promo-code-btn'),
-                                  onPressed: loading ? null : _applyPromoCode,
-                                  child: Text(l10n.commonApply),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: DonySpacing.xs),
-                          Text(
-                            l10n.promoCodeNotReferralHint,
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                          if (quote != null && quote.promoApplied) ...[
-                            const SizedBox(height: DonySpacing.xs),
-                            Row(
-                              children: [
-                                DonyIcon(
-                                  'circle-check',
-                                  size: 16,
-                                  color: cs.success,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    quote.promoLabel ??
-                                        l10n.requestCreatePromoAppliedFallback,
-                                    style: tt.bodySmall?.copyWith(
-                                      color: cs.success,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                          // Code valide, mais le minimum de frais de service
-                          // annule tout le gain : indice, sans style d'erreur.
-                          if (quote != null &&
-                              quote.promoIneffectiveBecauseMinimum) ...[
-                            const SizedBox(height: DonySpacing.xs),
-                            Row(
-                              key: const Key('request-promo-ineffective'),
-                              children: [
-                                DonyIcon(
-                                  'info',
-                                  size: 16,
-                                  color: cs.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    l10n.promoIneffectiveCommissionMinimum,
-                                    style: tt.bodySmall?.copyWith(
-                                      color: cs.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                          if (promoError != null) ...[
-                            const SizedBox(height: DonySpacing.xs),
-                            Row(
-                              children: [
-                                DonyIcon(
-                                  'circle-alert',
-                                  size: 16,
-                                  color: cs.error,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    promoError,
-                                    style: tt.bodySmall?.copyWith(
-                                      color: cs.error,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      );
-                    },
-                  ),
-                ],
-                const SizedBox(height: DonySpacing.base),
-
-                // ── Modes de paiement ──────────────────────────────────────
-                AiFieldMark(
-                  fields: const ['acceptedPaymentMethods'],
-                  child: _FieldLabel(l10n.requestCreatePaymentAcceptedLabel),
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                Text(
-                  l10n.requestCreatePaymentHint,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-                _PaymentMethodChips(
-                  selected: state.acceptedPaymentMethods,
-                  currency: currency,
-                ),
-                if (_mobileMoneyAccountMissing(state)) ...[
-                  const SizedBox(height: DonySpacing.sm),
-                  PaymentSetupNotice(
-                    key: const Key('request-mobile-money-setup-notice'),
-                    message: l10n.requestCreateMobileMoneyAccountRequired,
-                    ctaLabel: l10n.requestCreateMobileMoneyAccountCta,
-                    ctaKey: const Key('request-activate-mobile-money-cta'),
-                    onCtaTap: () async {
-                      await context.push<void>(
-                        '/payments/mobile-money/account',
-                      );
-                      if (mounted) widget.onMobileMoneySetupReturned?.call();
-                    },
-                  ),
-                ],
-                const SizedBox(height: DonySpacing.base),
-
-                // L'écran s'arrêtait sur la mention CGU, qui répond à une
-                // obligation légale, pas à « et maintenant ? ».
-                Container(
-                  padding: const EdgeInsets.all(DonySpacing.md),
-                  decoration: BoxDecoration(
-                    color: cs.primaryContainer,
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DonyIcon('send', size: 16, color: cs.primary),
-                      const SizedBox(width: DonySpacing.sm),
-                      Expanded(
+            // ── Calcul au kilo + frais : le total est ce qui part au back ──
+            if (state.totalBudgetEur != null) ...[
+              if (perKilo)
+                ListenableBuilder(
+                  listenable: _budgetCtrl,
+                  builder: (context, _) {
+                    final perKiloValue = _parseNumber(_budgetCtrl.text);
+                    final total = state.totalBudgetEur!;
+                    if (perKiloValue == null || weight == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 7),
+                      child: Container(
+                        key: const Key('price-per-kilo-computed'),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 9,
+                        ),
+                        decoration: BoxDecoration(
+                          color: p.blue50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: Text(
-                          l10n.requestCreatePublishInfoBanner,
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurface,
-                            height: 1.4,
+                          l10n.requestCreatePerKiloComputed(
+                            formatWeightKg(l10n, weight),
+                            CurrencyFormatter.format(
+                              perKiloValue,
+                              currency,
+                              compact: true,
+                            ),
+                            CurrencyFormatter.format(
+                              total,
+                              currency,
+                              compact: true,
+                            ),
+                          ),
+                          style: WizardPalette.text(
+                            size: 12.5,
+                            weight: FontWeight.w700,
+                            color: p.calcText,
                           ),
                         ),
                       ),
-                    ],
+                    );
+                  },
+                ),
+              const SizedBox(height: 8),
+              ListenableBuilder(
+                listenable: Listenable.merge([
+                  _quoteNotifier,
+                  _frozenGridNotifier,
+                ]),
+                builder: (context, _) {
+                  final quoteVal = _quoteNotifier.value;
+                  final quote = quoteVal is NegotiationQuote ? quoteVal : null;
+                  return _BudgetBreakdown(
+                    budgetEur: state.totalBudgetEur!,
+                    quote: quote,
+                    currency: currency,
+                    grid: _requestGrid,
+                    editing: state.isEditing,
+                    priceLabel: perKilo && weight != null
+                        ? l10n.requestCreateShipmentPriceWithCalc(
+                            formatWeightKg(l10n, weight),
+                            CurrencyFormatter.format(
+                              _parseNumber(_budgetCtrl.text) ?? 0,
+                              currency,
+                              compact: true,
+                            ),
+                          )
+                        : l10n.requestCreateShipmentPriceLabel,
+                  );
+                },
+              ),
+
+              // ── Code promo ────────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.only(top: 14, bottom: 6),
+                child: Text(
+                  l10n.requestCreatePromoLabel,
+                  style: WizardPalette.text(
+                    size: 12,
+                    weight: FontWeight.w700,
+                    color: p.n800,
                   ),
                 ),
-                // Le CTA « Publier ma demande » + la mention CGU sont portés par
-                // la barre sticky du wizard (_StickyCta) — pas de bouton inline ici.
-              ],
+              ),
+              ListenableBuilder(
+                listenable: Listenable.merge([
+                  _quoteNotifier,
+                  _quoteLoadingNotifier,
+                ]),
+                builder: (context, _) {
+                  final loading = _quoteLoadingNotifier.value;
+                  final quoteVal = _quoteNotifier.value;
+                  final quote = quoteVal is NegotiationQuote ? quoteVal : null;
+                  final promoError = quoteVal is String ? quoteVal : null;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DonyReplayMask(
+                              child: TextFormField(
+                                key: const Key('promo-code-input'),
+                                controller: _promoCtrl,
+                                scrollPadding: kDonyKeyboardScrollPadding,
+                                textCapitalization:
+                                    TextCapitalization.characters,
+                                style: WizardPalette.text(
+                                  size: 13,
+                                  weight: FontWeight.w700,
+                                  color: p.n800,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: l10n.requestCreatePromoHint,
+                                  hintStyle: WizardPalette.text(
+                                    size: 13,
+                                    weight: FontWeight.w600,
+                                    color: p.placeholder,
+                                  ),
+                                  filled: true,
+                                  fillColor: p.white,
+                                  isDense: true,
+                                  constraints: const BoxConstraints(
+                                    minHeight: 42,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 11,
+                                  ),
+                                  border: _fieldBorder(p.border),
+                                  enabledBorder: _fieldBorder(p.border),
+                                  focusedBorder: _fieldBorder(p.blue),
+                                  suffixIcon: loading
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(10),
+                                          child: SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                onFieldSubmitted: (_) => _applyPromoCode(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            height: 42,
+                            width: 92,
+                            child: FilledButton(
+                              key: const Key('apply-promo-code-btn'),
+                              onPressed: loading ? null : _applyPromoCode,
+                              style: FilledButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(92, 42),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                textStyle: WizardPalette.text(
+                                  size: 13,
+                                  weight: FontWeight.w800,
+                                  color: p.white,
+                                ),
+                              ),
+                              child: Text(
+                                l10n.commonApply,
+                                maxLines: 1,
+                                softWrap: false,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      _Hint(l10n.promoCodeNotReferralHint),
+                      if (quote != null && quote.promoApplied)
+                        _PromoNote(
+                          quote.promoLabel ??
+                              l10n.requestCreatePromoAppliedFallback,
+                          color: p.okText,
+                        ),
+                      // Code valide, mais le minimum de frais de service
+                      // annule tout le gain : indice, sans style d'erreur.
+                      if (quote != null && quote.promoIneffectiveBecauseMinimum)
+                        _PromoNote(
+                          l10n.promoIneffectiveCommissionMinimum,
+                          color: p.n600,
+                          noteKey: const Key('request-promo-ineffective'),
+                        ),
+                      if (promoError != null)
+                        _PromoNote(promoError, color: p.red),
+                    ],
+                  );
+                },
+              ),
+            ],
+
+            // ── Information de publication ─────────────────────────────────
+            // L'écran s'arrêtait sur la mention CGU, qui répond à une
+            // obligation légale, pas à « et maintenant ? ».
+            Container(
+              margin: const EdgeInsets.only(top: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: p.info,
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: p.infoBorder),
+              ),
+              child: Text(
+                l10n.requestCreatePublishInfoBanner,
+                style: WizardPalette.text(
+                  size: 11.5,
+                  weight: FontWeight.w400,
+                  color: p.n600,
+                  height: 1.4,
+                ),
+              ),
+            ),
+            // Le CTA « Publier ma demande » + la mention CGU sont portés par
+            // la barre sticky du wizard (_StickyCta) — pas de bouton inline ici.
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+double? _parseNumber(String text) => double.tryParse(text.replaceAll(',', '.'));
+
+OutlineInputBorder _fieldBorder(Color color) => OutlineInputBorder(
+  borderRadius: BorderRadius.circular(13),
+  borderSide: BorderSide(color: color, width: 1.5),
+);
+
+/// Intitulé de section de la maquette : « 1 · DEVISE », bleu, 11 px, espacé.
+class _Zone extends StatelessWidget {
+  const _Zone(this.text, {this.top = 0});
+
+  final String text;
+  final double top;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(top: top, bottom: 2),
+      child: Text(
+        text.toUpperCase(),
+        style: WizardPalette.text(
+          size: 11,
+          weight: FontWeight.w800,
+          color: WizardPalette.of(context).blue,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+}
+
+/// Ligne d'aide sous un champ (11,5 px, gris).
+class _Hint extends StatelessWidget {
+  const _Hint(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(1, 5, 1, 0),
+      child: Text(
+        text,
+        style: WizardPalette.text(
+          size: 11.5,
+          weight: FontWeight.w400,
+          color: WizardPalette.of(context).n600,
+          height: 1.4,
+        ),
+      ),
+    );
+  }
+}
+
+/// Note sous le code promo : appliqué (vert), sans effet (gris), refusé (rouge).
+class _PromoNote extends StatelessWidget {
+  const _PromoNote(this.text, {required this.color, this.noteKey});
+
+  final String text;
+  final Color color;
+  final Key? noteKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      key: noteKey,
+      padding: const EdgeInsets.fromLTRB(1, 5, 1, 0),
+      child: Text(
+        text,
+        style: WizardPalette.text(
+          size: 11.5,
+          weight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+/// Avertissement orange : un mobile money coché sans compte configuré.
+class _MobileMoneyWarning extends StatelessWidget {
+  const _MobileMoneyWarning({
+    super.key,
+    required this.message,
+    required this.ctaLabel,
+    required this.onCtaTap,
+  });
+
+  final String message;
+  final String ctaLabel;
+  final VoidCallback onCtaTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = WizardPalette.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: p.warnBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: p.warnBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            message,
+            style: WizardPalette.text(
+              size: 11.5,
+              weight: FontWeight.w400,
+              color: p.warnText,
+              height: 1.4,
             ),
           ),
-        );
-      },
+          // Le lien passe sous le texte, jamais à côté : il reste lisible
+          // quelle que soit la taille de police choisie par l'utilisateur.
+          InkWell(
+            key: const Key('request-activate-mobile-money-cta'),
+            onTap: onCtaTap,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 7),
+              child: Text(
+                ctaLabel,
+                style: WizardPalette.text(
+                  size: 11.5,
+                  weight: FontWeight.w800,
+                  color: p.blue,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -708,6 +911,7 @@ class _CurrencySelectionRow extends StatelessWidget {
       context,
       options: _options,
       initialCurrency: currency,
+      grouped: true,
     );
     if (selected != null) {
       formBloc.add(PackageRequestCurrencyChanged(selected));
@@ -716,8 +920,7 @@ class _CurrencySelectionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    final p = WizardPalette.of(context);
     final l10n = context.l10n;
     return Semantics(
       button: true,
@@ -728,36 +931,38 @@ class _CurrencySelectionRow extends StatelessWidget {
       child: ExcludeSemantics(
         child: InkWell(
           key: const Key('package-request-currency-selector-row'),
-          borderRadius: BorderRadius.circular(DonyRadius.md),
+          borderRadius: BorderRadius.circular(13),
           onTap: () => unawaited(_openSelector(context)),
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.base,
-              vertical: DonySpacing.md,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
             decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(color: cs.outline),
+              color: p.white,
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: p.border, width: 1.5),
             ),
             child: Row(
               children: [
-                DonyIcon('banknote', size: 18, color: cs.primary),
-                const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
                     '${currency.name(l10n)} (${currency.code})',
-                    style: tt.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: cs.onSurface,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: WizardPalette.text(
+                      size: 13,
+                      weight: FontWeight.w700,
+                      color: p.n800,
                     ),
                   ),
                 ),
+                const SizedBox(width: DonySpacing.sm),
                 Text(
                   l10n.requestCreateChangeCurrency,
-                  style: tt.labelLarge?.copyWith(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w700,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: WizardPalette.text(
+                    size: 12.5,
+                    weight: FontWeight.w800,
+                    color: p.blue,
                   ),
                 ),
               ],
@@ -770,7 +975,7 @@ class _CurrencySelectionRow extends StatelessWidget {
 }
 
 /// Rappel en lecture seule de la devise figée d'une demande en édition : même
-/// gabarit que [_CurrencySelectionRow], sans « Changer » ni action.
+/// gabarit que [_CurrencySelectionRow], fond grisé, sans « Changer » ni action.
 class _CurrencyLockedRow extends StatelessWidget {
   const _CurrencyLockedRow({required this.currency});
 
@@ -778,8 +983,7 @@ class _CurrencyLockedRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    final p = WizardPalette.of(context);
     final l10n = context.l10n;
     return Semantics(
       container: true,
@@ -790,26 +994,35 @@ class _CurrencyLockedRow extends StatelessWidget {
       child: ExcludeSemantics(
         child: Container(
           key: const Key('package-request-currency-locked-row'),
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.base,
-            vertical: DonySpacing.md,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
           decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.md),
-            border: Border.all(color: cs.outline),
+            color: p.n100,
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: p.border, width: 1.5),
           ),
           child: Row(
             children: [
-              DonyIcon('banknote', size: 18, color: cs.primary),
-              const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(
                   '${currency.name(l10n)} (${currency.code})',
-                  style: tt.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: cs.onSurface,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: WizardPalette.text(
+                    size: 13,
+                    weight: FontWeight.w700,
+                    color: p.n800,
                   ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Text(
+                l10n.requestCreateCurrencyLockedTag,
+                maxLines: 1,
+                softWrap: false,
+                style: WizardPalette.text(
+                  size: 11,
+                  weight: FontWeight.w700,
+                  color: p.n500,
                 ),
               ),
             ],
@@ -820,26 +1033,7 @@ class _CurrencyLockedRow extends StatelessWidget {
   }
 }
 
-// ─── Atoms ──────────────────────────────────────────────────────────────────
-
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: Theme.of(context).colorScheme.onSurface,
-        fontSize: 14,
-      ),
-    );
-  }
-}
-
-// ─── Budget total input ──────────────────────────────────────────────────────
+// ─── Champ du prix ───────────────────────────────────────────────────────────
 
 class _BudgetTotalInput extends StatelessWidget {
   const _BudgetTotalInput({
@@ -849,9 +1043,14 @@ class _BudgetTotalInput extends StatelessWidget {
     required this.currency,
     this.grid,
     this.legacy = false,
+    this.perKiloWeightKg,
+    this.semanticLabel,
   });
   final TextEditingController controller;
   final SupportedCurrency? currency;
+
+  /// Prévient le parent qu'un devis chargé précédemment est périmé.
+  final VoidCallback? onBudgetChanged;
 
   /// Grille de commission de la demande, `null` sans grille.
   final CommissionGrid? grid;
@@ -859,15 +1058,34 @@ class _BudgetTotalInput extends StatelessWidget {
   /// Demande existante antérieure aux paliers : taux unique, sans minimum.
   final bool legacy;
 
-  /// Prévient le parent qu'un devis chargé précédemment est périmé.
-  final VoidCallback? onBudgetChanged;
+  /// Poids du colis quand le champ saisit un prix AU KILO ; `null` quand il
+  /// saisit le total. Dans les deux cas le bloc ne reçoit que le total.
+  final double? perKiloWeightKg;
+
+  /// Libellé lu par les lecteurs d'écran (la maquette n'affiche pas de titre
+  /// au-dessus du champ).
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
+    final p = WizardPalette.of(context);
     final l10n = context.l10n;
-    return DonyReplayMask(
+    final perKilo = perKiloWeightKg != null;
+    final effectiveCurrency = currency ?? SupportedCurrency.eur;
+
+    /// Total que représente la saisie : elle-même, ou poids × prix au kilo.
+    double? totalOf(String text) {
+      final value = _parseNumber(text);
+      if (!perKilo) return value;
+      return PerKiloPricing.totalFor(
+        weightKg: perKiloWeightKg,
+        perKilo: value,
+        currency: effectiveCurrency,
+      );
+    }
+
+    final symbol = currency?.symbol ?? '';
+    final field = DonyReplayMask(
       child: TextFormField(
         key: const Key('total-budget-input'),
         controller: controller,
@@ -877,46 +1095,55 @@ class _BudgetTotalInput extends StatelessWidget {
         // Le « touched » natif : le message n'apparaît qu'après une première
         // interaction, sans drapeau ni second afficheur d'erreur à tenir.
         autovalidateMode: AutovalidateMode.onUserInteraction,
-        style: tt.headlineMedium?.copyWith(
-          fontWeight: FontWeight.w800,
-          fontSize: 22,
-          color: cs.onSurface,
+        style: WizardPalette.text(
+          size: 18,
+          weight: FontWeight.w800,
+          color: p.n800,
         ),
         decoration: InputDecoration(
           filled: true,
-          fillColor: cs.surface,
+          fillColor: p.white,
+          isDense: true,
+          constraints: const BoxConstraints(minHeight: 46),
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.base,
-            vertical: DonySpacing.md + 2,
+            horizontal: 14,
+            vertical: 11.5,
           ),
-          hintText: l10n.requestCreateBudgetInputHint,
-          hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          suffixText: currency?.symbol,
-          suffixStyle: tt.titleSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: cs.onSurfaceVariant,
+          hintText: perKilo
+              ? l10n.requestCreatePerKiloInputHint
+              : l10n.requestCreateBudgetInputHint,
+          hintStyle: WizardPalette.text(
+            size: 15,
+            weight: FontWeight.w600,
+            color: p.placeholder,
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.md),
-            borderSide: BorderSide(color: cs.outline),
+          suffixText: perKilo
+              ? l10n.requestCreatePriceUnitPerKilo(symbol)
+              : l10n.requestCreatePriceUnitTotal(symbol),
+          suffixStyle: WizardPalette.text(
+            size: 12,
+            weight: FontWeight.w700,
+            color: p.n600,
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.md),
-            borderSide: BorderSide(color: cs.primary, width: 2),
+          errorStyle: WizardPalette.text(
+            size: 11.5,
+            weight: FontWeight.w700,
+            color: p.red,
           ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.md),
-            borderSide: BorderSide(color: cs.error, width: 1.5),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.md),
-            borderSide: BorderSide(color: cs.error, width: 2),
-          ),
+          errorMaxLines: 2,
+          border: _fieldBorder(p.border),
+          enabledBorder: _fieldBorder(p.border),
+          focusedBorder: _fieldBorder(p.blue),
+          errorBorder: _fieldBorder(p.red),
+          focusedErrorBorder: _fieldBorder(p.red),
         ),
         onChanged: (text) {
-          final value = double.tryParse(text.replaceAll(',', '.'));
+          // Au kilo ou non, le bloc reçoit le TOTAL : le contrat avec le back
+          // ne change pas.
           context.read<PackageRequestFormBloc>().add(
-            PackageRequestTotalBudgetChanged(value),
+            PackageRequestTotalBudgetChanged(
+              perKilo ? totalOf(text) : _parseNumber(text),
+            ),
           );
           onBudgetChanged?.call();
         },
@@ -924,8 +1151,7 @@ class _BudgetTotalInput extends StatelessWidget {
           if (v == null || v.trim().isEmpty) {
             return l10n.requestCreateBudgetEmpty;
           }
-          final d = double.tryParse(v.replaceAll(',', '.'));
-          final effectiveCurrency = currency ?? SupportedCurrency.eur;
+          final d = totalOf(v);
           if (!PackageRequestLimits.isBudgetValid(
             d,
             effectiveCurrency,
@@ -961,6 +1187,9 @@ class _BudgetTotalInput extends StatelessWidget {
         },
       ),
     );
+    return semanticLabel == null
+        ? field
+        : Semantics(label: semanticLabel, child: field);
   }
 }
 
@@ -984,6 +1213,7 @@ class _BudgetBreakdown extends StatelessWidget {
     required this.currency,
     this.grid,
     this.editing = false,
+    required this.priceLabel,
   });
 
   final double budgetEur;
@@ -997,6 +1227,9 @@ class _BudgetBreakdown extends StatelessWidget {
   /// Demande existante : le devis du back suit la grille en vigueur, ses
   /// montants ne valent que s'il porte la grille figée de la demande.
   final bool editing;
+
+  /// Libellé de la ligne du prix (« Prix de l'envoi », avec le calcul au kilo).
+  final String priceLabel;
 
   /// Devis dont les montants valent pour cette demande.
   NegotiationQuote? get _amountQuote {
@@ -1049,8 +1282,8 @@ class _BudgetBreakdown extends StatelessWidget {
     return _card(
       cs,
       children: [
-        _line(tt, cs, l10n.requestPublicBudget, fmt(publicBudget)),
-        const SizedBox(height: DonySpacing.xs),
+        _line(tt, cs, priceLabel, fmt(publicBudget)),
+        const SizedBox(height: 5),
         _line(
           tt,
           cs,
@@ -1058,7 +1291,7 @@ class _BudgetBreakdown extends StatelessWidget {
           serviceFeeAmountLabel(commission, cur.code),
         ),
         if (hasDiscount) ...[
-          const SizedBox(height: DonySpacing.xs),
+          const SizedBox(height: 5),
           _line(
             tt,
             cs,
@@ -1066,32 +1299,31 @@ class _BudgetBreakdown extends StatelessWidget {
             '−${fmt(discount)}',
           ),
         ],
-        const SizedBox(height: DonySpacing.xs),
-        Divider(color: cs.success.withValues(alpha: 0.2)),
-        const SizedBox(height: DonySpacing.xs),
+        _rule(cs),
         _netRow(tt, cs, l10n, fmt(net)),
         if (hasDiscount) ...[
-          const SizedBox(height: DonySpacing.xs),
+          const SizedBox(height: 5),
           Row(
             key: const Key('request-budget-you-pay'),
             children: [
               Expanded(
                 child: Text(
                   l10n.requestCreateYouPayLabel,
-                  style: tt.bodyMedium?.copyWith(
-                    color: cs.success,
-                    fontWeight: FontWeight.w700,
+                  style: WizardPalette.text(
+                    size: 12,
+                    weight: FontWeight.w700,
+                    color: WizardPalette.fromScheme(cs).okText,
                   ),
                 ),
               ),
               const SizedBox(width: DonySpacing.sm),
               Text(
                 fmt(total),
-                style: tt.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: cs.success,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
+                style: WizardPalette.text(
+                  size: 12,
+                  weight: FontWeight.w800,
+                  color: WizardPalette.fromScheme(cs).okText,
+                ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
               ),
             ],
           ),
@@ -1119,10 +1351,10 @@ class _BudgetBreakdown extends StatelessWidget {
         _line(
           tt,
           cs,
-          l10n.requestPublicBudget,
+          priceLabel,
           CurrencyFormatter.formatOrPlain(budgetEur, currency),
         ),
-        const SizedBox(height: DonySpacing.xs),
+        const SizedBox(height: 5),
         _line(
           tt,
           cs,
@@ -1130,33 +1362,41 @@ class _BudgetBreakdown extends StatelessWidget {
           CurrencyFormatter.formatOrPlain(commissionEur, currency),
         ),
         if (hasRealBoost) ...[
-          const SizedBox(height: DonySpacing.xs),
+          const SizedBox(height: 5),
           _line(
             tt,
             cs,
             l10n.requestCreatePromoBoostLabel,
             '+${CurrencyFormatter.formatOrPlain(boost, currency)}',
-            valueColor: cs.success,
+            valueColor: WizardPalette.fromScheme(cs).okText,
           ),
         ],
-        const SizedBox(height: DonySpacing.xs),
-        Divider(color: cs.success.withValues(alpha: 0.2)),
-        const SizedBox(height: DonySpacing.xs),
+        _rule(cs),
         _netRow(tt, cs, l10n, CurrencyFormatter.formatOrPlain(net, currency)),
       ],
     );
   }
 
   Widget _card(ColorScheme cs, {required List<Widget> children}) => Container(
-    padding: const EdgeInsets.all(DonySpacing.base),
+    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
     decoration: BoxDecoration(
-      color: cs.successLight,
-      borderRadius: BorderRadius.circular(DonyRadius.md),
+      color: WizardPalette.fromScheme(cs).ok,
+      borderRadius: BorderRadius.circular(13),
     ),
     child: Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: children,
+    ),
+  );
+
+  /// Filet entre les lignes et le total : 6 px de marge de chaque côté.
+  Widget _rule(ColorScheme cs) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Divider(
+      height: 1,
+      thickness: 1,
+      color: WizardPalette.fromScheme(cs).okRule,
     ),
   );
 
@@ -1165,24 +1405,33 @@ class _BudgetBreakdown extends StatelessWidget {
     ColorScheme cs,
     AppLocalizations l10n,
     String value,
-  ) => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    crossAxisAlignment: CrossAxisAlignment.end,
-    children: [
-      Text(
-        l10n.requestCreateTravelerReceivesLabel,
-        style: tt.bodyMedium?.copyWith(fontSize: 13, color: cs.success),
-      ),
-      Text(
-        value,
-        style: tt.bodyMedium?.copyWith(
-          fontSize: 24,
-          fontWeight: FontWeight.w800,
-          color: cs.success,
+  ) {
+    final p = WizardPalette.fromScheme(cs);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            l10n.requestCreateTravelerReceivesLabel,
+            style: WizardPalette.text(
+              size: 12,
+              weight: FontWeight.w400,
+              color: p.okText,
+            ),
+          ),
         ),
-      ),
-    ],
-  );
+        const SizedBox(width: DonySpacing.sm),
+        Text(
+          value,
+          style: WizardPalette.text(
+            size: 21,
+            weight: FontWeight.w700,
+            color: p.okText,
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _line(
     TextTheme tt,
@@ -1190,24 +1439,22 @@ class _BudgetBreakdown extends StatelessWidget {
     String label,
     String value, {
     Color? valueColor,
-  }) => Row(
-    children: [
-      Expanded(
-        child: Text(label, style: tt.bodyMedium?.copyWith(color: cs.success)),
-      ),
-      const SizedBox(width: DonySpacing.sm),
-      Text(
-        value,
-        style: tt.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: valueColor ?? cs.success,
-        ),
-      ),
-    ],
-  );
+  }) {
+    final p = WizardPalette.fromScheme(cs);
+    final style = WizardPalette.text(
+      size: 12,
+      weight: FontWeight.w400,
+      color: p.okText,
+    );
+    return Row(
+      children: [
+        Expanded(child: Text(label, style: style)),
+        const SizedBox(width: DonySpacing.sm),
+        Text(value, style: style.copyWith(color: valueColor ?? p.okText)),
+      ],
+    );
+  }
 }
-
-// ─── Negotiable toggle ────────────────────────────────────────────────────────
 
 // ─── Payment method chips ─────────────────────────────────────────────────────
 
@@ -1218,8 +1465,7 @@ class _PaymentMethodChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    final p = WizardPalette.of(context);
     // La devise borne les moyens : pas de carte en franc CFA, pas de mobile
     // money hors CFA. Une méthode déjà cochée hors de cette borne (demande en
     // édition : rail retiré comme Wave ou Orange Money, ou devise changée)
@@ -1230,91 +1476,95 @@ class _PaymentMethodChips extends StatelessWidget {
       ...selectable,
       ...selected.where((m) => !selectable.contains(m)),
     ];
-    // Carte dédiée + icônes + chips plus hauts : la version précédente était
-    // une simple ligne de pastilles fines, facile à survoler sans la remarquer.
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Wrap(
-        spacing: DonySpacing.sm,
-        runSpacing: DonySpacing.sm,
-        children: methods.map((method) {
-          final isSelected = selected.contains(method);
-          final isLastSelected =
-              isSelected &&
-              !PackageRequestFormBloc.canDeselectPaymentMethod(selected);
-          return GestureDetector(
-            onTap: () {
-              // Le bloc refuse de vider la sélection. Sans ce mot, le refus se
-              // lisait comme un tap perdu.
-              if (isLastSelected) {
-                DonySnackbar.show(
-                  context,
-                  message: context.l10n.requestCreateKeepOnePaymentMethod,
-                );
-                return;
-              }
-              context.read<PackageRequestFormBloc>().add(
-                PackageRequestPaymentMethodToggled(method),
-              );
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-              constraints: const BoxConstraints(minHeight: 52),
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.base,
-                vertical: DonySpacing.sm + 2,
-              ),
-              decoration: BoxDecoration(
-                color: isSelected ? cs.primaryContainer : cs.surface,
-                borderRadius: BorderRadius.circular(DonyRadius.xl),
-                border: Border.all(
-                  color: isSelected ? cs.primary : cs.outline,
-                  width: isSelected ? 2 : 1.0,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    method.icon,
-                    size: 20,
-                    color: isSelected ? cs.primary : cs.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: DonySpacing.xs + 2),
-                  Text(
-                    method.label(context.l10n),
-                    style: tt.bodyMedium?.copyWith(
-                      color: isSelected ? cs.primary : cs.onSurface,
-                      fontWeight: isSelected
-                          ? FontWeight.w800
-                          : FontWeight.w600,
-                    ),
-                  ),
-                  if (isSelected) ...[
-                    const SizedBox(width: DonySpacing.xs),
-                    DonyIcon('circle-check', size: 16, color: cs.primary),
-                  ],
-                ],
-              ),
+    return Row(
+      children: [
+        for (var i = 0; i < methods.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: _PaymentChip(
+              method: methods[i],
+              isSelected: selected.contains(methods[i]),
+              isLastSelected:
+                  selected.contains(methods[i]) &&
+                  !PackageRequestFormBloc.canDeselectPaymentMethod(selected),
+              palette: p,
             ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _PaymentChip extends StatelessWidget {
+  const _PaymentChip({
+    required this.method,
+    required this.isSelected,
+    required this.isLastSelected,
+    required this.palette,
+  });
+
+  final PaymentMethod method;
+  final bool isSelected;
+  final bool isLastSelected;
+  final WizardPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette;
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
+        onTap: () {
+          // Le bloc refuse de vider la sélection. Sans ce mot, le refus se
+          // lisait comme un tap perdu.
+          if (isLastSelected) {
+            DonySnackbar.show(
+              context,
+              message: context.l10n.requestCreateKeepOnePaymentMethod,
+            );
+            return;
+          }
+          context.read<PackageRequestFormBloc>().add(
+            PackageRequestPaymentMethodToggled(method),
           );
-        }).toList(),
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? p.blue50 : p.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? p.blue : p.border,
+              width: 1.5,
+            ),
+          ),
+          child: Text(
+            method.label(context.l10n),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: WizardPalette.text(
+              size: 12,
+              weight: FontWeight.w800,
+              color: isSelected ? p.blue : p.n600,
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-/// Choix du mode de prix, en deux cartes plutôt qu'un interrupteur.
+/// Choix du mode de prix, en deux cartes côte à côte plutôt qu'un
+/// interrupteur.
 ///
 /// Un interrupteur nomme un réglage (« Prix négociable ») ; deux cartes
 /// nomment deux conséquences. Surtout, c'est le choix qui porte la règle du
-/// budget obligatoire, au lieu de la laisser surgir à la publication.
+/// prix obligatoire, au lieu de la laisser surgir à la publication.
 class _PriceModeChoice extends StatelessWidget {
   const _PriceModeChoice({required this.negotiable, required this.onChanged});
 
@@ -1324,26 +1574,31 @@ class _PriceModeChoice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Column(
-      children: [
-        _PriceModeCard(
-          key: const Key('price-mode-open'),
-          emoji: '💬',
-          title: l10n.requestCreatePriceModeOpenTitle,
-          subtitle: l10n.requestCreatePriceModeOpenSubtitle,
-          selected: negotiable,
-          onTap: () => onChanged(true),
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        _PriceModeCard(
-          key: const Key('price-mode-fixed'),
-          emoji: '🏷️',
-          title: l10n.requestCreatePriceModeFixedTitle,
-          subtitle: l10n.requestCreatePriceModeFixedSubtitle,
-          selected: !negotiable,
-          onTap: () => onChanged(false),
-        ),
-      ],
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _PriceModeCard(
+              key: const Key('price-mode-open'),
+              title: l10n.requestCreatePriceModeOpenTitle,
+              subtitle: l10n.requestCreatePriceModeOpenSubtitle,
+              selected: negotiable,
+              onTap: () => onChanged(true),
+            ),
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: _PriceModeCard(
+              key: const Key('price-mode-fixed'),
+              title: l10n.requestCreatePriceModeFixedTitle,
+              subtitle: l10n.requestCreatePriceModeFixedSubtitle,
+              selected: !negotiable,
+              onTap: () => onChanged(false),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1351,14 +1606,12 @@ class _PriceModeChoice extends StatelessWidget {
 class _PriceModeCard extends StatelessWidget {
   const _PriceModeCard({
     super.key,
-    required this.emoji,
     required this.title,
     required this.subtitle,
     required this.selected,
     required this.onTap,
   });
 
-  final String emoji;
   final String title;
   final String subtitle;
   final bool selected;
@@ -1366,52 +1619,152 @@ class _PriceModeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
+    final p = WizardPalette.of(context);
     return Semantics(
       selected: selected,
       button: true,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(DonyRadius.card),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(DonySpacing.base),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? cs.primaryContainer : cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(
-              color: selected ? cs.primary : cs.outline,
-              width: selected ? 2 : 1,
-            ),
+            color: selected ? p.blue50 : p.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: selected ? p.blue : p.border, width: 1.5),
           ),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 20)),
-              const SizedBox(width: DonySpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: selected ? cs.primary : cs.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
+              Text(
+                title,
+                style: WizardPalette.text(
+                  size: 12,
+                  weight: FontWeight.w700,
+                  color: selected ? p.blue : p.n800,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                subtitle,
+                style: WizardPalette.text(
+                  size: 10.5,
+                  weight: FontWeight.w400,
+                  color: p.n600,
+                  height: 1.3,
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Sélecteur « Prix total » / « Prix au kilo » : deux segments, le segment
+/// actif en blanc sur fond gris. « Prix au kilo » est grisé sans poids connu.
+class _PriceBasisSelector extends StatelessWidget {
+  const _PriceBasisSelector({
+    required this.perKilo,
+    required this.perKiloAvailable,
+    required this.onChanged,
+  });
+
+  final bool perKilo;
+  final bool perKiloAvailable;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = WizardPalette.of(context);
+    final l10n = context.l10n;
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: p.n100,
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _Segment(
+              key: const Key('price-basis-total'),
+              label: l10n.requestCreatePriceBasisTotal,
+              selected: !perKilo,
+              enabled: true,
+              onTap: () => onChanged(false),
+            ),
+          ),
+          Expanded(
+            child: _Segment(
+              key: const Key('price-basis-per-kilo'),
+              label: l10n.requestCreatePriceBasisPerKilo,
+              selected: perKilo,
+              enabled: perKiloAvailable,
+              onTap: () => onChanged(true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Segment extends StatelessWidget {
+  const _Segment({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = WizardPalette.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      enabled: enabled,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled ? onTap : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? p.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: selected
+                ? const [
+                    BoxShadow(
+                      color: Color(0x1F000000),
+                      blurRadius: 3,
+                      offset: Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+            style: WizardPalette.text(
+              size: 12.5,
+              weight: FontWeight.w800,
+              color: !enabled
+                  ? p.placeholder
+                  : selected
+                  ? p.blue
+                  : p.n600,
+            ),
           ),
         ),
       ),

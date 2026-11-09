@@ -172,6 +172,7 @@ const _sameInBothLanguages = <String>{
   'requestDetailMessageCta', // « Message » se dit pareil
   'requestDescriptionLabel', // « Description » se dit pareil
   'requestPublicBudget', // « Budget » se dit pareil
+  'requestCreatePriceUnitPerKilo', // « {symbol} / kg » : symbole et unité
   'requestPosterTileBudget', // « Budget » se dit pareil
   'requestPosterCaptionBudget', // gabarit identique, seuls {price} et {terms} varient
   'requestPublicZonesLabel', // « Zones » se dit pareil

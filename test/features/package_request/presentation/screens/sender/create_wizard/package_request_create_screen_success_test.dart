@@ -894,6 +894,6 @@ void main() {
     useEnglish();
     await driveToStep3(tester);
 
-    expect(find.text('The budget'), findsOneWidget);
+    expect(find.text('The price'), findsOneWidget);
   });
 }
