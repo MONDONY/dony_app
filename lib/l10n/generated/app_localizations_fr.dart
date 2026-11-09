@@ -308,11 +308,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get errorSmsOtpDisabledTitle => 'Indisponible';
+  String get errorSmsOtpDisabledTitle => 'SMS indisponible';
 
   @override
   String get errorSmsOtpDisabledMessage =>
-      'La connexion par téléphone n\'est pas encore disponible.';
+      'La connexion par SMS n\'est pas disponible pour ce numéro. Connectez-vous avec votre adresse e-mail, Google ou Apple.';
 
   @override
   String get errorInvalidPhoneNumberTitle => 'Numéro injoignable';
@@ -1438,6 +1438,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authPhoneContinueWithEmail => 'Continuer avec une adresse email';
+
+  @override
+  String get authPhoneSmsBlockedOtherMethod => 'Voir les options';
 
   @override
   String get authOtpEnterSixDigits => 'Entrez le code à 6 chiffres';
