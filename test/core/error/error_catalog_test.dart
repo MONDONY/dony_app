@@ -1932,7 +1932,7 @@ void main() {
       const ValidationException('x', code: 'budget-below-commission-minimum'),
     );
 
-    expect(p.title, 'Budget trop faible');
+    expect(p.title, 'Prix trop faible');
     expect(
       p.message,
       'Ce montant ne couvre pas les frais de service de Yadony.',

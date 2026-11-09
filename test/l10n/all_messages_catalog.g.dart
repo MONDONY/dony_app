@@ -1428,6 +1428,33 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'requestCreateKeepOnePaymentMethod': (l) =>
       l.requestCreateKeepOnePaymentMethod,
   'requestCreatePublishInfoBanner': (l) => l.requestCreatePublishInfoBanner,
+  'requestCreatePriceSectionLabel': (l) => l.requestCreatePriceSectionLabel,
+  'requestCreatePriceBasisTotal': (l) => l.requestCreatePriceBasisTotal,
+  'requestCreatePriceBasisPerKilo': (l) => l.requestCreatePriceBasisPerKilo,
+  'requestCreatePriceBasisPerKiloNeedsWeight': (l) =>
+      l.requestCreatePriceBasisPerKiloNeedsWeight,
+  'requestCreatePriceUnitTotal': (l) =>
+      l.requestCreatePriceUnitTotal(placeholderMarker('symbol')),
+  'requestCreatePriceUnitPerKilo': (l) =>
+      l.requestCreatePriceUnitPerKilo(placeholderMarker('symbol')),
+  'requestCreatePerKiloInputHint': (l) => l.requestCreatePerKiloInputHint,
+  'requestCreatePerKiloComputed': (l) => l.requestCreatePerKiloComputed(
+    placeholderMarker('weight'),
+    placeholderMarker('perKilo'),
+    placeholderMarker('total'),
+  ),
+  'requestCreateShipmentPriceLabel': (l) => l.requestCreateShipmentPriceLabel,
+  'requestCreateCurrencyLockedTag': (l) => l.requestCreateCurrencyLockedTag,
+  'requestCreateShipmentPriceWithCalc': (l) =>
+      l.requestCreateShipmentPriceWithCalc(
+        placeholderMarker('weight'),
+        placeholderMarker('perKilo'),
+      ),
+  'currencySelectorTitleRequest': (l) => l.currencySelectorTitleRequest,
+  'currencySelectorValidate': (l) => l.currencySelectorValidate,
+  'currencySelectorRowCard': (l) => l.currencySelectorRowCard,
+  'currencySelectorRowMobileMoney': (l) => l.currencySelectorRowMobileMoney,
+  'currencySelectorRowCash': (l) => l.currencySelectorRowCash,
   'requestCreateBudgetInputHint': (l) => l.requestCreateBudgetInputHint,
   'requestCreateBudgetEmpty': (l) => l.requestCreateBudgetEmpty,
   'requestCreateBudgetRange': (l) => l.requestCreateBudgetRange(
@@ -8211,6 +8238,10 @@ const textParameters = <String, List<String>>{
   'requestTimeYesterday': ['verb', 'time'],
   'requestTimeOn': ['verb', 'date'],
   'requestCreateToleranceRangeHint': ['from', 'to'],
+  'requestCreatePriceUnitTotal': ['symbol'],
+  'requestCreatePriceUnitPerKilo': ['symbol'],
+  'requestCreatePerKiloComputed': ['weight', 'perKilo', 'total'],
+  'requestCreateShipmentPriceWithCalc': ['weight', 'perKilo'],
   'requestCreateBudgetRange': ['min', 'max'],
   'requestCreateCurrencySemanticLabel': ['name', 'code'],
   'requestCreateCurrencyLockedSemanticLabel': ['name', 'code'],

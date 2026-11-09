@@ -3,6 +3,7 @@ import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_palette.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -73,21 +74,32 @@ abstract final class CurrencySelector {
     BuildContext context, {
     required List<CurrencyPaymentOption> options,
     SupportedCurrency? initialCurrency,
+
+    /// Présentation de la demande de colis (étape « Le prix ») : devises
+    /// regroupées par moyens de paiement, sans encart explicatif, bouton
+    /// « Valider ». Les autres appelants gardent la liste historique.
+    bool grouped = false,
   }) {
     final selected = ValueNotifier<SupportedCurrency>(
       initialCurrency ?? ActiveCurrency.current ?? SupportedCurrency.eur,
     );
     return DonyBottomSheet.show<SupportedCurrency>(
       context,
-      title: context.l10n.currencySelectorTitle,
-      child: _CurrencyOptionList(options: options, selected: selected),
+      title: grouped
+          ? context.l10n.currencySelectorTitleRequest
+          : context.l10n.currencySelectorTitle,
+      child: grouped
+          ? _GroupedCurrencyList(options: options, selected: selected)
+          : _CurrencyOptionList(options: options, selected: selected),
       // Règle DonyButton dans bottom sheet : toujours en stickyBottom,
       // jamais dans le child scrollable.
       stickyBottom: ValueListenableBuilder<SupportedCurrency>(
         valueListenable: selected,
         builder: (context, value, _) => DonyButton(
           key: const Key('currency-selector-confirm'),
-          label: context.l10n.currencySelectorConfirm(value.code),
+          label: grouped
+              ? context.l10n.currencySelectorValidate
+              : context.l10n.currencySelectorConfirm(value.code),
           onPressed: () => Navigator.of(context).pop(value),
         ),
       ),
@@ -252,6 +264,164 @@ class _PaymentMethodsNotice extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Liste de la maquette « Le prix » : les devises sous trois intitulés (carte
+/// et espèces, mobile money et espèces, espèces seules), chacune avec ses
+/// moyens de paiement en sous-titre et une pastille de sélection.
+class _GroupedCurrencyList extends StatelessWidget {
+  const _GroupedCurrencyList({required this.options, required this.selected});
+
+  final List<CurrencyPaymentOption> options;
+  final ValueNotifier<SupportedCurrency> selected;
+
+  CurrencyPaymentOption? _optionFor(SupportedCurrency currency) {
+    for (final option in options) {
+      if (option.currency == currency) return option;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final p = WizardPalette.of(context);
+    final groups = <(String, String, List<SupportedCurrency>)>[
+      (l.currencySelectorSubtitleCard, l.currencySelectorRowCard, []),
+      (
+        l.currencySelectorSubtitleMobileMoney,
+        l.currencySelectorRowMobileMoney,
+        [],
+      ),
+      (l.currencySelectorSubtitleCashOnly, l.currencySelectorRowCash, []),
+    ];
+    for (final currency in SupportedCurrency.values) {
+      final option = _optionFor(currency);
+      final index = (option?.hasCardRail ?? false)
+          ? 0
+          : (option?.hasMobileMoneyRail ?? false)
+          ? 1
+          : 2;
+      groups[index].$3.add(currency);
+    }
+    return ValueListenableBuilder<SupportedCurrency>(
+      valueListenable: selected,
+      builder: (context, value, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final group in groups)
+            if (group.$3.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: 6, bottom: 2),
+                child: Text(
+                  group.$1.toUpperCase(),
+                  style: WizardPalette.text(
+                    size: 10.5,
+                    weight: FontWeight.w800,
+                    color: p.blue,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ),
+              for (final currency in group.$3)
+                _GroupedCurrencyRow(
+                  currency: currency,
+                  subtitle: group.$2,
+                  isSelected: currency == value,
+                  onTap: () => selected.value = currency,
+                ),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+class _GroupedCurrencyRow extends StatelessWidget {
+  const _GroupedCurrencyRow({
+    required this.currency,
+    required this.subtitle,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final SupportedCurrency currency;
+  final String subtitle;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final p = WizardPalette.of(context);
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 9),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: p.n100)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${currency.name(l)} (${currency.code})',
+                      style: WizardPalette.text(
+                        size: 13,
+                        weight: FontWeight.w700,
+                        color: p.n800,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: Text(
+                        subtitle,
+                        style: WizardPalette.text(
+                          size: 10.5,
+                          weight: FontWeight.w600,
+                          color: p.n500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected ? p.blue : Colors.transparent,
+                  border: Border.all(
+                    color: isSelected ? p.blue : p.border,
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? Center(
+                        child: Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: p.white,
+                          ),
+                        ),
+                      )
+                    : null,
               ),
             ],
           ),

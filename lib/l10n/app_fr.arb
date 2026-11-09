@@ -50,8 +50,8 @@
   "errorMobileMoneyProviderUnavailableMessage": "Le service mobile money ne répond pas. Réessayez dans quelques minutes.",
   "errorInvalidPaymentMethodTitle": "Moyen de paiement invalide",
   "errorInvalidPaymentMethodMessage": "Ce moyen de paiement n'est pas reconnu. Mettez l'application à jour.",
-  "errorRequestBudgetOutOfBoundsTitle": "Budget trop élevé",
-  "errorRequestBudgetOutOfBoundsMessage": "Ce budget dépasse le plafond autorisé pour cette devise. Réduisez le montant puis réessayez.",
+  "errorRequestBudgetOutOfBoundsTitle": "Prix trop élevé",
+  "errorRequestBudgetOutOfBoundsMessage": "Ce prix dépasse le plafond autorisé pour cette devise. Réduisez le montant puis réessayez.",
   "errorRequestAlreadyAcceptedTitle": "Ce colis est parti",
   "errorRequestAlreadyAcceptedMessage": "Un autre voyageur a réglé les frais de service avant vous, ce colis ne peut plus vous revenir.",
   "errorTripNoParcelDepartedTitle": "Aucun colis récupéré",
@@ -120,7 +120,7 @@
   "errorProLimitReachedMessage": "Vous avez atteint votre limite d'annonces ce mois-ci. Passez en PRO pour publier sans limite.",
   "errorDraftLimitReachedTitle": "Limite de brouillons atteinte",
   "errorDraftLimitReachedMessage": "Passez en PRO pour créer davantage de brouillons.",
-  "errorBudgetBelowCommissionMinimumTitle": "Budget trop faible",
+  "errorBudgetBelowCommissionMinimumTitle": "Prix trop faible",
   "@errorBudgetBelowCommissionMinimumTitle": {
     "description": "Titre : budget sous le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum)"
   },
@@ -2686,7 +2686,7 @@
   "@requestCreateStepTitlePackage": {
     "description": "Titre de l'app bar, étape 2 (package_request_create_screen.dart)"
   },
-  "requestCreateStepTitleBudget": "Le budget",
+  "requestCreateStepTitleBudget": "Le prix",
   "@requestCreateStepTitleBudget": {
     "description": "Titre de l'app bar, étape 3 (package_request_create_screen.dart)"
   },
@@ -2897,7 +2897,7 @@
   "@requestCreateWeightInvalid": {
     "description": "Erreur de validation : poids non numérique (step_2_details.dart)"
   },
-  "requestCreateBudgetSubtitle": "Vérifiez votre demande, puis indiquez le budget à montrer aux voyageurs.",
+  "requestCreateBudgetSubtitle": "Vérifiez votre demande, puis indiquez le prix à montrer aux voyageurs.",
   "@requestCreateBudgetSubtitle": {
     "description": "Sous-titre de l'étape 3 (step_3_recap_budget.dart)"
   },
@@ -2909,7 +2909,7 @@
   "@requestCreatePriceModeOpenTitle": {
     "description": "Titre de la carte \"prix négociable\" (step_3_recap_budget.dart)"
   },
-  "requestCreatePriceModeOpenSubtitle": "Les voyageurs proposent leur prix, vous choisissez.",
+  "requestCreatePriceModeOpenSubtitle": "Les voyageurs proposent leur prix",
   "@requestCreatePriceModeOpenSubtitle": {
     "description": "Sous-titre de la carte \"prix négociable\" (step_3_recap_budget.dart)"
   },
@@ -2917,7 +2917,7 @@
   "@requestCreatePriceModeFixedTitle": {
     "description": "Titre de la carte \"prix ferme\" (step_3_recap_budget.dart)"
   },
-  "requestCreatePriceModeFixedSubtitle": "Un montant ferme, sans négociation.",
+  "requestCreatePriceModeFixedSubtitle": "Un montant ferme",
   "@requestCreatePriceModeFixedSubtitle": {
     "description": "Sous-titre de la carte \"prix ferme\" (step_3_recap_budget.dart)"
   },
@@ -2925,15 +2925,15 @@
   "@requestCreateCurrencyLabel": {
     "description": "Libellé du sélecteur de devise (step_3_recap_budget.dart)"
   },
-  "requestCreateBudgetLabelNegotiable": "Budget indicatif",
+  "requestCreateBudgetLabelNegotiable": "Prix total de votre envoi",
   "@requestCreateBudgetLabelNegotiable": {
     "description": "Libellé du champ budget en mode négociable (step_3_recap_budget.dart)"
   },
-  "requestCreateBudgetLabelFixed": "Votre prix",
+  "requestCreateBudgetLabelFixed": "Prix de votre colis",
   "@requestCreateBudgetLabelFixed": {
     "description": "Libellé du champ budget en mode prix ferme (step_3_recap_budget.dart)"
   },
-  "requestCreateBudgetHintNegotiable": "Donnez un ordre d'idée pour attirer plus d'offres, sans vous engager.",
+  "requestCreateBudgetHintNegotiable": "Pour tout votre colis, pas par kilo ni par article.",
   "@requestCreateBudgetHintNegotiable": {
     "description": "Texte d'aide sous le champ budget en mode négociable (step_3_recap_budget.dart)"
   },
@@ -2976,16 +2976,95 @@
   "requestCreatePublishInfoBanner": "Une fois publiée, les voyageurs sur ce trajet sont prévenus. Vous recevrez une notification à la première offre.",
   "@requestCreatePublishInfoBanner": {
     "description": "Bandeau informatif en fin d'étape 3 (step_3_recap_budget.dart)"
+  },  "requestCreatePriceSectionLabel": "Prix",
+  "@requestCreatePriceSectionLabel": {
+    "description": "Titre de la section prix de l'étape 3 (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceBasisTotal": "Prix total",
+  "@requestCreatePriceBasisTotal": {
+    "description": "Sélecteur : le prix saisi est le total (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceBasisPerKilo": "Prix au kilo",
+  "@requestCreatePriceBasisPerKilo": {
+    "description": "Sélecteur : le prix saisi est au kilo, le total est calculé (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceBasisPerKiloNeedsWeight": "Indiquez d'abord le poids du colis pour fixer un prix au kilo.",
+  "@requestCreatePriceBasisPerKiloNeedsWeight": {
+    "description": "Explication quand le prix au kilo est grisé faute de poids (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceUnitTotal": "{symbol} au total",
+  "@requestCreatePriceUnitTotal": {
+    "description": "Unité du champ prix en mode total (step_3_recap_budget.dart)",
+    "placeholders": {
+      "symbol": {"type": "String"}
+    }
+  },
+  "requestCreatePriceUnitPerKilo": "{symbol} / kg",
+  "@requestCreatePriceUnitPerKilo": {
+    "description": "Unité du champ prix en mode au kilo (step_3_recap_budget.dart)",
+    "placeholders": {
+      "symbol": {"type": "String"}
+    }
+  },
+  "requestCreatePerKiloInputHint": "Ex. 5,00",
+  "@requestCreatePerKiloInputHint": {
+    "description": "Indication du champ prix au kilo (step_3_recap_budget.dart)"
+  },
+  "requestCreatePerKiloComputed": "{weight} × {perKilo} = {total} au total",
+  "@requestCreatePerKiloComputed": {
+    "description": "Calcul du total en mode prix au kilo (step_3_recap_budget.dart)",
+    "placeholders": {
+      "weight": {"type": "String"},
+      "perKilo": {"type": "String"},
+      "total": {"type": "String"}
+    }
+  },
+  "requestCreateShipmentPriceLabel": "Prix de l'envoi",
+  "@requestCreateShipmentPriceLabel": {
+    "description": "Ligne du récapitulatif vert des frais : prix de l'envoi (step_3_recap_budget.dart)"
+  },
+
+  "requestCreateCurrencyLockedTag": "non modifiable",
+  "@requestCreateCurrencyLockedTag": {
+    "description": "Mention de la ligne devise figée à la modification (step_3_recap_budget.dart)"
+  },
+  "requestCreateShipmentPriceWithCalc": "Prix de l'envoi ({weight} × {perKilo})",
+  "@requestCreateShipmentPriceWithCalc": {
+    "description": "Ligne du prix de l'envoi en mode prix au kilo (step_3_recap_budget.dart)",
+    "placeholders": {
+      "weight": {"type": "String"},
+      "perKilo": {"type": "String"}
+    }
+  },
+  "currencySelectorTitleRequest": "Devise de la demande",
+  "@currencySelectorTitleRequest": {
+    "description": "Titre du sélecteur de devise d'une demande de colis (currency_selector.dart)"
+  },
+  "currencySelectorValidate": "Valider",
+  "@currencySelectorValidate": {
+    "description": "Bouton du sélecteur de devise d'une demande de colis (currency_selector.dart)"
+  },
+  "currencySelectorRowCard": "Carte · Espèces",
+  "@currencySelectorRowCard": {
+    "description": "Moyens de paiement sous une devise (currency_selector.dart)"
+  },
+  "currencySelectorRowMobileMoney": "Mobile money · Espèces",
+  "@currencySelectorRowMobileMoney": {
+    "description": "Moyens de paiement sous une devise (currency_selector.dart)"
+  },
+  "currencySelectorRowCash": "Espèces uniquement",
+  "@currencySelectorRowCash": {
+    "description": "Moyens de paiement sous une devise (currency_selector.dart)"
   },
   "requestCreateBudgetInputHint": "Ex. 40,00",
   "@requestCreateBudgetInputHint": {
     "description": "Texte d'indication du champ budget total (step_3_recap_budget.dart)"
   },
-  "requestCreateBudgetEmpty": "Indiquez un budget",
+  "requestCreateBudgetEmpty": "Indiquez un prix",
   "@requestCreateBudgetEmpty": {
     "description": "Erreur de validation : champ budget vide (step_3_recap_budget.dart)"
   },
-  "requestCreateBudgetRange": "Entre {min} et {max}",
+  "requestCreateBudgetRange": "Entre {min} et {max}.",
   "@requestCreateBudgetRange": {
     "description": "Erreur de validation : budget hors bornes (step_3_recap_budget.dart)",
     "placeholders": {
@@ -3017,7 +3096,7 @@
   "@requestCreateYouPayLabel": {
     "description": "Sous grille de commission : total payé par l'expéditeur quand un code promo le baisse sous le budget public (step_3_recap_budget.dart)"
   },
-  "requestBudgetBelowServiceFee": "Ce budget est trop bas pour couvrir les frais de service.",
+  "requestBudgetBelowServiceFee": "Ce prix est trop bas pour couvrir les frais de service.",
   "@requestBudgetBelowServiceFee": {"description": "Erreur de validation du budget d'une demande : il ne couvre pas les frais de service de la grille. Sans montant : le minimum n'est jamais cité (step_3_recap_budget.dart)."},
   "requestCreateCurrencySemanticLabel": "Devise de la demande : {name}, {code}. Bouton, modifier la devise.",
   "@requestCreateCurrencySemanticLabel": {

@@ -95,9 +95,10 @@ void main() {
   }
 
   group('Step3RecapBudget', () {
-    testWidgets('rend titre + récap + budget', (tester) async {
+    testWidgets('rend le récap compact + le champ du prix', (tester) async {
       await tester.pumpWidget(wrap(const Step3RecapBudget()));
-      expect(find.text('Budget'), findsOneWidget);
+      // Plus de gros titre dans le corps : « Le prix » est dans la barre du haut.
+      expect(find.text('Budget'), findsNothing);
       expect(find.byType(WizardSummaryCard), findsOneWidget);
       // Budget input (1 TextFormField visible dans cette étape)
       expect(find.byType(TextFormField), findsOneWidget);
@@ -362,7 +363,7 @@ void main() {
       );
 
       final budget = CurrencyFormatter.formatOrPlain(40, SupportedCurrency.cad);
-      expect(find.text(r'CA$'), findsOneWidget);
+      expect(find.text(r'CA$ au total'), findsOneWidget);
       expect(find.text(budget), findsOneWidget);
       expect(find.textContaining('€'), findsNothing);
     });
@@ -398,17 +399,18 @@ void main() {
         await tester.pump();
 
         expect(canContinue.value, isFalse);
-        expect(find.text('Budget indicatif'), findsOneWidget);
-        expect(find.text('Budget indicatif (optionnel)'), findsNothing);
+        // Pas de titre au-dessus du champ (maquette) : l'unité « € au total »
+        // en dit autant, et le libellé reste lu par les lecteurs d'écran.
+        expect(find.text('€ au total'), findsOneWidget);
         // Le message ne s'affiche plus à l'ouverture — un formulaire vierge
         // n'accueille pas par un reproche —, mais dès que la publication est
         // tentée. Sans lui, le tap sur « Publier » ne produisait rien. Il est
         // porté par le validateur du champ, seul afficheur de cette erreur.
-        expect(find.text('Indiquez un budget'), findsNothing);
+        expect(find.text('Indiquez un prix'), findsNothing);
 
         key.currentState!.submit();
         await tester.pump();
-        expect(find.text('Indiquez un budget'), findsOneWidget);
+        expect(find.text('Indiquez un prix'), findsOneWidget);
       },
     );
 
@@ -471,7 +473,7 @@ void main() {
         expect(canContinue.value, isFalse);
         // Champ vidé après saisie : l'autovalidation à l'interaction rend le
         // message sans qu'il faille tenter la publication.
-        expect(find.text('Indiquez un budget'), findsOneWidget);
+        expect(find.text('Indiquez un prix'), findsOneWidget);
       },
     );
 
@@ -495,11 +497,10 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Choisir une devise'), findsOneWidget);
-        expect(
-          find.byKey(const Key('currency-payment-methods-notice')),
-          findsOneWidget,
-        );
+        expect(find.text('Devise de la demande'), findsOneWidget);
+        // Les devises sont regroupées par moyens de paiement.
+        expect(find.text('CARTE ET ESPÈCES'), findsOneWidget);
+        expect(find.text('MOBILE MONEY ET ESPÈCES'), findsOneWidget);
 
         await tester.tap(find.text('Dollar canadien (CAD)'));
         await tester.pumpAndSettle();
@@ -511,8 +512,8 @@ void main() {
       },
     );
 
-    testWidgets('le sélecteur de devise annonce mobile money et espèces pour '
-        'le XOF', (tester) async {
+    testWidgets('le sélecteur de devise range le XOF sous mobile money et '
+        'espèces', (tester) async {
       await tester.pumpWidget(
         wrap(
           const Step3RecapBudget(currency: SupportedCurrency.xof),
@@ -536,10 +537,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Mobile money et espèces disponibles en XOF'),
-        findsOneWidget,
-      );
+      // Le franc CFA est sous l'intitulé mobile money et espèces, avec ses
+      // moyens de paiement en sous-titre.
+      expect(find.text('MOBILE MONEY ET ESPÈCES'), findsOneWidget);
+      // Une fois sur la ligne de l'étape, une fois dans la liste.
+      expect(find.text('Franc CFA Ouest (XOF)'), findsNWidgets(2));
+      expect(find.text('Mobile money · Espèces'), findsWidgets);
     });
 
     testWidgets(
@@ -923,7 +926,7 @@ void main() {
 
       expect(canContinue.value, isFalse);
       expect(
-        find.text('Ce budget est trop bas pour couvrir les frais de service.'),
+        find.text('Ce prix est trop bas pour couvrir les frais de service.'),
         findsOneWidget,
       );
       // Le message des bornes ne s'y superpose pas.
