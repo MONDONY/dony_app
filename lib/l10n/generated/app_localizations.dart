@@ -33750,6 +33750,12 @@ abstract class AppLocalizations {
   /// **'Décrivez votre envoi à voix haute. L\'IA prépare le formulaire, vous vérifiez avant de publier.'**
   String get aiFormDraftEntryBodyPackage;
 
+  /// Courte phrase sous le titre de la carte d'entrée IA compacte.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'IA prépare le formulaire.'**
+  String get aiFormDraftEntrySubtitle;
+
   /// Bouton de la carte d'entrée IA.
   ///
   /// In fr, this message translates to:

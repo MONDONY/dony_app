@@ -7232,6 +7232,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'aiFormDraftEntryTitle': (l) => l.aiFormDraftEntryTitle,
   'aiFormDraftEntryBodyTrip': (l) => l.aiFormDraftEntryBodyTrip,
   'aiFormDraftEntryBodyPackage': (l) => l.aiFormDraftEntryBodyPackage,
+  'aiFormDraftEntrySubtitle': (l) => l.aiFormDraftEntrySubtitle,
   'aiFormDraftEntryCta': (l) => l.aiFormDraftEntryCta,
   'aiConsentTitle': (l) => l.aiConsentTitle,
   'aiConsentIntro': (l) => l.aiConsentIntro,

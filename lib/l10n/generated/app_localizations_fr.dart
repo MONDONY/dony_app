@@ -20920,6 +20920,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Décrivez votre envoi à voix haute. L\'IA prépare le formulaire, vous vérifiez avant de publier.';
 
   @override
+  String get aiFormDraftEntrySubtitle => 'L\'IA prépare le formulaire.';
+
+  @override
   String get aiFormDraftEntryCta => 'Créer avec l\'IA';
 
   @override

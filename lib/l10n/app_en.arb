@@ -10656,6 +10656,7 @@
   "aiFormDraftEntryTitle": "Say it, we fill it in for you",
   "aiFormDraftEntryBodyTrip": "Describe your trip out loud. The AI prepares the form, you check it before publishing.",
   "aiFormDraftEntryBodyPackage": "Describe your parcel out loud. The AI prepares the form, you check it before publishing.",
+  "aiFormDraftEntrySubtitle": "The AI prepares the form.",
   "aiFormDraftEntryCta": "Create with AI",
   "aiConsentTitle": "AI assistant: your consent",
   "aiConsentIntro": "The assistant and “Create with AI” rely on an artificial intelligence provider outside Yadony. Before you use them for the first time, here is what is sent to it.",
