@@ -25,17 +25,17 @@ void main() {
       AiEntryCard(kind: AiFormKind.trip, onPressed: () => taps++),
     );
     expect(find.text(fr.aiFormDraftEntryTitle), findsOneWidget);
-    expect(find.text(fr.aiFormDraftEntryBodyTrip), findsOneWidget);
+    expect(find.text(fr.aiFormDraftEntrySubtitle), findsOneWidget);
     await tester.tap(find.byKey(const Key('ai-entry-cta')));
     expect(taps, 1);
   });
 
-  testWidgets('carte demande d’envoi : son texte', (tester) async {
+  testWidgets('carte demande d’envoi : même texte compact', (tester) async {
     await pump(
       tester,
       AiEntryCard(kind: AiFormKind.packageRequest, onPressed: () {}),
     );
-    expect(find.text(fr.aiFormDraftEntryBodyPackage), findsOneWidget);
+    expect(find.text(fr.aiFormDraftEntrySubtitle), findsOneWidget);
   });
 
   testWidgets('porte : cachée tant que la sonde n’a pas dit oui', (

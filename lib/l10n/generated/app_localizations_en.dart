@@ -20742,6 +20742,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Describe your parcel out loud. The AI prepares the form, you check it before publishing.';
 
   @override
+  String get aiFormDraftEntrySubtitle => 'The AI prepares the form.';
+
+  @override
   String get aiFormDraftEntryCta => 'Create with AI';
 
   @override

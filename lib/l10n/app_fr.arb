@@ -21675,6 +21675,8 @@
   "@aiFormDraftEntryBodyTrip": {"description": "Texte de la carte d'entrée IA du formulaire trajet."},
   "aiFormDraftEntryBodyPackage": "Décrivez votre envoi à voix haute. L'IA prépare le formulaire, vous vérifiez avant de publier.",
   "@aiFormDraftEntryBodyPackage": {"description": "Texte de la carte d'entrée IA de la demande d'envoi."},
+  "aiFormDraftEntrySubtitle": "L'IA prépare le formulaire.",
+  "@aiFormDraftEntrySubtitle": {"description": "Courte phrase sous le titre de la carte d'entrée IA compacte."},
   "aiFormDraftEntryCta": "Créer avec l'IA",
   "@aiFormDraftEntryCta": {"description": "Bouton de la carte d'entrée IA."},
   "aiConsentTitle": "Assistant IA : votre accord",
