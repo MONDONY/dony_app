@@ -1,4 +1,5 @@
 import 'package:dony/features/app_update/data/datasources/app_update_remote_config_datasource.dart';
+import 'package:dony/features/app_update/data/datasources/remote_config_interval_store.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -25,19 +26,140 @@ void main() {
       // celle posée par HelpCenterRemoteConfigDatasource.
     });
 
-    test('utilise douze heures en production', () async {
+    test('utilise 60 minutes en production sans valeur mémorisée', () async {
       final client = _FakeRemoteConfigClient(minSupportedBuild: 0);
       final datasource = AppUpdateRemoteConfigDatasource(
         remoteConfig: client,
         isDevelopment: false,
+        intervalStore: _FakeStore(),
       );
 
       await datasource.fetchAndActivate();
 
       expect(
         client.settings.single.minimumFetchInterval,
-        const Duration(hours: 12),
+        const Duration(minutes: 60),
       );
+    });
+
+    test('applique la valeur mémorisée en production', () async {
+      final client = _FakeRemoteConfigClient(minSupportedBuild: 0);
+      final datasource = AppUpdateRemoteConfigDatasource(
+        remoteConfig: client,
+        isDevelopment: false,
+        intervalStore: _FakeStore(stored: 15),
+      );
+
+      await datasource.fetchAndActivate();
+
+      expect(
+        client.settings.single.minimumFetchInterval,
+        const Duration(minutes: 15),
+      );
+    });
+
+    test('garde 5 minutes en debug malgré la valeur mémorisée', () async {
+      final client = _FakeRemoteConfigClient(minSupportedBuild: 0);
+      final datasource = AppUpdateRemoteConfigDatasource(
+        remoteConfig: client,
+        isDevelopment: true,
+        intervalStore: _FakeStore(stored: 15),
+      );
+
+      await datasource.fetchAndActivate();
+
+      expect(
+        client.settings.single.minimumFetchInterval,
+        const Duration(minutes: 5),
+      );
+    });
+
+    test('une lecture mémorisée en échec retombe sur 60 minutes', () async {
+      final client = _FakeRemoteConfigClient(minSupportedBuild: 0);
+      final datasource = AppUpdateRemoteConfigDatasource(
+        remoteConfig: client,
+        isDevelopment: false,
+        intervalStore: _FakeStore(readError: StateError('disk')),
+      );
+
+      await datasource.fetchAndActivate();
+
+      expect(
+        client.settings.single.minimumFetchInterval,
+        const Duration(minutes: 60),
+      );
+    });
+
+    group('syncRefreshInterval', () {
+      AppUpdateRemoteConfigDatasource build(
+        _FakeStore store,
+        _FakeRemote? remote,
+      ) => AppUpdateRemoteConfigDatasource(
+        remoteConfig: _FakeRemoteConfigClient(minSupportedBuild: 0),
+        isDevelopment: false,
+        intervalStore: store,
+        intervalRemote: remote,
+      );
+
+      test('mémorise une valeur valide du back', () async {
+        final store = _FakeStore();
+        await build(store, _FakeRemote(value: 120)).syncRefreshInterval();
+        expect(store.stored, 120);
+      });
+
+      test('accepte les bornes 5 et 1440', () async {
+        final store = _FakeStore();
+        await build(store, _FakeRemote(value: 5)).syncRefreshInterval();
+        expect(store.stored, 5);
+        await build(store, _FakeRemote(value: 1440)).syncRefreshInterval();
+        expect(store.stored, 1440);
+      });
+
+      for (final bad in <Object?>[4, 1441, 0, -10, 12.5, '60', null]) {
+        test('ignore la valeur hors bornes ou invalide $bad', () async {
+          final store = _FakeStore(stored: 30);
+          await build(store, _FakeRemote(value: bad)).syncRefreshInterval();
+          expect(store.stored, 30);
+        });
+      }
+
+      test('une erreur (404, réseau) est sans effet', () async {
+        final store = _FakeStore(stored: 30);
+        await expectLater(
+          build(
+            store,
+            _FakeRemote(error: StateError('404')),
+          ).syncRefreshInterval(),
+          completes,
+        );
+        expect(store.stored, 30);
+      });
+
+      test('une écriture en échec est avalée', () async {
+        final store = _FakeStore(writeError: StateError('disk'));
+        await expectLater(
+          build(store, _FakeRemote(value: 60)).syncRefreshInterval(),
+          completes,
+        );
+      });
+
+      test('sans source distante, rien ne se passe', () async {
+        final store = _FakeStore(stored: 30);
+        await build(store, null).syncRefreshInterval();
+        expect(store.stored, 30);
+      });
+
+      test('fetchAndActivate lance la synchro sans bloquer', () async {
+        final store = _FakeStore();
+        final remote = _FakeRemote(value: 90);
+        final datasource = build(store, remote);
+
+        await datasource.fetchAndActivate();
+        await Future<void>.delayed(Duration.zero);
+
+        expect(remote.calls, 1);
+        expect(store.stored, 90);
+      });
     });
 
     test('minSupportedBuild vaut 0 quand la clé n\'a jamais été publiée', () {
@@ -151,5 +273,46 @@ final class _FakeRemoteConfigClient implements AppUpdateRemoteConfigClient {
       throw error;
     }
     settings.add(value);
+  }
+}
+
+final class _FakeStore implements RemoteConfigIntervalStore {
+  _FakeStore({this.stored, this.readError, this.writeError});
+
+  int? stored;
+  final Object? readError;
+  final Object? writeError;
+
+  @override
+  Future<int?> read() async {
+    if (readError case final error?) {
+      throw error;
+    }
+    return stored;
+  }
+
+  @override
+  Future<void> write(int minutes) async {
+    if (writeError case final error?) {
+      throw error;
+    }
+    stored = minutes;
+  }
+}
+
+final class _FakeRemote implements RemoteConfigIntervalRemote {
+  _FakeRemote({this.value, this.error});
+
+  final Object? value;
+  final Object? error;
+  var calls = 0;
+
+  @override
+  Future<Object?> fetchMinutes() async {
+    calls++;
+    if (error case final e?) {
+      throw e;
+    }
+    return value;
   }
 }

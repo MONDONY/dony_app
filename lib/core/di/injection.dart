@@ -40,6 +40,7 @@ import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/ai_form_draft/data/speech_service.dart';
 import 'package:dony/features/app_update/bloc/app_update_banner_cubit.dart';
 import 'package:dony/features/app_update/data/datasources/app_update_remote_config_datasource.dart';
+import 'package:dony/features/app_update/data/datasources/remote_config_interval_store.dart';
 import 'package:dony/features/app_update/data/services/app_update_service.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/bloc/assistant_voice_cubit.dart';
@@ -1929,7 +1930,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
 
   // Verrou de version minimale (min_supported_build, Firebase Remote Config)
   getIt.registerLazySingleton<AppUpdateConfigSource>(
-    () => AppUpdateRemoteConfigDatasource(),
+    () => AppUpdateRemoteConfigDatasource(
+      intervalRemote: ApiRemoteConfigIntervalRemote(getIt<ApiClient>()),
+    ),
   );
   getIt.registerLazySingleton<AppUpdateService>(
     () => AppUpdateService(getIt<AppUpdateConfigSource>()),
