@@ -1446,6 +1446,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
         placeholderMarker('name'),
         placeholderMarker('code'),
       ),
+  'requestCreateCurrencyLockedSemanticLabel': (l) =>
+      l.requestCreateCurrencyLockedSemanticLabel(
+        placeholderMarker('name'),
+        placeholderMarker('code'),
+      ),
   'requestCreateChangeCurrency': (l) => l.requestCreateChangeCurrency,
   'requestCreatePhotoUnsupported': (l) => l.requestCreatePhotoUnsupported,
   'requestCreateTakePhoto': (l) => l.requestCreateTakePhoto,
@@ -8208,6 +8213,7 @@ const textParameters = <String, List<String>>{
   'requestCreateToleranceRangeHint': ['from', 'to'],
   'requestCreateBudgetRange': ['min', 'max'],
   'requestCreateCurrencySemanticLabel': ['name', 'code'],
+  'requestCreateCurrencyLockedSemanticLabel': ['name', 'code'],
   'requestDetailCashCommissionTitle': ['name'],
   'requestTravelerAddingTrip': ['name'],
   'requestOfferWaitingFor': ['name'],

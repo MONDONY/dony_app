@@ -4072,6 +4072,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String requestCreateCurrencyLockedSemanticLabel(String name, String code) {
+    return 'Devise de la demande : $name, $code. Non modifiable.';
+  }
+
+  @override
   String get requestCreateChangeCurrency => 'Changer';
 
   @override

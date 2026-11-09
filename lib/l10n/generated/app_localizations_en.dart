@@ -4050,6 +4050,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String requestCreateCurrencyLockedSemanticLabel(String name, String code) {
+    return 'Request currency: $name, $code. Cannot be changed.';
+  }
+
+  @override
   String get requestCreateChangeCurrency => 'Change';
 
   @override

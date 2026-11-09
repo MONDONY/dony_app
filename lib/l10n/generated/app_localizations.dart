@@ -6827,6 +6827,12 @@ abstract class AppLocalizations {
   /// **'Devise de la demande : {name}, {code}. Bouton, modifier la devise.'**
   String requestCreateCurrencySemanticLabel(String name, String code);
 
+  /// Libellé d'accessibilité de la ligne devise en lecture seule, en édition (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise de la demande : {name}, {code}. Non modifiable.'**
+  String requestCreateCurrencyLockedSemanticLabel(String name, String code);
+
   /// Lien de modification de la devise, dans la ligne du sélecteur (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:

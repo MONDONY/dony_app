@@ -3031,6 +3031,18 @@
       }
     }
   },
+  "requestCreateCurrencyLockedSemanticLabel": "Devise de la demande : {name}, {code}. Non modifiable.",
+  "@requestCreateCurrencyLockedSemanticLabel": {
+    "description": "Libellé d'accessibilité de la ligne devise en lecture seule, en édition (step_3_recap_budget.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "requestCreateChangeCurrency": "Changer",
   "@requestCreateChangeCurrency": {
     "description": "Lien de modification de la devise, dans la ligne du sélecteur (step_3_recap_budget.dart)"

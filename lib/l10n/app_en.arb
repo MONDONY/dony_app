@@ -1205,6 +1205,7 @@
   "requestCreateYouPayLabel": "You will pay",
   "requestBudgetBelowServiceFee": "This budget is too low to cover the service fee.",
   "requestCreateCurrencySemanticLabel": "Request currency: {name}, {code}. Button, change the currency.",
+  "requestCreateCurrencyLockedSemanticLabel": "Request currency: {name}, {code}. Cannot be changed.",
   "requestCreateChangeCurrency": "Change",
   "requestCreatePhotoUnsupported": "Unsupported or too large image",
   "requestCreateTakePhoto": "Take a photo",
