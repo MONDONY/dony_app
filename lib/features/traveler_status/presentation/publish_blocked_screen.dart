@@ -150,8 +150,7 @@ class _BlockedView extends StatelessWidget {
                 onClose: () => _close(context),
               ),
             ),
-            PublishingReason.gpProPending ||
-            PublishingReason.ok => DonyPageScaffold(
+            PublishingReason.gpProPending => DonyPageScaffold(
               title: l.publishBlockedAppBarTitle,
               body: const _PendingBody(),
               stickyBottom: _Actions(
@@ -159,6 +158,12 @@ class _BlockedView extends StatelessWidget {
                 onPrimary: () => unawaited(_openGpPro(context)),
                 onClose: () => _close(context),
               ),
+            ),
+            // Plus rien ne bloque : le `pop(true)` du listener part, rien à
+            // dessiner (surtout pas la face « en cours d'examen »).
+            PublishingReason.ok => DonyPageScaffold(
+              title: l.publishBlockedAppBarTitle,
+              body: const SizedBox.shrink(),
             ),
           };
         },

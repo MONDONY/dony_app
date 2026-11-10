@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -64,51 +66,64 @@ class TravelerStatusSheet extends StatelessWidget {
     bool allowLater = true,
   }) async {
     final auth = maybeRead<AuthBloc>(context);
-    // Créé ici pour relire la déclaration une fois la feuille fermée ; le
-    // `BlocProvider` le ferme avec la feuille.
+    // Créé ici et fermé ici (`BlocProvider.value`) : si la feuille est fermée
+    // d'un geste pendant l'envoi de « Particulier », la réponse du `PUT` est
+    // encore lue après la fermeture.
     final cubit = getIt<TravelerStatusCubit>();
-    final outcome = await DonyBottomSheet.show<TravelerStatusOutcome>(
-      context,
-      analyticsName: 'traveler-status',
-      wrapper: (child) =>
-          BlocProvider<TravelerStatusCubit>(create: (_) => cubit, child: child),
-      stickyBottom: allowLater ? const _LaterButton() : null,
-      child: const TravelerStatusSheet(),
-    );
-    switch (outcome) {
-      case TravelerStatusOutcome.individual:
-        final state = cubit.state;
-        final user = auth?.state.currentUser;
-        if (auth != null &&
-            !auth.isClosed &&
-            state is TravelerStatusSuccess &&
-            user != null) {
-          auth.add(
-            AuthUserSynced(user.withTravelerStatus(state.declaration.status)),
-          );
-        }
-      case TravelerStatusOutcome.gpProRequested:
-        // Le vrai résultat se lit au retour du formulaire, sur le statut de la
-        // demande.
-        if (!context.mounted) return TravelerStatusOutcome.gpProAbandoned;
-        await context.push<void>('/profile/gp-pro');
-        final sent = await _applicationSent();
-        if (auth != null && !auth.isClosed) {
-          auth.add(const AuthProfileRefreshRequested());
-        }
-        return sent
-            ? TravelerStatusOutcome.gpProSent
-            : TravelerStatusOutcome.gpProAbandoned;
-      case TravelerStatusOutcome.gpProSent ||
-          TravelerStatusOutcome.gpProAbandoned ||
-          TravelerStatusOutcome.later ||
-          null:
-        return outcome;
+    try {
+      final outcome = await DonyBottomSheet.show<TravelerStatusOutcome>(
+        context,
+        analyticsName: 'traveler-status',
+        wrapper: (child) =>
+            BlocProvider<TravelerStatusCubit>.value(value: cubit, child: child),
+        stickyBottom: allowLater ? const _LaterButton() : null,
+        child: const TravelerStatusSheet(),
+      );
+      switch (outcome) {
+        case TravelerStatusOutcome.gpProRequested:
+          // Le vrai résultat se lit au retour du formulaire, sur le statut de
+          // la demande.
+          if (!context.mounted) return TravelerStatusOutcome.gpProAbandoned;
+          await context.push<void>('/profile/gp-pro');
+          final sent = await _applicationSent();
+          if (auth != null && !auth.isClosed) {
+            auth.add(const AuthProfileRefreshRequested());
+          }
+          return sent
+              ? TravelerStatusOutcome.gpProSent
+              : TravelerStatusOutcome.gpProAbandoned;
+        case TravelerStatusOutcome.gpProSent ||
+            TravelerStatusOutcome.gpProAbandoned ||
+            TravelerStatusOutcome.later:
+          return outcome;
+        case TravelerStatusOutcome.individual || null:
+          // `null` : feuille fermée d'un geste, peut-être pendant l'envoi.
+          var state = cubit.state;
+          if (outcome == null && state is TravelerStatusSubmitting) {
+            state = await cubit.stream
+                .firstWhere((s) => s is! TravelerStatusSubmitting)
+                .timeout(
+                  const Duration(seconds: 40),
+                  onTimeout: () => cubit.state,
+                );
+          }
+          if (state is! TravelerStatusSuccess) return outcome;
+          final user = auth?.state.currentUser;
+          if (auth != null && !auth.isClosed) {
+            if (user != null) {
+              auth.add(
+                AuthUserSynced(
+                  user.withTravelerStatus(state.declaration.status),
+                ),
+              );
+            }
+            auth.add(const AuthProfileRefreshRequested());
+          }
+          return TravelerStatusOutcome.individual;
+      }
+    } finally {
+      unawaited(cubit.close());
     }
-    if (auth != null && !auth.isClosed) {
-      auth.add(const AuthProfileRefreshRequested());
-    }
-    return outcome;
   }
 
   /// La demande GP Pro est partie : en validation (ou en attente de l'identité).
@@ -133,7 +148,11 @@ class TravelerStatusSheet extends StatelessWidget {
       listener: (context, state) {
         switch (state) {
           case TravelerStatusSuccess():
-            Navigator.of(context).pop(TravelerStatusOutcome.individual);
+            // Feuille déjà refermée d'un geste (animation de sortie) : un
+            // second `pop` retirerait la page dessous.
+            if (ModalRoute.of(context)?.isActive ?? false) {
+              Navigator.of(context).pop(TravelerStatusOutcome.individual);
+            }
           case TravelerStatusFailure(:final error):
             ErrorPresenter.show(context, error);
           case TravelerStatusInitial() || TravelerStatusSubmitting():

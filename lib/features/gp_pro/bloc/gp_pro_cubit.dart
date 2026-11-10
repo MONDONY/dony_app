@@ -25,13 +25,19 @@ class GpProCubit extends Cubit<GpProCubitState> {
     'gp-pro-already-active',
   };
 
-  Future<void> load() async {
+  /// [trackOpened] : l'écran GP Pro s'ouvre vraiment (route `/profile/gp-pro`) ;
+  /// la ligne « Statut de voyageur » du profil ne lit la demande que pour sa
+  /// pastille, elle ne trace rien.
+  Future<void> load({bool trackOpened = false}) async {
+    if (isClosed) return;
     // Pas de flash de chargement lors d'un rechargement d'un écran déjà prêt.
     if (state.load != GpProLoadStatus.ready) {
       emit(state.copyWith(load: GpProLoadStatus.loading));
     }
     try {
       final status = await _repository.fetchStatus();
+      // Écran quitté pendant la lecture : le cubit est fermé, plus d'émission.
+      if (isClosed) return;
       emit(
         state.copyWith(
           load: GpProLoadStatus.ready,
@@ -40,7 +46,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
           clearError: true,
         ),
       );
-      if (!_openedLogged) {
+      if (trackOpened && !_openedLogged) {
         _openedLogged = true;
         unawaited(
           _analytics.logEvent(
@@ -50,8 +56,10 @@ class GpProCubit extends Cubit<GpProCubitState> {
         );
       }
     } on GpProUnavailableException {
+      if (isClosed) return;
       emit(state.copyWith(load: GpProLoadStatus.unavailable));
     } catch (e) {
+      if (isClosed) return;
       AppLog.warn('gp_pro_load_failed', data: {'code': _code(e)});
       emit(state.copyWith(load: GpProLoadStatus.failure));
     }
@@ -82,9 +90,11 @@ class GpProCubit extends Cubit<GpProCubitState> {
         type: type,
       );
       uploadedId = doc.id;
+      if (isClosed) return;
       var status = state.status;
       if (status != null && status.isOpen) {
         status = await _repository.attachDocuments([doc.id]);
+        if (isClosed) return;
       }
       final pieces = _replace(
         state.pieces,
@@ -104,6 +114,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
         ),
       );
     } catch (e) {
+      if (isClosed) return;
       emit(
         state.copyWith(
           pieces: _replace(
@@ -132,6 +143,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
     emit(state.copyWith(clearError: true));
     try {
       await _repository.removeDocument(remoteId);
+      if (isClosed) return;
       final status = state.status;
       final attached =
           status != null &&
@@ -160,6 +172,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
         ),
       );
     } catch (e) {
+      if (isClosed) return;
       emit(state.copyWith(errorCode: _code(e)));
     }
   }
@@ -180,6 +193,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
   );
 
   Future<void> submit() async {
+    if (isClosed) return;
     final frequency = state.frequency;
     if (frequency == null || !state.canSubmit) return;
     final cleanName = state.businessName.trim();
@@ -198,6 +212,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
         documentIds: ids,
         source: GpProSource.profile,
       );
+      if (isClosed) return;
       emit(
         state.copyWith(
           submitting: false,
@@ -218,6 +233,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
         ),
       );
     } on GpProException catch (e) {
+      if (isClosed) return;
       if (e.status == 409 || _conflictCodes.contains(e.code)) {
         emit(state.copyWith(submitting: false, restarting: false));
         await load();
@@ -225,6 +241,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
         _failSubmit(e.code);
       }
     } catch (_) {
+      if (isClosed) return;
       _failSubmit('unknown');
     }
   }
@@ -241,13 +258,16 @@ class GpProCubit extends Cubit<GpProCubitState> {
   }
 
   Future<void> cancel() async {
+    if (isClosed) return;
     emit(state.copyWith(cancelling: true, clearError: true));
     try {
       await _repository.cancel();
+      if (isClosed) return;
       emit(state.copyWith(cancelling: false, pieces: const []));
       unawaited(_analytics.logEvent(AnalyticsEvents.gpProApplicationCancelled));
       await load();
     } on GpProException catch (e) {
+      if (isClosed) return;
       if (e.status == 404) {
         emit(state.copyWith(cancelling: false));
         await load();
@@ -255,6 +275,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
         emit(state.copyWith(cancelling: false, errorCode: e.code));
       }
     } catch (_) {
+      if (isClosed) return;
       emit(state.copyWith(cancelling: false, errorCode: 'unknown'));
     }
   }
@@ -266,14 +287,17 @@ class GpProCubit extends Cubit<GpProCubitState> {
   /// retrait par l'équipe entre-temps) ; le but est atteint, on recharge et on
   /// le dit comme un succès.
   Future<void> resign() async {
-    if (state.resigning) return;
+    if (isClosed || state.resigning) return;
     emit(state.copyWith(resigning: true, resigned: false, clearError: true));
     try {
       await _repository.resign();
+      // Le retrait a eu lieu côté serveur, même si l'écran est quitté : tracé.
       unawaited(_analytics.logEvent(AnalyticsEvents.gpProResigned));
+      if (isClosed) return;
       emit(state.copyWith(resigning: false, resigned: true));
       await load();
     } on GpProException catch (e) {
+      if (isClosed) return;
       if (e.code == 'gp-pro-not-active') {
         emit(state.copyWith(resigning: false, resigned: true));
         await load();
@@ -281,6 +305,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
       }
       _failResign(e.code);
     } catch (_) {
+      if (isClosed) return;
       _failResign('unknown');
     }
   }

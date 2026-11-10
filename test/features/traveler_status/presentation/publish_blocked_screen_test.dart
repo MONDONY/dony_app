@@ -381,6 +381,22 @@ void main() {
     });
   });
 
+  group('plus rien ne bloque', () {
+    testWidgets('la face « en cours d\'examen » ne se dessine pas', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        const PublishingEligibility(allowed: true, reason: PublishingReason.ok),
+      );
+
+      expect(find.text(fr.publishBlockedPendingTitle), findsNothing);
+      expect(find.text(fr.publishBlockedLimitTitle), findsNothing);
+      expect(find.byType(DonyButton), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('360 dp, français et anglais, sans exception', () {
     for (final locale in [AppL10n.fr, AppL10n.en]) {
       final l = locale == AppL10n.fr ? fr : en;

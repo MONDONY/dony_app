@@ -1763,6 +1763,24 @@ void main() {
       expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
     });
 
+    testWidgets('deux appuis sur « Publier » pendant la lecture de la '
+        'demande : une seule feuille, une seule création', (tester) async {
+      final gate = Completer<GpProStatus>();
+      when(() => gpRepo.fetchStatus()).thenAnswer((_) => gate.future);
+      await reachPublishStep(tester);
+      await tapPublish(tester);
+      await tapPublish(tester);
+      gate.complete(const GpProStatus(state: GpProState.none));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(DonyButton, 'Plus tard'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous voyagez en tant que ?'), findsNothing);
+      expect(createdCount(), 1);
+    });
+
     testWidgets('statut déjà déclaré : aucune question', (tester) async {
       await reachPublishStep(tester, status: TravelerStatus.individual);
       await tapPublish(tester);

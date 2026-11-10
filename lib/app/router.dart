@@ -1750,7 +1750,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/profile/gp-pro',
       builder: (context, state) => BlocProvider(
-        create: (_) => getIt<GpProCubit>()..load(),
+        create: (_) => getIt<GpProCubit>()..load(trackOpened: true),
         child: const GpProScreen(),
       ),
     ),

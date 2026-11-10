@@ -37998,10 +37998,10 @@ abstract class AppLocalizations {
   /// **'SIRET, NINEA, RCCM ou équivalent.'**
   String get gpProRegistrationHint;
 
-  /// Erreur sous le numéro d'entreprise quand il est non vide et invalide ; remplace l'aide neutre (gp_pro_form.dart).
+  /// Erreur sous le numéro d'entreprise quand il est non vide et invalide : longueur, premier caractère et séparateurs permis ; remplace l'aide neutre (gp_pro_form.dart).
   ///
   /// In fr, this message translates to:
-  /// **'4 caractères minimum : lettres, chiffres, espace, point, barre oblique ou tiret.'**
+  /// **'Entre 4 et 40 caractères, en commençant par une lettre ou un chiffre (espace, point, barre oblique et tiret acceptés ensuite).'**
   String get gpProRegistrationInvalid;
 
   /// Champ du pays d'immatriculation de l'entreprise et titre de la feuille de sélection (gp_pro_form.dart).

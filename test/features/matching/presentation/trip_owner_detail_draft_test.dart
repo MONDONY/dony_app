@@ -783,6 +783,24 @@ void main() {
       expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
     });
 
+    testWidgets('deux appuis rapides sur « Publier » pendant la lecture de la '
+        'demande : une seule feuille, une seule publication', (tester) async {
+      final gate = Completer<GpProStatus>();
+      when(() => gpRepo.fetchStatus()).thenAnswer((_) => gate.future);
+      await pumpDraft(tester);
+
+      final publish = _inFooter(find.text('Publier'));
+      await tester.tap(publish);
+      await tester.tap(publish);
+      gate.complete(const GpProStatus(state: GpProState.none));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(DonyButton, 'Plus tard'));
+      await tester.pumpAndSettle();
+      verifyPublishDispatched(1);
+    });
+
     testWidgets('« GP Pro » puis formulaire quitté sans envoyer : rien n\'est '
         'publié, aucun message', (tester) async {
       await pumpDraft(tester);

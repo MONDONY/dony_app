@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/network/retry_policy.dart';
 import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_remote_datasource.dart';
@@ -92,7 +93,9 @@ void main() {
     test(
       'fetchEligibility lit GET /travelers/me/publishing-eligibility',
       () async {
-        when(() => dio.get(_eligibilityPath)).thenAnswer(
+        when(
+          () => dio.get(_eligibilityPath, options: any(named: 'options')),
+        ).thenAnswer(
           (_) async => _ok({
             'allowed': false,
             'reason': 'STATUS_REQUIRED',
@@ -110,8 +113,41 @@ void main() {
       },
     );
 
+    test('la lecture a un délai court et ne se rejoue pas', () async {
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
+      ).thenAnswer((_) async => _ok({'reason': 'OK'}, _eligibilityPath));
+
+      await repository.fetchEligibility();
+
+      final options =
+          verify(
+                () => dio.get(
+                  _eligibilityPath,
+                  options: captureAny(named: 'options'),
+                ),
+              ).captured.single
+              as Options;
+      expect(options.receiveTimeout, const Duration(seconds: 8));
+      expect(options.sendTimeout, const Duration(seconds: 8));
+      expect(options.extra?[RetryPolicy.transientAttemptKey], greaterThan(10));
+    });
+
+    test('check : délai dépassé = OK, la publication suit son cours', () async {
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
+      ).thenThrow(_failure(type: DioExceptionType.receiveTimeout));
+
+      final result = await repository.checkEligibility();
+
+      expect(result.eligibility, PublishingEligibility.ok);
+      expect(result.failureCode, isNotNull);
+    });
+
     test('check : réponse lue, aucun échec', () async {
-      when(() => dio.get(_eligibilityPath)).thenAnswer(
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
+      ).thenAnswer(
         (_) async => _ok({'allowed': true, 'reason': 'OK'}, _eligibilityPath),
       );
 
@@ -122,7 +158,9 @@ void main() {
     });
 
     test('check : 404 (ancien back) = OK, sans échec à tracer', () async {
-      when(() => dio.get(_eligibilityPath)).thenThrow(_failure(status: 404));
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
+      ).thenThrow(_failure(status: 404));
 
       final result = await repository.checkEligibility();
 
@@ -132,7 +170,7 @@ void main() {
 
     test('check : 404 déjà converti par l\'intercepteur = OK', () async {
       when(
-        () => dio.get(_eligibilityPath),
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
       ).thenThrow(_failure(error: const NotFoundException()));
 
       final result = await repository.checkEligibility();
@@ -143,7 +181,7 @@ void main() {
 
     test('check : erreur réseau = OK, avec le code à tracer', () async {
       when(
-        () => dio.get(_eligibilityPath),
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
       ).thenThrow(_failure(type: DioExceptionType.connectionError));
 
       final result = await repository.checkEligibility();
@@ -154,7 +192,7 @@ void main() {
 
     test('check : erreur 500 = OK, avec le code à tracer', () async {
       when(
-        () => dio.get(_eligibilityPath),
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
       ).thenThrow(_failure(status: 500, error: const ServerException('boom')));
 
       final result = await repository.checkEligibility();
@@ -165,7 +203,7 @@ void main() {
 
     test('check : erreur non réseau (réponse illisible) = OK', () async {
       when(
-        () => dio.get(_eligibilityPath),
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
       ).thenAnswer((_) async => _ok('pas du json', _eligibilityPath));
 
       final result = await repository.checkEligibility();

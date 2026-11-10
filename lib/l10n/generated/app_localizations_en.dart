@@ -23515,10 +23515,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'To get the GP Pro badge back, you will need to apply again.';
 
   @override
-  String get gpProManageResign => 'Become an individual again';
+  String get gpProManageResign => 'Back to individual';
 
   @override
-  String get gpProResignConfirmTitle => 'Become an individual again?';
+  String get gpProResignConfirmTitle => 'Back to individual?';
 
   @override
   String get gpProResignConfirmBody =>
@@ -23614,7 +23614,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gpProRegistrationInvalid =>
-      'At least 4 characters: letters, digits, space, dot, slash or hyphen.';
+      'Between 4 and 40 characters, starting with a letter or a digit (space, dot, slash and hyphen allowed after).';
 
   @override
   String get gpProCountryLabel => 'Country of registration';

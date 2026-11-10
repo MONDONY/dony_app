@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -78,14 +80,15 @@ void main() {
 
   group('load', () {
     blocTest<GpProCubit, GpProCubitState>(
-      'ready + event opened une seule fois même après 2 load',
+      'écran GP Pro (trackOpened) : événement « ouvert » une seule fois même '
+      'après 2 load',
       build: () {
         stubStatus(none);
         return build();
       },
       act: (c) async {
-        await c.load();
-        await c.load();
+        await c.load(trackOpened: true);
+        await c.load(trackOpened: true);
       },
       expect: () => [
         const GpProCubitState(),
@@ -100,6 +103,56 @@ void main() {
         ).called(1);
       },
     );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'ligne « Statut de voyageur » du profil (sans trackOpened) : aucun '
+      'événement « ouvert »',
+      build: () {
+        stubStatus(none);
+        return build();
+      },
+      act: (c) async {
+        await c.load();
+        await c.load();
+      },
+      verify: (c) {
+        expect(c.state.status, none);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProApplicationOpened,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+
+    test('cubit fermé avant la réponse : aucune exception, aucune émission '
+        '(lecture réussie)', () async {
+      final gate = Completer<GpProStatus>();
+      when(() => repository.fetchStatus()).thenAnswer((_) => gate.future);
+      final cubit = build();
+      final pending = cubit.load();
+      await cubit.close();
+      gate.complete(none);
+      await pending;
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.gpProApplicationOpened,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    test('cubit fermé avant la réponse : aucune exception (lecture en '
+        'échec)', () async {
+      final gate = Completer<GpProStatus>();
+      when(() => repository.fetchStatus()).thenAnswer((_) => gate.future);
+      final cubit = build();
+      final pending = cubit.load();
+      await cubit.close();
+      gate.completeError(const GpProException('network'));
+      await pending;
+    });
 
     blocTest<GpProCubit, GpProCubitState>(
       '404 back ancien : unavailable',
@@ -710,6 +763,87 @@ void main() {
       act: (c) => c.submit(),
       verify: (c) => expect(c.state.errorCode, 'unknown'),
     );
+  });
+
+  group('cubit fermé en vol (écran quitté)', () {
+    test(
+      'resign : le retrait est tracé, aucune émission ni exception',
+      () async {
+        final gate = Completer<GpProStatus>();
+        when(() => repository.resign()).thenAnswer((_) => gate.future);
+        final cubit = build();
+        final pending = cubit.resign();
+        await cubit.close();
+        gate.complete(none);
+        await pending;
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProResigned,
+            properties: any(named: 'properties'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test('resign en échec : aucune exception', () async {
+      final gate = Completer<GpProStatus>();
+      when(() => repository.resign()).thenAnswer((_) => gate.future);
+      final cubit = build();
+      final pending = cubit.resign();
+      await cubit.close();
+      gate.completeError(const GpProException('network'));
+      await pending;
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.gpProResignFailed,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    test('resign sur un cubit déjà fermé : ignoré', () async {
+      final cubit = build();
+      await cubit.close();
+      await cubit.resign();
+      verifyNever(() => repository.resign());
+    });
+
+    test('cancel : aucune exception', () async {
+      final gate = Completer<void>();
+      when(() => repository.cancel()).thenAnswer((_) => gate.future);
+      final cubit = build();
+      final pending = cubit.cancel();
+      await cubit.close();
+      gate.complete();
+      await pending;
+    });
+
+    test('submit : aucune exception', () async {
+      final gate = Completer<GpProStatus>();
+      when(
+        () => repository.apply(
+          frequency: any(named: 'frequency'),
+          commercialName: any(named: 'commercialName'),
+          businessRegistrationNumber: any(named: 'businessRegistrationNumber'),
+          businessCountry: any(named: 'businessCountry'),
+          documentIds: any(named: 'documentIds'),
+          source: any(named: 'source'),
+        ),
+      ).thenAnswer((_) => gate.future);
+      final cubit = build()
+        ..emit(
+          const GpProCubitState(
+            frequency: GpProFrequency.weekly,
+            businessName: 'Diallo Express',
+            registrationNumber: 'CI-ABJ-2021-B-12345',
+            businessCountry: 'CI',
+          ),
+        );
+      final pending = cubit.submit();
+      await cubit.close();
+      gate.complete(const GpProStatus(state: GpProState.pending));
+      await pending;
+    });
   });
 
   group('resign', () {

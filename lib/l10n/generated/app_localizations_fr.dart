@@ -23785,7 +23785,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get gpProRegistrationInvalid =>
-      '4 caractères minimum : lettres, chiffres, espace, point, barre oblique ou tiret.';
+      'Entre 4 et 40 caractères, en commençant par une lettre ou un chiffre (espace, point, barre oblique et tiret acceptés ensuite).';
 
   @override
   String get gpProCountryLabel => 'Pays d\'immatriculation';

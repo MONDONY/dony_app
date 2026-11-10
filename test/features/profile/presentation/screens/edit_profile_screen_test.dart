@@ -1141,10 +1141,11 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => statusRepo.declareIndividual()).called(1);
-      verifyInOrder([
-        () => mockAuthBloc.add(any(that: isA<AuthUserSynced>())),
-        () => mockAuthBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
-      ]);
+      // Une seule synchro locale puis un seul rechargement du profil.
+      final events = verify(() => mockAuthBloc.add(captureAny())).captured;
+      expect(events, hasLength(2));
+      expect(events[0], isA<AuthUserSynced>());
+      expect(events[1], isA<AuthProfileRefreshRequested>());
       final row = find.byKey(const Key('profile-traveler-status-row'));
       expect(
         find.descendant(of: row, matching: find.text('Particulier')),
@@ -1266,6 +1267,40 @@ void main() {
       });
     });
 
+    testWidgets('anglais, 360 dp : la confirmation de « Back to individual » '
+        'tient sans exception', (tester) async {
+      useEnglish();
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await pump(tester, gpProUser);
+      final pill = find.descendant(
+        of: find.byKey(const Key('profile-traveler-status-row')),
+        matching: find.text('Edit'),
+      );
+      await tester.ensureVisible(pill);
+      await tester.pumpAndSettle();
+      await tester.tap(pill);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Back to individual'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Dialog), findsOneWidget);
+      expect(find.text('Back to individual?'), findsOneWidget);
+      final confirm = find.descendant(
+        of: find.byType(Dialog),
+        matching: find.text('Back to individual'),
+      );
+      expect(confirm, findsOneWidget);
+      // Le libellé reste dans la boîte (la police de test, plus large que la
+      // vraie, peut le replier sur deux lignes sans qu'il déborde).
+      final box = tester.getRect(find.byType(Dialog));
+      expect(box.contains(tester.getRect(confirm).topLeft), isTrue);
+      expect(box.contains(tester.getRect(confirm).bottomRight), isTrue);
+      expect(tester.takeException(), isNull);
+    });
+
     for (final english in [false, true]) {
       testWidgets('360 dp, ${english ? 'anglais' : 'français'} : sans '
           'exception, libellés des boutons de la feuille sur une ligne', (
@@ -1295,7 +1330,7 @@ void main() {
 
         final resign = find.widgetWithText(
           DonyButton,
-          english ? 'Become an individual again' : 'Redevenir particulier',
+          english ? 'Back to individual' : 'Redevenir particulier',
         );
         expect(resign, findsOneWidget);
         expect(tester.takeException(), isNull);

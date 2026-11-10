@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -229,6 +231,39 @@ void main() {
       expect(events[1], isA<AuthProfileRefreshRequested>());
       final synced = events[0] as AuthUserSynced;
       expect(synced.user.travelerStatus, TravelerStatus.individual);
+    });
+
+    testWidgets('feuille fermée d\'un geste pendant l\'envoi : le profil est '
+        'quand même mis à jour, sans second pop', (tester) async {
+      final gate = Completer<TravelerStatusDeclaration>();
+      when(() => repository.declareIndividual()).thenAnswer((_) => gate.future);
+      await open(tester);
+
+      await tester.tap(find.text(fr.travelerStatusOptionIndividual));
+      await tester.pump();
+      // Glissement hors de la feuille avant la réponse.
+      await tester.tapAt(const Offset(180, 20));
+      await tester.pumpAndSettle();
+      expect(find.text(fr.travelerStatusSheetTitle), findsNothing);
+      expect(resultSet, isFalse);
+
+      gate.complete(
+        TravelerStatusDeclaration(
+          status: TravelerStatus.individual,
+          declaredAt: DateTime.utc(2026, 11),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(resultSet, isTrue);
+      expect(result, TravelerStatusOutcome.individual);
+      // La page dessous est toujours là : aucun second pop.
+      expect(find.text('ouvrir'), findsOneWidget);
+      final events = verify(() => authBloc.add(captureAny())).captured;
+      expect(events, hasLength(2));
+      expect(events[0], isA<AuthUserSynced>());
+      expect(events[1], isA<AuthProfileRefreshRequested>());
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('refus du back : la feuille reste ouverte et se réactive', (

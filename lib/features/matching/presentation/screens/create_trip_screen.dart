@@ -1819,6 +1819,10 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// voyageur y a répondu) pour cette publication : on ne la remontre pas.
   bool _travelerStatusReminded = false;
 
+  /// La question du statut est en cours (lecture de la demande GP Pro puis
+  /// feuille) : verrou de ré-entrance, sans `setState`.
+  bool _reminding = false;
+
   /// Question du statut avant la publication d'un nouveau trajet. Jamais pour
   /// un brouillon, une modification ou un trajet dédié à une demande. Fermée
   /// d'un « Plus tard », ou après l'envoi d'une demande GP Pro (le voyageur
@@ -1826,7 +1830,16 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// Un formulaire GP Pro quitté sans envoyer la demande ne publie rien et ne
   /// dit rien : le voyageur retrouve son formulaire, la question reviendra.
   Future<void> _remindTravelerStatusThenSubmit() async {
-    final outcome = await remindTravelerStatusBeforePublish(context);
+    // Verrou posé dès l'appui, avant la lecture de la demande GP Pro : un second
+    // appui sur « Publier » pendant l'attente n'ouvre pas une deuxième feuille.
+    if (_reminding) return;
+    _reminding = true;
+    final TravelerStatusOutcome? outcome;
+    try {
+      outcome = await remindTravelerStatusBeforePublish(context);
+    } finally {
+      _reminding = false;
+    }
     if (!mounted || outcome == TravelerStatusOutcome.gpProAbandoned) return;
     _travelerStatusReminded = true;
     _submit();

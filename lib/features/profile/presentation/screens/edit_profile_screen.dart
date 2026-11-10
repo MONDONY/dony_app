@@ -997,18 +997,21 @@ class _TravelerStatusRowBody extends StatelessWidget {
     final auth = context.read<AuthBloc>();
     if (pending) {
       await context.push('/profile/gp-pro');
+      // Au retour : la demande a pu changer, le profil aussi.
+      if (cubit.isClosed) return;
+      await cubit.load();
+      if (!auth.isClosed) auth.add(const AuthProfileRefreshRequested());
     } else if (_isGpPro) {
       final resign = await GpProManageSheet.show(context);
       if (!context.mounted || !(resign ?? false)) return;
       await _confirmResign(context, cubit);
-      return;
     } else {
+      // La feuille recharge elle-même le profil (une seule fois) : ici, seule la
+      // pastille « En validation » est relue.
       await TravelerStatusSheet.show(context, allowLater: false);
+      if (cubit.isClosed) return;
+      await cubit.load();
     }
-    // Au retour : la demande a pu partir, le profil a pu changer.
-    if (cubit.isClosed) return;
-    await cubit.load();
-    if (!auth.isClosed) auth.add(const AuthProfileRefreshRequested());
   }
 
   /// Confirmation légère : un seul bouton, la feuille ou un tap à côté annule.
@@ -1023,7 +1026,7 @@ class _TravelerStatusRowBody extends StatelessWidget {
       variant: DonyDialogVariant.destructive,
       iconAsset: 'circle-alert',
     );
-    if (confirmed ?? false) await cubit.resign();
+    if ((confirmed ?? false) && !cubit.isClosed) await cubit.resign();
   }
 
   void _onResigned(BuildContext context) {

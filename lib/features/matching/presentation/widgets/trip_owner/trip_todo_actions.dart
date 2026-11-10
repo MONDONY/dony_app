@@ -138,6 +138,10 @@ Future<void> _open(
       // une demande GP Pro envoyée laissent la publication partir ; la limite
       // mensuelle, elle, est arrêtée par le 403 du back.
       final bloc = context.read<AnnouncementBloc>();
+      // Le verrou de ré-entrance est celui d'`openTripTodoAction` (posé dès
+      // l'appui, relâché à la fin du parcours) : un second appui pendant la
+      // lecture de la demande GP Pro ou la feuille n'ouvre pas une deuxième
+      // question.
       final outcome = await remindTravelerStatusBeforePublish(context);
       // L'écran a pu être quitté, ou son bloc fermé, pendant la feuille. Un
       // formulaire GP Pro quitté sans demande envoyée ne publie rien.

@@ -92,6 +92,9 @@ void main() {
     auth = _MockAuthBloc();
     when(() => auth.state).thenReturn(const AuthAuthenticated(_verified));
     when(() => cubit.load()).thenAnswer((_) async {});
+    when(
+      () => cubit.load(trackOpened: any(named: 'trackOpened')),
+    ).thenAnswer((_) async {});
     when(() => cubit.cancel()).thenAnswer((_) async {});
     when(() => cubit.removePiece(any())).thenAnswer((_) async {});
     when(() => cubit.submit()).thenAnswer((_) async {});
@@ -152,7 +155,7 @@ void main() {
       await pump(tester, const GpProCubitState(load: GpProLoadStatus.failure));
       expect(find.text(l.gpProFailureTitle), findsOneWidget);
       await tester.tap(find.text(l.commonRetry));
-      verify(() => cubit.load()).called(1);
+      verify(() => cubit.load(trackOpened: true)).called(1);
     });
 
     testWidgets('unavailable (back ancien) : indisponible pour le moment', (
@@ -164,7 +167,7 @@ void main() {
       );
       expect(find.text('Indisponible pour le moment'), findsOneWidget);
       await tester.tap(find.text(l.commonRetry));
-      verify(() => cubit.load()).called(1);
+      verify(() => cubit.load(trackOpened: true)).called(1);
     });
   });
 
