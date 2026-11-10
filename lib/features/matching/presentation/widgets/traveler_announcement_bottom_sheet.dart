@@ -33,6 +33,7 @@ import 'package:dony/features/matching/data/repositories/bid_negotiation_reposit
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/existing_trip_request.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/trip_view_recording.dart';
 import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/trip_billet_card.dart';
@@ -902,7 +903,7 @@ class _HeroWithFavorite extends StatelessWidget {
         // l'en-tête du billet plutôt que superposé au corridor.
         final coeur = FavoriteHeartButton(
           isFavorite: estFavori,
-          onToggle: () => unawaited(_basculerFavori(context, announcement.id)),
+          onToggle: () => unawaited(_basculerFavori(context, announcement)),
         );
         final partage = onShare;
         return TripBilletCard(
@@ -921,10 +922,14 @@ class _HeroWithFavorite extends StatelessWidget {
     );
   }
 
-  Future<void> _basculerFavori(BuildContext context, String id) async {
+  Future<void> _basculerFavori(
+    BuildContext context,
+    AnnouncementModel trip,
+  ) async {
+    final id = trip.id;
     final cubit = context.read<FavoriteIdsCubit>();
     try {
-      await cubit.toggleTrip(id);
+      await cubit.toggleTrip(id, corridor: tripMomentCorridor(trip));
       if (!context.mounted) return;
       final desormaisFavori = cubit.isTripFav(id);
       DonySnackbar.show(

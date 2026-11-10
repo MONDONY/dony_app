@@ -40,6 +40,7 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/data/payer_phone_memory.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -54,6 +55,7 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
+import '../../../video_modal/moment_test_support.dart';
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -1964,6 +1966,7 @@ void main() {
     }
 
     testWidgets('ajout → message de confirmation', (tester) async {
+      final moments = useRecordingMoments();
       final a = _buildAnnouncement();
       when(() => repo.add('trip', a.id)).thenAnswer((_) async {});
 
@@ -1973,6 +1976,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('Trajet ajouté aux favoris'), findsOneWidget);
+      // Moment « favori ajouté » avec le corridor de la fiche.
+      expect(moments.triggers, [VideoModalTrigger.favoriteAdded]);
+      expect(moments.emitted.single.corridor, isNotNull);
     });
 
     testWidgets('retrait → message de confirmation', (tester) async {

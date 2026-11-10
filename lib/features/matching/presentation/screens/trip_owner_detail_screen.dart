@@ -25,6 +25,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
+import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
@@ -40,6 +41,8 @@ import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:dony/features/traveler_status/presentation/publish_blocked_screen.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -466,6 +469,10 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
             routeContext,
           ).pop(), // revient au détail, déjà rafraîchi
           analyticsContext: 'trip_draft_published',
+          modalMoment: VideoModalMoment.action(
+            VideoModalTrigger.tripPublished,
+            corridor: tripMomentCorridor(published),
+          ),
           secondaryLabel: l.tripOwnerShareMyTrip,
           onSecondary: () => unawaited(
             Share.share(

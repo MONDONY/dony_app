@@ -15,6 +15,8 @@ import 'package:dony/features/tracking/presentation/photo_dropped_warning.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:dony/features/tracking/presentation/widgets/pickup_code_request_panel.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -536,6 +538,9 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             leaveScanFlow(context);
           },
           analyticsContext: 'delivery_confirmed',
+          modalMoment: VideoModalMoment.action(
+            VideoModalTrigger.deliveryConfirmed,
+          ),
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -8,6 +9,9 @@ import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/data/kyc_completion_tracker.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class KycBloc extends Bloc<KycEvent, KycState> {
@@ -103,6 +107,11 @@ class KycBloc extends Bloc<KycEvent, KycState> {
   Future<void> _logCompletion() async {
     final tracker = _completionTracker;
     if (tracker != null && !await tracker.claim()) return;
+    // Identité vérifiée : moment d'action des modals, une fois par compte et
+    // par appareil comme `kyc_completed`.
+    VideoModalMoments.notify(
+      VideoModalMoment.action(VideoModalTrigger.kycVerified),
+    );
     await _analytics.logEvent(AnalyticsEvents.kycCompleted);
   }
 

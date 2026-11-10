@@ -27,6 +27,15 @@ bool isVideoModalFrontmost(BuildContext context) {
   return isVideoModalFrontmost(navigator.context);
 }
 
+/// Vrai si la personne est en train de saisir du texte (un champ de saisie a
+/// le focus) : un modal d'action ne s'ouvre pas par-dessus sa frappe.
+bool isVideoModalUserTyping() {
+  final focusContext = FocusManager.instance.primaryFocus?.context;
+  if (focusContext == null) return false;
+  return focusContext.widget is EditableText ||
+      focusContext.findAncestorWidgetOfExactType<EditableText>() != null;
+}
+
 /// Ouvre un modal : feuille vidéo puis lecteur si la vidéo est demandée, ou
 /// feuille d'information et l'action du bouton touché.
 abstract final class VideoModalPresenter {

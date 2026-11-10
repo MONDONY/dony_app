@@ -1,4 +1,5 @@
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:equatable/equatable.dart';
 
 enum VideoModalStatus { initial, loading, ready }
@@ -28,6 +29,17 @@ class VideoModalState extends Equatable {
     if (status != VideoModalStatus.ready || shownThisSession) return null;
     for (final c in campaigns) {
       if (c.triggers.any(triggers.contains)) return c;
+    }
+    return null;
+  }
+
+  /// Campagne à ouvrir pour ce moment d'action, ou `null` : même ordre que
+  /// [candidateFor] (priorité puis version la plus récente), et le moment doit
+  /// convenir à la campagne (seuils, corridor : voir `VideoModalMoment.accepts`).
+  VideoModalCampaign? candidateForMoment(VideoModalMoment moment) {
+    if (status != VideoModalStatus.ready || shownThisSession) return null;
+    for (final c in campaigns) {
+      if (moment.accepts(c)) return c;
     }
     return null;
   }

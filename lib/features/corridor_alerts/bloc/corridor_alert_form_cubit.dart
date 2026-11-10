@@ -8,6 +8,10 @@ import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dar
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:equatable/equatable.dart';
 
 enum CorridorAlertFormStatus { editing, submitting, success, error }
@@ -296,6 +300,18 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
       } else {
         await _repository.create(draft);
         unawaited(_analytics.logEvent(AnalyticsEvents.corridorAlertCreated));
+        // Alerte ajoutée : moment « favori » des modals, avec son corridor.
+        VideoModalMoments.notify(
+          VideoModalMoment.action(
+            VideoModalTrigger.favoriteAdded,
+            corridor: VideoModalMomentCorridor(
+              fromCity: draft.departureCity,
+              fromCountryCode: draft.departureCountryCode,
+              toCity: draft.arrivalCity,
+              toCountryCode: draft.arrivalCountryCode,
+            ),
+          ),
+        );
       }
       emit(state.copyWith(status: CorridorAlertFormStatus.success));
     } catch (err) {

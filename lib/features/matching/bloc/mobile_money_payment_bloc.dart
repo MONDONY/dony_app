@@ -11,6 +11,9 @@ import 'package:dony/features/matching/data/models/mobile_money_accepted_operato
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Paiement mobile money (opérateurs servis par pawaPay) d'un bid, d'un fil
@@ -377,6 +380,11 @@ class MobileMoneyPaymentBloc
         ),
       );
       _logPayment(AnalyticsEvents.paymentSucceeded, next.status, scope);
+      // Paiement mobile money réussi : moment d'action des modals (cet écran
+      // d'attente se referme aussitôt, aucun écran de succès ne le porte).
+      VideoModalMoments.notify(
+        VideoModalMoment.action(VideoModalTrigger.paymentSucceeded),
+      );
     } else if (next is MobileMoneyPaymentDepositFailed && !wasFailed) {
       final failureCode = next.status.deposit?.failureCode ?? '';
       unawaited(
@@ -387,6 +395,9 @@ class MobileMoneyPaymentBloc
             'scope': scope.analyticsName,
           },
         ),
+      );
+      VideoModalMoments.notify(
+        VideoModalMoment.action(VideoModalTrigger.paymentFailed),
       );
       _logPayment(AnalyticsEvents.paymentFailed, next.status, scope, {
         'reason': 'declined',
@@ -402,6 +413,9 @@ class MobileMoneyPaymentBloc
           AnalyticsEvents.mobileMoneyExpired,
           properties: {'scope': scope.analyticsName},
         ),
+      );
+      VideoModalMoments.notify(
+        VideoModalMoment.action(VideoModalTrigger.paymentFailed),
       );
       _logPayment(AnalyticsEvents.paymentFailed, next.status, scope, {
         'reason': 'expired',

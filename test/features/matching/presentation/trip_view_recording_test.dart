@@ -4,10 +4,14 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/trip_view_recording.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/mock_analytics_backend.dart';
+import '../../video_modal/moment_test_support.dart';
 
 class _MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
@@ -33,7 +37,10 @@ void main() {
   late _MockAnnouncementRepository repository;
   late MockAnalyticsBackend backend;
 
+  late RecordingMoments moments;
+
   setUp(() {
+    moments = useRecordingMoments();
     repository = _MockAnnouncementRepository();
     backend = MockAnalyticsBackend();
     when(() => repository.recordView(any())).thenAnswer((_) async {});
@@ -85,6 +92,47 @@ void main() {
       ).called(1);
     },
   );
+
+  group('moment « trajet consulté N fois »', () {
+    setUp(() => SharedPreferences.setMockInitialValues({}));
+
+    test(
+      'compteur local par trajet : le moment part dès la 2e consultation',
+      () async {
+        recordTripView(_trip, viewerId: 'sender-001');
+        await pumpEventQueue(times: 50);
+        expect(moments.emitted, isEmpty);
+        recordTripView(_trip, viewerId: null); // un invité compte aussi
+        recordTripView(_trip, viewerId: 'sender-001');
+        await pumpEventQueue(times: 100);
+        expect(moments.triggers, [
+          VideoModalTrigger.tripViewedRepeatedly,
+          VideoModalTrigger.tripViewedRepeatedly,
+        ]);
+        expect(moments.emitted.map((m) => m.viewCount), [2, 3]);
+        expect(moments.emitted.first.tripId, 'ann-001');
+        // Le corridor du trajet part avec le moment (villes de la fiche).
+        expect(
+          const VideoModalCorridor(
+            from: 'Paris',
+            to: 'dakar',
+          ).matches(moments.emitted.first.corridor),
+          isTrue,
+        );
+      },
+    );
+
+    test(
+      'le voyageur sur son propre trajet : aucune consultation comptée',
+      () async {
+        for (var i = 0; i < 3; i++) {
+          recordTripView(_trip, viewerId: 'trav-001');
+        }
+        await pumpEventQueue(times: 50);
+        expect(moments.emitted, isEmpty);
+      },
+    );
+  });
 
   test('un échec réseau du back est avalé, jamais remonté', () async {
     when(

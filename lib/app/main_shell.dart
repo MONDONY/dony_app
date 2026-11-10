@@ -42,6 +42,9 @@ import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:dony/features/video_modal/presentation/video_modal_host.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -49,6 +52,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+/// Colis livré, côté expéditeur : l'invite de note n'existe qu'une fois la
+/// livraison confirmée, c'est donc le moment d'action « livraison confirmée »
+/// des modals, ouvert après la feuille de note. Côté voyageur (la note est
+/// celle de l'expéditeur), l'écran de succès de la livraison l'a déjà émis.
+@visibleForTesting
+void notifyDeliveryMomentForRatingPrompt(PendingRatingFound state) {
+  if (state.isTravelerRating) return;
+  VideoModalMoments.notify(
+    VideoModalMoment.action(VideoModalTrigger.deliveryConfirmed),
+  );
+}
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key, required this.navigationShell});
@@ -320,6 +335,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               listener: (context, state) {
                 if (state is PendingRatingFound && !_ratingPromptShown) {
                   _ratingPromptShown = true;
+                  notifyDeliveryMomentForRatingPrompt(state);
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (!mounted) return;
                     RatingBottomSheet.show(

@@ -20,7 +20,7 @@ class VideoModalRepository {
     Future<String?> Function()? appVersion,
     String Function()? platform,
   }) : _clock = clock ?? DateTime.now,
-       _appVersionLoader = appVersion ?? _readAppVersion,
+       _appVersionLoader = appVersion ?? readAppVersion,
        _platform = platform ?? _currentPlatform;
 
   final VideoModalRemoteDatasource _remote;
@@ -30,7 +30,7 @@ class VideoModalRepository {
   final String Function() _platform;
 
   /// Version de l'app (`1.0.6`, sans le numéro de build), lue une fois.
-  static Future<String?> _readAppVersion() async {
+  static Future<String?> readAppVersion() async {
     try {
       final version = (await PackageInfo.fromPlatform()).version;
       return version.isEmpty ? null : version;

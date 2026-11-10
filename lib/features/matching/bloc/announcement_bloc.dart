@@ -16,6 +16,9 @@ import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -290,6 +293,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
           similar: similar,
         ),
       );
+      _notifySearchMoment(event, count: _searchCount(result));
       if (similar.isNotEmpty) {
         unawaited(
           _analytics.logEvent(
@@ -314,6 +318,29 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         ),
       );
     }
+  }
+
+  /// Trajets réservables d'une première page, sinon le total serveur.
+  static int _searchCount(AnnouncementSearchPage page) =>
+      page.bookableElements ?? page.totalElements;
+
+  /// Moment d'action « recherche sans résultat » ou « peu de résultats » :
+  /// seulement pour une vraie recherche (au moins une ville saisie), jamais
+  /// pour la liste par défaut de l'accueil. Un seul moment par recherche.
+  void _notifySearchMoment(
+    AnnouncementSearchRequested event, {
+    required int count,
+  }) {
+    final from = event.departureCity?.trim() ?? '';
+    final to = event.arrivalCity?.trim() ?? '';
+    if (from.isEmpty && to.isEmpty) return;
+    VideoModalMoments.notify(
+      VideoModalMoment.search(
+        kind: VideoModalSearchKind.trip,
+        resultCount: count,
+        corridor: VideoModalMomentCorridor(fromCity: from, toCity: to),
+      ),
+    );
   }
 
   /// Dernière recherche lancée : la page suivante reprend ses critères.

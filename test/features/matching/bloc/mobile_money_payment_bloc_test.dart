@@ -17,8 +17,11 @@ import 'package:dony/features/matching/data/models/mobile_money_accepted_operato
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../video_modal/moment_test_support.dart';
 
 class MockMobileMoneyRepository extends Mock implements MobileMoneyRepository {}
 
@@ -110,7 +113,10 @@ void main() {
     ),
   );
 
+  late RecordingMoments moments;
+
   setUp(() {
+    moments = useRecordingMoments();
     repository = MockMobileMoneyRepository();
     analytics = MockAnalyticsService();
     when(
@@ -1738,6 +1744,7 @@ void main() {
             properties: {'scope': 'bid'},
           ),
         ).called(1);
+        expect(moments.triggers, [VideoModalTrigger.paymentFailed]);
       },
     );
 
@@ -2054,6 +2061,8 @@ void main() {
         expect(p['method'], 'mobile_money');
         expect(p['context'], 'bid_supplement');
         expect(p['currency'], 'XOF');
+        // Moment d'action des modals : une seule fois, comme l'analytics.
+        expect(moments.triggers, [VideoModalTrigger.paymentSucceeded]);
         expect(p.containsKey('amount_bracket'), isTrue);
         expect(p.keys, isNot(contains('phone')));
         expect(p.keys, isNot(contains('msisdn')));
@@ -2100,6 +2109,7 @@ void main() {
         expect(p['context'], 'bid_supplement');
         expect(p['reason'], 'declined');
         expect(p['error_code'], 'PAYER_NOT_FOUND');
+        expect(moments.triggers, [VideoModalTrigger.paymentFailed]);
       },
     );
 

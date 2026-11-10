@@ -1,8 +1,12 @@
 import 'dart:async';
+
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -149,6 +153,9 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     Emitter<PaymentState> emit,
   ) async {
     emit(PaymentError(NetworkException(event.message, code: 'payment-failed')));
+    VideoModalMoments.notify(
+      VideoModalMoment.action(VideoModalTrigger.paymentFailed),
+    );
     unawaited(
       _analytics.logEvent(
         AnalyticsEvents.paymentFailed,

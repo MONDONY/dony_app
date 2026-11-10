@@ -36,6 +36,10 @@ import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -275,6 +279,24 @@ class _PackageRequestCreateScreenState
         (_step2Key.currentState?.hasUnsubmittedInput ?? false);
   }
 
+  /// Formulaire quitté sans publier après avoir été commencé : moment
+  /// d'action des modals, avec le corridor déjà validé. Création seulement.
+  void _notifyAbandoned(PackageRequestFormState state) {
+    if (!_draftsEnabled) return;
+    // Les villes de l'étape en cours ne sont poussées au bloc qu'à sa
+    // validation : on lit aussi la saisie de l'étape 1.
+    final step1 = _step1Key.currentState?.draftInput;
+    VideoModalMoments.notify(
+      VideoModalMoment.action(
+        VideoModalTrigger.formAbandoned,
+        corridor: VideoModalMomentCorridor(
+          fromCity: state.departureCity ?? step1?['departureCity'] as String?,
+          toCity: state.arrivalCity ?? step1?['arrivalCity'] as String?,
+        ),
+      ),
+    );
+  }
+
   /// Sortie demandée depuis l'étape 0 (croix ou retour système).
   Future<void> _handleExitRequest(
     BuildContext formContext,
@@ -291,6 +313,7 @@ class _PackageRequestCreateScreenState
       final confirmed = await DonyDialog.confirmDiscard(context);
       _confirmingExit = false;
       if (!mounted || confirmed != true) return;
+      _notifyAbandoned(state);
       _leave();
       return;
     }
@@ -301,6 +324,7 @@ class _PackageRequestCreateScreenState
       case DraftExitChoice.save:
         await _saveDraftAndLeave(formContext, FormDraftSource.exitDialog);
       case DraftExitChoice.discard:
+        _notifyAbandoned(state);
         await _draftCubit!.discard(source: FormDraftSource.exitDialog);
         if (mounted) _leave();
     }
@@ -341,6 +365,7 @@ class _PackageRequestCreateScreenState
       message: context.l10n.formDraftSavedMessage,
       type: DonySnackbarType.success,
     );
+    _notifyAbandoned(state);
     _leave();
   }
 
@@ -528,6 +553,15 @@ class _PackageRequestCreateScreenState
             analyticsContext: isDraft
                 ? 'package_request_draft_saved'
                 : 'package_request_published',
+            modalMoment: isDraft || isEditing
+                ? null
+                : VideoModalMoment.action(
+                    VideoModalTrigger.requestPublished,
+                    corridor: VideoModalMomentCorridor(
+                      fromCity: created.departureCity,
+                      toCity: created.arrivalCity,
+                    ),
+                  ),
             // Comme pour un trajet : à la publication, l'expéditeur peut
             // diffuser tout de suite son affiche (image, lien et légende) pour
             // trouver un voyageur hors de l'application. Ni au brouillon, qui

@@ -4,10 +4,12 @@ import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/mock_analytics_backend.dart';
+import '../../video_modal/moment_test_support.dart';
 
 class _MockPaymentGateway extends Mock implements PaymentGateway {}
 
@@ -32,7 +34,10 @@ void main() {
 
   tearDown(resetPaymentMethodFlagsForTest);
 
+  late RecordingMoments moments;
+
   setUp(() async {
+    moments = useRecordingMoments();
     resetPaymentMethodFlagsForTest();
     gateway = _MockPaymentGateway();
     repository = _MockPaymentRepository();
@@ -129,6 +134,8 @@ void main() {
     expect(succeeded, containsPair('method', 'platform_pay'));
     expect(succeeded, containsPair('context', 'bid'));
     expect(succeeded, isNot(contains('amount')));
+    // Le succès passe par l'écran de succès : la feuille n'émet pas de moment.
+    expect(moments.emitted, isEmpty);
   });
 
   test('PayPal annulé : payment_cancelled, aucun échec', () async {
@@ -147,6 +154,8 @@ void main() {
     );
     verifyNever(() => backend.capture(AnalyticsEvents.paymentFailed, any()));
     verifyNever(() => backend.capture(AnalyticsEvents.paymentSucceeded, any()));
+    // Annulé par la personne : moment « paiement échoué ou annulé ».
+    expect(moments.triggers, [VideoModalTrigger.paymentFailed]);
   });
 
   test('refus PayPal : payment_failed reason declined', () async {
@@ -162,6 +171,7 @@ void main() {
     final failed = capturedFor(AnalyticsEvents.paymentFailed);
     expect(failed, containsPair('method', 'paypal'));
     expect(failed, containsPair('reason', 'declined'));
+    expect(moments.triggers, [VideoModalTrigger.paymentFailed]);
   });
 
   test('clé éphémère indisponible : reason card_unavailable', () async {

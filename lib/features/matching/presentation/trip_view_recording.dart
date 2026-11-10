@@ -5,6 +5,8 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 
 /// Une personne ouvre le détail d'un trajet (feuille expéditeur) : le back la
 /// compte pour l'audience du voyageur, et `announcement_viewed` part vers
@@ -23,6 +25,12 @@ void recordTripView(
   if (viewerId == announcement.travelerId) {
     return;
   }
+  // Compteur local des consultations de ce trajet (moment « trajet consulté
+  // N fois » des modals) : invités compris, aucun appel réseau.
+  VideoModalMoments.notifyTripViewed(
+    tripId: announcement.id,
+    corridor: tripMomentCorridor(announcement),
+  );
   if (getIt.isRegistered<AnalyticsService>()) {
     unawaited(
       getIt<AnalyticsService>().logEvent(
