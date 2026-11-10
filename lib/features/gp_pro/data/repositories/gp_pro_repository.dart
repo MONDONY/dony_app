@@ -29,12 +29,16 @@ class GpProRepository {
   Future<GpProStatus> apply({
     required GpProFrequency frequency,
     String? commercialName,
+    String? businessRegistrationNumber,
+    String? businessCountry,
     List<String> documentIds = const [],
     required GpProSource source,
   }) => _guard(
     () => _datasource.apply(
       frequency: frequency,
       commercialName: commercialName,
+      businessRegistrationNumber: businessRegistrationNumber,
+      businessCountry: businessCountry,
       documentIds: documentIds,
       source: source,
     ),
@@ -53,6 +57,9 @@ class GpProRepository {
       _guard(() => _datasource.removeDocument(documentId));
 
   Future<void> cancel() => _guard(_datasource.cancel);
+
+  /// Quitte le statut GP Pro. 409 `gp-pro-not-active` : déjà particulier.
+  Future<GpProStatus> resign() => _guard(_datasource.resign);
 
   Future<T> _guard<T>(Future<T> Function() call) async {
     try {

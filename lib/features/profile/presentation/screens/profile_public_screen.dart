@@ -390,11 +390,11 @@ class _LoadedView extends StatelessWidget {
           ).animate().fadeIn(delay: 70.ms, duration: 300.ms),
         ),
 
-        // ── Statut légal d'un professionnel (lot 2) ───────────────────────────
-        if (profile.travelerStatus == TravelerStatus.professional)
+        // ── GP Pro : entreprise déclarée et explication du badge ──────────────
+        if (profile.gpPro)
           SliverToBoxAdapter(
             child: _FlatSection(
-              child: _TravelerStatusSection(profile: profile),
+              child: _GpProSection(profile: profile),
             ).animate().fadeIn(delay: 75.ms, duration: 300.ms),
           ),
 
@@ -602,7 +602,7 @@ class _ProfileHero extends StatelessWidget {
                           color: cs.onSurfaceVariant,
                         ),
                       ),
-                    if (profile.travelerStatus != null ||
+                    if (_showsIndividualPill(profile) ||
                         profile.kycVerified ||
                         profile.isProAccount ||
                         profile.gpPro) ...[
@@ -611,11 +611,11 @@ class _ProfileHero extends StatelessWidget {
                         spacing: DonySpacing.xs,
                         runSpacing: DonySpacing.xs,
                         children: [
-                          if (profile.travelerStatus != null)
-                            TravelerStatusChip(
-                              status: profile.travelerStatus,
-                              registrationNumber:
-                                  profile.businessRegistrationNumber,
+                          if (_showsIndividualPill(profile))
+                            _HeroPill(
+                              label: l.travelerStatusChipIndividual,
+                              background: cs.surfaceContainerHighest,
+                              foreground: cs.onSurfaceVariant,
                             ),
                           if (profile.kycVerified)
                             _HeroPill(
@@ -985,14 +985,20 @@ class _AboutSection extends StatelessWidget {
   }
 }
 
-// ─── Statut légal d'un professionnel (lot 2) ────────────────────────────────
+// ─── GP Pro : entreprise déclarée et explication du badge ───────────────────
 
-/// Ce que le professionnel a déclaré : raison sociale, numéro d'immatriculation
-/// et pays, tels que l'impose l'information des consommateurs. Yadony ne les
-/// vérifie pas auprès des registres : la mention le dit. Une ligne sans valeur
-/// n'est pas affichée.
-class _TravelerStatusSection extends StatelessWidget {
-  const _TravelerStatusSection({required this.profile});
+/// Pastille « Particulier » : seulement un voyageur qui a répondu « particulier »
+/// et qui n'a pas le badge GP Pro (le badge dit déjà tout).
+bool _showsIndividualPill(ProfilePublicModel profile) =>
+    !profile.gpPro && profile.travelerStatus == TravelerStatus.individual;
+
+/// Section d'un GP Pro : la ligne de l'entreprise déclarée (raison sociale,
+/// immatriculation, pays) avec sa mention, puis l'accordéon « Qu'est-ce qu'un
+/// GP Pro ? », replié par défaut. Yadony ne vérifie pas l'entreprise auprès des
+/// registres : la mention le dit. Sans information d'entreprise (badge accordé
+/// avant la déclaration), seul l'accordéon s'affiche.
+class _GpProSection extends StatelessWidget {
+  const _GpProSection({required this.profile});
   final ProfilePublicModel profile;
 
   @override
@@ -1001,54 +1007,77 @@ class _TravelerStatusSection extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final country = profile.businessCountry;
-    final rows = <(String, String)>[
-      (l.profilePublicStatusLabel, l.travelerStatusChipProfessional),
-      if (_filled(profile.businessName))
-        (l.profilePublicBusinessNameLabel, profile.businessName!.trim()),
+    final parts = <String>[
+      if (_filled(profile.businessName)) profile.businessName!.trim(),
       if (_filled(profile.businessRegistrationNumber))
-        (
-          l.profilePublicBusinessNumberLabel,
+        l.profilePublicBusinessLineNumber(
           profile.businessRegistrationNumber!.trim(),
         ),
-      if (_filled(country))
-        (l.profilePublicBusinessCountryLabel, countryName(l, country!)),
+      if (_filled(country)) countryName(l, country!),
     ];
     return Column(
-      key: const Key('profile-traveler-status'),
+      key: const Key('profile-gp-pro'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final (label, value) in rows)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                const SizedBox(width: DonySpacing.base),
-                Expanded(
-                  child: Text(
-                    value,
-                    textAlign: TextAlign.end,
-                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
-            ),
+        if (parts.isNotEmpty) ...[
+          Text(
+            parts.join(' · '),
+            style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
-        const SizedBox(height: DonySpacing.xs),
-        Text(
-          l.profilePublicBusinessDisclaimer,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
+          const SizedBox(height: DonySpacing.xxs),
+          Text(
+            l.profilePublicBusinessDeclared,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: DonySpacing.md),
+        ],
+        const _GpProExplainer(),
       ],
     );
   }
 
   static bool _filled(String? value) =>
       value != null && value.trim().isNotEmpty;
+}
+
+/// Accordéon replié « Qu'est-ce qu'un GP Pro ? ». L'ouverture est l'état interne
+/// de `ExpansionTile`, sans `setState` ni état d'écran.
+class _GpProExplainer extends StatelessWidget {
+  const _GpProExplainer();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(DonyRadius.md),
+      child: Material(
+        color: cs.surfaceContainerHighest,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            key: const Key('profile-gp-pro-explainer'),
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+            ),
+            childrenPadding: const EdgeInsets.fromLTRB(
+              DonySpacing.base,
+              0,
+              DonySpacing.base,
+              DonySpacing.base,
+            ),
+            expandedAlignment: Alignment.centerLeft,
+            title: Text(
+              l.gpProInfoTitle,
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            children: [Text(l.gpProExplainerBody, style: tt.bodyMedium)],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ─── Vérifications section (FLUTTER-4H) ─────────────────────────────────────

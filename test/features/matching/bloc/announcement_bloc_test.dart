@@ -13,6 +13,7 @@ import 'package:dony/features/matching/data/models/announcement_search_page.dart
 import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
@@ -522,7 +523,7 @@ void main() {
 
     blocTest<AnnouncementBloc, AnnouncementState>(
       'création : 403 traveler-status-required émet '
-      'AnnouncementTravelerStatusRequired',
+      'AnnouncementPublishingBlocked (statut requis)',
       build: () {
         when(
           () => mockRepo.createAnnouncement(
@@ -562,7 +563,7 @@ void main() {
       ),
       expect: () => [
         isA<AnnouncementLoading>(),
-        isA<AnnouncementTravelerStatusRequired>(),
+        isA<AnnouncementPublishingBlocked>(),
       ],
     );
 
@@ -658,8 +659,8 @@ void main() {
     );
 
     blocTest<AnnouncementBloc, AnnouncementState>(
-      'publish traveler-status-required (403 du back, interrupteur actif) '
-      'émet AnnouncementTravelerStatusRequired',
+      'publish traveler-status-required (403 du back, limite atteinte) '
+      'émet AnnouncementPublishingBlocked (statut requis)',
       build: () {
         when(() => mockRepo.publishAnnouncement('a1')).thenThrow(
           DioException(
@@ -675,16 +676,40 @@ void main() {
       act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
       expect: () => [
         isA<AnnouncementLoading>(),
-        isA<AnnouncementTravelerStatusRequired>().having(
-          (s) => s.error.code,
-          'code',
-          'traveler-status-required',
-        ),
+        isA<AnnouncementPublishingBlocked>()
+            .having((s) => s.error.code, 'code', 'traveler-status-required')
+            .having((s) => s.reason, 'reason', PublishingReason.statusRequired),
       ],
     );
 
+    for (final (code, reason) in [
+      ('traveler-status-required', PublishingReason.statusRequired),
+      ('monthly-limit-reached', PublishingReason.limitReached),
+      ('gp-pro-pending', PublishingReason.gpProPending),
+    ]) {
+      blocTest<AnnouncementBloc, AnnouncementState>(
+        'publish : 403 $code émet AnnouncementPublishingBlocked ($reason)',
+        build: () {
+          when(() => mockRepo.publishAnnouncement('a1')).thenThrow(
+            DioException(
+              requestOptions: RequestOptions(path: '/announcements/a1/publish'),
+              error: ForbiddenException('x', code),
+            ),
+          );
+          return buildBloc();
+        },
+        act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
+        expect: () => [
+          isA<AnnouncementLoading>(),
+          isA<AnnouncementPublishingBlocked>()
+              .having((s) => s.error.code, 'code', code)
+              .having((s) => s.reason, 'reason', reason),
+        ],
+      );
+    }
+
     blocTest<AnnouncementBloc, AnnouncementState>(
-      'publish : un autre 403 ne devient pas « statut requis »',
+      'publish : un autre 403 ne devient pas un blocage de publication',
       build: () {
         when(
           () => mockRepo.publishAnnouncement('a1'),

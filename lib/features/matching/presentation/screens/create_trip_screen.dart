@@ -59,6 +59,8 @@ import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
+import 'package:dony/features/traveler_status/presentation/publish_blocked_screen.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_prompt.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_sheet.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
@@ -1813,25 +1815,43 @@ class _TripFormContentState extends State<_TripFormContent> {
       TripLegCurrency.of(leg, _currency),
   ];
 
-  /// Le rappel « Comment voyagez-vous ? » a déjà été montré (ou le statut
-  /// vient d'être déclaré) pour cette publication : on ne le remontre pas.
+  /// La question « Vous voyagez en tant que ? » a déjà été montrée (ou le
+  /// voyageur y a répondu) pour cette publication : on ne la remontre pas.
   bool _travelerStatusReminded = false;
 
-  /// Rappel du statut légal avant la publication d'un nouveau trajet. Jamais
-  /// pour un brouillon, une modification ou un trajet dédié à une demande.
-  /// Fermée d'un « Plus tard », la feuille laisse la publication continuer.
+  /// La question du statut est en cours (lecture de la demande GP Pro puis
+  /// feuille) : verrou de ré-entrance, sans `setState`.
+  bool _reminding = false;
+
+  /// Question du statut avant la publication d'un nouveau trajet. Jamais pour
+  /// un brouillon, une modification ou un trajet dédié à une demande. Fermée
+  /// d'un « Plus tard », ou après l'envoi d'une demande GP Pro (le voyageur
+  /// publie comme particulier pendant la validation), la publication continue.
+  /// Un formulaire GP Pro quitté sans envoyer la demande ne publie rien et ne
+  /// dit rien : le voyageur retrouve son formulaire, la question reviendra.
   Future<void> _remindTravelerStatusThenSubmit() async {
-    await TravelerStatusSheet.show(context);
-    if (!mounted) return;
+    // Verrou posé dès l'appui, avant la lecture de la demande GP Pro : un second
+    // appui sur « Publier » pendant l'attente n'ouvre pas une deuxième feuille.
+    if (_reminding) return;
+    _reminding = true;
+    final TravelerStatusOutcome? outcome;
+    try {
+      outcome = await remindTravelerStatusBeforePublish(context);
+    } finally {
+      _reminding = false;
+    }
+    if (!mounted || outcome == TravelerStatusOutcome.gpProAbandoned) return;
     _travelerStatusReminded = true;
     _submit();
   }
 
-  /// 403 `traveler-status-required` : Yadony exige la déclaration. La feuille
-  /// obligatoire s'ouvre, puis la publication reprend.
-  Future<void> _onTravelerStatusRequired() async {
-    final declared = await TravelerStatusSheet.show(context, required: true);
-    if (declared != true || !mounted) return;
+  /// Publication refusée par la limite mensuelle (403 `traveler-status-required`,
+  /// `monthly-limit-reached` ou `gp-pro-pending`) : l'écran de blocage s'ouvre.
+  /// Si plus rien ne bloque au retour, la publication reprend ; sinon le
+  /// voyageur retrouve son formulaire, qu'il peut enregistrer en brouillon.
+  Future<void> _onPublishingBlocked(PublishingReason reason) async {
+    final canPublish = await showPublishingBlocked(context, reason);
+    if (!canPublish || !mounted) return;
     _travelerStatusReminded = true;
     _submit();
   }
@@ -2402,10 +2422,11 @@ class _TripFormContentState extends State<_TripFormContent> {
             final block = PaymentCapabilityBlock.fromErrorCode(
               state.error.code,
             );
-            if (state.error.code == 'traveler-status-required') {
-              // Trajet dédié refusé faute de statut déclaré : feuille
-              // obligatoire, puis le même envoi reprend.
-              unawaited(_onTravelerStatusRequired());
+            final blockedBy = PublishingReason.fromErrorCode(state.error.code);
+            if (blockedBy != null) {
+              // Trajet dédié refusé par la limite mensuelle : écran de
+              // blocage, puis le même envoi reprend si rien ne bloque plus.
+              unawaited(_onPublishingBlocked(blockedBy));
             } else if (block == PaymentCapabilityBlock.cardCapabilityRequired) {
               unawaited(showCardCapabilityRequiredSheet(context));
             } else {
@@ -2597,8 +2618,8 @@ class _TripFormContentState extends State<_TripFormContent> {
                 unawaited(context.push('/profile/upgrade-to-pro'));
               }
             }
-          } else if (state is AnnouncementTravelerStatusRequired) {
-            unawaited(_onTravelerStatusRequired());
+          } else if (state is AnnouncementPublishingBlocked) {
+            unawaited(_onPublishingBlocked(state.reason));
           } else if (state is AnnouncementTripUnsupported) {
             DonySnackbar.show(
               context,

@@ -9,6 +9,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_parcels_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_sheets.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_prompt.dart';
+import 'package:dony/features/traveler_status/presentation/traveler_status_sheet.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -133,12 +134,22 @@ Future<void> _open(
         isEditing: true,
       );
     case TripTodoKind.publish:
-      // Rappel du statut légal (particulier / professionnel) : la feuille se
-      // ferme d'un « Plus tard », la publication part dans tous les cas.
+      // Question du statut (particulier / GP Pro) : « Plus tard », un geste ou
+      // une demande GP Pro envoyée laissent la publication partir ; la limite
+      // mensuelle, elle, est arrêtée par le 403 du back.
       final bloc = context.read<AnnouncementBloc>();
-      await remindTravelerStatusBeforePublish(context);
-      // L'écran a pu être quitté, ou son bloc fermé, pendant la feuille.
-      if (!context.mounted || bloc.isClosed) return;
+      // Le verrou de ré-entrance est celui d'`openTripTodoAction` (posé dès
+      // l'appui, relâché à la fin du parcours) : un second appui pendant la
+      // lecture de la demande GP Pro ou la feuille n'ouvre pas une deuxième
+      // question.
+      final outcome = await remindTravelerStatusBeforePublish(context);
+      // L'écran a pu être quitté, ou son bloc fermé, pendant la feuille. Un
+      // formulaire GP Pro quitté sans demande envoyée ne publie rien.
+      if (!context.mounted ||
+          bloc.isClosed ||
+          outcome == TravelerStatusOutcome.gpProAbandoned) {
+        return;
+      }
       bloc.add(AnnouncementPublishRequested(trip.id));
     case TripTodoKind.presence ||
         TripTodoKind.scan ||

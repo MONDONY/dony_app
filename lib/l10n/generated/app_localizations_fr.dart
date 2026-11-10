@@ -20719,7 +20719,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get gpProInfoBody =>
-      'Un GP Pro est un voyageur régulier ou une entreprise dont la demande a été examinée puis acceptée par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.';
+      'Un GP Pro est un voyageur professionnel. Son profil, avec sa raison sociale et son numéro d\'entreprise, a été examiné par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.';
 
   @override
   String get gpProScreenTitle => 'GP Pro';
@@ -20742,7 +20742,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get gpProIntroBody =>
-      'Vous voyagez souvent, seul ou pour votre entreprise ? Demandez le badge GP Pro. L\'équipe Yadony examine chaque demande.';
+      'Vous transportez des colis à titre professionnel ? Indiquez votre entreprise et demandez le badge GP Pro. L\'équipe Yadony examine chaque demande.';
 
   @override
   String get gpProKycTitle => 'Vérifiez d\'abord votre identité';
@@ -20768,9 +20768,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get gpProFrequencyLessOften => 'Moins souvent';
-
-  @override
-  String get gpProCommercialNameLabel => 'Nom commercial (facultatif)';
 
   @override
   String get gpProPiecesTitle => 'Justificatifs (facultatif)';
@@ -20883,7 +20880,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gpProSummaryFrequency => 'Fréquence';
 
   @override
-  String get gpProSummaryCommercialName => 'Nom commercial';
+  String get gpProSummaryCommercialName => 'Raison sociale';
 
   @override
   String get gpProErrorNetwork =>
@@ -23604,108 +23601,34 @@ class AppLocalizationsFr extends AppLocalizations {
   String get travelerStatusChipIndividual => 'Particulier';
 
   @override
-  String get travelerStatusChipProfessional => 'Professionnel';
-
-  @override
-  String travelerStatusChipProfessionalWithNumber(String number) {
-    return 'Professionnel · $number';
-  }
-
-  @override
-  String get profilePublicStatusLabel => 'Statut';
-
-  @override
-  String get profilePublicBusinessNameLabel => 'Raison sociale';
-
-  @override
-  String get profilePublicBusinessNumberLabel => 'Immatriculation';
-
-  @override
-  String get profilePublicBusinessCountryLabel => 'Pays';
-
-  @override
-  String get profilePublicBusinessDisclaimer =>
-      'Informations déclarées par le voyageur, non vérifiées par Yadony.';
-
-  @override
-  String get travelerStatusSheetTitle => 'Comment voyagez-vous ?';
+  String get travelerStatusSheetTitle => 'Vous voyagez en tant que ?';
 
   @override
   String get travelerStatusSheetSubtitle =>
-      'Les expéditeurs voient votre réponse sur vos trajets. Vous pouvez la modifier à tout moment dans votre profil.';
-
-  @override
-  String get travelerStatusSheetSubtitleRequired =>
-      'Pour publier un trajet, indiquez comment vous voyagez. Les expéditeurs voient votre réponse sur vos trajets.';
+      'Les expéditeurs le verront sur votre profil.';
 
   @override
   String get travelerStatusOptionIndividual => 'Particulier';
 
   @override
-  String get travelerStatusOptionIndividualBody =>
-      'Je voyage à titre personnel, ce n\'est pas mon métier.';
+  String get travelerStatusOptionIndividualBody => 'Ce n\'est pas mon métier';
 
   @override
-  String get travelerStatusOptionProfessional => 'Professionnel';
-
-  @override
-  String get travelerStatusOptionProfessionalBody =>
-      'Je transporte des colis dans le cadre d\'une activité déclarée.';
-
-  @override
-  String get travelerStatusIndividualTitle => 'Voyageur particulier';
-
-  @override
-  String get travelerStatusIndividualSubtitle =>
-      'En tant que particulier, vous n\'avez pas à fournir de numéro d\'entreprise.';
-
-  @override
-  String get travelerStatusIndividualConfirm =>
-      'Je confirme voyager à titre personnel et que ce n\'est pas mon métier.';
-
-  @override
-  String get travelerStatusIndividualHint =>
-      'Si vous transportez des colis de façon régulière pour en tirer un revenu, choisissez « Professionnel ». Vos gains restent à déclarer à l\'administration fiscale de votre pays.';
-
-  @override
-  String get travelerStatusProfessionalTitle => 'Voyageur professionnel';
-
-  @override
-  String get travelerStatusProfessionalSubtitle =>
-      'Ces informations seront visibles des expéditeurs.';
-
-  @override
-  String get travelerStatusBusinessNameLabel => 'Raison sociale';
-
-  @override
-  String get travelerStatusRegistrationLabel => 'Numéro d\'entreprise';
-
-  @override
-  String get travelerStatusRegistrationHint =>
-      'SIRET, NINEA, RCCM ou équivalent.';
-
-  @override
-  String get travelerStatusCountryLabel => 'Pays d\'immatriculation';
-
-  @override
-  String get errorTravelerStatusRequiredTitle => 'Statut à déclarer';
+  String get errorTravelerStatusRequiredTitle => 'Statut à indiquer';
 
   @override
   String get errorTravelerStatusRequiredMessage =>
-      'Indiquez si vous voyagez en tant que particulier ou professionnel pour publier un trajet.';
+      'Indiquez si vous voyagez en tant que particulier ou GP Pro pour continuer à publier.';
 
   @override
-  String get errorTravelerStatusInvalidTitle => 'Déclaration à corriger';
+  String get errorTravelerStatusInvalidTitle => 'Demande GP Pro nécessaire';
 
   @override
   String get errorTravelerStatusInvalidMessage =>
-      'Vérifiez la raison sociale, le numéro d\'entreprise et le pays, puis réessayez.';
+      'Pour voyager à titre professionnel, faites une demande GP Pro.';
 
   @override
   String get profileFieldTravelerStatusAllCaps => 'STATUT DE VOYAGEUR';
-
-  @override
-  String get profileTravelerStatusNotSet => 'Non renseigné';
 
   @override
   String get bidCreateIndividualTravelerTitle =>
@@ -23724,4 +23647,179 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get infoModalOpenFallback => 'Ouvrir';
+
+  @override
+  String profilePublicBusinessLineNumber(String number) {
+    return 'Immatriculation n° $number';
+  }
+
+  @override
+  String get profilePublicBusinessDeclared =>
+      'Entreprise déclarée par le voyageur';
+
+  @override
+  String get gpProExplainerBody =>
+      'Un GP Pro est un voyageur professionnel : il transporte des colis dans le cadre d\'une activité déclarée. Son profil a été examiné par l\'équipe Yadony. Ce badge n\'est pas une garantie de Yadony sur le transport.';
+
+  @override
+  String get profileEditSectionActivity => 'Activité';
+
+  @override
+  String get profileTravelerStatusNotSet => 'Non renseigné';
+
+  @override
+  String get profileTravelerStatusGpPro => 'GP Pro';
+
+  @override
+  String profileTravelerStatusGpProNamed(String name) {
+    return 'GP Pro · $name';
+  }
+
+  @override
+  String get profileTravelerStatusChoose => 'Choisir';
+
+  @override
+  String get profileTravelerStatusPending => 'En validation';
+
+  @override
+  String get profileTravelerStatusHint =>
+      'Particulier ou GP Pro : affiché aux expéditeurs sur votre profil.';
+
+  @override
+  String get gpProManageTitle => 'Votre statut GP Pro';
+
+  @override
+  String get gpProManageHint =>
+      'Pour retrouver le badge GP Pro, il faudra refaire une demande.';
+
+  @override
+  String get gpProManageResign => 'Redevenir particulier';
+
+  @override
+  String get gpProResignConfirmTitle => 'Redevenir particulier ?';
+
+  @override
+  String get gpProResignConfirmBody =>
+      'Vous perdrez le badge GP Pro et les informations de votre entreprise. Pour le retrouver, il faudra refaire une demande.';
+
+  @override
+  String get gpProResignDone => 'Vous êtes de nouveau particulier.';
+
+  @override
+  String get gpProResignFailed =>
+      'Impossible de redevenir particulier pour le moment. Réessayez.';
+
+  @override
+  String get travelerStatusOptionGpPro => 'GP Pro';
+
+  @override
+  String get travelerStatusOptionGpProBody =>
+      'Je transporte à titre professionnel';
+
+  @override
+  String get travelerStatusIndividualConfirmation =>
+      'En choisissant Particulier, je confirme voyager à titre personnel.';
+
+  @override
+  String get publishBlockedAppBarTitle => 'Créer un trajet';
+
+  @override
+  String publishBlockedStatusTitle(int limit) {
+    String _temp0 = intl.Intl.pluralLogic(
+      limit,
+      locale: localeName,
+      other: 'Limite de $limit trajets atteinte ce mois-ci',
+      one: 'Limite de $limit trajet atteinte ce mois-ci',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get publishBlockedStatusTitleNoLimit =>
+      'Limite de trajets atteinte ce mois-ci';
+
+  @override
+  String get publishBlockedStatusBody =>
+      'Pour continuer, dites-nous comment vous voyagez.';
+
+  @override
+  String get publishBlockedLimitTitle =>
+      'Vous ne pouvez plus créer de trajet ce mois-ci';
+
+  @override
+  String publishBlockedLimitBody(int limit) {
+    String _temp0 = intl.Intl.pluralLogic(
+      limit,
+      locale: localeName,
+      other: 'Un particulier peut publier $limit trajets par mois.',
+      one: 'Un particulier peut publier $limit trajet par mois.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String publishBlockedResumeOn(String date) {
+    return 'Vous pourrez de nouveau publier à partir du $date.';
+  }
+
+  @override
+  String get publishBlockedResumeNextMonth =>
+      'Vous pourrez de nouveau publier le mois prochain.';
+
+  @override
+  String get publishBlockedBecomeGpPro =>
+      'Pour publier davantage, devenez GP Pro.';
+
+  @override
+  String get publishBlockedBecomeGpProCta => 'Devenir GP Pro';
+
+  @override
+  String get publishBlockedPendingTitle =>
+      'Votre demande GP Pro est en cours d\'examen';
+
+  @override
+  String get publishBlockedPendingBody =>
+      'L\'équipe Yadony vous prévient par notification. Vous pourrez publier dès la validation.';
+
+  @override
+  String get publishBlockedPendingCta => 'Voir ma demande';
+
+  @override
+  String get gpProBusinessNameLabel => 'Raison sociale';
+
+  @override
+  String get gpProRegistrationLabel => 'Numéro d\'entreprise';
+
+  @override
+  String get gpProRegistrationHint => 'SIRET, NINEA, RCCM ou équivalent.';
+
+  @override
+  String get gpProRegistrationInvalid =>
+      'Entre 4 et 40 caractères, en commençant par une lettre ou un chiffre (espace, point, barre oblique et tiret acceptés ensuite).';
+
+  @override
+  String get gpProCountryLabel => 'Pays d\'immatriculation';
+
+  @override
+  String get gpProErrorBusinessIncomplete =>
+      'Renseignez la raison sociale, le numéro d\'entreprise et le pays.';
+
+  @override
+  String get errorMonthlyLimitReachedTitle => 'Limite mensuelle atteinte';
+
+  @override
+  String get errorMonthlyLimitReachedMessage =>
+      'Vous avez atteint votre limite de trajets pour ce mois-ci. Vous pourrez publier de nouveau le mois prochain, ou devenir GP Pro.';
+
+  @override
+  String get errorGpProPendingTitle => 'Demande GP Pro en cours d\'examen';
+
+  @override
+  String get errorGpProPendingMessage =>
+      'Vous pourrez publier dès que l\'équipe Yadony aura validé votre demande GP Pro.';
+
+  @override
+  String publishBlockedResumeOnFirst(String month) {
+    return 'Vous pourrez de nouveau publier à partir du 1er $month.';
+  }
 }

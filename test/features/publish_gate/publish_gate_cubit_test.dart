@@ -10,6 +10,8 @@ import 'package:dony/features/publish_gate/bloc/publish_gate_state.dart';
 import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:dony/features/publish_gate/data/models/publish_draft_entry.dart';
 import 'package:dony/features/publish_gate/data/repositories/publish_commitment_repository.dart';
+import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
+import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
 import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -27,6 +29,8 @@ class _MockAnalytics extends Mock implements AnalyticsService {}
 
 class _MockTemplates extends Mock implements TripTemplateRepository {}
 
+class _MockTravelerStatus extends Mock implements TravelerStatusRepository {}
+
 void main() {
   setUpAll(() => registerFallbackValue(PublishCommitmentRole.traveler));
 
@@ -35,6 +39,7 @@ void main() {
   late _MockRequests requests;
   late _MockAnalytics analytics;
   late _MockTemplates templates;
+  late _MockTravelerStatus travelerStatus;
   late FormDraftStore store;
 
   setUp(() {
@@ -43,6 +48,10 @@ void main() {
     requests = _MockRequests();
     analytics = _MockAnalytics();
     templates = _MockTemplates();
+    travelerStatus = _MockTravelerStatus();
+    when(() => travelerStatus.checkEligibility()).thenAnswer(
+      (_) async => (eligibility: PublishingEligibility.ok, failureCode: null),
+    );
     when(() => templates.getAll()).thenAnswer((_) async => const []);
     store = testFormDraftStore();
     when(
@@ -70,8 +79,74 @@ void main() {
     announcements: announcements,
     packageRequests: requests,
     templates: templates,
+    eligibility: travelerStatus,
     analytics: analytics,
   );
+
+  group('éligibilité à la publication (voyageur)', () {
+    const blocked = PublishingEligibility(
+      allowed: false,
+      reason: PublishingReason.statusRequired,
+      limit: 4,
+      used: 4,
+    );
+
+    test('bloqué : état « blocked » avant tout engagement', () async {
+      when(
+        () => travelerStatus.checkEligibility(),
+      ).thenAnswer((_) async => (eligibility: blocked, failureCode: null));
+      final cubit = build(PublishCommitmentRole.traveler);
+
+      await cubit.start(kycVerified: true);
+
+      expect(cubit.state.status, PublishGateStatus.blocked);
+      expect(cubit.state.blockedBy, blocked);
+      verifyNever(() => commitmentRepo.fetch());
+    });
+
+    test('autorisé : le parcours habituel continue', () async {
+      when(
+        () => commitmentRepo.fetch(),
+      ).thenAnswer((_) async => commitments(travelerRequired: false));
+      final cubit = build(PublishCommitmentRole.traveler);
+
+      await cubit.start(kycVerified: true);
+
+      expect(cubit.state.status, PublishGateStatus.ready);
+      expect(cubit.state.blockedBy, isNull);
+    });
+
+    test('lecture en échec (réseau, 404) : jamais de blocage, échec tracé '
+        'avec son code seul', () async {
+      when(() => travelerStatus.checkEligibility()).thenAnswer(
+        (_) async =>
+            (eligibility: PublishingEligibility.ok, failureCode: 'OFFLINE'),
+      );
+      when(
+        () => commitmentRepo.fetch(),
+      ).thenAnswer((_) async => commitments(travelerRequired: false));
+      final cubit = build(PublishCommitmentRole.traveler);
+
+      await cubit.start(kycVerified: true);
+
+      expect(cubit.state.status, PublishGateStatus.ready);
+      verify(
+        () => analytics.logEvent(
+          'publish_eligibility_failed',
+          properties: {'error_code': 'OFFLINE'},
+        ),
+      ).called(1);
+    });
+
+    test('expéditeur : l\'éligibilité n\'est jamais lue', () async {
+      when(() => commitmentRepo.fetch()).thenAnswer((_) async => commitments());
+      final cubit = build(PublishCommitmentRole.sender);
+
+      await cubit.start(kycVerified: true);
+
+      verifyNever(() => travelerStatus.checkEligibility());
+    });
+  });
 
   group('start', () {
     test('déjà accepté et vérifié : écran sauté, aucun brouillon', () async {

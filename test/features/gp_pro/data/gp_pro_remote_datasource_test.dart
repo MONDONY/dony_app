@@ -72,6 +72,76 @@ void main() {
     });
   });
 
+  test('apply envoie raison sociale, numéro et pays d\'entreprise', () async {
+    when(
+      () => dio.post('/gp-pro/applications', data: any(named: 'data')),
+    ).thenAnswer(
+      (_) async => _ok({'state': 'PENDING'}, '/gp-pro/applications', 201),
+    );
+
+    await datasource.apply(
+      frequency: GpProFrequency.monthly,
+      commercialName: ' Diallo Express ',
+      businessRegistrationNumber: ' CI-ABJ-2021-B-12345 ',
+      businessCountry: 'CI',
+      source: GpProSource.profile,
+    );
+
+    final body =
+        verify(
+              () => dio.post(
+                '/gp-pro/applications',
+                data: captureAny(named: 'data'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
+    expect(body, {
+      'travelFrequency': 'MONTHLY',
+      'commercialName': 'Diallo Express',
+      'businessRegistrationNumber': 'CI-ABJ-2021-B-12345',
+      'businessCountry': 'CI',
+      'source': 'PROFILE',
+    });
+  });
+
+  test(
+    'apply sans champs entreprise (ancien contrat) : corps inchangé',
+    () async {
+      when(
+        () => dio.post('/gp-pro/applications', data: any(named: 'data')),
+      ).thenAnswer(
+        (_) async => _ok({'state': 'PENDING'}, '/gp-pro/applications', 201),
+      );
+
+      await datasource.apply(
+        frequency: GpProFrequency.weekly,
+        source: GpProSource.profile,
+      );
+
+      final body =
+          verify(
+                () => dio.post(
+                  '/gp-pro/applications',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(body.containsKey('businessRegistrationNumber'), isFalse);
+      expect(body.containsKey('businessCountry'), isFalse);
+    },
+  );
+
+  test('resign appelle POST /gp-pro/resign et lit le statut', () async {
+    when(
+      () => dio.post('/gp-pro/resign'),
+    ).thenAnswer((_) async => _ok({'state': 'NONE'}, '/gp-pro/resign'));
+
+    final status = await datasource.resign();
+
+    expect(status.state, GpProState.none);
+    verify(() => dio.post('/gp-pro/resign')).called(1);
+  });
+
   test('apply omet le nom vide et les documents vides', () async {
     when(
       () => dio.post('/gp-pro/applications', data: any(named: 'data')),

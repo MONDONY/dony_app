@@ -12,6 +12,9 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
+import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
+import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
@@ -33,6 +36,8 @@ class FakeAuthEvent extends Fake implements AuthEvent {}
 
 class _MockTravelerStatusRepository extends Mock
     implements TravelerStatusRepository {}
+
+class _MockGpProRepository extends Mock implements GpProRepository {}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
@@ -81,6 +86,14 @@ Widget _wrap(Widget child, MockAuthBloc authBloc) {
                 const Scaffold(body: Text('EditEmailScreen')),
           ),
           GoRoute(
+            path: '/profile/gp-pro',
+            builder: (context, state) => Scaffold(
+              body: Text(
+                'GpProScreen edit=${state.uri.queryParameters['edit']}',
+              ),
+            ),
+          ),
+          GoRoute(
             path: '/profile/edit/phone',
             builder: (context, _) =>
                 const Scaffold(body: Text('EditPhoneScreen')),
@@ -108,16 +121,29 @@ void main() {
   });
 
   late MockAuthBloc mockAuthBloc;
+  late _MockGpProRepository gpRepo;
 
   setUp(() {
     mockAuthBloc = MockAuthBloc();
     when(() => mockAuthBloc.isClosed).thenReturn(false);
     setSmsAuthEnabled(kSmsAuthEnabledDefault);
+    // La ligne « Statut de voyageur » lit la demande GP Pro (pastille
+    // « En validation ») et sait redevenir particulier.
+    gpRepo = _MockGpProRepository();
+    when(
+      () => gpRepo.fetchStatus(),
+    ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+    final gpAnalytics = _MockAnalyticsService();
+    when(
+      () => gpAnalytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    getIt.registerFactory<GpProCubit>(() => GpProCubit(gpRepo, gpAnalytics));
   });
 
   tearDown(() {
     mockAuthBloc.close();
     setSmsAuthEnabled(kSmsAuthEnabledDefault);
+    if (getIt.isRegistered<GpProCubit>()) getIt.unregister<GpProCubit>();
   });
 
   // ── Mode vue (par défaut à l'ouverture) ───────────────────────────────────
@@ -935,7 +961,7 @@ void main() {
     });
   });
 
-  // ── Statut de voyageur (lot 2) ────────────────────────────────────────────
+  // ── Statut de voyageur : ligne de même forme que Email et Téléphone ──────
 
   group('statut de voyageur', () {
     late _MockTravelerStatusRepository statusRepo;
@@ -946,20 +972,6 @@ void main() {
       when(
         () => analytics.logEvent(any(), properties: any(named: 'properties')),
       ).thenAnswer((_) async {});
-      when(
-        () => statusRepo.declare(
-          status: any(named: 'status'),
-          personalUseConfirmed: any(named: 'personalUseConfirmed'),
-          businessName: any(named: 'businessName'),
-          registrationNumber: any(named: 'registrationNumber'),
-          country: any(named: 'country'),
-        ),
-      ).thenAnswer(
-        (_) async => TravelerStatusDeclaration(
-          status: TravelerStatus.individual,
-          declaredAt: DateTime.utc(2026, 11),
-        ),
-      );
       getIt.registerFactory<TravelerStatusCubit>(
         () => TravelerStatusCubit(statusRepo, analytics),
       );
@@ -985,104 +997,129 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('voyageur sans statut : « Non renseigné »', (tester) async {
+    final gpProUser = _travelerUser.copyWith(
+      gpPro: true,
+      travelerStatus: TravelerStatus.professional,
+      businessName: 'Diallo Express',
+      businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+      businessCountry: 'CI',
+    );
+
+    testWidgets('voyageur sans statut : « Non renseigné », pastille Choisir '
+        'et phrase d\'aide', (tester) async {
       await pump(tester, _travelerUser);
 
+      expect(find.text('ACTIVITÉ'), findsOneWidget);
       expect(find.text('STATUT DE VOYAGEUR'), findsOneWidget);
       expect(find.text('Non renseigné'), findsOneWidget);
-    });
-
-    testWidgets('particulier : « Particulier »', (tester) async {
-      await pump(
-        tester,
-        _travelerUser.copyWith(travelerStatus: TravelerStatus.individual),
-      );
-      expect(find.text('Particulier'), findsOneWidget);
-      expect(find.text('Non renseigné'), findsNothing);
-    });
-
-    testWidgets('professionnel : statut et numéro', (tester) async {
-      await pump(
-        tester,
-        _travelerUser.copyWith(
-          travelerStatus: TravelerStatus.professional,
-          businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
-        ),
-      );
-      expect(find.text('Professionnel · CI-ABJ-2021-B-12345'), findsOneWidget);
-    });
-
-    testWidgets('expéditeur seul : aucune ligne', (tester) async {
-      await pump(tester, _senderUser);
-      expect(find.text('STATUT DE VOYAGEUR'), findsNothing);
-    });
-
-    testWidgets('la ligne ouvre la feuille ; après la déclaration, le profil '
-        'est rechargé et la ligne suit', (tester) async {
-      final states = StreamController<AuthState>.broadcast();
-      addTearDown(states.close);
-      await pump(tester, _travelerUser, stream: states.stream);
-
-      await tester.ensureVisible(find.text('Non renseigné'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Non renseigné'));
-      await tester.pumpAndSettle();
-      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
-
-      await tester.tap(find.text('Particulier'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.text(
-          "Je confirme voyager à titre personnel et que ce n'est pas mon métier.",
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
-      await tester.pumpAndSettle();
-
-      verify(
-        () => mockAuthBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
-      ).called(1);
-
-      // Le rechargement du profil renvoie le statut déclaré.
-      states.add(
-        AuthProfileUpdated(
-          _travelerUser.copyWith(travelerStatus: TravelerStatus.individual),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Particulier'), findsOneWidget);
-      expect(find.text('Non renseigné'), findsNothing);
-    });
-
-    testWidgets('depuis le profil : pas de « Plus tard »', (tester) async {
-      await pump(tester, _travelerUser);
-      await tester.ensureVisible(find.text('Non renseigné'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Non renseigné'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
-      expect(find.widgetWithText(DonyButton, 'Plus tard'), findsNothing);
-      // Le sous-titre « facultatif » reste celui d'un rappel qui se modifie.
+      expect(find.text('Choisir'), findsOneWidget);
       expect(
         find.text(
-          'Les expéditeurs voient votre réponse sur vos trajets. Vous pouvez '
-          'la modifier à tout moment dans votre profil.',
+          'Particulier ou GP Pro : affiché aux expéditeurs sur votre profil.',
         ),
         findsOneWidget,
       );
     });
 
-    testWidgets('PUT réussi, rechargement du profil en échec : la ligne '
-        'affiche quand même le nouveau statut', (tester) async {
+    testWidgets('particulier : « Particulier » et pastille Modifier', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        _travelerUser.copyWith(travelerStatus: TravelerStatus.individual),
+      );
+      final row = find.byKey(const Key('profile-traveler-status-row'));
+      expect(
+        find.descendant(of: row, matching: find.text('Particulier')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: row, matching: find.text('Modifier')),
+        findsOneWidget,
+      );
+      expect(find.text('Non renseigné'), findsNothing);
+    });
+
+    testWidgets('GP Pro avec entreprise : « GP Pro · raison sociale », '
+        'jamais « Professionnel » ni le numéro', (tester) async {
+      await pump(tester, gpProUser);
+
+      expect(find.text('GP Pro · Diallo Express'), findsOneWidget);
+      expect(find.textContaining('Professionnel'), findsNothing);
+      expect(find.textContaining('CI-ABJ-2021-B-12345'), findsNothing);
+      final row = find.byKey(const Key('profile-traveler-status-row'));
+      expect(
+        find.descendant(of: row, matching: find.text('Modifier')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('badge GP Pro ancien, sans entreprise : « GP Pro »', (
+      tester,
+    ) async {
+      await pump(tester, _travelerUser.copyWith(gpPro: true));
+      final row = find.byKey(const Key('profile-traveler-status-row'));
+      expect(
+        find.descendant(of: row, matching: find.text('GP Pro')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('demande GP Pro en attente : pastille « En validation »', (
+      tester,
+    ) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.pending));
+      await pump(tester, _travelerUser);
+
+      expect(find.text('En validation'), findsOneWidget);
+      expect(find.text('Choisir'), findsNothing);
+    });
+
+    testWidgets(
+      'lecture du statut GP Pro en échec : la ligne reste utilisable',
+      (tester) async {
+        when(
+          () => gpRepo.fetchStatus(),
+        ).thenThrow(const GpProException('network'));
+        await pump(tester, _travelerUser);
+
+        expect(find.text('Choisir'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('expéditeur seul : aucune ligne', (tester) async {
+      await pump(tester, _senderUser);
+      expect(find.text('STATUT DE VOYAGEUR'), findsNothing);
+      expect(find.text('ACTIVITÉ'), findsNothing);
+    });
+
+    testWidgets('« Choisir » ouvre la feuille du statut, sans « Plus tard »', (
+      tester,
+    ) async {
+      await pump(tester, _travelerUser);
+      await tester.ensureVisible(find.text('Choisir'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Choisir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Plus tard'), findsNothing);
+    });
+
+    testWidgets('« Choisir », puis Particulier : déclaré, profil mis à jour '
+        'puis rechargé, la ligne suit', (tester) async {
+      when(() => statusRepo.declareIndividual()).thenAnswer(
+        (_) async => TravelerStatusDeclaration(
+          status: TravelerStatus.individual,
+          declaredAt: DateTime.utc(2026, 11),
+        ),
+      );
       final states = StreamController<AuthState>.broadcast();
       addTearDown(states.close);
-      // Le rechargement (AuthProfileRefreshRequested) échoue en silence et ne
-      // renvoie rien ; seule la synchro locale (AuthUserSynced) met l'état à
-      // jour, comme dans AuthBloc.
+      // La synchro locale (AuthUserSynced) met l'état à jour, comme AuthBloc.
       when(() => mockAuthBloc.add(any())).thenAnswer((invocation) {
         final event = invocation.positionalArguments.first;
         if (event is AuthUserSynced) {
@@ -1091,53 +1128,215 @@ void main() {
       });
       await pump(tester, _travelerUser, stream: states.stream);
 
-      await tester.ensureVisible(find.text('Non renseigné'));
+      await tester.ensureVisible(find.text('Choisir'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Non renseigné'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Particulier'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+      await tester.tap(find.text('Choisir'));
       await tester.pumpAndSettle();
       await tester.tap(
-        find.text(
-          "Je confirme voyager à titre personnel et que ce n'est pas mon métier.",
+        find.descendant(
+          of: find.byKey(const Key('traveler-status-individual')),
+          matching: find.text('Particulier'),
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
-      await tester.pumpAndSettle();
 
-      expect(find.text('Particulier'), findsOneWidget);
+      verify(() => statusRepo.declareIndividual()).called(1);
+      // Une seule synchro locale puis un seul rechargement du profil.
+      final events = verify(() => mockAuthBloc.add(captureAny())).captured;
+      expect(events, hasLength(2));
+      expect(events[0], isA<AuthUserSynced>());
+      expect(events[1], isA<AuthProfileRefreshRequested>());
+      final row = find.byKey(const Key('profile-traveler-status-row'));
+      expect(
+        find.descendant(of: row, matching: find.text('Particulier')),
+        findsOneWidget,
+      );
       expect(find.text('Non renseigné'), findsNothing);
-      // La synchro locale précède le rechargement.
-      verifyInOrder([
-        () => mockAuthBloc.add(any(that: isA<AuthUserSynced>())),
-        () => mockAuthBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
-      ]);
     });
 
-    testWidgets('360 dp, anglais : sans exception', (tester) async {
+    testWidgets('« En validation » ouvre le suivi de la demande GP Pro', (
+      tester,
+    ) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.pending));
+      await pump(tester, _travelerUser);
+      await tester.ensureVisible(find.text('En validation'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('En validation'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('GpProScreen edit=null'), findsOneWidget);
+    });
+
+    group('GP Pro : Modifier', () {
+      Future<void> openManage(WidgetTester tester) async {
+        await pump(tester, gpProUser);
+        final pill = find.descendant(
+          of: find.byKey(const Key('profile-traveler-status-row')),
+          matching: find.text('Modifier'),
+        );
+        await tester.ensureVisible(pill);
+        await tester.pumpAndSettle();
+        await tester.tap(pill);
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('la feuille ne propose que « Redevenir particulier », dans '
+          'son pied', (tester) async {
+        await openManage(tester);
+
+        expect(find.text('Votre statut GP Pro'), findsOneWidget);
+        expect(find.text('Modifier mes informations'), findsNothing);
+        expect(
+          find.widgetWithText(DonyButton, 'Redevenir particulier'),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('« Redevenir particulier » : une confirmation à un seul '
+          'bouton, puis le retrait et le profil rechargé', (tester) async {
+        when(
+          () => gpRepo.resign(),
+        ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+        await openManage(tester);
+
+        await tester.tap(
+          find.widgetWithText(DonyButton, 'Redevenir particulier'),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Redevenir particulier ?'), findsOneWidget);
+        verifyNever(() => gpRepo.resign());
+
+        await tester.tap(
+          find.descendant(
+            of: find.byType(Dialog),
+            matching: find.text('Redevenir particulier'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        verify(() => gpRepo.resign()).called(1);
+        verify(
+          () => mockAuthBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
+        ).called(1);
+        expect(find.text('Vous êtes de nouveau particulier.'), findsOneWidget);
+      });
+
+      testWidgets('retrait refusé : message d\'échec, profil non rechargé', (
+        tester,
+      ) async {
+        when(() => gpRepo.resign()).thenThrow(const GpProException('network'));
+        await openManage(tester);
+        await tester.tap(
+          find.widgetWithText(DonyButton, 'Redevenir particulier'),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: find.byType(Dialog),
+            matching: find.text('Redevenir particulier'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text(
+            'Impossible de redevenir particulier pour le moment. Réessayez.',
+          ),
+          findsOneWidget,
+        );
+        verifyNever(
+          () => mockAuthBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
+        );
+      });
+
+      testWidgets('confirmation fermée sans bouton : rien n\'est retiré', (
+        tester,
+      ) async {
+        await openManage(tester);
+        await tester.tap(
+          find.widgetWithText(DonyButton, 'Redevenir particulier'),
+        );
+        await tester.pumpAndSettle();
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+
+        verifyNever(() => gpRepo.resign());
+      });
+    });
+
+    testWidgets('anglais, 360 dp : la confirmation de « Back to individual » '
+        'tient sans exception', (tester) async {
       useEnglish();
       tester.view.physicalSize = const Size(360, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      whenListen<AuthState>(
-        mockAuthBloc,
-        const Stream.empty(),
-        initialState: AuthAuthenticated(
-          _travelerUser.copyWith(
-            travelerStatus: TravelerStatus.professional,
-            businessRegistrationNumber: 'CI-ABJ-2021-B-1234567890-LONG',
-          ),
-        ),
+      await pump(tester, gpProUser);
+      final pill = find.descendant(
+        of: find.byKey(const Key('profile-traveler-status-row')),
+        matching: find.text('Edit'),
       );
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.ensureVisible(pill);
       await tester.pumpAndSettle();
+      await tester.tap(pill);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Back to individual'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Dialog), findsOneWidget);
+      expect(find.text('Back to individual?'), findsOneWidget);
+      final confirm = find.descendant(
+        of: find.byType(Dialog),
+        matching: find.text('Back to individual'),
+      );
+      expect(confirm, findsOneWidget);
+      // Le libellé reste dans la boîte (la police de test, plus large que la
+      // vraie, peut le replier sur deux lignes sans qu'il déborde).
+      final box = tester.getRect(find.byType(Dialog));
+      expect(box.contains(tester.getRect(confirm).topLeft), isTrue);
+      expect(box.contains(tester.getRect(confirm).bottomRight), isTrue);
       expect(tester.takeException(), isNull);
-      expect(find.text('TRAVELER STATUS'), findsOneWidget);
-      expect(find.textContaining('Professional · CI-ABJ'), findsOneWidget);
     });
+
+    for (final english in [false, true]) {
+      testWidgets('360 dp, ${english ? 'anglais' : 'français'} : sans '
+          'exception, libellés des boutons de la feuille sur une ligne', (
+        tester,
+      ) async {
+        if (english) useEnglish();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await pump(
+          tester,
+          gpProUser.copyWith(
+            businessName: 'Diallo Express Transport International',
+          ),
+        );
+        expect(tester.takeException(), isNull);
+
+        final pill = find.descendant(
+          of: find.byKey(const Key('profile-traveler-status-row')),
+          matching: find.text(english ? 'Edit' : 'Modifier'),
+        );
+        await tester.ensureVisible(pill);
+        await tester.pumpAndSettle();
+        await tester.tap(pill);
+        await tester.pumpAndSettle();
+
+        final resign = find.widgetWithText(
+          DonyButton,
+          english ? 'Back to individual' : 'Redevenir particulier',
+        );
+        expect(resign, findsOneWidget);
+        expect(tester.takeException(), isNull);
+        // Une ligne : la hauteur du bouton reste celle d'un bouton normal.
+        expect(tester.getSize(resign).height, lessThan(64));
+      });
+    }
   });
 }

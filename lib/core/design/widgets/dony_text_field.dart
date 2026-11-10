@@ -38,6 +38,7 @@ class DonyTextField extends StatelessWidget {
     this.onChanged,
     this.validator,
     this.errorText,
+    this.errorMaxLines,
     this.enabled = true,
     this.requiredLabel = false,
     this.autofocus = false,
@@ -85,6 +86,7 @@ class DonyTextField extends StatelessWidget {
        _value = value,
        _onTap = onTap,
        _trailing = trailing,
+       errorMaxLines = null,
        controller = null,
        hint = null,
        suffixIcon = null,
@@ -131,6 +133,10 @@ class DonyTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final FormFieldValidator<String>? validator;
   final String? errorText;
+
+  /// Lignes permises au message d'erreur (une seule par défaut : un message
+  /// long y serait tronqué).
+  final int? errorMaxLines;
   final bool enabled;
   final bool autofocus;
   final int maxLines;
@@ -188,6 +194,7 @@ class DonyTextField extends StatelessWidget {
               : null),
       suffixIcon: suffixOverride ?? suffixIcon,
       errorText: errorText,
+      errorMaxLines: errorMaxLines,
       contentPadding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.base,
         vertical: DonySpacing.md,
