@@ -1781,6 +1781,21 @@ void main() {
       expect(createdCount(), 1);
     });
 
+    testWidgets('formulaire GP Pro quitté sans envoyer : un second appui sur '
+        '« Publier » rouvre la question (verrou relâché)', (tester) async {
+      await reachPublishStep(tester);
+      await tapPublish(tester);
+      await tester.tap(find.text('GP Pro'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('formulaire GP Pro'));
+      await tester.pumpAndSettle();
+      expect(find.text('Vous voyagez en tant que ?'), findsNothing);
+
+      await tapPublish(tester);
+
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
+    });
+
     testWidgets('statut déjà déclaré : aucune question', (tester) async {
       await reachPublishStep(tester, status: TravelerStatus.individual);
       await tapPublish(tester);

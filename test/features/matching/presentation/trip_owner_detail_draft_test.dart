@@ -801,6 +801,20 @@ void main() {
       verifyPublishDispatched(1);
     });
 
+    testWidgets('lecture de la demande GP Pro sans réponse (8 s) : la question '
+        'est posée', (tester) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) => Completer<GpProStatus>().future);
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pump(const Duration(seconds: 9));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
+    });
+
     testWidgets('« GP Pro » puis formulaire quitté sans envoyer : rien n\'est '
         'publié, aucun message', (tester) async {
       await pumpDraft(tester);

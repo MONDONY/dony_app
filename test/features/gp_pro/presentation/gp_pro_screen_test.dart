@@ -310,6 +310,31 @@ void main() {
     });
 
     for (final english in [false, true]) {
+      testWidgets('360 dp, ${english ? 'anglais' : 'français'} : le message '
+          'd\'erreur du numéro peut passer sur 3 lignes, sans exception', (
+        tester,
+      ) async {
+        if (english) useEnglish();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await pump(tester, _ready(GpProState.none, registrationNumber: '12'));
+
+        final loc = english ? lookupAppLocalizations(AppL10n.en) : l;
+        expect(find.text(loc.gpProRegistrationInvalid), findsOneWidget);
+        final field = tester.widget<TextField>(
+          find.descendant(
+            of: find.widgetWithText(TextFormField, loc.gpProRegistrationLabel),
+            matching: find.byType(TextField),
+          ),
+        );
+        expect(field.decoration?.errorMaxLines, 3);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    for (final english in [false, true]) {
       testWidgets('360 dp, ${english ? 'anglais' : 'français'} : formulaire '
           'sans exception', (tester) async {
         if (english) useEnglish();

@@ -132,6 +132,7 @@ class _GpProFormState extends State<GpProForm> {
                       ),
                     ],
                     errorText: invalid ? l.gpProRegistrationInvalid : null,
+                    errorMaxLines: 3,
                   ),
                 ),
                 if (!invalid)

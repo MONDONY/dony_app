@@ -37,9 +37,16 @@ Future<TravelerStatusOutcome?> remindTravelerStatusBeforePublish(
   return TravelerStatusSheet.show(context);
 }
 
+/// Délai de la lecture de la demande avant la feuille : au-delà, la question est
+/// posée (on ne fait pas attendre le voyageur sur une lecture accessoire).
+const Duration _applicationReadTimeout = Duration(seconds: 8);
+
 Future<bool> _gpProApplicationOpen() async {
   try {
-    return (await getIt<GpProRepository>().fetchStatus()).isOpen;
+    final status = await getIt<GpProRepository>().fetchStatus().timeout(
+      _applicationReadTimeout,
+    );
+    return status.isOpen;
   } on Object {
     return false;
   }
