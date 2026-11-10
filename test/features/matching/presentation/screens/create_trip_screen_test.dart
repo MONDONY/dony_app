@@ -194,6 +194,7 @@ UserModel _makeUser({String kycStatus = 'VERIFIED'}) => UserModel(
 /// the publish gate added in Task 5 doesn't intercept pre-existing tests.
 _MockAuthBloc _makeAuthBloc([AuthState? state]) {
   final b = _MockAuthBloc();
+  when(() => b.isClosed).thenReturn(false);
   when(() => b.state).thenReturn(state ?? AuthAuthenticated(_makeUser()));
   when(() => b.stream).thenAnswer((_) => const Stream.empty());
   return b;

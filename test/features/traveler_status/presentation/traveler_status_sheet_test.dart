@@ -44,6 +44,7 @@ void main() {
     result = null;
     resultSet = false;
     when(() => authBloc.state).thenReturn(const AuthInitial());
+    when(() => authBloc.isClosed).thenReturn(false);
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
@@ -75,6 +76,7 @@ void main() {
     bool required = false,
     Locale locale = AppL10n.fr,
     double width = 360,
+    bool allowLater = true,
   }) async {
     tester.view.physicalSize = Size(width, 800);
     tester.view.devicePixelRatio = 1;
@@ -95,6 +97,7 @@ void main() {
                   result = await TravelerStatusSheet.show(
                     context,
                     required: required,
+                    allowLater: allowLater,
                   );
                   resultSet = true;
                 },
@@ -164,6 +167,21 @@ void main() {
           country: any(named: 'country'),
         ),
       );
+    });
+
+    testWidgets('allowLater: false (profil) : pas de « Plus tard », sous-titre '
+        'inchangé', (tester) async {
+      await open(tester, allowLater: false);
+      expect(find.widgetWithText(DonyButton, fr.commonLater), findsNothing);
+      expect(find.text(fr.travelerStatusSheetSubtitle), findsOneWidget);
+      expect(find.text(fr.travelerStatusSheetSubtitleRequired), findsNothing);
+    });
+
+    testWidgets('allowLater par défaut : « Plus tard » présent (publication)', (
+      tester,
+    ) async {
+      await open(tester);
+      expect(find.widgetWithText(DonyButton, fr.commonLater), findsOneWidget);
     });
 
     testWidgets('aucun bouton dans le contenu défilant', (tester) async {

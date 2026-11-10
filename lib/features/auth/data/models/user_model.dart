@@ -253,6 +253,54 @@ class UserModel extends Equatable {
     businessCountry: businessCountry ?? this.businessCountry,
   );
 
+  /// Applique une déclaration de statut renvoyée par le back, sans attendre le
+  /// rechargement du profil. Contrairement à [copyWith], les champs d'un
+  /// professionnel sont remplacés tels quels : passer à « particulier » les
+  /// efface, comme le fait le back.
+  UserModel withTravelerStatus(
+    TravelerStatus status, {
+    String? businessName,
+    String? businessRegistrationNumber,
+    String? businessCountry,
+  }) {
+    final professional = status == TravelerStatus.professional;
+    return UserModel(
+      id: id,
+      username: username,
+      phoneNumber: phoneNumber,
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+      city: city,
+      country: country,
+      onboardingSeenAt: onboardingSeenAt,
+      roles: roles,
+      kycStatus: kycStatus,
+      status: this.status,
+      totalTrips: totalTrips,
+      totalShipments: totalShipments,
+      isProAccount: isProAccount,
+      gpPro: gpPro,
+      companyName: companyName,
+      siret: siret,
+      stripeAccountStatus: stripeAccountStatus,
+      deletionRequestedAt: deletionRequestedAt,
+      bio: bio,
+      avatarUrl: avatarUrl,
+      languages: languages,
+      averageRating: averageRating,
+      preferredLanguage: preferredLanguage,
+      messagingMutedUntil: messagingMutedUntil,
+      recetteMode: recetteMode,
+      travelerStatus: status,
+      businessName: professional ? businessName : null,
+      businessRegistrationNumber: professional
+          ? businessRegistrationNumber
+          : null,
+      businessCountry: professional ? businessCountry : null,
+    );
+  }
+
   /// Nom affiché : prénom et nom si renseignés, sinon le [username] du compte.
   ///
   /// Ne retombe volontairement ni sur le numéro de téléphone ni sur l'email. C'était le

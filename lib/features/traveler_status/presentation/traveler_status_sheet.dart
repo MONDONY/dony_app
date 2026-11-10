@@ -6,6 +6,7 @@ import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/l10n/country_names.dart';
@@ -34,24 +35,51 @@ class TravelerStatusSheet extends StatefulWidget {
 
   /// Ouvre la feuille. Rend `true` si le statut vient d'être déclaré, `false`
   /// si le voyageur a choisi « Plus tard », `null` si la feuille est fermée
-  /// d'un geste. Après une déclaration, le profil du compte est rechargé pour
-  /// que la pastille et la ligne du profil suivent.
+  /// d'un geste.
+  ///
+  /// [allowLater] : propose « Plus tard » (défaut). Le profil le retire :
+  /// modifier son statut n'est pas un rappel qu'on reporte. [required] le
+  /// retire aussi, et dit pourquoi dans le sous-titre.
+  ///
+  /// Après une déclaration, la réponse du `PUT` est appliquée tout de suite au
+  /// profil local (`AuthUserSynced`), puis le profil est rechargé : le
+  /// rechargement avale ses échecs, la pastille et la ligne du profil ne
+  /// doivent pas en dépendre.
   static Future<bool?> show(
     BuildContext context, {
     bool required = false,
+    bool allowLater = true,
   }) async {
     final auth = maybeRead<AuthBloc>(context);
+    // Créé ici pour relire la déclaration une fois la feuille fermée ; le
+    // `BlocProvider` le ferme avec la feuille.
+    final cubit = getIt<TravelerStatusCubit>();
     final declared = await DonyBottomSheet.show<bool>(
       context,
       analyticsName: 'traveler-status',
-      wrapper: (child) => BlocProvider<TravelerStatusCubit>(
-        create: (_) => getIt<TravelerStatusCubit>(),
-        child: child,
-      ),
-      stickyBottom: _TravelerStatusActions(required: required),
+      wrapper: (child) =>
+          BlocProvider<TravelerStatusCubit>(create: (_) => cubit, child: child),
+      stickyBottom: _TravelerStatusActions(required: required || !allowLater),
       child: TravelerStatusSheet(required: required),
     );
-    if (declared == true) auth?.add(const AuthProfileRefreshRequested());
+    if (declared == true && auth != null && !auth.isClosed) {
+      final state = cubit.state;
+      final user = auth.state.currentUser;
+      if (state is TravelerStatusSuccess && user != null) {
+        final d = state.declaration;
+        auth.add(
+          AuthUserSynced(
+            user.withTravelerStatus(
+              d.status,
+              businessName: d.businessName,
+              businessRegistrationNumber: d.registrationNumber,
+              businessCountry: d.country,
+            ),
+          ),
+        );
+      }
+      auth.add(const AuthProfileRefreshRequested());
+    }
     return declared;
   }
 

@@ -932,7 +932,8 @@ class _TravelerStatusRow extends StatelessWidget {
       label: '$label, $value',
       child: InkWell(
         key: const Key('profile-traveler-status-row'),
-        onTap: () => unawaited(TravelerStatusSheet.show(context)),
+        onTap: () =>
+            unawaited(TravelerStatusSheet.show(context, allowLater: false)),
         borderRadius: BorderRadius.circular(DonyRadius.md),
         child: Container(
           padding: const EdgeInsets.all(DonySpacing.base),

@@ -724,6 +724,45 @@ void main() {
       );
     });
 
+    test('withTravelerStatus : professionnel renseigné', () {
+      const user = UserModel(
+        id: 'u1',
+        roles: ['TRAVELER'],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+        firstName: 'Awa',
+      );
+      final pro = user.withTravelerStatus(
+        TravelerStatus.professional,
+        businessName: 'Diallo Express SARL',
+        businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+        businessCountry: 'CI',
+      );
+      expect(pro.travelerStatus, TravelerStatus.professional);
+      expect(pro.businessName, 'Diallo Express SARL');
+      expect(pro.businessRegistrationNumber, 'CI-ABJ-2021-B-12345');
+      expect(pro.businessCountry, 'CI');
+      expect(pro.firstName, 'Awa');
+    });
+
+    test('withTravelerStatus : passer à particulier efface les champs pro', () {
+      const pro = UserModel(
+        id: 'u1',
+        roles: ['TRAVELER'],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+        travelerStatus: TravelerStatus.professional,
+        businessName: 'Diallo Express SARL',
+        businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+        businessCountry: 'CI',
+      );
+      final individual = pro.withTravelerStatus(TravelerStatus.individual);
+      expect(individual.travelerStatus, TravelerStatus.individual);
+      expect(individual.businessName, isNull);
+      expect(individual.businessRegistrationNumber, isNull);
+      expect(individual.businessCountry, isNull);
+    });
+
     test('deux comptes de statut différent ne sont pas égaux', () {
       const a = UserModel(
         id: 'u1',

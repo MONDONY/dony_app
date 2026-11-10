@@ -207,6 +207,7 @@ void main() {
     bidBloc = _MockBidBloc();
     cancelBloc = _MockCancellationBloc();
     authBloc = _MockAuthBloc();
+    when(() => authBloc.isClosed).thenReturn(false);
     analytics = _MockAnalyticsService();
 
     when(

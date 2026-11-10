@@ -111,6 +111,7 @@ void main() {
 
   setUp(() {
     mockAuthBloc = MockAuthBloc();
+    when(() => mockAuthBloc.isClosed).thenReturn(false);
     setSmsAuthEnabled(kSmsAuthEnabledDefault);
   });
 
@@ -1054,6 +1055,66 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Particulier'), findsOneWidget);
       expect(find.text('Non renseigné'), findsNothing);
+    });
+
+    testWidgets('depuis le profil : pas de « Plus tard »', (tester) async {
+      await pump(tester, _travelerUser);
+      await tester.ensureVisible(find.text('Non renseigné'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Non renseigné'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Plus tard'), findsNothing);
+      // Le sous-titre « facultatif » reste celui d'un rappel qui se modifie.
+      expect(
+        find.text(
+          'Les expéditeurs voient votre réponse sur vos trajets. Vous pouvez '
+          'la modifier à tout moment dans votre profil.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('PUT réussi, rechargement du profil en échec : la ligne '
+        'affiche quand même le nouveau statut', (tester) async {
+      final states = StreamController<AuthState>.broadcast();
+      addTearDown(states.close);
+      // Le rechargement (AuthProfileRefreshRequested) échoue en silence et ne
+      // renvoie rien ; seule la synchro locale (AuthUserSynced) met l'état à
+      // jour, comme dans AuthBloc.
+      when(() => mockAuthBloc.add(any())).thenAnswer((invocation) {
+        final event = invocation.positionalArguments.first;
+        if (event is AuthUserSynced) {
+          states.add(AuthProfileUpdated(event.user));
+        }
+      });
+      await pump(tester, _travelerUser, stream: states.stream);
+
+      await tester.ensureVisible(find.text('Non renseigné'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Non renseigné'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Particulier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.text(
+          "Je confirme voyager à titre personnel et que ce n'est pas mon métier.",
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Particulier'), findsOneWidget);
+      expect(find.text('Non renseigné'), findsNothing);
+      // La synchro locale précède le rechargement.
+      verifyInOrder([
+        () => mockAuthBloc.add(any(that: isA<AuthUserSynced>())),
+        () => mockAuthBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
+      ]);
     });
 
     testWidgets('360 dp, anglais : sans exception', (tester) async {
