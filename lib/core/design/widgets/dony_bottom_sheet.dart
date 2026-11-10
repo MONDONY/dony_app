@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/analytics_route_filter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -36,6 +38,7 @@ abstract final class DonyBottomSheet {
     bool isScrollControlled = true,
     bool isDanger = false,
     double? heightFraction,
+    double? maxHeightFraction,
     Widget Function(Widget)? wrapper,
     bool showFeedback = false,
     String? analyticsName,
@@ -77,6 +80,7 @@ abstract final class DonyBottomSheet {
           showHandle: showHandle,
           isDanger: isDanger,
           expand: heightFraction != null,
+          maxHeightFraction: maxHeightFraction,
           stickyBottom: stickyBottom,
           footer: footer,
           showFeedback: showFeedback,
@@ -102,6 +106,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
     this.showHandle = true,
     this.isDanger = false,
     this.expand = false,
+    this.maxHeightFraction,
     this.showFeedback = false,
   });
 
@@ -121,6 +126,11 @@ class _DonyBottomSheetContent extends StatelessWidget {
   final bool showHandle;
   final bool isDanger;
   final bool expand;
+
+  /// Hauteur maximale de la feuille en part de l'écran (la feuille épouse son
+  /// contenu jusque-là, puis le contenu défile, le pied reste collé). Remplace
+  /// la marge haute de 10 %.
+  final double? maxHeightFraction;
 
   /// Scarabée de signalement ([DonyFeedbackButton]) avant la croix de
   /// l'en-tête. Facultatif : une feuille qui tient lieu d'écran (détail d'un
@@ -175,8 +185,12 @@ class _DonyBottomSheetContent extends StatelessWidget {
       child: Material(type: MaterialType.transparency, child: child),
     );
 
-    return Container(
-      margin: expand ? EdgeInsets.zero : EdgeInsets.only(top: topMargin),
+    final cap = maxHeightFraction;
+    final capped = cap != null && !expand;
+    final sheet = Container(
+      margin: expand || capped
+          ? EdgeInsets.zero
+          : EdgeInsets.only(top: topMargin),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: const BorderRadius.vertical(
@@ -264,6 +278,16 @@ class _DonyBottomSheetContent extends StatelessWidget {
             ?footer,
         ],
       ),
+    );
+    if (!capped) return sheet;
+    // Jamais plus haut que l'écran sous la barre d'état.
+    final maxHeight = math.min(
+      mq.size.height * cap,
+      mq.size.height - mq.viewPadding.top,
+    );
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      child: sheet,
     );
   }
 }

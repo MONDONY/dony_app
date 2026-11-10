@@ -185,6 +185,73 @@ enum InfoScreen {
   }
 }
 
+/// Habillage d'un modal (enum `layout` du back). Absent : [bottomSheet], le
+/// rendu d'avant ce choix. Valeur inconnue : `null`, la campagne est ignorée.
+enum VideoModalLayout {
+  bottomSheet('BOTTOM_SHEET'),
+  centered('CENTERED'),
+  fullscreen('FULLSCREEN');
+
+  const VideoModalLayout(this.wire);
+
+  final String wire;
+
+  static VideoModalLayout? fromWire(Object? value) {
+    if (value == null) return bottomSheet;
+    for (final l in values) {
+      if (l.wire == value) return l;
+    }
+    return null;
+  }
+}
+
+/// Place de l'image d'un modal d'information (enum `imageMode` du back).
+enum VideoModalImageMode {
+  none('NONE'),
+
+  /// Bannière au-dessus du titre et du texte.
+  top('TOP'),
+
+  /// L'image occupe tout le modal au-dessus des boutons ; ni titre ni texte
+  /// affichés (le titre reste le libellé d'accessibilité).
+  poster('POSTER');
+
+  const VideoModalImageMode(this.wire);
+
+  final String wire;
+
+  /// Absent : [none]. Valeur inconnue : `null`, la campagne est ignorée.
+  static VideoModalImageMode? fromWire(Object? value) {
+    if (value == null) return none;
+    for (final m in values) {
+      if (m.wire == value) return m;
+    }
+    return null;
+  }
+}
+
+/// Cadrage de l'image (enum `imageFit` du back).
+enum VideoModalImageFit {
+  /// Remplit le cadre en recadrant.
+  cover('COVER'),
+
+  /// Image entière.
+  contain('CONTAIN');
+
+  const VideoModalImageFit(this.wire);
+
+  final String wire;
+
+  /// Absent : [cover]. Valeur inconnue : `null`.
+  static VideoModalImageFit? fromWire(Object? value) {
+    if (value == null) return cover;
+    for (final f in values) {
+      if (f.wire == value) return f;
+    }
+    return null;
+  }
+}
+
 /// Action d'un bouton d'un modal d'information.
 class VideoModalAction extends Equatable {
   const VideoModalAction._(this.kind, {this.screen, this.url});
@@ -279,9 +346,17 @@ class VideoModalCampaign extends Equatable {
     this.maxDisplays = defaultMaxDisplays,
     this.displays = 0,
     this.audience = VideoModalAudience.neverAnswered,
+    this.layout = VideoModalLayout.bottomSheet,
+    this.sizePercent,
+    this.imageMode = VideoModalImageMode.none,
+    this.imageFit = VideoModalImageFit.cover,
+    this.imageUrl,
+    this.imageAlt,
   });
 
   static const defaultMaxDisplays = 3;
+  static const minSizePercent = 30;
+  static const maxSizePercent = 100;
   static const maxHighlights = 3;
   static final _youtubeId = RegExp(r'^[A-Za-z0-9_-]{11}$');
 
@@ -306,6 +381,24 @@ class VideoModalCampaign extends Equatable {
   final int maxDisplays;
   final int displays;
   final VideoModalAudience audience;
+
+  /// Habillage et hauteur maximale en % de l'écran (`null` : selon le
+  /// contenu ; sans effet en plein écran).
+  final VideoModalLayout layout;
+  final int? sizePercent;
+
+  /// Image d'un modal d'information (jamais pour une vidéo). [imageUrl] est
+  /// renseignée dès que [imageMode] n'est pas [VideoModalImageMode.none].
+  final VideoModalImageMode imageMode;
+  final VideoModalImageFit imageFit;
+  final String? imageUrl;
+  final String? imageAlt;
+
+  /// Une image est à précharger avant d'afficher le modal.
+  bool get hasImage =>
+      imageMode != VideoModalImageMode.none && imageUrl != null;
+
+  bool get isPoster => hasImage && imageMode == VideoModalImageMode.poster;
 
   bool get isInfo => type == VideoModalType.info;
 
@@ -336,6 +429,11 @@ class VideoModalCampaign extends Equatable {
     if (triggers.isEmpty) return null;
     final info = type == VideoModalType.info ? _parseInfo(json) : null;
     if (type == VideoModalType.info && info == null) return null;
+    final layout = VideoModalLayout.fromWire(json['layout']);
+    if (layout == null) return null;
+    final image = type == VideoModalType.info ? _parseImage(json) : null;
+    if (type == VideoModalType.info && image == null) return null;
+    final size = _int(json['sizePercent']);
     final rawHighlights = json['highlights'];
     final highlights = rawHighlights is List
         ? rawHighlights
@@ -367,6 +465,47 @@ class VideoModalCampaign extends Equatable {
           : defaultMaxDisplays,
       displays: _int(json['displays']) ?? 0,
       audience: VideoModalAudience.fromWire(json['audience']),
+      layout: layout,
+      sizePercent: size != null && size >= minSizePercent && size <= 100
+          ? size
+          : null,
+      imageMode: image?.mode ?? VideoModalImageMode.none,
+      imageFit: image?.fit ?? VideoModalImageFit.cover,
+      imageUrl: image?.url,
+      imageAlt: image?.alt,
+    );
+  }
+
+  /// Image d'un modal d'information, ou `null` s'il est inutilisable : mode
+  /// ou cadrage inconnu de cette version, affiche sans adresse https valide.
+  /// Une bannière sans adresse valide devient un modal sans image.
+  static ({
+    VideoModalImageMode mode,
+    VideoModalImageFit fit,
+    String? url,
+    String? alt,
+  })?
+  _parseImage(Map<dynamic, dynamic> json) {
+    final mode = VideoModalImageMode.fromWire(json['imageMode']);
+    if (mode == null) return null;
+    const none = (
+      mode: VideoModalImageMode.none,
+      fit: VideoModalImageFit.cover,
+      url: null,
+      alt: null,
+    );
+    if (mode == VideoModalImageMode.none) return none;
+    final fit = VideoModalImageFit.fromWire(json['imageFit']);
+    if (fit == null) return null;
+    final url = json['imageUrl'];
+    if (!VideoModalAction.isValidUrl(url)) {
+      return mode == VideoModalImageMode.poster ? null : none;
+    }
+    return (
+      mode: mode,
+      fit: fit,
+      url: url! as String,
+      alt: _text(json['imageAlt']),
     );
   }
 
@@ -441,5 +580,11 @@ class VideoModalCampaign extends Equatable {
     maxDisplays,
     displays,
     audience,
+    layout,
+    sizePercent,
+    imageMode,
+    imageFit,
+    imageUrl,
+    imageAlt,
   ];
 }
