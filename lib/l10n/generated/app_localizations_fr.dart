@@ -23718,4 +23718,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get travelerStatusRegistrationInvalid =>
       '4 caractères minimum : lettres, chiffres, espace, point, barre oblique ou tiret.';
+
+  @override
+  String get infoModalCloseFallback => 'D\'accord';
+
+  @override
+  String get infoModalOpenFallback => 'Ouvrir';
 }

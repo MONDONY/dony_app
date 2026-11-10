@@ -35,12 +35,16 @@ final class VideoModalAnswerRequested extends VideoModalEvent {
     required this.campaign,
     required this.trigger,
     required this.event,
+    this.actionKind,
   });
 
   final VideoModalCampaign campaign;
   final VideoModalTrigger trigger;
   final VideoModalEventType event;
 
+  /// Action du bouton touché, pour un modal d'information seulement.
+  final VideoModalActionKind? actionKind;
+
   @override
-  List<Object?> get props => [campaign, trigger, event];
+  List<Object?> get props => [campaign, trigger, event, actionKind];
 }

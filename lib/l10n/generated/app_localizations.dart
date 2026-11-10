@@ -37919,6 +37919,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'4 caractères minimum : lettres, chiffres, espace, point, barre oblique ou tiret.'**
   String get travelerStatusRegistrationInvalid;
+
+  /// Bouton d'un modal d'information qui ferme, quand le serveur n'envoie pas de libellé (info_modal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'D\'accord'**
+  String get infoModalCloseFallback;
+
+  /// Bouton d'un modal d'information qui ouvre un écran ou un lien, quand le serveur n'envoie pas de libellé (info_modal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir'**
+  String get infoModalOpenFallback;
 }
 
 class _AppLocalizationsDelegate
