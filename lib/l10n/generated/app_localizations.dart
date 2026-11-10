@@ -38063,6 +38063,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vous pourrez de nouveau publier à partir du 1er {month}.'**
   String publishBlockedResumeOnFirst(String month);
+
+  /// Titre de la section GP Pro de l'écran Profil, entre Argent et Ma réputation (profile_gp_pro_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'GP PRO'**
+  String get profileSectionGpPro;
+
+  /// Libellé de la ligne GP Pro du Profil quand le voyageur n'est pas GP Pro et n'a aucune demande ouverte (profile_gp_pro_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Devenir GP Pro'**
+  String get profileGpProBecome;
+
+  /// Sous-titre de la ligne « Devenir GP Pro » du Profil (profile_gp_pro_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil professionnel examiné par l\'équipe, avec raison sociale et numéro d\'entreprise.'**
+  String get profileGpProBecomeSubtitle;
+
+  /// Libellé de la ligne GP Pro du Profil quand une demande est ouverte (pastille « En validation ») (profile_gp_pro_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande GP Pro'**
+  String get profileGpProApplication;
+
+  /// Pastille de la ligne GP Pro du Profil quand le badge est accordé (profile_gp_pro_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Actif'**
+  String get profileGpProActivePill;
 }
 
 class _AppLocalizationsDelegate

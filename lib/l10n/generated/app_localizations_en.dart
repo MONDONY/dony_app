@@ -23651,4 +23651,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String publishBlockedResumeOnFirst(String month) {
     return 'You will be able to publish again from $month 1st.';
   }
+
+  @override
+  String get profileSectionGpPro => 'GP PRO';
+
+  @override
+  String get profileGpProBecome => 'Become a GP Pro';
+
+  @override
+  String get profileGpProBecomeSubtitle =>
+      'Professional profile reviewed by the team, with business name and registration number.';
+
+  @override
+  String get profileGpProApplication => 'GP Pro application';
+
+  @override
+  String get profileGpProActivePill => 'Active';
 }

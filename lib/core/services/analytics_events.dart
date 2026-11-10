@@ -1338,6 +1338,11 @@ abstract final class AnalyticsEvents {
   /// Entrée GP Pro du menu de l'onglet Moi.
   static const profileMenuGpProOpened = 'profile_menu_gp_pro_opened';
 
+  /// Ligne « GP Pro » de l'écran Profil (entre Argent et Ma réputation) touchée.
+  /// Propriété `state` : `none` (Devenir GP Pro), `open` (demande en cours),
+  /// `active` (badge accordé). Jamais d'information d'entreprise.
+  static const profileGpProRowTapped = 'profile_gp_pro_row_tapped';
+
   // ── Suivi approximatif du voyageur ─────────────────────────────────────
   /// « Je pars » confirmé depuis l'écran du trajet (propriété `has_position`).
   /// Jamais de coordonnées.

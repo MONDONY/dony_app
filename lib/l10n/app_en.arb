@@ -11658,5 +11658,15 @@
   "errorGpProPendingMessage": "You will be able to publish as soon as the Yadony team approves your GP Pro application.",
   "@errorGpProPendingMessage": {"description": "Message de l'erreur 403 gp-pro-pending (error_catalog.dart)."},
   "publishBlockedResumeOnFirst": "You will be able to publish again from {month} 1st.",
-  "@publishBlockedResumeOnFirst": {"description": "Date de reprise quand c'est le premier du mois : « 1er » en français ; {month} est le nom du mois (publish_blocked_screen.dart).", "placeholders": {"month": {"type": "String"}}}
+  "@publishBlockedResumeOnFirst": {"description": "Date de reprise quand c'est le premier du mois : « 1er » en français ; {month} est le nom du mois (publish_blocked_screen.dart).", "placeholders": {"month": {"type": "String"}}},
+  "profileSectionGpPro": "GP PRO",
+  "@profileSectionGpPro": {"description": "Titre de la section GP Pro de l'écran Profil, entre Argent et Ma réputation (profile_gp_pro_section.dart)."},
+  "profileGpProBecome": "Become a GP Pro",
+  "@profileGpProBecome": {"description": "Libellé de la ligne GP Pro du Profil quand le voyageur n'est pas GP Pro et n'a aucune demande ouverte (profile_gp_pro_section.dart)."},
+  "profileGpProBecomeSubtitle": "Professional profile reviewed by the team, with business name and registration number.",
+  "@profileGpProBecomeSubtitle": {"description": "Sous-titre de la ligne « Devenir GP Pro » du Profil (profile_gp_pro_section.dart)."},
+  "profileGpProApplication": "GP Pro application",
+  "@profileGpProApplication": {"description": "Libellé de la ligne GP Pro du Profil quand une demande est ouverte (pastille « En validation ») (profile_gp_pro_section.dart)."},
+  "profileGpProActivePill": "Active",
+  "@profileGpProActivePill": {"description": "Pastille de la ligne GP Pro du Profil quand le badge est accordé (profile_gp_pro_section.dart)."}
 }

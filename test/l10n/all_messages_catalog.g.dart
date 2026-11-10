@@ -8197,6 +8197,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.profileFieldTravelerStatusAllCaps,
   'bidCreateIndividualTravelerTitle': (l) => l.bidCreateIndividualTravelerTitle,
   'bidCreateIndividualTravelerBody': (l) => l.bidCreateIndividualTravelerBody,
+  'travelerStatusRegistrationInvalid': (l) =>
+      l.travelerStatusRegistrationInvalid,
+  'infoModalCloseFallback': (l) => l.infoModalCloseFallback,
+  'infoModalOpenFallback': (l) => l.infoModalOpenFallback,
   'profilePublicBusinessLineNumber': (l) =>
       l.profilePublicBusinessLineNumber(placeholderMarker('number')),
   'profilePublicBusinessDeclared': (l) => l.profilePublicBusinessDeclared,
@@ -8248,6 +8252,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorGpProPendingMessage': (l) => l.errorGpProPendingMessage,
   'publishBlockedResumeOnFirst': (l) =>
       l.publishBlockedResumeOnFirst(placeholderMarker('month')),
+  'profileSectionGpPro': (l) => l.profileSectionGpPro,
+  'profileGpProBecome': (l) => l.profileGpProBecome,
+  'profileGpProBecomeSubtitle': (l) => l.profileGpProBecomeSubtitle,
+  'profileGpProApplication': (l) => l.profileGpProApplication,
+  'profileGpProActivePill': (l) => l.profileGpProActivePill,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

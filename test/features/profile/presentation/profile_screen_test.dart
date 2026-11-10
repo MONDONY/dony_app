@@ -471,6 +471,24 @@ void main() {
       }
     });
 
+    testWidgets('la section GP PRO est entre ARGENT et MA RÉPUTATION', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 6000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await pumpWith(tester, _dualRoleUser);
+
+      final money = tester.getTopLeft(find.text('ARGENT')).dy;
+      final gpPro = tester.getTopLeft(find.text('GP PRO')).dy;
+      final reputation = tester.getTopLeft(find.text('MA RÉPUTATION')).dy;
+      expect(money, lessThan(gpPro));
+      expect(gpPro, lessThan(reputation));
+      // Sans cubit GP Pro dans le graphe (tests), la ligne se dégrade.
+      expect(find.text('Devenir GP Pro'), findsOneWidget);
+    });
+
     testWidgets('les entrées toujours migrées vers Activités ont disparu', (
       tester,
     ) async {

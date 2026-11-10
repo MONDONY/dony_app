@@ -23822,4 +23822,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String publishBlockedResumeOnFirst(String month) {
     return 'Vous pourrez de nouveau publier à partir du 1er $month.';
   }
+
+  @override
+  String get profileSectionGpPro => 'GP PRO';
+
+  @override
+  String get profileGpProBecome => 'Devenir GP Pro';
+
+  @override
+  String get profileGpProBecomeSubtitle =>
+      'Profil professionnel examiné par l\'équipe, avec raison sociale et numéro d\'entreprise.';
+
+  @override
+  String get profileGpProApplication => 'Demande GP Pro';
+
+  @override
+  String get profileGpProActivePill => 'Actif';
 }
