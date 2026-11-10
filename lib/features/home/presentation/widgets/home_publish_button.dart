@@ -9,6 +9,8 @@ import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +28,12 @@ enum HomePublishChoice {
 
   /// Valeur de la propriété `choice` de `home_publish_tapped`.
   final String analyticsValue;
+
+  /// Déclencheur du modal vidéo posé devant ce formulaire.
+  VideoModalTrigger get videoModalTrigger => switch (this) {
+    HomePublishChoice.parcel => VideoModalTrigger.sendParcel,
+    HomePublishChoice.trip => VideoModalTrigger.publishTrip,
+  };
 }
 
 /// Ordre des choix selon le rôle actif : le parcours du rôle en premier,
@@ -78,6 +86,9 @@ class HomePublishButton extends StatelessWidget {
         },
       ),
     );
+    // Modal vidéo de l'admin posé devant ce formulaire, s'il y en a un.
+    await VideoModalGate.before(context, choice.videoModalTrigger);
+    if (!context.mounted) return;
     unawaited(context.push<Object?>(choice.route));
   }
 

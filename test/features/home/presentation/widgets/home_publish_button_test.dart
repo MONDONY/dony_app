@@ -6,6 +6,8 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/home/presentation/widgets/home_publish_button.dart';
+import 'package:dony/features/video_modal/bloc/video_modal_bloc.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,6 +17,9 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
+class _MockVideoModalBloc extends MockBloc<VideoModalEvent, VideoModalState>
+    implements VideoModalBloc {}
 
 class _MockActiveRoleCubit extends MockCubit<ActiveRole>
     implements ActiveRoleCubit {}
@@ -273,5 +278,48 @@ void main() {
     ]);
     expect(HomePublishChoice.parcel.route, '/parcels/send-intro');
     expect(HomePublishChoice.trip.route, '/trips/publish-intro');
+  });
+
+  test('chaque choix a son déclencheur de modal vidéo', () {
+    expect(
+      HomePublishChoice.trip.videoModalTrigger,
+      VideoModalTrigger.publishTrip,
+    );
+    expect(
+      HomePublishChoice.parcel.videoModalTrigger,
+      VideoModalTrigger.sendParcel,
+    );
+  });
+
+  testWidgets('modal vidéo PUBLISH_TRIP : ouvert après la feuille, avant '
+      'l\'intro de trajet, qui suit « Commencer »', (tester) async {
+    final modalBloc = _MockVideoModalBloc();
+    when(() => modalBloc.isClosed).thenReturn(false);
+    when(() => modalBloc.state).thenReturn(
+      const VideoModalState(
+        status: VideoModalStatus.ready,
+        campaigns: [
+          VideoModalCampaign(
+            id: 'c1',
+            version: 1,
+            triggers: {VideoModalTrigger.publishTrip},
+            title: 'Bien publier son trajet',
+            youtubeVideoId: 'dQw4w9WgXcQ',
+          ),
+        ],
+      ),
+    );
+    getIt.registerSingleton<VideoModalBloc>(modalBloc);
+    await tester.pumpWidget(_app(role: ActiveRole.traveler));
+    await tester.pumpAndSettle();
+    await openSheet(tester);
+    await tester.tap(find.byKey(const Key('home-publish-choice-trip')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bien publier son trajet'), findsOneWidget);
+    expect(find.text('STUB_TRIP_INTRO'), findsNothing);
+    await tester.tap(find.byKey(const Key('video-modal-secondary')));
+    await tester.pumpAndSettle();
+    expect(find.text('STUB_TRIP_INTRO'), findsOneWidget);
   });
 }

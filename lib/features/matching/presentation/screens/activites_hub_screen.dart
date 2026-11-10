@@ -32,6 +32,8 @@ import 'package:dony/features/matching/presentation/widgets/tools_completion_car
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/payments/money/presentation/widgets/money_header_button.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -65,11 +67,26 @@ void _openRoute(BuildContext context, String event, String route) {
 /// Bouton de la tuile « Mes colis ». Passe d'abord par l'écran d'intro
 /// (conditions + responsabilités) ; c'est lui qui applique le gate KYC et
 /// ouvre le wizard une fois vérifié.
-void _openSendIntro(BuildContext context) => _openRoute(
+void _openSendIntro(BuildContext context) => _openPublishRoute(
   context,
+  VideoModalTrigger.sendParcel,
   AnalyticsEvents.activitesHubRequestCreateOpened,
   '/parcels/send-intro',
 );
+
+/// Bouton « Publier un trajet » / « Publier un colis » : le modal vidéo de
+/// l'admin posé devant ce formulaire passe d'abord, s'il y en a un.
+void _openPublishRoute(
+  BuildContext context,
+  VideoModalTrigger trigger,
+  String event,
+  String route,
+) {
+  unawaited(() async {
+    await VideoModalGate.before(context, trigger);
+    if (context.mounted) _openRoute(context, event, route);
+  }());
+}
 
 /// Envois qui demandent encore quelque chose : les puces « En cours »
 /// ([kEnvoisEnCours]) et « En attente » ([kEnvoisAVenir], dont l'attente de
@@ -726,8 +743,9 @@ class _ActivityGrid extends StatelessWidget {
           AnalyticsEvents.activitesHubTripsOpened,
           '/announcements/trips',
         ),
-        onCtaTap: () => _openRoute(
+        onCtaTap: () => _openPublishRoute(
           context,
+          VideoModalTrigger.publishTrip,
           AnalyticsEvents.activitesHubTripCreateOpened,
           '/trips/publish-intro',
         ),

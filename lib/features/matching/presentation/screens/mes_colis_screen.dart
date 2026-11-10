@@ -11,6 +11,8 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -118,13 +120,15 @@ class _MesColisViewState extends State<_MesColisView> {
 
   /// Même geste que la pill « Envoyer » de la liste d'envois : l'écran d'intro
   /// applique le gate KYC puis ouvre le wizard.
-  void _onNewRequest() {
+  Future<void> _onNewRequest() async {
     unawaited(
       getIt<AnalyticsService>().logEvent(
         AnalyticsEvents.shipmentNewRequestOpened,
       ),
     );
-    context.push('/parcels/send-intro');
+    await VideoModalGate.before(context, VideoModalTrigger.sendParcel);
+    if (!mounted) return;
+    unawaited(context.push('/parcels/send-intro'));
   }
 
   @override

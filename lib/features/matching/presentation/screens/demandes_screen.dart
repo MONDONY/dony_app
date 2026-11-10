@@ -28,6 +28,8 @@ import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_ch
 import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/features/tracking/presentation/tracking_consent_prompt.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -587,13 +589,18 @@ class _EmptyForFilter extends StatelessWidget {
           description: description,
           actionLabel: showAction ? l.tripPublishTitle : null,
           onAction: showAction
-              ? () {
+              ? () async {
                   unawaited(
                     getIt<AnalyticsService>().logEvent(
                       AnalyticsEvents.activitesHubTripCreateOpened,
                     ),
                   );
-                  context.push('/trips/create');
+                  await VideoModalGate.before(
+                    context,
+                    VideoModalTrigger.publishTrip,
+                  );
+                  if (!context.mounted) return;
+                  unawaited(context.push('/trips/create'));
                 }
               : null,
         ),

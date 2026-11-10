@@ -17,6 +17,8 @@ abstract final class GuestAccessGuard {
       path == '/home' ||
       path == '/recherche/composer' ||
       path == '/favoris' ||
+      // Lecteur d'un modal vidéo : le modal s'affiche aussi aux visiteurs.
+      path == '/video-modal/player' ||
       RegExp(r'^/package-requests/[^/]+/public$').hasMatch(path) ||
       RegExp(r'^/announcements/[^/]+/trip$').hasMatch(path);
 

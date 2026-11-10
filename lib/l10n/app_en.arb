@@ -11530,5 +11530,12 @@
   "tripParcelsLineAwaiting": "{count, plural, =1{1 needs your action} other{{count} need your action}}",
   "@tripParcelsLineAwaiting": {"description": "Écran du trajet (propriétaire), ligne Colis : colis distincts qui attendent un geste du voyageur, en orange sous le résumé (trip_parcels_line.dart).", "placeholders": {"count": {"type": "int"}}},
   "tripParcelAwaitingSemantics": "Needs your action",
-  "@tripParcelAwaitingSemantics": {"description": "Sheet « Colis » de l'écran du trajet : lecture d'écran du point orange d'un colis qui attend un geste du voyageur (trip_parcel_rows.dart)."}
+  "@tripParcelAwaitingSemantics": {"description": "Sheet « Colis » de l'écran du trajet : lecture d'écran du point orange d'un colis qui attend un geste du voyageur (trip_parcel_rows.dart)."},
+  "videoModalPrimaryFallback": "Watch the video",
+  "videoModalSecondaryFallback": "Get started",
+  "videoModalHighlightsTitle": "With Yadony, you can",
+  "videoModalPlayerEndSearch": "Find a trip",
+  "videoModalPlayerEndPublish": "Publish my trip",
+  "videoModalPlayerError": "The video can't be played right now.",
+  "videoModalThumbnailSemantics": "Play the video: {title}"
 }

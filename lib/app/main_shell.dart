@@ -42,6 +42,7 @@ import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/features/video_modal/presentation/video_modal_host.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -308,69 +309,76 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return ConsentPromptHost(
-      child: MultiBlocListener(
-        listeners: [
-          NotificationBadgeListener(badge: getIt<AppBadgeService>()),
-          BlocListener<RatingBloc, RatingState>(
-            listener: (context, state) {
-              if (state is PendingRatingFound && !_ratingPromptShown) {
-                _ratingPromptShown = true;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!mounted) return;
-                  RatingBottomSheet.show(
-                    context,
-                    bidId: state.bidId,
-                    travelerName: state.otherPartyName,
-                    isTravelerRating: state.isTravelerRating,
-                  );
-                });
+      // Modals vidéo de l'admin : APP_OPEN puis le déclencheur de l'onglet
+      // affiché, jamais par-dessus une autre feuille.
+      child: VideoModalHost(
+        tabIndex: widget.navigationShell.currentIndex,
+        child: MultiBlocListener(
+          listeners: [
+            NotificationBadgeListener(badge: getIt<AppBadgeService>()),
+            BlocListener<RatingBloc, RatingState>(
+              listener: (context, state) {
+                if (state is PendingRatingFound && !_ratingPromptShown) {
+                  _ratingPromptShown = true;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    RatingBottomSheet.show(
+                      context,
+                      bidId: state.bidId,
+                      travelerName: state.otherPartyName,
+                      isTravelerRating: state.isTravelerRating,
+                    );
+                  });
+                }
+              },
+            ),
+          ],
+          child: BlocBuilder<StripeAccountBloc, StripeAccountState>(
+            buildWhen: (prev, curr) {
+              if (prev is StripeAccountReady && curr is StripeAccountReady) {
+                return prev.accountStatus.isRejected !=
+                    curr.accountStatus.isRejected;
               }
+              return prev.runtimeType != curr.runtimeType;
+            },
+            builder: (context, accountState) {
+              Widget? banner;
+              // Seul un compte REJETÉ garde un bandeau permanent : c'est un état
+              // terminal qui exige de contacter le support, l'utilisateur doit le
+              // voir sans le chercher.
+              //
+              // Un compte simplement désactivé n'en a plus : le bandeau squattait
+              // le haut de toutes les pages avec l'allure d'une erreur réseau,
+              // pour un état qui se règle en reprenant l'onboarding Stripe. Le
+              // gating de `/trips/create` (voir router.dart) suffit à l'annoncer
+              // au moment où il gêne vraiment.
+              if (accountState is StripeAccountReady) {
+                if (accountState.accountStatus.isRejected) {
+                  banner = const AccountRejectedBanner();
+                }
+              }
+              return Scaffold(
+                // Le contenu passe DERRIÈRE la bottom nav (bar ancrée dont le
+                // fond s'étend sous le home indicator). Scaffold injecte la
+                // hauteur de la nav dans MediaQuery.padding.bottom du body,
+                // donc les écrans en SafeArea réservent l'espace.
+                extendBody: true,
+                body: Column(
+                  children: [
+                    ?banner,
+                    const AppUpdatePromptGate(
+                      key: ValueKey('app-update-prompt'),
+                    ),
+                    Expanded(child: widget.navigationShell),
+                  ],
+                ),
+                bottomNavigationBar: MainShellBottomNav(
+                  currentIndex: widget.navigationShell.currentIndex,
+                  onTap: _onTap,
+                ),
+              );
             },
           ),
-        ],
-        child: BlocBuilder<StripeAccountBloc, StripeAccountState>(
-          buildWhen: (prev, curr) {
-            if (prev is StripeAccountReady && curr is StripeAccountReady) {
-              return prev.accountStatus.isRejected !=
-                  curr.accountStatus.isRejected;
-            }
-            return prev.runtimeType != curr.runtimeType;
-          },
-          builder: (context, accountState) {
-            Widget? banner;
-            // Seul un compte REJETÉ garde un bandeau permanent : c'est un état
-            // terminal qui exige de contacter le support, l'utilisateur doit le
-            // voir sans le chercher.
-            //
-            // Un compte simplement désactivé n'en a plus : le bandeau squattait
-            // le haut de toutes les pages avec l'allure d'une erreur réseau,
-            // pour un état qui se règle en reprenant l'onboarding Stripe. Le
-            // gating de `/trips/create` (voir router.dart) suffit à l'annoncer
-            // au moment où il gêne vraiment.
-            if (accountState is StripeAccountReady) {
-              if (accountState.accountStatus.isRejected) {
-                banner = const AccountRejectedBanner();
-              }
-            }
-            return Scaffold(
-              // Le contenu passe DERRIÈRE la bottom nav (bar ancrée dont le
-              // fond s'étend sous le home indicator). Scaffold injecte la
-              // hauteur de la nav dans MediaQuery.padding.bottom du body,
-              // donc les écrans en SafeArea réservent l'espace.
-              extendBody: true,
-              body: Column(
-                children: [
-                  ?banner,
-                  const AppUpdatePromptGate(key: ValueKey('app-update-prompt')),
-                  Expanded(child: widget.navigationShell),
-                ],
-              ),
-              bottomNavigationBar: MainShellBottomNav(
-                currentIndex: widget.navigationShell.currentIndex,
-                onTap: _onTap,
-              ),
-            );
-          },
         ),
       ),
     );

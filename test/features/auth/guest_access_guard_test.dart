@@ -44,6 +44,8 @@ void main() {
       // Les favoris sont le seul contenu qu'un visiteur peut conserver :
       // le backend et le routeur les autorisent déjà à un invité.
       expect(GuestAccessGuard.isPublicGuestPath('/favoris'), isTrue);
+      // Lecteur d'un modal vidéo : le modal s'affiche aussi aux visiteurs.
+      expect(GuestAccessGuard.isPublicGuestPath('/video-modal/player'), isTrue);
       // Cible du lien d'affiche yadony://annonce/{id} : ouverte au visiteur,
       // l'écran renvoie lui-même le non-propriétaire vers la vue expéditeur.
       expect(
