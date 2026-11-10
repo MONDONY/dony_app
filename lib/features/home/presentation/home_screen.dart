@@ -63,6 +63,8 @@ import 'package:dony/features/package_request/presentation/widgets/package_reque
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
 import 'package:dony/features/receptions/bloc/receptions_prompt_cubit.dart';
 import 'package:dony/features/receptions/presentation/widgets/receptions_prompt_banner.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -1377,6 +1379,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
       return;
     }
     final summary = context.read<TripsSummaryCubit>();
+    await VideoModalGate.before(context, VideoModalTrigger.publishTrip);
+    if (!mounted) {
+      return;
+    }
     await router.push<void>('/trips/create');
     if (!mounted) {
       return;

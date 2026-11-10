@@ -23403,6 +23403,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripParcelAwaitingSemantics => 'Needs your action';
 
   @override
+  String get videoModalPrimaryFallback => 'Watch the video';
+
+  @override
+  String get videoModalSecondaryFallback => 'Get started';
+
+  @override
+  String get videoModalHighlightsTitle => 'With Yadony, you can';
+
+  @override
+  String get videoModalPlayerEndSearch => 'Find a trip';
+
+  @override
+  String get videoModalPlayerEndPublish => 'Publish my trip';
+
+  @override
+  String get videoModalPlayerError => 'The video can\'t be played right now.';
+
+  @override
+  String videoModalThumbnailSemantics(String title) {
+    return 'Play the video: $title';
+  }
+
+  @override
   String get moneyKeywordWarningTitle => 'Sending money is prohibited';
 
   @override

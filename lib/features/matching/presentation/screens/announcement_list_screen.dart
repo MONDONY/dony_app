@@ -12,6 +12,8 @@ import 'package:dony/features/matching/presentation/widgets/activity_header_widg
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_group_header.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -177,7 +179,10 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
 
   Future<void> _createTrip() async {
     // Passe par l'écran d'intro (conditions + responsabilités) : c'est lui qui
-    // ouvre le formulaire une fois l'identité vérifiée.
+    // ouvre le formulaire une fois l'identité vérifiée. Le modal vidéo de
+    // l'admin posé devant ce formulaire passe d'abord, s'il y en a un.
+    await VideoModalGate.before(context, VideoModalTrigger.publishTrip);
+    if (!mounted) return;
     await context.push('/trips/publish-intro');
     // Rafraîchit au retour : un trajet a pu être créé depuis le formulaire
     // ouvert par l'intro.

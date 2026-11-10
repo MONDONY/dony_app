@@ -24,6 +24,8 @@ const _excludedPrefixes = <String>[
   '/support',
   // Lecteur vidéo des tutoriels.
   '/profile/help/tutorial/',
+  // Lecteur d'un modal vidéo.
+  '/video-modal/',
   // L'assistant lui-même.
   '/assistant',
 ];

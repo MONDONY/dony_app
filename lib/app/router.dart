@@ -261,6 +261,8 @@ import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:dony/features/trip_templates/presentation/screens/trip_recurrence_edit_screen.dart';
 import 'package:dony/features/trip_templates/presentation/screens/trip_template_edit_screen.dart';
 import 'package:dony/features/trip_templates/presentation/screens/trip_templates_screen.dart';
+import 'package:dony/features/video_modal/bloc/video_modal_bloc.dart';
+import 'package:dony/features/video_modal/presentation/screens/video_modal_player_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -807,6 +809,16 @@ final GoRouter appRouter = GoRouter(
       path: '/parcels/send-intro',
       builder: (context, state) =>
           const PublishIntroScreen(role: PublishIntroRole.parcel),
+    ),
+    // ── Lecteur plein écran d'un modal vidéo (VideoModalPresenter) ──────────
+    GoRoute(
+      path: videoModalPlayerRoute,
+      redirect: (_, state) =>
+          state.extra is VideoModalPlayerArgs ? null : '/home',
+      builder: (context, state) => VideoModalPlayerScreen(
+        args: state.extra! as VideoModalPlayerArgs,
+        modalBloc: getIt<VideoModalBloc>(),
+      ),
     ),
 
     // ── Créer / modifier un trajet (plein écran, slide-up) ───────────────────

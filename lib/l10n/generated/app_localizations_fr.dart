@@ -23570,6 +23570,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripParcelAwaitingSemantics => 'Attend votre geste';
 
   @override
+  String get videoModalPrimaryFallback => 'Voir la vidéo';
+
+  @override
+  String get videoModalSecondaryFallback => 'Commencer';
+
+  @override
+  String get videoModalHighlightsTitle => 'Avec Yadony, vous pouvez';
+
+  @override
+  String get videoModalPlayerEndSearch => 'Rechercher un trajet';
+
+  @override
+  String get videoModalPlayerEndPublish => 'Publier mon trajet';
+
+  @override
+  String get videoModalPlayerError =>
+      'La vidéo ne peut pas être lue pour le moment.';
+
+  @override
+  String videoModalThumbnailSemantics(String title) {
+    return 'Lire la vidéo : $title';
+  }
+
+  @override
   String get moneyKeywordWarningTitle => 'Envoi d\'argent interdit';
 
   @override

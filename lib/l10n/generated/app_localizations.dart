@@ -37662,6 +37662,48 @@ abstract class AppLocalizations {
   /// **'Attend votre geste'**
   String get tripParcelAwaitingSemantics;
 
+  /// Bouton principal d'un modal vidéo quand le serveur n'envoie pas de libellé (video_modal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir la vidéo'**
+  String get videoModalPrimaryFallback;
+
+  /// Bouton secondaire d'un modal vidéo quand le serveur n'envoie pas de libellé (video_modal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Commencer'**
+  String get videoModalSecondaryFallback;
+
+  /// Titre de la liste des points forts d'un modal vidéo (video_modal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Avec Yadony, vous pouvez'**
+  String get videoModalHighlightsTitle;
+
+  /// Fin de la vidéo d'un modal : bouton principal, ouvre l'onglet Rechercher (video_modal_player_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un trajet'**
+  String get videoModalPlayerEndSearch;
+
+  /// Fin de la vidéo d'un modal : bouton secondaire, ouvre la publication d'un trajet (video_modal_player_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier mon trajet'**
+  String get videoModalPlayerEndPublish;
+
+  /// Lecteur d'un modal vidéo : la vidéo ne démarre pas (video_modal_player_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La vidéo ne peut pas être lue pour le moment.'**
+  String get videoModalPlayerError;
+
+  /// Lecture d'écran de la miniature d'un modal vidéo (video_modal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire la vidéo : {title}'**
+  String videoModalThumbnailSemantics(String title);
+
   /// Titre du bandeau orange, non bloquant, affiché sous la description du colis quand elle évoque l'envoi d'argent (money_keyword_warning.dart : demande sur un trajet et demande d'expéditeur publiée).
   ///
   /// In fr, this message translates to:

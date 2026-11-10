@@ -1361,4 +1361,18 @@ abstract final class AnalyticsEvents {
   /// Réponse au partage de l'avancée du trajet (propriétés `granted` : bool,
   /// vrai seulement si la position du système est accordée, et `source`).
   static const trackingConsentAnswered = 'tracking_consent_answered';
+
+  /// Modal vidéo affiché (feuille du bas d'une campagne de l'admin › Modals
+  /// vidéo). Propriétés `campaign_id`, `version`, `trigger`, `guest`.
+  static const videoModalShown = 'video_modal_shown';
+
+  /// Bouton vidéo du modal touché, lecteur ouvert (mêmes propriétés).
+  static const videoModalVideoOpened = 'video_modal_video_opened';
+
+  /// Vidéo du modal vue jusqu'au bout (mêmes propriétés).
+  static const videoModalVideoCompleted = 'video_modal_video_completed';
+
+  /// Bouton secondaire du modal (« Commencer », « Plus tard ») touché
+  /// (mêmes propriétés).
+  static const videoModalDismissed = 'video_modal_dismissed';
 }

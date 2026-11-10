@@ -342,6 +342,10 @@ import 'package:dony/features/trip_templates/data/datasources/trip_recurrence_da
 import 'package:dony/features/trip_templates/data/datasources/trip_template_datasource.dart';
 import 'package:dony/features/trip_templates/data/repositories/trip_recurrence_repository.dart';
 import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
+import 'package:dony/features/video_modal/bloc/video_modal_bloc.dart';
+import 'package:dony/features/video_modal/data/datasources/video_modal_local_datasource.dart';
+import 'package:dony/features/video_modal/data/datasources/video_modal_remote_datasource.dart';
+import 'package:dony/features/video_modal/data/repositories/video_modal_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get_it/get_it.dart';
@@ -1100,6 +1104,24 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
     ),
     dispose: (c) => c.close(),
+  );
+
+  // Modals vidéo : un état par session (un modal au plus par lancement),
+  // lu par le shell (VideoModalHost) et par les boutons de publication
+  // (VideoModalGate).
+  getIt.registerLazySingleton<VideoModalRepository>(
+    () => VideoModalRepository(
+      VideoModalRemoteDatasource(getIt<ApiClient>()),
+      VideoModalLocalDatasource(),
+    ),
+  );
+  getIt.registerLazySingleton<VideoModalBloc>(
+    () => VideoModalBloc(
+      getIt<VideoModalRepository>(),
+      getIt<AnalyticsService>(),
+      hasRealSession: () => getIt<FirebaseSessionProbe>().hasRealSession,
+    ),
+    dispose: (b) => b.close(),
   );
 
   getIt.registerLazySingleton<ConfigDatasource>(
