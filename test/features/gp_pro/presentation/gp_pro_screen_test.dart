@@ -171,6 +171,26 @@ void main() {
     });
   });
 
+  group('retrait réussi (sortie de l\'écran)', () {
+    testWidgets('pas de flash du formulaire ni de la vue KYC quand le statut '
+        'redevient NONE', (tester) async {
+      when(() => cubit.state).thenReturn(
+        const GpProCubitState(
+          load: GpProLoadStatus.ready,
+          status: GpProStatus(state: GpProState.none),
+          resigned: true,
+        ),
+      );
+      await tester.pumpWidget(host());
+      await tester.pump();
+
+      expect(find.text(l.gpProSubmit), findsNothing);
+      expect(find.text(l.gpProKycCta), findsNothing);
+      expect(find.text(l.gpProFrequencyWeekly), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+  });
+
   group('NONE', () {
     testWidgets('sans KYC : bouton KYC, pas de formulaire', (tester) async {
       when(() => auth.state).thenReturn(const AuthAuthenticated(_unverified));

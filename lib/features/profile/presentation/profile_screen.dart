@@ -11,7 +11,9 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_banner_host.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_status_signal.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
+import 'package:dony/features/profile/presentation/widgets/profile_gp_pro_section.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_menu_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
@@ -109,7 +111,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         unawaited(context.push('/settings/data'));
       case ProfileMenuAction.gpPro:
         _logEvent(AnalyticsEvents.profileMenuGpProOpened);
-        unawaited(context.push('/profile/gp-pro'));
+        await context.push<void>('/profile/gp-pro');
+        // Au retour du menu : une demande a pu partir ou être décidée, la ligne
+        // « GP Pro » du Profil se relit.
+        notifyGpProStatusChanged();
       case ProfileMenuAction.logout:
         _logEvent(AnalyticsEvents.profileMenuLogoutTapped);
         await _confirmLogout();
@@ -483,6 +488,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // s'empilaient en un vide de ~2× la hauteur voulue.
       if (showAccountSection) gap,
       animated(ProfileMoneySection(user: user)),
+      gap,
+      animated(ProfileGpProSection(user: user)),
       gap,
       animated(ProfileReputationSection(user: user)),
       gap,

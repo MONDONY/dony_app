@@ -303,7 +303,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // GP Pro montre le badge, le motif d'un refus ou d'un retrait.
     'GP_PRO_APPROVED' ||
     'GP_PRO_REJECTED' ||
-    'GP_PRO_REVOKED' => '/profile/gp-pro',
+    'GP_PRO_REVOKED' ||
+    // « Confirmez votre statut » (yadony-back lot 4) : le voyageur répond
+    // Particulier ou GP Pro depuis l'écran GP Pro.
+    'TRAVELER_STATUS_CONFIRMATION' => '/profile/gp-pro',
 
     // Message de l'équipe support → détail du ticket si l'id est valide,
     // sinon la liste des tickets.

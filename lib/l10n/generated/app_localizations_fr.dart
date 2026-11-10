@@ -23825,4 +23825,20 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get videoModalDontShowAgain => 'Ne plus afficher';
+
+  @override
+  String get profileSectionGpPro => 'GP PRO';
+
+  @override
+  String get profileGpProBecome => 'Devenir GP Pro';
+
+  @override
+  String get profileGpProBecomeSubtitle =>
+      'Profil professionnel validé par l\'équipe.';
+
+  @override
+  String get profileGpProApplication => 'Demande GP Pro';
+
+  @override
+  String get profileGpProActivePill => 'Actif';
 }

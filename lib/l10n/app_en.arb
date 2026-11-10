@@ -11660,5 +11660,15 @@
   "publishBlockedResumeOnFirst": "You will be able to publish again from {month} 1st.",
   "@publishBlockedResumeOnFirst": {"description": "Date de reprise quand c'est le premier du mois : « 1er » en français ; {month} est le nom du mois (publish_blocked_screen.dart).", "placeholders": {"month": {"type": "String"}}},
   "videoModalDontShowAgain": "Don't show again",
-  "@videoModalDontShowAgain": {"description": "Case à cocher d'un modal (vidéo ou information) dont la campagne l'autorise : la personne ne veut plus revoir ce modal. Posée dans la zone fixe du bas, avant les boutons (video_modal_dont_show_again.dart)"}
+  "@videoModalDontShowAgain": {"description": "Case à cocher d'un modal (vidéo ou information) dont la campagne l'autorise : la personne ne veut plus revoir ce modal. Posée dans la zone fixe du bas, avant les boutons (video_modal_dont_show_again.dart)"},
+  "profileSectionGpPro": "GP PRO",
+  "@profileSectionGpPro": {"description": "Titre de la section GP Pro de l'écran Profil, entre Argent et Ma réputation (profile_gp_pro_section.dart)."},
+  "profileGpProBecome": "Become a GP Pro",
+  "@profileGpProBecome": {"description": "Libellé de la ligne GP Pro du Profil quand le voyageur n'est pas GP Pro et n'a aucune demande ouverte (profile_gp_pro_section.dart)."},
+  "profileGpProBecomeSubtitle": "Professional profile, reviewed by the team.",
+  "@profileGpProBecomeSubtitle": {"description": "Sous-titre de la ligne « Devenir GP Pro » du Profil, sur deux lignes au plus à 360 dp (profile_gp_pro_section.dart)."},
+  "profileGpProApplication": "GP Pro application",
+  "@profileGpProApplication": {"description": "Libellé de la ligne GP Pro du Profil quand une demande est ouverte (pastille « En validation ») (profile_gp_pro_section.dart)."},
+  "profileGpProActivePill": "Active",
+  "@profileGpProActivePill": {"description": "Pastille de la ligne GP Pro du Profil quand le badge est accordé (profile_gp_pro_section.dart)."}
 }

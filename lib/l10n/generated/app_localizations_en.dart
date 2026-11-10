@@ -23654,4 +23654,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoModalDontShowAgain => 'Don\'t show again';
+
+  @override
+  String get profileSectionGpPro => 'GP PRO';
+
+  @override
+  String get profileGpProBecome => 'Become a GP Pro';
+
+  @override
+  String get profileGpProBecomeSubtitle =>
+      'Professional profile, reviewed by the team.';
+
+  @override
+  String get profileGpProApplication => 'GP Pro application';
+
+  @override
+  String get profileGpProActivePill => 'Active';
 }
