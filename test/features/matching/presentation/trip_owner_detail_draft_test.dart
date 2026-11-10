@@ -666,6 +666,7 @@ void main() {
         initialState: const AuthAuthenticated(_owner),
       );
       final controller = await pumpDraft(tester);
+      addTearDown(controller.close);
 
       controller.add(
         AnnouncementTravelerStatusRequired(
@@ -691,6 +692,7 @@ void main() {
         initialState: const AuthAuthenticated(_owner),
       );
       final controller = await pumpDraft(tester);
+      addTearDown(controller.close);
 
       controller.add(
         AnnouncementTravelerStatusRequired(
