@@ -1,6 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/gp_pro_badge.dart';
-import 'package:dony/core/design/widgets/traveler_status_chip.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
@@ -125,27 +124,24 @@ void main() {
       expect(find.byType(GpProBadge), findsOneWidget);
     });
 
-    testWidgets(
-      'statut légal : professionnel avec numéro, particulier, aucun',
-      (tester) async {
-        await _openSheet(
-          tester,
-          const TravelerProfile(
-            id: 't9',
-            displayName: 'Diallo Express',
-            travelerStatus: TravelerStatus.professional,
-            businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
-          ),
-        );
-        expect(
-          find.text('Professionnel · CI-ABJ-2021-B-12345'),
-          findsOneWidget,
-        );
-        expect(tester.takeException(), isNull);
-      },
-    );
+    testWidgets('statut légal : aucune pastille sur la fiche voyageur', (
+      tester,
+    ) async {
+      await _openSheet(
+        tester,
+        const TravelerProfile(
+          id: 't9',
+          displayName: 'Diallo Express',
+          travelerStatus: TravelerStatus.professional,
+          businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+        ),
+      );
+      expect(find.textContaining('Professionnel'), findsNothing);
+      expect(find.textContaining('CI-ABJ-2021-B-12345'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
 
-    testWidgets('statut légal : particulier', (tester) async {
+    testWidgets('statut légal particulier : aucune pastille', (tester) async {
       await _openSheet(
         tester,
         const TravelerProfile(
@@ -154,14 +150,7 @@ void main() {
           travelerStatus: TravelerStatus.individual,
         ),
       );
-      expect(find.text('Particulier'), findsOneWidget);
-    });
-
-    testWidgets('statut légal absent (ancien back) : aucune pastille', (
-      tester,
-    ) async {
-      await _openSheet(tester, _travelerFull);
-      expect(find.byType(TravelerStatusChip), findsNothing);
+      expect(find.text('Particulier'), findsNothing);
     });
 
     testWidgets('pas de badge GP Pro quand gpPro = false', (tester) async {

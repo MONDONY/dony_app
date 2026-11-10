@@ -75,6 +75,29 @@ void main() {
 
   group('load', () {
     blocTest<GpProCubit, GpProCubitState>(
+      'editBusiness : un GP Pro actif rouvre le formulaire (restarting)',
+      build: () {
+        stubStatus(const GpProStatus(state: GpProState.active));
+        return build();
+      },
+      act: (c) => c.load(editBusiness: true),
+      verify: (c) {
+        expect(c.state.restarting, isTrue);
+        expect(c.state.status?.state, GpProState.active);
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'editBusiness sans statut actif : rien à rouvrir',
+      build: () {
+        stubStatus(pending);
+        return build();
+      },
+      act: (c) => c.load(editBusiness: true),
+      verify: (c) => expect(c.state.restarting, isFalse),
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
       'ready + event opened une seule fois même après 2 load',
       build: () {
         stubStatus(none);
@@ -623,6 +646,117 @@ void main() {
       seed: ready,
       act: (c) => c.submit(),
       verify: (c) => expect(c.state.errorCode, 'unknown'),
+    );
+  });
+
+  group('resign', () {
+    blocTest<GpProCubit, GpProCubitState>(
+      'succès : event, statut rechargé, resigned vrai',
+      build: () {
+        when(
+          () => repository.resign(),
+        ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+        stubStatus(none);
+        return build();
+      },
+      seed: () => const GpProCubitState(
+        load: GpProLoadStatus.ready,
+        status: GpProStatus(state: GpProState.active),
+      ),
+      act: (c) => c.resign(),
+      verify: (c) {
+        expect(c.state.resigning, isFalse);
+        expect(c.state.resigned, isTrue);
+        expect(c.state.status, none);
+        expect(c.state.errorCode, isNull);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProResigned,
+            properties: any(named: 'properties'),
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      '409 gp-pro-not-active : déjà particulier, rechargement et succès',
+      build: () {
+        when(
+          () => repository.resign(),
+        ).thenThrow(const GpProException('gp-pro-not-active', status: 409));
+        stubStatus(none);
+        return build();
+      },
+      seed: () => const GpProCubitState(load: GpProLoadStatus.ready),
+      act: (c) => c.resign(),
+      verify: (c) {
+        expect(c.state.resigned, isTrue);
+        expect(c.state.resigning, isFalse);
+        expect(c.state.errorCode, isNull);
+        verify(() => repository.fetchStatus()).called(1);
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'échec réseau : errorCode, événement d\'échec avec error_code seul',
+      build: () {
+        when(
+          () => repository.resign(),
+        ).thenThrow(const GpProException('network'));
+        return build();
+      },
+      act: (c) => c.resign(),
+      verify: (c) {
+        expect(c.state.errorCode, 'network');
+        expect(c.state.resigned, isFalse);
+        expect(c.state.resigning, isFalse);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProResignFailed,
+            properties: {'error_code': 'network'},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'ancien back (404) : gp-pro-unavailable, pas de plantage',
+      build: () {
+        when(
+          () => repository.resign(),
+        ).thenThrow(const GpProUnavailableException(status: 404));
+        return build();
+      },
+      act: (c) => c.resign(),
+      verify: (c) {
+        expect(c.state.errorCode, 'gp-pro-unavailable');
+        expect(c.state.resigned, isFalse);
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'erreur non typée : unknown',
+      build: () {
+        when(() => repository.resign()).thenThrow(StateError('x'));
+        return build();
+      },
+      act: (c) => c.resign(),
+      verify: (c) => expect(c.state.errorCode, 'unknown'),
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'un second appel pendant le premier est ignoré',
+      build: () {
+        when(
+          () => repository.resign(),
+        ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+        stubStatus(none);
+        return build();
+      },
+      seed: () =>
+          const GpProCubitState(load: GpProLoadStatus.ready, resigning: true),
+      act: (c) => c.resign(),
+      verify: (_) => verifyNever(() => repository.resign()),
     );
   });
 

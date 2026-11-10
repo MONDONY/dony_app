@@ -46,6 +46,8 @@ class GpProCubitState extends Equatable {
     this.submitting = false,
     this.cancelling = false,
     this.restarting = false,
+    this.resigning = false,
+    this.resigned = false,
     this.errorCode,
   });
 
@@ -61,6 +63,13 @@ class GpProCubitState extends Equatable {
   /// « Refaire une demande » : le statut reste REJECTED/REVOKED mais l'écran
   /// montre le formulaire.
   final bool restarting;
+
+  /// « Redevenir particulier » en cours d'envoi.
+  final bool resigning;
+
+  /// Le voyageur a quitté le statut GP Pro (ou n'y était déjà plus) : l'écran
+  /// recharge le profil et le dit.
+  final bool resigned;
 
   /// Code d'erreur de la dernière action (`GpProException.code`), à traduire.
   final String? errorCode;
@@ -80,6 +89,8 @@ class GpProCubitState extends Equatable {
     bool? submitting,
     bool? cancelling,
     bool? restarting,
+    bool? resigning,
+    bool? resigned,
     String? errorCode,
     bool clearError = false,
   }) => GpProCubitState(
@@ -90,6 +101,8 @@ class GpProCubitState extends Equatable {
     submitting: submitting ?? this.submitting,
     cancelling: cancelling ?? this.cancelling,
     restarting: restarting ?? this.restarting,
+    resigning: resigning ?? this.resigning,
+    resigned: resigned ?? this.resigned,
     errorCode: clearError ? null : (errorCode ?? this.errorCode),
   );
 
@@ -102,6 +115,8 @@ class GpProCubitState extends Equatable {
     submitting,
     cancelling,
     restarting,
+    resigning,
+    resigned,
     errorCode,
   ];
 }

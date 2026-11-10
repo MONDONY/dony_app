@@ -10,6 +10,9 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_state.dart';
+import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_manage_sheet.dart';
 import 'package:dony/features/profile/presentation/profile_labels.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_photo_viewer.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart'
@@ -528,12 +531,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       const SizedBox(height: DonySpacing.xxl),
 
-                      // ── Statut de voyageur (voyageurs uniquement) ────────────
-                      // Particulier ou professionnel : se déclare ou se
-                      // modifie ici à tout moment, dans la même feuille que
-                      // le rappel à la publication d'un trajet.
+                      // ── Activité : statut de voyageur (voyageurs) ────────────
+                      // Particulier ou GP Pro : se déclare ou se modifie ici à
+                      // tout moment. Même forme que Email et Téléphone.
                       if (isTraveler) ...[
+                        _SectionLabel(label: l.profileEditSectionActivity),
+                        const SizedBox(height: DonySpacing.md),
                         _TravelerStatusRow(user: user),
+                        const SizedBox(height: DonySpacing.xs),
+                        Text(
+                          l.profileTravelerStatusHint,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
                         const SizedBox(height: DonySpacing.xxl),
                       ],
 
@@ -817,6 +831,45 @@ class _ContactInfoRow extends StatelessWidget {
       );
     }
 
+    return _InfoCardRow(
+      iconAsset: iconAsset,
+      label: label,
+      value: hasValue ? value! : l.profileNotAdded,
+      muted: !hasValue,
+      pillLabel: hasValue ? l.commonEdit : l.profileAddBadgeAction,
+      onTap: onTap,
+    );
+  }
+}
+
+/// Carte cliquable d'une coordonnée ou d'un statut : icône, libellé en
+/// capitales, valeur sur une ligne et pastille d'action. Partagée par Email,
+/// Téléphone et « Statut de voyageur » pour que les trois aient la même forme.
+class _InfoCardRow extends StatelessWidget {
+  const _InfoCardRow({
+    required this.iconAsset,
+    required this.label,
+    required this.value,
+    required this.muted,
+    required this.pillLabel,
+    required this.onTap,
+    this.rowKey,
+    this.iconColor,
+  });
+
+  final String iconAsset;
+  final String label;
+  final String value;
+
+  /// Valeur d'attente (« Non ajouté », « Non renseigné ») : italique, grisée.
+  final bool muted;
+  final String pillLabel;
+  final VoidCallback onTap;
+  final Key? rowKey;
+  final Color? iconColor;
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -824,11 +877,11 @@ class _ContactInfoRow extends StatelessWidget {
       button: true,
       container: true,
       excludeSemantics: true,
-      // Format sans mot supplémentaire : `label` (déjà traduit) et la valeur
-      // (donnée brute, ou le placeholder `profileNotAdded` déjà traduit) sont
-      // simplement juxtaposés — rien à assembler en langue naturelle ici.
-      label: '$label, ${hasValue ? value! : l.profileNotAdded}',
+      // `label` et la valeur sont déjà traduits : simplement juxtaposés, rien
+      // à assembler en langue naturelle ici.
+      label: '$label, $value',
       child: InkWell(
+        key: rowKey,
         onTap: onTap,
         borderRadius: BorderRadius.circular(DonyRadius.md),
         child: Container(
@@ -843,108 +896,11 @@ class _ContactInfoRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              DonyIcon(iconAsset, size: 20, color: cs.onSurfaceVariant),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: tt.labelSmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.xxs),
-                    Text(
-                      hasValue ? value! : l.profileNotAdded,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: tt.bodyMedium?.copyWith(
-                        color: hasValue ? cs.onSurface : cs.onSurfaceVariant,
-                        fontWeight: hasValue
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
+              DonyIcon(
+                iconAsset,
+                size: 20,
+                color: iconColor ?? cs.onSurfaceVariant,
               ),
-              const SizedBox(width: DonySpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.sm,
-                  vertical: DonySpacing.xxs + 1,
-                ),
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.full),
-                ),
-                child: Text(
-                  hasValue ? l.commonEdit : l.profileAddBadgeAction,
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Ligne « Statut de voyageur » : la déclaration actuelle (ou « Non
-/// renseigné ») et un chevron. Un tap ouvre la feuille « Comment
-/// voyagez-vous ? », qui recharge le profil une fois le statut déclaré. Pas de
-/// badge texte : le chevron suffit, la valeur dit déjà ce qui est enregistré.
-class _TravelerStatusRow extends StatelessWidget {
-  const _TravelerStatusRow({required this.user});
-
-  final UserModel user;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final status = user.travelerStatus;
-    final number = user.businessRegistrationNumber?.trim();
-    final value = switch (status) {
-      null => l.profileTravelerStatusNotSet,
-      TravelerStatus.individual => l.travelerStatusChipIndividual,
-      TravelerStatus.professional =>
-        number == null || number.isEmpty
-            ? l.travelerStatusChipProfessional
-            : l.travelerStatusChipProfessionalWithNumber(number),
-    };
-    final label = l.profileFieldTravelerStatusAllCaps;
-
-    return Semantics(
-      button: true,
-      container: true,
-      excludeSemantics: true,
-      // `label` et `value` sont déjà traduits : simplement juxtaposés.
-      label: '$label, $value',
-      child: InkWell(
-        key: const Key('profile-traveler-status-row'),
-        onTap: () =>
-            unawaited(TravelerStatusSheet.show(context, allowLater: false)),
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        child: Container(
-          padding: const EdgeInsets.all(DonySpacing.base),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.md),
-            border: Border.all(color: cs.outline),
-          ),
-          child: Row(
-            children: [
-              DonyIcon('badge-check', size: 20, color: cs.onSurfaceVariant),
               const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: Column(
@@ -964,26 +920,189 @@ class _TravelerStatusRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: tt.bodyMedium?.copyWith(
-                        color: status == null
-                            ? cs.onSurfaceVariant
-                            : cs.onSurface,
-                        fontWeight: status == null
-                            ? FontWeight.w400
-                            : FontWeight.w600,
-                        fontStyle: status == null
-                            ? FontStyle.italic
-                            : FontStyle.normal,
+                        color: muted ? cs.onSurfaceVariant : cs.onSurface,
+                        fontWeight: muted ? FontWeight.w400 : FontWeight.w600,
+                        fontStyle: muted ? FontStyle.italic : FontStyle.normal,
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: DonySpacing.sm),
-              DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.sm,
+                  vertical: DonySpacing.xxs + 1,
+                ),
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                ),
+                child: Text(
+                  pillLabel,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Ligne « Statut de voyageur », de même forme que Email et Téléphone : la
+/// réponse actuelle et une pastille d'action.
+///
+/// - pas de réponse : « Non renseigné », pastille « Choisir » (feuille
+///   Particulier / GP Pro) ;
+/// - demande GP Pro en attente : pastille « En validation » (suivi de la
+///   demande) ;
+/// - particulier : pastille « Modifier » (même feuille) ;
+/// - GP Pro : pastille « Modifier », qui ouvre « Modifier mes informations » ou
+///   « Redevenir particulier ».
+///
+/// Le statut de la demande GP Pro vient de son propre cubit, créé ici : un échec
+/// de lecture laisse la ligne utilisable.
+class _TravelerStatusRow extends StatelessWidget {
+  const _TravelerStatusRow({required this.user});
+
+  final UserModel user;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider<GpProCubit>(
+      create: (_) => getIt<GpProCubit>()..load(),
+      child: _TravelerStatusRowBody(user: user),
+    );
+  }
+}
+
+class _TravelerStatusRowBody extends StatelessWidget {
+  const _TravelerStatusRowBody({required this.user});
+
+  final UserModel user;
+
+  /// Le voyageur est GP Pro : badge accordé, ou statut professionnel validé.
+  bool get _isGpPro =>
+      user.gpPro || user.travelerStatus == TravelerStatus.professional;
+
+  Future<void> _onTap(BuildContext context, {required bool pending}) async {
+    final cubit = context.read<GpProCubit>();
+    final auth = context.read<AuthBloc>();
+    if (pending) {
+      await context.push('/profile/gp-pro');
+    } else if (_isGpPro) {
+      final choice = await GpProManageSheet.show(context);
+      if (!context.mounted) return;
+      switch (choice) {
+        case GpProManageChoice.edit:
+          await context.push('/profile/gp-pro?edit=1');
+        case GpProManageChoice.resign:
+          await _confirmResign(context, cubit);
+          return;
+        case null:
+          return;
+      }
+    } else {
+      await TravelerStatusSheet.show(context, allowLater: false);
+    }
+    // Au retour : la demande a pu partir, le profil a pu changer.
+    if (cubit.isClosed) return;
+    await cubit.load();
+    if (!auth.isClosed) auth.add(const AuthProfileRefreshRequested());
+  }
+
+  /// Confirmation légère : un seul bouton, la feuille ou un tap à côté annule.
+  Future<void> _confirmResign(BuildContext context, GpProCubit cubit) async {
+    final l = context.l10n;
+    final confirmed = await DonyDialog.show(
+      context,
+      title: l.gpProResignConfirmTitle,
+      message: l.gpProResignConfirmBody,
+      confirmLabel: l.gpProManageResign,
+      showCancel: false,
+      variant: DonyDialogVariant.destructive,
+      iconAsset: 'circle-alert',
+    );
+    if (confirmed ?? false) await cubit.resign();
+  }
+
+  void _onResigned(BuildContext context) {
+    final auth = context.read<AuthBloc>();
+    if (!auth.isClosed) {
+      final current = auth.state.currentUser;
+      if (current != null) {
+        auth.add(
+          AuthUserSynced(
+            current
+                .withTravelerStatus(TravelerStatus.individual)
+                .copyWith(gpPro: false),
+          ),
+        );
+      }
+      auth.add(const AuthProfileRefreshRequested());
+    }
+    DonySnackbar.show(
+      context,
+      message: context.l10n.gpProResignDone,
+      type: DonySnackbarType.success,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final status = user.travelerStatus;
+    final name = user.businessName?.trim();
+    final value = _isGpPro
+        ? (name == null || name.isEmpty
+              ? l.profileTravelerStatusGpPro
+              : l.profileTravelerStatusGpProNamed(name))
+        : switch (status) {
+            null => l.profileTravelerStatusNotSet,
+            TravelerStatus.individual => l.travelerStatusChipIndividual,
+            TravelerStatus.professional => l.profileTravelerStatusGpPro,
+          };
+    final answered = _isGpPro || status != null;
+
+    return BlocConsumer<GpProCubit, GpProCubitState>(
+      listenWhen: (prev, curr) =>
+          (curr.resigned && !prev.resigned) ||
+          (curr.errorCode != null && curr.errorCode != prev.errorCode),
+      listener: (context, state) {
+        if (state.errorCode != null) {
+          DonySnackbar.show(
+            context,
+            message: l.gpProResignFailed,
+            type: DonySnackbarType.error,
+          );
+        } else {
+          _onResigned(context);
+        }
+      },
+      builder: (context, state) {
+        // Une demande en attente passe avant : la pastille dit « En validation »
+        // tant que l'équipe n'a pas décidé.
+        final pending = state.status?.isOpen ?? false;
+        return _InfoCardRow(
+          rowKey: const Key('profile-traveler-status-row'),
+          iconAsset: 'badge-check',
+          iconColor: _isGpPro ? Theme.of(context).colorScheme.primary : null,
+          label: l.profileFieldTravelerStatusAllCaps,
+          value: value,
+          muted: !answered,
+          pillLabel: pending
+              ? l.profileTravelerStatusPending
+              : (answered ? l.commonEdit : l.profileTravelerStatusChoose),
+          onTap: () => unawaited(_onTap(context, pending: pending)),
+        );
+      },
     );
   }
 }

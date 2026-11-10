@@ -8183,15 +8183,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'moneyKeywordWarningTitle': (l) => l.moneyKeywordWarningTitle,
   'moneyKeywordWarningBody': (l) => l.moneyKeywordWarningBody,
   'travelerStatusChipIndividual': (l) => l.travelerStatusChipIndividual,
-  'travelerStatusChipProfessional': (l) => l.travelerStatusChipProfessional,
-  'travelerStatusChipProfessionalWithNumber': (l) =>
-      l.travelerStatusChipProfessionalWithNumber(placeholderMarker('number')),
-  'profilePublicStatusLabel': (l) => l.profilePublicStatusLabel,
-  'profilePublicBusinessNameLabel': (l) => l.profilePublicBusinessNameLabel,
-  'profilePublicBusinessNumberLabel': (l) => l.profilePublicBusinessNumberLabel,
-  'profilePublicBusinessCountryLabel': (l) =>
-      l.profilePublicBusinessCountryLabel,
-  'profilePublicBusinessDisclaimer': (l) => l.profilePublicBusinessDisclaimer,
   'travelerStatusSheetTitle': (l) => l.travelerStatusSheetTitle,
   'travelerStatusSheetSubtitle': (l) => l.travelerStatusSheetSubtitle,
   'travelerStatusSheetSubtitleRequired': (l) =>
@@ -8221,11 +8212,30 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorTravelerStatusInvalidMessage,
   'profileFieldTravelerStatusAllCaps': (l) =>
       l.profileFieldTravelerStatusAllCaps,
-  'profileTravelerStatusNotSet': (l) => l.profileTravelerStatusNotSet,
   'bidCreateIndividualTravelerTitle': (l) => l.bidCreateIndividualTravelerTitle,
   'bidCreateIndividualTravelerBody': (l) => l.bidCreateIndividualTravelerBody,
   'travelerStatusRegistrationInvalid': (l) =>
       l.travelerStatusRegistrationInvalid,
+  'profilePublicBusinessLineNumber': (l) =>
+      l.profilePublicBusinessLineNumber(placeholderMarker('number')),
+  'profilePublicBusinessDeclared': (l) => l.profilePublicBusinessDeclared,
+  'gpProExplainerBody': (l) => l.gpProExplainerBody,
+  'profileEditSectionActivity': (l) => l.profileEditSectionActivity,
+  'profileTravelerStatusNotSet': (l) => l.profileTravelerStatusNotSet,
+  'profileTravelerStatusGpPro': (l) => l.profileTravelerStatusGpPro,
+  'profileTravelerStatusGpProNamed': (l) =>
+      l.profileTravelerStatusGpProNamed(placeholderMarker('name')),
+  'profileTravelerStatusChoose': (l) => l.profileTravelerStatusChoose,
+  'profileTravelerStatusPending': (l) => l.profileTravelerStatusPending,
+  'profileTravelerStatusHint': (l) => l.profileTravelerStatusHint,
+  'gpProManageTitle': (l) => l.gpProManageTitle,
+  'gpProManageHint': (l) => l.gpProManageHint,
+  'gpProManageEdit': (l) => l.gpProManageEdit,
+  'gpProManageResign': (l) => l.gpProManageResign,
+  'gpProResignConfirmTitle': (l) => l.gpProResignConfirmTitle,
+  'gpProResignConfirmBody': (l) => l.gpProResignConfirmBody,
+  'gpProResignDone': (l) => l.gpProResignDone,
+  'gpProResignFailed': (l) => l.gpProResignFailed,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8915,5 +8925,6 @@ const textParameters = <String, List<String>>{
   'tripTodoDueBeforeDate': ['date', 'time'],
   'tripTodoDueBanner': ['due', 'consequence'],
   'videoModalThumbnailSemantics': ['title'],
-  'travelerStatusChipProfessionalWithNumber': ['number'],
+  'profilePublicBusinessLineNumber': ['number'],
+  'profileTravelerStatusGpProNamed': ['name'],
 };

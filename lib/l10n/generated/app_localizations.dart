@@ -37722,48 +37722,6 @@ abstract class AppLocalizations {
   /// **'Particulier'**
   String get travelerStatusChipIndividual;
 
-  /// Pastille du statut légal d'un voyageur professionnel, sans numéro (traveler_status_chip.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Professionnel'**
-  String get travelerStatusChipProfessional;
-
-  /// Pastille d'un voyageur professionnel avec son numéro d'immatriculation déclaré, sur une seule ligne (traveler_status_chip.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Professionnel · {number}'**
-  String travelerStatusChipProfessionalWithNumber(String number);
-
-  /// Libellé de la ligne du statut légal dans le bloc d'un professionnel du profil public (profile_public_screen.dart, _TravelerStatusSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'Statut'**
-  String get profilePublicStatusLabel;
-
-  /// Libellé de la raison sociale déclarée par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'Raison sociale'**
-  String get profilePublicBusinessNameLabel;
-
-  /// Libellé du numéro d'immatriculation déclaré par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'Immatriculation'**
-  String get profilePublicBusinessNumberLabel;
-
-  /// Libellé du pays d'immatriculation déclaré par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'Pays'**
-  String get profilePublicBusinessCountryLabel;
-
-  /// Mention sous les informations d'un professionnel : Yadony ne les vérifie pas auprès des registres (profile_public_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Informations déclarées par le voyageur, non vérifiées par Yadony.'**
-  String get profilePublicBusinessDisclaimer;
-
   /// Titre de la feuille de déclaration du statut légal du voyageur, étape du choix (traveler_status_sheet.dart).
   ///
   /// In fr, this message translates to:
@@ -37896,12 +37854,6 @@ abstract class AppLocalizations {
   /// **'STATUT DE VOYAGEUR'**
   String get profileFieldTravelerStatusAllCaps;
 
-  /// Valeur de la ligne « Statut de voyageur » tant que le voyageur n'a pas répondu à « Comment voyagez-vous ? » (edit_profile_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Non renseigné'**
-  String get profileTravelerStatusNotSet;
-
   /// Titre de l'encart d'information avant le paiement quand le voyageur de l'annonce voyage à titre personnel (create_bid_bottom_sheet.dart). Texte à faire valider par un avocat.
   ///
   /// In fr, this message translates to:
@@ -37919,6 +37871,114 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'4 caractères minimum : lettres, chiffres, espace, point, barre oblique ou tiret.'**
   String get travelerStatusRegistrationInvalid;
+
+  /// Segment de la ligne d'entreprise d'un GP Pro : le numéro d'immatriculation déclaré, entre la raison sociale et le pays (profile_public_screen.dart, _GpProSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Immatriculation n° {number}'**
+  String profilePublicBusinessLineNumber(String number);
+
+  /// Mention sous la ligne d'entreprise d'un GP Pro : Yadony ne vérifie pas ces informations auprès des registres (profile_public_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Entreprise déclarée par le voyageur'**
+  String get profilePublicBusinessDeclared;
+
+  /// Texte de l'accordéon « Qu'est-ce qu'un GP Pro ? » du profil public (profile_public_screen.dart). Reprend l'article 8 des CGU.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un GP Pro est un voyageur professionnel : il transporte des colis dans le cadre d\'une activité déclarée. Son profil a été examiné par l\'équipe Yadony. Ce badge n\'est pas une garantie de Yadony sur le transport.'**
+  String get gpProExplainerBody;
+
+  /// Titre de la section qui porte la ligne « Statut de voyageur » dans Modifier le profil (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Activité'**
+  String get profileEditSectionActivity;
+
+  /// Valeur de la ligne « Statut de voyageur » tant que le voyageur n'a pas répondu à « Vous voyagez en tant que ? » (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non renseigné'**
+  String get profileTravelerStatusNotSet;
+
+  /// Valeur de la ligne « Statut de voyageur » d'un GP Pro sans raison sociale connue (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'GP Pro'**
+  String get profileTravelerStatusGpPro;
+
+  /// Valeur de la ligne « Statut de voyageur » d'un GP Pro avec sa raison sociale (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'GP Pro · {name}'**
+  String profileTravelerStatusGpProNamed(String name);
+
+  /// Pastille d'action de la ligne « Statut de voyageur » tant que le voyageur n'a pas répondu (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir'**
+  String get profileTravelerStatusChoose;
+
+  /// Pastille de la ligne « Statut de voyageur » quand une demande GP Pro attend la décision de l'équipe (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En validation'**
+  String get profileTravelerStatusPending;
+
+  /// Phrase sous la ligne « Statut de voyageur » de Modifier le profil : à quoi sert la réponse (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Particulier ou GP Pro : affiché aux expéditeurs sur votre profil.'**
+  String get profileTravelerStatusHint;
+
+  /// Titre de la feuille qui s'ouvre sur « Modifier » de la ligne « Statut de voyageur » d'un GP Pro (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre statut GP Pro'**
+  String get gpProManageTitle;
+
+  /// Phrase de la feuille de gestion du statut GP Pro : modifier les informations repasse en validation (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier vos informations d\'entreprise relance une validation par l\'équipe Yadony.'**
+  String get gpProManageHint;
+
+  /// Bouton principal de la feuille de gestion du statut GP Pro : rouvre le formulaire GP Pro (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier mes informations'**
+  String get gpProManageEdit;
+
+  /// Bouton secondaire de la feuille de gestion du statut GP Pro : retire le badge d'un clic (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Redevenir particulier'**
+  String get gpProManageResign;
+
+  /// Titre de la confirmation légère avant de quitter le statut GP Pro (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Redevenir particulier ?'**
+  String get gpProResignConfirmTitle;
+
+  /// Corps de la confirmation avant de quitter le statut GP Pro (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous perdrez le badge GP Pro et les informations de votre entreprise. Pour le retrouver, il faudra refaire une demande.'**
+  String get gpProResignConfirmBody;
+
+  /// Message de succès après avoir quitté le statut GP Pro (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes de nouveau particulier.'**
+  String get gpProResignDone;
+
+  /// Message d'échec quand le retrait du statut GP Pro n'a pas abouti (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de redevenir particulier pour le moment. Réessayez.'**
+  String get gpProResignFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -25,7 +25,10 @@ class GpProCubit extends Cubit<GpProCubitState> {
     'gp-pro-already-active',
   };
 
-  Future<void> load() async {
+  /// [editBusiness] : un GP Pro actif rouvre le formulaire pour modifier ses
+  /// informations d'entreprise (« Modifier mes informations ») ; le back relance
+  /// alors une validation.
+  Future<void> load({bool editBusiness = false}) async {
     // Pas de flash de chargement lors d'un rechargement d'un écran déjà prêt.
     if (state.load != GpProLoadStatus.ready) {
       emit(state.copyWith(load: GpProLoadStatus.loading));
@@ -37,6 +40,9 @@ class GpProCubit extends Cubit<GpProCubitState> {
           load: GpProLoadStatus.ready,
           status: status,
           pieces: _merge(status),
+          restarting: editBusiness && status.state == GpProState.active
+              ? true
+              : null,
           clearError: true,
         ),
       );
@@ -230,6 +236,43 @@ class GpProCubit extends Cubit<GpProCubitState> {
     } catch (_) {
       emit(state.copyWith(cancelling: false, errorCode: 'unknown'));
     }
+  }
+
+  /// « Redevenir particulier » : le badge GP Pro est retiré en un tap, les
+  /// informations d'entreprise effacées, une demande en attente annulée.
+  ///
+  /// 409 `gp-pro-not-active` : le voyageur n'est déjà plus GP Pro (double tap,
+  /// retrait par l'équipe entre-temps) ; le but est atteint, on recharge et on
+  /// le dit comme un succès.
+  Future<void> resign() async {
+    if (state.resigning) return;
+    emit(state.copyWith(resigning: true, resigned: false, clearError: true));
+    try {
+      await _repository.resign();
+      unawaited(_analytics.logEvent(AnalyticsEvents.gpProResigned));
+      emit(state.copyWith(resigning: false, resigned: true));
+      await load();
+    } on GpProException catch (e) {
+      if (e.code == 'gp-pro-not-active') {
+        emit(state.copyWith(resigning: false, resigned: true));
+        await load();
+        return;
+      }
+      _failResign(e.code);
+    } catch (_) {
+      _failResign('unknown');
+    }
+  }
+
+  /// Jamais de donnée saisie : le code d'erreur seul.
+  void _failResign(String code) {
+    emit(state.copyWith(resigning: false, errorCode: code));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.gpProResignFailed,
+        properties: {'error_code': code},
+      ),
+    );
   }
 
   /// « Refaire une demande » après un refus ou une révocation.

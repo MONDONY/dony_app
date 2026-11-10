@@ -1307,6 +1307,13 @@ abstract final class AnalyticsEvents {
   /// Candidature GP Pro en attente annulée par le voyageur.
   static const gpProApplicationCancelled = 'gp_pro_application_cancelled';
 
+  /// « Redevenir particulier » : le voyageur a quitté le statut GP Pro.
+  static const gpProResigned = 'gp_pro_resigned';
+
+  /// « Redevenir particulier » refusé ou impossible. Propriété `error_code`
+  /// (`network`, `gp-pro-unavailable`, `unknown`…), rien d'autre.
+  static const gpProResignFailed = 'gp_pro_resign_failed';
+
   /// Pièce jointe ajoutée à la candidature.
   static const gpProDocumentAdded = 'gp_pro_document_added';
 

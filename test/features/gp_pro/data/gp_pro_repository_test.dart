@@ -45,6 +45,8 @@ void main() {
       () => ds.apply(
         frequency: any(named: 'frequency'),
         commercialName: any(named: 'commercialName'),
+        businessRegistrationNumber: any(named: 'businessRegistrationNumber'),
+        businessCountry: any(named: 'businessCountry'),
         documentIds: any(named: 'documentIds'),
         source: any(named: 'source'),
       ),
@@ -77,6 +79,81 @@ void main() {
     verify(() => ds.cancel()).called(1);
   });
 
+  test('apply transmet les champs entreprise', () async {
+    const status = GpProStatus(state: GpProState.pending);
+    when(
+      () => ds.apply(
+        frequency: any(named: 'frequency'),
+        commercialName: any(named: 'commercialName'),
+        businessRegistrationNumber: any(named: 'businessRegistrationNumber'),
+        businessCountry: any(named: 'businessCountry'),
+        documentIds: any(named: 'documentIds'),
+        source: any(named: 'source'),
+      ),
+    ).thenAnswer((_) async => status);
+
+    await repo.apply(
+      frequency: GpProFrequency.weekly,
+      commercialName: 'Diallo Express',
+      businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+      businessCountry: 'CI',
+      source: GpProSource.profile,
+    );
+
+    verify(
+      () => ds.apply(
+        frequency: GpProFrequency.weekly,
+        commercialName: 'Diallo Express',
+        businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+        businessCountry: 'CI',
+        source: GpProSource.profile,
+      ),
+    ).called(1);
+  });
+
+  group('resign', () {
+    test('délègue et rend le statut', () async {
+      const status = GpProStatus(state: GpProState.none);
+      when(() => ds.resign()).thenAnswer((_) async => status);
+      expect(await repo.resign(), status);
+    });
+
+    test('409 gp-pro-not-active : GpProException avec son code', () async {
+      when(() => ds.resign()).thenThrow(
+        _http(409, {'type': 'https://api.yadony.com/errors/gp-pro-not-active'}),
+      );
+      await expectLater(
+        repo.resign(),
+        throwsA(
+          isA<GpProException>()
+              .having((e) => e.code, 'code', 'gp-pro-not-active')
+              .having((e) => e.status, 'status', 409),
+        ),
+      );
+    });
+
+    test('404 (ancien back) : GpProUnavailableException', () async {
+      when(() => ds.resign()).thenThrow(_http(404));
+      await expectLater(
+        repo.resign(),
+        throwsA(isA<GpProUnavailableException>()),
+      );
+    });
+
+    test('sans réponse : code network', () async {
+      when(() => ds.resign()).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/gp-pro/resign'),
+          type: DioExceptionType.connectionError,
+        ),
+      );
+      await expectLater(
+        repo.resign(),
+        throwsA(isA<GpProException>().having((e) => e.code, 'code', 'network')),
+      );
+    });
+  });
+
   test('404 sur fetchStatus lève GpProUnavailableException', () async {
     when(() => ds.fetchStatus()).thenThrow(_http(404));
     await expectLater(
@@ -90,6 +167,8 @@ void main() {
       () => ds.apply(
         frequency: any(named: 'frequency'),
         commercialName: any(named: 'commercialName'),
+        businessRegistrationNumber: any(named: 'businessRegistrationNumber'),
+        businessCountry: any(named: 'businessCountry'),
         documentIds: any(named: 'documentIds'),
         source: any(named: 'source'),
       ),

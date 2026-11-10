@@ -373,11 +373,6 @@ class _ProfileHeader extends StatelessWidget {
                         label: context.l10n.profileSheetProBadge,
                         iconColor: cs.warning,
                       ),
-                    if (traveler.travelerStatus != null)
-                      TravelerStatusChip(
-                        status: traveler.travelerStatus,
-                        registrationNumber: traveler.businessRegistrationNumber,
-                      ),
                     if (traveler.gpPro)
                       const GpProBadge(surface: 'traveler_sheet'),
                     if (traveler.kycVerified)
