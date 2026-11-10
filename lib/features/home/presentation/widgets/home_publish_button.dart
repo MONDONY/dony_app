@@ -87,8 +87,11 @@ class HomePublishButton extends StatelessWidget {
       ),
     );
     // Modal vidéo de l'admin posé devant ce formulaire, s'il y en a un.
-    await VideoModalGate.before(context, choice.videoModalTrigger);
-    if (!context.mounted) return;
+    final proceed = await VideoModalGate.before(
+      context,
+      choice.videoModalTrigger,
+    );
+    if (!proceed || !context.mounted) return;
     unawaited(context.push<Object?>(choice.route));
   }
 

@@ -181,8 +181,11 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
     // Passe par l'écran d'intro (conditions + responsabilités) : c'est lui qui
     // ouvre le formulaire une fois l'identité vérifiée. Le modal vidéo de
     // l'admin posé devant ce formulaire passe d'abord, s'il y en a un.
-    await VideoModalGate.before(context, VideoModalTrigger.publishTrip);
-    if (!mounted) return;
+    final proceed = await VideoModalGate.before(
+      context,
+      VideoModalTrigger.publishTrip,
+    );
+    if (!proceed || !mounted) return;
     await context.push('/trips/publish-intro');
     // Rafraîchit au retour : un trajet a pu être créé depuis le formulaire
     // ouvert par l'intro.

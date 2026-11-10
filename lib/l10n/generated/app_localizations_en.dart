@@ -23471,6 +23471,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Consumer law does not apply to your agreement with them.';
 
   @override
+  String get travelerStatusRegistrationInvalid =>
+      'At least 4 characters: letters, digits, space, dot, slash or hyphen.';
+
+  @override
+  String get infoModalCloseFallback => 'OK';
+
+  @override
+  String get infoModalOpenFallback => 'Open';
+
+  @override
   String profilePublicBusinessLineNumber(String number) {
     return 'Registration no. $number';
   }

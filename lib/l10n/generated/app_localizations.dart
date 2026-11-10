@@ -37782,6 +37782,24 @@ abstract class AppLocalizations {
   /// **'Le droit de la consommation ne s\'applique pas à votre accord avec lui.'**
   String get bidCreateIndividualTravelerBody;
 
+  /// Erreur sous le champ du numéro d'entreprise quand il est non vide et invalide (moins de 4 caractères ou caractère interdit) ; remplace l'aide neutre (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'4 caractères minimum : lettres, chiffres, espace, point, barre oblique ou tiret.'**
+  String get travelerStatusRegistrationInvalid;
+
+  /// Bouton d'un modal d'information qui ferme, quand le serveur n'envoie pas de libellé (info_modal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'D\'accord'**
+  String get infoModalCloseFallback;
+
+  /// Bouton d'un modal d'information qui ouvre un écran ou un lien, quand le serveur n'envoie pas de libellé (info_modal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir'**
+  String get infoModalOpenFallback;
+
   /// Segment de la ligne d'entreprise d'un GP Pro : le numéro d'immatriculation déclaré, entre la raison sociale et le pays (profile_public_screen.dart, _GpProSection).
   ///
   /// In fr, this message translates to:

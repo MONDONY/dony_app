@@ -260,4 +260,6 @@ IconData videoModalIconData(VideoModalIcon icon) => switch (icon) {
   VideoModalIcon.qr => Icons.qr_code_2_rounded,
   VideoModalIcon.star => Icons.star_rounded,
   VideoModalIcon.wallet => Icons.account_balance_wallet_rounded,
+  VideoModalIcon.bell => Icons.notifications_rounded,
+  VideoModalIcon.info => Icons.info_rounded,
 };

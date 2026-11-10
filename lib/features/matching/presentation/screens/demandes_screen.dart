@@ -595,11 +595,11 @@ class _EmptyForFilter extends StatelessWidget {
                       AnalyticsEvents.activitesHubTripCreateOpened,
                     ),
                   );
-                  await VideoModalGate.before(
+                  final proceed = await VideoModalGate.before(
                     context,
                     VideoModalTrigger.publishTrip,
                   );
-                  if (!context.mounted) return;
+                  if (!proceed || !context.mounted) return;
                   unawaited(context.push('/trips/create'));
                 }
               : null,

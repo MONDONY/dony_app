@@ -1379,8 +1379,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
       return;
     }
     final summary = context.read<TripsSummaryCubit>();
-    await VideoModalGate.before(context, VideoModalTrigger.publishTrip);
-    if (!mounted) {
+    final proceed = await VideoModalGate.before(
+      context,
+      VideoModalTrigger.publishTrip,
+    );
+    if (!proceed || !mounted) {
       return;
     }
     await router.push<void>('/trips/create');

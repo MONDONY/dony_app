@@ -59,3 +59,58 @@ VideoModalCampaign campaign({
   displays: displays,
   audience: audience,
 );
+
+Map<String, Object?> infoJson({
+  String id = 'i1',
+  int version = 1,
+  List<String> triggers = const ['SEARCH_TAB'],
+  Object? primaryAction = const {'kind': 'SCREEN', 'screen': 'MY_MONEY'},
+  Object? secondaryAction = const {'kind': 'CLOSE'},
+  Object? body = 'Votre argent est à un seul endroit.',
+  String? icon = 'WALLET',
+}) => {
+  'id': id,
+  'version': version,
+  'type': 'INFO',
+  'triggers': triggers,
+  'title': 'Mon argent',
+  'subtitle': 'Tout au même endroit',
+  'body': body,
+  'icon': icon,
+  'primaryLabel': 'Voir mon argent',
+  'primaryAction': primaryAction,
+  'secondaryLabel': 'Plus tard',
+  'secondaryAction': secondaryAction,
+  'maxDisplays': 3,
+  'displays': 0,
+  'audience': 'NEVER_ANSWERED',
+};
+
+VideoModalCampaign infoCampaign({
+  String id = 'i1',
+  int version = 1,
+  Set<VideoModalTrigger> triggers = const {VideoModalTrigger.searchTab},
+  String title = 'Mon argent',
+  String? subtitle = 'Tout au même endroit',
+  String body = 'Votre argent est à un seul endroit.',
+  VideoModalIcon icon = VideoModalIcon.wallet,
+  String? primaryLabel = 'Voir mon argent',
+  String? secondaryLabel = 'Plus tard',
+  VideoModalAction primary = const VideoModalAction.openScreen(
+    InfoScreen.myMoney,
+  ),
+  VideoModalAction? secondary = const VideoModalAction.close(),
+}) => VideoModalCampaign(
+  id: id,
+  version: version,
+  triggers: triggers,
+  title: title,
+  subtitle: subtitle,
+  type: VideoModalType.info,
+  body: body,
+  icon: icon,
+  primaryLabel: primaryLabel,
+  secondaryLabel: secondaryLabel,
+  primaryAction: primary,
+  secondaryAction: secondary,
+);

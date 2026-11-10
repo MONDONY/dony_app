@@ -83,8 +83,8 @@ void _openPublishRoute(
   String route,
 ) {
   unawaited(() async {
-    await VideoModalGate.before(context, trigger);
-    if (context.mounted) _openRoute(context, event, route);
+    final proceed = await VideoModalGate.before(context, trigger);
+    if (proceed && context.mounted) _openRoute(context, event, route);
   }());
 }
 

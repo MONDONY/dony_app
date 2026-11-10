@@ -126,8 +126,11 @@ class _MesColisViewState extends State<_MesColisView> {
         AnalyticsEvents.shipmentNewRequestOpened,
       ),
     );
-    await VideoModalGate.before(context, VideoModalTrigger.sendParcel);
-    if (!mounted) return;
+    final proceed = await VideoModalGate.before(
+      context,
+      VideoModalTrigger.sendParcel,
+    );
+    if (!proceed || !mounted) return;
     unawaited(context.push('/parcels/send-intro'));
   }
 

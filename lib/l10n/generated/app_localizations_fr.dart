@@ -23639,6 +23639,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le droit de la consommation ne s\'applique pas à votre accord avec lui.';
 
   @override
+  String get travelerStatusRegistrationInvalid =>
+      '4 caractères minimum : lettres, chiffres, espace, point, barre oblique ou tiret.';
+
+  @override
+  String get infoModalCloseFallback => 'D\'accord';
+
+  @override
+  String get infoModalOpenFallback => 'Ouvrir';
+
+  @override
   String profilePublicBusinessLineNumber(String number) {
     return 'Immatriculation n° $number';
   }

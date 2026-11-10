@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/video_modal/bloc/video_modal_bloc.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/presentation/screens/video_modal_player_screen.dart';
+import 'package:dony/features/video_modal/presentation/widgets/info_modal_sheet.dart';
 import 'package:dony/features/video_modal/presentation/widgets/video_modal_sheet.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
@@ -23,31 +26,47 @@ bool isVideoModalFrontmost(BuildContext context) {
   return isVideoModalFrontmost(navigator.context);
 }
 
-/// Ouvre un modal vidéo : feuille, puis lecteur si la vidéo est demandée.
+/// Ouvre un modal : feuille vidéo puis lecteur si la vidéo est demandée, ou
+/// feuille d'information et l'action du bouton touché.
 abstract final class VideoModalPresenter {
   static bool _presenting = false;
 
   @visibleForTesting
   static void resetForTest() => _presenting = false;
 
-  /// Se termine quand la feuille et le lecteur sont refermés.
-  static Future<void> present(
+  /// Se termine quand la feuille et le lecteur sont refermés. Rend `true` si
+  /// l'appelant peut poursuivre vers son formulaire ; `false` si une action
+  /// d'information a déjà emmené la personne ailleurs (écran ou lien).
+  static Future<bool> present(
     BuildContext context, {
     required VideoModalBloc bloc,
     required VideoModalCampaign campaign,
     required VideoModalTrigger trigger,
+    @visibleForTesting ExternalUrlLauncher? launcher,
+    @visibleForTesting bool Function()? hasRealSession,
   }) async {
-    if (_presenting) return;
+    if (_presenting) return true;
     _presenting = true;
-    void answer(VideoModalEventType event) => bloc.add(
-      VideoModalAnswerRequested(
-        campaign: campaign,
-        trigger: trigger,
-        event: event,
-      ),
-    );
+    void answer(VideoModalEventType event, {VideoModalActionKind? kind}) =>
+        bloc.add(
+          VideoModalAnswerRequested(
+            campaign: campaign,
+            trigger: trigger,
+            event: event,
+            actionKind: kind,
+          ),
+        );
     try {
       answer(VideoModalEventType.shown);
+      if (campaign.isInfo) {
+        return await _presentInfo(
+          context,
+          campaign: campaign,
+          answer: answer,
+          launcher: launcher,
+          hasRealSession: hasRealSession,
+        );
+      }
       final choice = await VideoModalSheet.show(context, campaign: campaign);
       switch (choice) {
         case VideoModalChoice.dismiss:
@@ -57,16 +76,89 @@ abstract final class VideoModalPresenter {
           break;
         case VideoModalChoice.watch:
           answer(VideoModalEventType.opened);
-          if (!context.mounted) return;
+          if (!context.mounted) return true;
           final result = await context.push<VideoModalPlayerResult>(
             videoModalPlayerRoute,
             extra: VideoModalPlayerArgs(campaign: campaign, trigger: trigger),
           );
-          if (!context.mounted || trigger.opensForm) return;
+          if (!context.mounted || trigger.opensForm) return true;
           _follow(context, result);
       }
+      return true;
     } finally {
       _presenting = false;
+    }
+  }
+
+  static Future<bool> _presentInfo(
+    BuildContext context, {
+    required VideoModalCampaign campaign,
+    required void Function(VideoModalEventType, {VideoModalActionKind? kind})
+    answer,
+    ExternalUrlLauncher? launcher,
+    bool Function()? hasRealSession,
+  }) async {
+    final choice = await InfoModalSheet.show(context, campaign: campaign);
+    // Fermé d'un geste : pas une réponse, seul SHOWN est compté.
+    if (choice == null) return true;
+    final action = choice == InfoModalChoice.primary
+        ? campaign.primaryAction
+        : campaign.secondaryAction;
+    if (action == null) return true;
+    // Bouton principal : « touché » (OPENED) quand il mène quelque part ;
+    // secondaire ou fermeture : DISMISSED.
+    final opened =
+        choice == InfoModalChoice.primary &&
+        action.kind != VideoModalActionKind.close;
+    answer(
+      opened ? VideoModalEventType.opened : VideoModalEventType.dismissed,
+      kind: action.kind,
+    );
+    if (!context.mounted) return true;
+    final left = await runInfoAction(
+      context,
+      action,
+      launcher: launcher,
+      hasRealSession: hasRealSession,
+    );
+    return !left;
+  }
+
+  /// Exécute l'action d'un bouton. Rend `true` si la personne a quitté le
+  /// parcours en cours (écran ouvert, feuille de connexion, lien externe).
+  @visibleForTesting
+  static Future<bool> runInfoAction(
+    BuildContext context,
+    VideoModalAction action, {
+    ExternalUrlLauncher? launcher,
+    bool Function()? hasRealSession,
+  }) async {
+    switch (action.kind) {
+      case VideoModalActionKind.close:
+        return false;
+      case VideoModalActionKind.url:
+        final url = Uri.tryParse(action.url ?? '');
+        if (url != null) {
+          // `open` ne lève jamais : un échec ne casse rien.
+          await (launcher ?? ExternalUrlLauncher()).open(url);
+        }
+        return true;
+      case VideoModalActionKind.screen:
+        final screen = action.screen;
+        if (screen == null) return false;
+        final real =
+            (hasRealSession ??
+            () => getItSafe<FirebaseSessionProbe>()?.hasRealSession ?? false)();
+        // Visiteur devant un écran protégé : la feuille de connexion, jamais
+        // un écran cassé.
+        if (!real && !GuestAccessGuard.isPublicGuestPath(screen.route)) {
+          unawaited(AuthRequiredSheet.show(context));
+        } else if (screen.isShellTab) {
+          context.go(screen.route);
+        } else {
+          unawaited(context.push<Object?>(screen.route));
+        }
+        return true;
     }
   }
 
@@ -96,16 +188,18 @@ abstract final class VideoModalPresenter {
 abstract final class VideoModalGate {
   /// Ouvre le modal de [trigger] s'il y en a un pour cette session, et se
   /// termine une fois le modal (et son lecteur) refermé ; aussitôt sinon.
-  /// L'appelant poursuit ensuite vers le formulaire dans tous les cas.
-  static Future<void> before(
+  /// Rend `true` quand l'appelant poursuit vers le formulaire ; `false` si un
+  /// modal d'information a déjà ouvert un autre écran ou un lien (le
+  /// formulaire n'est alors pas poussé par-dessus).
+  static Future<bool> before(
     BuildContext context,
     VideoModalTrigger trigger,
   ) async {
     final bloc = getItSafe<VideoModalBloc>();
-    if (bloc == null || bloc.isClosed) return;
+    if (bloc == null || bloc.isClosed) return true;
     final campaign = bloc.state.candidateFor({trigger});
-    if (campaign == null || !isVideoModalFrontmost(context)) return;
-    await VideoModalPresenter.present(
+    if (campaign == null || !isVideoModalFrontmost(context)) return true;
+    return VideoModalPresenter.present(
       context,
       bloc: bloc,
       campaign: campaign,
