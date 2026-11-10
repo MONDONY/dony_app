@@ -11530,5 +11530,9 @@
   "tripParcelsLineAwaiting": "{count, plural, =1{1 needs your action} other{{count} need your action}}",
   "@tripParcelsLineAwaiting": {"description": "Écran du trajet (propriétaire), ligne Colis : colis distincts qui attendent un geste du voyageur, en orange sous le résumé (trip_parcels_line.dart).", "placeholders": {"count": {"type": "int"}}},
   "tripParcelAwaitingSemantics": "Needs your action",
-  "@tripParcelAwaitingSemantics": {"description": "Sheet « Colis » de l'écran du trajet : lecture d'écran du point orange d'un colis qui attend un geste du voyageur (trip_parcel_rows.dart)."}
+  "@tripParcelAwaitingSemantics": {"description": "Sheet « Colis » de l'écran du trajet : lecture d'écran du point orange d'un colis qui attend un geste du voyageur (trip_parcel_rows.dart)."},
+  "moneyKeywordWarningTitle": "Sending money is prohibited",
+  "@moneyKeywordWarningTitle": {"description": "Titre du bandeau orange, non bloquant, affiché sous la description du colis quand elle évoque l'envoi d'argent (money_keyword_warning.dart : demande sur un trajet et demande d'expéditeur publiée)."},
+  "moneyKeywordWarningBody": "Cash, cheques and bank cards cannot be handed to a traveler (Terms of use, article 4). If your parcel contains none, ignore this message.",
+  "@moneyKeywordWarningBody": {"description": "Corps du bandeau d'envoi d'argent sous la description du colis : rappel de l'interdiction (CGU, article 4), l'envoi reste possible (money_keyword_warning.dart)."}
 }

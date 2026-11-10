@@ -23568,4 +23568,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripParcelAwaitingSemantics => 'Attend votre geste';
+
+  @override
+  String get moneyKeywordWarningTitle => 'Envoi d\'argent interdit';
+
+  @override
+  String get moneyKeywordWarningBody =>
+      'Les espèces, chèques et cartes bancaires ne peuvent pas être confiés à un voyageur (CGU, article 4). Si votre colis n\'en contient pas, ignorez ce message.';
 }
