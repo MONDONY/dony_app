@@ -38,6 +38,8 @@ VideoModalCampaign campaign({
   int displays = 0,
   String? primaryLabel = 'Voir la vidéo (3 min)',
   String? secondaryLabel = 'Commencer',
+  VideoModalLayout layout = VideoModalLayout.bottomSheet,
+  int? sizePercent,
   List<VideoModalHighlight> highlights = const [
     VideoModalHighlight(
       icon: VideoModalIcon.parcel,
@@ -58,6 +60,8 @@ VideoModalCampaign campaign({
   maxDisplays: maxDisplays,
   displays: displays,
   audience: audience,
+  layout: layout,
+  sizePercent: sizePercent,
 );
 
 Map<String, Object?> infoJson({
@@ -68,6 +72,7 @@ Map<String, Object?> infoJson({
   Object? secondaryAction = const {'kind': 'CLOSE'},
   Object? body = 'Votre argent est à un seul endroit.',
   String? icon = 'WALLET',
+  Map<String, Object?> extra = const {},
 }) => {
   'id': id,
   'version': version,
@@ -84,6 +89,7 @@ Map<String, Object?> infoJson({
   'maxDisplays': 3,
   'displays': 0,
   'audience': 'NEVER_ANSWERED',
+  ...extra,
 };
 
 VideoModalCampaign infoCampaign({
@@ -100,6 +106,12 @@ VideoModalCampaign infoCampaign({
     InfoScreen.myMoney,
   ),
   VideoModalAction? secondary = const VideoModalAction.close(),
+  VideoModalLayout layout = VideoModalLayout.bottomSheet,
+  int? sizePercent,
+  VideoModalImageMode imageMode = VideoModalImageMode.none,
+  VideoModalImageFit imageFit = VideoModalImageFit.cover,
+  String? imageUrl,
+  String? imageAlt,
 }) => VideoModalCampaign(
   id: id,
   version: version,
@@ -113,4 +125,10 @@ VideoModalCampaign infoCampaign({
   secondaryLabel: secondaryLabel,
   primaryAction: primary,
   secondaryAction: secondary,
+  layout: layout,
+  sizePercent: sizePercent,
+  imageMode: imageMode,
+  imageFit: imageFit,
+  imageUrl: imageUrl,
+  imageAlt: imageAlt,
 );

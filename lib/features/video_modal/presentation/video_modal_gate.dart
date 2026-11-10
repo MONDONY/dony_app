@@ -9,6 +9,7 @@ import 'package:dony/features/video_modal/bloc/video_modal_bloc.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/presentation/screens/video_modal_player_screen.dart';
 import 'package:dony/features/video_modal/presentation/widgets/info_modal_sheet.dart';
+import 'package:dony/features/video_modal/presentation/widgets/video_modal_image.dart';
 import 'package:dony/features/video_modal/presentation/widgets/video_modal_sheet.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
@@ -44,6 +45,7 @@ abstract final class VideoModalPresenter {
     required VideoModalTrigger trigger,
     @visibleForTesting ExternalUrlLauncher? launcher,
     @visibleForTesting bool Function()? hasRealSession,
+    @visibleForTesting VideoModalImageLoader? imageLoader,
   }) async {
     if (_presenting) return true;
     _presenting = true;
@@ -57,11 +59,23 @@ abstract final class VideoModalPresenter {
           ),
         );
     try {
+      // Image préchargée AVANT l'affichage, 3 s au plus. Échec : une
+      // bannière s'affiche sans image ; une affiche ne s'affiche pas et rien
+      // n'est compté (ni SHOWN ni « un modal par session »), on retentera à
+      // la prochaine occasion.
+      VideoModalImage? image;
+      if (campaign.hasImage) {
+        image = await (imageLoader ?? loadVideoModalImage)(campaign.imageUrl!);
+        if (!context.mounted) return true;
+        if (image == null && campaign.isPoster) return true;
+        if (!isVideoModalFrontmost(context)) return true;
+      }
       answer(VideoModalEventType.shown);
       if (campaign.isInfo) {
         return await _presentInfo(
           context,
           campaign: campaign,
+          image: image,
           answer: answer,
           launcher: launcher,
           hasRealSession: hasRealSession,
@@ -93,14 +107,24 @@ abstract final class VideoModalPresenter {
   static Future<bool> _presentInfo(
     BuildContext context, {
     required VideoModalCampaign campaign,
+    required VideoModalImage? image,
     required void Function(VideoModalEventType, {VideoModalActionKind? kind})
     answer,
     ExternalUrlLauncher? launcher,
     bool Function()? hasRealSession,
   }) async {
-    final choice = await InfoModalSheet.show(context, campaign: campaign);
+    final choice = await InfoModalSheet.show(
+      context,
+      campaign: campaign,
+      image: image,
+    );
     // Fermé d'un geste : pas une réponse, seul SHOWN est compté.
     if (choice == null) return true;
+    // Croix (carte centrée, plein écran) : fermeture explicite, sans action.
+    if (choice == InfoModalChoice.closed) {
+      answer(VideoModalEventType.dismissed, kind: VideoModalActionKind.close);
+      return true;
+    }
     final action = choice == InfoModalChoice.primary
         ? campaign.primaryAction
         : campaign.secondaryAction;

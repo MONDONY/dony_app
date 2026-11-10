@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/presentation/widgets/video_modal_frame.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -7,7 +8,7 @@ import 'package:flutter/material.dart';
 /// réponse : le modal pourra revenir au prochain déclencheur.
 enum VideoModalChoice { watch, dismiss }
 
-/// Feuille du bas d'une campagne : icône dans un halo, titre, sous-titre,
+/// Modal d'une campagne vidéo (feuille du bas, carte centrée ou plein écran) : icône dans un halo, titre, sous-titre,
 /// miniature de la vidéo avec sa durée, jusqu'à trois points forts, et deux
 /// boutons empilés en pleine largeur dans le pied collant.
 abstract final class VideoModalSheet {
@@ -17,10 +18,14 @@ abstract final class VideoModalSheet {
     BuildContext context, {
     required VideoModalCampaign campaign,
   }) {
-    return DonyBottomSheet.show<VideoModalChoice>(
+    return VideoModalFrame.show<VideoModalChoice>(
       context,
+      layout: campaign.layout,
+      sizePercent: campaign.sizePercent,
       analyticsName: analyticsName,
-      stickyBottom: VideoModalSheetButtons(campaign: campaign),
+      buttons: VideoModalSheetButtons(campaign: campaign),
+      // La croix vaut le bouton secondaire : fermeture explicite.
+      closeResult: VideoModalChoice.dismiss,
       child: VideoModalSheetContent(campaign: campaign),
     );
   }

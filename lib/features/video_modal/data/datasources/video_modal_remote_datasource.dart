@@ -21,7 +21,9 @@ class VideoModalRemoteDatasource {
   Future<Object?> fetchEligible(String lang) async {
     final response = await _client.dio.get<Object?>(
       '/video-modals/eligible',
-      queryParameters: {'lang': lang},
+      // `caps=layout` : cette app sait rendre les formats et les images ; un
+      // back ancien ignore le paramètre.
+      queryParameters: {'lang': lang, 'caps': 'layout'},
       options: _quiet,
     );
     return response.data;
