@@ -459,18 +459,18 @@ class TravelerCard extends StatelessWidget {
                       _FullTripChip(label: l.listingStatusFull),
                     if (distanceBadge != null)
                       _DistanceBadge(label: distanceBadge!),
-                    if (isGpPro)
-                      const GpProBadge(
-                        surface: 'trip_card',
-                        interactive: false,
-                      ),
-                    if (isProAccount) const _ProBadge(),
                     if (travelerStatus != null)
                       TravelerStatusChip(
                         status: travelerStatus,
                         registrationNumber:
                             traveler?.businessRegistrationNumber,
                       ),
+                    if (isGpPro)
+                      const GpProBadge(
+                        surface: 'trip_card',
+                        interactive: false,
+                      ),
+                    if (isProAccount) const _ProBadge(),
                     if (announcement.isUrgent) const DonyUrgentBadge(),
                     if (categories.isNotEmpty)
                       _CategoryChips(
@@ -496,18 +496,18 @@ class TravelerCard extends StatelessWidget {
                     spacing: DonySpacing.xxs,
                     runSpacing: DonySpacing.xxs,
                     children: [
-                      if (isGpPro)
-                        const GpProBadge(
-                          surface: 'trip_card',
-                          interactive: false,
-                        ),
-                      if (isProAccount) const _ProBadge(),
                       if (travelerStatus != null)
                         TravelerStatusChip(
                           status: travelerStatus,
                           registrationNumber:
                               traveler?.businessRegistrationNumber,
                         ),
+                      if (isGpPro)
+                        const GpProBadge(
+                          surface: 'trip_card',
+                          interactive: false,
+                        ),
+                      if (isProAccount) const _ProBadge(),
                       if (announcement.isUrgent) const DonyUrgentBadge(),
                     ],
                   ),

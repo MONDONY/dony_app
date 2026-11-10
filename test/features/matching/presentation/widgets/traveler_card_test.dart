@@ -481,6 +481,35 @@ void main() {
         });
       }
 
+      for (final compact in [false, true]) {
+        testWidgets(
+          'carte ${compact ? 'compacte' : 'pleine'} : « Professionnel » vient '
+          'avant « GP Pro » (maquette écran 4)',
+          (tester) async {
+            await tester.pumpWidget(
+              _wrap(
+                TravelerCard(
+                  announcement: _makeAnn(
+                    gpPro: true,
+                    travelerStatus: TravelerStatus.professional,
+                  ),
+                  index: 0,
+                  isOwnAnnouncement: false,
+                  compact: compact,
+                  onTap: () {},
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            final status = tester.getTopLeft(find.byType(TravelerStatusChip));
+            final gp = tester.getTopLeft(find.byType(GpProBadge));
+            // Même ligne : la pastille de statut est à gauche du badge.
+            expect(status.dy, gp.dy);
+            expect(status.dx, lessThan(gp.dx));
+          },
+        );
+      }
+
       testWidgets('à 360 dp, pro + GP Pro + numéro long : aucune exception', (
         tester,
       ) async {
