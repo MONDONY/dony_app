@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/money_keyword_warning.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
@@ -336,6 +337,9 @@ class Step2DetailsState extends State<Step2Details> {
             _FieldLabel(l10n.requestCreateDescriptionLabel),
             const SizedBox(height: DonySpacing.xs),
             _DescriptionInput(controller: _descriptionCtrl),
+            // Non bloquant : rappel des CGU si la description évoque de
+            // l'argent (le back signale la demande à la modération).
+            MoneyKeywordWarning(controller: _descriptionCtrl),
           ],
         ),
       ),

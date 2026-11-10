@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/money_keyword_warning.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
@@ -337,5 +338,101 @@ void main() {
         expect(bloc.state.categories, ['Autre']);
       },
     );
+  });
+
+  group('Step2Details : description qui évoque de l\'argent', () {
+    final description = find.byKey(const Key('description-input'));
+    final banner = find.byKey(MoneyKeywordWarning.bannerKey);
+
+    /// 360 dp de large, la plus petite largeur visée ; assez haut pour que
+    /// l'overlay du combo catégories reste à l'écran.
+    void narrowViewport(WidgetTester tester) {
+      tester.view.physicalSize = const Size(360, 2200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+    }
+
+    Future<void> typeDescription(WidgetTester tester, String text) async {
+      await tester.ensureVisible(description);
+      await tester.enterText(description, text);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      '« cash » affiche le bandeau, l\'effacer le retire (360 dp, sans erreur)',
+      (tester) async {
+        narrowViewport(tester);
+        await tester.pumpWidget(wrap(const Step2Details()));
+        await tester.pump();
+        expect(banner, findsNothing);
+
+        await typeDescription(tester, 'cash');
+        expect(banner, findsOneWidget);
+        expect(find.text("Envoi d'argent interdit"), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        expect(
+          tester.getTopLeft(banner).dy,
+          greaterThan(tester.getBottomLeft(description).dy),
+        );
+
+        await typeDescription(tester, '');
+        expect(banner, findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('« vêtements » n\'affiche aucun bandeau', (tester) async {
+      narrowViewport(tester);
+      await tester.pumpWidget(wrap(const Step2Details()));
+      await tester.pump();
+
+      await typeDescription(tester, 'vêtements');
+      expect(banner, findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('en anglais : bandeau traduit, sans erreur à 360 dp', (
+      tester,
+    ) async {
+      useEnglish();
+      narrowViewport(tester);
+      await tester.pumpWidget(wrap(const Step2Details()));
+      await tester.pump();
+
+      await typeDescription(tester, 'some money');
+      expect(find.text('Sending money is prohibited'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('non bloquant : la description part telle quelle au submit', (
+      tester,
+    ) async {
+      narrowViewport(tester);
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key), bloc: mockBloc));
+      await tester.enterText(find.byType(TextFormField).first, '2');
+      await tester.tap(find.byKey(const Key('package-content-field')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('package-content-item-Vêtements & tissus')),
+      );
+      await tester.pumpAndSettle();
+      await typeDescription(tester, 'Vêtements et un peu de cash');
+      expect(banner, findsOneWidget);
+
+      key.currentState!.submit();
+      await tester.pump();
+      verify(
+        () => mockBloc.add(
+          const FormStep2Submitted(
+            weightKg: 2,
+            parcelSize: ParcelSize.small,
+            categories: ['Vêtements & tissus'],
+            description: 'Vêtements et un peu de cash',
+          ),
+        ),
+      ).called(1);
+    });
   });
 }

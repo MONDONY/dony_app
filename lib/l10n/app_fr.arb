@@ -23081,5 +23081,9 @@
   "tripParcelsLineAwaiting": "{count, plural, =1{1 attend votre geste} other{{count} attendent votre geste}}",
   "@tripParcelsLineAwaiting": {"description": "Écran du trajet (propriétaire), ligne Colis : colis distincts qui attendent un geste du voyageur, en orange sous le résumé (trip_parcels_line.dart).", "placeholders": {"count": {"type": "int"}}},
   "tripParcelAwaitingSemantics": "Attend votre geste",
-  "@tripParcelAwaitingSemantics": {"description": "Sheet « Colis » de l'écran du trajet : lecture d'écran du point orange d'un colis qui attend un geste du voyageur (trip_parcel_rows.dart)."}
+  "@tripParcelAwaitingSemantics": {"description": "Sheet « Colis » de l'écran du trajet : lecture d'écran du point orange d'un colis qui attend un geste du voyageur (trip_parcel_rows.dart)."},
+  "moneyKeywordWarningTitle": "Envoi d'argent interdit",
+  "@moneyKeywordWarningTitle": {"description": "Titre du bandeau orange, non bloquant, affiché sous la description du colis quand elle évoque l'envoi d'argent (money_keyword_warning.dart : demande sur un trajet et demande d'expéditeur publiée)."},
+  "moneyKeywordWarningBody": "Les espèces, chèques et cartes bancaires ne peuvent pas être confiés à un voyageur (CGU, article 4). Si votre colis n'en contient pas, ignorez ce message.",
+  "@moneyKeywordWarningBody": {"description": "Corps du bandeau d'envoi d'argent sous la description du colis : rappel de l'interdiction (CGU, article 4), l'envoi reste possible (money_keyword_warning.dart)."}
 }
