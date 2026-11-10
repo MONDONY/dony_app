@@ -137,6 +137,8 @@ Future<void> _open(
       // ferme d'un « Plus tard », la publication part dans tous les cas.
       final bloc = context.read<AnnouncementBloc>();
       await remindTravelerStatusBeforePublish(context);
+      // L'écran a pu être quitté, ou son bloc fermé, pendant la feuille.
+      if (!context.mounted || bloc.isClosed) return;
       bloc.add(AnnouncementPublishRequested(trip.id));
     case TripTodoKind.presence ||
         TripTodoKind.scan ||

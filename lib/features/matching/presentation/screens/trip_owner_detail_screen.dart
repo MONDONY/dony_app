@@ -436,6 +436,8 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   Future<void> _onTravelerStatusRequired(BuildContext context) async {
     final bloc = context.read<AnnouncementBloc>();
     final declared = await TravelerStatusSheet.show(context, required: true);
+    // L'écran a pu être quitté, ou son bloc fermé, pendant la feuille.
+    if (!context.mounted || bloc.isClosed) return;
     if (declared == true) {
       bloc.add(AnnouncementPublishRequested(widget.announcementId));
     }

@@ -325,6 +325,7 @@ void main() {
 
     setUp(() async {
       annBloc = MockAnnouncementBloc();
+      when(() => annBloc.isClosed).thenReturn(false);
       bidBloc = MockBidBloc();
       whenListen(
         annBloc,

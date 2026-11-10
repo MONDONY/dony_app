@@ -126,7 +126,7 @@ AnnouncementModel _makeAnnouncement({
 
 // ── Pump helper ───────────────────────────────────────────────────────────────
 
-Future<void> _pump(
+Future<GoRouter> _pump(
   WidgetTester tester, {
   required _MockAnnouncementBloc annBloc,
   required _MockBidBloc bidBloc,
@@ -183,6 +183,7 @@ Future<void> _pump(
     MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
   );
   await tester.pump(const Duration(milliseconds: 300));
+  return router;
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -236,6 +237,7 @@ void main() {
     );
 
     when(() => annBloc.add(any())).thenReturn(null);
+    when(() => annBloc.isClosed).thenReturn(false);
 
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
@@ -566,6 +568,8 @@ void main() {
       }
     });
 
+    GoRouter? router;
+
     Future<StreamController<AnnouncementState>> pumpDraft(
       WidgetTester tester,
     ) async {
@@ -578,7 +582,7 @@ void main() {
         initialState: AnnouncementDetailLoaded(draft),
       );
       addTearDown(controller.close);
-      await _pump(
+      router = await _pump(
         tester,
         annBloc: annBloc,
         bidBloc: bidBloc,
@@ -616,6 +620,103 @@ void main() {
         );
       },
     );
+
+    testWidgets('écran quitté pendant la feuille de rappel : rien n\'est '
+        'publié, aucune exception', (tester) async {
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+
+      // L'écran du brouillon est remplacé pendant que la feuille est ouverte :
+      // la navigation ferme la feuille. Aucune exception. (La feuille se
+      // referme avant que l'écran soit démonté : c'est le bloc fermé, testé
+      // ci-dessous, qui sépare le cas fautif du cas sain.)
+      router!.go('/kyc/status');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TripOwnerDetailScreen), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('bloc fermé pendant la feuille de rappel : rien n\'est '
+        'publié', (tester) async {
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+      when(() => annBloc.isClosed).thenReturn(true);
+      await tester.tap(find.widgetWithText(DonyButton, 'Plus tard'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verifyNever(
+        () => annBloc.add(any(that: isA<AnnouncementPublishRequested>())),
+      );
+    });
+
+    testWidgets('403 puis écran quitté pendant la feuille obligatoire : '
+        'aucune publication, aucune exception', (tester) async {
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+      final controller = await pumpDraft(tester);
+
+      controller.add(
+        AnnouncementTravelerStatusRequired(
+          const ForbiddenException('x', 'traveler-status-required'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+
+      router!.go('/kyc/status');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TripOwnerDetailScreen), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('403 puis bloc fermé pendant la feuille obligatoire : '
+        'déclaration faite, aucune publication', (tester) async {
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+      final controller = await pumpDraft(tester);
+
+      controller.add(
+        AnnouncementTravelerStatusRequired(
+          const ForbiddenException('x', 'traveler-status-required'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      when(() => annBloc.isClosed).thenReturn(true);
+
+      await tester.tap(find.text('Particulier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.text(
+          "Je confirme voyager à titre personnel et que ce n'est pas mon métier.",
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verifyNever(
+        () => annBloc.add(any(that: isA<AnnouncementPublishRequested>())),
+      );
+    });
 
     testWidgets('« Plus tard » : la publication continue', (tester) async {
       await pumpDraft(tester);
