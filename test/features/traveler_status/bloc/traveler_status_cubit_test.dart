@@ -313,6 +313,78 @@ void main() {
       },
     );
 
+    test('échec 422 : événement d\'échec avec le code, jamais une valeur '
+        'saisie', () async {
+      when(
+        () => repository.declare(
+          status: any(named: 'status'),
+          personalUseConfirmed: any(named: 'personalUseConfirmed'),
+          businessName: any(named: 'businessName'),
+          registrationNumber: any(named: 'registrationNumber'),
+          country: any(named: 'country'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/traveler-status/me'),
+          error: const ValidationException(
+            'invalide',
+            code: 'traveler-status-invalid',
+          ),
+        ),
+      );
+      final c = build()
+        ..choose(TravelerStatus.professional)
+        ..continueToDetails()
+        ..updateBusiness(
+          name: 'Diallo Express SARL',
+          registrationNumber: 'CI-ABJ-2021-B-12345',
+          country: 'CI',
+        );
+
+      await c.submit();
+
+      final captured = verify(
+        () => analytics.logEvent(
+          'traveler_status_declare_failed',
+          properties: captureAny(named: 'properties'),
+        ),
+      ).captured;
+      expect(captured, hasLength(1));
+      final props = captured.single as Map<String, Object?>;
+      expect(props, {
+        'status': 'PROFESSIONAL',
+        'error_code': 'traveler-status-invalid',
+      });
+      expect(props.values.join(), isNot(contains('Diallo')));
+      expect(props.values.join(), isNot(contains('12345')));
+      expect(props.values.join(), isNot(contains('CI-')));
+    });
+
+    test('échec sans code : error_code vaut unknown', () async {
+      when(
+        () => repository.declare(
+          status: any(named: 'status'),
+          personalUseConfirmed: any(named: 'personalUseConfirmed'),
+          businessName: any(named: 'businessName'),
+          registrationNumber: any(named: 'registrationNumber'),
+          country: any(named: 'country'),
+        ),
+      ).thenThrow(const NetworkException('coupure'));
+      final c = build()
+        ..choose(TravelerStatus.individual)
+        ..continueToDetails()
+        ..setConfirmed(true);
+
+      await c.submit();
+
+      verify(
+        () => analytics.logEvent(
+          'traveler_status_declare_failed',
+          properties: {'status': 'INDIVIDUAL', 'error_code': 'unknown'},
+        ),
+      ).called(1);
+    });
+
     test('après un échec, on peut corriger et renvoyer', () async {
       var calls = 0;
       when(

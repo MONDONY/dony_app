@@ -246,7 +246,18 @@ class TravelerStatusCubit extends Cubit<TravelerStatusState> {
       );
     } catch (e) {
       if (isClosed) return;
-      emit(TravelerStatusFailure(form, unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      emit(TravelerStatusFailure(form, error));
+      // Jamais la saisie : seulement le statut visé et le code d'erreur.
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.travelerStatusDeclareFailed,
+          properties: {
+            'status': status.wire,
+            'error_code': error.code ?? 'unknown',
+          },
+        ),
+      );
     }
   }
 }

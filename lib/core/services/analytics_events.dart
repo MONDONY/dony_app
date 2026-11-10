@@ -1291,6 +1291,12 @@ abstract final class AnalyticsEvents {
   /// sociale ni le numéro d'immatriculation.
   static const travelerStatusDeclared = 'traveler_status_declared';
 
+  /// Déclaration du statut légal refusée ou en erreur (422, réseau…).
+  /// Propriétés `status` (`INDIVIDUAL` ou `PROFESSIONAL`) et `error_code`
+  /// (`unknown` sans code métier), jamais la raison sociale, le numéro ni le
+  /// pays saisis.
+  static const travelerStatusDeclareFailed = 'traveler_status_declare_failed';
+
   // ── GP Pro (badge de voyageur régulier accordé par l'admin) ────────────
   /// Écran de candidature GP Pro ouvert.
   static const gpProApplicationOpened = 'gp_pro_application_opened';
