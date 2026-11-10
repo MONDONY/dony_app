@@ -8,6 +8,7 @@ import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
 import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_form.dart';
 import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_labels.dart';
 import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_pieces_section.dart';
+import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_resign.dart';
 import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -71,11 +72,24 @@ class _GpProScreenState extends State<GpProScreen> {
     };
   }
 
+  Future<void> _confirmResign(GpProCubit cubit) =>
+      confirmGpProResign(context, cubit);
+
   Future<void> _openKyc() async {
     final cubit = context.read<GpProCubit>();
     await context.push(kycVerifyLocation());
     // Au retour, une demande AWAITING_KYC a pu passer en PENDING.
     if (mounted) await cubit.load();
+  }
+
+  /// Plus GP Pro : profil mis à jour, confirmation discrète, retour au profil.
+  void _onResigned(BuildContext context) {
+    applyGpProResigned(context);
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/profile');
+    }
   }
 
   Future<void> _confirmCancel() async {
@@ -100,8 +114,14 @@ class _GpProScreenState extends State<GpProScreen> {
       (b) => b.state.currentUser?.isKycVerified ?? false,
     );
     return BlocConsumer<GpProCubit, GpProCubitState>(
-      listenWhen: (p, c) => c.errorCode != null && c.errorCode != p.errorCode,
+      listenWhen: (p, c) =>
+          (c.errorCode != null && c.errorCode != p.errorCode) ||
+          (c.resigned && !p.resigned),
       listener: (context, s) {
+        if (s.resigned) {
+          _onResigned(context);
+          return;
+        }
         final code = s.errorCode!;
         DonySnackbar.show(
           context,
@@ -181,7 +201,17 @@ class _GpProScreenState extends State<GpProScreen> {
           flat: true,
           onPressed: cubit.restart,
         );
-      case _View.loading || _View.failure || _View.unavailable || _View.active:
+      case _View.active:
+        // Action secondaire sous le bloc « Vous êtes GP Pro » : même
+        // confirmation légère et même `resign()` que « Modifier le profil ».
+        return DonyButton(
+          key: const Key('gp_pro_resign'),
+          label: l.gpProManageResign,
+          variant: DonyButtonVariant.destructiveGhost,
+          isLoading: s.resigning,
+          onPressed: s.resigning ? null : () => _confirmResign(cubit),
+        );
+      case _View.loading || _View.failure || _View.unavailable:
         return null;
     }
   }

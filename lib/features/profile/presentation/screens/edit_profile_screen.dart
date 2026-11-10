@@ -13,6 +13,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_state.dart';
 import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_manage_sheet.dart';
+import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_resign.dart';
 import 'package:dony/features/profile/presentation/profile_labels.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_photo_viewer.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart'
@@ -1004,7 +1005,7 @@ class _TravelerStatusRowBody extends StatelessWidget {
     } else if (_isGpPro) {
       final resign = await GpProManageSheet.show(context);
       if (!context.mounted || !(resign ?? false)) return;
-      await _confirmResign(context, cubit);
+      await confirmGpProResign(context, cubit);
     } else {
       // La feuille recharge elle-même le profil (une seule fois) : ici, seule la
       // pastille « En validation » est relue.
@@ -1012,43 +1013,6 @@ class _TravelerStatusRowBody extends StatelessWidget {
       if (cubit.isClosed) return;
       await cubit.load();
     }
-  }
-
-  /// Confirmation légère : un seul bouton, la feuille ou un tap à côté annule.
-  Future<void> _confirmResign(BuildContext context, GpProCubit cubit) async {
-    final l = context.l10n;
-    final confirmed = await DonyDialog.show(
-      context,
-      title: l.gpProResignConfirmTitle,
-      message: l.gpProResignConfirmBody,
-      confirmLabel: l.gpProManageResign,
-      showCancel: false,
-      variant: DonyDialogVariant.destructive,
-      iconAsset: 'circle-alert',
-    );
-    if ((confirmed ?? false) && !cubit.isClosed) await cubit.resign();
-  }
-
-  void _onResigned(BuildContext context) {
-    final auth = context.read<AuthBloc>();
-    if (!auth.isClosed) {
-      final current = auth.state.currentUser;
-      if (current != null) {
-        auth.add(
-          AuthUserSynced(
-            current
-                .withTravelerStatus(TravelerStatus.individual)
-                .copyWith(gpPro: false),
-          ),
-        );
-      }
-      auth.add(const AuthProfileRefreshRequested());
-    }
-    DonySnackbar.show(
-      context,
-      message: context.l10n.gpProResignDone,
-      type: DonySnackbarType.success,
-    );
   }
 
   @override
@@ -1079,7 +1043,7 @@ class _TravelerStatusRowBody extends StatelessWidget {
             type: DonySnackbarType.error,
           );
         } else {
-          _onResigned(context);
+          applyGpProResigned(context);
         }
       },
       builder: (context, state) {
