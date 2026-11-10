@@ -2144,4 +2144,42 @@ void main() {
       expect(en.title, isNot(fr.title));
     });
   });
+
+  group('ErrorCatalog — statut légal du voyageur (lot 2)', () {
+    test('403 traveler-status-required : connu, FR et EN', () {
+      const error = ForbiddenException('x', 'traveler-status-required');
+      expect(ErrorCatalog.isKnown(error), isTrue);
+      final fr = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+      expect(fr.title, 'Statut à déclarer');
+      expect(fr.message, contains('particulier ou professionnel'));
+      expect(fr.severity, ErrorSeverity.warning);
+      final en = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(en.title, isNot(fr.title));
+      expect(en.message, contains('individual or a professional'));
+    });
+
+    test('422 traveler-status-invalid : connu, FR et EN', () {
+      const error = ValidationException(
+        'invalide',
+        code: 'traveler-status-invalid',
+      );
+      expect(ErrorCatalog.isKnown(error), isTrue);
+      final fr = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+      expect(fr.title, 'Déclaration à corriger');
+      final en = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(en.message, contains('company name'));
+    });
+  });
 }

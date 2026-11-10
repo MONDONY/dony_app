@@ -23626,4 +23626,78 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get profilePublicBusinessDisclaimer =>
       'Informations déclarées par le voyageur, non vérifiées par Yadony.';
+
+  @override
+  String get travelerStatusSheetTitle => 'Comment voyagez-vous ?';
+
+  @override
+  String get travelerStatusSheetSubtitle =>
+      'Les expéditeurs voient votre réponse sur vos trajets. Vous pouvez la modifier à tout moment dans votre profil.';
+
+  @override
+  String get travelerStatusSheetSubtitleRequired =>
+      'Pour publier un trajet, indiquez comment vous voyagez. Les expéditeurs voient votre réponse sur vos trajets.';
+
+  @override
+  String get travelerStatusOptionIndividual => 'Particulier';
+
+  @override
+  String get travelerStatusOptionIndividualBody =>
+      'Je voyage à titre personnel, ce n\'est pas mon métier.';
+
+  @override
+  String get travelerStatusOptionProfessional => 'Professionnel';
+
+  @override
+  String get travelerStatusOptionProfessionalBody =>
+      'Je transporte des colis dans le cadre d\'une activité déclarée.';
+
+  @override
+  String get travelerStatusIndividualTitle => 'Voyageur particulier';
+
+  @override
+  String get travelerStatusIndividualSubtitle =>
+      'En tant que particulier, vous n\'avez pas à fournir de numéro d\'entreprise.';
+
+  @override
+  String get travelerStatusIndividualConfirm =>
+      'Je confirme voyager à titre personnel et que ce n\'est pas mon métier.';
+
+  @override
+  String get travelerStatusIndividualHint =>
+      'Si vous transportez des colis de façon régulière pour en tirer un revenu, choisissez « Professionnel ». Vos gains restent à déclarer à l\'administration fiscale de votre pays.';
+
+  @override
+  String get travelerStatusProfessionalTitle => 'Voyageur professionnel';
+
+  @override
+  String get travelerStatusProfessionalSubtitle =>
+      'Ces informations seront visibles des expéditeurs.';
+
+  @override
+  String get travelerStatusBusinessNameLabel => 'Raison sociale';
+
+  @override
+  String get travelerStatusRegistrationLabel => 'Numéro d\'entreprise';
+
+  @override
+  String get travelerStatusRegistrationHint =>
+      'SIRET, NINEA, RCCM ou équivalent.';
+
+  @override
+  String get travelerStatusCountryLabel => 'Pays d\'immatriculation';
+
+  @override
+  String get errorTravelerStatusRequiredTitle => 'Statut à déclarer';
+
+  @override
+  String get errorTravelerStatusRequiredMessage =>
+      'Indiquez si vous voyagez en tant que particulier ou professionnel pour publier un trajet.';
+
+  @override
+  String get errorTravelerStatusInvalidTitle => 'Déclaration à corriger';
+
+  @override
+  String get errorTravelerStatusInvalidMessage =>
+      'Vérifiez la raison sociale, le numéro d\'entreprise et le pays, puis réessayez.';
 }

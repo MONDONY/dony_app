@@ -8192,6 +8192,33 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'profilePublicBusinessCountryLabel': (l) =>
       l.profilePublicBusinessCountryLabel,
   'profilePublicBusinessDisclaimer': (l) => l.profilePublicBusinessDisclaimer,
+  'travelerStatusSheetTitle': (l) => l.travelerStatusSheetTitle,
+  'travelerStatusSheetSubtitle': (l) => l.travelerStatusSheetSubtitle,
+  'travelerStatusSheetSubtitleRequired': (l) =>
+      l.travelerStatusSheetSubtitleRequired,
+  'travelerStatusOptionIndividual': (l) => l.travelerStatusOptionIndividual,
+  'travelerStatusOptionIndividualBody': (l) =>
+      l.travelerStatusOptionIndividualBody,
+  'travelerStatusOptionProfessional': (l) => l.travelerStatusOptionProfessional,
+  'travelerStatusOptionProfessionalBody': (l) =>
+      l.travelerStatusOptionProfessionalBody,
+  'travelerStatusIndividualTitle': (l) => l.travelerStatusIndividualTitle,
+  'travelerStatusIndividualSubtitle': (l) => l.travelerStatusIndividualSubtitle,
+  'travelerStatusIndividualConfirm': (l) => l.travelerStatusIndividualConfirm,
+  'travelerStatusIndividualHint': (l) => l.travelerStatusIndividualHint,
+  'travelerStatusProfessionalTitle': (l) => l.travelerStatusProfessionalTitle,
+  'travelerStatusProfessionalSubtitle': (l) =>
+      l.travelerStatusProfessionalSubtitle,
+  'travelerStatusBusinessNameLabel': (l) => l.travelerStatusBusinessNameLabel,
+  'travelerStatusRegistrationLabel': (l) => l.travelerStatusRegistrationLabel,
+  'travelerStatusRegistrationHint': (l) => l.travelerStatusRegistrationHint,
+  'travelerStatusCountryLabel': (l) => l.travelerStatusCountryLabel,
+  'errorTravelerStatusRequiredTitle': (l) => l.errorTravelerStatusRequiredTitle,
+  'errorTravelerStatusRequiredMessage': (l) =>
+      l.errorTravelerStatusRequiredMessage,
+  'errorTravelerStatusInvalidTitle': (l) => l.errorTravelerStatusInvalidTitle,
+  'errorTravelerStatusInvalidMessage': (l) =>
+      l.errorTravelerStatusInvalidMessage,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

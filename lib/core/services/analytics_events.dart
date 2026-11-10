@@ -1285,6 +1285,12 @@ abstract final class AnalyticsEvents {
   /// « Réessayer » touché sur l'écran de maintenance.
   static const maintenanceRetryTapped = 'maintenance_retry_tapped';
 
+  // ── Statut légal du voyageur (particulier / professionnel) ─────────────
+  /// Statut légal déclaré depuis la feuille « Comment voyagez-vous ? ».
+  /// Propriété `status` (`INDIVIDUAL` ou `PROFESSIONAL`), jamais la raison
+  /// sociale ni le numéro d'immatriculation.
+  static const travelerStatusDeclared = 'traveler_status_declared';
+
   // ── GP Pro (badge de voyageur régulier accordé par l'admin) ────────────
   /// Écran de candidature GP Pro ouvert.
   static const gpProApplicationOpened = 'gp_pro_application_opened';
