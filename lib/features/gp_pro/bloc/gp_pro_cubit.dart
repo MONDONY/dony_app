@@ -19,6 +19,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
 
   int _counter = 0;
   bool _loadInFlight = false;
+  bool _reloadQueued = false;
   bool _openedLogged = false;
 
   /// Codes 409 du back : une demande existe déjà, le statut local est périmé.
@@ -31,14 +32,23 @@ class GpProCubit extends Cubit<GpProCubitState> {
   /// la ligne « Statut de voyageur » du profil ne lit la demande que pour sa
   /// pastille, elle ne trace rien.
   Future<void> load({bool trackOpened = false}) async {
-    // Une lecture à la fois : un second appel pendant la première est ignoré
-    // (pas de requêtes en rafale quand plusieurs déclencheurs se suivent).
-    if (isClosed || _loadInFlight) return;
+    if (isClosed) return;
+    // Une lecture à la fois. Un appel pendant une lecture n'est pas perdu (la
+    // réponse en vol peut être périmée) : il est mis en file, un seul rejeu
+    // coalescé quel que soit le nombre de demandes, donc pas de rafale.
+    if (_loadInFlight) {
+      _reloadQueued = true;
+      return;
+    }
     _loadInFlight = true;
     try {
-      await _load(trackOpened: trackOpened);
+      do {
+        _reloadQueued = false;
+        await _load(trackOpened: trackOpened);
+      } while (_reloadQueued && !isClosed);
     } finally {
       _loadInFlight = false;
+      _reloadQueued = false;
     }
   }
 
@@ -249,6 +259,9 @@ class GpProCubit extends Cubit<GpProCubitState> {
     } on GpProException catch (e) {
       if (isClosed) return;
       if (e.status == 409 || _conflictCodes.contains(e.code)) {
+        // Demande déjà ouverte ou déjà active : l'état serveur a changé, pas
+        // d'erreur trompeuse, une relecture et le signal.
+        notifyGpProStatusChanged();
         emit(state.copyWith(submitting: false, restarting: false));
         await load();
       } else {

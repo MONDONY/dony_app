@@ -267,7 +267,7 @@ void main() {
       expect(find.text('Demande GP Pro'), findsNothing);
     });
 
-    testWidgets('nouveau profil de l\'AuthBloc : la demande est relue', (
+    testWidgets('autre compte (id différent) : la demande est relue', (
       tester,
     ) async {
       await pump(tester, _user);
@@ -275,10 +275,57 @@ void main() {
         (_) async => const GpProStatus(state: GpProState.awaitingKyc),
       );
 
-      authStates.add(AuthProfileUpdated(_user.copyWith(city: 'Lyon')));
+      authStates.add(AuthProfileUpdated(_user.copyWith(id: 'u2')));
       await tester.pumpAndSettle();
 
       expect(find.text('Demande GP Pro'), findsOneWidget);
+    });
+
+    testWidgets('Updated(u), Loading, Updated(u) : aucune relecture en plus', (
+      tester,
+    ) async {
+      await pump(tester, _user);
+      verify(() => repo.fetchStatus()).called(1);
+
+      authStates
+        ..add(const AuthProfileUpdated(_user))
+        ..add(const AuthLoading())
+        ..add(const AuthProfileUpdated(_user));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => repo.fetchStatus());
+    });
+
+    testWidgets('même compte, profil rechargé avec une autre ville : aucune '
+        'relecture', (tester) async {
+      await pump(tester, _user);
+      verify(() => repo.fetchStatus()).called(1);
+
+      authStates.add(AuthProfileUpdated(_user.copyWith(city: 'Lyon')));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => repo.fetchStatus());
+    });
+
+    testWidgets('déconnexion : aucune relecture', (tester) async {
+      await pump(tester, _user);
+      verify(() => repo.fetchStatus()).called(1);
+
+      authStates.add(const AuthInitial());
+      await tester.pumpAndSettle();
+
+      verifyNever(() => repo.fetchStatus());
+    });
+
+    testWidgets('statut ACTIVE lu alors que le profil n\'a pas encore le '
+        'badge : « GP Pro » et « Actif »', (tester) async {
+      when(
+        () => repo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.active));
+      await pump(tester, _user);
+
+      expect(find.text('Actif'), findsOneWidget);
+      expect(find.text('Devenir GP Pro'), findsNothing);
     });
 
     testWidgets('user.gpPro passe de vrai à faux : « Devenir GP Pro »', (
@@ -294,21 +341,30 @@ void main() {
       expect(find.text('Devenir GP Pro'), findsOneWidget);
     });
 
-    testWidgets('plusieurs signaux d\'affilée : une seule relecture à la '
-        'fois', (tester) async {
+    testWidgets('plusieurs signaux d\'affilée pendant une lecture : un seul '
+        'rejeu, la dernière demande n\'est pas perdue', (tester) async {
       await pump(tester, _user);
       final gate = Completer<GpProStatus>();
       when(() => repo.fetchStatus()).thenAnswer((_) => gate.future);
 
       notifyGpProStatusChanged();
+      await tester.pump();
       notifyGpProStatusChanged();
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      notifyGpProStatusChanged();
       await tester.pump();
 
-      // 1 lecture au montage + 1 seule relance, les deux autres ignorées.
+      // Une seule lecture en vol (le montage a déjà fait la sienne).
       verify(() => repo.fetchStatus()).called(2);
+      when(
+        () => repo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.pending));
       gate.complete(const GpProStatus(state: GpProState.none));
       await tester.pumpAndSettle();
+
+      // Les deux signaux mis en file ont donné un seul rejeu, dont le résultat
+      // (plus récent) est affiché.
+      verify(() => repo.fetchStatus()).called(1);
+      expect(find.text('Demande GP Pro'), findsOneWidget);
     });
   });
 
@@ -318,12 +374,36 @@ void main() {
           'sans ellipse', (tester) async {
         await pump(tester, _user, locale: locale);
         final l = locale == AppL10n.fr ? fr : en;
+        final finder = find.text(l.profileGpProBecomeSubtitle);
 
-        final paragraph = tester.renderObject<RenderParagraph>(
-          find.text(l.profileGpProBecomeSubtitle),
-        );
+        final paragraph = tester.renderObject<RenderParagraph>(finder);
         expect(paragraph.didExceedMaxLines, isFalse);
-        expect(l.profileGpProBecomeSubtitle.length, lessThanOrEqualTo(60));
+
+        // La mesure n'est pas vide : la police de l'app est bien celle qui est
+        // chargée, et un texte long de même largeur dépasse bien deux lignes.
+        final style = tester.widget<Text>(finder).style;
+        expect(style?.fontFamily, contains('PlusJakartaSans'));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: paragraph.size.width,
+                  child: Text(
+                    'Profil professionnel examiné par l\'équipe, avec raison '
+                    'sociale et numéro d\'entreprise, validé avant toute '
+                    'publication de trajet.',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: style,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        final control = tester.renderObject<RenderParagraph>(find.byType(Text));
+        expect(control.didExceedMaxLines, isTrue);
       });
     }
   });

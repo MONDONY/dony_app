@@ -13,6 +13,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_state.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_status_signal.dart';
+import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -85,6 +86,9 @@ class ProfileGpProSection extends StatelessWidget {
           builder: (context, s) => _GpProRow(
             state: switch ((s.status, s.load)) {
               (final status?, _) when status.isOpen => ProfileGpProState.open,
+              // Badge accordé mais profil local pas encore rafraîchi.
+              (final status?, _) when status.state == GpProState.active =>
+                ProfileGpProState.active,
               (null, GpProLoadStatus.loading) => ProfileGpProState.loading,
               _ => ProfileGpProState.none,
             },
@@ -112,9 +116,14 @@ class _StatusRefresher extends StatefulWidget {
 
 class _StatusRefresherState extends State<_StatusRefresher>
     with WidgetsBindingObserver {
+  /// Dernier utilisateur connecté vu : un état transitoire de l'`AuthBloc`
+  /// (chargement, erreur, déconnexion) n'est pas un nouveau profil.
+  UserModel? _lastUser;
+
   @override
   void initState() {
     super.initState();
+    _lastUser = maybeRead<AuthBloc>(context)?.state.currentUser;
     WidgetsBinding.instance.addObserver(this);
     gpProStatusChanged.addListener(_reload);
   }
@@ -142,7 +151,15 @@ class _StatusRefresherState extends State<_StatusRefresher>
     final auth = maybeRead<AuthBloc>(context);
     if (auth == null) return widget.child;
     return BlocListener<AuthBloc, AuthState>(
-      listenWhen: (prev, curr) => prev.currentUser != curr.currentUser,
+      // Seulement un autre compte ou un badge qui change : pas sur
+      // Updated(u), Loading, Updated(u), ni à la déconnexion.
+      listenWhen: (prev, curr) {
+        final user = curr.currentUser;
+        if (user == null) return false;
+        final last = _lastUser;
+        _lastUser = user;
+        return last != null && (last.id != user.id || last.gpPro != user.gpPro);
+      },
       listener: (_, _) => _reload(),
       child: widget.child,
     );

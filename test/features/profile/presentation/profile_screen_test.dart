@@ -15,6 +15,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
 import 'package:dony/features/billing/data/billing_repository.dart';
 import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_status_signal.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -37,6 +38,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../helpers/currency_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 
@@ -1250,6 +1252,20 @@ void main() {
         verify(() => analyticsService.logEvent(nav.$3)).called(1);
       });
     }
+
+    testWidgets('retour de « GP Pro » du menu : le statut GP Pro est '
+        'signalé (la ligne du Profil se relit)', (tester) async {
+      await openMenu(tester, _dualRoleUser);
+      await tester.tap(find.byKey(const Key('profile-menu-gp-pro')));
+      await tester.pumpAndSettle();
+      expect(find.text('GpPro'), findsOneWidget);
+      final before = gpProStatusChanged.value;
+
+      GoRouter.of(tester.element(find.text('GpPro'))).pop();
+      await tester.pumpAndSettle();
+
+      expect(gpProStatusChanged.value, before + 1);
+    });
 
     testWidgets(
       '« Se déconnecter » confirme puis déclenche AuthLogoutRequested',
