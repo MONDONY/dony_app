@@ -23651,4 +23651,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String publishBlockedResumeOnFirst(String month) {
     return 'You will be able to publish again from $month 1st.';
   }
+
+  @override
+  String get videoModalDontShowAgain => 'Don\'t show again';
 }

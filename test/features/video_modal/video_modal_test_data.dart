@@ -9,6 +9,7 @@ Map<String, Object?> campaignJson({
   int displays = 0,
   String? primaryLabel = 'Voir la vidéo (3 min)',
   String? secondaryLabel = 'Commencer',
+  Map<String, Object?> extra = const {},
 }) => {
   'id': id,
   'version': version,
@@ -27,6 +28,7 @@ Map<String, Object?> campaignJson({
   'maxDisplays': maxDisplays,
   'displays': displays,
   'audience': audience,
+  ...extra,
 };
 
 VideoModalCampaign campaign({
@@ -40,6 +42,12 @@ VideoModalCampaign campaign({
   String? secondaryLabel = 'Commencer',
   VideoModalLayout layout = VideoModalLayout.bottomSheet,
   int? sizePercent,
+  int priority = 0,
+  VideoModalFrequency frequency = VideoModalFrequency.upToN,
+  int? frequencyDays,
+  bool stopAfterAnswer = true,
+  bool allowDontShowAgain = false,
+  DateTime? lastShownAt,
   List<VideoModalHighlight> highlights = const [
     VideoModalHighlight(
       icon: VideoModalIcon.parcel,
@@ -62,6 +70,12 @@ VideoModalCampaign campaign({
   audience: audience,
   layout: layout,
   sizePercent: sizePercent,
+  priority: priority,
+  frequency: frequency,
+  frequencyDays: frequencyDays,
+  stopAfterAnswer: stopAfterAnswer,
+  allowDontShowAgain: allowDontShowAgain,
+  lastShownAt: lastShownAt,
 );
 
 Map<String, Object?> infoJson({
@@ -112,6 +126,15 @@ VideoModalCampaign infoCampaign({
   VideoModalImageFit imageFit = VideoModalImageFit.cover,
   String? imageUrl,
   String? imageAlt,
+  int priority = 0,
+  VideoModalFrequency frequency = VideoModalFrequency.upToN,
+  int? frequencyDays,
+  bool stopAfterAnswer = true,
+  bool allowDontShowAgain = false,
+  DateTime? lastShownAt,
+  int maxDisplays = VideoModalCampaign.defaultMaxDisplays,
+  int displays = 0,
+  VideoModalAudience audience = VideoModalAudience.neverAnswered,
 }) => VideoModalCampaign(
   id: id,
   version: version,
@@ -131,4 +154,13 @@ VideoModalCampaign infoCampaign({
   imageFit: imageFit,
   imageUrl: imageUrl,
   imageAlt: imageAlt,
+  priority: priority,
+  frequency: frequency,
+  frequencyDays: frequencyDays,
+  stopAfterAnswer: stopAfterAnswer,
+  allowDontShowAgain: allowDontShowAgain,
+  lastShownAt: lastShownAt,
+  maxDisplays: maxDisplays,
+  displays: displays,
+  audience: audience,
 );

@@ -157,6 +157,24 @@ void main() {
     expect(find.byKey(const Key('video-modal-primary')), findsNothing);
   });
 
+  for (final trigger in [
+    VideoModalTrigger.publishTrip,
+    VideoModalTrigger.sendParcel,
+  ]) {
+    testWidgets('${trigger.wire} : aucun délai d\'ouverture', (tester) async {
+      usePhone360(tester);
+      await pump(tester, trigger);
+      await tester.runAsync(load);
+      await tester.tap(find.text('publier'));
+      // Bien moins que les 2 s du shell : le modal précède le formulaire
+      // demandé, la personne n'attend pas.
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byKey(const Key('video-modal-primary')), findsOneWidget);
+      expect(log, isEmpty);
+    });
+  }
+
   testWidgets('SEND_PARCEL : fin de vidéo puis formulaire', (tester) async {
     usePhone360(tester);
     await pump(tester, VideoModalTrigger.sendParcel);

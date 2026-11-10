@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/presentation/widgets/video_modal_dont_show_again.dart';
 import 'package:dony/features/video_modal/presentation/widgets/video_modal_frame.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -17,13 +18,20 @@ abstract final class VideoModalSheet {
   static Future<VideoModalChoice?> show(
     BuildContext context, {
     required VideoModalCampaign campaign,
+
+    /// Case « Ne plus afficher » : écrite par le geste de la personne, lue par
+    /// l'appelant une fois le modal fermé.
+    ValueNotifier<bool>? dontShowAgain,
   }) {
     return VideoModalFrame.show<VideoModalChoice>(
       context,
       layout: campaign.layout,
       sizePercent: campaign.sizePercent,
       analyticsName: analyticsName,
-      buttons: VideoModalSheetButtons(campaign: campaign),
+      buttons: VideoModalSheetButtons(
+        campaign: campaign,
+        dontShowAgain: dontShowAgain,
+      ),
       // La croix vaut le bouton secondaire : fermeture explicite.
       closeResult: VideoModalChoice.dismiss,
       child: VideoModalSheetContent(campaign: campaign),
@@ -33,16 +41,22 @@ abstract final class VideoModalSheet {
 
 /// Les deux boutons du pied collant, principal en haut.
 class VideoModalSheetButtons extends StatelessWidget {
-  const VideoModalSheetButtons({super.key, required this.campaign});
+  const VideoModalSheetButtons({
+    super.key,
+    required this.campaign,
+    this.dontShowAgain,
+  });
 
   final VideoModalCampaign campaign;
+  final ValueNotifier<bool>? dontShowAgain;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
+    return VideoModalFooterContent(
+      allowDontShowAgain: campaign.allowDontShowAgain,
+      dontShowAgain: dontShowAgain,
+      buttons: [
         DonyButton(
           key: const Key('video-modal-primary'),
           label: campaign.primaryLabel ?? l.videoModalPrimaryFallback,

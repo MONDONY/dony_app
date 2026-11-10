@@ -161,6 +161,10 @@ void main() {
     (VideoModalEventType.opened, AnalyticsEvents.videoModalVideoOpened),
     (VideoModalEventType.completed, AnalyticsEvents.videoModalVideoCompleted),
     (VideoModalEventType.dismissed, AnalyticsEvents.videoModalDismissed),
+    (
+      VideoModalEventType.dontShowAgain,
+      AnalyticsEvents.videoModalDontShowAgain,
+    ),
   ]) {
     blocTest<VideoModalBloc, VideoModalState>(
       '${event.wire} : visiteur, tracé avec guest',
@@ -225,6 +229,57 @@ void main() {
       );
     });
   });
+
+  blocTest<VideoModalBloc, VideoModalState>(
+    'DONT_SHOW_AGAIN d\'un modal d\'information : tracé avec type=info',
+    build: build,
+    act: (b) => b.add(
+      VideoModalAnswerRequested(
+        campaign: infoCampaign(),
+        trigger: VideoModalTrigger.searchTab,
+        event: VideoModalEventType.dontShowAgain,
+      ),
+    ),
+    // Ne compte pas comme un affichage : « un modal par session » intact.
+    expect: () => <VideoModalState>[],
+    verify: (_) {
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.videoModalDontShowAgain,
+          properties: {
+            'campaign_id': 'i1',
+            'version': 1,
+            'trigger': 'SEARCH_TAB',
+            'guest': false,
+            'type': 'info',
+          },
+        ),
+      ).called(1);
+    },
+  );
+
+  blocTest<VideoModalBloc, VideoModalState>(
+    'file triée par priorité : la plus haute passe d\'abord',
+    build: () {
+      when(
+        () => repo.loadEligible(
+          lang: any(named: 'lang'),
+          realSession: any(named: 'realSession'),
+        ),
+      ).thenAnswer(
+        (_) async => VideoModalCampaign.sortByPriority([
+          campaign(id: 'bas'),
+          campaign(id: 'haut', priority: 5),
+        ]),
+      );
+      return build();
+    },
+    act: (b) =>
+        b.add(const VideoModalLoadRequested(lang: 'fr', realSession: true)),
+    verify: (b) {
+      expect(b.state.candidateFor({VideoModalTrigger.searchTab})!.id, 'haut');
+    },
+  );
 
   test('égalité des événements', () {
     expect(

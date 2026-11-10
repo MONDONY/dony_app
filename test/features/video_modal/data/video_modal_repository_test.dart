@@ -30,12 +30,16 @@ void main() {
 
   group('loadEligible', () {
     test(
-      'envoie la langue et caps=layout, sans report Sentry ni relance',
+      'envoie la langue, caps=layout,targeting et la plateforme, sans report Sentry ni relance',
       () async {
         api.on('GET', '/video-modals/eligible', [campaignJson()]);
         final list = await repo.loadEligible(lang: 'en', realSession: true);
         expect(list.single.id, 'c1');
-        expect(api.last.queryParameters, {'lang': 'en', 'caps': 'layout'});
+        expect(api.last.queryParameters, {
+          'lang': 'en',
+          'caps': 'layout,targeting',
+          'platform': 'android',
+        });
         expect(api.last.extra[ApiClient.skipErrorReportKey], isTrue);
         expect(api.last.extra['skipTransientRetry'], isTrue);
       },
@@ -244,7 +248,11 @@ void main() {
 
 class _ThrowingRemote implements VideoModalRemoteDatasource {
   @override
-  Future<Object?> fetchEligible(String lang) => throw StateError('x');
+  Future<Object?> fetchEligible(
+    String lang, {
+    String? appVersion,
+    String? platform,
+  }) => throw StateError('x');
 
   @override
   Future<void> postEvent(

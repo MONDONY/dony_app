@@ -88,6 +88,8 @@ class VideoModalBloc extends Bloc<VideoModalEvent, VideoModalState> {
           VideoModalEventType.completed =>
             AnalyticsEvents.videoModalVideoCompleted,
           VideoModalEventType.dismissed => AnalyticsEvents.videoModalDismissed,
+          VideoModalEventType.dontShowAgain =>
+            AnalyticsEvents.videoModalDontShowAgain,
         },
         properties: {
           'campaign_id': event.campaign.id,

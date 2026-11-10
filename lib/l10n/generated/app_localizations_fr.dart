@@ -23822,4 +23822,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String publishBlockedResumeOnFirst(String month) {
     return 'Vous pourrez de nouveau publier à partir du 1er $month.';
   }
+
+  @override
+  String get videoModalDontShowAgain => 'Ne plus afficher';
 }

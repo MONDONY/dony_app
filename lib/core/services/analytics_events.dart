@@ -1406,4 +1406,8 @@ abstract final class AnalyticsEvents {
   /// Bouton secondaire du modal (« Commencer », « Plus tard ») touché
   /// (mêmes propriétés).
   static const videoModalDismissed = 'video_modal_dismissed';
+
+  /// Case « Ne plus afficher » cochée puis modal fermé ou bouton touché
+  /// (mêmes propriétés) : réponse définitive pour la version.
+  static const videoModalDontShowAgain = 'video_modal_dont_show_again';
 }

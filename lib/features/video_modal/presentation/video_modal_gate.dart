@@ -49,6 +49,8 @@ abstract final class VideoModalPresenter {
   }) async {
     if (_presenting) return true;
     _presenting = true;
+    // Case « Ne plus afficher » : seul un geste y écrit.
+    final dontShowAgain = ValueNotifier<bool>(false);
     void answer(VideoModalEventType event, {VideoModalActionKind? kind}) =>
         bloc.add(
           VideoModalAnswerRequested(
@@ -77,11 +79,16 @@ abstract final class VideoModalPresenter {
           campaign: campaign,
           image: image,
           answer: answer,
+          dontShowAgain: dontShowAgain,
           launcher: launcher,
           hasRealSession: hasRealSession,
         );
       }
-      final choice = await VideoModalSheet.show(context, campaign: campaign);
+      final choice = await VideoModalSheet.show(
+        context,
+        campaign: campaign,
+        dontShowAgain: dontShowAgain,
+      );
       switch (choice) {
         case VideoModalChoice.dismiss:
           answer(VideoModalEventType.dismissed);
@@ -90,17 +97,23 @@ abstract final class VideoModalPresenter {
           break;
         case VideoModalChoice.watch:
           answer(VideoModalEventType.opened);
-          if (!context.mounted) return true;
-          final result = await context.push<VideoModalPlayerResult>(
-            videoModalPlayerRoute,
-            extra: VideoModalPlayerArgs(campaign: campaign, trigger: trigger),
-          );
-          if (!context.mounted || trigger.opensForm) return true;
-          _follow(context, result);
+      }
+      // « Ne plus afficher » : en plus de l'événement du bouton, quelle que
+      // soit la façon de fermer (geste et retour compris).
+      if (dontShowAgain.value) answer(VideoModalEventType.dontShowAgain);
+      if (choice == VideoModalChoice.watch) {
+        if (!context.mounted) return true;
+        final result = await context.push<VideoModalPlayerResult>(
+          videoModalPlayerRoute,
+          extra: VideoModalPlayerArgs(campaign: campaign, trigger: trigger),
+        );
+        if (!context.mounted || trigger.opensForm) return true;
+        _follow(context, result);
       }
       return true;
     } finally {
       _presenting = false;
+      dontShowAgain.dispose();
     }
   }
 
@@ -110,6 +123,7 @@ abstract final class VideoModalPresenter {
     required VideoModalImage? image,
     required void Function(VideoModalEventType, {VideoModalActionKind? kind})
     answer,
+    required ValueNotifier<bool> dontShowAgain,
     ExternalUrlLauncher? launcher,
     bool Function()? hasRealSession,
   }) async {
@@ -117,18 +131,32 @@ abstract final class VideoModalPresenter {
       context,
       campaign: campaign,
       image: image,
+      dontShowAgain: dontShowAgain,
     );
+    // « Ne plus afficher » : en plus de l'événement du bouton, quelle que soit
+    // la façon de fermer.
+    void answerDontShowAgain() {
+      if (dontShowAgain.value) answer(VideoModalEventType.dontShowAgain);
+    }
+
     // Fermé d'un geste : pas une réponse, seul SHOWN est compté.
-    if (choice == null) return true;
+    if (choice == null) {
+      answerDontShowAgain();
+      return true;
+    }
     // Croix (carte centrée, plein écran) : fermeture explicite, sans action.
     if (choice == InfoModalChoice.closed) {
       answer(VideoModalEventType.dismissed, kind: VideoModalActionKind.close);
+      answerDontShowAgain();
       return true;
     }
     final action = choice == InfoModalChoice.primary
         ? campaign.primaryAction
         : campaign.secondaryAction;
-    if (action == null) return true;
+    if (action == null) {
+      answerDontShowAgain();
+      return true;
+    }
     // Bouton principal : « touché » (OPENED) quand il mène quelque part ;
     // secondaire ou fermeture : DISMISSED.
     final opened =
@@ -138,6 +166,7 @@ abstract final class VideoModalPresenter {
       opened ? VideoModalEventType.opened : VideoModalEventType.dismissed,
       kind: action.kind,
     );
+    answerDontShowAgain();
     if (!context.mounted) return true;
     final left = await runInfoAction(
       context,
