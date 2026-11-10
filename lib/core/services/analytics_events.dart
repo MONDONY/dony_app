@@ -1285,17 +1285,25 @@ abstract final class AnalyticsEvents {
   /// « Réessayer » touché sur l'écran de maintenance.
   static const maintenanceRetryTapped = 'maintenance_retry_tapped';
 
-  // ── Statut légal du voyageur (particulier / professionnel) ─────────────
-  /// Statut légal déclaré depuis la feuille « Comment voyagez-vous ? ».
-  /// Propriété `status` (`INDIVIDUAL` ou `PROFESSIONAL`), jamais la raison
-  /// sociale ni le numéro d'immatriculation.
+  // ── Statut du voyageur (particulier / GP Pro) ──────────────────────────
+  /// « Particulier » déclaré depuis la feuille « Vous voyagez en tant que ? ».
+  /// Propriété `status` (`INDIVIDUAL`), rien d'autre.
   static const travelerStatusDeclared = 'traveler_status_declared';
 
-  /// Déclaration du statut légal refusée ou en erreur (422, réseau…).
-  /// Propriétés `status` (`INDIVIDUAL` ou `PROFESSIONAL`) et `error_code`
-  /// (`unknown` sans code métier), jamais la raison sociale, le numéro ni le
-  /// pays saisis.
+  /// Déclaration « particulier » refusée ou impossible. Propriétés `status`
+  /// (`INDIVIDUAL`) et `error_code` (`unknown` sans code métier).
   static const travelerStatusDeclareFailed = 'traveler_status_declare_failed';
+
+  /// Écran de blocage d'une création de trajet vu (limite mensuelle).
+  /// Propriétés `reason` (`STATUS_REQUIRED`, `LIMIT_REACHED`,
+  /// `GP_PRO_PENDING`) et `source` (`gate` : point d'entrée « Créer un
+  /// trajet », `publish_error` : publication refusée par le back).
+  static const publishBlockedShown = 'publish_blocked_shown';
+
+  /// Lecture du droit de publier en échec (réseau, serveur) : la publication
+  /// n'est jamais bloquée pour autant. Propriété `error_code` seule. Un 404
+  /// (ancien back) n'est pas tracé.
+  static const publishEligibilityFailed = 'publish_eligibility_failed';
 
   // ── GP Pro (badge de voyageur régulier accordé par l'admin) ────────────
   /// Écran de candidature GP Pro ouvert.
@@ -1303,6 +1311,10 @@ abstract final class AnalyticsEvents {
 
   /// Candidature GP Pro envoyée.
   static const gpProApplicationSubmitted = 'gp_pro_application_submitted';
+
+  /// Candidature GP Pro refusée ou impossible. Propriété `error_code` seule :
+  /// jamais la raison sociale, le numéro ni le pays saisis.
+  static const gpProApplicationFailed = 'gp_pro_application_failed';
 
   /// Candidature GP Pro en attente annulée par le voyageur.
   static const gpProApplicationCancelled = 'gp_pro_application_cancelled';

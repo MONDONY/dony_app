@@ -20602,7 +20602,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gpProIntroBody =>
-      'Do you travel often, on your own or for your business? Apply for the GP Pro badge. The Yadony team reviews every application.';
+      'Do you carry parcels professionally? Enter your business details and apply for the GP Pro badge. The Yadony team reviews every application.';
 
   @override
   String get gpProKycTitle => 'Verify your identity first';
@@ -20628,9 +20628,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gpProFrequencyLessOften => 'Less often';
-
-  @override
-  String get gpProCommercialNameLabel => 'Business name (optional)';
 
   @override
   String get gpProPiecesTitle => 'Supporting documents (optional)';
@@ -23436,78 +23433,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get travelerStatusChipIndividual => 'Individual';
 
   @override
-  String get travelerStatusSheetTitle => 'How do you travel?';
+  String get travelerStatusSheetTitle => 'You are traveling as…';
 
   @override
   String get travelerStatusSheetSubtitle =>
-      'Senders see your answer on your trips. You can change it at any time in your profile.';
-
-  @override
-  String get travelerStatusSheetSubtitleRequired =>
-      'To publish a trip, tell us how you travel. Senders see your answer on your trips.';
+      'Senders will see it on your profile.';
 
   @override
   String get travelerStatusOptionIndividual => 'Individual';
 
   @override
-  String get travelerStatusOptionIndividualBody =>
-      'I travel for personal reasons, it is not my job.';
-
-  @override
-  String get travelerStatusOptionProfessional => 'Professional';
-
-  @override
-  String get travelerStatusOptionProfessionalBody =>
-      'I carry parcels as part of a registered business.';
-
-  @override
-  String get travelerStatusIndividualTitle => 'Individual traveler';
-
-  @override
-  String get travelerStatusIndividualSubtitle =>
-      'As an individual, you do not need to provide a business number.';
-
-  @override
-  String get travelerStatusIndividualConfirm =>
-      'I confirm that I travel for personal reasons and that it is not my job.';
-
-  @override
-  String get travelerStatusIndividualHint =>
-      'If you carry parcels regularly to earn an income, choose \"Professional\". Your earnings still have to be declared to your country\'s tax authority.';
-
-  @override
-  String get travelerStatusProfessionalTitle => 'Professional traveler';
-
-  @override
-  String get travelerStatusProfessionalSubtitle =>
-      'Senders will be able to see this information.';
-
-  @override
-  String get travelerStatusBusinessNameLabel => 'Company name';
-
-  @override
-  String get travelerStatusRegistrationLabel => 'Business number';
-
-  @override
-  String get travelerStatusRegistrationHint =>
-      'SIRET, NINEA, RCCM or equivalent.';
-
-  @override
-  String get travelerStatusCountryLabel => 'Country of registration';
+  String get travelerStatusOptionIndividualBody => 'It\'s not my job';
 
   @override
   String get errorTravelerStatusRequiredTitle => 'Status required';
 
   @override
   String get errorTravelerStatusRequiredMessage =>
-      'Tell us whether you travel as an individual or a professional to publish a trip.';
+      'Tell us whether you travel as an individual or a GP Pro to keep publishing.';
 
   @override
-  String get errorTravelerStatusInvalidTitle => 'Declaration to fix';
+  String get errorTravelerStatusInvalidTitle => 'GP Pro application needed';
 
   @override
   String get errorTravelerStatusInvalidMessage =>
-      'Check the company name, business number and country, then try again.';
+      'To travel professionally, send a GP Pro application.';
 
   @override
   String get profileFieldTravelerStatusAllCaps => 'TRAVELER STATUS';
@@ -23519,10 +23469,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidCreateIndividualTravelerBody =>
       'Consumer law does not apply to your agreement with them.';
-
-  @override
-  String get travelerStatusRegistrationInvalid =>
-      'At least 4 characters: letters, digits, space, dot, slash or hyphen.';
 
   @override
   String profilePublicBusinessLineNumber(String number) {
@@ -23587,4 +23533,110 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get gpProResignFailed =>
       'Couldn\'t switch you back to an individual right now. Try again.';
+
+  @override
+  String get travelerStatusOptionGpPro => 'GP Pro';
+
+  @override
+  String get travelerStatusOptionGpProBody => 'I carry parcels professionally';
+
+  @override
+  String get travelerStatusIndividualConfirmation =>
+      'By choosing Individual, I confirm that I travel for personal reasons.';
+
+  @override
+  String get publishBlockedAppBarTitle => 'Create a trip';
+
+  @override
+  String publishBlockedStatusTitle(int limit) {
+    String _temp0 = intl.Intl.pluralLogic(
+      limit,
+      locale: localeName,
+      other: 'Limit of $limit trips reached this month',
+      one: 'Limit of $limit trip reached this month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get publishBlockedStatusTitleNoLimit =>
+      'Trip limit reached this month';
+
+  @override
+  String get publishBlockedStatusBody => 'To continue, tell us how you travel.';
+
+  @override
+  String get publishBlockedLimitTitle =>
+      'You can\'t create more trips this month';
+
+  @override
+  String publishBlockedLimitBody(int limit) {
+    String _temp0 = intl.Intl.pluralLogic(
+      limit,
+      locale: localeName,
+      other: 'An individual can publish $limit trips per month.',
+      one: 'An individual can publish $limit trip per month.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String publishBlockedResumeOn(String date) {
+    return 'You will be able to publish again from $date.';
+  }
+
+  @override
+  String get publishBlockedResumeNextMonth =>
+      'You will be able to publish again next month.';
+
+  @override
+  String get publishBlockedBecomeGpPro => 'To publish more, become a GP Pro.';
+
+  @override
+  String get publishBlockedBecomeGpProCta => 'Become a GP Pro';
+
+  @override
+  String get publishBlockedPendingTitle =>
+      'Your GP Pro application is under review';
+
+  @override
+  String get publishBlockedPendingBody =>
+      'The Yadony team will notify you. You will be able to publish as soon as it is approved.';
+
+  @override
+  String get publishBlockedPendingCta => 'View my application';
+
+  @override
+  String get gpProBusinessNameLabel => 'Business name';
+
+  @override
+  String get gpProRegistrationLabel => 'Business registration number';
+
+  @override
+  String get gpProRegistrationHint => 'SIRET, NINEA, RCCM or equivalent.';
+
+  @override
+  String get gpProRegistrationInvalid =>
+      'At least 4 characters: letters, digits, space, dot, slash or hyphen.';
+
+  @override
+  String get gpProCountryLabel => 'Country of registration';
+
+  @override
+  String get gpProErrorBusinessIncomplete =>
+      'Fill in the business name, the registration number and the country.';
+
+  @override
+  String get errorMonthlyLimitReachedTitle => 'Monthly limit reached';
+
+  @override
+  String get errorMonthlyLimitReachedMessage =>
+      'You have reached your trip limit for this month. You will be able to publish again next month, or become a GP Pro.';
+
+  @override
+  String get errorGpProPendingTitle => 'GP Pro application under review';
+
+  @override
+  String get errorGpProPendingMessage =>
+      'You will be able to publish as soon as the Yadony team approves your GP Pro application.';
 }

@@ -37,9 +37,11 @@ import 'package:dony/features/matching/presentation/screens/trip_owner_detail_sc
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
+import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_declaration.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
+import 'package:dony/features/traveler_status/presentation/publish_blocked_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -171,6 +173,25 @@ Future<GoRouter> _pump(
         path: '/trips/create',
         builder: (_, _) =>
             const Scaffold(body: Center(child: Text('Créer / modifier'))),
+      ),
+      GoRoute(
+        path: '/trips/publish-blocked',
+        builder: (_, state) {
+          final args = state.extra! as PublishBlockedArgs;
+          return PublishBlockedScreen(
+            eligibility: args.eligibility,
+            source: args.source,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/profile/gp-pro',
+        builder: (context, _) => Scaffold(
+          body: TextButton(
+            onPressed: context.pop,
+            child: const Text('formulaire GP Pro'),
+          ),
+        ),
       ),
       GoRoute(
         path: '/profile/upgrade-to-pro',
@@ -534,22 +555,32 @@ void main() {
   group('statut légal du voyageur à la publication d\'un brouillon', () {
     late _MockTravelerStatusRepository statusRepo;
 
+    /// Ce que l'écran de blocage relit : limite de 4 trajets atteinte.
+    void stubEligibility(PublishingReason reason) {
+      when(() => statusRepo.checkEligibility()).thenAnswer(
+        (_) async => (
+          eligibility: PublishingEligibility(
+            allowed: false,
+            reason: reason,
+            limit: 4,
+            used: 4,
+            resetsOn: DateTime(2026, 12),
+          ),
+          failureCode: null,
+        ),
+      );
+    }
+
     setUp(() {
       statusRepo = _MockTravelerStatusRepository();
-      when(
-        () => statusRepo.declare(
-          status: any(named: 'status'),
-          personalUseConfirmed: any(named: 'personalUseConfirmed'),
-          businessName: any(named: 'businessName'),
-          registrationNumber: any(named: 'registrationNumber'),
-          country: any(named: 'country'),
-        ),
-      ).thenAnswer(
+      when(() => statusRepo.declareIndividual()).thenAnswer(
         (_) async => TravelerStatusDeclaration(
           status: TravelerStatus.individual,
           declaredAt: DateTime.utc(2026, 11),
         ),
       );
+      stubEligibility(PublishingReason.statusRequired);
+      getIt.registerSingleton<TravelerStatusRepository>(statusRepo);
       getIt.registerFactory<TravelerStatusCubit>(
         () => TravelerStatusCubit(statusRepo, analytics),
       );
@@ -566,6 +597,9 @@ void main() {
     tearDown(() {
       if (getIt.isRegistered<TravelerStatusCubit>()) {
         getIt.unregister<TravelerStatusCubit>();
+      }
+      if (getIt.isRegistered<TravelerStatusRepository>()) {
+        getIt.unregister<TravelerStatusRepository>();
       }
     });
 
@@ -607,7 +641,7 @@ void main() {
     ).called(times);
 
     testWidgets(
-      'sans statut : « Publier » ouvre la feuille, rien n\'est publié '
+      'sans statut : « Publier » ouvre la question, rien n\'est publié '
       'tant qu\'elle est ouverte',
       (tester) async {
         await pumpDraft(tester);
@@ -615,20 +649,44 @@ void main() {
         await tester.tap(_inFooter(find.text('Publier')));
         await tester.pumpAndSettle();
 
-        expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+        expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
         verifyNever(
           () => annBloc.add(any(that: isA<AnnouncementPublishRequested>())),
         );
       },
     );
 
-    testWidgets('écran quitté pendant la feuille de rappel : rien n\'est '
-        'publié, aucune exception', (tester) async {
+    testWidgets('badge GP Pro déjà accordé : « Publier » ne pose aucune '
+        'question', (tester) async {
+      const gpPro = UserModel(
+        id: _ownerId,
+        roles: [],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+        gpPro: true,
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(gpPro));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(gpPro),
+      );
       await pumpDraft(tester);
 
       await tester.tap(_inFooter(find.text('Publier')));
       await tester.pumpAndSettle();
-      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+
+      expect(find.text('Vous voyagez en tant que ?'), findsNothing);
+      verifyPublishDispatched(1);
+    });
+
+    testWidgets('écran quitté pendant la question : rien n\'est publié, '
+        'aucune exception', (tester) async {
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
 
       // L'écran du brouillon est remplacé pendant que la feuille est ouverte :
       // la navigation ferme la feuille. Aucune exception. (La feuille se
@@ -641,78 +699,15 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('bloc fermé pendant la feuille de rappel : rien n\'est '
-        'publié', (tester) async {
+    testWidgets('bloc fermé pendant la question : rien n\'est publié', (
+      tester,
+    ) async {
       await pumpDraft(tester);
 
       await tester.tap(_inFooter(find.text('Publier')));
       await tester.pumpAndSettle();
       when(() => annBloc.isClosed).thenReturn(true);
       await tester.tap(find.widgetWithText(DonyButton, 'Plus tard'));
-      await tester.pumpAndSettle();
-
-      expect(tester.takeException(), isNull);
-      verifyNever(
-        () => annBloc.add(any(that: isA<AnnouncementPublishRequested>())),
-      );
-    });
-
-    testWidgets('403 puis écran quitté pendant la feuille obligatoire : '
-        'aucune publication, aucune exception', (tester) async {
-      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
-      whenListen(
-        authBloc,
-        const Stream<AuthState>.empty(),
-        initialState: const AuthAuthenticated(_owner),
-      );
-      final controller = await pumpDraft(tester);
-      addTearDown(controller.close);
-
-      controller.add(
-        AnnouncementTravelerStatusRequired(
-          const ForbiddenException('x', 'traveler-status-required'),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
-
-      router!.go('/kyc/status');
-      await tester.pumpAndSettle();
-
-      expect(find.byType(TripOwnerDetailScreen), findsNothing);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('403 puis bloc fermé pendant la feuille obligatoire : '
-        'déclaration faite, aucune publication', (tester) async {
-      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
-      whenListen(
-        authBloc,
-        const Stream<AuthState>.empty(),
-        initialState: const AuthAuthenticated(_owner),
-      );
-      final controller = await pumpDraft(tester);
-      addTearDown(controller.close);
-
-      controller.add(
-        AnnouncementTravelerStatusRequired(
-          const ForbiddenException('x', 'traveler-status-required'),
-        ),
-      );
-      await tester.pumpAndSettle();
-      when(() => annBloc.isClosed).thenReturn(true);
-
-      await tester.tap(find.text('Particulier'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.text(
-          "Je confirme voyager à titre personnel et que ce n'est pas mon métier.",
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
@@ -729,27 +724,17 @@ void main() {
       await tester.tap(find.widgetWithText(DonyButton, 'Plus tard'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Comment voyagez-vous ?'), findsNothing);
+      expect(find.text('Vous voyagez en tant que ?'), findsNothing);
       verifyPublishDispatched(1);
     });
 
-    testWidgets('statut déclaré dans la feuille : la publication continue et '
-        'le profil est rechargé', (tester) async {
+    testWidgets('« Particulier » : la publication continue et le profil '
+        'est rechargé', (tester) async {
       await pumpDraft(tester);
 
       await tester.tap(_inFooter(find.text('Publier')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Particulier'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.text(
-          'Je confirme voyager à titre personnel et que ce n\'est pas mon métier.',
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
       await tester.pumpAndSettle();
 
       verifyPublishDispatched(1);
@@ -758,51 +743,155 @@ void main() {
       ).called(1);
     });
 
-    testWidgets('le back répond 403 traveler-status-required : la feuille '
-        'se rouvre sans « Plus tard », la publication reprend après la '
-        'déclaration', (tester) async {
-      // Statut déjà connu de l'app (profil périmé) : la publication part, le
-      // back refuse, la feuille obligatoire s'ouvre.
-      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
-      whenListen(
-        authBloc,
-        const Stream<AuthState>.empty(),
-        initialState: const AuthAuthenticated(_owner),
-      );
-      final controller = await pumpDraft(tester);
-      addTearDown(controller.close);
+    group('le back refuse (403)', () {
+      Future<StreamController<AnnouncementState>> pumpOwner(
+        WidgetTester tester,
+      ) async {
+        // Statut déjà connu de l'app (profil périmé) : la publication part, le
+        // back refuse, l'écran de blocage s'ouvre.
+        when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+        whenListen(
+          authBloc,
+          const Stream<AuthState>.empty(),
+          initialState: const AuthAuthenticated(_owner),
+        );
+        return pumpDraft(tester);
+      }
 
-      await tester.tap(_inFooter(find.text('Publier')));
-      await tester.pumpAndSettle();
-      verifyPublishDispatched(1);
-      expect(find.text('Comment voyagez-vous ?'), findsNothing);
+      AnnouncementPublishingBlocked blocked(
+        String code,
+        PublishingReason reason,
+      ) => AnnouncementPublishingBlocked(ForbiddenException('x', code), reason);
 
-      controller.add(
-        AnnouncementTravelerStatusRequired(
-          const ForbiddenException('x', 'traveler-status-required'),
-        ),
-      );
-      await tester.pumpAndSettle();
+      testWidgets('traveler-status-required : écran de blocage avec les deux '
+          'choix, sans « Plus tard »', (tester) async {
+        final controller = await pumpOwner(tester);
+        addTearDown(controller.close);
 
-      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
-      expect(find.widgetWithText(DonyButton, 'Plus tard'), findsNothing);
+        await tester.tap(_inFooter(find.text('Publier')));
+        await tester.pumpAndSettle();
+        verifyPublishDispatched(1);
+        expect(find.text('Vous voyagez en tant que ?'), findsNothing);
 
-      await tester.tap(find.text('Particulier'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.text(
-          'Je confirme voyager à titre personnel et que ce n\'est pas mon métier.',
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
-      await tester.pumpAndSettle();
+        controller.add(
+          blocked('traveler-status-required', PublishingReason.statusRequired),
+        );
+        await tester.pumpAndSettle();
 
-      // Une seconde publication après la déclaration (mocktail ne recompte
-      // pas l'appel déjà vérifié plus haut).
-      verifyPublishDispatched(1);
+        expect(
+          find.text('Limite de 4 trajets atteinte ce mois-ci'),
+          findsOneWidget,
+        );
+        expect(find.widgetWithText(DonyButton, 'Plus tard'), findsNothing);
+        expect(find.text('Particulier'), findsOneWidget);
+        expect(find.text('GP Pro'), findsOneWidget);
+      });
+
+      testWidgets('monthly-limit-reached : « Fermer » ne republie pas', (
+        tester,
+      ) async {
+        stubEligibility(PublishingReason.limitReached);
+        final controller = await pumpOwner(tester);
+        addTearDown(controller.close);
+        await tester.tap(_inFooter(find.text('Publier')));
+        await tester.pumpAndSettle();
+
+        controller.add(
+          blocked('monthly-limit-reached', PublishingReason.limitReached),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text('Vous ne pouvez plus créer de trajet ce mois-ci'),
+          findsOneWidget,
+        );
+        await tester.tap(find.widgetWithText(DonyButton, 'Fermer'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TripOwnerDetailScreen), findsOneWidget);
+        verifyPublishDispatched(1);
+      });
+
+      testWidgets('gp-pro-pending, demande validée au retour : la publication '
+          'reprend', (tester) async {
+        stubEligibility(PublishingReason.gpProPending);
+        final controller = await pumpOwner(tester);
+        addTearDown(controller.close);
+        await tester.tap(_inFooter(find.text('Publier')));
+        await tester.pumpAndSettle();
+        verifyPublishDispatched(1);
+
+        controller.add(
+          blocked('gp-pro-pending', PublishingReason.gpProPending),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text("Votre demande GP Pro est en cours d'examen"),
+          findsOneWidget,
+        );
+
+        when(() => statusRepo.checkEligibility()).thenAnswer(
+          (_) async =>
+              (eligibility: PublishingEligibility.ok, failureCode: null),
+        );
+        await tester.tap(find.widgetWithText(DonyButton, 'Voir ma demande'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('formulaire GP Pro'));
+        await tester.pumpAndSettle();
+
+        // Une seconde publication après la validation (mocktail ne recompte
+        // pas l'appel déjà vérifié plus haut).
+        verifyPublishDispatched(1);
+      });
+
+      testWidgets('écran quitté pendant l\'écran de blocage : aucune '
+          'publication, aucune exception', (tester) async {
+        final controller = await pumpOwner(tester);
+        addTearDown(controller.close);
+
+        controller.add(
+          blocked('traveler-status-required', PublishingReason.statusRequired),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text('Limite de 4 trajets atteinte ce mois-ci'),
+          findsOneWidget,
+        );
+
+        router!.go('/kyc/status');
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TripOwnerDetailScreen), findsNothing);
+        expect(tester.takeException(), isNull);
+        verifyNever(
+          () => annBloc.add(any(that: isA<AnnouncementPublishRequested>())),
+        );
+      });
+
+      testWidgets('bloc fermé pendant l\'écran de blocage, demande validée : '
+          'aucune publication', (tester) async {
+        stubEligibility(PublishingReason.gpProPending);
+        final controller = await pumpOwner(tester);
+        addTearDown(controller.close);
+
+        controller.add(
+          blocked('gp-pro-pending', PublishingReason.gpProPending),
+        );
+        await tester.pumpAndSettle();
+        when(() => annBloc.isClosed).thenReturn(true);
+        when(() => statusRepo.checkEligibility()).thenAnswer(
+          (_) async =>
+              (eligibility: PublishingEligibility.ok, failureCode: null),
+        );
+        await tester.tap(find.widgetWithText(DonyButton, 'Voir ma demande'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('formulaire GP Pro'));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        verifyNever(
+          () => annBloc.add(any(that: isA<AnnouncementPublishRequested>())),
+        );
+      });
     });
   });
 }

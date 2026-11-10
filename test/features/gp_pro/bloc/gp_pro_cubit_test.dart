@@ -60,6 +60,9 @@ void main() {
       expect(s.canSubmit, isFalse);
       final full = s.copyWith(
         frequency: GpProFrequency.weekly,
+        businessName: 'Diallo Express',
+        registrationNumber: 'CI-ABJ-2021-B-12345',
+        businessCountry: 'CI',
         pieces: [piece('1'), piece('2'), piece('3'), piece('4')],
       );
       expect(full.canAddPiece, isFalse);
@@ -439,35 +442,112 @@ void main() {
     );
   });
 
+  group('entreprise : saisie et validité', () {
+    GpProCubitState filled({
+      String name = 'Diallo Express',
+      String number = 'CI-ABJ-2021-B-12345',
+      String? country = 'CI',
+    }) => GpProCubitState(
+      frequency: GpProFrequency.weekly,
+      businessName: name,
+      registrationNumber: number,
+      businessCountry: country,
+    );
+
+    test('une demande complète peut partir', () {
+      expect(filled().canSubmit, isTrue);
+      expect(filled().isBusinessComplete, isTrue);
+    });
+
+    test('raison sociale vide ou d\'un caractère : pas d\'envoi', () {
+      expect(filled(name: '').canSubmit, isFalse);
+      expect(filled(name: '   ').canSubmit, isFalse);
+      expect(filled(name: 'D').canSubmit, isFalse);
+    });
+
+    test('numéro : 4 à 40 caractères, lettres, chiffres, espace . / -', () {
+      expect(filled(number: '123').canSubmit, isFalse);
+      expect(filled(number: ' 1234 ').canSubmit, isTrue);
+      expect(filled(number: '-1234').canSubmit, isFalse);
+      expect(filled(number: '12 34/56.78-9').canSubmit, isTrue);
+      expect(filled(number: '12\$34').canSubmit, isFalse);
+      expect(filled(number: 'A' * 40).canSubmit, isTrue);
+      expect(filled(number: 'A' * 41).canSubmit, isFalse);
+    });
+
+    test('pays : deux lettres majuscules', () {
+      expect(filled(country: null).canSubmit, isFalse);
+      expect(filled(country: 'ci').canSubmit, isFalse);
+      expect(filled(country: 'CIV').canSubmit, isFalse);
+    });
+
+    test('numéro non vide et invalide : erreur à montrer', () {
+      expect(filled(number: '12').isRegistrationNumberInvalid, isTrue);
+      expect(filled(number: '').isRegistrationNumberInvalid, isFalse);
+      expect(filled().isRegistrationNumberInvalid, isFalse);
+    });
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'updateBusiness garde les valeurs non passées, un pays vide l\'efface',
+      build: build,
+      act: (c) => c
+        ..updateBusiness(name: 'Awa Express')
+        ..updateBusiness(registrationNumber: '1234', country: 'SN')
+        ..updateBusiness(country: ''),
+      verify: (c) {
+        expect(c.state.businessName, 'Awa Express');
+        expect(c.state.registrationNumber, '1234');
+        expect(c.state.businessCountry, isNull);
+      },
+    );
+  });
+
   group('submit', () {
     GpProCubitState ready({List<GpProPiece>? pieces}) => GpProCubitState(
       load: GpProLoadStatus.ready,
       status: none,
       frequency: GpProFrequency.twiceAMonth,
+      businessName: '  Awa Express ',
+      registrationNumber: ' CI-ABJ-2021-B-12345 ',
+      businessCountry: 'CI',
       pieces: pieces ?? [piece('p0', remoteId: 'd1')],
       restarting: true,
     );
 
+    void stubApply([GpProStatus status = pending]) => when(
+      () => repository.apply(
+        frequency: any(named: 'frequency'),
+        commercialName: any(named: 'commercialName'),
+        businessRegistrationNumber: any(named: 'businessRegistrationNumber'),
+        businessCountry: any(named: 'businessCountry'),
+        documentIds: any(named: 'documentIds'),
+        source: any(named: 'source'),
+      ),
+    ).thenAnswer((_) async => status);
+
     blocTest<GpProCubit, GpProCubitState>(
-      'succès : analytics exacts, statut remplacé, restarting remis à faux',
+      'succès : champs entreprise nettoyés envoyés, analytics sans saisie',
       build: () {
-        when(
-          () => repository.apply(
-            frequency: GpProFrequency.twiceAMonth,
-            commercialName: 'Awa Express',
-            documentIds: ['d1'],
-            source: GpProSource.profile,
-          ),
-        ).thenAnswer((_) async => pending);
+        stubApply();
         return build();
       },
       seed: ready,
-      act: (c) => c.submit(commercialName: '  Awa Express '),
+      act: (c) => c.submit(),
       verify: (c) {
         expect(c.state.status, pending);
         expect(c.state.restarting, isFalse);
         expect(c.state.submitting, isFalse);
         expect(c.state.pieces, hasLength(1));
+        verify(
+          () => repository.apply(
+            frequency: GpProFrequency.twiceAMonth,
+            commercialName: 'Awa Express',
+            businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+            businessCountry: 'CI',
+            documentIds: ['d1'],
+            source: GpProSource.profile,
+          ),
+        ).called(1);
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.gpProApplicationSubmitted,
@@ -483,69 +563,27 @@ void main() {
     );
 
     blocTest<GpProCubit, GpProCubitState>(
-      'nom blanc : has_commercial_name faux, nom non envoyé',
-      build: () {
-        when(
-          () => repository.apply(
-            frequency: GpProFrequency.twiceAMonth,
-            documentIds: ['d1'],
-            source: GpProSource.profile,
-          ),
-        ).thenAnswer((_) async => pending);
-        return build();
-      },
-      seed: ready,
-      act: (c) => c.submit(commercialName: '  '),
-      verify: (_) {
-        verify(
-          () => repository.apply(
-            frequency: GpProFrequency.twiceAMonth,
-            documentIds: ['d1'],
-            source: GpProSource.profile,
-          ),
-        ).called(1);
-      },
-      // Analytics vérifiés ci-dessous.
-    );
-
-    blocTest<GpProCubit, GpProCubitState>(
-      'nom blanc : analytics sans nom',
-      build: () {
-        when(
-          () => repository.apply(
-            frequency: any(named: 'frequency'),
-            commercialName: any(named: 'commercialName'),
-            documentIds: any(named: 'documentIds'),
-            source: any(named: 'source'),
-          ),
-        ).thenAnswer((_) async => pending);
-        return build();
-      },
-      seed: ready,
-      act: (c) => c.submit(commercialName: '  '),
-      verify: (_) => verify(
-        () => analytics.logEvent(
-          AnalyticsEvents.gpProApplicationSubmitted,
-          properties: {
-            'source': 'profile',
-            'frequency': 'TWICE_A_MONTH',
-            'document_count': 1,
-            'has_commercial_name': false,
-          },
+      'entreprise incomplète : aucun appel',
+      build: build,
+      seed: () => ready().copyWith(registrationNumber: '12'),
+      act: (c) => c.submit(),
+      expect: () => <GpProCubitState>[],
+      verify: (_) => verifyNever(
+        () => repository.apply(
+          frequency: any(named: 'frequency'),
+          commercialName: any(named: 'commercialName'),
+          businessRegistrationNumber: any(named: 'businessRegistrationNumber'),
+          businessCountry: any(named: 'businessCountry'),
+          documentIds: any(named: 'documentIds'),
+          source: any(named: 'source'),
         ),
-      ).called(1),
+      ),
     );
 
     blocTest<GpProCubit, GpProCubitState>(
       'seules les pièces ready comptent',
       build: () {
-        when(
-          () => repository.apply(
-            frequency: GpProFrequency.twiceAMonth,
-            documentIds: ['d1'],
-            source: GpProSource.profile,
-          ),
-        ).thenAnswer((_) async => pending);
+        stubApply();
         return build();
       },
       seed: () => ready(
@@ -558,6 +596,9 @@ void main() {
       verify: (_) => verify(
         () => repository.apply(
           frequency: GpProFrequency.twiceAMonth,
+          commercialName: 'Awa Express',
+          businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+          businessCountry: 'CI',
           documentIds: ['d1'],
           source: GpProSource.profile,
         ),
@@ -571,24 +612,20 @@ void main() {
           ready(pieces: [piece('p0', status: GpProUploadStatus.uploading)]),
       act: (c) => c.submit(),
       expect: () => <GpProCubitState>[],
-      verify: (_) => verifyNever(
-        () => repository.apply(
-          frequency: any(named: 'frequency'),
-          commercialName: any(named: 'commercialName'),
-          documentIds: any(named: 'documentIds'),
-          source: any(named: 'source'),
-        ),
-      ),
     );
 
     for (final code in ['gp-pro-application-open', 'gp-pro-already-active']) {
       blocTest<GpProCubit, GpProCubitState>(
-        '409 $code : fetchStatus rappelé',
+        '409 $code : fetchStatus rappelé, échec tracé avec son code seul',
         build: () {
           when(
             () => repository.apply(
               frequency: any(named: 'frequency'),
               commercialName: any(named: 'commercialName'),
+              businessRegistrationNumber: any(
+                named: 'businessRegistrationNumber',
+              ),
+              businessCountry: any(named: 'businessCountry'),
               documentIds: any(named: 'documentIds'),
               source: any(named: 'source'),
             ),
@@ -608,12 +645,53 @@ void main() {
     }
 
     blocTest<GpProCubit, GpProCubitState>(
-      'autre erreur : errorCode, formulaire gardé',
+      '422 gp-pro-business-incomplete : errorCode, formulaire gardé avec la '
+      'saisie, échec tracé sans la saisie',
       build: () {
         when(
           () => repository.apply(
             frequency: any(named: 'frequency'),
             commercialName: any(named: 'commercialName'),
+            businessRegistrationNumber: any(
+              named: 'businessRegistrationNumber',
+            ),
+            businessCountry: any(named: 'businessCountry'),
+            documentIds: any(named: 'documentIds'),
+            source: any(named: 'source'),
+          ),
+        ).thenThrow(
+          const GpProException('gp-pro-business-incomplete', status: 422),
+        );
+        return build();
+      },
+      seed: ready,
+      act: (c) => c.submit(),
+      verify: (c) {
+        expect(c.state.errorCode, 'gp-pro-business-incomplete');
+        expect(c.state.submitting, isFalse);
+        expect(c.state.restarting, isTrue);
+        expect(c.state.businessName, '  Awa Express ');
+        final captured = verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProApplicationFailed,
+            properties: captureAny(named: 'properties'),
+          ),
+        ).captured;
+        expect(captured.single, {'error_code': 'gp-pro-business-incomplete'});
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'erreur réseau : errorCode network, tracé',
+      build: () {
+        when(
+          () => repository.apply(
+            frequency: any(named: 'frequency'),
+            commercialName: any(named: 'commercialName'),
+            businessRegistrationNumber: any(
+              named: 'businessRegistrationNumber',
+            ),
+            businessCountry: any(named: 'businessCountry'),
             documentIds: any(named: 'documentIds'),
             source: any(named: 'source'),
           ),
@@ -624,9 +702,13 @@ void main() {
       act: (c) => c.submit(),
       verify: (c) {
         expect(c.state.errorCode, 'network');
-        expect(c.state.submitting, isFalse);
-        expect(c.state.restarting, isTrue);
         expect(c.state.frequency, GpProFrequency.twiceAMonth);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProApplicationFailed,
+            properties: {'error_code': 'network'},
+          ),
+        ).called(1);
       },
     );
 
@@ -637,6 +719,10 @@ void main() {
           () => repository.apply(
             frequency: any(named: 'frequency'),
             commercialName: any(named: 'commercialName'),
+            businessRegistrationNumber: any(
+              named: 'businessRegistrationNumber',
+            ),
+            businessCountry: any(named: 'businessCountry'),
             documentIds: any(named: 'documentIds'),
             source: any(named: 'source'),
           ),

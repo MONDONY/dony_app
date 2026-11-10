@@ -1,6 +1,17 @@
 import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
 import 'package:equatable/equatable.dart';
 
+/// Bornes alignées sur le back (`GpProApplicationRequest`) : le serveur reste
+/// juge, ces contrôles évitent seulement un aller-retour pour une faute de
+/// frappe évidente.
+const int kGpProBusinessNameMinLength = 2;
+const int kGpProRegistrationMinLength = 4;
+const int kGpProRegistrationMaxLength = 40;
+final RegExp kGpProRegistrationPattern = RegExp(
+  r'^[A-Za-z0-9][A-Za-z0-9 ./-]*$',
+);
+final RegExp kGpProCountryPattern = RegExp(r'^[A-Z]{2}$');
+
 /// Chargement du statut GP Pro.
 enum GpProLoadStatus { loading, ready, failure, unavailable }
 
@@ -48,6 +59,9 @@ class GpProCubitState extends Equatable {
     this.restarting = false,
     this.resigning = false,
     this.resigned = false,
+    this.businessName = '',
+    this.registrationNumber = '',
+    this.businessCountry,
     this.errorCode,
   });
 
@@ -71,6 +85,15 @@ class GpProCubitState extends Equatable {
   /// recharge le profil et le dit.
   final bool resigned;
 
+  /// Raison sociale saisie (obligatoire pour une nouvelle demande).
+  final String businessName;
+
+  /// Numéro d'entreprise saisi (SIRET, NINEA, RCCM ou équivalent).
+  final String registrationNumber;
+
+  /// Code ISO2 en majuscules du pays d'immatriculation, ou `null`.
+  final String? businessCountry;
+
   /// Code d'erreur de la dernière action (`GpProException.code`), à traduire.
   final String? errorCode;
 
@@ -79,7 +102,28 @@ class GpProCubitState extends Equatable {
   bool get hasUploading =>
       pieces.any((p) => p.status == GpProUploadStatus.uploading);
 
-  bool get canSubmit => frequency != null && !hasUploading && !submitting;
+  /// Numéro conforme : 4 à 40 caractères, lettres, chiffres, espace, point,
+  /// barre oblique ou tiret, sans commencer par un séparateur.
+  bool get isRegistrationNumberValid {
+    final number = registrationNumber.trim();
+    return number.length >= kGpProRegistrationMinLength &&
+        number.length <= kGpProRegistrationMaxLength &&
+        kGpProRegistrationPattern.hasMatch(number);
+  }
+
+  /// Numéro saisi mais refusé : l'erreur remplace l'aide neutre.
+  bool get isRegistrationNumberInvalid =>
+      registrationNumber.trim().isNotEmpty && !isRegistrationNumberValid;
+
+  /// Raison sociale, numéro et pays renseignés et conformes.
+  bool get isBusinessComplete =>
+      businessName.trim().length >= kGpProBusinessNameMinLength &&
+      isRegistrationNumberValid &&
+      businessCountry != null &&
+      kGpProCountryPattern.hasMatch(businessCountry!);
+
+  bool get canSubmit =>
+      frequency != null && isBusinessComplete && !hasUploading && !submitting;
 
   GpProCubitState copyWith({
     GpProLoadStatus? load,
@@ -91,6 +135,10 @@ class GpProCubitState extends Equatable {
     bool? restarting,
     bool? resigning,
     bool? resigned,
+    String? businessName,
+    String? registrationNumber,
+    String? businessCountry,
+    bool clearBusinessCountry = false,
     String? errorCode,
     bool clearError = false,
   }) => GpProCubitState(
@@ -103,6 +151,11 @@ class GpProCubitState extends Equatable {
     restarting: restarting ?? this.restarting,
     resigning: resigning ?? this.resigning,
     resigned: resigned ?? this.resigned,
+    businessName: businessName ?? this.businessName,
+    registrationNumber: registrationNumber ?? this.registrationNumber,
+    businessCountry: clearBusinessCountry
+        ? null
+        : (businessCountry ?? this.businessCountry),
     errorCode: clearError ? null : (errorCode ?? this.errorCode),
   );
 
@@ -117,6 +170,9 @@ class GpProCubitState extends Equatable {
     restarting,
     resigning,
     resigned,
+    businessName,
+    registrationNumber,
+    businessCountry,
     errorCode,
   ];
 }

@@ -15,6 +15,7 @@ import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
+import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -128,18 +129,22 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       } else if (error is ForbiddenException &&
           error.code == 'pro-limit-reached') {
         emit(AnnouncementProLimitReached(error));
-      } else if (_isTravelerStatusRequired(error)) {
-        emit(AnnouncementTravelerStatusRequired(error));
+      } else if (_publishingBlock(error) case final reason?) {
+        emit(AnnouncementPublishingBlocked(error, reason));
       } else {
         emit(AnnouncementError(error));
       }
     }
   }
 
-  /// 403 `traveler-status-required` : l'interrupteur « statut obligatoire »
-  /// est actif et le voyageur n'a pas encore déclaré son statut.
-  static bool _isTravelerStatusRequired(AppException error) =>
-      error is ForbiddenException && error.code == 'traveler-status-required';
+  /// 403 d'une publication refusée par la limite mensuelle de trajets :
+  /// `traveler-status-required` (limite atteinte, aucune réponse Particulier ou
+  /// GP Pro), `monthly-limit-reached` (particulier) ou `gp-pro-pending`
+  /// (demande GP Pro en cours d'examen). `null` pour toute autre erreur.
+  static PublishingReason? _publishingBlock(AppException error) =>
+      error is ForbiddenException
+      ? PublishingReason.fromErrorCode(error.code)
+      : null;
 
   /// Création, publication ou modification d'un trajet refusée : le tunnel
   /// « bloqué par la limite de brouillons, le KYC ou l'offre PRO » était
@@ -189,8 +194,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         emit(AnnouncementProLimitReached(error));
       } else if (error.code == 'departure-date-passed') {
         emit(AnnouncementDepartureDatePassed(error));
-      } else if (_isTravelerStatusRequired(error)) {
-        emit(AnnouncementTravelerStatusRequired(error));
+      } else if (_publishingBlock(error) case final reason?) {
+        emit(AnnouncementPublishingBlocked(error, reason));
       } else {
         emit(AnnouncementError(error));
       }
@@ -500,8 +505,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       } else if (error is ForbiddenException &&
           error.code == 'pro-limit-reached') {
         emit(AnnouncementProLimitReached(error));
-      } else if (_isTravelerStatusRequired(error)) {
-        emit(AnnouncementTravelerStatusRequired(error));
+      } else if (_publishingBlock(error) case final reason?) {
+        emit(AnnouncementPublishingBlocked(error, reason));
       } else {
         emit(AnnouncementError(error));
       }

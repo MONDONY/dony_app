@@ -254,6 +254,7 @@ import 'package:dony/features/tracking/presentation/screens/scan_identify_screen
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
+import 'package:dony/features/traveler_status/presentation/publish_blocked_screen.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
@@ -804,6 +805,20 @@ final GoRouter appRouter = GoRouter(
       path: '/trips/publish-intro',
       builder: (context, state) =>
           const PublishIntroScreen(role: PublishIntroRole.trip),
+    ),
+    // Limite mensuelle de trajets atteinte : arrête la création (extra
+    // `PublishBlockedArgs`, rend `true` si plus rien ne bloque).
+    GoRoute(
+      path: '/trips/publish-blocked',
+      redirect: (_, state) =>
+          state.extra is PublishBlockedArgs ? null : '/home',
+      builder: (context, state) {
+        final args = state.extra! as PublishBlockedArgs;
+        return PublishBlockedScreen(
+          eligibility: args.eligibility,
+          source: args.source,
+        );
+      },
     ),
     GoRoute(
       path: '/parcels/send-intro',
@@ -1736,8 +1751,9 @@ final GoRouter appRouter = GoRouter(
       path: '/profile/gp-pro',
       builder: (context, state) => BlocProvider(
         // `?edit=1` : un GP Pro actif rouvre le formulaire (Modifier le profil).
-        create: (_) => getIt<GpProCubit>()
-          ..load(editBusiness: state.uri.queryParameters['edit'] == '1'),
+        create: (_) =>
+            getIt<GpProCubit>()
+              ..load(editBusiness: state.uri.queryParameters['edit'] == '1'),
         child: const GpProScreen(),
       ),
     ),

@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_payload.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -202,7 +203,7 @@ void main() {
     );
 
     blocTest<AnnouncementBloc, AnnouncementState>(
-      '403 traveler-status-required : AnnouncementTravelerStatusRequired',
+      '403 traveler-status-required : AnnouncementPublishingBlocked',
       build: () {
         when(() => repo.createTrip(any())).thenThrow(
           DioException(
@@ -217,11 +218,9 @@ void main() {
       ),
       expect: () => [
         isA<AnnouncementLoading>(),
-        isA<AnnouncementTravelerStatusRequired>().having(
-          (s) => s.error.code,
-          'code',
-          'traveler-status-required',
-        ),
+        isA<AnnouncementPublishingBlocked>()
+            .having((s) => s.error.code, 'code', 'traveler-status-required')
+            .having((s) => s.reason, 'reason', PublishingReason.statusRequired),
       ],
     );
 

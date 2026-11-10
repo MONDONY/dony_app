@@ -698,6 +698,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       announcements: getIt<AnnouncementRepository>(),
       packageRequests: getIt<PackageRequestRepository>(),
       templates: getIt<TripTemplateRepository>(),
+      eligibility: getIt<TravelerStatusRepository>(),
       analytics: getIt<AnalyticsService>(),
     ),
   );

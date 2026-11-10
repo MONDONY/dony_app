@@ -16,11 +16,14 @@ import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
 import 'package:dony/features/gp_pro/presentation/screens/gp_pro_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/l10n_test_helpers.dart';
 
 class _MockGpProCubit extends MockCubit<GpProCubitState>
     implements GpProCubit {}
@@ -54,6 +57,9 @@ GpProCubitState _ready(
   List<GpProPiece> pieces = const [],
   String? reason,
   String? commercialName,
+  String businessName = '',
+  String registrationNumber = '',
+  String? businessCountry,
   bool restarting = false,
   bool submitting = false,
   String? errorCode,
@@ -66,6 +72,9 @@ GpProCubitState _ready(
     travelFrequency: state == GpProState.none ? null : GpProFrequency.monthly,
   ),
   frequency: frequency,
+  businessName: businessName,
+  registrationNumber: registrationNumber,
+  businessCountry: businessCountry,
   pieces: pieces,
   restarting: restarting,
   submitting: submitting,
@@ -85,9 +94,14 @@ void main() {
     when(() => cubit.load()).thenAnswer((_) async {});
     when(() => cubit.cancel()).thenAnswer((_) async {});
     when(() => cubit.removePiece(any())).thenAnswer((_) async {});
+    when(() => cubit.submit()).thenAnswer((_) async {});
     when(
-      () => cubit.submit(commercialName: any(named: 'commercialName')),
-    ).thenAnswer((_) async {});
+      () => cubit.updateBusiness(
+        name: any(named: 'name'),
+        registrationNumber: any(named: 'registrationNumber'),
+        country: any(named: 'country'),
+      ),
+    ).thenReturn(null);
     when(
       () => cubit.addPiece(
         filePath: any(named: 'filePath'),
@@ -212,21 +226,109 @@ void main() {
       verify(() => cubit.selectFrequency(GpProFrequency.weekly)).called(1);
     });
 
-    testWidgets('envoi : submit avec le nom commercial saisi', (tester) async {
+    testWidgets('envoi : le bouton lance submit du cubit', (tester) async {
       await pump(
         tester,
-        _ready(GpProState.none, frequency: GpProFrequency.weekly),
+        _ready(
+          GpProState.none,
+          frequency: GpProFrequency.weekly,
+          businessName: 'Diallo Express',
+          registrationNumber: 'CI-ABJ-2021-B-12345',
+          businessCountry: 'CI',
+        ),
       );
-      await tester.enterText(find.byType(TextField), 'Diallo Express');
       await tester.tap(find.byKey(const Key('gp_pro_submit')));
-      verify(() => cubit.submit(commercialName: 'Diallo Express')).called(1);
+      verify(() => cubit.submit()).called(1);
     });
 
-    testWidgets('nom commercial limité à 80 caractères', (tester) async {
-      await pump(tester, _ready(GpProState.none));
-      final field = tester.widget<TextField>(find.byType(TextField));
-      expect(field.maxLength, 80);
+    testWidgets('entreprise : trois champs, envoi grisé tant que le numéro '
+        'ou le pays manque', (tester) async {
+      await pump(
+        tester,
+        _ready(
+          GpProState.none,
+          frequency: GpProFrequency.weekly,
+          businessName: 'Diallo Express',
+        ),
+      );
+      expect(find.text(l.gpProBusinessNameLabel), findsOneWidget);
+      expect(find.text(l.gpProRegistrationLabel), findsOneWidget);
+      expect(find.text(l.gpProCountryLabel), findsOneWidget);
+      expect(find.text(l.gpProRegistrationHint), findsOneWidget);
+      final submit = tester.widget<DonyButton>(
+        find.byKey(const Key('gp_pro_submit')),
+      );
+      expect(submit.onPressed, isNull);
     });
+
+    testWidgets('saisie : raison sociale et numéro remontent au cubit', (
+      tester,
+    ) async {
+      await pump(tester, _ready(GpProState.none));
+      await tester.enterText(
+        find.widgetWithText(TextFormField, l.gpProBusinessNameLabel),
+        'Diallo Express',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, l.gpProRegistrationLabel),
+        'CI-ABJ-2021-B-12345',
+      );
+      verify(() => cubit.updateBusiness(name: 'Diallo Express')).called(1);
+      verify(
+        () => cubit.updateBusiness(registrationNumber: 'CI-ABJ-2021-B-12345'),
+      ).called(1);
+    });
+
+    testWidgets('numéro invalide : erreur à la place de l\'aide', (
+      tester,
+    ) async {
+      await pump(tester, _ready(GpProState.none, registrationNumber: '12'));
+      expect(find.text(l.gpProRegistrationInvalid), findsOneWidget);
+      expect(find.text(l.gpProRegistrationHint), findsNothing);
+    });
+
+    testWidgets('pays choisi : son nom est affiché', (tester) async {
+      await pump(tester, _ready(GpProState.none, businessCountry: 'CI'));
+      expect(find.text("Côte d'Ivoire"), findsOneWidget);
+    });
+
+    testWidgets('raison sociale limitée à 80 caractères', (tester) async {
+      await pump(tester, _ready(GpProState.none));
+      final field = tester.widget<TextField>(
+        find.descendant(
+          of: find.widgetWithText(TextFormField, l.gpProBusinessNameLabel),
+          matching: find.byType(TextField),
+        ),
+      );
+      expect(
+        field.inputFormatters?.whereType<LengthLimitingTextInputFormatter>(),
+        isNotEmpty,
+      );
+    });
+
+    for (final english in [false, true]) {
+      testWidgets('360 dp, ${english ? 'anglais' : 'français'} : formulaire '
+          'sans exception', (tester) async {
+        if (english) useEnglish();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await pump(
+          tester,
+          _ready(
+            GpProState.none,
+            frequency: GpProFrequency.weekly,
+            businessName: 'Diallo Express Transport International SARL',
+            registrationNumber: 'CI-ABJ-2021-B-1234567890-LONG',
+            businessCountry: 'CI',
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        final submit = tester.getSize(find.byKey(const Key('gp_pro_submit')));
+        expect(submit.height, lessThan(64));
+      });
+    }
 
     testWidgets('« Refaire une demande » en cours : formulaire', (
       tester,

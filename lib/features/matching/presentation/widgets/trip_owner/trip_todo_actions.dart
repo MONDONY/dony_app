@@ -133,8 +133,9 @@ Future<void> _open(
         isEditing: true,
       );
     case TripTodoKind.publish:
-      // Rappel du statut légal (particulier / professionnel) : la feuille se
-      // ferme d'un « Plus tard », la publication part dans tous les cas.
+      // Question du statut (particulier / GP Pro) : « Plus tard », un geste ou
+      // l'ouverture du formulaire GP Pro laissent la publication partir ; la
+      // limite mensuelle, elle, est arrêtée par le 403 du back.
       final bloc = context.read<AnnouncementBloc>();
       await remindTravelerStatusBeforePublish(context);
       // L'écran a pu être quitté, ou son bloc fermé, pendant la feuille.

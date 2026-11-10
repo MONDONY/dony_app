@@ -170,11 +170,25 @@ class GpProCubit extends Cubit<GpProCubitState> {
     }
   }
 
-  Future<void> submit({String? commercialName}) async {
+  /// Met à jour la saisie de l'entreprise. Un argument absent garde la valeur
+  /// courante ; [country] vide efface le pays.
+  void updateBusiness({
+    String? name,
+    String? registrationNumber,
+    String? country,
+  }) => emit(
+    state.copyWith(
+      businessName: name,
+      registrationNumber: registrationNumber,
+      businessCountry: country,
+      clearBusinessCountry: country != null && country.isEmpty,
+    ),
+  );
+
+  Future<void> submit() async {
     final frequency = state.frequency;
     if (frequency == null || !state.canSubmit) return;
-    final name = commercialName?.trim();
-    final cleanName = (name == null || name.isEmpty) ? null : name;
+    final cleanName = state.businessName.trim();
     final ids = [
       for (final p in state.pieces)
         if (p.status == GpProUploadStatus.ready && p.remoteId != null)
@@ -185,6 +199,8 @@ class GpProCubit extends Cubit<GpProCubitState> {
       final status = await _repository.apply(
         frequency: frequency,
         commercialName: cleanName,
+        businessRegistrationNumber: state.registrationNumber.trim(),
+        businessCountry: state.businessCountry,
         documentIds: ids,
         source: GpProSource.profile,
       );
@@ -203,7 +219,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
             'source': GpProSource.profile.name,
             'frequency': frequency.wire,
             'document_count': ids.length,
-            'has_commercial_name': cleanName != null,
+            'has_commercial_name': cleanName.isNotEmpty,
           },
         ),
       );
@@ -212,11 +228,22 @@ class GpProCubit extends Cubit<GpProCubitState> {
         emit(state.copyWith(submitting: false, restarting: false));
         await load();
       } else {
-        emit(state.copyWith(submitting: false, errorCode: e.code));
+        _failSubmit(e.code);
       }
     } catch (_) {
-      emit(state.copyWith(submitting: false, errorCode: 'unknown'));
+      _failSubmit('unknown');
     }
+  }
+
+  /// Jamais la saisie (raison sociale, numéro, pays) : le code d'erreur seul.
+  void _failSubmit(String code) {
+    emit(state.copyWith(submitting: false, errorCode: code));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.gpProApplicationFailed,
+        properties: {'error_code': code},
+      ),
+    );
   }
 
   Future<void> cancel() async {

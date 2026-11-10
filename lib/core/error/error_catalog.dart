@@ -935,6 +935,18 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.badge_outlined,
     ),
+    'monthly-limit-reached': _Entry(
+      title: (l) => l.errorMonthlyLimitReachedTitle,
+      message: (l) => l.errorMonthlyLimitReachedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.event_busy_rounded,
+    ),
+    'gp-pro-pending': _Entry(
+      title: (l) => l.errorGpProPendingTitle,
+      message: (l) => l.errorGpProPendingMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_top_rounded,
+    ),
     'traveler-status-invalid': _Entry(
       title: (l) => l.errorTravelerStatusInvalidTitle,
       message: (l) => l.errorTravelerStatusInvalidMessage,

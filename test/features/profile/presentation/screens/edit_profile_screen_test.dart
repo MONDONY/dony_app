@@ -18,6 +18,7 @@ import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
+import 'package:dony/features/traveler_status/data/traveler_status_declaration.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1104,8 +1105,52 @@ void main() {
       await tester.tap(find.text('Choisir'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
       expect(find.widgetWithText(DonyButton, 'Plus tard'), findsNothing);
+    });
+
+    testWidgets('« Choisir », puis Particulier : déclaré, profil mis à jour '
+        'puis rechargé, la ligne suit', (tester) async {
+      when(() => statusRepo.declareIndividual()).thenAnswer(
+        (_) async => TravelerStatusDeclaration(
+          status: TravelerStatus.individual,
+          declaredAt: DateTime.utc(2026, 11),
+        ),
+      );
+      final states = StreamController<AuthState>.broadcast();
+      addTearDown(states.close);
+      // La synchro locale (AuthUserSynced) met l'état à jour, comme AuthBloc.
+      when(() => mockAuthBloc.add(any())).thenAnswer((invocation) {
+        final event = invocation.positionalArguments.first;
+        if (event is AuthUserSynced) {
+          states.add(AuthProfileUpdated(event.user));
+        }
+      });
+      await pump(tester, _travelerUser, stream: states.stream);
+
+      await tester.ensureVisible(find.text('Choisir'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Choisir'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const Key('traveler-status-individual')),
+          matching: find.text('Particulier'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      verify(() => statusRepo.declareIndividual()).called(1);
+      verifyInOrder([
+        () => mockAuthBloc.add(any(that: isA<AuthUserSynced>())),
+        () => mockAuthBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
+      ]);
+      final row = find.byKey(const Key('profile-traveler-status-row'));
+      expect(
+        find.descendant(of: row, matching: find.text('Particulier')),
+        findsOneWidget,
+      );
+      expect(find.text('Non renseigné'), findsNothing);
     });
 
     testWidgets('« En validation » ouvre le suivi de la demande GP Pro', (
