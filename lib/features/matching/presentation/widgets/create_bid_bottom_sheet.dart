@@ -13,6 +13,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/core/widgets/money_keyword_warning.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
@@ -1639,11 +1640,15 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ),
             const SizedBox(height: DonySpacing.sm),
             DonyTextField(
+              key: const Key('bid-description-field'),
               controller: _descCtrl,
               hint: context.l10n.bidCreateDescriptionHint,
               maxLines: 4,
               minLines: 2,
             ).animate().fadeIn(delay: 100.ms),
+            // Non bloquant : rappel des CGU si la description évoque de
+            // l'argent (le back signale la demande à la modération).
+            MoneyKeywordWarning(controller: _descCtrl),
             const SizedBox(height: DonySpacing.xxl),
 
             // ── Politique de remboursement ────────────────────────────────

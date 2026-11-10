@@ -23424,4 +23424,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String videoModalThumbnailSemantics(String title) {
     return 'Play the video: $title';
   }
+
+  @override
+  String get moneyKeywordWarningTitle => 'Sending money is prohibited';
+
+  @override
+  String get moneyKeywordWarningBody =>
+      'Cash, cheques and bank cards cannot be handed to a traveler (Terms of use, article 4). If your parcel contains none, ignore this message.';
 }

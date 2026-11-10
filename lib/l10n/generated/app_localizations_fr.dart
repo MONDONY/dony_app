@@ -23592,4 +23592,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String videoModalThumbnailSemantics(String title) {
     return 'Lire la vidéo : $title';
   }
+
+  @override
+  String get moneyKeywordWarningTitle => 'Envoi d\'argent interdit';
+
+  @override
+  String get moneyKeywordWarningBody =>
+      'Les espèces, chèques et cartes bancaires ne peuvent pas être confiés à un voyageur (CGU, article 4). Si votre colis n\'en contient pas, ignorez ce message.';
 }

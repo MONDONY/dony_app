@@ -23095,5 +23095,9 @@
   "videoModalPlayerError": "La vidéo ne peut pas être lue pour le moment.",
   "@videoModalPlayerError": {"description": "Lecteur d'un modal vidéo : la vidéo ne démarre pas (video_modal_player_screen.dart)"},
   "videoModalThumbnailSemantics": "Lire la vidéo : {title}",
-  "@videoModalThumbnailSemantics": {"description": "Lecture d'écran de la miniature d'un modal vidéo (video_modal_sheet.dart)", "placeholders": {"title": {"type": "String"}}}
+  "@videoModalThumbnailSemantics": {"description": "Lecture d'écran de la miniature d'un modal vidéo (video_modal_sheet.dart)", "placeholders": {"title": {"type": "String"}}},
+  "moneyKeywordWarningTitle": "Envoi d'argent interdit",
+  "@moneyKeywordWarningTitle": {"description": "Titre du bandeau orange, non bloquant, affiché sous la description du colis quand elle évoque l'envoi d'argent (money_keyword_warning.dart : demande sur un trajet et demande d'expéditeur publiée)."},
+  "moneyKeywordWarningBody": "Les espèces, chèques et cartes bancaires ne peuvent pas être confiés à un voyageur (CGU, article 4). Si votre colis n'en contient pas, ignorez ce message.",
+  "@moneyKeywordWarningBody": {"description": "Corps du bandeau d'envoi d'argent sous la description du colis : rappel de l'interdiction (CGU, article 4), l'envoi reste possible (money_keyword_warning.dart)."}
 }

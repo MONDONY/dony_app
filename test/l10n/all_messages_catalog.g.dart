@@ -8172,6 +8172,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripParcelsLineAwaiting': (l) =>
       l.tripParcelsLineAwaiting(intPlaceholderValue),
   'tripParcelAwaitingSemantics': (l) => l.tripParcelAwaitingSemantics,
+  'moneyKeywordWarningTitle': (l) => l.moneyKeywordWarningTitle,
+  'moneyKeywordWarningBody': (l) => l.moneyKeywordWarningBody,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

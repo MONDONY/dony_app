@@ -37703,6 +37703,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Lire la vidéo : {title}'**
   String videoModalThumbnailSemantics(String title);
+
+  /// Titre du bandeau orange, non bloquant, affiché sous la description du colis quand elle évoque l'envoi d'argent (money_keyword_warning.dart : demande sur un trajet et demande d'expéditeur publiée).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi d\'argent interdit'**
+  String get moneyKeywordWarningTitle;
+
+  /// Corps du bandeau d'envoi d'argent sous la description du colis : rappel de l'interdiction (CGU, article 4), l'envoi reste possible (money_keyword_warning.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les espèces, chèques et cartes bancaires ne peuvent pas être confiés à un voyageur (CGU, article 4). Si votre colis n\'en contient pas, ignorez ce message.'**
+  String get moneyKeywordWarningBody;
 }
 
 class _AppLocalizationsDelegate

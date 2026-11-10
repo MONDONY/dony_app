@@ -11537,5 +11537,9 @@
   "videoModalPlayerEndSearch": "Find a trip",
   "videoModalPlayerEndPublish": "Publish my trip",
   "videoModalPlayerError": "The video can't be played right now.",
-  "videoModalThumbnailSemantics": "Play the video: {title}"
+  "videoModalThumbnailSemantics": "Play the video: {title}",
+  "moneyKeywordWarningTitle": "Sending money is prohibited",
+  "@moneyKeywordWarningTitle": {"description": "Titre du bandeau orange, non bloquant, affiché sous la description du colis quand elle évoque l'envoi d'argent (money_keyword_warning.dart : demande sur un trajet et demande d'expéditeur publiée)."},
+  "moneyKeywordWarningBody": "Cash, cheques and bank cards cannot be handed to a traveler (Terms of use, article 4). If your parcel contains none, ignore this message.",
+  "@moneyKeywordWarningBody": {"description": "Corps du bandeau d'envoi d'argent sous la description du colis : rappel de l'interdiction (CGU, article 4), l'envoi reste possible (money_keyword_warning.dart)."}
 }
