@@ -8172,8 +8172,60 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripParcelsLineAwaiting': (l) =>
       l.tripParcelsLineAwaiting(intPlaceholderValue),
   'tripParcelAwaitingSemantics': (l) => l.tripParcelAwaitingSemantics,
+  'videoModalPrimaryFallback': (l) => l.videoModalPrimaryFallback,
+  'videoModalSecondaryFallback': (l) => l.videoModalSecondaryFallback,
+  'videoModalHighlightsTitle': (l) => l.videoModalHighlightsTitle,
+  'videoModalPlayerEndSearch': (l) => l.videoModalPlayerEndSearch,
+  'videoModalPlayerEndPublish': (l) => l.videoModalPlayerEndPublish,
+  'videoModalPlayerError': (l) => l.videoModalPlayerError,
+  'videoModalThumbnailSemantics': (l) =>
+      l.videoModalThumbnailSemantics(placeholderMarker('title')),
   'moneyKeywordWarningTitle': (l) => l.moneyKeywordWarningTitle,
   'moneyKeywordWarningBody': (l) => l.moneyKeywordWarningBody,
+  'travelerStatusChipIndividual': (l) => l.travelerStatusChipIndividual,
+  'travelerStatusChipProfessional': (l) => l.travelerStatusChipProfessional,
+  'travelerStatusChipProfessionalWithNumber': (l) =>
+      l.travelerStatusChipProfessionalWithNumber(placeholderMarker('number')),
+  'profilePublicStatusLabel': (l) => l.profilePublicStatusLabel,
+  'profilePublicBusinessNameLabel': (l) => l.profilePublicBusinessNameLabel,
+  'profilePublicBusinessNumberLabel': (l) => l.profilePublicBusinessNumberLabel,
+  'profilePublicBusinessCountryLabel': (l) =>
+      l.profilePublicBusinessCountryLabel,
+  'profilePublicBusinessDisclaimer': (l) => l.profilePublicBusinessDisclaimer,
+  'travelerStatusSheetTitle': (l) => l.travelerStatusSheetTitle,
+  'travelerStatusSheetSubtitle': (l) => l.travelerStatusSheetSubtitle,
+  'travelerStatusSheetSubtitleRequired': (l) =>
+      l.travelerStatusSheetSubtitleRequired,
+  'travelerStatusOptionIndividual': (l) => l.travelerStatusOptionIndividual,
+  'travelerStatusOptionIndividualBody': (l) =>
+      l.travelerStatusOptionIndividualBody,
+  'travelerStatusOptionProfessional': (l) => l.travelerStatusOptionProfessional,
+  'travelerStatusOptionProfessionalBody': (l) =>
+      l.travelerStatusOptionProfessionalBody,
+  'travelerStatusIndividualTitle': (l) => l.travelerStatusIndividualTitle,
+  'travelerStatusIndividualSubtitle': (l) => l.travelerStatusIndividualSubtitle,
+  'travelerStatusIndividualConfirm': (l) => l.travelerStatusIndividualConfirm,
+  'travelerStatusIndividualHint': (l) => l.travelerStatusIndividualHint,
+  'travelerStatusProfessionalTitle': (l) => l.travelerStatusProfessionalTitle,
+  'travelerStatusProfessionalSubtitle': (l) =>
+      l.travelerStatusProfessionalSubtitle,
+  'travelerStatusBusinessNameLabel': (l) => l.travelerStatusBusinessNameLabel,
+  'travelerStatusRegistrationLabel': (l) => l.travelerStatusRegistrationLabel,
+  'travelerStatusRegistrationHint': (l) => l.travelerStatusRegistrationHint,
+  'travelerStatusCountryLabel': (l) => l.travelerStatusCountryLabel,
+  'errorTravelerStatusRequiredTitle': (l) => l.errorTravelerStatusRequiredTitle,
+  'errorTravelerStatusRequiredMessage': (l) =>
+      l.errorTravelerStatusRequiredMessage,
+  'errorTravelerStatusInvalidTitle': (l) => l.errorTravelerStatusInvalidTitle,
+  'errorTravelerStatusInvalidMessage': (l) =>
+      l.errorTravelerStatusInvalidMessage,
+  'profileFieldTravelerStatusAllCaps': (l) =>
+      l.profileFieldTravelerStatusAllCaps,
+  'profileTravelerStatusNotSet': (l) => l.profileTravelerStatusNotSet,
+  'bidCreateIndividualTravelerTitle': (l) => l.bidCreateIndividualTravelerTitle,
+  'bidCreateIndividualTravelerBody': (l) => l.bidCreateIndividualTravelerBody,
+  'travelerStatusRegistrationInvalid': (l) =>
+      l.travelerStatusRegistrationInvalid,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8862,4 +8914,6 @@ const textParameters = <String, List<String>>{
   'tripTodoDueBeforeTime': ['time'],
   'tripTodoDueBeforeDate': ['date', 'time'],
   'tripTodoDueBanner': ['due', 'consequence'],
+  'videoModalThumbnailSemantics': ['title'],
+  'travelerStatusChipProfessionalWithNumber': ['number'],
 };

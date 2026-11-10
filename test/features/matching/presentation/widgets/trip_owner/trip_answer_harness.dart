@@ -183,6 +183,7 @@ class AnswerHarness {
     when(() => screenBids.add(any())).thenAnswer(
       (i) => screenEvents.add(i.positionalArguments.first as BidEvent),
     );
+    when(() => annBloc.isClosed).thenReturn(false);
     when(() => annBloc.add(any())).thenAnswer(
       (i) => annEvents.add(i.positionalArguments.first as AnnouncementEvent),
     );

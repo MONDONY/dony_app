@@ -37715,6 +37715,210 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les espèces, chèques et cartes bancaires ne peuvent pas être confiés à un voyageur (CGU, article 4). Si votre colis n\'en contient pas, ignorez ce message.'**
   String get moneyKeywordWarningBody;
+
+  /// Pastille du statut légal d'un voyageur qui voyage à titre personnel (traveler_status_chip.dart : carte de trajet, fiche voyageur, profil public).
+  ///
+  /// In fr, this message translates to:
+  /// **'Particulier'**
+  String get travelerStatusChipIndividual;
+
+  /// Pastille du statut légal d'un voyageur professionnel, sans numéro (traveler_status_chip.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Professionnel'**
+  String get travelerStatusChipProfessional;
+
+  /// Pastille d'un voyageur professionnel avec son numéro d'immatriculation déclaré, sur une seule ligne (traveler_status_chip.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Professionnel · {number}'**
+  String travelerStatusChipProfessionalWithNumber(String number);
+
+  /// Libellé de la ligne du statut légal dans le bloc d'un professionnel du profil public (profile_public_screen.dart, _TravelerStatusSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Statut'**
+  String get profilePublicStatusLabel;
+
+  /// Libellé de la raison sociale déclarée par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison sociale'**
+  String get profilePublicBusinessNameLabel;
+
+  /// Libellé du numéro d'immatriculation déclaré par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Immatriculation'**
+  String get profilePublicBusinessNumberLabel;
+
+  /// Libellé du pays d'immatriculation déclaré par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get profilePublicBusinessCountryLabel;
+
+  /// Mention sous les informations d'un professionnel : Yadony ne les vérifie pas auprès des registres (profile_public_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations déclarées par le voyageur, non vérifiées par Yadony.'**
+  String get profilePublicBusinessDisclaimer;
+
+  /// Titre de la feuille de déclaration du statut légal du voyageur, étape du choix (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment voyagez-vous ?'**
+  String get travelerStatusSheetTitle;
+
+  /// Sous-titre de l'étape du choix quand la déclaration est facultative (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les expéditeurs voient votre réponse sur vos trajets. Vous pouvez la modifier à tout moment dans votre profil.'**
+  String get travelerStatusSheetSubtitle;
+
+  /// Sous-titre de l'étape du choix quand Yadony exige la déclaration pour publier, sans lien « Plus tard » (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour publier un trajet, indiquez comment vous voyagez. Les expéditeurs voient votre réponse sur vos trajets.'**
+  String get travelerStatusSheetSubtitleRequired;
+
+  /// Option « particulier » de l'étape du choix (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Particulier'**
+  String get travelerStatusOptionIndividual;
+
+  /// Explication de l'option particulier (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je voyage à titre personnel, ce n\'est pas mon métier.'**
+  String get travelerStatusOptionIndividualBody;
+
+  /// Option « professionnel » de l'étape du choix (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Professionnel'**
+  String get travelerStatusOptionProfessional;
+
+  /// Explication de l'option professionnel (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je transporte des colis dans le cadre d\'une activité déclarée.'**
+  String get travelerStatusOptionProfessionalBody;
+
+  /// Titre de l'étape de confirmation d'un particulier (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur particulier'**
+  String get travelerStatusIndividualTitle;
+
+  /// Sous-titre de l'étape particulier (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En tant que particulier, vous n\'avez pas à fournir de numéro d\'entreprise.'**
+  String get travelerStatusIndividualSubtitle;
+
+  /// Case à cocher de la déclaration d'un particulier : preuve enregistrée avec la date et la version du texte (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je confirme voyager à titre personnel et que ce n\'est pas mon métier.'**
+  String get travelerStatusIndividualConfirm;
+
+  /// Rappel sous la case du particulier : le transport régulier relève du statut professionnel, les gains restent déclarables (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Si vous transportez des colis de façon régulière pour en tirer un revenu, choisissez « Professionnel ». Vos gains restent à déclarer à l\'administration fiscale de votre pays.'**
+  String get travelerStatusIndividualHint;
+
+  /// Titre de l'étape des champs d'un professionnel (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur professionnel'**
+  String get travelerStatusProfessionalTitle;
+
+  /// Sous-titre de l'étape professionnel : raison sociale et numéro sont publics (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces informations seront visibles des expéditeurs.'**
+  String get travelerStatusProfessionalSubtitle;
+
+  /// Champ de la raison sociale d'un professionnel (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison sociale'**
+  String get travelerStatusBusinessNameLabel;
+
+  /// Champ du numéro d'immatriculation d'un professionnel (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro d\'entreprise'**
+  String get travelerStatusRegistrationLabel;
+
+  /// Aide sous le champ du numéro d'entreprise (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'SIRET, NINEA, RCCM ou équivalent.'**
+  String get travelerStatusRegistrationHint;
+
+  /// Champ du pays d'immatriculation de l'entreprise et titre de la feuille de sélection (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays d\'immatriculation'**
+  String get travelerStatusCountryLabel;
+
+  /// Titre de l'erreur 403 traveler-status-required : Yadony exige la déclaration du statut pour publier (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Statut à déclarer'**
+  String get errorTravelerStatusRequiredTitle;
+
+  /// Message de l'erreur 403 traveler-status-required (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez si vous voyagez en tant que particulier ou professionnel pour publier un trajet.'**
+  String get errorTravelerStatusRequiredMessage;
+
+  /// Titre de l'erreur 422 traveler-status-invalid : déclaration refusée par le serveur (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Déclaration à corriger'**
+  String get errorTravelerStatusInvalidTitle;
+
+  /// Message de l'erreur 422 traveler-status-invalid (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez la raison sociale, le numéro d\'entreprise et le pays, puis réessayez.'**
+  String get errorTravelerStatusInvalidMessage;
+
+  /// Libellé en capitales de la ligne du statut légal du voyageur dans « Modifier le profil » (edit_profile_screen.dart, _TravelerStatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'STATUT DE VOYAGEUR'**
+  String get profileFieldTravelerStatusAllCaps;
+
+  /// Valeur de la ligne « Statut de voyageur » tant que le voyageur n'a pas répondu à « Comment voyagez-vous ? » (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non renseigné'**
+  String get profileTravelerStatusNotSet;
+
+  /// Titre de l'encart d'information avant le paiement quand le voyageur de l'annonce voyage à titre personnel (create_bid_bottom_sheet.dart). Texte à faire valider par un avocat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur est un particulier.'**
+  String get bidCreateIndividualTravelerTitle;
+
+  /// Corps de l'encart d'information avant le paiement chez un voyageur particulier : il ne bloque rien (create_bid_bottom_sheet.dart). Texte à faire valider par un avocat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le droit de la consommation ne s\'applique pas à votre accord avec lui.'**
+  String get bidCreateIndividualTravelerBody;
+
+  /// Erreur sous le champ du numéro d'entreprise quand il est non vide et invalide (moins de 4 caractères ou caractère interdit) ; remplace l'aide neutre (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'4 caractères minimum : lettres, chiffres, espace, point, barre oblique ou tiret.'**
+  String get travelerStatusRegistrationInvalid;
 }
 
 class _AppLocalizationsDelegate

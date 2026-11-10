@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/mobile_money_network.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'announcement_model.g.dart';
@@ -74,6 +75,17 @@ class TravelerProfile {
   /// réglage par défaut des comptes et au cas d'un backend plus ancien.
   final bool acceptsUnverified;
 
+  /// Statut légal déclaré par le voyageur (lot 2). `null` : pas encore
+  /// déclaré, ou back antérieur au statut : aucune pastille.
+  @JsonKey(fromJson: TravelerStatus.parse, toJson: travelerStatusToJson)
+  final TravelerStatus? travelerStatus;
+
+  /// Raison sociale, numéro et pays d'immatriculation d'un professionnel
+  /// (déclarés, non vérifiés par Yadony). Toujours `null` pour un particulier.
+  final String? businessName;
+  final String? businessRegistrationNumber;
+  final String? businessCountry;
+
   const TravelerProfile({
     required this.id,
     this.displayName,
@@ -85,6 +97,10 @@ class TravelerProfile {
     this.kycVerified = false,
     this.avatarUrl,
     this.acceptsUnverified = false,
+    this.travelerStatus,
+    this.businessName,
+    this.businessRegistrationNumber,
+    this.businessCountry,
   });
 
   factory TravelerProfile.fromJson(Map<String, dynamic> json) =>

@@ -336,6 +336,9 @@ import 'package:dony/features/tracking/data/tracking_queue_photo_store.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/data/trip_tracking_repository.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_consent_sheet.dart';
+import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
+import 'package:dony/features/traveler_status/data/traveler_status_remote_datasource.dart';
+import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/data/datasources/trip_recurrence_datasource.dart';
@@ -989,6 +992,20 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<GpProCubit>(
     () => GpProCubit(getIt(), getIt<AnalyticsService>()),
+  );
+
+  // Statut légal du voyageur (particulier / professionnel)
+  getIt.registerLazySingleton<TravelerStatusRemoteDatasource>(
+    () => TravelerStatusRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<TravelerStatusRepository>(
+    () => TravelerStatusRepository(getIt<TravelerStatusRemoteDatasource>()),
+  );
+  getIt.registerFactory<TravelerStatusCubit>(
+    () => TravelerStatusCubit(
+      getIt<TravelerStatusRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Signalement d'incident

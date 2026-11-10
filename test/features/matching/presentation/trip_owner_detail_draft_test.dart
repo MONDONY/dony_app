@@ -16,6 +16,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -35,6 +36,10 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
+import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
+import 'package:dony/features/traveler_status/data/traveler_status_declaration.dart';
+import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -81,12 +86,25 @@ class _MockTripDepartCubit extends MockCubit<TripDepartState>
 
 const _ownerId = 'trav-001';
 
+/// Propriétaire qui a déjà déclaré son statut : « Publier » part tout de suite.
 const _owner = UserModel(
   id: _ownerId,
   roles: [],
   kycStatus: 'VERIFIED',
   status: 'ACTIVE',
+  travelerStatus: TravelerStatus.individual,
 );
+
+/// Propriétaire qui n'a pas encore répondu à « Comment voyagez-vous ? ».
+const _ownerUndeclared = UserModel(
+  id: _ownerId,
+  roles: [],
+  kycStatus: 'VERIFIED',
+  status: 'ACTIVE',
+);
+
+class _MockTravelerStatusRepository extends Mock
+    implements TravelerStatusRepository {}
 
 AnnouncementModel _makeAnnouncement({
   String status = 'ACTIVE',
@@ -108,7 +126,7 @@ AnnouncementModel _makeAnnouncement({
 
 // ── Pump helper ───────────────────────────────────────────────────────────────
 
-Future<void> _pump(
+Future<GoRouter> _pump(
   WidgetTester tester, {
   required _MockAnnouncementBloc annBloc,
   required _MockBidBloc bidBloc,
@@ -165,6 +183,7 @@ Future<void> _pump(
     MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
   );
   await tester.pump(const Duration(milliseconds: 300));
+  return router;
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -179,6 +198,8 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
     registerFallbackValue(AnnouncementDetailRequested(''));
+    registerFallbackValue(TravelerStatus.individual);
+    registerFallbackValue(const AuthProfileRefreshRequested());
   });
 
   setUp(() {
@@ -186,6 +207,7 @@ void main() {
     bidBloc = _MockBidBloc();
     cancelBloc = _MockCancellationBloc();
     authBloc = _MockAuthBloc();
+    when(() => authBloc.isClosed).thenReturn(false);
     analytics = _MockAnalyticsService();
 
     when(
@@ -216,6 +238,7 @@ void main() {
     );
 
     when(() => annBloc.add(any())).thenReturn(null);
+    when(() => annBloc.isClosed).thenReturn(false);
 
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
@@ -507,6 +530,281 @@ void main() {
       expect(find.byType(TripOwnerDetailScreen), findsOneWidget);
     },
   );
+
+  group('statut légal du voyageur à la publication d\'un brouillon', () {
+    late _MockTravelerStatusRepository statusRepo;
+
+    setUp(() {
+      statusRepo = _MockTravelerStatusRepository();
+      when(
+        () => statusRepo.declare(
+          status: any(named: 'status'),
+          personalUseConfirmed: any(named: 'personalUseConfirmed'),
+          businessName: any(named: 'businessName'),
+          registrationNumber: any(named: 'registrationNumber'),
+          country: any(named: 'country'),
+        ),
+      ).thenAnswer(
+        (_) async => TravelerStatusDeclaration(
+          status: TravelerStatus.individual,
+          declaredAt: DateTime.utc(2026, 11),
+        ),
+      );
+      getIt.registerFactory<TravelerStatusCubit>(
+        () => TravelerStatusCubit(statusRepo, analytics),
+      );
+      when(
+        () => authBloc.state,
+      ).thenReturn(const AuthAuthenticated(_ownerUndeclared));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_ownerUndeclared),
+      );
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<TravelerStatusCubit>()) {
+        getIt.unregister<TravelerStatusCubit>();
+      }
+    });
+
+    GoRouter? router;
+
+    Future<StreamController<AnnouncementState>> pumpDraft(
+      WidgetTester tester,
+    ) async {
+      final draft = _makeAnnouncement(status: 'DRAFT');
+      when(() => annBloc.state).thenReturn(AnnouncementDetailLoaded(draft));
+      final controller = StreamController<AnnouncementState>();
+      whenListen(
+        annBloc,
+        controller.stream,
+        initialState: AnnouncementDetailLoaded(draft),
+      );
+      addTearDown(controller.close);
+      router = await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+        initial: draft,
+      );
+      await tester.pumpAndSettle();
+      return controller;
+    }
+
+    void verifyPublishDispatched(int times) => verify(
+      () => annBloc.add(
+        any(
+          that: predicate<AnnouncementEvent>(
+            (e) => e is AnnouncementPublishRequested && e.id == 'ann-trip-001',
+            'AnnouncementPublishRequested',
+          ),
+        ),
+      ),
+    ).called(times);
+
+    testWidgets(
+      'sans statut : « Publier » ouvre la feuille, rien n\'est publié '
+      'tant qu\'elle est ouverte',
+      (tester) async {
+        await pumpDraft(tester);
+
+        await tester.tap(_inFooter(find.text('Publier')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+        verifyNever(
+          () => annBloc.add(any(that: isA<AnnouncementPublishRequested>())),
+        );
+      },
+    );
+
+    testWidgets('écran quitté pendant la feuille de rappel : rien n\'est '
+        'publié, aucune exception', (tester) async {
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+
+      // L'écran du brouillon est remplacé pendant que la feuille est ouverte :
+      // la navigation ferme la feuille. Aucune exception. (La feuille se
+      // referme avant que l'écran soit démonté : c'est le bloc fermé, testé
+      // ci-dessous, qui sépare le cas fautif du cas sain.)
+      router!.go('/kyc/status');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TripOwnerDetailScreen), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('bloc fermé pendant la feuille de rappel : rien n\'est '
+        'publié', (tester) async {
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+      when(() => annBloc.isClosed).thenReturn(true);
+      await tester.tap(find.widgetWithText(DonyButton, 'Plus tard'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verifyNever(
+        () => annBloc.add(any(that: isA<AnnouncementPublishRequested>())),
+      );
+    });
+
+    testWidgets('403 puis écran quitté pendant la feuille obligatoire : '
+        'aucune publication, aucune exception', (tester) async {
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+      final controller = await pumpDraft(tester);
+      addTearDown(controller.close);
+
+      controller.add(
+        AnnouncementTravelerStatusRequired(
+          const ForbiddenException('x', 'traveler-status-required'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+
+      router!.go('/kyc/status');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TripOwnerDetailScreen), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('403 puis bloc fermé pendant la feuille obligatoire : '
+        'déclaration faite, aucune publication', (tester) async {
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+      final controller = await pumpDraft(tester);
+      addTearDown(controller.close);
+
+      controller.add(
+        AnnouncementTravelerStatusRequired(
+          const ForbiddenException('x', 'traveler-status-required'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      when(() => annBloc.isClosed).thenReturn(true);
+
+      await tester.tap(find.text('Particulier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.text(
+          "Je confirme voyager à titre personnel et que ce n'est pas mon métier.",
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      verifyNever(
+        () => annBloc.add(any(that: isA<AnnouncementPublishRequested>())),
+      );
+    });
+
+    testWidgets('« Plus tard » : la publication continue', (tester) async {
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Plus tard'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Comment voyagez-vous ?'), findsNothing);
+      verifyPublishDispatched(1);
+    });
+
+    testWidgets('statut déclaré dans la feuille : la publication continue et '
+        'le profil est rechargé', (tester) async {
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Particulier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.text(
+          'Je confirme voyager à titre personnel et que ce n\'est pas mon métier.',
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+      await tester.pumpAndSettle();
+
+      verifyPublishDispatched(1);
+      verify(
+        () => authBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
+      ).called(1);
+    });
+
+    testWidgets('le back répond 403 traveler-status-required : la feuille '
+        'se rouvre sans « Plus tard », la publication reprend après la '
+        'déclaration', (tester) async {
+      // Statut déjà connu de l'app (profil périmé) : la publication part, le
+      // back refuse, la feuille obligatoire s'ouvre.
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+      final controller = await pumpDraft(tester);
+      addTearDown(controller.close);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+      verifyPublishDispatched(1);
+      expect(find.text('Comment voyagez-vous ?'), findsNothing);
+
+      controller.add(
+        AnnouncementTravelerStatusRequired(
+          const ForbiddenException('x', 'traveler-status-required'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Plus tard'), findsNothing);
+
+      await tester.tap(find.text('Particulier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.text(
+          'Je confirme voyager à titre personnel et que ce n\'est pas mon métier.',
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+      await tester.pumpAndSettle();
+
+      // Une seconde publication après la déclaration (mocktail ne recompte
+      // pas l'appel déjà vérifié plus haut).
+      verifyPublishDispatched(1);
+    });
+  });
 }
 
 /// [f] dans le pied collant de l'écran.

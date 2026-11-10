@@ -520,6 +520,52 @@ void main() {
       ],
     );
 
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'création : 403 traveler-status-required émet '
+      'AnnouncementTravelerStatusRequired',
+      build: () {
+        when(
+          () => mockRepo.createAnnouncement(
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            departureDate: any(named: 'departureDate'),
+            departureTime: any(named: 'departureTime'),
+            arrivalTime: any(named: 'arrivalTime'),
+            pickupAddress: any(named: 'pickupAddress'),
+            deliveryAddress: any(named: 'deliveryAddress'),
+            availableKg: any(named: 'availableKg'),
+            pricePerKg: any(named: 'pricePerKg'),
+            transportMode: any(named: 'transportMode'),
+            handoverDeadline: any(named: 'handoverDeadline'),
+            saveAsDraft: any(named: 'saveAsDraft'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/announcements'),
+            error: const ForbiddenException('x', 'traveler-status-required'),
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        AnnouncementCreateRequested(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime.now().add(const Duration(days: 10)),
+          pickupAddress: kTestPickupAddress,
+          deliveryAddress: kTestDeliveryAddress,
+          availableKg: 20.0,
+          pricePerKg: 5.0,
+          transportMode: TransportMode.plane,
+          handoverDeadline: DateTime(2026, 6, 14, 18),
+        ),
+      ),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementTravelerStatusRequired>(),
+      ],
+    );
+
     // RÉGRESSION (mirroir du cas pro-limit-reached ci-dessus, cf. l.162-167) : en
     // prod, le datasource laisse remonter un DioException brut dont .error porte
     // la ForbiddenException posée par l'interceptor — PAS une ForbiddenException
@@ -609,6 +655,44 @@ void main() {
         isA<AnnouncementLoading>(),
         isA<AnnouncementKycRequired>(),
       ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'publish traveler-status-required (403 du back, interrupteur actif) '
+      'émet AnnouncementTravelerStatusRequired',
+      build: () {
+        when(() => mockRepo.publishAnnouncement('a1')).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/announcements/a1/publish'),
+            error: const ForbiddenException(
+              'Statut requis',
+              'traveler-status-required',
+            ),
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementTravelerStatusRequired>().having(
+          (s) => s.error.code,
+          'code',
+          'traveler-status-required',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'publish : un autre 403 ne devient pas « statut requis »',
+      build: () {
+        when(
+          () => mockRepo.publishAnnouncement('a1'),
+        ).thenThrow(const ForbiddenException('Non', 'forbidden-other'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
+      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
     );
 
     // RÉGRESSION (mirroir du cas pro-limit-reached de la création, cf. l.162-167) :

@@ -42,6 +42,7 @@ import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.d
 import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
 import 'package:dony/features/recipients/data/phone_validation.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1699,6 +1700,18 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               onChanged: (v) => _disclaimerNotifier.value = v,
             ).animate().fadeIn(delay: 200.ms),
             const SizedBox(height: DonySpacing.md),
+            // Voyageur particulier : le droit de la consommation ne s'applique
+            // pas à leur accord. Information seule, rien ne bloque. Absent pour
+            // un professionnel et pour un statut inconnu (ancien back).
+            if (widget.announcement.traveler?.travelerStatus ==
+                TravelerStatus.individual) ...[
+              DonyStatusBanner(
+                type: DonyStatusBannerType.info,
+                title: context.l10n.bidCreateIndividualTravelerTitle,
+                message: context.l10n.bidCreateIndividualTravelerBody,
+              ),
+              const SizedBox(height: DonySpacing.md),
+            ],
             DonyStatusBanner(
               type: DonyStatusBannerType.info,
               iconAsset: 'package',

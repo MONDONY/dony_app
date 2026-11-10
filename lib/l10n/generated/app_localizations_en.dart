@@ -23431,4 +23431,123 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get moneyKeywordWarningBody =>
       'Cash, cheques and bank cards cannot be handed to a traveler (Terms of use, article 4). If your parcel contains none, ignore this message.';
+
+  @override
+  String get travelerStatusChipIndividual => 'Individual';
+
+  @override
+  String get travelerStatusChipProfessional => 'Professional';
+
+  @override
+  String travelerStatusChipProfessionalWithNumber(String number) {
+    return 'Professional · $number';
+  }
+
+  @override
+  String get profilePublicStatusLabel => 'Status';
+
+  @override
+  String get profilePublicBusinessNameLabel => 'Company name';
+
+  @override
+  String get profilePublicBusinessNumberLabel => 'Registration';
+
+  @override
+  String get profilePublicBusinessCountryLabel => 'Country';
+
+  @override
+  String get profilePublicBusinessDisclaimer =>
+      'Information declared by the traveler, not verified by Yadony.';
+
+  @override
+  String get travelerStatusSheetTitle => 'How do you travel?';
+
+  @override
+  String get travelerStatusSheetSubtitle =>
+      'Senders see your answer on your trips. You can change it at any time in your profile.';
+
+  @override
+  String get travelerStatusSheetSubtitleRequired =>
+      'To publish a trip, tell us how you travel. Senders see your answer on your trips.';
+
+  @override
+  String get travelerStatusOptionIndividual => 'Individual';
+
+  @override
+  String get travelerStatusOptionIndividualBody =>
+      'I travel for personal reasons, it is not my job.';
+
+  @override
+  String get travelerStatusOptionProfessional => 'Professional';
+
+  @override
+  String get travelerStatusOptionProfessionalBody =>
+      'I carry parcels as part of a registered business.';
+
+  @override
+  String get travelerStatusIndividualTitle => 'Individual traveler';
+
+  @override
+  String get travelerStatusIndividualSubtitle =>
+      'As an individual, you do not need to provide a business number.';
+
+  @override
+  String get travelerStatusIndividualConfirm =>
+      'I confirm that I travel for personal reasons and that it is not my job.';
+
+  @override
+  String get travelerStatusIndividualHint =>
+      'If you carry parcels regularly to earn an income, choose \"Professional\". Your earnings still have to be declared to your country\'s tax authority.';
+
+  @override
+  String get travelerStatusProfessionalTitle => 'Professional traveler';
+
+  @override
+  String get travelerStatusProfessionalSubtitle =>
+      'Senders will be able to see this information.';
+
+  @override
+  String get travelerStatusBusinessNameLabel => 'Company name';
+
+  @override
+  String get travelerStatusRegistrationLabel => 'Business number';
+
+  @override
+  String get travelerStatusRegistrationHint =>
+      'SIRET, NINEA, RCCM or equivalent.';
+
+  @override
+  String get travelerStatusCountryLabel => 'Country of registration';
+
+  @override
+  String get errorTravelerStatusRequiredTitle => 'Status required';
+
+  @override
+  String get errorTravelerStatusRequiredMessage =>
+      'Tell us whether you travel as an individual or a professional to publish a trip.';
+
+  @override
+  String get errorTravelerStatusInvalidTitle => 'Declaration to fix';
+
+  @override
+  String get errorTravelerStatusInvalidMessage =>
+      'Check the company name, business number and country, then try again.';
+
+  @override
+  String get profileFieldTravelerStatusAllCaps => 'TRAVELER STATUS';
+
+  @override
+  String get profileTravelerStatusNotSet => 'Not set';
+
+  @override
+  String get bidCreateIndividualTravelerTitle =>
+      'This traveler is an individual.';
+
+  @override
+  String get bidCreateIndividualTravelerBody =>
+      'Consumer law does not apply to your agreement with them.';
+
+  @override
+  String get travelerStatusRegistrationInvalid =>
+      'At least 4 characters: letters, digits, space, dot, slash or hyphen.';
 }

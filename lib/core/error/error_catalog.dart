@@ -929,6 +929,18 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.badge_outlined,
     ),
+    'traveler-status-required': _Entry(
+      title: (l) => l.errorTravelerStatusRequiredTitle,
+      message: (l) => l.errorTravelerStatusRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.badge_outlined,
+    ),
+    'traveler-status-invalid': _Entry(
+      title: (l) => l.errorTravelerStatusInvalidTitle,
+      message: (l) => l.errorTravelerStatusInvalidMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.badge_outlined,
+    ),
     'departure-date-passed': _Entry(
       title: (l) => l.errorDepartureDatePassedTitle,
       message: (l) => l.errorDepartureDatePassedMessage,

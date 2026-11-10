@@ -1,3 +1,5 @@
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
+
 class ProfilePublicModel {
   const ProfilePublicModel({
     required this.userId,
@@ -20,6 +22,10 @@ class ProfilePublicModel {
     this.residenceCountry,
     this.measuredResponseMinutes,
     this.lastSeenDaysAgo,
+    this.travelerStatus,
+    this.businessName,
+    this.businessRegistrationNumber,
+    this.businessCountry,
   });
 
   final String userId;
@@ -55,6 +61,15 @@ class ProfilePublicModel {
   /// l'utilisateur la masque ou si elle est inconnue.
   final int? lastSeenDaysAgo;
 
+  /// Statut légal déclaré (lot 2) ; `null` : non déclaré ou back antérieur.
+  final TravelerStatus? travelerStatus;
+
+  /// Raison sociale, numéro et pays d'immatriculation d'un professionnel,
+  /// déclarés par lui et non vérifiés par Yadony. `null` pour un particulier.
+  final String? businessName;
+  final String? businessRegistrationNumber;
+  final String? businessCountry;
+
   factory ProfilePublicModel.fromJson(Map<String, dynamic> json) {
     return ProfilePublicModel(
       userId: json['userId'] as String? ?? '',
@@ -86,6 +101,10 @@ class ProfilePublicModel {
       measuredResponseMinutes: (json['measuredResponseMinutes'] as num?)
           ?.toInt(),
       lastSeenDaysAgo: (json['lastSeenDaysAgo'] as num?)?.toInt(),
+      travelerStatus: TravelerStatus.parse(json['travelerStatus'] as String?),
+      businessName: json['businessName'] as String?,
+      businessRegistrationNumber: json['businessRegistrationNumber'] as String?,
+      businessCountry: json['businessCountry'] as String?,
     );
   }
 }

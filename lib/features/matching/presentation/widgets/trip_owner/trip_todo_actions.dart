@@ -8,6 +8,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_parcels_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_sheets.dart';
+import 'package:dony/features/traveler_status/presentation/traveler_status_prompt.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -30,17 +31,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// - [TripTodoKind.instructions] : l'édition des instructions de retrait
 ///   (`ArrivalInstructionsBottomSheet`, `isEditing: true`), celle de la tuile
 ///   « Arrivée » ;
-/// - [TripTodoKind.publish] : `AnnouncementPublishRequested` (KYC, date
-///   passée, limite PRO et écran de succès restent gérés par l'écouteur de
-///   l'écran) ;
+/// - [TripTodoKind.publish] : rappel du statut légal du voyageur s'il manque
+///   (feuille fermable), puis `AnnouncementPublishRequested` (KYC, date
+///   passée, limite PRO, statut exigé par Yadony et écran de succès restent
+///   gérés par l'écouteur de l'écran) ;
 /// - les actions par colis ([TripTodoKind.perParcel]) : le sheet qui liste
 ///   les colis concernés ([openTripTodoParcelsSheet]).
 ///
 /// Un seul geste à la fois par écran : tant que le sheet ou la feuille
 /// ouvert ici n'est pas refermé, un second appui (double tap sur le pied, la
 /// carte ou une ligne) ne fait rien. Le corps et le pied partagent ce verrou,
-/// porté par la route de l'écran ([ModalRoute]). « Publier » ne l'attend pas :
-/// `AnnouncementBloc` ignore déjà une publication pendant la précédente.
+/// porté par la route de l'écran ([ModalRoute]). Sans feuille de rappel du
+/// statut, « Publier » part tout de suite : `AnnouncementBloc` ignore déjà une
+/// publication pendant la précédente.
 ///
 /// Mesure : `bid_detail_tile_opened` (`tile` = nom du type, `role:
 /// trip_owner`, `source` = [source]) à l'ouverture de chaque sheet. Les
@@ -130,9 +133,13 @@ Future<void> _open(
         isEditing: true,
       );
     case TripTodoKind.publish:
-      context.read<AnnouncementBloc>().add(
-        AnnouncementPublishRequested(trip.id),
-      );
+      // Rappel du statut légal (particulier / professionnel) : la feuille se
+      // ferme d'un « Plus tard », la publication part dans tous les cas.
+      final bloc = context.read<AnnouncementBloc>();
+      await remindTravelerStatusBeforePublish(context);
+      // L'écran a pu être quitté, ou son bloc fermé, pendant la feuille.
+      if (!context.mounted || bloc.isClosed) return;
+      bloc.add(AnnouncementPublishRequested(trip.id));
     case TripTodoKind.presence ||
         TripTodoKind.scan ||
         TripTodoKind.amendment ||

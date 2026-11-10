@@ -1,11 +1,13 @@
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/widgets/gp_pro_badge.dart';
+import 'package:dony/core/design/widgets/traveler_status_chip.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -35,6 +37,8 @@ AnnouncementModel _makeAnn({
   String capacityUnit = 'CUSTOM',
   double availableKg = 8,
   double totalKg = 8,
+  TravelerStatus? travelerStatus,
+  String? businessRegistrationNumber,
 }) => AnnouncementModel(
   id: 'a1',
   travelerId: 't1',
@@ -66,6 +70,8 @@ AnnouncementModel _makeAnn({
     gpPro: gpPro,
     isProAccount: isProAccount,
     kycVerified: kycVerified,
+    travelerStatus: travelerStatus,
+    businessRegistrationNumber: businessRegistrationNumber,
   ),
 );
 
@@ -406,6 +412,127 @@ void main() {
       expect(find.byType(GpProBadge), findsOneWidget);
       expect(find.text('GP Pro'), findsOneWidget);
       expect(find.text('Identité'), findsNothing);
+    });
+
+    group('pastille du statut légal du voyageur (lot 2)', () {
+      for (final compact in [false, true]) {
+        final mode = compact ? 'compacte' : 'pleine';
+
+        testWidgets('carte $mode : particulier', (tester) async {
+          await tester.pumpWidget(
+            _wrap(
+              TravelerCard(
+                announcement: _makeAnn(
+                  travelerStatus: TravelerStatus.individual,
+                ),
+                index: 0,
+                isOwnAnnouncement: false,
+                compact: compact,
+                onTap: () {},
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(find.byType(TravelerStatusChip), findsOneWidget);
+          expect(find.text('Particulier'), findsOneWidget);
+        });
+
+        testWidgets('carte $mode : professionnel avec son numéro', (
+          tester,
+        ) async {
+          await tester.pumpWidget(
+            _wrap(
+              TravelerCard(
+                announcement: _makeAnn(
+                  travelerStatus: TravelerStatus.professional,
+                  businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+                ),
+                index: 0,
+                isOwnAnnouncement: false,
+                compact: compact,
+                onTap: () {},
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(
+            find.text('Professionnel · CI-ABJ-2021-B-12345'),
+            findsOneWidget,
+          );
+        });
+
+        testWidgets('carte $mode : statut inconnu (ancien back), rien', (
+          tester,
+        ) async {
+          await tester.pumpWidget(
+            _wrap(
+              TravelerCard(
+                announcement: _makeAnn(),
+                index: 0,
+                isOwnAnnouncement: false,
+                compact: compact,
+                onTap: () {},
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(find.byType(TravelerStatusChip), findsNothing);
+          expect(find.text('Particulier'), findsNothing);
+        });
+      }
+
+      for (final compact in [false, true]) {
+        testWidgets(
+          'carte ${compact ? 'compacte' : 'pleine'} : « Professionnel » vient '
+          'avant « GP Pro » (maquette écran 4)',
+          (tester) async {
+            await tester.pumpWidget(
+              _wrap(
+                TravelerCard(
+                  announcement: _makeAnn(
+                    gpPro: true,
+                    travelerStatus: TravelerStatus.professional,
+                  ),
+                  index: 0,
+                  isOwnAnnouncement: false,
+                  compact: compact,
+                  onTap: () {},
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            final status = tester.getTopLeft(find.byType(TravelerStatusChip));
+            final gp = tester.getTopLeft(find.byType(GpProBadge));
+            // Même ligne : la pastille de statut est à gauche du badge.
+            expect(status.dy, gp.dy);
+            expect(status.dx, lessThan(gp.dx));
+          },
+        );
+      }
+
+      testWidgets('à 360 dp, pro + GP Pro + numéro long : aucune exception', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _wrapAt(
+            360,
+            TravelerCard(
+              announcement: _makeAnn(
+                gpPro: true,
+                travelerStatus: TravelerStatus.professional,
+                businessRegistrationNumber: 'CI-ABJ-2021-B-1234567890',
+              ),
+              index: 0,
+              isOwnAnnouncement: false,
+              onTap: () {},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(find.byType(TravelerStatusChip), findsOneWidget);
+        expect(find.byType(GpProBadge), findsOneWidget);
+      });
     });
 
     testWidgets('pas de badge GP Pro quand gpPro est faux', (tester) async {

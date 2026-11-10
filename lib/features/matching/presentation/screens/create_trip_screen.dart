@@ -59,6 +59,8 @@ import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/traveler_status/presentation/traveler_status_prompt.dart';
+import 'package:dony/features/traveler_status/presentation/traveler_status_sheet.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
@@ -1811,6 +1813,29 @@ class _TripFormContentState extends State<_TripFormContent> {
       TripLegCurrency.of(leg, _currency),
   ];
 
+  /// Le rappel « Comment voyagez-vous ? » a déjà été montré (ou le statut
+  /// vient d'être déclaré) pour cette publication : on ne le remontre pas.
+  bool _travelerStatusReminded = false;
+
+  /// Rappel du statut légal avant la publication d'un nouveau trajet. Jamais
+  /// pour un brouillon, une modification ou un trajet dédié à une demande.
+  /// Fermée d'un « Plus tard », la feuille laisse la publication continuer.
+  Future<void> _remindTravelerStatusThenSubmit() async {
+    await TravelerStatusSheet.show(context);
+    if (!mounted) return;
+    _travelerStatusReminded = true;
+    _submit();
+  }
+
+  /// 403 `traveler-status-required` : Yadony exige la déclaration. La feuille
+  /// obligatoire s'ouvre, puis la publication reprend.
+  Future<void> _onTravelerStatusRequired() async {
+    final declared = await TravelerStatusSheet.show(context, required: true);
+    if (declared != true || !mounted) return;
+    _travelerStatusReminded = true;
+    _submit();
+  }
+
   void _submit({bool saveAsDraft = false}) {
     // Gate KYC — inchangé pour le reste du flux, nouveau uniquement ici :
     // publier/modifier un trajet nécessite une identité vérifiée. Si ce n'est
@@ -1818,6 +1843,14 @@ class _TripFormContentState extends State<_TripFormContent> {
     final user = context.read<AuthBloc>().state.currentUser;
     if (!saveAsDraft && user != null && !user.isKycVerified) {
       unawaited(KycOnboardingBottomSheet.show(context));
+      return;
+    }
+    if (!saveAsDraft &&
+        !_isEdit &&
+        !_isLocked &&
+        !_travelerStatusReminded &&
+        travelerStatusMissing(context)) {
+      unawaited(_remindTravelerStatusThenSubmit());
       return;
     }
 
@@ -2369,7 +2402,11 @@ class _TripFormContentState extends State<_TripFormContent> {
             final block = PaymentCapabilityBlock.fromErrorCode(
               state.error.code,
             );
-            if (block == PaymentCapabilityBlock.cardCapabilityRequired) {
+            if (state.error.code == 'traveler-status-required') {
+              // Trajet dédié refusé faute de statut déclaré : feuille
+              // obligatoire, puis le même envoi reprend.
+              unawaited(_onTravelerStatusRequired());
+            } else if (block == PaymentCapabilityBlock.cardCapabilityRequired) {
               unawaited(showCardCapabilityRequiredSheet(context));
             } else {
               // Not a payment-method block: fall back to the generic error UX.
@@ -2560,6 +2597,8 @@ class _TripFormContentState extends State<_TripFormContent> {
                 unawaited(context.push('/profile/upgrade-to-pro'));
               }
             }
+          } else if (state is AnnouncementTravelerStatusRequired) {
+            unawaited(_onTravelerStatusRequired());
           } else if (state is AnnouncementTripUnsupported) {
             DonySnackbar.show(
               context,

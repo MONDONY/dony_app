@@ -137,6 +137,15 @@ class AnnouncementKycRequired extends AnnouncementState {
   AnnouncementKycRequired(this.error);
 }
 
+/// Yadony exige la déclaration du statut légal (particulier ou professionnel)
+/// pour publier : 403 `traveler-status-required`, seulement quand l'admin a
+/// activé l'interrupteur. L'écran rouvre la feuille de déclaration, sans
+/// « Plus tard », puis reprend la publication.
+class AnnouncementTravelerStatusRequired extends AnnouncementState {
+  final AppException error;
+  AnnouncementTravelerStatusRequired(this.error);
+}
+
 /// La date de départ du trajet est passée : publication refusée tant que
 /// l'utilisateur n'a pas corrigé la date.
 class AnnouncementDepartureDatePassed extends AnnouncementState {
