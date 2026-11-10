@@ -23700,4 +23700,18 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorTravelerStatusInvalidMessage =>
       'Vérifiez la raison sociale, le numéro d\'entreprise et le pays, puis réessayez.';
+
+  @override
+  String get profileFieldTravelerStatusAllCaps => 'STATUT DE VOYAGEUR';
+
+  @override
+  String get profileTravelerStatusNotSet => 'Non renseigné';
+
+  @override
+  String get bidCreateIndividualTravelerTitle =>
+      'Ce voyageur est un particulier.';
+
+  @override
+  String get bidCreateIndividualTravelerBody =>
+      'Le droit de la consommation ne s\'applique pas à votre accord avec lui.';
 }

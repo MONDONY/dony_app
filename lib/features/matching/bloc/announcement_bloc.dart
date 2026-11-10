@@ -128,11 +128,18 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       } else if (error is ForbiddenException &&
           error.code == 'pro-limit-reached') {
         emit(AnnouncementProLimitReached(error));
+      } else if (_isTravelerStatusRequired(error)) {
+        emit(AnnouncementTravelerStatusRequired(error));
       } else {
         emit(AnnouncementError(error));
       }
     }
   }
+
+  /// 403 `traveler-status-required` : l'interrupteur « statut obligatoire »
+  /// est actif et le voyageur n'a pas encore déclaré son statut.
+  static bool _isTravelerStatusRequired(AppException error) =>
+      error is ForbiddenException && error.code == 'traveler-status-required';
 
   /// Création, publication ou modification d'un trajet refusée : le tunnel
   /// « bloqué par la limite de brouillons, le KYC ou l'offre PRO » était
@@ -182,6 +189,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         emit(AnnouncementProLimitReached(error));
       } else if (error.code == 'departure-date-passed') {
         emit(AnnouncementDepartureDatePassed(error));
+      } else if (_isTravelerStatusRequired(error)) {
+        emit(AnnouncementTravelerStatusRequired(error));
       } else {
         emit(AnnouncementError(error));
       }
@@ -491,6 +500,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       } else if (error is ForbiddenException &&
           error.code == 'pro-limit-reached') {
         emit(AnnouncementProLimitReached(error));
+      } else if (_isTravelerStatusRequired(error)) {
+        emit(AnnouncementTravelerStatusRequired(error));
       } else {
         emit(AnnouncementError(error));
       }

@@ -23532,4 +23532,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorTravelerStatusInvalidMessage =>
       'Check the company name, business number and country, then try again.';
+
+  @override
+  String get profileFieldTravelerStatusAllCaps => 'TRAVELER STATUS';
+
+  @override
+  String get profileTravelerStatusNotSet => 'Not set';
+
+  @override
+  String get bidCreateIndividualTravelerTitle =>
+      'This traveler is an individual.';
+
+  @override
+  String get bidCreateIndividualTravelerBody =>
+      'Consumer law does not apply to your agreement with them.';
 }

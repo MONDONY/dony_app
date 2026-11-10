@@ -37889,6 +37889,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vérifiez la raison sociale, le numéro d\'entreprise et le pays, puis réessayez.'**
   String get errorTravelerStatusInvalidMessage;
+
+  /// Libellé en capitales de la ligne du statut légal du voyageur dans « Modifier le profil » (edit_profile_screen.dart, _TravelerStatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'STATUT DE VOYAGEUR'**
+  String get profileFieldTravelerStatusAllCaps;
+
+  /// Valeur de la ligne « Statut de voyageur » tant que le voyageur n'a pas répondu à « Comment voyagez-vous ? » (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non renseigné'**
+  String get profileTravelerStatusNotSet;
+
+  /// Titre de l'encart d'information avant le paiement quand le voyageur de l'annonce voyage à titre personnel (create_bid_bottom_sheet.dart). Texte à faire valider par un avocat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur est un particulier.'**
+  String get bidCreateIndividualTravelerTitle;
+
+  /// Corps de l'encart d'information avant le paiement chez un voyageur particulier : il ne bloque rien (create_bid_bottom_sheet.dart). Texte à faire valider par un avocat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le droit de la consommation ne s\'applique pas à votre accord avec lui.'**
+  String get bidCreateIndividualTravelerBody;
 }
 
 class _AppLocalizationsDelegate

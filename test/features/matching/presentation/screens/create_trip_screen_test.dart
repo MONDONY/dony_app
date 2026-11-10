@@ -63,6 +63,10 @@ import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
+import 'package:dony/features/traveler_status/data/traveler_status_declaration.dart';
+import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
@@ -147,6 +151,9 @@ class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
 // ── Mock Services / Repos ─────────────────────────────────────────────────────
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
+class _MockTravelerStatusRepository extends Mock
+    implements TravelerStatusRepository {}
 
 class _MockPriceGridRepository extends Mock implements PriceGridRepository {}
 
@@ -1419,6 +1426,287 @@ void main() {
       );
 
       await tester.pump(const Duration(seconds: 5));
+    });
+  });
+
+  // ── Group: statut légal du voyageur (lot 2) ───────────────────────────────────
+  // Création d'un NOUVEAU trajet : modèle appliqué, date posée, étape 2, puis
+  // « Publier ». Rappel avant l'envoi, jamais pour un brouillon ; 403 du back
+  // quand Yadony exige la déclaration.
+
+  group('CreateTripScreen — statut légal du voyageur (lot 2)', () {
+    const template = TripTemplate(
+      id: 'tmpl-status',
+      label: 'Abidjan → Paris',
+      departureCity: 'Abidjan',
+      arrivalCity: 'Paris',
+      transportMode: 'CAR',
+      capacityUnit: 'KG_FREE',
+      availableKg: 30,
+      pricePerKg: 1500,
+      acceptedCategories: ['Vêtements & tissus'],
+      currency: 'XOF',
+      acceptedPaymentMethods: ['CASH'],
+      negotiable: true,
+      pickupAddress: AddressData(label: 'Cocody', lat: 5.35, lng: -3.99),
+      deliveryAddress: AddressData(
+        label: 'Gare de Lyon',
+        lat: 48.84,
+        lng: 2.37,
+      ),
+      departureTime: '22:00',
+      arrivalTime: '06:30',
+      handoverLeadDays: 2,
+      departureCountryCode: 'CI',
+      arrivalCountryCode: 'FR',
+    );
+
+    late _MockAnnouncementBloc announcementBloc;
+    late _MockTravelerStatusRepository statusRepo;
+    late StreamController<AnnouncementState> states;
+
+    setUpAll(() {
+      registerFallbackValue(TravelerStatus.individual);
+    });
+
+    setUp(() {
+      states = StreamController<AnnouncementState>.broadcast();
+      announcementBloc = _MockAnnouncementBloc();
+      when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+      when(() => announcementBloc.stream).thenAnswer((_) => states.stream);
+      if (getIt.isRegistered<AnnouncementBloc>()) {
+        getIt.unregister<AnnouncementBloc>();
+      }
+      getIt.registerFactory<AnnouncementBloc>(() => announcementBloc);
+
+      if (getIt.isRegistered<TripTemplateBloc>()) {
+        getIt.unregister<TripTemplateBloc>();
+      }
+      getIt.registerFactory<TripTemplateBloc>(() {
+        final b = _MockTripTemplateBloc();
+        when(() => b.state).thenReturn(
+          const TripTemplateState(
+            status: TripTemplateStatus.success,
+            templates: [template],
+          ),
+        );
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
+        return b;
+      });
+
+      statusRepo = _MockTravelerStatusRepository();
+      when(
+        () => statusRepo.declare(
+          status: any(named: 'status'),
+          personalUseConfirmed: any(named: 'personalUseConfirmed'),
+          businessName: any(named: 'businessName'),
+          registrationNumber: any(named: 'registrationNumber'),
+          country: any(named: 'country'),
+        ),
+      ).thenAnswer(
+        (_) async => TravelerStatusDeclaration(
+          status: TravelerStatus.individual,
+          declaredAt: DateTime.utc(2026, 11),
+        ),
+      );
+      if (getIt.isRegistered<TravelerStatusCubit>()) {
+        getIt.unregister<TravelerStatusCubit>();
+      }
+      getIt.registerFactory<TravelerStatusCubit>(
+        () => TravelerStatusCubit(statusRepo, getIt<AnalyticsService>()),
+      );
+    });
+
+    tearDown(() async {
+      await states.close();
+      if (getIt.isRegistered<AnnouncementBloc>()) {
+        getIt.unregister<AnnouncementBloc>();
+      }
+      getIt.registerFactory<AnnouncementBloc>(() {
+        final b = _MockAnnouncementBloc();
+        when(() => b.state).thenReturn(AnnouncementInitial());
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
+        return b;
+      });
+      if (getIt.isRegistered<TripTemplateBloc>()) {
+        getIt.unregister<TripTemplateBloc>();
+      }
+      getIt.registerFactory<TripTemplateBloc>(() {
+        final b = _MockTripTemplateBloc();
+        when(() => b.state).thenReturn(const TripTemplateState());
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
+        return b;
+      });
+      if (getIt.isRegistered<TravelerStatusCubit>()) {
+        getIt.unregister<TravelerStatusCubit>();
+      }
+    });
+
+    /// Formulaire de création rempli par le modèle, date posée : prêt à
+    /// publier à l'étape 2.
+    Future<void> reachPublishStep(
+      WidgetTester tester, {
+      TravelerStatus? status,
+    }) async {
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          const CreateTripScreen(),
+          authState: AuthAuthenticated(
+            UserModel(
+              id: 'user-test-1',
+              roles: const ['TRAVELER'],
+              kycStatus: 'VERIFIED',
+              status: 'ACTIVE',
+              travelerStatus: status,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.textContaining('Abidjan → Paris'));
+      await tester.pump(const Duration(milliseconds: 600));
+      // La confirmation « modèle appliqué » recouvre les boutons du bas.
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
+      tester
+          .widget<TrajetStep>(find.byType(TrajetStep))
+          .departureDateNotifier
+          .value = DateTime.now().add(
+        const Duration(days: 30),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      for (var i = 0; i < 2; i++) {
+        await tester.ensureVisible(find.text('Continuer'));
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+      }
+      await tester.pump(const Duration(seconds: 5));
+    }
+
+    /// « Aperçu » puis, dans la feuille d'aperçu, le bouton demandé.
+    Future<void> tapInPreview(WidgetTester tester, String label) async {
+      final preview = find.byKey(const Key('create-announcement-preview'));
+      await tester.ensureVisible(preview);
+      await tester.tap(preview);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, label));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> tapPublish(WidgetTester tester) =>
+        tapInPreview(tester, "Publier l'annonce");
+
+    int createdCount() => verify(
+      () => announcementBloc.add(any(that: isA<AnnouncementCreateRequested>())),
+    ).callCount;
+
+    Future<void> declareIndividual(WidgetTester tester) async {
+      await tester.tap(find.text('Particulier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.text(
+          'Je confirme voyager à titre personnel et que ce n\'est pas mon métier.',
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('statut absent : « Publier » ouvre le rappel, rien n\'est '
+        'envoyé tant qu\'il est ouvert', (tester) async {
+      await reachPublishStep(tester);
+      await tapPublish(tester);
+
+      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Plus tard'), findsOneWidget);
+      verifyNever(
+        () =>
+            announcementBloc.add(any(that: isA<AnnouncementCreateRequested>())),
+      );
+    });
+
+    testWidgets('« Plus tard » : le trajet est quand même publié, une seule '
+        'fois', (tester) async {
+      await reachPublishStep(tester);
+      await tapPublish(tester);
+      await tester.tap(find.widgetWithText(DonyButton, 'Plus tard'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Comment voyagez-vous ?'), findsNothing);
+      expect(createdCount(), 1);
+    });
+
+    testWidgets('statut déclaré dans la feuille : le trajet part ensuite', (
+      tester,
+    ) async {
+      await reachPublishStep(tester);
+      await tapPublish(tester);
+      await declareIndividual(tester);
+
+      verify(
+        () => statusRepo.declare(
+          status: TravelerStatus.individual,
+          personalUseConfirmed: true,
+        ),
+      ).called(1);
+      expect(createdCount(), 1);
+    });
+
+    testWidgets('statut déjà déclaré : aucun rappel', (tester) async {
+      await reachPublishStep(tester, status: TravelerStatus.professional);
+      await tapPublish(tester);
+
+      expect(find.text('Comment voyagez-vous ?'), findsNothing);
+      expect(createdCount(), 1);
+    });
+
+    testWidgets('brouillon : jamais de rappel', (tester) async {
+      await reachPublishStep(tester);
+      await tapInPreview(tester, 'Enregistrer comme brouillon');
+
+      expect(find.text('Comment voyagez-vous ?'), findsNothing);
+      verify(
+        () => announcementBloc.add(
+          any(
+            that: predicate<AnnouncementEvent>(
+              (e) => e is AnnouncementCreateRequested && e.saveAsDraft,
+              'brouillon',
+            ),
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('403 traveler-status-required : la feuille se rouvre sans '
+        '« Plus tard », la publication reprend après la déclaration', (
+      tester,
+    ) async {
+      await reachPublishStep(tester, status: TravelerStatus.individual);
+      await tapPublish(tester);
+      expect(createdCount(), 1);
+
+      states.add(
+        AnnouncementTravelerStatusRequired(
+          const ForbiddenException('x', 'traveler-status-required'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Plus tard'), findsNothing);
+
+      await declareIndividual(tester);
+
+      // Le premier envoi a déjà été vérifié (createdCount) : celui-ci est le
+      // second, parti après la déclaration.
+      expect(createdCount(), 1);
     });
   });
 
@@ -3953,6 +4241,66 @@ void main() {
           findsOneWidget,
         );
         expect(find.byType(SnackBar), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'traveler-status-required (403) → feuille obligatoire sans « Plus tard », '
+      'pas de snackbar générique, le même envoi repart après la déclaration',
+      (tester) async {
+        final statusRepo = _MockTravelerStatusRepository();
+        when(
+          () => statusRepo.declare(
+            status: any(named: 'status'),
+            personalUseConfirmed: any(named: 'personalUseConfirmed'),
+            businessName: any(named: 'businessName'),
+            registrationNumber: any(named: 'registrationNumber'),
+            country: any(named: 'country'),
+          ),
+        ).thenAnswer(
+          (_) async => TravelerStatusDeclaration(
+            status: TravelerStatus.individual,
+            declaredAt: DateTime.utc(2026, 11),
+          ),
+        );
+        registerFallbackValue(TravelerStatus.individual);
+        getIt.registerFactory<TravelerStatusCubit>(
+          () => TravelerStatusCubit(statusRepo, getIt<AnalyticsService>()),
+        );
+        addTearDown(() {
+          if (getIt.isRegistered<TravelerStatusCubit>()) {
+            getIt.unregister<TravelerStatusCubit>();
+          }
+        });
+
+        await navigateLockedToStep2AndSubmit(tester);
+        verify(() => negotiationBloc.add(any())).called(1);
+
+        negoStreamCtrl.add(
+          const NegotiationError(
+            ForbiddenException('Statut requis', 'traveler-status-required'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+        expect(find.widgetWithText(DonyButton, 'Plus tard'), findsNothing);
+        expect(find.byType(SnackBar), findsNothing);
+
+        await tester.tap(find.text('Particulier'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.text(
+            "Je confirme voyager à titre personnel et que ce n'est pas mon métier.",
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+        await tester.pumpAndSettle();
+
+        verify(() => negotiationBloc.add(any())).called(1);
       },
     );
 

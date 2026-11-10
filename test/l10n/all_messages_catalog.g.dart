@@ -8219,6 +8219,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorTravelerStatusInvalidTitle': (l) => l.errorTravelerStatusInvalidTitle,
   'errorTravelerStatusInvalidMessage': (l) =>
       l.errorTravelerStatusInvalidMessage,
+  'profileFieldTravelerStatusAllCaps': (l) =>
+      l.profileFieldTravelerStatusAllCaps,
+  'profileTravelerStatusNotSet': (l) => l.profileTravelerStatusNotSet,
+  'bidCreateIndividualTravelerTitle': (l) => l.bidCreateIndividualTravelerTitle,
+  'bidCreateIndividualTravelerBody': (l) => l.bidCreateIndividualTravelerBody,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

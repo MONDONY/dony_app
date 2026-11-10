@@ -202,6 +202,30 @@ void main() {
     );
 
     blocTest<AnnouncementBloc, AnnouncementState>(
+      '403 traveler-status-required : AnnouncementTravelerStatusRequired',
+      build: () {
+        when(() => repo.createTrip(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/announcements/trips'),
+            error: const ForbiddenException('x', 'traveler-status-required'),
+          ),
+        );
+        return build();
+      },
+      act: (b) => b.add(
+        AnnouncementTripCreateRequested(first: firstLeg(), legs: [doualaLeg()]),
+      ),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementTravelerStatusRequired>().having(
+          (s) => s.error.code,
+          'code',
+          'traveler-status-required',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
       'réponse vide : non pris en charge',
       build: () {
         when(() => repo.createTrip(any())).thenAnswer((_) async => []);

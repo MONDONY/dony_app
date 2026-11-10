@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -13,6 +15,8 @@ import 'package:dony/features/profile/presentation/widgets/profile_photo_viewer.
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart'
     show profileCompletionTierColor;
 import 'package:dony/features/profile/presentation/widgets/spoken_languages_sheet.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
+import 'package:dony/features/traveler_status/presentation/traveler_status_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -524,6 +528,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       const SizedBox(height: DonySpacing.xxl),
 
+                      // ── Statut de voyageur (voyageurs uniquement) ────────────
+                      // Particulier ou professionnel : se déclare ou se
+                      // modifie ici à tout moment, dans la même feuille que
+                      // le rappel à la publication d'un trajet.
+                      if (isTraveler) ...[
+                        _TravelerStatusRow(user: user),
+                        const SizedBox(height: DonySpacing.xxl),
+                      ],
+
                       // ── Section Préférences (voyageurs uniquement) ───────────
                       if (isTraveler) ...[
                         _SectionLabel(label: l.profileEditSectionPreferences),
@@ -877,6 +890,95 @@ class _ContactInfoRow extends StatelessWidget {
                   ),
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ligne « Statut de voyageur » : la déclaration actuelle (ou « Non
+/// renseigné ») et un chevron. Un tap ouvre la feuille « Comment
+/// voyagez-vous ? », qui recharge le profil une fois le statut déclaré. Pas de
+/// badge texte : le chevron suffit, la valeur dit déjà ce qui est enregistré.
+class _TravelerStatusRow extends StatelessWidget {
+  const _TravelerStatusRow({required this.user});
+
+  final UserModel user;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final status = user.travelerStatus;
+    final number = user.businessRegistrationNumber?.trim();
+    final value = switch (status) {
+      null => l.profileTravelerStatusNotSet,
+      TravelerStatus.individual => l.travelerStatusChipIndividual,
+      TravelerStatus.professional =>
+        number == null || number.isEmpty
+            ? l.travelerStatusChipProfessional
+            : l.travelerStatusChipProfessionalWithNumber(number),
+    };
+    final label = l.profileFieldTravelerStatusAllCaps;
+
+    return Semantics(
+      button: true,
+      container: true,
+      excludeSemantics: true,
+      // `label` et `value` sont déjà traduits : simplement juxtaposés.
+      label: '$label, $value',
+      child: InkWell(
+        key: const Key('profile-traveler-status-row'),
+        onTap: () => unawaited(TravelerStatusSheet.show(context)),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        child: Container(
+          padding: const EdgeInsets.all(DonySpacing.base),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            border: Border.all(color: cs.outline),
+          ),
+          child: Row(
+            children: [
+              DonyIcon('badge-check', size: 20, color: cs.onSurfaceVariant),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.xxs),
+                    Text(
+                      value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.bodyMedium?.copyWith(
+                        color: status == null
+                            ? cs.onSurfaceVariant
+                            : cs.onSurface,
+                        fontWeight: status == null
+                            ? FontWeight.w400
+                            : FontWeight.w600,
+                        fontStyle: status == null
+                            ? FontStyle.italic
+                            : FontStyle.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
             ],
           ),
         ),

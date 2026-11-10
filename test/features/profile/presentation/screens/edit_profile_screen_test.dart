@@ -5,12 +5,18 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_search_field.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/presentation/screens/edit_profile_screen.dart';
+import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
+import 'package:dony/features/traveler_status/data/traveler_status_declaration.dart';
+import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,6 +30,11 @@ import '../../../../helpers/l10n_test_helpers.dart';
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 class FakeAuthEvent extends Fake implements AuthEvent {}
+
+class _MockTravelerStatusRepository extends Mock
+    implements TravelerStatusRepository {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _MockImagePicker extends Mock implements ImagePicker {}
 
@@ -93,6 +104,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(FakeAuthEvent());
     registerFallbackValue(ImageSource.gallery);
+    registerFallbackValue(TravelerStatus.individual);
   });
 
   late MockAuthBloc mockAuthBloc;
@@ -919,6 +931,152 @@ void main() {
       await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
       await tester.pump();
       expect(saved().languages, ['Français']);
+    });
+  });
+
+  // ── Statut de voyageur (lot 2) ────────────────────────────────────────────
+
+  group('statut de voyageur', () {
+    late _MockTravelerStatusRepository statusRepo;
+
+    setUp(() {
+      statusRepo = _MockTravelerStatusRepository();
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      when(
+        () => statusRepo.declare(
+          status: any(named: 'status'),
+          personalUseConfirmed: any(named: 'personalUseConfirmed'),
+          businessName: any(named: 'businessName'),
+          registrationNumber: any(named: 'registrationNumber'),
+          country: any(named: 'country'),
+        ),
+      ).thenAnswer(
+        (_) async => TravelerStatusDeclaration(
+          status: TravelerStatus.individual,
+          declaredAt: DateTime.utc(2026, 11),
+        ),
+      );
+      getIt.registerFactory<TravelerStatusCubit>(
+        () => TravelerStatusCubit(statusRepo, analytics),
+      );
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<TravelerStatusCubit>()) {
+        getIt.unregister<TravelerStatusCubit>();
+      }
+    });
+
+    Future<void> pump(
+      WidgetTester tester,
+      UserModel user, {
+      Stream<AuthState> stream = const Stream.empty(),
+    }) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        stream,
+        initialState: AuthAuthenticated(user),
+      );
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('voyageur sans statut : « Non renseigné »', (tester) async {
+      await pump(tester, _travelerUser);
+
+      expect(find.text('STATUT DE VOYAGEUR'), findsOneWidget);
+      expect(find.text('Non renseigné'), findsOneWidget);
+    });
+
+    testWidgets('particulier : « Particulier »', (tester) async {
+      await pump(
+        tester,
+        _travelerUser.copyWith(travelerStatus: TravelerStatus.individual),
+      );
+      expect(find.text('Particulier'), findsOneWidget);
+      expect(find.text('Non renseigné'), findsNothing);
+    });
+
+    testWidgets('professionnel : statut et numéro', (tester) async {
+      await pump(
+        tester,
+        _travelerUser.copyWith(
+          travelerStatus: TravelerStatus.professional,
+          businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+        ),
+      );
+      expect(find.text('Professionnel · CI-ABJ-2021-B-12345'), findsOneWidget);
+    });
+
+    testWidgets('expéditeur seul : aucune ligne', (tester) async {
+      await pump(tester, _senderUser);
+      expect(find.text('STATUT DE VOYAGEUR'), findsNothing);
+    });
+
+    testWidgets('la ligne ouvre la feuille ; après la déclaration, le profil '
+        'est rechargé et la ligne suit', (tester) async {
+      final states = StreamController<AuthState>.broadcast();
+      addTearDown(states.close);
+      await pump(tester, _travelerUser, stream: states.stream);
+
+      await tester.ensureVisible(find.text('Non renseigné'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Non renseigné'));
+      await tester.pumpAndSettle();
+      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+
+      await tester.tap(find.text('Particulier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.text(
+          "Je confirme voyager à titre personnel et que ce n'est pas mon métier.",
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => mockAuthBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
+      ).called(1);
+
+      // Le rechargement du profil renvoie le statut déclaré.
+      states.add(
+        AuthProfileUpdated(
+          _travelerUser.copyWith(travelerStatus: TravelerStatus.individual),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Particulier'), findsOneWidget);
+      expect(find.text('Non renseigné'), findsNothing);
+    });
+
+    testWidgets('360 dp, anglais : sans exception', (tester) async {
+      useEnglish();
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(
+          _travelerUser.copyWith(
+            travelerStatus: TravelerStatus.professional,
+            businessRegistrationNumber: 'CI-ABJ-2021-B-1234567890-LONG',
+          ),
+        ),
+      );
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('TRAVELER STATUS'), findsOneWidget);
+      expect(find.textContaining('Professional · CI-ABJ'), findsOneWidget);
     });
   });
 }
