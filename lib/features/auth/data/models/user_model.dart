@@ -1,3 +1,4 @@
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:equatable/equatable.dart';
 
@@ -62,6 +63,16 @@ class UserModel extends Equatable {
   /// juge. Absent sur un ancien back ou en production : faux.
   final bool recetteMode;
 
+  /// Statut légal déclaré (lot 2) : `null` tant que le voyageur n'a pas
+  /// répondu, ou avec un back antérieur au statut.
+  final TravelerStatus? travelerStatus;
+
+  /// Raison sociale, numéro et pays d'immatriculation, pour un professionnel.
+  /// Le propriétaire voit son propre numéro.
+  final String? businessName;
+  final String? businessRegistrationNumber;
+  final String? businessCountry;
+
   const UserModel({
     required this.id,
     this.username,
@@ -90,6 +101,10 @@ class UserModel extends Equatable {
     this.preferredLanguage,
     this.messagingMutedUntil,
     this.recetteMode = false,
+    this.travelerStatus,
+    this.businessName,
+    this.businessRegistrationNumber,
+    this.businessCountry,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -131,6 +146,10 @@ class UserModel extends Equatable {
         ? null
         : DateTime.tryParse(json['messagingMutedUntil'] as String),
     recetteMode: json['recetteMode'] == true,
+    travelerStatus: TravelerStatus.parse(json['travelerStatus'] as String?),
+    businessName: json['businessName'] as String?,
+    businessRegistrationNumber: json['businessRegistrationNumber'] as String?,
+    businessCountry: json['businessCountry'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -161,6 +180,10 @@ class UserModel extends Equatable {
     'preferredLanguage': preferredLanguage,
     'messagingMutedUntil': messagingMutedUntil?.toIso8601String(),
     'recetteMode': recetteMode,
+    'travelerStatus': travelerStatus?.wire,
+    'businessName': businessName,
+    'businessRegistrationNumber': businessRegistrationNumber,
+    'businessCountry': businessCountry,
   };
 
   UserModel copyWith({
@@ -191,6 +214,10 @@ class UserModel extends Equatable {
     String? preferredLanguage,
     DateTime? messagingMutedUntil,
     bool? recetteMode,
+    TravelerStatus? travelerStatus,
+    String? businessName,
+    String? businessRegistrationNumber,
+    String? businessCountry,
   }) => UserModel(
     id: id ?? this.id,
     username: username ?? this.username,
@@ -219,6 +246,11 @@ class UserModel extends Equatable {
     preferredLanguage: preferredLanguage ?? this.preferredLanguage,
     messagingMutedUntil: messagingMutedUntil ?? this.messagingMutedUntil,
     recetteMode: recetteMode ?? this.recetteMode,
+    travelerStatus: travelerStatus ?? this.travelerStatus,
+    businessName: businessName ?? this.businessName,
+    businessRegistrationNumber:
+        businessRegistrationNumber ?? this.businessRegistrationNumber,
+    businessCountry: businessCountry ?? this.businessCountry,
   );
 
   /// Nom affiché : prénom et nom si renseignés, sinon le [username] du compte.
@@ -314,5 +346,9 @@ class UserModel extends Equatable {
     preferredLanguage,
     messagingMutedUntil,
     recetteMode,
+    travelerStatus,
+    businessName,
+    businessRegistrationNumber,
+    businessCountry,
   ];
 }

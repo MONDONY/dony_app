@@ -141,6 +141,7 @@ class TravelerCard extends StatelessWidget {
     final totalTrips = traveler?.totalTrips;
     final isGpPro = traveler?.gpPro ?? false;
     final isProAccount = traveler?.isProAccount ?? false;
+    final travelerStatus = traveler?.travelerStatus;
     final dateStr = DateFormat.MMMEd(
       l.localeName,
     ).format(announcement.departureDate);
@@ -439,6 +440,7 @@ class TravelerCard extends StatelessWidget {
                       distanceBadge != null ||
                       isGpPro ||
                       isProAccount ||
+                      travelerStatus != null ||
                       announcement.isUrgent ||
                       categories.isNotEmpty)) ...[
                 const SizedBox(height: DonySpacing.sm),
@@ -463,6 +465,12 @@ class TravelerCard extends StatelessWidget {
                         interactive: false,
                       ),
                     if (isProAccount) const _ProBadge(),
+                    if (travelerStatus != null)
+                      TravelerStatusChip(
+                        status: travelerStatus,
+                        registrationNumber:
+                            traveler?.businessRegistrationNumber,
+                      ),
                     if (announcement.isUrgent) const DonyUrgentBadge(),
                     if (categories.isNotEmpty)
                       _CategoryChips(
@@ -478,7 +486,10 @@ class TravelerCard extends StatelessWidget {
                 // selon la largeur (liste vs carousel), donnant deux hauteurs. Ici
                 // ils disposent de toute la largeur de la carte et s'alignent de
                 // façon identique dans les deux vues.
-                if (isGpPro || isProAccount || announcement.isUrgent) ...[
+                if (isGpPro ||
+                    isProAccount ||
+                    travelerStatus != null ||
+                    announcement.isUrgent) ...[
                   const SizedBox(height: DonySpacing.sm),
                   Wrap(
                     crossAxisAlignment: WrapCrossAlignment.center,
@@ -491,6 +502,12 @@ class TravelerCard extends StatelessWidget {
                           interactive: false,
                         ),
                       if (isProAccount) const _ProBadge(),
+                      if (travelerStatus != null)
+                        TravelerStatusChip(
+                          status: travelerStatus,
+                          registrationNumber:
+                              traveler?.businessRegistrationNumber,
+                        ),
                       if (announcement.isUrgent) const DonyUrgentBadge(),
                     ],
                   ),

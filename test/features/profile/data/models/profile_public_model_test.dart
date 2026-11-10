@@ -1,4 +1,5 @@
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -56,6 +57,47 @@ void main() {
         'senderIncidentCount': 4,
       });
       expect(model.userId, 'u1');
+    });
+  });
+
+  group('ProfilePublicModel : statut légal du voyageur (lot 2)', () {
+    test('ancien back : champs absents donnent null', () {
+      final m = ProfilePublicModel.fromJson({'userId': 'u1'});
+      expect(m.travelerStatus, isNull);
+      expect(m.businessName, isNull);
+      expect(m.businessRegistrationNumber, isNull);
+      expect(m.businessCountry, isNull);
+    });
+
+    test('professionnel lu', () {
+      final m = ProfilePublicModel.fromJson({
+        'userId': 'u1',
+        'travelerStatus': 'PROFESSIONAL',
+        'businessName': 'Diallo Express SARL',
+        'businessRegistrationNumber': 'CI-ABJ-2021-B-12345',
+        'businessCountry': 'CI',
+      });
+      expect(m.travelerStatus, TravelerStatus.professional);
+      expect(m.businessName, 'Diallo Express SARL');
+      expect(m.businessRegistrationNumber, 'CI-ABJ-2021-B-12345');
+      expect(m.businessCountry, 'CI');
+    });
+
+    test('particulier lu, statut inconnu : null', () {
+      expect(
+        ProfilePublicModel.fromJson({
+          'userId': 'u1',
+          'travelerStatus': 'INDIVIDUAL',
+        }).travelerStatus,
+        TravelerStatus.individual,
+      );
+      expect(
+        ProfilePublicModel.fromJson({
+          'userId': 'u1',
+          'travelerStatus': 'X',
+        }).travelerStatus,
+        isNull,
+      );
     });
   });
 }

@@ -11541,5 +11541,21 @@
   "moneyKeywordWarningTitle": "Sending money is prohibited",
   "@moneyKeywordWarningTitle": {"description": "Titre du bandeau orange, non bloquant, affiché sous la description du colis quand elle évoque l'envoi d'argent (money_keyword_warning.dart : demande sur un trajet et demande d'expéditeur publiée)."},
   "moneyKeywordWarningBody": "Cash, cheques and bank cards cannot be handed to a traveler (Terms of use, article 4). If your parcel contains none, ignore this message.",
-  "@moneyKeywordWarningBody": {"description": "Corps du bandeau d'envoi d'argent sous la description du colis : rappel de l'interdiction (CGU, article 4), l'envoi reste possible (money_keyword_warning.dart)."}
+  "@moneyKeywordWarningBody": {"description": "Corps du bandeau d'envoi d'argent sous la description du colis : rappel de l'interdiction (CGU, article 4), l'envoi reste possible (money_keyword_warning.dart)."},
+  "travelerStatusChipIndividual": "Individual",
+  "@travelerStatusChipIndividual": {"description": "Pastille du statut légal d'un voyageur qui voyage à titre personnel (traveler_status_chip.dart : carte de trajet, fiche voyageur, profil public)."},
+  "travelerStatusChipProfessional": "Professional",
+  "@travelerStatusChipProfessional": {"description": "Pastille du statut légal d'un voyageur professionnel, sans numéro (traveler_status_chip.dart)."},
+  "travelerStatusChipProfessionalWithNumber": "Professional · {number}",
+  "@travelerStatusChipProfessionalWithNumber": {"description": "Pastille d'un voyageur professionnel avec son numéro d'immatriculation déclaré, sur une seule ligne (traveler_status_chip.dart).", "placeholders": {"number": {"type": "String"}}},
+  "profilePublicStatusLabel": "Status",
+  "@profilePublicStatusLabel": {"description": "Libellé de la ligne du statut légal dans le bloc d'un professionnel du profil public (profile_public_screen.dart, _TravelerStatusSection)."},
+  "profilePublicBusinessNameLabel": "Company name",
+  "@profilePublicBusinessNameLabel": {"description": "Libellé de la raison sociale déclarée par un professionnel (profile_public_screen.dart, _TravelerStatusSection)."},
+  "profilePublicBusinessNumberLabel": "Registration",
+  "@profilePublicBusinessNumberLabel": {"description": "Libellé du numéro d'immatriculation déclaré par un professionnel (profile_public_screen.dart, _TravelerStatusSection)."},
+  "profilePublicBusinessCountryLabel": "Country",
+  "@profilePublicBusinessCountryLabel": {"description": "Libellé du pays d'immatriculation déclaré par un professionnel (profile_public_screen.dart, _TravelerStatusSection)."},
+  "profilePublicBusinessDisclaimer": "Information declared by the traveler, not verified by Yadony.",
+  "@profilePublicBusinessDisclaimer": {"description": "Mention sous les informations d'un professionnel : Yadony ne les vérifie pas auprès des registres (profile_public_screen.dart)."}
 }

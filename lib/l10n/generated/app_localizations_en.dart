@@ -23431,4 +23431,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get moneyKeywordWarningBody =>
       'Cash, cheques and bank cards cannot be handed to a traveler (Terms of use, article 4). If your parcel contains none, ignore this message.';
+
+  @override
+  String get travelerStatusChipIndividual => 'Individual';
+
+  @override
+  String get travelerStatusChipProfessional => 'Professional';
+
+  @override
+  String travelerStatusChipProfessionalWithNumber(String number) {
+    return 'Professional · $number';
+  }
+
+  @override
+  String get profilePublicStatusLabel => 'Status';
+
+  @override
+  String get profilePublicBusinessNameLabel => 'Company name';
+
+  @override
+  String get profilePublicBusinessNumberLabel => 'Registration';
+
+  @override
+  String get profilePublicBusinessCountryLabel => 'Country';
+
+  @override
+  String get profilePublicBusinessDisclaimer =>
+      'Information declared by the traveler, not verified by Yadony.';
 }

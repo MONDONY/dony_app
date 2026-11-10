@@ -23599,4 +23599,31 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get moneyKeywordWarningBody =>
       'Les espèces, chèques et cartes bancaires ne peuvent pas être confiés à un voyageur (CGU, article 4). Si votre colis n\'en contient pas, ignorez ce message.';
+
+  @override
+  String get travelerStatusChipIndividual => 'Particulier';
+
+  @override
+  String get travelerStatusChipProfessional => 'Professionnel';
+
+  @override
+  String travelerStatusChipProfessionalWithNumber(String number) {
+    return 'Professionnel · $number';
+  }
+
+  @override
+  String get profilePublicStatusLabel => 'Statut';
+
+  @override
+  String get profilePublicBusinessNameLabel => 'Raison sociale';
+
+  @override
+  String get profilePublicBusinessNumberLabel => 'Immatriculation';
+
+  @override
+  String get profilePublicBusinessCountryLabel => 'Pays';
+
+  @override
+  String get profilePublicBusinessDisclaimer =>
+      'Informations déclarées par le voyageur, non vérifiées par Yadony.';
 }

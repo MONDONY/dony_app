@@ -18,6 +18,10 @@ TravelerProfile _$TravelerProfileFromJson(Map<String, dynamic> json) =>
       kycVerified: json['kycVerified'] as bool? ?? false,
       avatarUrl: json['avatarUrl'] as String?,
       acceptsUnverified: json['acceptsUnverified'] as bool? ?? false,
+      travelerStatus: TravelerStatus.parse(json['travelerStatus'] as String?),
+      businessName: json['businessName'] as String?,
+      businessRegistrationNumber: json['businessRegistrationNumber'] as String?,
+      businessCountry: json['businessCountry'] as String?,
     );
 
 Map<String, dynamic> _$TravelerProfileToJson(TravelerProfile instance) =>
@@ -32,6 +36,10 @@ Map<String, dynamic> _$TravelerProfileToJson(TravelerProfile instance) =>
       'kycVerified': instance.kycVerified,
       'avatarUrl': instance.avatarUrl,
       'acceptsUnverified': instance.acceptsUnverified,
+      'travelerStatus': travelerStatusToJson(instance.travelerStatus),
+      'businessName': instance.businessName,
+      'businessRegistrationNumber': instance.businessRegistrationNumber,
+      'businessCountry': instance.businessCountry,
     };
 
 AnnouncementModel _$AnnouncementModelFromJson(

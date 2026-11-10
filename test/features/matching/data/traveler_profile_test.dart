@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -147,6 +148,71 @@ void main() {
         p.toJson()['avatarUrl'],
         'https://cdn.dony.app/avatars/tp-102.jpg',
       );
+    });
+  });
+
+  group('TravelerProfile : statut légal du voyageur (lot 2)', () {
+    test('ancien back : champs absents donnent null, aucune erreur', () {
+      final p = TravelerProfile.fromJson({'id': 'tp-1', 'gpPro': true});
+      expect(p.travelerStatus, isNull);
+      expect(p.businessName, isNull);
+      expect(p.businessRegistrationNumber, isNull);
+      expect(p.businessCountry, isNull);
+    });
+
+    test('champs explicitement null : même résultat', () {
+      final p = TravelerProfile.fromJson({
+        'id': 'tp-1',
+        'travelerStatus': null,
+        'businessName': null,
+        'businessRegistrationNumber': null,
+        'businessCountry': null,
+      });
+      expect(p.travelerStatus, isNull);
+    });
+
+    test('particulier lu', () {
+      final p = TravelerProfile.fromJson({
+        'id': 'tp-2',
+        'travelerStatus': 'INDIVIDUAL',
+      });
+      expect(p.travelerStatus, TravelerStatus.individual);
+      expect(p.businessName, isNull);
+    });
+
+    test('professionnel lu avec raison sociale, numéro et pays', () {
+      final p = TravelerProfile.fromJson({
+        'id': 'tp-3',
+        'travelerStatus': 'PROFESSIONAL',
+        'businessName': 'Diallo Express SARL',
+        'businessRegistrationNumber': 'CI-ABJ-2021-B-12345',
+        'businessCountry': 'CI',
+      });
+      expect(p.travelerStatus, TravelerStatus.professional);
+      expect(p.businessName, 'Diallo Express SARL');
+      expect(p.businessRegistrationNumber, 'CI-ABJ-2021-B-12345');
+      expect(p.businessCountry, 'CI');
+    });
+
+    test('statut inconnu d\'un futur back : null, pas d\'exception', () {
+      final p = TravelerProfile.fromJson({
+        'id': 'tp-4',
+        'travelerStatus': 'COOPERATIVE',
+      });
+      expect(p.travelerStatus, isNull);
+    });
+
+    test('aller-retour toJson', () {
+      final p = TravelerProfile.fromJson({
+        'id': 'tp-5',
+        'travelerStatus': 'PROFESSIONAL',
+        'businessName': 'X SARL',
+        'businessRegistrationNumber': '1234',
+        'businessCountry': 'SN',
+      });
+      final back = TravelerProfile.fromJson(p.toJson());
+      expect(back.travelerStatus, TravelerStatus.professional);
+      expect(back.businessRegistrationNumber, '1234');
     });
   });
 }

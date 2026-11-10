@@ -8172,8 +8172,26 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripParcelsLineAwaiting': (l) =>
       l.tripParcelsLineAwaiting(intPlaceholderValue),
   'tripParcelAwaitingSemantics': (l) => l.tripParcelAwaitingSemantics,
+  'videoModalPrimaryFallback': (l) => l.videoModalPrimaryFallback,
+  'videoModalSecondaryFallback': (l) => l.videoModalSecondaryFallback,
+  'videoModalHighlightsTitle': (l) => l.videoModalHighlightsTitle,
+  'videoModalPlayerEndSearch': (l) => l.videoModalPlayerEndSearch,
+  'videoModalPlayerEndPublish': (l) => l.videoModalPlayerEndPublish,
+  'videoModalPlayerError': (l) => l.videoModalPlayerError,
+  'videoModalThumbnailSemantics': (l) =>
+      l.videoModalThumbnailSemantics(placeholderMarker('title')),
   'moneyKeywordWarningTitle': (l) => l.moneyKeywordWarningTitle,
   'moneyKeywordWarningBody': (l) => l.moneyKeywordWarningBody,
+  'travelerStatusChipIndividual': (l) => l.travelerStatusChipIndividual,
+  'travelerStatusChipProfessional': (l) => l.travelerStatusChipProfessional,
+  'travelerStatusChipProfessionalWithNumber': (l) =>
+      l.travelerStatusChipProfessionalWithNumber(placeholderMarker('number')),
+  'profilePublicStatusLabel': (l) => l.profilePublicStatusLabel,
+  'profilePublicBusinessNameLabel': (l) => l.profilePublicBusinessNameLabel,
+  'profilePublicBusinessNumberLabel': (l) => l.profilePublicBusinessNumberLabel,
+  'profilePublicBusinessCountryLabel': (l) =>
+      l.profilePublicBusinessCountryLabel,
+  'profilePublicBusinessDisclaimer': (l) => l.profilePublicBusinessDisclaimer,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8862,4 +8880,6 @@ const textParameters = <String, List<String>>{
   'tripTodoDueBeforeTime': ['time'],
   'tripTodoDueBeforeDate': ['date', 'time'],
   'tripTodoDueBanner': ['due', 'consequence'],
+  'videoModalThumbnailSemantics': ['title'],
+  'travelerStatusChipProfessionalWithNumber': ['number'],
 };

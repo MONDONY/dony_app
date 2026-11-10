@@ -19,6 +19,7 @@ import 'package:dony/features/ratings/presentation/widgets/report_rating_button.
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -389,6 +390,14 @@ class _LoadedView extends StatelessWidget {
           ).animate().fadeIn(delay: 70.ms, duration: 300.ms),
         ),
 
+        // ── Statut légal d'un professionnel (lot 2) ───────────────────────────
+        if (profile.travelerStatus == TravelerStatus.professional)
+          SliverToBoxAdapter(
+            child: _FlatSection(
+              child: _TravelerStatusSection(profile: profile),
+            ).animate().fadeIn(delay: 75.ms, duration: 300.ms),
+          ),
+
         // ── À propos section ──────────────────────────────────────────────────
         if (profile.bio != null && profile.bio!.trim().isNotEmpty)
           SliverToBoxAdapter(
@@ -593,7 +602,8 @@ class _ProfileHero extends StatelessWidget {
                           color: cs.onSurfaceVariant,
                         ),
                       ),
-                    if (profile.kycVerified ||
+                    if (profile.travelerStatus != null ||
+                        profile.kycVerified ||
                         profile.isProAccount ||
                         profile.gpPro) ...[
                       const SizedBox(height: DonySpacing.sm),
@@ -601,6 +611,12 @@ class _ProfileHero extends StatelessWidget {
                         spacing: DonySpacing.xs,
                         runSpacing: DonySpacing.xs,
                         children: [
+                          if (profile.travelerStatus != null)
+                            TravelerStatusChip(
+                              status: profile.travelerStatus,
+                              registrationNumber:
+                                  profile.businessRegistrationNumber,
+                            ),
                           if (profile.kycVerified)
                             _HeroPill(
                               label: l.profilePublicVerified,
@@ -967,6 +983,72 @@ class _AboutSection extends StatelessWidget {
       ],
     );
   }
+}
+
+// ─── Statut légal d'un professionnel (lot 2) ────────────────────────────────
+
+/// Ce que le professionnel a déclaré : raison sociale, numéro d'immatriculation
+/// et pays, tels que l'impose l'information des consommateurs. Yadony ne les
+/// vérifie pas auprès des registres : la mention le dit. Une ligne sans valeur
+/// n'est pas affichée.
+class _TravelerStatusSection extends StatelessWidget {
+  const _TravelerStatusSection({required this.profile});
+  final ProfilePublicModel profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final country = profile.businessCountry;
+    final rows = <(String, String)>[
+      (l.profilePublicStatusLabel, l.travelerStatusChipProfessional),
+      if (_filled(profile.businessName))
+        (l.profilePublicBusinessNameLabel, profile.businessName!.trim()),
+      if (_filled(profile.businessRegistrationNumber))
+        (
+          l.profilePublicBusinessNumberLabel,
+          profile.businessRegistrationNumber!.trim(),
+        ),
+      if (_filled(country))
+        (l.profilePublicBusinessCountryLabel, countryName(l, country!)),
+    ];
+    return Column(
+      key: const Key('profile-traveler-status'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (label, value) in rows)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                ),
+                const SizedBox(width: DonySpacing.base),
+                Expanded(
+                  child: Text(
+                    value,
+                    textAlign: TextAlign.end,
+                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          l.profilePublicBusinessDisclaimer,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+      ],
+    );
+  }
+
+  static bool _filled(String? value) =>
+      value != null && value.trim().isNotEmpty;
 }
 
 // ─── Vérifications section (FLUTTER-4H) ─────────────────────────────────────

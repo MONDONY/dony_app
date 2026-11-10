@@ -1,4 +1,5 @@
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
@@ -665,6 +666,80 @@ void main() {
         );
         expect(user1, isNot(equals(user2)));
       });
+    });
+  });
+
+  group('UserModel : statut légal du voyageur (lot 2)', () {
+    test('ancien back : champs absents donnent null', () {
+      final user = UserModel.fromJson(const {'id': 'u1', 'roles': <String>[]});
+      expect(user.travelerStatus, isNull);
+      expect(user.businessName, isNull);
+      expect(user.businessRegistrationNumber, isNull);
+      expect(user.businessCountry, isNull);
+    });
+
+    test('professionnel lu, aller-retour toJson', () {
+      final user = UserModel.fromJson(const {
+        'id': 'u1',
+        'roles': <String>[],
+        'travelerStatus': 'PROFESSIONAL',
+        'businessName': 'Diallo Express SARL',
+        'businessRegistrationNumber': 'CI-ABJ-2021-B-12345',
+        'businessCountry': 'CI',
+      });
+      expect(user.travelerStatus, TravelerStatus.professional);
+      expect(user.businessName, 'Diallo Express SARL');
+      final back = UserModel.fromJson(user.toJson());
+      expect(back.travelerStatus, TravelerStatus.professional);
+      expect(back.businessRegistrationNumber, 'CI-ABJ-2021-B-12345');
+      expect(back.businessCountry, 'CI');
+    });
+
+    test('statut inconnu : null', () {
+      final user = UserModel.fromJson(const {
+        'id': 'u1',
+        'roles': <String>[],
+        'travelerStatus': 'ROBOT',
+      });
+      expect(user.travelerStatus, isNull);
+    });
+
+    test('copyWith garde le statut et peut le changer', () {
+      const user = UserModel(
+        id: 'u1',
+        roles: ['TRAVELER'],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+        travelerStatus: TravelerStatus.individual,
+      );
+      expect(
+        user.copyWith(firstName: 'A').travelerStatus,
+        TravelerStatus.individual,
+      );
+      expect(
+        user
+            .copyWith(travelerStatus: TravelerStatus.professional)
+            .travelerStatus,
+        TravelerStatus.professional,
+      );
+    });
+
+    test('deux comptes de statut différent ne sont pas égaux', () {
+      const a = UserModel(
+        id: 'u1',
+        roles: [],
+        kycStatus: 'PENDING',
+        status: 'ACTIVE',
+        travelerStatus: TravelerStatus.individual,
+      );
+      const b = UserModel(
+        id: 'u1',
+        roles: [],
+        kycStatus: 'PENDING',
+        status: 'ACTIVE',
+        travelerStatus: TravelerStatus.professional,
+      );
+      expect(a, isNot(equals(b)));
     });
   });
 }

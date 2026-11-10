@@ -37715,6 +37715,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les espèces, chèques et cartes bancaires ne peuvent pas être confiés à un voyageur (CGU, article 4). Si votre colis n\'en contient pas, ignorez ce message.'**
   String get moneyKeywordWarningBody;
+
+  /// Pastille du statut légal d'un voyageur qui voyage à titre personnel (traveler_status_chip.dart : carte de trajet, fiche voyageur, profil public).
+  ///
+  /// In fr, this message translates to:
+  /// **'Particulier'**
+  String get travelerStatusChipIndividual;
+
+  /// Pastille du statut légal d'un voyageur professionnel, sans numéro (traveler_status_chip.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Professionnel'**
+  String get travelerStatusChipProfessional;
+
+  /// Pastille d'un voyageur professionnel avec son numéro d'immatriculation déclaré, sur une seule ligne (traveler_status_chip.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Professionnel · {number}'**
+  String travelerStatusChipProfessionalWithNumber(String number);
+
+  /// Libellé de la ligne du statut légal dans le bloc d'un professionnel du profil public (profile_public_screen.dart, _TravelerStatusSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Statut'**
+  String get profilePublicStatusLabel;
+
+  /// Libellé de la raison sociale déclarée par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison sociale'**
+  String get profilePublicBusinessNameLabel;
+
+  /// Libellé du numéro d'immatriculation déclaré par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Immatriculation'**
+  String get profilePublicBusinessNumberLabel;
+
+  /// Libellé du pays d'immatriculation déclaré par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get profilePublicBusinessCountryLabel;
+
+  /// Mention sous les informations d'un professionnel : Yadony ne les vérifie pas auprès des registres (profile_public_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations déclarées par le voyageur, non vérifiées par Yadony.'**
+  String get profilePublicBusinessDisclaimer;
 }
 
 class _AppLocalizationsDelegate

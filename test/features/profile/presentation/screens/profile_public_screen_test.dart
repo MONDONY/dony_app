@@ -22,6 +22,7 @@ import 'package:dony/features/settings/data/repositories/blocked_users_repositor
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -1737,5 +1738,123 @@ void main() {
 
     expect(find.text('EN COURS'), findsNothing);
     expect(find.text('Fatou Diallo'), findsWidgets);
+  });
+
+  // ── Statut légal du voyageur (lot 2) ──────────────────────────────────────
+
+  ProfilePublicModel statusProfile({
+    TravelerStatus? status,
+    String? name,
+    String? number,
+    String? country,
+  }) => ProfilePublicModel(
+    userId: _userId,
+    displayName: 'Diallo Express',
+    kycVerified: true,
+    isProAccount: false,
+    gpPro: true,
+    completedBidsCount: 12,
+    averageRating: 4.8,
+    ratingCount: 7,
+    memberSince: 'mars 2025',
+    badges: const [],
+    travelerStatus: status,
+    businessName: name,
+    businessRegistrationNumber: number,
+    businessCountry: country,
+  );
+
+  group('statut légal du voyageur', () {
+    testWidgets('professionnel : pastille, raison sociale, numéro et pays', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapLoaded(
+          profile: statusProfile(
+            status: TravelerStatus.professional,
+            name: 'Diallo Express SARL',
+            number: 'CI-ABJ-2021-B-12345',
+            country: 'CI',
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text('Professionnel · CI-ABJ-2021-B-12345', skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('profile-traveler-status'), skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Diallo Express SARL', skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(
+        find.text('CI-ABJ-2021-B-12345', skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Informations déclarées par le voyageur, non vérifiées par Yadony.',
+          skipOffstage: false,
+        ),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('particulier : la pastille seule, pas de bloc détaillé', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapLoaded(profile: statusProfile(status: TravelerStatus.individual)),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('Particulier', skipOffstage: false), findsOneWidget);
+      expect(
+        find.byKey(const Key('profile-traveler-status'), skipOffstage: false),
+        findsNothing,
+      );
+    });
+
+    testWidgets('statut absent (ancien back) : rien', (tester) async {
+      await tester.pumpWidget(_wrapLoaded(profile: statusProfile()));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.byType(TravelerStatusChip, skipOffstage: false),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('profile-traveler-status'), skipOffstage: false),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('professionnel sans pays ni numéro : pas de ligne vide', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapLoaded(
+          profile: statusProfile(
+            status: TravelerStatus.professional,
+            name: 'Diallo Express SARL',
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text('Diallo Express SARL', skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(find.text('Immatriculation', skipOffstage: false), findsNothing);
+      expect(find.text('Pays', skipOffstage: false), findsNothing);
+    });
   });
 }
