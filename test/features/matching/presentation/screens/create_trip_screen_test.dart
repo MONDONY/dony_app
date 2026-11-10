@@ -1699,9 +1699,6 @@ void main() {
 
     testWidgets('« GP Pro » puis demande envoyée : le trajet part '
         '(particulier pendant la validation)', (tester) async {
-      when(
-        () => gpRepo.fetchStatus(),
-      ).thenAnswer((_) async => const GpProStatus(state: GpProState.pending));
       await reachPublishStep(tester);
       await tapPublish(tester);
       await tester.tap(find.text('GP Pro'));
@@ -1712,6 +1709,10 @@ void main() {
             announcementBloc.add(any(that: isA<AnnouncementCreateRequested>())),
       );
 
+      // La demande part depuis le formulaire.
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.pending));
       await tester.tap(find.text('formulaire GP Pro'));
       await tester.pumpAndSettle();
 
@@ -1735,6 +1736,31 @@ void main() {
       expect(find.byType(CreateTripScreen), findsOneWidget);
       expect(find.byType(SnackBar), findsNothing);
       expect(tester.takeException(), isNull);
+    });
+
+    for (final state in [GpProState.pending, GpProState.awaitingKyc]) {
+      testWidgets('demande GP Pro ouverte (${state.wire}) : la question ne '
+          'revient pas, le trajet part', (tester) async {
+        when(
+          () => gpRepo.fetchStatus(),
+        ).thenAnswer((_) async => GpProStatus(state: state));
+        await reachPublishStep(tester);
+        await tapPublish(tester);
+
+        expect(find.text('Vous voyagez en tant que ?'), findsNothing);
+        expect(createdCount(), 1);
+      });
+    }
+
+    testWidgets('lecture de la demande GP Pro en échec : la question est '
+        'posée', (tester) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenThrow(const GpProException('network'));
+      await reachPublishStep(tester);
+      await tapPublish(tester);
+
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
     });
 
     testWidgets('statut déjà déclaré : aucune question', (tester) async {

@@ -756,6 +756,33 @@ void main() {
       ).called(1);
     });
 
+    testWidgets('demande GP Pro ouverte : « Publier » ne pose pas la question, '
+        'la publication part', (tester) async {
+      when(() => gpRepo.fetchStatus()).thenAnswer(
+        (_) async => const GpProStatus(state: GpProState.awaitingKyc),
+      );
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous voyagez en tant que ?'), findsNothing);
+      verifyPublishDispatched(1);
+    });
+
+    testWidgets('lecture de la demande GP Pro en échec : la question est '
+        'posée', (tester) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenThrow(const GpProException('network'));
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
+    });
+
     testWidgets('« GP Pro » puis formulaire quitté sans envoyer : rien n\'est '
         'publié, aucun message', (tester) async {
       await pumpDraft(tester);
@@ -778,15 +805,16 @@ void main() {
     testWidgets('« GP Pro » puis demande envoyée : la publication part', (
       tester,
     ) async {
-      when(
-        () => gpRepo.fetchStatus(),
-      ).thenAnswer((_) async => const GpProStatus(state: GpProState.pending));
       await pumpDraft(tester);
 
       await tester.tap(_inFooter(find.text('Publier')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('GP Pro'));
       await tester.pumpAndSettle();
+      // La demande part depuis le formulaire.
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.pending));
       await tester.tap(find.text('formulaire GP Pro'));
       await tester.pumpAndSettle();
 

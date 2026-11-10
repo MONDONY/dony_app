@@ -1,6 +1,8 @@
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_sheet.dart';
 import 'package:flutter/widgets.dart';
 
@@ -20,10 +22,25 @@ bool travelerStatusMissing(BuildContext context) {
 /// rien. Si la limite mensuelle est atteinte, c'est le 403 du back qui arrête
 /// la publication.
 ///
+/// Une demande GP Pro déjà ouverte (en validation ou en attente d'identité)
+/// vaut réponse : la question ne revient pas, la publication suit son cours (à
+/// la limite, le back répond 403 `gp-pro-pending`). Une lecture de la demande en
+/// échec ne change rien : on pose la question.
+///
 /// Rend la réponse, ou `null` si rien n'a été demandé.
 Future<TravelerStatusOutcome?> remindTravelerStatusBeforePublish(
   BuildContext context,
 ) async {
   if (!travelerStatusMissing(context)) return null;
+  if (await _gpProApplicationOpen()) return null;
+  if (!context.mounted) return null;
   return TravelerStatusSheet.show(context);
+}
+
+Future<bool> _gpProApplicationOpen() async {
+  try {
+    return (await getIt<GpProRepository>().fetchStatus()).isOpen;
+  } on Object {
+    return false;
+  }
 }

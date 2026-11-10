@@ -1826,7 +1826,7 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// Un formulaire GP Pro quitté sans envoyer la demande ne publie rien et ne
   /// dit rien : le voyageur retrouve son formulaire, la question reviendra.
   Future<void> _remindTravelerStatusThenSubmit() async {
-    final outcome = await TravelerStatusSheet.show(context);
+    final outcome = await remindTravelerStatusBeforePublish(context);
     if (!mounted || outcome == TravelerStatusOutcome.gpProAbandoned) return;
     _travelerStatusReminded = true;
     _submit();
