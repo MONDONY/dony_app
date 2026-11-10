@@ -57,12 +57,18 @@ void main() {
   });
 
   /// Profil (page de départ) puis écran GP Pro poussé par-dessus.
-  Future<void> open(WidgetTester tester, {Locale locale = AppL10n.fr}) async {
+  Future<void> open(
+    WidgetTester tester, {
+    Locale locale = AppL10n.fr,
+    bool directEntry = false,
+  }) async {
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final router = GoRouter(
+      // `directEntry` : ouvert par `go` (notification, lien profond), pile vide.
+      initialLocation: directEntry ? '/profile/gp-pro' : '/',
       routes: [
         GoRoute(
           path: '/',
@@ -77,6 +83,10 @@ void main() {
               ],
             ),
           ),
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (_, _) => const Scaffold(body: Text('Profil (onglet)')),
         ),
         GoRoute(
           path: '/profile/gp-pro',
@@ -100,7 +110,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('ouvrir'));
+    if (!directEntry) await tester.tap(find.text('ouvrir'));
     await tester.pumpAndSettle();
   }
 
@@ -179,6 +189,32 @@ void main() {
         properties: any(named: 'properties'),
       ),
     ).called(1);
+  });
+
+  testWidgets('ouvert par un lien (pile vide) : après le retrait, arrivée sur '
+      'l\'onglet Profil', (tester) async {
+    when(
+      () => repo.resign(),
+    ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+    await open(tester, directEntry: true);
+    expect(find.text(fr.gpProActiveTitle), findsOneWidget);
+    await tester.tap(resignButton('Redevenir particulier'));
+    await tester.pumpAndSettle();
+    when(
+      () => repo.fetchStatus(),
+    ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(Dialog),
+        matching: find.text('Redevenir particulier'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Profil (onglet)'), findsOneWidget);
+    expect(find.text(fr.gpProActiveTitle), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('retrait refusé : on reste sur l\'écran, message d\'erreur, '

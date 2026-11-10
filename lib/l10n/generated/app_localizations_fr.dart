@@ -23831,7 +23831,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profileGpProBecomeSubtitle =>
-      'Profil professionnel examiné par l\'équipe, avec raison sociale et numéro d\'entreprise.';
+      'Profil professionnel validé par l\'équipe.';
 
   @override
   String get profileGpProApplication => 'Demande GP Pro';

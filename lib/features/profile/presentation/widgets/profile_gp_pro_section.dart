@@ -8,9 +8,11 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_state.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_status_signal.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +21,10 @@ import 'package:go_router/go_router.dart';
 
 /// Où en est le voyageur avec le badge GP Pro, tel que la ligne le dit.
 enum ProfileGpProState {
+  /// Première lecture de la demande en cours : ligne neutre, ni « Devenir GP
+  /// Pro » ni pastille (on ne sait pas encore).
+  loading('loading'),
+
   /// Pas GP Pro, aucune demande ouverte : « Devenir GP Pro ».
   none('none'),
 
@@ -73,14 +79,72 @@ class ProfileGpProSection extends StatelessWidget {
     }
     return BlocProvider<GpProCubit>(
       create: (_) => getIt<GpProCubit>()..load(),
-      child: BlocBuilder<GpProCubit, GpProCubitState>(
-        buildWhen: (p, c) => p.status != c.status,
-        builder: (context, s) => _GpProRow(
-          state: (s.status?.isOpen ?? false)
-              ? ProfileGpProState.open
-              : ProfileGpProState.none,
+      child: _StatusRefresher(
+        child: BlocBuilder<GpProCubit, GpProCubitState>(
+          buildWhen: (p, c) => p.status != c.status || p.load != c.load,
+          builder: (context, s) => _GpProRow(
+            state: switch ((s.status, s.load)) {
+              (final status?, _) when status.isOpen => ProfileGpProState.open,
+              (null, GpProLoadStatus.loading) => ProfileGpProState.loading,
+              _ => ProfileGpProState.none,
+            },
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// Relit la demande quand elle a pu changer, l'onglet Profil restant en mémoire
+/// d'une visite à l'autre : un nouveau profil de l'`AuthBloc`, un changement de
+/// statut GP Pro ([gpProStatusChanged], quel que soit l'écran d'où il vient), la
+/// reprise de l'app. `GpProCubit.load` ignore un appel pendant une lecture en
+/// cours : pas de requêtes en rafale. Le `State` ne porte que des abonnements,
+/// jamais d'état d'écran (aucun `setState`).
+class _StatusRefresher extends StatefulWidget {
+  const _StatusRefresher({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_StatusRefresher> createState() => _StatusRefresherState();
+}
+
+class _StatusRefresherState extends State<_StatusRefresher>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    gpProStatusChanged.addListener(_reload);
+  }
+
+  @override
+  void dispose() {
+    gpProStatusChanged.removeListener(_reload);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _reload();
+  }
+
+  void _reload() {
+    if (!mounted) return;
+    final cubit = maybeRead<GpProCubit>(context);
+    if (cubit != null && !cubit.isClosed) unawaited(cubit.load());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = maybeRead<AuthBloc>(context);
+    if (auth == null) return widget.child;
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (prev, curr) => prev.currentUser != curr.currentUser,
+      listener: (_, _) => _reload(),
+      child: widget.child,
     );
   }
 }
@@ -118,12 +182,13 @@ class _GpProRow extends StatelessWidget {
     final active = state == ProfileGpProState.active;
     final open = state == ProfileGpProState.open;
     final label = switch (state) {
+      ProfileGpProState.loading => l.gpProBadgeLabel,
       ProfileGpProState.none => l.profileGpProBecome,
       ProfileGpProState.open => l.profileGpProApplication,
       ProfileGpProState.active => l.gpProBadgeLabel,
     };
     final pill = switch (state) {
-      ProfileGpProState.none => null,
+      ProfileGpProState.loading || ProfileGpProState.none => null,
       ProfileGpProState.open => l.profileTravelerStatusPending,
       ProfileGpProState.active => l.profileGpProActivePill,
     };

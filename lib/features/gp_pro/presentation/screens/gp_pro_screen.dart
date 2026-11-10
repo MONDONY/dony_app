@@ -46,6 +46,9 @@ class _GpProScreenState extends State<GpProScreen> {
   static const _kycRequired = 'gp-pro-kyc-required';
 
   _View _view(GpProCubitState s, {required bool kycVerified}) {
+    // Retrait réussi : l'écran est quitté, la page glisse encore. Pas de flash
+    // du formulaire ou de la vue KYC pendant cette sortie.
+    if (s.resigned) return _View.loading;
     switch (s.load) {
       case GpProLoadStatus.loading:
         return _View.loading;

@@ -23660,7 +23660,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileGpProBecomeSubtitle =>
-      'Professional profile reviewed by the team, with business name and registration number.';
+      'Professional profile, reviewed by the team.';
 
   @override
   String get profileGpProApplication => 'GP Pro application';

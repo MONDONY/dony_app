@@ -38076,10 +38076,10 @@ abstract class AppLocalizations {
   /// **'Devenir GP Pro'**
   String get profileGpProBecome;
 
-  /// Sous-titre de la ligne « Devenir GP Pro » du Profil (profile_gp_pro_section.dart).
+  /// Sous-titre de la ligne « Devenir GP Pro » du Profil, sur deux lignes au plus à 360 dp (profile_gp_pro_section.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Profil professionnel examiné par l\'équipe, avec raison sociale et numéro d\'entreprise.'**
+  /// **'Profil professionnel validé par l\'équipe.'**
   String get profileGpProBecomeSubtitle;
 
   /// Libellé de la ligne GP Pro du Profil quand une demande est ouverte (pastille « En validation ») (profile_gp_pro_section.dart).

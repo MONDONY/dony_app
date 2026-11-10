@@ -4,6 +4,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/app_log.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_state.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_status_signal.dart';
 import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
 import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +18,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
   final AnalyticsService _analytics;
 
   int _counter = 0;
+  bool _loadInFlight = false;
   bool _openedLogged = false;
 
   /// Codes 409 du back : une demande existe déjà, le statut local est périmé.
@@ -29,7 +31,18 @@ class GpProCubit extends Cubit<GpProCubitState> {
   /// la ligne « Statut de voyageur » du profil ne lit la demande que pour sa
   /// pastille, elle ne trace rien.
   Future<void> load({bool trackOpened = false}) async {
-    if (isClosed) return;
+    // Une lecture à la fois : un second appel pendant la première est ignoré
+    // (pas de requêtes en rafale quand plusieurs déclencheurs se suivent).
+    if (isClosed || _loadInFlight) return;
+    _loadInFlight = true;
+    try {
+      await _load(trackOpened: trackOpened);
+    } finally {
+      _loadInFlight = false;
+    }
+  }
+
+  Future<void> _load({required bool trackOpened}) async {
     // Pas de flash de chargement lors d'un rechargement d'un écran déjà prêt.
     if (state.load != GpProLoadStatus.ready) {
       emit(state.copyWith(load: GpProLoadStatus.loading));
@@ -212,6 +225,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
         documentIds: ids,
         source: GpProSource.profile,
       );
+      notifyGpProStatusChanged();
       if (isClosed) return;
       emit(
         state.copyWith(
@@ -262,6 +276,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
     emit(state.copyWith(cancelling: true, clearError: true));
     try {
       await _repository.cancel();
+      notifyGpProStatusChanged();
       if (isClosed) return;
       emit(state.copyWith(cancelling: false, pieces: const []));
       unawaited(_analytics.logEvent(AnalyticsEvents.gpProApplicationCancelled));
@@ -291,6 +306,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
     emit(state.copyWith(resigning: true, resigned: false, clearError: true));
     try {
       await _repository.resign();
+      notifyGpProStatusChanged();
       // Le retrait a eu lieu côté serveur, même si l'écran est quitté : tracé.
       unawaited(_analytics.logEvent(AnalyticsEvents.gpProResigned));
       if (isClosed) return;
@@ -299,6 +315,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
     } on GpProException catch (e) {
       if (isClosed) return;
       if (e.code == 'gp-pro-not-active') {
+        notifyGpProStatusChanged();
         emit(state.copyWith(resigning: false, resigned: true));
         await load();
         return;
