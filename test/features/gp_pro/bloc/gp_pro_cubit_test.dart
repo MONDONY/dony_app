@@ -5,6 +5,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_state.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_status_signal.dart';
 import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
 import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -763,6 +764,133 @@ void main() {
       act: (c) => c.submit(),
       verify: (c) => expect(c.state.errorCode, 'unknown'),
     );
+  });
+
+  group('signal de changement de statut (gpProStatusChanged)', () {
+    GpProCubitState ready() => const GpProCubitState(
+      load: GpProLoadStatus.ready,
+      status: none,
+      frequency: GpProFrequency.weekly,
+      businessName: 'Diallo Express',
+      registrationNumber: 'CI-ABJ-2021-B-12345',
+      businessCountry: 'CI',
+    );
+
+    void stubApply(Future<GpProStatus> Function() answer) => when(
+      () => repository.apply(
+        frequency: any(named: 'frequency'),
+        commercialName: any(named: 'commercialName'),
+        businessRegistrationNumber: any(named: 'businessRegistrationNumber'),
+        businessCountry: any(named: 'businessCountry'),
+        documentIds: any(named: 'documentIds'),
+        source: any(named: 'source'),
+      ),
+    ).thenAnswer((_) => answer());
+
+    Future<int> signalsDuring(Future<void> Function() action) async {
+      final before = gpProStatusChanged.value;
+      await action();
+      return gpProStatusChanged.value - before;
+    }
+
+    test('submit réussi : un signal', () async {
+      stubApply(() async => pending);
+      final cubit = build()..emit(ready());
+      expect(await signalsDuring(cubit.submit), 1);
+    });
+
+    test('submit 409 (demande déjà ouverte) : un signal, relecture, aucune '
+        'erreur trompeuse', () async {
+      stubApply(
+        () async =>
+            throw const GpProException('gp-pro-application-open', status: 409),
+      );
+      stubStatus(pending);
+      final cubit = build()..emit(ready());
+      expect(await signalsDuring(cubit.submit), 1);
+      expect(cubit.state.errorCode, isNull);
+      expect(cubit.state.status, pending);
+    });
+
+    test('submit en échec réseau : aucun signal', () async {
+      stubApply(() async => throw const GpProException('network'));
+      final cubit = build()..emit(ready());
+      expect(await signalsDuring(cubit.submit), 0);
+    });
+
+    test('cancel réussi : un signal ; en échec : aucun', () async {
+      when(() => repository.cancel()).thenAnswer((_) async {});
+      stubStatus(none);
+      expect(await signalsDuring(build().cancel), 1);
+
+      when(
+        () => repository.cancel(),
+      ).thenThrow(const GpProException('network'));
+      expect(await signalsDuring(build().cancel), 0);
+    });
+
+    test('resign réussi : un signal ; 409 gp-pro-not-active : un signal ; '
+        'échec : aucun', () async {
+      stubStatus(none);
+      when(
+        () => repository.resign(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+      expect(await signalsDuring(build().resign), 1);
+
+      when(
+        () => repository.resign(),
+      ).thenThrow(const GpProException('gp-pro-not-active', status: 409));
+      expect(await signalsDuring(build().resign), 1);
+
+      when(
+        () => repository.resign(),
+      ).thenThrow(const GpProException('network'));
+      expect(await signalsDuring(build().resign), 0);
+    });
+
+    test('une simple lecture n\'émet jamais de signal', () async {
+      stubStatus(none);
+      expect(await signalsDuring(build().load), 0);
+    });
+  });
+
+  group('lectures du statut mises en file', () {
+    test('deux load() rapides : une seule requête en vol, le second est '
+        'rejoué une fois, jamais perdu', () async {
+      final first = Completer<GpProStatus>();
+      var calls = 0;
+      when(() => repository.fetchStatus()).thenAnswer((_) {
+        calls++;
+        return calls == 1
+            ? first.future
+            : Future.value(const GpProStatus(state: GpProState.pending));
+      });
+      final cubit = build();
+
+      final a = cubit.load();
+      final b = cubit.load();
+      final c = cubit.load();
+      await Future<void>.delayed(Duration.zero);
+      expect(calls, 1, reason: 'une seule requête pendant la première');
+
+      first.complete(none);
+      await Future.wait([a, b, c]);
+
+      expect(calls, 2, reason: 'un seul rejeu pour les deux demandes');
+      expect(cubit.state.status, pending, reason: 'résultat le plus récent');
+    });
+
+    test('load() sur un cubit fermé pendant la file : aucun rejeu', () async {
+      final first = Completer<GpProStatus>();
+      when(() => repository.fetchStatus()).thenAnswer((_) => first.future);
+      final cubit = build();
+      final a = cubit.load();
+      unawaited(cubit.load());
+      await cubit.close();
+      first.complete(none);
+      await a;
+      verify(() => repository.fetchStatus()).called(1);
+    });
   });
 
   group('cubit fermé en vol (écran quitté)', () {

@@ -999,11 +999,13 @@ void main() {
     );
   });
 
-  test('GP_PRO_APPROVED/REJECTED/REVOKED ouvrent l\'écran GP Pro', () {
+  test('GP_PRO_APPROVED/REJECTED/REVOKED et TRAVELER_STATUS_CONFIRMATION '
+      'ouvrent l\'écran GP Pro', () {
     for (final type in [
       'GP_PRO_APPROVED',
       'GP_PRO_REJECTED',
       'GP_PRO_REVOKED',
+      'TRAVELER_STATUS_CONFIRMATION',
     ]) {
       expect(
         resolveNotificationRoute(type, {'route': 'profile/gp-pro'}),
