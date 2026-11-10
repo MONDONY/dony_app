@@ -11607,5 +11607,7 @@
   "bidCreateIndividualTravelerTitle": "This traveler is an individual.",
   "@bidCreateIndividualTravelerTitle": {"description": "Titre de l'encart d'information avant le paiement quand le voyageur de l'annonce voyage à titre personnel (create_bid_bottom_sheet.dart). Texte à faire valider par un avocat."},
   "bidCreateIndividualTravelerBody": "Consumer law does not apply to your agreement with them.",
-  "@bidCreateIndividualTravelerBody": {"description": "Corps de l'encart d'information avant le paiement chez un voyageur particulier : il ne bloque rien (create_bid_bottom_sheet.dart). Texte à faire valider par un avocat."}
+  "@bidCreateIndividualTravelerBody": {"description": "Corps de l'encart d'information avant le paiement chez un voyageur particulier : il ne bloque rien (create_bid_bottom_sheet.dart). Texte à faire valider par un avocat."},
+  "travelerStatusRegistrationInvalid": "At least 4 characters: letters, digits, space, dot, slash or hyphen.",
+  "@travelerStatusRegistrationInvalid": {"description": "Erreur sous le champ du numéro d'entreprise quand il est non vide et invalide (moins de 4 caractères ou caractère interdit) ; remplace l'aide neutre (traveler_status_sheet.dart)."}
 }

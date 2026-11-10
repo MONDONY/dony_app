@@ -257,6 +257,11 @@ class _IndividualStep extends StatelessWidget {
   }
 }
 
+/// Numéro saisi mais refusé : non vide et invalide.
+bool _numberInvalid(TravelerStatusEditing form) =>
+    form.registrationNumber.trim().isNotEmpty &&
+    !form.isRegistrationNumberValid;
+
 class _ProfessionalStep extends StatelessWidget {
   const _ProfessionalStep({
     required this.nameCtrl,
@@ -289,18 +294,37 @@ class _ProfessionalStep extends StatelessWidget {
           inputFormatters: [LengthLimitingTextInputFormatter(120)],
         ),
         const SizedBox(height: DonySpacing.md),
-        DonyTextField(
-          controller: numberCtrl,
-          label: l.travelerStatusRegistrationLabel,
-          textInputAction: TextInputAction.done,
-          inputFormatters: [LengthLimitingTextInputFormatter(40)],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: DonySpacing.xs),
-          child: Text(
-            l.travelerStatusRegistrationHint,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
+        // Erreur dès que le champ est non vide et invalide (moins de 4
+        // caractères, caractère interdit) : sans elle, « Enregistrer » restait
+        // grisé sans explication. L'aide neutre revient champ vide ou valide.
+        BlocBuilder<TravelerStatusCubit, TravelerStatusState>(
+          buildWhen: (prev, curr) =>
+              _numberInvalid(prev.form) != _numberInvalid(curr.form),
+          builder: (context, state) {
+            final invalid = _numberInvalid(state.form);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DonyTextField(
+                  controller: numberCtrl,
+                  label: l.travelerStatusRegistrationLabel,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [LengthLimitingTextInputFormatter(40)],
+                  errorText: invalid
+                      ? l.travelerStatusRegistrationInvalid
+                      : null,
+                ),
+                if (!invalid)
+                  Padding(
+                    padding: const EdgeInsets.only(top: DonySpacing.xs),
+                    child: Text(
+                      l.travelerStatusRegistrationHint,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
         const SizedBox(height: DonySpacing.md),
         DonyTextField.tappable(

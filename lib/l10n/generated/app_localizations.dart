@@ -37913,6 +37913,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le droit de la consommation ne s\'applique pas à votre accord avec lui.'**
   String get bidCreateIndividualTravelerBody;
+
+  /// Erreur sous le champ du numéro d'entreprise quand il est non vide et invalide (moins de 4 caractères ou caractère interdit) ; remplace l'aide neutre (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'4 caractères minimum : lettres, chiffres, espace, point, barre oblique ou tiret.'**
+  String get travelerStatusRegistrationInvalid;
 }
 
 class _AppLocalizationsDelegate

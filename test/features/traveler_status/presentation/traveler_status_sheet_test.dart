@@ -318,6 +318,63 @@ void main() {
     );
   });
 
+  group('aide sur le numéro d\'entreprise invalide', () {
+    for (final locale in [AppL10n.fr, AppL10n.en]) {
+      final l = locale == AppL10n.fr ? fr : en;
+      final code = locale.languageCode;
+
+      testWidgets('[$code] 360 dp : message d\'erreur dès que le champ est '
+          'non vide et invalide, aide neutre sinon', (tester) async {
+        await open(tester, locale: locale);
+        await tester.tap(find.text(l.travelerStatusOptionProfessional));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(DonyButton, l.commonContinue));
+        await tester.pumpAndSettle();
+
+        // Champ vide : l'aide neutre, pas d'erreur.
+        expect(find.text(l.travelerStatusRegistrationHint), findsOneWidget);
+        expect(find.text(l.travelerStatusRegistrationInvalid), findsNothing);
+
+        // 1 à 3 caractères : erreur à la place de l'aide.
+        await tester.enterText(find.byType(TextField).at(1), '123');
+        await tester.pump();
+        expect(find.text(l.travelerStatusRegistrationInvalid), findsOneWidget);
+        expect(find.text(l.travelerStatusRegistrationHint), findsNothing);
+
+        // Caractère interdit, même assez long.
+        await tester.enterText(find.byType(TextField).at(1), '12345<script>');
+        await tester.pump();
+        expect(find.text(l.travelerStatusRegistrationInvalid), findsOneWidget);
+
+        // Valide : l'aide neutre revient.
+        await tester.enterText(find.byType(TextField).at(1), 'CI-ABJ 2021/1.2');
+        await tester.pump();
+        expect(find.text(l.travelerStatusRegistrationInvalid), findsNothing);
+        expect(find.text(l.travelerStatusRegistrationHint), findsOneWidget);
+
+        // Vidé à nouveau : aide neutre.
+        await tester.enterText(find.byType(TextField).at(1), '');
+        await tester.pump();
+        expect(find.text(l.travelerStatusRegistrationHint), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('textes exacts, sans tiret cadratin', (tester) async {
+      expect(
+        fr.travelerStatusRegistrationInvalid,
+        '4 caractères minimum : lettres, chiffres, espace, point, barre '
+        'oblique ou tiret.',
+      );
+      expect(
+        en.travelerStatusRegistrationInvalid,
+        'At least 4 characters: letters, digits, space, dot, slash or hyphen.',
+      );
+      expect(fr.travelerStatusRegistrationInvalid, isNot(contains('—')));
+      expect(en.travelerStatusRegistrationInvalid, isNot(contains('—')));
+    });
+  });
+
   group('échec du back', () {
     testWidgets('la feuille reste ouverte et le bouton se réactive', (
       tester,

@@ -23714,4 +23714,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidCreateIndividualTravelerBody =>
       'Le droit de la consommation ne s\'applique pas à votre accord avec lui.';
+
+  @override
+  String get travelerStatusRegistrationInvalid =>
+      '4 caractères minimum : lettres, chiffres, espace, point, barre oblique ou tiret.';
 }
