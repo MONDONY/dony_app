@@ -21,6 +21,8 @@ import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
 import 'package:dony/features/city/data/recent_city_store.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
+import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -156,6 +158,8 @@ class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _MockTravelerStatusRepository extends Mock
     implements TravelerStatusRepository {}
+
+class _MockGpProRepository extends Mock implements GpProRepository {}
 
 class _MockPriceGridRepository extends Mock implements PriceGridRepository {}
 
@@ -1486,6 +1490,7 @@ void main() {
 
     late _MockAnnouncementBloc announcementBloc;
     late _MockTravelerStatusRepository statusRepo;
+    late _MockGpProRepository gpRepo;
     late StreamController<AnnouncementState> states;
 
     setUpAll(() {
@@ -1517,6 +1522,14 @@ void main() {
         return b;
       });
 
+      gpRepo = _MockGpProRepository();
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+      if (getIt.isRegistered<GpProRepository>()) {
+        getIt.unregister<GpProRepository>();
+      }
+      getIt.registerSingleton<GpProRepository>(gpRepo);
       statusRepo = _MockTravelerStatusRepository();
       when(() => statusRepo.declareIndividual()).thenAnswer(
         (_) async => TravelerStatusDeclaration(
@@ -1574,6 +1587,9 @@ void main() {
       }
       if (getIt.isRegistered<TravelerStatusRepository>()) {
         getIt.unregister<TravelerStatusRepository>();
+      }
+      if (getIt.isRegistered<GpProRepository>()) {
+        getIt.unregister<GpProRepository>();
       }
     });
 
@@ -1681,8 +1697,11 @@ void main() {
       expect(createdCount(), 1);
     });
 
-    testWidgets('« GP Pro » : le formulaire s\'ouvre, puis le trajet part '
+    testWidgets('« GP Pro » puis demande envoyée : le trajet part '
         '(particulier pendant la validation)', (tester) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.pending));
       await reachPublishStep(tester);
       await tapPublish(tester);
       await tester.tap(find.text('GP Pro'));
@@ -1698,6 +1717,24 @@ void main() {
 
       verifyNever(() => statusRepo.declareIndividual());
       expect(createdCount(), 1);
+    });
+
+    testWidgets('« GP Pro » puis formulaire quitté sans envoyer : rien ne '
+        'part, aucun message, le formulaire du trajet reste', (tester) async {
+      await reachPublishStep(tester);
+      await tapPublish(tester);
+      await tester.tap(find.text('GP Pro'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('formulaire GP Pro'));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () =>
+            announcementBloc.add(any(that: isA<AnnouncementCreateRequested>())),
+      );
+      expect(find.byType(CreateTripScreen), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('statut déjà déclaré : aucune question', (tester) async {

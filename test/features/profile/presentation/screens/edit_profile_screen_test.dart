@@ -1181,33 +1181,17 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      testWidgets('la feuille propose deux actions dans son pied', (
-        tester,
-      ) async {
+      testWidgets('la feuille ne propose que « Redevenir particulier », dans '
+          'son pied', (tester) async {
         await openManage(tester);
 
         expect(find.text('Votre statut GP Pro'), findsOneWidget);
-        expect(
-          find.widgetWithText(DonyButton, 'Modifier mes informations'),
-          findsOneWidget,
-        );
+        expect(find.text('Modifier mes informations'), findsNothing);
         expect(
           find.widgetWithText(DonyButton, 'Redevenir particulier'),
           findsOneWidget,
         );
         expect(tester.takeException(), isNull);
-      });
-
-      testWidgets('« Modifier mes informations » rouvre le formulaire GP Pro', (
-        tester,
-      ) async {
-        await openManage(tester);
-        await tester.tap(
-          find.widgetWithText(DonyButton, 'Modifier mes informations'),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.text('GpProScreen edit=1'), findsOneWidget);
       });
 
       testWidgets('« Redevenir particulier » : une confirmation à un seul '
@@ -1309,19 +1293,13 @@ void main() {
         await tester.tap(pill);
         await tester.pumpAndSettle();
 
-        final edit = find.widgetWithText(
-          DonyButton,
-          english ? 'Edit my details' : 'Modifier mes informations',
-        );
         final resign = find.widgetWithText(
           DonyButton,
           english ? 'Become an individual again' : 'Redevenir particulier',
         );
-        expect(edit, findsOneWidget);
         expect(resign, findsOneWidget);
         expect(tester.takeException(), isNull);
         // Une ligne : la hauteur du bouton reste celle d'un bouton normal.
-        expect(tester.getSize(edit).height, lessThan(64));
         expect(tester.getSize(resign).height, lessThan(64));
       });
     }

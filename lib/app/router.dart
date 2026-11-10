@@ -1750,10 +1750,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/profile/gp-pro',
       builder: (context, state) => BlocProvider(
-        // `?edit=1` : un GP Pro actif rouvre le formulaire (Modifier le profil).
-        create: (_) =>
-            getIt<GpProCubit>()
-              ..load(editBusiness: state.uri.queryParameters['edit'] == '1'),
+        create: (_) => getIt<GpProCubit>()..load(),
         child: const GpProScreen(),
       ),
     ),

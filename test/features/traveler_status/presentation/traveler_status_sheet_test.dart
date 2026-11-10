@@ -6,6 +6,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
+import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_declaration.dart';
@@ -21,6 +23,8 @@ import 'package:mocktail/mocktail.dart';
 class _MockRepository extends Mock implements TravelerStatusRepository {}
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
+
+class _MockGpProRepository extends Mock implements GpProRepository {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
@@ -41,6 +45,7 @@ void main() {
   late _MockRepository repository;
   late _MockAnalytics analytics;
   late _MockAuthBloc authBloc;
+  late _MockGpProRepository gpRepo;
   TravelerStatusOutcome? result;
   var resultSet = false;
 
@@ -50,6 +55,11 @@ void main() {
     repository = _MockRepository();
     analytics = _MockAnalytics();
     authBloc = _MockAuthBloc();
+    gpRepo = _MockGpProRepository();
+    when(
+      () => gpRepo.fetchStatus(),
+    ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+    getIt.registerSingleton<GpProRepository>(gpRepo);
     result = null;
     resultSet = false;
     when(() => authBloc.state).thenReturn(const AuthAuthenticated(_user));
@@ -257,24 +267,63 @@ void main() {
   });
 
   group('GP Pro', () {
-    testWidgets('un tap ouvre le formulaire GP Pro, rien n\'est déclaré', (
-      tester,
-    ) async {
+    Future<void> openFormThenReturn(WidgetTester tester) async {
       await open(tester);
-
       await tester.tap(find.text(fr.travelerStatusOptionGpPro));
       await tester.pumpAndSettle();
-
       expect(find.text('formulaire GP Pro'), findsOneWidget);
       verifyNever(() => repository.declareIndividual());
-
-      // Retour du formulaire : résultat « gpPro », profil rechargé.
       await tester.tap(find.text('formulaire GP Pro'));
       await tester.pumpAndSettle();
-      expect(result, TravelerStatusOutcome.gpPro);
+    }
+
+    testWidgets('formulaire quitté sans envoyer : « abandonné », profil '
+        'rechargé, rien n\'est déclaré', (tester) async {
+      await openFormThenReturn(tester);
+
+      expect(result, TravelerStatusOutcome.gpProAbandoned);
       verify(
         () => authBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
       ).called(1);
+      verifyNever(() => repository.declareIndividual());
+    });
+
+    for (final state in [GpProState.pending, GpProState.awaitingKyc]) {
+      testWidgets('demande envoyée (${state.wire}) au retour : « envoyée »', (
+        tester,
+      ) async {
+        when(
+          () => gpRepo.fetchStatus(),
+        ).thenAnswer((_) async => GpProStatus(state: state));
+
+        await openFormThenReturn(tester);
+
+        expect(result, TravelerStatusOutcome.gpProSent);
+      });
+    }
+
+    testWidgets('demande refusée ou retirée au retour : « abandonné »', (
+      tester,
+    ) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.rejected));
+
+      await openFormThenReturn(tester);
+
+      expect(result, TravelerStatusOutcome.gpProAbandoned);
+    });
+
+    testWidgets('lecture du statut en échec : « abandonné », aucune '
+        'exception', (tester) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenThrow(const GpProException('network'));
+
+      await openFormThenReturn(tester);
+
+      expect(result, TravelerStatusOutcome.gpProAbandoned);
+      expect(tester.takeException(), isNull);
     });
   });
 

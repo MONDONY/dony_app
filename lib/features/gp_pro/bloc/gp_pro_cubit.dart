@@ -25,10 +25,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
     'gp-pro-already-active',
   };
 
-  /// [editBusiness] : un GP Pro actif rouvre le formulaire pour modifier ses
-  /// informations d'entreprise (« Modifier mes informations ») ; le back relance
-  /// alors une validation.
-  Future<void> load({bool editBusiness = false}) async {
+  Future<void> load() async {
     // Pas de flash de chargement lors d'un rechargement d'un écran déjà prêt.
     if (state.load != GpProLoadStatus.ready) {
       emit(state.copyWith(load: GpProLoadStatus.loading));
@@ -40,9 +37,6 @@ class GpProCubit extends Cubit<GpProCubitState> {
           load: GpProLoadStatus.ready,
           status: status,
           pieces: _merge(status),
-          restarting: editBusiness && status.state == GpProState.active
-              ? true
-              : null,
           clearError: true,
         ),
       );

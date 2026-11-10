@@ -13,10 +13,12 @@ bool travelerStatusMissing(BuildContext context) {
 }
 
 /// Question du statut au clic sur « Publier », à chaque publication tant que le
-/// voyageur n'a pas répondu. Ne bloque jamais : « Plus tard », un geste ou
-/// l'ouverture du formulaire GP Pro laissent l'appelant publier quand même (le
-/// voyageur publie comme particulier pendant la validation). Si la limite
-/// mensuelle est atteinte, c'est le 403 du back qui arrête la publication.
+/// voyageur n'a pas répondu. « Plus tard », un geste, « Particulier » ou une
+/// demande GP Pro envoyée laissent l'appelant publier (le voyageur publie comme
+/// particulier pendant la validation). Un formulaire GP Pro quitté sans envoyer
+/// la demande rend [TravelerStatusOutcome.gpProAbandoned] : l'appelant ne publie
+/// rien. Si la limite mensuelle est atteinte, c'est le 403 du back qui arrête
+/// la publication.
 ///
 /// Rend la réponse, ou `null` si rien n'a été demandé.
 Future<TravelerStatusOutcome?> remindTravelerStatusBeforePublish(

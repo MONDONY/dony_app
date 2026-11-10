@@ -5,6 +5,7 @@ import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_choice_tiles.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -17,8 +18,18 @@ enum TravelerStatusOutcome {
   /// « Particulier » : déclaré, le profil est à jour.
   individual,
 
-  /// « GP Pro » : le formulaire GP Pro s'est ouvert puis refermé.
-  gpPro,
+  /// « GP Pro » touché : la feuille se ferme et le formulaire s'ouvre. Valeur
+  /// interne, jamais rendue par [TravelerStatusSheet.show] (qui rend
+  /// [gpProSent] ou [gpProAbandoned] au retour du formulaire).
+  gpProRequested,
+
+  /// « GP Pro » : le formulaire s'est refermé sur une demande envoyée (en
+  /// validation). Le voyageur publie comme particulier pendant l'examen.
+  gpProSent,
+
+  /// « GP Pro » : le formulaire s'est refermé sans demande envoyée. Le voyageur
+  /// a renoncé, rien ne doit être publié à sa place.
+  gpProAbandoned,
 
   /// « Plus tard » : rien n'a été répondu.
   later,
@@ -76,15 +87,39 @@ class TravelerStatusSheet extends StatelessWidget {
             AuthUserSynced(user.withTravelerStatus(state.declaration.status)),
           );
         }
-      case TravelerStatusOutcome.gpPro:
-        if (context.mounted) await context.push<void>('/profile/gp-pro');
-      case TravelerStatusOutcome.later || null:
+      case TravelerStatusOutcome.gpProRequested:
+        // Le vrai résultat se lit au retour du formulaire, sur le statut de la
+        // demande.
+        if (!context.mounted) return TravelerStatusOutcome.gpProAbandoned;
+        await context.push<void>('/profile/gp-pro');
+        final sent = await _applicationSent();
+        if (auth != null && !auth.isClosed) {
+          auth.add(const AuthProfileRefreshRequested());
+        }
+        return sent
+            ? TravelerStatusOutcome.gpProSent
+            : TravelerStatusOutcome.gpProAbandoned;
+      case TravelerStatusOutcome.gpProSent ||
+          TravelerStatusOutcome.gpProAbandoned ||
+          TravelerStatusOutcome.later ||
+          null:
         return outcome;
     }
     if (auth != null && !auth.isClosed) {
       auth.add(const AuthProfileRefreshRequested());
     }
     return outcome;
+  }
+
+  /// La demande GP Pro est partie : en validation (ou en attente de l'identité).
+  /// Toute autre réponse, ou une lecture en échec, vaut « pas envoyée » : on ne
+  /// publie jamais sur un doute.
+  static Future<bool> _applicationSent() async {
+    try {
+      return (await getIt<GpProRepository>().fetchStatus()).isOpen;
+    } on Object {
+      return false;
+    }
   }
 
   @override
@@ -123,8 +158,9 @@ class TravelerStatusSheet extends StatelessWidget {
             TravelerStatusChoiceTiles(
               busy: state is TravelerStatusSubmitting,
               onIndividual: cubit.chooseIndividual,
-              onGpPro: () =>
-                  Navigator.of(context).pop(TravelerStatusOutcome.gpPro),
+              onGpPro: () => Navigator.of(
+                context,
+              ).pop(TravelerStatusOutcome.gpProRequested),
             ),
           ],
         );

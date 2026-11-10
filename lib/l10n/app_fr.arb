@@ -21603,8 +21603,8 @@
   "@gpProBadgeSemantics": {"description": "Texte lu par les lecteurs d'écran pour le badge GP Pro (version pastille ou libellé)."},
   "gpProInfoTitle": "Qu'est-ce qu'un GP Pro ?",
   "@gpProInfoTitle": {"description": "Titre de la feuille qui explique le badge GP Pro, ouverte en touchant le badge."},
-  "gpProInfoBody": "Un GP Pro est un voyageur régulier ou une entreprise dont la demande a été examinée puis acceptée par l'équipe Yadony. Ce badge est différent de l'abonnement PRO et de l'identité vérifiée : il n'est ni payant ni automatique.",
-  "@gpProInfoBody": {"description": "Corps de la feuille d'explication du badge GP Pro : badge accordé par l'équipe, distinct de l'abonnement PRO et de l'identité vérifiée."},
+  "gpProInfoBody": "Un GP Pro est un voyageur professionnel. Son profil, avec sa raison sociale et son numéro d'entreprise, a été examiné par l'équipe Yadony. Ce badge est différent de l'abonnement PRO et de l'identité vérifiée : il n'est ni payant ni automatique.",
+  "@gpProInfoBody": {"description": "Texte de la feuille d'explication du badge GP Pro (gp_pro_info_sheet.dart et écran GP Pro)."},
   "gpProScreenTitle": "GP Pro",
   "@gpProScreenTitle": {"description": "Titre de l'écran /profile/gp-pro (demande et statut du badge GP Pro)."},
   "gpProFailureTitle": "Impossible de charger votre statut GP Pro",
@@ -23144,10 +23144,8 @@
   "@profileTravelerStatusHint": {"description": "Phrase sous la ligne « Statut de voyageur » de Modifier le profil : à quoi sert la réponse (edit_profile_screen.dart)."},
   "gpProManageTitle": "Votre statut GP Pro",
   "@gpProManageTitle": {"description": "Titre de la feuille qui s'ouvre sur « Modifier » de la ligne « Statut de voyageur » d'un GP Pro (gp_pro_manage_sheet.dart)."},
-  "gpProManageHint": "Modifier vos informations d'entreprise relance une validation par l'équipe Yadony.",
-  "@gpProManageHint": {"description": "Phrase de la feuille de gestion du statut GP Pro : modifier les informations repasse en validation (gp_pro_manage_sheet.dart)."},
-  "gpProManageEdit": "Modifier mes informations",
-  "@gpProManageEdit": {"description": "Bouton principal de la feuille de gestion du statut GP Pro : rouvre le formulaire GP Pro (gp_pro_manage_sheet.dart)."},
+  "gpProManageHint": "Pour retrouver le badge GP Pro, il faudra refaire une demande.",
+  "@gpProManageHint": {"description": "Phrase de la feuille de gestion du statut GP Pro : le retrait du badge est définitif tant qu'une nouvelle demande n'a pas été validée (gp_pro_manage_sheet.dart)."},
   "gpProManageResign": "Redevenir particulier",
   "@gpProManageResign": {"description": "Bouton secondaire de la feuille de gestion du statut GP Pro : retire le badge d'un clic (gp_pro_manage_sheet.dart)."},
   "gpProResignConfirmTitle": "Redevenir particulier ?",
@@ -23209,5 +23207,7 @@
   "errorGpProPendingTitle": "Demande GP Pro en cours d'examen",
   "@errorGpProPendingTitle": {"description": "Titre de l'erreur 403 gp-pro-pending : limite atteinte pendant la validation (error_catalog.dart)."},
   "errorGpProPendingMessage": "Vous pourrez publier dès que l'équipe Yadony aura validé votre demande GP Pro.",
-  "@errorGpProPendingMessage": {"description": "Message de l'erreur 403 gp-pro-pending (error_catalog.dart)."}
+  "@errorGpProPendingMessage": {"description": "Message de l'erreur 403 gp-pro-pending (error_catalog.dart)."},
+  "publishBlockedResumeOnFirst": "Vous pourrez de nouveau publier à partir du 1er {month}.",
+  "@publishBlockedResumeOnFirst": {"description": "Date de reprise quand c'est le premier du mois : « 1er » en français ; {month} est le nom du mois (publish_blocked_screen.dart).", "placeholders": {"month": {"type": "String"}}}
 }

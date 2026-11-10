@@ -20719,7 +20719,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get gpProInfoBody =>
-      'Un GP Pro est un voyageur régulier ou une entreprise dont la demande a été examinée puis acceptée par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.';
+      'Un GP Pro est un voyageur professionnel. Son profil, avec sa raison sociale et son numéro d\'entreprise, a été examiné par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.';
 
   @override
   String get gpProScreenTitle => 'GP Pro';
@@ -23680,10 +23680,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get gpProManageHint =>
-      'Modifier vos informations d\'entreprise relance une validation par l\'équipe Yadony.';
-
-  @override
-  String get gpProManageEdit => 'Modifier mes informations';
+      'Pour retrouver le badge GP Pro, il faudra refaire une demande.';
 
   @override
   String get gpProManageResign => 'Redevenir particulier';
@@ -23810,4 +23807,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorGpProPendingMessage =>
       'Vous pourrez publier dès que l\'équipe Yadony aura validé votre demande GP Pro.';
+
+  @override
+  String publishBlockedResumeOnFirst(String month) {
+    return 'Vous pourrez de nouveau publier à partir du 1er $month.';
+  }
 }

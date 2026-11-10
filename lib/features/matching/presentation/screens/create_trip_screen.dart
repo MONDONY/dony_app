@@ -1821,11 +1821,13 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   /// Question du statut avant la publication d'un nouveau trajet. Jamais pour
   /// un brouillon, une modification ou un trajet dédié à une demande. Fermée
-  /// d'un « Plus tard », ou après l'ouverture du formulaire GP Pro (le voyageur
+  /// d'un « Plus tard », ou après l'envoi d'une demande GP Pro (le voyageur
   /// publie comme particulier pendant la validation), la publication continue.
+  /// Un formulaire GP Pro quitté sans envoyer la demande ne publie rien et ne
+  /// dit rien : le voyageur retrouve son formulaire, la question reviendra.
   Future<void> _remindTravelerStatusThenSubmit() async {
-    await TravelerStatusSheet.show(context);
-    if (!mounted) return;
+    final outcome = await TravelerStatusSheet.show(context);
+    if (!mounted || outcome == TravelerStatusOutcome.gpProAbandoned) return;
     _travelerStatusReminded = true;
     _submit();
   }

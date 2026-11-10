@@ -9,6 +9,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_parcels_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_sheets.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_prompt.dart';
+import 'package:dony/features/traveler_status/presentation/traveler_status_sheet.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -134,12 +135,17 @@ Future<void> _open(
       );
     case TripTodoKind.publish:
       // Question du statut (particulier / GP Pro) : « Plus tard », un geste ou
-      // l'ouverture du formulaire GP Pro laissent la publication partir ; la
-      // limite mensuelle, elle, est arrêtée par le 403 du back.
+      // une demande GP Pro envoyée laissent la publication partir ; la limite
+      // mensuelle, elle, est arrêtée par le 403 du back.
       final bloc = context.read<AnnouncementBloc>();
-      await remindTravelerStatusBeforePublish(context);
-      // L'écran a pu être quitté, ou son bloc fermé, pendant la feuille.
-      if (!context.mounted || bloc.isClosed) return;
+      final outcome = await remindTravelerStatusBeforePublish(context);
+      // L'écran a pu être quitté, ou son bloc fermé, pendant la feuille. Un
+      // formulaire GP Pro quitté sans demande envoyée ne publie rien.
+      if (!context.mounted ||
+          bloc.isClosed ||
+          outcome == TravelerStatusOutcome.gpProAbandoned) {
+        return;
+      }
       bloc.add(AnnouncementPublishRequested(trip.id));
     case TripTodoKind.presence ||
         TripTodoKind.scan ||

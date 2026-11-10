@@ -998,17 +998,10 @@ class _TravelerStatusRowBody extends StatelessWidget {
     if (pending) {
       await context.push('/profile/gp-pro');
     } else if (_isGpPro) {
-      final choice = await GpProManageSheet.show(context);
-      if (!context.mounted) return;
-      switch (choice) {
-        case GpProManageChoice.edit:
-          await context.push('/profile/gp-pro?edit=1');
-        case GpProManageChoice.resign:
-          await _confirmResign(context, cubit);
-          return;
-        case null:
-          return;
-      }
+      final resign = await GpProManageSheet.show(context);
+      if (!context.mounted || !(resign ?? false)) return;
+      await _confirmResign(context, cubit);
+      return;
     } else {
       await TravelerStatusSheet.show(context, allowLater: false);
     }

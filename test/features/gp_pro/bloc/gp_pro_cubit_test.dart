@@ -78,29 +78,6 @@ void main() {
 
   group('load', () {
     blocTest<GpProCubit, GpProCubitState>(
-      'editBusiness : un GP Pro actif rouvre le formulaire (restarting)',
-      build: () {
-        stubStatus(const GpProStatus(state: GpProState.active));
-        return build();
-      },
-      act: (c) => c.load(editBusiness: true),
-      verify: (c) {
-        expect(c.state.restarting, isTrue);
-        expect(c.state.status?.state, GpProState.active);
-      },
-    );
-
-    blocTest<GpProCubit, GpProCubitState>(
-      'editBusiness sans statut actif : rien à rouvrir',
-      build: () {
-        stubStatus(pending);
-        return build();
-      },
-      act: (c) => c.load(editBusiness: true),
-      verify: (c) => expect(c.state.restarting, isFalse),
-    );
-
-    blocTest<GpProCubit, GpProCubitState>(
       'ready + event opened une seule fois même après 2 load',
       build: () {
         stubStatus(none);

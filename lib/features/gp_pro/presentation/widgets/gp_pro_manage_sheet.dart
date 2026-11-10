@@ -2,47 +2,27 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
-/// Ce que le GP Pro veut faire de son statut.
-enum GpProManageChoice {
-  /// Rouvrir le formulaire GP Pro (une nouvelle validation suivra).
-  edit,
-
-  /// Redevenir particulier en un tap.
-  resign,
-}
-
-/// Feuille « Votre statut GP Pro » : deux actions, « Modifier mes
-/// informations » (rouvre le formulaire) et « Redevenir particulier ».
+/// Feuille « Votre statut GP Pro » d'un GP Pro actif : une seule action,
+/// « Redevenir particulier ». Le back refuse une nouvelle demande à un GP Pro
+/// actif (409 `gp-pro-already-active`) : il n'y a pas de « Modifier mes
+/// informations ». Le bouton vit dans le `stickyBottom` et se lit sur une ligne.
 ///
-/// Les deux boutons vivent dans le `stickyBottom` et se lisent sur une ligne.
 /// La feuille ne porte aucun état : elle rend le choix, l'appelant agit.
 abstract final class GpProManageSheet {
-  /// Rend le choix, ou `null` si la feuille est fermée d'un geste.
-  static Future<GpProManageChoice?> show(BuildContext context) {
+  /// Rend `true` si le voyageur veut redevenir particulier, `null` si la feuille
+  /// est fermée d'un geste.
+  static Future<bool?> show(BuildContext context) {
     final l = context.l10n;
-    return DonyBottomSheet.show<GpProManageChoice>(
+    return DonyBottomSheet.show<bool>(
       context,
       analyticsName: 'gp-pro/manage',
       title: l.gpProManageTitle,
       stickyBottom: Builder(
-        builder: (sheetContext) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DonyButton(
-              key: const Key('gp-pro-manage-edit'),
-              label: sheetContext.l10n.gpProManageEdit,
-              onPressed: () =>
-                  Navigator.of(sheetContext).pop(GpProManageChoice.edit),
-            ),
-            const SizedBox(height: DonySpacing.xs),
-            DonyButton(
-              key: const Key('gp-pro-manage-resign'),
-              label: sheetContext.l10n.gpProManageResign,
-              variant: DonyButtonVariant.ghost,
-              onPressed: () =>
-                  Navigator.of(sheetContext).pop(GpProManageChoice.resign),
-            ),
-          ],
+        builder: (sheetContext) => DonyButton(
+          key: const Key('gp-pro-manage-resign'),
+          label: sheetContext.l10n.gpProManageResign,
+          variant: DonyButtonVariant.destructiveGhost,
+          onPressed: () => Navigator.of(sheetContext).pop(true),
         ),
       ),
       child: Builder(

@@ -33390,10 +33390,10 @@ abstract class AppLocalizations {
   /// **'Qu\'est-ce qu\'un GP Pro ?'**
   String get gpProInfoTitle;
 
-  /// Corps de la feuille d'explication du badge GP Pro : badge accordé par l'équipe, distinct de l'abonnement PRO et de l'identité vérifiée.
+  /// Texte de la feuille d'explication du badge GP Pro (gp_pro_info_sheet.dart et écran GP Pro).
   ///
   /// In fr, this message translates to:
-  /// **'Un GP Pro est un voyageur régulier ou une entreprise dont la demande a été examinée puis acceptée par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.'**
+  /// **'Un GP Pro est un voyageur professionnel. Son profil, avec sa raison sociale et son numéro d\'entreprise, a été examiné par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.'**
   String get gpProInfoBody;
 
   /// Titre de l'écran /profile/gp-pro (demande et statut du badge GP Pro).
@@ -37848,17 +37848,11 @@ abstract class AppLocalizations {
   /// **'Votre statut GP Pro'**
   String get gpProManageTitle;
 
-  /// Phrase de la feuille de gestion du statut GP Pro : modifier les informations repasse en validation (gp_pro_manage_sheet.dart).
+  /// Phrase de la feuille de gestion du statut GP Pro : le retrait du badge est définitif tant qu'une nouvelle demande n'a pas été validée (gp_pro_manage_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Modifier vos informations d\'entreprise relance une validation par l\'équipe Yadony.'**
+  /// **'Pour retrouver le badge GP Pro, il faudra refaire une demande.'**
   String get gpProManageHint;
-
-  /// Bouton principal de la feuille de gestion du statut GP Pro : rouvre le formulaire GP Pro (gp_pro_manage_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Modifier mes informations'**
-  String get gpProManageEdit;
 
   /// Bouton secondaire de la feuille de gestion du statut GP Pro : retire le badge d'un clic (gp_pro_manage_sheet.dart).
   ///
@@ -38045,6 +38039,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vous pourrez publier dès que l\'équipe Yadony aura validé votre demande GP Pro.'**
   String get errorGpProPendingMessage;
+
+  /// Date de reprise quand c'est le premier du mois : « 1er » en français ; {month} est le nom du mois (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez de nouveau publier à partir du 1er {month}.'**
+  String publishBlockedResumeOnFirst(String month);
 }
 
 class _AppLocalizationsDelegate

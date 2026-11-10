@@ -272,14 +272,18 @@ class _LimitReachedBody extends StatelessWidget {
         if (resetsOn == null)
           l.publishBlockedResumeNextMonth
         else
-          l.publishBlockedResumeOn(
-            DateFormat.MMMMd(l.localeName).format(resetsOn),
-          ),
+          _resumeSentence(l, resetsOn),
         l.publishBlockedBecomeGpPro,
       ],
     );
   }
 }
+
+/// « à partir du 1er décembre » le premier du mois (« December 1st »), sinon
+/// la date courte de la langue (« 15 décembre », « December 15 »).
+String _resumeSentence(AppLocalizations l, DateTime date) => date.day == 1
+    ? l.publishBlockedResumeOnFirst(DateFormat.MMMM(l.localeName).format(date))
+    : l.publishBlockedResumeOn(DateFormat.MMMMd(l.localeName).format(date));
 
 class _PendingBody extends StatelessWidget {
   const _PendingBody();

@@ -266,6 +266,45 @@ void main() {
       expect(find.widgetWithText(DonyButton, fr.commonClose), findsOneWidget);
     });
 
+    testWidgets('le premier du mois s\'écrit « 1er décembre » en français', (
+      tester,
+    ) async {
+      await open(tester, _eligibility(PublishingReason.limitReached));
+      expect(
+        find.text('Vous pourrez de nouveau publier à partir du 1er décembre.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('du 1 décembre'), findsNothing);
+    });
+
+    testWidgets('le premier du mois s\'écrit « December 1st » en anglais', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        _eligibility(PublishingReason.limitReached),
+        locale: AppL10n.en,
+      );
+      expect(
+        find.text('You will be able to publish again from December 1st.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('un autre jour garde le format courant', (tester) async {
+      await open(
+        tester,
+        _eligibility(
+          PublishingReason.limitReached,
+          resetsOn: DateTime(2026, 12, 15),
+        ),
+      );
+      expect(
+        find.text('Vous pourrez de nouveau publier à partir du 15 décembre.'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('sans limite ni date (403 seul) : phrases de repli', (
       tester,
     ) async {

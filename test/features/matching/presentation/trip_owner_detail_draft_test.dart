@@ -25,6 +25,8 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
+import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -107,6 +109,8 @@ const _ownerUndeclared = UserModel(
 
 class _MockTravelerStatusRepository extends Mock
     implements TravelerStatusRepository {}
+
+class _MockGpProRepository extends Mock implements GpProRepository {}
 
 AnnouncementModel _makeAnnouncement({
   String status = 'ACTIVE',
@@ -554,6 +558,7 @@ void main() {
 
   group('statut légal du voyageur à la publication d\'un brouillon', () {
     late _MockTravelerStatusRepository statusRepo;
+    late _MockGpProRepository gpRepo;
 
     /// Ce que l'écran de blocage relit : limite de 4 trajets atteinte.
     void stubEligibility(PublishingReason reason) {
@@ -572,6 +577,11 @@ void main() {
     }
 
     setUp(() {
+      gpRepo = _MockGpProRepository();
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+      getIt.registerSingleton<GpProRepository>(gpRepo);
       statusRepo = _MockTravelerStatusRepository();
       when(() => statusRepo.declareIndividual()).thenAnswer(
         (_) async => TravelerStatusDeclaration(
@@ -600,6 +610,9 @@ void main() {
       }
       if (getIt.isRegistered<TravelerStatusRepository>()) {
         getIt.unregister<TravelerStatusRepository>();
+      }
+      if (getIt.isRegistered<GpProRepository>()) {
+        getIt.unregister<GpProRepository>();
       }
     });
 
@@ -741,6 +754,43 @@ void main() {
       verify(
         () => authBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
       ).called(1);
+    });
+
+    testWidgets('« GP Pro » puis formulaire quitté sans envoyer : rien n\'est '
+        'publié, aucun message', (tester) async {
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('GP Pro'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('formulaire GP Pro'));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () => annBloc.add(any(that: isA<AnnouncementPublishRequested>())),
+      );
+      expect(find.byType(TripOwnerDetailScreen), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('« GP Pro » puis demande envoyée : la publication part', (
+      tester,
+    ) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.pending));
+      await pumpDraft(tester);
+
+      await tester.tap(_inFooter(find.text('Publier')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('GP Pro'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('formulaire GP Pro'));
+      await tester.pumpAndSettle();
+
+      verifyPublishDispatched(1);
     });
 
     group('le back refuse (403)', () {
