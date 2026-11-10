@@ -2,6 +2,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
+import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 
 abstract class AnnouncementState {}
 
@@ -137,13 +138,14 @@ class AnnouncementKycRequired extends AnnouncementState {
   AnnouncementKycRequired(this.error);
 }
 
-/// Yadony exige la déclaration du statut légal (particulier ou professionnel)
-/// pour publier : 403 `traveler-status-required`, seulement quand l'admin a
-/// activé l'interrupteur. L'écran rouvre la feuille de déclaration, sans
-/// « Plus tard », puis reprend la publication.
-class AnnouncementTravelerStatusRequired extends AnnouncementState {
+/// La publication est refusée par la limite mensuelle de trajets de
+/// l'utilisateur (403 `traveler-status-required`, `monthly-limit-reached` ou
+/// `gp-pro-pending`). L'écran ouvre l'écran de blocage correspondant à
+/// [reason].
+class AnnouncementPublishingBlocked extends AnnouncementState {
   final AppException error;
-  AnnouncementTravelerStatusRequired(this.error);
+  final PublishingReason reason;
+  AnnouncementPublishingBlocked(this.error, this.reason);
 }
 
 /// La date de départ du trajet est passée : publication refusée tant que

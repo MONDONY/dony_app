@@ -38,7 +38,8 @@ import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_tiles.dart';
 import 'package:dony/features/tracking/bloc/tracking_consent_cubit.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
-import 'package:dony/features/traveler_status/presentation/traveler_status_sheet.dart';
+import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
+import 'package:dony/features/traveler_status/presentation/publish_blocked_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -422,23 +423,27 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
       unawaited(_onDepartureDatePassed(context));
     } else if (state is AnnouncementProLimitReached) {
       unawaited(_onProLimitReached(context, state.error));
-    } else if (state is AnnouncementTravelerStatusRequired) {
-      unawaited(_onTravelerStatusRequired(context));
+    } else if (state is AnnouncementPublishingBlocked) {
+      unawaited(_onPublishingBlocked(context, state.reason));
     } else if (state is AnnouncementError) {
       // Sans trajet affiché, l'état d'erreur de l'écran le dit déjà.
       if (_known() != null) ErrorPresenter.show(context, state.error);
     }
   }
 
-  /// Yadony exige le statut légal pour publier (403
-  /// `traveler-status-required`) : la feuille de déclaration s'ouvre sans
-  /// « Plus tard », puis la publication du brouillon reprend.
-  Future<void> _onTravelerStatusRequired(BuildContext context) async {
+  /// Publication du brouillon refusée par la limite mensuelle (403
+  /// `traveler-status-required`, `monthly-limit-reached` ou `gp-pro-pending`) :
+  /// l'écran de blocage s'ouvre, puis la publication reprend si plus rien ne
+  /// bloque.
+  Future<void> _onPublishingBlocked(
+    BuildContext context,
+    PublishingReason reason,
+  ) async {
     final bloc = context.read<AnnouncementBloc>();
-    final declared = await TravelerStatusSheet.show(context, required: true);
-    // L'écran a pu être quitté, ou son bloc fermé, pendant la feuille.
+    final canPublish = await showPublishingBlocked(context, reason);
+    // L'écran a pu être quitté, ou son bloc fermé, pendant l'écran de blocage.
     if (!context.mounted || bloc.isClosed) return;
-    if (declared == true) {
+    if (canPublish) {
       bloc.add(AnnouncementPublishRequested(widget.announcementId));
     }
   }

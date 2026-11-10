@@ -213,11 +213,16 @@ class _AddTile extends StatelessWidget {
             children: [
               DonyIcon('plus', size: 18, color: cs.primary),
               const SizedBox(width: DonySpacing.sm),
-              Text(
-                context.l10n.gpProAddPiece,
-                style: tt.labelLarge?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  context.l10n.gpProAddPiece,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.labelLarge?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

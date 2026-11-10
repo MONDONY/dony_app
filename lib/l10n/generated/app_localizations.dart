@@ -33390,10 +33390,10 @@ abstract class AppLocalizations {
   /// **'Qu\'est-ce qu\'un GP Pro ?'**
   String get gpProInfoTitle;
 
-  /// Corps de la feuille d'explication du badge GP Pro : badge accordé par l'équipe, distinct de l'abonnement PRO et de l'identité vérifiée.
+  /// Texte de la feuille d'explication du badge GP Pro (gp_pro_info_sheet.dart et écran GP Pro).
   ///
   /// In fr, this message translates to:
-  /// **'Un GP Pro est un voyageur régulier ou une entreprise dont la demande a été examinée puis acceptée par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.'**
+  /// **'Un GP Pro est un voyageur professionnel. Son profil, avec sa raison sociale et son numéro d\'entreprise, a été examiné par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.'**
   String get gpProInfoBody;
 
   /// Titre de l'écran /profile/gp-pro (demande et statut du badge GP Pro).
@@ -33432,10 +33432,10 @@ abstract class AppLocalizations {
   /// **'Devenir GP Pro'**
   String get gpProIntroTitle;
 
-  /// Écran GP Pro, aucune demande : texte de l'encart d'introduction (badge accordé après examen par l'équipe).
+  /// Texte d'introduction du formulaire GP Pro (gp_pro_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Vous voyagez souvent, seul ou pour votre entreprise ? Demandez le badge GP Pro. L\'équipe Yadony examine chaque demande.'**
+  /// **'Vous transportez des colis à titre professionnel ? Indiquez votre entreprise et demandez le badge GP Pro. L\'équipe Yadony examine chaque demande.'**
   String get gpProIntroBody;
 
   /// Écran GP Pro sans identité vérifiée : titre de l'encart qui mène au parcours de vérification.
@@ -33485,12 +33485,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Moins souvent'**
   String get gpProFrequencyLessOften;
-
-  /// Formulaire GP Pro : libellé flottant du nom commercial, 80 caractères au plus.
-  ///
-  /// In fr, this message translates to:
-  /// **'Nom commercial (facultatif)'**
-  String get gpProCommercialNameLabel;
 
   /// Formulaire GP Pro : titre de la section des justificatifs, facultatifs.
   ///
@@ -33690,10 +33684,10 @@ abstract class AppLocalizations {
   /// **'Fréquence'**
   String get gpProSummaryFrequency;
 
-  /// Écran GP Pro : libellé du nom commercial déclaré dans la demande.
+  /// Libellé de la raison sociale dans le rappel de la demande GP Pro ouverte (gp_pro_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Nom commercial'**
+  /// **'Raison sociale'**
   String get gpProSummaryCommercialName;
 
   /// Écran GP Pro : erreur réseau.
@@ -37722,172 +37716,52 @@ abstract class AppLocalizations {
   /// **'Particulier'**
   String get travelerStatusChipIndividual;
 
-  /// Pastille du statut légal d'un voyageur professionnel, sans numéro (traveler_status_chip.dart).
+  /// Titre de la feuille de choix du statut du voyageur (traveler_status_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Professionnel'**
-  String get travelerStatusChipProfessional;
-
-  /// Pastille d'un voyageur professionnel avec son numéro d'immatriculation déclaré, sur une seule ligne (traveler_status_chip.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Professionnel · {number}'**
-  String travelerStatusChipProfessionalWithNumber(String number);
-
-  /// Libellé de la ligne du statut légal dans le bloc d'un professionnel du profil public (profile_public_screen.dart, _TravelerStatusSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'Statut'**
-  String get profilePublicStatusLabel;
-
-  /// Libellé de la raison sociale déclarée par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'Raison sociale'**
-  String get profilePublicBusinessNameLabel;
-
-  /// Libellé du numéro d'immatriculation déclaré par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'Immatriculation'**
-  String get profilePublicBusinessNumberLabel;
-
-  /// Libellé du pays d'immatriculation déclaré par un professionnel (profile_public_screen.dart, _TravelerStatusSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'Pays'**
-  String get profilePublicBusinessCountryLabel;
-
-  /// Mention sous les informations d'un professionnel : Yadony ne les vérifie pas auprès des registres (profile_public_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Informations déclarées par le voyageur, non vérifiées par Yadony.'**
-  String get profilePublicBusinessDisclaimer;
-
-  /// Titre de la feuille de déclaration du statut légal du voyageur, étape du choix (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Comment voyagez-vous ?'**
+  /// **'Vous voyagez en tant que ?'**
   String get travelerStatusSheetTitle;
 
-  /// Sous-titre de l'étape du choix quand la déclaration est facultative (traveler_status_sheet.dart).
+  /// Sous-titre de la feuille de choix du statut (traveler_status_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Les expéditeurs voient votre réponse sur vos trajets. Vous pouvez la modifier à tout moment dans votre profil.'**
+  /// **'Les expéditeurs le verront sur votre profil.'**
   String get travelerStatusSheetSubtitle;
 
-  /// Sous-titre de l'étape du choix quand Yadony exige la déclaration pour publier, sans lien « Plus tard » (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Pour publier un trajet, indiquez comment vous voyagez. Les expéditeurs voient votre réponse sur vos trajets.'**
-  String get travelerStatusSheetSubtitleRequired;
-
-  /// Option « particulier » de l'étape du choix (traveler_status_sheet.dart).
+  /// Option « particulier » de la feuille de choix et de l'écran de blocage (traveler_status_choice_tiles.dart).
   ///
   /// In fr, this message translates to:
   /// **'Particulier'**
   String get travelerStatusOptionIndividual;
 
-  /// Explication de l'option particulier (traveler_status_sheet.dart).
+  /// Explication de l'option particulier (traveler_status_choice_tiles.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Je voyage à titre personnel, ce n\'est pas mon métier.'**
+  /// **'Ce n\'est pas mon métier'**
   String get travelerStatusOptionIndividualBody;
 
-  /// Option « professionnel » de l'étape du choix (traveler_status_sheet.dart).
+  /// Titre de l'erreur 403 traveler-status-required : limite mensuelle atteinte sans réponse Particulier ou GP Pro (error_catalog.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Professionnel'**
-  String get travelerStatusOptionProfessional;
-
-  /// Explication de l'option professionnel (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Je transporte des colis dans le cadre d\'une activité déclarée.'**
-  String get travelerStatusOptionProfessionalBody;
-
-  /// Titre de l'étape de confirmation d'un particulier (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Voyageur particulier'**
-  String get travelerStatusIndividualTitle;
-
-  /// Sous-titre de l'étape particulier (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'En tant que particulier, vous n\'avez pas à fournir de numéro d\'entreprise.'**
-  String get travelerStatusIndividualSubtitle;
-
-  /// Case à cocher de la déclaration d'un particulier : preuve enregistrée avec la date et la version du texte (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Je confirme voyager à titre personnel et que ce n\'est pas mon métier.'**
-  String get travelerStatusIndividualConfirm;
-
-  /// Rappel sous la case du particulier : le transport régulier relève du statut professionnel, les gains restent déclarables (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Si vous transportez des colis de façon régulière pour en tirer un revenu, choisissez « Professionnel ». Vos gains restent à déclarer à l\'administration fiscale de votre pays.'**
-  String get travelerStatusIndividualHint;
-
-  /// Titre de l'étape des champs d'un professionnel (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Voyageur professionnel'**
-  String get travelerStatusProfessionalTitle;
-
-  /// Sous-titre de l'étape professionnel : raison sociale et numéro sont publics (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Ces informations seront visibles des expéditeurs.'**
-  String get travelerStatusProfessionalSubtitle;
-
-  /// Champ de la raison sociale d'un professionnel (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Raison sociale'**
-  String get travelerStatusBusinessNameLabel;
-
-  /// Champ du numéro d'immatriculation d'un professionnel (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Numéro d\'entreprise'**
-  String get travelerStatusRegistrationLabel;
-
-  /// Aide sous le champ du numéro d'entreprise (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'SIRET, NINEA, RCCM ou équivalent.'**
-  String get travelerStatusRegistrationHint;
-
-  /// Champ du pays d'immatriculation de l'entreprise et titre de la feuille de sélection (traveler_status_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Pays d\'immatriculation'**
-  String get travelerStatusCountryLabel;
-
-  /// Titre de l'erreur 403 traveler-status-required : Yadony exige la déclaration du statut pour publier (error_catalog.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Statut à déclarer'**
+  /// **'Statut à indiquer'**
   String get errorTravelerStatusRequiredTitle;
 
   /// Message de l'erreur 403 traveler-status-required (error_catalog.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Indiquez si vous voyagez en tant que particulier ou professionnel pour publier un trajet.'**
+  /// **'Indiquez si vous voyagez en tant que particulier ou GP Pro pour continuer à publier.'**
   String get errorTravelerStatusRequiredMessage;
 
-  /// Titre de l'erreur 422 traveler-status-invalid : déclaration refusée par le serveur (error_catalog.dart).
+  /// Titre de l'erreur 422 traveler-status-invalid : seul « particulier » se déclare, un professionnel fait une demande GP Pro (error_catalog.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Déclaration à corriger'**
+  /// **'Demande GP Pro nécessaire'**
   String get errorTravelerStatusInvalidTitle;
 
   /// Message de l'erreur 422 traveler-status-invalid (error_catalog.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Vérifiez la raison sociale, le numéro d\'entreprise et le pays, puis réessayez.'**
+  /// **'Pour voyager à titre professionnel, faites une demande GP Pro.'**
   String get errorTravelerStatusInvalidMessage;
 
   /// Libellé en capitales de la ligne du statut légal du voyageur dans « Modifier le profil » (edit_profile_screen.dart, _TravelerStatusRow).
@@ -37895,12 +37769,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'STATUT DE VOYAGEUR'**
   String get profileFieldTravelerStatusAllCaps;
-
-  /// Valeur de la ligne « Statut de voyageur » tant que le voyageur n'a pas répondu à « Comment voyagez-vous ? » (edit_profile_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Non renseigné'**
-  String get profileTravelerStatusNotSet;
 
   /// Titre de l'encart d'information avant le paiement quand le voyageur de l'annonce voyage à titre personnel (create_bid_bottom_sheet.dart). Texte à faire valider par un avocat.
   ///
@@ -37914,11 +37782,269 @@ abstract class AppLocalizations {
   /// **'Le droit de la consommation ne s\'applique pas à votre accord avec lui.'**
   String get bidCreateIndividualTravelerBody;
 
-  /// Erreur sous le champ du numéro d'entreprise quand il est non vide et invalide (moins de 4 caractères ou caractère interdit) ; remplace l'aide neutre (traveler_status_sheet.dart).
+  /// Segment de la ligne d'entreprise d'un GP Pro : le numéro d'immatriculation déclaré, entre la raison sociale et le pays (profile_public_screen.dart, _GpProSection).
   ///
   /// In fr, this message translates to:
-  /// **'4 caractères minimum : lettres, chiffres, espace, point, barre oblique ou tiret.'**
-  String get travelerStatusRegistrationInvalid;
+  /// **'Immatriculation n° {number}'**
+  String profilePublicBusinessLineNumber(String number);
+
+  /// Mention sous la ligne d'entreprise d'un GP Pro : Yadony ne vérifie pas ces informations auprès des registres (profile_public_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Entreprise déclarée par le voyageur'**
+  String get profilePublicBusinessDeclared;
+
+  /// Texte de l'accordéon « Qu'est-ce qu'un GP Pro ? » du profil public (profile_public_screen.dart). Reprend l'article 8 des CGU.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un GP Pro est un voyageur professionnel : il transporte des colis dans le cadre d\'une activité déclarée. Son profil a été examiné par l\'équipe Yadony. Ce badge n\'est pas une garantie de Yadony sur le transport.'**
+  String get gpProExplainerBody;
+
+  /// Titre de la section qui porte la ligne « Statut de voyageur » dans Modifier le profil (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Activité'**
+  String get profileEditSectionActivity;
+
+  /// Valeur de la ligne « Statut de voyageur » tant que le voyageur n'a pas répondu à « Vous voyagez en tant que ? » (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non renseigné'**
+  String get profileTravelerStatusNotSet;
+
+  /// Valeur de la ligne « Statut de voyageur » d'un GP Pro sans raison sociale connue (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'GP Pro'**
+  String get profileTravelerStatusGpPro;
+
+  /// Valeur de la ligne « Statut de voyageur » d'un GP Pro avec sa raison sociale (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'GP Pro · {name}'**
+  String profileTravelerStatusGpProNamed(String name);
+
+  /// Pastille d'action de la ligne « Statut de voyageur » tant que le voyageur n'a pas répondu (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir'**
+  String get profileTravelerStatusChoose;
+
+  /// Pastille de la ligne « Statut de voyageur » quand une demande GP Pro attend la décision de l'équipe (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En validation'**
+  String get profileTravelerStatusPending;
+
+  /// Phrase sous la ligne « Statut de voyageur » de Modifier le profil : à quoi sert la réponse (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Particulier ou GP Pro : affiché aux expéditeurs sur votre profil.'**
+  String get profileTravelerStatusHint;
+
+  /// Titre de la feuille qui s'ouvre sur « Modifier » de la ligne « Statut de voyageur » d'un GP Pro (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre statut GP Pro'**
+  String get gpProManageTitle;
+
+  /// Phrase de la feuille de gestion du statut GP Pro : le retrait du badge est définitif tant qu'une nouvelle demande n'a pas été validée (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour retrouver le badge GP Pro, il faudra refaire une demande.'**
+  String get gpProManageHint;
+
+  /// Bouton secondaire de la feuille de gestion du statut GP Pro : retire le badge d'un clic (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Redevenir particulier'**
+  String get gpProManageResign;
+
+  /// Titre de la confirmation légère avant de quitter le statut GP Pro (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Redevenir particulier ?'**
+  String get gpProResignConfirmTitle;
+
+  /// Corps de la confirmation avant de quitter le statut GP Pro (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous perdrez le badge GP Pro et les informations de votre entreprise. Pour le retrouver, il faudra refaire une demande.'**
+  String get gpProResignConfirmBody;
+
+  /// Message de succès après avoir quitté le statut GP Pro (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes de nouveau particulier.'**
+  String get gpProResignDone;
+
+  /// Message d'échec quand le retrait du statut GP Pro n'a pas abouti (gp_pro_manage_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de redevenir particulier pour le moment. Réessayez.'**
+  String get gpProResignFailed;
+
+  /// Option « GP Pro » de la feuille « Vous voyagez en tant que ? » et de l'écran de blocage (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'GP Pro'**
+  String get travelerStatusOptionGpPro;
+
+  /// Explication de l'option GP Pro (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je transporte à titre professionnel'**
+  String get travelerStatusOptionGpProBody;
+
+  /// Phrase sous l'option Particulier : sa lecture vaut confirmation de voyager à titre personnel, enregistrée avec la date et la version du texte (traveler_status_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En choisissant Particulier, je confirme voyager à titre personnel.'**
+  String get travelerStatusIndividualConfirmation;
+
+  /// Titre de l'écran qui arrête une création de trajet quand la limite mensuelle est atteinte (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un trajet'**
+  String get publishBlockedAppBarTitle;
+
+  /// Titre quand la limite mensuelle est atteinte et que le voyageur n'a pas encore répondu Particulier ou GP Pro ; {limit} est sa limite (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{limit, plural, one{Limite de {limit} trajet atteinte ce mois-ci} other{Limite de {limit} trajets atteinte ce mois-ci}}'**
+  String publishBlockedStatusTitle(int limit);
+
+  /// Même titre quand le chiffre de la limite est inconnu (publication refusée par le back) (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite de trajets atteinte ce mois-ci'**
+  String get publishBlockedStatusTitleNoLimit;
+
+  /// Explication sous le titre, au-dessus des deux choix (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour continuer, dites-nous comment vous voyagez.'**
+  String get publishBlockedStatusBody;
+
+  /// Titre de l'écran d'un particulier qui a atteint sa limite mensuelle (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne pouvez plus créer de trajet ce mois-ci'**
+  String get publishBlockedLimitTitle;
+
+  /// Rappel de la limite mensuelle d'un particulier ; {limit} est sa limite (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{limit, plural, one{Un particulier peut publier {limit} trajet par mois.} other{Un particulier peut publier {limit} trajets par mois.}}'**
+  String publishBlockedLimitBody(int limit);
+
+  /// Date de reprise : premier jour du mois suivant, {date} est déjà formatée (ex. « 1 décembre ») (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez de nouveau publier à partir du {date}.'**
+  String publishBlockedResumeOn(String date);
+
+  /// Reprise quand la date exacte est inconnue (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez de nouveau publier le mois prochain.'**
+  String get publishBlockedResumeNextMonth;
+
+  /// Piste de sortie pour un particulier qui a atteint sa limite (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour publier davantage, devenez GP Pro.'**
+  String get publishBlockedBecomeGpPro;
+
+  /// Bouton qui ouvre le formulaire GP Pro depuis l'écran de limite atteinte (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Devenir GP Pro'**
+  String get publishBlockedBecomeGpProCta;
+
+  /// Titre quand la limite est atteinte et que la demande GP Pro attend la décision de l'équipe (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre demande GP Pro est en cours d\'examen'**
+  String get publishBlockedPendingTitle;
+
+  /// Explication de l'attente de validation (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'équipe Yadony vous prévient par notification. Vous pourrez publier dès la validation.'**
+  String get publishBlockedPendingBody;
+
+  /// Bouton qui ouvre le suivi de la demande GP Pro (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir ma demande'**
+  String get publishBlockedPendingCta;
+
+  /// Champ de la raison sociale du formulaire GP Pro, obligatoire pour une nouvelle demande (gp_pro_form.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison sociale'**
+  String get gpProBusinessNameLabel;
+
+  /// Champ du numéro d'immatriculation du formulaire GP Pro (gp_pro_form.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro d\'entreprise'**
+  String get gpProRegistrationLabel;
+
+  /// Aide sous le champ du numéro d'entreprise (gp_pro_form.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'SIRET, NINEA, RCCM ou équivalent.'**
+  String get gpProRegistrationHint;
+
+  /// Erreur sous le numéro d'entreprise quand il est non vide et invalide : longueur, premier caractère et séparateurs permis ; remplace l'aide neutre (gp_pro_form.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre 4 et 40 caractères, en commençant par une lettre ou un chiffre (espace, point, barre oblique et tiret acceptés ensuite).'**
+  String get gpProRegistrationInvalid;
+
+  /// Champ du pays d'immatriculation de l'entreprise et titre de la feuille de sélection (gp_pro_form.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays d\'immatriculation'**
+  String get gpProCountryLabel;
+
+  /// Erreur 422 gp-pro-business-incomplete de la demande GP Pro (gp_pro_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Renseignez la raison sociale, le numéro d\'entreprise et le pays.'**
+  String get gpProErrorBusinessIncomplete;
+
+  /// Titre de l'erreur 403 monthly-limit-reached : plus de trajet à publier ce mois-ci (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite mensuelle atteinte'**
+  String get errorMonthlyLimitReachedTitle;
+
+  /// Message de l'erreur 403 monthly-limit-reached (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez atteint votre limite de trajets pour ce mois-ci. Vous pourrez publier de nouveau le mois prochain, ou devenir GP Pro.'**
+  String get errorMonthlyLimitReachedMessage;
+
+  /// Titre de l'erreur 403 gp-pro-pending : limite atteinte pendant la validation (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande GP Pro en cours d\'examen'**
+  String get errorGpProPendingTitle;
+
+  /// Message de l'erreur 403 gp-pro-pending (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez publier dès que l\'équipe Yadony aura validé votre demande GP Pro.'**
+  String get errorGpProPendingMessage;
+
+  /// Date de reprise quand c'est le premier du mois : « 1er » en français ; {month} est le nom du mois (publish_blocked_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez de nouveau publier à partir du 1er {month}.'**
+  String publishBlockedResumeOnFirst(String month);
 }
 
 class _AppLocalizationsDelegate

@@ -1,15 +1,9 @@
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 
-/// Déclaration enregistrée, telle que `PUT /traveler-status/me` la renvoie à
-/// son propriétaire (qui voit son propre numéro d'immatriculation).
+/// Déclaration enregistrée, telle que `PUT /traveler-status/me` la renvoie.
+/// Seul « particulier » se déclare ainsi : un GP Pro passe par sa demande.
 class TravelerStatusDeclaration {
-  const TravelerStatusDeclaration({
-    required this.status,
-    this.declaredAt,
-    this.businessName,
-    this.registrationNumber,
-    this.country,
-  });
+  const TravelerStatusDeclaration({required this.status, this.declaredAt});
 
   factory TravelerStatusDeclaration.fromJson(Map<String, dynamic> json) =>
       TravelerStatusDeclaration(
@@ -21,14 +15,8 @@ class TravelerStatusDeclaration {
         declaredAt: json['declaredAt'] == null
             ? null
             : DateTime.tryParse(json['declaredAt'] as String),
-        businessName: json['businessName'] as String?,
-        registrationNumber: json['registrationNumber'] as String?,
-        country: json['country'] as String?,
       );
 
   final TravelerStatus status;
   final DateTime? declaredAt;
-  final String? businessName;
-  final String? registrationNumber;
-  final String? country;
 }

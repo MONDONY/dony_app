@@ -1,5 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/network/retry_policy.dart';
+import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_remote_datasource.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
@@ -10,10 +13,29 @@ class MockApiClient extends Mock implements ApiClient {}
 
 class MockDio extends Mock implements Dio {}
 
-Response<dynamic> _ok(dynamic data) => Response(
-  data: data,
-  statusCode: 200,
-  requestOptions: RequestOptions(path: '/traveler-status/me'),
+Response<dynamic> _ok(dynamic data, [String path = '/traveler-status/me']) =>
+    Response(
+      data: data,
+      statusCode: 200,
+      requestOptions: RequestOptions(path: path),
+    );
+
+const _eligibilityPath = '/travelers/me/publishing-eligibility';
+
+DioException _failure({
+  int? status,
+  AppException? error,
+  DioExceptionType? type,
+}) => DioException(
+  requestOptions: RequestOptions(path: _eligibilityPath),
+  type: type ?? DioExceptionType.badResponse,
+  response: status == null
+      ? null
+      : Response(
+          statusCode: status,
+          requestOptions: RequestOptions(path: _eligibilityPath),
+        ),
+  error: error,
 );
 
 void main() {
@@ -30,90 +52,164 @@ void main() {
     );
   });
 
-  Map<String, dynamic> sentBody() =>
-      verify(
-            () =>
-                dio.put('/traveler-status/me', data: captureAny(named: 'data')),
-          ).captured.single
-          as Map<String, dynamic>;
-
-  test(
-    'particulier : envoie le statut et la confirmation, rien d\'autre',
-    () async {
+  group('declareIndividual', () {
+    test('envoie le statut et la confirmation, rien d\'autre', () async {
       when(
         () => dio.put('/traveler-status/me', data: any(named: 'data')),
       ).thenAnswer(
-        (_) async => _ok({
-          'status': 'INDIVIDUAL',
-          'declaredAt': '2026-11-10T10:00:00Z',
-          'businessName': null,
-          'registrationNumber': null,
-          'country': null,
-        }),
+        (_) async =>
+            _ok({'status': 'INDIVIDUAL', 'declaredAt': '2026-11-10T10:00:00Z'}),
       );
 
-      final declared = await repository.declare(
-        status: TravelerStatus.individual,
-        personalUseConfirmed: true,
-      );
+      final declared = await repository.declareIndividual();
 
-      expect(sentBody(), {
-        'status': 'INDIVIDUAL',
-        'personalUseConfirmed': true,
-      });
+      final body =
+          verify(
+                () => dio.put(
+                  '/traveler-status/me',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(body, {'status': 'INDIVIDUAL', 'personalUseConfirmed': true});
       expect(declared.status, TravelerStatus.individual);
       expect(declared.declaredAt, DateTime.utc(2026, 11, 10, 10));
-      expect(declared.registrationNumber, isNull);
-    },
-  );
+    });
 
-  test(
-    'professionnel : envoie raison sociale, numéro et pays nettoyés',
-    () async {
+    test('l\'erreur du back remonte telle quelle', () async {
       when(
         () => dio.put('/traveler-status/me', data: any(named: 'data')),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/traveler-status/me'),
+        ),
+      );
+
+      expect(repository.declareIndividual(), throwsA(isA<DioException>()));
+    });
+  });
+
+  group('éligibilité à la publication', () {
+    test(
+      'fetchEligibility lit GET /travelers/me/publishing-eligibility',
+      () async {
+        when(
+          () => dio.get(_eligibilityPath, options: any(named: 'options')),
+        ).thenAnswer(
+          (_) async => _ok({
+            'allowed': false,
+            'reason': 'STATUS_REQUIRED',
+            'limit': 4,
+            'used': 4,
+            'resetsOn': '2026-12-01',
+            'travelerStatus': null,
+          }, _eligibilityPath),
+        );
+
+        final e = await repository.fetchEligibility();
+
+        expect(e.reason, PublishingReason.statusRequired);
+        expect(e.limit, 4);
+      },
+    );
+
+    test('la lecture a un délai court et ne se rejoue pas', () async {
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
+      ).thenAnswer((_) async => _ok({'reason': 'OK'}, _eligibilityPath));
+
+      await repository.fetchEligibility();
+
+      final options =
+          verify(
+                () => dio.get(
+                  _eligibilityPath,
+                  options: captureAny(named: 'options'),
+                ),
+              ).captured.single
+              as Options;
+      expect(options.receiveTimeout, const Duration(seconds: 8));
+      expect(options.sendTimeout, const Duration(seconds: 8));
+      expect(options.extra?[RetryPolicy.transientAttemptKey], greaterThan(10));
+    });
+
+    test('check : délai dépassé = OK, la publication suit son cours', () async {
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
+      ).thenThrow(_failure(type: DioExceptionType.receiveTimeout));
+
+      final result = await repository.checkEligibility();
+
+      expect(result.eligibility, PublishingEligibility.ok);
+      expect(result.failureCode, isNotNull);
+    });
+
+    test('check : réponse lue, aucun échec', () async {
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
       ).thenAnswer(
-        (_) async => _ok({
-          'status': 'PROFESSIONAL',
-          'declaredAt': '2026-11-10T10:00:00Z',
-          'businessName': 'Diallo Express SARL',
-          'registrationNumber': 'CI-ABJ-2021-B-12345',
-          'country': 'CI',
-        }),
+        (_) async => _ok({'allowed': true, 'reason': 'OK'}, _eligibilityPath),
       );
 
-      final declared = await repository.declare(
-        status: TravelerStatus.professional,
-        businessName: '  Diallo Express SARL ',
-        registrationNumber: ' CI-ABJ-2021-B-12345 ',
-        country: 'CI',
-      );
+      final result = await repository.checkEligibility();
 
-      expect(sentBody(), {
-        'status': 'PROFESSIONAL',
-        'businessName': 'Diallo Express SARL',
-        'registrationNumber': 'CI-ABJ-2021-B-12345',
-        'country': 'CI',
-      });
-      expect(declared.status, TravelerStatus.professional);
-      expect(declared.businessName, 'Diallo Express SARL');
-      expect(declared.country, 'CI');
-    },
-  );
+      expect(result.eligibility.allowed, isTrue);
+      expect(result.failureCode, isNull);
+    });
 
-  test('l\'erreur du back remonte telle quelle', () async {
-    when(
-      () => dio.put('/traveler-status/me', data: any(named: 'data')),
-    ).thenThrow(
-      DioException(requestOptions: RequestOptions(path: '/traveler-status/me')),
-    );
+    test('check : 404 (ancien back) = OK, sans échec à tracer', () async {
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
+      ).thenThrow(_failure(status: 404));
 
-    expect(
-      () => repository.declare(
-        status: TravelerStatus.individual,
-        personalUseConfirmed: true,
-      ),
-      throwsA(isA<DioException>()),
-    );
+      final result = await repository.checkEligibility();
+
+      expect(result.eligibility, PublishingEligibility.ok);
+      expect(result.failureCode, isNull);
+    });
+
+    test('check : 404 déjà converti par l\'intercepteur = OK', () async {
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
+      ).thenThrow(_failure(error: const NotFoundException()));
+
+      final result = await repository.checkEligibility();
+
+      expect(result.eligibility.allowed, isTrue);
+      expect(result.failureCode, isNull);
+    });
+
+    test('check : erreur réseau = OK, avec le code à tracer', () async {
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
+      ).thenThrow(_failure(type: DioExceptionType.connectionError));
+
+      final result = await repository.checkEligibility();
+
+      expect(result.eligibility.allowed, isTrue);
+      expect(result.failureCode, isNotNull);
+    });
+
+    test('check : erreur 500 = OK, avec le code à tracer', () async {
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
+      ).thenThrow(_failure(status: 500, error: const ServerException('boom')));
+
+      final result = await repository.checkEligibility();
+
+      expect(result.eligibility.allowed, isTrue);
+      expect(result.failureCode, isNotNull);
+    });
+
+    test('check : erreur non réseau (réponse illisible) = OK', () async {
+      when(
+        () => dio.get(_eligibilityPath, options: any(named: 'options')),
+      ).thenAnswer((_) async => _ok('pas du json', _eligibilityPath));
+
+      final result = await repository.checkEligibility();
+
+      expect(result.eligibility.allowed, isTrue);
+      expect(result.failureCode, 'unknown');
+    });
   });
 }

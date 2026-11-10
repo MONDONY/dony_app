@@ -2145,7 +2145,7 @@ void main() {
     });
   });
 
-  group('ErrorCatalog — statut légal du voyageur (lot 2)', () {
+  group('ErrorCatalog — statut du voyageur et limite mensuelle', () {
     test('403 traveler-status-required : connu, FR et EN', () {
       const error = ForbiddenException('x', 'traveler-status-required');
       expect(ErrorCatalog.isKnown(error), isTrue);
@@ -2153,18 +2153,52 @@ void main() {
         error,
         l10n: lookupAppLocalizations(AppL10n.fr),
       );
-      expect(fr.title, 'Statut à déclarer');
-      expect(fr.message, contains('particulier ou professionnel'));
+      expect(fr.title, 'Statut à indiquer');
+      expect(fr.message, contains('particulier ou GP Pro'));
       expect(fr.severity, ErrorSeverity.warning);
       final en = ErrorCatalog.lookup(
         error,
         l10n: lookupAppLocalizations(AppL10n.en),
       );
       expect(en.title, isNot(fr.title));
-      expect(en.message, contains('individual or a professional'));
+      expect(en.message, contains('individual or a GP Pro'));
     });
 
-    test('422 traveler-status-invalid : connu, FR et EN', () {
+    test('403 monthly-limit-reached : connu, FR et EN', () {
+      const error = ForbiddenException('x', 'monthly-limit-reached');
+      expect(ErrorCatalog.isKnown(error), isTrue);
+      final fr = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+      expect(fr.title, 'Limite mensuelle atteinte');
+      expect(fr.message, contains('mois prochain'));
+      expect(fr.severity, ErrorSeverity.warning);
+      final en = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(en.title, 'Monthly limit reached');
+      expect(en.message, contains('next month'));
+    });
+
+    test('403 gp-pro-pending : connu, FR et EN', () {
+      const error = ForbiddenException('x', 'gp-pro-pending');
+      expect(ErrorCatalog.isKnown(error), isTrue);
+      final fr = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+      expect(fr.title, "Demande GP Pro en cours d'examen");
+      final en = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(en.title, 'GP Pro application under review');
+      expect(en.message, contains('approves'));
+    });
+
+    test('422 traveler-status-invalid : renvoie vers la demande GP Pro', () {
       const error = ValidationException(
         'invalide',
         code: 'traveler-status-invalid',
@@ -2174,12 +2208,12 @@ void main() {
         error,
         l10n: lookupAppLocalizations(AppL10n.fr),
       );
-      expect(fr.title, 'Déclaration à corriger');
+      expect(fr.title, 'Demande GP Pro nécessaire');
       final en = ErrorCatalog.lookup(
         error,
         l10n: lookupAppLocalizations(AppL10n.en),
       );
-      expect(en.message, contains('company name'));
+      expect(en.message, contains('GP Pro application'));
     });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -60,6 +62,9 @@ void main() {
       expect(s.canSubmit, isFalse);
       final full = s.copyWith(
         frequency: GpProFrequency.weekly,
+        businessName: 'Diallo Express',
+        registrationNumber: 'CI-ABJ-2021-B-12345',
+        businessCountry: 'CI',
         pieces: [piece('1'), piece('2'), piece('3'), piece('4')],
       );
       expect(full.canAddPiece, isFalse);
@@ -75,14 +80,15 @@ void main() {
 
   group('load', () {
     blocTest<GpProCubit, GpProCubitState>(
-      'ready + event opened une seule fois même après 2 load',
+      'écran GP Pro (trackOpened) : événement « ouvert » une seule fois même '
+      'après 2 load',
       build: () {
         stubStatus(none);
         return build();
       },
       act: (c) async {
-        await c.load();
-        await c.load();
+        await c.load(trackOpened: true);
+        await c.load(trackOpened: true);
       },
       expect: () => [
         const GpProCubitState(),
@@ -97,6 +103,56 @@ void main() {
         ).called(1);
       },
     );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'ligne « Statut de voyageur » du profil (sans trackOpened) : aucun '
+      'événement « ouvert »',
+      build: () {
+        stubStatus(none);
+        return build();
+      },
+      act: (c) async {
+        await c.load();
+        await c.load();
+      },
+      verify: (c) {
+        expect(c.state.status, none);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProApplicationOpened,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+
+    test('cubit fermé avant la réponse : aucune exception, aucune émission '
+        '(lecture réussie)', () async {
+      final gate = Completer<GpProStatus>();
+      when(() => repository.fetchStatus()).thenAnswer((_) => gate.future);
+      final cubit = build();
+      final pending = cubit.load();
+      await cubit.close();
+      gate.complete(none);
+      await pending;
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.gpProApplicationOpened,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    test('cubit fermé avant la réponse : aucune exception (lecture en '
+        'échec)', () async {
+      final gate = Completer<GpProStatus>();
+      when(() => repository.fetchStatus()).thenAnswer((_) => gate.future);
+      final cubit = build();
+      final pending = cubit.load();
+      await cubit.close();
+      gate.completeError(const GpProException('network'));
+      await pending;
+    });
 
     blocTest<GpProCubit, GpProCubitState>(
       '404 back ancien : unavailable',
@@ -416,35 +472,112 @@ void main() {
     );
   });
 
+  group('entreprise : saisie et validité', () {
+    GpProCubitState filled({
+      String name = 'Diallo Express',
+      String number = 'CI-ABJ-2021-B-12345',
+      String? country = 'CI',
+    }) => GpProCubitState(
+      frequency: GpProFrequency.weekly,
+      businessName: name,
+      registrationNumber: number,
+      businessCountry: country,
+    );
+
+    test('une demande complète peut partir', () {
+      expect(filled().canSubmit, isTrue);
+      expect(filled().isBusinessComplete, isTrue);
+    });
+
+    test('raison sociale vide ou d\'un caractère : pas d\'envoi', () {
+      expect(filled(name: '').canSubmit, isFalse);
+      expect(filled(name: '   ').canSubmit, isFalse);
+      expect(filled(name: 'D').canSubmit, isFalse);
+    });
+
+    test('numéro : 4 à 40 caractères, lettres, chiffres, espace . / -', () {
+      expect(filled(number: '123').canSubmit, isFalse);
+      expect(filled(number: ' 1234 ').canSubmit, isTrue);
+      expect(filled(number: '-1234').canSubmit, isFalse);
+      expect(filled(number: '12 34/56.78-9').canSubmit, isTrue);
+      expect(filled(number: '12\$34').canSubmit, isFalse);
+      expect(filled(number: 'A' * 40).canSubmit, isTrue);
+      expect(filled(number: 'A' * 41).canSubmit, isFalse);
+    });
+
+    test('pays : deux lettres majuscules', () {
+      expect(filled(country: null).canSubmit, isFalse);
+      expect(filled(country: 'ci').canSubmit, isFalse);
+      expect(filled(country: 'CIV').canSubmit, isFalse);
+    });
+
+    test('numéro non vide et invalide : erreur à montrer', () {
+      expect(filled(number: '12').isRegistrationNumberInvalid, isTrue);
+      expect(filled(number: '').isRegistrationNumberInvalid, isFalse);
+      expect(filled().isRegistrationNumberInvalid, isFalse);
+    });
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'updateBusiness garde les valeurs non passées, un pays vide l\'efface',
+      build: build,
+      act: (c) => c
+        ..updateBusiness(name: 'Awa Express')
+        ..updateBusiness(registrationNumber: '1234', country: 'SN')
+        ..updateBusiness(country: ''),
+      verify: (c) {
+        expect(c.state.businessName, 'Awa Express');
+        expect(c.state.registrationNumber, '1234');
+        expect(c.state.businessCountry, isNull);
+      },
+    );
+  });
+
   group('submit', () {
     GpProCubitState ready({List<GpProPiece>? pieces}) => GpProCubitState(
       load: GpProLoadStatus.ready,
       status: none,
       frequency: GpProFrequency.twiceAMonth,
+      businessName: '  Awa Express ',
+      registrationNumber: ' CI-ABJ-2021-B-12345 ',
+      businessCountry: 'CI',
       pieces: pieces ?? [piece('p0', remoteId: 'd1')],
       restarting: true,
     );
 
+    void stubApply([GpProStatus status = pending]) => when(
+      () => repository.apply(
+        frequency: any(named: 'frequency'),
+        commercialName: any(named: 'commercialName'),
+        businessRegistrationNumber: any(named: 'businessRegistrationNumber'),
+        businessCountry: any(named: 'businessCountry'),
+        documentIds: any(named: 'documentIds'),
+        source: any(named: 'source'),
+      ),
+    ).thenAnswer((_) async => status);
+
     blocTest<GpProCubit, GpProCubitState>(
-      'succès : analytics exacts, statut remplacé, restarting remis à faux',
+      'succès : champs entreprise nettoyés envoyés, analytics sans saisie',
       build: () {
-        when(
-          () => repository.apply(
-            frequency: GpProFrequency.twiceAMonth,
-            commercialName: 'Awa Express',
-            documentIds: ['d1'],
-            source: GpProSource.profile,
-          ),
-        ).thenAnswer((_) async => pending);
+        stubApply();
         return build();
       },
       seed: ready,
-      act: (c) => c.submit(commercialName: '  Awa Express '),
+      act: (c) => c.submit(),
       verify: (c) {
         expect(c.state.status, pending);
         expect(c.state.restarting, isFalse);
         expect(c.state.submitting, isFalse);
         expect(c.state.pieces, hasLength(1));
+        verify(
+          () => repository.apply(
+            frequency: GpProFrequency.twiceAMonth,
+            commercialName: 'Awa Express',
+            businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+            businessCountry: 'CI',
+            documentIds: ['d1'],
+            source: GpProSource.profile,
+          ),
+        ).called(1);
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.gpProApplicationSubmitted,
@@ -460,69 +593,27 @@ void main() {
     );
 
     blocTest<GpProCubit, GpProCubitState>(
-      'nom blanc : has_commercial_name faux, nom non envoyé',
-      build: () {
-        when(
-          () => repository.apply(
-            frequency: GpProFrequency.twiceAMonth,
-            documentIds: ['d1'],
-            source: GpProSource.profile,
-          ),
-        ).thenAnswer((_) async => pending);
-        return build();
-      },
-      seed: ready,
-      act: (c) => c.submit(commercialName: '  '),
-      verify: (_) {
-        verify(
-          () => repository.apply(
-            frequency: GpProFrequency.twiceAMonth,
-            documentIds: ['d1'],
-            source: GpProSource.profile,
-          ),
-        ).called(1);
-      },
-      // Analytics vérifiés ci-dessous.
-    );
-
-    blocTest<GpProCubit, GpProCubitState>(
-      'nom blanc : analytics sans nom',
-      build: () {
-        when(
-          () => repository.apply(
-            frequency: any(named: 'frequency'),
-            commercialName: any(named: 'commercialName'),
-            documentIds: any(named: 'documentIds'),
-            source: any(named: 'source'),
-          ),
-        ).thenAnswer((_) async => pending);
-        return build();
-      },
-      seed: ready,
-      act: (c) => c.submit(commercialName: '  '),
-      verify: (_) => verify(
-        () => analytics.logEvent(
-          AnalyticsEvents.gpProApplicationSubmitted,
-          properties: {
-            'source': 'profile',
-            'frequency': 'TWICE_A_MONTH',
-            'document_count': 1,
-            'has_commercial_name': false,
-          },
+      'entreprise incomplète : aucun appel',
+      build: build,
+      seed: () => ready().copyWith(registrationNumber: '12'),
+      act: (c) => c.submit(),
+      expect: () => <GpProCubitState>[],
+      verify: (_) => verifyNever(
+        () => repository.apply(
+          frequency: any(named: 'frequency'),
+          commercialName: any(named: 'commercialName'),
+          businessRegistrationNumber: any(named: 'businessRegistrationNumber'),
+          businessCountry: any(named: 'businessCountry'),
+          documentIds: any(named: 'documentIds'),
+          source: any(named: 'source'),
         ),
-      ).called(1),
+      ),
     );
 
     blocTest<GpProCubit, GpProCubitState>(
       'seules les pièces ready comptent',
       build: () {
-        when(
-          () => repository.apply(
-            frequency: GpProFrequency.twiceAMonth,
-            documentIds: ['d1'],
-            source: GpProSource.profile,
-          ),
-        ).thenAnswer((_) async => pending);
+        stubApply();
         return build();
       },
       seed: () => ready(
@@ -535,6 +626,9 @@ void main() {
       verify: (_) => verify(
         () => repository.apply(
           frequency: GpProFrequency.twiceAMonth,
+          commercialName: 'Awa Express',
+          businessRegistrationNumber: 'CI-ABJ-2021-B-12345',
+          businessCountry: 'CI',
           documentIds: ['d1'],
           source: GpProSource.profile,
         ),
@@ -548,24 +642,20 @@ void main() {
           ready(pieces: [piece('p0', status: GpProUploadStatus.uploading)]),
       act: (c) => c.submit(),
       expect: () => <GpProCubitState>[],
-      verify: (_) => verifyNever(
-        () => repository.apply(
-          frequency: any(named: 'frequency'),
-          commercialName: any(named: 'commercialName'),
-          documentIds: any(named: 'documentIds'),
-          source: any(named: 'source'),
-        ),
-      ),
     );
 
     for (final code in ['gp-pro-application-open', 'gp-pro-already-active']) {
       blocTest<GpProCubit, GpProCubitState>(
-        '409 $code : fetchStatus rappelé',
+        '409 $code : fetchStatus rappelé, échec tracé avec son code seul',
         build: () {
           when(
             () => repository.apply(
               frequency: any(named: 'frequency'),
               commercialName: any(named: 'commercialName'),
+              businessRegistrationNumber: any(
+                named: 'businessRegistrationNumber',
+              ),
+              businessCountry: any(named: 'businessCountry'),
               documentIds: any(named: 'documentIds'),
               source: any(named: 'source'),
             ),
@@ -585,12 +675,53 @@ void main() {
     }
 
     blocTest<GpProCubit, GpProCubitState>(
-      'autre erreur : errorCode, formulaire gardé',
+      '422 gp-pro-business-incomplete : errorCode, formulaire gardé avec la '
+      'saisie, échec tracé sans la saisie',
       build: () {
         when(
           () => repository.apply(
             frequency: any(named: 'frequency'),
             commercialName: any(named: 'commercialName'),
+            businessRegistrationNumber: any(
+              named: 'businessRegistrationNumber',
+            ),
+            businessCountry: any(named: 'businessCountry'),
+            documentIds: any(named: 'documentIds'),
+            source: any(named: 'source'),
+          ),
+        ).thenThrow(
+          const GpProException('gp-pro-business-incomplete', status: 422),
+        );
+        return build();
+      },
+      seed: ready,
+      act: (c) => c.submit(),
+      verify: (c) {
+        expect(c.state.errorCode, 'gp-pro-business-incomplete');
+        expect(c.state.submitting, isFalse);
+        expect(c.state.restarting, isTrue);
+        expect(c.state.businessName, '  Awa Express ');
+        final captured = verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProApplicationFailed,
+            properties: captureAny(named: 'properties'),
+          ),
+        ).captured;
+        expect(captured.single, {'error_code': 'gp-pro-business-incomplete'});
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'erreur réseau : errorCode network, tracé',
+      build: () {
+        when(
+          () => repository.apply(
+            frequency: any(named: 'frequency'),
+            commercialName: any(named: 'commercialName'),
+            businessRegistrationNumber: any(
+              named: 'businessRegistrationNumber',
+            ),
+            businessCountry: any(named: 'businessCountry'),
             documentIds: any(named: 'documentIds'),
             source: any(named: 'source'),
           ),
@@ -601,9 +732,13 @@ void main() {
       act: (c) => c.submit(),
       verify: (c) {
         expect(c.state.errorCode, 'network');
-        expect(c.state.submitting, isFalse);
-        expect(c.state.restarting, isTrue);
         expect(c.state.frequency, GpProFrequency.twiceAMonth);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProApplicationFailed,
+            properties: {'error_code': 'network'},
+          ),
+        ).called(1);
       },
     );
 
@@ -614,6 +749,10 @@ void main() {
           () => repository.apply(
             frequency: any(named: 'frequency'),
             commercialName: any(named: 'commercialName'),
+            businessRegistrationNumber: any(
+              named: 'businessRegistrationNumber',
+            ),
+            businessCountry: any(named: 'businessCountry'),
             documentIds: any(named: 'documentIds'),
             source: any(named: 'source'),
           ),
@@ -623,6 +762,198 @@ void main() {
       seed: ready,
       act: (c) => c.submit(),
       verify: (c) => expect(c.state.errorCode, 'unknown'),
+    );
+  });
+
+  group('cubit fermé en vol (écran quitté)', () {
+    test(
+      'resign : le retrait est tracé, aucune émission ni exception',
+      () async {
+        final gate = Completer<GpProStatus>();
+        when(() => repository.resign()).thenAnswer((_) => gate.future);
+        final cubit = build();
+        final pending = cubit.resign();
+        await cubit.close();
+        gate.complete(none);
+        await pending;
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProResigned,
+            properties: any(named: 'properties'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test('resign en échec : aucune exception', () async {
+      final gate = Completer<GpProStatus>();
+      when(() => repository.resign()).thenAnswer((_) => gate.future);
+      final cubit = build();
+      final pending = cubit.resign();
+      await cubit.close();
+      gate.completeError(const GpProException('network'));
+      await pending;
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.gpProResignFailed,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    test('resign sur un cubit déjà fermé : ignoré', () async {
+      final cubit = build();
+      await cubit.close();
+      await cubit.resign();
+      verifyNever(() => repository.resign());
+    });
+
+    test('cancel : aucune exception', () async {
+      final gate = Completer<void>();
+      when(() => repository.cancel()).thenAnswer((_) => gate.future);
+      final cubit = build();
+      final pending = cubit.cancel();
+      await cubit.close();
+      gate.complete();
+      await pending;
+    });
+
+    test('submit : aucune exception', () async {
+      final gate = Completer<GpProStatus>();
+      when(
+        () => repository.apply(
+          frequency: any(named: 'frequency'),
+          commercialName: any(named: 'commercialName'),
+          businessRegistrationNumber: any(named: 'businessRegistrationNumber'),
+          businessCountry: any(named: 'businessCountry'),
+          documentIds: any(named: 'documentIds'),
+          source: any(named: 'source'),
+        ),
+      ).thenAnswer((_) => gate.future);
+      final cubit = build()
+        ..emit(
+          const GpProCubitState(
+            frequency: GpProFrequency.weekly,
+            businessName: 'Diallo Express',
+            registrationNumber: 'CI-ABJ-2021-B-12345',
+            businessCountry: 'CI',
+          ),
+        );
+      final pending = cubit.submit();
+      await cubit.close();
+      gate.complete(const GpProStatus(state: GpProState.pending));
+      await pending;
+    });
+  });
+
+  group('resign', () {
+    blocTest<GpProCubit, GpProCubitState>(
+      'succès : event, statut rechargé, resigned vrai',
+      build: () {
+        when(
+          () => repository.resign(),
+        ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+        stubStatus(none);
+        return build();
+      },
+      seed: () => const GpProCubitState(
+        load: GpProLoadStatus.ready,
+        status: GpProStatus(state: GpProState.active),
+      ),
+      act: (c) => c.resign(),
+      verify: (c) {
+        expect(c.state.resigning, isFalse);
+        expect(c.state.resigned, isTrue);
+        expect(c.state.status, none);
+        expect(c.state.errorCode, isNull);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProResigned,
+            properties: any(named: 'properties'),
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      '409 gp-pro-not-active : déjà particulier, rechargement et succès',
+      build: () {
+        when(
+          () => repository.resign(),
+        ).thenThrow(const GpProException('gp-pro-not-active', status: 409));
+        stubStatus(none);
+        return build();
+      },
+      seed: () => const GpProCubitState(load: GpProLoadStatus.ready),
+      act: (c) => c.resign(),
+      verify: (c) {
+        expect(c.state.resigned, isTrue);
+        expect(c.state.resigning, isFalse);
+        expect(c.state.errorCode, isNull);
+        verify(() => repository.fetchStatus()).called(1);
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'échec réseau : errorCode, événement d\'échec avec error_code seul',
+      build: () {
+        when(
+          () => repository.resign(),
+        ).thenThrow(const GpProException('network'));
+        return build();
+      },
+      act: (c) => c.resign(),
+      verify: (c) {
+        expect(c.state.errorCode, 'network');
+        expect(c.state.resigned, isFalse);
+        expect(c.state.resigning, isFalse);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.gpProResignFailed,
+            properties: {'error_code': 'network'},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'ancien back (404) : gp-pro-unavailable, pas de plantage',
+      build: () {
+        when(
+          () => repository.resign(),
+        ).thenThrow(const GpProUnavailableException(status: 404));
+        return build();
+      },
+      act: (c) => c.resign(),
+      verify: (c) {
+        expect(c.state.errorCode, 'gp-pro-unavailable');
+        expect(c.state.resigned, isFalse);
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'erreur non typée : unknown',
+      build: () {
+        when(() => repository.resign()).thenThrow(StateError('x'));
+        return build();
+      },
+      act: (c) => c.resign(),
+      verify: (c) => expect(c.state.errorCode, 'unknown'),
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'un second appel pendant le premier est ignoré',
+      build: () {
+        when(
+          () => repository.resign(),
+        ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+        stubStatus(none);
+        return build();
+      },
+      seed: () =>
+          const GpProCubitState(load: GpProLoadStatus.ready, resigning: true),
+      act: (c) => c.resign(),
+      verify: (_) => verifyNever(() => repository.resign()),
     );
   });
 

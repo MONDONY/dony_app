@@ -81,4 +81,3 @@ export 'package:dony/core/design/widgets/dony_user_card.dart';
 export 'package:dony/core/design/widgets/gp_pro_badge.dart';
 // Form controls
 export 'package:dony/core/design/widgets/required_label.dart';
-export 'package:dony/core/design/widgets/traveler_status_chip.dart';

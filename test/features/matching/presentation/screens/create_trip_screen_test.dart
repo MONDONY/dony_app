@@ -21,6 +21,8 @@ import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
 import 'package:dony/features/city/data/recent_city_store.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
+import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -64,9 +66,11 @@ import 'package:dony/features/profile/data/datasources/help_center_remote_config
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
+import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_declaration.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
+import 'package:dony/features/traveler_status/presentation/publish_blocked_screen.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
@@ -154,6 +158,8 @@ class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _MockTravelerStatusRepository extends Mock
     implements TravelerStatusRepository {}
+
+class _MockGpProRepository extends Mock implements GpProRepository {}
 
 class _MockPriceGridRepository extends Mock implements PriceGridRepository {}
 
@@ -257,6 +263,26 @@ Widget _wrapWithRouter(
         path: '/profile/help/tutorial/:tutorialId',
         builder: (_, state) => Scaffold(
           body: Text('TutorialStub:${state.pathParameters['tutorialId']}'),
+        ),
+      ),
+      // Limite mensuelle de trajets : écran de blocage et formulaire GP Pro.
+      GoRoute(
+        path: '/trips/publish-blocked',
+        builder: (_, state) {
+          final args = state.extra! as PublishBlockedArgs;
+          return PublishBlockedScreen(
+            eligibility: args.eligibility,
+            source: args.source,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/profile/gp-pro',
+        builder: (context, _) => Scaffold(
+          body: TextButton(
+            onPressed: context.pop,
+            child: const Text('formulaire GP Pro'),
+          ),
         ),
       ),
       // Extra route so GoRouter can navigate back on context.pop()
@@ -1464,6 +1490,7 @@ void main() {
 
     late _MockAnnouncementBloc announcementBloc;
     late _MockTravelerStatusRepository statusRepo;
+    late _MockGpProRepository gpRepo;
     late StreamController<AnnouncementState> states;
 
     setUpAll(() {
@@ -1495,21 +1522,38 @@ void main() {
         return b;
       });
 
-      statusRepo = _MockTravelerStatusRepository();
+      gpRepo = _MockGpProRepository();
       when(
-        () => statusRepo.declare(
-          status: any(named: 'status'),
-          personalUseConfirmed: any(named: 'personalUseConfirmed'),
-          businessName: any(named: 'businessName'),
-          registrationNumber: any(named: 'registrationNumber'),
-          country: any(named: 'country'),
-        ),
-      ).thenAnswer(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+      if (getIt.isRegistered<GpProRepository>()) {
+        getIt.unregister<GpProRepository>();
+      }
+      getIt.registerSingleton<GpProRepository>(gpRepo);
+      statusRepo = _MockTravelerStatusRepository();
+      when(() => statusRepo.declareIndividual()).thenAnswer(
         (_) async => TravelerStatusDeclaration(
           status: TravelerStatus.individual,
           declaredAt: DateTime.utc(2026, 11),
         ),
       );
+      // Limite atteinte à 4 trajets, aucune réponse : ce que l'écran de
+      // blocage relit après un 403.
+      when(() => statusRepo.checkEligibility()).thenAnswer(
+        (_) async => (
+          eligibility: const PublishingEligibility(
+            allowed: false,
+            reason: PublishingReason.statusRequired,
+            limit: 4,
+            used: 4,
+          ),
+          failureCode: null,
+        ),
+      );
+      if (getIt.isRegistered<TravelerStatusRepository>()) {
+        getIt.unregister<TravelerStatusRepository>();
+      }
+      getIt.registerSingleton<TravelerStatusRepository>(statusRepo);
       if (getIt.isRegistered<TravelerStatusCubit>()) {
         getIt.unregister<TravelerStatusCubit>();
       }
@@ -1541,6 +1585,12 @@ void main() {
       if (getIt.isRegistered<TravelerStatusCubit>()) {
         getIt.unregister<TravelerStatusCubit>();
       }
+      if (getIt.isRegistered<TravelerStatusRepository>()) {
+        getIt.unregister<TravelerStatusRepository>();
+      }
+      if (getIt.isRegistered<GpProRepository>()) {
+        getIt.unregister<GpProRepository>();
+      }
     });
 
     /// Formulaire de création rempli par le modèle, date posée : prêt à
@@ -1548,6 +1598,7 @@ void main() {
     Future<void> reachPublishStep(
       WidgetTester tester, {
       TravelerStatus? status,
+      bool gpPro = false,
     }) async {
       tester.view.physicalSize = const Size(800, 1024);
       tester.view.devicePixelRatio = 1.0;
@@ -1563,6 +1614,7 @@ void main() {
               kycStatus: 'VERIFIED',
               status: 'ACTIVE',
               travelerStatus: status,
+              gpPro: gpPro,
             ),
           ),
         ),
@@ -1608,24 +1660,14 @@ void main() {
     Future<void> declareIndividual(WidgetTester tester) async {
       await tester.tap(find.text('Particulier'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.text(
-          'Je confirme voyager à titre personnel et que ce n\'est pas mon métier.',
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
-      await tester.pumpAndSettle();
     }
 
-    testWidgets('statut absent : « Publier » ouvre le rappel, rien n\'est '
-        'envoyé tant qu\'il est ouvert', (tester) async {
+    testWidgets('statut absent : « Publier » ouvre la question, rien n\'est '
+        'envoyé tant qu\'elle est ouverte', (tester) async {
       await reachPublishStep(tester);
       await tapPublish(tester);
 
-      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
       expect(find.widgetWithText(DonyButton, 'Plus tard'), findsOneWidget);
       verifyNever(
         () =>
@@ -1640,39 +1682,141 @@ void main() {
       await tester.tap(find.widgetWithText(DonyButton, 'Plus tard'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Comment voyagez-vous ?'), findsNothing);
+      expect(find.text('Vous voyagez en tant que ?'), findsNothing);
       expect(createdCount(), 1);
     });
 
-    testWidgets('statut déclaré dans la feuille : le trajet part ensuite', (
+    testWidgets('« Particulier » : déclaré, puis le trajet part', (
       tester,
     ) async {
       await reachPublishStep(tester);
       await tapPublish(tester);
       await declareIndividual(tester);
 
-      verify(
-        () => statusRepo.declare(
-          status: TravelerStatus.individual,
-          personalUseConfirmed: true,
-        ),
-      ).called(1);
+      verify(() => statusRepo.declareIndividual()).called(1);
       expect(createdCount(), 1);
     });
 
-    testWidgets('statut déjà déclaré : aucun rappel', (tester) async {
-      await reachPublishStep(tester, status: TravelerStatus.professional);
+    testWidgets('« GP Pro » puis demande envoyée : le trajet part '
+        '(particulier pendant la validation)', (tester) async {
+      await reachPublishStep(tester);
+      await tapPublish(tester);
+      await tester.tap(find.text('GP Pro'));
+      await tester.pumpAndSettle();
+      expect(find.text('formulaire GP Pro'), findsOneWidget);
+      verifyNever(
+        () =>
+            announcementBloc.add(any(that: isA<AnnouncementCreateRequested>())),
+      );
+
+      // La demande part depuis le formulaire.
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.pending));
+      await tester.tap(find.text('formulaire GP Pro'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => statusRepo.declareIndividual());
+      expect(createdCount(), 1);
+    });
+
+    testWidgets('« GP Pro » puis formulaire quitté sans envoyer : rien ne '
+        'part, aucun message, le formulaire du trajet reste', (tester) async {
+      await reachPublishStep(tester);
+      await tapPublish(tester);
+      await tester.tap(find.text('GP Pro'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('formulaire GP Pro'));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () =>
+            announcementBloc.add(any(that: isA<AnnouncementCreateRequested>())),
+      );
+      expect(find.byType(CreateTripScreen), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    for (final state in [GpProState.pending, GpProState.awaitingKyc]) {
+      testWidgets('demande GP Pro ouverte (${state.wire}) : la question ne '
+          'revient pas, le trajet part', (tester) async {
+        when(
+          () => gpRepo.fetchStatus(),
+        ).thenAnswer((_) async => GpProStatus(state: state));
+        await reachPublishStep(tester);
+        await tapPublish(tester);
+
+        expect(find.text('Vous voyagez en tant que ?'), findsNothing);
+        expect(createdCount(), 1);
+      });
+    }
+
+    testWidgets('lecture de la demande GP Pro en échec : la question est '
+        'posée', (tester) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenThrow(const GpProException('network'));
+      await reachPublishStep(tester);
       await tapPublish(tester);
 
-      expect(find.text('Comment voyagez-vous ?'), findsNothing);
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
+    });
+
+    testWidgets('deux appuis sur « Publier » pendant la lecture de la '
+        'demande : une seule feuille, une seule création', (tester) async {
+      final gate = Completer<GpProStatus>();
+      when(() => gpRepo.fetchStatus()).thenAnswer((_) => gate.future);
+      await reachPublishStep(tester);
+      await tapPublish(tester);
+      await tapPublish(tester);
+      gate.complete(const GpProStatus(state: GpProState.none));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(DonyButton, 'Plus tard'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous voyagez en tant que ?'), findsNothing);
       expect(createdCount(), 1);
     });
 
-    testWidgets('brouillon : jamais de rappel', (tester) async {
+    testWidgets('formulaire GP Pro quitté sans envoyer : un second appui sur '
+        '« Publier » rouvre la question (verrou relâché)', (tester) async {
+      await reachPublishStep(tester);
+      await tapPublish(tester);
+      await tester.tap(find.text('GP Pro'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('formulaire GP Pro'));
+      await tester.pumpAndSettle();
+      expect(find.text('Vous voyagez en tant que ?'), findsNothing);
+
+      await tapPublish(tester);
+
+      expect(find.text('Vous voyagez en tant que ?'), findsOneWidget);
+    });
+
+    testWidgets('statut déjà déclaré : aucune question', (tester) async {
+      await reachPublishStep(tester, status: TravelerStatus.individual);
+      await tapPublish(tester);
+
+      expect(find.text('Vous voyagez en tant que ?'), findsNothing);
+      expect(createdCount(), 1);
+    });
+
+    testWidgets('badge GP Pro déjà accordé : aucune question', (tester) async {
+      await reachPublishStep(tester, gpPro: true);
+      await tapPublish(tester);
+
+      expect(find.text('Vous voyagez en tant que ?'), findsNothing);
+      expect(createdCount(), 1);
+    });
+
+    testWidgets('brouillon : jamais de question', (tester) async {
       await reachPublishStep(tester);
       await tapInPreview(tester, 'Enregistrer comme brouillon');
 
-      expect(find.text('Comment voyagez-vous ?'), findsNothing);
+      expect(find.text('Vous voyagez en tant que ?'), findsNothing);
       verify(
         () => announcementBloc.add(
           any(
@@ -1685,29 +1829,142 @@ void main() {
       ).called(1);
     });
 
-    testWidgets('403 traveler-status-required : la feuille se rouvre sans '
-        '« Plus tard », la publication reprend après la déclaration', (
-      tester,
-    ) async {
+    testWidgets('403 traveler-status-required : l\'écran de blocage s\'ouvre '
+        'avec les deux choix, sans « Plus tard »', (tester) async {
       await reachPublishStep(tester, status: TravelerStatus.individual);
       await tapPublish(tester);
       expect(createdCount(), 1);
 
       states.add(
-        AnnouncementTravelerStatusRequired(
+        AnnouncementPublishingBlocked(
           const ForbiddenException('x', 'traveler-status-required'),
+          PublishingReason.statusRequired,
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+      expect(
+        find.text('Limite de 4 trajets atteinte ce mois-ci'),
+        findsOneWidget,
+      );
+      expect(find.text('Particulier'), findsOneWidget);
+      expect(find.text('GP Pro'), findsOneWidget);
       expect(find.widgetWithText(DonyButton, 'Plus tard'), findsNothing);
+    });
 
-      await declareIndividual(tester);
+    testWidgets('403 monthly-limit-reached : « vous ne pouvez plus créer de '
+        'trajet », « Fermer » ramène au formulaire sans republier', (
+      tester,
+    ) async {
+      when(() => statusRepo.checkEligibility()).thenAnswer(
+        (_) async => (
+          eligibility: PublishingEligibility(
+            allowed: false,
+            reason: PublishingReason.limitReached,
+            limit: 4,
+            used: 4,
+            resetsOn: DateTime(2026, 12),
+            travelerStatus: TravelerStatus.individual,
+          ),
+          failureCode: null,
+        ),
+      );
+      await reachPublishStep(tester, status: TravelerStatus.individual);
+      await tapPublish(tester);
 
-      // Le premier envoi a déjà été vérifié (createdCount) : celui-ci est le
-      // second, parti après la déclaration.
+      states.add(
+        AnnouncementPublishingBlocked(
+          const ForbiddenException('x', 'monthly-limit-reached'),
+          PublishingReason.limitReached,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Vous ne pouvez plus créer de trajet ce mois-ci'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.widgetWithText(DonyButton, 'Fermer'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateTripScreen), findsOneWidget);
       expect(createdCount(), 1);
+    });
+
+    testWidgets('403 gp-pro-pending puis demande validée au retour : la '
+        'publication reprend', (tester) async {
+      when(() => statusRepo.checkEligibility()).thenAnswer(
+        (_) async => (
+          eligibility: const PublishingEligibility(
+            allowed: false,
+            reason: PublishingReason.gpProPending,
+            limit: 4,
+            used: 4,
+          ),
+          failureCode: null,
+        ),
+      );
+      await reachPublishStep(tester, status: TravelerStatus.individual);
+      await tapPublish(tester);
+      expect(createdCount(), 1);
+
+      states.add(
+        AnnouncementPublishingBlocked(
+          const ForbiddenException('x', 'gp-pro-pending'),
+          PublishingReason.gpProPending,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text("Votre demande GP Pro est en cours d'examen"),
+        findsOneWidget,
+      );
+
+      // La validation tombe pendant que le voyageur regarde sa demande.
+      when(() => statusRepo.checkEligibility()).thenAnswer(
+        (_) async => (eligibility: PublishingEligibility.ok, failureCode: null),
+      );
+      await tester.tap(find.widgetWithText(DonyButton, 'Voir ma demande'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('formulaire GP Pro'));
+      await tester.pumpAndSettle();
+
+      // Une seconde publication après la validation (mocktail ne recompte pas
+      // l'appel déjà vérifié plus haut).
+      expect(createdCount(), 1);
+    });
+
+    testWidgets('403 et lecture du droit de publier en échec (ancien back) : '
+        'l\'écran se construit sur la raison du 403', (tester) async {
+      when(() => statusRepo.checkEligibility()).thenAnswer(
+        (_) async => (eligibility: PublishingEligibility.ok, failureCode: null),
+      );
+      await reachPublishStep(tester, status: TravelerStatus.individual);
+      await tapPublish(tester);
+
+      states.add(
+        AnnouncementPublishingBlocked(
+          const ForbiddenException('x', 'monthly-limit-reached'),
+          PublishingReason.limitReached,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Vous ne pouvez plus créer de trajet ce mois-ci'),
+        findsOneWidget,
+      );
+      expect(
+        find
+                .text('Vous pourrez de nouveau publier à partir du 1 décembre.')
+                .evaluate()
+                .isNotEmpty ||
+            find
+                .textContaining('Vous pourrez de nouveau publier')
+                .evaluate()
+                .isNotEmpty,
+        isTrue,
+      );
     });
   });
 
@@ -4245,26 +4502,41 @@ void main() {
       },
     );
 
-    testWidgets(
-      'traveler-status-required (403) → feuille obligatoire sans « Plus tard », '
-      'pas de snackbar générique, le même envoi repart après la déclaration',
-      (tester) async {
+    for (final (code, reason, title) in [
+      (
+        'traveler-status-required',
+        PublishingReason.statusRequired,
+        'Limite de 4 trajets atteinte ce mois-ci',
+      ),
+      (
+        'monthly-limit-reached',
+        PublishingReason.limitReached,
+        'Vous ne pouvez plus créer de trajet ce mois-ci',
+      ),
+      (
+        'gp-pro-pending',
+        PublishingReason.gpProPending,
+        "Votre demande GP Pro est en cours d'examen",
+      ),
+    ]) {
+      testWidgets('$code (403) → écran de blocage, pas de snackbar générique, '
+          'le même envoi ne repart pas tant que rien ne se débloque', (
+        tester,
+      ) async {
         final statusRepo = _MockTravelerStatusRepository();
-        when(
-          () => statusRepo.declare(
-            status: any(named: 'status'),
-            personalUseConfirmed: any(named: 'personalUseConfirmed'),
-            businessName: any(named: 'businessName'),
-            registrationNumber: any(named: 'registrationNumber'),
-            country: any(named: 'country'),
-          ),
-        ).thenAnswer(
-          (_) async => TravelerStatusDeclaration(
-            status: TravelerStatus.individual,
-            declaredAt: DateTime.utc(2026, 11),
+        when(() => statusRepo.checkEligibility()).thenAnswer(
+          (_) async => (
+            eligibility: PublishingEligibility(
+              allowed: false,
+              reason: reason,
+              limit: 4,
+              used: 4,
+              resetsOn: DateTime(2026, 12),
+            ),
+            failureCode: null,
           ),
         );
-        registerFallbackValue(TravelerStatus.individual);
+        getIt.registerSingleton<TravelerStatusRepository>(statusRepo);
         getIt.registerFactory<TravelerStatusCubit>(
           () => TravelerStatusCubit(statusRepo, getIt<AnalyticsService>()),
         );
@@ -4272,38 +4544,23 @@ void main() {
           if (getIt.isRegistered<TravelerStatusCubit>()) {
             getIt.unregister<TravelerStatusCubit>();
           }
+          if (getIt.isRegistered<TravelerStatusRepository>()) {
+            getIt.unregister<TravelerStatusRepository>();
+          }
         });
 
         await navigateLockedToStep2AndSubmit(tester);
         verify(() => negotiationBloc.add(any())).called(1);
 
-        negoStreamCtrl.add(
-          const NegotiationError(
-            ForbiddenException('Statut requis', 'traveler-status-required'),
-          ),
-        );
+        negoStreamCtrl.add(NegotiationError(ForbiddenException('x', code)));
         await tester.pumpAndSettle();
 
-        expect(find.text('Comment voyagez-vous ?'), findsOneWidget);
+        expect(find.text(title), findsOneWidget);
         expect(find.widgetWithText(DonyButton, 'Plus tard'), findsNothing);
         expect(find.byType(SnackBar), findsNothing);
-
-        await tester.tap(find.text('Particulier'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
-        await tester.pumpAndSettle();
-        await tester.tap(
-          find.text(
-            "Je confirme voyager à titre personnel et que ce n'est pas mon métier.",
-          ),
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
-        await tester.pumpAndSettle();
-
-        verify(() => negotiationBloc.add(any())).called(1);
-      },
-    );
+        verifyNever(() => negotiationBloc.add(any()));
+      });
+    }
 
     testWidgets(
       'card-capability-required → CTA route vers /connect/onboarding/intro',

@@ -1740,10 +1740,11 @@ void main() {
     expect(find.text('Fatou Diallo'), findsWidgets);
   });
 
-  // ── Statut légal du voyageur (lot 2) ──────────────────────────────────────
+  // ── Statut du voyageur : GP Pro ou particulier (lot 2b) ──────────────────
 
   ProfilePublicModel statusProfile({
     TravelerStatus? status,
+    bool gpPro = true,
     String? name,
     String? number,
     String? country,
@@ -1752,7 +1753,7 @@ void main() {
     displayName: 'Diallo Express',
     kycVerified: true,
     isProAccount: false,
-    gpPro: true,
+    gpPro: gpPro,
     completedBidsCount: 12,
     averageRating: 4.8,
     ratingCount: 7,
@@ -1764,8 +1765,54 @@ void main() {
     businessCountry: country,
   );
 
-  group('statut légal du voyageur', () {
-    testWidgets('professionnel : pastille, raison sociale, numéro et pays', (
+  const explainer =
+      'Un GP Pro est un voyageur professionnel : il transporte des colis dans '
+      "le cadre d'une activité déclarée. Son profil a été examiné par l'équipe "
+      "Yadony. Ce badge n'est pas une garantie de Yadony sur le transport.";
+
+  group('statut du voyageur sur le profil public', () {
+    testWidgets('GP Pro avec entreprise : une ligne, la mention et '
+        "l'accordéon replié", (tester) async {
+      await tester.pumpWidget(
+        _wrapLoaded(
+          profile: statusProfile(
+            status: TravelerStatus.professional,
+            name: 'Diallo Express SARL',
+            number: 'CI-ABJ-2021-B-12345',
+            country: 'CI',
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.byType(GpProBadge, skipOffstage: false), findsOneWidget);
+      expect(
+        find.text(
+          'Diallo Express SARL · Immatriculation n° CI-ABJ-2021-B-12345 · '
+          "Côte d'Ivoire",
+          skipOffstage: false,
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Entreprise déclarée par le voyageur', skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(
+        find.text("Qu'est-ce qu'un GP Pro ?", skipOffstage: false),
+        findsOneWidget,
+      );
+      // Replié par défaut : le texte de l'explication n'est pas à l'écran.
+      expect(find.text(explainer), findsNothing);
+      // L'ancien tableau Statut / Raison sociale / Immatriculation / Pays
+      // n'existe plus.
+      expect(find.text('Statut', skipOffstage: false), findsNothing);
+      expect(find.text('Raison sociale', skipOffstage: false), findsNothing);
+      expect(find.text('Professionnel', skipOffstage: false), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets("l'accordéon s'ouvre au toucher et montre la phrase", (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -1780,63 +1827,33 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(
-        find.text('Professionnel · CI-ABJ-2021-B-12345', skipOffstage: false),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('profile-traveler-status'), skipOffstage: false),
-        findsOneWidget,
-      );
-      expect(
-        find.text('Diallo Express SARL', skipOffstage: false),
-        findsOneWidget,
-      );
-      expect(
-        find.text('CI-ABJ-2021-B-12345', skipOffstage: false),
-        findsOneWidget,
-      );
-      expect(
-        find.text(
-          'Informations déclarées par le voyageur, non vérifiées par Yadony.',
-          skipOffstage: false,
-        ),
-        findsOneWidget,
-      );
-      expect(tester.takeException(), isNull);
+      final title = find.text("Qu'est-ce qu'un GP Pro ?", skipOffstage: false);
+      await tester.ensureVisible(title);
+      await tester.pumpAndSettle();
+      await tester.tap(title);
+      await tester.pumpAndSettle();
+
+      expect(find.text(explainer), findsOneWidget);
     });
 
-    testWidgets('particulier : la pastille seule, pas de bloc détaillé', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _wrapLoaded(profile: statusProfile(status: TravelerStatus.individual)),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      expect(find.text('Particulier', skipOffstage: false), findsOneWidget);
-      expect(
-        find.byKey(const Key('profile-traveler-status'), skipOffstage: false),
-        findsNothing,
-      );
-    });
-
-    testWidgets('statut absent (ancien back) : rien', (tester) async {
+    testWidgets('GP Pro sans entreprise (badge ancien) : accordéon seul, '
+        'pas de ligne entreprise', (tester) async {
       await tester.pumpWidget(_wrapLoaded(profile: statusProfile()));
       await tester.pump(const Duration(milliseconds: 600));
 
+      expect(find.byType(GpProBadge, skipOffstage: false), findsOneWidget);
       expect(
-        find.byType(TravelerStatusChip, skipOffstage: false),
-        findsNothing,
+        find.text("Qu'est-ce qu'un GP Pro ?", skipOffstage: false),
+        findsOneWidget,
       );
       expect(
-        find.byKey(const Key('profile-traveler-status'), skipOffstage: false),
+        find.text('Entreprise déclarée par le voyageur', skipOffstage: false),
         findsNothing,
       );
-      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Immatriculation'), findsNothing);
     });
 
-    testWidgets('professionnel sans pays ni numéro : pas de ligne vide', (
+    testWidgets('GP Pro avec le seul nom : pas de segment vide', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -1853,8 +1870,73 @@ void main() {
         find.text('Diallo Express SARL', skipOffstage: false),
         findsOneWidget,
       );
-      expect(find.text('Immatriculation', skipOffstage: false), findsNothing);
-      expect(find.text('Pays', skipOffstage: false), findsNothing);
+      expect(
+        find.text('Entreprise déclarée par le voyageur', skipOffstage: false),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('particulier : la pastille « Particulier », rien d’autre', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapLoaded(
+          profile: statusProfile(
+            status: TravelerStatus.individual,
+            gpPro: false,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('Particulier', skipOffstage: false), findsOneWidget);
+      expect(find.byType(GpProBadge, skipOffstage: false), findsNothing);
+      expect(
+        find.text("Qu'est-ce qu'un GP Pro ?", skipOffstage: false),
+        findsNothing,
+      );
+    });
+
+    testWidgets('statut absent (ancien back) et pas GP Pro : aucune pastille '
+        'de statut', (tester) async {
+      await tester.pumpWidget(
+        _wrapLoaded(profile: statusProfile(gpPro: false)),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('Particulier', skipOffstage: false), findsNothing);
+      expect(find.byType(GpProBadge, skipOffstage: false), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('360 dp, anglais, entreprise à longs libellés : aucune '
+        'exception', (tester) async {
+      useEnglish();
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        _wrapLoaded(
+          profile: statusProfile(
+            status: TravelerStatus.professional,
+            name: 'Diallo Express Transport International SARL',
+            number: 'CI-ABJ-2021-B-1234567890-LONG',
+            country: 'CI',
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(tester.takeException(), isNull);
+      expect(
+        find.text('Company declared by the traveler', skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(
+        find.text('What is a GP Pro?', skipOffstage: false),
+        findsOneWidget,
+      );
     });
   });
 }

@@ -16,15 +16,22 @@ class GpProRemoteDatasource {
   Future<GpProStatus> apply({
     required GpProFrequency frequency,
     String? commercialName,
+    String? businessRegistrationNumber,
+    String? businessCountry,
     List<String> documentIds = const [],
     required GpProSource source,
   }) async {
     final name = commercialName?.trim();
+    final number = businessRegistrationNumber?.trim();
     final response = await _apiClient.dio.post(
       '/gp-pro/applications',
       data: {
         'travelFrequency': frequency.wire,
         if (name != null && name.isNotEmpty) 'commercialName': name,
+        if (number != null && number.isNotEmpty)
+          'businessRegistrationNumber': number,
+        if (businessCountry != null && businessCountry.isNotEmpty)
+          'businessCountry': businessCountry,
         if (documentIds.isNotEmpty) 'documentIds': documentIds,
         'source': source.wire,
       },
@@ -64,6 +71,13 @@ class GpProRemoteDatasource {
 
   Future<void> cancel() async {
     await _apiClient.dio.delete('/gp-pro/applications/current');
+  }
+
+  /// `POST /gp-pro/resign` : le voyageur quitte le statut GP Pro (badge retiré,
+  /// informations d'entreprise effacées, demande en attente annulée).
+  Future<GpProStatus> resign() async {
+    final response = await _apiClient.dio.post('/gp-pro/resign');
+    return GpProStatus.fromJson(response.data as Map<String, dynamic>);
   }
 
   static String _fileName(String filePath) {

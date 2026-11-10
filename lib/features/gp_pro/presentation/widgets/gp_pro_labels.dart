@@ -25,6 +25,7 @@ extension GpProLabels on AppLocalizations {
     'gp-pro-document-invalid' => gpProErrorDocumentInvalid,
     'gp-pro-document-storage-unavailable' => gpProErrorStorageUnavailable,
     'gp-pro-kyc-required' => gpProErrorKycRequired,
+    'gp-pro-business-incomplete' => gpProErrorBusinessIncomplete,
     _ => gpProErrorGeneric,
   };
 }

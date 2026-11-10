@@ -1,5 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
@@ -20,6 +20,11 @@ import 'package:dony/features/publish_gate/bloc/publish_gate_cubit.dart';
 import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:dony/features/publish_gate/data/repositories/publish_commitment_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
+import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
+import 'package:dony/features/traveler_status/data/traveler_status.dart';
+import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
+import 'package:dony/features/traveler_status/presentation/publish_blocked_screen.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
 import 'package:flutter/material.dart';
@@ -49,6 +54,8 @@ class _MockRequests extends Mock implements PackageRequestRepository {}
 
 class _MockTemplates extends Mock implements TripTemplateRepository {}
 
+class _MockTravelerStatus extends Mock implements TravelerStatusRepository {}
+
 UserModel _user({required String kycStatus}) => UserModel.fromJson({
   'id': 'u1',
   'roles': const ['SENDER', 'TRAVELER'],
@@ -58,6 +65,7 @@ UserModel _user({required String kycStatus}) => UserModel.fromJson({
 late List<String> visited;
 late List<Object?> extras;
 late _MockCommitments _commitmentRepo;
+late _MockTravelerStatus _statusRepo;
 
 Future<void> _pump(
   WidgetTester tester, {
@@ -69,6 +77,7 @@ Future<void> _pump(
   Map<String, dynamic>? localDraft,
   List<Object> serverDrafts = const [],
   List<TripTemplate> tripTemplates = const [],
+  PublishingEligibility eligibility = PublishingEligibility.ok,
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
@@ -118,6 +127,15 @@ Future<void> _pump(
   );
   final templates = _MockTemplates();
   when(() => templates.getAll()).thenAnswer((_) async => tripTemplates);
+  _statusRepo = _MockTravelerStatus();
+  when(
+    () => _statusRepo.checkEligibility(),
+  ).thenAnswer((_) async => (eligibility: eligibility, failureCode: null));
+  getIt
+    ..registerSingleton<TravelerStatusRepository>(_statusRepo)
+    ..registerFactory<TravelerStatusCubit>(
+      () => TravelerStatusCubit(_statusRepo, getIt<AnalyticsService>()),
+    );
   getIt.registerFactoryParam<PublishGateCubit, PublishCommitmentRole, void>(
     (r, _) => PublishGateCubit(
       role: r,
@@ -126,6 +144,7 @@ Future<void> _pump(
       announcements: announcements,
       packageRequests: requests,
       templates: templates,
+      eligibility: _statusRepo,
       analytics: getIt<AnalyticsService>(),
     ),
   );
@@ -205,6 +224,25 @@ Future<void> _pump(
         },
       ),
       GoRoute(
+        path: '/trips/publish-blocked',
+        builder: (_, state) {
+          final args = state.extra! as PublishBlockedArgs;
+          return PublishBlockedScreen(
+            eligibility: args.eligibility,
+            source: args.source,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/profile/gp-pro',
+        builder: (context, _) => Scaffold(
+          body: TextButton(
+            onPressed: context.pop,
+            child: const Text('Formulaire GP Pro'),
+          ),
+        ),
+      ),
+      GoRoute(
         path: '/home',
         builder: (_, _) {
           visited.add('/home');
@@ -232,6 +270,117 @@ Future<void> _check(WidgetTester tester) async {
 
 void main() {
   setUpAll(() => registerFallbackValue(PublishCommitmentRole.traveler));
+
+  group('PublishIntroScreen — limite mensuelle de trajets', () {
+    const blocked = PublishingEligibility(
+      allowed: false,
+      reason: PublishingReason.statusRequired,
+      limit: 4,
+      used: 4,
+    );
+
+    testWidgets('limite atteinte : l\'écran de blocage passe avant les '
+        'engagements', (tester) async {
+      await _pump(
+        tester,
+        role: PublishIntroRole.trip,
+        kycStatus: 'VERIFIED',
+        eligibility: blocked,
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Limite de 4 trajets atteinte ce mois-ci'),
+        findsOneWidget,
+      );
+      expect(find.text('Vos engagements de voyageur'), findsNothing);
+      verifyNever(() => _commitmentRepo.fetch());
+      expect(visited, isNot(contains('/trips/create')));
+    });
+
+    testWidgets('limite atteinte, retour arrière : on quitte l\'aiguillage', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        role: PublishIntroRole.trip,
+        kycStatus: 'VERIFIED',
+        eligibility: const PublishingEligibility(
+          allowed: false,
+          reason: PublishingReason.limitReached,
+          limit: 4,
+          used: 4,
+          travelerStatus: TravelerStatus.individual,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Vous ne pouvez plus créer de trajet ce mois-ci'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.widgetWithText(DonyButton, 'Fermer'));
+      await tester.pumpAndSettle();
+
+      expect(visited, contains('/home'));
+      expect(visited, isNot(contains('/trips/create')));
+    });
+
+    testWidgets('demande GP Pro validée au retour : l\'aiguillage repart', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        role: PublishIntroRole.trip,
+        kycStatus: 'VERIFIED',
+        eligibility: const PublishingEligibility(
+          allowed: false,
+          reason: PublishingReason.gpProPending,
+          limit: 4,
+          used: 4,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text("Votre demande GP Pro est en cours d'examen"),
+        findsOneWidget,
+      );
+
+      when(() => _statusRepo.checkEligibility()).thenAnswer(
+        (_) async => (eligibility: PublishingEligibility.ok, failureCode: null),
+      );
+      await tester.tap(find.widgetWithText(DonyButton, 'Voir ma demande'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Formulaire GP Pro'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vos engagements de voyageur'), findsOneWidget);
+    });
+
+    testWidgets('lecture du droit en échec (ancien back) : parcours habituel', (
+      tester,
+    ) async {
+      await _pump(tester, role: PublishIntroRole.trip, kycStatus: 'VERIFIED');
+      expect(find.text('Vos engagements de voyageur'), findsOneWidget);
+    });
+
+    testWidgets('demande d\'envoi (expéditeur) : jamais bloquée', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        role: PublishIntroRole.parcel,
+        kycStatus: 'VERIFIED',
+        eligibility: blocked,
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Limite de 4 trajets atteinte ce mois-ci'),
+        findsNothing,
+      );
+      verifyNever(() => _statusRepo.checkEligibility());
+    });
+  });
 
   group('PublishIntroScreen — trajet', () {
     testWidgets(

@@ -203,7 +203,7 @@ class _GpProScreenState extends State<GpProScreen> {
           title: l.gpProFailureTitle,
           description: l.gpProFailureBody,
           actionLabel: l.commonRetry,
-          onAction: cubit.load,
+          onAction: () => cubit.load(trackOpened: true),
         );
       case _View.unavailable:
         return DonyEmptyState(
@@ -211,7 +211,7 @@ class _GpProScreenState extends State<GpProScreen> {
           title: l.gpProUnavailableTitle,
           description: l.gpProUnavailableBody,
           actionLabel: l.commonRetry,
-          onAction: cubit.load,
+          onAction: () => cubit.load(trackOpened: true),
         );
       case _View.kyc:
         sections = [

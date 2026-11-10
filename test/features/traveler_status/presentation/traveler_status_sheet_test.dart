@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -5,6 +7,9 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
+import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_declaration.dart';
@@ -14,36 +19,52 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockRepository extends Mock implements TravelerStatusRepository {}
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
+class _MockGpProRepository extends Mock implements GpProRepository {}
+
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
 class _FakeAuthEvent extends Fake implements AuthEvent {}
 
+const _user = UserModel(
+  id: 'u1',
+  firstName: 'Moussa',
+  lastName: 'Koné',
+  email: 'moussa@test.com',
+  roles: ['TRAVELER'],
+  kycStatus: 'VERIFIED',
+  status: 'ACTIVE',
+);
+
 void main() {
   late _MockRepository repository;
   late _MockAnalytics analytics;
   late _MockAuthBloc authBloc;
-  bool? result;
+  late _MockGpProRepository gpRepo;
+  TravelerStatusOutcome? result;
   var resultSet = false;
 
-  setUpAll(() {
-    registerFallbackValue(_FakeAuthEvent());
-    registerFallbackValue(TravelerStatus.individual);
-  });
+  setUpAll(() => registerFallbackValue(_FakeAuthEvent()));
 
   setUp(() {
     repository = _MockRepository();
     analytics = _MockAnalytics();
     authBloc = _MockAuthBloc();
+    gpRepo = _MockGpProRepository();
+    when(
+      () => gpRepo.fetchStatus(),
+    ).thenAnswer((_) async => const GpProStatus(state: GpProState.none));
+    getIt.registerSingleton<GpProRepository>(gpRepo);
     result = null;
     resultSet = false;
-    when(() => authBloc.state).thenReturn(const AuthInitial());
+    when(() => authBloc.state).thenReturn(const AuthAuthenticated(_user));
     when(() => authBloc.isClosed).thenReturn(false);
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
@@ -51,15 +72,7 @@ void main() {
     getIt.registerFactory<TravelerStatusCubit>(
       () => TravelerStatusCubit(repository, analytics),
     );
-    when(
-      () => repository.declare(
-        status: any(named: 'status'),
-        personalUseConfirmed: any(named: 'personalUseConfirmed'),
-        businessName: any(named: 'businessName'),
-        registrationNumber: any(named: 'registrationNumber'),
-        country: any(named: 'country'),
-      ),
-    ).thenAnswer(
+    when(() => repository.declareIndividual()).thenAnswer(
       (_) async => TravelerStatusDeclaration(
         status: TravelerStatus.individual,
         declaredAt: DateTime.utc(2026, 11),
@@ -73,7 +86,6 @@ void main() {
 
   Future<void> open(
     WidgetTester tester, {
-    bool required = false,
     Locale locale = AppL10n.fr,
     double width = 360,
     bool allowLater = true,
@@ -82,21 +94,16 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: BlocProvider<AuthBloc>.value(
-          value: authBloc,
-          child: Scaffold(
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, _) => Scaffold(
             body: Builder(
               builder: (context) => TextButton(
                 onPressed: () async {
                   result = await TravelerStatusSheet.show(
                     context,
-                    required: required,
                     allowLater: allowLater,
                   );
                   resultSet = true;
@@ -105,6 +112,30 @@ void main() {
               ),
             ),
           ),
+        ),
+        GoRoute(
+          path: '/profile/gp-pro',
+          builder: (context, _) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: context.pop,
+                child: const Text('formulaire GP Pro'),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      BlocProvider<AuthBloc>.value(
+        value: authBloc,
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
         ),
       ),
     );
@@ -115,77 +146,31 @@ void main() {
   final fr = lookupAppLocalizations(AppL10n.fr);
   final en = lookupAppLocalizations(AppL10n.en);
 
-  DonyButton button(WidgetTester tester, String label) =>
-      tester.widget<DonyButton>(find.widgetWithText(DonyButton, label));
-
-  group('étape 1 : le choix', () {
-    testWidgets('rien de présélectionné, « Continuer » grisé', (tester) async {
+  group('la feuille', () {
+    testWidgets('deux choix sans clavier ni présélection', (tester) async {
       await open(tester);
 
       expect(find.text(fr.travelerStatusSheetTitle), findsOneWidget);
-      expect(find.text(fr.travelerStatusOptionIndividual), findsOneWidget);
-      expect(find.text(fr.travelerStatusOptionProfessional), findsOneWidget);
-      final group = tester.widget<DonyRadioGroup<TravelerStatus>>(
-        find.byType(DonyRadioGroup<TravelerStatus>),
-      );
-      expect(group.value, isNull);
-      expect(button(tester, fr.commonContinue).onPressed, isNull);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('« Plus tard » visible quand la déclaration est facultative', (
-      tester,
-    ) async {
-      await open(tester);
-      expect(find.widgetWithText(DonyButton, fr.commonLater), findsOneWidget);
-    });
-
-    testWidgets('« Plus tard » absent quand la déclaration est obligatoire', (
-      tester,
-    ) async {
-      await open(tester, required: true);
-      expect(find.widgetWithText(DonyButton, fr.commonLater), findsNothing);
-      expect(find.text(fr.travelerStatusSheetTitle), findsOneWidget);
-    });
-
-    testWidgets('« Plus tard » ferme la feuille sans déclarer (faux)', (
-      tester,
-    ) async {
-      await open(tester);
-      await tester.tap(find.widgetWithText(DonyButton, fr.commonLater));
-      await tester.pumpAndSettle();
-
-      expect(resultSet, isTrue);
-      expect(result, isFalse);
-      expect(find.text(fr.travelerStatusSheetTitle), findsNothing);
-      verifyNever(
-        () => repository.declare(
-          status: any(named: 'status'),
-          personalUseConfirmed: any(named: 'personalUseConfirmed'),
-          businessName: any(named: 'businessName'),
-          registrationNumber: any(named: 'registrationNumber'),
-          country: any(named: 'country'),
-        ),
-      );
-    });
-
-    testWidgets('allowLater: false (profil) : pas de « Plus tard », sous-titre '
-        'inchangé', (tester) async {
-      await open(tester, allowLater: false);
-      expect(find.widgetWithText(DonyButton, fr.commonLater), findsNothing);
       expect(find.text(fr.travelerStatusSheetSubtitle), findsOneWidget);
-      expect(find.text(fr.travelerStatusSheetSubtitleRequired), findsNothing);
+      expect(find.text(fr.travelerStatusOptionIndividual), findsOneWidget);
+      expect(find.text(fr.travelerStatusOptionIndividualBody), findsOneWidget);
+      expect(find.text(fr.travelerStatusOptionGpPro), findsOneWidget);
+      expect(find.text(fr.travelerStatusOptionGpProBody), findsOneWidget);
+      expect(
+        find.text(fr.travelerStatusIndividualConfirmation),
+        findsOneWidget,
+      );
+      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(DonyRadioGroup<TravelerStatus>), findsNothing);
+      verifyNever(() => repository.declareIndividual());
     });
 
-    testWidgets('allowLater par défaut : « Plus tard » présent (publication)', (
+    testWidgets('« Plus tard » dans le pied, jamais dans le contenu défilant', (
       tester,
     ) async {
       await open(tester);
-      expect(find.widgetWithText(DonyButton, fr.commonLater), findsOneWidget);
-    });
 
-    testWidgets('aucun bouton dans le contenu défilant', (tester) async {
-      await open(tester);
+      expect(find.widgetWithText(DonyButton, fr.commonLater), findsOneWidget);
       expect(
         find.descendant(
           of: find.byType(SingleChildScrollView),
@@ -193,237 +178,187 @@ void main() {
         ),
         findsNothing,
       );
-      expect(find.byType(DonyButton), findsWidgets);
     });
-  });
 
-  group('particulier', () {
-    testWidgets(
-      'case à cocher puis « Enregistrer » : déclare et renvoie vrai',
-      (tester) async {
-        await open(tester);
-        await tester.tap(find.text(fr.travelerStatusOptionIndividual));
-        await tester.pumpAndSettle();
-        expect(button(tester, fr.commonContinue).onPressed, isNotNull);
-        await tester.tap(find.widgetWithText(DonyButton, fr.commonContinue));
-        await tester.pumpAndSettle();
+    testWidgets('allowLater: false : pas de « Plus tard »', (tester) async {
+      await open(tester, allowLater: false);
 
-        expect(find.text(fr.travelerStatusIndividualTitle), findsOneWidget);
-        expect(find.text(fr.travelerStatusIndividualConfirm), findsOneWidget);
-        expect(button(tester, fr.commonSave).onPressed, isNull);
-
-        await tester.tap(find.text(fr.travelerStatusIndividualConfirm));
-        await tester.pumpAndSettle();
-        expect(button(tester, fr.commonSave).onPressed, isNotNull);
-
-        await tester.tap(find.widgetWithText(DonyButton, fr.commonSave));
-        await tester.pumpAndSettle();
-
-        verify(
-          () => repository.declare(
-            status: TravelerStatus.individual,
-            personalUseConfirmed: true,
-          ),
-        ).called(1);
-        expect(result, isTrue);
-        verify(
-          () => authBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
-        ).called(1);
-      },
-    );
-
-    testWidgets('« Retour » revient au choix en gardant la sélection', (
-      tester,
-    ) async {
-      await open(tester);
-      await tester.tap(find.text(fr.travelerStatusOptionIndividual));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, fr.commonContinue));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, fr.commonBack));
-      await tester.pumpAndSettle();
-
+      expect(find.widgetWithText(DonyButton, fr.commonLater), findsNothing);
+      expect(find.byType(DonyButton), findsNothing);
       expect(find.text(fr.travelerStatusSheetTitle), findsOneWidget);
-      final group = tester.widget<DonyRadioGroup<TravelerStatus>>(
-        find.byType(DonyRadioGroup<TravelerStatus>),
-      );
-      expect(group.value, TravelerStatus.individual);
     });
-  });
 
-  group('professionnel', () {
-    Future<void> toProfessional(WidgetTester tester) async {
-      await tester.tap(find.text(fr.travelerStatusOptionProfessional));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, fr.commonContinue));
-      await tester.pumpAndSettle();
-    }
-
-    testWidgets(
-      'trois champs, bouton grisé tant que le numéro est trop court',
-      (tester) async {
-        await open(tester);
-        await toProfessional(tester);
-
-        expect(find.text(fr.travelerStatusProfessionalTitle), findsOneWidget);
-        expect(find.byType(TextField), findsNWidgets(2));
-        expect(find.text(fr.travelerStatusCountryLabel), findsWidgets);
-
-        await tester.enterText(find.byType(TextField).at(0), 'Diallo Express');
-        await tester.enterText(find.byType(TextField).at(1), '123');
-        await tester.pump();
-        expect(button(tester, fr.commonSave).onPressed, isNull);
-      },
-    );
-
-    testWidgets(
-      'formulaire complet : déclare avec raison sociale, numéro, pays',
-      (tester) async {
-        when(
-          () => repository.declare(
-            status: TravelerStatus.professional,
-            businessName: 'Diallo Express SARL',
-            registrationNumber: 'CI-ABJ-2021-B-12345',
-            country: 'CI',
-          ),
-        ).thenAnswer(
-          (_) async => TravelerStatusDeclaration(
-            status: TravelerStatus.professional,
-            declaredAt: DateTime.utc(2026, 11),
-          ),
-        );
-        await open(tester);
-        await toProfessional(tester);
-
-        await tester.enterText(
-          find.byType(TextField).at(0),
-          'Diallo Express SARL',
-        );
-        await tester.enterText(
-          find.byType(TextField).at(1),
-          'CI-ABJ-2021-B-12345',
-        );
-        await tester.pump();
-        // Pays : feuille de sélection.
-        await tester.tap(find.text(fr.travelerStatusCountryLabel).first);
-        await tester.pumpAndSettle();
-        await tester.ensureVisible(find.text('Côte d\'Ivoire').first);
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Côte d\'Ivoire').first);
-        await tester.pumpAndSettle();
-
-        expect(button(tester, fr.commonSave).onPressed, isNotNull);
-        await tester.tap(find.widgetWithText(DonyButton, fr.commonSave));
-        await tester.pumpAndSettle();
-
-        expect(result, isTrue);
-      },
-    );
-
-    testWidgets(
-      'les champs gardent leur texte après « Retour » puis « Continuer »',
-      (tester) async {
-        await open(tester);
-        await toProfessional(tester);
-        await tester.enterText(find.byType(TextField).at(0), 'Diallo Express');
-        await tester.tap(find.widgetWithText(DonyButton, fr.commonBack));
-        await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(DonyButton, fr.commonContinue));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Diallo Express'), findsOneWidget);
-      },
-    );
-  });
-
-  group('aide sur le numéro d\'entreprise invalide', () {
-    for (final locale in [AppL10n.fr, AppL10n.en]) {
-      final l = locale == AppL10n.fr ? fr : en;
-      final code = locale.languageCode;
-
-      testWidgets('[$code] 360 dp : message d\'erreur dès que le champ est '
-          'non vide et invalide, aide neutre sinon', (tester) async {
-        await open(tester, locale: locale);
-        await tester.tap(find.text(l.travelerStatusOptionProfessional));
-        await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(DonyButton, l.commonContinue));
-        await tester.pumpAndSettle();
-
-        // Champ vide : l'aide neutre, pas d'erreur.
-        expect(find.text(l.travelerStatusRegistrationHint), findsOneWidget);
-        expect(find.text(l.travelerStatusRegistrationInvalid), findsNothing);
-
-        // 1 à 3 caractères : erreur à la place de l'aide.
-        await tester.enterText(find.byType(TextField).at(1), '123');
-        await tester.pump();
-        expect(find.text(l.travelerStatusRegistrationInvalid), findsOneWidget);
-        expect(find.text(l.travelerStatusRegistrationHint), findsNothing);
-
-        // Caractère interdit, même assez long.
-        await tester.enterText(find.byType(TextField).at(1), '12345<script>');
-        await tester.pump();
-        expect(find.text(l.travelerStatusRegistrationInvalid), findsOneWidget);
-
-        // Valide : l'aide neutre revient.
-        await tester.enterText(find.byType(TextField).at(1), 'CI-ABJ 2021/1.2');
-        await tester.pump();
-        expect(find.text(l.travelerStatusRegistrationInvalid), findsNothing);
-        expect(find.text(l.travelerStatusRegistrationHint), findsOneWidget);
-
-        // Vidé à nouveau : aide neutre.
-        await tester.enterText(find.byType(TextField).at(1), '');
-        await tester.pump();
-        expect(find.text(l.travelerStatusRegistrationHint), findsOneWidget);
-        expect(tester.takeException(), isNull);
-      });
-    }
-
-    testWidgets('textes exacts, sans tiret cadratin', (tester) async {
-      expect(
-        fr.travelerStatusRegistrationInvalid,
-        '4 caractères minimum : lettres, chiffres, espace, point, barre '
-        'oblique ou tiret.',
-      );
-      expect(
-        en.travelerStatusRegistrationInvalid,
-        'At least 4 characters: letters, digits, space, dot, slash or hyphen.',
-      );
-      expect(fr.travelerStatusRegistrationInvalid, isNot(contains('—')));
-      expect(en.travelerStatusRegistrationInvalid, isNot(contains('—')));
-    });
-  });
-
-  group('échec du back', () {
-    testWidgets('la feuille reste ouverte et le bouton se réactive', (
+    testWidgets('« Plus tard » ferme la feuille : résultat « later »', (
       tester,
     ) async {
-      when(
-        () => repository.declare(
-          status: any(named: 'status'),
-          personalUseConfirmed: any(named: 'personalUseConfirmed'),
-          businessName: any(named: 'businessName'),
-          registrationNumber: any(named: 'registrationNumber'),
-          country: any(named: 'country'),
-        ),
-      ).thenThrow(Exception('boom'));
       await open(tester);
+
+      await tester.tap(find.widgetWithText(DonyButton, fr.commonLater));
+      await tester.pumpAndSettle();
+
+      expect(result, TravelerStatusOutcome.later);
+      verifyNever(() => repository.declareIndividual());
+      verifyNever(() => authBloc.add(any()));
+    });
+
+    testWidgets('fermée d\'un geste : résultat nul', (tester) async {
+      await open(tester);
+
+      await tester.tapAt(const Offset(180, 20));
+      await tester.pumpAndSettle();
+
+      expect(resultSet, isTrue);
+      expect(result, isNull);
+    });
+  });
+
+  group('Particulier', () {
+    testWidgets('un tap déclare, ferme la feuille et met le profil à jour', (
+      tester,
+    ) async {
+      await open(tester);
+
       await tester.tap(find.text(fr.travelerStatusOptionIndividual));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, fr.commonContinue));
+
+      verify(() => repository.declareIndividual()).called(1);
+      expect(result, TravelerStatusOutcome.individual);
+      // La réponse du PUT est appliquée tout de suite au profil local, puis le
+      // profil est rechargé (dans cet ordre).
+      final events = verify(() => authBloc.add(captureAny())).captured;
+      expect(events, hasLength(2));
+      expect(events[0], isA<AuthUserSynced>());
+      expect(events[1], isA<AuthProfileRefreshRequested>());
+      final synced = events[0] as AuthUserSynced;
+      expect(synced.user.travelerStatus, TravelerStatus.individual);
+    });
+
+    testWidgets('feuille fermée d\'un geste pendant l\'envoi : le profil est '
+        'quand même mis à jour, sans second pop', (tester) async {
+      final gate = Completer<TravelerStatusDeclaration>();
+      when(() => repository.declareIndividual()).thenAnswer((_) => gate.future);
+      await open(tester);
+
+      await tester.tap(find.text(fr.travelerStatusOptionIndividual));
+      await tester.pump();
+      // Glissement hors de la feuille avant la réponse.
+      await tester.tapAt(const Offset(180, 20));
       await tester.pumpAndSettle();
-      await tester.tap(find.text(fr.travelerStatusIndividualConfirm));
+      expect(find.text(fr.travelerStatusSheetTitle), findsNothing);
+      expect(resultSet, isFalse);
+
+      gate.complete(
+        TravelerStatusDeclaration(
+          status: TravelerStatus.individual,
+          declaredAt: DateTime.utc(2026, 11),
+        ),
+      );
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(DonyButton, fr.commonSave));
+
+      expect(resultSet, isTrue);
+      expect(result, TravelerStatusOutcome.individual);
+      // La page dessous est toujours là : aucun second pop.
+      expect(find.text('ouvrir'), findsOneWidget);
+      final events = verify(() => authBloc.add(captureAny())).captured;
+      expect(events, hasLength(2));
+      expect(events[0], isA<AuthUserSynced>());
+      expect(events[1], isA<AuthProfileRefreshRequested>());
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('refus du back : la feuille reste ouverte et se réactive', (
+      tester,
+    ) async {
+      when(() => repository.declareIndividual()).thenThrow(Exception('boom'));
+      await open(tester);
+
+      await tester.tap(find.text(fr.travelerStatusOptionIndividual));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(resultSet, isFalse);
-      expect(find.text(fr.travelerStatusIndividualTitle), findsOneWidget);
-      expect(button(tester, fr.commonSave).onPressed, isNotNull);
-      // Laisser les animations de la snackbar d'erreur se terminer.
+      expect(find.text(fr.travelerStatusSheetTitle), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          'traveler_status_declare_failed',
+          properties: {'status': 'INDIVIDUAL', 'error_code': 'unknown'},
+        ),
+      ).called(1);
+
+      // Un nouvel essai part.
+      when(() => repository.declareIndividual()).thenAnswer(
+        (_) async => TravelerStatusDeclaration(
+          status: TravelerStatus.individual,
+          declaredAt: DateTime.utc(2026, 11),
+        ),
+      );
       for (var i = 0; i < 6; i++) {
         await tester.pump(const Duration(milliseconds: 400));
       }
+      await tester.tap(find.text(fr.travelerStatusOptionIndividual));
+      await tester.pumpAndSettle();
+      expect(result, TravelerStatusOutcome.individual);
+    });
+  });
+
+  group('GP Pro', () {
+    Future<void> openFormThenReturn(WidgetTester tester) async {
+      await open(tester);
+      await tester.tap(find.text(fr.travelerStatusOptionGpPro));
+      await tester.pumpAndSettle();
+      expect(find.text('formulaire GP Pro'), findsOneWidget);
+      verifyNever(() => repository.declareIndividual());
+      await tester.tap(find.text('formulaire GP Pro'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('formulaire quitté sans envoyer : « abandonné », profil '
+        'rechargé, rien n\'est déclaré', (tester) async {
+      await openFormThenReturn(tester);
+
+      expect(result, TravelerStatusOutcome.gpProAbandoned);
+      verify(
+        () => authBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
+      ).called(1);
+      verifyNever(() => repository.declareIndividual());
+    });
+
+    for (final state in [GpProState.pending, GpProState.awaitingKyc]) {
+      testWidgets('demande envoyée (${state.wire}) au retour : « envoyée »', (
+        tester,
+      ) async {
+        when(
+          () => gpRepo.fetchStatus(),
+        ).thenAnswer((_) async => GpProStatus(state: state));
+
+        await openFormThenReturn(tester);
+
+        expect(result, TravelerStatusOutcome.gpProSent);
+      });
+    }
+
+    testWidgets('demande refusée ou retirée au retour : « abandonné »', (
+      tester,
+    ) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenAnswer((_) async => const GpProStatus(state: GpProState.rejected));
+
+      await openFormThenReturn(tester);
+
+      expect(result, TravelerStatusOutcome.gpProAbandoned);
+    });
+
+    testWidgets('lecture du statut en échec : « abandonné », aucune '
+        'exception', (tester) async {
+      when(
+        () => gpRepo.fetchStatus(),
+      ).thenThrow(const GpProException('network'));
+
+      await openFormThenReturn(tester);
+
+      expect(result, TravelerStatusOutcome.gpProAbandoned);
+      expect(tester.takeException(), isNull);
     });
   });
 
@@ -432,49 +367,40 @@ void main() {
       final l = locale == AppL10n.fr ? fr : en;
       final code = locale.languageCode;
 
-      testWidgets(
-        '[$code] les trois étapes sans exception, boutons sur une ligne',
-        (tester) async {
-          await open(tester, locale: locale);
-          final h = tester
-              .getSize(find.widgetWithText(DonyButton, l.commonContinue))
-              .height;
+      testWidgets('[$code] sans exception, « Plus tard » sur une ligne', (
+        tester,
+      ) async {
+        await open(tester, locale: locale);
 
-          await tester.tap(find.text(l.travelerStatusOptionProfessional));
-          await tester.pumpAndSettle();
-          await tester.tap(find.widgetWithText(DonyButton, l.commonContinue));
-          await tester.pumpAndSettle();
-          expect(tester.takeException(), isNull);
-          expect(
-            tester
-                .getSize(find.widgetWithText(DonyButton, l.commonSave))
-                .height,
-            h,
-          );
-          expect(
-            tester
-                .getSize(find.widgetWithText(DonyButton, l.commonBack))
-                .height,
-            h,
-          );
-
-          await tester.tap(find.widgetWithText(DonyButton, l.commonBack));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text(l.travelerStatusOptionIndividual));
-          await tester.pumpAndSettle();
-          await tester.tap(find.widgetWithText(DonyButton, l.commonContinue));
-          await tester.pumpAndSettle();
-          expect(tester.takeException(), isNull);
-          expect(find.text(l.travelerStatusIndividualConfirm), findsOneWidget);
-        },
-      );
+        expect(tester.takeException(), isNull);
+        expect(find.text(l.travelerStatusSheetTitle), findsOneWidget);
+        final later = find.widgetWithText(DonyButton, l.commonLater);
+        expect(later, findsOneWidget);
+        expect(tester.getSize(later).height, lessThan(64));
+      });
     }
 
     testWidgets('anglais : textes traduits', (tester) async {
       await open(tester, locale: AppL10n.en);
       expect(find.text(en.travelerStatusSheetTitle), findsOneWidget);
       expect(en.travelerStatusSheetTitle, isNot(fr.travelerStatusSheetTitle));
-      expect(find.widgetWithText(DonyButton, en.commonLater), findsOneWidget);
+      expect(find.text(en.travelerStatusOptionGpPro), findsOneWidget);
+    });
+
+    testWidgets('aucun tiret cadratin dans les textes de la feuille', (
+      tester,
+    ) async {
+      for (final l in [fr, en]) {
+        for (final text in [
+          l.travelerStatusSheetTitle,
+          l.travelerStatusSheetSubtitle,
+          l.travelerStatusOptionIndividualBody,
+          l.travelerStatusOptionGpProBody,
+          l.travelerStatusIndividualConfirmation,
+        ]) {
+          expect(text.contains('—'), isFalse, reason: text);
+        }
+      }
     });
   });
 }
