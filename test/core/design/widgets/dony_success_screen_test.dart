@@ -7,11 +7,14 @@ import 'package:dony/core/design/widgets/dony_success_screen.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../features/video_modal/moment_test_support.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 
 // ── Test doubles ─────────────────────────────────────────────────────────────
@@ -29,6 +32,7 @@ void main() {
     VoidCallback? onTertiary,
     List<DonySuccessAction> extraActions = const [],
     String? secondaryIconAsset = 'share-2',
+    VideoModalMoment? modalMoment,
   }) => MaterialApp(
     theme: AppTheme.light(),
     home: DonySuccessScreen(
@@ -45,6 +49,7 @@ void main() {
       onTertiary: onTertiary,
       extraActions: extraActions,
       secondaryIconAsset: secondaryIconAsset,
+      modalMoment: modalMoment,
     ),
   );
 
@@ -83,6 +88,46 @@ void main() {
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
     }
+  });
+
+  group('moment d\'action des modals', () {
+    testWidgets('émis à l\'affichage, avec l\'écran comme origine', (
+      tester,
+    ) async {
+      final moments = useRecordingMoments();
+      final moment = VideoModalMoment.action(
+        VideoModalTrigger.paymentSucceeded,
+      );
+      await tester.pumpWidget(host(onCta: () {}, modalMoment: moment));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(moments.emitted, [moment]);
+      expect(moments.origins.single, isNotNull);
+      expect(moments.origins.single!.mounted, isTrue);
+      // L'écran n'est pas perturbé.
+      expect(find.text('Envoi réservé !'), findsOneWidget);
+      expect(find.text('Voir mes envois'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('émis une seule fois malgré les reconstructions', (
+      tester,
+    ) async {
+      final moments = useRecordingMoments();
+      final moment = VideoModalMoment.action(VideoModalTrigger.tripPublished);
+      await tester.pumpWidget(host(onCta: () {}, modalMoment: moment));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpWidget(host(onCta: () {}, modalMoment: moment));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(moments.emitted, hasLength(1));
+    });
+
+    testWidgets('sans moment : rien n\'est émis', (tester) async {
+      final moments = useRecordingMoments();
+      await tester.pumpWidget(host(onCta: () {}));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(moments.emitted, isEmpty);
+    });
   });
 
   testWidgets('affiche titre, sous-titre et label du CTA', (tester) async {

@@ -11,6 +11,8 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -49,6 +51,7 @@ class DonySuccessScreen extends StatefulWidget {
     this.extraActions = const [],
     this.secondaryIconAsset = 'share-2',
     this.extra,
+    this.modalMoment,
   });
 
   final DonyMascotteType mascotteType;
@@ -98,6 +101,11 @@ class DonySuccessScreen extends StatefulWidget {
   /// tap CTA, tap fermer). `null` = aucun tracking (écrans pas encore migrés).
   final String? analyticsContext;
 
+  /// Moment d'action des modals (« paiement réussi », « trajet publié »…) émis
+  /// quand l'écran s'affiche : un modal peut s'ouvrir par-dessus l'écran
+  /// 2 secondes plus tard s'il est toujours au premier plan. `null` : aucun.
+  final VideoModalMoment? modalMoment;
+
   @override
   State<DonySuccessScreen> createState() => _DonySuccessScreenState();
 }
@@ -139,6 +147,9 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
     _trackEvent(AnalyticsEvents.successScreenViewed);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final moment = widget.modalMoment;
+      if (moment != null) VideoModalMoments.notify(moment, origin: context);
       // sendAnnouncement remplace announce et exige la FlutterView cible :
       // l'annonce doit atteindre la fenêtre qui porte cet écran.
       if (!mounted) return;

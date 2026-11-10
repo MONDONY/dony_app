@@ -13,6 +13,8 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -304,6 +306,7 @@ class _EscrowConfirmedView extends StatelessWidget {
       ctaLabel: l.paymentEscrowCta,
       onCta: () => context.go('/home'),
       analyticsContext: 'escrow_payment',
+      modalMoment: VideoModalMoment.action(VideoModalTrigger.paymentSucceeded),
     );
   }
 }

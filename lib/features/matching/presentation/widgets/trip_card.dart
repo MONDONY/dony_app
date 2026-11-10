@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -223,7 +224,8 @@ class TripCard extends StatelessWidget {
 /// Renders a [FavoriteHeartButton] driven by [FavoriteIdsCubit].
 /// Silently returns [SizedBox.shrink] if no cubit is in the tree —
 /// so the card never crashes when rendered outside a cubit provider.
-Widget _buildFavoriteHeart(BuildContext context, String tripId) {
+Widget _buildFavoriteHeart(BuildContext context, AnnouncementModel trip) {
+  final tripId = trip.id;
   FavoriteIdsCubit? cubit;
   try {
     cubit = context.read<FavoriteIdsCubit>();
@@ -238,7 +240,7 @@ Widget _buildFavoriteHeart(BuildContext context, String tripId) {
       isFavorite: c.isTripFav(tripId),
       onToggle: () async {
         try {
-          await c.toggleTrip(tripId);
+          await c.toggleTrip(tripId, corridor: tripMomentCorridor(trip));
         } catch (_) {
           if (ctx.mounted) {
             DonySnackbar.show(
@@ -397,7 +399,7 @@ class _ActiveCardContent extends StatelessWidget {
               ],
               if (showFavorite) ...[
                 const SizedBox(width: DonySpacing.xs),
-                _buildFavoriteHeart(context, announcement.id),
+                _buildFavoriteHeart(context, announcement),
               ],
             ],
           ),
@@ -614,7 +616,7 @@ class _PastCardContent extends StatelessWidget {
           ],
           if (showFavorite) ...[
             const SizedBox(width: DonySpacing.xs),
-            _buildFavoriteHeart(context, announcement.id),
+            _buildFavoriteHeart(context, announcement),
           ],
         ],
       ),

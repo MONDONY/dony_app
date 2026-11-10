@@ -10,6 +10,9 @@ import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
@@ -225,6 +228,10 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     PaymentMethodKind method,
   ) {
     emit(failure);
+    // Paiement échoué : moment d'action des modals.
+    VideoModalMoments.notify(
+      VideoModalMoment.action(VideoModalTrigger.paymentFailed),
+    );
     _log(AnalyticsEvents.paymentFailed, {
       'reason': _reasonName(failure.reason),
     }, method);
@@ -323,6 +330,10 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
       _log(AnalyticsEvents.paymentSucceeded, const {}, method);
     } on PaymentCancelledException {
       emit(ready); // annulation silencieuse — la sheet reste prête
+      // Paiement annulé par la personne : moment d'action des modals.
+      VideoModalMoments.notify(
+        VideoModalMoment.action(VideoModalTrigger.paymentFailed),
+      );
       _log(AnalyticsEvents.paymentCancelled, const {}, method);
       if (method == PaymentMethodKind.wallet) {
         _logPlatformPayCancelled(_now().difference(startedAt));

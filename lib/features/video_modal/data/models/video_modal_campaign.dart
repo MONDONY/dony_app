@@ -1,3 +1,4 @@
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
 import 'package:equatable/equatable.dart';
 
 /// Où une campagne peut s'ouvrir (enum `VideoModalTrigger` du back).
@@ -9,7 +10,23 @@ enum VideoModalTrigger {
   messagesTab('MESSAGES_TAB'),
   profileTab('PROFILE_TAB'),
   publishTrip('PUBLISH_TRIP'),
-  sendParcel('SEND_PARCEL');
+  sendParcel('SEND_PARCEL'),
+
+  // Moments d'action (étape 2) : l'app les déclenche quand quelque chose se
+  // passe, avec le corridor concerné quand il existe.
+  deliveryConfirmed('DELIVERY_CONFIRMED'),
+  paymentSucceeded('PAYMENT_SUCCEEDED'),
+  tripPublished('TRIP_PUBLISHED'),
+  requestPublished('REQUEST_PUBLISHED'),
+  kycVerified('KYC_VERIFIED'),
+  searchNoTripResults('SEARCH_NO_TRIP_RESULTS'),
+  searchNoParcelResults('SEARCH_NO_PARCEL_RESULTS'),
+  searchFewResults('SEARCH_FEW_RESULTS'),
+  favoriteAdded('FAVORITE_ADDED'),
+  formAbandoned('FORM_ABANDONED'),
+  tripViewedRepeatedly('TRIP_VIEWED_REPEATEDLY'),
+  paymentFailed('PAYMENT_FAILED'),
+  appUpdated('APP_UPDATED');
 
   const VideoModalTrigger(this.wire);
 
@@ -19,6 +36,33 @@ enum VideoModalTrigger {
   /// Déclencheur posé devant un formulaire : après le modal, l'app poursuit
   /// vers le formulaire demandé.
   bool get opensForm => this == publishTrip || this == sendParcel;
+
+  /// Déclenché par l'app sur un événement (action réussie, recherche,
+  /// favori…), et non par l'arrivée sur un écran ou un bouton.
+  bool get isMoment => switch (this) {
+    appOpen ||
+    searchTab ||
+    activitiesTab ||
+    trackingTab ||
+    messagesTab ||
+    profileTab ||
+    publishTrip ||
+    sendParcel => false,
+    _ => true,
+  };
+
+  /// Les `corridors` d'une campagne s'appliquent à ce déclencheur.
+  bool get usesCorridors => switch (this) {
+    searchNoTripResults ||
+    searchNoParcelResults ||
+    searchFewResults ||
+    favoriteAdded ||
+    tripViewedRepeatedly ||
+    formAbandoned ||
+    tripPublished ||
+    requestPublished => true,
+    _ => false,
+  };
 
   static VideoModalTrigger? fromWire(Object? value) {
     for (final t in values) {
@@ -395,6 +439,8 @@ class VideoModalCampaign extends Equatable {
     this.stopAfterAnswer = true,
     this.allowDontShowAgain = false,
     this.lastShownAt,
+    this.triggerOptions = const VideoModalTriggerOptions(),
+    this.corridors = const [],
   });
 
   static const defaultMaxDisplays = 3;
@@ -453,6 +499,11 @@ class VideoModalCampaign extends Equatable {
   final bool stopAfterAnswer;
   final bool allowDontShowAgain;
   final DateTime? lastShownAt;
+
+  /// Moments d'action (étape 2) : seuils des déclencheurs « peu de résultats »
+  /// et « trajet consulté N fois », et corridors ciblés (liste vide : tous).
+  final VideoModalTriggerOptions triggerOptions;
+  final List<VideoModalCorridor> corridors;
 
   /// Plafond d'affichages de la version, `null` : pas de plafond (à chaque
   /// lancement, tous les N jours).
@@ -517,6 +568,19 @@ class VideoModalCampaign extends Equatable {
             frequencyDays > maxFrequencyDays)) {
       return null;
     }
+    final rawCorridors = json['corridors'];
+    final corridors = rawCorridors is List
+        ? rawCorridors
+              .map(VideoModalCorridor.tryParse)
+              .whereType<VideoModalCorridor>()
+              .take(VideoModalCorridor.maxEntries)
+              .toList(growable: false)
+        : const <VideoModalCorridor>[];
+    // Des corridors envoyés mais tous illisibles : mieux vaut ignorer la
+    // campagne que l'ouvrir pour tous les corridors.
+    if (rawCorridors is List && rawCorridors.isNotEmpty && corridors.isEmpty) {
+      return null;
+    }
     final size = _int(json['sizePercent']);
     final rawHighlights = json['highlights'];
     final highlights = rawHighlights is List
@@ -567,6 +631,8 @@ class VideoModalCampaign extends Equatable {
           : true,
       allowDontShowAgain: json['allowDontShowAgain'] == true,
       lastShownAt: _instant(json['lastShownAt']),
+      triggerOptions: VideoModalTriggerOptions.parse(json['triggerOptions']),
+      corridors: corridors,
     );
   }
 
@@ -702,5 +768,7 @@ class VideoModalCampaign extends Equatable {
     stopAfterAnswer,
     allowDontShowAgain,
     lastShownAt,
+    triggerOptions,
+    corridors,
   ];
 }

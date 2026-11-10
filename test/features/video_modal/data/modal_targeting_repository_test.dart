@@ -41,7 +41,7 @@ void main() {
       await make().loadEligible(lang: 'fr', realSession: true);
       expect(api.last.queryParameters, {
         'lang': 'fr',
-        'caps': 'layout,targeting',
+        'caps': 'layout,targeting,moments',
         'appVersion': '1.0.6',
         'platform': 'ios',
       });
@@ -53,7 +53,7 @@ void main() {
       await make().loadEligible(lang: 'fr', realSession: true);
       expect(api.last.queryParameters, {
         'lang': 'fr',
-        'caps': 'layout,targeting',
+        'caps': 'layout,targeting,moments',
         'platform': 'ios',
       });
     });

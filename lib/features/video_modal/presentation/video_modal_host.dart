@@ -4,6 +4,7 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/video_modal/bloc/video_modal_bloc.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
@@ -13,6 +14,13 @@ import 'package:flutter/widgets.dart';
 /// les modals posés devant un formulaire (`VideoModalGate`) : on ne fait pas
 /// attendre quelqu'un qui vient de toucher « Publier ».
 const kVideoModalOpenDelay = Duration(seconds: 2);
+
+/// Un moment d'action qui n'a pas pu s'ouvrir (écran recouvert, saisie en
+/// cours) est réessayé à cet intervalle, puis abandonné après
+/// [kVideoModalMomentMaxAge] : un modal « paiement réussi » n'a plus de sens
+/// quelques minutes plus tard.
+const kVideoModalMomentRetry = Duration(seconds: 1);
+const kVideoModalMomentMaxAge = Duration(minutes: 2);
 
 /// Ouvre les modals vidéo du shell : `APP_OPEN` au premier écran, puis le
 /// déclencheur de chaque onglet affiché (`SEARCH_TAB` … `PROFILE_TAB`).
@@ -24,6 +32,13 @@ const kVideoModalOpenDelay = Duration(seconds: 2);
 /// plan. Le modal s'ouvre [kVideoModalOpenDelay] après l'arrivée sur l'écran,
 /// une fois revérifié que l'écran est toujours le premier plan. Jamais plus
 /// d'un modal par session.
+///
+/// Écoute aussi les moments d'action (`VideoModalMoments`) : livraison,
+/// paiement, publication, recherche, favori, formulaire quitté… Mêmes règles
+/// que les écrans : un modal par lancement, jamais par-dessus une autre
+/// fenêtre ni pendant une saisie, [kVideoModalOpenDelay] après le moment, avec
+/// revérification du premier plan. Un moment ouvre le modal sur l'écran qui
+/// l'a émis tant qu'il est monté, sinon sur l'écran du shell.
 class VideoModalHost extends StatefulWidget {
   const VideoModalHost({
     super.key,
@@ -33,6 +48,10 @@ class VideoModalHost extends StatefulWidget {
     @visibleForTesting this.hasRealSession,
     @visibleForTesting this.lang,
     @visibleForTesting this.openDelay = kVideoModalOpenDelay,
+    @visibleForTesting this.moments,
+    @visibleForTesting this.momentRetry = kVideoModalMomentRetry,
+    @visibleForTesting this.momentMaxAge = kVideoModalMomentMaxAge,
+    @visibleForTesting this.clock,
   });
 
   /// Onglet affiché par le shell (index de branche du `StatefulShellRoute`).
@@ -42,6 +61,10 @@ class VideoModalHost extends StatefulWidget {
   final bool Function()? hasRealSession;
   final String Function()? lang;
   final Duration openDelay;
+  final VideoModalMoments? moments;
+  final Duration momentRetry;
+  final Duration momentMaxAge;
+  final DateTime Function()? clock;
 
   @override
   State<VideoModalHost> createState() => _VideoModalHostState();
@@ -61,6 +84,22 @@ class _VideoModalHostState extends State<VideoModalHost> {
   Timer? _delayTimer;
   Set<VideoModalTrigger> _delayed = {};
 
+  /// Moments d'action émis et pas encore ouverts, du plus ancien au plus
+  /// récent.
+  StreamSubscription<VideoModalMomentSignal>? _momentSub;
+  final List<VideoModalMomentSignal> _moments = [];
+  bool _momentScheduled = false;
+  Timer? _momentTimer;
+  Timer? _momentRetryTimer;
+
+  /// Au plus ce nombre de moments en attente : les plus anciens partent.
+  static const _maxQueuedMoments = 8;
+
+  VideoModalMoments get _momentService =>
+      widget.moments ?? VideoModalMoments.instance;
+
+  DateTime _now() => (widget.clock ?? DateTime.now)();
+
   bool get _realSession =>
       (widget.hasRealSession ??
       () => getItSafe<FirebaseSessionProbe>()?.hasRealSession ?? false)();
@@ -74,11 +113,23 @@ class _VideoModalHostState extends State<VideoModalHost> {
     if (bloc == null || bloc.isClosed) return;
     _bloc = bloc;
     _subscription = bloc.stream.listen((s) {
-      if (s.status == VideoModalStatus.ready) _schedule();
+      if (s.status == VideoModalStatus.ready) {
+        _schedule();
+        _scheduleMoments();
+      }
     });
-    _lifecycle = AppLifecycleListener(onResume: _schedule);
+    _lifecycle = AppLifecycleListener(
+      onResume: () {
+        _schedule();
+        _scheduleMoments();
+      },
+    );
+    _momentSub = _momentService.signals.listen(_onMoment);
     _arm(widget.tabIndex, withAppOpen: !bloc.state.appOpenConsumed);
     _load();
+    // Première ouverture après un changement de version : le moment attend
+    // que les campagnes soient chargées.
+    unawaited(_momentService.checkAppUpdated());
   }
 
   @override
@@ -88,6 +139,7 @@ class _VideoModalHostState extends State<VideoModalHost> {
     // (feuille de consentement ou de note refermée, page dépilée).
     ModalRoute.of(context);
     _schedule();
+    _scheduleMoments();
   }
 
   @override
@@ -109,6 +161,9 @@ class _VideoModalHostState extends State<VideoModalHost> {
   @override
   void dispose() {
     _delayTimer?.cancel();
+    _momentTimer?.cancel();
+    _momentRetryTimer?.cancel();
+    unawaited(_momentSub?.cancel());
     unawaited(_subscription?.cancel());
     _lifecycle?.dispose();
     super.dispose();
@@ -207,6 +262,154 @@ class _VideoModalHostState extends State<VideoModalHost> {
         trigger: trigger,
       ),
     );
+  }
+
+  // ── Moments d'action ──────────────────────────────────────────────────────
+
+  void _onMoment(VideoModalMomentSignal signal) {
+    if (!mounted || _bloc == null) return;
+    // Un paiement réussi après un échec : le modal d'échec n'a plus lieu.
+    if (signal.moment.trigger == VideoModalTrigger.paymentSucceeded) {
+      _moments.removeWhere(
+        (s) => s.moment.trigger == VideoModalTrigger.paymentFailed,
+      );
+    }
+    // Le même moment déjà en attente (recherche relancée, favori rebasculé).
+    if (_moments.any((s) => s.moment == signal.moment)) return;
+    _moments.add(signal);
+    if (_moments.length > _maxQueuedMoments) _moments.removeAt(0);
+    _scheduleMoments();
+  }
+
+  void _scheduleMoments() {
+    if (_momentScheduled || _moments.isEmpty || _bloc == null) return;
+    _momentScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _momentScheduled = false;
+      _tryShowMoments();
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  void _tryShowMoments() {
+    final bloc = _bloc;
+    if (!mounted || bloc == null || bloc.isClosed || _moments.isEmpty) return;
+    final now = _now();
+    _moments.removeWhere(
+      (s) => now.difference(s.emittedAt) > widget.momentMaxAge,
+    );
+    final state = bloc.state;
+    if (state.shownThisSession) {
+      _moments.clear();
+      return;
+    }
+    // Campagnes pas encore prêtes : l'état `ready` relancera l'évaluation.
+    if (state.status != VideoModalStatus.ready) return;
+    if (state.loadedForRealSession != _realSession ||
+        state.loadedLang != _lang) {
+      _load();
+      return;
+    }
+    // Aucune campagne pour ce moment (déclencheur, seuil, corridor) : rien
+    // n'est à attendre.
+    _moments.removeWhere((s) => state.candidateForMoment(s.moment) == null);
+    if (_moments.isEmpty) return;
+    if (_momentTimer != null) return;
+    _momentRetryTimer?.cancel();
+    _momentRetryTimer = null;
+    if (_pickMoment(state) != null) {
+      _momentTimer = Timer(widget.openDelay, _afterMomentDelay);
+    } else {
+      // Écran recouvert, saisie en cours ou app en arrière-plan : on réessaie.
+      _momentRetryTimer = Timer(widget.momentRetry, () {
+        _momentRetryTimer = null;
+        _tryShowMoments();
+      });
+    }
+  }
+
+  /// Fin du délai : revérifie que rien n'a changé avant d'ouvrir le modal.
+  void _afterMomentDelay() {
+    _momentTimer = null;
+    final bloc = _bloc;
+    if (!mounted || bloc == null || bloc.isClosed) return;
+    final state = bloc.state;
+    if (state.shownThisSession) {
+      _moments.clear();
+      return;
+    }
+    final sameSession =
+        state.status == VideoModalStatus.ready &&
+        state.loadedForRealSession == _realSession &&
+        state.loadedLang == _lang;
+    final pick = sameSession ? _pickMoment(state) : null;
+    if (pick == null) {
+      _tryShowMoments();
+      return;
+    }
+    _moments.remove(pick.signal);
+    unawaited(_presentMoment(bloc, pick));
+  }
+
+  Future<void> _presentMoment(
+    VideoModalBloc bloc,
+    ({
+      VideoModalMomentSignal signal,
+      BuildContext context,
+      VideoModalCampaign campaign,
+    })
+    pick,
+  ) async {
+    final moment = pick.signal.moment;
+    final service = _momentService;
+    await VideoModalPresenter.present(
+      pick.context,
+      bloc: bloc,
+      campaign: pick.campaign,
+      trigger: moment.trigger,
+    );
+    // Compteur de consultations remis à zéro une fois le modal affiché.
+    final tripId = moment.tripId;
+    if (tripId != null && !bloc.isClosed && bloc.state.shownThisSession) {
+      unawaited(service.resetTripViews(tripId));
+    }
+  }
+
+  /// Le moment à ouvrir maintenant : parmi ceux dont l'écran (celui qui l'a
+  /// émis tant qu'il est monté, sinon le shell) est au premier plan, celui de
+  /// la campagne la plus prioritaire, à égalité le plus ancien. `null` si
+  /// l'app n'est pas au premier plan, si la personne saisit du texte ou si
+  /// aucun écran n'est libre.
+  ({
+    VideoModalMomentSignal signal,
+    BuildContext context,
+    VideoModalCampaign campaign,
+  })?
+  _pickMoment(VideoModalState state) {
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (lifecycle != null && lifecycle != AppLifecycleState.resumed) {
+      return null;
+    }
+    if (isVideoModalUserTyping()) return null;
+    ({
+      VideoModalMomentSignal signal,
+      BuildContext context,
+      VideoModalCampaign campaign,
+    })?
+    best;
+    for (final signal in _moments) {
+      final campaign = state.candidateForMoment(signal.moment);
+      if (campaign == null) continue;
+      final origin = signal.origin;
+      final BuildContext? target = origin != null && origin.mounted
+          ? origin
+          : (mounted ? context : null);
+      if (target == null || !isVideoModalFrontmost(target)) continue;
+      if (best == null || campaign.priority > best.campaign.priority) {
+        best = (signal: signal, context: target, campaign: campaign);
+      }
+    }
+    return best;
   }
 
   @override

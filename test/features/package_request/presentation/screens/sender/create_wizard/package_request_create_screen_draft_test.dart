@@ -21,6 +21,8 @@ import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,6 +32,7 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../../../helpers/form_draft_test_doubles.dart';
 import '../../../../../../helpers/mock_analytics_backend.dart';
 import '../../../../../../helpers/mock_recent_city_store.dart';
+import '../../../../../video_modal/moment_test_support.dart';
 
 const _emptyHelpConfigJson = '''
 {
@@ -209,9 +212,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Garder votre saisie ?'), findsOneWidget);
 
+    final moments = useRecordingMoments();
     await tester.tap(find.byKey(const Key('draft-exit-save')));
     await tester.pumpAndSettle();
 
+    // Formulaire commencé puis quitté sans publier : moment avec le corridor.
+    expect(moments.triggers, [VideoModalTrigger.formAbandoned]);
+    expect(
+      const VideoModalCorridor(
+        from: 'paris',
+      ).matches(moments.emitted.single.corridor),
+      isTrue,
+    );
     final saved = await store.read(FormDraftKind.packageRequest);
     expect(saved?.step, 0);
     expect(saved?.data['departureCity'], 'Paris');
@@ -227,9 +239,11 @@ void main() {
 
     await tester.tap(find.byType(DonyAppBarBackButton));
     await tester.pumpAndSettle();
+    final moments = useRecordingMoments();
     await tester.tap(find.byKey(const Key('draft-exit-discard')));
     await tester.pumpAndSettle();
 
+    expect(moments.triggers, [VideoModalTrigger.formAbandoned]);
     expect(await store.read(FormDraftKind.packageRequest), isNull);
     expect(wizardOpen(), isFalse);
   });
@@ -241,9 +255,11 @@ void main() {
 
     await tester.enterText(find.widgetWithText(TextFormField, '4'), '7');
     await tester.pump();
+    final moments = useRecordingMoments();
     await tester.tap(find.byKey(const Key('request-save-draft')));
     await tester.pumpAndSettle();
 
+    expect(moments.triggers, [VideoModalTrigger.formAbandoned]);
     final saved = await store.read(FormDraftKind.packageRequest);
     expect(saved?.step, 1);
     expect(saved?.data['weightKg'], 7);
@@ -254,11 +270,14 @@ void main() {
   testWidgets('bouton « Brouillon » sur un formulaire vierge : rien à garder', (
     tester,
   ) async {
+    final moments = useRecordingMoments();
     await open(tester);
 
     await tester.tap(find.byKey(const Key('request-save-draft')));
     await tester.pump();
 
+    // Formulaire pas commencé : rien n'est abandonné.
+    expect(moments.emitted, isEmpty);
     expect(find.text('Rien à enregistrer pour l\'instant.'), findsOneWidget);
     expect(storage.values, isEmpty);
     expect(wizardOpen(), isTrue);

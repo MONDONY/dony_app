@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/return_to_thread.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -28,6 +30,7 @@ class NegotiationCommissionSettledScreen extends StatelessWidget {
       onCta: () => returnToNegotiationThread(context, threadId),
       onClose: () => returnToNegotiationThread(context, threadId),
       analyticsContext: 'negotiation_commission_settled',
+      modalMoment: VideoModalMoment.action(VideoModalTrigger.paymentSucceeded),
     );
   }
 }

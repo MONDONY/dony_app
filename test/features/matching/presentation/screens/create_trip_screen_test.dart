@@ -76,6 +76,8 @@ import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -92,6 +94,7 @@ import '../../../../helpers/form_draft_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/mock_recent_city_store.dart';
+import '../../../video_modal/moment_test_support.dart';
 
 const _emptyHelpConfigJson = '''
 {
@@ -4348,6 +4351,7 @@ void main() {
     testWidgets(
       'sortie sans saisie : la croix ferme directement, sans confirmation',
       (tester) async {
+        final moments = useRecordingMoments();
         await pump(tester, null);
         // Laisse passer les post-frames qui stabilisent la référence.
         await tester.pump();
@@ -4357,6 +4361,8 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Quitter sans enregistrer ?'), findsNothing);
+        // Rien n'a été commencé : aucun formulaire abandonné.
+        expect(moments.emitted, isEmpty);
       },
     );
 
@@ -4383,6 +4389,27 @@ void main() {
         );
         expect(find.text('Continuer la saisie'), findsOneWidget);
         expect(find.text('Quitter'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'modification d\'un trajet quittée : ce n\'est pas un formulaire abandonné',
+      (tester) async {
+        final moments = useRecordingMoments();
+        await pump(
+          tester,
+          makeAnnouncement(arrivalTime: const TimeOfDay(hour: 10, minute: 30)),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        await editSomething(tester);
+        await tester.tap(find.byType(DonyAppBarBackButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Quitter'));
+        await tester.pumpAndSettle();
+
+        expect(moments.emitted, isEmpty);
       },
     );
 
@@ -5331,6 +5358,7 @@ void main() {
     testWidgets('sortie après saisie : « Enregistrer le brouillon » le garde', (
       tester,
     ) async {
+      final moments = useRecordingMoments();
       await pumpScreen(tester, CreateTripArgs(resumeDraft: draft()));
 
       await tester.tap(find.byType(DonyAppBarBackButton));
@@ -5339,6 +5367,17 @@ void main() {
 
       await tester.tap(find.byKey(const Key('draft-exit-save')));
       await tester.pumpAndSettle();
+
+      // Formulaire commencé puis quitté sans publier : un moment, avec le
+      // corridor déjà saisi.
+      expect(moments.triggers, [VideoModalTrigger.formAbandoned]);
+      expect(
+        const VideoModalCorridor(
+          from: 'Paris',
+          to: 'dakar',
+        ).matches(moments.emitted.single.corridor),
+        isTrue,
+      );
 
       final saved = await store.read(FormDraftKind.trip);
       expect(saved, isNotNull);
@@ -5353,6 +5392,7 @@ void main() {
     testWidgets('sortie : « Quitter sans enregistrer » efface le brouillon', (
       tester,
     ) async {
+      final moments = useRecordingMoments();
       await store.save(FormDraftKind.trip, draft().toJson());
       await pumpScreen(tester, CreateTripArgs(resumeDraft: draft()));
 
@@ -5361,6 +5401,8 @@ void main() {
       await tester.tap(find.byKey(const Key('draft-exit-discard')));
       await tester.pumpAndSettle();
 
+      expect(moments.triggers, [VideoModalTrigger.formAbandoned]);
+
       expect(await store.read(FormDraftKind.trip), isNull);
       expect(find.byType(CreateTripScreen), findsNothing);
     });
@@ -5368,6 +5410,7 @@ void main() {
     testWidgets('sortie : « Continuer la saisie » ne change rien', (
       tester,
     ) async {
+      final moments = useRecordingMoments();
       await pumpScreen(tester, CreateTripArgs(resumeDraft: draft()));
 
       await tester.tap(find.byType(DonyAppBarBackButton));
@@ -5375,16 +5418,20 @@ void main() {
       await tester.tap(find.byKey(const Key('draft-exit-stay')));
       await tester.pumpAndSettle();
 
+      // Il reste sur sa saisie : rien n'est abandonné.
+      expect(moments.emitted, isEmpty);
       expect(find.byType(CreateTripScreen), findsOneWidget);
       expect(await store.read(FormDraftKind.trip), isNull);
     });
 
     testWidgets('bouton « Brouillon » : enregistre et quitte', (tester) async {
+      final moments = useRecordingMoments();
       await pumpScreen(tester, CreateTripArgs(resumeDraft: draft()));
 
       await tester.tap(find.byKey(const Key('trip-save-draft')));
       await tester.pumpAndSettle();
 
+      expect(moments.triggers, [VideoModalTrigger.formAbandoned]);
       expect((await store.read(FormDraftKind.trip))?.step, 1);
       expect(find.byType(CreateTripScreen), findsNothing);
     });

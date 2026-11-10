@@ -1,9 +1,12 @@
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../helpers/mock_analytics_backend.dart';
+import '../../video_modal/moment_test_support.dart';
 
 class _MockPaymentRepo extends Mock implements PaymentRepository {}
 
@@ -43,6 +46,7 @@ void main() {
   });
 
   test('payment_failed fires on PaymentFailed event', () async {
+    final moments = useRecordingMoments();
     final bloc = makeBloc();
     bloc.add(const PaymentFailed('Card declined'));
     await bloc.stream.firstWhere((s) => s is PaymentError);
@@ -50,6 +54,7 @@ void main() {
     verify(
       () => backend.capture(AnalyticsEvents.paymentFailed, any()),
     ).called(1);
+    expect(moments.triggers, [VideoModalTrigger.paymentFailed]);
   });
 
   test('no events when disabled', () async {

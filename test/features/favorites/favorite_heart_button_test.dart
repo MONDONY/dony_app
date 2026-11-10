@@ -4,6 +4,8 @@ import 'package:dony/features/favorites/data/repositories/favorite_repository.da
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +13,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/l10n_test_helpers.dart';
+import '../video_modal/moment_test_support.dart';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -236,6 +239,47 @@ void main() {
         final icon = tester.widget<Icon>(find.byType(Icon).first);
         // The heart must NOT be filled (trip-1 is not in favorites)
         expect(icon.icon, Icons.bookmark_border);
+      },
+    );
+
+    testWidgets(
+      'toucher le cœur : trajet ajouté, moment « favori » avec le corridor',
+      (tester) async {
+        final moments = useRecordingMoments();
+        final repo = _MockFavoriteRepository();
+        when(() => repo.add('trip', 'trip-1')).thenAnswer((_) async {});
+        final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
+
+        await tester.pumpWidget(
+          BlocProvider<FavoriteIdsCubit>.value(
+            value: cubit,
+            child: _wrap(
+              TripCard(
+                announcement: makeAnnouncement(),
+                onTap: () {},
+                index: 0,
+                showFavorite: true,
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.tap(find.byType(FavoriteHeartButton));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(moments.triggers, [VideoModalTrigger.favoriteAdded]);
+        expect(
+          const VideoModalCorridor(
+            from: 'paris',
+            to: 'dakar',
+          ).matches(moments.emitted.single.corridor),
+          isTrue,
+        );
+        // Retirer le favori n'émet rien de plus.
+        await tester.tap(find.byType(FavoriteHeartButton));
+        await tester.pump();
+        expect(moments.emitted, hasLength(1));
       },
     );
 

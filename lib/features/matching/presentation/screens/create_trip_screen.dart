@@ -38,6 +38,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
+import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
@@ -67,6 +68,10 @@ import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -265,6 +270,31 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     super.dispose();
   }
 
+  /// Formulaire quitté sans publier après avoir été commencé (saisie
+  /// modifiée, donc `_isDirtyNotifier`) : moment d'action des modals, avec le
+  /// corridor déjà saisi. Création seulement : un trajet modifié ou dédié à
+  /// une demande n'est pas « abandonné ».
+  void _notifyAbandoned() {
+    if (!_draftsEnabled) return;
+    TripFormDraft? draft;
+    try {
+      draft = _draftSnapshot?.call();
+    } on Object {
+      draft = null;
+    }
+    VideoModalMoments.notify(
+      VideoModalMoment.action(
+        VideoModalTrigger.formAbandoned,
+        corridor: VideoModalMomentCorridor(
+          fromCity: draft?.departureCity,
+          fromCountryCode: draft?.departureCountryCode,
+          toCity: draft?.arrivalCity,
+          toCountryCode: draft?.arrivalCountryCode,
+        ),
+      ),
+    );
+  }
+
   /// Sortie demandée (croix de l'app bar ou retour système).
   ///
   /// Sans saisie en cours on sort directement : imposer une confirmation à
@@ -281,6 +311,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       final confirmed = await DonyDialog.confirmDiscard(context);
       _confirmingExit = false;
       if (!mounted || confirmed != true) return;
+      _notifyAbandoned();
       _leave();
       return;
     }
@@ -291,6 +322,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       case DraftExitChoice.save:
         await _saveDraftAndLeave(FormDraftSource.exitDialog);
       case DraftExitChoice.discard:
+        _notifyAbandoned();
         await draftCubit.discard(source: FormDraftSource.exitDialog);
         if (mounted) _leave();
     }
@@ -317,6 +349,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       message: context.l10n.formDraftSavedMessage,
       type: DonySnackbarType.success,
     );
+    _notifyAbandoned();
     _leave();
   }
 
@@ -2557,6 +2590,12 @@ class _TripFormContentState extends State<_TripFormContent> {
                           ? l.tripPublishSuccessCta
                           : l.tripPublishSuccessParcelsCta,
                       onCta: isEdit ? viewTrip : seeParcels,
+                      modalMoment: isEdit
+                          ? null
+                          : VideoModalMoment.action(
+                              VideoModalTrigger.tripPublished,
+                              corridor: tripMomentCorridor(announcement),
+                            ),
                       analyticsContext: isEdit
                           ? 'trip_published'
                           : 'trip_published_v2',

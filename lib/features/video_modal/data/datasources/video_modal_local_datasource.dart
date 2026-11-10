@@ -14,6 +14,11 @@ class VideoModalLocalDatasource {
   static const historyKey = 'video_modal_history_v1';
   static const pendingKey = 'video_modal_pending_v1';
 
+  /// Moments d'action (étape 2), propres à l'appareil : jamais envoyés au
+  /// back, jamais effacés par la synchro de la connexion.
+  static const lastAppVersionKey = 'video_modal_last_app_version_v1';
+  static const tripViewsKey = 'video_modal_trip_views_v1';
+
   Future<VideoModalLocalHistory> readHistory() async {
     final raw = (await _prefs()).getString(historyKey);
     return VideoModalLocalHistory.fromJson(_decode(raw));
@@ -42,6 +47,41 @@ class VideoModalLocalDatasource {
       pendingKey,
       jsonEncode(pending.map((e) => e.toJson()).toList()),
     );
+  }
+
+  /// Dernière version de l'app vue au lancement (`1.0.6`), `null` tant
+  /// qu'aucune n'a été mémorisée (première installation).
+  Future<String?> readLastAppVersion() async {
+    final value = (await _prefs()).getString(lastAppVersionKey);
+    return value == null || value.isEmpty ? null : value;
+  }
+
+  Future<void> writeLastAppVersion(String version) async {
+    await (await _prefs()).setString(lastAppVersionKey, version);
+  }
+
+  /// Consultations des fiches trajet par identifiant de trajet, du moins
+  /// récent au plus récent (l'ordre de la liste fait foi pour l'élagage).
+  Future<Map<String, int>> readTripViews() async {
+    final decoded = _decode((await _prefs()).getString(tripViewsKey));
+    if (decoded is! Map) return {};
+    final result = <String, int>{};
+    for (final e in decoded.entries) {
+      final count = e.value;
+      if (e.key is String && count is int && count > 0) {
+        result[e.key as String] = count;
+      }
+    }
+    return result;
+  }
+
+  Future<void> writeTripViews(Map<String, int> views) async {
+    final prefs = await _prefs();
+    if (views.isEmpty) {
+      await prefs.remove(tripViewsKey);
+      return;
+    }
+    await prefs.setString(tripViewsKey, jsonEncode(views));
   }
 
   /// Efface tout l'historique local (après la synchro au back).

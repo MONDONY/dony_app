@@ -43,6 +43,8 @@ import 'package:dony/features/payments/presentation/widgets/payment_method_names
 import 'package:dony/features/recipients/data/phone_validation.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -2212,6 +2214,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   onCta: () =>
                       routeContext.go('/bids/${state.bidId}?from=payment'),
                   analyticsContext: 'bid_payment',
+                  modalMoment: VideoModalMoment.action(
+                    VideoModalTrigger.paymentSucceeded,
+                  ),
                 ),
               ),
             ),

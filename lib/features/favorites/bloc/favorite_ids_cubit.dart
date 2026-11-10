@@ -1,4 +1,8 @@
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -73,12 +77,23 @@ class FavoriteIdsCubit extends Cubit<FavoriteIdsState> {
 
   /// Optimistically toggles a trip favorite.
   /// Rolls back and rethrows on backend error so the UI can show a snackbar.
-  Future<void> toggleTrip(String id) => _toggle(
-    id,
-    () => state.tripIds,
-    (s) => state.copyWith(tripIds: s),
-    'trip',
-  );
+  ///
+  /// [corridor] : départ et arrivée du trajet, pour le moment d'action
+  /// « trajet ajouté aux favoris » des modals (émis seulement quand l'ajout
+  /// est confirmé par le serveur, jamais au retrait ni sur un échec).
+  Future<void> toggleTrip(String id, {VideoModalMomentCorridor? corridor}) =>
+      _toggle(
+        id,
+        () => state.tripIds,
+        (s) => state.copyWith(tripIds: s),
+        'trip',
+        onAdded: () => VideoModalMoments.notify(
+          VideoModalMoment.action(
+            VideoModalTrigger.favoriteAdded,
+            corridor: corridor,
+          ),
+        ),
+      );
 
   /// Optimistically toggles a package-request favorite.
   /// Rolls back and rethrows on backend error so the UI can show a snackbar.
@@ -95,8 +110,9 @@ class FavoriteIdsCubit extends Cubit<FavoriteIdsState> {
     String id,
     Set<String> Function() getCurrent,
     FavoriteIdsState Function(Set<String>) buildState,
-    String type,
-  ) async {
+    String type, {
+    void Function()? onAdded,
+  }) async {
     final current = getCurrent();
     final adding = !current.contains(id);
 
@@ -108,6 +124,7 @@ class FavoriteIdsCubit extends Cubit<FavoriteIdsState> {
     try {
       if (adding) {
         await _repo.add(type, id);
+        onAdded?.call();
       } else {
         await _repo.remove(type, id);
       }

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -16,6 +17,8 @@ import 'package:dony/features/package_request/presentation/widgets/thread/return
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -167,6 +170,9 @@ class PaymentRecapBottomSheet {
                                         thread.id,
                                       ),
                                       analyticsContext: 'negotiation_payment',
+                                      modalMoment: VideoModalMoment.action(
+                                        VideoModalTrigger.paymentSucceeded,
+                                      ),
                                     ),
                                   ),
                                 );

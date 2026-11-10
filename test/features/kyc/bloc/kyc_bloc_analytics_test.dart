@@ -4,9 +4,12 @@ import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/data/kyc_completion_tracker.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../helpers/mock_analytics_backend.dart';
+import '../../video_modal/moment_test_support.dart';
 
 class _MockKycRepo extends Mock implements KycRepository {}
 
@@ -16,7 +19,10 @@ void main() {
   late _MockKycRepo repo;
   late MockAnalyticsBackend backend;
 
+  late RecordingMoments moments;
+
   setUp(() {
+    moments = useRecordingMoments();
     repo = _MockKycRepo();
     backend = MockAnalyticsBackend();
   });
@@ -86,6 +92,8 @@ void main() {
     verify(
       () => backend.capture(AnalyticsEvents.kycCompleted, any()),
     ).called(1);
+    // Identité vérifiée : un seul moment d'action, comme `kyc_completed`.
+    expect(moments.triggers, [VideoModalTrigger.kycVerified]);
   });
 
   test('kyc_completed is not re-sent for an account already logged', () async {
@@ -99,6 +107,8 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     verifyNever(() => backend.capture(AnalyticsEvents.kycCompleted, any()));
+    // Compte déjà vérifié : aucun moment à la réouverture de l'écran.
+    expect(moments.emitted, isEmpty);
   });
 
   test('kyc_completed fires when the tracker grants the first claim', () async {
@@ -113,6 +123,7 @@ void main() {
     verify(
       () => backend.capture(AnalyticsEvents.kycCompleted, any()),
     ).called(1);
+    expect(moments.triggers, [VideoModalTrigger.kycVerified]);
   });
 
   test('no event when analytics disabled', () async {

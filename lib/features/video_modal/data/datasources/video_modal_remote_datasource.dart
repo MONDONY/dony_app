@@ -18,8 +18,9 @@ class VideoModalRemoteDatasource {
   );
 
   /// Capacités de cette app : formats et images (`layout`), ciblage et
-  /// fréquences (`targeting`). Un back ancien ignore le paramètre.
-  static const caps = 'layout,targeting';
+  /// fréquences (`targeting`), moments d'action (`moments`). Un back ancien
+  /// ignore le paramètre.
+  static const caps = 'layout,targeting,moments';
 
   /// `GET /video-modals/eligible?lang=&caps=&appVersion=&platform=` : public,
   /// le jeton est facultatif. [appVersion] (`x.y.z`) et [platform]

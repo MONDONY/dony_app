@@ -8,6 +8,9 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class PackageRequestSearchEvent extends Equatable {
@@ -245,6 +248,10 @@ class PackageRequestSearchBloc
           totalElements: page.totalElements,
         ),
       );
+      _notifySearchMoment(
+        e,
+        count: math.max(page.totalElements, page.content.length),
+      );
       unawaited(
         _analytics?.logEvent(
           AnalyticsEvents.packageRequestSearched,
@@ -272,6 +279,23 @@ class PackageRequestSearchBloc
         ),
       );
     }
+  }
+
+  /// Moment d'action « recherche de colis sans résultat » ou « peu de
+  /// résultats » : seulement pour une vraie recherche (au moins une ville),
+  /// pas pour la liste « Pour mes trajets ». Un seul moment par recherche.
+  void _notifySearchMoment(SearchFiltersChanged e, {required int count}) {
+    if (e.matchingMyTrips == true) return;
+    final from = e.departure?.trim() ?? '';
+    final to = e.arrival?.trim() ?? '';
+    if (from.isEmpty && to.isEmpty) return;
+    VideoModalMoments.notify(
+      VideoModalMoment.search(
+        kind: VideoModalSearchKind.parcel,
+        resultCount: count,
+        corridor: VideoModalMomentCorridor(fromCity: from, toCity: to),
+      ),
+    );
   }
 
   Future<void> _onLoadMore(
