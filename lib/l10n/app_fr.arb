@@ -23216,6 +23216,8 @@
   "@errorGpProPendingMessage": {"description": "Message de l'erreur 403 gp-pro-pending (error_catalog.dart)."},
   "publishBlockedResumeOnFirst": "Vous pourrez de nouveau publier à partir du 1er {month}.",
   "@publishBlockedResumeOnFirst": {"description": "Date de reprise quand c'est le premier du mois : « 1er » en français ; {month} est le nom du mois (publish_blocked_screen.dart).", "placeholders": {"month": {"type": "String"}}},
+  "videoModalDontShowAgain": "Ne plus afficher",
+  "@videoModalDontShowAgain": {"description": "Case à cocher d'un modal (vidéo ou information) dont la campagne l'autorise : la personne ne veut plus revoir ce modal. Posée dans la zone fixe du bas, avant les boutons (video_modal_dont_show_again.dart)"},
   "profileSectionGpPro": "GP PRO",
   "@profileSectionGpPro": {"description": "Titre de la section GP Pro de l'écran Profil, entre Argent et Ma réputation (profile_gp_pro_section.dart)."},
   "profileGpProBecome": "Devenir GP Pro",

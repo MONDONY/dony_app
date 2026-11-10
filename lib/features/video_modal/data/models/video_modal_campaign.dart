@@ -64,14 +64,22 @@ enum VideoModalEventType {
   shown('SHOWN'),
   dismissed('DISMISSED'),
   opened('OPENED'),
-  completed('COMPLETED');
+  completed('COMPLETED'),
+
+  /// Case « Ne plus afficher » cochée : réponse définitive pour la version.
+  /// Hors de l'échelle des statuts (voir [isStatus]) : elle ne rétrograde ni
+  /// ne remplace OPENED, COMPLETED ou DISMISSED.
+  dontShowAgain('DONT_SHOW_AGAIN');
 
   const VideoModalEventType(this.wire);
 
   final String wire;
 
+  /// SHOWN, DISMISSED, OPENED, COMPLETED : l'échelle des statuts d'une version.
+  bool get isStatus => this != dontShowAgain;
+
   /// OPENED, COMPLETED ou DISMISSED : la personne a répondu.
-  bool get isAnswer => this != shown;
+  bool get isAnswer => isStatus && this != shown;
 
   /// OPENED ou COMPLETED : la vidéo a été ouverte.
   bool get isWatch => this == opened || this == completed;
@@ -200,6 +208,35 @@ enum VideoModalLayout {
     if (value == null) return bottomSheet;
     for (final l in values) {
       if (l.wire == value) return l;
+    }
+    return null;
+  }
+}
+
+/// Fréquence d'affichage d'une campagne (enum `frequency` du back). Absent :
+/// [upToN], le comportement d'avant ce choix. Valeur inconnue : `null`, la
+/// campagne est ignorée.
+enum VideoModalFrequency {
+  /// Une seule fois par version (équivaut à [upToN] avec 1).
+  once('ONCE'),
+
+  /// Jusqu'à `maxDisplays` fois par version.
+  upToN('UP_TO_N'),
+
+  /// À chaque lancement de l'app (un seul modal par lancement côté app).
+  everyOpen('EVERY_OPEN'),
+
+  /// Une fois tous les `frequencyDays` jours.
+  everyNDays('EVERY_N_DAYS');
+
+  const VideoModalFrequency(this.wire);
+
+  final String wire;
+
+  static VideoModalFrequency? fromWire(Object? value) {
+    if (value == null) return upToN;
+    for (final f in values) {
+      if (f.wire == value) return f;
     }
     return null;
   }
@@ -352,9 +389,16 @@ class VideoModalCampaign extends Equatable {
     this.imageFit = VideoModalImageFit.cover,
     this.imageUrl,
     this.imageAlt,
+    this.priority = 0,
+    this.frequency = VideoModalFrequency.upToN,
+    this.frequencyDays,
+    this.stopAfterAnswer = true,
+    this.allowDontShowAgain = false,
+    this.lastShownAt,
   });
 
   static const defaultMaxDisplays = 3;
+  static const maxFrequencyDays = 365;
   static const minSizePercent = 30;
   static const maxSizePercent = 100;
   static const maxHighlights = 3;
@@ -393,6 +437,36 @@ class VideoModalCampaign extends Equatable {
   final VideoModalImageFit imageFit;
   final String? imageUrl;
   final String? imageAlt;
+
+  /// Ciblage et fréquence (étape 1 « moment, ciblage, fréquence »). Les
+  /// valeurs par défaut sont celles d'un back qui ne les envoie pas : le
+  /// comportement d'avant (jusqu'à [maxDisplays] fois, une réponse arrête).
+  ///
+  /// [priority] : plus haut passe d'abord. [frequencyDays] : seulement pour
+  /// [VideoModalFrequency.everyNDays]. [stopAfterAnswer] : une réponse (bouton
+  /// touché) bloque les affichages suivants de la version.
+  /// [allowDontShowAgain] : la case « Ne plus afficher » est proposée.
+  /// [lastShownAt] : dernier affichage de la personne pour la version.
+  final int priority;
+  final VideoModalFrequency frequency;
+  final int? frequencyDays;
+  final bool stopAfterAnswer;
+  final bool allowDontShowAgain;
+  final DateTime? lastShownAt;
+
+  /// Plafond d'affichages de la version, `null` : pas de plafond (à chaque
+  /// lancement, tous les N jours).
+  int? get displayCap => switch (frequency) {
+    VideoModalFrequency.once => 1,
+    VideoModalFrequency.upToN => maxDisplays,
+    VideoModalFrequency.everyOpen || VideoModalFrequency.everyNDays => null,
+  };
+
+  /// Le plafond d'affichages n'est pas atteint.
+  bool get underDisplayCap {
+    final cap = displayCap;
+    return cap == null || displays < cap;
+  }
 
   /// Une image est à précharger avant d'afficher le modal.
   bool get hasImage =>
@@ -433,6 +507,16 @@ class VideoModalCampaign extends Equatable {
     if (layout == null) return null;
     final image = type == VideoModalType.info ? _parseImage(json) : null;
     if (type == VideoModalType.info && image == null) return null;
+    final frequency = VideoModalFrequency.fromWire(json['frequency']);
+    if (frequency == null) return null;
+    final frequencyDays = _int(json['frequencyDays']);
+    // Tous les N jours sans N valide : la fréquence est illisible.
+    if (frequency == VideoModalFrequency.everyNDays &&
+        (frequencyDays == null ||
+            frequencyDays < 1 ||
+            frequencyDays > maxFrequencyDays)) {
+      return null;
+    }
     final size = _int(json['sizePercent']);
     final rawHighlights = json['highlights'];
     final highlights = rawHighlights is List
@@ -473,6 +557,16 @@ class VideoModalCampaign extends Equatable {
       imageFit: image?.fit ?? VideoModalImageFit.cover,
       imageUrl: image?.url,
       imageAlt: image?.alt,
+      priority: _int(json['priority']) ?? 0,
+      frequency: frequency,
+      frequencyDays: frequency == VideoModalFrequency.everyNDays
+          ? frequencyDays
+          : null,
+      stopAfterAnswer: json['stopAfterAnswer'] is bool
+          ? json['stopAfterAnswer'] as bool
+          : true,
+      allowDontShowAgain: json['allowDontShowAgain'] == true,
+      lastShownAt: _instant(json['lastShownAt']),
     );
   }
 
@@ -535,15 +629,28 @@ class VideoModalCampaign extends Equatable {
     return (body: body, icon: icon, primary: primary, secondary: secondary);
   }
 
-  /// Liste de la réponse, dans l'ordre du back (version publiée la plus
-  /// récente d'abord). Tout autre corps (objet, HTML d'un 404) donne une
-  /// liste vide.
+  /// Liste de la réponse, triée par priorité décroissante ; à priorité égale,
+  /// l'ordre du back (version publiée la plus récente d'abord) est gardé. Tout
+  /// autre corps (objet, HTML d'un 404) donne une liste vide.
   static List<VideoModalCampaign> parseList(Object? body) {
     if (body is! List) return const [];
-    return body
+    final parsed = body
         .map(tryParse)
         .whereType<VideoModalCampaign>()
         .toList(growable: false);
+    return sortByPriority(parsed);
+  }
+
+  /// Tri stable par priorité décroissante (le `sort` de Dart ne l'est pas).
+  static List<VideoModalCampaign> sortByPriority(
+    List<VideoModalCampaign> campaigns,
+  ) {
+    final indexed = campaigns.indexed.toList()
+      ..sort((a, b) {
+        final byPriority = b.$2.priority.compareTo(a.$2.priority);
+        return byPriority != 0 ? byPriority : a.$1.compareTo(b.$1);
+      });
+    return indexed.map((e) => e.$2).toList(growable: false);
   }
 
   /// Durée affichée sur la miniature (`3:24`), `null` sans durée.
@@ -556,6 +663,9 @@ class VideoModalCampaign extends Equatable {
   }
 
   static int? _int(Object? v) => v is int ? v : (v is num ? v.toInt() : null);
+
+  static DateTime? _instant(Object? v) =>
+      v is String && v.isNotEmpty ? DateTime.tryParse(v) : null;
 
   static String? _text(Object? v) =>
       v is String && v.trim().isNotEmpty ? v.trim() : null;
@@ -586,5 +696,11 @@ class VideoModalCampaign extends Equatable {
     imageFit,
     imageUrl,
     imageAlt,
+    priority,
+    frequency,
+    frequencyDays,
+    stopAfterAnswer,
+    allowDontShowAgain,
+    lastShownAt,
   ];
 }

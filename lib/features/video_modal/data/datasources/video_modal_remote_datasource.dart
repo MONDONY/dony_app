@@ -17,13 +17,27 @@ class VideoModalRemoteDatasource {
     },
   );
 
-  /// `GET /video-modals/eligible?lang=` : public, le jeton est facultatif.
-  Future<Object?> fetchEligible(String lang) async {
+  /// Capacités de cette app : formats et images (`layout`), ciblage et
+  /// fréquences (`targeting`). Un back ancien ignore le paramètre.
+  static const caps = 'layout,targeting';
+
+  /// `GET /video-modals/eligible?lang=&caps=&appVersion=&platform=` : public,
+  /// le jeton est facultatif. [appVersion] (`x.y.z`) et [platform]
+  /// (`android` / `ios`) servent au ciblage du back ; `appVersion` est omise
+  /// quand l'app ne sait pas la lire.
+  Future<Object?> fetchEligible(
+    String lang, {
+    String? appVersion,
+    String? platform,
+  }) async {
     final response = await _client.dio.get<Object?>(
       '/video-modals/eligible',
-      // `caps=layout` : cette app sait rendre les formats et les images ; un
-      // back ancien ignore le paramètre.
-      queryParameters: {'lang': lang, 'caps': 'layout'},
+      queryParameters: {
+        'lang': lang,
+        'caps': caps,
+        'appVersion': ?appVersion,
+        'platform': ?platform,
+      },
       options: _quiet,
     );
     return response.data;

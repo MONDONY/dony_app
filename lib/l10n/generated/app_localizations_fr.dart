@@ -23824,6 +23824,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get videoModalDontShowAgain => 'Ne plus afficher';
+
+  @override
   String get profileSectionGpPro => 'GP PRO';
 
   @override

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/profile/presentation/screens/help_tutorial_player.dart';
+import 'package:dony/features/video_modal/presentation/video_modal_host.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -47,6 +48,15 @@ Future<void> settleTransitions(WidgetTester tester) async {
   for (var i = 0; i < 8; i++) {
     await tester.pump(const Duration(milliseconds: 100));
   }
+}
+
+/// Attend le délai d'ouverture d'un modal du shell (2 s), puis les
+/// transitions.
+Future<void> settleAfterOpenDelay(WidgetTester tester) async {
+  // Le chargement et l'évaluation des déclencheurs d'abord, puis le délai.
+  await settleTransitions(tester);
+  await tester.pump(kVideoModalOpenDelay);
+  await settleTransitions(tester);
 }
 
 ThemeData get testTheme => AppTheme.light();

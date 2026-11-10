@@ -8,6 +8,12 @@ import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 
+/// Délai entre l'arrivée sur l'écran (onglet ou ouverture de l'app) et
+/// l'ouverture du modal : la personne voit d'abord l'écran. Pas de délai pour
+/// les modals posés devant un formulaire (`VideoModalGate`) : on ne fait pas
+/// attendre quelqu'un qui vient de toucher « Publier ».
+const kVideoModalOpenDelay = Duration(seconds: 2);
+
 /// Ouvre les modals vidéo du shell : `APP_OPEN` au premier écran, puis le
 /// déclencheur de chaque onglet affiché (`SEARCH_TAB` … `PROFILE_TAB`).
 ///
@@ -15,7 +21,9 @@ import 'package:flutter/widgets.dart';
 /// campagnes sont chargées une fois par session ; un déclencheur arrivé
 /// pendant qu'une feuille, une boîte de dialogue ou une demande de
 /// permission du système est ouverte attend que l'écran redevienne le premier
-/// plan. Jamais plus d'un modal par session.
+/// plan. Le modal s'ouvre [kVideoModalOpenDelay] après l'arrivée sur l'écran,
+/// une fois revérifié que l'écran est toujours le premier plan. Jamais plus
+/// d'un modal par session.
 class VideoModalHost extends StatefulWidget {
   const VideoModalHost({
     super.key,
@@ -24,6 +32,7 @@ class VideoModalHost extends StatefulWidget {
     @visibleForTesting this.bloc,
     @visibleForTesting this.hasRealSession,
     @visibleForTesting this.lang,
+    @visibleForTesting this.openDelay = kVideoModalOpenDelay,
   });
 
   /// Onglet affiché par le shell (index de branche du `StatefulShellRoute`).
@@ -32,6 +41,7 @@ class VideoModalHost extends StatefulWidget {
   final VideoModalBloc? bloc;
   final bool Function()? hasRealSession;
   final String Function()? lang;
+  final Duration openDelay;
 
   @override
   State<VideoModalHost> createState() => _VideoModalHostState();
@@ -46,6 +56,10 @@ class _VideoModalHostState extends State<VideoModalHost> {
   /// campagnes pas encore chargées).
   Set<VideoModalTrigger> _pending = {};
   bool _scheduled = false;
+
+  /// Déclencheurs évalués dont le modal attend la fin du délai d'ouverture.
+  Timer? _delayTimer;
+  Set<VideoModalTrigger> _delayed = {};
 
   bool get _realSession =>
       (widget.hasRealSession ??
@@ -82,7 +96,9 @@ class _VideoModalHostState extends State<VideoModalHost> {
     if (oldWidget.tabIndex != widget.tabIndex) {
       _arm(
         widget.tabIndex,
-        withAppOpen: _pending.contains(VideoModalTrigger.appOpen),
+        withAppOpen:
+            _pending.contains(VideoModalTrigger.appOpen) ||
+            _delayed.contains(VideoModalTrigger.appOpen),
       );
       // Connexion ou déconnexion pendant la session : rechargement si le
       // type de session a changé (le BLoC ignore sinon la demande).
@@ -92,6 +108,7 @@ class _VideoModalHostState extends State<VideoModalHost> {
 
   @override
   void dispose() {
+    _delayTimer?.cancel();
     unawaited(_subscription?.cancel());
     _lifecycle?.dispose();
     super.dispose();
@@ -102,6 +119,10 @@ class _VideoModalHostState extends State<VideoModalHost> {
   );
 
   void _arm(int tabIndex, {required bool withAppOpen}) {
+    // L'écran a changé : le délai repart à zéro sur le nouvel écran.
+    _delayTimer?.cancel();
+    _delayTimer = null;
+    _delayed = {};
     final tab = VideoModalTrigger.forShellTab(tabIndex);
     _pending = {if (withAppOpen) VideoModalTrigger.appOpen, ?tab};
     _schedule();
@@ -140,6 +161,37 @@ class _VideoModalHostState extends State<VideoModalHost> {
     _pending = {};
     if (triggers.contains(VideoModalTrigger.appOpen)) {
       bloc.add(const VideoModalAppOpenConsumedRequested());
+    }
+    if (state.candidateFor(triggers) == null) return;
+    _delayTimer?.cancel();
+    _delayed = triggers;
+    final tab = widget.tabIndex;
+    _delayTimer = Timer(widget.openDelay, () => _afterDelay(triggers, tab));
+  }
+
+  /// Fin du délai : revérifie que rien n'a changé (écran, session, autre
+  /// fenêtre ouverte) avant d'ouvrir le modal. Un écran passé au second plan
+  /// remet les déclencheurs en attente : le délai repartira à son retour.
+  void _afterDelay(Set<VideoModalTrigger> triggers, int tab) {
+    _delayTimer = null;
+    _delayed = {};
+    final bloc = _bloc;
+    if (!mounted || bloc == null || bloc.isClosed) return;
+    // Autre onglet : `_arm` a déjà repris la main.
+    if (widget.tabIndex != tab) return;
+    final state = bloc.state;
+    if (state.shownThisSession) return;
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    final sameSession =
+        state.status == VideoModalStatus.ready &&
+        state.loadedForRealSession == _realSession &&
+        state.loadedLang == _lang;
+    if (!sameSession ||
+        (lifecycle != null && lifecycle != AppLifecycleState.resumed) ||
+        !isVideoModalFrontmost(context)) {
+      _pending = {..._pending, ...triggers};
+      _schedule();
+      return;
     }
     final campaign = state.candidateFor(triggers);
     if (campaign == null) return;

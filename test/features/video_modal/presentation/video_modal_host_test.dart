@@ -137,7 +137,7 @@ void main() {
     (tester) async {
       usePhone360(tester);
       await pumpHost(tester);
-      await settleTransitions(tester);
+      await settleAfterOpenDelay(tester);
       expect(find.text('Bienvenue sur Yadony'), findsOneWidget);
       verify(() => repo.loadEligible(lang: 'fr', realSession: true)).called(1);
       expect(bloc.state.appOpenConsumed, isTrue);
@@ -160,10 +160,10 @@ void main() {
       campaign(id: 'c2', triggers: {VideoModalTrigger.messagesTab}),
     ];
     await pumpHost(tester);
-    await settleTransitions(tester);
+    await settleAfterOpenDelay(tester);
     expect(find.text('Bienvenue sur Yadony'), findsNothing);
     tab.value = 4;
-    await settleTransitions(tester);
+    await settleAfterOpenDelay(tester);
     expect(find.text('Bienvenue sur Yadony'), findsOneWidget);
     // Fermé d'un geste (retour) : SHOWN seulement.
     await tester.binding.handlePopRoute();
@@ -171,7 +171,7 @@ void main() {
     expect(find.text('Bienvenue sur Yadony'), findsNothing);
     // Un seul modal par session, même sur un autre onglet visé.
     tab.value = 3;
-    await settleTransitions(tester);
+    await settleAfterOpenDelay(tester);
     expect(find.text('Bienvenue sur Yadony'), findsNothing);
     expect(recorded(), [VideoModalEventType.shown]);
   });
@@ -188,11 +188,11 @@ void main() {
     await tester.tap(find.text('dialogue'));
     await settleTransitions(tester);
     tab.value = 3;
-    await settleTransitions(tester);
+    await settleAfterOpenDelay(tester);
     expect(find.text('dlg'), findsOneWidget);
     expect(find.text('Bienvenue sur Yadony'), findsNothing);
     await tester.tapAt(const Offset(10, 10));
-    await settleTransitions(tester);
+    await settleAfterOpenDelay(tester);
     expect(find.text('dlg'), findsNothing);
     expect(find.text('Bienvenue sur Yadony'), findsOneWidget);
   });
@@ -201,9 +201,9 @@ void main() {
     usePhone360(tester);
     loadResult = [];
     await pumpHost(tester);
-    await settleTransitions(tester);
+    await settleAfterOpenDelay(tester);
     tab.value = 1;
-    await settleTransitions(tester);
+    await settleAfterOpenDelay(tester);
     expect(find.text('Bienvenue sur Yadony'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -223,7 +223,7 @@ void main() {
   ) async {
     usePhone360(tester);
     await pumpHost(tester);
-    await settleTransitions(tester);
+    await settleAfterOpenDelay(tester);
     await tester.tap(find.byKey(const Key('video-modal-primary')));
     await settleTransitions(tester);
     session.emit(HelpTutorialPlayerEvent.ended);
@@ -243,7 +243,7 @@ void main() {
   ) async {
     usePhone360(tester);
     await pumpHost(tester);
-    await settleTransitions(tester);
+    await settleAfterOpenDelay(tester);
     await tester.tap(find.byKey(const Key('video-modal-primary')));
     await settleTransitions(tester);
     session.emit(HelpTutorialPlayerEvent.ended);
@@ -259,7 +259,7 @@ void main() {
     usePhone360(tester);
     realSession = false;
     await pumpHost(tester);
-    await settleTransitions(tester);
+    await settleAfterOpenDelay(tester);
     verify(() => repo.loadEligible(lang: 'fr', realSession: false)).called(1);
     verifyNever(() => repo.syncGuestEvents());
     await tester.tap(find.byKey(const Key('video-modal-primary')));
@@ -279,15 +279,141 @@ void main() {
       realSession = false;
       loadResult = [];
       await pumpHost(tester);
-      await settleTransitions(tester);
+      await settleAfterOpenDelay(tester);
       realSession = true;
       loadResult = [
         campaign(triggers: {VideoModalTrigger.activitiesTab}),
       ];
       tab.value = 1;
-      await settleTransitions(tester);
+      await settleAfterOpenDelay(tester);
       verify(() => repo.syncGuestEvents()).called(1);
       expect(find.text('Bienvenue sur Yadony'), findsOneWidget);
     },
   );
+
+  group('délai d\'ouverture de 2 secondes', () {
+    final modal = find.text('Bienvenue sur Yadony');
+
+    testWidgets('rien avant 2 s, modal après', (tester) async {
+      usePhone360(tester);
+      await pumpHost(tester);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 1700));
+      expect(modal, findsNothing);
+      verifyNever(
+        () => repo.record(any(), any(), realSession: any(named: 'realSession')),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(modal, findsOneWidget);
+      expect(recorded(), [VideoModalEventType.shown]);
+    });
+
+    testWidgets('changement d\'onglet pendant le délai : il repart à zéro', (
+      tester,
+    ) async {
+      usePhone360(tester);
+      await pumpHost(tester);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(seconds: 1));
+      tab.value = 2;
+      await tester.pump(const Duration(milliseconds: 100));
+      // 1,1 s + 1,9 s : le premier délai aurait expiré, pas le nouveau.
+      await tester.pump(const Duration(milliseconds: 1900));
+      expect(modal, findsNothing);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(modal, findsOneWidget);
+    });
+
+    testWidgets('boîte de dialogue ouverte pendant le délai : attend sa '
+        'fermeture, puis un nouveau délai', (tester) async {
+      usePhone360(tester);
+      await pumpHost(tester);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('dialogue'));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(seconds: 3));
+      expect(find.text('dlg'), findsOneWidget);
+      expect(modal, findsNothing);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('dlg'), findsNothing);
+      expect(modal, findsNothing);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(modal, findsOneWidget);
+    });
+
+    testWidgets('app passée en arrière-plan pendant le délai : attend le '
+        'retour au premier plan', (tester) async {
+      usePhone360(tester);
+      await pumpHost(tester);
+      await tester.pump(const Duration(milliseconds: 100));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump(const Duration(seconds: 3));
+      expect(modal, findsNothing);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(modal, findsOneWidget);
+    });
+
+    testWidgets('un autre modal ouvert pendant le délai : pas de second', (
+      tester,
+    ) async {
+      usePhone360(tester);
+      await pumpHost(tester);
+      await tester.pump(const Duration(milliseconds: 100));
+      // Par exemple celui d'un bouton « Publier » touché pendant le délai.
+      bloc.add(
+        VideoModalAnswerRequested(
+          campaign: campaign(id: 'autre'),
+          trigger: VideoModalTrigger.publishTrip,
+          event: VideoModalEventType.shown,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 3));
+      expect(modal, findsNothing);
+      expect(recorded(), [VideoModalEventType.shown]);
+    });
+
+    testWidgets('écran quitté pendant le délai : aucun modal, aucune erreur', (
+      tester,
+    ) async {
+      usePhone360(tester);
+      await pumpHost(tester);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 3));
+      expect(modal, findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('priorité : la campagne la plus haute passe d\'abord', (
+      tester,
+    ) async {
+      usePhone360(tester);
+      loadResult = VideoModalCampaign.sortByPriority([
+        campaign(id: 'bas', triggers: {VideoModalTrigger.appOpen}),
+        campaign(
+          id: 'haut',
+          priority: 4,
+          triggers: {VideoModalTrigger.appOpen},
+        ),
+      ]);
+      await pumpHost(tester);
+      await settleAfterOpenDelay(tester);
+      final shown = verify(
+        () => repo.record(
+          captureAny(),
+          any(),
+          realSession: any(named: 'realSession'),
+        ),
+      ).captured.cast<VideoModalCampaign>();
+      expect(shown.single.id, 'haut');
+    });
+  });
 }

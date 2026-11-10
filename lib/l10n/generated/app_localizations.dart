@@ -38064,6 +38064,12 @@ abstract class AppLocalizations {
   /// **'Vous pourrez de nouveau publier à partir du 1er {month}.'**
   String publishBlockedResumeOnFirst(String month);
 
+  /// Case à cocher d'un modal (vidéo ou information) dont la campagne l'autorise : la personne ne veut plus revoir ce modal. Posée dans la zone fixe du bas, avant les boutons (video_modal_dont_show_again.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne plus afficher'**
+  String get videoModalDontShowAgain;
+
   /// Titre de la section GP Pro de l'écran Profil, entre Argent et Ma réputation (profile_gp_pro_section.dart).
   ///
   /// In fr, this message translates to:

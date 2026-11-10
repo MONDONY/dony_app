@@ -4,6 +4,8 @@ import 'package:dony/features/video_modal/data/datasources/video_modal_local_dat
 import 'package:dony/features/video_modal/data/datasources/video_modal_remote_datasource.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_local_history.dart';
+import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 /// Modals vidéo : campagnes éligibles et réponses.
 ///
@@ -11,23 +13,57 @@ import 'package:dony/features/video_modal/data/models/video_modal_local_history.
 /// donnent « aucune campagne », et une réponse non envoyée est perdue sans
 /// bruit pour un compte (le compteur du back en sera simplement plus bas).
 class VideoModalRepository {
-  VideoModalRepository(this._remote, this._local, {DateTime Function()? clock})
-    : _clock = clock ?? DateTime.now;
+  VideoModalRepository(
+    this._remote,
+    this._local, {
+    DateTime Function()? clock,
+    Future<String?> Function()? appVersion,
+    String Function()? platform,
+  }) : _clock = clock ?? DateTime.now,
+       _appVersionLoader = appVersion ?? _readAppVersion,
+       _platform = platform ?? _currentPlatform;
 
   final VideoModalRemoteDatasource _remote;
   final VideoModalLocalDatasource _local;
   final DateTime Function() _clock;
+  final Future<String?> Function() _appVersionLoader;
+  final String Function() _platform;
 
-  /// Campagnes à proposer, dans l'ordre du back. Sans compte, les règles du
-  /// back (plafond, réponse, public) sont appliquées avec l'historique local.
+  /// Version de l'app (`1.0.6`, sans le numéro de build), lue une fois.
+  static Future<String?> _readAppVersion() async {
+    try {
+      final version = (await PackageInfo.fromPlatform()).version;
+      return version.isEmpty ? null : version;
+    } on Object {
+      return null;
+    }
+  }
+
+  static String _currentPlatform() =>
+      defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android';
+
+  /// Campagnes à proposer, triées par priorité (à égalité, l'ordre du back).
+  /// Sans compte, les règles du back (« Ne plus afficher », réponse,
+  /// fréquence, public, plafond d'un modal par jour) sont appliquées avec
+  /// l'historique local.
   Future<List<VideoModalCampaign>> loadEligible({
     required String lang,
     required bool realSession,
   }) async {
     final List<VideoModalCampaign> campaigns;
     try {
+      String? version;
+      try {
+        version = await _appVersionLoader();
+      } on Object {
+        version = null;
+      }
       campaigns = VideoModalCampaign.parseList(
-        await _remote.fetchEligible(lang),
+        await _remote.fetchEligible(
+          lang,
+          appVersion: version,
+          platform: _platform(),
+        ),
       );
     } on Object catch (e) {
       AppLog.debug(
@@ -36,10 +72,14 @@ class VideoModalRepository {
       );
       return const [];
     }
-    final capped = campaigns.where((c) => c.displays < c.maxDisplays);
+    final capped = campaigns.where((c) => c.underDisplayCap);
     if (realSession) return capped.toList(growable: false);
     final history = await _readHistory();
-    return capped.where(history.isEligible).toList(growable: false);
+    final now = _clock();
+    if (history.dailyCapReached(now)) return const [];
+    return capped
+        .where((c) => history.isEligible(c, now: now))
+        .toList(growable: false);
   }
 
   /// Envoie l'événement au back (compte) ou le garde sur le téléphone
@@ -66,8 +106,9 @@ class VideoModalRepository {
     }
     try {
       final history = await _readHistory();
+      final at = _clock();
       await _local.writeHistory(
-        history.apply(campaign.id, campaign.version, event),
+        history.apply(campaign.id, campaign.version, event, at: at),
       );
       final pending = await _local.readPending();
       await _local.writePending([
@@ -76,7 +117,7 @@ class VideoModalRepository {
           campaignId: campaign.id,
           version: campaign.version,
           event: event,
-          occurredAt: _clock(),
+          occurredAt: at,
         ),
       ]);
     } on Object catch (e) {

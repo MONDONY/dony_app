@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/presentation/widgets/video_modal_dont_show_again.dart';
 import 'package:dony/features/video_modal/presentation/widgets/video_modal_frame.dart';
 import 'package:dony/features/video_modal/presentation/widgets/video_modal_image.dart';
 import 'package:dony/features/video_modal/presentation/widgets/video_modal_sheet.dart';
@@ -26,6 +27,10 @@ abstract final class InfoModalSheet {
 
     /// Image préchargée ; `null` : modal sans image (bannière en échec).
     VideoModalImage? image,
+
+    /// Case « Ne plus afficher » : écrite par le geste de la personne, lue par
+    /// l'appelant une fois le modal fermé.
+    ValueNotifier<bool>? dontShowAgain,
   }) {
     final poster = image != null && campaign.isPoster;
     return VideoModalFrame.show<InfoModalChoice>(
@@ -34,7 +39,10 @@ abstract final class InfoModalSheet {
       sizePercent: campaign.sizePercent,
       analyticsName: analyticsName,
       poster: poster,
-      buttons: InfoModalSheetButtons(campaign: campaign),
+      buttons: InfoModalSheetButtons(
+        campaign: campaign,
+        dontShowAgain: dontShowAgain,
+      ),
       closeResult: InfoModalChoice.closed,
       child: InfoModalSheetContent(campaign: campaign, image: image),
     );
@@ -50,16 +58,22 @@ String _fallbackLabel(BuildContext context, VideoModalAction? action) {
 
 /// Les boutons du pied collant : un seul, ou deux empilés.
 class InfoModalSheetButtons extends StatelessWidget {
-  const InfoModalSheetButtons({super.key, required this.campaign});
+  const InfoModalSheetButtons({
+    super.key,
+    required this.campaign,
+    this.dontShowAgain,
+  });
 
   final VideoModalCampaign campaign;
+  final ValueNotifier<bool>? dontShowAgain;
 
   @override
   Widget build(BuildContext context) {
     final secondary = campaign.secondaryAction;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
+    return VideoModalFooterContent(
+      allowDontShowAgain: campaign.allowDontShowAgain,
+      dontShowAgain: dontShowAgain,
+      buttons: [
         DonyButton(
           key: const Key('info-modal-primary'),
           label:
