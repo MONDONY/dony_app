@@ -17,12 +17,14 @@ import 'package:go_router/go_router.dart';
 /// Entrée « Informations fiscales » de l'écran Profil (déclaration DAC7), sous
 /// la section « Argent ».
 ///
-/// - voyageur concerné (`solicitation == SOLLICITER`) : bannière discrète avec
-///   « Compléter » et « Plus tard » (masquée pour la session) ;
-/// - informations déjà fournies (`DEJA_FOURNI`) : une ligne discrète qui ouvre
-///   l'écran, sans bannière ;
-/// - sinon, et pour toute réponse 404, 403, 401 ou ancien back : rien du tout,
-///   ni erreur ni espace.
+/// - voyageur concerné (`solicitation == SOLLICITER` ; collecte ciblée :
+///   `INFO_REQUIRED` après une demande) : bannière discrète avec « Compléter »
+///   et « Plus tard » (masquée pour la session) ;
+/// - informations déjà fournies (`DEJA_FOURNI` ; collecte ciblée : `COMPLETE`,
+///   ou `INFO_REQUIRED` sans bannière, sous-titre « À compléter ») : une ligne
+///   discrète qui ouvre l'écran ;
+/// - sinon (pays hors périmètre, pays inconnu), et pour toute réponse 404,
+///   403, 401 ou ancien back : rien du tout, ni erreur ni espace.
 ///
 /// Une lecture au chargement et à la reprise de l'app, coalescée par le cubit.
 /// L'entrée porte elle-même son espacement bas : absente, elle ne laisse aucun
@@ -51,12 +53,17 @@ class ProfileTaxInfoEntry extends StatelessWidget {
             if (s.showBanner) {
               return _Spaced(
                 child: TaxInfoBanner(
+                  residenceOnly: s.bannerAsksResidence,
                   onOpen: () => unawaited(_open(context, 'banner')),
                   onLater: context.read<TaxInfoPromptCubit>().dismiss,
                 ),
               );
             }
-            if (s.showRow) return const _Spaced(child: _Row(onTap: _open));
+            if (s.showRow) {
+              return _Spaced(
+                child: _Row(onTap: _open, needsAction: s.rowNeedsAction),
+              );
+            }
             return const SizedBox.shrink();
           },
         ),
@@ -86,9 +93,13 @@ class _Spaced extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.onTap});
+  const _Row({required this.onTap, required this.needsAction});
 
   final Future<void> Function(BuildContext context, String variant) onTap;
+
+  /// Il manque quelque chose : « À compléter » au lieu de « Voir ou
+  /// modifier ».
+  final bool needsAction;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +113,9 @@ class _Row extends StatelessWidget {
           iconColor: cs.primary,
           iconBgColor: cs.primaryContainer,
           label: l.taxInfoRowLabel,
-          subtitle: l.taxInfoRowSubtitle,
+          subtitle: needsAction
+              ? l.taxInfoRowSubtitleToComplete
+              : l.taxInfoRowSubtitle,
           showDivider: false,
           onTap: () => unawaited(onTap(context, 'row')),
         ),
@@ -113,7 +126,8 @@ class _Row extends StatelessWidget {
 
 /// Relit les informations quand elles ont pu changer, l'onglet Profil restant
 /// en mémoire d'une visite à l'autre : enregistrement depuis l'écran
-/// ([taxInfoChanged]) et reprise de l'app. `TaxInfoPromptCubit.load` coalesce
+/// ([taxInfoChanged]), ouverture de l'onglet Profil
+/// ([taxInfoRefreshRequested]) et reprise de l'app. `TaxInfoPromptCubit.load` coalesce
 /// les appels : pas de requêtes en rafale. Le `State` ne porte que des
 /// abonnements, jamais d'état d'écran (aucun `setState`).
 class _Refresher extends StatefulWidget {
@@ -131,11 +145,13 @@ class _RefresherState extends State<_Refresher> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     taxInfoChanged.addListener(_reload);
+    taxInfoRefreshRequested.addListener(_reload);
   }
 
   @override
   void dispose() {
     taxInfoChanged.removeListener(_reload);
+    taxInfoRefreshRequested.removeListener(_reload);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dony/core/currency/country_picker.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/tax_info/bloc/tax_info_cubit.dart';
@@ -8,6 +7,7 @@ import 'package:dony/features/tax_info/data/models/tax_info.dart';
 import 'package:dony/features/tax_info/data/repositories/tax_info_repository.dart';
 import 'package:dony/features/tax_info/presentation/screens/tax_info_screen.dart';
 import 'package:dony/features/tax_info/presentation/widgets/tax_info_labels.dart';
+import 'package:dony/features/tax_info/presentation/widgets/tax_residence_picker.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -393,23 +393,33 @@ void main() {
       expect(find.text(fr.taxInfoErrorInvalid), findsNothing);
     });
 
-    testWidgets('choix du pays dans le catalogue de l\'app', (tester) async {
+    testWidgets('choix du pays : catalogue de l\'app et toute l\'Union', (
+      tester,
+    ) async {
       await pump(tester);
       await tester.tap(find.byKey(const Key('tax_info_country')));
       await tester.pumpAndSettle();
-      expect(find.byType(CountryPickerList), findsOneWidget);
+      expect(find.byType(TaxResidencePickerList), findsOneWidget);
       await tester.enterText(
-        find.descendant(
-          of: find.byType(CountryPickerList),
-          matching: find.byType(TextField),
-        ),
+        find.byKey(const Key('tax_residence_search')),
         'Sénégal',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Sénégal').last);
+      await tester.tap(find.byKey(const Key('tax_residence_SN')));
       await tester.pumpAndSettle();
-      expect(find.byType(CountryPickerList), findsNothing);
+      expect(find.byType(TaxResidencePickerList), findsNothing);
       expect(find.text('Sénégal'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('tax_info_country')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('tax_residence_search')),
+        'pologne',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('tax_residence_PL')));
+      await tester.pumpAndSettle();
+      expect(find.text('Pologne'), findsOneWidget);
     });
 
     testWidgets('enregistrement réussi : envoi rogné, confirmation, écran '

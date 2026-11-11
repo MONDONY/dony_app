@@ -8,9 +8,17 @@ import 'package:flutter/material.dart';
 ///
 /// Les deux actions sont des liens texte courts, sur une ligne, côte à côte.
 class TaxInfoBanner extends StatelessWidget {
-  const TaxInfoBanner({super.key, required this.onOpen, required this.onLater});
+  const TaxInfoBanner({
+    super.key,
+    required this.onOpen,
+    required this.onLater,
+    this.residenceOnly = false,
+  });
 
   final VoidCallback onOpen;
+
+  /// Seul le pays de résidence est demandé.
+  final bool residenceOnly;
   final VoidCallback onLater;
 
   @override
@@ -25,7 +33,9 @@ class TaxInfoBanner extends StatelessWidget {
       type: DonyStatusBannerType.info,
       iconAsset: 'landmark',
       title: l.taxInfoBannerTitle,
-      message: l.taxInfoBannerBody,
+      message: residenceOnly
+          ? l.taxInfoBannerResidenceBody
+          : l.taxInfoBannerBody,
       // `Wrap` : si le texte agrandi ne tient pas côte à côte, « Plus tard »
       // passe dessous, chaque libellé restant sur une ligne.
       action: Wrap(

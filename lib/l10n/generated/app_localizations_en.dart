@@ -14552,6 +14552,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get countryNameMa => 'Morocco';
 
   @override
+  String get countryNameBg => 'Bulgaria';
+
+  @override
+  String get countryNameCz => 'Czechia';
+
+  @override
+  String get countryNameDk => 'Denmark';
+
+  @override
+  String get countryNameHu => 'Hungary';
+
+  @override
+  String get countryNamePl => 'Poland';
+
+  @override
+  String get countryNameRo => 'Romania';
+
+  @override
+  String get countryNameSe => 'Sweden';
+
+  @override
   String get recipientListTitle => 'My recipients';
 
   @override
@@ -23791,4 +23812,178 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get taxInfoSaveMissingCountry =>
       'Choose the country that issued the number to save.';
+
+  @override
+  String get taxInfoCollectIntro =>
+      'The law requires us to report to the tax authorities, every year, the amounts received by travelers who live in the European Union (DAC7 obligation).';
+
+  @override
+  String get taxInfoCollectNoTax =>
+      'This does not necessarily mean you will owe any tax.';
+
+  @override
+  String get taxInfoCollectPrefilled =>
+      'We have already taken the information from your ID document.';
+
+  @override
+  String taxInfoCollectMissing(String fields) {
+    return 'We only need: $fields.';
+  }
+
+  @override
+  String get taxInfoMissingName => 'your first and last name';
+
+  @override
+  String get taxInfoMissingBirthDate => 'your date of birth';
+
+  @override
+  String get taxInfoMissingAddress => 'your address';
+
+  @override
+  String get taxInfoMissingTaxNumber => 'your tax identification number';
+
+  @override
+  String get taxInfoWhereToFind =>
+      'Where to find your tax number? It is at the top of your French tax return or tax notice, and in your personal account on impots.gouv.fr.';
+
+  @override
+  String get taxInfoKnownTitle => 'From your ID document';
+
+  @override
+  String get taxInfoKnownProfileTitle => 'Already in your profile';
+
+  @override
+  String get taxInfoNameLabel => 'Full name';
+
+  @override
+  String get taxInfoFirstNameLabel => 'First name';
+
+  @override
+  String get taxInfoLastNameLabel => 'Last name';
+
+  @override
+  String get taxInfoBirthDateLabel => 'Date of birth';
+
+  @override
+  String get taxInfoAddressLabel => 'Address';
+
+  @override
+  String get taxInfoStreetLabel => 'Street address';
+
+  @override
+  String get taxInfoLine2Label => 'Address line 2 (optional)';
+
+  @override
+  String get taxInfoPostalCodeLabel => 'Postal code';
+
+  @override
+  String get taxInfoCityLabel => 'City';
+
+  @override
+  String taxInfoAddressCountry(String country) {
+    return 'Country of residence: $country';
+  }
+
+  @override
+  String get taxInfoNotMyAddress => 'This is no longer my address';
+
+  @override
+  String get taxInfoKeepAddress => 'Keep my ID address';
+
+  @override
+  String get taxInfoNoTaxNumber => 'I don\'t have a tax number';
+
+  @override
+  String get taxInfoBirthPlaceLabel => 'Place of birth (city, country)';
+
+  @override
+  String get taxInfoBirthPlaceHint =>
+      'Without a tax number, enter your place of birth (city and country).';
+
+  @override
+  String get taxInfoBirthPlaceSaved =>
+      'Place of birth already saved. Enter it again to change it.';
+
+  @override
+  String get taxInfoNumberFrInvalid =>
+      'A French tax number has exactly 13 digits.';
+
+  @override
+  String get taxInfoFieldInvalid => 'Value rejected. Please check this field.';
+
+  @override
+  String get taxInfoSaveMissingName =>
+      'Enter your first and last name to save.';
+
+  @override
+  String get taxInfoSaveMissingBirthDate =>
+      'Choose your date of birth to save.';
+
+  @override
+  String get taxInfoSaveMissingAddress => 'Complete your address to save.';
+
+  @override
+  String get taxInfoSaveMissingBirthPlace =>
+      'Enter your place of birth to save.';
+
+  @override
+  String get taxInfoSaveMissingResidence =>
+      'Choose your country of residence to save.';
+
+  @override
+  String get taxInfoErrorReadOnly =>
+      'This information comes from your ID document and can\'t be changed.';
+
+  @override
+  String get taxInfoErrorNotApplicable =>
+      'This information is not required from you.';
+
+  @override
+  String get taxInfoResidenceTitle => 'Your country of residence';
+
+  @override
+  String get taxInfoResidenceBody =>
+      'Tell us the country you live in. If it is in the European Union, the law requires a few tax details from you (DAC7 obligation). Otherwise, there is nothing else to provide.';
+
+  @override
+  String get taxInfoResidenceLabel => 'Country of residence';
+
+  @override
+  String get taxInfoResidenceHint => 'The country of your main address.';
+
+  @override
+  String get taxInfoResidenceSaved =>
+      'Country saved. There is nothing else to provide.';
+
+  @override
+  String get taxInfoResidenceSavedMore =>
+      'Country saved. We still need a few details.';
+
+  @override
+  String get taxInfoNotConcerned => 'No tax information is required from you.';
+
+  @override
+  String get taxInfoCompleteTitle => 'All up to date';
+
+  @override
+  String get taxInfoCompleteBody => 'There is nothing else to provide.';
+
+  @override
+  String get taxInfoRowSubtitleToComplete => 'To complete';
+
+  @override
+  String get taxInfoTeamWillContact =>
+      'The Yadony team will contact you to complete this file.';
+
+  @override
+  String get taxInfoBannerResidenceBody =>
+      'Tell us your country of residence. Nothing is blocked.';
+
+  @override
+  String get taxInfoNothingNew =>
+      'We have received your information. The Yadony team will get back to you if needed.';
+
+  @override
+  String get taxInfoVatWillBeErased =>
+      'Leaving this field empty deletes your saved VAT number.';
 }

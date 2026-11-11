@@ -268,7 +268,11 @@ void main() {
       verify(
         () => analytics.logEvent(
           AnalyticsEvents.taxInfoOpened,
-          properties: {'solicitation': 'SOLLICITER', 'provided': false},
+          properties: {
+            'solicitation': 'SOLLICITER',
+            'provided': false,
+            'collection_status': 'legacy',
+          },
         ),
       ).called(1);
       await cubit.close();

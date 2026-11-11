@@ -14654,6 +14654,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get countryNameMa => 'Maroc';
 
   @override
+  String get countryNameBg => 'Bulgarie';
+
+  @override
+  String get countryNameCz => 'Tchéquie';
+
+  @override
+  String get countryNameDk => 'Danemark';
+
+  @override
+  String get countryNameHu => 'Hongrie';
+
+  @override
+  String get countryNamePl => 'Pologne';
+
+  @override
+  String get countryNameRo => 'Roumanie';
+
+  @override
+  String get countryNameSe => 'Suède';
+
+  @override
   String get recipientListTitle => 'Mes destinataires';
 
   @override
@@ -23963,4 +23984,180 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get taxInfoSaveMissingCountry =>
       'Choisissez le pays d\'émission du numéro pour enregistrer.';
+
+  @override
+  String get taxInfoCollectIntro =>
+      'La loi nous oblige à transmettre chaque année aux impôts les sommes reçues par les voyageurs qui habitent dans l\'Union européenne (obligation DAC7).';
+
+  @override
+  String get taxInfoCollectNoTax =>
+      'Cela n\'entraîne pas forcément d\'impôt pour vous.';
+
+  @override
+  String get taxInfoCollectPrefilled =>
+      'Nous avons déjà repris les informations de votre pièce d\'identité.';
+
+  @override
+  String taxInfoCollectMissing(String fields) {
+    return 'Il nous manque seulement : $fields.';
+  }
+
+  @override
+  String get taxInfoMissingName => 'vos nom et prénom';
+
+  @override
+  String get taxInfoMissingBirthDate => 'votre date de naissance';
+
+  @override
+  String get taxInfoMissingAddress => 'votre adresse';
+
+  @override
+  String get taxInfoMissingTaxNumber => 'votre numéro fiscal';
+
+  @override
+  String get taxInfoWhereToFind =>
+      'Où trouver votre numéro fiscal ? Il est en haut de votre déclaration de revenus ou de votre avis d\'impôt, et dans votre espace particulier sur impots.gouv.fr.';
+
+  @override
+  String get taxInfoKnownTitle => 'Repris de votre pièce d\'identité';
+
+  @override
+  String get taxInfoKnownProfileTitle => 'Déjà dans votre profil';
+
+  @override
+  String get taxInfoNameLabel => 'Nom et prénom';
+
+  @override
+  String get taxInfoFirstNameLabel => 'Prénom';
+
+  @override
+  String get taxInfoLastNameLabel => 'Nom';
+
+  @override
+  String get taxInfoBirthDateLabel => 'Date de naissance';
+
+  @override
+  String get taxInfoAddressLabel => 'Adresse';
+
+  @override
+  String get taxInfoStreetLabel => 'Numéro et rue';
+
+  @override
+  String get taxInfoLine2Label => 'Complément (facultatif)';
+
+  @override
+  String get taxInfoPostalCodeLabel => 'Code postal';
+
+  @override
+  String get taxInfoCityLabel => 'Ville';
+
+  @override
+  String taxInfoAddressCountry(String country) {
+    return 'Pays de résidence : $country';
+  }
+
+  @override
+  String get taxInfoNotMyAddress => 'Ce n\'est plus mon adresse';
+
+  @override
+  String get taxInfoKeepAddress => 'Garder l\'adresse de ma pièce';
+
+  @override
+  String get taxInfoNoTaxNumber => 'Je n\'ai pas de numéro fiscal';
+
+  @override
+  String get taxInfoBirthPlaceLabel => 'Lieu de naissance (ville, pays)';
+
+  @override
+  String get taxInfoBirthPlaceHint =>
+      'Sans numéro fiscal, indiquez votre lieu de naissance (ville et pays).';
+
+  @override
+  String get taxInfoBirthPlaceSaved =>
+      'Lieu de naissance déjà enregistré. Saisissez-le de nouveau pour le changer.';
+
+  @override
+  String get taxInfoNumberFrInvalid =>
+      'Le numéro fiscal français compte exactement 13 chiffres.';
+
+  @override
+  String get taxInfoFieldInvalid => 'Valeur refusée. Vérifiez ce champ.';
+
+  @override
+  String get taxInfoSaveMissingName =>
+      'Renseignez vos nom et prénom pour enregistrer.';
+
+  @override
+  String get taxInfoSaveMissingBirthDate =>
+      'Choisissez votre date de naissance pour enregistrer.';
+
+  @override
+  String get taxInfoSaveMissingAddress =>
+      'Complétez votre adresse pour enregistrer.';
+
+  @override
+  String get taxInfoSaveMissingBirthPlace =>
+      'Renseignez votre lieu de naissance pour enregistrer.';
+
+  @override
+  String get taxInfoSaveMissingResidence =>
+      'Choisissez votre pays de résidence pour enregistrer.';
+
+  @override
+  String get taxInfoErrorReadOnly =>
+      'Cette information vient de votre pièce d\'identité et ne peut pas être modifiée.';
+
+  @override
+  String get taxInfoErrorNotApplicable =>
+      'Ces informations ne vous sont pas demandées.';
+
+  @override
+  String get taxInfoResidenceTitle => 'Votre pays de résidence';
+
+  @override
+  String get taxInfoResidenceBody =>
+      'Indiquez le pays où vous habitez. Si c\'est un pays de l\'Union européenne, la loi nous demande quelques informations fiscales (obligation DAC7). Sinon, vous n\'avez rien d\'autre à fournir.';
+
+  @override
+  String get taxInfoResidenceLabel => 'Pays de résidence';
+
+  @override
+  String get taxInfoResidenceHint => 'Le pays de votre adresse principale.';
+
+  @override
+  String get taxInfoResidenceSaved =>
+      'Pays enregistré. Vous n\'avez rien d\'autre à fournir.';
+
+  @override
+  String get taxInfoResidenceSavedMore =>
+      'Pays enregistré. Il nous manque encore quelques informations.';
+
+  @override
+  String get taxInfoNotConcerned =>
+      'Aucune information fiscale ne vous est demandée.';
+
+  @override
+  String get taxInfoCompleteTitle => 'Tout est à jour';
+
+  @override
+  String get taxInfoCompleteBody => 'Vous n\'avez rien d\'autre à fournir.';
+
+  @override
+  String get taxInfoRowSubtitleToComplete => 'À compléter';
+
+  @override
+  String get taxInfoTeamWillContact =>
+      'L\'équipe Yadony vous contactera pour compléter ce dossier.';
+
+  @override
+  String get taxInfoBannerResidenceBody =>
+      'Indiquez votre pays de résidence. Cela ne bloque rien.';
+
+  @override
+  String get taxInfoNothingNew =>
+      'Nous avons bien reçu vos informations. L\'équipe Yadony reviendra vers vous si besoin.';
+
+  @override
+  String get taxInfoVatWillBeErased =>
+      'Laisser ce champ vide supprime votre numéro de TVA enregistré.';
 }

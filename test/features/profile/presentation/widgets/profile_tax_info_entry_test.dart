@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../tax_info/tax_info_targeted_fixtures.dart';
 import '../../../tax_info/tax_info_test_helpers.dart';
 
 class _MockRepo extends Mock implements TaxInfoRepository {}
@@ -200,6 +201,101 @@ void main() {
           properties: {'variant': 'row'},
         ),
       ).called(1);
+    });
+  });
+
+  group('collecte ciblée (yadony-back #730)', () {
+    testWidgets('INFO_REQUIRED demandé : bannière', (tester) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kFranceDiditNifMissing);
+      await pump(tester);
+      expect(banner(), findsOneWidget);
+      expect(row(), findsNothing);
+    });
+
+    testWidgets('INFO_REQUIRED pas encore demandé : ligne « À compléter »', (
+      tester,
+    ) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kAllMissing);
+      await pump(tester);
+      expect(banner(), findsNothing);
+      expect(row(), findsOneWidget);
+      expect(find.text(fr.taxInfoRowSubtitleToComplete), findsOneWidget);
+    });
+
+    testWidgets('COMPLETE : ligne « Voir ou modifier »', (tester) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kComplete);
+      await pump(tester);
+      expect(row(), findsOneWidget);
+      expect(find.text(fr.taxInfoRowSubtitle), findsOneWidget);
+    });
+
+    testWidgets('hors périmètre : aucune entrée visible', (tester) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kOutOfScope);
+      await pump(tester);
+      expect(banner(), findsNothing);
+      expect(row(), findsNothing);
+      expect(find.text(fr.taxInfoRowLabel), findsNothing);
+    });
+
+    testWidgets('pays inconnu : bannière « pays seul », sans la '
+        'notification', (tester) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kResidence);
+      await pump(tester);
+      expect(banner(), findsOneWidget);
+      expect(find.text(fr.taxInfoBannerResidenceBody), findsOneWidget);
+      expect(find.text(fr.taxInfoBannerBody), findsNothing);
+      await tester.tap(find.byKey(const Key('tax-info-banner-later')));
+      await tester.pumpAndSettle();
+      expect(banner(), findsNothing);
+      expect(row(), findsOneWidget);
+      expect(find.text(fr.taxInfoRowSubtitleToComplete), findsOneWidget);
+    });
+
+    testWidgets('onglet Profil ouvert : relecture, la bannière apparaît', (
+      tester,
+    ) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kOutOfScope);
+      await pump(tester);
+      expect(banner(), findsNothing);
+      when(() => repo.fetch()).thenAnswer((_) async => kResidence);
+      requestTaxInfoRefresh();
+      await tester.pumpAndSettle();
+      expect(banner(), findsOneWidget);
+      verify(() => repo.fetch()).called(2);
+    });
+
+    testWidgets('relecture en échec : rien, aucune erreur', (tester) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kResidence);
+      await pump(tester);
+      when(() => repo.fetch()).thenThrow(const TaxInfoException('network'));
+      requestTaxInfoRefresh();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(banner(), findsOneWidget);
+    });
+
+    testWidgets('statut inconnu (futur) : ancien comportement, rien pour '
+        'un voyageur non sollicité', (tester) async {
+      when(() => repo.fetch()).thenAnswer(
+        (_) async => TaxInfo.fromJson(const {
+          'provided': false,
+          'solicitation': 'NE_PAS_SOLLICITER',
+          'collectionStatus': 'CLOSURE_PENDING',
+          'actionRequired': true,
+        }),
+      );
+      await pump(tester);
+      expect(banner(), findsNothing);
+      expect(row(), findsNothing);
+    });
+
+    testWidgets('en, à 360 dp : « To complete » sans exception', (
+      tester,
+    ) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kAllMissing);
+      await pump(tester, locale: AppL10n.en);
+      expect(find.text(en.taxInfoRowSubtitleToComplete), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 

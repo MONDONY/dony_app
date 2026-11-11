@@ -20,4 +20,14 @@ void main() {
     expect(match.uri.path, '/profile/tax-info');
     expect((match.matches.last.route as GoRoute).path, '/profile/tax-info');
   });
+
+  test('?scope=residence (notification « pays seul ») résout la même '
+      'route', () {
+    final match = appRouter.configuration.findMatch(
+      Uri.parse('/profile/tax-info?scope=residence'),
+    );
+    expect(match.isNotEmpty, isTrue);
+    expect((match.matches.last.route as GoRoute).path, '/profile/tax-info');
+    expect(match.uri.queryParameters['scope'], 'residence');
+  });
 }

@@ -1759,11 +1759,19 @@ final GoRouter appRouter = GoRouter(
 
     // ── Informations fiscales, déclaration DAC7 (hors shell) ──────────
     // Ouvert par la bannière du Profil, les notifications TAX_INFO_REQUEST et
-    // TAX_STATEMENT et le lien `yadony://profile/tax-info`.
+    // TAX_STATEMENT et le lien `yadony://profile/tax-info`. `?scope=residence`
+    // (demande « pays seul ») ne sert qu'à l'analytique : le statut lu au
+    // back décide de ce que l'écran demande, et un voyageur hors périmètre
+    // le voit se refermer aussitôt.
     GoRoute(
       path: '/profile/tax-info',
       builder: (context, state) => BlocProvider(
-        create: (_) => getIt<TaxInfoCubit>()..load(),
+        create: (_) => getIt<TaxInfoCubit>()
+          ..load(
+            scope: state.uri.queryParameters['scope'] == 'residence'
+                ? 'residence'
+                : null,
+          ),
         child: const TaxInfoScreen(),
       ),
     ),
