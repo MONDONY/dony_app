@@ -33,7 +33,7 @@ DioException _http(int status, [Object? body]) => DioException(
 void main() {
   group('TaxInfo.fromJson', () {
     test('lit toute la réponse', () {
-      final info = TaxInfo.fromJson({
+      final info = TaxInfo.fromJson(const {
         'provided': true,
         'maskedTaxIdentificationNumber': '****1234',
         'taxCountry': 'FR',
@@ -56,7 +56,7 @@ void main() {
     });
 
     test('champs nuls ou absents : valeurs sûres', () {
-      final info = TaxInfo.fromJson({
+      final info = TaxInfo.fromJson(const {
         'provided': false,
         'maskedTaxIdentificationNumber': '  ',
         'solicitation': 'SOLLICITER',
@@ -71,11 +71,11 @@ void main() {
 
     test('solicitation absente ou inconnue : on ne demande rien', () {
       expect(
-        TaxInfo.fromJson({'provided': false}).solicitation,
+        TaxInfo.fromJson(const {'provided': false}).solicitation,
         TaxInfoSolicitation.nePasSolliciter,
       );
       expect(
-        TaxInfo.fromJson({'solicitation': 'AUTRE'}).solicitation,
+        TaxInfo.fromJson(const {'solicitation': 'AUTRE'}).solicitation,
         TaxInfoSolicitation.nePasSolliciter,
       );
     });
