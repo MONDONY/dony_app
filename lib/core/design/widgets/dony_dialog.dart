@@ -268,31 +268,95 @@ class _DonyDialogWidget extends StatelessWidget {
               content!,
             ],
             const SizedBox(height: DonySpacing.xl),
-            Row(
-              children: [
-                if (effectiveCancelLabel != null) ...[
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: Text(effectiveCancelLabel),
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                ],
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: confirmColor,
-                    ),
-                    child: Text(effectiveConfirmLabel),
-                  ),
-                ),
-              ],
+            _DialogActions(
+              confirmLabel: effectiveConfirmLabel,
+              cancelLabel: effectiveCancelLabel,
+              confirmColor: confirmColor,
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Boutons de la boîte de dialogue : côte à côte quand les deux libellés
+/// tiennent chacun sur une ligne à taille normale, sinon empilés en pleine
+/// largeur, bouton principal en haut. Jamais de libellé coupé ni de police
+/// réduite.
+class _DialogActions extends StatelessWidget {
+  const _DialogActions({
+    required this.confirmLabel,
+    required this.cancelLabel,
+    required this.confirmColor,
+  });
+
+  final String confirmLabel;
+  final String? cancelLabel;
+  final Color confirmColor;
+
+  /// Marge horizontale interne d'un bouton Material (24 de chaque côté) plus
+  /// une réserve pour l'arrondi des mesures de texte.
+  static const double _buttonInset = 52;
+
+  bool _fitsSideBySide(BuildContext context, double maxWidth) {
+    if (cancelLabel == null) return true;
+    final style =
+        Theme.of(context).textTheme.labelLarge ?? const TextStyle(fontSize: 14);
+    final scaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    double measure(String text) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: direction,
+        textScaler: scaler,
+        maxLines: 1,
+      )..layout();
+      return painter.width;
+    }
+
+    final each = (maxWidth - DonySpacing.sm) / 2;
+    return measure(confirmLabel) + _buttonInset <= each &&
+        measure(cancelLabel!) + _buttonInset <= each;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final confirm = FilledButton(
+      onPressed: () => Navigator.of(context).pop(true),
+      style: FilledButton.styleFrom(backgroundColor: confirmColor),
+      child: Text(confirmLabel, maxLines: 1, softWrap: false),
+    );
+    final cancel = cancelLabel == null
+        ? null
+        : OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(cancelLabel!, maxLines: 1, softWrap: false),
+          );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (cancel == null) {
+          return SizedBox(width: double.infinity, child: confirm);
+        }
+        if (_fitsSideBySide(context, constraints.maxWidth)) {
+          return Row(
+            children: [
+              Expanded(child: cancel),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(child: confirm),
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            confirm,
+            const SizedBox(height: DonySpacing.sm),
+            cancel,
+          ],
+        );
+      },
     );
   }
 }

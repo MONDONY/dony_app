@@ -40,6 +40,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(const KycStatusRefreshed());
     registerFallbackValue(const AuthCheckRequested());
+    registerFallbackValue(const AuthProfileRefreshRequested());
   });
 
   setUp(() async {
@@ -182,6 +183,31 @@ void main() {
     await tester.pump();
     verify(() => kycBloc.add(const KycSessionRequested())).called(1);
     await tester.pump(const Duration(minutes: 6));
+  });
+
+  testWidgets('vérifiée : le profil est resynchronisé dès le statut reçu', (
+    tester,
+  ) async {
+    authenticated('PENDING');
+    await open(tester);
+    await emit(
+      tester,
+      const KycStatusLoaded(kycStatus: 'VERIFIED', verificationStatus: 'ok'),
+    );
+    // Avant le minuteur de fermeture (1,5 s).
+    verify(() => authBloc.add(const AuthProfileRefreshRequested())).called(1);
+    await tester.pump(const Duration(milliseconds: 1600));
+    await settle(tester);
+  });
+
+  testWidgets('en cours : aucune resynchronisation du profil', (tester) async {
+    authenticated('PENDING');
+    await open(tester);
+    await emit(
+      tester,
+      const KycStatusLoaded(kycStatus: 'PENDING', verificationStatus: 'p'),
+    );
+    verifyNever(() => authBloc.add(const AuthProfileRefreshRequested()));
   });
 
   testWidgets('vérifiée : la feuille se ferme seule et recharge le profil', (

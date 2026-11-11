@@ -96,7 +96,7 @@ class VideoModalBloc extends Bloc<VideoModalEvent, VideoModalState> {
           'version': event.campaign.version,
           'trigger': event.trigger.wire,
           'guest': !realSession,
-          if (event.campaign.isInfo) 'type': 'info',
+          'type': event.campaign.isInfo ? 'info' : 'video',
           if (event.actionKind != null)
             'action_kind': event.actionKind!.wire.toLowerCase(),
         },

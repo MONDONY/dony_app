@@ -41,6 +41,20 @@ void main() {
       expect(ForegroundPushRefresh.forType('BID_RECEIVED').referral, isFalse);
     });
 
+    for (final type in [
+      'GP_PRO_APPROVED',
+      'GP_PRO_REJECTED',
+      'GP_PRO_REVOKED',
+    ]) {
+      test('$type : le profil est relu, pas les listes de colis', () {
+        final refresh = ForegroundPushRefresh.forType(type);
+        expect(refresh.profile, isTrue);
+        expect(refresh.notificationFeed, isTrue);
+        expect(refresh.activityIndicators, isFalse);
+        expect(refresh.referral, isFalse);
+      });
+    }
+
     test('type absent : tout, par prudence', () {
       final refresh = ForegroundPushRefresh.forType(null);
       expect(refresh.notificationFeed, isTrue);

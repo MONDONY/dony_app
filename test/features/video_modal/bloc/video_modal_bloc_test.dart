@@ -151,6 +151,7 @@ void main() {
             'version': 2,
             'trigger': 'SEARCH_TAB',
             'guest': false,
+            'type': 'video',
           },
         ),
       ).called(1);
@@ -192,6 +193,7 @@ void main() {
               'version': 2,
               'trigger': 'PUBLISH_TRIP',
               'guest': true,
+              'type': 'video',
             },
           ),
         ).called(1);

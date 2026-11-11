@@ -143,6 +143,9 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           _pollInterval = const Duration(seconds: 30);
           if (state.kycStatus == 'VERIFIED') {
             _stopPolling();
+            // Le profil local suit tout de suite, sans attendre le minuteur
+            // ni la navigation (le statut restait périmé jusqu'au redémarrage).
+            context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
             // Cancellable timer: auto-navigate after a short visual delay.
             _autoNavTimer = Timer(
               const Duration(milliseconds: 1500),

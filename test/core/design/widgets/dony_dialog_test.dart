@@ -247,4 +247,96 @@ void main() {
       expect(find.text('Leave without saving'), findsOneWidget);
     });
   });
+
+  group('360 dp : libellés sur une ligne, boutons empilés si trop longs', () {
+    Future<void> open360(
+      WidgetTester tester, {
+      required String confirm,
+      required String cancel,
+    }) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => DonyDialog.show(
+                  context,
+                  title: 'Titre',
+                  confirmLabel: confirm,
+                  cancelLabel: cancel,
+                  variant: DonyDialogVariant.destructive,
+                ),
+                child: const Text('ouvrir'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+    }
+
+    double height(WidgetTester tester, String label) => tester
+        .getSize(
+          find.ancestor(
+            of: find.text(label),
+            matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
+          ),
+        )
+        .height;
+
+    for (final (confirm, cancel) in [
+      ('Se déconnecter', 'Annuler'),
+      ('Sign out', 'Cancel'),
+      ('Se déconnecter de tous mes appareils', 'Annuler'),
+    ]) {
+      testWidgets('« $confirm » / « $cancel » : une ligne, sans exception', (
+        tester,
+      ) async {
+        await open360(tester, confirm: confirm, cancel: cancel);
+        expect(tester.takeException(), isNull);
+        final text = tester.widget<Text>(find.text(confirm));
+        expect(text.maxLines, 1);
+        expect(text.style?.fontSize, isNull);
+        // Hauteur normale : pas de libellé sur plusieurs lignes.
+        expect(height(tester, confirm), lessThan(60));
+        expect(height(tester, cancel), lessThan(60));
+      });
+    }
+
+    testWidgets('libellé long : empilés, principal en haut, pleine largeur', (
+      tester,
+    ) async {
+      await open360(
+        tester,
+        confirm: 'Se déconnecter de tous mes appareils',
+        cancel: 'Annuler',
+      );
+      final confirmRect = tester.getRect(
+        find.widgetWithText(
+          FilledButton,
+          'Se déconnecter de tous mes appareils',
+        ),
+      );
+      final cancelRect = tester.getRect(
+        find.widgetWithText(OutlinedButton, 'Annuler'),
+      );
+      expect(confirmRect.bottom, lessThanOrEqualTo(cancelRect.top));
+      expect(confirmRect.width, cancelRect.width);
+    });
+
+    testWidgets('libellés courts : côte à côte', (tester) async {
+      await open360(tester, confirm: 'Oui', cancel: 'Non');
+      final confirmRect = tester.getRect(
+        find.widgetWithText(FilledButton, 'Oui'),
+      );
+      final cancelRect = tester.getRect(
+        find.widgetWithText(OutlinedButton, 'Non'),
+      );
+      expect(confirmRect.top, cancelRect.top);
+    });
+  });
 }

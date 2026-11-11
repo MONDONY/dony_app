@@ -1742,50 +1742,44 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: DonyReplayMask(
-                                child: TextFormField(
-                                  controller: _promoCtrl,
-                                  textCapitalization:
-                                      TextCapitalization.characters,
-                                  decoration: InputDecoration(
-                                    hintText:
-                                        context.l10n.bidCreatePromoCodeHint,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: DonySpacing.base,
-                                      vertical: DonySpacing.md,
-                                    ),
-                                    suffixIcon: isQuoteLoading
-                                        ? const Padding(
-                                            padding: EdgeInsets.all(12),
-                                            child: SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            ),
-                                          )
-                                        : null,
-                                  ),
-                                  onFieldSubmitted: (_) => _applyPromoCode(),
-                                ),
+                        DonyReplayMask(
+                          child: TextFormField(
+                            controller: _promoCtrl,
+                            textCapitalization: TextCapitalization.characters,
+                            decoration: InputDecoration(
+                              hintText: context.l10n.bidCreatePromoCodeHint,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: DonySpacing.base,
+                                vertical: DonySpacing.md,
                               ),
+                              suffixIcon: isQuoteLoading
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(12),
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    )
+                                  : null,
                             ),
-                            const SizedBox(width: DonySpacing.sm),
-                            SizedBox(
-                              height: 52,
-                              width: 110,
-                              child: FilledButton(
-                                onPressed: isQuoteLoading
-                                    ? null
-                                    : _applyPromoCode,
-                                child: Text(context.l10n.commonApply),
-                              ),
+                            onFieldSubmitted: (_) => _applyPromoCode(),
+                          ),
+                        ),
+                        const SizedBox(height: DonySpacing.sm),
+                        SizedBox(
+                          height: 52,
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: isQuoteLoading ? null : _applyPromoCode,
+                            child: Text(
+                              context.l10n.commonApply,
+                              maxLines: 1,
+                              softWrap: false,
                             ),
-                          ],
+                          ),
                         ),
                         const SizedBox(height: DonySpacing.xs),
                         Text(
