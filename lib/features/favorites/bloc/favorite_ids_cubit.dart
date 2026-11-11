@@ -4,6 +4,7 @@ import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart'
 import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 // ---------------------------------------------------------------------------
@@ -81,19 +82,26 @@ class FavoriteIdsCubit extends Cubit<FavoriteIdsState> {
   /// [corridor] : départ et arrivée du trajet, pour le moment d'action
   /// « trajet ajouté aux favoris » des modals (émis seulement quand l'ajout
   /// est confirmé par le serveur, jamais au retrait ni sur un échec).
-  Future<void> toggleTrip(String id, {VideoModalMomentCorridor? corridor}) =>
-      _toggle(
-        id,
-        () => state.tripIds,
-        (s) => state.copyWith(tripIds: s),
-        'trip',
-        onAdded: () => VideoModalMoments.notify(
-          VideoModalMoment.action(
-            VideoModalTrigger.favoriteAdded,
-            corridor: corridor,
-          ),
-        ),
-      );
+  ///
+  /// [origin] : contexte de l'écran de détail d'où part l'ajout, pour que le
+  /// modal s'ouvre sur cet écran et non au retour sur la liste.
+  Future<void> toggleTrip(
+    String id, {
+    VideoModalMomentCorridor? corridor,
+    BuildContext? origin,
+  }) => _toggle(
+    id,
+    () => state.tripIds,
+    (s) => state.copyWith(tripIds: s),
+    'trip',
+    onAdded: () => VideoModalMoments.notify(
+      VideoModalMoment.action(
+        VideoModalTrigger.favoriteAdded,
+        corridor: corridor,
+      ),
+      origin: origin,
+    ),
+  );
 
   /// Optimistically toggles a package-request favorite.
   /// Rolls back and rethrows on backend error so the UI can show a snackbar.

@@ -6,6 +6,7 @@ import 'package:dony/features/matching/data/repositories/announcement_repository
 import 'package:dony/features/matching/presentation/trip_view_recording.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -119,6 +120,36 @@ void main() {
           ).matches(moments.emitted.first.corridor),
           isTrue,
         );
+      },
+    );
+
+    testWidgets('l\'écran de détail passé en origine accompagne le moment', (
+      tester,
+    ) async {
+      late BuildContext detail;
+      await tester.pumpWidget(
+        Builder(
+          builder: (context) {
+            detail = context;
+            return const SizedBox();
+          },
+        ),
+      );
+      await tester.runAsync(() async {
+        recordTripView(_trip, viewerId: 'sender-001', origin: detail);
+        recordTripView(_trip, viewerId: 'sender-001', origin: detail);
+        await pumpEventQueue(times: 100);
+      });
+      expect(moments.origins.single, same(detail));
+    });
+
+    test(
+      'sans origine : le moment part sans écran (comportement actuel)',
+      () async {
+        recordTripView(_trip, viewerId: 'sender-001');
+        recordTripView(_trip, viewerId: 'sender-001');
+        await pumpEventQueue(times: 100);
+        expect(moments.origins.single, isNull);
       },
     );
 

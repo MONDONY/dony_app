@@ -56,6 +56,9 @@ abstract interface class HelpTutorialYoutubeController {
 
   Future<void> cueVideoById({required String videoId});
 
+  /// Charge la vidéo et la lance sans attendre un toucher (lecture auto).
+  Future<void> loadVideoById({required String videoId});
+
   Widget buildScaffold({
     required double aspectRatio,
     required Widget Function(Widget player) pageBuilder,
@@ -215,15 +218,13 @@ final class _YoutubeTutorialPlayerSession implements HelpTutorialPlayerSession {
 
   Future<void> _initialize() async {
     try {
-      if (configuration.autoPlay) {
-        throw StateError(
-          'Les tutoriels d’aide ne peuvent pas démarrer automatiquement.', // i18n-ignore
-        );
-      }
+      // `autoPlay` faux (tutoriels d'aide) : la vidéo est seulement préparée,
+      // la personne touche lecture. Vrai (modal vidéo) : elle démarre seule.
+      final loading = configuration.autoPlay
+          ? _controller.loadVideoById(videoId: configuration.videoId)
+          : _controller.cueVideoById(videoId: configuration.videoId);
       final didBecomeReady = await Future.any<bool>([
-        _controller
-            .cueVideoById(videoId: configuration.videoId)
-            .then((_) => true),
+        loading.then((_) => true),
         _initializationCancelled.future.then((_) => false),
       ]);
       if (!didBecomeReady || _closed || _initializationFailed) {
@@ -354,6 +355,11 @@ final class _PackageYoutubeController implements HelpTutorialYoutubeController {
   @override
   Future<void> cueVideoById({required String videoId}) {
     return _activeController.cueVideoById(videoId: videoId);
+  }
+
+  @override
+  Future<void> loadVideoById({required String videoId}) {
+    return _activeController.loadVideoById(videoId: videoId);
   }
 
   @override

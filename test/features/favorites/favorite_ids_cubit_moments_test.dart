@@ -2,6 +2,7 @@ import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -31,6 +32,35 @@ void main() {
     expect(moments.triggers, [VideoModalTrigger.favoriteAdded]);
     expect(moments.emitted.single.corridor, corridor);
   });
+
+  testWidgets(
+    'ajout depuis le détail : le contexte de l\'écran est l\'origine',
+    (tester) async {
+      when(() => repo.add(any(), any())).thenAnswer((_) async {});
+      late BuildContext detail;
+      await tester.pumpWidget(
+        Builder(
+          builder: (context) {
+            detail = context;
+            return const SizedBox();
+          },
+        ),
+      );
+      final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
+      await cubit.toggleTrip('t1', corridor: corridor, origin: detail);
+      expect(moments.origins.single, same(detail));
+    },
+  );
+
+  test(
+    'ajout sans origine : le moment part sans écran (comportement actuel)',
+    () async {
+      when(() => repo.add(any(), any())).thenAnswer((_) async {});
+      final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
+      await cubit.toggleTrip('t1', corridor: corridor);
+      expect(moments.origins.single, isNull);
+    },
+  );
 
   test('ajout sans corridor connu : le moment part quand même', () async {
     when(() => repo.add(any(), any())).thenAnswer((_) async {});

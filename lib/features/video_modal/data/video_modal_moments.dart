@@ -64,10 +64,15 @@ class VideoModalMoments {
 
   /// Consultation d'une fiche trajet : le compteur local monte, et le moment
   /// part à partir de la deuxième consultation (chaque campagne a son seuil).
+  /// [origin] : le contexte de l'écran de détail, pour que le modal s'ouvre
+  /// dessus et non au retour sur la liste.
   static void notifyTripViewed({
     required String tripId,
     VideoModalMomentCorridor? corridor,
-  }) => unawaited(instance.recordTripView(tripId, corridor: corridor));
+    BuildContext? origin,
+  }) => unawaited(
+    instance.recordTripView(tripId, corridor: corridor, origin: origin),
+  );
 
   @visibleForTesting
   static void useForTest(VideoModalMoments moments) => instance = moments;
@@ -105,6 +110,7 @@ class VideoModalMoments {
   Future<int> recordTripView(
     String tripId, {
     VideoModalMomentCorridor? corridor,
+    BuildContext? origin,
   }) {
     if (tripId.isEmpty) return Future.value(0);
     final completer = Completer<int>();
@@ -125,6 +131,9 @@ class VideoModalMoments {
               viewCount: count,
               corridor: corridor,
             ),
+            // L'hôte vérifie `origin.mounted` avant de s'en servir.
+            // ignore: use_build_context_synchronously
+            origin: origin,
           );
         }
         completer.complete(count);

@@ -120,7 +120,6 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
   // la feuille s'affiche hors de l'arbre de providers.
   final lecteurId = authState.currentUserId;
   // Audience du trajet : une personne de plus pour le voyageur, sans attendre.
-  recordTripView(announcement, viewerId: lecteurId);
   // Un expéditeur non vérifié peut quand même écrire à un voyageur qui a
   // désactivé « profils vérifiés uniquement » : sans cette exception, le réglage
   // du voyageur resterait sans effet, le client barrant la route avant l'appel.
@@ -464,15 +463,53 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
         );
       },
     ),
-    child: _TravelerAnnouncementContent(
+    child: _TripViewReporter(
       announcement: announcement,
-      avecFavori: favoris != null && !estProprietaire,
-      lecteurId: lecteurId,
-      returnsNavigation: returnsNavigation,
-      fromMap: fromMap,
-      fromDetail: fromDetail,
+      viewerId: lecteurId,
+      child: _TravelerAnnouncementContent(
+        announcement: announcement,
+        avecFavori: favoris != null && !estProprietaire,
+        lecteurId: lecteurId,
+        returnsNavigation: returnsNavigation,
+        fromMap: fromMap,
+        fromDetail: fromDetail,
+      ),
     ),
   );
+}
+
+/// Signale la consultation du trajet depuis la feuille elle-même : son contexte
+/// sert d'origine au modal « trajet consulté N fois », qui s'ouvre donc sur le
+/// détail et non au retour sur la liste. Une seule fois par ouverture.
+class _TripViewReporter extends StatefulWidget {
+  const _TripViewReporter({
+    required this.announcement,
+    required this.viewerId,
+    required this.child,
+  });
+
+  final AnnouncementModel announcement;
+  final String? viewerId;
+  final Widget child;
+
+  @override
+  State<_TripViewReporter> createState() => _TripViewReporterState();
+}
+
+class _TripViewReporterState extends State<_TripViewReporter> {
+  @override
+  void initState() {
+    super.initState();
+    // Audience du trajet : une personne de plus pour le voyageur, sans attendre.
+    recordTripView(
+      widget.announcement,
+      viewerId: widget.viewerId,
+      origin: context,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 Future<ExistingTripRequest?> _findExistingTripRequest(String announcementId) {
@@ -929,7 +966,11 @@ class _HeroWithFavorite extends StatelessWidget {
     final id = trip.id;
     final cubit = context.read<FavoriteIdsCubit>();
     try {
-      await cubit.toggleTrip(id, corridor: tripMomentCorridor(trip));
+      await cubit.toggleTrip(
+        id,
+        corridor: tripMomentCorridor(trip),
+        origin: context,
+      );
       if (!context.mounted) return;
       final desormaisFavori = cubit.isTripFav(id);
       DonySnackbar.show(

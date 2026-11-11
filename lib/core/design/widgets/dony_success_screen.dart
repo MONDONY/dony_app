@@ -303,12 +303,16 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
         body: Builder(
           builder: (context) {
             final h = DonyLayout.hPadding(context);
+            // Barre de navigation système (3 boutons Android) : le dernier
+            // bouton défile au-dessus d'elle, jamais dessous (un tap sur son
+            // bas déclenchait la touche Accueil).
+            final systemBottom = MediaQuery.viewPaddingOf(context).bottom;
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 h,
                 DonySpacing.xxl,
                 h,
-                DonySpacing.huge,
+                DonySpacing.huge + systemBottom,
               ),
               child: DonyLayout.constrained(
                 context,

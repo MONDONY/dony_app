@@ -95,6 +95,21 @@ void main() {
     expect(session.closed, isTrue);
   });
 
+  testWidgets('le lecteur est demandé en lecture automatique', (tester) async {
+    usePhone360(tester);
+    final configurations = <HelpTutorialPlayerConfiguration>[];
+    await pump(
+      tester,
+      factory: (configuration) {
+        configurations.add(configuration);
+        return session;
+      },
+    );
+    expect(configurations, hasLength(1));
+    expect(configurations.single.autoPlay, isTrue);
+    expect(configurations.single.videoId, campaign().youtubeVideoId);
+  });
+
   testWidgets('fin de vidéo : COMPLETED une fois, deux actions empilées', (
     tester,
   ) async {
