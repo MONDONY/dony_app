@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
 import 'package:dony/features/tax_info/data/datasources/tax_info_remote_datasource.dart';
 import 'package:dony/features/tax_info/data/models/tax_info.dart';
+import 'package:dony/features/tax_info/data/models/tax_info_update.dart';
 
 /// Échec d'un appel « informations fiscales ». [code] est le `type` RFC 7807 du
 /// back (dernier segment, ex. `tax-info-invalid`) ou `network` sans réponse.
@@ -11,9 +13,10 @@ class TaxInfoException implements Exception {
   final String code;
   final int? status;
 
-  /// Champ refusé par le back (422 `tax-info-invalid`, propriété `field` :
-  /// `taxIdentificationNumber` ou `vatNumber`). Le nom du champ seulement,
-  /// jamais sa valeur.
+  /// Champ refusé par le back (422 `tax-info-invalid` ou `tax-info-read-only`,
+  /// propriété `field` : `taxIdentificationNumber`, `vatNumber`, `firstName`,
+  /// `birthDate`, `address.city`…). Le nom du champ seulement, jamais sa
+  /// valeur.
   final String? field;
 
   @override
@@ -29,10 +32,22 @@ class TaxInfoUnavailableException extends TaxInfoException {
     : super('tax-info-unavailable');
 }
 
+/// Codes levés par [TaxInfoRepository.saveResidenceCountry] avant tout envoi :
+/// le pays ne se change pas depuis l'écran fiscal (paiements engagés, ou
+/// activation des paiements par carte en cours qu'un changement annulerait).
+/// Réglages › Préférences reste la porte, avec sa confirmation.
+const String kTaxResidenceLockedCode = 'country-locked';
+const String kTaxResidenceResetsPayoutCode = 'country-resets-payout';
+
 class TaxInfoRepository {
-  TaxInfoRepository(this._datasource);
+  TaxInfoRepository(this._datasource, [this._businessPrefs]);
 
   final TaxInfoRemoteDatasource _datasource;
+
+  /// Préférences du compte (`/users/me/business-preferences`), seule porte
+  /// d'écriture du pays de résidence côté back. Facultatif pour les tests qui
+  /// ne touchent pas au pays.
+  final BusinessPrefsRepository? _businessPrefs;
 
   Future<TaxInfo> fetch() => _guard(_datasource.fetch);
 
@@ -48,6 +63,35 @@ class TaxInfoRepository {
       vatNumber: vatNumber,
     ),
   );
+
+  /// Collecte ciblée : `PUT` partiel (yadony-back #730).
+  Future<TaxInfo> update(TaxInfoUpdate update) =>
+      _guard(() => _datasource.update(update));
+
+  /// Pays de résidence inconnu : enregistré par le `PUT` des préférences
+  /// (même corps que le `GET`, `country` renseigné), puis relecture des
+  /// informations fiscales, qui en dépendent.
+  ///
+  /// Refuse sans rien envoyer si le pays est verrouillé ou si le changer
+  /// annulerait une activation des paiements par carte : Réglages demande
+  /// alors confirmation, pas cet écran.
+  Future<TaxInfo> saveResidenceCountry(String country) => _guard(() async {
+    final prefsRepo = _businessPrefs;
+    if (prefsRepo == null) {
+      throw const TaxInfoUnavailableException();
+    }
+    final prefs = await prefsRepo.fetchPrefs();
+    if (prefs.country != country) {
+      if (prefs.countryLocked) {
+        throw const TaxInfoException(kTaxResidenceLockedCode);
+      }
+      if (prefs.countryChangeResetsPayoutSetup) {
+        throw const TaxInfoException(kTaxResidenceResetsPayoutCode);
+      }
+      await prefsRepo.updatePrefs(prefs.copyWith(country: country));
+    }
+    return _datasource.fetch();
+  });
 
   Future<T> _guard<T>(Future<T> Function() call) async {
     try {

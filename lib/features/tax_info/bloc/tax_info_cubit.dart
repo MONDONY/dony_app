@@ -7,28 +7,49 @@ import 'package:dony/features/tax_info/bloc/tax_info_signal.dart';
 import 'package:dony/features/tax_info/bloc/tax_info_state.dart';
 import 'package:dony/features/tax_info/data/models/tax_info.dart';
 import 'package:dony/features/tax_info/data/repositories/tax_info_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Écran « Informations fiscales » (`/profile/tax-info`) : lecture, saisie et
-/// enregistrement du numéro fiscal. Jamais bloquant : rien dans l'app ne dépend
-/// de cet écran.
+/// enregistrement des informations fiscales. Jamais bloquant : rien dans l'app
+/// ne dépend de cet écran (ni acceptation, ni publication, ni paiement, ni
+/// retrait).
 ///
-/// Le numéro et la TVA saisis ne partent que dans le `PUT`. Ni les journaux ni
+/// Deux contrats :
+/// - ancien (lot 3d, ou DAC7 éteint) : numéro fiscal, pays d'émission, TVA ;
+/// - collecte ciblée (yadony-back #730, `collectionStatus` présent) : le pays
+///   seul s'il est inconnu, sinon seulement les champs manquants.
+///
+/// Les valeurs saisies ne partent que dans le `PUT`. Ni les journaux ni
 /// l'analytique n'en reçoivent la valeur ou la longueur : seulement des codes.
 class TaxInfoCubit extends Cubit<TaxInfoState> {
-  TaxInfoCubit(this._repository, this._analytics) : super(const TaxInfoState());
+  TaxInfoCubit(
+    this._repository,
+    this._analytics, {
+    VoidCallback? onResidenceCountrySaved,
+  }) : _onResidenceCountrySaved = onResidenceCountrySaved,
+       super(const TaxInfoState());
 
   final TaxInfoRepository _repository;
   final AnalyticsService _analytics;
+
+  /// Pays de résidence enregistré : les préférences en mémoire (devise, pays)
+  /// se relisent.
+  final VoidCallback? _onResidenceCountrySaved;
 
   bool _loadInFlight = false;
   bool _reloadQueued = false;
   bool _openedLogged = false;
 
+  /// Ouverture depuis une notification « pays seul » (`residence`), pour
+  /// l'analytique : le statut lu reste la seule source de vérité.
+  String? _scope;
+
   /// Une lecture à la fois ; un appel pendant une lecture est mis en file (un
   /// seul rejeu, quel que soit le nombre de demandes).
-  Future<void> load() async {
+  Future<void> load({String? scope}) async {
     if (isClosed) return;
+    _scope ??= scope;
     if (_loadInFlight) {
       _reloadQueued = true;
       return;
@@ -52,19 +73,21 @@ class TaxInfoCubit extends Cubit<TaxInfoState> {
     try {
       final info = await _repository.fetch();
       if (isClosed) return;
-      // Ni fourni ni demandé : rien à montrer (ex. lien d'une ancienne
-      // notification pour un voyageur qui n'est plus concerné).
-      final concerned =
-          info.provided || info.solicitation == TaxInfoSolicitation.solliciter;
       emit(
         state.copyWith(
-          load: concerned
+          load: _concerned(info)
               ? TaxInfoLoadStatus.ready
               : TaxInfoLoadStatus.unavailable,
           info: info,
           // Pays d'émission proposé d'après la résidence, modifiable.
           taxCountry:
               state.taxCountry ?? info.taxCountry ?? info.residenceCountry,
+          // Lieu de naissance déjà donné à la place du numéro : la case
+          // « Je n'ai pas de numéro fiscal » reste cochée.
+          noTaxNumber:
+              state.noTaxNumber ||
+              (info.identity?.birthPlaceProvided ?? false) &&
+                  info.isMissing(TaxInfoField.taxIdentificationNumber),
           clearError: true,
         ),
       );
@@ -76,6 +99,8 @@ class TaxInfoCubit extends Cubit<TaxInfoState> {
             properties: {
               'solicitation': info.solicitation.wire,
               'provided': info.provided,
+              'collection_status': info.collectionStatus?.wire ?? 'legacy',
+              'scope': ?_scope,
             },
           ),
         );
@@ -90,22 +115,93 @@ class TaxInfoCubit extends Cubit<TaxInfoState> {
     }
   }
 
-  /// Saisie du formulaire. Modifier le numéro efface l'erreur « numéro refusé »
-  /// du serveur : elle portait sur la valeur précédente.
-  void updateForm({String? taxNumber, String? vatNumber, String? taxCountry}) {
+  /// L'écran est-il pour ce voyageur ?
+  ///
+  /// Collecte ciblée : tout sauf `NE_PAS_SOLLICITER` (pays hors périmètre,
+  /// l'écran n'est jamais proposé). Ancien contrat : fourni ou demandé ; ni
+  /// l'un ni l'autre (ex. lien d'une ancienne notification) : rien à montrer.
+  static bool _concerned(TaxInfo info) {
+    if (info.usesCollectionContract) {
+      return info.collectionStatus != TaxInfoCollectionStatus.nePasSolliciter;
+    }
+    return info.provided || info.solicitation == TaxInfoSolicitation.solliciter;
+  }
+
+  /// Saisie du formulaire. Modifier un champ efface l'erreur du serveur qui
+  /// le désignait : elle portait sur la valeur précédente.
+  void updateForm({
+    String? taxNumber,
+    String? vatNumber,
+    String? taxCountry,
+    String? residenceCountry,
+    String? firstName,
+    String? lastName,
+    DateTime? birthDate,
+    String? street,
+    String? line2,
+    String? postalCode,
+    String? city,
+    String? birthPlace,
+  }) {
     if (isClosed || state.submitting) return;
+    final s = state;
+    final clear =
+        (taxNumber != null && s.serverRejectedTaxNumber) ||
+        (taxCountry != null && s.serverRejected(kTaxFieldCountry)) ||
+        (vatNumber != null && s.serverRejectedVat) ||
+        (firstName != null && s.serverRejected(kTaxFieldFirstName)) ||
+        (lastName != null && s.serverRejected(kTaxFieldLastName)) ||
+        (birthDate != null && s.serverRejected(kTaxFieldBirthDate)) ||
+        (street != null && s.serverRejected(kTaxFieldStreet)) ||
+        (line2 != null && s.serverRejected(kTaxFieldLine2)) ||
+        (postalCode != null && s.serverRejected(kTaxFieldPostalCode)) ||
+        (city != null && s.serverRejected(kTaxFieldCity)) ||
+        (birthPlace != null && s.serverRejected(kTaxFieldBirthPlace));
     emit(
-      state.copyWith(
+      s.copyWith(
         taxNumber: taxNumber,
         vatNumber: vatNumber,
         taxCountry: taxCountry,
-        // Effacée dès que le champ désigné par le serveur change : l'erreur
-        // portait sur la valeur précédente.
-        clearError:
-            (taxNumber != null && state.serverRejectedTaxNumber) ||
-            (vatNumber != null && state.serverRejectedVat),
+        residenceCountry: residenceCountry,
+        firstName: firstName,
+        lastName: lastName,
+        birthDate: birthDate,
+        street: street,
+        line2: line2,
+        postalCode: postalCode,
+        city: city,
+        birthPlace: birthPlace,
+        clearError: clear,
       ),
     );
+  }
+
+  /// « Ce n'est plus mon adresse » : l'adresse reprise de la pièce cède la
+  /// place aux champs de saisie (vides).
+  void replaceAddress() {
+    if (isClosed || state.submitting) return;
+    emit(state.copyWith(replacingAddress: true));
+  }
+
+  /// Retour à l'adresse reprise de la pièce, sans rien envoyer.
+  void keepAddress() {
+    if (isClosed || state.submitting) return;
+    emit(
+      state.copyWith(
+        replacingAddress: false,
+        street: '',
+        line2: '',
+        postalCode: '',
+        city: '',
+      ),
+    );
+  }
+
+  /// « Je n'ai pas de numéro fiscal » : le lieu de naissance remplace le
+  /// numéro (et la TVA).
+  void setNoTaxNumber(bool value) {
+    if (isClosed || state.submitting || state.noTaxNumber == value) return;
+    emit(state.copyWith(noTaxNumber: value, clearError: true));
   }
 
   /// « Modifier » sur la fiche d'un voyageur qui a déjà fourni ses
@@ -140,20 +236,31 @@ class TaxInfoCubit extends Cubit<TaxInfoState> {
   /// `submitting` est émis avant tout `await`.
   Future<void> submit() async {
     if (isClosed || !state.canSubmit) return;
+    if (state.asksResidence) return _submitResidence();
     final edit = state.info?.provided ?? false;
-    final country = state.taxCountry!;
+    final country = state.taxCountry;
+    final targeted = state.isTargeted;
+    final update = state.update;
     emit(state.copyWith(submitting: true, clearError: true));
     try {
-      final info = await _repository.save(
-        taxIdentificationNumber: state.taxNumber,
-        taxCountry: country,
-        vatNumber: state.vatNumber,
-      );
+      final info = targeted
+          ? await _repository.update(update)
+          : await _repository.save(
+              taxIdentificationNumber: state.taxNumber,
+              taxCountry: country!,
+              vatNumber: state.vatNumber,
+            );
       notifyTaxInfoChanged();
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.taxInfoSaved,
-          properties: {'edit': edit},
+          properties: {
+            'edit': edit,
+            if (targeted) 'scope': 'tax_info',
+            if (targeted) 'fields': update.fieldCodes.join(','),
+            if (targeted)
+              'collection_status': info.collectionStatus?.wire ?? 'legacy',
+          },
         ),
       );
       if (isClosed) return;
@@ -165,6 +272,44 @@ class TaxInfoCubit extends Cubit<TaxInfoState> {
           info: info,
           taxCountry: info.taxCountry ?? country,
           saved: true,
+        ),
+      );
+    } on TaxInfoUnavailableException {
+      _failSubmit('dac7-disabled', unavailable: true);
+    } on TaxInfoException catch (e) {
+      _failSubmit(e.code, field: e.field);
+    } catch (_) {
+      _failSubmit('unknown');
+    }
+  }
+
+  /// Pays de résidence (statut `RESIDENCE_INCONNUE`), puis relecture : le
+  /// voyageur hors périmètre n'a plus rien à fournir, le résident de l'Union
+  /// voit aussitôt ce qui manque.
+  Future<void> _submitResidence() async {
+    final code = state.residenceCountry!;
+    emit(state.copyWith(submitting: true, clearError: true));
+    try {
+      final info = await _repository.saveResidenceCountry(code);
+      notifyTaxInfoChanged();
+      _onResidenceCountrySaved?.call();
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.taxInfoSaved,
+          properties: {
+            'edit': false,
+            'scope': 'residence',
+            'collection_status': info.collectionStatus?.wire ?? 'legacy',
+          },
+        ),
+      );
+      if (isClosed) return;
+      emit(
+        TaxInfoState(
+          load: TaxInfoLoadStatus.ready,
+          info: info,
+          taxCountry: info.taxCountry ?? info.residenceCountry,
+          residenceSaves: state.residenceSaves + 1,
         ),
       );
     } on TaxInfoUnavailableException {

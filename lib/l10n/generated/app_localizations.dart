@@ -38315,6 +38315,300 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Choisissez le pays d\'émission du numéro pour enregistrer.'**
   String get taxInfoSaveMissingCountry;
+
+  /// En-tête de l'écran Informations fiscales, collecte ciblée (brouillon avocat, tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La loi nous oblige à transmettre chaque année aux impôts les sommes reçues par les voyageurs qui habitent dans l\'Union européenne (obligation DAC7).'**
+  String get taxInfoCollectIntro;
+
+  /// Phrase en gras de l'en-tête, collecte ciblée (brouillon avocat).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cela n\'entraîne pas forcément d\'impôt pour vous.'**
+  String get taxInfoCollectNoTax;
+
+  /// En-tête : affiché seulement si au moins un champ vient de la pièce vérifiée (brouillon avocat).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous avons déjà repris les informations de votre pièce d\'identité.'**
+  String get taxInfoCollectPrefilled;
+
+  /// En-tête : liste des champs manquants (brouillon avocat).
+  ///
+  /// In fr, this message translates to:
+  /// **'Il nous manque seulement : {fields}.'**
+  String taxInfoCollectMissing(String fields);
+
+  /// Réunit les deux derniers éléments d'une liste de champs manquants.
+  ///
+  /// In fr, this message translates to:
+  /// **'{first} et {second}'**
+  String taxInfoListPair(String first, String second);
+
+  /// Champ manquant cité dans l'en-tête.
+  ///
+  /// In fr, this message translates to:
+  /// **'vos nom et prénom'**
+  String get taxInfoMissingName;
+
+  /// Champ manquant cité dans l'en-tête.
+  ///
+  /// In fr, this message translates to:
+  /// **'votre date de naissance'**
+  String get taxInfoMissingBirthDate;
+
+  /// Champ manquant cité dans l'en-tête.
+  ///
+  /// In fr, this message translates to:
+  /// **'votre adresse'**
+  String get taxInfoMissingAddress;
+
+  /// Champ manquant cité dans l'en-tête.
+  ///
+  /// In fr, this message translates to:
+  /// **'votre numéro fiscal'**
+  String get taxInfoMissingTaxNumber;
+
+  /// Aide affichée quand le numéro fiscal manque (brouillon avocat).
+  ///
+  /// In fr, this message translates to:
+  /// **'Où trouver votre numéro fiscal ? Il est en haut de votre déclaration de revenus ou de votre avis d\'impôt, et dans votre espace particulier sur impots.gouv.fr.'**
+  String get taxInfoWhereToFind;
+
+  /// Titre de la carte des informations en lecture seule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Repris de votre pièce d\'identité'**
+  String get taxInfoKnownTitle;
+
+  /// Titre de la carte des informations connues quand aucune ne vient de la pièce.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà dans votre profil'**
+  String get taxInfoKnownProfileTitle;
+
+  /// Ligne en lecture seule : nom et prénom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom et prénom'**
+  String get taxInfoNameLabel;
+
+  /// Champ prénom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prénom'**
+  String get taxInfoFirstNameLabel;
+
+  /// Champ nom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get taxInfoLastNameLabel;
+
+  /// Champ ou ligne date de naissance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de naissance'**
+  String get taxInfoBirthDateLabel;
+
+  /// Ligne en lecture seule ou titre de section : adresse principale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse'**
+  String get taxInfoAddressLabel;
+
+  /// Champ rue de l'adresse principale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro et rue'**
+  String get taxInfoStreetLabel;
+
+  /// Champ complément d'adresse.
+  ///
+  /// In fr, this message translates to:
+  /// **'Complément (facultatif)'**
+  String get taxInfoLine2Label;
+
+  /// Champ code postal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code postal'**
+  String get taxInfoPostalCodeLabel;
+
+  /// Champ ville.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville'**
+  String get taxInfoCityLabel;
+
+  /// Pays de l'adresse, non modifiable ici.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays de résidence : {country}'**
+  String taxInfoAddressCountry(String country);
+
+  /// Lien sous l'adresse reprise de la pièce : permet de la ressaisir.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce n\'est plus mon adresse'**
+  String get taxInfoNotMyAddress;
+
+  /// Lien qui annule « Ce n'est plus mon adresse ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder l\'adresse de ma pièce'**
+  String get taxInfoKeepAddress;
+
+  /// Case à cocher : le lieu de naissance remplace le numéro fiscal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je n\'ai pas de numéro fiscal'**
+  String get taxInfoNoTaxNumber;
+
+  /// Champ lieu de naissance, seulement sans numéro fiscal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de naissance (ville, pays)'**
+  String get taxInfoBirthPlaceLabel;
+
+  /// Aide sous le lieu de naissance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il remplace le numéro fiscal quand vous n\'en avez pas.'**
+  String get taxInfoBirthPlaceHint;
+
+  /// Aide sous le lieu de naissance quand il est déjà enregistré.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de naissance déjà enregistré. Saisissez-le de nouveau pour le changer.'**
+  String get taxInfoBirthPlaceSaved;
+
+  /// Erreur immédiate sous le numéro fiscal français.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le numéro fiscal français compte exactement 13 chiffres.'**
+  String get taxInfoNumberFrInvalid;
+
+  /// Erreur du serveur sous un champ d'identité ou d'adresse, sans recopier la valeur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valeur refusée. Vérifiez ce champ.'**
+  String get taxInfoFieldInvalid;
+
+  /// Aide au-dessus du bouton Enregistrer grisé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renseignez vos nom et prénom pour enregistrer.'**
+  String get taxInfoSaveMissingName;
+
+  /// Aide au-dessus du bouton Enregistrer grisé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez votre date de naissance pour enregistrer.'**
+  String get taxInfoSaveMissingBirthDate;
+
+  /// Aide au-dessus du bouton Enregistrer grisé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Complétez votre adresse pour enregistrer.'**
+  String get taxInfoSaveMissingAddress;
+
+  /// Aide au-dessus du bouton Enregistrer grisé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renseignez votre lieu de naissance pour enregistrer.'**
+  String get taxInfoSaveMissingBirthPlace;
+
+  /// Aide au-dessus du bouton Enregistrer grisé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez votre pays de résidence pour enregistrer.'**
+  String get taxInfoSaveMissingResidence;
+
+  /// Erreur 422 tax-info-read-only.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette information vient de votre pièce d\'identité et ne peut pas être modifiée.'**
+  String get taxInfoErrorReadOnly;
+
+  /// Erreur 422 tax-info-not-applicable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces informations ne vous sont pas demandées.'**
+  String get taxInfoErrorNotApplicable;
+
+  /// Le pays est verrouillé (paiements engagés).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre pays ne peut pas être changé ici. Contactez le support si besoin.'**
+  String get taxInfoErrorCountryLocked;
+
+  /// Changer de pays annulerait une activation des paiements par carte : passer par Réglages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changez votre pays depuis Réglages, qui vous dit ce que cela change.'**
+  String get taxInfoErrorCountryResetsPayout;
+
+  /// Titre de la vue « pays seul » (pays inconnu).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre pays de résidence'**
+  String get taxInfoResidenceTitle;
+
+  /// Texte de la vue « pays seul » (brouillon avocat).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez le pays où vous habitez. Si c\'est un pays de l\'Union européenne, la loi nous demande quelques informations fiscales (obligation DAC7). Sinon, vous n\'avez rien d\'autre à fournir.'**
+  String get taxInfoResidenceBody;
+
+  /// Champ pays de résidence.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays de résidence'**
+  String get taxInfoResidenceLabel;
+
+  /// Aide sous le pays de résidence.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le pays de votre adresse principale.'**
+  String get taxInfoResidenceHint;
+
+  /// Confirmation : pays enregistré, rien d'autre à demander.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays enregistré. Vous n\'avez rien d\'autre à fournir.'**
+  String get taxInfoResidenceSaved;
+
+  /// Confirmation : pays enregistré, l'écran montre ce qui manque.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays enregistré. Il nous manque encore quelques informations.'**
+  String get taxInfoResidenceSavedMore;
+
+  /// Message quand l'écran se ferme seul : voyageur hors périmètre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune information fiscale ne vous est demandée.'**
+  String get taxInfoNotConcerned;
+
+  /// Titre : rien à demander (COMPLETE).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout est à jour'**
+  String get taxInfoCompleteTitle;
+
+  /// Texte : rien à demander (COMPLETE).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'avez rien d\'autre à fournir.'**
+  String get taxInfoCompleteBody;
+
+  /// Sous-titre de la ligne du Profil quand il manque quelque chose.
+  ///
+  /// In fr, this message translates to:
+  /// **'À compléter'**
+  String get taxInfoRowSubtitleToComplete;
 }
 
 class _AppLocalizationsDelegate

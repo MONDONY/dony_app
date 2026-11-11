@@ -310,9 +310,13 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
 
     // Déclaration DAC7 (yadony-back lot 3b) : la demande d'informations
     // fiscales et le récapitulatif annuel ouvrent le même écran, d'où le
-    // voyageur renseigne ou relit (forme masquée) son numéro fiscal. Jamais
-    // bloquant : l'écran dit simplement qu'il n'y a rien à faire si le
-    // voyageur n'est plus concerné.
+    // voyageur renseigne ou relit (forme masquée) ses informations. Jamais
+    // bloquant : l'écran se ferme seul si le voyageur n'est pas concerné.
+    // Collecte ciblée (yadony-back #730) : `scope: RESIDENCE_COUNTRY` = demande
+    // du pays seul (l'écran le demande d'après le statut lu, le paramètre ne
+    // sert qu'à l'analytique).
+    'TAX_INFO_REQUEST' when field('scope') == 'RESIDENCE_COUNTRY' =>
+      '/profile/tax-info?scope=residence',
     'TAX_INFO_REQUEST' || 'TAX_STATEMENT' => '/profile/tax-info',
 
     // Message de l'équipe support → détail du ticket si l'id est valide,

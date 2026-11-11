@@ -17,12 +17,14 @@ import 'package:go_router/go_router.dart';
 /// Entrée « Informations fiscales » de l'écran Profil (déclaration DAC7), sous
 /// la section « Argent ».
 ///
-/// - voyageur concerné (`solicitation == SOLLICITER`) : bannière discrète avec
-///   « Compléter » et « Plus tard » (masquée pour la session) ;
-/// - informations déjà fournies (`DEJA_FOURNI`) : une ligne discrète qui ouvre
-///   l'écran, sans bannière ;
-/// - sinon, et pour toute réponse 404, 403, 401 ou ancien back : rien du tout,
-///   ni erreur ni espace.
+/// - voyageur concerné (`solicitation == SOLLICITER` ; collecte ciblée :
+///   `INFO_REQUIRED` après une demande) : bannière discrète avec « Compléter »
+///   et « Plus tard » (masquée pour la session) ;
+/// - informations déjà fournies (`DEJA_FOURNI` ; collecte ciblée : `COMPLETE`,
+///   ou `INFO_REQUIRED` sans bannière, sous-titre « À compléter ») : une ligne
+///   discrète qui ouvre l'écran ;
+/// - sinon (pays hors périmètre, pays inconnu), et pour toute réponse 404,
+///   403, 401 ou ancien back : rien du tout, ni erreur ni espace.
 ///
 /// Une lecture au chargement et à la reprise de l'app, coalescée par le cubit.
 /// L'entrée porte elle-même son espacement bas : absente, elle ne laisse aucun
@@ -56,7 +58,11 @@ class ProfileTaxInfoEntry extends StatelessWidget {
                 ),
               );
             }
-            if (s.showRow) return const _Spaced(child: _Row(onTap: _open));
+            if (s.showRow) {
+              return _Spaced(
+                child: _Row(onTap: _open, needsAction: s.rowNeedsAction),
+              );
+            }
             return const SizedBox.shrink();
           },
         ),
@@ -86,9 +92,13 @@ class _Spaced extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.onTap});
+  const _Row({required this.onTap, required this.needsAction});
 
   final Future<void> Function(BuildContext context, String variant) onTap;
+
+  /// Il manque quelque chose : « À compléter » au lieu de « Voir ou
+  /// modifier ».
+  final bool needsAction;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +112,9 @@ class _Row extends StatelessWidget {
           iconColor: cs.primary,
           iconBgColor: cs.primaryContainer,
           label: l.taxInfoRowLabel,
-          subtitle: l.taxInfoRowSubtitle,
+          subtitle: needsAction
+              ? l.taxInfoRowSubtitleToComplete
+              : l.taxInfoRowSubtitle,
           showDivider: false,
           onTap: () => unawaited(onTap(context, 'row')),
         ),
