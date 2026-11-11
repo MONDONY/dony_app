@@ -38099,6 +38099,198 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Actif'**
   String get profileGpProActivePill;
+
+  /// Titre de l'écran /profile/tax-info (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations fiscales'**
+  String get taxInfoScreenTitle;
+
+  /// Motif de la collecte, en tête de l'écran Informations fiscales (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Obligation légale de transmission à l\'administration fiscale. Vos informations sont chiffrées.'**
+  String get taxInfoReason;
+
+  /// Lien vers impots.gouv.fr sous le motif de la collecte (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En savoir plus'**
+  String get taxInfoLearnMore;
+
+  /// Rassurance sous le motif : la demande n'est jamais bloquante (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien n\'est bloqué dans l\'app : vous pouvez le faire plus tard.'**
+  String get taxInfoNeverBlocking;
+
+  /// Champ du numéro d'identification fiscale et libellé de la fiche (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro fiscal'**
+  String get taxInfoNumberLabel;
+
+  /// Aide sous le champ du numéro fiscal (tax_info_form.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le numéro d\'identification fiscale attribué par votre pays de résidence fiscale.'**
+  String get taxInfoNumberHint;
+
+  /// Erreur sous le numéro fiscal non vide et invalide ; remplace l'aide neutre (tax_info_form.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre 4 et 40 caractères : lettres, chiffres, espace, point, tiret ou barre oblique.'**
+  String get taxInfoNumberInvalid;
+
+  /// Champ du pays d'émission du numéro fiscal et titre de la feuille de sélection (tax_info_form.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays d\'émission du numéro'**
+  String get taxInfoCountryLabel;
+
+  /// Champ facultatif du numéro de TVA (tax_info_form.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de TVA (facultatif)'**
+  String get taxInfoVatLabel;
+
+  /// Libellé de la ligne TVA de la fiche des informations enregistrées (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de TVA'**
+  String get taxInfoSummaryVatLabel;
+
+  /// Valeur de la ligne TVA de la fiche quand aucun numéro de TVA n'est enregistré (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non renseigné'**
+  String get taxInfoVatNone;
+
+  /// Titre de la fiche d'un voyageur qui a déjà fourni ses informations (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations enregistrées'**
+  String get taxInfoSummaryTitle;
+
+  /// Explication de la fiche des informations enregistrées (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Elles sont chiffrées. Pour votre sécurité, le numéro n\'est jamais affiché en entier.'**
+  String get taxInfoSummaryBody;
+
+  /// Bouton d'enregistrement de l'écran Informations fiscales, sur une ligne à 360 dp (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get taxInfoSave;
+
+  /// Bouton qui ferme l'écran ou masque la bannière sans rien enregistrer (tax_info_screen.dart, tax_info_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get taxInfoLater;
+
+  /// Bouton de la fiche pour modifier les informations déjà fournies (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier'**
+  String get taxInfoEdit;
+
+  /// Bouton qui quitte la modification et revient à la fiche, sans rien enregistrer (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get taxInfoCancelEdit;
+
+  /// Confirmation après l'enregistrement (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations fiscales enregistrées.'**
+  String get taxInfoSaved;
+
+  /// Titre quand aucune information fiscale n'est demandée au voyageur (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien à renseigner'**
+  String get taxInfoUnavailableTitle;
+
+  /// Explication quand aucune information fiscale n'est demandée (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune information fiscale ne vous est demandée pour le moment.'**
+  String get taxInfoUnavailableBody;
+
+  /// Bouton de l'écran « Rien à renseigner » (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer'**
+  String get taxInfoClose;
+
+  /// Titre de l'erreur de lecture des informations fiscales (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chargement impossible'**
+  String get taxInfoFailureTitle;
+
+  /// Explication de l'erreur de lecture des informations fiscales (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre connexion, puis réessayez.'**
+  String get taxInfoFailureBody;
+
+  /// Numéro fiscal refusé par le serveur (422 tax-info-invalid) ; ne recopie jamais la valeur saisie (tax_info_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro n\'a pas été accepté. Vérifiez-le, puis réessayez.'**
+  String get taxInfoErrorInvalid;
+
+  /// Enregistrement des informations fiscales : erreur réseau (tax_info_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion impossible. Vérifiez votre réseau, puis réessayez.'**
+  String get taxInfoErrorNetwork;
+
+  /// Enregistrement des informations fiscales : fonction éteinte côté serveur (tax_info_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette fonction n\'est pas disponible pour le moment.'**
+  String get taxInfoErrorUnavailable;
+
+  /// Enregistrement des informations fiscales : erreur inattendue (tax_info_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrement impossible pour le moment. Réessayez dans un instant.'**
+  String get taxInfoErrorGeneric;
+
+  /// Titre de la bannière du Profil, affichée seulement aux voyageurs concernés (tax_info_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations fiscales'**
+  String get taxInfoBannerTitle;
+
+  /// Texte de la bannière du Profil (tax_info_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Obligation légale de transmission à l\'administration fiscale. Cela ne bloque rien.'**
+  String get taxInfoBannerBody;
+
+  /// Bouton de la bannière du Profil qui ouvre l'écran Informations fiscales, sur une ligne à 360 dp (tax_info_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compléter'**
+  String get taxInfoBannerAction;
+
+  /// Ligne discrète du Profil pour un voyageur qui a déjà fourni ses informations (tax_info_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations fiscales'**
+  String get taxInfoRowLabel;
+
+  /// Sous-titre de la ligne Informations fiscales du Profil (tax_info_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir ou modifier'**
+  String get taxInfoRowSubtitle;
 }
 
 class _AppLocalizationsDelegate

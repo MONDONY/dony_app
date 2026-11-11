@@ -23670,4 +23670,111 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileGpProActivePill => 'Active';
+
+  @override
+  String get taxInfoScreenTitle => 'Tax information';
+
+  @override
+  String get taxInfoReason =>
+      'Legal obligation to report to the tax authority. Your information is encrypted.';
+
+  @override
+  String get taxInfoLearnMore => 'Learn more';
+
+  @override
+  String get taxInfoNeverBlocking =>
+      'Nothing is blocked in the app: you can do this later.';
+
+  @override
+  String get taxInfoNumberLabel => 'Tax identification number';
+
+  @override
+  String get taxInfoNumberHint =>
+      'The tax identification number issued by your country of tax residence.';
+
+  @override
+  String get taxInfoNumberInvalid =>
+      'Between 4 and 40 characters: letters, digits, space, dot, hyphen or slash.';
+
+  @override
+  String get taxInfoCountryLabel => 'Country that issued the number';
+
+  @override
+  String get taxInfoVatLabel => 'VAT number (optional)';
+
+  @override
+  String get taxInfoSummaryVatLabel => 'VAT number';
+
+  @override
+  String get taxInfoVatNone => 'Not provided';
+
+  @override
+  String get taxInfoSummaryTitle => 'Information on file';
+
+  @override
+  String get taxInfoSummaryBody =>
+      'They are encrypted. For your security, the number is never shown in full.';
+
+  @override
+  String get taxInfoSave => 'Save';
+
+  @override
+  String get taxInfoLater => 'Later';
+
+  @override
+  String get taxInfoEdit => 'Edit';
+
+  @override
+  String get taxInfoCancelEdit => 'Cancel';
+
+  @override
+  String get taxInfoSaved => 'Tax information saved.';
+
+  @override
+  String get taxInfoUnavailableTitle => 'Nothing to provide';
+
+  @override
+  String get taxInfoUnavailableBody =>
+      'No tax information is requested from you at the moment.';
+
+  @override
+  String get taxInfoClose => 'Close';
+
+  @override
+  String get taxInfoFailureTitle => 'Could not load';
+
+  @override
+  String get taxInfoFailureBody => 'Check your connection, then try again.';
+
+  @override
+  String get taxInfoErrorInvalid =>
+      'This number was not accepted. Check it, then try again.';
+
+  @override
+  String get taxInfoErrorNetwork =>
+      'Connection failed. Check your network, then try again.';
+
+  @override
+  String get taxInfoErrorUnavailable =>
+      'This feature is not available at the moment.';
+
+  @override
+  String get taxInfoErrorGeneric =>
+      'Could not save right now. Try again in a moment.';
+
+  @override
+  String get taxInfoBannerTitle => 'Tax information';
+
+  @override
+  String get taxInfoBannerBody =>
+      'Legal obligation to report to the tax authority. It blocks nothing.';
+
+  @override
+  String get taxInfoBannerAction => 'Complete';
+
+  @override
+  String get taxInfoRowLabel => 'Tax information';
+
+  @override
+  String get taxInfoRowSubtitle => 'View or edit';
 }
