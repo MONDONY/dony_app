@@ -48,6 +48,10 @@ class DonyTextField extends StatelessWidget {
     this.textInputAction,
     this.onSubmitted,
     this.inputFormatters,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
+    this.enableIMEPersonalizedLearning = true,
+    this.textCapitalization = TextCapitalization.none,
   }) : _variant = _DonyTextFieldVariant.text,
        _value = null,
        _onTap = null,
@@ -103,7 +107,11 @@ class DonyTextField extends StatelessWidget {
        focusNode = null,
        textInputAction = null,
        onSubmitted = null,
-       inputFormatters = null;
+       inputFormatters = null,
+       autocorrect = true,
+       enableSuggestions = true,
+       enableIMEPersonalizedLearning = true,
+       textCapitalization = TextCapitalization.none;
 
   // ── Champs partagés ─────────────────────────────────────────────────────────
 
@@ -156,6 +164,16 @@ class DonyTextField extends StatelessWidget {
 
   /// Mise en forme de la saisie (ex. numéro groupé par deux chiffres).
   final List<TextInputFormatter>? inputFormatters;
+
+  /// Correction automatique, suggestions et apprentissage du clavier : activés
+  /// par défaut. À couper (`false`) pour un identifiant qu'un correcteur ne doit
+  /// ni réécrire ni mémoriser (numéro fiscal, code, numéro de compte).
+  final bool autocorrect;
+  final bool enableSuggestions;
+  final bool enableIMEPersonalizedLearning;
+
+  /// Majuscules automatiques du clavier (aucune par défaut).
+  final TextCapitalization textCapitalization;
 
   // Tappable
   final String? _value;
@@ -223,6 +241,10 @@ class DonyTextField extends StatelessWidget {
             textInputAction: textInputAction,
             onFieldSubmitted: onSubmitted,
             inputFormatters: inputFormatters,
+            autocorrect: autocorrect,
+            enableSuggestions: enableSuggestions,
+            enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
+            textCapitalization: textCapitalization,
             // Toucher hors du champ ferme le clavier (FLUTTER-A3). Flutter ne
             // le fait que sur ordinateur : sur téléphone, le pavé numérique
             // d'iOS n'a pas de touche « OK », et un formulaire court qui ne

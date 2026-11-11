@@ -81,6 +81,7 @@ void main() {
         '/profile/addresses',
         '/profile/addresses/add',
         '/profile/recipients',
+        '/profile/tax-info',
         '/account/disabled',
       ]) {
         expect(isReplaySensitivePath(p), isTrue, reason: p);

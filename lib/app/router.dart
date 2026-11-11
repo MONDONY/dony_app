@@ -243,6 +243,8 @@ import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/presentation/screens/support_home_screen.dart';
 import 'package:dony/features/support/presentation/screens/support_ticket_detail_screen.dart';
+import 'package:dony/features/tax_info/bloc/tax_info_cubit.dart';
+import 'package:dony/features/tax_info/presentation/screens/tax_info_screen.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
@@ -1752,6 +1754,17 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<GpProCubit>()..load(trackOpened: true),
         child: const GpProScreen(),
+      ),
+    ),
+
+    // ── Informations fiscales, déclaration DAC7 (hors shell) ──────────
+    // Ouvert par la bannière du Profil, les notifications TAX_INFO_REQUEST et
+    // TAX_STATEMENT et le lien `yadony://profile/tax-info`.
+    GoRoute(
+      path: '/profile/tax-info',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<TaxInfoCubit>()..load(),
+        child: const TaxInfoScreen(),
       ),
     ),
 

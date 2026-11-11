@@ -84,6 +84,26 @@ bool appPreferencesNeedAppRebuild(
     previous.preferences.themeMode != next.preferences.themeMode ||
     previous.preferences.languageCode != next.preferences.languageCode;
 
+// Allowlist par égalité stricte des chemins FIXES atteignables via yadony://.
+// Empêche un lien forgé (ex. yadony://admin/…) d'atteindre un écran non prévu.
+//
+// Ce n'est plus la seule porte du schéma : les chemins paramétrés ci-dessus
+// sont résolus avant elle. Auditer la surface deep-link demande donc de
+// lire les deux.
+const kAllowedDeepLinkPaths = {
+  '/stripe/onboarding/complete',
+  '/stripe/onboarding/refresh',
+  '/tracking/scan',
+  // Alertes prix des billets (notification FLIGHT_PRICE_ALERT).
+  '/flights/alerts',
+  // Récompense de parrainage à choisir (REFERRAL_REWARD_AVAILABLE).
+  '/profile/referral',
+  // Décision sur la demande GP Pro (GP_PRO_APPROVED/REJECTED/REVOKED).
+  '/profile/gp-pro',
+  // Informations fiscales DAC7 (TAX_INFO_REQUEST/TAX_STATEMENT).
+  '/profile/tax-info',
+};
+
 class DonyApp extends StatefulWidget {
   const DonyApp({super.key});
 
@@ -259,23 +279,7 @@ class _DonyAppState extends State<DonyApp> {
     resolveParcelDeepLink,
   ];
 
-  // Allowlist par égalité stricte des chemins FIXES atteignables via yadony://.
-  // Empêche un lien forgé (ex. yadony://admin/…) d'atteindre un écran non prévu.
-  //
-  // Ce n'est plus la seule porte du schéma : les chemins paramétrés ci-dessus
-  // sont résolus avant elle. Auditer la surface deep-link demande donc de
-  // lire les deux.
-  static const _allowedDeepLinkPaths = {
-    '/stripe/onboarding/complete',
-    '/stripe/onboarding/refresh',
-    '/tracking/scan',
-    // Alertes prix des billets (notification FLIGHT_PRICE_ALERT).
-    '/flights/alerts',
-    // Récompense de parrainage à choisir (REFERRAL_REWARD_AVAILABLE).
-    '/profile/referral',
-    // Décision sur la demande GP Pro (GP_PRO_APPROVED/REJECTED/REVOKED).
-    '/profile/gp-pro',
-  };
+  static const _allowedDeepLinkPaths = kAllowedDeepLinkPaths;
 
   void _dispatchPosterLink(Uri uri) {
     final route =

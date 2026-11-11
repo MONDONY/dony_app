@@ -1415,4 +1415,27 @@ abstract final class AnalyticsEvents {
   /// Case « Ne plus afficher » cochée puis modal fermé ou bouton touché
   /// (mêmes propriétés) : réponse définitive pour la version.
   static const videoModalDontShowAgain = 'video_modal_dont_show_again';
+
+  // ── Informations fiscales (déclaration DAC7, jamais bloquante) ─────────
+  /// Écran « Informations fiscales » ouvert (propriétés `solicitation` :
+  /// `SOLLICITER` / `DEJA_FOURNI` / `NE_PAS_SOLLICITER`, et `provided` : bool).
+  /// Jamais le numéro fiscal, la TVA ni leur longueur.
+  static const taxInfoOpened = 'tax_info_opened';
+
+  /// Informations fiscales enregistrées (propriété `edit` : bool, vrai si le
+  /// voyageur modifiait des informations déjà fournies). Aucune valeur saisie.
+  static const taxInfoSaved = 'tax_info_saved';
+
+  /// Enregistrement refusé ou impossible. Propriété `error_code` seule
+  /// (`tax-info-invalid`, `network`, `unknown`…).
+  static const taxInfoSaveFailed = 'tax_info_save_failed';
+
+  /// « Plus tard » touché, sur l'écran ou sur la bannière du Profil : rien
+  /// n'est enregistré, aucune conséquence (propriété `source` : `screen` /
+  /// `banner`).
+  static const taxInfoLater = 'tax_info_later';
+
+  /// Bannière ou ligne « Informations fiscales » du Profil touchée (propriété
+  /// `variant` : `banner` / `row`).
+  static const profileTaxInfoTapped = 'profile_tax_info_tapped';
 }

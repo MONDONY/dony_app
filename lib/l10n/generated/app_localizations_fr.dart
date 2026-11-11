@@ -23841,4 +23841,126 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profileGpProActivePill => 'Actif';
+
+  @override
+  String get taxInfoScreenTitle => 'Informations fiscales';
+
+  @override
+  String get taxInfoReason =>
+      'Obligation légale de transmission à l\'administration fiscale. Vos informations sont chiffrées.';
+
+  @override
+  String get taxInfoLearnMore => 'En savoir plus';
+
+  @override
+  String get taxInfoNeverBlocking =>
+      'Rien n\'est bloqué dans l\'app : vous pouvez le faire plus tard.';
+
+  @override
+  String get taxInfoNumberLabel => 'Numéro fiscal';
+
+  @override
+  String get taxInfoNumberHint =>
+      'Le numéro d\'identification fiscale attribué par votre pays de résidence fiscale.';
+
+  @override
+  String get taxInfoNumberInvalid =>
+      'Entre 4 et 40 caractères : lettres et chiffres, avec espace, point, tiret ou barre oblique au milieu.';
+
+  @override
+  String get taxInfoCountryLabel => 'Pays d\'émission du numéro';
+
+  @override
+  String get taxInfoVatLabel => 'Numéro de TVA (facultatif)';
+
+  @override
+  String get taxInfoSummaryVatLabel => 'Numéro de TVA';
+
+  @override
+  String get taxInfoVatNone => 'Non renseigné';
+
+  @override
+  String get taxInfoSummaryTitle => 'Informations enregistrées';
+
+  @override
+  String get taxInfoSummaryBody =>
+      'Elles sont chiffrées. Pour votre sécurité, le numéro n\'est jamais affiché en entier.';
+
+  @override
+  String get taxInfoSave => 'Enregistrer';
+
+  @override
+  String get taxInfoLater => 'Plus tard';
+
+  @override
+  String get taxInfoEdit => 'Modifier';
+
+  @override
+  String get taxInfoCancelEdit => 'Annuler';
+
+  @override
+  String get taxInfoSaved => 'Informations fiscales enregistrées.';
+
+  @override
+  String get taxInfoUnavailableTitle => 'Rien à renseigner';
+
+  @override
+  String get taxInfoUnavailableBody =>
+      'Aucune information fiscale ne vous est demandée pour le moment.';
+
+  @override
+  String get taxInfoClose => 'Fermer';
+
+  @override
+  String get taxInfoFailureTitle => 'Chargement impossible';
+
+  @override
+  String get taxInfoFailureBody => 'Vérifiez votre connexion, puis réessayez.';
+
+  @override
+  String get taxInfoErrorInvalid =>
+      'Ce numéro n\'a pas été accepté. Vérifiez-le, puis réessayez.';
+
+  @override
+  String get taxInfoErrorNetwork =>
+      'Connexion impossible. Vérifiez votre réseau, puis réessayez.';
+
+  @override
+  String get taxInfoErrorUnavailable =>
+      'Cette fonction n\'est pas disponible pour le moment.';
+
+  @override
+  String get taxInfoErrorGeneric =>
+      'Enregistrement impossible pour le moment. Réessayez dans un instant.';
+
+  @override
+  String get taxInfoBannerTitle => 'Informations fiscales';
+
+  @override
+  String get taxInfoBannerBody =>
+      'Obligation légale de transmission à l\'administration fiscale. Cela ne bloque rien.';
+
+  @override
+  String get taxInfoBannerAction => 'Compléter';
+
+  @override
+  String get taxInfoRowLabel => 'Informations fiscales';
+
+  @override
+  String get taxInfoRowSubtitle => 'Voir ou modifier';
+
+  @override
+  String get taxInfoCountryHint => 'Le pays qui a délivré ce numéro.';
+
+  @override
+  String get taxInfoSaveMissingNumber =>
+      'Renseignez votre numéro fiscal pour enregistrer.';
+
+  @override
+  String get taxInfoSaveMissingVat =>
+      'Vérifiez le numéro de TVA pour enregistrer.';
+
+  @override
+  String get taxInfoSaveMissingCountry =>
+      'Choisissez le pays d\'émission du numéro pour enregistrer.';
 }
