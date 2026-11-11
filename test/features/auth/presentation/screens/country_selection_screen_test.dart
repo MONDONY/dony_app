@@ -68,6 +68,7 @@ void main() {
   });
 
   setUp(() {
+    DonySnackbar.clearDedup();
     cubit = MockCountryOnboardingCubit();
     when(() => cubit.state).thenReturn(const CountryOnboardingInitial());
     when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
@@ -252,6 +253,26 @@ void main() {
       find.text('Impossible d’enregistrer le pays. Réessayez.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('échec du pays : « Réessayer » relance le même pays', (
+    tester,
+  ) async {
+    whenListen<CountryOnboardingState>(
+      cubit,
+      Stream.fromIterable([
+        const CountryOnboardingSaving('FR'),
+        const CountryOnboardingError(CountryOnboardingFailure.saveCountry),
+      ]),
+      initialState: const CountryOnboardingInitial(),
+    );
+
+    await _wrap(tester, cubit);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Réessayer'));
+    await tester.pump();
+
+    verify(() => cubit.select('FR')).called(1);
   });
 
   testWidgets(

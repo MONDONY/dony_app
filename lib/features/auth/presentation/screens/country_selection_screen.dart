@@ -70,6 +70,18 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
                 context.l10n.authCountryChoiceSaveError,
             },
             type: DonySnackbarType.error,
+            // Réessayer le même pays sans le re-sélectionner à la main.
+            actionLabel:
+                state.failure == CountryOnboardingFailure.saveCountry &&
+                    _lastAttemptedCountryCode != null
+                ? context.l10n.commonRetry
+                : null,
+            onAction: () {
+              final code = _lastAttemptedCountryCode;
+              if (code != null) {
+                context.read<CountryOnboardingCubit>().select(code);
+              }
+            },
           );
         }
       },

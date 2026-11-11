@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
+import 'package:dony/features/auth/data/services/residence_country_writer.dart';
 import 'package:dony/features/settings/data/models/user_business_prefs_dto.dart';
 import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,6 +42,7 @@ void main() {
   });
 
   setUp(() {
+    residenceRetryDelay = Duration.zero;
     repository = MockBusinessPrefsRepository();
     prefs = MockBox();
     analytics = MockAnalyticsService();
@@ -145,6 +148,46 @@ void main() {
       verifyNever(() => repository.updatePrefs(any()));
       verifyNever(() => prefs.put(any(), any()));
       verifyNever(() => analytics.logEvent(any()));
+    },
+  );
+
+  blocTest<CountryOnboardingCubit, CountryOnboardingState>(
+    'GET en échec réseau puis succès au 2e essai : pays enregistré',
+    setUp: () {
+      var gets = 0;
+      when(() => repository.fetchPrefs()).thenAnswer((_) async {
+        if (++gets == 1) throw const NetworkException('offline');
+        return _prefs;
+      });
+    },
+    build: build,
+    act: (cubit) => cubit.select('FR'),
+    expect: () => const [
+      CountryOnboardingSaving('FR'),
+      CountryOnboardingSuccess(),
+    ],
+    verify: (_) {
+      verify(() => repository.fetchPrefs()).called(2);
+      verify(() => prefs.put(HiveService.kCountryCode, 'FR')).called(1);
+    },
+  );
+
+  blocTest<CountryOnboardingCubit, CountryOnboardingState>(
+    'réseau en échec définitif : erreur affichée, Hive inchangé',
+    setUp: () {
+      when(
+        () => repository.fetchPrefs(),
+      ).thenThrow(const NetworkException('offline'));
+    },
+    build: build,
+    act: (cubit) => cubit.select('FR'),
+    expect: () => const [
+      CountryOnboardingSaving('FR'),
+      CountryOnboardingError(CountryOnboardingFailure.saveCountry),
+    ],
+    verify: (_) {
+      verify(() => repository.fetchPrefs()).called(3);
+      verifyNever(() => prefs.put(any(), any()));
     },
   );
 

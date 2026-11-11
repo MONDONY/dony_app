@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/residence_country_writer.dart';
 import 'package:dony/features/settings/data/models/user_business_prefs_dto.dart';
@@ -35,6 +37,7 @@ void main() {
   setUpAll(() => registerFallbackValue(_FakeUserBusinessPrefsDto()));
 
   setUp(() {
+    residenceRetryDelay = Duration.zero;
     repository = _MockBusinessPrefsRepository();
     prefs = _MockBox();
     when(() => repository.fetchPrefs()).thenAnswer((_) async => _current);
@@ -70,6 +73,89 @@ void main() {
       writeResidenceCountry(repository, prefs, 'SN'),
       throwsException,
     );
+    verifyNever(() => prefs.put(any(), any()));
+  });
+
+  test(
+    'GET en échec réseau puis succès au 2e essai : pays enregistré',
+    () async {
+      var gets = 0;
+      when(() => repository.fetchPrefs()).thenAnswer((_) async {
+        if (++gets == 1) throw const NetworkException('offline');
+        return _current;
+      });
+
+      await writeResidenceCountry(repository, prefs, 'FR');
+
+      expect(gets, 2);
+      verify(() => repository.updatePrefs(any())).called(1);
+      verify(() => prefs.put(HiveService.kCountryCode, 'FR')).called(1);
+      verify(() => prefs.put(HiveService.kCurrencyCode, 'XOF')).called(1);
+    },
+  );
+
+  test('PUT en 503 puis succès : une reprise, Hive écrit une fois', () async {
+    var puts = 0;
+    when(() => repository.updatePrefs(any())).thenAnswer((_) async {
+      if (++puts == 1) throw const ServiceUnavailableException();
+      return _saved;
+    });
+
+    await writeResidenceCountry(repository, prefs, 'SN');
+
+    expect(puts, 2);
+    verify(() => prefs.put(HiveService.kCountryCode, 'SN')).called(1);
+  });
+
+  test(
+    'DioException portant une AppException transitoire est reprise',
+    () async {
+      var gets = 0;
+      when(() => repository.fetchPrefs()).thenAnswer((_) async {
+        if (++gets == 1) {
+          throw DioException(
+            requestOptions: RequestOptions(path: '/x'),
+            error: const TimeoutException(),
+          );
+        }
+        return _current;
+      });
+
+      await writeResidenceCountry(repository, prefs, 'FR');
+
+      expect(gets, 2);
+    },
+  );
+
+  test(
+    'échec définitif : 3 tentatives, erreur remontée, Hive intact',
+    () async {
+      when(
+        () => repository.fetchPrefs(),
+      ).thenThrow(const NetworkException('offline'));
+
+      await expectLater(
+        writeResidenceCountry(repository, prefs, 'FR'),
+        throwsA(isA<NetworkException>()),
+      );
+
+      verify(() => repository.fetchPrefs()).called(3);
+      verifyNever(() => repository.updatePrefs(any()));
+      verifyNever(() => prefs.put(any(), any()));
+    },
+  );
+
+  test('refus métier (422) : aucune reprise', () async {
+    when(
+      () => repository.updatePrefs(any()),
+    ).thenThrow(const ValidationException('refusé'));
+
+    await expectLater(
+      writeResidenceCountry(repository, prefs, 'FR'),
+      throwsA(isA<ValidationException>()),
+    );
+
+    verify(() => repository.updatePrefs(any())).called(1);
     verifyNever(() => prefs.put(any(), any()));
   });
 }
