@@ -32,6 +32,10 @@ void main() {
   late _MockAuthBloc authBloc;
   late StreamController<KycState> states;
 
+  setUpAll(() {
+    registerFallbackValue(const AuthProfileRefreshRequested());
+  });
+
   setUp(() {
     useEnglish();
     kycBloc = _MockKycBloc();
@@ -154,5 +158,28 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.textContaining('page /'), findsOneWidget);
+  });
+
+  testWidgets(
+    'vérifiée : le profil est resynchronisé sans attendre le minuteur',
+    (tester) async {
+      await pump(tester, _pending);
+      states.add(
+        const KycStatusLoaded(kycStatus: 'VERIFIED', verificationStatus: 'ok'),
+      );
+      await tester.pump();
+      // Bien avant les 1,5 s de la navigation automatique.
+      verify(() => authBloc.add(const AuthProfileRefreshRequested())).called(1);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 400));
+    },
+  );
+
+  testWidgets('en cours : pas de resynchronisation du profil', (tester) async {
+    await pump(tester, _pending);
+    states.add(_pending);
+    await tester.pump();
+    verifyNever(() => authBloc.add(const AuthProfileRefreshRequested()));
+    await tester.pump(const Duration(minutes: 6));
   });
 }

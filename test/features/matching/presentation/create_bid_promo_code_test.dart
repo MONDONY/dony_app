@@ -306,6 +306,35 @@ void main() {
     expect(find.widgetWithText(FilledButton, 'Appliquer'), findsOneWidget);
   });
 
+  testWidgets('Appliquer / Apply : une ligne, pleine largeur sous le champ, '
+      'à 360 dp', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    for (final (english, label, header) in [
+      (false, 'Appliquer', 'CODE PROMO (OPTIONNEL)'),
+      (true, 'Apply', 'PROMO CODE (OPTIONAL)'),
+    ]) {
+      if (english) useEnglish();
+      await openSheet(tester);
+      await scrollTo(tester, find.text(header));
+      final button = find.widgetWithText(FilledButton, label);
+      expect(button, findsOneWidget);
+      final text = tester.widget<Text>(find.text(label));
+      expect(text.maxLines, 1);
+      expect(text.style?.fontSize, isNull);
+      expect(tester.getSize(button).height, 52);
+      final field = find.byType(TextFormField).last;
+      // Sous le champ, même largeur : le libellé n'est plus à l'étroit.
+      expect(
+        tester.getRect(button).top,
+        greaterThanOrEqualTo(tester.getRect(field).bottom),
+      );
+      expect(tester.getSize(button).width, tester.getSize(field).width);
+      expect(tester.takeException(), isNull);
+    }
+  });
+
   // ── 2. Dispatch de l'événement ───────────────────────────────────────────
 
   testWidgets('Appliquer dispatche BidQuoteRequested avec le code saisi', (

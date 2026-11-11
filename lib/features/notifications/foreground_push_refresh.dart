@@ -38,6 +38,15 @@ class ForegroundPushRefresh {
       activityIndicators: false,
       profile: true,
     ),
+    // Décision de l'équipe sur la demande GP Pro : le statut et le badge du
+    // profil changent, ils doivent suivre sans relancer l'app.
+    'GP_PRO_APPROVED' ||
+    'GP_PRO_REJECTED' ||
+    'GP_PRO_REVOKED' => const ForegroundPushRefresh(
+      notificationFeed: true,
+      activityIndicators: false,
+      profile: true,
+    ),
     'SUPPORT_MESSAGE' => const ForegroundPushRefresh(
       notificationFeed: true,
       activityIndicators: false,

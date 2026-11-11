@@ -11,7 +11,8 @@ import 'package:flutter/widgets.dart';
 /// « Redevenir particulier », partagé par « Modifier le profil » et l'écran GP
 /// Pro : la même confirmation légère, puis `GpProCubit.resign()`.
 ///
-/// Confirmation à un seul bouton : un tap à côté de la boîte annule.
+/// Confirmation avec « Annuler » (libellé par défaut du dialogue) et le
+/// bouton destructif.
 Future<void> confirmGpProResign(BuildContext context, GpProCubit cubit) async {
   final l = context.l10n;
   final confirmed = await DonyDialog.show(
@@ -19,7 +20,6 @@ Future<void> confirmGpProResign(BuildContext context, GpProCubit cubit) async {
     title: l.gpProResignConfirmTitle,
     message: l.gpProResignConfirmBody,
     confirmLabel: l.gpProManageResign,
-    showCancel: false,
     variant: DonyDialogVariant.destructive,
     iconAsset: 'circle-alert',
   );

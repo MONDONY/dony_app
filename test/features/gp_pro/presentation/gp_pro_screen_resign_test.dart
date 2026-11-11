@@ -152,6 +152,26 @@ void main() {
     expect(find.text(fr.gpProActiveTitle), findsOneWidget);
   });
 
+  testWidgets('confirmation : « Annuler » ferme sans rien retirer', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.tap(resignButton('Redevenir particulier'));
+    await tester.pumpAndSettle();
+
+    final cancel = find.descendant(
+      of: find.byType(Dialog),
+      matching: find.text('Annuler'),
+    );
+    expect(cancel, findsOneWidget);
+    await tester.tap(cancel);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Dialog), findsNothing);
+    verifyNever(() => repo.resign());
+    expect(find.text(fr.gpProActiveTitle), findsOneWidget);
+  });
+
   testWidgets('confirmé : resign, retour au profil, profil mis à jour sans '
       'badge, confirmation discrète', (tester) async {
     when(
@@ -252,6 +272,7 @@ void main() {
     await tester.tap(button);
     await tester.pumpAndSettle();
     expect(find.text('Back to individual?'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

@@ -236,6 +236,9 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         _pollInterval = const Duration(seconds: 30);
         if (state.kycStatus == 'VERIFIED') {
           _stopPolling();
+          // Resynchronise le profil tout de suite, sans attendre la
+          // fermeture de la feuille.
+          widget.authBloc.add(const AuthProfileRefreshRequested());
           // Cancellable timer: auto-close after a short visual delay.
           _autoNavTimer = Timer(
             const Duration(milliseconds: 1500),
