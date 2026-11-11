@@ -23308,8 +23308,6 @@
   "@taxInfoCollectPrefilled": {"description": "En-tête : affiché seulement si au moins un champ vient de la pièce vérifiée (brouillon avocat)."},
   "taxInfoCollectMissing": "Il nous manque seulement : {fields}.",
   "@taxInfoCollectMissing": {"description": "En-tête : liste des champs manquants (brouillon avocat).", "placeholders": {"fields": {"type": "String", "example": "votre adresse et votre numéro fiscal"}}},
-  "taxInfoListPair": "{first} et {second}",
-  "@taxInfoListPair": {"description": "Réunit les deux derniers éléments d'une liste de champs manquants.", "placeholders": {"first": {"type": "String", "example": "votre adresse"}, "second": {"type": "String", "example": "votre numéro fiscal"}}},
   "taxInfoMissingName": "vos nom et prénom",
   "@taxInfoMissingName": {"description": "Champ manquant cité dans l'en-tête."},
   "taxInfoMissingBirthDate": "votre date de naissance",

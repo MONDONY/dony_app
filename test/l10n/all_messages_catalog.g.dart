@@ -6376,7 +6376,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'taxInfoCollectNoTax': (l) => l.taxInfoCollectNoTax,
   'taxInfoCollectPrefilled': (l) => l.taxInfoCollectPrefilled,
   'taxInfoCollectMissing': (l) => l.taxInfoCollectMissing(placeholderMarker('fields')),
-  'taxInfoListPair': (l) => l.taxInfoListPair(placeholderMarker('first'), placeholderMarker('second')),
   'taxInfoMissingName': (l) => l.taxInfoMissingName,
   'taxInfoMissingBirthDate': (l) => l.taxInfoMissingBirthDate,
   'taxInfoMissingAddress': (l) => l.taxInfoMissingAddress,
@@ -7115,6 +7114,5 @@ const textParameters = <String, List<String>>{
   'publishBlockedResumeOn': ['date'],
   'publishBlockedResumeOnFirst': ['month'],
   'taxInfoCollectMissing': ['fields'],
-  'taxInfoListPair': ['first', 'second'],
   'taxInfoAddressCountry': ['country'],
 };

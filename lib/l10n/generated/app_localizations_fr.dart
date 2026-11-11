@@ -23982,11 +23982,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String taxInfoListPair(String first, String second) {
-    return '$first et $second';
-  }
-
-  @override
   String get taxInfoMissingName => 'vos nom et prénom';
 
   @override

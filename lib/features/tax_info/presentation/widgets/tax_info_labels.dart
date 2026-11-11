@@ -53,9 +53,6 @@ extension TaxInfoLabels on AppLocalizations {
   /// rien à citer.
   String? taxInfoMissingList(List<TaxInfoField> fields) {
     final names = [for (final f in fields) ?taxInfoMissingFieldName(f)];
-    if (names.isEmpty) return null;
-    if (names.length == 1) return names.single;
-    final head = names.sublist(0, names.length - 1).join(', ');
-    return taxInfoListPair(head, names.last);
+    return names.isEmpty ? null : joinList(this, names);
   }
 }

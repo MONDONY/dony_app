@@ -1039,4 +1039,23 @@ void main() {
     }
     expect(isShellTabRoute('/profile/tax-info'), isFalse);
   });
+
+  test('TAX_INFO_REQUEST « pays seul » : même écran, portée en paramètre', () {
+    expect(
+      resolveNotificationRoute('TAX_INFO_REQUEST', {
+        'scope': 'RESIDENCE_COUNTRY',
+        'route': '/profile/tax-info',
+      }),
+      '/profile/tax-info?scope=residence',
+    );
+    expect(
+      resolveNotificationRoute('TAX_INFO_REQUEST', {'scope': 'TAX_INFO'}),
+      '/profile/tax-info',
+    );
+    // Le récapitulatif annuel n'a pas de portée.
+    expect(
+      resolveNotificationRoute('TAX_STATEMENT', {'scope': 'RESIDENCE_COUNTRY'}),
+      '/profile/tax-info',
+    );
+  });
 }

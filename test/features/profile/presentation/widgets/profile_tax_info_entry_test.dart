@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../tax_info/tax_info_targeted_fixtures.dart';
 import '../../../tax_info/tax_info_test_helpers.dart';
 
 class _MockRepo extends Mock implements TaxInfoRepository {}
@@ -200,6 +201,54 @@ void main() {
           properties: {'variant': 'row'},
         ),
       ).called(1);
+    });
+  });
+
+  group('collecte ciblée (yadony-back #730)', () {
+    testWidgets('INFO_REQUIRED demandé : bannière', (tester) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kFranceDiditNifMissing);
+      await pump(tester);
+      expect(banner(), findsOneWidget);
+      expect(row(), findsNothing);
+    });
+
+    testWidgets('INFO_REQUIRED pas encore demandé : ligne « À compléter »', (
+      tester,
+    ) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kAllMissing);
+      await pump(tester);
+      expect(banner(), findsNothing);
+      expect(row(), findsOneWidget);
+      expect(find.text(fr.taxInfoRowSubtitleToComplete), findsOneWidget);
+    });
+
+    testWidgets('COMPLETE : ligne « Voir ou modifier »', (tester) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kComplete);
+      await pump(tester);
+      expect(row(), findsOneWidget);
+      expect(find.text(fr.taxInfoRowSubtitle), findsOneWidget);
+    });
+
+    for (final entry in {
+      'hors périmètre': kOutOfScope,
+      'pays inconnu': kResidence,
+    }.entries) {
+      testWidgets('${entry.key} : aucune entrée visible', (tester) async {
+        when(() => repo.fetch()).thenAnswer((_) async => entry.value);
+        await pump(tester);
+        expect(banner(), findsNothing);
+        expect(row(), findsNothing);
+        expect(find.text(fr.taxInfoRowLabel), findsNothing);
+      });
+    }
+
+    testWidgets('en, à 360 dp : « To complete » sans exception', (
+      tester,
+    ) async {
+      when(() => repo.fetch()).thenAnswer((_) async => kAllMissing);
+      await pump(tester, locale: AppL10n.en);
+      expect(find.text(en.taxInfoRowSubtitleToComplete), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 

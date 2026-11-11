@@ -38340,12 +38340,6 @@ abstract class AppLocalizations {
   /// **'Il nous manque seulement : {fields}.'**
   String taxInfoCollectMissing(String fields);
 
-  /// Réunit les deux derniers éléments d'une liste de champs manquants.
-  ///
-  /// In fr, this message translates to:
-  /// **'{first} et {second}'**
-  String taxInfoListPair(String first, String second);
-
   /// Champ manquant cité dans l'en-tête.
   ///
   /// In fr, this message translates to:
