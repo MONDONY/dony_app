@@ -7,6 +7,7 @@ import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/presentation/announcements_inbox_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -20,9 +21,12 @@ NotificationModel _annonce({
   required String id,
   String title = 'Maintenance ce soir',
   bool read = false,
+  String type = 'ADMIN_BROADCAST',
+  String? deeplink,
 }) => NotificationModel(
   id: id,
-  type: 'ADMIN_BROADCAST',
+  type: type,
+  deeplink: deeplink,
   category: 'annonce',
   title: title,
   body: 'Le service sera interrompu de 22 h à 23 h.',
@@ -167,5 +171,95 @@ void main() {
 
     expect(find.text('Loading error'), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
+  });
+
+  group('navigation au tap', () {
+    Future<List<String>> tapAndCollect(
+      WidgetTester tester,
+      NotificationModel a,
+    ) async {
+      stub(AnnouncementsInboxLoaded([a]));
+      final visited = <String>[];
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const AnnouncementsInboxScreen(),
+          ),
+          for (final p in [
+            '/profile/gp-pro',
+            '/profile/tax-info',
+            '/notifications/:id',
+          ])
+            GoRoute(
+              path: p,
+              builder: (_, state) {
+                visited.add(state.uri.toString());
+                return const Scaffold(body: Text('cible'));
+              },
+            ),
+        ],
+      );
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Maintenance ce soir'));
+      await tester.pumpAndSettle();
+      return visited;
+    }
+
+    testWidgets('GP_PRO_REVOKED avec deeplink ouvre /profile/gp-pro', (
+      tester,
+    ) async {
+      final visited = await tapAndCollect(
+        tester,
+        _annonce(
+          id: 'a',
+          type: 'GP_PRO_REVOKED',
+          deeplink: 'yadony://profile/gp-pro',
+        ),
+      );
+      expect(visited, ['/profile/gp-pro']);
+    });
+
+    for (final type in ['GP_PRO_APPROVED', 'GP_PRO_REJECTED']) {
+      testWidgets('$type sans deeplink passe par le resolver', (tester) async {
+        final visited = await tapAndCollect(
+          tester,
+          _annonce(id: 'a', type: type),
+        );
+        expect(visited, ['/profile/gp-pro']);
+      });
+    }
+
+    testWidgets('TAX_STATEMENT ouvre /profile/tax-info', (tester) async {
+      final visited = await tapAndCollect(
+        tester,
+        _annonce(id: 'a', type: 'TAX_STATEMENT'),
+      );
+      expect(visited, ['/profile/tax-info']);
+    });
+
+    testWidgets('type inconnu : détail générique, lue quand même', (
+      tester,
+    ) async {
+      final visited = await tapAndCollect(
+        tester,
+        _annonce(id: 'abc', type: 'PROMO'),
+      );
+      expect(visited, ['/notifications/abc']);
+      verify(
+        () => bloc.add(any(that: isA<AnnouncementsInboxMarkReadRequested>())),
+      ).called(1);
+    });
+
+    testWidgets('deeplink vers une route inconnue : détail générique', (
+      tester,
+    ) async {
+      final visited = await tapAndCollect(
+        tester,
+        _annonce(id: 'abc', type: 'PROMO', deeplink: 'yadony://nulle-part'),
+      );
+      expect(visited, ['/notifications/abc']);
+    });
   });
 }
