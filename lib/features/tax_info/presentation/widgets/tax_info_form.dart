@@ -4,7 +4,6 @@ import 'package:dony/features/tax_info/bloc/tax_info_cubit.dart';
 import 'package:dony/features/tax_info/bloc/tax_info_state.dart';
 import 'package:dony/features/tax_info/presentation/widgets/tax_info_labels.dart';
 import 'package:dony/features/tax_info/presentation/widgets/tax_residence_picker.dart';
-import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -245,7 +244,7 @@ class _TaxInfoFormState extends State<TaxInfoForm> {
                 DonyTextField.tappable(
                   key: const Key('tax_info_country'),
                   label: l.taxInfoCountryLabel,
-                  value: code == null ? null : countryName(l, code),
+                  value: code == null ? null : taxCountryName(l, code),
                   trailing: DonyIcon(
                     'chevron-right',
                     color: cs.onSurfaceVariant,

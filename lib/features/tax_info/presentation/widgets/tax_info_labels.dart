@@ -1,5 +1,6 @@
 import 'package:dony/features/tax_info/bloc/tax_info_state.dart';
 import 'package:dony/features/tax_info/data/models/tax_info.dart';
+import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 
 /// Page derrière « En savoir plus ».
@@ -55,3 +56,23 @@ extension TaxInfoLabels on AppLocalizations {
     return names.isEmpty ? null : joinList(this, names);
   }
 }
+
+/// Nom affichable d'un pays pour les informations fiscales : [countryName],
+/// plus les pays de l'Union absents du catalogue de l'app (BG, CZ, DK, HU,
+/// PL, RO, SE), proposés seulement ici (`residenceCountryChoices`, pays
+/// d'émission du numéro).
+///
+/// Volontairement hors de [countryName] : [knownCountryCode] s'en sert pour
+/// décider si un pays renvoyé par la recherche d'adresse est connu de l'app,
+/// et ces pays ne doivent rien changer aux autres écrans (adresses de
+/// retrait, livraison, Réglages).
+String taxCountryName(AppLocalizations l, String code) => switch (code) {
+  'BG' => l.countryNameBg,
+  'CZ' => l.countryNameCz,
+  'DK' => l.countryNameDk,
+  'HU' => l.countryNameHu,
+  'PL' => l.countryNamePl,
+  'RO' => l.countryNameRo,
+  'SE' => l.countryNameSe,
+  _ => countryName(l, code),
+};

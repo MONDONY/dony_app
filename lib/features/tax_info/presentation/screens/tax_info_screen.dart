@@ -10,7 +10,6 @@ import 'package:dony/features/tax_info/presentation/widgets/tax_info_form.dart';
 import 'package:dony/features/tax_info/presentation/widgets/tax_info_identity_section.dart';
 import 'package:dony/features/tax_info/presentation/widgets/tax_info_labels.dart';
 import 'package:dony/features/tax_info/presentation/widgets/tax_residence_picker.dart';
-import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -523,7 +522,7 @@ class _ResidenceView extends StatelessWidget {
             return DonyTextField.tappable(
               key: const Key('tax_info_residence'),
               label: l.taxInfoResidenceLabel,
-              value: code == null ? null : countryName(l, code),
+              value: code == null ? null : taxCountryName(l, code),
               errorText: s.serverRejected(kTaxFieldResidence)
                   ? l.taxInfoFieldInvalid
                   : null,
@@ -586,7 +585,7 @@ class _Summary extends StatelessWidget {
     final country = info.taxCountry;
     final rows = [
       (l.taxInfoNumberLabel, info.maskedTaxIdentificationNumber ?? _masked),
-      if (country != null) (l.taxInfoCountryLabel, countryName(l, country)),
+      if (country != null) (l.taxInfoCountryLabel, taxCountryName(l, country)),
       (
         l.taxInfoSummaryVatLabel,
         info.maskedVatNumber ??

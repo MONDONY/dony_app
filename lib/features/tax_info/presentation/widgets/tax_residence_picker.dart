@@ -1,7 +1,7 @@
 import 'package:dony/core/currency/country_catalog.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/l10n/country_names.dart';
+import 'package:dony/features/tax_info/presentation/widgets/tax_info_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -90,7 +90,7 @@ class _TaxResidencePickerListState extends State<TaxResidencePickerList> {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final named = [
-      for (final code in widget.choices) (code, countryName(l, code)),
+      for (final code in widget.choices) (code, taxCountryName(l, code)),
     ]..sort((a, b) => _fold(a.$2).compareTo(_fold(b.$2)));
     return Column(
       mainAxisSize: MainAxisSize.min,
