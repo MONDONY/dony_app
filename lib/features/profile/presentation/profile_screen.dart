@@ -18,6 +18,7 @@ import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_menu_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_skeleton.dart';
+import 'package:dony/features/profile/presentation/widgets/profile_tax_info_entry.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -489,6 +490,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (showAccountSection) gap,
       animated(ProfileMoneySection(user: user)),
       gap,
+      // Bannière ou ligne « Informations fiscales » (DAC7) : porte son propre
+      // espacement bas, et ne laisse aucun vide quand elle est absente.
+      ProfileTaxInfoEntry(user: user),
       animated(ProfileGpProSection(user: user)),
       gap,
       animated(ProfileReputationSection(user: user)),
