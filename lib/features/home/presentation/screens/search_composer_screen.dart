@@ -173,6 +173,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
                 onDepartureCleared: () => _clearDeparture(f),
                 onArrivalCleared: () => _clearArrival(f),
                 onSwap: () => _update(f.swapCorridor()),
+                allowFreeText: true,
               ).animate().fadeIn(duration: 250.ms),
 
               SearchSectionLabel(l.homeComposerSectionWhen),

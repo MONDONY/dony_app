@@ -284,6 +284,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
               onDepartureCleared: () => _departureCityNotifier.value = null,
               onArrivalCleared: () => _arrivalCityNotifier.value = null,
               onSwap: _swapCities,
+              allowFreeText: true,
             ).animate().fadeIn(duration: 250.ms),
             const SizedBox(height: DonySpacing.base),
 

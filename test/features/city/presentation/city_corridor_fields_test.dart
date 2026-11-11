@@ -63,6 +63,8 @@ void main() {
     String? arrivalError,
     bool requiredLabels = false,
     VoidCallback? onSwap,
+    bool allowFreeText = false,
+    ValueChanged<CityModel>? onDepartureSelected,
   }) {
     return MaterialApp(
       theme: AppTheme.light(),
@@ -76,9 +78,10 @@ void main() {
             departureError: departureError,
             arrivalError: arrivalError,
             requiredLabels: requiredLabels,
+            allowFreeText: allowFreeText,
             departureCityBloc: departureBloc,
             arrivalCityBloc: arrivalBloc,
-            onDepartureSelected: (_) {},
+            onDepartureSelected: onDepartureSelected ?? (_) {},
             onArrivalSelected: (_) {},
             onDepartureCleared: () {},
             onArrivalCleared: () {},
@@ -328,5 +331,31 @@ void main() {
       expect(selected?.name, 'Dakar');
       expect(find.text('Choisissez une ville dans la liste'), findsNothing);
     });
+  });
+
+  testWidgets('allowFreeText : la ville tapée remonte au parent', (
+    tester,
+  ) async {
+    final got = <CityModel>[];
+    await tester.pumpWidget(
+      build(allowFreeText: true, onDepartureSelected: got.add),
+    );
+    await tester.enterText(find.byKey(const Key('dep')), 'Lyon');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    expect(got.single.name, 'Lyon');
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('sans allowFreeText : la ville libre ne remonte pas', (
+    tester,
+  ) async {
+    final got = <CityModel>[];
+    await tester.pumpWidget(build(onDepartureSelected: got.add));
+    await tester.enterText(find.byKey(const Key('dep')), 'Lyon');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    expect(got, isEmpty);
+    await tester.pump(const Duration(seconds: 1));
   });
 }
