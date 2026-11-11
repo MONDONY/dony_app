@@ -48,13 +48,13 @@ class TaxInfoScreen extends StatelessWidget {
   };
 
   /// Pays hors périmètre lu à l'ouverture : l'écran se ferme seul (la route
-  /// « redirige »), avec un mot d'explication.
-  static bool _becameNotConcerned(TaxInfoState p, TaxInfoState c) =>
-      p.load != TaxInfoLoadStatus.unavailable &&
-      c.load == TaxInfoLoadStatus.unavailable &&
-      c.collection == TaxInfoCollectionStatus.nePasSolliciter;
+  /// « redirige »), avec un mot d'explication. Voir [_NotConcernedCloser].
+  static bool _notConcerned(TaxInfoState s) =>
+      s.load == TaxInfoLoadStatus.unavailable &&
+      s.collection == TaxInfoCollectionStatus.nePasSolliciter &&
+      s.errorCode == null;
 
-  void _close(BuildContext context) {
+  static void _close(BuildContext context) {
     if (context.canPop()) {
       context.pop();
     } else {
@@ -69,7 +69,6 @@ class TaxInfoScreen extends StatelessWidget {
       listenWhen: (p, c) =>
           (c.saved && !p.saved) ||
           c.residenceSaves != p.residenceSaves ||
-          _becameNotConcerned(p, c) ||
           (c.errorCode != null &&
               (c.errorCode != p.errorCode || c.errorField != p.errorField) &&
               // Un champ refusé s'affiche sous le champ, pas en doublon.
@@ -93,16 +92,6 @@ class TaxInfoScreen extends StatelessWidget {
             _close(context);
             return;
           }
-        }
-        if (s.load == TaxInfoLoadStatus.unavailable &&
-            s.collection == TaxInfoCollectionStatus.nePasSolliciter &&
-            s.errorCode == null) {
-          DonySnackbar.show(
-            context,
-            message: l.taxInfoNotConcerned,
-          );
-          _close(context);
-          return;
         }
         if (s.saved) {
           DonySnackbar.show(
@@ -221,6 +210,8 @@ class TaxInfoScreen extends StatelessWidget {
           actionLabel: l.commonRetry,
           onAction: () => unawaited(cubit.load()),
         );
+      case _View.unavailable when _notConcerned(s):
+        return const _NotConcernedCloser();
       case _View.unavailable:
         return DonyEmptyState(
           iconAsset: 'landmark',
@@ -255,6 +246,33 @@ class TaxInfoScreen extends StatelessWidget {
         );
     }
   }
+}
+
+/// Pays hors périmètre : rien à demander, l'écran n'est jamais proposé. S'il
+/// est ouvert quand même (ancienne notification, lien), il se ferme dès la
+/// première image, avec un mot. Un widget plutôt que le seul `listener` : la
+/// lecture peut aboutir avant que l'écran l'écoute.
+class _NotConcernedCloser extends StatefulWidget {
+  const _NotConcernedCloser();
+
+  @override
+  State<_NotConcernedCloser> createState() => _NotConcernedCloserState();
+}
+
+class _NotConcernedCloserState extends State<_NotConcernedCloser> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      DonySnackbar.show(context, message: context.l10n.taxInfoNotConcerned);
+      TaxInfoScreen._close(context);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      const SizedBox.expand(key: Key('tax_info_not_concerned'));
 }
 
 /// Encadré d'information de l'écran : icône à gauche, contenu à droite.
