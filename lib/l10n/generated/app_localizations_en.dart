@@ -23694,7 +23694,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taxInfoNumberInvalid =>
-      'Between 4 and 40 characters: letters, digits, space, dot, hyphen or slash.';
+      'Between 4 and 40 characters: letters and digits, with spaces, dots, hyphens or slashes in the middle.';
 
   @override
   String get taxInfoCountryLabel => 'Country that issued the number';
@@ -23777,4 +23777,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taxInfoRowSubtitle => 'View or edit';
+
+  @override
+  String get taxInfoCountryHint => 'The country that issued this number.';
+
+  @override
+  String get taxInfoSaveMissingNumber =>
+      'Enter your tax identification number to save.';
+
+  @override
+  String get taxInfoSaveMissingVat => 'Check the VAT number to save.';
+
+  @override
+  String get taxInfoSaveMissingCountry =>
+      'Choose the country that issued the number to save.';
 }

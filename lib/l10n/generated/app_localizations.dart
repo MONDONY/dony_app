@@ -38139,7 +38139,7 @@ abstract class AppLocalizations {
   /// Erreur sous le numéro fiscal non vide et invalide ; remplace l'aide neutre (tax_info_form.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Entre 4 et 40 caractères : lettres, chiffres, espace, point, tiret ou barre oblique.'**
+  /// **'Entre 4 et 40 caractères : lettres et chiffres, avec espace, point, tiret ou barre oblique au milieu.'**
   String get taxInfoNumberInvalid;
 
   /// Champ du pays d'émission du numéro fiscal et titre de la feuille de sélection (tax_info_form.dart).
@@ -38291,6 +38291,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Voir ou modifier'**
   String get taxInfoRowSubtitle;
+
+  /// Aide sous le champ du pays d'émission du numéro fiscal (tax_info_form.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le pays qui a délivré ce numéro.'**
+  String get taxInfoCountryHint;
+
+  /// Aide au-dessus du bouton Enregistrer grisé : le numéro fiscal manque ou est invalide (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Renseignez votre numéro fiscal pour enregistrer.'**
+  String get taxInfoSaveMissingNumber;
+
+  /// Aide au-dessus du bouton Enregistrer grisé : le numéro de TVA est invalide (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez le numéro de TVA pour enregistrer.'**
+  String get taxInfoSaveMissingVat;
+
+  /// Aide au-dessus du bouton Enregistrer grisé : le pays d'émission manque (tax_info_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez le pays d\'émission du numéro pour enregistrer.'**
+  String get taxInfoSaveMissingCountry;
 }
 
 class _AppLocalizationsDelegate

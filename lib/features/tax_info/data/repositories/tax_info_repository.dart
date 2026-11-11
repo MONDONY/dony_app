@@ -6,13 +6,19 @@ import 'package:dony/features/tax_info/data/models/tax_info.dart';
 /// back (dernier segment, ex. `tax-info-invalid`) ou `network` sans réponse.
 /// Ne porte jamais la valeur saisie.
 class TaxInfoException implements Exception {
-  const TaxInfoException(this.code, {this.status});
+  const TaxInfoException(this.code, {this.status, this.field});
 
   final String code;
   final int? status;
 
+  /// Champ refusé par le back (422 `tax-info-invalid`, propriété `field` :
+  /// `taxIdentificationNumber` ou `vatNumber`). Le nom du champ seulement,
+  /// jamais sa valeur.
+  final String? field;
+
   @override
-  String toString() => 'TaxInfoException($code, status: $status)';
+  String toString() =>
+      'TaxInfoException($code, status: $status, field: $field)';
 }
 
 /// La fonction est absente pour ce compte : collecte éteinte (404
@@ -60,7 +66,15 @@ class TaxInfoRepository {
     return TaxInfoException(
       _problemCode(e.response?.data) ?? 'unknown',
       status: status,
+      field: _problemField(e.response?.data),
     );
+  }
+
+  /// Nom du champ refusé (extension `field` du ProblemDetail), jamais sa valeur.
+  static String? _problemField(Object? data) {
+    if (data is! Map) return null;
+    final field = data['field'];
+    return field is String && field.isNotEmpty ? field : null;
   }
 
   /// Dernier segment du `type` RFC 7807, sinon `code` (champ d'extension).

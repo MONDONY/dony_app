@@ -2,7 +2,9 @@ import 'package:dony/features/tax_info/bloc/tax_info_state.dart';
 import 'package:dony/l10n/l10n.dart';
 
 /// Page de l'administration fiscale derrière « En savoir plus ».
-final Uri kTaxInfoLearnMoreUrl = Uri.parse('https://www.impots.gouv.fr');
+final Uri kTaxInfoLearnMoreUrl = Uri.parse(
+  'https://www.impots.gouv.fr/economie-collaborative-et-plateformes-numeriques',
+);
 
 /// Libellés traduits des erreurs d'enregistrement des informations fiscales.
 extension TaxInfoLabels on AppLocalizations {

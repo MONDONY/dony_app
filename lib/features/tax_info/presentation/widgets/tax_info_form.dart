@@ -85,14 +85,15 @@ class _TaxInfoFormState extends State<TaxInfoForm> {
         BlocBuilder<TaxInfoCubit, TaxInfoState>(
           buildWhen: (p, c) =>
               p.isTaxNumberInvalid != c.isTaxNumberInvalid ||
-              p.errorCode != c.errorCode ||
+              p.serverRejectedTaxNumber != c.serverRejectedTaxNumber ||
               p.submitting != c.submitting,
           builder: (context, state) {
             // Erreur dès que le champ est non vide et invalide, ou si le
-            // serveur a refusé ce numéro. L'aide neutre revient sinon.
+            // serveur a refusé ce numéro (et non la TVA). L'aide neutre
+            // revient sinon.
             final errorText = state.isTaxNumberInvalid
                 ? l.taxInfoNumberInvalid
-                : (state.errorCode == kTaxInfoInvalidCode
+                : (state.serverRejectedTaxNumber
                       ? l.taxInfoError(kTaxInfoInvalidCode)
                       : null);
             return Column(
@@ -108,6 +109,14 @@ class _TaxInfoFormState extends State<TaxInfoForm> {
                     inputFormatters: [
                       LengthLimitingTextInputFormatter(kTaxNumberMaxLength),
                     ],
+                    // Identifiant fiscal : ni correcteur, ni suggestions, ni
+                    // apprentissage du clavier ; majuscules (le back met en
+                    // majuscules de toute façon).
+                    keyboardType: TextInputType.text,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    enableIMEPersonalizedLearning: false,
+                    textCapitalization: TextCapitalization.characters,
                     errorText: errorText,
                     errorMaxLines: 3,
                   ),
@@ -129,30 +138,62 @@ class _TaxInfoFormState extends State<TaxInfoForm> {
           buildWhen: (p, c) => p.taxCountry != c.taxCountry,
           builder: (context, state) {
             final code = state.taxCountry;
-            return DonyTextField.tappable(
-              key: const Key('tax_info_country'),
-              label: l.taxInfoCountryLabel,
-              value: code == null ? null : countryName(l, code),
-              trailing: DonyIcon('chevron-right', color: cs.onSurfaceVariant),
-              onTap: () => _pickCountry(code),
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DonyTextField.tappable(
+                  key: const Key('tax_info_country'),
+                  label: l.taxInfoCountryLabel,
+                  value: code == null ? null : countryName(l, code),
+                  trailing: DonyIcon(
+                    'chevron-right',
+                    color: cs.onSurfaceVariant,
+                  ),
+                  onTap: () => _pickCountry(code),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: DonySpacing.xs),
+                  child: Text(
+                    l.taxInfoCountryHint,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ),
+              ],
             );
           },
         ),
         const SizedBox(height: DonySpacing.md),
         BlocBuilder<TaxInfoCubit, TaxInfoState>(
-          buildWhen: (p, c) => p.submitting != c.submitting,
-          builder: (context, state) => DonyReplayMask(
-            child: DonyTextField(
-              key: const Key('tax_info_vat'),
-              controller: _vat,
-              label: l.taxInfoVatLabel,
-              enabled: !state.submitting,
-              textInputAction: TextInputAction.done,
-              inputFormatters: [
-                LengthLimitingTextInputFormatter(kVatNumberMaxLength),
-              ],
-            ),
-          ),
+          buildWhen: (p, c) =>
+              p.isVatInvalid != c.isVatInvalid ||
+              p.serverRejectedVat != c.serverRejectedVat ||
+              p.submitting != c.submitting,
+          builder: (context, state) {
+            final errorText = state.isVatInvalid
+                ? l.taxInfoNumberInvalid
+                : (state.serverRejectedVat
+                      ? l.taxInfoError(kTaxInfoInvalidCode)
+                      : null);
+            return DonyReplayMask(
+              child: DonyTextField(
+                key: const Key('tax_info_vat'),
+                controller: _vat,
+                label: l.taxInfoVatLabel,
+                enabled: !state.submitting,
+                textInputAction: TextInputAction.done,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(kVatNumberMaxLength),
+                ],
+                keyboardType: TextInputType.text,
+                autocorrect: false,
+                enableSuggestions: false,
+                enableIMEPersonalizedLearning: false,
+                textCapitalization: TextCapitalization.characters,
+                errorText: errorText,
+                errorMaxLines: 3,
+              ),
+            );
+          },
         ),
       ],
     );

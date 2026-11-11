@@ -11683,7 +11683,7 @@
   "@taxInfoNumberLabel": {"description": "Champ du numéro d'identification fiscale et libellé de la fiche (tax_info_screen.dart)."},
   "taxInfoNumberHint": "The tax identification number issued by your country of tax residence.",
   "@taxInfoNumberHint": {"description": "Aide sous le champ du numéro fiscal (tax_info_form.dart)."},
-  "taxInfoNumberInvalid": "Between 4 and 40 characters: letters, digits, space, dot, hyphen or slash.",
+  "taxInfoNumberInvalid": "Between 4 and 40 characters: letters and digits, with spaces, dots, hyphens or slashes in the middle.",
   "@taxInfoNumberInvalid": {"description": "Erreur sous le numéro fiscal non vide et invalide ; remplace l'aide neutre (tax_info_form.dart)."},
   "taxInfoCountryLabel": "Country that issued the number",
   "@taxInfoCountryLabel": {"description": "Champ du pays d'émission du numéro fiscal et titre de la feuille de sélection (tax_info_form.dart)."},
@@ -11734,5 +11734,13 @@
   "taxInfoRowLabel": "Tax information",
   "@taxInfoRowLabel": {"description": "Ligne discrète du Profil pour un voyageur qui a déjà fourni ses informations (tax_info_banner.dart)."},
   "taxInfoRowSubtitle": "View or edit",
-  "@taxInfoRowSubtitle": {"description": "Sous-titre de la ligne Informations fiscales du Profil (tax_info_banner.dart)."}
+  "@taxInfoRowSubtitle": {"description": "Sous-titre de la ligne Informations fiscales du Profil (tax_info_banner.dart)."},
+  "taxInfoCountryHint": "The country that issued this number.",
+  "@taxInfoCountryHint": {"description": "Aide sous le champ du pays d'émission du numéro fiscal (tax_info_form.dart)."},
+  "taxInfoSaveMissingNumber": "Enter your tax identification number to save.",
+  "@taxInfoSaveMissingNumber": {"description": "Aide au-dessus du bouton Enregistrer grisé : le numéro fiscal manque ou est invalide (tax_info_screen.dart)."},
+  "taxInfoSaveMissingVat": "Check the VAT number to save.",
+  "@taxInfoSaveMissingVat": {"description": "Aide au-dessus du bouton Enregistrer grisé : le numéro de TVA est invalide (tax_info_screen.dart)."},
+  "taxInfoSaveMissingCountry": "Choose the country that issued the number to save.",
+  "@taxInfoSaveMissingCountry": {"description": "Aide au-dessus du bouton Enregistrer grisé : le pays d'émission manque (tax_info_screen.dart)."}
 }

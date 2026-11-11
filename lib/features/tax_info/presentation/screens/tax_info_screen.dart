@@ -98,9 +98,30 @@ class TaxInfoScreen extends StatelessWidget {
     switch (view) {
       case _View.form:
         final editing = s.editing;
+        // Bouton grisé : on dit pourquoi, au lieu d'un bouton muet.
+        final missing = s.submitting
+            ? null
+            : !s.isTaxNumberValid
+            ? l.taxInfoSaveMissingNumber
+            : s.isVatInvalid
+            ? l.taxInfoSaveMissingVat
+            : s.taxCountry == null
+            ? l.taxInfoSaveMissingCountry
+            : null;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (missing != null) ...[
+              Text(
+                missing,
+                key: const Key('tax_info_save_missing'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
             DonyButton(
               key: const Key('tax_info_save'),
               label: l.taxInfoSave,

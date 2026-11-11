@@ -99,7 +99,11 @@ class TaxInfoCubit extends Cubit<TaxInfoState> {
         taxNumber: taxNumber,
         vatNumber: vatNumber,
         taxCountry: taxCountry,
-        clearError: taxNumber != null && state.errorCode == kTaxInfoInvalidCode,
+        // Effacée dès que le champ désigné par le serveur change : l'erreur
+        // portait sur la valeur précédente.
+        clearError:
+            (taxNumber != null && state.serverRejectedTaxNumber) ||
+            (vatNumber != null && state.serverRejectedVat),
       ),
     );
   }
@@ -166,7 +170,7 @@ class TaxInfoCubit extends Cubit<TaxInfoState> {
     } on TaxInfoUnavailableException {
       _failSubmit('dac7-disabled', unavailable: true);
     } on TaxInfoException catch (e) {
-      _failSubmit(e.code);
+      _failSubmit(e.code, field: e.field);
     } catch (_) {
       _failSubmit('unknown');
     }
@@ -184,7 +188,10 @@ class TaxInfoCubit extends Cubit<TaxInfoState> {
   }
 
   /// Jamais de donnée saisie : le code d'erreur seul.
-  void _failSubmit(String code, {bool unavailable = false}) {
+  ///
+  /// [unavailable] : plus de formulaire à rejouer, la saisie est effacée de
+  /// l'état. Réseau et 422 la gardent pour un nouvel essai.
+  void _failSubmit(String code, {String? field, bool unavailable = false}) {
     unawaited(
       _analytics.logEvent(
         AnalyticsEvents.taxInfoSaveFailed,
@@ -196,6 +203,9 @@ class TaxInfoCubit extends Cubit<TaxInfoState> {
       state.copyWith(
         submitting: false,
         errorCode: code,
+        errorField: field,
+        taxNumber: unavailable ? '' : null,
+        vatNumber: unavailable ? '' : null,
         load: unavailable ? TaxInfoLoadStatus.unavailable : null,
       ),
     );

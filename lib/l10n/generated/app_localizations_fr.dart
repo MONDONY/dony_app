@@ -23865,7 +23865,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get taxInfoNumberInvalid =>
-      'Entre 4 et 40 caractères : lettres, chiffres, espace, point, tiret ou barre oblique.';
+      'Entre 4 et 40 caractères : lettres et chiffres, avec espace, point, tiret ou barre oblique au milieu.';
 
   @override
   String get taxInfoCountryLabel => 'Pays d\'émission du numéro';
@@ -23948,4 +23948,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get taxInfoRowSubtitle => 'Voir ou modifier';
+
+  @override
+  String get taxInfoCountryHint => 'Le pays qui a délivré ce numéro.';
+
+  @override
+  String get taxInfoSaveMissingNumber =>
+      'Renseignez votre numéro fiscal pour enregistrer.';
+
+  @override
+  String get taxInfoSaveMissingVat =>
+      'Vérifiez le numéro de TVA pour enregistrer.';
+
+  @override
+  String get taxInfoSaveMissingCountry =>
+      'Choisissez le pays d\'émission du numéro pour enregistrer.';
 }

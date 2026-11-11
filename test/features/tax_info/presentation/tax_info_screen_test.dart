@@ -7,6 +7,7 @@ import 'package:dony/features/tax_info/bloc/tax_info_cubit.dart';
 import 'package:dony/features/tax_info/data/models/tax_info.dart';
 import 'package:dony/features/tax_info/data/repositories/tax_info_repository.dart';
 import 'package:dony/features/tax_info/presentation/screens/tax_info_screen.dart';
+import 'package:dony/features/tax_info/presentation/widgets/tax_info_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -237,6 +238,161 @@ void main() {
       expect(field.controller.text.length, 40);
     });
 
+    testWidgets('clavier : ni correcteur, ni suggestions, ni apprentissage, '
+        'majuscules, sur le numéro fiscal ET la TVA', (tester) async {
+      await pump(tester);
+      for (final key in ['tax_info_number', 'tax_info_vat']) {
+        final field = tester.widget<TextField>(
+          find.descendant(
+            of: find.byKey(Key(key)),
+            matching: find.byType(TextField),
+          ),
+        );
+        expect(field.autocorrect, isFalse, reason: key);
+        expect(field.enableSuggestions, isFalse, reason: key);
+        expect(field.enableIMEPersonalizedLearning, isFalse, reason: key);
+        expect(field.textCapitalization, TextCapitalization.characters);
+        expect(field.keyboardType, TextInputType.text, reason: key);
+      }
+    });
+
+    testWidgets('TVA invalide : erreur sous la TVA, bouton grisé avec une aide '
+        'claire ; vide, la TVA est permise', (tester) async {
+      await pump(tester);
+      await tester.enterText(
+        find.byKey(const Key('tax_info_number')),
+        '12345678',
+      );
+      await tester.pump();
+      expect(saveEnabled(tester), isTrue);
+
+      await tester.enterText(find.byKey(const Key('tax_info_vat')), 'F1');
+      await tester.pump();
+      expect(find.text(fr.taxInfoNumberInvalid), findsOneWidget);
+      expect(saveEnabled(tester), isFalse);
+      expect(find.text(fr.taxInfoSaveMissingVat), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('tax_info_vat')), '');
+      await tester.pump();
+      expect(find.text(fr.taxInfoNumberInvalid), findsNothing);
+      expect(saveEnabled(tester), isTrue);
+      expect(find.byKey(const Key('tax_info_save_missing')), findsNothing);
+    });
+
+    testWidgets('aide au-dessus d\'« Enregistrer » grisé : numéro puis pays', (
+      tester,
+    ) async {
+      when(() => repo.fetch()).thenAnswer(
+        (_) async => const TaxInfo(
+          provided: false,
+          solicitation: TaxInfoSolicitation.solliciter,
+        ),
+      );
+      await pump(tester);
+      // Résidence inconnue : pas de pays proposé.
+      expect(find.text(fr.taxInfoCountryHint), findsOneWidget);
+      expect(find.text(fr.taxInfoSaveMissingNumber), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('tax_info_number')),
+        '12345678',
+      );
+      await tester.pump();
+      expect(find.text(fr.taxInfoSaveMissingNumber), findsNothing);
+      expect(find.text(fr.taxInfoSaveMissingCountry), findsOneWidget);
+      expect(saveEnabled(tester), isFalse);
+    });
+
+    testWidgets('422 sur la TVA : l\'erreur s\'affiche sous la TVA, pas sous '
+        'le numéro, et s\'efface avec la TVA', (tester) async {
+      stubSave(
+        () async => throw const TaxInfoException(
+          'tax-info-invalid',
+          status: 422,
+          field: 'vatNumber',
+        ),
+      );
+      await pump(tester);
+      await tester.enterText(
+        find.byKey(const Key('tax_info_number')),
+        '12345678',
+      );
+      await tester.enterText(find.byKey(const Key('tax_info_vat')), 'FR1234');
+      await tester.pump();
+      await tester.tap(save());
+      await tester.pumpAndSettle();
+
+      final errorFinder = find.text(fr.taxInfoErrorInvalid);
+      expect(errorFinder, findsOneWidget);
+      // Sous le champ TVA : on lit l'erreur dans le décor de ce champ.
+      final vatError = tester
+          .widget<TextField>(
+            find.descendant(
+              of: find.byKey(const Key('tax_info_vat')),
+              matching: find.byType(TextField),
+            ),
+          )
+          .decoration
+          ?.errorText;
+      final numberError = tester
+          .widget<TextField>(
+            find.descendant(
+              of: find.byKey(const Key('tax_info_number')),
+              matching: find.byType(TextField),
+            ),
+          )
+          .decoration
+          ?.errorText;
+      expect(vatError, fr.taxInfoErrorInvalid);
+      expect(numberError, isNull);
+
+      // Modifier le numéro n'efface pas l'erreur de la TVA.
+      await tester.enterText(
+        find.byKey(const Key('tax_info_number')),
+        '123456789',
+      );
+      await tester.pump();
+      expect(find.text(fr.taxInfoErrorInvalid), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('tax_info_vat')), 'FR12345');
+      await tester.pump();
+      expect(find.text(fr.taxInfoErrorInvalid), findsNothing);
+    });
+
+    testWidgets('422 sur le numéro : erreur sous le numéro et effacée quand '
+        'le numéro change', (tester) async {
+      stubSave(
+        () async => throw const TaxInfoException(
+          'tax-info-invalid',
+          field: 'taxIdentificationNumber',
+        ),
+      );
+      await pump(tester);
+      await tester.enterText(
+        find.byKey(const Key('tax_info_number')),
+        '12345678',
+      );
+      await tester.pump();
+      await tester.tap(save());
+      await tester.pumpAndSettle();
+      final numberError = tester
+          .widget<TextField>(
+            find.descendant(
+              of: find.byKey(const Key('tax_info_number')),
+              matching: find.byType(TextField),
+            ),
+          )
+          .decoration
+          ?.errorText;
+      expect(numberError, fr.taxInfoErrorInvalid);
+      await tester.enterText(
+        find.byKey(const Key('tax_info_number')),
+        '12345679',
+      );
+      await tester.pump();
+      expect(find.text(fr.taxInfoErrorInvalid), findsNothing);
+    });
+
     testWidgets('choix du pays dans le catalogue de l\'app', (tester) async {
       await pump(tester);
       await tester.tap(find.byKey(const Key('tax_info_country')));
@@ -450,7 +606,11 @@ void main() {
       await tester.tap(find.byKey(const Key('tax_info_learn_more')));
       await tester.pumpAndSettle();
       expect(launcher.urls, hasLength(1));
-      expect(Uri.parse(launcher.urls.single).host, endsWith('impots.gouv.fr'));
+      expect(
+        launcher.urls.single,
+        'https://www.impots.gouv.fr/economie-collaborative-et-plateformes-numeriques',
+      );
+      expect(kTaxInfoLearnMoreUrl.scheme, 'https');
       expect(launcher.modes.single, PreferredLaunchMode.externalApplication);
     });
   });

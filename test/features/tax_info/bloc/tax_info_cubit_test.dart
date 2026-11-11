@@ -85,12 +85,74 @@ void main() {
       expect(s('1234').isTaxNumberValid, isTrue);
       expect(s(' 12 34 ').isTaxNumberValid, isTrue);
       expect(s('FR-12.34/56').isTaxNumberValid, isTrue);
-      expect(s('Éa1 23').isTaxNumberValid, isTrue);
+      expect(s('Éa1 23').isTaxNumberValid, isFalse);
+      expect(s('ab1 23').isTaxNumberValid, isTrue);
+      // Séparateur en bord : refusé comme par le back.
+      expect(s('-1234').isTaxNumberValid, isFalse);
+      expect(s('1234.').isTaxNumberValid, isFalse);
+      expect(s('12 34 ').isTaxNumberValid, isTrue); // rogné avant contrôle
+      expect(s('1234/').isTaxNumberValid, isFalse);
       expect(s('1' * 40).isTaxNumberValid, isTrue);
       expect(s('1' * 41).isTaxNumberValid, isFalse);
       expect(s('12_34').isTaxNumberValid, isFalse);
       expect(s('12@34').isTaxNumberInvalid, isTrue);
       expect(s('12–34').isTaxNumberValid, isFalse);
+    });
+
+    test(
+      'validation de la TVA : vide permise, sinon même règle que le back',
+      () {
+        TaxInfoState v(String n) => TaxInfoState(vatNumber: n);
+        expect(v('').isVatValid, isTrue);
+        expect(v('   ').isVatValid, isTrue);
+        expect(v('FR12').isVatValid, isTrue);
+        expect(v('FR 12 345 678 901').isVatValid, isTrue);
+        expect(v('FR1').isVatValid, isFalse);
+        expect(v('FR1').isVatInvalid, isTrue);
+        expect(v('FR12_3').isVatInvalid, isTrue);
+        expect(v('-FR12').isVatInvalid, isTrue);
+        expect(v('FR12.').isVatInvalid, isTrue);
+        expect(v('F' * 41).isVatInvalid, isTrue);
+        const ready = TaxInfoState(
+          load: TaxInfoLoadStatus.ready,
+          taxNumber: '12345',
+          taxCountry: 'FR',
+        );
+        expect(ready.copyWith(vatNumber: 'X').canSubmit, isFalse);
+        expect(ready.copyWith(vatNumber: 'FR12').canSubmit, isTrue);
+      },
+    );
+
+    test('toString ne recopie ni le numéro fiscal ni la TVA', () {
+      const s = TaxInfoState(taxNumber: 'SECRET-1234', vatNumber: 'FRVAT-9999');
+      expect('$s', isNot(contains('SECRET')));
+      expect('$s', isNot(contains('FRVAT')));
+      expect(s.toString(), 'TaxInfoState');
+    });
+
+    test('erreur 422 : rattachée au bon champ', () {
+      const nif = TaxInfoState(errorCode: kTaxInfoInvalidCode);
+      expect(nif.serverRejectedTaxNumber, isTrue);
+      expect(nif.serverRejectedVat, isFalse);
+      const nif2 = TaxInfoState(
+        errorCode: kTaxInfoInvalidCode,
+        errorField: kTaxFieldNumber,
+      );
+      expect(nif2.serverRejectedTaxNumber, isTrue);
+      const vat = TaxInfoState(
+        errorCode: kTaxInfoInvalidCode,
+        errorField: kTaxFieldVat,
+      );
+      expect(vat.serverRejectedVat, isTrue);
+      expect(vat.serverRejectedTaxNumber, isFalse);
+      expect(
+        const TaxInfoState(errorCode: 'network').serverRejectedVat,
+        isFalse,
+      );
+      expect(
+        const TaxInfoState(errorCode: 'network').serverRejectedTaxNumber,
+        isFalse,
+      );
     });
 
     test('canSubmit demande chargement prêt, numéro, pays, pas d\'envoi', () {
@@ -254,9 +316,9 @@ void main() {
       stubFetch(_ask);
       final cubit = build();
       await cubit.load();
-      cubit.updateForm(taxNumber: '12345', vatNumber: 'FR9', taxCountry: 'SN');
+      cubit.updateForm(taxNumber: '12345', vatNumber: 'FR99', taxCountry: 'SN');
       expect(cubit.state.taxNumber, '12345');
-      expect(cubit.state.vatNumber, 'FR9');
+      expect(cubit.state.vatNumber, 'FR99');
       expect(cubit.state.taxCountry, 'SN');
       expect(cubit.state.canSubmit, isTrue);
       await cubit.close();
@@ -469,11 +531,14 @@ void main() {
       );
       final cubit = build();
       await cubit.load();
-      cubit.updateForm(taxNumber: '12345678');
+      cubit.updateForm(taxNumber: '12345678', vatNumber: 'FR9999');
       await cubit.submit();
       expect(cubit.state.load, TaxInfoLoadStatus.unavailable);
       expect(cubit.state.errorCode, 'dac7-disabled');
       expect(cubit.state.submitting, isFalse);
+      // Plus de formulaire à rejouer : la saisie ne reste pas en mémoire.
+      expect(cubit.state.taxNumber, isEmpty);
+      expect(cubit.state.vatNumber, isEmpty);
       await cubit.close();
     });
 
@@ -532,6 +597,11 @@ void main() {
       await cubit.close();
       gate.completeError(const TaxInfoException('network'));
       await pending;
+      // Aucune émission après la fermeture : l'état reste celui d'avant l'échec
+      // (un `emit` sur un cubit fermé lèverait une exception).
+      expect(cubit.isClosed, isTrue);
+      expect(cubit.state.submitting, isTrue);
+      expect(cubit.state.errorCode, isNull);
     });
   });
 

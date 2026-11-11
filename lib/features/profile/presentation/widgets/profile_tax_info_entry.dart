@@ -35,7 +35,11 @@ class ProfileTaxInfoEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final current = user;
-    if (current == null || !getIt.isRegistered<TaxInfoPromptCubit>()) {
+    // Voyageurs seulement : le back répond 403 à un expéditeur pur, inutile de
+    // l'interroger à chaque ouverture du Profil et à chaque reprise de l'app.
+    if (current == null ||
+        !current.isTraveler ||
+        !getIt.isRegistered<TaxInfoPromptCubit>()) {
       return const SizedBox.shrink();
     }
     return BlocProvider<TaxInfoPromptCubit>(

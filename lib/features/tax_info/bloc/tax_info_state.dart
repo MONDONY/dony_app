@@ -7,10 +7,21 @@ import 'package:equatable/equatable.dart';
 const int kTaxNumberMinLength = 4;
 const int kTaxNumberMaxLength = 40;
 const int kVatNumberMaxLength = 40;
-final RegExp kTaxNumberPattern = RegExp(r'^[\p{L}\p{N} ./-]+$', unicode: true);
+
+/// Même règle que le back (`TravelerTaxInfoService`) pour le numéro fiscal et
+/// la TVA : lettres et chiffres ASCII, séparateurs (espace, point, tiret, barre
+/// oblique) seulement au milieu. Le back met en majuscules avant de contrôler :
+/// les minuscules passent.
+final RegExp kTaxNumberPattern = RegExp(
+  r'^[A-Za-z0-9](?:[A-Za-z0-9 ./-]*[A-Za-z0-9])?$',
+);
 
 /// Code d'erreur du back pour un numéro refusé (422).
 const String kTaxInfoInvalidCode = 'tax-info-invalid';
+
+/// Champs désignés par la propriété `field` du 422.
+const String kTaxFieldNumber = 'taxIdentificationNumber';
+const String kTaxFieldVat = 'vatNumber';
 
 /// Chargement de l'écran.
 ///
@@ -35,6 +46,7 @@ class TaxInfoState extends Equatable {
     this.submitting = false,
     this.saved = false,
     this.errorCode,
+    this.errorField,
   });
 
   final TaxInfoLoadStatus load;
@@ -55,6 +67,10 @@ class TaxInfoState extends Equatable {
   /// Dernière erreur d'envoi : `tax-info-invalid`, `network`, `unknown`.
   final String? errorCode;
 
+  /// Champ désigné par le 422 (`taxIdentificationNumber` ou `vatNumber`), sinon
+  /// nul (l'erreur se rattache alors au numéro fiscal).
+  final String? errorField;
+
   /// L'écran montre la fiche (forme masquée) plutôt que le formulaire.
   bool get showsSummary => (info?.provided ?? false) && !editing;
 
@@ -70,11 +86,37 @@ class TaxInfoState extends Equatable {
   bool get isTaxNumberInvalid =>
       taxNumber.trim().isNotEmpty && !isTaxNumberValid;
 
+  /// TVA facultative : vide, ou 4 à 40 caractères de la même règle que le
+  /// numéro fiscal.
+  bool get isVatValid {
+    final vat = vatNumber.trim();
+    return vat.isEmpty ||
+        (vat.length >= kTaxNumberMinLength &&
+            vat.length <= kVatNumberMaxLength &&
+            kTaxNumberPattern.hasMatch(vat));
+  }
+
+  bool get isVatInvalid => !isVatValid;
+
+  /// Le serveur a refusé la TVA (422 `field: vatNumber`).
+  bool get serverRejectedVat =>
+      errorCode == kTaxInfoInvalidCode && errorField == kTaxFieldVat;
+
+  /// Le serveur a refusé le numéro fiscal (422, champ désigné ou non : sans
+  /// champ, l'erreur se rattache au numéro).
+  bool get serverRejectedTaxNumber =>
+      errorCode == kTaxInfoInvalidCode && errorField != kTaxFieldVat;
+
   bool get canSubmit =>
       load == TaxInfoLoadStatus.ready &&
       !submitting &&
       isTaxNumberValid &&
+      isVatValid &&
       taxCountry != null;
+
+  /// Aucun `toString` de débogage ne recopie le numéro fiscal ni la TVA saisis.
+  @override
+  bool? get stringify => false;
 
   TaxInfoState copyWith({
     TaxInfoLoadStatus? load,
@@ -86,6 +128,7 @@ class TaxInfoState extends Equatable {
     bool? submitting,
     bool? saved,
     String? errorCode,
+    String? errorField,
     bool clearError = false,
   }) => TaxInfoState(
     load: load ?? this.load,
@@ -97,6 +140,7 @@ class TaxInfoState extends Equatable {
     submitting: submitting ?? this.submitting,
     saved: saved ?? this.saved,
     errorCode: clearError ? null : (errorCode ?? this.errorCode),
+    errorField: clearError ? null : (errorField ?? this.errorField),
   );
 
   @override
@@ -110,6 +154,7 @@ class TaxInfoState extends Equatable {
     submitting,
     saved,
     errorCode,
+    errorField,
   ];
 }
 

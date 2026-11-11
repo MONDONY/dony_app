@@ -8290,6 +8290,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'taxInfoBannerAction': (l) => l.taxInfoBannerAction,
   'taxInfoRowLabel': (l) => l.taxInfoRowLabel,
   'taxInfoRowSubtitle': (l) => l.taxInfoRowSubtitle,
+  'taxInfoCountryHint': (l) => l.taxInfoCountryHint,
+  'taxInfoSaveMissingNumber': (l) => l.taxInfoSaveMissingNumber,
+  'taxInfoSaveMissingVat': (l) => l.taxInfoSaveMissingVat,
+  'taxInfoSaveMissingCountry': (l) => l.taxInfoSaveMissingCountry,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

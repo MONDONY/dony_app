@@ -220,6 +220,40 @@ void main() {
       );
     });
 
+    test('422 : conserve le champ désigné, jamais la valeur', () async {
+      when(() => ds.fetch()).thenThrow(
+        _http(422, {
+          'type': 'https://yadony.com/errors/tax-info-invalid',
+          'field': 'vatNumber',
+          'detail': 'Le numéro SECRET-1 est faux',
+        }),
+      );
+      await expectLater(
+        repo.fetch(),
+        throwsA(
+          isA<TaxInfoException>()
+              .having((e) => e.field, 'field', 'vatNumber')
+              .having(
+                (e) => e.toString(),
+                'toString',
+                isNot(contains('SECRET')),
+              ),
+        ),
+      );
+    });
+
+    test('champ absent ou illisible : nul', () async {
+      when(
+        () => ds.fetch(),
+      ).thenThrow(_http(422, {'type': 'x/tax-info-invalid', 'field': 3}));
+      await expectLater(
+        repo.fetch(),
+        throwsA(
+          isA<TaxInfoException>().having((e) => e.field, 'field', isNull),
+        ),
+      );
+    });
+
     test('code d\'extension quand le type manque', () async {
       when(() => ds.fetch()).thenThrow(_http(500, {'code': 'boom'}));
       await expectLater(

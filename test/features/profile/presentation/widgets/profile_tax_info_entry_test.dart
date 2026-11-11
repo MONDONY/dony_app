@@ -238,6 +238,17 @@ void main() {
       await expectNothing(tester);
     });
 
+    testWidgets(
+      'expéditeur pur (rôle SENDER) : aucune lecture, rien d\'affiché',
+      (tester) async {
+        await pump(tester, user: _user.copyWith(roles: const ['SENDER']));
+        expect(banner(), findsNothing);
+        expect(row(), findsNothing);
+        verifyNever(() => repo.fetch());
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets('pas d\'utilisateur : aucune lecture', (tester) async {
       await pump(tester, user: null);
       expect(banner(), findsNothing);
