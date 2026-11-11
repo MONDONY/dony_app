@@ -589,9 +589,11 @@ void main() {
           country: 'PL',
         ),
       );
-      await tester.pump();
+      // Image de reconstruction, puis fin des animations de focus/défilement
+      // déclenchées par la saisie (horloge factice) avant de lire l'écran.
+      await tester.pumpAndSettle();
 
-      expect(find.text('France'), findsOneWidget);
+      expect(find.text('France', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('édition d\'une adresse hors catalogue (MA) : nom et drapeau', (

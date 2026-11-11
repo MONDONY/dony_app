@@ -7,11 +7,14 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/video_modal/data/video_modal_moments.dart';
+import 'package:flutter/widgets.dart';
 
 /// Une personne ouvre le détail d'un trajet (feuille expéditeur) : le back la
 /// compte pour l'audience du voyageur, et `announcement_viewed` part vers
 /// l'analytics.
 ///
+/// - [origin] : l'écran de détail, pour que le modal « trajet consulté N fois »
+///   s'ouvre dessus (et non au retour sur la liste).
 /// - Le voyageur sur son propre trajet n'est jamais compté.
 /// - Un invité (`viewerId` nul, aucun compte côté back) n'est pas compté par le
 ///   back, mais l'event analytics part : il mesure l'entonnoir visiteur.
@@ -21,6 +24,7 @@ import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 void recordTripView(
   AnnouncementModel announcement, {
   required String? viewerId,
+  BuildContext? origin,
 }) {
   if (viewerId == announcement.travelerId) {
     return;
@@ -30,6 +34,7 @@ void recordTripView(
   VideoModalMoments.notifyTripViewed(
     tripId: announcement.id,
     corridor: tripMomentCorridor(announcement),
+    origin: origin,
   );
   if (getIt.isRegistered<AnalyticsService>()) {
     unawaited(

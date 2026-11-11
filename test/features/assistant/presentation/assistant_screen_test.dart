@@ -726,7 +726,11 @@ void main() {
       initialState: const AssistantState(messages: [_question]),
     );
     await pumpRaw(tester);
-    await tester.pump(const Duration(milliseconds: 500));
+    // Le flux émet après le premier rendu : une image pour livrer l'état au
+    // listener, puis l'animation du SnackBar jusqu'au bout (horloge factice,
+    // aucun délai réel). Un seul pump(500 ms) dépendait de l'ordre des tâches.
+    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.textContaining('n\'est pas parti'), findsOneWidget);
     verify(() => bloc.add(const AssistantEscalationHandled())).called(1);
   });

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_mascotte.dart';
 import 'package:dony/core/design/widgets/dony_success_screen.dart';
@@ -129,6 +130,66 @@ void main() {
       expect(moments.emitted, isEmpty);
     });
   });
+
+  testWidgets(
+    'barre de navigation système : le dernier bouton défile au-dessus d\'elle',
+    (tester) async {
+      // Redmi 720 px de large (densité 2), contenu plus haut que l'écran, barre à 3 boutons : 56 dp réservés en
+      // bas (plus que l'ancienne marge fixe de 48 dp).
+      tester.view
+        ..physicalSize = const Size(720, 700)
+        ..devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      const navBar = 56.0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              padding: const EdgeInsets.only(bottom: navBar),
+              viewPadding: const EdgeInsets.only(bottom: navBar),
+            ),
+            child: child!,
+          ),
+          home: DonySuccessScreen(
+            mascotteType: DonyMascotteType.securise,
+            title: 'Trajet publié !',
+            subtitle: 'Votre trajet est en ligne.',
+            ctaLabel: 'Voir les colis',
+            onCta: () {},
+            secondaryLabel: 'Voir mon trajet',
+            onSecondary: () {},
+            tertiaryLabel: 'Partager',
+            onTertiary: () {},
+            extraActions: [
+              DonySuccessAction(label: 'Configurer', onTap: () {}),
+              DonySuccessAction(label: 'Autre', onTap: () {}),
+            ],
+            secondaryIconAsset: null,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      final scrollable = find.byType(Scrollable).first;
+      await tester.drag(scrollable, const Offset(0, -2000));
+      await tester.pump();
+      final bouton = find.widgetWithText(DonyButton, 'Voir mon trajet');
+      final dernier = find.widgetWithText(DonyButton, 'Autre');
+      final viewportBottom = tester.view.physicalSize.height / 2;
+      // En fin de défilement, le dernier bouton garde sa marge habituelle
+      // (DonySpacing.huge) AU-DESSUS de la barre de navigation : sans l'inset
+      // système, il se retrouvait collé à elle (un tap sur son bas touchait la
+      // touche Accueil).
+      expect(
+        viewportBottom - tester.getBottomLeft(dernier).dy,
+        greaterThanOrEqualTo(navBar + DonySpacing.huge),
+      );
+      expect(
+        tester.getBottomLeft(bouton).dy,
+        lessThan(tester.getTopLeft(dernier).dy),
+      );
+    },
+  );
 
   testWidgets('affiche titre, sous-titre et label du CTA', (tester) async {
     await tester.pumpWidget(host(onCta: () {}));

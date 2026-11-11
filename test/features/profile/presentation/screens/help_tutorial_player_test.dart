@@ -50,6 +50,53 @@ void main() {
       },
     );
 
+    test(
+      'autoPlay : charge la vidéo (lecture seule) au lieu de la préparer',
+      () async {
+        final controller = _FakeYoutubeController();
+        final session = createYoutubeTutorialPlayerSession(
+          const HelpTutorialPlayerConfiguration(
+            videoId: 'dQw4w9WgXcQ',
+            autoPlay: true,
+          ),
+          controllerFactory:
+              ({required key, required params, required onWebResourceError}) =>
+                  controller,
+          systemUi: _RecordingSystemUi(<String>[]),
+        );
+        addTearDown(session.close);
+        final events = <HelpTutorialPlayerEvent>[];
+        final subscription = session.events.listen(events.add);
+        addTearDown(subscription.cancel);
+
+        await pumpEventQueue();
+        expect(controller.loadedVideoIds, ['dQw4w9WgXcQ']);
+        expect(controller.cuedVideoIds, isEmpty);
+
+        controller.completeCue();
+        await pumpEventQueue();
+        expect(events, [HelpTutorialPlayerEvent.ready]);
+      },
+    );
+
+    test(
+      'sans autoPlay (tutoriels d’aide) : la vidéo est seulement préparée',
+      () async {
+        final controller = _FakeYoutubeController();
+        final session = createYoutubeTutorialPlayerSession(
+          _configuration,
+          controllerFactory:
+              ({required key, required params, required onWebResourceError}) =>
+                  controller,
+          systemUi: _RecordingSystemUi(<String>[]),
+        );
+        addTearDown(session.close);
+        await pumpEventQueue();
+        expect(controller.cuedVideoIds, ['dQw4w9WgXcQ']);
+        expect(controller.loadedVideoIds, isEmpty);
+      },
+    );
+
     test('traite une erreur WebView du frame principal comme fatale', () async {
       final controller = _FakeYoutubeController();
       late ValueChanged<YoutubeWebResourceError> resourceErrorCallback;
@@ -382,6 +429,7 @@ final class _FakeYoutubeController implements HelpTutorialYoutubeController {
   final List<String> order;
   final Future<void>? blockedClose;
   final cuedVideoIds = <String>[];
+  final loadedVideoIds = <String>[];
   int abandonCalls = 0;
   int closeCalls = 0;
 
@@ -411,6 +459,12 @@ final class _FakeYoutubeController implements HelpTutorialYoutubeController {
   @override
   Future<void> cueVideoById({required String videoId}) {
     cuedVideoIds.add(videoId);
+    return _cueCompleter.future;
+  }
+
+  @override
+  Future<void> loadVideoById({required String videoId}) {
+    loadedVideoIds.add(videoId);
     return _cueCompleter.future;
   }
 

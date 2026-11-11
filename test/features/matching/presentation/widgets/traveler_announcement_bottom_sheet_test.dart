@@ -41,6 +41,9 @@ import 'package:dony/features/payments/data/payer_phone_memory.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
+import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -315,6 +318,24 @@ class _RealSessionProbe implements FirebaseSessionProbe {
   bool get hasRealSession => true;
 }
 
+/// Retient les consultations de trajet et l'écran d'où elles partent, sans
+/// stockage (le compteur local a ses propres tests).
+class _TripViewSpyMoments extends RecordingMoments {
+  final List<String> tripIds = [];
+  final List<BuildContext?> tripOrigins = [];
+
+  @override
+  Future<int> recordTripView(
+    String tripId, {
+    VideoModalMomentCorridor? corridor,
+    BuildContext? origin,
+  }) async {
+    tripIds.add(tripId);
+    tripOrigins.add(origin);
+    return 1;
+  }
+}
+
 void main() {
   setUpAll(() {
     initializeDateFormatting('fr');
@@ -355,6 +376,26 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => repository.recordView(a.id)).called(1);
+    },
+  );
+
+  testWidgets(
+    'consultation du trajet : l\'origine du moment est la feuille ouverte',
+    (tester) async {
+      final moments = _TripViewSpyMoments();
+      VideoModalMoments.useForTest(moments);
+      addTearDown(VideoModalMoments.resetForTest);
+      final a = _buildAnnouncement(kycVerified: true);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(moments.tripIds, [a.id]);
+      final origin = moments.tripOrigins.single;
+      expect(origin, isNotNull);
+      // Frontmost = la feuille ouverte, pas la liste qu'elle recouvre : le
+      // modal s'ouvre sur le détail, pas au retour sur la liste.
+      expect(isVideoModalFrontmost(origin!), isTrue);
     },
   );
 
@@ -1979,6 +2020,11 @@ void main() {
       // Moment « favori ajouté » avec le corridor de la fiche.
       expect(moments.triggers, [VideoModalTrigger.favoriteAdded]);
       expect(moments.emitted.single.corridor, isNotNull);
+      // Le modal s'ouvre sur le détail (la feuille), pas au retour sur la liste.
+      final origin = moments.origins.single;
+      expect(origin, isNotNull);
+      expect(origin!.mounted, isTrue);
+      expect(isVideoModalFrontmost(origin), isTrue);
     });
 
     testWidgets('retrait → message de confirmation', (tester) async {

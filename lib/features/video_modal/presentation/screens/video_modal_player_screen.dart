@@ -60,6 +60,8 @@ class _VideoModalPlayerScreenState extends State<VideoModalPlayerScreen> {
       final session = widget.sessionFactory(
         HelpTutorialPlayerConfiguration(
           videoId: widget.args.campaign.youtubeVideoId,
+          // Le modal vient d'un toucher sur « Regarder » : pas un second toucher.
+          autoPlay: true,
         ),
       );
       _session = session;
