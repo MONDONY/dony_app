@@ -268,7 +268,10 @@ class _TaxInfoIdentitySectionState extends State<TaxInfoIdentitySection> {
       textCapitalization: capitalization,
       textInputAction: action,
       inputFormatters: [LengthLimitingTextInputFormatter(maxLength)],
+      // Données DAC7 : ni suggestions ni apprentissage du clavier.
       autocorrect: false,
+      enableSuggestions: false,
+      enableIMEPersonalizedLearning: false,
       errorText: errorText,
       errorMaxLines: 3,
     ),

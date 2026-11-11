@@ -24070,7 +24070,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get taxInfoBirthPlaceHint =>
-      'Il remplace le numéro fiscal quand vous n\'en avez pas.';
+      'Sans numéro fiscal, indiquez votre lieu de naissance (ville et pays).';
 
   @override
   String get taxInfoBirthPlaceSaved =>
@@ -24148,4 +24148,16 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get taxInfoTeamWillContact =>
       'L\'équipe Yadony vous contactera pour compléter ce dossier.';
+
+  @override
+  String get taxInfoBannerResidenceBody =>
+      'Indiquez votre pays de résidence. Cela ne bloque rien.';
+
+  @override
+  String get taxInfoNothingNew =>
+      'Nous avons bien reçu vos informations. L\'équipe Yadony reviendra vers vous si besoin.';
+
+  @override
+  String get taxInfoVatWillBeErased =>
+      'Laisser ce champ vide supprime votre numéro de TVA enregistré.';
 }

@@ -150,7 +150,10 @@ class TaxInfoScreen extends StatelessWidget {
         final editing = s.editing;
         // Bouton grisé : on dit pourquoi, au lieu d'un bouton muet.
         final input = s.submitting ? null : s.firstMissingInput;
-        final missing = input == null ? null : l.taxInfoMissingInput(input);
+        final missing = input != null
+            ? l.taxInfoMissingInput(input)
+            // Rien de nouveau à envoyer : un mot plutôt qu'un bouton muet.
+            : (s.nothingNewToSend ? l.taxInfoNothingNew : null);
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -220,6 +223,11 @@ class TaxInfoScreen extends StatelessWidget {
         );
       case _View.unavailable when _notConcerned(s):
         return const _NotConcernedCloser();
+      // Pays hors Union enregistré à l'instant : l'écran se ferme (listener),
+      // rien à montrer pendant l'animation de sortie.
+      case _View.unavailable
+          when s.collection == TaxInfoCollectionStatus.nePasSolliciter:
+        return const SizedBox.shrink();
       case _View.unavailable:
         return DonyEmptyState(
           iconAsset: 'landmark',
@@ -413,7 +421,8 @@ class _CollectHeader extends StatelessWidget {
             style: tt.bodyMedium,
           ),
         ],
-        if (info.isMissing(TaxInfoField.taxIdentificationNumber)) ...[
+        if (info.isMissing(TaxInfoField.taxIdentificationNumber) &&
+            state.showsFrenchTaxNumberHelp) ...[
           gap,
           Text(
             l.taxInfoWhereToFind,

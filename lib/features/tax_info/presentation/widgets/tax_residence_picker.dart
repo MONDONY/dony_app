@@ -5,6 +5,19 @@ import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
+/// Les 27 États membres de l'Union (miroir de
+/// `Dac7ResidencyPolicy.EU_MEMBER_STATES` côté back, Grèce = GR).
+const List<String> kEuMemberStates = [
+  'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', //
+  'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO', //
+  'SE', 'SI', 'SK',
+];
+
+/// Pays d'émission proposés pour le numéro fiscal : le catalogue de l'app et
+/// toute l'Union (un NIF suédois ou polonais doit pouvoir se déclarer).
+List<String> taxIssuingCountryChoices() =>
+    {for (final c in CountryCatalog.all) c.code, ...kEuMemberStates}.toList();
+
 /// Pays proposés pour la résidence fiscale : la liste du back
 /// (`residenceCountryChoices`, yadony-back #730), sinon le catalogue de l'app
 /// (back sans cette liste).
@@ -12,8 +25,8 @@ List<String> taxResidenceChoices(List<String> fromBack) => fromBack.isNotEmpty
     ? fromBack
     : [for (final c in CountryCatalog.all) c.code];
 
-/// Ouvre la liste des pays de résidence dans une [DonyBottomSheet], avec
-/// recherche. Rend le code ISO choisi, ou `null` si la feuille est fermée sans
+/// Ouvre une liste de pays (résidence, ou pays d'émission du numéro fiscal)
+/// dans une [DonyBottomSheet], avec recherche. Rend le code ISO choisi, ou `null` si la feuille est fermée sans
 /// choix.
 ///
 /// Liste séparée du sélecteur des Réglages : elle contient des pays de
@@ -24,11 +37,12 @@ Future<String?> showTaxResidencePicker(
   required String title,
   required List<String> choices,
   String? selectedCode,
+  String analyticsName = 'tax-info/residence-country',
 }) => DonyBottomSheet.show<String>(
   context,
   title: title,
   heightFraction: 0.85,
-  analyticsName: 'tax-info/residence-country',
+  analyticsName: analyticsName,
   child: TaxResidencePickerList(choices: choices, selectedCode: selectedCode),
 );
 

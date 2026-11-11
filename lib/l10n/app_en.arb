@@ -11807,7 +11807,7 @@
   "@taxInfoNoTaxNumber": {"description": "Case à cocher : le lieu de naissance remplace le numéro fiscal."},
   "taxInfoBirthPlaceLabel": "Place of birth (city, country)",
   "@taxInfoBirthPlaceLabel": {"description": "Champ lieu de naissance, seulement sans numéro fiscal."},
-  "taxInfoBirthPlaceHint": "It replaces the tax number when you don't have one.",
+  "taxInfoBirthPlaceHint": "Without a tax number, enter your place of birth (city and country).",
   "@taxInfoBirthPlaceHint": {"description": "Aide sous le lieu de naissance."},
   "taxInfoBirthPlaceSaved": "Place of birth already saved. Enter it again to change it.",
   "@taxInfoBirthPlaceSaved": {"description": "Aide sous le lieu de naissance quand il est déjà enregistré."},
@@ -11850,5 +11850,11 @@
   "taxInfoRowSubtitleToComplete": "To complete",
   "@taxInfoRowSubtitleToComplete": {"description": "Sous-titre de la ligne du Profil quand il manque quelque chose."},
   "taxInfoTeamWillContact": "The Yadony team will contact you to complete this file.",
-  "@taxInfoTeamWillContact": {"description": "Il ne manque que ce que l'équipe complète (BUSINESS_IDENTITY, IDENTITY_REVIEW) : rien à saisir."}
+  "@taxInfoTeamWillContact": {"description": "Il ne manque que ce que l'équipe complète (BUSINESS_IDENTITY, IDENTITY_REVIEW) : rien à saisir."},
+  "taxInfoBannerResidenceBody": "Tell us your country of residence. Nothing is blocked.",
+  "@taxInfoBannerResidenceBody": {"description": "Bannière du Profil quand seul le pays de résidence manque (DAC7)."},
+  "taxInfoNothingNew": "We have received your information. The Yadony team will get back to you if needed.",
+  "@taxInfoNothingNew": {"description": "Tout ce qui est saisissable est rempli mais le dossier reste à compléter (lieu de naissance sans numéro fiscal)."},
+  "taxInfoVatWillBeErased": "Leaving this field empty deletes your saved VAT number.",
+  "@taxInfoVatWillBeErased": {"description": "Aide sous la TVA quand un numéro de TVA est déjà enregistré."}
 }

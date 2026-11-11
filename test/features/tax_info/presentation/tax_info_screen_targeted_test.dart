@@ -397,8 +397,10 @@ void main() {
     });
 
     testWidgets('lieu de naissance déjà enregistré : case cochée, aide '
-        'adaptée', (tester) async {
+        'adaptée, message au lieu d\'un bouton muet', (tester) async {
       await pump(tester, kBirthPlaceSaved);
+      expect(find.text(fr.taxInfoNothingNew), findsOneWidget);
+      expect(saveEnabled(tester), isFalse);
       expect(
         tester.widget<DonyCheckbox>(byKey('tax_info_no_number')).value,
         isTrue,
@@ -423,6 +425,8 @@ void main() {
       expect(find.textContaining(fr.taxInfoCollectPrefilled), findsNothing);
       expect(byKey('tax_info_known_id'), findsNothing);
       expect(find.text(fr.taxInfoSaveMissingName), findsOneWidget);
+      // Résident belge : pas d'aide propre à la France.
+      expect(find.text(fr.taxInfoWhereToFind), findsNothing);
 
       await tester.enterText(byKey('tax_info_first_name'), 'Jeanne');
       await tester.enterText(byKey('tax_info_last_name'), 'Martin');
@@ -508,6 +512,78 @@ void main() {
       await tester.tap(save());
       await tester.pumpAndSettle();
       expect(find.text(fr.taxInfoErrorReadOnly), findsOneWidget);
+    });
+  });
+
+  group('relecture de l\'app (fix round 1)', () {
+    testWidgets('pays d\'émission : un NIF suédois se déclare', (tester) async {
+      when(() => repo.update(any())).thenAnswer((_) async => kComplete);
+      await pump(tester, kFranceDiditNifMissing);
+      await tapVisible(tester, byKey('tax_info_country'));
+      await tester.enterText(byKey('tax_residence_search'), 'suede');
+      await tester.pumpAndSettle();
+      await tester.tap(byKey('tax_residence_SE'));
+      await tester.pumpAndSettle();
+      expect(find.text('Suède'), findsOneWidget);
+      // Règle française levée : numéro suédois libre (règle générale).
+      await tester.enterText(byKey('tax_info_number'), '19900412-1234');
+      await tester.pump();
+      expect(find.text(fr.taxInfoNumberFrInvalid), findsNothing);
+      await tester.tap(save());
+      await tester.pumpAndSettle();
+      expect(captured().toJson()['taxCountry'], 'SE');
+    });
+
+    testWidgets('TVA déjà enregistrée : laisser vide l\'efface, on le dit', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        TaxInfo(
+          provided: false,
+          solicitation: TaxInfoSolicitation.nePasSolliciter,
+          vatNumberProvided: true,
+          maskedVatNumber: '****789',
+          residenceCountry: 'FR',
+          collectionStatus: TaxInfoCollectionStatus.infoRequired,
+          missingFields: const [TaxInfoField.taxIdentificationNumber],
+          actionRequired: true,
+          identity: kDiditIdentity,
+        ),
+      );
+      expect(byKey('tax_info_vat_erase_hint'), findsOneWidget);
+      await tester.enterText(byKey('tax_info_vat'), 'FR40303265045');
+      await tester.pump();
+      expect(byKey('tax_info_vat_erase_hint'), findsNothing);
+    });
+
+    testWidgets('statut inconnu (futur) : « Rien à renseigner », jamais '
+        'd\'exception', (tester) async {
+      await pump(
+        tester,
+        TaxInfo.fromJson(const {
+          'provided': false,
+          'solicitation': 'NE_PAS_SOLLICITER',
+          'collectionStatus': 'CLOSURE_PENDING',
+        }),
+      );
+      expect(find.text(fr.taxInfoUnavailableTitle), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('pays hors Union enregistré : aucun écran « indisponible » '
+        'pendant la sortie', (tester) async {
+      final gate = Completer<TaxInfo>();
+      when(() => repo.update(any())).thenAnswer((_) => gate.future);
+      await pump(tester, kResidence);
+      await pickResidence(tester, 'CI');
+      await tester.tap(save());
+      await tester.pump();
+      gate.complete(kOutOfScope);
+      await tester.pump();
+      expect(find.text(fr.taxInfoUnavailableTitle), findsNothing);
+      await tester.pumpAndSettle();
+      expect(find.text('ACCUEIL'), findsOneWidget);
     });
   });
 

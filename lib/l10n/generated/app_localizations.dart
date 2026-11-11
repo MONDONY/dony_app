@@ -38511,7 +38511,7 @@ abstract class AppLocalizations {
   /// Aide sous le lieu de naissance.
   ///
   /// In fr, this message translates to:
-  /// **'Il remplace le numéro fiscal quand vous n\'en avez pas.'**
+  /// **'Sans numéro fiscal, indiquez votre lieu de naissance (ville et pays).'**
   String get taxInfoBirthPlaceHint;
 
   /// Aide sous le lieu de naissance quand il est déjà enregistré.
@@ -38639,6 +38639,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'équipe Yadony vous contactera pour compléter ce dossier.'**
   String get taxInfoTeamWillContact;
+
+  /// Bannière du Profil quand seul le pays de résidence manque (DAC7).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez votre pays de résidence. Cela ne bloque rien.'**
+  String get taxInfoBannerResidenceBody;
+
+  /// Tout ce qui est saisissable est rempli mais le dossier reste à compléter (lieu de naissance sans numéro fiscal).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous avons bien reçu vos informations. L\'équipe Yadony reviendra vers vous si besoin.'**
+  String get taxInfoNothingNew;
+
+  /// Aide sous la TVA quand un numéro de TVA est déjà enregistré.
+  ///
+  /// In fr, this message translates to:
+  /// **'Laisser ce champ vide supprime votre numéro de TVA enregistré.'**
+  String get taxInfoVatWillBeErased;
 }
 
 class _AppLocalizationsDelegate

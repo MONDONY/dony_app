@@ -23898,7 +23898,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taxInfoBirthPlaceHint =>
-      'It replaces the tax number when you don\'t have one.';
+      'Without a tax number, enter your place of birth (city and country).';
 
   @override
   String get taxInfoBirthPlaceSaved =>
@@ -23974,4 +23974,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get taxInfoTeamWillContact =>
       'The Yadony team will contact you to complete this file.';
+
+  @override
+  String get taxInfoBannerResidenceBody =>
+      'Tell us your country of residence. Nothing is blocked.';
+
+  @override
+  String get taxInfoNothingNew =>
+      'We have received your information. The Yadony team will get back to you if needed.';
+
+  @override
+  String get taxInfoVatWillBeErased =>
+      'Leaving this field empty deletes your saved VAT number.';
 }

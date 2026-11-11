@@ -8,8 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// /travelers/me/tax-info` : la demande arrive par la notification
 /// `TAX_INFO_REQUEST`, envoyée par le back après l'acceptation.
 ///
-/// Garde de structure : seuls le routeur, l'injection et l'entrée du Profil
-/// connaissent la fonctionnalité. Un parcours métier qui importerait
+/// Garde de structure : seuls le routeur, l'injection, le shell (onglet
+/// Profil) et l'entrée du Profil connaissent la fonctionnalité. Un parcours métier qui importerait
 /// `features/tax_info/` (et pourrait attendre sa réponse) fait échouer ce
 /// test.
 void main() {
@@ -17,6 +17,9 @@ void main() {
     const allowed = {
       'lib/app/router.dart',
       'lib/core/di/injection.dart',
+      // Onglet Profil sélectionné : relecture du statut (pas un parcours
+      // métier, rien n'attend la réponse).
+      'lib/app/main_shell.dart',
       'lib/features/profile/presentation/widgets/profile_tax_info_entry.dart',
     };
     final offenders = <String>[];

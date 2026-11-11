@@ -593,6 +593,53 @@ void main() {
     });
   });
 
+  group('état : relecture de l\'app (fix round 1)', () {
+    test('lieu de naissance déjà donné, rien de nouveau : on le dit', () {
+      final s = TaxInfoState(
+        load: TaxInfoLoadStatus.ready,
+        info: kBirthPlaceSaved,
+        noTaxNumber: true,
+      );
+      expect(s.nothingNewToSend, isTrue);
+      expect(s.canSubmit, isFalse);
+      expect(s.copyWith(birthPlace: 'Dakar').nothingNewToSend, isFalse);
+      expect(s.copyWith(submitting: true).nothingNewToSend, isFalse);
+      // Rien de saisissable du tout : pas ce message (l'équipe complète).
+      expect(
+        const TaxInfoState(
+          load: TaxInfoLoadStatus.ready,
+          info: kBusinessWithNif,
+        ).nothingNewToSend,
+        isFalse,
+      );
+      expect(
+        const TaxInfoState(
+          load: TaxInfoLoadStatus.ready,
+          info: kResidence,
+        ).nothingNewToSend,
+        isFalse,
+      );
+    });
+
+    test('aide « où trouver le numéro » : France seulement', () {
+      final france = TaxInfoState(
+        load: TaxInfoLoadStatus.ready,
+        info: kFranceDiditNifMissing,
+      );
+      expect(france.showsFrenchTaxNumberHelp, isTrue);
+      const belgium = TaxInfoState(
+        load: TaxInfoLoadStatus.ready,
+        info: kAllMissing,
+        taxCountry: 'BE',
+      );
+      expect(belgium.showsFrenchTaxNumberHelp, isFalse);
+      expect(
+        belgium.copyWith(taxCountry: 'FR').showsFrenchTaxNumberHelp,
+        isTrue,
+      );
+    });
+  });
+
   group('état : nouveau contrat (relecture du back)', () {
     test('professionnel avec NIF : rien à saisir, l\'équipe complète', () {
       const s = TaxInfoState(
@@ -678,14 +725,25 @@ void main() {
       expect(s.rowNeedsAction, isFalse);
     });
 
-    test('hors périmètre ou pays inconnu : rien', () {
-      for (final info in [kOutOfScope, kResidence]) {
-        final s = TaxInfoPromptState(info: info);
-        expect(s.showBanner, isFalse);
-        expect(s.showRow, isFalse);
-      }
+    test('hors périmètre : rien', () {
+      const s = TaxInfoPromptState(info: kOutOfScope);
+      expect(s.showBanner, isFalse);
+      expect(s.showRow, isFalse);
+      expect(s.bannerAsksResidence, isFalse);
       expect(const TaxInfoPromptState().showRow, isFalse);
       expect(const TaxInfoPromptState().showBanner, isFalse);
+    });
+
+    test('pays inconnu : bannière « pays seul », puis ligne « À compléter » '
+        'après « Plus tard »', () {
+      const s = TaxInfoPromptState(info: kResidence);
+      expect(s.showBanner, isTrue);
+      expect(s.bannerAsksResidence, isTrue);
+      expect(s.showRow, isFalse);
+      const later = TaxInfoPromptState(info: kResidence, dismissed: true);
+      expect(later.showBanner, isFalse);
+      expect(later.showRow, isTrue);
+      expect(later.rowNeedsAction, isTrue);
     });
 
     test('ancien contrat inchangé', () {

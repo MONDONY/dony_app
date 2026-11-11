@@ -42,6 +42,7 @@ import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/features/tax_info/bloc/tax_info_signal.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/features/video_modal/data/video_modal_moments.dart';
@@ -89,6 +90,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   bool _ratingPromptShown = false;
   DateTime? _lastHomeRefreshAt;
   DateTime? _lastMessagesRefreshAt;
+  DateTime? _lastProfileRefreshAt;
 
   /// Dernier passage en arrière-plan, remis à `null` au retour (voir
   /// [isResumeRefreshDue]).
@@ -168,6 +170,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       context.read<BidBloc>().add(
         const BidMyListAutoRefreshRequested(force: true),
       );
+    }
+    if (index == 4 && !_shouldThrottle(_lastProfileRefreshAt)) {
+      // Profil : l'onglet reste vivant (IndexedStack). Le statut fiscal (DAC7)
+      // se relit à l'ouverture pour que la bannière apparaisse même sans la
+      // notification. Lecture asynchrone, échec avalé : jamais bloquant.
+      _lastProfileRefreshAt = DateTime.now();
+      requestTaxInfoRefresh();
     }
     if (index == 3 && !_shouldThrottle(_lastMessagesRefreshAt)) {
       // Messages : ConversationListScreen ne charge qu'au premier montage

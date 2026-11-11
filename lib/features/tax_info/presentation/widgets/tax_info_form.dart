@@ -1,9 +1,9 @@
-import 'package:dony/core/currency/country_picker.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tax_info/bloc/tax_info_cubit.dart';
 import 'package:dony/features/tax_info/bloc/tax_info_state.dart';
 import 'package:dony/features/tax_info/presentation/widgets/tax_info_labels.dart';
+import 'package:dony/features/tax_info/presentation/widgets/tax_residence_picker.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -82,11 +82,14 @@ class _TaxInfoFormState extends State<TaxInfoForm> {
 
   Future<void> _pickCountry(String? current) async {
     final cubit = context.read<TaxInfoCubit>();
-    final code = await showCountryPicker(
+    // Catalogue de l'app et toute l'Union : le catalogue des devises seul
+    // ne propose pas BG, CZ, DK, HU, PL, RO ni SE.
+    final code = await showTaxResidencePicker(
       context,
       title: context.l10n.taxInfoCountryLabel,
+      choices: taxIssuingCountryChoices(),
       selectedCode: current,
-      showFlag: false,
+      analyticsName: 'tax-info/issuing-country',
     );
     if (code != null && !cubit.isClosed) cubit.updateForm(taxCountry: code);
   }
@@ -147,6 +150,8 @@ class _TaxInfoFormState extends State<TaxInfoForm> {
                 textInputAction: TextInputAction.done,
                 textCapitalization: TextCapitalization.words,
                 autocorrect: false,
+                enableSuggestions: false,
+                enableIMEPersonalizedLearning: false,
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(kTaxBirthPlaceMaxLength),
                 ],
@@ -263,14 +268,16 @@ class _TaxInfoFormState extends State<TaxInfoForm> {
           buildWhen: (p, c) =>
               p.isVatInvalid != c.isVatInvalid ||
               p.serverRejectedVat != c.serverRejectedVat ||
-              p.submitting != c.submitting,
+              p.submitting != c.submitting ||
+              p.info != c.info ||
+              p.vatNumber.trim().isEmpty != c.vatNumber.trim().isEmpty,
           builder: (context, state) {
             final errorText = state.isVatInvalid
                 ? l.taxInfoNumberInvalid
                 : (state.serverRejectedVat
                       ? l.taxInfoError(kTaxInfoInvalidCode)
                       : null);
-            return DonyReplayMask(
+            final field = DonyReplayMask(
               child: DonyTextField(
                 key: const Key('tax_info_vat'),
                 controller: _vat,
@@ -288,6 +295,27 @@ class _TaxInfoFormState extends State<TaxInfoForm> {
                 errorText: errorText,
                 errorMaxLines: 3,
               ),
+            );
+            // Numéro de TVA déjà enregistré : l'envoi du numéro fiscal sans
+            // TVA l'efface (contrat du back), on le dit.
+            final erases =
+                errorText == null &&
+                (state.info?.vatNumberProvided ?? false) &&
+                state.vatNumber.trim().isEmpty;
+            if (!erases) return field;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                field,
+                Padding(
+                  padding: const EdgeInsets.only(top: DonySpacing.xs),
+                  child: Text(
+                    l.taxInfoVatWillBeErased,
+                    key: const Key('tax_info_vat_erase_hint'),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ),
+              ],
             );
           },
         ),

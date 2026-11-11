@@ -389,6 +389,24 @@ class TaxInfoState extends Equatable {
     );
   }
 
+  /// Tout ce qui est saisissable est rempli, mais rien de nouveau à envoyer
+  /// (lieu de naissance déjà enregistré sans numéro fiscal : le back garde
+  /// `INFO_REQUIRED` en lecture stricte). L'écran le dit au lieu d'un bouton
+  /// grisé muet.
+  bool get nothingNewToSend =>
+      load == TaxInfoLoadStatus.ready &&
+      isTargeted &&
+      !asksResidence &&
+      !submitting &&
+      hasEnterableInput &&
+      firstMissingInput == null &&
+      update.isEmpty;
+
+  /// « Où trouver votre numéro fiscal ? » parle de la déclaration française
+  /// et d'impots.gouv.fr : seulement pour la France.
+  bool get showsFrenchTaxNumberHelp =>
+      info?.residenceCountry == 'FR' || taxCountry == 'FR';
+
   bool get canSubmit =>
       load == TaxInfoLoadStatus.ready &&
       !submitting &&
@@ -493,8 +511,8 @@ class TaxInfoPromptState extends Equatable {
   ///
   /// Collecte ciblée : résident de l'Union à qui il manque quelque chose de
   /// saisissable (`actionRequired`) et à qui la demande a été faite
-  /// (première acceptation ou rappels). Jamais pour un pays hors périmètre
-  /// ni pour le pays seul (la notification s'en charge).
+  /// (première acceptation ou rappels). Pays inconnu : bannière « pays
+  /// seul » ([bannerAsksResidence]). Jamais pour un pays hors périmètre.
   bool get showBanner {
     if (dismissed) return false;
     final current = info;
@@ -502,10 +520,19 @@ class TaxInfoPromptState extends Equatable {
     if (!_targeted) {
       return current.solicitation == TaxInfoSolicitation.solliciter;
     }
+    if (bannerAsksResidence) return true;
     return current.collectionStatus == TaxInfoCollectionStatus.infoRequired &&
         current.actionRequired &&
         current.requestedAt != null;
   }
+
+  /// Pays de résidence inconnu : la bannière ne demande que le pays. Seul
+  /// point d'entrée persistant de ce statut (le back ne pose pas de date de
+  /// demande, et la notification « pays seul » ne part qu'une fois).
+  bool get bannerAsksResidence =>
+      _targeted &&
+      info?.collectionStatus == TaxInfoCollectionStatus.residenceInconnue &&
+      info!.actionRequired;
 
   /// Ligne discrète « Informations fiscales ».
   ///
@@ -521,6 +548,9 @@ class TaxInfoPromptState extends Equatable {
     return switch (current.collectionStatus) {
       TaxInfoCollectionStatus.complete => true,
       TaxInfoCollectionStatus.infoRequired => !showBanner,
+      // « Plus tard » sur la bannière « pays seul » : ligne « À compléter ».
+      TaxInfoCollectionStatus.residenceInconnue =>
+        current.actionRequired && dismissed,
       _ => false,
     };
   }
@@ -528,7 +558,9 @@ class TaxInfoPromptState extends Equatable {
   /// La ligne invite à compléter plutôt qu'à relire.
   bool get rowNeedsAction =>
       _targeted &&
-      info?.collectionStatus == TaxInfoCollectionStatus.infoRequired &&
+      (info?.collectionStatus == TaxInfoCollectionStatus.infoRequired ||
+          info?.collectionStatus ==
+              TaxInfoCollectionStatus.residenceInconnue) &&
       info!.actionRequired;
 
   @override

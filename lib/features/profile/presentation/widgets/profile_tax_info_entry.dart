@@ -53,6 +53,7 @@ class ProfileTaxInfoEntry extends StatelessWidget {
             if (s.showBanner) {
               return _Spaced(
                 child: TaxInfoBanner(
+                  residenceOnly: s.bannerAsksResidence,
                   onOpen: () => unawaited(_open(context, 'banner')),
                   onLater: context.read<TaxInfoPromptCubit>().dismiss,
                 ),
@@ -125,7 +126,8 @@ class _Row extends StatelessWidget {
 
 /// Relit les informations quand elles ont pu changer, l'onglet Profil restant
 /// en mémoire d'une visite à l'autre : enregistrement depuis l'écran
-/// ([taxInfoChanged]) et reprise de l'app. `TaxInfoPromptCubit.load` coalesce
+/// ([taxInfoChanged]), ouverture de l'onglet Profil
+/// ([taxInfoRefreshRequested]) et reprise de l'app. `TaxInfoPromptCubit.load` coalesce
 /// les appels : pas de requêtes en rafale. Le `State` ne porte que des
 /// abonnements, jamais d'état d'écran (aucun `setState`).
 class _Refresher extends StatefulWidget {
@@ -143,11 +145,13 @@ class _RefresherState extends State<_Refresher> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     taxInfoChanged.addListener(_reload);
+    taxInfoRefreshRequested.addListener(_reload);
   }
 
   @override
   void dispose() {
     taxInfoChanged.removeListener(_reload);
+    taxInfoRefreshRequested.removeListener(_reload);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
