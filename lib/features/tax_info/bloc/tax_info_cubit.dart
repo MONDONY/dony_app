@@ -6,8 +6,8 @@ import 'package:dony/core/services/app_log.dart';
 import 'package:dony/features/tax_info/bloc/tax_info_signal.dart';
 import 'package:dony/features/tax_info/bloc/tax_info_state.dart';
 import 'package:dony/features/tax_info/data/models/tax_info.dart';
+import 'package:dony/features/tax_info/data/models/tax_info_update.dart';
 import 'package:dony/features/tax_info/data/repositories/tax_info_repository.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Écran « Informations fiscales » (`/profile/tax-info`) : lecture, saisie et
@@ -23,19 +23,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Les valeurs saisies ne partent que dans le `PUT`. Ni les journaux ni
 /// l'analytique n'en reçoivent la valeur ou la longueur : seulement des codes.
 class TaxInfoCubit extends Cubit<TaxInfoState> {
-  TaxInfoCubit(
-    this._repository,
-    this._analytics, {
-    VoidCallback? onResidenceCountrySaved,
-  }) : _onResidenceCountrySaved = onResidenceCountrySaved,
-       super(const TaxInfoState());
+  TaxInfoCubit(this._repository, this._analytics) : super(const TaxInfoState());
 
   final TaxInfoRepository _repository;
   final AnalyticsService _analytics;
-
-  /// Pays de résidence enregistré : les préférences en mémoire (devise, pays)
-  /// se relisent.
-  final VoidCallback? _onResidenceCountrySaved;
 
   bool _loadInFlight = false;
   bool _reloadQueued = false;
@@ -146,6 +137,7 @@ class TaxInfoCubit extends Cubit<TaxInfoState> {
     if (isClosed || state.submitting) return;
     final s = state;
     final clear =
+        (residenceCountry != null && s.serverRejected(kTaxFieldResidence)) ||
         (taxNumber != null && s.serverRejectedTaxNumber) ||
         (taxCountry != null && s.serverRejected(kTaxFieldCountry)) ||
         (vatNumber != null && s.serverRejectedVat) ||
@@ -283,16 +275,19 @@ class TaxInfoCubit extends Cubit<TaxInfoState> {
     }
   }
 
-  /// Pays de résidence (statut `RESIDENCE_INCONNUE`), puis relecture : le
-  /// voyageur hors périmètre n'a plus rien à fournir, le résident de l'Union
-  /// voit aussitôt ce qui manque.
+  /// Pays de résidence (statut `RESIDENCE_INCONNUE`), envoyé par le `PUT`
+  /// fiscal (`residenceCountry`, yadony-back #730) : le pays du profil et les
+  /// paiements n'en dépendent pas. La réponse dit la suite : le voyageur hors
+  /// périmètre n'a plus rien à fournir, le résident de l'Union voit aussitôt
+  /// ce qui manque.
   Future<void> _submitResidence() async {
     final code = state.residenceCountry!;
     emit(state.copyWith(submitting: true, clearError: true));
     try {
-      final info = await _repository.saveResidenceCountry(code);
+      final info = await _repository.update(
+        TaxInfoUpdate(residenceCountry: code),
+      );
       notifyTaxInfoChanged();
-      _onResidenceCountrySaved?.call();
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.taxInfoSaved,

@@ -38,6 +38,7 @@ const String kTaxInfoInvalidCode = 'tax-info-invalid';
 const String kTaxInfoReadOnlyCode = 'tax-info-read-only';
 
 /// Champs désignés par la propriété `field` du 422.
+const String kTaxFieldResidence = 'residenceCountry';
 const String kTaxFieldNumber = 'taxIdentificationNumber';
 const String kTaxFieldCountry = 'taxCountry';
 const String kTaxFieldVat = 'vatNumber';
@@ -53,6 +54,7 @@ const String kTaxFieldCity = 'address.city';
 /// Champs dont un refus du serveur s'affiche sous le champ lui-même (sinon,
 /// message global).
 const Set<String> kTaxInlineFields = {
+  kTaxFieldResidence,
   kTaxFieldNumber,
   kTaxFieldCountry,
   kTaxFieldVat,
@@ -203,6 +205,7 @@ class TaxInfoState extends Equatable {
   bool get offersNoTaxNumber =>
       isTargeted &&
       !editing &&
+      !info!.isBusiness &&
       info!.isMissing(TaxInfoField.taxIdentificationNumber);
 
   /// Champs numéro, pays d'émission et TVA visibles.
@@ -211,6 +214,15 @@ class TaxInfoState extends Equatable {
 
   /// Lieu de naissance, seulement sans numéro fiscal.
   bool get asksBirthPlace => offersNoTaxNumber && noTaxNumber;
+
+  /// Quelque chose à saisir dans l'écran. Faux quand il ne manque que ce
+  /// que l'équipe complète (`BUSINESS_IDENTITY`, `IDENTITY_REVIEW`).
+  bool get hasEnterableInput =>
+      asksResidence ||
+      asksName ||
+      asksBirthDate ||
+      asksAddress ||
+      asksTaxNumber;
 
   /// L'écran montre la fiche (forme masquée) plutôt que le formulaire.
   ///
@@ -224,6 +236,8 @@ class TaxInfoState extends Equatable {
   /// Au moins une valeur reprise de la pièce d'identité.
   bool get hasPrefilledFromId {
     final identity = info?.identity;
+    // Pièce non relue à temps : rien n'est repris, les champs sont à saisir.
+    if (identity?.identityCheckUnavailable ?? false) return false;
     if ((info?.readOnlyFields ?? const []).isNotEmpty) return true;
     return identity != null &&
         (identity.nameSource == TaxInfoSource.didit ||
@@ -319,6 +333,7 @@ class TaxInfoState extends Equatable {
     if (field == null) return showsTaxNumberFields;
     if (!kTaxInlineFields.contains(field)) return false;
     return switch (field) {
+      kTaxFieldResidence => asksResidence,
       kTaxFieldNumber ||
       kTaxFieldCountry ||
       kTaxFieldVat => showsTaxNumberFields,
@@ -476,10 +491,10 @@ class TaxInfoPromptState extends Equatable {
 
   /// Bannière : seulement pour un voyageur concerné, sauf « Plus tard ».
   ///
-  /// Collecte ciblée : résident de l'Union à qui il manque quelque chose et
-  /// à qui la demande a été faite (première acceptation ou rappels). Jamais
-  /// pour un pays hors périmètre ni pour le pays seul (la notification et
-  /// Réglages s'en chargent).
+  /// Collecte ciblée : résident de l'Union à qui il manque quelque chose de
+  /// saisissable (`actionRequired`) et à qui la demande a été faite
+  /// (première acceptation ou rappels). Jamais pour un pays hors périmètre
+  /// ni pour le pays seul (la notification s'en charge).
   bool get showBanner {
     if (dismissed) return false;
     final current = info;
@@ -488,6 +503,7 @@ class TaxInfoPromptState extends Equatable {
       return current.solicitation == TaxInfoSolicitation.solliciter;
     }
     return current.collectionStatus == TaxInfoCollectionStatus.infoRequired &&
+        current.actionRequired &&
         current.requestedAt != null;
   }
 
@@ -512,7 +528,8 @@ class TaxInfoPromptState extends Equatable {
   /// La ligne invite à compléter plutôt qu'à relire.
   bool get rowNeedsAction =>
       _targeted &&
-      info?.collectionStatus == TaxInfoCollectionStatus.infoRequired;
+      info?.collectionStatus == TaxInfoCollectionStatus.infoRequired &&
+      info!.actionRequired;
 
   @override
   List<Object?> get props => [info, dismissed];

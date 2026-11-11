@@ -14654,6 +14654,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get countryNameMa => 'Maroc';
 
   @override
+  String get countryNameBg => 'Bulgarie';
+
+  @override
+  String get countryNameCz => 'Tchéquie';
+
+  @override
+  String get countryNameDk => 'Danemark';
+
+  @override
+  String get countryNameHu => 'Hongrie';
+
+  @override
+  String get countryNamePl => 'Pologne';
+
+  @override
+  String get countryNameRo => 'Roumanie';
+
+  @override
+  String get countryNameSe => 'Suède';
+
+  @override
   String get recipientListTitle => 'Mes destinataires';
 
   @override
@@ -24091,14 +24112,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ces informations ne vous sont pas demandées.';
 
   @override
-  String get taxInfoErrorCountryLocked =>
-      'Votre pays ne peut pas être changé ici. Contactez le support si besoin.';
-
-  @override
-  String get taxInfoErrorCountryResetsPayout =>
-      'Changez votre pays depuis Réglages, qui vous dit ce que cela change.';
-
-  @override
   String get taxInfoResidenceTitle => 'Votre pays de résidence';
 
   @override
@@ -24131,4 +24144,8 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get taxInfoRowSubtitleToComplete => 'À compléter';
+
+  @override
+  String get taxInfoTeamWillContact =>
+      'L\'équipe Yadony vous contactera pour compléter ce dossier.';
 }

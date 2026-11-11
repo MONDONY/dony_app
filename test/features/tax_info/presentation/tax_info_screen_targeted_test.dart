@@ -1,13 +1,14 @@
 import 'dart:async';
 
-import 'package:dony/core/currency/country_picker.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tax_info/bloc/tax_info_cubit.dart';
 import 'package:dony/features/tax_info/data/models/tax_info.dart';
 import 'package:dony/features/tax_info/data/models/tax_info_update.dart';
 import 'package:dony/features/tax_info/data/repositories/tax_info_repository.dart';
 import 'package:dony/features/tax_info/presentation/screens/tax_info_screen.dart';
+import 'package:dony/features/tax_info/presentation/widgets/tax_residence_picker.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -101,16 +102,10 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> pickCountry(WidgetTester tester, String name) async {
-    await tester.enterText(
-      find.descendant(
-        of: find.byType(CountryPickerList),
-        matching: find.byType(TextField),
-      ),
-      name,
-    );
+  Future<void> pickResidence(WidgetTester tester, String code) async {
+    await tester.tap(byKey('tax_info_residence'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(name).last);
+    await tester.tap(byKey('tax_residence_$code'));
     await tester.pumpAndSettle();
   }
 
@@ -131,68 +126,107 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('hors Union : enregistré, rien d\'autre, écran fermé', (
-      tester,
-    ) async {
-      when(
-        () => repo.saveResidenceCountry('CI'),
-      ).thenAnswer((_) async => kOutOfScope);
+    testWidgets('sélecteur : seulement les pays proposés par le back, '
+        'Suède comprise, recherche sans accent', (tester) async {
       await pump(tester, kResidence);
       await tester.tap(byKey('tax_info_residence'));
       await tester.pumpAndSettle();
-      await pickCountry(tester, 'Côte d\'Ivoire');
+      expect(find.byType(TaxResidencePickerList), findsOneWidget);
+      for (final code in kResidence.residenceCountryChoices) {
+        expect(byKey('tax_residence_$code'), findsOneWidget, reason: code);
+      }
+      expect(find.text('Suède'), findsOneWidget);
+      expect(byKey('tax_residence_DE'), findsNothing);
+      await tester.enterText(byKey('tax_residence_search'), 'suede');
+      await tester.pumpAndSettle();
+      expect(byKey('tax_residence_SE'), findsOneWidget);
+      expect(byKey('tax_residence_FR'), findsNothing);
+      await tester.enterText(byKey('tax_residence_search'), 'fr');
+      await tester.pumpAndSettle();
+      expect(byKey('tax_residence_FR'), findsOneWidget);
+      await tester.tap(byKey('tax_residence_FR'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TaxResidencePickerList), findsNothing);
+      expect(find.text('France'), findsOneWidget);
+      // Rouvert : le pays choisi est coché.
+      await tester.tap(byKey('tax_info_residence'));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: byKey('tax_residence_FR'),
+          matching: find.byType(DonyIcon),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: byKey('tax_residence_SE'),
+          matching: find.byType(DonyIcon),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('hors Union : enregistré, rien d\'autre, écran fermé', (
+      tester,
+    ) async {
+      when(() => repo.update(any())).thenAnswer((_) async => kOutOfScope);
+      await pump(tester, kResidence);
+      await pickResidence(tester, 'CI');
       expect(find.text('Côte d\'Ivoire'), findsOneWidget);
       expect(saveEnabled(tester), isTrue);
       await tester.tap(save());
       await tester.pumpAndSettle();
-      verify(() => repo.saveResidenceCountry('CI')).called(1);
+      expect(captured().toJson(), {'residenceCountry': 'CI'});
       expect(find.text(fr.taxInfoResidenceSaved), findsOneWidget);
       expect(find.text('ACCUEIL'), findsOneWidget);
     });
 
-    testWidgets('résident de l\'Union : l\'écran montre aussitôt ce qui '
-        'manque', (tester) async {
+    testWidgets('résident de l\'Union (Suède) : l\'écran montre aussitôt ce '
+        'qui manque', (tester) async {
       when(
-        () => repo.saveResidenceCountry('FR'),
+        () => repo.update(any()),
       ).thenAnswer((_) async => kFranceDiditNifMissing);
       await pump(tester, kResidence);
-      await tester.tap(byKey('tax_info_residence'));
-      await tester.pumpAndSettle();
-      await pickCountry(tester, 'France');
+      await pickResidence(tester, 'SE');
       await tester.tap(save());
       await tester.pumpAndSettle();
+      expect(captured().toJson(), {'residenceCountry': 'SE'});
       expect(find.text(fr.taxInfoResidenceSavedMore), findsOneWidget);
       expect(byKey('tax_info_number'), findsOneWidget);
       expect(byKey('tax_info_residence'), findsNothing);
     });
 
-    testWidgets('pays verrouillé : message, rien de fermé', (tester) async {
-      when(
-        () => repo.saveResidenceCountry(any()),
-      ).thenThrow(const TaxInfoException(kTaxResidenceLockedCode));
+    testWidgets('pays refusé (422) : erreur sous le pays, rien de fermé', (
+      tester,
+    ) async {
+      when(() => repo.update(any())).thenThrow(
+        const TaxInfoException('tax-info-invalid', field: 'residenceCountry'),
+      );
       await pump(tester, kResidence);
-      await tester.tap(byKey('tax_info_residence'));
-      await tester.pumpAndSettle();
-      await pickCountry(tester, 'France');
+      await pickResidence(tester, 'FR');
       await tester.tap(save());
       await tester.pumpAndSettle();
-      expect(find.text(fr.taxInfoErrorCountryLocked), findsOneWidget);
+      expect(find.text(fr.taxInfoFieldInvalid), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
       expect(byKey('tax_info_residence'), findsOneWidget);
     });
 
-    testWidgets('activation des paiements en cours : renvoi vers Réglages', (
-      tester,
-    ) async {
-      when(
-        () => repo.saveResidenceCountry(any()),
-      ).thenThrow(const TaxInfoException(kTaxResidenceResetsPayoutCode));
-      await pump(tester, kResidence);
+    testWidgets('back sans liste : catalogue de l\'app', (tester) async {
+      await pump(
+        tester,
+        const TaxInfo(
+          provided: false,
+          solicitation: TaxInfoSolicitation.nePasSolliciter,
+          collectionStatus: TaxInfoCollectionStatus.residenceInconnue,
+          missingFields: [TaxInfoField.residenceCountry],
+        ),
+      );
       await tester.tap(byKey('tax_info_residence'));
       await tester.pumpAndSettle();
-      await pickCountry(tester, 'France');
-      await tester.tap(save());
-      await tester.pumpAndSettle();
-      expect(find.text(fr.taxInfoErrorCountryResetsPayout), findsOneWidget);
+      expect(byKey('tax_residence_FR'), findsOneWidget);
+      expect(byKey('tax_residence_SE'), findsNothing);
+      expect(taxResidenceChoices(const []), contains('DE'));
     });
 
     testWidgets('« Plus tard » ferme sans rien enregistrer', (tester) async {
@@ -200,7 +234,45 @@ void main() {
       await tester.tap(byKey('tax_info_later'));
       await tester.pumpAndSettle();
       expect(find.text('ACCUEIL'), findsOneWidget);
-      verifyNever(() => repo.saveResidenceCountry(any()));
+      verifyNever(() => repo.update(any()));
+    });
+  });
+
+  group('rien à saisir, ou pièce non relue', () {
+    testWidgets('professionnel avec NIF : « l\'équipe vous contactera », '
+        'aucun formulaire, « Fermer »', (tester) async {
+      await pump(tester, kBusinessWithNif);
+      expect(find.text(fr.taxInfoTeamWillContact), findsOneWidget);
+      expect(find.textContaining('Il nous manque seulement'), findsNothing);
+      expect(byKey('tax_info_number'), findsNothing);
+      expect(save(), findsNothing);
+      expect(find.text('****9999'), findsOneWidget);
+      expectOneLineNotShrunk(tester, byKey('tax_info_close'));
+      await tester.tap(byKey('tax_info_close'));
+      await tester.pumpAndSettle();
+      expect(find.text('ACCUEIL'), findsOneWidget);
+    });
+
+    testWidgets('professionnel sans NIF : numéro seul, sans « pas de '
+        'numéro », et le mot de l\'équipe', (tester) async {
+      await pump(tester, kBusinessNoNif);
+      expect(find.text(fr.taxInfoTeamWillContact), findsOneWidget);
+      expect(
+        find.text('Il nous manque seulement : votre numéro fiscal.'),
+        findsOneWidget,
+      );
+      expect(byKey('tax_info_number'), findsOneWidget);
+      expect(byKey('tax_info_no_number'), findsNothing);
+    });
+
+    testWidgets('pièce non relue à temps : champs vides, sans « déjà '
+        'repris », sans erreur', (tester) async {
+      await pump(tester, kIdentityUnavailable);
+      expect(find.textContaining(fr.taxInfoCollectPrefilled), findsNothing);
+      expect(byKey('tax_info_first_name'), findsOneWidget);
+      expect(byKey('tax_info_street'), findsOneWidget);
+      expect(find.text(fr.taxInfoFailureTitle), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 

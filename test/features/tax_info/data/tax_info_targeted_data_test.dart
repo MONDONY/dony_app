@@ -1,7 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
-import 'package:dony/features/settings/data/models/user_business_prefs_dto.dart';
-import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
 import 'package:dony/features/tax_info/data/datasources/tax_info_remote_datasource.dart';
 import 'package:dony/features/tax_info/data/models/tax_info.dart';
 import 'package:dony/features/tax_info/data/models/tax_info_update.dart';
@@ -14,8 +12,6 @@ class _MockApiClient extends Mock implements ApiClient {}
 class _MockDio extends Mock implements Dio {}
 
 class _MockDatasource extends Mock implements TaxInfoRemoteDatasource {}
-
-class _MockPrefs extends Mock implements BusinessPrefsRepository {}
 
 const _path = '/travelers/me/tax-info';
 
@@ -49,13 +45,6 @@ const _infoRequiredJson = <String, dynamic>{
   },
 };
 
-const _prefs = UserBusinessPrefsDto(
-  weightUnit: 'kg',
-  currencyCode: 'EUR',
-  defaultPackageWeightKg: 23,
-  minBidPriceEur: 0,
-);
-
 DioException _http(int status, [Object? body]) => DioException(
   requestOptions: RequestOptions(path: _path),
   type: DioExceptionType.badResponse,
@@ -69,7 +58,6 @@ DioException _http(int status, [Object? body]) => DioException(
 void main() {
   setUpAll(() {
     registerFallbackValue(const TaxInfoUpdate());
-    registerFallbackValue(_prefs);
   });
 
   group('TaxInfo.fromJson : collecte ciblée', () {
@@ -100,6 +88,40 @@ void main() {
       expect(id.addressReplaceable, isTrue);
       expect(id.birthPlaceProvided, isFalse);
       expect(id.identityCheckUnavailable, isFalse);
+    });
+
+    test('pays proposés (RESIDENCE_INCONNUE) : codes normalisés, sans '
+        'doublon', () {
+      final info = TaxInfo.fromJson(const {
+        'collectionStatus': 'RESIDENCE_INCONNUE',
+        'missingFields': ['RESIDENCE_COUNTRY'],
+        'actionRequired': true,
+        'residenceCountryChoices': ['BG', 'se', 'SE', 'FRA', 4, 'FR'],
+      });
+      expect(info.residenceCountryChoices, ['BG', 'SE', 'FR']);
+      expect(TaxInfo.fromJson(const {}).residenceCountryChoices, isEmpty);
+    });
+
+    test('champs non saisissables : professionnel, revue d\'identité', () {
+      final pro = TaxInfo.fromJson(const {
+        'collectionStatus': 'INFO_REQUIRED',
+        'missingFields': ['BUSINESS_IDENTITY'],
+        'actionRequired': false,
+      });
+      expect(pro.missingFields, [TaxInfoField.businessIdentity]);
+      expect(pro.needsTeamFollowUp, isTrue);
+      expect(pro.isBusiness, isTrue);
+      expect(pro.actionRequired, isFalse);
+      final review = TaxInfo.fromJson(const {
+        'collectionStatus': 'INFO_REQUIRED',
+        'missingFields': ['ADDRESS', 'IDENTITY_REVIEW'],
+      });
+      expect(review.needsTeamFollowUp, isTrue);
+      expect(review.isBusiness, isFalse);
+      expect(TaxInfoField.address.enterable, isTrue);
+      expect(TaxInfoField.identityReview.enterable, isFalse);
+      expect(TaxInfoField.businessIdentity.enterable, isFalse);
+      expect(TaxInfo.fromJson(_infoRequiredJson).needsTeamFollowUp, isFalse);
     });
 
     test('chaque statut connu', () {
@@ -256,6 +278,17 @@ void main() {
       expect(update.fieldCodes, ['BIRTH_PLACE', 'ADDRESS']);
     });
 
+    test('pays de résidence seul, ou avec l\'identité', () {
+      const update = TaxInfoUpdate(residenceCountry: 'SE');
+      expect(update.toJson(), {'residenceCountry': 'SE'});
+      expect(update.isEmpty, isFalse);
+      expect(update.fieldCodes, ['RESIDENCE_COUNTRY']);
+      expect(
+        const TaxInfoUpdate(residenceCountry: 'SE', birthPlace: 'x').toJson(),
+        {'residenceCountry': 'SE', 'birthPlace': 'x'},
+      );
+    });
+
     test('vide', () {
       expect(const TaxInfoUpdate().isEmpty, isTrue);
       expect(const TaxInfoUpdate().toJson(), isEmpty);
@@ -311,14 +344,12 @@ void main() {
 
   group('TaxInfoRepository : collecte ciblée', () {
     late _MockDatasource ds;
-    late _MockPrefs prefs;
     late TaxInfoRepository repo;
     final complete = TaxInfo.fromJson(const {'collectionStatus': 'COMPLETE'});
 
     setUp(() {
       ds = _MockDatasource();
-      prefs = _MockPrefs();
-      repo = TaxInfoRepository(ds, prefs);
+      repo = TaxInfoRepository(ds);
     });
 
     test('update transmet le succès et traduit les 422', () async {
@@ -340,85 +371,22 @@ void main() {
       );
     });
 
-    test('pays : PUT des préférences avec le pays, puis relecture', () async {
-      when(() => prefs.fetchPrefs()).thenAnswer((_) async => _prefs);
-      when(() => prefs.updatePrefs(any())).thenAnswer((_) async => _prefs);
-      when(() => ds.fetch()).thenAnswer((_) async => complete);
-      expect(await repo.saveResidenceCountry('FR'), complete);
-      final sent =
-          verify(() => prefs.updatePrefs(captureAny())).captured.single
-              as UserBusinessPrefsDto;
-      expect(sent.country, 'FR');
-      expect(sent.weightUnit, 'kg');
-      verify(() => ds.fetch()).called(1);
-    });
-
-    test('pays déjà enregistré : aucun PUT, relecture seule', () async {
-      when(
-        () => prefs.fetchPrefs(),
-      ).thenAnswer((_) async => _prefs.copyWith(country: 'SN'));
-      when(() => ds.fetch()).thenAnswer((_) async => complete);
-      await repo.saveResidenceCountry('SN');
-      verifyNever(() => prefs.updatePrefs(any()));
-    });
-
-    test('pays verrouillé : refus sans envoi', () async {
-      when(
-        () => prefs.fetchPrefs(),
-      ).thenAnswer((_) async => _prefs.copyWith(countryLocked: true));
-      await expectLater(
-        repo.saveResidenceCountry('FR'),
-        throwsA(
-          isA<TaxInfoException>().having(
-            (e) => e.code,
-            'code',
-            kTaxResidenceLockedCode,
-          ),
-        ),
-      );
-      verifyNever(() => prefs.updatePrefs(any()));
-    });
-
-    test('activation des paiements en cours : Réglages, pas ici', () async {
-      when(() => prefs.fetchPrefs()).thenAnswer(
-        (_) async => _prefs.copyWith(countryChangeResetsPayoutSetup: true),
-      );
-      await expectLater(
-        repo.saveResidenceCountry('FR'),
-        throwsA(
-          isA<TaxInfoException>().having(
-            (e) => e.code,
-            'code',
-            kTaxResidenceResetsPayoutCode,
-          ),
-        ),
-      );
-      verifyNever(() => prefs.updatePrefs(any()));
-    });
-
-    test('422 country-locked du serveur : code conservé', () async {
-      when(() => prefs.fetchPrefs()).thenAnswer((_) async => _prefs);
-      when(() => prefs.updatePrefs(any())).thenThrow(
+    test('pays refusé : 422 sur residenceCountry', () async {
+      when(() => ds.update(any())).thenThrow(
         _http(422, const {
-          'type': 'https://yadony.com/problems/country-locked',
+          'type': 'https://yadony.com/problems/tax-info-invalid',
+          'field': 'residenceCountry',
         }),
       );
       await expectLater(
-        repo.saveResidenceCountry('FR'),
+        repo.update(const TaxInfoUpdate(residenceCountry: 'XX')),
         throwsA(
           isA<TaxInfoException>().having(
-            (e) => e.code,
-            'code',
-            'country-locked',
+            (e) => e.field,
+            'field',
+            'residenceCountry',
           ),
         ),
-      );
-    });
-
-    test('sans dépôt des préférences : fonction absente', () async {
-      await expectLater(
-        TaxInfoRepository(ds).saveResidenceCountry('FR'),
-        throwsA(isA<TaxInfoUnavailableException>()),
       );
     });
   });

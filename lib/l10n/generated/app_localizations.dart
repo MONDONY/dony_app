@@ -24157,6 +24157,48 @@ abstract class AppLocalizations {
   /// **'Maroc'**
   String get countryNameMa;
 
+  /// Nom du pays BG (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bulgarie'**
+  String get countryNameBg;
+
+  /// Nom du pays CZ (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tchéquie'**
+  String get countryNameCz;
+
+  /// Nom du pays DK (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Danemark'**
+  String get countryNameDk;
+
+  /// Nom du pays HU (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hongrie'**
+  String get countryNameHu;
+
+  /// Nom du pays PL (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pologne'**
+  String get countryNamePl;
+
+  /// Nom du pays RO (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Roumanie'**
+  String get countryNameRo;
+
+  /// Nom du pays SE (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suède'**
+  String get countryNameSe;
+
   /// Titre de l'écran liste des destinataires (recipients_screen.dart).
   ///
   /// In fr, this message translates to:
@@ -38532,18 +38574,6 @@ abstract class AppLocalizations {
   /// **'Ces informations ne vous sont pas demandées.'**
   String get taxInfoErrorNotApplicable;
 
-  /// Le pays est verrouillé (paiements engagés).
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre pays ne peut pas être changé ici. Contactez le support si besoin.'**
-  String get taxInfoErrorCountryLocked;
-
-  /// Changer de pays annulerait une activation des paiements par carte : passer par Réglages.
-  ///
-  /// In fr, this message translates to:
-  /// **'Changez votre pays depuis Réglages, qui vous dit ce que cela change.'**
-  String get taxInfoErrorCountryResetsPayout;
-
   /// Titre de la vue « pays seul » (pays inconnu).
   ///
   /// In fr, this message translates to:
@@ -38603,6 +38633,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'À compléter'**
   String get taxInfoRowSubtitleToComplete;
+
+  /// Il ne manque que ce que l'équipe complète (BUSINESS_IDENTITY, IDENTITY_REVIEW) : rien à saisir.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'équipe Yadony vous contactera pour compléter ce dossier.'**
+  String get taxInfoTeamWillContact;
 }
 
 class _AppLocalizationsDelegate

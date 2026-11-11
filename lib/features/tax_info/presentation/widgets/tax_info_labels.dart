@@ -1,6 +1,5 @@
 import 'package:dony/features/tax_info/bloc/tax_info_state.dart';
 import 'package:dony/features/tax_info/data/models/tax_info.dart';
-import 'package:dony/features/tax_info/data/repositories/tax_info_repository.dart';
 import 'package:dony/l10n/l10n.dart';
 
 /// Page derrière « En savoir plus ».
@@ -20,8 +19,6 @@ extension TaxInfoLabels on AppLocalizations {
     kTaxInfoInvalidCode => taxInfoErrorInvalid,
     kTaxInfoReadOnlyCode => taxInfoErrorReadOnly,
     'tax-info-not-applicable' => taxInfoErrorNotApplicable,
-    kTaxResidenceLockedCode => taxInfoErrorCountryLocked,
-    kTaxResidenceResetsPayoutCode => taxInfoErrorCountryResetsPayout,
     'network' => taxInfoErrorNetwork,
     'dac7-disabled' => taxInfoErrorUnavailable,
     _ => taxInfoErrorGeneric,
@@ -40,13 +37,15 @@ extension TaxInfoLabels on AppLocalizations {
   };
 
   /// Champ manquant cité dans l'en-tête (« votre adresse »), `null` pour le
-  /// pays (demandé à part, jamais listé).
+  /// pays (demandé à part) et pour ce que l'équipe complète (dit à part).
   String? taxInfoMissingFieldName(TaxInfoField field) => switch (field) {
     TaxInfoField.name => taxInfoMissingName,
     TaxInfoField.birthDate => taxInfoMissingBirthDate,
     TaxInfoField.address => taxInfoMissingAddress,
     TaxInfoField.taxIdentificationNumber => taxInfoMissingTaxNumber,
-    TaxInfoField.residenceCountry => null,
+    TaxInfoField.residenceCountry ||
+    TaxInfoField.businessIdentity ||
+    TaxInfoField.identityReview => null,
   };
 
   /// « votre adresse et votre numéro fiscal », « a, b et c » ; `null` si

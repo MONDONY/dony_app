@@ -4017,6 +4017,13 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'deliveryAddressDefaultSubtitle': (l) => l.deliveryAddressDefaultSubtitle,
   'countryNameGn': (l) => l.countryNameGn,
   'countryNameMa': (l) => l.countryNameMa,
+  'countryNameBg': (l) => l.countryNameBg,
+  'countryNameCz': (l) => l.countryNameCz,
+  'countryNameDk': (l) => l.countryNameDk,
+  'countryNameHu': (l) => l.countryNameHu,
+  'countryNamePl': (l) => l.countryNamePl,
+  'countryNameRo': (l) => l.countryNameRo,
+  'countryNameSe': (l) => l.countryNameSe,
   'recipientListTitle': (l) => l.recipientListTitle,
   'recipientEmptyTitle': (l) => l.recipientEmptyTitle,
   'recipientEmptyDescription': (l) => l.recipientEmptyDescription,
@@ -6408,8 +6415,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'taxInfoSaveMissingResidence': (l) => l.taxInfoSaveMissingResidence,
   'taxInfoErrorReadOnly': (l) => l.taxInfoErrorReadOnly,
   'taxInfoErrorNotApplicable': (l) => l.taxInfoErrorNotApplicable,
-  'taxInfoErrorCountryLocked': (l) => l.taxInfoErrorCountryLocked,
-  'taxInfoErrorCountryResetsPayout': (l) => l.taxInfoErrorCountryResetsPayout,
   'taxInfoResidenceTitle': (l) => l.taxInfoResidenceTitle,
   'taxInfoResidenceBody': (l) => l.taxInfoResidenceBody,
   'taxInfoResidenceLabel': (l) => l.taxInfoResidenceLabel,
@@ -6420,6 +6425,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'taxInfoCompleteTitle': (l) => l.taxInfoCompleteTitle,
   'taxInfoCompleteBody': (l) => l.taxInfoCompleteBody,
   'taxInfoRowSubtitleToComplete': (l) => l.taxInfoRowSubtitleToComplete,
+  'taxInfoTeamWillContact': (l) => l.taxInfoTeamWillContact,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

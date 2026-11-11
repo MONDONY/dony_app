@@ -52,6 +52,15 @@ String countryName(AppLocalizations l, String code) => switch (code) {
   'GN' => l.countryNameGn,
   // Hors catalogue, ville d'aéroport proposée par l'onglet Billets.
   'MA' => l.countryNameMa,
+  // Hors catalogue des devises : pays de l'Union proposés seulement pour la
+  // résidence fiscale (DAC7, `residenceCountryChoices` du back).
+  'BG' => l.countryNameBg,
+  'CZ' => l.countryNameCz,
+  'DK' => l.countryNameDk,
+  'HU' => l.countryNameHu,
+  'PL' => l.countryNamePl,
+  'RO' => l.countryNameRo,
+  'SE' => l.countryNameSe,
   _ => code,
 };
 

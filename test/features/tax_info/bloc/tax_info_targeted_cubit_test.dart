@@ -20,24 +20,18 @@ class _MockAnalytics extends Mock implements AnalyticsService {}
 void main() {
   late _MockRepo repo;
   late _MockAnalytics analytics;
-  late int residenceCallbacks;
 
   setUpAll(() => registerFallbackValue(const TaxInfoUpdate()));
 
   setUp(() {
     repo = _MockRepo();
     analytics = _MockAnalytics();
-    residenceCallbacks = 0;
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
   });
 
-  TaxInfoCubit build() => TaxInfoCubit(
-    repo,
-    analytics,
-    onResidenceCountrySaved: () => residenceCallbacks++,
-  );
+  TaxInfoCubit build() => TaxInfoCubit(repo, analytics);
 
   Future<TaxInfoCubit> loaded(TaxInfo info) async {
     when(() => repo.fetch()).thenAnswer((_) async => info);
@@ -499,61 +493,74 @@ void main() {
   });
 
   group('cubit : pays de résidence', () {
-    test('résident de l\'Union : il reste des informations', () async {
-      final cubit = await loaded(kResidence);
-      when(
-        () => repo.saveResidenceCountry('FR'),
-      ).thenAnswer((_) async => kFranceDiditNifMissing);
-      cubit.updateForm(residenceCountry: 'FR');
-      final pending = cubit.submit();
-      expect(cubit.state.submitting, isTrue);
-      await pending;
-      expect(cubit.state.residenceSaves, 1);
-      expect(cubit.state.asksResidence, isFalse);
-      expect(cubit.state.collection, TaxInfoCollectionStatus.infoRequired);
-      expect(cubit.state.taxCountry, 'FR');
-      expect(cubit.state.load, TaxInfoLoadStatus.ready);
-      expect(residenceCallbacks, 1);
-      verify(
-        () => analytics.logEvent(
-          AnalyticsEvents.taxInfoSaved,
-          properties: {
-            'edit': false,
-            'scope': 'residence',
-            'collection_status': 'INFO_REQUIRED',
-          },
-        ),
-      ).called(1);
-    });
+    TaxInfoUpdate sent() =>
+        verify(() => repo.update(captureAny())).captured.single
+            as TaxInfoUpdate;
+
+    test(
+      'résident de l\'Union : PUT fiscal, il reste des informations',
+      () async {
+        final cubit = await loaded(kResidence);
+        when(
+          () => repo.update(any()),
+        ).thenAnswer((_) async => kFranceDiditNifMissing);
+        cubit.updateForm(residenceCountry: 'SE');
+        final pending = cubit.submit();
+        expect(cubit.state.submitting, isTrue);
+        await pending;
+        expect(sent().toJson(), {'residenceCountry': 'SE'});
+        expect(cubit.state.residenceSaves, 1);
+        expect(cubit.state.asksResidence, isFalse);
+        expect(cubit.state.collection, TaxInfoCollectionStatus.infoRequired);
+        expect(cubit.state.taxCountry, 'FR');
+        expect(cubit.state.load, TaxInfoLoadStatus.ready);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.taxInfoSaved,
+            properties: {
+              'edit': false,
+              'scope': 'residence',
+              'collection_status': 'INFO_REQUIRED',
+            },
+          ),
+        ).called(1);
+      },
+    );
 
     test('hors Union : plus rien à demander', () async {
       final cubit = await loaded(kResidence);
-      when(
-        () => repo.saveResidenceCountry('CI'),
-      ).thenAnswer((_) async => kOutOfScope);
+      when(() => repo.update(any())).thenAnswer((_) async => kOutOfScope);
       cubit.updateForm(residenceCountry: 'CI');
       await cubit.submit();
       expect(cubit.state.residenceSaves, 1);
       expect(cubit.state.collection, TaxInfoCollectionStatus.nePasSolliciter);
     });
 
-    test('refus : code gardé, pays gardé', () async {
-      final cubit = await loaded(kResidence);
-      when(
-        () => repo.saveResidenceCountry(any()),
-      ).thenThrow(const TaxInfoException(kTaxResidenceLockedCode));
-      cubit.updateForm(residenceCountry: 'FR');
-      await cubit.submit();
-      expect(cubit.state.errorCode, kTaxResidenceLockedCode);
-      expect(cubit.state.residenceCountry, 'FR');
-      expect(cubit.state.residenceSaves, 0);
-      expect(residenceCallbacks, 0);
-    });
+    test(
+      'pays refusé : erreur sous le pays, effacée au nouveau choix',
+      () async {
+        final cubit = await loaded(kResidence);
+        when(() => repo.update(any())).thenThrow(
+          const TaxInfoException(
+            kTaxInfoInvalidCode,
+            field: kTaxFieldResidence,
+          ),
+        );
+        cubit.updateForm(residenceCountry: 'FR');
+        await cubit.submit();
+        expect(cubit.state.serverRejected(kTaxFieldResidence), isTrue);
+        expect(cubit.state.hasInlineError, isTrue);
+        expect(cubit.state.residenceCountry, 'FR');
+        expect(cubit.state.residenceSaves, 0);
+        cubit.updateForm(residenceCountry: 'BE');
+        expect(cubit.state.errorCode, isNull);
+      },
+    );
 
     test('fonction absente, puis erreur inconnue', () async {
       var cubit = await loaded(kResidence);
       when(
-        () => repo.saveResidenceCountry(any()),
+        () => repo.update(any()),
       ).thenThrow(const TaxInfoUnavailableException(status: 404));
       cubit.updateForm(residenceCountry: 'FR');
       await cubit.submit();
@@ -561,7 +568,7 @@ void main() {
       expect(cubit.state.errorCode, 'dac7-disabled');
 
       cubit = await loaded(kResidence);
-      when(() => repo.saveResidenceCountry(any())).thenThrow(StateError('x'));
+      when(() => repo.update(any())).thenThrow(StateError('x'));
       cubit.updateForm(residenceCountry: 'FR');
       await cubit.submit();
       expect(cubit.state.errorCode, 'unknown');
@@ -570,21 +577,76 @@ void main() {
     test('sans pays choisi : rien n\'est envoyé', () async {
       final cubit = await loaded(kResidence);
       await cubit.submit();
-      verifyNever(() => repo.saveResidenceCountry(any()));
+      verifyNever(() => repo.update(any()));
     });
 
     test('cubit fermé pendant l\'envoi : aucune émission', () async {
       final cubit = await loaded(kResidence);
       final gate = Completer<TaxInfo>();
-      when(
-        () => repo.saveResidenceCountry(any()),
-      ).thenAnswer((_) => gate.future);
+      when(() => repo.update(any())).thenAnswer((_) => gate.future);
       cubit.updateForm(residenceCountry: 'FR');
       final pending = cubit.submit();
       await cubit.close();
       gate.complete(kFranceDiditNifMissing);
       await pending;
-      expect(residenceCallbacks, 1);
+      expect(cubit.isClosed, isTrue);
+    });
+  });
+
+  group('état : nouveau contrat (relecture du back)', () {
+    test('professionnel avec NIF : rien à saisir, l\'équipe complète', () {
+      const s = TaxInfoState(
+        load: TaxInfoLoadStatus.ready,
+        info: kBusinessWithNif,
+      );
+      expect(s.showsSummary, isFalse);
+      expect(s.hasEnterableInput, isFalse);
+      expect(s.asksTaxNumber, isFalse);
+      expect(s.info!.needsTeamFollowUp, isTrue);
+    });
+
+    test('professionnel sans NIF : numéro, jamais « pas de numéro »', () {
+      const s = TaxInfoState(
+        load: TaxInfoLoadStatus.ready,
+        info: kBusinessNoNif,
+      );
+      expect(s.hasEnterableInput, isTrue);
+      expect(s.asksTaxNumber, isTrue);
+      expect(s.offersNoTaxNumber, isFalse);
+      expect(s.copyWith(noTaxNumber: true).asksBirthPlace, isFalse);
+    });
+
+    test('pièce non relue à temps : rien de « déjà repris », champs à '
+        'saisir', () {
+      const s = TaxInfoState(
+        load: TaxInfoLoadStatus.ready,
+        info: kIdentityUnavailable,
+      );
+      expect(s.hasPrefilledFromId, isFalse);
+      expect(s.asksName, isTrue);
+      expect(s.asksAddress, isTrue);
+    });
+
+    test('Profil : professionnel sans action, ligne sans « À compléter »', () {
+      const s = TaxInfoPromptState(info: kBusinessWithNif);
+      expect(s.showBanner, isFalse);
+      expect(s.showRow, isTrue);
+      expect(s.rowNeedsAction, isFalse);
+    });
+
+    test('Profil : demande faite mais rien de saisissable, pas de '
+        'bannière', () {
+      final s = TaxInfoPromptState(
+        info: TaxInfo(
+          provided: true,
+          solicitation: TaxInfoSolicitation.solliciter,
+          collectionStatus: TaxInfoCollectionStatus.infoRequired,
+          missingFields: const [TaxInfoField.identityReview],
+          requestedAt: DateTime.utc(2026, 11, 11),
+        ),
+      );
+      expect(s.showBanner, isFalse);
+      expect(s.rowNeedsAction, isFalse);
     });
   });
 

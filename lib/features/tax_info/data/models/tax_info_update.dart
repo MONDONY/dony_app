@@ -14,7 +14,12 @@ class TaxInfoUpdate {
     this.birthDate,
     this.birthPlace,
     this.address,
+    this.residenceCountry,
   });
+
+  /// Pays de résidence (code ISO), seulement quand le profil n'en a pas
+  /// (`RESIDENCE_INCONNUE`), parmi `residenceCountryChoices`.
+  final String? residenceCountry;
 
   /// Envoyé avec [taxCountry] (obligatoire) ; [vatNumber] absent l'efface.
   final String? taxIdentificationNumber;
@@ -31,6 +36,7 @@ class TaxInfoUpdate {
   final TaxInfoAddressInput? address;
 
   bool get isEmpty =>
+      residenceCountry == null &&
       taxIdentificationNumber == null &&
       vatNumber == null &&
       firstName == null &&
@@ -40,6 +46,7 @@ class TaxInfoUpdate {
 
   /// Codes des champs envoyés (analytique), jamais leurs valeurs.
   List<String> get fieldCodes => [
+    if (residenceCountry != null) 'RESIDENCE_COUNTRY',
     if (taxIdentificationNumber != null) 'TAX_IDENTIFICATION_NUMBER',
     if (vatNumber != null) 'VAT_NUMBER',
     if (firstName != null || lastName != null) 'NAME',
@@ -53,6 +60,7 @@ class TaxInfoUpdate {
     final nif = taxIdentificationNumber?.trim();
     final day = birthDate;
     return {
+      'residenceCountry': ?residenceCountry,
       'taxIdentificationNumber': ?nif,
       if (nif != null && taxCountry != null) 'taxCountry': taxCountry,
       // Avec le numéro : TVA vide = absente (le back l'efface, comme l'ancien

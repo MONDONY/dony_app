@@ -1004,27 +1004,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<TaxInfoRemoteDatasource>(
     () => TaxInfoRemoteDatasource(getIt<ApiClient>()),
   );
-  // Le pays de résidence (collecte ciblée, pays inconnu) s'enregistre par
-  // les préférences du compte, seule porte du back pour `users.country`.
   getIt.registerLazySingleton<TaxInfoRepository>(
-    () => TaxInfoRepository(
-      getIt<TaxInfoRemoteDatasource>(),
-      getIt<BusinessPrefsRepository>(),
-    ),
+    () => TaxInfoRepository(getIt<TaxInfoRemoteDatasource>()),
   );
   getIt.registerLazySingleton<TaxInfoSession>(TaxInfoSession.new);
   getIt.registerFactory<TaxInfoCubit>(
-    () => TaxInfoCubit(
-      getIt<TaxInfoRepository>(),
-      getIt<AnalyticsService>(),
-      // Pays enregistré depuis l'écran fiscal : les préférences en mémoire
-      // (pays, devise recalculée par le serveur) se relisent.
-      onResidenceCountrySaved: () {
-        if (getIt.isRegistered<BusinessPrefsBloc>()) {
-          getIt<BusinessPrefsBloc>().add(const BusinessPrefsSyncRequested());
-        }
-      },
-    ),
+    () => TaxInfoCubit(getIt<TaxInfoRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerFactoryParam<TaxInfoPromptCubit, String, void>(
     (userId, _) => TaxInfoPromptCubit(

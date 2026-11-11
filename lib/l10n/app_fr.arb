@@ -16296,6 +16296,20 @@
   },
   "countryNameMa": "Maroc",
   "@countryNameMa": {"description": "Nom du pays MA (Maroc), choix de la ville d'un billet."},
+  "countryNameBg": "Bulgarie",
+  "@countryNameBg": {"description": "Nom du pays BG (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale."},
+  "countryNameCz": "Tchéquie",
+  "@countryNameCz": {"description": "Nom du pays CZ (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale."},
+  "countryNameDk": "Danemark",
+  "@countryNameDk": {"description": "Nom du pays DK (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale."},
+  "countryNameHu": "Hongrie",
+  "@countryNameHu": {"description": "Nom du pays HU (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale."},
+  "countryNamePl": "Pologne",
+  "@countryNamePl": {"description": "Nom du pays PL (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale."},
+  "countryNameRo": "Roumanie",
+  "@countryNameRo": {"description": "Nom du pays RO (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale."},
+  "countryNameSe": "Suède",
+  "@countryNameSe": {"description": "Nom du pays SE (Union européenne, hors catalogue des devises), sélecteur du pays de résidence fiscale."},
   "recipientListTitle": "Mes destinataires",
   "@recipientListTitle": {
     "description": "Titre de l'écran liste des destinataires (recipients_screen.dart)."
@@ -23372,10 +23386,6 @@
   "@taxInfoErrorReadOnly": {"description": "Erreur 422 tax-info-read-only."},
   "taxInfoErrorNotApplicable": "Ces informations ne vous sont pas demandées.",
   "@taxInfoErrorNotApplicable": {"description": "Erreur 422 tax-info-not-applicable."},
-  "taxInfoErrorCountryLocked": "Votre pays ne peut pas être changé ici. Contactez le support si besoin.",
-  "@taxInfoErrorCountryLocked": {"description": "Le pays est verrouillé (paiements engagés)."},
-  "taxInfoErrorCountryResetsPayout": "Changez votre pays depuis Réglages, qui vous dit ce que cela change.",
-  "@taxInfoErrorCountryResetsPayout": {"description": "Changer de pays annulerait une activation des paiements par carte : passer par Réglages."},
   "taxInfoResidenceTitle": "Votre pays de résidence",
   "@taxInfoResidenceTitle": {"description": "Titre de la vue « pays seul » (pays inconnu)."},
   "taxInfoResidenceBody": "Indiquez le pays où vous habitez. Si c'est un pays de l'Union européenne, la loi nous demande quelques informations fiscales (obligation DAC7). Sinon, vous n'avez rien d'autre à fournir.",
@@ -23395,5 +23405,7 @@
   "taxInfoCompleteBody": "Vous n'avez rien d'autre à fournir.",
   "@taxInfoCompleteBody": {"description": "Texte : rien à demander (COMPLETE)."},
   "taxInfoRowSubtitleToComplete": "À compléter",
-  "@taxInfoRowSubtitleToComplete": {"description": "Sous-titre de la ligne du Profil quand il manque quelque chose."}
+  "@taxInfoRowSubtitleToComplete": {"description": "Sous-titre de la ligne du Profil quand il manque quelque chose."},
+  "taxInfoTeamWillContact": "L'équipe Yadony vous contactera pour compléter ce dossier.",
+  "@taxInfoTeamWillContact": {"description": "Il ne manque que ce que l'équipe complète (BUSINESS_IDENTITY, IDENTITY_REVIEW) : rien à saisir."}
 }

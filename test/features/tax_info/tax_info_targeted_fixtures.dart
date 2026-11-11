@@ -11,6 +11,7 @@ const kResidence = TaxInfo(
   collectionStatus: TaxInfoCollectionStatus.residenceInconnue,
   missingFields: [TaxInfoField.residenceCountry],
   actionRequired: true,
+  residenceCountryChoices: ['BE', 'CI', 'FR', 'SE', 'SN'],
 );
 
 /// Côte d'Ivoire : rien à demander, jamais d'écran.
@@ -152,4 +153,49 @@ const kLegacyAsk = TaxInfo(
   provided: false,
   solicitation: TaxInfoSolicitation.solliciter,
   residenceCountry: 'FR',
+);
+
+/// Professionnel qui a donné son NIF : il ne reste que l'identité
+/// d'entreprise, non saisissable (`actionRequired: false`).
+const kBusinessWithNif = TaxInfo(
+  provided: true,
+  solicitation: TaxInfoSolicitation.dejaFourni,
+  maskedTaxIdentificationNumber: '****9999',
+  taxCountry: 'FR',
+  residenceCountry: 'FR',
+  collectionStatus: TaxInfoCollectionStatus.infoRequired,
+  missingFields: [TaxInfoField.businessIdentity],
+);
+
+/// Professionnel sans NIF : le numéro (sans « pas de numéro ») et l'identité
+/// d'entreprise.
+const kBusinessNoNif = TaxInfo(
+  provided: false,
+  solicitation: TaxInfoSolicitation.nePasSolliciter,
+  residenceCountry: 'FR',
+  collectionStatus: TaxInfoCollectionStatus.infoRequired,
+  missingFields: [
+    TaxInfoField.taxIdentificationNumber,
+    TaxInfoField.businessIdentity,
+  ],
+  actionRequired: true,
+);
+
+/// Pièce non relue à temps : rien de repris, les champs sont à saisir.
+const kIdentityUnavailable = TaxInfo(
+  provided: false,
+  solicitation: TaxInfoSolicitation.nePasSolliciter,
+  residenceCountry: 'FR',
+  collectionStatus: TaxInfoCollectionStatus.infoRequired,
+  missingFields: [
+    TaxInfoField.name,
+    TaxInfoField.birthDate,
+    TaxInfoField.address,
+    TaxInfoField.taxIdentificationNumber,
+  ],
+  actionRequired: true,
+  identity: TaxInfoIdentity(
+    nameSource: TaxInfoSource.didit,
+    identityCheckUnavailable: true,
+  ),
 );

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dony/core/currency/country_picker.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -10,6 +9,7 @@ import 'package:dony/features/tax_info/data/models/tax_info.dart';
 import 'package:dony/features/tax_info/presentation/widgets/tax_info_form.dart';
 import 'package:dony/features/tax_info/presentation/widgets/tax_info_identity_section.dart';
 import 'package:dony/features/tax_info/presentation/widgets/tax_info_labels.dart';
+import 'package:dony/features/tax_info/presentation/widgets/tax_residence_picker.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -138,6 +138,14 @@ class TaxInfoScreen extends StatelessWidget {
     final l = context.l10n;
     final cubit = context.read<TaxInfoCubit>();
     switch (view) {
+      case _View.form when s.isTargeted && !s.editing && !s.hasEnterableInput:
+        // Il ne manque que ce que l'équipe complète : rien à saisir.
+        return DonyButton(
+          key: const Key('tax_info_close'),
+          label: l.taxInfoClose,
+          flat: true,
+          onPressed: () => _close(context),
+        );
       case _View.form || _View.residence:
         final editing = s.editing;
         // Bouton grisé : on dit pourquoi, au lieu d'un bouton muet.
@@ -386,6 +394,14 @@ class _CollectHeader extends StatelessWidget {
           ),
           style: tt.bodyMedium,
         ),
+        if (info.needsTeamFollowUp) ...[
+          gap,
+          Text(
+            l.taxInfoTeamWillContact,
+            key: const Key('tax_info_team_follow_up'),
+            style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ],
         if (state.hasPrefilledFromId || missing != null) ...[
           gap,
           Text(
@@ -441,19 +457,21 @@ class _CompleteBlock extends StatelessWidget {
   }
 }
 
-/// `RESIDENCE_INCONNUE` : seul le pays de résidence est demandé, dans le
-/// catalogue des pays de l'app (le même que Réglages, qui enregistre le pays
-/// par la même porte).
+/// `RESIDENCE_INCONNUE` : seul le pays de résidence est demandé, parmi les
+/// pays proposés par le back (`residenceCountryChoices`). Il part dans le
+/// `PUT` fiscal : le pays du profil et les paiements n'en dépendent pas.
 class _ResidenceView extends StatelessWidget {
   const _ResidenceView();
 
   Future<void> _pick(BuildContext context, String? current) async {
     final cubit = context.read<TaxInfoCubit>();
-    final code = await showCountryPicker(
+    final code = await showTaxResidencePicker(
       context,
       title: context.l10n.taxInfoResidenceLabel,
+      choices: taxResidenceChoices(
+        cubit.state.info?.residenceCountryChoices ?? const [],
+      ),
       selectedCode: current,
-      showFlag: false,
     );
     if (code != null && !cubit.isClosed) {
       cubit.updateForm(residenceCountry: code);
@@ -488,13 +506,18 @@ class _ResidenceView extends StatelessWidget {
         BlocBuilder<TaxInfoCubit, TaxInfoState>(
           buildWhen: (p, c) =>
               p.residenceCountry != c.residenceCountry ||
-              p.submitting != c.submitting,
+              p.submitting != c.submitting ||
+              p.serverRejected(kTaxFieldResidence) !=
+                  c.serverRejected(kTaxFieldResidence),
           builder: (context, s) {
             final code = s.residenceCountry;
             return DonyTextField.tappable(
               key: const Key('tax_info_residence'),
               label: l.taxInfoResidenceLabel,
               value: code == null ? null : countryName(l, code),
+              errorText: s.serverRejected(kTaxFieldResidence)
+                  ? l.taxInfoFieldInvalid
+                  : null,
               trailing: DonyIcon('chevron-right', color: cs.onSurfaceVariant),
               onTap: s.submitting ? null : () => _pick(context, code),
             );

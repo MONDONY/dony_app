@@ -60,11 +60,23 @@ enum TaxInfoField {
   name('NAME'),
   birthDate('BIRTH_DATE'),
   address('ADDRESS'),
-  taxIdentificationNumber('TAX_IDENTIFICATION_NUMBER');
+  taxIdentificationNumber('TAX_IDENTIFICATION_NUMBER'),
+
+  /// Identité d'entreprise d'un professionnel : non saisissable dans l'app,
+  /// l'équipe Yadony reprend contact.
+  businessIdentity('BUSINESS_IDENTITY'),
+
+  /// Identité à revoir par l'équipe : non saisissable dans l'app.
+  identityReview('IDENTITY_REVIEW');
 
   const TaxInfoField(this.wire);
 
   final String wire;
+
+  /// Le voyageur peut-il le renseigner lui-même dans l'écran ?
+  bool get enterable =>
+      this != TaxInfoField.businessIdentity &&
+      this != TaxInfoField.identityReview;
 
   static TaxInfoField? fromWire(Object? value) {
     for (final f in TaxInfoField.values) {
@@ -247,6 +259,7 @@ class TaxInfo extends Equatable {
     this.actionRequired = false,
     this.requestedAt,
     this.identity,
+    this.residenceCountryChoices = const [],
   });
 
   factory TaxInfo.fromJson(Map<String, dynamic> json) => TaxInfo(
@@ -267,6 +280,7 @@ class TaxInfo extends Equatable {
     actionRequired: json['actionRequired'] == true,
     requestedAt: DateTime.tryParse(json['requestedAt'] as String? ?? ''),
     identity: TaxInfoIdentity.fromJson(json['identity']),
+    residenceCountryChoices: _codes(json['residenceCountryChoices']),
   );
 
   final bool provided;
@@ -301,10 +315,33 @@ class TaxInfo extends Equatable {
   final DateTime? requestedAt;
   final TaxInfoIdentity? identity;
 
+  /// Pays proposés pour la résidence (codes ISO triés), seulement pour
+  /// `RESIDENCE_INCONNUE`. Inclut des pays de l'Union absents du catalogue
+  /// des devises (BG, CZ, DK, HU, PL, RO, SE).
+  final List<String> residenceCountryChoices;
+
   /// Le back parle le contrat de collecte ciblée.
   bool get usesCollectionContract => collectionStatus != null;
 
   bool isMissing(TaxInfoField field) => missingFields.contains(field);
+
+  /// Il manque quelque chose que seule l'équipe peut compléter.
+  bool get needsTeamFollowUp => missingFields.any((f) => !f.enterable);
+
+  /// Professionnel (identité d'entreprise attendue) : pas de lieu de
+  /// naissance à la place du numéro.
+  bool get isBusiness => isMissing(TaxInfoField.businessIdentity);
+
+  static List<String> _codes(Object? value) {
+    if (value is! List) return const [];
+    final out = <String>[];
+    for (final raw in value) {
+      if (raw is! String) continue;
+      final code = raw.trim().toUpperCase();
+      if (code.length == 2 && !out.contains(code)) out.add(code);
+    }
+    return List.unmodifiable(out);
+  }
 
   static String? _text(Object? value) {
     if (value is! String) return null;
@@ -329,5 +366,6 @@ class TaxInfo extends Equatable {
     actionRequired,
     requestedAt,
     identity,
+    residenceCountryChoices,
   ];
 }
