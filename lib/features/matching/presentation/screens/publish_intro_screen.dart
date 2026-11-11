@@ -18,7 +18,6 @@ import 'package:dony/features/publish_gate/data/models/publish_commitments.dart'
 import 'package:dony/features/publish_gate/data/models/publish_draft_entry.dart';
 import 'package:dony/features/publish_gate/presentation/publish_drafts_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
-import 'package:dony/features/traveler_status/presentation/publish_blocked_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -71,8 +70,6 @@ class PublishIntroScreen extends StatelessWidget {
         listenWhen: (prev, next) =>
             (next.status == PublishGateStatus.ready &&
                 prev.status != PublishGateStatus.ready) ||
-            (next.status == PublishGateStatus.blocked &&
-                prev.status != PublishGateStatus.blocked) ||
             next.errorSeq != prev.errorSeq,
         listener: _onGateChanged,
         builder: (context, gate) => gate.introShown
@@ -96,34 +93,8 @@ class PublishIntroScreen extends StatelessWidget {
       );
       return;
     }
-    if (gate.status == PublishGateStatus.blocked) {
-      unawaited(_showBlocked(context, gate));
-      return;
-    }
     if (gate.status == PublishGateStatus.ready) {
       unawaited(_continueToForm(context, gate));
-    }
-  }
-
-  /// Limite mensuelle atteinte : l'écran de blocage passe avant les
-  /// engagements et le formulaire. S'il rend la main (une demande GP Pro validée
-  /// entre-temps), l'aiguillage repart ; sinon on quitte, l'aiguillage n'a plus
-  /// rien à montrer.
-  Future<void> _showBlocked(BuildContext context, PublishGateState gate) async {
-    final eligibility = gate.blockedBy;
-    if (eligibility == null) return;
-    final cubit = context.read<PublishGateCubit>();
-    final verified =
-        _currentUser(context.read<AuthBloc>().state)?.isKycVerified ?? false;
-    final canPublish = await context.push<bool>(
-      '/trips/publish-blocked',
-      extra: PublishBlockedArgs(eligibility),
-    );
-    if (!context.mounted) return;
-    if (canPublish ?? false) {
-      unawaited(cubit.start(kycVerified: verified));
-    } else {
-      _leave(context);
     }
   }
 

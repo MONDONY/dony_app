@@ -1,5 +1,4 @@
 import 'package:dony/features/publish_gate/data/models/publish_draft_entry.dart';
-import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:equatable/equatable.dart';
 
@@ -19,10 +18,6 @@ enum PublishGateStatus {
   /// Prêt : la feuille des brouillons s'ouvre s'il y en a, sinon le
   /// formulaire.
   ready,
-
-  /// Limite mensuelle de trajets atteinte : l'écran de blocage s'ouvre à la
-  /// place des engagements et du formulaire (voyageur seulement).
-  blocked,
 }
 
 /// Échec à montrer une fois, sous l'écran des engagements.
@@ -43,7 +38,6 @@ class PublishGateState extends Equatable {
     this.introShown = false,
     this.drafts = const [],
     this.templates = const [],
-    this.blockedBy,
     this.error,
     this.errorSeq = 0,
   });
@@ -72,9 +66,6 @@ class PublishGateState extends Equatable {
   /// La feuille « Terminer ou créer » a quelque chose à proposer.
   bool get hasChoices => drafts.isNotEmpty || templates.isNotEmpty;
 
-  /// Raison du blocage quand [status] vaut `blocked`.
-  final PublishingEligibility? blockedBy;
-
   final PublishGateError? error;
 
   /// Incrémenté à chaque nouvelle erreur, pour la montrer même répétée.
@@ -88,7 +79,6 @@ class PublishGateState extends Equatable {
     bool? introShown,
     List<PublishDraftEntry>? drafts,
     List<TripTemplate>? templates,
-    PublishingEligibility? blockedBy,
     PublishGateError? error,
     bool bumpError = false,
   }) => PublishGateState(
@@ -99,7 +89,6 @@ class PublishGateState extends Equatable {
     introShown: introShown ?? this.introShown,
     drafts: drafts ?? this.drafts,
     templates: templates ?? this.templates,
-    blockedBy: blockedBy ?? this.blockedBy,
     error: bumpError ? error : this.error,
     errorSeq: bumpError ? errorSeq + 1 : errorSeq,
   );
@@ -113,7 +102,6 @@ class PublishGateState extends Equatable {
     introShown,
     drafts,
     templates,
-    blockedBy,
     error,
     errorSeq,
   ];
