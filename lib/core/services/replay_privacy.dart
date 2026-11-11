@@ -52,6 +52,8 @@ const kReplaySensitivePathPrefixes = <String>[
   '/profile/recipients',
   '/profile/subscriptions',
   '/profile/upgrade-to-pro',
+  // Numéro fiscal (déclaration DAC7) : jamais dans un enregistrement.
+  '/profile/tax-info',
   '/account',
   // Réglages : seuls ceux qui touchent à la sécurité (code PIN, appareils),
   // aux personnes bloquées, à l'export des données ou à un texte libre

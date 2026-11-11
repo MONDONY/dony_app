@@ -5,6 +5,11 @@ void main() {
   test('all event names are non-empty snake_case strings', () {
     final events = [
       AnalyticsEvents.signupStarted,
+      AnalyticsEvents.taxInfoOpened,
+      AnalyticsEvents.taxInfoSaved,
+      AnalyticsEvents.taxInfoSaveFailed,
+      AnalyticsEvents.taxInfoLater,
+      AnalyticsEvents.profileTaxInfoTapped,
       AnalyticsEvents.otpSubmitted,
       AnalyticsEvents.signupCompleted,
       AnalyticsEvents.analyticsConsentAnswered,

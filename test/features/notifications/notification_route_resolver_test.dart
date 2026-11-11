@@ -1016,4 +1016,27 @@ void main() {
     }
     expect(isShellTabRoute('/profile/gp-pro'), isFalse);
   });
+
+  test('TAX_INFO_REQUEST et TAX_STATEMENT ouvrent l\'écran Informations '
+      'fiscales, avec ou sans payload', () {
+    for (final type in ['TAX_INFO_REQUEST', 'TAX_STATEMENT']) {
+      expect(
+        resolveNotificationRoute(type, {}),
+        '/profile/tax-info',
+        reason: type,
+      );
+      expect(
+        resolveNotificationRoute(type, {'route': '/profile/tax-info'}),
+        '/profile/tax-info',
+        reason: type,
+      );
+      // Aucun identifiant du payload ne s'invite dans la route.
+      expect(
+        resolveNotificationRoute(type, {'bidId': '../admin', 'year': '2026'}),
+        '/profile/tax-info',
+        reason: type,
+      );
+    }
+    expect(isShellTabRoute('/profile/tax-info'), isFalse);
+  });
 }

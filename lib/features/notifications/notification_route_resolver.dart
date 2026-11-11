@@ -308,6 +308,13 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // Particulier ou GP Pro depuis l'écran GP Pro.
     'TRAVELER_STATUS_CONFIRMATION' => '/profile/gp-pro',
 
+    // Déclaration DAC7 (yadony-back lot 3b) : la demande d'informations
+    // fiscales et le récapitulatif annuel ouvrent le même écran, d'où le
+    // voyageur renseigne ou relit (forme masquée) son numéro fiscal. Jamais
+    // bloquant : l'écran dit simplement qu'il n'y a rien à faire si le
+    // voyageur n'est plus concerné.
+    'TAX_INFO_REQUEST' || 'TAX_STATEMENT' => '/profile/tax-info',
+
     // Message de l'équipe support → détail du ticket si l'id est valide,
     // sinon la liste des tickets.
     'SUPPORT_MESSAGE' when _isUuid(field('ticketId')) =>

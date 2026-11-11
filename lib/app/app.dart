@@ -275,6 +275,8 @@ class _DonyAppState extends State<DonyApp> {
     '/profile/referral',
     // Décision sur la demande GP Pro (GP_PRO_APPROVED/REJECTED/REVOKED).
     '/profile/gp-pro',
+    // Informations fiscales DAC7 (TAX_INFO_REQUEST/TAX_STATEMENT).
+    '/profile/tax-info',
   };
 
   void _dispatchPosterLink(Uri uri) {

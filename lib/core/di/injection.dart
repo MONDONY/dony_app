@@ -322,6 +322,11 @@ import 'package:dony/features/support/bloc/support_summary_cubit.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/data/support_live_events.dart';
 import 'package:dony/features/support/data/support_repository.dart';
+import 'package:dony/features/tax_info/bloc/tax_info_cubit.dart';
+import 'package:dony/features/tax_info/bloc/tax_info_prompt_cubit.dart';
+import 'package:dony/features/tax_info/bloc/tax_info_session.dart';
+import 'package:dony/features/tax_info/data/datasources/tax_info_remote_datasource.dart';
+import 'package:dony/features/tax_info/data/repositories/tax_info_repository.dart';
 import 'package:dony/features/tracking/bloc/pickup_code_request_cubit.dart';
 import 'package:dony/features/tracking/bloc/position_reporter_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
@@ -993,6 +998,26 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<GpProCubit>(
     () => GpProCubit(getIt(), getIt<AnalyticsService>()),
+  );
+
+  // Informations fiscales (déclaration DAC7 : jamais bloquante)
+  getIt.registerLazySingleton<TaxInfoRemoteDatasource>(
+    () => TaxInfoRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<TaxInfoRepository>(
+    () => TaxInfoRepository(getIt<TaxInfoRemoteDatasource>()),
+  );
+  getIt.registerLazySingleton<TaxInfoSession>(TaxInfoSession.new);
+  getIt.registerFactory<TaxInfoCubit>(
+    () => TaxInfoCubit(getIt<TaxInfoRepository>(), getIt<AnalyticsService>()),
+  );
+  getIt.registerFactoryParam<TaxInfoPromptCubit, String, void>(
+    (userId, _) => TaxInfoPromptCubit(
+      getIt<TaxInfoRepository>(),
+      getIt<AnalyticsService>(),
+      getIt<TaxInfoSession>(),
+      userId,
+    ),
   );
 
   // Statut légal du voyageur (particulier / professionnel)
