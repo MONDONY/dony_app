@@ -422,6 +422,7 @@ void main() {
       VoidCallback? onCleared,
       ValueChanged<String?>? onSelectionErrorChanged,
       bool requireSelection = true,
+      bool allowFreeText = false,
     }) => MaterialApp(
       home: Scaffold(
         body: BlocProvider<CitySearchBloc>.value(
@@ -431,6 +432,7 @@ void main() {
             onSelected: onSelected ?? (_) {},
             onCleared: onCleared,
             requireSelection: requireSelection,
+            allowFreeText: allowFreeText,
             onSelectionErrorChanged: onSelectionErrorChanged,
           ),
         ),
@@ -594,5 +596,125 @@ void main() {
         await tester.pump(const Duration(seconds: 1));
       },
     );
+
+    group('allowFreeText (filtres de recherche)', () {
+      const lyon = CityModel(
+        name: 'Lyon',
+        countryCode: 'FR',
+        countryName: 'France',
+        lat: 45.76,
+        lng: 4.83,
+      );
+
+      Widget free({
+        ValueChanged<CityModel>? onSelected,
+        VoidCallback? onCleared,
+      }) => field(
+        requireSelection: false,
+        allowFreeText: true,
+        onSelected: onSelected,
+        onCleared: onCleared,
+      );
+
+      testWidgets('clavier Terminé sans suggestion : la ville libre part', (
+        tester,
+      ) async {
+        final got = <CityModel>[];
+        await tester.pumpWidget(free(onSelected: got.add));
+        await tester.enterText(find.byType(TextField), '  Lyon ');
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+        expect(got.single.name, 'Lyon');
+        expect(fieldText(tester), '  Lyon ');
+        await tester.pump(const Duration(seconds: 1));
+      });
+
+      testWidgets('perte de focus sans suggestion : la ville libre part', (
+        tester,
+      ) async {
+        final got = <CityModel>[];
+        await tester.pumpWidget(free(onSelected: got.add));
+        await tester.enterText(find.byType(TextField), 'Lyon');
+        await blur(tester);
+        expect(got.map((c) => c.name), ['Lyon']);
+        await tester.pump(const Duration(seconds: 1));
+      });
+
+      testWidgets(
+        'suggestion exacte (casse, accents) : la suggestion est prise',
+        (tester) async {
+          final got = <CityModel>[];
+          await tester.pumpWidget(free(onSelected: got.add));
+          await tester.enterText(find.byType(TextField), 'sedhiou');
+          states.add(const CitySearchLoaded([sedhiou]));
+          await tester.pump();
+          await blur(tester);
+          expect(got.last.name, 'Sédhiou');
+          expect(got.last.countryCode, 'SN');
+          await tester.pump(const Duration(seconds: 1));
+        },
+      );
+
+      testWidgets(
+        'ville libre envoyée avant les résultats : la suggestion exacte '
+        'la remplace à leur arrivée',
+        (tester) async {
+          final got = <CityModel>[];
+          await tester.pumpWidget(free(onSelected: got.add));
+          await tester.enterText(find.byType(TextField), 'lyon');
+          await blur(tester);
+          expect(got.single.name, 'lyon');
+          states.add(const CitySearchLoaded([lyon]));
+          await tester.pump();
+          expect(got.map((c) => c.name), ['lyon', 'Lyon']);
+          expect(got.last.countryCode, 'FR');
+          await tester.pump(const Duration(seconds: 1));
+        },
+      );
+
+      testWidgets('erreur réseau : le texte reste utilisable, sans plantage', (
+        tester,
+      ) async {
+        final got = <CityModel>[];
+        await tester.pumpWidget(free(onSelected: got.add));
+        await tester.enterText(find.byType(TextField), 'Lyon');
+        states.add(const CitySearchError(NetworkException('network error')));
+        await tester.pump();
+        await blur(tester);
+        expect(tester.takeException(), isNull);
+        expect(got.single.name, 'Lyon');
+        expect(fieldText(tester), 'Lyon');
+        await tester.pump(const Duration(seconds: 1));
+      });
+
+      testWidgets('retaper après envoi : le parent oublie la ville', (
+        tester,
+      ) async {
+        var cleared = 0;
+        await tester.pumpWidget(free(onCleared: () => cleared++));
+        await tester.enterText(find.byType(TextField), 'Lyon');
+        await blur(tester);
+        await tester.enterText(find.byType(TextField), 'Lyons');
+        await tester.pump();
+        expect(cleared, 1);
+        await tester.pump(const Duration(seconds: 1));
+      });
+
+      testWidgets('requireSelection prime : rien ne change (publication)', (
+        tester,
+      ) async {
+        final got = <CityModel>[];
+        await tester.pumpWidget(
+          field(allowFreeText: true, onSelected: got.add),
+        );
+        await tester.enterText(find.byType(TextField), 'Lyon');
+        states.add(const CitySearchLoaded([abidjan]));
+        await tester.pump();
+        await blur(tester);
+        expect(got, isEmpty);
+        expect(fieldText(tester), '');
+        await tester.pump(const Duration(seconds: 1));
+      });
+    });
   });
 }

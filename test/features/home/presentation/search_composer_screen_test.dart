@@ -274,6 +274,45 @@ void main() {
     }
   });
 
+  testWidgets('ville tapée sans choisir de suggestion : le filtre la retient '
+      'et le comptage la reçoit', (tester) async {
+    _vueHaute(tester);
+    final repo = _MockAnnouncementRepo();
+    await tester.pumpWidget(_Harness(announcementRepo: repo));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('composer-departure-city')),
+      'Lyon',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await _settleFilterChange(tester);
+
+    verify(
+      () => repo.countAnnouncements(
+        departureCity: 'Lyon',
+        arrivalCity: any(named: 'arrivalCity'),
+        departureDateFrom: any(named: 'departureDateFrom'),
+        departureDateTo: any(named: 'departureDateTo'),
+        minAvailableKg: any(named: 'minAvailableKg'),
+        maxAvailableKg: any(named: 'maxAvailableKg'),
+        maxPricePerKg: any(named: 'maxPricePerKg'),
+        gpProOnly: any(named: 'gpProOnly'),
+        minRating: any(named: 'minRating'),
+        weekendOnly: any(named: 'weekendOnly'),
+        transportMode: any(named: 'transportMode'),
+        kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+        contentType: any(named: 'contentType'),
+        userLat: any(named: 'userLat'),
+        userLng: any(named: 'userLng'),
+        radiusKm: any(named: 'radiusKm'),
+        urgent: any(named: 'urgent'),
+        maxStops: any(named: 'maxStops'),
+        paymentMethods: any(named: 'paymentMethods'),
+      ),
+    ).called(greaterThanOrEqualTo(1));
+  });
+
   testWidgets('« Plus de filtres » s\'ouvre au toucher et montre les filtres '
       'rares', (tester) async {
     _vueHaute(tester);

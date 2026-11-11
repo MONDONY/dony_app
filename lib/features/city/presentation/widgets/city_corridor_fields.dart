@@ -49,6 +49,7 @@ class CityCorridorFields extends StatefulWidget {
     this.arrivalError,
     this.departureCityBloc,
     this.arrivalCityBloc,
+    this.allowFreeText = false,
   });
 
   final String? departureValue;
@@ -80,6 +81,10 @@ class CityCorridorFields extends StatefulWidget {
   /// alors le sien via GetIt.
   final CitySearchBloc? departureCityBloc;
   final CitySearchBloc? arrivalCityBloc;
+
+  /// Filtres de recherche : une ville tapée sans suggestion choisie est
+  /// transmise telle quelle (voir [CityAutocompleteField.allowFreeText]).
+  final bool allowFreeText;
 
   @override
   State<CityCorridorFields> createState() => _CityCorridorFieldsState();
@@ -166,6 +171,7 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
                               visible: visible,
                             ),
                         requireSelection: widget.requiredLabels,
+                        allowFreeText: widget.allowFreeText,
                         onSelectionErrorChanged: (m) =>
                             _departureSelectionError.value = m,
                         onSelected: widget.onDepartureSelected,
@@ -196,6 +202,7 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
                               visible: visible,
                             ),
                         requireSelection: widget.requiredLabels,
+                        allowFreeText: widget.allowFreeText,
                         onSelectionErrorChanged: (m) =>
                             _arrivalSelectionError.value = m,
                         onSelected: widget.onArrivalSelected,

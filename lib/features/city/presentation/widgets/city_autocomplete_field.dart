@@ -54,7 +54,17 @@ class CityAutocompleteField extends StatefulWidget {
     this.onSuggestionsVisibilityChanged,
     this.requireSelection = false,
     this.onSelectionErrorChanged,
+    this.allowFreeText = false,
   });
+
+  /// Filtres de recherche : une ville tapée sans choisir de suggestion est
+  /// quand même transmise au parent (à la perte de focus ou à la validation
+  /// clavier), sous forme d'un [CityModel] libre (pays vide, coordonnées
+  /// nulles). Si une suggestion correspond exactement (casse et accents
+  /// ignorés), c'est elle qui est transmise, même si elle n'arrive qu'après.
+  /// Sans effet avec [requireSelection] : un formulaire de publication garde
+  /// l'obligation de choisir dans la liste.
+  final bool allowFreeText;
 
   /// Le champ n'accepte qu'une ville de la liste (formulaire à soumettre).
   ///
@@ -164,6 +174,10 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   /// Perte de focus survenue pendant [_awaitingResults] : la résolution se
   /// fait à l'arrivée des résultats (voir [_onSearchState]).
   bool _resolvePending = false;
+
+  /// Le parent détient le texte tel que tapé (ville libre), pas une
+  /// suggestion : une correspondance exacte arrivée ensuite la remplace.
+  bool _freeCommitted = false;
 
   /// Message « Choisissez une ville dans la liste », hors setState.
   final _selectionError = ValueNotifier<String?>(null);
@@ -284,11 +298,27 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
       _onCitySelected(match);
       return;
     }
+    if (widget.allowFreeText && !widget.requireSelection) {
+      _commitFreeText(text);
+      return;
+    }
     if (_awaitingResults) {
       _resolvePending = true;
       return;
     }
     _rejectTypedText();
+  }
+
+  /// Ville libre : le texte tapé part au parent tel quel (nettoyé), sans
+  /// attendre les suggestions.
+  void _commitFreeText(String text) {
+    final name = text.trim();
+    _resolvePending = false;
+    _confirmedText = name;
+    _freeCommitted = true;
+    widget.onSelected(
+      CityModel(name: name, countryCode: '', countryName: '', lat: 0, lng: 0),
+    );
   }
 
   /// Aucun résultat ne correspond : en mode [requireSelection], on vide le
@@ -322,8 +352,9 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
     // Champ encore en saisie : une correspondance exacte remonte au parent
     // sans fermer la liste (l'utilisateur peut toujours choisir une autre
     // suggestion homonyme) — « Continuer » se débloque sans tap obligatoire.
-    if (match != null && !_textConfirmed) {
+    if (match != null && (!_textConfirmed || _freeCommitted)) {
       _confirmedText = match.name;
+      _freeCommitted = false;
       widget.onSelected(match);
     }
   }
@@ -341,6 +372,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   void _onCitySelected(CityModel city) {
     _controller.text = city.name;
     _confirmedText = city.name;
+    _freeCommitted = false;
     _resolvePending = false;
     _awaitingResults = false;
     _setSelectionError(null);
@@ -374,6 +406,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
           onPressed: () {
             _controller.clear();
             _confirmedText = null;
+            _freeCommitted = false;
             _setSelectionError(null);
             _suppressSuggestions = false;
             setState(() {});
@@ -389,6 +422,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
     // Toute frappe rouvre le jeu : l'utilisateur cherche une autre ville.
     _suppressSuggestions = false;
     _setSelectionError(null);
+    _freeCommitted = false;
     _awaitingResults = value.trim().length >= 2;
     setState(() {});
     context.read<CitySearchBloc>().add(CitySearchQueryChanged(value));
