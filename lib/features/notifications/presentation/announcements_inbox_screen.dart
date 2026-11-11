@@ -118,13 +118,22 @@ class _AnnouncementsList extends StatelessWidget {
           return _AnnouncementTile(
             announcement: a,
             onTap: () {
-              // Lue d'abord, puis le texte complet sur l'écran de détail.
+              // Lue d'abord, puis la cible de l'annonce : celle du deeplink ou
+              // du resolver (GP_PRO_*, TAX_*, TRAVELER_STATUS_CONFIRMATION
+              // vivent dans cette boîte), à défaut le texte complet sur
+              // l'écran de détail.
               context.read<AnnouncementsInboxBloc>().add(
                 AnnouncementsInboxMarkReadRequested(a.id),
               );
-              GoRouter.maybeOf(
-                context,
-              )?.push(NotificationDetailScreen.routeFor(a.id));
+              final router = GoRouter.maybeOf(context);
+              if (router == null) return;
+              final route =
+                  openableRouteForNotification(
+                    a,
+                    (r) => notificationRouteExists(router, r),
+                  ) ??
+                  NotificationDetailScreen.routeFor(a.id);
+              router.push(route);
             },
           ).animate().fadeIn(
             delay: Duration(milliseconds: 40 * index),
