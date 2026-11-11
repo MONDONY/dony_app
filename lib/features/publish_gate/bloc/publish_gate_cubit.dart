@@ -14,7 +14,6 @@ import 'package:dony/features/publish_gate/bloc/publish_gate_state.dart';
 import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:dony/features/publish_gate/data/models/publish_draft_entry.dart';
 import 'package:dony/features/publish_gate/data/repositories/publish_commitment_repository.dart';
-import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -41,6 +40,10 @@ enum PublishDraftChoice {
 /// fois suivantes, l'écran est sauté. Dans les deux cas, s'il reste des
 /// brouillons (sur ce téléphone ou sur le serveur), la feuille « Terminer ou
 /// créer » passe avant le formulaire.
+///
+/// La limite mensuelle de trajets n'est jamais lue ici : enregistrer un
+/// brouillon n'est jamais bloqué. Seul le clic sur « Publier » l'est (403 du
+/// back, écran de blocage ouvert par le formulaire).
 class PublishGateCubit extends Cubit<PublishGateState> {
   PublishGateCubit({
     required this.role,
@@ -49,14 +52,12 @@ class PublishGateCubit extends Cubit<PublishGateState> {
     required AnnouncementRepository announcements,
     required PackageRequestRepository packageRequests,
     required TripTemplateRepository templates,
-    required TravelerStatusRepository eligibility,
     required AnalyticsService analytics,
   }) : _commitments = commitments,
        _drafts = drafts,
        _announcements = announcements,
        _packageRequests = packageRequests,
        _templates = templates,
-       _eligibility = eligibility,
        _analytics = analytics,
        super(const PublishGateState());
 
@@ -66,7 +67,6 @@ class PublishGateCubit extends Cubit<PublishGateState> {
   final AnnouncementRepository _announcements;
   final PackageRequestRepository _packageRequests;
   final TripTemplateRepository _templates;
-  final TravelerStatusRepository _eligibility;
   final AnalyticsService _analytics;
 
   /// Nombre maximal de brouillons serveur proposés, les plus récents.
@@ -81,7 +81,6 @@ class PublishGateCubit extends Cubit<PublishGateState> {
   /// vérification d'identité, préalable à toute publication.
   Future<void> start({required bool kycVerified}) async {
     emit(const PublishGateState());
-    if (role == PublishCommitmentRole.traveler && await _isBlocked()) return;
     PublishCommitments? fetched;
     try {
       fetched = await _commitments.fetch();
@@ -110,31 +109,6 @@ class PublishGateCubit extends Cubit<PublishGateState> {
         introShown: true,
       ),
     );
-  }
-
-  /// Limite mensuelle de trajets : lue avant les engagements, un voyageur
-  /// arrêté n'a rien à accepter. Une lecture qui échoue (réseau, ancien back
-  /// sans la route) n'arrête jamais personne.
-  Future<bool> _isBlocked() async {
-    final result = await _eligibility.checkEligibility();
-    if (isClosed) return true;
-    final failure = result.failureCode;
-    if (failure != null) {
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.publishEligibilityFailed,
-          properties: {'error_code': failure},
-        ),
-      );
-    }
-    if (result.eligibility.allowed) return false;
-    emit(
-      state.copyWith(
-        status: PublishGateStatus.blocked,
-        blockedBy: result.eligibility,
-      ),
-    );
-    return true;
   }
 
   void setChecked(bool value) => emit(state.copyWith(checked: value));

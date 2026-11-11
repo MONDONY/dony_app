@@ -77,7 +77,6 @@ Future<void> _pump(
   Map<String, dynamic>? localDraft,
   List<Object> serverDrafts = const [],
   List<TripTemplate> tripTemplates = const [],
-  PublishingEligibility eligibility = PublishingEligibility.ok,
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
@@ -128,9 +127,19 @@ Future<void> _pump(
   final templates = _MockTemplates();
   when(() => templates.getAll()).thenAnswer((_) async => tripTemplates);
   _statusRepo = _MockTravelerStatus();
-  when(
-    () => _statusRepo.checkEligibility(),
-  ).thenAnswer((_) async => (eligibility: eligibility, failureCode: null));
+  when(() => _statusRepo.checkEligibility()).thenAnswer(
+    // Toujours à la limite : l'aiguillage ne doit pas le lire.
+    (_) async => (
+      eligibility: const PublishingEligibility(
+        allowed: false,
+        reason: PublishingReason.limitReached,
+        limit: 4,
+        used: 4,
+        travelerStatus: TravelerStatus.individual,
+      ),
+      failureCode: null,
+    ),
+  );
   getIt
     ..registerSingleton<TravelerStatusRepository>(_statusRepo)
     ..registerFactory<TravelerStatusCubit>(
@@ -144,7 +153,6 @@ Future<void> _pump(
       announcements: announcements,
       packageRequests: requests,
       templates: templates,
-      eligibility: _statusRepo,
       analytics: getIt<AnalyticsService>(),
     ),
   );
@@ -272,108 +280,31 @@ void main() {
   setUpAll(() => registerFallbackValue(PublishCommitmentRole.traveler));
 
   group('PublishIntroScreen — limite mensuelle de trajets', () {
-    const blocked = PublishingEligibility(
-      allowed: false,
-      reason: PublishingReason.statusRequired,
-      limit: 4,
-      used: 4,
-    );
-
-    testWidgets('limite atteinte : l\'écran de blocage passe avant les '
-        'engagements', (tester) async {
+    testWidgets('à la limite : l\'écran de blocage ne s\'ouvre pas, le '
+        'voyageur arrive aux engagements puis au formulaire', (tester) async {
       await _pump(
         tester,
         role: PublishIntroRole.trip,
         kycStatus: 'VERIFIED',
-        eligibility: blocked,
+        commitmentRequired: false,
       );
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Limite de 4 trajets atteinte ce mois-ci'),
-        findsOneWidget,
-      );
-      expect(find.text('Vos engagements de voyageur'), findsNothing);
-      verifyNever(() => _commitmentRepo.fetch());
-      expect(visited, isNot(contains('/trips/create')));
-    });
-
-    testWidgets('limite atteinte, retour arrière : on quitte l\'aiguillage', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        role: PublishIntroRole.trip,
-        kycStatus: 'VERIFIED',
-        eligibility: const PublishingEligibility(
-          allowed: false,
-          reason: PublishingReason.limitReached,
-          limit: 4,
-          used: 4,
-          travelerStatus: TravelerStatus.individual,
-        ),
-      );
-      await tester.pumpAndSettle();
       expect(
         find.text('Vous ne pouvez plus créer de trajet ce mois-ci'),
-        findsOneWidget,
+        findsNothing,
       );
-
-      await tester.tap(find.widgetWithText(DonyButton, 'Fermer'));
-      await tester.pumpAndSettle();
-
-      expect(visited, contains('/home'));
-      expect(visited, isNot(contains('/trips/create')));
+      expect(visited, contains('/trips/create'));
+      verifyNever(() => _statusRepo.checkEligibility());
     });
 
-    testWidgets('demande GP Pro validée au retour : l\'aiguillage repart', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        role: PublishIntroRole.trip,
-        kycStatus: 'VERIFIED',
-        eligibility: const PublishingEligibility(
-          allowed: false,
-          reason: PublishingReason.gpProPending,
-          limit: 4,
-          used: 4,
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(
-        find.text("Votre demande GP Pro est en cours d'examen"),
-        findsOneWidget,
-      );
-
-      when(() => _statusRepo.checkEligibility()).thenAnswer(
-        (_) async => (eligibility: PublishingEligibility.ok, failureCode: null),
-      );
-      await tester.tap(find.widgetWithText(DonyButton, 'Voir ma demande'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Formulaire GP Pro'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Vos engagements de voyageur'), findsOneWidget);
-    });
-
-    testWidgets('lecture du droit en échec (ancien back) : parcours habituel', (
+    testWidgets('à la limite, engagements à accepter : ils s\'affichent', (
       tester,
     ) async {
       await _pump(tester, role: PublishIntroRole.trip, kycStatus: 'VERIFIED');
-      expect(find.text('Vos engagements de voyageur'), findsOneWidget);
-    });
-
-    testWidgets('demande d\'envoi (expéditeur) : jamais bloquée', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        role: PublishIntroRole.parcel,
-        kycStatus: 'VERIFIED',
-        eligibility: blocked,
-      );
       await tester.pumpAndSettle();
+
+      expect(find.text('Vos engagements de voyageur'), findsOneWidget);
       expect(
         find.text('Limite de 4 trajets atteinte ce mois-ci'),
         findsNothing,
