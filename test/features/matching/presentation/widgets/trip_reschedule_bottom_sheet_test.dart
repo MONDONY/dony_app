@@ -647,7 +647,7 @@ void main() {
     for (final locale in [AppL10n.fr, AppL10n.en]) {
       testWidgets('360 dp ${locale.languageCode} : quatre puces et bouton '
           'sur une ligne', (tester) async {
-        enableEnglish();
+        if (locale == AppL10n.en) enableEnglish();
         await open(
           tester,
           trip: roadTrip(arrivalOffset: 6),

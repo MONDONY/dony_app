@@ -113,10 +113,11 @@ void main() {
     for (final k in ['arrival-day-0', 'arrival-day-1', 'arrival-day-2']) {
       expect(_selected(tester, k), isFalse);
     }
-    final row = tester.widget<Text>(find.byKey(const Key('arrival-date-row')));
-    final shown = row.textSpan!.toPlainText();
-    expect(shown, startsWith('Date d\'arrivée : '));
-    expect(shown, endsWith(DateFormat.yMMMEd('fr').format(_plusDays(dep, 5))));
+    expect(find.text('Date d\'arrivée'), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('arrival-date-value'))).data,
+      DateFormat.yMMMEd('fr').format(_plusDays(dep, 5)),
+    );
   });
 
   testWidgets('un décalage de 1 ou 2 jours sélectionne la puce, sans ligne', (
@@ -172,10 +173,11 @@ void main() {
 
       expect(notifier.value, 7);
       expect(_selected(tester, 'arrival-day-other'), isTrue);
-      final row = tester.widget<Text>(
-        find.byKey(const Key('arrival-date-row')),
+      expect(find.text('Date d\'arrivée'), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('arrival-date-value'))).data,
+        'Dans 7 jours',
       );
-      expect(row.textSpan!.toPlainText(), 'Date d\'arrivée : Dans 7 jours');
     });
 
     testWidgets('anglais : « Other date », « In 12 days »', (tester) async {
@@ -191,10 +193,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(notifier.value, 12);
-      final row = tester.widget<Text>(
-        find.byKey(const Key('arrival-date-row')),
+      expect(find.text('Arrival date'), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('arrival-date-value'))).data,
+        'In 12 days',
       );
-      expect(row.textSpan!.toPlainText(), 'Arrival date : In 12 days');
     });
 
     testWidgets('fermer le choix sans rien toucher garde le décalage', (

@@ -6747,9 +6747,13 @@ void main() {
       expect(sent.arrivalDate, wireDay(draftDeparture(), 5));
     });
 
-    testWidgets('route J+5 puis avion : décalage 0, aucun arrivalDate', (
-      tester,
-    ) async {
+    /// Brouillon route avec heure d'arrivée (sans heure, le décalage avion
+    /// serait ignoré de toute façon), repris à l'étape Mode, puis [mode] choisi.
+    Future<AnnouncementCreateRequested> roadThenMode(
+      WidgetTester tester, {
+      required int offset,
+      required String mode,
+    }) async {
       roadOn();
       await pumpScreen(
         tester,
@@ -6757,18 +6761,36 @@ void main() {
           resumeDraft: fullDraft(
             stepId: TripFormStep.mode,
             transportMode: 'CAR',
-            arrivalDayOffset: 5,
+            arrivalTime: '12:00',
+            arrivalDayOffset: offset,
           ),
         ),
       );
-      await tester.tap(find.byKey(const Key('mode-card-plane')));
+      await tester.tap(find.byKey(Key('mode-card-$mode')));
       await tester.pump();
       await _goToStep(tester, TripFormStep.conditions);
       await publish(tester);
+      return sentCreate();
+    }
 
-      final sent = sentCreate();
+    testWidgets('route J+5 avec heure puis avion : décalage 0, aucun '
+        'arrivalDate', (tester) async {
+      final sent = await roadThenMode(tester, offset: 5, mode: 'plane');
       expect(sent.transportMode, TransportMode.plane);
+      expect(sent.arrivalTime, '12:00');
       expect(sent.arrivalDate, isNull);
+    });
+
+    testWidgets('route J+3 puis avion : 0, les puces avion s\'arrêtent à J+2', (
+      tester,
+    ) async {
+      final sent = await roadThenMode(tester, offset: 3, mode: 'plane');
+      expect(sent.arrivalDate, isNull);
+    });
+
+    testWidgets('route J+2 puis avion : J+2 gardé', (tester) async {
+      final sent = await roadThenMode(tester, offset: 2, mode: 'plane');
+      expect(sent.arrivalDate, wireDay(draftDeparture(), 2));
     });
 
     testWidgets('avion J+3 avec heure puis route : J+3 gardé (borne 14)', (

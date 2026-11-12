@@ -3026,17 +3026,17 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureTimeNotifier.value = _timeOfDay(d.departureTime);
     _arrivalTimeNotifier.value = _timeOfDay(d.arrivalTime);
     final draftMode = _creationModeFrom(d.transportMode);
-    final draftModeIsRoad = draftMode?.isRoad ?? false;
     // Le brouillon garde jusqu'à 120 jours (bateau) : borné ici au mode
     // retenu, un J+10 de route devient J+3 en avion.
-    // Sans heure d'arrivée, le jour d'arrivée ne vaut qu'en route (C28).
-    _arrivalDayOffsetNotifier.value = d.arrivalTime == null && !draftModeIsRoad
-        ? 0
-        : d.arrivalDayOffset.clamp(
-            0,
-            transportModeOrPlane(draftMode).maxArrivalDays,
-          );
+    // Mode d'abord : son changement ramène le décalage à 0, la restauration
+    // pose ensuite le décalage du brouillon (borné au mode).
     _transportModeNotifier.value = draftMode;
+    // Sans heure d'arrivée, le jour d'arrivée ne vaut qu'en route (C28).
+    _arrivalDayOffsetNotifier.value = effectiveArrivalOffset(
+      mode: draftMode,
+      hasArrivalTime: d.arrivalTime != null,
+      offset: d.arrivalDayOffset,
+    ).clamp(0, transportModeOrPlane(draftMode).maxArrivalDays);
     _stopsNotifier.value = d.stops;
     // Après la date : son listener réapplique un délai de modèle en attente.
     _pendingHandoverLeadDays = d.handoverLeadDays;
@@ -3436,12 +3436,15 @@ class _TripFormContentState extends State<_TripFormContent> {
     offset: _arrivalDayOffsetNotifier.value,
   );
 
-  /// Changement de mode : un décalage au-delà de la borne du nouveau mode
-  /// (J+10 de route repassé en avion) est ramené au jour même, jamais envoyé
-  /// en silence (Review Focus 4 et 5).
+  /// Changement de mode : un décalage au-delà de ce que les puces du nouveau
+  /// mode proposent (J+10 ou J+3 de route repassé en avion, puces 0 à 2) est
+  /// ramené au jour même, jamais envoyé en silence (Review Focus 4 et 5).
+  /// L'ouverture en modification garde la valeur du serveur : seul un
+  /// changement de mode passe ici.
   void _clampArrivalOffsetToMode() {
     final mode = _transportModeNotifier.value;
-    if (mode != null && _arrivalDayOffsetNotifier.value > mode.maxArrivalDays) {
+    if (mode != null &&
+        _arrivalDayOffsetNotifier.value > arrivalChipsMaxDays(mode)) {
       _arrivalDayOffsetNotifier.value = 0;
     }
   }
@@ -3451,10 +3454,12 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// `_clampArrivalOffsetToMode` le ramène au choix du mode.
   int _templateArrivalOffset(TripTemplate t) {
     final mode = _transportModeNotifier.value;
-    final offset = mode == null || t.arrivalTime != null || mode.isRoad
-        ? t.arrivalDayOffset
-        : 0;
-    return mode == null ? offset : offset.clamp(0, mode.maxArrivalDays);
+    if (mode == null) return t.arrivalDayOffset;
+    return effectiveArrivalOffset(
+      mode: mode,
+      hasArrivalTime: t.arrivalTime != null,
+      offset: t.arrivalDayOffset,
+    ).clamp(0, mode.maxArrivalDays);
   }
 
   /// Arrivée du trajet saisi, d'où part la première étape ajoutée

@@ -142,26 +142,25 @@ class ArrivalDayChips extends StatelessWidget {
             ),
             if (otherSelected) ...[
               const SizedBox(height: DonySpacing.xs),
-              Text.rich(
+              Wrap(
                 key: const Key('arrival-date-row'),
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '${l.tripPublishArrivalDateLabel} : ',
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                    TextSpan(
-                      text: departure == null
-                          ? l.tripPublishArrivalDayOption(selected)
-                          : DateFormat.yMMMEd(
-                              l.localeName,
-                            ).format(_dayAt(departure, selected)),
-                      style: tt.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
+                spacing: DonySpacing.sm,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    l.tripPublishArrivalDateLabel,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  Text(
+                    departure == null
+                        ? l.tripPublishArrivalDayOption(selected)
+                        : DateFormat.yMMMEd(
+                            l.localeName,
+                          ).format(_dayAt(departure, selected)),
+                    key: const Key('arrival-date-value'),
+                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ],
               ),
             ],
           ],
