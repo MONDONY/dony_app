@@ -63,7 +63,7 @@ class IntentForm extends StatelessWidget {
       (UserIntent.sender, '📦', l.intentSender, l.intentSenderHint, 'sender'),
       (
         UserIntent.traveler,
-        '✈️',
+        '🧳',
         l.intentTraveler,
         l.intentTravelerHint,
         'traveler',

@@ -406,7 +406,7 @@ void main() {
           ],
         ),
       );
-      expect(find.text('Billet ou carte d\'embarquement'), findsOneWidget);
+      expect(find.text('Titre de transport'), findsOneWidget);
       await tester.tap(find.bySemanticsLabel(l.gpProRemovePiece));
       verify(() => cubit.removePiece('r-1')).called(1);
     });
@@ -430,7 +430,7 @@ void main() {
       );
       await tester.pumpWidget(host());
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text('Billet ou carte d\'embarquement'), findsOneWidget);
+      expect(find.text('Titre de transport'), findsOneWidget);
       expect(find.bySemanticsLabel(l.gpProRemovePiece), findsNothing);
       verifyNever(() => cubit.removePiece(any()));
     });

@@ -539,6 +539,18 @@ void main() {
       expect(find.text('Activez les paiements par carte'), findsNothing);
     });
 
+    testWidgets('« Comment ça marche » : transport neutre, sans bagages', (
+      tester,
+    ) async {
+      await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
+
+      expect(
+        find.text('Un voyageur transporte votre colis avec lui.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('bagage'), findsNothing);
+    });
+
     testWidgets('vérifié : case cochée puis Continuer ouvre le wizard', (
       tester,
     ) async {

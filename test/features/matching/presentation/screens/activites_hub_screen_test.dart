@@ -54,6 +54,7 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/money_test_doubles.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 import '../../../flights/bloc/flights_test_doubles.dart';
 
 const _emptyHelpConfigJson = '''
@@ -960,6 +961,23 @@ void main() {
       expect(send.height, publish.height);
       expect(send.height, lessThanOrEqualTo(56));
     });
+
+    testWidgets(
+      'la tuile Trajets porte l\'icône neutre route, jamais un avion',
+      (tester) async {
+        await _pump(tester);
+
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('hub-tile-trips')),
+            matching: findDonyIcon('route'),
+          ),
+          findsOneWidget,
+        );
+        // Flag Billets éteint : aucun avion sur le hub.
+        expectNoPlaneIcon(tester);
+      },
+    );
 
     testWidgets('les deux tuiles principales ont la même hauteur', (
       tester,

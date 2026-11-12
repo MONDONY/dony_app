@@ -12,6 +12,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 Widget _wrap({
   SearchMode mode = SearchMode.parcels,
@@ -387,6 +388,21 @@ void _matchingMyTripsChipTests() {
       expect(find.text('Pour mes trajets'), findsOneWidget);
     },
   );
+
+  testWidgets('la pastille « Pour mes trajets » porte route, pas un avion', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap());
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('chip-row-matching-my-trips')),
+        matching: findDonyIcon('route'),
+      ),
+      findsOneWidget,
+    );
+    expectNoPlaneIcon(tester);
+  });
 
   testWidgets('mode Trajets : la pastille est absente', (tester) async {
     await tester.pumpWidget(_wrap(mode: SearchMode.trips));

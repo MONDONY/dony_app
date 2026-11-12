@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_catalog.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
 import 'package:dony/features/payments/money/bloc/money_schedule.dart';
 import 'package:dony/features/payments/money/data/models/money_overview_model.dart';
@@ -338,7 +340,7 @@ class _AllTripsEntry extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.flight_rounded, size: 20, color: cs.primary),
+              DonyIcon(kNeutralTripIconAsset, size: 20, color: cs.primary),
               const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: Text(

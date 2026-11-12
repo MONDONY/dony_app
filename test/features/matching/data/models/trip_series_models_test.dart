@@ -97,6 +97,30 @@ void main() {
   });
 
   group('tripTemplateFromAnnouncement', () {
+    test('le mode du trajet est repris tel quel, jamais forcé en avion', () {
+      for (final (mode, wire) in [
+        (TransportMode.boat, 'BOAT'),
+        (TransportMode.car, 'CAR'),
+        (TransportMode.bus, 'BUS'),
+        (TransportMode.train, 'TRAIN'),
+        (TransportMode.plane, 'PLANE'),
+      ]) {
+        final t = tripTemplateFromAnnouncement(
+          _trip(mode: mode),
+          label: 'Modèle',
+        );
+        expect(t.transportMode, wire);
+      }
+    });
+
+    test('mode absent (anciennes données) : avion', () {
+      final t = tripTemplateFromAnnouncement(
+        _trip(mode: null),
+        label: 'Modèle',
+      );
+      expect(t.transportMode, 'PLANE');
+    });
+
     test('reprend le trajet sans ses dates', () {
       final t = tripTemplateFromAnnouncement(
         _trip(

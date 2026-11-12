@@ -79,6 +79,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 import '../../../helpers/mock_recent_city_store.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 const _emptyHelpConfigJson = '''
 {
@@ -901,6 +902,22 @@ void main() {
     testWidgets('voyageur : « Je voyage » est actif', (tester) async {
       await pumpAvec(tester, charge(UserIntent.traveler));
       expect(modeAffiche(tester), SearchMode.parcels);
+    });
+
+    // Le mode du trajet n'est pas choisi sur l'accueil : aucun avion en dur,
+    // ni en « Je voyage » ni en « J'envoie un colis ».
+    testWidgets('« Je voyage » : aucun avion sur l\'accueil', (tester) async {
+      await pumpAvec(tester, charge(UserIntent.traveler));
+      expect(modeAffiche(tester), SearchMode.parcels);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('« J\'envoie un colis » : aucun avion sur l\'accueil', (
+      tester,
+    ) async {
+      await pumpAvec(tester, charge(UserIntent.sender));
+      expect(modeAffiche(tester), SearchMode.trips);
+      expectNoPlaneIcon(tester);
     });
 
     for (final etat in <String, ActivationState>{

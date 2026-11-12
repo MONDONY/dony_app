@@ -511,7 +511,7 @@ void main() {
         find.byKey(const Key('trip-activity-parcels-empty')),
         findsOneWidget,
       );
-      expect(find.text('Aucun colis embarqué'), findsOneWidget);
+      expect(find.text('Aucun colis confié'), findsOneWidget);
       expect(
         find.byKey(const Key('trip-activity-parcels-open-list')),
         findsOneWidget,
@@ -631,7 +631,7 @@ void main() {
       expect(loadError(), findsOneWidget);
       expect(find.text('Erreur de chargement'), findsOneWidget);
       expect(find.text('Réessayer'), findsOneWidget);
-      expect(find.text('Aucun colis embarqué'), findsNothing);
+      expect(find.text('Aucun colis confié'), findsNothing);
       expect(find.byType(CircularProgressIndicator), findsNothing);
       // Le pied reste : la liste complète s'ouvre quand même.
       expect(

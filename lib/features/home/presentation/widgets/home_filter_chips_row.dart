@@ -276,7 +276,7 @@ class HomeFilterChipsRow extends StatelessWidget {
                 key: const Key('chip-row-matching-my-trips'),
                 label: l.homeComposerForMyTrips,
                 isActive: filters.matchingMyTrips,
-                iconAsset: 'plane',
+                iconAsset: kNeutralTripIconAsset,
                 onTap: _canFilterOnMyTrips
                     ? onMatchingMyTripsToggle
                     : onMatchingMyTripsBlocked,

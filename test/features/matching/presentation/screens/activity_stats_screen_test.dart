@@ -22,6 +22,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 class _MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
@@ -111,6 +112,15 @@ void main() {
   });
 
   tearDown(() => getIt.reset());
+
+  testWidgets('la tuile Trajets publiés porte l\'icône route, pas un avion', (
+    tester,
+  ) async {
+    await _pump(tester);
+
+    expect(findDonyIcon('route'), findsWidgets);
+    expectNoPlaneIcon(tester);
+  });
 
   testWidgets(
     'titre « Mes statistiques », trois périodes, 30 jours par défaut',

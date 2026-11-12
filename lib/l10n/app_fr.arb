@@ -1513,7 +1513,7 @@
   "@requestPublishIntroWhyTitle": {
     "description": "Titre de la section « comment ça marche », rôle expéditeur"
   },
-  "requestPublishIntroWhyBulletCarried": "Un voyageur transporte votre colis dans ses bagages.",
+  "requestPublishIntroWhyBulletCarried": "Un voyageur transporte votre colis avec lui.",
   "@requestPublishIntroWhyBulletCarried": {
     "description": "Puce « comment ça marche », rôle expéditeur : transport"
   },
@@ -9177,10 +9177,13 @@
   "@tripOwnerShareMyTrip": {
     "description": "Bouton secondaire de partage de l'écran de succès (trip_owner_detail_screen.dart)."
   },
-  "tripOwnerShareMessage": "✈️ Je voyage {dep} → {arr} le {date} avec de la place dans mes bagages !\nRéservez vos kilos sur Yadony 📦\n{url}",
+  "tripOwnerShareMessage": "{emoji} Je voyage {dep} → {arr} le {date} avec de la place pour vos colis !\nRéservez vos kilos sur Yadony 📦\n{url}",
   "@tripOwnerShareMessage": {
-    "description": "Message partagé après publication d'un brouillon (trip_owner_detail_screen.dart). date formatée en DateFormat.MMMMd(locale) ; url = donnée non traduite.",
+    "description": "Message partagé après publication d'un brouillon (trip_owner_detail_screen.dart). emoji = emoji du mode du trajet (TransportModeUI.emoji) ; date formatée en DateFormat.MMMMd(locale) ; url = donnée non traduite.",
     "placeholders": {
+      "emoji": {
+        "type": "String"
+      },
       "dep": {
         "type": "String"
       },
@@ -9326,7 +9329,7 @@
   "@tripOwnerParcelsTile": {
     "description": "Tuile « Colis » (écran du trajet, ex-grille d’actions), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur)."
   },
-  "tripOwnerNoParcelsMessage": "Aucun colis embarqué",
+  "tripOwnerNoParcelsMessage": "Aucun colis confié",
   "@tripOwnerNoParcelsMessage": {
     "description": "Tooltip de la tuile « Colis » désactivée (écran du trajet, ex-grille d’actions) ; réutilisé comme titre de l'état vide du sheet « Colis » de l'activité du trajet (trip_activity_sheets.dart, même préfixe, texte identique)."
   },
@@ -21781,7 +21784,7 @@
   "@gpProPieceSourceTitle": {"description": "Feuille de choix de la source de l'image (appareil photo ou galerie) d'un justificatif GP Pro."},
   "gpProDocTypeBusinessRegistration": "Registre d'entreprise (Kbis, SIRET, NINEA, RCCM…)",
   "@gpProDocTypeBusinessRegistration": {"description": "Type de justificatif GP Pro : BUSINESS_REGISTRATION."},
-  "gpProDocTypeTravelProof": "Billet ou carte d'embarquement",
+  "gpProDocTypeTravelProof": "Titre de transport",
   "@gpProDocTypeTravelProof": {"description": "Type de justificatif GP Pro : TRAVEL_PROOF."},
   "gpProDocTypeSocialProfile": "Capture d'un réseau social",
   "@gpProDocTypeSocialProfile": {"description": "Type de justificatif GP Pro : SOCIAL_PROFILE."},

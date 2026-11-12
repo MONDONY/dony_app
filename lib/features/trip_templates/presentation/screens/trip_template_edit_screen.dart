@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -19,6 +20,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/transport_mode_row.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_fields.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
@@ -199,8 +201,10 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _fields.arrivalCity.value = t.arrivalCity;
     _fields.departureCountryCode.value = t.departureCountryCode;
     _fields.arrivalCountryCode.value = t.arrivalCountryCode;
-    _fields.transportMode.value =
-        transportModeFromWire(t.transportMode) ?? TransportMode.plane;
+    // Mode du modèle gardé tel quel (route, bateau...) : jamais ramené à
+    // l'avion. Un mode illisible reste nul, `_buildPayload` renvoie alors la
+    // valeur d'origine.
+    _fields.transportMode.value = transportModeFromWire(t.transportMode);
     _fields.departureTime.value = _timeOfDay(t.departureTime);
     _fields.arrivalTime.value = _timeOfDay(t.arrivalTime);
     _handoverLeadDays.value = t.handoverLeadDays;
@@ -337,6 +341,16 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     super.dispose();
   }
 
+  /// Mode du modèle tel qu'il sera enregistré : celui du formulaire, sinon la
+  /// valeur d'origine du modèle ouvert (mode illisible), sinon avion.
+  String _modeWire() {
+    final mode = _fields.transportMode.value;
+    if (mode != null) {
+      return transportModeToWire(mode);
+    }
+    return widget.template?.transportMode ?? 'PLANE';
+  }
+
   /// Payload complet envoyé au bloc : les trois étapes (Trajet, Lieux &
   /// capacité, Prix & conditions), sérialisées par `TripTemplate.toJson` —
   /// même mapping adresse/champs que le modèle chargé depuis le repository,
@@ -359,9 +373,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       arrivalLng: widget.template?.arrivalLng,
       departureCountryCode: _fields.departureCountryCode.value,
       arrivalCountryCode: _fields.arrivalCountryCode.value,
-      transportMode: transportModeToWire(
-        _fields.transportMode.value ?? TransportMode.plane,
-      ),
+      transportMode: _modeWire(),
       capacityUnit: formState.capacityUnit.toWire(),
       availableKg: _fields.availableKg.value.round(),
       pricingMode: formState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG',
@@ -546,9 +558,28 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       // ── TRAJET ──────────────────────────────────────────────────
       _SectionLabel(
         label: l.tripTemplateTripSectionLabel,
-        iconAsset: 'plane-takeoff',
+        iconAsset: kNeutralTripIconAsset,
       ),
       const SizedBox(height: DonySpacing.sm),
+      // Mode du modèle : choisi dès que le voyageur a le choix, ou montré
+      // quand le modèle n'est pas un avion (modèle bateau ou route existant).
+      ValueListenableBuilder<TransportModesAvailability>(
+        valueListenable: transportModesListenable,
+        builder: (context, modes, _) => ValueListenableBuilder<TransportMode?>(
+          valueListenable: _fields.transportMode,
+          builder: (context, mode, _) =>
+              modes.hasTripChoice ||
+                  transportModeOrPlane(mode) != TransportMode.plane
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: DonySpacing.lg),
+                  child: TransportModeRow(
+                    modes: modes.tripCreationModes,
+                    notifier: _fields.transportMode,
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ),
       ListenableBuilder(
         listenable: Listenable.merge([
           _fields.departureCity,
@@ -589,11 +620,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       ),
       const SizedBox(height: DonySpacing.xxl),
 
-      // Pas de « Mode de transport » : la création de trajet n'en propose
-      // plus (toujours avion). Le modèle garde la valeur en coulisse (avion
-      // par défaut, celle d'un ancien modèle en édition) parce que l'API et
-      // les récurrences l'exigent.
-
       // ── HORAIRES ─────────────────────────────────────────────────
       _SectionLabel(
         label: l.tripTemplateScheduleSectionLabel,
@@ -601,14 +627,14 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       ),
       const SizedBox(height: DonySpacing.sm),
       _TimeRow(
-        icon: 'plane-takeoff',
+        icon: 'map-pin',
         label: l.tripTemplateDepartureTimeFieldLabel,
         shortLabel: l.tripTemplateDepartureShortLabel,
         time: _fields.departureTime,
       ),
       const SizedBox(height: DonySpacing.sm),
       _TimeRow(
-        icon: 'plane-landing',
+        icon: 'flag',
         label: l.tripTemplateArrivalTimeFieldLabel,
         shortLabel: l.tripTemplateArrivalShortLabel,
         time: _fields.arrivalTime,

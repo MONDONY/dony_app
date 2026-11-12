@@ -2899,7 +2899,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestPublishIntroWhyBulletCarried =>
-      'Un voyageur transporte votre colis dans ses bagages.';
+      'Un voyageur transporte votre colis avec lui.';
 
   @override
   String get requestPublishIntroWhyBulletPayment =>
@@ -8781,12 +8781,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String tripOwnerShareMessage(
+    String emoji,
     String dep,
     String arr,
     String date,
     String url,
   ) {
-    return '✈️ Je voyage $dep → $arr le $date avec de la place dans mes bagages !\nRéservez vos kilos sur Yadony 📦\n$url';
+    return '$emoji Je voyage $dep → $arr le $date avec de la place pour vos colis !\nRéservez vos kilos sur Yadony 📦\n$url';
   }
 
   @override
@@ -8901,7 +8902,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerParcelsTile => 'Colis';
 
   @override
-  String get tripOwnerNoParcelsMessage => 'Aucun colis embarqué';
+  String get tripOwnerNoParcelsMessage => 'Aucun colis confié';
 
   @override
   String get tripOwnerDeleteDialogTitle => 'Supprimer ce trajet ?';
@@ -20911,7 +20912,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Registre d\'entreprise (Kbis, SIRET, NINEA, RCCM…)';
 
   @override
-  String get gpProDocTypeTravelProof => 'Billet ou carte d\'embarquement';
+  String get gpProDocTypeTravelProof => 'Titre de transport';
 
   @override
   String get gpProDocTypeSocialProfile => 'Capture d\'un réseau social';

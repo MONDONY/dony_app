@@ -380,7 +380,11 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
                 QuickChip(
                   key: Key('chip-stops-${filter?.name ?? 'any'}'),
                   label: label,
-                  iconAsset: 'plane',
+                  // Les escales sont une notion d'avion : l'avion n'est dessiné
+                  // que si le filtre de mode vaut avion.
+                  iconAsset: f.transportMode == TransportMode.plane
+                      ? 'plane'
+                      : kNeutralTripIconAsset,
                   active: f.stopsFilter == filter,
                   onChanged: (_) => _update(
                     filter == null
@@ -524,7 +528,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
             child: QuickChip(
               key: const Key('chip-matching-my-trips'),
               label: l.homeComposerForMyTrips,
-              iconAsset: 'plane',
+              iconAsset: kNeutralTripIconAsset,
               active: f.matchingMyTrips,
               onChanged: _canFilterOnMyTrips
                   ? (v) => _update(f.copyWith(matchingMyTrips: v))

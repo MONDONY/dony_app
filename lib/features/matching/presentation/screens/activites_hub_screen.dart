@@ -20,6 +20,7 @@ import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/activity_labels.dart';
 import 'package:dony/features/matching/presentation/screens/mes_colis_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/activites_flight_alerts_row.dart';
@@ -727,7 +728,7 @@ class _ActivityGrid extends StatelessWidget {
     final trips = BlocBuilder<TripsSummaryCubit, TripsSummaryState>(
       builder: (context, state) => ActivityHeroTile(
         key: const Key('hub-tile-trips'),
-        iconName: 'plane',
+        iconName: kNeutralTripIconAsset,
         color: travel,
         value: state.summary?.activeTrips ?? 0,
         label: l.activityTileTripsLabel,

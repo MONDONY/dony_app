@@ -41,6 +41,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_recent_city_store.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 class _MockAnnouncementRepo extends Mock implements AnnouncementRepository {}
 
@@ -450,6 +451,47 @@ void main() {
     expect(captured.every((v) => v == null), isTrue);
     expect(find.text('Tous'), findsWidgets);
   });
+
+  // Les escales sont une notion d'avion : leur puce ne dessine un avion que
+  // si le filtre de mode vaut avion.
+  for (final (mode, planeShown) in <(TransportMode?, bool)>[
+    (null, false),
+    (TransportMode.car, false),
+    (TransportMode.plane, true),
+  ]) {
+    testWidgets('puces Escales, filtre mode $mode : avion $planeShown', (
+      tester,
+    ) async {
+      // Route allumée : sans choix de mode, le filtre de mode est écarté.
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      addTearDown(resetTransportModesForTest);
+      _vueHaute(tester);
+      await tester.pumpWidget(
+        _Harness(initialFilters: HomeSearchFilters(transportMode: mode)),
+      );
+      await tester.pumpAndSettle();
+
+      await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+      await tester.tap(find.byKey(const Key('composer-more-filters')));
+      await tester.pumpAndSettle();
+      await _scrollTo(tester, find.text('ESCALES'));
+
+      final chip = find.byKey(const Key('chip-stops-directOnly'));
+      expect(chip, findsOneWidget);
+      expect(
+        find.descendant(of: chip, matching: findDonyIcon('plane')),
+        planeShown ? findsOneWidget : findsNothing,
+      );
+      if (!planeShown) {
+        expect(
+          find.descendant(of: chip, matching: findDonyIcon('route')),
+          findsOneWidget,
+        );
+      }
+    });
+  }
 
   // FLUTTER-GD / FLUTTER-G0 : les deux filtres partent au serveur.
   testWidgets('Escales et moyens de paiement alimentent la recherche', (

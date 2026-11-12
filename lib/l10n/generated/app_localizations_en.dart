@@ -2885,7 +2885,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestPublishIntroWhyBulletCarried =>
-      'A traveler carries your parcel in their luggage.';
+      'A traveler carries your parcel with them.';
 
   @override
   String get requestPublishIntroWhyBulletPayment =>
@@ -8728,12 +8728,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tripOwnerShareMessage(
+    String emoji,
     String dep,
     String arr,
     String date,
     String url,
   ) {
-    return '✈️ I\'m traveling $dep → $arr on $date with room in my luggage!\nBook your kilos on Yadony 📦\n$url';
+    return '$emoji I\'m traveling $dep → $arr on $date with room for your parcels!\nBook your kilos on Yadony 📦\n$url';
   }
 
   @override
@@ -8848,7 +8849,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripOwnerParcelsTile => 'Parcels';
 
   @override
-  String get tripOwnerNoParcelsMessage => 'No parcels on board';
+  String get tripOwnerNoParcelsMessage => 'No parcels yet';
 
   @override
   String get tripOwnerDeleteDialogTitle => 'Delete this trip?';
@@ -20771,7 +20772,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Business registration (Kbis, SIRET, NINEA, RCCM…)';
 
   @override
-  String get gpProDocTypeTravelProof => 'Ticket or boarding pass';
+  String get gpProDocTypeTravelProof => 'Travel ticket';
 
   @override
   String get gpProDocTypeSocialProfile => 'Social media screenshot';

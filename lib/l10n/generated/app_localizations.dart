@@ -4913,7 +4913,7 @@ abstract class AppLocalizations {
   /// Puce « comment ça marche », rôle expéditeur : transport
   ///
   /// In fr, this message translates to:
-  /// **'Un voyageur transporte votre colis dans ses bagages.'**
+  /// **'Un voyageur transporte votre colis avec lui.'**
   String get requestPublishIntroWhyBulletCarried;
 
   /// Puce « comment ça marche », rôle expéditeur : paiement séquestré
@@ -14578,11 +14578,17 @@ abstract class AppLocalizations {
   /// **'Partager mon trajet'**
   String get tripOwnerShareMyTrip;
 
-  /// Message partagé après publication d'un brouillon (trip_owner_detail_screen.dart). date formatée en DateFormat.MMMMd(locale) ; url = donnée non traduite.
+  /// Message partagé après publication d'un brouillon (trip_owner_detail_screen.dart). emoji = emoji du mode du trajet (TransportModeUI.emoji) ; date formatée en DateFormat.MMMMd(locale) ; url = donnée non traduite.
   ///
   /// In fr, this message translates to:
-  /// **'✈️ Je voyage {dep} → {arr} le {date} avec de la place dans mes bagages !\nRéservez vos kilos sur Yadony 📦\n{url}'**
-  String tripOwnerShareMessage(String dep, String arr, String date, String url);
+  /// **'{emoji} Je voyage {dep} → {arr} le {date} avec de la place pour vos colis !\nRéservez vos kilos sur Yadony 📦\n{url}'**
+  String tripOwnerShareMessage(
+    String emoji,
+    String dep,
+    String arr,
+    String date,
+    String url,
+  );
 
   /// Titre du bandeau brouillon (trip_owner_detail_screen.dart).
   ///
@@ -14761,7 +14767,7 @@ abstract class AppLocalizations {
   /// Tooltip de la tuile « Colis » désactivée (écran du trajet, ex-grille d’actions) ; réutilisé comme titre de l'état vide du sheet « Colis » de l'activité du trajet (trip_activity_sheets.dart, même préfixe, texte identique).
   ///
   /// In fr, this message translates to:
-  /// **'Aucun colis embarqué'**
+  /// **'Aucun colis confié'**
   String get tripOwnerNoParcelsMessage;
 
   /// Titre du dialogue de suppression du trajet (écran du trajet, ex-grille d’actions).
@@ -33753,7 +33759,7 @@ abstract class AppLocalizations {
   /// Type de justificatif GP Pro : TRAVEL_PROOF.
   ///
   /// In fr, this message translates to:
-  /// **'Billet ou carte d\'embarquement'**
+  /// **'Titre de transport'**
   String get gpProDocTypeTravelProof;
 
   /// Type de justificatif GP Pro : SOCIAL_PROFILE.

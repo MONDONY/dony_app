@@ -791,7 +791,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 14. Appeler `Posthog()` directement → passer par `AnalyticsService`
 15. Créer un BLoC sans injecter `AnalyticsService` en paramètre
 16. Ajouter un nom d'event inline → toujours passer par `AnalyticsEvents.xxx`
-17. **Icône camion (`Icons.local_shipping*`)** → JAMAIS l'utiliser dans le projet (mode de transport, envoi, livraison, ou autre). dony = transport par voyageur (bagage en avion), pas par camion. Préférer `Icons.inventory_2_rounded` (colis), `Icons.flight_rounded` (trajet/transport), `Icons.outbox_rounded` (envoi). Exception : uniquement si je le précise explicitement.
+17. **Icône camion (`Icons.local_shipping*`)** → JAMAIS l'utiliser dans le projet (mode de transport, envoi, livraison, ou autre). dony = transport par voyageur (avion, bateau, route), pas par camion ; la route prend l'icône `car`. Préférer `Icons.inventory_2_rounded` (colis), l'icône du mode du trajet (`TransportModeUI.iconAsset`, icône neutre `route` si le mode est inconnu : jamais un avion en dur), `Icons.outbox_rounded` (envoi). Exception : uniquement si je le précise explicitement.
 18. Laisser du code mort dans le repo — un widget/écran/service sans aucun appelant doit être supprimé, pas laissé "au cas où". Vérifier par `grep` avant de le garder ; supprimer aussi ses tests dédiés
 
 ### ALWAYS

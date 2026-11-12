@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 const _trajetsKey = Key('search_mode_segment_trips');
 const _colisKey = Key('search_mode_segment_colis');
@@ -303,7 +304,7 @@ void main() {
     );
     final voyage = find.descendant(
       of: find.byKey(_colisKey),
-      matching: find.byKey(const Key('search_mode_icon_plane')),
+      matching: find.byKey(const Key('search_mode_icon_route')),
     );
     expect(envoi, findsOneWidget);
     expect(voyage, findsOneWidget);
@@ -312,10 +313,12 @@ void main() {
     final iconeEnvoi = tester.widget<DonyIcon>(envoi);
     final iconeVoyage = tester.widget<DonyIcon>(voyage);
     expect(iconeEnvoi.name, 'package');
-    expect(iconeVoyage.name, 'plane');
+    expect(iconeVoyage.name, 'route');
     expect(iconeEnvoi.size, iconeVoyage.size);
     expect(iconeEnvoi.color, cs.onSurface);
     expect(iconeVoyage.color, cs.onSurfaceVariant);
+    // Le mode du trajet n'est pas encore choisi : jamais un avion.
+    expectNoPlaneIcon(tester);
   });
 
   testWidgets('les icônes, décoratives, n\'entrent pas dans la sémantique', (

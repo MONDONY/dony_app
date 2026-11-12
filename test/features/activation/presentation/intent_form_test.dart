@@ -10,6 +10,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/plane_icon_expectations.dart';
+
 class _MockIntentCubit extends MockCubit<IntentFormState>
     implements IntentCubit {}
 
@@ -57,6 +59,15 @@ void main() {
       expect(find.byKey(Key('intent-destination-$code')), findsOneWidget);
     }
     expect(find.byKey(const Key('intent-destination-OTHER')), findsOneWidget);
+  });
+
+  testWidgets('l\'intention voyageur : valise, jamais un avion', (
+    tester,
+  ) async {
+    await pump(tester);
+    expect(find.text('🧳'), findsOneWidget);
+    expect(find.text('📦'), findsOneWidget);
+    expectNoPlaneIcon(tester);
   });
 
   testWidgets('destination principale : titre et aide sans ambiguïté', (

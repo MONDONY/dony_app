@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -101,7 +102,7 @@ class SearchModeSelector extends StatelessWidget {
                 Expanded(
                   child: _Segment(
                     key: const Key('search_mode_segment_colis'),
-                    iconName: 'plane',
+                    iconName: kNeutralTripIconAsset,
                     title: parcelsTitle(l),
                     subtitle: _subtitle(l, SearchMode.parcels),
                     count: _countShown(SearchMode.parcels)
@@ -133,7 +134,8 @@ class _Segment extends StatelessWidget {
   });
 
   /// Icône Lucide de l'intention, la même que sur la tuile correspondante du
-  /// hub Activités (`package` pour l'envoi, `plane` pour le voyage).
+  /// hub Activités (`package` pour l'envoi, `route` pour le voyage : le mode du trajet
+  /// n'est pas encore choisi).
   final String iconName;
   final String title;
 

@@ -3,6 +3,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/l10n/l10n.dart';
+import 'package:intl/intl.dart';
 
 /// Libellés traduits du mode de transport d'un trajet.
 extension TransportModeL10n on TransportMode {
@@ -14,6 +15,20 @@ extension TransportModeL10n on TransportMode {
     TransportMode.other => l.tripTransportOther,
   };
 }
+
+/// Message partagé pour un trajet [trip] publié : l'emoji de son mode (avion
+/// quand le mode est absent) puis le corridor, la date et le lien [url].
+String tripShareMessage(
+  AppLocalizations l,
+  AnnouncementModel trip,
+  String url,
+) => l.tripOwnerShareMessage(
+  transportModeOrPlane(trip.transportMode).emoji,
+  trip.departureCity,
+  trip.arrivalCity,
+  DateFormat.MMMMd(l.localeName).format(trip.departureDate),
+  url,
+);
 
 /// Libellés traduits d'un filtre d'urgence de départ.
 extension UrgencyFilterL10n on UrgencyFilter {

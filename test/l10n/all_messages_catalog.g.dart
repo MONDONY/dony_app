@@ -3218,6 +3218,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   ),
   'tripOwnerShareMyTrip': (l) => l.tripOwnerShareMyTrip,
   'tripOwnerShareMessage': (l) => l.tripOwnerShareMessage(
+    placeholderMarker('emoji'),
     placeholderMarker('dep'),
     placeholderMarker('arr'),
     placeholderMarker('date'),
@@ -8598,7 +8599,7 @@ const textParameters = <String, List<String>>{
   'shipmentReimbursementInfoMessage': ['cap'],
   'bidListNoResultDescription': ['query'],
   'tripOwnerPublishedSubtitle': ['dep', 'arr'],
-  'tripOwnerShareMessage': ['dep', 'arr', 'date', 'url'],
+  'tripOwnerShareMessage': ['emoji', 'dep', 'arr', 'date', 'url'],
   'bidListCardTrackingNumberLabel': ['number'],
   'activityToolsMissing': ['items'],
   'activityToolHubSemanticsReady': ['label', 'title'],
