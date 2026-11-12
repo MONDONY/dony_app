@@ -33,8 +33,6 @@ final class FieldChange<T extends Object> {
 
   final T? value;
   final bool isClear;
-
-  bool get isKeep => value == null && !isClear;
 }
 
 /// Entrée de corps pour une taille ([key] : `maxItemSize` d'un trajet, d'un

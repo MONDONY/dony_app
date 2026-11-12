@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -147,14 +148,14 @@ class CompatibleTravelerCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    l.requestAvailableKg(trip.availableKg.toStringAsFixed(0)),
+                    l.requestAvailableKg(
+                      formatWeightGrouped(l.localeName, trip.availableKg),
+                    ),
                     style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                   ),
                   Text(
                     l.requestYourParcelWeight(
-                      requestWeightKg.toStringAsFixed(
-                        requestWeightKg % 1 == 0 ? 0 : 1,
-                      ),
+                      formatWeightGrouped(l.localeName, requestWeightKg),
                     ),
                     style: TextStyle(
                       fontSize: 12,

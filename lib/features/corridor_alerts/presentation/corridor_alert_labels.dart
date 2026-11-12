@@ -1,3 +1,4 @@
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -49,13 +50,11 @@ String corridorAlertDateLabel(AppLocalizations l, CorridorAlertModel a) {
 
 /// « ≥ 3 kg » ou « Tout poids » (alertes colis uniquement).
 ///
-/// Le poids fractionnaire suit la langue (`formatOneDecimal`, virgule en
-/// français) ; un poids entier reste sans décimale, comme avant (correction
-/// R46 : le rendu précédent affichait toujours un point, y compris en
-/// français, ex. « ≥ 2.5 kg »).
+/// Le poids suit la langue (`formatWeightKg`, virgule en français) ; un poids
+/// entier reste sans décimale (correction R46 : le rendu précédent affichait
+/// toujours un point, y compris en français, ex. « ≥ 2.5 kg »).
 String corridorAlertWeightLabel(AppLocalizations l, CorridorAlertModel a) {
   final kg = a.minWeightKg;
   if (kg == null) return l.corridorAlertAnyWeight;
-  final display = kg % 1 == 0 ? kg.toStringAsFixed(0) : formatOneDecimal(l, kg);
-  return '≥ $display kg';
+  return '≥ ${formatWeightKg(l, kg)}';
 }

@@ -2262,13 +2262,15 @@ void main() {
       'édition sans toucher la taille : rien envoyé (le back garde)',
       () async {
         final change = await sentChange(original: ItemSize.l, touch: false);
-        expect(change.isKeep, isTrue);
+        expect(change.value, isNull);
+        expect(change.isClear, isFalse);
       },
     );
 
     test('édition, même taille re-choisie : rien envoyé', () async {
       final change = await sentChange(original: ItemSize.l, chosen: ItemSize.l);
-      expect(change.isKeep, isTrue);
+      expect(change.value, isNull);
+      expect(change.isClear, isFalse);
     });
 
     test('édition, taille changée : envoyée', () async {
@@ -2284,7 +2286,8 @@ void main() {
     test('édition, demande chargée sans taille, jamais choisie : rien '
         'effacé ni envoyé', () async {
       final change = await sentChange(touch: false);
-      expect(change.isKeep, isTrue);
+      expect(change.value, isNull);
+      expect(change.isClear, isFalse);
     });
 
     test('édition, demande chargée sans taille, une taille choisie : '

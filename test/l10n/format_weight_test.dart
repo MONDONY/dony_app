@@ -11,16 +11,20 @@ void main() {
       expect(formatWeightKg(l, 4.5), '4,5 kg');
     });
 
-    test('fr : cas limite, un poids qui s\'arrondit à un entier perd sa '
-        'décimale (4,04 → « 4 kg », déclaré en PR)', () {
+    test('fr : deux décimales au plus, 0,25 kg ne se lit pas « 0,2 kg »', () {
       final l = lookupAppLocalizations(AppL10n.fr);
-      expect(formatWeightKg(l, 4.04), '4 kg');
+      expect(formatWeightKg(l, 0.25), '0,25 kg');
+      expect(formatWeightKg(l, 0.5), '0,5 kg');
+      expect(formatWeightKg(l, 23), '23 kg');
+      expect(formatWeightKg(l, 4.04), '4,04 kg');
+      expect(formatWeightKg(l, 4.004), '4 kg');
     });
 
     test('en : entier sans décimale, décimale avec point', () {
       final l = lookupAppLocalizations(AppL10n.en);
       expect(formatWeightKg(l, 4.0), '4 kg');
       expect(formatWeightKg(l, 4.5), '4.5 kg');
+      expect(formatWeightKg(l, 0.25), '0.25 kg');
     });
   });
 
@@ -28,7 +32,7 @@ void main() {
     test('en : séparateur de milliers', () {
       final l = lookupAppLocalizations(AppL10n.en);
       expect(formatWeightKg(l, 1200), '1,200 kg');
-      expect(formatWeightKg(l, 999999.99), '1,000,000 kg');
+      expect(formatWeightKg(l, 999999.99), '999,999.99 kg');
       expect(formatWeightKg(l, 1200.5), '1,200.5 kg');
     });
 

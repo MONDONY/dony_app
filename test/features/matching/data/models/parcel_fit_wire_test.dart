@@ -41,7 +41,8 @@ void main() {
 
   group('FieldChange', () {
     test('ofNullable : null ne dit rien, une valeur est envoyée', () {
-      expect(FieldChange.ofNullable<ItemSize>(null).isKeep, isTrue);
+      expect(FieldChange.ofNullable<ItemSize>(null).value, isNull);
+      expect(FieldChange.ofNullable<ItemSize>(null).isClear, isFalse);
       expect(FieldChange.ofNullable(ItemSize.m).value, ItemSize.m);
     });
 

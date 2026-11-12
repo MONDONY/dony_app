@@ -6666,7 +6666,8 @@ void main() {
       final sent = verify(
         () => announcementBloc.add(captureAny()),
       ).captured.whereType<AnnouncementUpdateRequested>().single;
-      expect(sent.maxItemSize.isKeep, isTrue);
+      expect(sent.maxItemSize.value, isNull);
+      expect(sent.maxItemSize.isClear, isFalse);
       expect(sent.maxParcelWeightKg.isClear, isTrue);
       expect(sent.availableKg, 1200);
     });
@@ -6685,8 +6686,10 @@ void main() {
       final sent = verify(
         () => announcementBloc.add(captureAny()),
       ).captured.whereType<AnnouncementUpdateRequested>().single;
-      expect(sent.maxItemSize.isKeep, isTrue);
-      expect(sent.maxParcelWeightKg.isKeep, isTrue);
+      expect(sent.maxItemSize.value, isNull);
+      expect(sent.maxItemSize.isClear, isFalse);
+      expect(sent.maxParcelWeightKg.value, isNull);
+      expect(sent.maxParcelWeightKg.isClear, isFalse);
     });
 
     testWidgets(

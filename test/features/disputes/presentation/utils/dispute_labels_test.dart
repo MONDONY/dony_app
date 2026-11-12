@@ -54,6 +54,7 @@ void main() {
     expect(disputeWeightLabel(fr, 5), '5');
     expect(disputeWeightLabel(fr, 4.5), '4,5');
     expect(disputeWeightLabel(en, 4.5), '4.5');
+    expect(disputeWeightLabel(fr, 0.25), '0,25');
   });
 
   test('anglais : types, statuts et autre partie', () {

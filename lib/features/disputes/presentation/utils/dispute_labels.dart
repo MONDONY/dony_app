@@ -1,3 +1,4 @@
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/l10n/l10n.dart';
 
 /// Traductions d'affichage des valeurs backend (spec, section Traductions).
@@ -17,7 +18,7 @@ String disputeStatusLabel(AppLocalizations l, String status) =>
       _ => status,
     };
 
-/// Poids d'un envoi pour [AppLocalizations.disputeParcelWeight] : entier sans
-/// décimale, à la langue sinon (`formatOneDecimal`).
+/// Poids d'un envoi pour [AppLocalizations.disputeParcelWeight] : valeur seule
+/// (le texte pose « kg »), formatée par `formatWeightGrouped`.
 String disputeWeightLabel(AppLocalizations l, double kg) =>
-    kg % 1 == 0 ? kg.toStringAsFixed(0) : formatOneDecimal(l, kg);
+    formatWeightGrouped(l.localeName, kg);
