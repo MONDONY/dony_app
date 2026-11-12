@@ -5072,25 +5072,25 @@ abstract class AppLocalizations {
   /// **'Espèces'**
   String get tripPublishCashLabel;
 
-  /// Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M).
+  /// Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_step.dart, Sentry FLUTTER-8M).
   ///
   /// In fr, this message translates to:
   /// **'Toujours accepté sur ce trajet. Frais de service avancés sur votre solde Yadony quand vous acceptez le colis, remboursés par l\'expéditeur dans le paiement en espèces'**
   String get tripPublishCashLockedSubtitle;
 
-  /// Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M).
+  /// Message au toucher de l'interrupteur espèces verrouillé (prix_step.dart, Sentry FLUTTER-8M).
   ///
   /// In fr, this message translates to:
   /// **'Sans paiement par carte sur ce trajet, les espèces restent toujours acceptées : c\'est le mode qui permet aux expéditeurs de réserver.'**
   String get tripPublishCashLockedExplanation;
 
-  /// Message au toucher de la ligne carte quand elle est active (prix_conditions_step.dart, Sentry FLUTTER-CS/D2).
+  /// Message au toucher de la ligne carte quand elle est active (prix_step.dart, Sentry FLUTTER-CS/D2).
   ///
   /// In fr, this message translates to:
   /// **'Le paiement par carte est activé sur ce trajet : les expéditeurs pourront payer par carte, l\'argent est séquestré jusqu\'à la livraison.'**
   String get tripPublishCardActiveExplanation;
 
-  /// Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_conditions_step.dart, Sentry FLUTTER-D2).
+  /// Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_step.dart, Sentry FLUTTER-D2).
   ///
   /// In fr, this message translates to:
   /// **'Vérification de votre compte de paiement…'**
@@ -5138,7 +5138,7 @@ abstract class AppLocalizations {
   /// **'Le paiement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces, et en mobile money pour les trajets en XOF ou XAF.'**
   String get tripPublishCashOnlyBannerNoConnect;
 
-  /// Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_conditions_step.dart, FLUTTER-EE).
+  /// Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_step.dart, FLUTTER-EE).
   ///
   /// In fr, this message translates to:
   /// **'Le paiement par carte dépend du pays de résidence indiqué dans votre profil ({country}), et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces, et en mobile money pour les trajets en XOF ou XAF.'**
@@ -26437,19 +26437,19 @@ abstract class AppLocalizations {
   /// **'Vous pourrez contacter le voyageur dès que votre paiement sera confirmé.'**
   String get bidDetailContactTravelerAfterPaymentHint;
 
-  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
+  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)
   ///
   /// In fr, this message translates to:
   /// **'Précisez ce que vous acceptez en « Autre »'**
   String get tripPublishOtherContentPrecisionLabel;
 
-  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
+  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)
   ///
   /// In fr, this message translates to:
   /// **'Ex. pièces auto, petit électroménager'**
   String get tripPublishOtherContentPrecisionHint;
 
-  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
+  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (create_trip_screen.dart, FLUTTER-4G)
   ///
   /// In fr, this message translates to:
   /// **'Vous avez coché « Autre » : précisez ce que vous acceptez avant de publier.'**

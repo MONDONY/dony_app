@@ -1644,19 +1644,19 @@
   },
   "tripPublishCashLockedSubtitle": "Toujours accepté sur ce trajet. Frais de service avancés sur votre solde Yadony quand vous acceptez le colis, remboursés par l'expéditeur dans le paiement en espèces",
   "@tripPublishCashLockedSubtitle": {
-    "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+    "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_step.dart, Sentry FLUTTER-8M)."
   },
   "tripPublishCashLockedExplanation": "Sans paiement par carte sur ce trajet, les espèces restent toujours acceptées : c'est le mode qui permet aux expéditeurs de réserver.",
   "@tripPublishCashLockedExplanation": {
-    "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+    "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_step.dart, Sentry FLUTTER-8M)."
   },
   "tripPublishCardActiveExplanation": "Le paiement par carte est activé sur ce trajet : les expéditeurs pourront payer par carte, l'argent est séquestré jusqu'à la livraison.",
   "@tripPublishCardActiveExplanation": {
-    "description": "Message au toucher de la ligne carte quand elle est active (prix_conditions_step.dart, Sentry FLUTTER-CS/D2)."
+    "description": "Message au toucher de la ligne carte quand elle est active (prix_step.dart, Sentry FLUTTER-CS/D2)."
   },
   "tripPublishCardCheckingSubtitle": "Vérification de votre compte de paiement…",
   "@tripPublishCardCheckingSubtitle": {
-    "description": "Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_conditions_step.dart, Sentry FLUTTER-D2)."
+    "description": "Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_step.dart, Sentry FLUTTER-D2)."
   },
   "tripPublishCashSubtitle": "Frais de service avancés sur votre solde Yadony quand vous acceptez le colis, remboursés par l'expéditeur dans le paiement en espèces",
   "@tripPublishCashSubtitle": {
@@ -1688,7 +1688,7 @@
   },
   "tripPublishCashOnlyBannerNoConnectCountry": "Le paiement par carte dépend du pays de résidence indiqué dans votre profil ({country}), et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces, et en mobile money pour les trajets en XOF ou XAF.",
   "@tripPublishCashOnlyBannerNoConnectCountry": {
-    "description": "Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_conditions_step.dart, FLUTTER-EE).",
+    "description": "Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_step.dart, FLUTTER-EE).",
     "placeholders": {
       "country": {
         "type": "String"
@@ -18210,15 +18210,15 @@
   },
   "tripPublishOtherContentPrecisionLabel": "Précisez ce que vous acceptez en « Autre »",
   "@tripPublishOtherContentPrecisionLabel": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)"
   },
   "tripPublishOtherContentPrecisionHint": "Ex. pièces auto, petit électroménager",
   "@tripPublishOtherContentPrecisionHint": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)"
   },
   "tripPublishOtherContentPrecisionRequired": "Vous avez coché « Autre » : précisez ce que vous acceptez avant de publier.",
   "@tripPublishOtherContentPrecisionRequired": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (create_trip_screen.dart, FLUTTER-4G)"
   },
   "profilePublicVerificationsSectionLabel": "VÉRIFICATIONS",
   "@profilePublicVerificationsSectionLabel": {

@@ -10,6 +10,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
   home: Scaffold(body: SingleChildScrollView(child: child)),
@@ -328,6 +329,17 @@ void main() {
 
       expect(find.text('15 nov. → 15 déc.'), findsOneWidget);
     });
+  });
+
+  testWidgets('TransportModeField : icône SVG du mode, pas d\'icône Material', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(TransportModeField(mode: TransportMode.boat, onTap: () {})),
+    );
+
+    expect(findDonyIcon('ship'), findsOneWidget);
+    expect(find.byIcon(Icons.directions_boat_rounded), findsNothing);
   });
 
   testWidgets('en anglais : en-tête et valeur de TransportModeField', (

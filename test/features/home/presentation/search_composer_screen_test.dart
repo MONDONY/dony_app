@@ -493,6 +493,25 @@ void main() {
     });
   }
 
+  testWidgets('puces Escales, avion seul proposé : l\'avion reste dessiné', (
+    tester,
+  ) async {
+    _vueHaute(tester);
+    await tester.pumpWidget(const _Harness());
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+    await tester.tap(find.byKey(const Key('composer-more-filters')));
+    await tester.pumpAndSettle();
+    await _scrollTo(tester, find.text('ESCALES'));
+
+    final chip = find.byKey(const Key('chip-stops-directOnly'));
+    expect(
+      find.descendant(of: chip, matching: findDonyIcon('plane')),
+      findsOneWidget,
+    );
+  });
+
   // FLUTTER-GD / FLUTTER-G0 : les deux filtres partent au serveur.
   testWidgets('Escales et moyens de paiement alimentent la recherche', (
     tester,

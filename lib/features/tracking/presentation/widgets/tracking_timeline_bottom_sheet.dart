@@ -23,7 +23,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///
 /// [departureCity] et [arrivalCity] `null` quand le colis est inconnu de
 /// l'app (lu par QR) : pas de trajet en sous-titre ni de ville dans la phrase
-/// d'état. [transportMode] choisit l'icône du trajet (avion par défaut).
+/// d'état. [transportMode] choisit l'icône du trajet : `null` (ancienne donnée
+/// sans le mode) vaut avion, [TransportMode.other] donne l'icône neutre (mode
+/// inconnu, colis d'un tiers).
 /// [trackingNumber] : numéro DON affiché au-dessus du titre, s'il est connu.
 /// [onShareTracking] : bouton « Partager le suivi » en bas de la feuille.
 /// [bidStatus] : statut du colis s'il est connu. `ARRIVED` affiche l'arrivée

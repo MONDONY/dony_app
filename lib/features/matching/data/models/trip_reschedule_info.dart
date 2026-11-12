@@ -21,7 +21,8 @@ class TripRescheduleInfo {
 
   final String id;
 
-  /// `FLIGHT_CANCELLED`, `POSTPONED` ou `OTHER`.
+  /// `FLIGHT_CANCELLED` (trajet en avion), `TRANSPORT_CANCELLED` (autre mode),
+  /// `POSTPONED` ou `OTHER`.
   final String reason;
   final String? note;
   final DateTime? previousDepartureDate;

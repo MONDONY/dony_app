@@ -989,6 +989,9 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// brouillon) reste à choisir au lieu de valoir l'avion.
   bool get _hasModeStep => widget.steps.contains(TripFormStep.mode);
 
+  /// La ligne « Mode de transport » de l'étape Trajet est montrée.
+  late final bool _showModeRow;
+
   // ── Erreurs de champs obligatoires ──────────────────────────────────────────
   // Les champs manquants ne passent en rouge qu'après une première interaction
   // de l'utilisateur avec l'étape : un formulaire vierge reste neutre.
@@ -1272,6 +1275,15 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (!_isEdit && !_isLocked) {
       _transportModeNotifier.value = _hasModeStep ? null : TransportMode.plane;
     }
+    // Ligne « Mode de transport » (modification, trajet dédié à mode connu) :
+    // même règle que l'écran des modèles. Un voyageur qui n'a que l'avion
+    // n'a rien à choisir, la ligne n'apparaît que pour un trajet d'un autre
+    // mode. Décidé une fois : changer de puce ne la fait pas disparaître.
+    _showModeRow =
+        (_isEdit || (_isLocked && !_hasModeStep)) &&
+        (widget.tripModes.length > 1 ||
+            transportModeOrPlane(_transportModeNotifier.value) !=
+                TransportMode.plane);
     _syncCanSubmit(); // état initial — transport + prix
 
     // Désactivation du bouton Continuer tant que les 3 champs obligatoires
@@ -3116,9 +3128,8 @@ class _TripFormContentState extends State<_TripFormContent> {
           // Pas d'étape Mode en modification ni en trajet dédié à mode connu :
           // le mode se lit (et se change en modification) en tête de l'étape.
           // Un trajet dédié « peu importe » a l'étape Mode, donc pas de ligne.
-          transportModeRowModes: _isEdit || (_isLocked && !_hasModeStep)
-              ? widget.tripModes
-              : null,
+          // Avion seul proposé et trajet avion : rien à choisir, pas de ligne.
+          transportModeRowModes: _showModeRow ? widget.tripModes : null,
           transportModeRowReadOnly: _isLocked,
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,

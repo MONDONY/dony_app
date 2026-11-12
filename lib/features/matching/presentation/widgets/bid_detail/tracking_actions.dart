@@ -27,6 +27,7 @@ void openSenderTrackingTimeline(BuildContext context, BidModel bid) {
     bidId: bid.id,
     departureCity: bid.departureCity,
     arrivalCity: bid.arrivalCity,
+    transportMode: bid.transportMode,
     arrivalInstructions: bid.arrivalInstructions,
     trackingNumber: bid.trackingNumber,
     bidStatus: bid.status,

@@ -912,11 +912,11 @@
   "tripPublishCashLabel": "Cash",
   "tripPublishCashLockedSubtitle": "Always accepted on this trip. Service fee advanced from your Yadony balance when you accept the parcel, paid back by the sender in the cash payment",
   "@tripPublishCashLockedSubtitle": {
-    "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+    "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_step.dart, Sentry FLUTTER-8M)."
   },
   "tripPublishCashLockedExplanation": "Without card payment on this trip, cash always stays accepted: it is how senders can book.",
   "@tripPublishCashLockedExplanation": {
-    "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+    "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_step.dart, Sentry FLUTTER-8M)."
   },
   "tripPublishCardActiveExplanation": "Card payment is on for this trip: senders can pay by card, and the money is held until delivery.",
   "@tripPublishCardActiveExplanation": {
@@ -935,7 +935,7 @@
   "tripPublishCashOnlyBannerNoConnect": "Card payment depends on the country of residence in your profile, not on the country you're in. Stripe doesn't cover it yet: your trips are posted in cash, and in mobile money for trips in XOF or XAF.",
   "tripPublishCashOnlyBannerNoConnectCountry": "Card payment depends on the country of residence in your profile ({country}), not on the country you're in. Stripe doesn't cover it yet: your trips are posted in cash, and in mobile money for trips in XOF or XAF.",
   "@tripPublishCashOnlyBannerNoConnectCountry": {
-    "description": "Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_conditions_step.dart, FLUTTER-EE).",
+    "description": "Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_step.dart, FLUTTER-EE).",
     "placeholders": {
       "country": {
         "type": "String"
@@ -1005,7 +1005,7 @@
   "tripPublishModeAirTagDuration": "A few days",
   "tripPublishModeAirTagCapacity": "Suitcases or kg",
   "tripPublishModeRoadTitle": "By road",
-  "tripPublishModeRoadSubtitle": "Car, coach or truck",
+  "tripPublishModeRoadSubtitle": "Car, bus or truck",
   "tripPublishModeRoadTagScope": "Domestic or international",
   "tripPublishModeRoadTagCapacity": "Free or exact kg",
   "tripPublishHandoverLocationsLabel": "Drop-off locations",
@@ -1195,7 +1195,7 @@
   "requestCreateModeHelpAny": "All travelers on this route will see your request.",
   "requestCreateModeHelpPlane": "Only travelers flying will see your request.",
   "requestCreateModeHelpBoat": "Only ships (shared containers) will see your request.",
-  "requestCreateModeHelpRoad": "Only travelers by car, coach or truck will see your request.",
+  "requestCreateModeHelpRoad": "Only travelers by car, bus or truck will see your request.",
   "requestCreateAiAction": "Create with AI",
   "requestCreateTrajetSectionLabel": "TRIP",
   "requestCreateTrajetQuestion": "Where from, where to?",
@@ -8857,15 +8857,15 @@
   },
   "tripPublishOtherContentPrecisionLabel": "Specify what you accept under “Other”",
   "@tripPublishOtherContentPrecisionLabel": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)"
   },
   "tripPublishOtherContentPrecisionHint": "E.g. car parts, small appliances",
   "@tripPublishOtherContentPrecisionHint": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)"
   },
   "tripPublishOtherContentPrecisionRequired": "You ticked “Other”: specify what you accept before publishing.",
   "@tripPublishOtherContentPrecisionRequired": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (create_trip_screen.dart, FLUTTER-4G)"
   },
   "profilePublicVerificationsSectionLabel": "VERIFICATIONS",
   "@profilePublicVerificationsSectionLabel": {

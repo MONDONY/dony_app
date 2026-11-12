@@ -5953,6 +5953,42 @@ void main() {
       expect(sent.transportMode, TransportMode.boat);
     });
 
+    testWidgets("avion seul, modification d'un trajet avion : pas de ligne du "
+        'mode (rien à choisir)', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(announcement: _makeFullAnnouncement()),
+      );
+
+      expect(header(tester).steps.first, TripFormStep.trajet);
+      expect(find.byType(TransportModeRow, skipOffstage: false), findsNothing);
+    });
+
+    testWidgets("avion seul, modification d'un trajet BOAT : ligne du mode "
+        'montrée, BOAT sélectionné', (tester) async {
+      final boatTrip = _makeFullAnnouncement(transportMode: TransportMode.boat);
+      await pumpScreen(tester, CreateTripArgs(announcement: boatTrip));
+
+      final row = tester.widget<TransportModeRow>(
+        find.byType(TransportModeRow),
+      );
+      expect(row.notifier.value, TransportMode.boat);
+      expect(find.byKey(const Key('mode-chip-boat')), findsOneWidget);
+    });
+
+    testWidgets('avion seul, trajet dédié sur demande avion : pas de ligne du '
+        'mode', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          lockContext: _makeLockContext(),
+          negotiationBloc: _makeNegotiationBloc(),
+        ),
+      );
+
+      expect(find.byType(TransportModeRow, skipOffstage: false), findsNothing);
+    });
+
     testWidgets('modification : la ligne du mode change le mode envoyé', (
       tester,
     ) async {

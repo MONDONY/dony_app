@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
@@ -29,6 +30,7 @@ BidModel _bid(
   String? to,
   String? instructions,
   String? number,
+  TransportMode? transportMode,
 }) => BidModel(
   id: id,
   announcementId: announcementId,
@@ -38,6 +40,7 @@ BidModel _bid(
   departureCity: from,
   arrivalCity: to,
   arrivalInstructions: instructions,
+  transportMode: transportMode,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
 );
@@ -46,6 +49,7 @@ AnnouncementModel _trip(
   String id, {
   String from = 'Paris',
   String to = 'Dakar',
+  TransportMode? transportMode,
 }) => AnnouncementModel(
   id: id,
   travelerId: 't',
@@ -53,6 +57,7 @@ AnnouncementModel _trip(
   departureDate: DateTime(2026, 9, 26),
   departureCity: from,
   arrivalCity: to,
+  transportMode: transportMode,
   availableKg: 10,
   totalKg: 20,
   pricePerKg: 5,
@@ -569,6 +574,58 @@ void main() {
       final id = c.state.effectId;
       c.trackShipment(c.state.shipments.single);
       expect(c.state.effectId, id);
+    });
+
+    test('trackShipment : le mode du colis passe à la frise (jamais l\'avion '
+        'supposé)', () async {
+      final c = build()..start(canValidate: false);
+      await Future<void>.delayed(Duration.zero);
+      c.trackShipment(
+        _bid(
+          'ship-car',
+          'IN_TRANSIT',
+          from: 'Paris',
+          to: 'Dakar',
+          transportMode: TransportMode.car,
+        ),
+      );
+      final effect = c.state.effect! as SuiviShowTimeline;
+      expect(effect.transportMode, TransportMode.car);
+    });
+
+    test('QR d\'un colis inconnu du bid : le mode du trajet sert de repli', () {
+      final hub = ScanHubLoaded(
+        trips: [_trip('trip-b', transportMode: TransportMode.boat)],
+        selectedTripId: 'trip-b',
+        bidsByTrip: {
+          'trip-b': [_bid('other', 'IN_TRANSIT', announcementId: 'trip-b')],
+        },
+        scanHistory: const [],
+      );
+      final c = build()
+        ..start(canValidate: true, requested: SuiviMode.suivre)
+        ..onQrScanned('other', hub);
+      final effect = c.state.effect! as SuiviShowTimeline;
+      expect(effect.transportMode, TransportMode.boat);
+    });
+
+    test('trackNumber : mode inconnu, icône neutre explicite (jamais '
+        'l\'avion)', () async {
+      when(() => trackingRepo.searchByTrackingNumber('DON-NEUTRE')).thenAnswer(
+        (_) async => const TrackingSearchModel(
+          trackingNumber: 'DON-NEUTRE',
+          bidId: 'bid-n',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          currentStep: 'IN_TRANSIT',
+          stepLabel: 'En transit',
+          paymentStatus: 'ESCROWED',
+        ),
+      );
+      final c = build()..start(canValidate: false);
+      await c.trackNumber('DON-NEUTRE');
+      final effect = c.state.effect! as SuiviShowTimeline;
+      expect(effect.transportMode, TransportMode.other);
     });
 
     test('trackNumber trouve le colis et ouvre son parcours', () async {

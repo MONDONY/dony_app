@@ -180,8 +180,9 @@ class BidModel {
   final String? departureCity;
   final String? arrivalCity;
 
-  /// Mode du trajet qui porte le colis. `null` pour un payload sans le champ :
-  /// l'écran retombe sur l'icône neutre, jamais sur un avion.
+  /// Mode du trajet qui porte le colis. `null` pour un payload sans le champ
+  /// (anciennes données) : les écrans le lisent comme un avion
+  /// (`transportModeOrPlane`).
   @JsonKey(fromJson: transportModeFromWire, toJson: _transportModeToWire)
   final TransportMode? transportMode;
 

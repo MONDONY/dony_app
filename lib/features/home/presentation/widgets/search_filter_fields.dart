@@ -246,7 +246,7 @@ class TransportModeField extends StatelessWidget {
             Row(
               children: [
                 active
-                    ? Icon(mode!.icon, size: 14, color: cs.primary)
+                    ? DonyIcon(mode!.iconAsset, size: 14, color: cs.primary)
                     : DonyIcon('route', size: 14, color: cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(

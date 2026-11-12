@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
@@ -25,6 +26,7 @@ import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -63,6 +65,7 @@ BidModel _bid({
   double? pricePerKg,
   String? departureCity,
   String? arrivalCity,
+  TransportMode? transportMode,
 }) => BidModel(
   id: 'bid-test',
   announcementId: 'ann-test',
@@ -94,6 +97,7 @@ BidModel _bid({
   pricePerKg: pricePerKg,
   departureCity: departureCity,
   arrivalCity: arrivalCity,
+  transportMode: transportMode,
 );
 
 // ── Host widget helpers ───────────────────────────────────────────────────────
@@ -756,6 +760,41 @@ void main() {
 
       // La feuille de suivi en lecture seule est ouverte.
       expect(find.text('Suivi en lecture seule'), findsOneWidget);
+    });
+
+    testWidgets('colis route (CAR) : la frise dessine l\'icône voiture, '
+        'jamais un avion', (tester) async {
+      final trackingBloc = _MockTrackingBloc();
+      when(() => trackingBloc.state).thenReturn(TrackingEventsLoaded([]));
+      when(
+        () => trackingBloc.stream,
+      ).thenAnswer((_) => const Stream<TrackingState>.empty());
+      if (getIt.isRegistered<TrackingBloc>()) {
+        getIt.unregister<TrackingBloc>();
+      }
+      getIt.registerFactory<TrackingBloc>(() => trackingBloc);
+      addTearDown(() {
+        if (getIt.isRegistered<TrackingBloc>()) {
+          getIt.unregister<TrackingBloc>();
+        }
+      });
+
+      await tester.pumpWidget(
+        hostTimelineOpener(
+          _bid(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            transportMode: TransportMode.car,
+          ),
+        ),
+      );
+      await tester.tap(find.text('open-timeline'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Suivi en lecture seule'), findsOneWidget);
+      expect(find.byKey(const Key('tracking-route')), findsOneWidget);
+      expect(findDonyIcon('car'), findsWidgets);
+      expectNoPlaneIcon(tester);
     });
 
     testWidgets(

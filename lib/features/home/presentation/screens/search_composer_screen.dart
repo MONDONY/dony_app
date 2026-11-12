@@ -380,9 +380,12 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
                 QuickChip(
                   key: Key('chip-stops-${filter?.name ?? 'any'}'),
                   label: label,
-                  // Les escales sont une notion d'avion : l'avion n'est dessiné
-                  // que si le filtre de mode vaut avion.
-                  iconAsset: f.transportMode == TransportMode.plane
+                  // Les escales sont une notion d'avion : l'avion est dessiné
+                  // si le filtre vaut avion ou si l'avion est le seul mode
+                  // proposé (le filtre est alors toujours nul).
+                  iconAsset:
+                      f.transportMode == TransportMode.plane ||
+                          !transportModes.hasRequestChoice
                       ? 'plane'
                       : kNeutralTripIconAsset,
                   active: f.stopsFilter == filter,

@@ -3264,7 +3264,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishModeRoadTitle => 'By road';
 
   @override
-  String get tripPublishModeRoadSubtitle => 'Car, coach or truck';
+  String get tripPublishModeRoadSubtitle => 'Car, bus or truck';
 
   @override
   String get tripPublishModeRoadTagScope => 'Domestic or international';
@@ -3946,7 +3946,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestCreateModeHelpRoad =>
-      'Only travelers by car, coach or truck will see your request.';
+      'Only travelers by car, bus or truck will see your request.';
 
   @override
   String get requestCreateAiAction => 'Create with AI';
