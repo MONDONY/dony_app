@@ -47,6 +47,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -483,6 +484,13 @@ _MockNegotiationBloc _makeNegotiationBloc() {
   when(() => b.stream).thenAnswer((_) => const Stream.empty());
   return b;
 }
+
+/// Étape du brouillon pour un index de l'écran à trois étapes.
+TripFormStep _stepIdAt(int step) => switch (step) {
+  1 => TripFormStep.capacite,
+  2 => TripFormStep.prix,
+  _ => TripFormStep.trajet,
+};
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
@@ -5105,7 +5113,7 @@ void main() {
         DateTime.now().add(const Duration(days: 30)),
       );
       return TripFormDraft(
-        step: step,
+        stepId: _stepIdAt(step),
         currency: 'EUR',
         departureCity: 'Paris',
         departureCountryCode: 'FR',
@@ -5271,7 +5279,7 @@ void main() {
         DateTime.now().add(const Duration(days: 30)),
       );
       return TripFormDraft(
-        step: step,
+        stepId: _stepIdAt(step),
         currency: 'EUR',
         departureCity: 'Paris',
         departureCountryCode: 'FR',
@@ -5353,7 +5361,7 @@ void main() {
         tester,
         CreateTripArgs(
           resumeDraft: TripFormDraft(
-            step: 2,
+            stepId: TripFormStep.prix,
             departureCity: draft().departureCity,
           ),
         ),
@@ -5392,7 +5400,7 @@ void main() {
       expect(back.departureCity, 'Paris');
       expect(back.arrivalCity, 'Dakar');
       expect(back.description, 'Valise rigide');
-      expect(back.step, 1);
+      expect(back.stepId, TripFormStep.capacite);
       expect(find.byType(CreateTripScreen), findsNothing);
     });
 

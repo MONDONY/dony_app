@@ -47,6 +47,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_currencies_confirm_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_legs_section.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_series/trip_series_card.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
@@ -107,6 +108,22 @@ class CreateTripArgs {
 /// Index de l'étape Prix & conditions, la dernière du formulaire, en tête de
 /// laquelle se choisit la devise du trajet (FLUTTER-RA).
 const int _kPriceStep = 2;
+
+/// Index de l'écran à trois étapes (trajet, lieux et capacité, prix et
+/// conditions) pour une étape du brouillon. Transitoire : disparaît avec le
+/// formulaire à cinq étapes.
+int _stepIndexOf(TripFormStep step) => switch (step) {
+  TripFormStep.mode || TripFormStep.trajet => 0,
+  TripFormStep.capacite => 1,
+  TripFormStep.prix || TripFormStep.conditions => 2,
+};
+
+/// Étape du brouillon pour un index de l'écran à trois étapes.
+TripFormStep _stepAtIndex(int index) => switch (index) {
+  1 => TripFormStep.capacite,
+  2 => TripFormStep.prix,
+  _ => TripFormStep.trajet,
+};
 
 class CreateTripScreen extends StatefulWidget {
   final CreateTripArgs? args;
@@ -371,7 +388,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   /// précédentes sont toujours complètes.
   void _resumeLocalDraft(TripFormDraft restored) {
     _restoreDraft?.call(restored);
-    var step = restored.step;
+    var step = _stepIndexOf(restored.stepId);
     if (step >= 1 && !_canContinueNotifier.value) step = 0;
     if (step >= 2 && !_canContinueStep1Notifier.value) step = 1;
     _currentStepNotifier.value = step;
@@ -2827,7 +2844,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     final arrivalTime = _arrivalTimeNotifier.value;
     final mode = _transportModeNotifier.value;
     return TripFormDraft(
-      step: widget.currentStepNotifier?.value ?? 0,
+      stepId: _stepAtIndex(widget.currentStepNotifier?.value ?? 0),
       currency: _currency.code,
       departureCity: _departureCityNotifier.value,
       departureCountryCode: _departureCountryCodeNotifier.value,

@@ -1,6 +1,7 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:equatable/equatable.dart';
 
 /// Brouillon local du formulaire « Publier un trajet » (FormDraftStore).
@@ -10,7 +11,7 @@ import 'package:equatable/equatable.dart';
 /// version de l'app doit rester lisible par la suivante.
 class TripFormDraft extends Equatable {
   const TripFormDraft({
-    this.step = 0,
+    this.stepId = TripFormStep.trajet,
     this.currency,
     this.departureCity,
     this.departureCountryCode,
@@ -44,8 +45,8 @@ class TripFormDraft extends Equatable {
     this.legs = const [],
   });
 
-  /// Étape atteinte : 0 trajet, 1 lieux et capacité, 2 prix et conditions.
-  final int step;
+  /// Étape atteinte.
+  final TripFormStep stepId;
 
   /// Devise choisie (code ISO).
   final String? currency;
@@ -104,7 +105,10 @@ class TripFormDraft extends Equatable {
   final List<TripLegDraft> legs;
 
   Map<String, dynamic> toJson() => {
-    'step': step,
+    'stepId': stepId.wire,
+    // Index de l'ancien formulaire à trois étapes : lu par les versions
+    // d'avant `stepId` et par la liste des brouillons (FormDraft.step).
+    'step': _legacyStep(stepId),
     'currency': currency,
     'departureCity': departureCity,
     'departureCountryCode': departureCountryCode,
@@ -144,7 +148,7 @@ class TripFormDraft extends Equatable {
   /// suivent, elles en dépendent.
   factory TripFormDraft.fromJson(Map<String, dynamic> json, {DateTime? now}) {
     final today = _dateOnly(now ?? DateTime.now());
-    var step = ((json['step'] as num?)?.toInt() ?? 0).clamp(0, 2);
+    var stepId = _stepFromJson(json);
     var date = _decodeDate(json['departureDate']);
     var deadline = _decodeDateTime(json['handoverDeadline']);
     var legs = [
@@ -155,10 +159,10 @@ class TripFormDraft extends Equatable {
       date = null;
       deadline = null;
       legs = const [];
-      step = 0;
+      stepId = TripFormStep.trajet;
     }
     return TripFormDraft(
-      step: step,
+      stepId: stepId,
       currency: json['currency'] as String?,
       departureCity: json['departureCity'] as String?,
       departureCountryCode: json['departureCountryCode'] as String?,
@@ -192,6 +196,27 @@ class TripFormDraft extends Equatable {
       negotiable: json['negotiable'] as bool? ?? false,
       legs: legs,
     );
+  }
+
+  /// Index à trois étapes : 0 trajet, 1 lieux et capacité, 2 prix et
+  /// conditions (Mode se range avec Trajet).
+  static int _legacyStep(TripFormStep step) => switch (step) {
+    TripFormStep.mode || TripFormStep.trajet => 0,
+    TripFormStep.capacite => 1,
+    TripFormStep.prix || TripFormStep.conditions => 2,
+  };
+
+  /// `stepId` prime ; sinon l'index `step` d'un brouillon d'avant les cinq
+  /// étapes (0 trajet, 1 capacité, 2 prix), borné.
+  static TripFormStep _stepFromJson(Map<String, dynamic> json) {
+    final raw = json['stepId'];
+    final byId = TripFormStep.fromWire(raw is String ? raw : null);
+    if (byId != null) return byId;
+    return switch (((json['step'] as num?)?.toInt() ?? 0).clamp(0, 2)) {
+      1 => TripFormStep.capacite,
+      2 => TripFormStep.prix,
+      _ => TripFormStep.trajet,
+    };
   }
 
   static Map<String, dynamic> _legToJson(TripLegDraft l) => {
