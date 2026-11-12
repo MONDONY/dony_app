@@ -5999,6 +5999,162 @@ void main() {
       expect(row.notifier.value, TransportMode.plane);
     });
 
+    /// Contexte d'une demande dont le mode est [mode] (null : « peu importe »),
+    /// avec ([threadId]) ou sans fil de négociation.
+    LockedTripContext lockedContext(
+      TransportMode? mode, {
+      String? threadId = 'thread-1',
+    }) => LockedTripContext(
+      threadId: threadId,
+      packageRequestId: 'req-1',
+      departureCity: 'Lyon',
+      arrivalCity: 'Abidjan',
+      desiredDate: DateTime(2026, 9),
+      dateToleranceDays: 5,
+      weightKg: 5.0,
+      transportMode: mode,
+      agreedPriceEur: 50.0,
+    );
+
+    /// Ouvre le trajet dédié de [ctx], renseigne l'heure de départ et les
+    /// la date limite de dépôt et les deux lieux de remise (par les rappels des
+    /// étapes, sans passer par le sélecteur d'adresse), puis rend le bloc de négociation simulé. [onModeStep]
+    /// agit à l'étape Mode quand elle s'affiche.
+    Future<_MockNegotiationBloc> openDedicated(
+      WidgetTester tester,
+      LockedTripContext ctx, {
+      Future<void> Function()? onModeStep,
+    }) async {
+      final nego = _makeNegotiationBloc();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(lockContext: ctx, negotiationBloc: nego),
+      );
+      if (onModeStep != null) await onModeStep();
+      tester
+          .widget<TrajetStep>(find.byType(TrajetStep, skipOffstage: false))
+          .departureTimeNotifier
+          .value = const TimeOfDay(
+        hour: 10,
+        minute: 0,
+      );
+      // Date limite de dépôt : l'étape Trajet ne laisse pas continuer sans.
+      final content = tester.state<State<StatefulWidget>>(
+        find.byKey(const Key('trip-form-content')),
+      );
+      (content as dynamic).handoverDeadlineForTest.value = DateTime(
+        2026,
+        8,
+        31,
+      );
+      final lieux = tester.widget<LieuxCapaciteStep>(
+        find.byType(LieuxCapaciteStep, skipOffstage: false),
+      );
+      lieux.onPickupChanged(
+        const AddressData(label: 'Gare de Lyon', lat: 48.844, lng: 2.374),
+      );
+      lieux.onDeliveryChanged(
+        const AddressData(label: 'Plateau', lat: 14.67, lng: -17.43),
+      );
+      await tester.pump();
+      await _goToStep(tester, TripFormStep.conditions);
+      await tester.tap(find.byKey(const Key('create-dedicated-trip-submit')));
+      await tester.pump();
+      return nego;
+    }
+
+    testWidgets('trajet dédié sur demande peu importe : étape Mode puis '
+        'transportMode envoyé', (tester) async {
+      roadOn();
+      final ctx = lockedContext(null);
+      final nego = await openDedicated(
+        tester,
+        ctx,
+        onModeStep: () async {
+          // Étape Mode ouverte d'elle-même, avion d'office, pas de ligne du
+          // mode (l'étape la remplace).
+          expect(header(tester).current, TripFormStep.mode);
+          expect(header(tester).steps.first, TripFormStep.mode);
+          expect(find.byType(ModeStep), findsOneWidget);
+          expect(
+            find.byType(TransportModeRow, skipOffstage: false),
+            findsNothing,
+          );
+          expect(continueButton(tester).onPressed, isNotNull);
+          await tester.tap(find.byKey(const Key('mode-card-car')));
+          await tester.pump();
+        },
+      );
+
+      final event = verify(
+        () => nego.add(captureAny()),
+      ).captured.whereType<NegotiationCreateDedicatedTripRequested>().single;
+      expect(event.threadId, 'thread-1');
+      expect(event.transportMode, TransportMode.car);
+    });
+
+    testWidgets('trajet dédié sur demande peu importe : avion d\'office si '
+        'le voyageur ne change rien', (tester) async {
+      roadOn();
+      final nego = await openDedicated(tester, lockedContext(null));
+
+      final event = verify(
+        () => nego.add(captureAny()),
+      ).captured.whereType<NegotiationCreateDedicatedTripRequested>().single;
+      expect(event.transportMode, TransportMode.plane);
+    });
+
+    testWidgets('trajet dédié, offre atomique sur demande peu importe : '
+        'transportMode dans le payload', (tester) async {
+      roadOn();
+      final nego = await openDedicated(
+        tester,
+        lockedContext(null, threadId: null),
+        onModeStep: () async {
+          await tester.tap(find.byKey(const Key('mode-card-car')));
+          await tester.pump();
+        },
+      );
+
+      final event = verify(
+        () => nego.add(captureAny()),
+      ).captured.whereType<NegotiationStartWithDedicatedTripRequested>().single;
+      expect(event.dedicatedTrip.transportMode, TransportMode.car);
+      expect(event.dedicatedTrip.toJson()['transportMode'], 'CAR');
+    });
+
+    testWidgets('trajet dédié sur demande à mode connu : transportMode non '
+        'envoyé (le back prend celui de la demande)', (tester) async {
+      roadOn();
+      final nego = await openDedicated(
+        tester,
+        lockedContext(TransportMode.boat),
+      );
+
+      final event = verify(
+        () => nego.add(captureAny()),
+      ).captured.whereType<NegotiationCreateDedicatedTripRequested>().single;
+      expect(event.transportMode, isNull);
+    });
+
+    testWidgets('trajet dédié, offre atomique à mode connu : payload sans '
+        'transportMode', (tester) async {
+      roadOn();
+      final nego = await openDedicated(
+        tester,
+        lockedContext(TransportMode.car, threadId: null),
+      );
+
+      final event = verify(
+        () => nego.add(captureAny()),
+      ).captured.whereType<NegotiationStartWithDedicatedTripRequested>().single;
+      expect(event.dedicatedTrip.transportMode, isNull);
+      expect(
+        event.dedicatedTrip.toJson().containsKey('transportMode'),
+        isFalse,
+      );
+    });
+
     /// Modèle de trajet complet (sans date), au mode [wire].
     TripTemplate templateOf(String wire) => TripTemplate(
       id: 'tmpl-$wire',

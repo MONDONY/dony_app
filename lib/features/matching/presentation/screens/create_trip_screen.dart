@@ -231,9 +231,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       showModeStep: showModeStepFor(
         isEdit: args?.announcement != null,
         isLocked: args?.lockContext != null,
-        // Le contexte d'une demande porte toujours un mode aujourd'hui ; la
-        // demande « peu importe » (mode nul) ouvrira l'étape Mode.
-        lockedModeKnown: true,
+        // La demande « peu importe » (mode nul) laisse le choix du mode au
+        // voyageur : l'étape Mode s'ouvre.
+        lockedModeKnown: args?.lockContext?.transportMode != null,
         modes: modes,
       ),
     );
@@ -1112,7 +1112,9 @@ class _TripFormContentState extends State<_TripFormContent> {
       _arrivalCityNotifier.value = ctx.arrivalCity;
       _departureDateNotifier.value = ctx.preferredDate ?? ctx.desiredDate;
       _availableKgNotifier.value = ctx.weightKg;
-      _transportModeNotifier.value = ctx.transportMode;
+      // Demande « peu importe » : l'avion d'office, le voyageur peut en
+      // changer à l'étape Mode qui s'ouvre alors d'elle-même.
+      _transportModeNotifier.value = ctx.transportMode ?? TransportMode.plane;
     }
     if (_isEdit) {
       final a = widget.announcement!;
@@ -2068,6 +2070,9 @@ class _TripFormContentState extends State<_TripFormContent> {
           acceptedContentTypes: allAccepted,
           refusedTypes: refused,
           paymentMethod: lc.paymentMethod,
+          // Envoyé seulement quand le voyageur l'a choisi (demande « peu
+          // importe ») : sinon le back garde le mode de la demande.
+          transportMode: _hasModeStep ? transportMode : null,
         );
         context.read<NegotiationBloc>().add(event);
         return;
@@ -2092,6 +2097,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           description: description,
           acceptedContentTypes: allAccepted,
           refusedTypes: refused,
+          transportMode: _hasModeStep ? transportMode : null,
         ),
       );
       // Distingue ce flux de celui à thread existant au retour du bloc.
@@ -2787,8 +2793,11 @@ class _TripFormContentState extends State<_TripFormContent> {
         : t.arrivalDayOffset;
     // Le mode n'est pas repris du modèle (création seulement) : choisi à
     // l'étape Mode, il prime ; sans étape Mode, c'est l'avion. Un modèle
-    // BOAT ou CAR ne change donc jamais en silence le mode du trajet.
-    if (!_hasModeStep) _transportModeNotifier.value = TransportMode.plane;
+    // BOAT ou CAR ne change donc jamais en silence le mode du trajet. Un
+    // trajet dédié ne perd jamais le mode de sa demande.
+    if (!_hasModeStep && !_isLocked) {
+      _transportModeNotifier.value = TransportMode.plane;
+    }
     // Valeur optimiste immédiate ; `CapacityUnitChanged` ci-dessous réécrit
     // `availableKg` à `unit.maxKg` (valise 23/32 kg) côté bloc — l'event
     // `AvailableKgChanged` émis juste après restaure la valeur du modèle via
@@ -3104,9 +3113,12 @@ class _TripFormContentState extends State<_TripFormContent> {
           arrivalDayOffsetNotifier: _arrivalDayOffsetNotifier,
           stopsNotifier: _stopsNotifier,
           transportModeNotifier: _transportModeNotifier,
-          // Pas d'étape Mode en modification ni en trajet dédié : le mode se
-          // lit (et se change en modification) en tête de l'étape.
-          transportModeRowModes: _isEdit || _isLocked ? widget.tripModes : null,
+          // Pas d'étape Mode en modification ni en trajet dédié à mode connu :
+          // le mode se lit (et se change en modification) en tête de l'étape.
+          // Un trajet dédié « peu importe » a l'étape Mode, donc pas de ligne.
+          transportModeRowModes: _isEdit || (_isLocked && !_hasModeStep)
+              ? widget.tripModes
+              : null,
           transportModeRowReadOnly: _isLocked,
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
