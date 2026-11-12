@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/trip_templates/data/models/trip_recurrence.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -42,6 +43,29 @@ void main() {
 
     test('back antérieur à V308 : carte acceptée', () {
       expect(TripRecurrence.fromJson(_json()).cardAccepted, isTrue);
+    });
+  });
+
+  group('TripRecurrence : taille et poids max par colis', () {
+    test('back antérieur (clés absentes) : null', () {
+      final r = TripRecurrence.fromJson(_json());
+      expect(r.maxItemSize, isNull);
+      expect(r.maxParcelWeightKg, isNull);
+    });
+
+    test('taille L et poids max 20 (entier JSON) : lus', () {
+      final r = TripRecurrence.fromJson({
+        ..._json(),
+        'maxItemSize': 'L',
+        'maxParcelWeightKg': 20,
+      });
+      expect(r.maxItemSize, ItemSize.l);
+      expect(r.maxParcelWeightKg, 20.0);
+    });
+
+    test('taille inconnue : null, sans exception', () {
+      final r = TripRecurrence.fromJson({..._json(), 'maxItemSize': 'XXL'});
+      expect(r.maxItemSize, isNull);
     });
   });
 }

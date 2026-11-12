@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/pricing/commission_grid_preload.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -131,6 +133,7 @@ class PackageRequestRepository {
     bool saveAsDraft = false,
     String? promoCode,
     String? currency,
+    ItemSize? itemSize,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/package-requests',
@@ -160,6 +163,8 @@ class PackageRequestRepository {
         // Optionnel : absente, l'API retombe sur la devise du portefeuille de
         // l'expéditeur (cf. plan devise-par-annonce, tâche 6).
         'currency': ?currency,
+        // Facultative : absente tant que l'expéditeur n'en choisit pas.
+        ...itemSizeEntry('itemSize', FieldChange.ofNullable(itemSize)),
       },
     );
     return PackageRequest.fromJson(response.data!);
@@ -186,6 +191,7 @@ class PackageRequestRepository {
     String? deliveryNeighborhood,
     List<String>? photoKeys,
     String? promoCode,
+    FieldChange<ItemSize> itemSize = const FieldChange.keep(),
   }) async {
     final response = await _apiClient.dio.put<Map<String, dynamic>>(
       '/package-requests/$id',
@@ -211,6 +217,8 @@ class PackageRequestRepository {
         'deliveryNeighborhood': ?deliveryNeighborhood,
         if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
         'promoCode': ?promoCode,
+        // Absente : taille conservée. `FieldChange.clear()` l'efface (`NONE`).
+        ...itemSizeEntry('itemSize', itemSize),
       },
     );
     return PackageRequest.fromJson(response.data!);

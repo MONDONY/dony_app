@@ -1,6 +1,7 @@
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/mobile_money_network.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
@@ -302,6 +303,15 @@ class AnnouncementModel {
   @JsonKey(defaultValue: false)
   final bool trackingActive;
 
+  /// Plus grande taille de colis acceptée (trajet en route). `null` : aucune
+  /// limite, ou back antérieur au lot 2 (clé absente ou taille inconnue).
+  @JsonKey(fromJson: itemSizeFromWire, toJson: itemSizeToWireOrNull)
+  final ItemSize? maxItemSize;
+
+  /// Poids maximum par colis, en kilos (jusqu'à 999 999,99). `null` : aucune
+  /// limite, ou back antérieur au lot 2.
+  final double? maxParcelWeightKg;
+
   /// Colis portés (nombre, kilos, net estimé). Servi au seul voyageur par le
   /// détail du trajet ; `null` sans colis ou sur un back antérieur.
   @JsonKey(
@@ -367,6 +377,8 @@ class AnnouncementModel {
     this.departureTimezone,
     this.trackingActive = false,
     this.parcelsSummary,
+    this.maxItemSize,
+    this.maxParcelWeightKg,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>

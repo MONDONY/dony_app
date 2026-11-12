@@ -1,4 +1,6 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 
 /// Modèle de trajet : tout le formulaire de création sauf la date.
 ///
@@ -36,6 +38,8 @@ class TripTemplate {
     this.departureCountryCode,
     this.arrivalCountryCode,
     this.arrivalDayOffset = 0,
+    this.maxItemSize,
+    this.maxParcelWeightKg,
   }) : acceptedPaymentMethods =
            acceptedPaymentMethods ??
            (cashAccepted ? const ['STRIPE', 'CASH'] : const ['STRIPE']);
@@ -89,6 +93,14 @@ class TripTemplate {
   /// Absent d'un modèle enregistré avant FLUTTER-4E : même jour.
   final int arrivalDayOffset;
 
+  /// Plus grande taille de colis acceptée (modèle en route). `null` : aucune
+  /// limite, ou modèle d'un back antérieur au lot 2.
+  final ItemSize? maxItemSize;
+
+  /// Poids max par colis, en kilos. `null` : aucune limite, ou modèle d'un
+  /// back antérieur au lot 2.
+  final double? maxParcelWeightKg;
+
   /// Miroir historique : vrai si CASH fait partie des moyens acceptés.
   bool get cashAccepted => acceptedPaymentMethods.contains('CASH');
 
@@ -128,6 +140,8 @@ class TripTemplate {
       departureCountryCode: json['departureCountryCode'] as String?,
       arrivalCountryCode: json['arrivalCountryCode'] as String?,
       arrivalDayOffset: (json['arrivalDayOffset'] as num?)?.toInt() ?? 0,
+      maxItemSize: itemSizeFromWire(json['maxItemSize']),
+      maxParcelWeightKg: (json['maxParcelWeightKg'] as num?)?.toDouble(),
     );
   }
 
@@ -156,7 +170,24 @@ class TripTemplate {
       ? null
       : {'label': address.label, 'lat': address.lat, 'lng': address.lng};
 
+  /// Corps d'une CRÉATION : taille et poids max ne sont écrits que s'ils sont
+  /// renseignés.
   Map<String, dynamic> toJson() => {
+    ..._baseJson(),
+    ...itemSizeEntry('maxItemSize', FieldChange.ofNullable(maxItemSize)),
+    ...maxParcelWeightEntry(FieldChange.ofNullable(maxParcelWeightKg)),
+  };
+
+  /// Corps d'une MODIFICATION par le formulaire complet : le back garde un
+  /// champ absent, donc une taille ou un poids max `null` (« aucune limite »)
+  /// part en sentinelle (`NONE`, `0`) pour effacer la valeur enregistrée.
+  Map<String, dynamic> toUpdateJson() => {
+    ..._baseJson(),
+    ...itemSizeEntry('maxItemSize', FieldChange.setOrClear(maxItemSize)),
+    ...maxParcelWeightEntry(FieldChange.setOrClear(maxParcelWeightKg)),
+  };
+
+  Map<String, dynamic> _baseJson() => {
     'label': label,
     'emoji': emoji,
     'departureCity': departureCity,

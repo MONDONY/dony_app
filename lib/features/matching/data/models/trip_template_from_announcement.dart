@@ -6,12 +6,14 @@ import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 /// Modèle de trajet tiré d'un trajet publié (« En faire un modèle », après
 /// un trajet récurrent). Tout est repris sauf les dates : la date limite de
 /// dépôt devient un délai en jours avant le départ (0 à 7), la date
-/// d'arrivée un décalage en jours (0 à 3), bornes du back.
+/// d'arrivée un décalage en jours borné par le mode du trajet (3 en avion, 14
+/// en route, 120 en bateau), bornes du back.
 TripTemplate tripTemplateFromAnnouncement(
   AnnouncementModel a, {
   required String label,
 }) {
   final methods = [for (final m in a.acceptedPaymentMethods) m.apiValue];
+  final mode = transportModeOrPlane(a.transportMode);
   return TripTemplate(
     id: '',
     label: label,
@@ -21,9 +23,9 @@ TripTemplate tripTemplateFromAnnouncement(
     arrivalCity: a.arrivalCity,
     arrivalLat: a.deliveryAddress?.lat,
     arrivalLng: a.deliveryAddress?.lng,
-    transportMode: transportModeToWire(a.transportMode ?? TransportMode.plane),
+    transportMode: transportModeToWire(mode),
     capacityUnit: a.capacityUnit ?? 'SUITCASE_23KG',
-    availableKg: a.totalKg.round().clamp(1, 1000),
+    availableKg: a.totalKg.round().clamp(1, TripCapacityLimits.maxKgFor(mode)),
     pricePerKg: a.pricePerKg,
     acceptedCategories: a.acceptedContentTypes ?? const [],
     arrivalTime: _hhmm(a.arrivalTime),
@@ -40,7 +42,9 @@ TripTemplate tripTemplateFromAnnouncement(
     handoverLeadDays: _leadDays(a),
     departureCountryCode: a.departureCountryCode,
     arrivalCountryCode: a.arrivalCountryCode,
-    arrivalDayOffset: _arrivalOffset(a),
+    arrivalDayOffset: _arrivalOffset(a, mode),
+    maxItemSize: a.maxItemSize,
+    maxParcelWeightKg: a.maxParcelWeightKg,
   );
 }
 
@@ -57,8 +61,10 @@ int? _leadDays(AnnouncementModel a) {
   return _day(a.departureDate).difference(_day(deadline)).inDays.clamp(0, 7);
 }
 
-int _arrivalOffset(AnnouncementModel a) {
+int _arrivalOffset(AnnouncementModel a, TransportMode mode) {
   final arrival = a.arrivalDate;
   if (arrival == null) return 0;
-  return _day(arrival).difference(_day(a.departureDate)).inDays.clamp(0, 3);
+  return _day(
+    arrival,
+  ).difference(_day(a.departureDate)).inDays.clamp(0, mode.maxArrivalDays);
 }

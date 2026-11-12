@@ -1,4 +1,6 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:equatable/equatable.dart';
@@ -33,6 +35,8 @@ class AnnouncementPayload extends Equatable {
     this.negotiable = false,
     this.saveAsDraft = false,
     this.currency,
+    this.maxItemSize,
+    this.maxParcelWeightKg,
   });
 
   final String departureCity;
@@ -61,6 +65,14 @@ class AnnouncementPayload extends Equatable {
   final bool negotiable;
   final bool saveAsDraft;
   final String? currency;
+
+  /// Taille max d'un colis, facultative (trajet en route) : absente du corps
+  /// quand elle n'est pas renseignée.
+  final ItemSize? maxItemSize;
+
+  /// Poids max par colis en kilos, facultatif : absent du corps quand il n'est
+  /// pas renseigné.
+  final double? maxParcelWeightKg;
 
   Map<String, dynamic> toJson() => {
     'departureCity': departureCity,
@@ -91,6 +103,8 @@ class AnnouncementPayload extends Equatable {
     // Optionnelle : absente, l'API retombe sur la devise du portefeuille du
     // créateur (cf. plan devise-par-annonce, tâche 5).
     'currency': ?currency,
+    ...itemSizeEntry('maxItemSize', FieldChange.ofNullable(maxItemSize)),
+    ...maxParcelWeightEntry(FieldChange.ofNullable(maxParcelWeightKg)),
   };
 
   @override

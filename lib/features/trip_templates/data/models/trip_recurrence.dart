@@ -1,3 +1,5 @@
+import 'package:dony/features/matching/data/models/item_size.dart';
+
 class RecurrenceAddress {
   const RecurrenceAddress({
     required this.label,
@@ -41,6 +43,8 @@ class TripRecurrence {
     this.lastGeneratedDate,
     this.arrivalDayOffset = 0,
     this.cardAccepted = true,
+    this.maxItemSize,
+    this.maxParcelWeightKg,
   });
 
   final String id;
@@ -70,6 +74,14 @@ class TripRecurrence {
   /// Carte proposée sur les trajets publiés (FLUTTER-FT). Absent d'un serveur
   /// antérieur : acceptée, comme avant.
   final bool cardAccepted;
+
+  /// Plus grande taille de colis acceptée (série en route). `null` : aucune
+  /// limite, ou back antérieur au lot 2.
+  final ItemSize? maxItemSize;
+
+  /// Poids max par colis, en kilos. `null` : aucune limite, ou back antérieur
+  /// au lot 2.
+  final double? maxParcelWeightKg;
 
   factory TripRecurrence.fromJson(Map<String, dynamic> json) {
     String? time = json['departureTime'] as String?;
@@ -109,6 +121,8 @@ class TripRecurrence {
       lastGeneratedDate: json['lastGeneratedDate'] as String?,
       arrivalDayOffset: (json['arrivalDayOffset'] as num?)?.toInt() ?? 0,
       cardAccepted: json['cardAccepted'] as bool? ?? true,
+      maxItemSize: itemSizeFromWire(json['maxItemSize']),
+      maxParcelWeightKg: (json['maxParcelWeightKg'] as num?)?.toDouble(),
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -361,6 +363,73 @@ void main() {
       api.on('GET', '/package-requests', {'content': <dynamic>[]});
       await repo.search(urgent: false, matchingMyTrips: false);
       expect(api.last.queryParameters, {'page': 0, 'size': 20});
+    });
+  });
+
+  group('taille du colis (itemSize)', () {
+    Future<void> create({ItemSize? size}) {
+      api.on('POST', '/package-requests', _prJson);
+      return repo.create(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: null,
+        dateToleranceDays: null,
+        weightKg: 999999.99,
+        parcelSize: ParcelSize.large,
+        transportMode: TransportMode.car,
+        categories: const ['FURNITURE'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.cash},
+        itemSize: size,
+      );
+    }
+
+    Future<void> update({
+      FieldChange<ItemSize> size = const FieldChange.keep(),
+    }) {
+      api.on('PUT', '/package-requests/pr-1', _prJson);
+      return repo.update(
+        'pr-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: null,
+        dateToleranceDays: null,
+        weightKg: 40,
+        parcelSize: ParcelSize.large,
+        transportMode: TransportMode.car,
+        categories: const ['FURNITURE'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.cash},
+        itemSize: size,
+      );
+    }
+
+    Map<String, dynamic> body() => api.last.data as Map<String, dynamic>;
+
+    test('create : taille envoyée, poids 999 999,99 sans perte', () async {
+      await create(size: ItemSize.xl);
+      expect(body()['itemSize'], 'XL');
+      expect(body()['weightKg'], 999999.99);
+    });
+
+    test('create sans taille : clé absente', () async {
+      await create();
+      expect(body().containsKey('itemSize'), isFalse);
+    });
+
+    test('update inchangée : clé absente (le back conserve)', () async {
+      await update();
+      expect(body().containsKey('itemSize'), isFalse);
+    });
+
+    test('update renseignée : le code', () async {
+      await update(size: const FieldChange.set(ItemSize.s));
+      expect(body()['itemSize'], 'S');
+    });
+
+    test('update effacée : NONE', () async {
+      await update(size: const FieldChange.clear());
+      expect(body()['itemSize'], 'NONE');
     });
   });
 }

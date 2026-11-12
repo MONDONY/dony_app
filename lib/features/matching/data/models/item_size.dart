@@ -38,6 +38,9 @@ ItemSize? itemSizeFromWire(Object? raw) {
 
 String itemSizeToWire(ItemSize size) => size.wire;
 
+/// Pour la sérialisation d'un champ facultatif : `null` reste `null`.
+String? itemSizeToWireOrNull(ItemSize? size) => size?.wire;
+
 extension ItemSizeL10n on ItemSize {
   /// Code court affiché en gras sur la tuile (« S », « XL »).
   String get code => wire;

@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/bid_checkout_response_model.d
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/data/models/commission_allocation_preview.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/traveler_bids_page.dart';
 
 class BidRepository {
@@ -23,6 +24,7 @@ class BidRepository {
     required String recipientPhone,
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
+    ItemSize? itemSize,
   }) => _datasource.checkoutBid(
     announcementId: announcementId,
     weightKg: weightKg,
@@ -32,6 +34,7 @@ class BidRepository {
     recipientPhone: recipientPhone,
     photoKeys: photoKeys,
     gridItems: gridItems,
+    itemSize: itemSize,
   );
 
   Future<BidQuoteResponse> quoteBid({
@@ -58,6 +61,7 @@ class BidRepository {
     String? promoCode,
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
+    ItemSize? itemSize,
   }) => _datasource.createBid(
     announcementId: announcementId,
     weightKg: weightKg,
@@ -70,6 +74,7 @@ class BidRepository {
     promoCode: promoCode,
     photoKeys: photoKeys,
     gridItems: gridItems,
+    itemSize: itemSize,
   );
 
   Future<List<BidModel>> getBidsForAnnouncement(String announcementId) =>

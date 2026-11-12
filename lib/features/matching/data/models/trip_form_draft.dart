@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
@@ -43,6 +44,8 @@ class TripFormDraft extends Equatable {
     this.mobileMoneyEnabled = false,
     this.negotiable = false,
     this.legs = const [],
+    this.maxItemSize,
+    this.maxParcelWeightKg,
   });
 
   /// Étape atteinte.
@@ -104,6 +107,14 @@ class TripFormDraft extends Equatable {
   /// Étapes ajoutées après le premier trajet (FLUTTER-4D).
   final List<TripLegDraft> legs;
 
+  /// Taille max d'un colis (trajet en route), facultative. Absente d'un
+  /// brouillon d'avant le lot 2 : `null`.
+  final ItemSize? maxItemSize;
+
+  /// Poids max par colis en kilos, facultatif. Absent d'un brouillon d'avant
+  /// le lot 2 : `null`.
+  final double? maxParcelWeightKg;
+
   Map<String, dynamic> toJson() => {
     'stepId': stepId.wire,
     // Index de l'ancien formulaire à trois étapes : lu par les versions
@@ -140,6 +151,8 @@ class TripFormDraft extends Equatable {
     'mobileMoneyEnabled': mobileMoneyEnabled,
     'negotiable': negotiable,
     'legs': [for (final l in legs) _legToJson(l)],
+    'maxItemSize': itemSizeToWireOrNull(maxItemSize),
+    'maxParcelWeightKg': maxParcelWeightKg,
   };
 
   /// Lecture tolérante : un champ absent ou illisible vaut le défaut du
@@ -172,7 +185,7 @@ class TripFormDraft extends Equatable {
       departureTime: _hhmm(json['departureTime']),
       arrivalTime: _hhmm(json['arrivalTime']),
       arrivalDayOffset: ((json['arrivalDayOffset'] as num?)?.toInt() ?? 0)
-          .clamp(0, 2),
+          .clamp(0, _maxArrivalDayOffset),
       handoverDeadline: deadline,
       handoverLeadDays: (json['handoverLeadDays'] as num?)?.toInt(),
       transportMode: json['transportMode'] as String?,
@@ -195,8 +208,15 @@ class TripFormDraft extends Equatable {
       mobileMoneyEnabled: json['mobileMoneyEnabled'] as bool? ?? false,
       negotiable: json['negotiable'] as bool? ?? false,
       legs: legs,
+      maxItemSize: itemSizeFromWire(json['maxItemSize']),
+      maxParcelWeightKg: _positiveNumber(json['maxParcelWeightKg']),
     );
   }
+
+  /// Plus grand décalage d'arrivée d'un mode (bateau : 120 jours). La borne
+  /// exacte du mode choisi est appliquée par le formulaire, pas par le
+  /// brouillon, qui garde la saisie telle quelle.
+  static const int _maxArrivalDayOffset = 120;
 
   /// Index à trois étapes : 0 trajet, 1 lieux et capacité, 2 prix et
   /// conditions (Mode se range avec Trajet).
@@ -298,6 +318,10 @@ class TripFormDraft extends Equatable {
       local.minute,
     );
   }
+
+  /// Poids lu tolérant : un texte ou un nombre négatif est écarté.
+  static double? _positiveNumber(Object? raw) =>
+      raw is num && raw >= 0 ? raw.toDouble() : null;
 
   static String? _hhmm(Object? raw) {
     if (raw is! String || !RegExp(r'^\d{1,2}:\d{2}$').hasMatch(raw)) {

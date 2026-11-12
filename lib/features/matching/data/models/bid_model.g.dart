@@ -45,6 +45,7 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   departureCity: json['departureCity'] as String?,
   arrivalCity: json['arrivalCity'] as String?,
   transportMode: transportModeFromWire(json['transportMode'] as String?),
+  itemSize: itemSizeFromWire(json['itemSize']),
   arrivalInstructions: json['arrivalInstructions'] as String?,
   departureDate: json['departureDate'] == null
       ? null
@@ -194,6 +195,7 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'departureCity': instance.departureCity,
   'arrivalCity': instance.arrivalCity,
   'transportMode': _transportModeToWire(instance.transportMode),
+  'itemSize': itemSizeToWireOrNull(instance.itemSize),
   'arrivalInstructions': instance.arrivalInstructions,
   'departureDate': instance.departureDate?.toIso8601String(),
   'departureTime': instance.departureTime,

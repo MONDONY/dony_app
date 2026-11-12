@@ -3,7 +3,9 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/announcement_payload.dart';
 import 'package:dony/features/matching/data/models/announcement_search_page.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
@@ -44,6 +46,8 @@ class AnnouncementRepository {
     bool negotiable = false,
     bool saveAsDraft = false,
     String? currency,
+    ItemSize? maxItemSize,
+    double? maxParcelWeightKg,
   }) async {
     return _remoteDatasource.createAnnouncement(
       departureCity: departureCity,
@@ -70,6 +74,8 @@ class AnnouncementRepository {
       negotiable: negotiable,
       saveAsDraft: saveAsDraft,
       currency: currency,
+      maxItemSize: maxItemSize,
+      maxParcelWeightKg: maxParcelWeightKg,
     );
   }
 
@@ -298,6 +304,8 @@ class AnnouncementRepository {
     required DateTime handoverDeadline,
     bool negotiable = false,
     String? currency,
+    FieldChange<ItemSize> maxItemSize = const FieldChange.keep(),
+    FieldChange<double> maxParcelWeightKg = const FieldChange.keep(),
   }) async {
     return _remoteDatasource.updateAnnouncement(
       id: id,
@@ -324,6 +332,8 @@ class AnnouncementRepository {
       handoverDeadline: handoverDeadline,
       negotiable: negotiable,
       currency: currency,
+      maxItemSize: maxItemSize,
+      maxParcelWeightKg: maxParcelWeightKg,
     );
   }
 

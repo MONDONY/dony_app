@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
@@ -108,7 +109,8 @@ void main() {
     }, now: now);
     expect(back.stepId, TripFormStep.trajet);
     expect(back.departureTime, isNull);
-    expect(back.arrivalDayOffset, 2);
+    // Route : jusqu'à J+14, bateau J+120 ; le brouillon ne tronque plus à 2.
+    expect(back.arrivalDayOffset, 7);
     expect(back.pickupAddress, isNull);
     expect(back.deliveryAddress, isNull);
     expect(back.legs, isEmpty);
@@ -209,5 +211,67 @@ void main() {
     (json['legs'] as List).first['acceptedPaymentMethods'] = null;
     final back = TripFormDraft.fromJson(json, now: now);
     expect(back.legs.single.acceptedPaymentMethods, isNull);
+  });
+
+  group('taille et poids max par colis', () {
+    test('aller-retour : taille et poids max sont relus', () {
+      final back = TripFormDraft.fromJson(
+        _viaJson(
+          const TripFormDraft(
+            transportMode: 'CAR',
+            maxItemSize: ItemSize.l,
+            maxParcelWeightKg: 20.5,
+          ),
+        ),
+        now: now,
+      );
+      expect(back.maxItemSize, ItemSize.l);
+      expect(back.maxParcelWeightKg, 20.5);
+    });
+
+    test(
+      'ancien brouillon sans ces clés : relu sans erreur, valeurs nulles',
+      () {
+        final json = _viaJson(_full())
+          ..remove('maxItemSize')
+          ..remove('maxParcelWeightKg');
+        final back = TripFormDraft.fromJson(json, now: now);
+        expect(back.maxItemSize, isNull);
+        expect(back.maxParcelWeightKg, isNull);
+        expect(back.departureCity, 'Paris');
+      },
+    );
+
+    test('taille inconnue ou poids illisible : nul, sans exception', () {
+      final back = TripFormDraft.fromJson(const {
+        'maxItemSize': 'XXL',
+        'maxParcelWeightKg': 'beaucoup',
+      }, now: now);
+      expect(back.maxItemSize, isNull);
+      expect(back.maxParcelWeightKg, isNull);
+    });
+
+    test('poids entier JSON et décalage de route au-delà de 2', () {
+      final back = TripFormDraft.fromJson(const {
+        'maxParcelWeightKg': 20,
+        'arrivalDayOffset': 14,
+      }, now: now);
+      expect(back.maxParcelWeightKg, 20.0);
+      expect(back.arrivalDayOffset, 14);
+    });
+
+    test('décalage borné à 120 (bateau)', () {
+      final back = TripFormDraft.fromJson(const {
+        'arrivalDayOffset': 500,
+      }, now: now);
+      expect(back.arrivalDayOffset, 120);
+    });
+
+    test('égalité : la taille compte', () {
+      expect(
+        const TripFormDraft(maxItemSize: ItemSize.m),
+        isNot(const TripFormDraft(maxItemSize: ItemSize.l)),
+      );
+    });
   });
 }
