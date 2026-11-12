@@ -942,12 +942,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPublishSuccessShareCta': (l) => l.tripPublishSuccessShareCta,
   'tripPublishMonthlyLimitTitle': (l) => l.tripPublishMonthlyLimitTitle,
   'tripPublishDraftLimitTitle': (l) => l.tripPublishDraftLimitTitle,
-  'tripPublishTemplatesLabel': (l) => l.tripPublishTemplatesLabel,
-  'tripPublishTemplatesHint': (l) => l.tripPublishTemplatesHint,
   'tripPublishTemplateAppliedMessage': (l) =>
       l.tripPublishTemplateAppliedMessage(placeholderMarker('label')),
-  'tripPublishTemplateChipGrid': (l) =>
-      l.tripPublishTemplateChipGrid(placeholderMarker('label')),
   'tripPublishDropoffSectionLabel': (l) => l.tripPublishDropoffSectionLabel,
   'tripPublishHandoverDeadlineLabel': (l) => l.tripPublishHandoverDeadlineLabel,
   'tripPublishHandoverDeadlineSubtitle': (l) =>
@@ -8420,7 +8416,6 @@ const textParameters = <String, List<String>>{
   'commonListLast': ['head', 'last'],
   'tripPublishSuccessSubtitle': ['departureCity', 'arrivalCity'],
   'tripPublishTemplateAppliedMessage': ['label'],
-  'tripPublishTemplateChipGrid': ['label'],
   'tripPublishIntroVerifyCallout': ['identity', 'path'],
   'tripPublishIntroVerifyHint': ['continueLabel'],
   'tripPublishPriceEstimateLine': ['travelerNet', 'senderTotal'],

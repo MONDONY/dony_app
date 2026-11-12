@@ -511,7 +511,6 @@ void main() {
     registerFallbackValue(_FakeCitySearchEvent());
 
     // Sealed event fallbacks — use concrete subclass instances
-    registerFallbackValue(const TripTemplateLoaded());
     registerFallbackValue(const StripeAccountStatusLoaded());
     registerFallbackValue(const MobileMoneyAccountsRequested());
     registerFallbackValue(const NegotiationFetchRequested('fallback-thread'));
@@ -587,16 +586,6 @@ void main() {
       });
     }
 
-    // TripTemplateBloc factory — screen calls getIt<TripTemplateBloc>()..add(TripTemplateLoaded())
-    if (!getIt.isRegistered<TripTemplateBloc>()) {
-      getIt.registerFactory<TripTemplateBloc>(() {
-        final b = _MockTripTemplateBloc();
-        when(() => b.state).thenReturn(const TripTemplateState());
-        when(() => b.stream).thenAnswer((_) => const Stream.empty());
-        return b;
-      });
-    }
-
     // TripSeriesCubit — carte « Vous faites ce trajet souvent ? » de l'écran
     // de succès d'une création.
     if (!getIt.isRegistered<TripSeriesCubit>()) {
@@ -640,7 +629,7 @@ void main() {
     // MobileMoneyAccountBloc factory — CreateTripScreen.build() (Tâche 9)
     // ajoute désormais `BlocProvider<MobileMoneyAccountBloc>(create: (_) =>
     // getIt<MobileMoneyAccountBloc>()..add(const MobileMoneyAccountsRequested()))`
-    // au MultiBlocProvider, inconditionnellement (comme TripTemplateBloc) :
+    // au MultiBlocProvider, inconditionnellement :
     // sans cet enregistrement, TOUT l'écran cesse de se construire.
     if (!getIt.isRegistered<MobileMoneyAccountBloc>()) {
       getIt.registerFactory<MobileMoneyAccountBloc>(() {
@@ -1172,9 +1161,9 @@ void main() {
     });
   });
 
-  // ── Group: Template suggestion bar + _applyTemplate ──────────────────────────
+  // ── Group: modèle initial (args.template) + _applyTemplate ───────────────────
 
-  group('CreateTripScreen — Template suggestion bar', () {
+  group('CreateTripScreen — modèle initial (_applyTemplate)', () {
     const mockTemplate = TripTemplate(
       id: 'tmpl-1',
       label: 'Paris → Dakar',
@@ -1221,43 +1210,20 @@ void main() {
       arrivalDayOffset: 1,
     );
 
-    setUp(() {
-      // Override TripTemplateBloc to return a mock avec les deux modèles.
-      if (getIt.isRegistered<TripTemplateBloc>()) {
-        getIt.unregister<TripTemplateBloc>();
-      }
-      getIt.registerFactory<TripTemplateBloc>(() {
-        final b = _MockTripTemplateBloc();
-        when(() => b.state).thenReturn(
-          const TripTemplateState(
-            status: TripTemplateStatus.success,
-            templates: [mockTemplate, fullTemplate],
-          ),
-        );
-        when(() => b.stream).thenAnswer((_) => const Stream.empty());
-        return b;
-      });
-    });
-
-    tearDown(() {
-      if (getIt.isRegistered<TripTemplateBloc>()) {
-        getIt.unregister<TripTemplateBloc>();
-      }
-      getIt.registerFactory<TripTemplateBloc>(() {
-        final b = _MockTripTemplateBloc();
-        when(() => b.state).thenReturn(const TripTemplateState());
-        when(() => b.stream).thenAnswer((_) => const Stream.empty());
-        return b;
-      });
-    });
-
-    /// Révèle et tape le modèle « Abidjan → Paris » (`fullTemplate`) : la
-    /// barre de suggestions est une `ListView.separated` horizontale lazy,
-    /// son deuxième item n'est construit qu'une fois scrollé en vue.
-    Future<void> tapFullTemplateChip(WidgetTester tester) async {
-      await tester.drag(find.byType(ListView), const Offset(-400, 0));
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.tap(find.textContaining('Abidjan → Paris'));
+    /// Ouvre la création avec [template] : le modèle choisi dans la feuille
+    /// « Partir d'un modèle ? » arrive par `args.template` et est appliqué
+    /// après le premier frame. Sa confirmation (SnackBar) reste à l'écran.
+    Future<void> pumpWithTemplate(
+      WidgetTester tester,
+      TripTemplate template,
+    ) async {
+      setupViewport(tester);
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(args: CreateTripArgs(template: template)),
+        ),
+      );
       await tester.pump(const Duration(milliseconds: 600));
     }
 
@@ -1274,56 +1240,65 @@ void main() {
       return (state as dynamic).handoverDeadlineForTest.value as DateTime?;
     }
 
-    testWidgets('template chip visible au step 0 en mode création', (
-      tester,
-    ) async {
+    testWidgets('création : aucune barre Mes modèles à l\'étape Trajet, même '
+        'avec des modèles enregistrés', (tester) async {
+      // Des modèles existent côté données : l'écran ne les propose plus, le
+      // choix se fait avant le formulaire (feuille « Partir d'un modèle ? »).
+      if (getIt.isRegistered<TripTemplateBloc>()) {
+        getIt.unregister<TripTemplateBloc>();
+      }
+      getIt.registerFactory<TripTemplateBloc>(() {
+        final b = _MockTripTemplateBloc();
+        when(() => b.state).thenReturn(
+          const TripTemplateState(
+            status: TripTemplateStatus.success,
+            templates: [mockTemplate, fullTemplate],
+          ),
+        );
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
+        return b;
+      });
+      addTearDown(() {
+        if (getIt.isRegistered<TripTemplateBloc>()) {
+          getIt.unregister<TripTemplateBloc>();
+        }
+      });
       registerCurrencyPreference('EUR');
       setupViewport(tester);
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
-      // The template bar shows the chip, prix formaté dans la devise active
-      expect(find.textContaining('Paris → Dakar'), findsOneWidget);
-      expect(find.textContaining('8'), findsWidgets);
-      expect(find.textContaining('€'), findsWidgets);
+      expect(find.byType(TrajetStep), findsOneWidget);
+      expect(find.text('Mes modèles'), findsNothing);
+      expect(find.byType(ActionChip), findsNothing);
+      expect(find.textContaining('Paris → Dakar'), findsNothing);
+      expect(find.textContaining('Abidjan → Paris'), findsNothing);
     });
 
-    testWidgets('tap template chip → _applyTemplate applique les valeurs', (
+    testWidgets('modèle initial → _applyTemplate applique les valeurs', (
       tester,
     ) async {
-      setupViewport(tester);
+      await pumpWithTemplate(tester, mockTemplate);
 
-      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
-      // Le second modèle n'est pas encore construit : la liste horizontale
-      // est lazy (ListView.separated) et ne bâtit que ses items visibles.
-      expect(find.byType(ActionChip), findsOneWidget);
-
-      // Tap the chip → _applyTemplate(t) called.
-      // _applyTemplate shows a DonySnackbar (SnackBar with ~4s auto-dismiss)
-      // → drain all pending timers to avoid the 'timer still pending' assertion.
-      await tester.tap(find.textContaining('Paris → Dakar'));
-      await tester.pump(const Duration(milliseconds: 600));
-
-      // Screen still present (no navigation triggered)
+      // Aucune navigation déclenchée.
       expect(find.byType(CreateTripScreen), findsOneWidget);
 
-      // _applyTemplate shows DonySnackbar with 'appliqué' in the message.
+      // _applyTemplate affiche une DonySnackbar avec « appliqué ».
       expect(find.textContaining('appliqué'), findsOneWidget);
 
-      // Drain the SnackBar auto-dismiss timer (~4 s default) so the widget
-      // tree can be disposed cleanly at end of test.
+      final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
+      expect(step.departureCityNotifier.value, 'Paris');
+      expect(step.arrivalCityNotifier.value, 'Dakar');
+
+      // Vide le minuteur de la SnackBar (~4 s) pour libérer l'arbre.
       await tester.pump(const Duration(seconds: 5));
     });
 
     testWidgets(
-      'FLUTTER-EH — appliquer un modèle porte ses codes pays jusqu\'au form bloc',
+      'FLUTTER-EH — un modèle initial porte ses codes pays jusqu\'au form bloc',
       (tester) async {
         registerCurrencyPreference('EUR');
-        setupViewport(tester);
-        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
-        await tapFullTemplateChip(tester);
+        await pumpWithTemplate(tester, fullTemplate);
 
         final formBloc = BlocProvider.of<AnnouncementFormBloc>(
           tester.element(find.byType(TrajetStep)),
@@ -1351,13 +1326,10 @@ void main() {
     );
 
     testWidgets(
-      'appliquer un modèle complet copie devise, conditions, adresses et heures',
+      'un modèle initial complet copie devise, conditions, adresses et heures',
       (tester) async {
         registerCurrencyPreference('EUR');
-        setupViewport(tester);
-        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
-        await tapFullTemplateChip(tester);
+        await pumpWithTemplate(tester, fullTemplate);
 
         final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
         expect(step.departureCityNotifier.value, 'Abidjan');
@@ -1415,10 +1387,7 @@ void main() {
     testWidgets(
       'délai de remise du modèle recalculé quand la date est choisie',
       (tester) async {
-        setupViewport(tester);
-        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
-        await tapFullTemplateChip(tester);
+        await pumpWithTemplate(tester, fullTemplate);
 
         final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
         step.departureDateNotifier.value = DateTime(2026, 10, 20);
@@ -1427,14 +1396,20 @@ void main() {
         // Le jour limite = départ - 2 jours (handoverLeadDays du modèle).
         expect(handoverDeadlineOf(tester), DateTime(2026, 10, 18));
 
-        // Enchaîner un modèle SANS délai de remise (mockTemplate) doit
-        // effacer la date limite du modèle précédent : champ nul du modèle
-        // = défaut du formulaire vierge, pas la valeur héritée.
-        await tester.drag(find.byType(ListView), const Offset(400, 0));
-        await tester.pump(const Duration(milliseconds: 300));
-        await tester.tap(find.textContaining('Paris → Dakar'));
-        await tester.pump(const Duration(milliseconds: 600));
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
 
+    testWidgets(
+      'modèle initial sans délai de remise : pas de date limite héritée',
+      (tester) async {
+        await pumpWithTemplate(tester, mockTemplate);
+
+        final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
+        step.departureDateNotifier.value = DateTime(2026, 10, 20);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Champ nul du modèle = défaut du formulaire vierge.
         expect(handoverDeadlineOf(tester), isNull);
 
         await tester.pump(const Duration(seconds: 5));
@@ -1445,11 +1420,7 @@ void main() {
       tester,
     ) async {
       registerCurrencyPreference('EUR');
-      setupViewport(tester);
-      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
-      await tester.tap(find.textContaining('Paris → Dakar'));
-      await tester.pump(const Duration(milliseconds: 600));
+      await pumpWithTemplate(tester, mockTemplate);
 
       // skipOffstage: false — les notifiers sont partagés, l'étape affichée
       // n'importe pas.
@@ -1459,7 +1430,9 @@ void main() {
       final conditions = tester.widget<ConditionsStep>(
         find.byType(ConditionsStep, skipOffstage: false),
       );
-      expect(prix.cashEnabledNotifier.value, isFalse);
+      // Sans carte dans ce montage, PrixStep verrouille les espèces à ON
+      // (post-frame, après l'application du modèle) : pas un champ du modèle.
+      expect(prix.cashEnabledNotifier.value, isTrue);
       expect(prix.mobileMoneyEnabledNotifier.value, isFalse);
       expect(prix.negotiableNotifier.value, isFalse);
       expect(conditions.descriptionCtrl.text, isEmpty);
@@ -1524,21 +1497,6 @@ void main() {
       }
       getIt.registerFactory<AnnouncementBloc>(() => announcementBloc);
 
-      if (getIt.isRegistered<TripTemplateBloc>()) {
-        getIt.unregister<TripTemplateBloc>();
-      }
-      getIt.registerFactory<TripTemplateBloc>(() {
-        final b = _MockTripTemplateBloc();
-        when(() => b.state).thenReturn(
-          const TripTemplateState(
-            status: TripTemplateStatus.success,
-            templates: [template],
-          ),
-        );
-        when(() => b.stream).thenAnswer((_) => const Stream.empty());
-        return b;
-      });
-
       gpRepo = _MockGpProRepository();
       when(
         () => gpRepo.fetchStatus(),
@@ -1590,15 +1548,6 @@ void main() {
         when(() => b.stream).thenAnswer((_) => const Stream.empty());
         return b;
       });
-      if (getIt.isRegistered<TripTemplateBloc>()) {
-        getIt.unregister<TripTemplateBloc>();
-      }
-      getIt.registerFactory<TripTemplateBloc>(() {
-        final b = _MockTripTemplateBloc();
-        when(() => b.state).thenReturn(const TripTemplateState());
-        when(() => b.stream).thenAnswer((_) => const Stream.empty());
-        return b;
-      });
       if (getIt.isRegistered<TravelerStatusCubit>()) {
         getIt.unregister<TravelerStatusCubit>();
       }
@@ -1610,7 +1559,8 @@ void main() {
       }
     });
 
-    /// Formulaire de création rempli par le modèle, date posée : prêt à
+    /// Formulaire de création ouvert avec le modèle (comme depuis la feuille
+    /// « Partir d'un modèle ? »), date posée : prêt à
     /// publier à l'étape 2.
     Future<void> reachPublishStep(
       WidgetTester tester, {
@@ -1623,7 +1573,7 @@ void main() {
       await pumpAndDrain(
         tester,
         _wrapWithRouter(
-          const CreateTripScreen(),
+          const CreateTripScreen(args: CreateTripArgs(template: template)),
           authState: AuthAuthenticated(
             UserModel(
               id: 'user-test-1',
@@ -1636,7 +1586,6 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.textContaining('Abidjan → Paris'));
       await tester.pump(const Duration(milliseconds: 600));
       // La confirmation « modèle appliqué » recouvre les boutons du bas.
       for (var i = 0; i < 8; i++) {
@@ -6220,35 +6169,6 @@ void main() {
       arrivalCountryCode: 'SN',
     );
 
-    /// Barre « Mes modèles » de l'étape Trajet garnie de [templates].
-    void useTemplates(List<TripTemplate> templates) {
-      if (getIt.isRegistered<TripTemplateBloc>()) {
-        getIt.unregister<TripTemplateBloc>();
-      }
-      getIt.registerFactory<TripTemplateBloc>(() {
-        final b = _MockTripTemplateBloc();
-        when(() => b.state).thenReturn(
-          TripTemplateState(
-            status: TripTemplateStatus.success,
-            templates: templates,
-          ),
-        );
-        when(() => b.stream).thenAnswer((_) => const Stream.empty());
-        return b;
-      });
-      addTearDown(() {
-        if (getIt.isRegistered<TripTemplateBloc>()) {
-          getIt.unregister<TripTemplateBloc>();
-        }
-        getIt.registerFactory<TripTemplateBloc>(() {
-          final b = _MockTripTemplateBloc();
-          when(() => b.state).thenReturn(const TripTemplateState());
-          when(() => b.stream).thenAnswer((_) => const Stream.empty());
-          return b;
-        });
-      });
-    }
-
     /// Date de départ dans un mois : le modèle n'en porte pas.
     Future<void> setDepartureInAMonth(WidgetTester tester) async {
       tester
@@ -6265,21 +6185,20 @@ void main() {
         .transportModeNotifier
         ?.value;
 
-    testWidgets('étape Mode → Route, puis modèle PLANE à Trajet : le mode '
-        'reste CAR et part en CAR', (tester) async {
+    testWidgets('modèle PLANE venu de la feuille, puis étape Mode → Route : '
+        'le mode choisi est CAR et part en CAR', (tester) async {
       roadOn();
-      useTemplates([templateOf('PLANE')]);
-      await pumpScreen(tester, null);
-
-      await tester.tap(find.byKey(const Key('mode-card-car')));
-      await tester.pump();
-      await _goToStep(tester, TripFormStep.trajet);
-      await tester.tap(find.textContaining('Paris → Dakar'));
-      await tester.pump(const Duration(milliseconds: 600));
+      await pumpScreen(tester, CreateTripArgs(template: templateOf('PLANE')));
       // La confirmation « modèle appliqué » recouvre les boutons du bas.
       for (var i = 0; i < 8; i++) {
         await tester.pump(const Duration(seconds: 1));
       }
+      // Le modèle n'a pas choisi le mode à la place du voyageur.
+      expect(currentMode(tester), isNull);
+
+      await tester.tap(find.byKey(const Key('mode-card-car')));
+      await tester.pump();
+      await _goToStep(tester, TripFormStep.trajet);
       expect(currentMode(tester), TransportMode.car);
 
       await setDepartureInAMonth(tester);

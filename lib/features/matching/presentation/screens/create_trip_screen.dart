@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/currency/active_currency.dart';
-import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -68,9 +67,6 @@ import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:dony/features/traveler_status/presentation/publish_blocked_screen.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_prompt.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_sheet.dart';
-import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
-import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
-import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
@@ -523,10 +519,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       // Étapes supplémentaires d'un voyage (FLUTTER-4D), en création seulement.
       BlocProvider<TripLegsCubit>(create: (_) => getIt<TripLegsCubit>()),
       BlocProvider<AiFilledFieldsCubit>.value(value: _aiFilled),
-      BlocProvider<TripTemplateBloc>(
-        create: (_) =>
-            getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
-      ),
       BlocProvider<MobileMoneyAccountBloc>(
         create: (_) =>
             getIt<MobileMoneyAccountBloc>()
@@ -3041,77 +3033,18 @@ class _TripFormContentState extends State<_TripFormContent> {
     return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
-  Widget _buildTemplatesSuggestionBar(
-    BuildContext context,
-    TextTheme tt,
-    ColorScheme cs,
-  ) {
-    return BlocBuilder<TripTemplateBloc, TripTemplateState>(
-      builder: (context, state) {
-        if (state.templates.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CaSectionLabel(
-              label: context.l10n.tripPublishTemplatesLabel,
-              iconAsset: 'bookmark',
-            ),
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              context.l10n.tripPublishTemplatesHint,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            SizedBox(
-              height: 40,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: state.templates.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(width: DonySpacing.sm),
-                itemBuilder: (context, i) {
-                  final t = state.templates[i];
-                  return ActionChip(
-                    avatar: t.emoji != null
-                        ? Text(t.emoji!)
-                        : DonyIcon('bookmark', size: 16, color: cs.primary),
-                    label: Text(
-                      t.pricePerKg == null
-                          ? context.l10n.tripPublishTemplateChipGrid(t.label)
-                          : '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg!, SupportedCurrency.fromCodeOrDefault(t.currency), compact: true)}/kg',
-                    ),
-                    onPressed: () => _applyTemplate(t),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: DonySpacing.xl),
-          ],
-        );
-      },
-    );
-  }
-
   // ── Mode ───────────────────────────────────────────────────────────────────
   List<Widget> _buildModeStep() => [
     ModeStep(modes: widget.tripModes, notifier: _transportModeNotifier),
   ];
 
   // ── Trajet ─────────────────────────────────────────────────────────────────
-  List<Widget> _buildStep0(BuildContext context, TextTheme tt, ColorScheme cs) {
+  List<Widget> _buildStep0(BuildContext context) {
     return [
       if (_isLocked) ...[
         _LockedBanner(lockContext: widget.lockContext!),
         const SizedBox(height: DonySpacing.lg),
       ],
-      if (!_isEdit && !_isLocked)
-        ValueListenableBuilder<SupportedCurrency>(
-          valueListenable: widget.currencyNotifier,
-          builder: (context, _, _) =>
-              _buildTemplatesSuggestionBar(context, tt, cs),
-        ),
       ValueListenableBuilder<Set<_Step0Field>>(
         valueListenable: _step0ErrorsNotifier,
         builder: (context, missing, _) => TrajetStep(
@@ -3447,7 +3380,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         final current = widget.currentStepNotifier!.value;
         List<Widget> contentOf(TripFormStep step) => switch (step) {
           TripFormStep.mode => _buildModeStep(),
-          TripFormStep.trajet => _buildStep0(context, tt, cs),
+          TripFormStep.trajet => _buildStep0(context),
           TripFormStep.capacite => _buildStep1(context, tt, cs),
           TripFormStep.prix => _buildPrixStep(context),
           TripFormStep.conditions => _buildConditionsStep(context),

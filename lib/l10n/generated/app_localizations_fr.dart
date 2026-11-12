@@ -2732,20 +2732,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishDraftLimitTitle => 'Limite de brouillons atteinte';
 
   @override
-  String get tripPublishTemplatesLabel => 'Mes modèles';
-
-  @override
-  String get tripPublishTemplatesHint =>
-      'Appliquez un modèle pour pré-remplir le trajet';
-
-  @override
   String tripPublishTemplateAppliedMessage(String label) {
     return 'Modèle « $label » appliqué';
-  }
-
-  @override
-  String tripPublishTemplateChipGrid(String label) {
-    return '$label · par article';
   }
 
   @override

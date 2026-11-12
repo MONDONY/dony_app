@@ -85,9 +85,6 @@ import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
-import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
-import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
-import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -382,10 +379,6 @@ class _TripMockCommissionMethodBloc
     extends MockBloc<CommissionMethodEvent, CommissionMethodState>
     implements CommissionMethodBloc {}
 
-class _TripMockTripTemplateBloc
-    extends MockBloc<TripTemplateEvent, TripTemplateState>
-    implements TripTemplateBloc {}
-
 class _TripMockStripeAccountBloc
     extends MockBloc<StripeAccountEvent, StripeAccountState>
     implements StripeAccountBloc {}
@@ -510,14 +503,6 @@ void _tripRegisterDependencies() {
     getIt.registerFactory<CommissionMethodBloc>(() {
       final b = _TripMockCommissionMethodBloc();
       when(() => b.state).thenReturn(CommissionMethodInitial());
-      when(() => b.stream).thenAnswer((_) => const Stream.empty());
-      return b;
-    });
-  }
-  if (!getIt.isRegistered<TripTemplateBloc>()) {
-    getIt.registerFactory<TripTemplateBloc>(() {
-      final b = _TripMockTripTemplateBloc();
-      when(() => b.state).thenReturn(const TripTemplateState());
       when(() => b.stream).thenAnswer((_) => const Stream.empty());
       return b;
     });

@@ -4640,29 +4640,11 @@ abstract class AppLocalizations {
   /// **'Limite de brouillons atteinte'**
   String get tripPublishDraftLimitTitle;
 
-  /// Titre de la barre de suggestion des modèles de trajet enregistrés
-  ///
-  /// In fr, this message translates to:
-  /// **'Mes modèles'**
-  String get tripPublishTemplatesLabel;
-
-  /// Texte d'aide sous le titre de la barre de suggestion des modèles de trajet
-  ///
-  /// In fr, this message translates to:
-  /// **'Appliquez un modèle pour pré-remplir le trajet'**
-  String get tripPublishTemplatesHint;
-
   /// Confirmation après application d'un modèle de trajet, avec son nom
   ///
   /// In fr, this message translates to:
   /// **'Modèle « {label} » appliqué'**
   String tripPublishTemplateAppliedMessage(String label);
-
-  /// Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom
-  ///
-  /// In fr, this message translates to:
-  /// **'{label} · par article'**
-  String tripPublishTemplateChipGrid(String label);
 
   /// Titre de section (étape Trajet) pour la date limite de dépôt des colis
   ///

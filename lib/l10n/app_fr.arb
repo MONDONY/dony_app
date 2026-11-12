@@ -1345,26 +1345,9 @@
   "@tripPublishDraftLimitTitle": {
     "description": "Titre du dialogue quand la limite de brouillons est atteinte"
   },
-  "tripPublishTemplatesLabel": "Mes modèles",
-  "@tripPublishTemplatesLabel": {
-    "description": "Titre de la barre de suggestion des modèles de trajet enregistrés"
-  },
-  "tripPublishTemplatesHint": "Appliquez un modèle pour pré-remplir le trajet",
-  "@tripPublishTemplatesHint": {
-    "description": "Texte d'aide sous le titre de la barre de suggestion des modèles de trajet"
-  },
   "tripPublishTemplateAppliedMessage": "Modèle « {label} » appliqué",
   "@tripPublishTemplateAppliedMessage": {
     "description": "Confirmation après application d'un modèle de trajet, avec son nom",
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "tripPublishTemplateChipGrid": "{label} · par article",
-  "@tripPublishTemplateChipGrid": {
-    "description": "Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom",
     "placeholders": {
       "label": {
         "type": "String"

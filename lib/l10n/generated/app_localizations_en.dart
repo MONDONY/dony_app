@@ -2718,20 +2718,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishDraftLimitTitle => 'Draft limit reached';
 
   @override
-  String get tripPublishTemplatesLabel => 'My templates';
-
-  @override
-  String get tripPublishTemplatesHint =>
-      'Apply a template to pre-fill the trip';
-
-  @override
   String tripPublishTemplateAppliedMessage(String label) {
     return 'Template “$label” applied';
-  }
-
-  @override
-  String tripPublishTemplateChipGrid(String label) {
-    return '$label · per item';
   }
 
   @override
