@@ -3444,6 +3444,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   ),
   'bidCreateMaxWeightLabel': (l) =>
       l.bidCreateMaxWeightLabel(placeholderMarker('maxKg')),
+  'bidCreateItemSizeLabel': (l) => l.bidCreateItemSizeLabel,
+  'bidCreateItemSizeHelp': (l) =>
+      l.bidCreateItemSizeHelp(placeholderMarker('size')),
   'commonDone': (l) => l.commonDone,
   'commonLater': (l) => l.commonLater,
   'commonLoadError': (l) => l.commonLoadError,
@@ -8646,6 +8649,7 @@ const textParameters = <String, List<String>>{
   'activityToolsProgressBody': ['missing'],
   'activityNewSinceLastVisit': ['label', 'title'],
   'bidCreateMaxWeightLabel': ['maxKg'],
+  'bidCreateItemSizeHelp': ['size'],
   'paymentContextRecipient': ['name'],
   'commissionCardExpiringMessage': ['date'],
   'commissionCardExpiryLabel': ['date'],

@@ -2,6 +2,8 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 
 /// Appels HTTP du fil de négociation du prix d'un trajet.
 ///
@@ -27,6 +29,7 @@ class BidNegotiationRemoteDatasource {
     List<String>? photoKeys,
     List<Map<String, dynamic>>? customItems,
     List<Map<String, dynamic>>? gridItems,
+    ItemSize? itemSize,
   }) async {
     final body = <String, dynamic>{
       'description': description,
@@ -49,6 +52,8 @@ class BidNegotiationRemoteDatasource {
     if (gridItems != null && gridItems.isNotEmpty) {
       body['gridItems'] = gridItems;
     }
+    // Taille facultative : la clé n'existe que si l'expéditeur en a choisi une.
+    body.addAll(itemSizeEntry('itemSize', FieldChange.ofNullable(itemSize)));
     final response = await _apiClient.dio.post(
       '/announcements/$announcementId/bids/negotiation',
       data: body,

@@ -15706,6 +15706,18 @@ abstract class AppLocalizations {
   /// **'max {maxKg} kg'**
   String bidCreateMaxWeightLabel(String maxKg);
 
+  /// Libellé du sélecteur de taille du colis, sur un trajet qui porte une taille maximum (create_bid/bid_item_size_block.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille du colis (facultatif)'**
+  String get bidCreateItemSizeLabel;
+
+  /// Aide sous le sélecteur de taille du colis : la taille maximum du trajet (create_bid/bid_item_size_block.dart). {size} est le code S, M, L ou XL.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur accepte les colis jusqu\'à la taille {size}.'**
+  String bidCreateItemSizeHelp(String size);
+
   /// Bouton générique de fin d'action (ex. bouton Terminé de la vue succès de DonyPaymentSheet).
   ///
   /// In fr, this message translates to:

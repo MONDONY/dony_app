@@ -9450,6 +9450,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get bidCreateItemSizeLabel => 'Parcel size (optional)';
+
+  @override
+  String bidCreateItemSizeHelp(String size) {
+    return 'This traveler accepts parcels up to size $size.';
+  }
+
+  @override
   String get commonDone => 'Done';
 
   @override

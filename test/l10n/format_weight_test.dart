@@ -43,6 +43,20 @@ void main() {
     });
   });
 
+  group('formatWeightGrouped : valeur seule avec milliers', () {
+    test('fr : espace fine insécable, virgule décimale, deux décimales', () {
+      expect(formatWeightGrouped('fr', 1200), '1\u202f200');
+      expect(formatWeightGrouped('fr', 0.25), '0,25');
+      expect(formatWeightGrouped('fr', 999999), '999\u202f999');
+    });
+
+    test('en : virgule des milliers, point décimal', () {
+      expect(formatWeightGrouped('en', 1200), '1,200');
+      expect(formatWeightGrouped('en', 12.5), '12.5');
+      expect(formatWeightGrouped('en', 20), '20');
+    });
+  });
+
   group('formatWeightValue : champs de saisie', () {
     test('reste non groupé', () {
       expect(formatWeightValue('fr', 1200), '1200');

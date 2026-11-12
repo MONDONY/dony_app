@@ -9511,6 +9511,14 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get bidCreateItemSizeLabel => 'Taille du colis (facultatif)';
+
+  @override
+  String bidCreateItemSizeHelp(String size) {
+    return 'Ce voyageur accepte les colis jusqu\'à la taille $size.';
+  }
+
+  @override
   String get commonDone => 'Terminé';
 
   @override

@@ -3,6 +3,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/datasources/bid_negotiation_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -75,6 +76,7 @@ void main() {
     List<Map<String, dynamic>>? gridItems,
     List<String>? photoKeys,
     String? countryCode,
+    ItemSize? itemSize,
   }) {
     when(
       () => dio.post(
@@ -100,6 +102,7 @@ void main() {
       gridItems: gridItems,
       photoKeys: photoKeys,
       countryCode: countryCode,
+      itemSize: itemSize,
     );
   }
 
@@ -166,6 +169,19 @@ void main() {
 
       expect(body['customItems'], hasLength(1));
       expect(body['gridItems'], hasLength(1));
+    });
+
+    test('la taille du colis est absente du corps tant qu\'elle n\'est pas '
+        'choisie', () async {
+      await propose();
+
+      expect(capturedBody().containsKey('itemSize'), isFalse);
+    });
+
+    test('la taille choisie part en S, M, L ou XL', () async {
+      await propose(itemSize: ItemSize.l);
+
+      expect(capturedBody()['itemSize'], 'L');
     });
 
     test('photoKeys et countryCode sont optionnels', () async {

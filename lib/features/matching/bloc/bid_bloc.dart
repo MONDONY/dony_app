@@ -91,6 +91,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         recipientPhone: event.recipientPhone,
         photoKeys: event.photoKeys,
         gridItems: event.gridItems,
+        itemSize: event.itemSize,
       );
       emit(BidCheckoutReady(response));
       // Offre carte créée en attente de paiement : sans cet événement, une
@@ -105,6 +106,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
             'weight_kg': event.weightKg,
             'currency': response.currency,
             'payment_method': 'card',
+            if (event.itemSize case final size?) 'item_size': size.wire,
           },
         ),
       );
@@ -135,6 +137,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         promoCode: event.promoCode,
         photoKeys: event.photoKeys,
         gridItems: event.gridItems,
+        itemSize: event.itemSize,
       );
       emit(BidCreated(bid));
       unawaited(
@@ -145,6 +148,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
             'weight_kg': bid.weightKg ?? 0.0,
             'price_per_kg': bid.pricePerKg ?? 0.0,
             'payment_method': event.paymentMethod.name,
+            if (event.itemSize case final size?) 'item_size': size.wire,
           },
         ),
       );

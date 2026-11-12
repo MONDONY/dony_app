@@ -11,6 +11,7 @@ import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
@@ -52,6 +53,8 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
 AnnouncementModel _announcement({
   required String capacityUnit,
   double availableKg = 10.0,
+  TransportMode? transportMode,
+  double? maxParcelWeightKg,
 }) => AnnouncementModel(
   id: 'ann-weight-test',
   travelerId: 'traveler-1',
@@ -62,6 +65,8 @@ AnnouncementModel _announcement({
   totalKg: availableKg,
   pricePerKg: 12.0,
   capacityUnit: capacityUnit,
+  transportMode: transportMode,
+  maxParcelWeightKg: maxParcelWeightKg,
   status: 'OPEN',
   bidsCount: 0,
   createdAt: DateTime(2026, 7),
@@ -484,6 +489,198 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const Key('bid-submit-hint')), findsNothing);
+    });
+  });
+  // ── 4. Poids max par colis et tonnes (lot « route ») ─────────────────────────
+  // Le maximum de la feuille est le plus petit entre les kilos restants (ou
+  // illimité en kilo libre) et le poids max par colis du trajet. Au-delà de
+  // 50 kg sur un mode lourd (route, bateau), le curseur laisse la place à une
+  // saisie numérique : 3 000 crans de 0,5 kg ne se règlent pas au doigt.
+
+  group('Poids max par colis et tonnes', () {
+    testWidgets('kilo libre, max 20 kg par colis : le repère « max 20 kg » '
+        'est affiché', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'KG_FREE', maxParcelWeightKg: 20),
+      );
+
+      expect(find.byKey(const Key('weight-field')), findsOneWidget);
+      expect(find.text('max 20 kg'), findsOneWidget);
+    });
+
+    testWidgets('kilo libre, max 20 kg par colis : « 42 » est ramené à 20', (
+      tester,
+    ) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'KG_FREE', maxParcelWeightKg: 20),
+      );
+
+      await tester.enterText(find.byKey(const Key('weight-field')), '42');
+      await tester.pump();
+
+      expect(displayedWeight(tester), '20');
+      expect(find.textContaining('20 kg ×'), findsOneWidget);
+    });
+
+    testWidgets('kilo libre, max 20 kg par colis : « 15 » reste 15', (
+      tester,
+    ) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'KG_FREE', maxParcelWeightKg: 20),
+      );
+
+      await tester.enterText(find.byKey(const Key('weight-field')), '15');
+      await tester.pump();
+
+      expect(displayedWeight(tester), '15');
+    });
+
+    testWidgets('kilo libre, max 20 kg : le « + » s\'arrête à 20', (
+      tester,
+    ) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'KG_FREE', maxParcelWeightKg: 20),
+      );
+      await tester.enterText(find.byKey(const Key('weight-field')), '20');
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('weight-increment')));
+      await tester.pump();
+
+      expect(displayedWeight(tester), '20');
+    });
+
+    testWidgets('trajet route 1 500 kg restants : saisie numérique, pas de '
+        'curseur, 1 200 kg acceptés', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'KG',
+          availableKg: 1500,
+          transportMode: TransportMode.car,
+        ),
+      );
+
+      expect(find.byType(Slider), findsNothing);
+      expect(find.text('max 1\u202f500 kg'), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('weight-field')), '1200');
+      await tester.pump();
+
+      expect(displayedWeight(tester), '1\u202f200');
+      expect(find.textContaining('1\u202f200 kg ×'), findsOneWidget);
+    });
+
+    testWidgets('trajet route 1 500 kg restants : 1 600 est ramené à 1 500', (
+      tester,
+    ) async {
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'KG',
+          availableKg: 1500,
+          transportMode: TransportMode.car,
+        ),
+      );
+
+      await tester.enterText(find.byKey(const Key('weight-field')), '1600');
+      await tester.pump();
+
+      expect(displayedWeight(tester), '1\u202f500');
+    });
+
+    testWidgets('route 1 500 kg restants, max 40 kg par colis : le plus petit '
+        'gagne, curseur de 0 à 40', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'KG',
+          availableKg: 1500,
+          transportMode: TransportMode.car,
+          maxParcelWeightKg: 40,
+        ),
+      );
+
+      final slider = tester.widget<Slider>(find.byType(Slider));
+      expect(slider.max, 40);
+      expect(find.text('max 40 kg'), findsOneWidget);
+    });
+
+    testWidgets('route 8 kg restants, max 40 kg par colis : les kilos restants '
+        'gagnent', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'KG',
+          availableKg: 8,
+          transportMode: TransportMode.car,
+          maxParcelWeightKg: 40,
+        ),
+      );
+
+      expect(tester.widget<Slider>(find.byType(Slider)).max, 8);
+    });
+
+    testWidgets('trajet avion de 69 kg restants : curseur inchangé (jusqu\'à '
+        '69)', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'SUITCASE_23KG',
+          availableKg: 69,
+          transportMode: TransportMode.plane,
+        ),
+      );
+
+      expect(tester.widget<Slider>(find.byType(Slider)).max, 69);
+      expect(find.byKey(const Key('weight-field')), findsNothing);
+    });
+
+    testWidgets('trajet sans mode connu de 60 kg restants : curseur inchangé', (
+      tester,
+    ) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'KG', availableKg: 60),
+      );
+
+      expect(tester.widget<Slider>(find.byType(Slider)).max, 60);
+    });
+
+    testWidgets('kilo libre sans limite par colis : repère absent, '
+        'comportement inchangé', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
+      );
+
+      expect(find.textContaining('max '), findsNothing);
+      await tester.enterText(find.byKey(const Key('weight-field')), '99');
+      await tester.pump();
+      expect(displayedWeight(tester), '99');
+    });
+
+    testWidgets('kilo libre sur la route : milliers groupés, 1 200 kg', (
+      tester,
+    ) async {
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'KG_FREE',
+          availableKg: 1,
+          transportMode: TransportMode.car,
+        ),
+      );
+
+      await tester.enterText(find.byKey(const Key('weight-field')), '1200');
+      await tester.pump();
+
+      expect(displayedWeight(tester), '1\u202f200');
+      expect(find.textContaining('1\u202f200 kg ×'), findsOneWidget);
     });
   });
 }

@@ -4598,6 +4598,8 @@
   "activityNewCount": "{count, plural, one{{count} new} other{{count} new}}",
   "activityNewSinceLastVisit": "{title}, {label} since your last visit",
   "bidCreateMaxWeightLabel": "max {maxKg} kg",
+  "bidCreateItemSizeLabel": "Parcel size (optional)",
+  "bidCreateItemSizeHelp": "This traveler accepts parcels up to size {size}.",
 
   "commonDone": "Done",
   "commonLater": "Later",

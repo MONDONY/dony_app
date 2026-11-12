@@ -31,10 +31,14 @@ import 'package:dony/features/matching/data/grid_item_declaration_matcher.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid/bid_item_size_block.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/photo_section.dart';
 import 'package:dony/features/matching/presentation/widgets/custom_items_section.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reimbursement_info_banner.dart';
+import 'package:dony/features/package_request/presentation/weight_input_format.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -109,6 +113,7 @@ class _CollectedFormData {
     this.gridItems,
     this.promoCode,
     this.photoKeys,
+    this.itemSize,
   });
   final double weightKg;
   final String description;
@@ -118,6 +123,9 @@ class _CollectedFormData {
   final List<Map<String, dynamic>>? gridItems;
   final String? promoCode;
   final List<String>? photoKeys;
+
+  /// Taille du colis choisie, facultative.
+  final ItemSize? itemSize;
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
@@ -210,6 +218,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _recipientPhoneErrorNotifier = ValueNotifier<bool>(false);
   final _recipientSection = RecipientSectionController();
   late final ValueNotifier<double> _weightNotifier;
+
+  /// Taille du colis, facultative : jamais requise pour envoyer. Proposée
+  /// seulement sur un trajet qui porte une taille maximum.
+  final _itemSizeNotifier = ValueNotifier<ItemSize?>(null);
   final _categoriesNotifier = ValueNotifier<Set<String>>({});
   // Seedé synchrone avec le catalogue embarqué (fallbackCatalog) — jamais
   // vide au premier frame — puis remplacé par le catalogue live du
@@ -242,6 +254,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _recipientPhoneCtrl.text,
     _promoCtrl.text,
     _weightNotifier.value,
+    _itemSizeNotifier.value,
     (_categoriesNotifier.value.toList()..sort()).join(','),
     _disclaimerNotifier.value,
     (_gridQuantitiesNotifier.value.entries
@@ -284,7 +297,25 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   // (cash si le trajet n'accepte pas Stripe).
   late final ValueNotifier<BidPaymentMethod> _methodNotifier;
 
-  double get _maxKg => widget.announcement.availableKg;
+  /// Poids maximum de la feuille : le plus petit entre les kilos restants
+  /// (illimités en kilo libre, dont le poids n'est plus comparé aux kilos
+  /// techniques) et le poids max par colis du trajet, quand il en a un.
+  /// `double.infinity` = aucune borne.
+  double get _maxKg {
+    final parcelCap = widget.announcement.maxParcelWeightKg;
+    final cap = parcelCap != null && parcelCap > 0
+        ? parcelCap
+        : double.infinity;
+    if (widget.announcement.isKgFree) return cap;
+    final available = widget.announcement.availableKg;
+    return available < cap ? available : cap;
+  }
+
+  /// Taille à envoyer : celle que l'expéditeur a choisie, jamais une valeur
+  /// par défaut. Sans taille maximum sur le trajet, le bloc n'existe pas et
+  /// rien ne part.
+  ItemSize? get _chosenItemSize =>
+      widget.announcement.maxItemSize == null ? null : _itemSizeNotifier.value;
 
   /// Net voyageur. `null` seulement pour un lecteur anonyme (le backend
   /// masque le net) ; cet écran de création d'offre exige d'être connecté,
@@ -607,6 +638,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _quoteNotifier.dispose();
     _promoErrorNotifier.dispose();
     _weightNotifier.dispose();
+    _itemSizeNotifier.dispose();
     _categoriesNotifier.dispose();
     _catalogNotifier.dispose();
     _disclaimerNotifier.dispose();
@@ -926,6 +958,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             .map((item) => item.toJson())
             .toList(),
         gridItems: _selectedGridItems(),
+        itemSize: _chosenItemSize,
       ),
     );
   }
@@ -1122,6 +1155,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       gridItems: _selectedGridItems(),
       promoCode: promoCode,
       photoKeys: _photosCubit.readyKeys,
+      itemSize: _chosenItemSize,
     );
 
     if (!_hasAlternativePaymentMethods) {
@@ -1152,6 +1186,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           promoCode: data.promoCode,
           gridItems: data.gridItems,
           photoKeys: data.photoKeys,
+          itemSize: data.itemSize,
         ),
       );
     } else {
@@ -1165,6 +1200,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           recipientPhone: data.recipientPhone,
           gridItems: data.gridItems,
           photoKeys: data.photoKeys,
+          itemSize: data.itemSize,
         ),
       );
     }
@@ -1578,8 +1614,24 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 maxKg: _maxKg,
                 isMixed: hasGridPricing,
                 isKgFree: widget.announcement.isKgFree,
+                heavy: widget.announcement.transportMode?.isHeavy ?? false,
                 onChanged: (v) => _weightNotifier.value = v,
               ).animate().fadeIn(duration: 250.ms),
+              const SizedBox(height: DonySpacing.xxl),
+            ],
+
+            // ── Taille du colis ───────────────────────────────────────────
+            // Facultative : elle ne bloque jamais l'envoi. Seules les tailles
+            // que le trajet accepte sont proposées.
+            if (widget.announcement.maxItemSize case final maxSize?) ...[
+              ValueListenableBuilder<ItemSize?>(
+                valueListenable: _itemSizeNotifier,
+                builder: (_, selected, _) => BidItemSizeBlock(
+                  maxSize: maxSize,
+                  selected: selected,
+                  onChanged: (size) => _itemSizeNotifier.value = size,
+                ),
+              ),
               const SizedBox(height: DonySpacing.xxl),
             ],
 
@@ -2347,6 +2399,11 @@ class _ContentHint extends StatelessWidget {
 
 // ── Weight section with slider ─────────────────────────────────────────────────
 
+/// Au-delà de ce maximum, sur un mode lourd (route, bateau), le curseur
+/// laisse la place à une saisie numérique : un cran tous les 0,5 kg donnerait
+/// des milliers de crans, impossibles à régler au doigt.
+const double _kSliderMaxKg = 50;
+
 class _WeightSection extends StatefulWidget {
   const _WeightSection({
     required this.weightKg,
@@ -2354,13 +2411,21 @@ class _WeightSection extends StatefulWidget {
     required this.onChanged,
     this.isMixed = false,
     this.isKgFree = false,
+    this.heavy = false,
   });
 
   final double weightKg;
+
+  /// Poids maximum de la feuille (`double.infinity` : aucune borne, kilo
+  /// libre sans poids max par colis).
   final double maxKg;
   final ValueChanged<double> onChanged;
   final bool isMixed;
   final bool isKgFree;
+
+  /// Mode lourd (route, bateau) : poids en tonnes, saisie avec milliers
+  /// groupés.
+  final bool heavy;
 
   @override
   State<_WeightSection> createState() => _WeightSectionState();
@@ -2376,10 +2441,29 @@ class _WeightSectionState extends State<_WeightSection> {
   // l'utilisateur doit pouvoir revenir à 0 en le vidant/décrémentant.
   double get _min => 0.0;
 
+  /// Saisie numérique (champ et boutons) plutôt que curseur : kilo libre, ou
+  /// maximum au-delà de [_kSliderMaxKg] sur un mode lourd.
+  bool get _numeric =>
+      widget.isKgFree || (widget.heavy && widget.maxKg > _kSliderMaxKg);
+
+  /// Plafond de saisie : le maximum de la feuille ; sur un mode lourd sans
+  /// autre borne, la capacité technique du back (999 999 kg).
+  double get _cap {
+    if (widget.maxKg.isFinite) return widget.maxKg;
+    return widget.heavy
+        ? TripCapacityLimits.heavyMaxKg.toDouble()
+        : double.infinity;
+  }
+
+  double _clampToCap(double kg) => kg > _cap ? _cap : kg;
+
+  double? _parse(String raw) =>
+      widget.heavy ? parseWeightInput(raw, heavy: true) : _parseWeight(raw);
+
   @override
   void initState() {
     super.initState();
-    if (widget.isKgFree) {
+    if (_numeric) {
       // Texte posé dans didChangeDependencies : il dépend de la langue, que
       // le contexte ne fournit pas encore ici.
       _kgCtrl = TextEditingController();
@@ -2403,14 +2487,19 @@ class _WeightSectionState extends State<_WeightSection> {
 
   /// Poids tel qu'affiché dans le champ, au séparateur décimal de la langue
   /// (« 0,5 » en français, « 0.5 » en anglais ; entier sans décimale).
-  String _fieldText(double kg) => formatWeightValue(_localeName, kg);
+  String _fieldText(double kg) {
+    if (!widget.heavy) return formatWeightValue(_localeName, kg);
+    // Mode lourd : milliers groupés, séparateur décimal de la langue.
+    final text = formatWeightInput(kg);
+    return _localeName == 'fr' ? text.replaceFirst('.', ',') : text;
+  }
 
   @override
   void didUpdateWidget(covariant _WeightSection oldWidget) {
     super.didUpdateWidget(oldWidget);
     final ctrl = _kgCtrl;
     if (ctrl != null && !(_kgFocus?.hasFocus ?? false)) {
-      final current = _parseWeight(ctrl.text);
+      final current = _parse(ctrl.text);
       if (current == null || current != widget.weightKg) {
         final text = _fieldText(widget.weightKg);
         ctrl.value = TextEditingValue(
@@ -2430,7 +2519,7 @@ class _WeightSectionState extends State<_WeightSection> {
   }
 
   void _setWeight(double value) {
-    final clamped = value < _min ? _min : value;
+    final clamped = _clampToCap(value < _min ? _min : value);
     widget.onChanged(_snapWeight(clamped));
   }
 
@@ -2438,8 +2527,10 @@ class _WeightSectionState extends State<_WeightSection> {
     if (_kgFocus?.hasFocus ?? false) return;
     final ctrl = _kgCtrl;
     if (ctrl == null) return;
-    final parsed = _parseWeight(ctrl.text);
-    final value = parsed == null ? _min : (parsed < _min ? _min : parsed);
+    final parsed = _parse(ctrl.text);
+    final value = parsed == null
+        ? _min
+        : _clampToCap(parsed < _min ? _min : parsed);
     if (value != widget.weightKg) widget.onChanged(value);
     final text = _fieldText(value);
     if (ctrl.text != text) {
@@ -2453,22 +2544,34 @@ class _WeightSectionState extends State<_WeightSection> {
   void _onFieldChanged(String raw) {
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return;
-    final parsed = _parseWeight(trimmed);
+    final parsed = _parse(trimmed);
     if (parsed == null) return;
     final value = parsed < _min ? _min : parsed;
+    if (value > _cap) {
+      // Au-delà du maximum : le champ montre ce qui est retenu.
+      final capped = _clampToCap(value);
+      final text = _fieldText(capped);
+      _kgCtrl?.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+      widget.onChanged(capped);
+      return;
+    }
     widget.onChanged(value);
   }
 
   @override
   Widget build(BuildContext context) {
-    return widget.isKgFree ? _buildKgFree(context) : _buildSlider(context);
+    return _numeric ? _buildNumeric(context) : _buildSlider(context);
   }
 
-  Widget _buildKgFree(BuildContext context) {
+  Widget _buildNumeric(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final weightKg = widget.weightKg;
     final canDecrement = weightKg > _min;
+    final canIncrement = weightKg < _cap;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2481,7 +2584,11 @@ class _WeightSectionState extends State<_WeightSection> {
         ),
         const SizedBox(height: DonySpacing.xxs),
         Text(
-          context.l10n.bidCreateFreeKgHint,
+          widget.isKgFree
+              ? context.l10n.bidCreateFreeKgHint
+              : context.l10n.bidCreateMaxWeightLabel(
+                  formatWeightGrouped(context.l10n.localeName, widget.maxKg),
+                ),
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
@@ -2510,7 +2617,12 @@ class _WeightSectionState extends State<_WeightSection> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        inputFormatters: [_WeightInputFormatter()],
+                        inputFormatters: [
+                          if (widget.heavy)
+                            const GroupedWeightInputFormatter(heavy: true)
+                          else
+                            _WeightInputFormatter(),
+                        ],
                         textAlign: TextAlign.center,
                         style: tt.displayLarge?.copyWith(color: cs.onSurface),
                         cursorColor: cs.primary,
@@ -2541,10 +2653,24 @@ class _WeightSectionState extends State<_WeightSection> {
             _StepperButton(
               key: const Key('weight-increment'),
               iconAsset: 'plus',
-              onPressed: () => _setWeight(weightKg + _kWeightStep),
+              onPressed: canIncrement
+                  ? () => _setWeight(weightKg + _kWeightStep)
+                  : null,
             ),
           ],
         ),
+        // Kilo libre borné par colis : le maximum se lit sous le champ.
+        if (widget.isKgFree && widget.maxKg.isFinite) ...[
+          const SizedBox(height: DonySpacing.xs),
+          Center(
+            child: Text(
+              context.l10n.bidCreateMaxWeightLabel(
+                formatWeightGrouped(context.l10n.localeName, widget.maxKg),
+              ),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -2629,7 +2755,7 @@ class _WeightSectionState extends State<_WeightSection> {
                 alignment: Alignment.centerRight,
                 child: Text(
                   context.l10n.bidCreateMaxWeightLabel(
-                    maxKg.toStringAsFixed(0),
+                    formatWeightGrouped(l.localeName, sliderMax),
                   ),
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
@@ -2662,7 +2788,7 @@ class _WeightSectionState extends State<_WeightSection> {
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             Text(
-              '${maxKg.toStringAsFixed(0)} kg',
+              '${formatWeightGrouped(l.localeName, sliderMax)} kg',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
@@ -3293,7 +3419,7 @@ class _PriceBreakdown extends StatelessWidget {
       lines.add(
         _line(
           tt,
-          '${formatWeightValue(context.l10n.localeName, weightKg)} kg × '
+          '${formatWeightGrouped(context.l10n.localeName, weightKg)} kg × '
           '${formatPriceIn(pricePerKg, currency)}',
           fmt(kgDisplay),
         ),

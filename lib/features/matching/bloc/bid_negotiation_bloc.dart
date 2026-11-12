@@ -132,6 +132,7 @@ class BidNegotiationBloc
         photoKeys: event.photoKeys,
         customItems: event.customItems,
         gridItems: event.gridItems,
+        itemSize: event.itemSize,
       );
       _emitLoaded(thread, BidNegotiationAction.proposed, emit);
       // Ni description, ni destinataire, ni téléphone : on mesure si la
@@ -145,6 +146,7 @@ class BidNegotiationBloc
             'has_custom_items': (event.customItems ?? const []).isNotEmpty,
             'custom_item_count': (event.customItems ?? const []).length,
             'payment_method': event.paymentMethod.apiValue,
+            if (event.itemSize case final size?) 'item_size': size.wire,
           },
         ),
       );

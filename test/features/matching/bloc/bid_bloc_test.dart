@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -233,6 +234,151 @@ void main() {
   });
 
   // ─── BidCreateRequested ──────────────────────────────────────────────────────
+
+  group('taille du colis (facultative)', () {
+    final checkoutResponse = BidCheckoutResponseModel(
+      bidId: 'bid-001',
+      clientSecret: 'pi_secret_xxx',
+      publishableKey: 'pk_test_xxx',
+      expiresAt: DateTime(2030),
+    );
+
+    blocTest<BidBloc, BidState>(
+      'checkout : la taille choisie est transmise au depot',
+      build: () {
+        when(
+          () => mockRepo.checkoutBid(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            description: any(named: 'description'),
+            contentCategory: any(named: 'contentCategory'),
+            recipientName: any(named: 'recipientName'),
+            recipientPhone: any(named: 'recipientPhone'),
+            photoKeys: any(named: 'photoKeys'),
+            itemSize: any(named: 'itemSize'),
+          ),
+        ).thenAnswer((_) async => checkoutResponse);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        BidCheckoutRequested(
+          announcementId: 'ann-001',
+          weightKg: 1200,
+          description: 'Meubles',
+          contentCategory: 'FURNITURE',
+          recipientName: 'Aminata Diallo',
+          recipientPhone: '+221701234567',
+          itemSize: ItemSize.xl,
+        ),
+      ),
+      verify: (_) {
+        verify(
+          () => mockRepo.checkoutBid(
+            announcementId: 'ann-001',
+            weightKg: 1200,
+            description: 'Meubles',
+            contentCategory: 'FURNITURE',
+            recipientName: 'Aminata Diallo',
+            recipientPhone: '+221701234567',
+            photoKeys: any(named: 'photoKeys'),
+            itemSize: ItemSize.xl,
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<BidBloc, BidState>(
+      'creation : la taille choisie est transmise au depot',
+      build: () {
+        when(
+          () => mockRepo.createBid(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            description: any(named: 'description'),
+            contentCategory: any(named: 'contentCategory'),
+            recipientName: any(named: 'recipientName'),
+            recipientPhone: any(named: 'recipientPhone'),
+            paymentMethod: BidPaymentMethod.cash,
+            photoKeys: any(named: 'photoKeys'),
+            itemSize: any(named: 'itemSize'),
+          ),
+        ).thenAnswer((_) async => buildBid());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        BidCreateRequested(
+          announcementId: 'ann-001',
+          weightKg: 8,
+          description: 'Vêtements',
+          contentCategory: 'CLOTHING',
+          recipientName: 'Aminata Diallo',
+          recipientPhone: '+221701234567',
+          paymentMethod: BidPaymentMethod.cash,
+          itemSize: ItemSize.m,
+        ),
+      ),
+      verify: (_) {
+        verify(
+          () => mockRepo.createBid(
+            announcementId: 'ann-001',
+            weightKg: 8,
+            description: 'Vêtements',
+            contentCategory: 'CLOTHING',
+            recipientName: 'Aminata Diallo',
+            recipientPhone: '+221701234567',
+            paymentMethod: BidPaymentMethod.cash,
+            photoKeys: any(named: 'photoKeys'),
+            itemSize: ItemSize.m,
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<BidBloc, BidState>(
+      'creation refusee en 422 parcel-too-big : BidError avec le code et le '
+      'detail du serveur',
+      build: () {
+        when(
+          () => mockRepo.createBid(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            description: any(named: 'description'),
+            contentCategory: any(named: 'contentCategory'),
+            recipientName: any(named: 'recipientName'),
+            recipientPhone: any(named: 'recipientPhone'),
+            photoKeys: any(named: 'photoKeys'),
+            itemSize: any(named: 'itemSize'),
+          ),
+        ).thenThrow(
+          const ValidationException(
+            'Ce voyageur accepte au plus la taille M.',
+            code: 'parcel-too-big',
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        BidCreateRequested(
+          announcementId: 'ann-001',
+          weightKg: 8,
+          description: 'Meuble',
+          contentCategory: 'FURNITURE',
+          recipientName: 'Aminata Diallo',
+          recipientPhone: '+221701234567',
+          itemSize: ItemSize.xl,
+        ),
+      ),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+          (s) =>
+              s is BidError &&
+              s.error.code == 'parcel-too-big' &&
+              s.error.message == 'Ce voyageur accepte au plus la taille M.',
+        ),
+      ],
+    );
+  });
 
   group('BidCreateRequested', () {
     blocTest<BidBloc, BidState>(

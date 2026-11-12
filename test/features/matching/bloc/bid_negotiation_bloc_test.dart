@@ -12,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -107,6 +108,7 @@ void main() {
         photoKeys: any(named: 'photoKeys'),
         customItems: any(named: 'customItems'),
         gridItems: any(named: 'gridItems'),
+        itemSize: any(named: 'itemSize'),
       ),
     ).thenAnswer((_) async => result);
   }
@@ -126,6 +128,7 @@ void main() {
         photoKeys: any(named: 'photoKeys'),
         customItems: any(named: 'customItems'),
         gridItems: any(named: 'gridItems'),
+        itemSize: any(named: 'itemSize'),
       ),
     ).thenThrow(error);
   }
@@ -351,6 +354,74 @@ void main() {
 
   group('propose', () {
     blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'la taille choisie du colis est transmise au depot',
+      build: () {
+        stubPropose(_thread());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const BidNegotiationProposeRequested(
+          announcementId: 'ann1',
+          weightKg: 3,
+          description: 'Deux paires de chaussures',
+          contentCategory: 'CLOTHING',
+          recipientName: 'Awa Diop',
+          recipientPhone: '+221700000000',
+          proposedTotalEur: 42,
+          itemSize: ItemSize.m,
+        ),
+      ),
+      wait: const Duration(milliseconds: 1),
+      verify: (_) {
+        verify(
+          () => repo.propose(
+            announcementId: 'ann1',
+            weightKg: 3,
+            description: any(named: 'description'),
+            contentCategory: any(named: 'contentCategory'),
+            recipientName: any(named: 'recipientName'),
+            recipientPhone: any(named: 'recipientPhone'),
+            proposedTotalEur: 42,
+            paymentMethod: any(named: 'paymentMethod'),
+            countryCode: any(named: 'countryCode'),
+            photoKeys: any(named: 'photoKeys'),
+            customItems: any(named: 'customItems'),
+            gridItems: any(named: 'gridItems'),
+            itemSize: ItemSize.m,
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'sans taille choisie, le depot recoit null',
+      build: () {
+        stubPropose(_thread());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(proposeEvent),
+      wait: const Duration(milliseconds: 1),
+      verify: (_) {
+        verify(
+          () => repo.propose(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            description: any(named: 'description'),
+            contentCategory: any(named: 'contentCategory'),
+            recipientName: any(named: 'recipientName'),
+            recipientPhone: any(named: 'recipientPhone'),
+            proposedTotalEur: any(named: 'proposedTotalEur'),
+            paymentMethod: any(named: 'paymentMethod'),
+            countryCode: any(named: 'countryCode'),
+            photoKeys: any(named: 'photoKeys'),
+            customItems: any(named: 'customItems'),
+            gridItems: any(named: 'gridItems'),
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
       'propose reussi emet Loading puis Loaded et tire trip_negotiation_proposed',
       build: () {
         stubPropose(_thread());
@@ -372,6 +443,36 @@ void main() {
         ).called(1);
       },
     );
+
+    test('trip_negotiation_proposed porte item_size seulement quand une taille '
+        'est choisie', () async {
+      stubPropose(_thread());
+      final bloc = buildBloc();
+      bloc.add(
+        const BidNegotiationProposeRequested(
+          announcementId: 'ann1',
+          weightKg: 3,
+          description: 'Deux paires de chaussures',
+          contentCategory: 'CLOTHING',
+          recipientName: 'Awa Diop',
+          recipientPhone: '+221700000000',
+          proposedTotalEur: 42,
+          itemSize: ItemSize.s,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s is BidNegotiationLoaded);
+      await Future<void>.delayed(Duration.zero);
+
+      final captured =
+          verify(
+                () => backend.capture(
+                  AnalyticsEvents.tripNegotiationProposed,
+                  captureAny(),
+                ),
+              ).captured.single
+              as Map<String, Object?>;
+      expect(captured['item_size'], 'S');
+    });
 
     test(
       'les proprietes de trip_negotiation_proposed ne portent aucune PII',

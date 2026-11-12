@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 
 abstract class BidEvent {
   const BidEvent();
@@ -19,6 +20,10 @@ class BidCheckoutRequested extends BidEvent {
   /// Clés S3 des photos déjà uploadées (≤ 4). Null/empty si aucune.
   final List<String>? photoKeys;
 
+  /// Taille du colis choisie par l'expéditeur (trajet en route qui porte une
+  /// taille maximum). Facultative : absente, rien n'est envoyé.
+  final ItemSize? itemSize;
+
   BidCheckoutRequested({
     required this.announcementId,
     required this.weightKg,
@@ -28,6 +33,7 @@ class BidCheckoutRequested extends BidEvent {
     required this.recipientPhone,
     this.gridItems,
     this.photoKeys,
+    this.itemSize,
   });
 }
 
@@ -54,6 +60,10 @@ class BidCreateRequested extends BidEvent {
   /// Clés S3 des photos déjà uploadées (≤ 4). Null/empty si aucune.
   final List<String>? photoKeys;
 
+  /// Taille du colis choisie par l'expéditeur, facultative (voir
+  /// [BidCheckoutRequested.itemSize]).
+  final ItemSize? itemSize;
+
   BidCreateRequested({
     required this.announcementId,
     required this.weightKg,
@@ -66,6 +76,7 @@ class BidCreateRequested extends BidEvent {
     this.promoCode,
     this.gridItems,
     this.photoKeys,
+    this.itemSize,
   });
 }
 

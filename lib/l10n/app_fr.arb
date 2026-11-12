@@ -9946,6 +9946,19 @@
       }
     }
   },
+  "bidCreateItemSizeLabel": "Taille du colis (facultatif)",
+  "@bidCreateItemSizeLabel": {
+    "description": "Libellé du sélecteur de taille du colis, sur un trajet qui porte une taille maximum (create_bid/bid_item_size_block.dart)"
+  },
+  "bidCreateItemSizeHelp": "Ce voyageur accepte les colis jusqu'à la taille {size}.",
+  "@bidCreateItemSizeHelp": {
+    "description": "Aide sous le sélecteur de taille du colis : la taille maximum du trajet (create_bid/bid_item_size_block.dart). {size} est le code S, M, L ou XL.",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
 
   "commonDone": "Terminé",
   "@commonDone": {

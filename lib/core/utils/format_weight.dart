@@ -20,3 +20,11 @@ String formatWeightKg(AppLocalizations l, double kg) =>
 /// chiffre du formulaire de demande, champ de saisie).
 String formatWeightValue(String localeName, double kg) =>
     NumberFormat('#0.##', localeName).format(kg);
+
+/// Valeur seule d'un poids, sans unité, avec les milliers groupés à la langue
+/// [localeName] (« 1 200 » en français, « 1,200 » en anglais) et deux
+/// décimales au plus, aucune quand le poids est entier. Pour les lignes de
+/// récapitulatif et les repères de maximum qui posent « kg » à part : une
+/// tonne ne doit pas se lire « 1200 kg ».
+String formatWeightGrouped(String localeName, double kg) =>
+    NumberFormat('#,##0.##', localeName).format(kg);
