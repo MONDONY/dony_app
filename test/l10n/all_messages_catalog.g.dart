@@ -803,6 +803,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'homeComposerClearAll': (l) => l.homeComposerClearAll,
   'homeComposerMoreFilters': (l) => l.homeComposerMoreFilters,
   'homeComposerMoreFiltersHint': (l) => l.homeComposerMoreFiltersHint,
+  'homeComposerSectionTransport': (l) => l.homeComposerSectionTransport,
   'homeComposerSectionWhen': (l) => l.homeComposerSectionWhen,
   'homeComposerSectionAroundMe': (l) => l.homeComposerSectionAroundMe,
   'homeComposerSearch': (l) => l.homeComposerSearch,
@@ -833,6 +834,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'homeModeSelectorParcelsToCarry': (l) =>
       l.homeModeSelectorParcelsToCarry(intPlaceholderValue),
   'homeModeSelectorParcelsSubtitle': (l) => l.homeModeSelectorParcelsSubtitle,
+  'homeFilterChipsTransport': (l) => l.homeFilterChipsTransport,
+  'homeFilterChipsTransportAll': (l) => l.homeFilterChipsTransportAll,
   'homeFilterChipsDate': (l) => l.homeFilterChipsDate,
   'homeFilterChipsAnyDate': (l) => l.homeFilterChipsAnyDate,
   'homeFilterChipsRating': (l) => l.homeFilterChipsRating,

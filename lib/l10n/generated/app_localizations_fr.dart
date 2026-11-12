@@ -2344,7 +2344,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeComposerMoreFiltersHint =>
-      'Type de contenu, transport, note, escales, paiement';
+      'Type de contenu, note, escales, paiement';
+
+  @override
+  String get homeComposerSectionTransport => 'TRANSPORT';
 
   @override
   String get homeComposerSectionWhen => 'QUAND';
@@ -2437,6 +2440,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeModeSelectorParcelsSubtitle => 'Colis à transporter';
+
+  @override
+  String get homeFilterChipsTransport => 'Transport';
+
+  @override
+  String get homeFilterChipsTransportAll => 'Tous';
 
   @override
   String get homeFilterChipsDate => 'Date';

@@ -3947,8 +3947,14 @@ abstract class AppLocalizations {
   /// No description provided for @homeComposerMoreFiltersHint.
   ///
   /// In fr, this message translates to:
-  /// **'Type de contenu, transport, note, escales, paiement'**
+  /// **'Type de contenu, note, escales, paiement'**
   String get homeComposerMoreFiltersHint;
+
+  /// Titre de la section du composeur de recherche de trajets qui filtre par mode de transport (Tous, Avion, Bateau, Route), visible seulement quand plusieurs modes sont ouverts
+  ///
+  /// In fr, this message translates to:
+  /// **'TRANSPORT'**
+  String get homeComposerSectionTransport;
 
   /// No description provided for @homeComposerSectionWhen.
   ///
@@ -4105,6 +4111,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Colis à transporter'**
   String get homeModeSelectorParcelsSubtitle;
+
+  /// Puce de filtre de l'accueil en tête de rangée : mode de transport pas encore choisi (une fois choisi, la puce affiche le mode)
+  ///
+  /// In fr, this message translates to:
+  /// **'Transport'**
+  String get homeFilterChipsTransport;
+
+  /// Puce du composeur de recherche, section TRANSPORT : tous les modes de transport, aucun filtre
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous'**
+  String get homeFilterChipsTransportAll;
 
   /// Puce de filtre de l'accueil : date personnalisée choisie mais pas encore renseignée
   ///

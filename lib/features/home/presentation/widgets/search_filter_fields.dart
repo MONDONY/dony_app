@@ -873,87 +873,90 @@ Future<void> showPricePicker(
   );
 }
 
-/// Sélecteur de mode de transport. [onApply] reçoit `null` quand aucun mode
-/// n'est retenu (tap sur le mode déjà sélectionné = désélection).
+/// Sélecteur de mode de transport. [modes] : les modes proposés à la
+/// recherche (`transportModes.searchModes`), jamais train ni autre. Un filtre
+/// [mode] déjà posé se présente par son groupe d'affichage (le bus est la
+/// route). [onApply] reçoit `null` quand aucun mode n'est retenu (tap sur le
+/// mode déjà sélectionné = désélection).
 Future<void> showTransportPicker(
   BuildContext context, {
   required TransportMode? mode,
+  required List<TransportMode> modes,
   required ValueChanged<TransportMode?> onApply,
 }) async {
-  TransportMode? local = mode;
-  await showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useRootNavigator: true,
-    backgroundColor: Colors.transparent,
-    builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setS) {
+  // Seul un geste de l'utilisateur écrit dans ce notifier : on peut le libérer
+  // à la fermeture de la feuille.
+  final selected = ValueNotifier<TransportMode?>(mode?.displayGroup);
+  await DonyBottomSheet.show<void>(
+    context,
+    title: context.l10n.homeFilterFieldsTransportMode,
+    child: ValueListenableBuilder<TransportMode?>(
+      valueListenable: selected,
+      builder: (ctx, local, _) {
         final tt = Theme.of(ctx).textTheme;
         final cs = Theme.of(ctx).colorScheme;
-        return SimpleSheet(
-          title: ctx.l10n.homeFilterFieldsTransportMode,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ...TransportMode.values.map((m) {
-                final selected = local == m;
-                return GestureDetector(
-                  onTap: () => setS(() => local = selected ? null : m),
-                  child: AnimatedContainer(
-                    duration: 180.ms,
-                    margin: const EdgeInsets.only(bottom: DonySpacing.xs),
-                    constraints: const BoxConstraints(minHeight: 44),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.base,
-                      vertical: DonySpacing.md,
-                    ),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? cs.primaryContainer
-                          : Theme.of(ctx).scaffoldBackgroundColor,
-                      borderRadius: BorderRadius.circular(DonyRadius.card),
-                      border: Border.all(
-                        color: selected ? cs.primary : cs.outline,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          m.icon,
-                          size: 18,
-                          color: selected ? cs.primary : cs.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: DonySpacing.md),
-                        Expanded(
-                          child: Text(
-                            m.label(ctx.l10n),
-                            style: tt.bodyMedium?.copyWith(
-                              color: selected ? cs.primary : cs.onSurface,
-                              fontWeight: selected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                        if (selected)
-                          DonyIcon('circle-check', size: 18, color: cs.primary),
-                      ],
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final m in modes)
+              GestureDetector(
+                key: Key('transport-picker-${transportModeToWire(m)}'),
+                onTap: () => selected.value = local == m ? null : m,
+                child: AnimatedContainer(
+                  duration: 180.ms,
+                  margin: const EdgeInsets.only(bottom: DonySpacing.xs),
+                  constraints: const BoxConstraints(minHeight: 44),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.base,
+                    vertical: DonySpacing.md,
+                  ),
+                  decoration: BoxDecoration(
+                    color: local == m
+                        ? cs.primaryContainer
+                        : Theme.of(ctx).scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(DonyRadius.card),
+                    border: Border.all(
+                      color: local == m ? cs.primary : cs.outline,
                     ),
                   ),
-                );
-              }),
-              const SizedBox(height: DonySpacing.md),
-              DonyButton(
-                label: ctx.l10n.commonApply,
-                onPressed: () {
-                  onApply(local);
-                  Navigator.of(ctx).pop();
-                },
+                  child: Row(
+                    children: [
+                      DonyIcon(
+                        m.iconAsset,
+                        size: 18,
+                        color: local == m ? cs.primary : cs.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: DonySpacing.md),
+                      Expanded(
+                        child: Text(
+                          m.label(ctx.l10n),
+                          style: tt.bodyMedium?.copyWith(
+                            color: local == m ? cs.primary : cs.onSurface,
+                            fontWeight: local == m
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      if (local == m)
+                        DonyIcon('circle-check', size: 18, color: cs.primary),
+                    ],
+                  ),
+                ),
               ),
-            ],
-          ),
+          ],
         );
       },
     ),
-  );
+    // Le bouton reste hors de la zone qui défile (règle des feuilles).
+    stickyBottom: Builder(
+      builder: (ctx) => DonyButton(
+        label: ctx.l10n.commonApply,
+        onPressed: () {
+          onApply(selected.value);
+          Navigator.of(ctx).pop();
+        },
+      ),
+    ),
+  ).whenComplete(selected.dispose);
 }

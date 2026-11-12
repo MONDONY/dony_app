@@ -1,6 +1,7 @@
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -560,6 +561,66 @@ void main() {
 
       test('toSearchParams sans minimum : 0 (aucun minimum)', () {
         expect(const HomeSearchFilters().toSearchParams().weightKg, 0);
+      });
+    });
+    group('filtre Transport limité aux modes proposés', () {
+      const proposes = [TransportMode.plane, TransportMode.car];
+
+      test('un mode proposé est gardé', () {
+        const f = HomeSearchFilters(transportMode: TransportMode.car);
+        expect(
+          f.withTransportLimitedTo(proposes).transportMode,
+          TransportMode.car,
+        );
+      });
+
+      test('bus devient route (même groupe d\'affichage)', () {
+        const f = HomeSearchFilters(transportMode: TransportMode.bus);
+        expect(
+          f.withTransportLimitedTo(proposes).transportMode,
+          TransportMode.car,
+        );
+      });
+
+      test('train, autre, bateau éteint : retirés', () {
+        for (final mode in [
+          TransportMode.train,
+          TransportMode.other,
+          TransportMode.boat,
+        ]) {
+          final f = HomeSearchFilters(
+            transportMode: mode,
+            departureCity: 'Paris',
+          );
+          final limited = f.withTransportLimitedTo(proposes);
+          expect(limited.transportMode, isNull, reason: '$mode');
+          expect(limited.departureCity, 'Paris');
+        }
+      });
+
+      test(
+        'un seul mode proposé (avion seul) : aucun choix, filtre retiré',
+        () {
+          const f = HomeSearchFilters(transportMode: TransportMode.plane);
+          expect(
+            f.withTransportLimitedTo(const [TransportMode.plane]).transportMode,
+            isNull,
+          );
+        },
+      );
+
+      test('sans filtre : la même instance', () {
+        const f = HomeSearchFilters();
+        expect(identical(f.withTransportLimitedTo(proposes), f), isTrue);
+      });
+
+      test('transport_mode reste une clé de suivi du filtre actif', () {
+        const f = HomeSearchFilters(transportMode: TransportMode.boat);
+        expect(f.activeKeys, contains('transport_mode'));
+        expect(
+          const HomeSearchFilters().activeKeys,
+          isNot(contains('transport_mode')),
+        );
       });
     });
   });

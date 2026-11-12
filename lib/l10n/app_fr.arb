@@ -1031,7 +1031,11 @@
   "homeComposerTitleParcels": "Filtrer les colis",
   "homeComposerClearAll": "Tout effacer",
   "homeComposerMoreFilters": "Plus de filtres",
-  "homeComposerMoreFiltersHint": "Type de contenu, transport, note, escales, paiement",
+  "homeComposerMoreFiltersHint": "Type de contenu, note, escales, paiement",
+  "homeComposerSectionTransport": "TRANSPORT",
+  "@homeComposerSectionTransport": {
+    "description": "Titre de la section du composeur de recherche de trajets qui filtre par mode de transport (Tous, Avion, Bateau, Route), visible seulement quand plusieurs modes sont ouverts"
+  },
   "homeComposerSectionWhen": "QUAND",
   "homeComposerSectionAroundMe": "AUTOUR DE MOI",
   "homeComposerSearch": "Rechercher",
@@ -1079,6 +1083,14 @@
     }
   },
   "homeModeSelectorParcelsSubtitle": "Colis à transporter",
+  "homeFilterChipsTransport": "Transport",
+  "@homeFilterChipsTransport": {
+    "description": "Puce de filtre de l'accueil en tête de rangée : mode de transport pas encore choisi (une fois choisi, la puce affiche le mode)"
+  },
+  "homeFilterChipsTransportAll": "Tous",
+  "@homeFilterChipsTransportAll": {
+    "description": "Puce du composeur de recherche, section TRANSPORT : tous les modes de transport, aucun filtre"
+  },
   "homeFilterChipsDate": "Date",
   "@homeFilterChipsDate": {
     "description": "Puce de filtre de l'accueil : date personnalisée choisie mais pas encore renseignée"

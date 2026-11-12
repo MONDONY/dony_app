@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/di/injection.dart';
@@ -28,6 +29,8 @@ import 'package:dony/features/home/presentation/sheet_controller_guard.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/home_publish_button.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
+import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart'
+    show showTransportPicker;
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
 import 'package:dony/features/home/presentation/widgets/search_period.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -845,7 +848,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// trajets », retour de l'écran de composition…). Le tracking vit dans
   /// [_openComposer], seul endroit où l'utilisateur valide vraiment une
   /// recherche via le bouton « Rechercher ».
-  void _onFiltersChanged(HomeSearchFilters next) {
+  void _onFiltersChanged(HomeSearchFilters filters) {
+    // Un filtre Transport que la recherche ne propose pas (train, bateau
+    // éteint, ou aucun vrai choix de mode) n'est jamais appliqué.
+    final next = filters.withTransportLimitedTo(transportModes.searchModes);
     _trackFilterDiff(_filters, next);
     setState(() => _filters = next);
     _dispatchForMode();
@@ -1296,6 +1302,18 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
+  /// Puce Transport : choix du mode parmi ceux que la recherche propose.
+  Future<void> _showTransportSheet() => showTransportPicker(
+    context,
+    mode: _filters.transportMode,
+    modes: transportModes.searchModes,
+    onApply: (mode) => _onFiltersChanged(
+      mode == null
+          ? _filters.copyWith(clearTransportMode: true)
+          : _filters.copyWith(transportMode: mode),
+    ),
+  );
+
   /// Bouton « Carte » de la liste : la carte reprend tout l'écran. Feuille
   /// détachée (Sentry 155532570) : voir [moveSheetWhenAttached].
   void _showMap() {
@@ -1436,7 +1454,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
     setState(() {
       _mode = SearchMode.trips;
-      _filters = next;
+      _filters = next.withTransportLimitedTo(transportModes.searchModes);
       _otherModeCount = null;
     });
     _dispatchForMode();
@@ -2092,9 +2110,22 @@ class _MapSenderViewState extends State<_MapSenderView> {
   }
 
   Widget _filterChipsRow() {
+    // Les modes ouverts viennent du serveur et peuvent arriver après l'écran :
+    // la rangée suit le drapeau.
+    return ValueListenableBuilder<TransportModesAvailability>(
+      valueListenable: transportModesListenable,
+      builder: (context, modes, _) => _chipsRow(modes),
+    );
+  }
+
+  Widget _chipsRow(TransportModesAvailability modes) {
     return HomeFilterChipsRow(
       mode: _mode,
       filters: _filters,
+      transportModes: modes.searchModes,
+      onTransportTap: () => unawaited(_showTransportSheet()),
+      onTransportClear: () =>
+          _onFiltersChanged(_filters.copyWith(clearTransportMode: true)),
       onNearMeClear: _deactivateNearMe,
       onUrgentToggle: _onUrgentToggle,
       onDateTap: _showDatePresetSheet,

@@ -4,8 +4,9 @@
 // Ordre d'après l'usage mesuré pendant le test du 27/09 au 12/10 : OÙ, QUAND,
 // POIDS ET PRIX, FILTRES RAPIDES (urgent, valise 23 kg, GP Pro, identité
 // vérifiée), puis « Plus de filtres », replié, pour les filtres rares (type de
-// contenu, mode de transport, note, week-end, escales, moyens de paiement,
-// urgence du départ), et AUTOUR DE MOI. Un filtre rare déjà actif ouvre
+// contenu, note, week-end, escales, moyens de paiement, urgence du départ), et
+// AUTOUR DE MOI. TRANSPORT (Tous, Avion, Bateau, Route) vient juste après les
+// villes, visible, dès que la recherche propose plusieurs modes. Un filtre rare déjà actif ouvre
 // « Plus de filtres » d'office : un filtre posé n'est jamais caché.
 //
 // La saisie « en une phrase » et son parseur serveur ont été retirés (2 % des
@@ -17,6 +18,7 @@
 
 import 'dart:async';
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -33,7 +35,9 @@ import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dar
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
 import 'package:dony/features/home/presentation/widgets/search_section_label.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -176,6 +180,16 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
                 allowFreeText: true,
               ).animate().fadeIn(duration: 250.ms),
 
+              if (widget.mode.isTrips)
+                _TransportSection(
+                  mode: f.transportMode,
+                  onChanged: (mode) => _update(
+                    mode == null
+                        ? f.copyWith(clearTransportMode: true)
+                        : f.copyWith(transportMode: mode),
+                  ),
+                ),
+
               SearchSectionLabel(l.homeComposerSectionWhen),
               DatePresetsField(
                 value: f,
@@ -310,28 +324,6 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
       _MoreFiltersSection(
         activeCount: _moreFiltersActiveCount(f),
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TransportModeField(
-                  mode: f.transportMode,
-                  onTap: () => unawaited(
-                    showTransportPicker(
-                      context,
-                      mode: f.transportMode,
-                      onApply: (v) => _update(
-                        v == null
-                            ? f.copyWith(clearTransportMode: true)
-                            : f.copyWith(transportMode: v),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const Spacer(),
-            ],
-          ),
-
           SearchSectionLabel(l.homeComposerSectionContents),
           // Autocomplétion plutôt que les onze types dépliés : la liste
           // occuperait l'écran entier. `singleSelection` conserve la sémantique
@@ -472,7 +464,6 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
   /// Nombre de filtres actifs rangés sous « Plus de filtres ». Il s'affiche en
   /// pastille sur l'en-tête replié et ouvre le bloc d'office s'il n'est pas nul.
   static int _moreFiltersActiveCount(HomeSearchFilters f) =>
-      (f.transportMode != null ? 1 : 0) +
       (f.contentType != null ? 1 : 0) +
       (f.minRating != null ? 1 : 0) +
       (f.weekendOnly ? 1 : 0) +
@@ -877,6 +868,60 @@ class _AroundMeBlockState extends State<_AroundMeBlock> {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// TRANSPORT : Tous / Avion / Bateau / Route, juste après les villes. Absent
+/// tant que la recherche ne propose pas au moins deux modes (l'avion seul ne
+/// laisse rien à choisir). Le bus se range avec la route : un filtre BUS rend
+/// « Route » actif. Suit le drapeau serveur : les modes ouverts peuvent
+/// arriver après l'écran.
+class _TransportSection extends StatelessWidget {
+  const _TransportSection({required this.mode, required this.onChanged});
+
+  final TransportMode? mode;
+  final ValueChanged<TransportMode?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return ValueListenableBuilder<TransportModesAvailability>(
+      valueListenable: transportModesListenable,
+      builder: (context, availability, _) {
+        final modes = availability.searchModes;
+        if (modes.length < 2) {
+          return const SizedBox.shrink();
+        }
+        final current = mode?.displayGroup;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SearchSectionLabel(l.homeComposerSectionTransport),
+            Wrap(
+              spacing: DonySpacing.sm,
+              runSpacing: DonySpacing.sm,
+              children: [
+                QuickChip(
+                  key: const Key('composer-transport-all'),
+                  label: l.homeFilterChipsTransportAll,
+                  active: current == null,
+                  onChanged: (_) => onChanged(null),
+                ),
+                for (final m in modes)
+                  QuickChip(
+                    key: Key('composer-transport-${m.name}'),
+                    label: m.label(l),
+                    iconAsset: m.iconAsset,
+                    active: current == m,
+                    // Retoucher le mode retenu revient à « Tous ».
+                    onChanged: (selected) => onChanged(selected ? m : null),
+                  ),
+              ],
+            ),
+          ],
+        ).animate().fadeIn(delay: 10.ms);
+      },
     );
   }
 }

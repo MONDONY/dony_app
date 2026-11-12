@@ -3,6 +3,7 @@
 
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -87,8 +88,12 @@ void main() {
                 child: const Text('prix'),
               ),
               TextButton(
-                onPressed: () =>
-                    showTransportPicker(context, mode: null, onApply: (_) {}),
+                onPressed: () => showTransportPicker(
+                  context,
+                  mode: null,
+                  modes: const [TransportMode.plane, TransportMode.car],
+                  onApply: (_) {},
+                ),
                 child: const Text('transport'),
               ),
             ],
@@ -419,5 +424,117 @@ void main() {
       final received = await openAndConfirm(tester, weightKg: 60);
       expect(received, [kCapacitySliderMaxKg]);
     });
+  });
+  group('showTransportPicker', () {
+    const modes = [TransportMode.plane, TransportMode.boat, TransportMode.car];
+
+    Future<List<TransportMode?>> open(
+      WidgetTester tester, {
+      TransportMode? mode,
+      List<TransportMode> offered = modes,
+    }) async {
+      final applied = <TransportMode?>[];
+      await tester.pumpWidget(
+        _wrap(
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showTransportPicker(
+                context,
+                mode: mode,
+                modes: offered,
+                onApply: applied.add,
+              ),
+              child: const Text('ouvrir'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+      return applied;
+    }
+
+    testWidgets('seuls les modes proposés sont listés, jamais train ni autre', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        offered: const [TransportMode.plane, TransportMode.car],
+      );
+
+      expect(find.text('Avion'), findsOneWidget);
+      expect(find.text('Route'), findsOneWidget);
+      expect(find.text('Bateau'), findsNothing);
+      expect(find.text('Train'), findsNothing);
+      expect(find.text('Autre'), findsNothing);
+      expect(find.text('Bus'), findsNothing);
+    });
+
+    testWidgets('choisir un mode puis Appliquer le renvoie', (tester) async {
+      final applied = await open(tester);
+
+      await tester.tap(find.text('Bateau'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      expect(applied, [TransportMode.boat]);
+      expect(find.text('Mode de transport'), findsNothing);
+    });
+
+    testWidgets('toucher le mode déjà retenu le désélectionne', (tester) async {
+      final applied = await open(tester, mode: TransportMode.car);
+
+      await tester.tap(find.text('Route'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      expect(applied, [null]);
+    });
+
+    testWidgets('un filtre BUS se présente comme « Route » déjà retenue', (
+      tester,
+    ) async {
+      final applied = await open(tester, mode: TransportMode.bus);
+
+      // Appliquer sans toucher : le mode retenu est la route.
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      expect(applied, [TransportMode.car]);
+    });
+
+    testWidgets('Appliquer est collé en bas, hors de la zone qui défile', (
+      tester,
+    ) async {
+      await open(tester);
+
+      expect(
+        find.ancestor(
+          of: find.text('Appliquer'),
+          matching: find.byType(SingleChildScrollView),
+        ),
+        findsNothing,
+      );
+    });
+
+    for (final locale in ['fr', 'en']) {
+      testWidgets('360 dp $locale : aucune erreur de mise en page', (
+        tester,
+      ) async {
+        if (locale == 'en') useEnglish();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await open(tester);
+
+        expect(tester.takeException(), isNull);
+        expect(
+          find.text(locale == 'en' ? 'Apply' : 'Appliquer'),
+          findsOneWidget,
+        );
+      });
+    }
   });
 }

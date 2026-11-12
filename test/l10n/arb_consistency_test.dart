@@ -168,6 +168,8 @@ const _sameInBothLanguages = <String>{
   'homeFilterChipsDate', // « Date » se dit pareil
   'homeFilterChipsUrgent', // « 🔥 Urgent » se dit pareil
   'homeFilterFieldsTransport', // « TRANSPORT » se dit pareil
+  'homeComposerSectionTransport', // « TRANSPORT » se dit pareil
+  'homeFilterChipsTransport', // « Transport » se dit pareil
   'homeFilterFieldsDate', // « DATE » se dit pareil
   'tripTransportTrain', // « Train » se dit pareil
   'tripTileConditions', // « Conditions » se dit pareil (tuile « Votre trajet »)

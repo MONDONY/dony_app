@@ -5,6 +5,7 @@
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -21,30 +22,40 @@ Widget _wrap({
   VoidCallback? onGpProToggle,
   VoidCallback? onSuitcase23Toggle,
   VoidCallback? onNearMeClear,
+  List<TransportMode> transportModes = const [],
+  VoidCallback? onTransportTap,
+  VoidCallback? onTransportClear,
+  double width = 800,
 }) => MaterialApp(
   home: Scaffold(
-    body: HomeFilterChipsRow(
-      mode: mode,
-      filters: filters,
-      activeTrips: activeTrips,
-      onUrgentToggle: () {},
-      onDateTap: () {},
-      onDateClear: () {},
-      onRatingTap: () {},
-      onRatingClear: () {},
-      onCapacityTap: () {},
-      onCapacityClear: () {},
-      onPriceTap: () {},
-      onPriceClear: () {},
-      onGpProToggle: onGpProToggle ?? () {},
-      onSuitcase23Toggle: onSuitcase23Toggle ?? () {},
-      onMaxWeightTap: () {},
-      onMaxWeightClear: () {},
-      onParcelSizeTap: () {},
-      onParcelSizeClear: () {},
-      onMatchingMyTripsToggle: onMatchingMyTripsToggle ?? () {},
-      onMatchingMyTripsBlocked: onMatchingMyTripsBlocked ?? () {},
-      onNearMeClear: onNearMeClear,
+    body: SizedBox(
+      width: width,
+      child: HomeFilterChipsRow(
+        mode: mode,
+        filters: filters,
+        activeTrips: activeTrips,
+        transportModes: transportModes,
+        onTransportTap: onTransportTap ?? () {},
+        onTransportClear: onTransportClear ?? () {},
+        onUrgentToggle: () {},
+        onDateTap: () {},
+        onDateClear: () {},
+        onRatingTap: () {},
+        onRatingClear: () {},
+        onCapacityTap: () {},
+        onCapacityClear: () {},
+        onPriceTap: () {},
+        onPriceClear: () {},
+        onGpProToggle: onGpProToggle ?? () {},
+        onSuitcase23Toggle: onSuitcase23Toggle ?? () {},
+        onMaxWeightTap: () {},
+        onMaxWeightClear: () {},
+        onParcelSizeTap: () {},
+        onParcelSizeClear: () {},
+        onMatchingMyTripsToggle: onMatchingMyTripsToggle ?? () {},
+        onMatchingMyTripsBlocked: onMatchingMyTripsBlocked ?? () {},
+        onNearMeClear: onNearMeClear,
+      ),
     ),
   ),
 );
@@ -63,6 +74,145 @@ void main() {
   group('date personnalisée', _customDateChipTests);
   group('puce Capacité', _capacityChipTests);
   group('ordre des puces', _chipOrderTests);
+  group('puce Transport', _transportChipTests);
+}
+
+const _avionBateauRoute = [
+  TransportMode.plane,
+  TransportMode.boat,
+  TransportMode.car,
+];
+
+void _transportChipTests() {
+  const chipKey = Key('home-chip-transport');
+  HomeSmallChip chip(WidgetTester tester) =>
+      tester.widget<HomeSmallChip>(find.byKey(chipKey));
+
+  testWidgets('avion seul : aucune puce Transport', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        transportModes: const [TransportMode.plane],
+      ),
+    );
+    expect(find.byKey(chipKey), findsNothing);
+
+    await tester.pumpWidget(_wrap(mode: SearchMode.trips));
+    expect(find.byKey(chipKey), findsNothing);
+  });
+
+  testWidgets('mode Colis (Je voyage) : jamais de puce Transport', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(transportModes: _avionBateauRoute));
+    expect(find.byKey(chipKey), findsNothing);
+  });
+
+  testWidgets('route allumée : la puce Transport vient avant la date', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        transportModes: const [TransportMode.plane, TransportMode.car],
+      ),
+    );
+
+    expect(chip(tester).label, 'Transport');
+    expect(chip(tester).isActive, isFalse);
+    expect(
+      tester.getTopLeft(find.byKey(chipKey)).dx,
+      lessThan(tester.getTopLeft(find.byKey(const Key('chip-date'))).dx),
+    );
+  });
+
+  testWidgets('inactive : un tap ouvre le choix', (tester) async {
+    var ouvert = 0;
+    var retire = 0;
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        transportModes: _avionBateauRoute,
+        onTransportTap: () => ouvert++,
+        onTransportClear: () => retire++,
+      ),
+    );
+    await tester.tap(find.byKey(chipKey));
+    expect((ouvert, retire), (1, 0));
+  });
+
+  testWidgets('active : libellé du mode, un tap retire le filtre', (
+    tester,
+  ) async {
+    var ouvert = 0;
+    var retire = 0;
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: const HomeSearchFilters(transportMode: TransportMode.boat),
+        transportModes: _avionBateauRoute,
+        onTransportTap: () => ouvert++,
+        onTransportClear: () => retire++,
+      ),
+    );
+    expect(chip(tester).label, 'Bateau');
+    expect(chip(tester).isActive, isTrue);
+    expect(chip(tester).iconAsset, 'ship');
+
+    await tester.tap(find.byKey(chipKey));
+    expect((ouvert, retire), (0, 1));
+  });
+
+  testWidgets('filtre BUS persistant affiché « Route »', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: const HomeSearchFilters(transportMode: TransportMode.bus),
+        transportModes: _avionBateauRoute,
+      ),
+    );
+    expect(chip(tester).label, 'Route');
+    expect(chip(tester).iconAsset, 'car');
+  });
+
+  testWidgets('en anglais : « Road » et « Transport »', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: const HomeSearchFilters(transportMode: TransportMode.car),
+        transportModes: _avionBateauRoute,
+      ),
+    );
+    expect(chip(tester).label, 'Road');
+  });
+
+  for (final locale in ['fr', 'en']) {
+    testWidgets('360 dp $locale : rangée sans débordement', (tester) async {
+      if (locale == 'en') useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          mode: SearchMode.trips,
+          filters: const HomeSearchFilters(
+            transportMode: TransportMode.boat,
+            nearMeActive: true,
+            nearMeRadiusKm: 50,
+            userLat: 48.85,
+            userLng: 2.35,
+          ),
+          transportModes: _avionBateauRoute,
+          onNearMeClear: () {},
+          width: 360,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      final hauteurs = {
+        tester.getSize(find.byKey(chipKey)).height,
+        tester.getSize(find.byKey(const Key('chip-date'))).height,
+      };
+      expect(hauteurs.length, 1, reason: 'même hauteur de puce');
+    });
+  }
 }
 
 void _capacityChipTests() {

@@ -710,7 +710,11 @@
   "homeComposerTitleParcels": "Filter parcels",
   "homeComposerClearAll": "Clear all",
   "homeComposerMoreFilters": "More filters",
-  "homeComposerMoreFiltersHint": "Content type, transport, rating, stops, payment",
+  "homeComposerMoreFiltersHint": "Content type, rating, stops, payment",
+  "homeComposerSectionTransport": "TRANSPORT",
+  "@homeComposerSectionTransport": {
+    "description": "Section title in the trip search composer that filters by transport mode (All, Plane, Boat, Road), shown only when several modes are open"
+  },
   "homeComposerSectionWhen": "WHEN",
   "homeComposerSectionAroundMe": "AROUND ME",
   "homeComposerSearch": "Search",
@@ -737,6 +741,14 @@
   "homeModeSelectorTravelersSubtitle": "Travelers available",
   "homeModeSelectorParcelsToCarry": "{count, plural, =1{{count} parcel to carry} other{{count} parcels to carry}}",
   "homeModeSelectorParcelsSubtitle": "Parcels to carry",
+  "homeFilterChipsTransport": "Transport",
+  "@homeFilterChipsTransport": {
+    "description": "Home filter chip at the start of the row: transport mode not chosen yet (once chosen, the chip shows the mode)"
+  },
+  "homeFilterChipsTransportAll": "All",
+  "@homeFilterChipsTransportAll": {
+    "description": "Search composer chip in the TRANSPORT section: all transport modes, no filter"
+  },
   "homeFilterChipsDate": "Date",
   "homeFilterChipsAnyDate": "Any date",
   "homeFilterChipsRating": "Rating",

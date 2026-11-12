@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/city/data/city_model.dart';
@@ -343,6 +344,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                       showTransportPicker(
                         context,
                         mode: _transportModeNotifier.value,
+                        modes: transportModes.searchModes,
                         onApply: (v) => _transportModeNotifier.value = v,
                       ),
                     ),

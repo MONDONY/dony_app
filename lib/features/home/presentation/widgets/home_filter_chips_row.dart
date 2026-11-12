@@ -7,7 +7,9 @@
 // widgets différents et effacée par deux chemins différents.
 //
 // Ordre : celui de l'usage mesuré pendant le test du 27/09 au 12/10 (date,
-// poids, urgent en tête), pas celui du code. Les chips COMMUNS (date, urgent)
+// poids, urgent en tête), pas celui du code. Seule exception : la puce
+// Transport, mode Trajets, ouvre la rangée dès que plusieurs modes sont
+// proposés (juste après « Près de moi » quand il est actif). Les chips COMMUNS (date, urgent)
 // gardent une `key` stable : elle évite qu'un chip commun soit
 // détruit/reconstruit à la bascule de mode même quand sa position change, ce
 // qui perdrait son animation et, plus grave, ferait clignoter un état
@@ -23,6 +25,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/search_period.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -48,6 +52,9 @@ class HomeFilterChipsRow extends StatelessWidget {
     required this.onParcelSizeClear,
     required this.onMatchingMyTripsToggle,
     required this.onMatchingMyTripsBlocked,
+    required this.onTransportTap,
+    required this.onTransportClear,
+    this.transportModes = const [],
     this.activeTrips,
     this.onNearMeClear,
   });
@@ -59,6 +66,17 @@ class HomeFilterChipsRow extends StatelessWidget {
   final VoidCallback onUrgentToggle;
   final VoidCallback onDateTap;
   final VoidCallback onDateClear;
+
+  /// Modes de transport proposés à la recherche (`transportModes.searchModes`).
+  /// La puce Transport n'existe qu'à partir de deux modes : un seul n'offre
+  /// aucun choix. Mode Trajets seulement (« Je voyage » n'a pas de transport).
+  final List<TransportMode> transportModes;
+
+  /// Puce Transport inactive : ouvre le choix du mode.
+  final VoidCallback onTransportTap;
+
+  /// Puce Transport active : retire le filtre.
+  final VoidCallback onTransportClear;
 
   // Trajets
   final VoidCallback onRatingTap;
@@ -150,6 +168,19 @@ class HomeFilterChipsRow extends StatelessWidget {
       ? filters.parcelSize!.wireName
       : l.homeFilterChipsSize;
 
+  /// Puce Transport, en tête des puces de filtre du mode Trajets. Le bus
+  /// s'affiche « Route » (`displayGroup`).
+  Widget _transportChip(AppLocalizations l) {
+    final mode = filters.transportMode?.displayGroup;
+    return HomeSmallChip(
+      key: const Key('home-chip-transport'),
+      label: mode?.label(l) ?? l.homeFilterChipsTransport,
+      isActive: mode != null,
+      iconAsset: mode?.iconAsset ?? kNeutralTripIconAsset,
+      onTap: mode != null ? onTransportClear : onTransportTap,
+    );
+  }
+
   /// Chip « Urgent », commun aux deux modes (même `key`, même rendu).
   Widget _urgentChip(AppLocalizations l) => HomeSmallChip(
     key: const Key('chip-urgent'),
@@ -179,7 +210,13 @@ class HomeFilterChipsRow extends StatelessWidget {
             ),
             const SizedBox(width: DonySpacing.xs),
           ],
-          // ── Date : commune aux deux modes, toujours en tête ─────────────────
+          // ── Transport : en tête des puces de filtre, mode Trajets seulement,
+          // dès que la recherche propose un vrai choix de mode ───────────────
+          if (mode.isTrips && transportModes.length >= 2) ...[
+            _transportChip(l),
+            const SizedBox(width: DonySpacing.xs),
+          ],
+          // ── Date : commune aux deux modes ────────────────────────────────────
           HomeSmallChip(
             key: const Key('chip-date'),
             label: _dateLabel(l),
