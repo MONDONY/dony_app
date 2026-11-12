@@ -3209,10 +3209,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishCurrencyChangeCta => 'Change';
 
   @override
-  String get tripPublishPlacesCapacityStepLabel => 'Locations & capacity';
+  String get tripPublishStepMode => 'Mode';
 
   @override
-  String get tripPublishPriceConditionsStepLabel => 'Price & conditions';
+  String get tripPublishStepCapacity => 'Capacity';
+
+  @override
+  String get tripPublishStepPrice => 'Price';
+
+  @override
+  String get tripPublishStepConditions => 'Terms';
 
   @override
   String get tripPublishModeQuestion => 'How are you traveling?';

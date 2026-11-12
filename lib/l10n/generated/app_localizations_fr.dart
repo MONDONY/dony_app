@@ -3228,10 +3228,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishCurrencyChangeCta => 'Changer';
 
   @override
-  String get tripPublishPlacesCapacityStepLabel => 'Lieux & capacité';
+  String get tripPublishStepMode => 'Mode';
 
   @override
-  String get tripPublishPriceConditionsStepLabel => 'Prix & conditions';
+  String get tripPublishStepCapacity => 'Capacité';
+
+  @override
+  String get tripPublishStepPrice => 'Prix';
+
+  @override
+  String get tripPublishStepConditions => 'Conditions';
 
   @override
   String get tripPublishModeQuestion => 'Comment voyagez-vous ?';

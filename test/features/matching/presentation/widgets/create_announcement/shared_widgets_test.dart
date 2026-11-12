@@ -1,13 +1,11 @@
 // Tests de couverture pour _shared_widgets.dart.
 // Ce fichier couvre : CaSectionCard, CaRowDivider, CaSectionLabel,
-// CaStepperHeader, CaStepNode.
+// CaStepNode (CaStepperHeader : stepper_header_test.dart).
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
-
-import '../../../../../helpers/l10n_test_helpers.dart';
 
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
@@ -74,38 +72,6 @@ void main() {
     });
   });
 
-  // ── CaStepperHeader ──────────────────────────────────────────────────────────
-  group('CaStepperHeader', () {
-    testWidgets('affiche les 3 labels de pas', (tester) async {
-      await tester.pumpWidget(
-        _wrap(const CaStepperHeader(currentStep: 0, totalSteps: 3)),
-      );
-      await tester.pump();
-      expect(find.text('Trajet'), findsOneWidget);
-      expect(find.text('Lieux & capacité'), findsOneWidget);
-      expect(find.text('Prix & conditions'), findsOneWidget);
-    });
-
-    testWidgets('affiche la coche (✓) sur les étapes complètes', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _wrap(const CaStepperHeader(currentStep: 2, totalSteps: 3)),
-      );
-      await tester.pump();
-      // Les pas 0 et 1 sont marqués ✓
-      expect(find.textContaining('✓'), findsNWidgets(2));
-    });
-
-    testWidgets('affiche les CaStepNode', (tester) async {
-      await tester.pumpWidget(
-        _wrap(const CaStepperHeader(currentStep: 1, totalSteps: 3)),
-      );
-      await tester.pump();
-      expect(find.byType(CaStepNode), findsNWidgets(3));
-    });
-  });
-
   // ── CaStepNode ───────────────────────────────────────────────────────────────
   group('CaStepNode', () {
     testWidgets('affiche le numéro quand le nœud n\'est ni actif ni terminé', (
@@ -142,20 +108,5 @@ void main() {
         expect(find.byType(AnimatedContainer), findsOneWidget);
       },
     );
-  });
-
-  // ── Group: English (i18n) ─────────────────────────────────────────────────
-
-  group('CaStepperHeader — English', () {
-    testWidgets('les 3 labels de pas sont traduits', (tester) async {
-      useEnglish();
-      await tester.pumpWidget(
-        _wrap(const CaStepperHeader(currentStep: 0, totalSteps: 3)),
-      );
-      await tester.pump();
-      expect(find.text('Trip'), findsOneWidget);
-      expect(find.text('Locations & capacity'), findsOneWidget);
-      expect(find.text('Price & conditions'), findsOneWidget);
-    });
   });
 }

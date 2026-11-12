@@ -1,8 +1,11 @@
 // Widgets helpers partagés entre les étapes du formulaire CreateAnnouncement.
 // Ce fichier est interne à la feature matching — ne pas importer depuis l'extérieur.
 // Ca = préfixe CreateAnnouncement — widgets internes à la feature, ne pas importer ailleurs.
+import 'dart:math' as math;
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -80,26 +83,33 @@ class CaSectionLabel extends StatelessWidget {
 // ─── Stepper header ───────────────────────────────────────────────────────────
 
 class CaStepperHeader extends StatelessWidget {
-  final int currentStep;
-  final int totalSteps;
+  /// Étapes affichées, dans l'ordre (de 3 à 5 selon le formulaire).
+  final List<TripFormStep> steps;
+
+  /// Étape courante ; les précédentes sont marquées faites.
+  final TripFormStep current;
 
   const CaStepperHeader({
     super.key,
-    required this.currentStep,
-    required this.totalSteps,
+    required this.steps,
+    required this.current,
   });
 
-  static List<String> _labels(AppLocalizations l) => [
-    l.tripPublishRouteSectionLabel,
-    l.tripPublishPlacesCapacityStepLabel,
-    l.tripPublishPriceConditionsStepLabel,
-  ];
+  static String _label(TripFormStep step, AppLocalizations l) => switch (step) {
+    TripFormStep.mode => l.tripPublishStepMode,
+    TripFormStep.trajet => l.tripPublishRouteSectionLabel,
+    TripFormStep.capacite => l.tripPublishStepCapacity,
+    TripFormStep.prix => l.tripPublishStepPrice,
+    TripFormStep.conditions => l.tripPublishStepConditions,
+  };
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final labels = _labels(context.l10n);
+    final l = context.l10n;
+    final currentStep = math.max(0, steps.indexOf(current));
+    final totalSteps = steps.length;
     return Column(
       children: [
         Padding(
@@ -123,19 +133,28 @@ class CaStepperHeader extends StatelessWidget {
         const SizedBox(height: DonySpacing.xs),
         Row(
           children: List.generate(totalSteps, (i) {
+            final label = _label(steps[i], l);
+            // Une ligne : à cinq étapes, « Conditions ✓ » est plus large que
+            // sa colonne à 360 dp. Le libellé rétrécit au lieu de passer à la
+            // ligne et de décaler la rangée.
             return Expanded(
-              child: Text(
-                i < currentStep ? '${labels[i]} ✓' : labels[i],
-                textAlign: TextAlign.center,
-                style: tt.labelSmall?.copyWith(
-                  color: i == currentStep
-                      ? cs.primary
-                      : i < currentStep
-                      ? cs.primary.withValues(alpha: 0.7)
-                      : cs.onSurfaceVariant,
-                  fontWeight: i == currentStep
-                      ? FontWeight.w800
-                      : FontWeight.w500,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  i < currentStep ? '$label ✓' : label,
+                  maxLines: 1,
+                  softWrap: false,
+                  textAlign: TextAlign.center,
+                  style: tt.labelSmall?.copyWith(
+                    color: i == currentStep
+                        ? cs.primary
+                        : i < currentStep
+                        ? cs.primary.withValues(alpha: 0.7)
+                        : cs.onSurfaceVariant,
+                    fontWeight: i == currentStep
+                        ? FontWeight.w800
+                        : FontWeight.w500,
+                  ),
                 ),
               ),
             );

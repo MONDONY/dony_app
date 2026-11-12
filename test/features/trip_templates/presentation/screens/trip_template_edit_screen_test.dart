@@ -29,6 +29,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_fields.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
@@ -493,10 +494,8 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
 
         expect(
-          tester
-              .widget<CaStepperHeader>(find.byType(CaStepperHeader))
-              .currentStep,
-          1,
+          tester.widget<CaStepperHeader>(find.byType(CaStepperHeader)).current,
+          TripFormStep.capacite,
         );
 
         // Flèche visible de l'AppBar, pas le geste système (PopScope).
@@ -508,10 +507,8 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-          tester
-              .widget<CaStepperHeader>(find.byType(CaStepperHeader))
-              .currentStep,
-          0,
+          tester.widget<CaStepperHeader>(find.byType(CaStepperHeader)).current,
+          TripFormStep.trajet,
         );
         // Toujours sur l'écran du modèle : la flèche a reculé d'une étape,
         // elle n'a pas fait sortir de l'écran (pas de pop du routeur).

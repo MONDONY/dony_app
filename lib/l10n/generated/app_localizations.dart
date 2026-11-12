@@ -5423,17 +5423,29 @@ abstract class AppLocalizations {
   /// **'Changer'**
   String get tripPublishCurrencyChangeCta;
 
-  /// Libellé d'étape du stepper de publication (étape 1)
+  /// Libellé de l'étape Mode dans l'en-tête des étapes de publication d'un trajet
   ///
   /// In fr, this message translates to:
-  /// **'Lieux & capacité'**
-  String get tripPublishPlacesCapacityStepLabel;
+  /// **'Mode'**
+  String get tripPublishStepMode;
 
-  /// Libellé d'étape du stepper de publication (étape 2)
+  /// Libellé de l'étape Capacité dans l'en-tête des étapes de publication d'un trajet
   ///
   /// In fr, this message translates to:
-  /// **'Prix & conditions'**
-  String get tripPublishPriceConditionsStepLabel;
+  /// **'Capacité'**
+  String get tripPublishStepCapacity;
+
+  /// Libellé de l'étape Prix dans l'en-tête des étapes de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix'**
+  String get tripPublishStepPrice;
+
+  /// Libellé de l'étape Conditions dans l'en-tête des étapes de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Conditions'**
+  String get tripPublishStepConditions;
 
   /// Titre de l'étape Mode du formulaire de publication d'un trajet
   ///

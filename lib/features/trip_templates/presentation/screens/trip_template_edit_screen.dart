@@ -20,6 +20,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_fields.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
@@ -45,7 +46,13 @@ class TripTemplateEditScreen extends StatefulWidget {
 }
 
 class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
-  static const _totalSteps = 3;
+  /// Les trois étapes du modèle : le modèle n'a ni étape Mode ni étape
+  /// Conditions séparée (les conditions suivent le prix).
+  static const _steps = [
+    TripFormStep.trajet,
+    TripFormStep.capacite,
+    TripFormStep.prix,
+  ];
 
   static List<(int?, String)> _handoverChoices(AppLocalizations l) => [
     (null, l.tripTemplateHandoverNone),
@@ -485,10 +492,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                   body: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CaStepperHeader(
-                        currentStep: step,
-                        totalSteps: _totalSteps,
-                      ),
+                      CaStepperHeader(steps: _steps, current: _steps[step]),
                       const SizedBox(height: DonySpacing.xxl),
                       ...switch (step) {
                         0 => _buildStep0(context),

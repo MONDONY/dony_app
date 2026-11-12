@@ -118,6 +118,13 @@ int _stepIndexOf(TripFormStep step) => switch (step) {
   TripFormStep.prix || TripFormStep.conditions => 2,
 };
 
+/// Étapes de l'en-tête tant que l'écran n'a que trois étapes.
+const List<TripFormStep> _kVisibleSteps = [
+  TripFormStep.trajet,
+  TripFormStep.capacite,
+  TripFormStep.prix,
+];
+
 /// Étape du brouillon pour un index de l'écran à trois étapes.
 TripFormStep _stepAtIndex(int index) => switch (index) {
   1 => TripFormStep.capacite,
@@ -3339,7 +3346,10 @@ class _TripFormContentState extends State<_TripFormContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CaStepperHeader(currentStep: step, totalSteps: _totalSteps),
+              CaStepperHeader(
+                steps: _kVisibleSteps,
+                current: _stepAtIndex(step),
+              ),
               const SizedBox(height: DonySpacing.lg),
               Offstage(
                 offstage: step != 0,
@@ -3368,8 +3378,6 @@ class _TripFormContentState extends State<_TripFormContent> {
       },
     );
   }
-
-  static const int _totalSteps = 3;
 }
 
 // ─── Champs obligatoires par étape ───────────────────────────────────────────

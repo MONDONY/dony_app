@@ -1142,10 +1142,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPublishCurrencyBannerSubtitle': (l) =>
       l.tripPublishCurrencyBannerSubtitle,
   'tripPublishCurrencyChangeCta': (l) => l.tripPublishCurrencyChangeCta,
-  'tripPublishPlacesCapacityStepLabel': (l) =>
-      l.tripPublishPlacesCapacityStepLabel,
-  'tripPublishPriceConditionsStepLabel': (l) =>
-      l.tripPublishPriceConditionsStepLabel,
+  'tripPublishStepMode': (l) => l.tripPublishStepMode,
+  'tripPublishStepCapacity': (l) => l.tripPublishStepCapacity,
+  'tripPublishStepPrice': (l) => l.tripPublishStepPrice,
+  'tripPublishStepConditions': (l) => l.tripPublishStepConditions,
   'tripPublishModeQuestion': (l) => l.tripPublishModeQuestion,
   'tripPublishModeHint': (l) => l.tripPublishModeHint,
   'tripPublishModeSectionLabel': (l) => l.tripPublishModeSectionLabel,

@@ -1931,13 +1931,21 @@
   "@tripPublishCurrencyChangeCta": {
     "description": "Bouton « Changer » de la bannière de sélection de devise"
   },
-  "tripPublishPlacesCapacityStepLabel": "Lieux & capacité",
-  "@tripPublishPlacesCapacityStepLabel": {
-    "description": "Libellé d'étape du stepper de publication (étape 1)"
+  "tripPublishStepMode": "Mode",
+  "@tripPublishStepMode": {
+    "description": "Libellé de l'étape Mode dans l'en-tête des étapes de publication d'un trajet"
   },
-  "tripPublishPriceConditionsStepLabel": "Prix & conditions",
-  "@tripPublishPriceConditionsStepLabel": {
-    "description": "Libellé d'étape du stepper de publication (étape 2)"
+  "tripPublishStepCapacity": "Capacité",
+  "@tripPublishStepCapacity": {
+    "description": "Libellé de l'étape Capacité dans l'en-tête des étapes de publication d'un trajet"
+  },
+  "tripPublishStepPrice": "Prix",
+  "@tripPublishStepPrice": {
+    "description": "Libellé de l'étape Prix dans l'en-tête des étapes de publication d'un trajet"
+  },
+  "tripPublishStepConditions": "Conditions",
+  "@tripPublishStepConditions": {
+    "description": "Libellé de l'étape Conditions dans l'en-tête des étapes de publication d'un trajet"
   },
   "tripPublishModeQuestion": "Comment voyagez-vous ?",
   "@tripPublishModeQuestion": {
