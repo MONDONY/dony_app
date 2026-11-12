@@ -11,6 +11,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/utils/format_weight.dart';
+import 'package:dony/core/utils/weight_input_format.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/money_keyword_warning.dart';
@@ -38,7 +39,6 @@ import 'package:dony/features/matching/presentation/widgets/create_bid/photo_sec
 import 'package:dony/features/matching/presentation/widgets/custom_items_section.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reimbursement_info_banner.dart';
-import 'package:dony/features/package_request/presentation/weight_input_format.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -2457,8 +2457,13 @@ class _WeightSectionState extends State<_WeightSection> {
 
   double _clampToCap(double kg) => kg > _cap ? _cap : kg;
 
-  double? _parse(String raw) =>
-      widget.heavy ? parseWeightInput(raw, heavy: true) : _parseWeight(raw);
+  /// Anglais : le champ lourd écrit « 1,200.5 » comme le récap (virgule des
+  /// milliers, point décimal) ; français : « 1 200,5 ».
+  bool get _commaThousands => _localeName == 'en';
+
+  double? _parse(String raw) => widget.heavy
+      ? parseWeightInput(raw, heavy: true, commaThousands: _commaThousands)
+      : _parseWeight(raw);
 
   @override
   void initState() {
@@ -2489,9 +2494,9 @@ class _WeightSectionState extends State<_WeightSection> {
   /// (« 0,5 » en français, « 0.5 » en anglais ; entier sans décimale).
   String _fieldText(double kg) {
     if (!widget.heavy) return formatWeightValue(_localeName, kg);
-    // Mode lourd : milliers groupés, séparateur décimal de la langue.
-    final text = formatWeightInput(kg);
-    return _localeName == 'fr' ? text.replaceFirst('.', ',') : text;
+    // Mode lourd : milliers groupés, séparateurs de la langue.
+    if (_commaThousands) return formatWeightInput(kg, commaThousands: true);
+    return formatWeightInput(kg).replaceFirst('.', ',');
   }
 
   @override
@@ -2518,9 +2523,13 @@ class _WeightSectionState extends State<_WeightSection> {
     super.dispose();
   }
 
+  /// Pas des boutons « − » et « + » : arrondi au demi-kilo d'abord, borne
+  /// ensuite. Si le demi-kilo dépasse un maximum décimal (22,3 : « + » depuis
+  /// 22 donnerait 22,5), le poids prend la borne exacte (22,3) : il ne
+  /// dépasse jamais ce que le trajet accepte.
   void _setWeight(double value) {
-    final clamped = _clampToCap(value < _min ? _min : value);
-    widget.onChanged(_snapWeight(clamped));
+    final snapped = _snapWeight(value < _min ? _min : value);
+    widget.onChanged(_clampToCap(snapped));
   }
 
   void _onFocusChanged() {
@@ -2602,51 +2611,60 @@ class _WeightSectionState extends State<_WeightSection> {
                   : null,
             ),
             const SizedBox(width: DonySpacing.base),
+            // FittedBox : un gros poids (« 999 999,99 kg », police agrandie) rétrécit
+            // pour tenir entre les deux boutons au lieu de déborder à 360 dp ;
+            // un poids courant garde sa taille.
             Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IntrinsicWidth(
-                    child: DonyReplayMask(
-                      child: TextField(
-                        key: const Key('weight-field'),
-                        controller: _kgCtrl,
-                        focusNode: _kgFocus,
-                        onChanged: _onFieldChanged,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        inputFormatters: [
-                          if (widget.heavy)
-                            const GroupedWeightInputFormatter(heavy: true)
-                          else
-                            _WeightInputFormatter(),
-                        ],
-                        textAlign: TextAlign.center,
-                        style: tt.displayLarge?.copyWith(color: cs.onSurface),
-                        cursorColor: cs.primary,
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    IntrinsicWidth(
+                      child: DonyReplayMask(
+                        child: TextField(
+                          key: const Key('weight-field'),
+                          controller: _kgCtrl,
+                          focusNode: _kgFocus,
+                          onChanged: _onFieldChanged,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          inputFormatters: [
+                            if (widget.heavy)
+                              GroupedWeightInputFormatter(
+                                heavy: true,
+                                commaThousands: _commaThousands,
+                              )
+                            else
+                              _WeightInputFormatter(),
+                          ],
+                          textAlign: TextAlign.center,
+                          style: tt.displayLarge?.copyWith(color: cs.onSurface),
+                          cursorColor: cs.primary,
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: DonySpacing.xs),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-                    child: Text(
-                      'kg',
-                      style: tt.headlineMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
+                    const SizedBox(width: DonySpacing.xs),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+                      child: Text(
+                        'kg',
+                        style: tt.headlineMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(width: DonySpacing.base),
@@ -3523,26 +3541,31 @@ class _PriceBreakdown extends StatelessWidget {
                     ],
                   ],
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (hasRealSavings) ...[
-                      Text(
-                        fmt(originalTotal!),
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          decoration: TextDecoration.lineThrough,
+                // FittedBox : un total à sept chiffres (route, tonnes) en
+                // police agrandie rétrécit plutôt que de déborder la carte.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (hasRealSavings) ...[
+                        Text(
+                          fmt(originalTotal!),
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            decoration: TextDecoration.lineThrough,
+                          ),
                         ),
+                        const SizedBox(width: 6),
+                      ],
+                      Text(
+                        fmt(totalPrice),
+                        key: const Key('bid-total-amount'),
+                        style: tt.titleLarge?.copyWith(color: cs.primary),
                       ),
-                      const SizedBox(width: 6),
                     ],
-                    Text(
-                      fmt(totalPrice),
-                      key: const Key('bid-total-amount'),
-                      style: tt.titleLarge?.copyWith(color: cs.primary),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -3568,16 +3591,27 @@ class _PriceBreakdown extends StatelessWidget {
     String value, {
     Color? valueColor,
     Key? valueKey,
-  }) => Row(
-    children: [
-      Expanded(child: Text(label, style: tt.bodyMedium)),
-      const SizedBox(width: DonySpacing.sm),
-      Text(
-        value,
-        key: valueKey,
-        style: tt.titleMedium?.copyWith(color: valueColor),
-      ),
-    ],
+  }) => LayoutBuilder(
+    // Le montant garde sa taille tant qu'il tient ; un très gros montant
+    // (999 999 kg à 2 € le kilo, police agrandie) rétrécit au lieu de faire
+    // déborder la ligne, et il ne prend jamais plus de 60 % de la largeur.
+    builder: (context, constraints) => Row(
+      children: [
+        Expanded(child: Text(label, style: tt.bodyMedium)),
+        const SizedBox(width: DonySpacing.sm),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.6),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              key: valueKey,
+              style: tt.titleMedium?.copyWith(color: valueColor),
+            ),
+          ),
+        ),
+      ],
+    ),
   );
 
   /// Libellé pourcentage : entier si rond, sinon 1 décimale virgule FR

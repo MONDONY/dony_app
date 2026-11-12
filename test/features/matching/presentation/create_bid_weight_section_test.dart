@@ -23,6 +23,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
@@ -681,6 +683,201 @@ void main() {
 
       expect(displayedWeight(tester), '1\u202f200');
       expect(find.textContaining('1\u202f200 kg ×'), findsOneWidget);
+    });
+  });
+  group('Bornage au pas des boutons', () {
+    testWidgets('kilo libre, max 22,3 : « + » depuis 22 ne dépasse jamais '
+        '22,3', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'KG_FREE', maxParcelWeightKg: 22.3),
+      );
+      await tester.enterText(find.byKey(const Key('weight-field')), '22');
+      await tester.pump();
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('weight-increment')));
+      await tester.pump();
+      expect(displayedWeight(tester), '22,3');
+
+      // Au maximum : « + » est désactivé, le poids ne bouge plus.
+      await tester.tap(find.byKey(const Key('weight-increment')));
+      await tester.pump();
+      expect(displayedWeight(tester), '22,3');
+    });
+
+    testWidgets('kilo libre, max 22,3 : « − » depuis 22,3 revient au demi-kilo '
+        'et jamais sous 0', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'KG_FREE', maxParcelWeightKg: 22.3),
+      );
+      await tester.enterText(find.byKey(const Key('weight-field')), '22,3');
+      await tester.pump();
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('weight-decrement')));
+      await tester.pump();
+      expect(displayedWeight(tester), '22');
+
+      await tester.enterText(find.byKey(const Key('weight-field')), '0,5');
+      await tester.pump();
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('weight-decrement')));
+      await tester.pump();
+      expect(displayedWeight(tester), '0');
+      // À 0, « − » est désactivé.
+      await tester.tap(find.byKey(const Key('weight-decrement')));
+      await tester.pump();
+      expect(displayedWeight(tester), '0');
+    });
+
+    testWidgets('route 1 497,8 kg restants : « + » depuis 1 497 s\'arrête à '
+        '1 497,8', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'KG',
+          availableKg: 1497.8,
+          transportMode: TransportMode.car,
+        ),
+      );
+      await tester.enterText(find.byKey(const Key('weight-field')), '1497');
+      await tester.pump();
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('weight-increment')));
+      await tester.pump();
+      expect(displayedWeight(tester), '1\u202f497,5');
+
+      // Le pas suivant (1 498) dépasserait : le poids prend la borne exacte.
+      await tester.tap(find.byKey(const Key('weight-increment')));
+      await tester.pump();
+      expect(displayedWeight(tester), '1\u202f497,8');
+    });
+  });
+
+  group('Repères du curseur', () {
+    testWidgets('avion, 10,7 kg restants : le repère annonce le dernier '
+        'cran (10,5), pas 11', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'SUITCASE_23KG',
+          availableKg: 10.7,
+          transportMode: TransportMode.plane,
+        ),
+      );
+
+      expect(tester.widget<Slider>(find.byType(Slider)).max, 10.5);
+      expect(find.text('max 10,5 kg'), findsOneWidget);
+      expect(find.text('10,5 kg'), findsOneWidget);
+      expect(find.text('max 11 kg'), findsNothing);
+    });
+
+    testWidgets('avion, capacité entière : repères inchangés', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'SUITCASE_23KG',
+          availableKg: 23,
+          transportMode: TransportMode.plane,
+        ),
+      );
+
+      expect(find.text('max 23 kg'), findsOneWidget);
+      expect(find.text('23 kg'), findsOneWidget);
+      expect(find.text('0 kg'), findsOneWidget);
+    });
+  });
+
+  group('Saisie lourde en anglais', () {
+    testWidgets('« 1200 » : le champ écrit 1,200 comme le récap', (
+      tester,
+    ) async {
+      useEnglish();
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'KG_FREE',
+          availableKg: 1,
+          transportMode: TransportMode.car,
+        ),
+      );
+
+      await tester.enterText(find.byKey(const Key('weight-field')), '1200');
+      await tester.pump();
+
+      expect(displayedWeight(tester), '1,200');
+      expect(find.textContaining('1,200 kg ×'), findsOneWidget);
+    });
+
+    testWidgets('ajouter un chiffre à « 1,200 » donne 12,000 (pas 1,20)', (
+      tester,
+    ) async {
+      useEnglish();
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'KG_FREE',
+          availableKg: 1,
+          transportMode: TransportMode.car,
+        ),
+      );
+      await tester.enterText(find.byKey(const Key('weight-field')), '1200');
+      await tester.pump();
+
+      await tester.enterText(find.byKey(const Key('weight-field')), '1,2000');
+      await tester.pump();
+
+      expect(displayedWeight(tester), '12,000');
+      expect(find.textContaining('12,000 kg ×'), findsOneWidget);
+    });
+
+    testWidgets('« 1,200.5 » : point décimal, relu à l\'identique au blur', (
+      tester,
+    ) async {
+      useEnglish();
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'KG_FREE',
+          availableKg: 1,
+          transportMode: TransportMode.car,
+        ),
+      );
+
+      await tester.enterText(find.byKey(const Key('weight-field')), '1,200.5');
+      await tester.pump();
+      expect(find.textContaining('1,200.5 kg ×'), findsOneWidget);
+
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      expect(displayedWeight(tester), '1,200.5');
+      expect(find.textContaining('1,200.5 kg ×'), findsOneWidget);
+    });
+
+    testWidgets('route 1 500 kg restants, anglais : repère « max 1,500 kg »', (
+      tester,
+    ) async {
+      useEnglish();
+      await openSheet(
+        tester,
+        _announcement(
+          capacityUnit: 'KG',
+          availableKg: 1500,
+          transportMode: TransportMode.car,
+        ),
+      );
+
+      expect(find.text('max 1,500 kg'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('weight-field')), '1600');
+      await tester.pump();
+      expect(displayedWeight(tester), '1,500');
     });
   });
 }

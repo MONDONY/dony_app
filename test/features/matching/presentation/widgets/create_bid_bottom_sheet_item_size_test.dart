@@ -16,6 +16,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/item_size_selector.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
@@ -423,9 +424,16 @@ void main() {
         await tester.pump(const Duration(milliseconds: 400));
 
         expect(find.textContaining(detail), findsWidgets);
-        // La feuille est toujours là, le bouton aussi, la taille reste choisie.
+        // La feuille est toujours là, le bouton aussi, la taille reste choisie
+        // (tuile M sélectionnée) et le poids saisi est gardé.
         expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
-        expect(find.byKey(const Key('item-size-M')), findsOneWidget);
+        expect(
+          tester
+              .widget<ItemSizeSelector>(find.byType(ItemSizeSelector))
+              .selected,
+          ItemSize.m,
+        );
+        expect(find.textContaining('5 kg ×'), findsOneWidget);
         final field = tester.widget<TextField>(find.byType(TextField).at(1));
         expect(field.controller?.text, 'Cartons');
       });
@@ -465,6 +473,57 @@ void main() {
           expect(rect.right, lessThanOrEqualTo(360));
         }
       });
+    }
+  });
+  group('360 dp, gros poids', () {
+    for (final english in [false, true]) {
+      for (final scale in [1.0, 2.0]) {
+        testWidgets('${english ? 'en' : 'fr'}, police x$scale : '
+            '999 999,99 kg sans débordement', (tester) async {
+          if (english) useEnglish();
+          tester.platformDispatcher.textScaleFactorTestValue = scale;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+          await _open(
+            tester,
+            _trip(
+              capacityUnit: 'KG_FREE',
+              availableKg: 1,
+              maxParcelWeightKg: 999999.99,
+              maxItemSize: ItemSize.xl,
+            ),
+            size: const Size(360, 3200),
+          );
+
+          await tester.enterText(
+            find.byKey(const Key('weight-field')),
+            '999999.99',
+          );
+          await tester.pump();
+
+          expect(tester.takeException(), isNull);
+          // Le champ montre le poids groupé, le récap le même poids.
+          final field = tester.widget<TextField>(
+            find.byKey(const Key('weight-field')),
+          );
+          expect(
+            field.controller?.text,
+            english ? '999,999.99' : '999\u202f999.99',
+          );
+          expect(
+            find.textContaining(
+              english ? '999,999.99 kg ×' : '999\u202f999,99 kg ×',
+            ),
+            findsOneWidget,
+          );
+          // Tout reste dans la largeur de l'écran.
+          final rect = tester.getRect(find.byKey(const Key('weight-field')));
+          expect(rect.right, lessThanOrEqualTo(360));
+          expect(
+            tester.getSize(find.byKey(const Key('bid-submit-btn'))).height,
+            lessThanOrEqualTo(56 * scale),
+          );
+        });
+      }
     }
   });
 }

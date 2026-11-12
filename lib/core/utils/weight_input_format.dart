@@ -4,6 +4,10 @@ import 'package:flutter/services.dart';
 /// insécable, celle du français (« 1 200 »).
 const String kWeightGroupSeparator = ' ';
 
+/// Séparateur de milliers de l'anglais (« 1,200 »), quand le champ suit la
+/// langue de l'écran ([GroupedWeightInputFormatter.commaThousands]).
+const String kWeightCommaGroupSeparator = ',';
+
 /// Décimales gardées : le back stocke les poids à deux décimales.
 const int _maxFractionDigits = 2;
 
@@ -33,7 +37,17 @@ bool _isMark(String ch) => ch == '.' || ch == ',';
 ///   en centaines et en milliers : « 1,200 » en anglais est 1 200 kg, jamais
 ///   1,2) ; en avion et « peu importe » (32 kg au plus) elle reste décimale.
 /// - Toute autre marque seule est décimale (« 1.5 », « 1200.5 », « 0.500 »).
-WeightReading readWeightInput(String raw, {bool heavy = false}) {
+///
+/// Avec [commaThousands] (champ en anglais : « 1,200.5 »), la lecture est
+/// stricte : la virgule est toujours un séparateur de milliers (jamais une
+/// décimale, sinon « 1,200 » suivi d'un chiffre se relirait « 1,20 ») et le
+/// point est la marque décimale. [heavy] n'a alors plus d'effet.
+WeightReading readWeightInput(
+  String raw, {
+  bool heavy = false,
+  bool commaThousands = false,
+}) {
+  if (commaThousands) return _readCommaThousands(raw);
   // Garde chiffres et marques, en retenant la place de chaque marque dans
   // [raw] pour replacer le curseur.
   final kept = StringBuffer();
@@ -95,10 +109,34 @@ WeightReading readWeightInput(String raw, {bool heavy = false}) {
   );
 }
 
+WeightReading _readCommaThousands(String raw) {
+  final integer = StringBuffer();
+  final fraction = StringBuffer();
+  int? dotIndex;
+  for (var i = 0; i < raw.length; i++) {
+    final ch = raw[i];
+    if (ch == '.' && dotIndex == null) {
+      dotIndex = i;
+    } else if (_isDigit(ch)) {
+      (dotIndex == null ? integer : fraction).write(ch);
+    }
+  }
+  return (
+    integer: integer.toString(),
+    fraction: dotIndex == null ? null : fraction.toString(),
+    mark: dotIndex == null ? null : '.',
+    markIndex: dotIndex,
+  );
+}
+
 /// Lit un poids saisi dans le champ (voir [readWeightInput]). `null` quand la
 /// saisie n'est pas un nombre.
-double? parseWeightInput(String text, {bool heavy = false}) {
-  final r = readWeightInput(text, heavy: heavy);
+double? parseWeightInput(
+  String text, {
+  bool heavy = false,
+  bool commaThousands = false,
+}) {
+  final r = readWeightInput(text, heavy: heavy, commaThousands: commaThousands);
   final fraction = r.fraction;
   final hasFraction = fraction != null && fraction.isNotEmpty;
   if (r.integer.isEmpty && !hasFraction) return null;
@@ -108,20 +146,27 @@ double? parseWeightInput(String text, {bool heavy = false}) {
 
 /// Texte du champ pour un poids déjà connu : milliers groupés (« 1 200 »),
 /// aucune décimale quand le poids est entier.
-String formatWeightInput(double kg) {
+///
+/// Avec [commaThousands], les milliers sont séparés par une virgule
+/// (« 1,200 », anglais) ; la partie décimale est toujours précédée d'un point
+/// ici, à charge de l'appelant de la rendre au séparateur de sa langue.
+String formatWeightInput(double kg, {bool commaThousands = false}) {
   final whole = kg == kg.roundToDouble();
   final text = whole ? kg.toInt().toString() : kg.toString();
   final dot = text.indexOf('.');
   final integer = dot < 0 ? text : text.substring(0, dot);
   final rest = dot < 0 ? '' : text.substring(dot);
-  return '${_group(integer)}$rest';
+  return '${_group(integer, _separator(commaThousands))}$rest';
 }
 
-String _group(String digits) {
+String _separator(bool commaThousands) =>
+    commaThousands ? kWeightCommaGroupSeparator : kWeightGroupSeparator;
+
+String _group(String digits, String separator) {
   final out = StringBuffer();
   for (var i = 0; i < digits.length; i++) {
     if (i > 0 && (digits.length - i) % 3 == 0) {
-      out.write(kWeightGroupSeparator);
+      out.write(separator);
     }
     out.write(digits[i]);
   }
@@ -134,10 +179,17 @@ String _group(String digits) {
 /// montre ce qui est réellement retenu, [parseWeightInput] lit la même
 /// chose. Le curseur reste sur le même chiffre.
 class GroupedWeightInputFormatter extends TextInputFormatter {
-  const GroupedWeightInputFormatter({this.heavy = false});
+  const GroupedWeightInputFormatter({
+    this.heavy = false,
+    this.commaThousands = false,
+  });
 
   /// Route ou bateau : un `,` ou `.` ambigu est un séparateur de milliers.
   final bool heavy;
+
+  /// Champ en anglais : milliers séparés par une virgule, décimale au point
+  /// (lecture stricte, voir [readWeightInput]).
+  final bool commaThousands;
 
   @override
   TextEditingValue formatEditUpdate(
@@ -148,14 +200,19 @@ class GroupedWeightInputFormatter extends TextInputFormatter {
     final caret = newValue.selection.baseOffset < 0
         ? text.length
         : newValue.selection.baseOffset.clamp(0, text.length);
-    final r = readWeightInput(text, heavy: heavy);
+    final r = readWeightInput(
+      text,
+      heavy: heavy,
+      commaThousands: commaThousands,
+    );
     var fraction = r.fraction;
     if (fraction != null && fraction.length > _maxFractionDigits) {
       fraction = fraction.substring(0, _maxFractionDigits);
     }
     final mark = fraction == null ? null : r.mark;
     final formatted =
-        '${_group(r.integer)}${mark == null ? '' : '$mark${fraction ?? ''}'}';
+        '${_group(r.integer, _separator(commaThousands))}'
+        "${mark == null ? '' : '$mark${fraction ?? ''}'}";
 
     if (caret >= text.length) {
       return TextEditingValue(

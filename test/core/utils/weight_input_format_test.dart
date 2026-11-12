@@ -1,4 +1,4 @@
-import 'package:dony/features/package_request/presentation/weight_input_format.dart';
+import 'package:dony/core/utils/weight_input_format.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -179,6 +179,61 @@ void main() {
             reason: '$raw heavy=$heavy',
           );
         }
+      }
+    });
+  });
+  group('anglais (commaThousands) : « 1,200.5 »', () {
+    TextEditingValue typeEn(String text) =>
+        const GroupedWeightInputFormatter(
+          heavy: true,
+          commaThousands: true,
+        ).formatEditUpdate(
+          TextEditingValue.empty,
+          TextEditingValue(
+            text: text,
+            selection: TextSelection.collapsed(offset: text.length),
+          ),
+        );
+
+    test('la virgule est toujours un séparateur de milliers', () {
+      expect(parseWeightInput('1,200', commaThousands: true), 1200);
+      expect(parseWeightInput('1,200,500', commaThousands: true), 1200500);
+      expect(parseWeightInput('12,5', commaThousands: true), 125);
+    });
+
+    test('le point est la marque décimale', () {
+      expect(parseWeightInput('1,200.5', commaThousands: true), 1200.5);
+      expect(parseWeightInput('0.5', commaThousands: true), 0.5);
+      expect(parseWeightInput('', commaThousands: true), isNull);
+    });
+
+    test('affichage : virgule des milliers, point décimal', () {
+      expect(formatWeightInput(1200, commaThousands: true), '1,200');
+      expect(formatWeightInput(1200.5, commaThousands: true), '1,200.5');
+      expect(formatWeightInput(999999, commaThousands: true), '999,999');
+      expect(formatWeightInput(12, commaThousands: true), '12');
+    });
+
+    test('le formateur groupe à la frappe', () {
+      expect(typeEn('1200').text, '1,200');
+      expect(typeEn('1200.5').text, '1,200.5');
+      expect(typeEn('999999.999').text, '999,999.99');
+    });
+
+    test('ajouter un chiffre à un champ déjà groupé ne le casse pas', () {
+      // « 1,200 » + « 0 » : sans lecture stricte, « 1,2000 » se lirait 1,20.
+      expect(typeEn('1,2000').text, '12,000');
+      expect(typeEn('1,200.50').text, '1,200.50');
+    });
+
+    test('ce que le champ montre est ce que lit parseWeightInput', () {
+      for (final raw in ['1200', '1,200', '1,200.5', '999999.99', '12,0000']) {
+        final shown = typeEn(raw).text;
+        expect(
+          parseWeightInput(shown, commaThousands: true),
+          parseWeightInput(raw, commaThousands: true),
+          reason: raw,
+        );
       }
     });
   });

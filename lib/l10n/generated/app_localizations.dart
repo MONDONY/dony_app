@@ -15700,7 +15700,7 @@ abstract class AppLocalizations {
   /// **'{title}, {label} depuis votre dernière visite'**
   String activityNewSinceLastVisit(Object label, Object title);
 
-  /// Libellé du poids maximum au-dessus du slider (create_bid_bottom_sheet.dart _buildSlider). {maxKg} déjà formaté (toStringAsFixed(0)).
+  /// Libellé du poids maximum au-dessus du slider (create_bid_bottom_sheet.dart _buildSlider, _buildNumeric). {maxKg} déjà formaté (valeur du dernier cran du curseur ou maximum de la saisie, milliers groupés, deux décimales au plus : formatWeightGrouped).
   ///
   /// In fr, this message translates to:
   /// **'max {maxKg} kg'**
