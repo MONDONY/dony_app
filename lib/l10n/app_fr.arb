@@ -2864,9 +2864,33 @@
       }
     }
   },
-  "requestCreateAirplaneOnlyMode": "seul mode disponible",
-  "@requestCreateAirplaneOnlyMode": {
-    "description": "Sous-texte du bloc mode de transport verrouillé sur avion (step_1_trajet_colis.dart)"
+  "requestCreateTransportModeLabel": "Mode de transport",
+  "@requestCreateTransportModeLabel": {
+    "description": "Libellé du choix du mode de transport à l'étape 1 de la demande de colis (request_transport_mode_selector.dart)"
+  },
+  "requestCreateTransportAny": "Peu importe",
+  "@requestCreateTransportAny": {
+    "description": "Puce « Peu importe » du mode de transport de la demande, et valeur de la ligne Transport du récapitulatif quand aucun mode n'est imposé"
+  },
+  "requestCreateModeHelpAny": "Tous les voyageurs de ce trajet verront votre demande.",
+  "@requestCreateModeHelpAny": {
+    "description": "Aide sous les puces de mode : « Peu importe » sélectionné"
+  },
+  "requestCreateModeHelpPlane": "Seuls les voyageurs en avion verront votre demande.",
+  "@requestCreateModeHelpPlane": {
+    "description": "Aide sous les puces de mode : avion sélectionné"
+  },
+  "requestCreateModeHelpBoat": "Seuls les bateaux (groupage en conteneur) verront votre demande.",
+  "@requestCreateModeHelpBoat": {
+    "description": "Aide sous les puces de mode : bateau sélectionné"
+  },
+  "requestCreateModeHelpRoad": "Seuls les voyageurs en voiture, car ou camion verront votre demande.",
+  "@requestCreateModeHelpRoad": {
+    "description": "Aide sous les puces de mode : route sélectionnée"
+  },
+  "requestCreateAiAction": "Créer avec l'IA",
+  "@requestCreateAiAction": {
+    "description": "Info-bulle de l'icône IA de la barre de titre de l'étape 1 de la demande de colis"
   },
   "requestCreateTrajetSectionLabel": "TRAJET",
   "@requestCreateTrajetSectionLabel": {

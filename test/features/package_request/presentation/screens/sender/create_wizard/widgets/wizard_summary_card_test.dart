@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
@@ -82,5 +83,50 @@ void main() {
     );
     await tester.pumpWidget(_wrap(const WizardSummaryCard(state: state)));
     expect(find.text('Flexible date'), findsOneWidget);
+  });
+
+  testWidgets('« peu importe » : ligne Transport affichée, icône neutre', (
+    tester,
+  ) async {
+    const state = PackageRequestFormState(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      transportModeAny: true,
+      weightKg: 5,
+    );
+    await tester.pumpWidget(_wrap(const WizardSummaryCard(state: state)));
+    expect(find.text('Transport'), findsOneWidget);
+    expect(find.text('Peu importe'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is DonyIcon && w.name == kNeutralTripIconAsset,
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('« peu importe » en anglais : « Any »', (tester) async {
+    useEnglish();
+    const state = PackageRequestFormState(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      transportModeAny: true,
+    );
+    await tester.pumpWidget(_wrap(const WizardSummaryCard(state: state)));
+    expect(find.text('Any'), findsOneWidget);
+  });
+
+  testWidgets('bateau : icône du mode devant le libellé', (tester) async {
+    const state = PackageRequestFormState(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      transportMode: TransportMode.boat,
+    );
+    await tester.pumpWidget(_wrap(const WizardSummaryCard(state: state)));
+    expect(find.text('Bateau'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'ship'),
+      findsOneWidget,
+    );
   });
 }

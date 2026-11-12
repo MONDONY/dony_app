@@ -3938,7 +3938,29 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get requestCreateAirplaneOnlyMode => 'seul mode disponible';
+  String get requestCreateTransportModeLabel => 'Mode de transport';
+
+  @override
+  String get requestCreateTransportAny => 'Peu importe';
+
+  @override
+  String get requestCreateModeHelpAny =>
+      'Tous les voyageurs de ce trajet verront votre demande.';
+
+  @override
+  String get requestCreateModeHelpPlane =>
+      'Seuls les voyageurs en avion verront votre demande.';
+
+  @override
+  String get requestCreateModeHelpBoat =>
+      'Seuls les bateaux (groupage en conteneur) verront votre demande.';
+
+  @override
+  String get requestCreateModeHelpRoad =>
+      'Seuls les voyageurs en voiture, car ou camion verront votre demande.';
+
+  @override
+  String get requestCreateAiAction => 'Créer avec l\'IA';
 
   @override
   String get requestCreateTrajetSectionLabel => 'TRAJET';

@@ -2,7 +2,9 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
+import 'package:dony/features/ai_form_draft/presentation/widgets/ai_entry_card.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
@@ -207,12 +209,37 @@ void main() {
     },
   );
 
-  testWidgets('carte visible en création quand formDraftEnabled', (
-    tester,
-  ) async {
+  testWidgets('icône IA de la barre de titre en création quand '
+      'formDraftEnabled, plus d\'encart dans l\'étape', (tester) async {
     useAiFormDraft(enabled: true);
     await open(tester);
-    expect(find.byKey(const Key('ai-entry-cta')), findsOneWidget);
+    final action = find.byKey(const Key('request-ai-action'));
+    expect(action, findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name == 'sparkles',
+        ),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('ai-entry-cta')), findsNothing);
+    expect(find.byType(AiEntryCard), findsNothing);
+    expect(find.byTooltip('Créer avec l\'IA'), findsOneWidget);
+  });
+
+  testWidgets('l\'icône IA n\'est que sur l\'étape 1', (tester) async {
+    useAiFormDraft(enabled: true);
+    await open(
+      tester,
+      extra: const PackageRequestDraftResume({
+        'step': 1,
+        'departureCity': 'Paris',
+        'arrivalCity': 'Dakar',
+      }),
+    );
+    expect(find.byKey(const Key('request-ai-action')), findsNothing);
   });
 
   testWidgets(
@@ -226,7 +253,7 @@ void main() {
       useAiFormDraft(enabled: true);
       await open(tester);
 
-      expect(find.byKey(const Key('ai-entry-cta')), findsOneWidget);
+      expect(find.byKey(const Key('request-ai-action')), findsOneWidget);
       expect(find.byKey(const Key('currency-publish-banner')), findsNothing);
       final city = find.byKey(const Key('step1-departure-city'));
       expect(city, findsOneWidget);
@@ -257,19 +284,19 @@ void main() {
   ) async {
     useAiFormDraft(enabled: false);
     await open(tester);
-    expect(find.byKey(const Key('ai-entry-cta')), findsNothing);
+    expect(find.byKey(const Key('request-ai-action')), findsNothing);
   });
 
   testWidgets('carte absente en édition', (tester) async {
     useAiFormDraft(enabled: true);
     await open(tester, extra: _request);
-    expect(find.byKey(const Key('ai-entry-cta')), findsNothing);
+    expect(find.byKey(const Key('request-ai-action')), findsNothing);
   });
 
   testWidgets('carte absente en duplication', (tester) async {
     useAiFormDraft(enabled: true);
     await open(tester, extra: PackageRequestDuplicate(_request));
-    expect(find.byKey(const Key('ai-entry-cta')), findsNothing);
+    expect(find.byKey(const Key('request-ai-action')), findsNothing);
   });
 
   testWidgets('carte absente en reprise de brouillon', (tester) async {
@@ -281,7 +308,7 @@ void main() {
         'departureCity': 'Paris',
       }),
     );
-    expect(find.byKey(const Key('ai-entry-cta')), findsNothing);
+    expect(find.byKey(const Key('request-ai-action')), findsNothing);
   });
 
   testWidgets('« Créer avec l’IA » remplit le wizard : bandeau, marques', (
@@ -290,7 +317,7 @@ void main() {
     final launcher = useAiFormDraft(enabled: true, outcome: outcome());
     await open(tester);
 
-    await tester.tap(find.byKey(const Key('ai-entry-cta')));
+    await tester.tap(find.byKey(const Key('request-ai-action')));
     await tester.pumpAndSettle();
 
     expect(launcher.calls.single.kind, AiFormKind.packageRequest);
@@ -311,7 +338,7 @@ void main() {
   ) async {
     final launcher = useAiFormDraft(enabled: true, outcome: outcome());
     await open(tester);
-    await tester.tap(find.byKey(const Key('ai-entry-cta')));
+    await tester.tap(find.byKey(const Key('request-ai-action')));
     await tester.pumpAndSettle();
     final marks = find.byKey(const Key('ai-field-mark')).evaluate().length;
     expect(marks, greaterThan(1));
@@ -329,7 +356,7 @@ void main() {
   ) async {
     useAiFormDraft(enabled: true);
     await open(tester);
-    await tester.tap(find.byKey(const Key('ai-entry-cta')));
+    await tester.tap(find.byKey(const Key('request-ai-action')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('ai-filled-banner')), findsNothing);
     expect(find.byKey(const Key('ai-field-mark')), findsNothing);

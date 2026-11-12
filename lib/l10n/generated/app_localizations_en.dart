@@ -3918,7 +3918,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get requestCreateAirplaneOnlyMode => 'only mode available';
+  String get requestCreateTransportModeLabel => 'Transport mode';
+
+  @override
+  String get requestCreateTransportAny => 'Any';
+
+  @override
+  String get requestCreateModeHelpAny =>
+      'All travelers on this route will see your request.';
+
+  @override
+  String get requestCreateModeHelpPlane =>
+      'Only travelers flying will see your request.';
+
+  @override
+  String get requestCreateModeHelpBoat =>
+      'Only ships (shared containers) will see your request.';
+
+  @override
+  String get requestCreateModeHelpRoad =>
+      'Only travelers by car, coach or truck will see your request.';
+
+  @override
+  String get requestCreateAiAction => 'Create with AI';
 
   @override
   String get requestCreateTrajetSectionLabel => 'TRIP';

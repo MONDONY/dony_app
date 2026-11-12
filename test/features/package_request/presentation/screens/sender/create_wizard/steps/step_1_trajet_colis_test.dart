@@ -1,3 +1,4 @@
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -43,6 +44,7 @@ void main() {
   });
 
   tearDown(() async {
+    resetTransportModesForTest();
     if (GetIt.I.isRegistered<CitySearchBloc>()) {
       GetIt.I.unregister<CitySearchBloc>();
     }
@@ -60,21 +62,24 @@ void main() {
     ),
   );
 
-  PackageRequest editingReq({DateTime? date, int tolerance = 2}) =>
-      PackageRequest(
-        id: 'r-edit',
-        senderId: 's-1',
-        departureCity: 'Lyon',
-        arrivalCity: 'Bamako',
-        desiredDate: date,
-        dateToleranceDays: tolerance,
-        weightKg: 8,
-        parcelSize: ParcelSize.medium,
-        transportMode: TransportMode.plane,
-        categories: const ['Vêtements'],
-        status: PackageRequestStatus.open,
-        createdAt: DateTime(2026, 5, 10),
-      );
+  PackageRequest editingReq({
+    DateTime? date,
+    int tolerance = 2,
+    TransportMode? mode = TransportMode.plane,
+  }) => PackageRequest(
+    id: 'r-edit',
+    senderId: 's-1',
+    departureCity: 'Lyon',
+    arrivalCity: 'Bamako',
+    desiredDate: date,
+    dateToleranceDays: tolerance,
+    weightKg: 8,
+    parcelSize: ParcelSize.medium,
+    transportMode: mode,
+    categories: const ['Vêtements'],
+    status: PackageRequestStatus.open,
+    createdAt: DateTime(2026, 5, 10),
+  );
 
   Widget wrapEditing(
     PackageRequest req, {
@@ -101,18 +106,20 @@ void main() {
   final farDate = DateTime.now().add(const Duration(days: 30));
 
   group('Step1TrajetColis', () {
-    testWidgets('rend le label section + titre + avion verrouillé', (
+    testWidgets('rend le label section + titre, sans bloc mode (avion seul)', (
       tester,
     ) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(find.text('TRAJET'), findsOneWidget);
       expect(find.text("D'où vers où ?"), findsOneWidget);
-      // Avion verrouillé remplace les 6 OptionButton
+      // Avion seul : plus de bloc « avion verrouillé », aucun choix à faire.
       expect(
         find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plane'),
-        findsOneWidget,
+        findsNothing,
       );
-      expect(find.text('Avion'), findsOneWidget);
+      expect(find.text('Avion'), findsNothing);
+      expect(find.byKey(const Key('request-mode-selector')), findsNothing);
+      expect(find.textContaining('seul mode'), findsNothing);
       expect(find.byType(OptionButton), findsNothing);
     });
 
@@ -129,7 +136,7 @@ void main() {
       // « Tolérance » nommait le réglage ; « Souplesse » nomme ce qu'il fait.
       expect(find.text('Souplesse'), findsOneWidget);
       expect(find.text('Tolérance'), findsNothing);
-      // "Mode de transport" supprimé — remplacé par le bloc avion verrouillé.
+      // Le mode de transport n'est proposé que si le serveur ouvre un autre mode.
       // Le poids du colis a été retiré de l'étape 1 (il est saisi à l'étape 2).
       expect(find.text('Poids du colis'), findsNothing);
     });
@@ -492,6 +499,222 @@ void main() {
         find.text(
           'Seuls les voyageurs partant exactement ce jour-là pourront répondre.',
         ),
+        findsOneWidget,
+      );
+    });
+  });
+
+  group('Step1TrajetColis — mode de transport', () {
+    void openAllModes() => setTransportModes(
+      const TransportModesAvailability(road: true, boat: true),
+    );
+
+    Finder chip(String mode) => find.byKey(Key('request-mode-$mode'));
+
+    testWidgets('avion seul : pas de bloc mode, soumission PLANE', (
+      tester,
+    ) async {
+      final key = GlobalKey<Step1TrajetColisState>();
+      await tester.pumpWidget(wrapEditing(editingReq(mode: null), key: key));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('request-mode-selector')), findsNothing);
+
+      key.currentState!.submit();
+      await tester.pumpAndSettle();
+
+      final state = blocOf(tester).state;
+      expect(state.transportMode, TransportMode.plane);
+      expect(state.transportModeAny, isFalse);
+      expect(key.currentState!.draftInput['transportMode'], 'PLANE');
+    });
+
+    testWidgets(
+      'route allumée : Peu importe pré-sélectionné, tap Route → CAR',
+      (tester) async {
+        setTransportModes(
+          const TransportModesAvailability(road: true, boat: false),
+        );
+        await tester.pumpWidget(wrap(const Step1TrajetColis()));
+        await tester.pump();
+
+        expect(find.text('Mode de transport'), findsOneWidget);
+        expect(chip('any'), findsOneWidget);
+        expect(chip('plane'), findsOneWidget);
+        expect(chip('car'), findsOneWidget);
+        expect(chip('boat'), findsNothing);
+        expect(
+          find.text('Tous les voyageurs de ce trajet verront votre demande.'),
+          findsOneWidget,
+        );
+
+        await tester.tap(chip('car'));
+        await tester.pump();
+
+        final state = blocOf(tester).state;
+        expect(state.transportMode, TransportMode.car);
+        expect(state.transportModeAny, isFalse);
+        expect(
+          find.text(
+            'Seuls les voyageurs en voiture, car ou camion verront votre '
+            'demande.',
+          ),
+          findsOneWidget,
+        );
+
+        await tester.tap(chip('any'));
+        await tester.pump();
+        expect(blocOf(tester).state.transportModeAny, isTrue);
+        expect(blocOf(tester).state.transportMode, isNull);
+      },
+    );
+
+    testWidgets('aide sous les puces selon le choix', (tester) async {
+      openAllModes();
+      await tester.pumpWidget(wrap(const Step1TrajetColis()));
+      await tester.pump();
+
+      await tester.tap(chip('plane'));
+      await tester.pump();
+      expect(
+        find.text('Seuls les voyageurs en avion verront votre demande.'),
+        findsOneWidget,
+      );
+
+      await tester.tap(chip('boat'));
+      await tester.pump();
+      expect(
+        find.text(
+          'Seuls les bateaux (groupage en conteneur) verront votre demande.',
+        ),
+        findsOneWidget,
+      );
+      expect(blocOf(tester).state.transportMode, TransportMode.boat);
+    });
+
+    testWidgets('les puces portent les icônes de chaque mode', (tester) async {
+      openAllModes();
+      await tester.pumpWidget(wrap(const Step1TrajetColis()));
+      await tester.pump();
+
+      for (final entry in {
+        'any': 'layout-grid',
+        'plane': 'plane',
+        'boat': 'ship',
+        'car': 'car',
+      }.entries) {
+        expect(
+          find.descendant(
+            of: chip(entry.key),
+            matching: find.byWidgetPredicate(
+              (w) => w is DonyIcon && w.name == entry.value,
+            ),
+          ),
+          findsOneWidget,
+          reason: entry.key,
+        );
+      }
+    });
+
+    testWidgets('modification d\'une demande « peu importe » : reste ANY', (
+      tester,
+    ) async {
+      openAllModes();
+      final key = GlobalKey<Step1TrajetColisState>();
+      await tester.pumpWidget(wrapEditing(editingReq(mode: null), key: key));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Tous les voyageurs de ce trajet verront votre demande.'),
+        findsOneWidget,
+      );
+      expect(key.currentState!.draftInput['transportMode'], 'ANY');
+
+      key.currentState!.submit();
+      await tester.pumpAndSettle();
+
+      final state = blocOf(tester).state;
+      expect(state.currentStep, 1);
+      expect(state.transportMode, isNull);
+      expect(state.transportModeAny, isTrue);
+      expect(state.requestTransportMode, isNull);
+    });
+
+    testWidgets('modification d\'une demande bateau : le mode est gardé', (
+      tester,
+    ) async {
+      openAllModes();
+      final key = GlobalKey<Step1TrajetColisState>();
+      await tester.pumpWidget(
+        wrapEditing(editingReq(mode: TransportMode.boat), key: key),
+      );
+      await tester.pumpAndSettle();
+      expect(key.currentState!.draftInput['transportMode'], 'BOAT');
+
+      key.currentState!.submit();
+      await tester.pumpAndSettle();
+
+      expect(blocOf(tester).state.transportMode, TransportMode.boat);
+      expect(blocOf(tester).state.transportModeAny, isFalse);
+    });
+
+    testWidgets('revenir à « Peu importe » après un choix : soumet ANY', (
+      tester,
+    ) async {
+      openAllModes();
+      final key = GlobalKey<Step1TrajetColisState>();
+      await tester.pumpWidget(wrapEditing(editingReq(mode: null), key: key));
+      await tester.pumpAndSettle();
+      // Le mode choisi à l'écran passe par le bloc : le changer puis revenir
+      // à « Peu importe » doit soumettre ANY.
+      await tester.tap(chip('plane'));
+      await tester.pump();
+      await tester.tap(chip('any'));
+      await tester.pump();
+
+      key.currentState!.submit();
+      await tester.pumpAndSettle();
+      expect(blocOf(tester).state.transportModeAny, isTrue);
+    });
+
+    for (final locale in ['fr', 'en']) {
+      testWidgets('360 dp $locale : les 4 puces sans débordement', (
+        tester,
+      ) async {
+        if (locale == 'en') useEnglish();
+        tester.view
+          ..physicalSize = const Size(360, 800)
+          ..devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        openAllModes();
+        await tester.pumpWidget(wrap(const Step1TrajetColis()));
+        await tester.pump();
+
+        final heights = <double>{};
+        for (final mode in ['any', 'plane', 'boat', 'car']) {
+          final rect = tester.getRect(chip(mode));
+          expect(rect.left, greaterThanOrEqualTo(0));
+          expect(rect.right, lessThanOrEqualTo(360));
+          heights.add(rect.height);
+        }
+        // Libellés sur une ligne : toutes les puces ont la même hauteur.
+        expect(heights, hasLength(1));
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('anglais : libellés et aide traduits', (tester) async {
+      useEnglish();
+      openAllModes();
+      await tester.pumpWidget(wrap(const Step1TrajetColis()));
+      await tester.pump();
+
+      expect(find.text('Transport mode'), findsOneWidget);
+      expect(find.text('Any'), findsOneWidget);
+      expect(find.text('Plane'), findsOneWidget);
+      expect(find.text('Boat'), findsOneWidget);
+      expect(find.text('Road'), findsOneWidget);
+      expect(
+        find.text('All travelers on this route will see your request.'),
         findsOneWidget,
       );
     });

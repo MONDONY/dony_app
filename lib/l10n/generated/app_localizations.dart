@@ -6623,11 +6623,47 @@ abstract class AppLocalizations {
   /// **'Les voyageurs partant du {from} au {to} pourront répondre.'**
   String requestCreateToleranceRangeHint(String from, String to);
 
-  /// Sous-texte du bloc mode de transport verrouillé sur avion (step_1_trajet_colis.dart)
+  /// Libellé du choix du mode de transport à l'étape 1 de la demande de colis (request_transport_mode_selector.dart)
   ///
   /// In fr, this message translates to:
-  /// **'seul mode disponible'**
-  String get requestCreateAirplaneOnlyMode;
+  /// **'Mode de transport'**
+  String get requestCreateTransportModeLabel;
+
+  /// Puce « Peu importe » du mode de transport de la demande, et valeur de la ligne Transport du récapitulatif quand aucun mode n'est imposé
+  ///
+  /// In fr, this message translates to:
+  /// **'Peu importe'**
+  String get requestCreateTransportAny;
+
+  /// Aide sous les puces de mode : « Peu importe » sélectionné
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les voyageurs de ce trajet verront votre demande.'**
+  String get requestCreateModeHelpAny;
+
+  /// Aide sous les puces de mode : avion sélectionné
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les voyageurs en avion verront votre demande.'**
+  String get requestCreateModeHelpPlane;
+
+  /// Aide sous les puces de mode : bateau sélectionné
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les bateaux (groupage en conteneur) verront votre demande.'**
+  String get requestCreateModeHelpBoat;
+
+  /// Aide sous les puces de mode : route sélectionnée
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les voyageurs en voiture, car ou camion verront votre demande.'**
+  String get requestCreateModeHelpRoad;
+
+  /// Info-bulle de l'icône IA de la barre de titre de l'étape 1 de la demande de colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer avec l\'IA'**
+  String get requestCreateAiAction;
 
   /// Libellé de section en tête de l'étape 1 (step_1_trajet_colis.dart)
   ///

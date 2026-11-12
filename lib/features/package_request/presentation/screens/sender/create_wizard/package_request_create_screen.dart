@@ -714,6 +714,16 @@ class _PackageRequestCreateScreenState
                 ),
               ),
             ),
+            if (_aiAvailability case final ai? when state.currentStep == 0)
+              AiEntryGate(
+                availability: ai,
+                child: IconButton(
+                  key: const Key('request-ai-action'),
+                  tooltip: l10n.requestCreateAiAction,
+                  onPressed: () => unawaited(_openAiDraft(context)),
+                  icon: DonyIcon('sparkles', color: cs.primary, size: 22),
+                ),
+              ),
             if (_draftsEnabled)
               IconButton(
                 key: const Key('request-save-draft'),
@@ -755,11 +765,11 @@ class _PackageRequestCreateScreenState
                 0 => Step1TrajetColis(
                   key: _step1Key,
                   canContinueNotifier: _canContinueNotifier,
-                  header: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (_aiAvailability case final availability?)
-                        BlocBuilder<AiFilledFieldsCubit, Set<String>>(
+                  // L'entrée « Créer avec l'IA » est l'icône de la barre de
+                  // titre : seule la bannière « Rempli par l'IA » reste ici.
+                  header: _aiAvailability == null
+                      ? null
+                      : BlocBuilder<AiFilledFieldsCubit, Set<String>>(
                           bloc: _aiFilled,
                           builder: (_, fields) => fields.isNotEmpty
                               ? Padding(
@@ -771,20 +781,8 @@ class _PackageRequestCreateScreenState
                                         unawaited(_openAiDraft(context)),
                                   ),
                                 )
-                              : AiEntryGate(
-                                  availability: availability,
-                                  padding: const EdgeInsets.only(
-                                    bottom: DonySpacing.base,
-                                  ),
-                                  child: AiEntryCard(
-                                    kind: AiFormKind.packageRequest,
-                                    onPressed: () =>
-                                        unawaited(_openAiDraft(context)),
-                                  ),
-                                ),
+                              : const SizedBox.shrink(),
                         ),
-                    ],
-                  ),
                 ),
                 1 => Step2Details(
                   key: _step2Key,
