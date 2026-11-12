@@ -7,6 +7,7 @@ import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -35,6 +36,7 @@ class PackageRequestFormBloc
     PackageRequest? editing,
     PackageRequestDuplicate? duplicating,
   }) : _analytics = analytics,
+       _editedItemSize = editing?.itemSize,
        super(
          editing != null
              ? _prefilledFrom(editing)
@@ -160,6 +162,19 @@ class PackageRequestFormBloc
     );
   }
 
+  /// Taille de la demande éditée telle que chargée ; `null` en création, ou
+  /// quand la demande chargée n'en porte pas (ancien back, liste).
+  final ItemSize? _editedItemSize;
+
+  /// Intention d'écriture de la taille en modification, comparée à celle de la
+  /// demande chargée : identique ou jamais connue puis jamais choisie = rien
+  /// envoyé ; changée = envoyée ; retirée = effacée.
+  FieldChange<ItemSize> _itemSizeChange() {
+    final now = state.itemSize;
+    if (now == _editedItemSize) return const FieldChange.keep();
+    return now == null ? const FieldChange.clear() : FieldChange.set(now);
+  }
+
   /// Une chaîne vide signifie « champ laissé à blanc » côté formulaire ; le
   /// backend, lui, attend `null` pour l'absence de valeur.
   static String? _blankToNull(String? v) =>
@@ -268,6 +283,16 @@ class PackageRequestFormBloc
           clearDraftLimitMessage: true,
         ),
       );
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.packageRequestSubmitFailed,
+          properties: {
+            'error_code': 'weight-too-heavy-for-mode',
+            'is_draft': e.saveAsDraft,
+            'editing': state.editingRequestId != null,
+          },
+        ),
+      );
       return;
     }
     final totalBudgetEur = state.totalBudgetEur ?? e.targetPriceEur;
@@ -321,9 +346,9 @@ class PackageRequestFormBloc
           pickupNeighborhood: _blankToNull(state.pickupNeighborhood),
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
           promoCode: _blankToNull(state.promoCode),
-          // Modification d'un formulaire complet : une taille retirée est
-          // effacée côté back, jamais laissée en place.
-          itemSize: FieldChange.setOrClear(state.itemSize),
+          // Taille non touchée : clé absente (le back la conserve) ; changée :
+          // envoyée ; retirée : effacée côté back (`NONE`).
+          itemSize: _itemSizeChange(),
         );
       } else {
         saved = await _repository.create(

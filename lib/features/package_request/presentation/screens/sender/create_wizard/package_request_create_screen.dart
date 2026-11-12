@@ -608,7 +608,7 @@ class _PackageRequestCreateScreenState
       // erreur, ce message dit pourquoi la publication est refusée.
       DonySnackbar.show(
         context,
-        message: context.l10n.requestCreateWeightTooHeavyForMode,
+        message: context.l10n.requestCreateWeightTooHeavySubmit,
         type: DonySnackbarType.warning,
       );
     } else if (state.submissionStatus == FormSubmissionStatus.error) {

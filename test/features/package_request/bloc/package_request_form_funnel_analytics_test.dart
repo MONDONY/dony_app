@@ -278,4 +278,40 @@ void main() {
       isFalse,
     );
   });
+
+  test('poids hors plafond du mode : refus tracé sans PII', () async {
+    final bloc = await makeBloc();
+    bloc.add(
+      const FormStep1Submitted(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: null,
+        dateToleranceDays: null,
+        transportMode: TransportMode.plane,
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    bloc.add(
+      const FormStep2Submitted(
+        weightKg: 1200,
+        parcelSize: ParcelSize.large,
+        categories: ['Meubles'],
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    bloc.add(const FormStep3Submitted(targetPriceEur: 100));
+    await bloc.stream.firstWhere(
+      (s) => s.formError == PackageRequestFormError.weightTooHeavyForMode,
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(capturedAll(AnalyticsEvents.packageRequestSubmitFailed).single, {
+      'error_code': 'weight-too-heavy-for-mode',
+      'is_draft': false,
+      'editing': false,
+    });
+    verifyNever(
+      () => backend.capture(AnalyticsEvents.packageRequestCreated, any()),
+    );
+  });
 }

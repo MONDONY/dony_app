@@ -228,16 +228,19 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('poids de route en avion : le SnackBar invite à choisir Route', (
-    tester,
-  ) async {
-    await submitHeavyParcelInPlane(tester);
+  testWidgets(
+    'poids de route en avion : le SnackBar propose de changer le poids ou de choisir Route',
+    (tester) async {
+      await submitHeavyParcelInPlane(tester);
 
-    expect(
-      find.text("Au-delà de 32 kg, choisissez Route à l'étape précédente."),
-      findsOneWidget,
-    );
-  });
+      expect(
+        find.text(
+          'Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('poids de route en avion, anglais : message traduit', (
     tester,
@@ -246,7 +249,7 @@ void main() {
     await submitHeavyParcelInPlane(tester);
 
     expect(
-      find.text('Above 32 kg, choose Road in the previous step.'),
+      find.text('This parcel is over 32 kg: change its weight or choose Road.'),
       findsOneWidget,
     );
   });

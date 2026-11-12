@@ -2218,15 +2218,22 @@ void main() {
       expect(bloc.state.isEditing, isFalse);
     });
 
-    Future<FieldChange<ItemSize>> sentChange(ItemSize? chosen) async {
+    /// Intention envoyée à la modification : [original] est la taille de la
+    /// demande chargée, [chosen] celle choisie ensuite (`touch: false` : le
+    /// formulaire n'y touche pas).
+    Future<FieldChange<ItemSize>> sentChange({
+      ItemSize? original,
+      ItemSize? chosen,
+      bool touch = true,
+    }) async {
       stubUpdate().thenAnswer((_) async => fakeRequest);
       final bloc = PackageRequestFormBloc(
         repo,
         analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-        editing: editable(size: ItemSize.l),
+        editing: editable(size: original),
       );
       addTearDown(bloc.close);
-      bloc.add(FormItemSizeChanged(chosen));
+      if (touch) bloc.add(FormItemSizeChanged(chosen));
       bloc.add(const FormStep3Submitted());
       await bloc.stream.firstWhere(
         (s) => s.submissionStatus == FormSubmissionStatus.success,
@@ -2251,14 +2258,81 @@ void main() {
       return captured.single as FieldChange<ItemSize>;
     }
 
+    test(
+      'édition sans toucher la taille : rien envoyé (le back garde)',
+      () async {
+        final change = await sentChange(original: ItemSize.l, touch: false);
+        expect(change.isKeep, isTrue);
+      },
+    );
+
+    test('édition, même taille re-choisie : rien envoyé', () async {
+      final change = await sentChange(original: ItemSize.l, chosen: ItemSize.l);
+      expect(change.isKeep, isTrue);
+    });
+
     test('édition, taille changée : envoyée', () async {
-      final change = await sentChange(ItemSize.s);
+      final change = await sentChange(original: ItemSize.l, chosen: ItemSize.s);
       expect(change.value, ItemSize.s);
     });
 
-    test('édition, taille retirée : effacée côté back (pas laissée)', () async {
-      final change = await sentChange(null);
+    test('édition, taille retirée : effacée côté back (NONE)', () async {
+      final change = await sentChange(original: ItemSize.l);
       expect(change.isClear, isTrue);
+    });
+
+    test('édition, demande chargée sans taille, jamais choisie : rien '
+        'effacé ni envoyé', () async {
+      final change = await sentChange(touch: false);
+      expect(change.isKeep, isTrue);
+    });
+
+    test('édition, demande chargée sans taille, une taille choisie : '
+        'envoyée', () async {
+      final change = await sentChange(chosen: ItemSize.m);
+      expect(change.value, ItemSize.m);
+    });
+
+    test('route passée en avion : la taille est effacée côté back', () async {
+      stubUpdate().thenAnswer((_) async => fakeRequest);
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: editable(size: ItemSize.l),
+      );
+      addTearDown(bloc.close);
+      // Poids compatible avec l'avion, pour que la garde du mode laisse passer.
+      bloc
+        ..add(
+          const FormStep2Submitted(
+            weightKg: 20,
+            parcelSize: ParcelSize.large,
+            categories: ['Meubles'],
+          ),
+        )
+        ..add(const FormTransportModeChanged(TransportMode.plane))
+        ..add(const FormStep3Submitted());
+      await bloc.stream.firstWhere(
+        (s) => s.submissionStatus == FormSubmissionStatus.success,
+      );
+      final captured = verify(
+        () => repo.update(
+          'r-1',
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          itemSize: captureAny(named: 'itemSize'),
+        ),
+      ).captured;
+      expect((captured.single as FieldChange<ItemSize>).isClear, isTrue);
     });
   });
 }

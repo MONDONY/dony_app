@@ -23614,5 +23614,9 @@
     "placeholders": {
       "max": {"type": "String"}
     }
+  },
+  "requestCreateWeightTooHeavySubmit": "Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.",
+  "@requestCreateWeightTooHeavySubmit": {
+    "description": "Message de la publication refusée : poids au-delà de 32 kg pour le mode choisi, affiché depuis l'étape budget (package_request_create_screen.dart)"
   }
 }

@@ -681,6 +681,53 @@ void main() {
       },
     );
 
+    Future<double?> submittedWeight(
+      WidgetTester tester,
+      String typed, {
+      TransportMode mode = TransportMode.car,
+    }) async {
+      viewport(tester);
+      final bloc = editing(mode: mode);
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key), bloc: bloc));
+      await tester.pump();
+      await tester.enterText(find.byType(TextFormField).first, typed);
+      await tester.pump();
+      key.currentState!.submit();
+      await tester.pump();
+      return bloc.state.currentStep == 2 ? bloc.state.weightKg : null;
+    }
+
+    testWidgets('route, anglais : « 1,200 » collé vaut 1 200 kg, pas 1,2', (
+      tester,
+    ) async {
+      useEnglish();
+      expect(await submittedWeight(tester, '1,200'), 1200);
+      // Le champ montre ce qui est retenu.
+      expect(find.widgetWithText(TextFormField, '1${sep}200'), findsOneWidget);
+    });
+
+    testWidgets('route, français : « 1 200 » vaut 1 200 kg', (tester) async {
+      expect(await submittedWeight(tester, '1 200'), 1200);
+    });
+
+    testWidgets('route : « 1.5 » vaut 1,5 et « 1200.5 » vaut 1 200,5', (
+      tester,
+    ) async {
+      expect(await submittedWeight(tester, '1.5'), 1.5);
+    });
+
+    testWidgets('route : « 1200.5 » vaut 1 200,5', (tester) async {
+      expect(await submittedWeight(tester, '1200.5'), 1200.5);
+    });
+
+    testWidgets('avion : « 1,200 » reste décimal, 1,2 kg', (tester) async {
+      expect(
+        await submittedWeight(tester, '1,200', mode: TransportMode.plane),
+        1.2,
+      );
+    });
+
     testWidgets('1 200,5 kg : décimale gardée', (tester) async {
       viewport(tester);
       final bloc = editing(mode: TransportMode.car);

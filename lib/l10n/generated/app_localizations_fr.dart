@@ -24347,4 +24347,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String requestCreateBudgetTechnicalMax(String max) {
     return 'Montant trop élevé : $max au maximum.';
   }
+
+  @override
+  String get requestCreateWeightTooHeavySubmit =>
+      'Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.';
 }

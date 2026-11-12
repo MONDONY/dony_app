@@ -24170,4 +24170,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String requestCreateBudgetTechnicalMax(String max) {
     return 'Amount too high: $max at most.';
   }
+
+  @override
+  String get requestCreateWeightTooHeavySubmit =>
+      'This parcel is over 32 kg: change its weight or choose Road.';
 }

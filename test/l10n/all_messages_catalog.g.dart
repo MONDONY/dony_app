@@ -8420,6 +8420,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.requestCreateBudgetMinOnly(placeholderMarker('min')),
   'requestCreateBudgetTechnicalMax': (l) =>
       l.requestCreateBudgetTechnicalMax(placeholderMarker('max')),
+  'requestCreateWeightTooHeavySubmit': (l) =>
+      l.requestCreateWeightTooHeavySubmit,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

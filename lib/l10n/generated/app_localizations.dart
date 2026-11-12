@@ -38987,6 +38987,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Montant trop élevé : {max} au maximum.'**
   String requestCreateBudgetTechnicalMax(String max);
+
+  /// Message de la publication refusée : poids au-delà de 32 kg pour le mode choisi, affiché depuis l'étape budget (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.'**
+  String get requestCreateWeightTooHeavySubmit;
 }
 
 class _AppLocalizationsDelegate

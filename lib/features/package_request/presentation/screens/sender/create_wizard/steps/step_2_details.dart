@@ -69,11 +69,15 @@ class Step2DetailsState extends State<Step2Details> {
   TransportMode? get _mode =>
       context.read<PackageRequestFormBloc>().state.requestTransportMode;
 
+  /// Route ou bateau : un `,` ou `.` ambigu du poids (« 1,200 ») y est un
+  /// séparateur de milliers.
+  bool get _heavy => _mode?.isHeavy ?? false;
+
   /// Mêmes bornes que le validateur du champ, pour le mode de la demande. Le
   /// gate se contentait de `v > 0` : « Continuer » s'activait sur 0,2 kg puis
   /// refusait la saisie.
   bool get _isWeightValid => PackageRequestLimits.isWeightValidFor(
-    parseWeightInput(_weightCtrl.text),
+    parseWeightInput(_weightCtrl.text, heavy: _heavy),
     _mode,
   );
 
@@ -81,7 +85,7 @@ class Step2DetailsState extends State<Step2Details> {
   /// d'une demande en route, puis mode passé en avion) : l'erreur se voit
   /// tout de suite, sans attendre « Continuer ».
   bool get _isWeightAboveMode {
-    final w = parseWeightInput(_weightCtrl.text);
+    final w = parseWeightInput(_weightCtrl.text, heavy: _heavy);
     return w != null && w > PackageRequestLimits.maxWeightFor(_mode);
   }
 
@@ -228,7 +232,7 @@ class Step2DetailsState extends State<Step2Details> {
   /// (`PackageRequestFormDraft`), validée ou non. Un poids illisible est
   /// laissé vide plutôt que gardé faux.
   Map<String, dynamic> get draftInput {
-    final w = parseWeightInput(_weightCtrl.text);
+    final w = parseWeightInput(_weightCtrl.text, heavy: _heavy);
     final desc = _descriptionCtrl.text.trim();
     return {
       'weightKg': w,
@@ -241,7 +245,7 @@ class Step2DetailsState extends State<Step2Details> {
   /// Vrai si l'étape porte une saisie que le bloc n'a pas encore reçue.
   bool get hasUnsubmittedInput {
     final s = context.read<PackageRequestFormBloc>().state;
-    final w = parseWeightInput(_weightCtrl.text);
+    final w = parseWeightInput(_weightCtrl.text, heavy: _heavy);
     final desc = _descriptionCtrl.text.trim();
     return w != s.weightKg ||
         !listEquals(_allCategories, s.categories) ||
@@ -259,7 +263,7 @@ class Step2DetailsState extends State<Step2Details> {
       _sync(markTouched: true);
       return;
     }
-    final w = parseWeightInput(_weightCtrl.text)!;
+    final w = parseWeightInput(_weightCtrl.text, heavy: _heavy)!;
     final desc = _descriptionCtrl.text.trim();
     context.read<PackageRequestFormBloc>().add(
       FormStep2Submitted(
@@ -560,7 +564,9 @@ class _WeightInput extends StatelessWidget {
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         // Milliers groupés pendant la frappe (« 1 200 »), chiffres et une
         // seule marque décimale.
-        inputFormatters: const [GroupedWeightInputFormatter()],
+        inputFormatters: [
+          GroupedWeightInputFormatter(heavy: mode?.isHeavy ?? false),
+        ],
         forceErrorText: forcedError,
         scrollPadding: kDonyKeyboardScrollPadding,
         style: tt.headlineMedium?.copyWith(
@@ -594,7 +600,7 @@ class _WeightInput extends StatelessWidget {
           ),
         ),
         validator: (v) {
-          final d = parseWeightInput(v ?? '');
+          final d = parseWeightInput(v ?? '', heavy: mode?.isHeavy ?? false);
           if (d == null) return context.l10n.requestCreateWeightInvalid;
           if (!PackageRequestLimits.isWeightValidFor(d, mode)) {
             return d > PackageRequestLimits.maxWeightFor(mode) &&
