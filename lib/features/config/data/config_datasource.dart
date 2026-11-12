@@ -1,4 +1,5 @@
 import 'package:dony/core/config/payment_methods_flag.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
@@ -77,5 +78,15 @@ class ConfigDatasource {
   Future<PaymentMethodFlags> getPaymentMethods() async {
     final response = await _client.dio.get('/config/payment-methods');
     return PaymentMethodFlags.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Modes de transport ouverts : `{"road": bool, "boat": bool}`. Champ absent :
+  /// faux. Un 404 remonte en `DioException`, le repository le traduit en avion
+  /// seul.
+  Future<TransportModesAvailability> getTransportModes() async {
+    final response = await _client.dio.get('/config/transport-modes');
+    return TransportModesAvailability.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
   }
 }

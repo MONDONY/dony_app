@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/config/payment_methods_flag.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
@@ -22,6 +23,10 @@ abstract class IConfigRepository {
   Future<CommissionGrid?> getCommissionGridById(String id);
 
   Future<PaymentMethodFlags> getPaymentMethods();
+
+  /// Modes de transport ouverts par le serveur. Jamais d'exception : un 404
+  /// (back sans la route) ou toute erreur rend [TransportModesAvailability.planeOnly].
+  Future<TransportModesAvailability> getTransportModes();
 }
 
 class ConfigRepository implements IConfigRepository {
@@ -120,6 +125,15 @@ class ConfigRepository implements IConfigRepository {
       return await _datasource.getPaymentMethods();
     } catch (e) {
       throw unwrapDioError(e);
+    }
+  }
+
+  @override
+  Future<TransportModesAvailability> getTransportModes() async {
+    try {
+      return await _datasource.getTransportModes();
+    } catch (_) {
+      return TransportModesAvailability.planeOnly;
     }
   }
 }
