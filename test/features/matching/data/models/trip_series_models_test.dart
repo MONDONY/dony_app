@@ -1,6 +1,7 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_series_result.dart';
 import 'package:dony/features/matching/data/models/trip_template_from_announcement.dart';
@@ -13,6 +14,8 @@ AnnouncementModel _trip({
   Set<BidPaymentMethod> methods = const {BidPaymentMethod.stripe},
   TransportMode? mode = TransportMode.plane,
   double totalKg = 23.4,
+  ItemSize? maxItemSize,
+  double? maxParcelWeightKg,
 }) => AnnouncementModel(
   id: 'a1',
   travelerId: 't1',
@@ -39,6 +42,8 @@ AnnouncementModel _trip({
   capacityUnit: 'SUITCASE_23KG',
   currency: 'XOF',
   negotiable: true,
+  maxItemSize: maxItemSize,
+  maxParcelWeightKg: maxParcelWeightKg,
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
 );
@@ -173,6 +178,90 @@ void main() {
       expect(t.transportMode, 'PLANE');
       expect(t.availableKg, 1);
       expect(t.cashAccepted, isFalse);
+    });
+
+    test('route arrivée à J+10 : décalage 10, jamais tronqué à 3', () {
+      final t = tripTemplateFromAnnouncement(
+        _trip(mode: TransportMode.car, arrivalDate: DateTime(2026, 11, 30)),
+        label: 'x',
+      );
+      expect(t.arrivalDayOffset, 10);
+    });
+
+    test('route : décalage borné à 14, bus compris', () {
+      for (final mode in [TransportMode.car, TransportMode.bus]) {
+        final t = tripTemplateFromAnnouncement(
+          _trip(mode: mode, arrivalDate: DateTime(2026, 12, 20)),
+          label: 'x',
+        );
+        expect(t.arrivalDayOffset, 14, reason: '$mode');
+      }
+    });
+
+    test('bateau : décalage jusqu\'à 120', () {
+      final t = tripTemplateFromAnnouncement(
+        _trip(mode: TransportMode.boat, arrivalDate: DateTime(2027, 1, 20)),
+        label: 'x',
+      );
+      expect(t.arrivalDayOffset, 61);
+      final far = tripTemplateFromAnnouncement(
+        _trip(mode: TransportMode.boat, arrivalDate: DateTime(2027, 6)),
+        label: 'x',
+      );
+      expect(far.arrivalDayOffset, 120);
+    });
+
+    test('avion à J+5 (ancienne donnée) : ramené à 3', () {
+      final t = tripTemplateFromAnnouncement(
+        _trip(arrivalDate: DateTime(2026, 11, 25)),
+        label: 'x',
+      );
+      expect(t.arrivalDayOffset, 3);
+    });
+
+    test('trajet route de 1 200 kg : capacité recopiée telle quelle', () {
+      final t = tripTemplateFromAnnouncement(
+        _trip(mode: TransportMode.car, totalKg: 1200),
+        label: 'x',
+      );
+      expect(t.availableKg, 1200);
+    });
+
+    test('capacité bornée par le mode : 999 en avion, 999 999 en bateau', () {
+      expect(
+        tripTemplateFromAnnouncement(
+          _trip(totalKg: 5000),
+          label: 'x',
+        ).availableKg,
+        999,
+      );
+      expect(
+        tripTemplateFromAnnouncement(
+          _trip(mode: TransportMode.boat, totalKg: 2000000),
+          label: 'x',
+        ).availableKg,
+        999999,
+      );
+    });
+
+    test('recopie la taille et le poids max par colis', () {
+      final t = tripTemplateFromAnnouncement(
+        _trip(
+          mode: TransportMode.car,
+          maxItemSize: ItemSize.l,
+          maxParcelWeightKg: 20.5,
+        ),
+        label: 'x',
+      );
+      expect(t.maxItemSize, ItemSize.l);
+      expect(t.maxParcelWeightKg, 20.5);
+    });
+
+    test('trajet sans taille ni poids max : modèle sans eux', () {
+      final t = tripTemplateFromAnnouncement(_trip(), label: 'x');
+      expect(t.maxItemSize, isNull);
+      expect(t.maxParcelWeightKg, isNull);
+      expect(t.toJson().containsKey('maxItemSize'), isFalse);
     });
 
     test(

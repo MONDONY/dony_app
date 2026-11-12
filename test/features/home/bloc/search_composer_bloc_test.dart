@@ -6,6 +6,7 @@ import 'package:dony/features/home/bloc/search_composer_event.dart';
 import 'package:dony/features/home/bloc/search_composer_state.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -29,6 +30,7 @@ void main() {
     registerFallbackValue(null as int?);
     registerFallbackValue(null as double?);
     registerFallbackValue(null as TransportMode?);
+    registerFallbackValue(null as ItemSize?);
     registerFallbackValue(null as DateTime?);
     registerFallbackValue(SearchMode.trips);
   });
@@ -213,6 +215,66 @@ void main() {
       expect(bloc.state.filters.arrivalCity, isNull);
       expect(bloc.state.filters.departureCity, isNull);
       expect(bloc.state.resultCount, 14);
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    'route : la taille minimale et la ville de passage partent au comptage',
+    build: build,
+    act: (bloc) => bloc.add(
+      const SearchComposerFiltersChanged(
+        HomeSearchFilters(
+          transportMode: TransportMode.car,
+          minItemSize: ItemSize.l,
+          viaCity: 'Tanger',
+        ),
+      ),
+    ),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      verify(
+        () => announcementRepo.countAnnouncements(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDateFrom: any(named: 'departureDateFrom'),
+          departureDateTo: any(named: 'departureDateTo'),
+          minAvailableKg: any(named: 'minAvailableKg'),
+          maxAvailableKg: any(named: 'maxAvailableKg'),
+          maxPricePerKg: any(named: 'maxPricePerKg'),
+          gpProOnly: any(named: 'gpProOnly'),
+          minRating: any(named: 'minRating'),
+          weekendOnly: any(named: 'weekendOnly'),
+          transportMode: TransportMode.car,
+          kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+          contentType: any(named: 'contentType'),
+          userLat: any(named: 'userLat'),
+          userLng: any(named: 'userLng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+          minItemSize: ItemSize.l,
+          viaCity: 'Tanger',
+        ),
+      ).called(1);
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    'tout effacer retire aussi le mode Route, la taille et la ville de '
+    'passage',
+    build: build,
+    seed: () => const SearchComposerState(
+      filters: HomeSearchFilters(
+        transportMode: TransportMode.car,
+        minItemSize: ItemSize.m,
+        viaCity: 'Tanger',
+      ),
+    ),
+    act: (bloc) => bloc.add(const SearchComposerCleared()),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      expect(bloc.state.filters.transportMode, isNull);
+      expect(bloc.state.filters.minItemSize, isNull);
+      expect(bloc.state.filters.viaCity, isNull);
     },
   );
 

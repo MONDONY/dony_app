@@ -12,6 +12,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_filled_fields_cubit.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_form_draft_availability_cubit.dart';
@@ -36,11 +37,13 @@ import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
@@ -1138,9 +1141,12 @@ class _TripFormContentState extends State<_TripFormContent> {
       }
       final arrivalDate = a.arrivalDate;
       if (arrivalDate != null) {
-        _arrivalDayOffsetNotifier.value = DateUtils.dateOnly(
-          arrivalDate,
-        ).difference(DateUtils.dateOnly(a.departureDate)).inDays.clamp(0, 2);
+        // Borné au mode du trajet (J+14 en route) : un trajet route à J+10
+        // ne doit pas être ramené à J+2 à l'ouverture.
+        _arrivalDayOffsetNotifier.value = DateUtils.dateOnly(arrivalDate)
+            .difference(DateUtils.dateOnly(a.departureDate))
+            .inDays
+            .clamp(0, transportModeOrPlane(a.transportMode).maxArrivalDays);
       }
       _pickupAddressNotifier.value = a.pickupAddress;
       _deliveryAddressNotifier.value = a.deliveryAddress;
@@ -1216,7 +1222,16 @@ class _TripFormContentState extends State<_TripFormContent> {
         // L'unité réécrit le kg à sa contenance (une valise) ; le kg du
         // trajet passe ensuite, sinon un trajet de deux valises, ou déjà
         // en partie réservé, s'enregistrait à une seule valise pleine.
-        formBloc.add(AvailableKgChanged(a.availableKg));
+        formBloc
+          ..add(const EditingTripStarted())
+          ..add(AvailableKgChanged(a.availableKg));
+        // Taille et poids max par colis du trajet routier : relus tels quels,
+        // renvoyés seulement si le voyageur les change (cf. _submit).
+        if (transportModeOrPlane(a.transportMode).hasItemSize) {
+          formBloc
+            ..add(MaxItemSizeChanged(a.maxItemSize))
+            ..add(MaxParcelWeightChanged(a.maxParcelWeightKg));
+        }
 
         final mode = a.pricingMode == 'MIXED'
             ? PricingMode.mixed
@@ -1331,6 +1346,10 @@ class _TripFormContentState extends State<_TripFormContent> {
     _availableKgNotifier.addListener(_syncKgToFormBloc);
     _descriptionCtrl.addListener(_syncDescriptionToFormBloc);
     _transportModeNotifier.addListener(_syncTransportModeToFormBloc);
+    _transportModeNotifier.addListener(_clampArrivalOffsetToMode);
+    // Modification et trajet dédié : le mode est posé avant ce listener. Le
+    // bloc doit le connaître (valises, plafond de capacité, taille max).
+    if (_isEdit || _isLocked) _syncTransportModeToFormBloc();
     _cashEnabledNotifier.addListener(_syncCashAcceptedToFormBloc);
     _mobileMoneyEnabledNotifier.addListener(_syncMobileMoneyAcceptedToFormBloc);
     _selectedContentNotifier.addListener(_syncAcceptedTypesToFormBloc);
@@ -1519,8 +1538,14 @@ class _TripFormContentState extends State<_TripFormContent> {
   }
 
   void _updateCanContinueStep1() {
+    // Capacité au-delà du plafond du mode ou poids max par colis hors bornes :
+    // « Continuer » grisé (Review Focus 4). Trajet dédié : capacité fixée par
+    // la demande, rien à vérifier ici.
+    final capacityValid =
+        _isLocked ||
+        context.read<AnnouncementFormBloc>().state.isCapacityStepValid;
     widget.canContinueStep1Notifier?.value =
-        _pickupAddress != null && _deliveryAddress != null;
+        _pickupAddress != null && _deliveryAddress != null && capacityValid;
     // « Touché » est arme uniquement a l'entree dans l'etape
     // (_markStep1TouchedOnEntry). L'armer aussi ici faisait s'ouvrir en rouge
     // une modification d'annonce n'ayant qu'une des deux adresses.
@@ -1808,6 +1833,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     // listeners partent ici.
     _transportModeNotifier.removeListener(_syncCanSubmit);
     _transportModeNotifier.removeListener(_syncTransportModeToFormBloc);
+    _transportModeNotifier.removeListener(_clampArrivalOffsetToMode);
     _transportModeNotifier.removeListener(_updateCanContinue);
     _transportModeNotifier.removeListener(_markStep0Touched);
     _cashEnabledNotifier.removeListener(_syncCashAcceptedToFormBloc);
@@ -2021,9 +2047,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         ? _formatTime(arrivalTimeVal)
         : null;
     // Envoyée seulement si l'arrivée est un autre jour que le départ.
-    final arrivalOffset = arrivalTimeVal != null
-        ? _arrivalDayOffsetNotifier.value
-        : 0;
+    final arrivalOffset = _effectiveArrivalOffset();
     final arrivalDate = arrivalOffset > 0
         ? DateFormat('yyyy-MM-dd').format(
             DateUtils.dateOnly(
@@ -2115,6 +2139,24 @@ class _TripFormContentState extends State<_TripFormContent> {
     final stops = supportsStops(transportMode) ? _stopsNotifier.value : null;
 
     final formBlocState = context.read<AnnouncementFormBloc>().state;
+    if (formBlocState.capacityTooHigh) {
+      _showError(
+        context.l10n.tripPublishCapacityTooHigh(
+          formatWeightKg(context.l10n, formBlocState.capacityMaxKg.toDouble()),
+        ),
+      );
+      return;
+    }
+    if (!formBlocState.isMaxParcelWeightValid) {
+      _showError(context.l10n.tripPublishMaxParcelWeightInvalid);
+      return;
+    }
+    // Taille et poids max par colis : route seulement, jamais un champ caché.
+    final hasParcelLimits = transportMode.hasItemSize;
+    final maxItemSize = hasParcelLimits ? formBlocState.maxItemSize : null;
+    final maxParcelWeightKg = hasParcelLimits
+        ? formBlocState.maxParcelWeightKg
+        : null;
     final capacityUnitWire = formBlocState.capacityUnit.toWire();
     final pricingModeWire = formBlocState.pricingMode == PricingMode.mixed
         ? 'MIXED'
@@ -2173,6 +2215,18 @@ class _TripFormContentState extends State<_TripFormContent> {
                   _currency.code != widget.announcement!.currency
               ? _currency.code
               : null,
+          // Envoyés seulement si le voyageur les a changés : absents, le
+          // serveur les garde ; effacés, il reçoit la sentinelle.
+          maxItemSize: _editChange(
+            maxItemSize,
+            widget.announcement!.maxItemSize,
+            hasParcelLimits,
+          ),
+          maxParcelWeightKg: _editChange(
+            maxParcelWeightKg,
+            widget.announcement!.maxParcelWeightKg,
+            hasParcelLimits,
+          ),
         ),
       );
     } else {
@@ -2202,6 +2256,8 @@ class _TripFormContentState extends State<_TripFormContent> {
         saveAsDraft: saveAsDraft,
         currency: _currency.code,
         fromAi: context.read<AiFilledFieldsCubit>().isFromAi,
+        maxItemSize: maxItemSize,
+        maxParcelWeightKg: maxParcelWeightKg,
       );
       // Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes partent
       // ensemble, en une transaction côté serveur.
@@ -2277,6 +2333,18 @@ class _TripFormContentState extends State<_TripFormContent> {
       }
       context.read<AnnouncementBloc>().add(event);
     }
+  }
+
+  /// Modification d'un champ facultatif : inchangé tant que la valeur du
+  /// formulaire est celle du trajet ouvert, ou que le mode n'en porte pas
+  /// (passer en avion efface les deux côté serveur).
+  static FieldChange<T> _editChange<T extends Object>(
+    T? current,
+    T? original,
+    bool applies,
+  ) {
+    if (!applies || current == original) return FieldChange<T>.keep();
+    return FieldChange.setOrClear(current);
   }
 
   Future<void> _confirmCurrenciesThenCreate(
@@ -2760,7 +2828,12 @@ class _TripFormContentState extends State<_TripFormContent> {
                 _availableKgNotifier.value = kg;
                 _applyingKgFromBloc = false;
               },
-              child: formChild,
+              child: BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
+                listenWhen: (prev, curr) =>
+                    prev.isCapacityStepValid != curr.isCapacityStepValid,
+                listener: (_, _) => _updateCanContinueStep1(),
+                child: formChild,
+              ),
             ),
       ),
     );
@@ -2788,20 +2861,25 @@ class _TripFormContentState extends State<_TripFormContent> {
     // Ville identique à celle déjà saisie : le notifier ne notifie pas, le
     // bloc garderait l'ancien code. Resynchronisation explicite.
     _syncCityToFormBloc();
-    _departureTimeNotifier.value = _timeOfDay(t.departureTime);
-    _arrivalTimeNotifier.value = _timeOfDay(t.arrivalTime);
-    // Vol de nuit mémorisé dans le modèle (FLUTTER-4E) ; sans heure
-    // d'arrivée, retour au jour même.
-    _arrivalDayOffsetNotifier.value = t.arrivalTime == null
-        ? 0
-        : t.arrivalDayOffset;
     // Le mode n'est pas repris du modèle (création seulement) : choisi à
     // l'étape Mode, il prime ; sans étape Mode, c'est l'avion. Un modèle
     // BOAT ou CAR ne change donc jamais en silence le mode du trajet. Un
-    // trajet dédié ne perd jamais le mode de sa demande.
+    // trajet dédié ne perd jamais le mode de sa demande. Posé AVANT le
+    // décalage d'arrivée : sinon `_clampArrivalOffsetToMode` remettrait à 0
+    // un J+3 d'avion venu d'un modèle avion.
     if (!_hasModeStep && !_isLocked) {
       _transportModeNotifier.value = TransportMode.plane;
     }
+    // Mode encore à choisir : celui du modèle est retenu pour le premier
+    // choix (`_clampArrivalOffsetToMode`).
+    _templateMode = _transportModeNotifier.value == null
+        ? transportModeFromWire(t.transportMode)
+        : null;
+    _departureTimeNotifier.value = _timeOfDay(t.departureTime);
+    _arrivalTimeNotifier.value = _timeOfDay(t.arrivalTime);
+    // Vol de nuit mémorisé dans le modèle (FLUTTER-4E), arrivée à J+N d'un
+    // modèle route ; borné au mode choisi.
+    _arrivalDayOffsetNotifier.value = _templateArrivalOffset(t);
     // Valeur optimiste immédiate ; `CapacityUnitChanged` ci-dessous réécrit
     // `availableKg` à `unit.maxKg` (valise 23/32 kg) côté bloc — l'event
     // `AvailableKgChanged` émis juste après restaure la valeur du modèle via
@@ -2871,6 +2949,15 @@ class _TripFormContentState extends State<_TripFormContent> {
         t.usesPriceGrid ? PricingMode.mixed : PricingMode.kg,
       ),
     );
+    // Taille et poids max par colis du modèle, si le mode choisi (ou encore à
+    // choisir) en porte : choisir ensuite l'avion les efface dans le bloc
+    // (`TransportModeChanged`), jamais envoyés en silence.
+    final mode = _transportModeNotifier.value;
+    if (mode == null || mode.hasItemSize) {
+      formBloc
+        ..add(MaxItemSizeChanged(t.maxItemSize))
+        ..add(MaxParcelWeightChanged(t.maxParcelWeightKg));
+    }
 
     DonySnackbar.show(
       context,
@@ -2935,6 +3022,8 @@ class _TripFormContentState extends State<_TripFormContent> {
       mobileMoneyEnabled: _mobileMoneyEnabledNotifier.value,
       negotiable: _negotiableNotifier.value,
       legs: context.read<TripLegsCubit>().state.legs,
+      maxItemSize: formState.maxItemSize,
+      maxParcelWeightKg: formState.maxParcelWeightKg,
     );
   }
 
@@ -2954,10 +3043,18 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureDateNotifier.value = d.departureDate;
     _departureTimeNotifier.value = _timeOfDay(d.departureTime);
     _arrivalTimeNotifier.value = _timeOfDay(d.arrivalTime);
-    _arrivalDayOffsetNotifier.value = d.arrivalTime == null
-        ? 0
-        : d.arrivalDayOffset;
-    _transportModeNotifier.value = _creationModeFrom(d.transportMode);
+    final draftMode = _creationModeFrom(d.transportMode);
+    // Le brouillon garde jusqu'à 120 jours (bateau) : borné ici au mode
+    // retenu, un J+10 de route devient J+3 en avion.
+    // Mode d'abord : son changement ramène le décalage à 0, la restauration
+    // pose ensuite le décalage du brouillon (borné au mode).
+    _transportModeNotifier.value = draftMode;
+    // Sans heure d'arrivée, le jour d'arrivée ne vaut qu'en route (C28).
+    _arrivalDayOffsetNotifier.value = effectiveArrivalOffset(
+      mode: draftMode,
+      hasArrivalTime: d.arrivalTime != null,
+      offset: d.arrivalDayOffset,
+    ).clamp(0, transportModeOrPlane(draftMode).maxArrivalDays);
     _stopsNotifier.value = d.stops;
     // Après la date : son listener réapplique un délai de modèle en attente.
     _pendingHandoverLeadDays = d.handoverLeadDays;
@@ -3001,6 +3098,12 @@ class _TripFormContentState extends State<_TripFormContent> {
     // Comme pour un modèle : l'unité réécrit le kg à son maximum, le kg
     // saisi passe ensuite.
     if (kg != null) formBloc.add(AvailableKgChanged(kg));
+    // Après le mode : vers un mode sans taille, le bloc les aurait effacés.
+    if (transportModeOrPlane(draftMode).hasItemSize) {
+      formBloc
+        ..add(MaxItemSizeChanged(d.maxItemSize))
+        ..add(MaxParcelWeightChanged(d.maxParcelWeightKg));
+    }
     final pricingMode = d.pricingMode == 'MIXED'
         ? PricingMode.mixed
         : PricingMode.kg;
@@ -3199,6 +3302,9 @@ class _TripFormContentState extends State<_TripFormContent> {
               : null,
           // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
           lockedCapacityKg: _isLocked ? widget.lockContext!.weightKg : null,
+          lockedTransportMode: _isLocked
+              ? widget.lockContext!.transportMode
+              : null,
         ),
       ),
     ];
@@ -3307,6 +3413,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         descriptionCtrl: _descriptionCtrl,
         customAcceptedCtrl: _customAcceptedCtrl,
         refusedCtrl: _refusedCtrl,
+        isRoad: _transportModeNotifier.value?.isRoad ?? false,
       ),
       // Voyage à plusieurs étapes (FLUTTER-4D), sous les conditions (C5) :
       // création seulement. Une modification touche une seule étape, un
@@ -3336,9 +3443,63 @@ class _TripFormContentState extends State<_TripFormContent> {
             // premier trajet.
             showStops: supportsStops(_transportModeNotifier.value),
             defaultStops: _stopsNotifier.value,
+            isRoad: _transportModeNotifier.value?.isRoad ?? false,
           ),
         ),
     ];
+  }
+
+  /// Décalage d'arrivée à envoyer : en route il compte même sans heure
+  /// d'arrivée (C28), ailleurs seulement avec une heure (`effectiveArrivalOffset`).
+  int _effectiveArrivalOffset() => effectiveArrivalOffset(
+    mode: _transportModeNotifier.value,
+    hasArrivalTime: _arrivalTimeNotifier.value != null,
+    offset: _arrivalDayOffsetNotifier.value,
+  );
+
+  /// Changement de mode : un décalage au-delà de ce que les puces du nouveau
+  /// mode proposent (J+10 ou J+3 de route repassé en avion, puces 0 à 2) est
+  /// ramené au jour même, jamais envoyé en silence (Review Focus 4 et 5).
+  /// L'ouverture en modification garde la valeur du serveur : seul un
+  /// changement de mode passe ici.
+  ///
+  /// Exception : le premier mode choisi après un modèle du MÊME mode garde le
+  /// décalage du modèle jusqu'au maximum du mode (vol avion à J+3 enregistré
+  /// dans le modèle) : ce n'est pas un changement de mode.
+  void _clampArrivalOffsetToMode() {
+    final mode = _transportModeNotifier.value;
+    if (mode == null) return;
+    final templateMode = _templateMode;
+    _templateMode = null;
+    if (_arrivalDayOffsetNotifier.value > _offsetLimit(mode, templateMode)) {
+      _arrivalDayOffsetNotifier.value = 0;
+    }
+  }
+
+  /// Mode du dernier modèle appliqué, tant que le voyageur n'a pas choisi
+  /// son mode (étape Mode après le modèle). Consommé au premier choix.
+  TransportMode? _templateMode;
+
+  /// Plus grand décalage gardé pour [mode] : le maximum du mode quand il est
+  /// celui du modèle, sinon ce que ses puces proposent (route J+3 repassé en
+  /// avion : 0, Review Focus 5).
+  static int _offsetLimit(TransportMode mode, TransportMode? templateMode) =>
+      mode == templateMode ? mode.maxArrivalDays : arrivalChipsMaxDays(mode);
+
+  /// Décalage d'arrivée repris d'un modèle. Mode déjà connu (avion seul,
+  /// trajet dédié) : le mode choisi prime, un décalage hors de ses bornes
+  /// revient au jour même. Mode encore inconnu (étape Mode après le modèle) :
+  /// gardé tel quel, `_clampArrivalOffsetToMode` le borne au choix du mode.
+  int _templateArrivalOffset(TripTemplate t) {
+    final mode = _transportModeNotifier.value;
+    if (mode == null) return t.arrivalDayOffset;
+    final offset = effectiveArrivalOffset(
+      mode: mode,
+      hasArrivalTime: t.arrivalTime != null,
+      offset: t.arrivalDayOffset,
+    );
+    final templateMode = transportModeFromWire(t.transportMode);
+    return offset > _offsetLimit(mode, templateMode) ? 0 : offset;
   }
 
   /// Arrivée du trajet saisi, d'où part la première étape ajoutée
@@ -3347,9 +3508,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     final city = _arrivalCityNotifier.value;
     final date = _departureDateNotifier.value;
     if (city == null || city.isEmpty || date == null) return null;
-    final offset = _arrivalTimeNotifier.value != null
-        ? _arrivalDayOffsetNotifier.value
-        : 0;
+    final offset = _effectiveArrivalOffset();
     return TripLegOrigin(
       city: city,
       countryCode: _arrivalCountryCodeNotifier.value,

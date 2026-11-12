@@ -14,9 +14,11 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/presentation/widgets/search_period.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/features/matching/presentation/widgets/item_size_selector.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -634,10 +636,16 @@ class WeightField extends StatelessWidget {
     super.key,
     required this.weightKg,
     required this.onChanged,
+    this.sliderMaxKg = kCapacitySliderMaxKg,
   });
 
   /// Poids minimal choisi ; `null` = aucun minimum (« Tous »).
   final double? weightKg;
+
+  /// Extrémité haute du curseur ([capacitySliderMaxKgFor] : 1 000 kg en route,
+  /// 50 sinon). Un minimum au-delà, posé depuis l'accueil avant un changement
+  /// de mode, est ramené à cette borne : un `Slider` hors de ses bornes plante.
+  final double sliderMaxKg;
 
   /// Reçoit `null` quand le curseur est laissé à son minimum : aucune borne.
   final ValueChanged<double?> onChanged;
@@ -693,10 +701,11 @@ class WeightField extends StatelessWidget {
   void _showWeightPicker(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    // Un minimum posé par la feuille Capacité (jusqu'à 50 kg) ou par la
-    // phrase peut sortir du curseur : on le ramène dans ses bornes.
+    // Un minimum posé par la feuille Capacité de l'accueil (jusqu'à 1 000 kg
+    // en route) peut sortir du curseur du mode courant : on le ramène dans ses
+    // bornes plutôt que de planter le `Slider`.
     double local = (weightKg ?? kCapacitySliderMinKg)
-        .clamp(kCapacitySliderMinKg, kCapacitySliderMaxKg)
+        .clamp(kCapacitySliderMinKg, sliderMaxKg)
         .toDouble();
     showModalBottomSheet<void>(
       context: context,
@@ -744,9 +753,8 @@ class WeightField extends StatelessWidget {
                 child: Slider(
                   value: local,
                   min: kCapacitySliderMinKg,
-                  max: kCapacitySliderMaxKg,
-                  divisions: (kCapacitySliderMaxKg - kCapacitySliderMinKg)
-                      .toInt(),
+                  max: sliderMaxKg,
+                  divisions: (sliderMaxKg - kCapacitySliderMinKg).toInt(),
                   onChanged: (v) => setS(() => local = v),
                 ),
               ),
@@ -871,6 +879,61 @@ Future<void> showPricePicker(
       ),
     ),
   );
+}
+
+/// Sélecteur de la taille de colis minimale que le trajet accepte (route).
+///
+/// [size] est la taille courante, `null` si aucun filtre ; [onApply] reçoit
+/// `null` quand aucune taille n'est retenue (un second tap sur la tuile choisie
+/// la désélectionne, la taille est facultative). Le bouton « Appliquer » vit
+/// dans `stickyBottom`, hors de la zone qui défile. Feuille de confort : pas
+/// d'`analyticsName` (le filtre posé part en `search_filter_applied`).
+Future<void> showItemSizePicker(
+  BuildContext context, {
+  required ItemSize? size,
+  required ValueChanged<ItemSize?> onApply,
+}) async {
+  // Seul un geste de l'utilisateur écrit dans ce notifier : on peut le libérer
+  // à la fermeture de la feuille.
+  final selected = ValueNotifier<ItemSize?>(size);
+  await DonyBottomSheet.show<void>(
+    context,
+    title: context.l10n.homeFilterChipsItemSize,
+    child: Builder(
+      builder: (ctx) {
+        final tt = Theme.of(ctx).textTheme;
+        final cs = Theme.of(ctx).colorScheme;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ValueListenableBuilder<ItemSize?>(
+              valueListenable: selected,
+              builder: (_, local, _) => ItemSizeSelector(
+                sizes: ItemSize.values,
+                selected: local,
+                onChanged: (v) => selected.value = v,
+              ),
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              ctx.l10n.homeComposerItemSizeHint,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        );
+      },
+    ),
+    stickyBottom: Builder(
+      builder: (ctx) => DonyButton(
+        label: ctx.l10n.commonApply,
+        onPressed: () {
+          onApply(selected.value);
+          Navigator.of(ctx).pop();
+        },
+      ),
+    ),
+  ).whenComplete(selected.dispose);
 }
 
 /// Sélecteur de mode de transport. [modes] : les modes proposés à la

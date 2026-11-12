@@ -7,6 +7,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
@@ -586,7 +587,7 @@ class _ParcelSummary extends StatelessWidget {
                     borderRadius: BorderRadius.circular(DonyRadius.full),
                   ),
                   child: Text(
-                    '${weight.toStringAsFixed(weight % 1 == 0 ? 0 : 1)} kg',
+                    formatWeightKg(context.l10n, weight),
                     style: tt.labelMedium?.copyWith(
                       color: cs.primary,
                       fontWeight: FontWeight.w700,

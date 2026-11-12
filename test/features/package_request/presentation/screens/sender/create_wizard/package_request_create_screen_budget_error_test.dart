@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -198,4 +199,90 @@ void main() {
       expect(find.text('Enter a budget to continue'), findsOneWidget);
     },
   );
+
+  /// Poids de route repris après un retour pour passer en avion : le bloc
+  /// refuse la publication (`weightTooHeavyForMode`), le SnackBar dit
+  /// pourquoi, dans la langue de l'app.
+  Future<void> submitHeavyParcelInPlane(WidgetTester tester) async {
+    await tester.pumpWidget(buildHarness());
+    await tester.tap(find.byKey(const Key('open-create')));
+    await tester.pumpAndSettle();
+
+    capturedBloc
+      ..add(
+        FormStep1Submitted(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 8, 15),
+          dateToleranceDays: 3,
+          transportMode: TransportMode.plane,
+        ),
+      )
+      ..add(
+        const FormStep2Submitted(
+          weightKg: 1200,
+          parcelSize: ParcelSize.large,
+          categories: ['Meubles'],
+        ),
+      )
+      ..add(const FormStep3Submitted(targetPriceEur: 100));
+    await tester.pumpAndSettle();
+  }
+
+  void openRoad() {
+    setTransportModes(
+      const TransportModesAvailability(road: true, boat: false),
+    );
+    addTearDown(resetTransportModesForTest);
+  }
+
+  testWidgets(
+    'poids de route en avion : le SnackBar propose de changer le poids ou de choisir Route',
+    (tester) async {
+      openRoad();
+      await submitHeavyParcelInPlane(tester);
+
+      expect(
+        find.text(
+          'Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('poids de route en avion, anglais : message traduit', (
+    tester,
+  ) async {
+    useEnglish();
+    openRoad();
+    await submitHeavyParcelInPlane(tester);
+
+    expect(
+      find.text('This parcel is over 32 kg: change its weight or choose Road.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'avion seul (route éteinte) : le SnackBar ne parle pas de Route',
+    (tester) async {
+      resetTransportModesForTest();
+      await submitHeavyParcelInPlane(tester);
+
+      expect(find.text('Entre 0,5 et 32 kg'), findsOneWidget);
+      expect(find.textContaining('choisissez Route'), findsNothing);
+    },
+  );
+
+  testWidgets('avion seul, anglais : « Between 0.5 and 32 kg »', (
+    tester,
+  ) async {
+    useEnglish();
+    resetTransportModesForTest();
+    await submitHeavyParcelInPlane(tester);
+
+    expect(find.text('Between 0.5 and 32 kg'), findsOneWidget);
+    expect(find.textContaining('choose Road'), findsNothing);
+  });
 }

@@ -1,4 +1,5 @@
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
@@ -258,6 +259,57 @@ void main() {
         (key: 'k/a', localPath: '/a.jpg'),
       ], fileExists: (_) => true);
       expect(cubit.readyKeys, ['k/x']);
+    });
+  });
+
+  group('PackageRequestFormDraft : taille du colis', () {
+    test('aller-retour : la taille est gardée en route', () {
+      final json = PackageRequestFormDraft.encode(
+        _full().copyWith(
+          transportMode: TransportMode.car,
+          weightKg: 1200,
+          itemSize: ItemSize.xl,
+        ),
+      );
+      expect(json['itemSize'], 'XL');
+      final back = PackageRequestFormDraft.decode(json, now: _now);
+      expect(back.itemSize, ItemSize.xl);
+      expect(back.weightKg, 1200);
+    });
+
+    test('ancien brouillon sans clé : aucune taille', () {
+      final json = PackageRequestFormDraft.encode(
+        _full().copyWith(transportMode: TransportMode.car),
+      )..remove('itemSize');
+      expect(PackageRequestFormDraft.decode(json, now: _now).itemSize, isNull);
+    });
+
+    test('valeur inconnue : aucune taille, pas d\'exception', () {
+      final json = PackageRequestFormDraft.encode(
+        _full().copyWith(transportMode: TransportMode.car),
+      )..['itemSize'] = 'XXL';
+      expect(PackageRequestFormDraft.decode(json, now: _now).itemSize, isNull);
+    });
+
+    test('brouillon repassé en avion : la taille est écartée', () {
+      final json = PackageRequestFormDraft.encode(
+        _full().copyWith(
+          transportMode: TransportMode.car,
+          itemSize: ItemSize.l,
+        ),
+      )..['transportMode'] = 'PLANE';
+      expect(PackageRequestFormDraft.decode(json, now: _now).itemSize, isNull);
+    });
+
+    test('peu importe : la taille est gardée', () {
+      final json = PackageRequestFormDraft.encode(
+        _full().copyWith(transportModeAny: true, itemSize: ItemSize.m),
+      );
+      expect(json['transportMode'], 'ANY');
+      expect(
+        PackageRequestFormDraft.decode(json, now: _now).itemSize,
+        ItemSize.m,
+      );
     });
   });
 }

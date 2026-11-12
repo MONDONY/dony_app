@@ -283,8 +283,10 @@ class TrajetStep extends StatelessWidget {
           departureTimeNotifier,
           arrivalTimeNotifier,
           ?arrivalDayOffsetNotifier,
+          ?transportModeNotifier,
         ]),
         builder: (context, _) {
+          final isRoad = transportModeNotifier?.value?.isRoad ?? false;
           return Column(
             children: [
               // ── Corridor départ → arrivée ───────────────────────────────
@@ -388,40 +390,50 @@ class TrajetStep extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.sm),
               // ── Heure d'arrivée (optionnel) — DonyTextField.tappable ───
-              DonyTextField.tappable(
-                key: const Key('arrivalTimeField'),
-                label: l.tripPublishArrivalTimeOptionalLabel,
-                value: arrivalTimeNotifier.value != null
-                    ? '${arrivalTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${arrivalTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
-                    : null,
-                prefixIcon: DonyIcons.time,
-                prefixIconColor: Theme.of(context).colorScheme.secondary,
-                trailing: arrivalTimeNotifier.value != null
-                    ? IconButton(
-                        tooltip: l.tripPublishClearArrivalTimeTooltip,
-                        icon: Icon(
-                          DonyIcons.close,
+              // Masquée en route (C28) : seul le jour d'arrivée compte. Un
+              // ancien trajet route qui en porte une la garde, pour qu'elle
+              // reste visible et effaçable.
+              if (!isRoad || arrivalTimeNotifier.value != null)
+                DonyTextField.tappable(
+                  key: const Key('arrivalTimeField'),
+                  label: l.tripPublishArrivalTimeOptionalLabel,
+                  value: arrivalTimeNotifier.value != null
+                      ? '${arrivalTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${arrivalTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
+                      : null,
+                  prefixIcon: DonyIcons.time,
+                  prefixIconColor: Theme.of(context).colorScheme.secondary,
+                  trailing: arrivalTimeNotifier.value != null
+                      ? IconButton(
+                          tooltip: l.tripPublishClearArrivalTimeTooltip,
+                          icon: Icon(
+                            DonyIcons.close,
+                            size: 18,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                          onPressed: () => arrivalTimeNotifier.value = null,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 44,
+                            minHeight: 44,
+                          ),
+                        )
+                      : Icon(
+                          DonyIcons.chevron,
                           size: 18,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                        onPressed: () => arrivalTimeNotifier.value = null,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 44,
-                          minHeight: 44,
-                        ),
-                      )
-                    : Icon(
-                        DonyIcons.chevron,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                onTap: () => onSelectArrivalTime(),
-              ),
+                  onTap: () => onSelectArrivalTime(),
+                ),
               if (arrivalDayOffsetNotifier != null &&
-                  arrivalTimeNotifier.value != null) ...[
+                  (isRoad || arrivalTimeNotifier.value != null)) ...[
                 const SizedBox(height: DonySpacing.sm),
-                ArrivalDayChips(notifier: arrivalDayOffsetNotifier!),
+                ArrivalDayChips(
+                  notifier: arrivalDayOffsetNotifier!,
+                  maxDays: arrivalChipsMaxDays(transportModeNotifier?.value),
+                  departureDate: departureDateNotifier.value,
+                ),
               ],
               const SizedBox(height: DonySpacing.sm),
               // ── Date de départ * — DonyTextField.tappable ─────────────

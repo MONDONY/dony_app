@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_detail_cubit.dart';
 import 'package:dony/features/package_request/bloc/package_request_detail_state.dart';
@@ -18,26 +19,31 @@ import 'package:intl/date_symbol_data_local.dart';
 class _MockDetailCubit extends MockCubit<PackageRequestDetailState>
     implements PackageRequestDetailCubit {}
 
-PackageRequest _request({double? gross = 45, bool negotiable = true}) =>
-    PackageRequest(
-      id: 'r1',
-      senderId: 's1',
-      departureCity: 'Lyon',
-      arrivalCity: 'Abidjan',
-      desiredDate: DateTime(2026, 10, 23),
-      dateToleranceDays: 3,
-      weightKg: 8,
-      parcelSize: ParcelSize.medium,
-      transportMode: TransportMode.plane,
-      categories: const ['Vêtements', 'Chaussures'],
-      grossPriceEur: gross,
-      negotiable: negotiable,
-      acceptedPaymentMethods: const {PaymentMethod.stripe},
-      pickupNeighborhood: 'Guillotière',
-      deliveryNeighborhood: 'Cocody',
-      status: PackageRequestStatus.open,
-      createdAt: DateTime(2026, 10),
-    );
+PackageRequest _request({
+  double? gross = 45,
+  bool negotiable = true,
+  double weightKg = 8,
+  ItemSize? itemSize,
+}) => PackageRequest(
+  id: 'r1',
+  senderId: 's1',
+  departureCity: 'Lyon',
+  arrivalCity: 'Abidjan',
+  desiredDate: DateTime(2026, 10, 23),
+  dateToleranceDays: 3,
+  weightKg: weightKg,
+  itemSize: itemSize,
+  parcelSize: ParcelSize.medium,
+  transportMode: TransportMode.plane,
+  categories: const ['Vêtements', 'Chaussures'],
+  grossPriceEur: gross,
+  negotiable: negotiable,
+  acceptedPaymentMethods: const {PaymentMethod.stripe},
+  pickupNeighborhood: 'Guillotière',
+  deliveryNeighborhood: 'Cocody',
+  status: PackageRequestStatus.open,
+  createdAt: DateTime(2026, 10),
+);
 
 const _base = 'https://api.yadony.test/api/v1';
 
@@ -165,6 +171,27 @@ void main() {
 
       expect(copied, ['$_base/demande/r1?c=lien']);
       expect(find.text('Lien copié'), findsOneWidget);
+    });
+
+    testWidgets('légende : poids décimal à la française, taille choisie', (
+      tester,
+    ) async {
+      await _pumpScreen(tester, request: _request(weightKg: 2.5));
+      await _tapAction(tester, 'Copier la légende');
+      expect(copied.single, contains('⚖️ 2,5 kg, format'));
+      expect(copied.single, isNot(contains('2.5')));
+    });
+
+    testWidgets('légende : 1 200 kg groupés et taille L choisie', (
+      tester,
+    ) async {
+      await _pumpScreen(
+        tester,
+        request: _request(weightKg: 1200, itemSize: ItemSize.l),
+      );
+      await _tapAction(tester, 'Copier la légende');
+      expect(copied.single, contains('⚖️ 1\u202f200 kg · taille L'));
+      expect(copied.single, isNot(contains('format')));
     });
 
     testWidgets('la légende reprend la demande et porte le lien', (

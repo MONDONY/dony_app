@@ -3,7 +3,9 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/announcement_payload.dart';
 import 'package:dony/features/matching/data/models/announcement_search_page.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
@@ -46,6 +48,8 @@ class AnnouncementRemoteDatasource {
     bool negotiable = false,
     bool saveAsDraft = false,
     String? currency,
+    ItemSize? maxItemSize,
+    double? maxParcelWeightKg,
   }) async {
     final response = await _apiClient.dio.post(
       '/announcements',
@@ -74,6 +78,8 @@ class AnnouncementRemoteDatasource {
         negotiable: negotiable,
         saveAsDraft: saveAsDraft,
         currency: currency,
+        maxItemSize: maxItemSize,
+        maxParcelWeightKg: maxParcelWeightKg,
       ).toJson(),
     );
 
@@ -247,6 +253,8 @@ class AnnouncementRemoteDatasource {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
   }) async {
     final result = await searchAnnouncementsPage(
       departureCity: departureCity,
@@ -271,6 +279,8 @@ class AnnouncementRemoteDatasource {
       urgent: urgent,
       maxStops: maxStops,
       paymentMethods: paymentMethods,
+      minItemSize: minItemSize,
+      viaCity: viaCity,
     );
     return result.content;
   }
@@ -298,6 +308,8 @@ class AnnouncementRemoteDatasource {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
     bool includeFull = false,
   }) async {
     final params = <String, dynamic>{
@@ -329,6 +341,8 @@ class AnnouncementRemoteDatasource {
         urgent: urgent,
         maxStops: maxStops,
         paymentMethods: paymentMethods,
+        minItemSize: minItemSize,
+        viaCity: viaCity,
       ),
     };
     final response = await _apiClient.dio.get(
@@ -371,6 +385,8 @@ class AnnouncementRemoteDatasource {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
   }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/announcements',
@@ -397,6 +413,8 @@ class AnnouncementRemoteDatasource {
           urgent: urgent,
           maxStops: maxStops,
           paymentMethods: paymentMethods,
+          minItemSize: minItemSize,
+          viaCity: viaCity,
         ),
       },
     );
@@ -430,6 +448,8 @@ class AnnouncementRemoteDatasource {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
   }) => <String, dynamic>{
     'departureCity': ?departureCity,
     'arrivalCity': ?arrivalCity,
@@ -460,6 +480,11 @@ class AnnouncementRemoteDatasource {
     // filtrés côté serveur. Jamais de liste vide.
     if (paymentMethods != null && paymentMethods.isNotEmpty)
       'paymentMethods': paymentMethods.join(','),
+    // Route : taille minimale (STRICTE côté back : un trajet sans taille
+    // maximum n'apparaît pas) et ville où une étape publiée du voyage
+    // s'arrête. Absents sans filtre ; un back antérieur les ignore.
+    if (minItemSize != null) 'minItemSize': itemSizeToWire(minItemSize),
+    if (viaCity != null && viaCity.trim().isNotEmpty) 'viaCity': viaCity.trim(),
   };
 
   Future<void> deleteAnnouncement(String id) async {
@@ -502,6 +527,8 @@ class AnnouncementRemoteDatasource {
     required DateTime handoverDeadline,
     bool negotiable = false,
     String? currency,
+    FieldChange<ItemSize> maxItemSize = const FieldChange.keep(),
+    FieldChange<double> maxParcelWeightKg = const FieldChange.keep(),
   }) async {
     final response = await _apiClient.dio.put(
       '/announcements/$id',
@@ -533,6 +560,10 @@ class AnnouncementRemoteDatasource {
         // Absente : devise inchangée. Présente seulement sur un trajet sans
         // demande ni offre (FLUTTER-KV), sinon 409 `currency-locked`.
         'currency': ?currency,
+        // Absents : taille et poids max conservés. Pour les effacer, passer
+        // `FieldChange.clear()` (sentinelles `NONE` et `0`).
+        ...itemSizeEntry('maxItemSize', maxItemSize),
+        ...maxParcelWeightEntry(maxParcelWeightKg),
       },
     );
 

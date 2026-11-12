@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -268,6 +269,56 @@ void main() {
       expect(transportModeToRequestWire(TransportMode.plane), 'PLANE');
       expect(transportModeToRequestWire(TransportMode.car), 'CAR');
       expect(transportModeToRequestWire(TransportMode.boat), 'BOAT');
+    });
+  });
+
+  group('PackageRequest.itemSize', () {
+    Map<String, dynamic> json([Map<String, dynamic> extra = const {}]) => {
+      'id': 'aaa-111',
+      'senderId': 'sender-1',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'weightKg': 5,
+      'parcelSize': 'SMALL',
+      'status': 'OPEN',
+      'createdAt': '2026-05-10T10:00:00Z',
+      ...extra,
+    };
+
+    test('clé absente (back antérieur) : null', () {
+      expect(PackageRequest.fromJson(json()).itemSize, isNull);
+    });
+
+    test('L lue', () {
+      expect(
+        PackageRequest.fromJson(json({'itemSize': 'L'})).itemSize,
+        ItemSize.l,
+      );
+    });
+
+    test('valeur inconnue : null, sans exception', () {
+      expect(
+        PackageRequest.fromJson(json({'itemSize': 'XXL'})).itemSize,
+        isNull,
+      );
+    });
+
+    test('poids décimal jusqu\'à 999 999,99, entier JSON lu en double', () {
+      expect(
+        PackageRequest.fromJson(json({'weightKg': 999999.99})).weightKg,
+        999999.99,
+      );
+      expect(
+        PackageRequest.fromJson(json({'weightKg': 1200})).weightKg,
+        1200.0,
+      );
+    });
+
+    test('la taille compte dans l\'égalité', () {
+      expect(
+        PackageRequest.fromJson(json({'itemSize': 'M'})),
+        isNot(PackageRequest.fromJson(json({'itemSize': 'L'}))),
+      );
     });
   });
 }

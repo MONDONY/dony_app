@@ -1,6 +1,8 @@
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/announcement_search_page.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
@@ -283,6 +285,59 @@ void main() {
       ).called(1);
     },
   );
+
+  test('taille minimale et « Passe par » : les trois recherches les '
+      'délèguent', () async {
+    when(
+      () => mockDs.searchAnnouncements(
+        minItemSize: any(named: 'minItemSize'),
+        viaCity: any(named: 'viaCity'),
+      ),
+    ).thenAnswer((_) async => [_ann()]);
+    when(
+      () => mockDs.searchAnnouncementsPage(
+        minItemSize: any(named: 'minItemSize'),
+        viaCity: any(named: 'viaCity'),
+      ),
+    ).thenAnswer(
+      (_) async =>
+          const AnnouncementSearchPage(content: [], totalElements: 0, page: 0),
+    );
+    when(
+      () => mockDs.countAnnouncements(
+        minItemSize: any(named: 'minItemSize'),
+        viaCity: any(named: 'viaCity'),
+      ),
+    ).thenAnswer((_) async => 3);
+
+    await repo.searchAnnouncements(minItemSize: ItemSize.l, viaCity: 'Tanger');
+    await repo.searchAnnouncementsPage(
+      minItemSize: ItemSize.l,
+      viaCity: 'Tanger',
+    );
+    final total = await repo.countAnnouncements(
+      minItemSize: ItemSize.l,
+      viaCity: 'Tanger',
+    );
+
+    expect(total, 3);
+    verify(
+      () => mockDs.searchAnnouncements(
+        minItemSize: ItemSize.l,
+        viaCity: 'Tanger',
+      ),
+    ).called(1);
+    verify(
+      () => mockDs.searchAnnouncementsPage(
+        minItemSize: ItemSize.l,
+        viaCity: 'Tanger',
+      ),
+    ).called(1);
+    verify(
+      () =>
+          mockDs.countAnnouncements(minItemSize: ItemSize.l, viaCity: 'Tanger'),
+    ).called(1);
+  });
 
   test('deleteAnnouncement delegates correctly', () async {
     when(() => mockDs.deleteAnnouncement('ann-1')).thenAnswer((_) async {});

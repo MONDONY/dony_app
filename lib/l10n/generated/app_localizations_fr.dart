@@ -1128,6 +1128,46 @@ class AppLocalizationsFr extends AppLocalizations {
       'La date d\'arrivée est trop loin après le départ pour ce mode.';
 
   @override
+  String get errorWeightTooHeavyTitle => 'Poids trop élevé';
+
+  @override
+  String get errorWeightTooHeavyMessage =>
+      'Ce poids dépasse le maximum accepté pour ce mode de transport.';
+
+  @override
+  String get errorTripCapacityTooHighTitle => 'Capacité trop élevée';
+
+  @override
+  String get errorTripCapacityTooHighMessage =>
+      'La capacité dépasse le maximum accepté pour ce mode de transport.';
+
+  @override
+  String get errorParcelTooHeavyTitle => 'Colis trop lourd';
+
+  @override
+  String get errorParcelTooHeavyMessage =>
+      'Ce colis dépasse le poids maximum accepté par ce voyageur.';
+
+  @override
+  String get errorParcelTooBigTitle => 'Colis trop volumineux';
+
+  @override
+  String get errorParcelTooBigMessage =>
+      'Ce colis dépasse la taille maximum acceptée par ce voyageur.';
+
+  @override
+  String get itemSizeSDescription => 'Sac';
+
+  @override
+  String get itemSizeMDescription => 'Carton';
+
+  @override
+  String get itemSizeLDescription => 'Valise, chaise';
+
+  @override
+  String get itemSizeXlDescription => 'Meuble';
+
+  @override
   String get errorConflictTitle => 'Action impossible';
 
   @override
@@ -2347,6 +2387,27 @@ class AppLocalizationsFr extends AppLocalizations {
       'Type de contenu, note, escales, paiement';
 
   @override
+  String get homeComposerMoreFiltersHintRoad =>
+      'Type de contenu, note, ville de passage, paiement';
+
+  @override
+  String get homeComposerSectionItemSize => 'TAILLE DU COLIS';
+
+  @override
+  String get homeComposerItemSizeHint =>
+      'Trajets qui acceptent au moins cette taille.';
+
+  @override
+  String get homeComposerSectionVia => 'PASSE PAR';
+
+  @override
+  String get homeComposerViaHint => 'Une ville sur la route (ex. Tanger)';
+
+  @override
+  String get homeComposerViaHelp =>
+      'Pour confier un colis à un voyageur dont le voyage s\'arrête dans votre ville.';
+
+  @override
   String get homeComposerSectionTransport => 'TRANSPORT';
 
   @override
@@ -2470,6 +2531,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeFilterChipsSuitcase23 => '🧳 Valise 23 kg';
+
+  @override
+  String get homeFilterChipsItemSize => 'Taille';
+
+  @override
+  String homeFilterChipsItemSizeActive(String size) {
+    return 'Taille $size et +';
+  }
 
   @override
   String get homeFilterFieldsPeriod => 'PÉRIODE';
@@ -3277,7 +3346,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishModeRoadTagScope => 'Même pays ou international';
 
   @override
-  String get tripPublishModeRoadTagCapacity => 'Kg libre ou exact';
+  String get tripPublishModeRoadTagCapacity => 'Kg, tonnes, taille S à XL';
+
+  @override
+  String get tripPublishMaxItemSizeLabel =>
+      'Taille max d\'un colis (facultatif)';
+
+  @override
+  String get tripPublishMaxParcelWeightLabel =>
+      'Poids max par colis (kg, facultatif)';
+
+  @override
+  String get tripPublishMaxParcelWeightInvalid =>
+      'Entre 0,5 kg et la capacité du trajet';
+
+  @override
+  String tripPublishCapacityTooHigh(String max) {
+    return 'Au plus $max pour ce mode';
+  }
+
+  @override
+  String get tripPublishAcceptHintRoad =>
+      'Ex : meubles, électroménager, cartons…';
+
+  @override
+  String get tripPublishLegsHintRoad =>
+      'Vous passez par Tanger ou Nouakchott ? Ajoutez une étape : chacune est publiée comme un trajet, avec ses kilos, son prix et ses colis.';
 
   @override
   String get tripPublishHandoverLocationsLabel => 'Lieux de remise';
@@ -9443,6 +9537,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String bidCreateMaxWeightLabel(String maxKg) {
     return 'max $maxKg kg';
+  }
+
+  @override
+  String get bidCreateItemSizeLabel => 'Taille du colis (facultatif)';
+
+  @override
+  String bidCreateItemSizeHelp(String size) {
+    return 'Ce voyageur accepte les colis jusqu\'à la taille $size.';
   }
 
   @override
@@ -16161,6 +16263,12 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get tripPublishArrivalOtherDate => 'Autre date';
+
+  @override
+  String get tripPublishArrivalDateLabel => 'Date d\'arrivée';
 
   @override
   String tripArrivalOnDateAtTime(String date, String time) {
@@ -24245,4 +24353,75 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get taxInfoVatWillBeErased =>
       'Laisser ce champ vide supprime votre numéro de TVA enregistré.';
+
+  @override
+  String get requestCreateItemSizeOptionalLabel =>
+      'Taille du colis (facultatif)';
+
+  @override
+  String get requestCreateItemSizeHelp =>
+      'Aide les voyageurs à voir si votre colis tient dans leur véhicule.';
+
+  @override
+  String get requestCreateWeightRangeRoad =>
+      'À partir de 0,5 kg, sans plafond (jusqu\'à 999 999 kg).';
+
+  @override
+  String get requestCreateWeightTooHeavyForMode =>
+      'Au-delà de 32 kg, choisissez Route à l\'étape précédente.';
+
+  @override
+  String tripCapacityUpToSize(String kg, String size) {
+    return '$kg, jusqu\'à taille $size';
+  }
+
+  @override
+  String tripCapacityFreeUpToSize(String size) {
+    return 'Kilos libres, jusqu\'à taille $size';
+  }
+
+  @override
+  String tripUpToSize(String size) {
+    return 'Jusqu\'à taille $size';
+  }
+
+  @override
+  String tripMaxParcelWeight(String kg) {
+    return '$kg max par colis';
+  }
+
+  @override
+  String tripRoadDuration(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count jours de route',
+      one: '1 jour de route',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String parcelWeightAndSize(String kg, String size) {
+    return '$kg · taille $size';
+  }
+
+  @override
+  String parcelSizeLabel(String size) {
+    return 'Taille $size';
+  }
+
+  @override
+  String requestCreateBudgetMinOnly(String min) {
+    return '$min au minimum.';
+  }
+
+  @override
+  String requestCreateBudgetTechnicalMax(String max) {
+    return 'Montant trop élevé : $max au maximum.';
+  }
+
+  @override
+  String get requestCreateWeightTooHeavySubmit =>
+      'Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.';
 }

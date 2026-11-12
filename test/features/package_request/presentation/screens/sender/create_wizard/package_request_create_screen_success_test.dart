@@ -10,6 +10,8 @@ import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
@@ -126,6 +128,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(ParcelSize.small);
     registerFallbackValue(TransportMode.plane);
+    registerFallbackValue(const FieldChange<ItemSize>.keep());
     registerCityFallbackValues();
   });
 
@@ -186,6 +189,7 @@ void main() {
     when(
       () => repo.update(
         any(),
+        itemSize: any(named: 'itemSize'),
         departureCity: any(named: 'departureCity'),
         arrivalCity: any(named: 'arrivalCity'),
         desiredDate: any(named: 'desiredDate'),

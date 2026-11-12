@@ -1,5 +1,6 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
@@ -73,6 +74,7 @@ void main() {
       saveAsDraft: any(named: 'saveAsDraft'),
       promoCode: any(named: 'promoCode'),
       currency: any(named: 'currency'),
+      itemSize: any(named: 'itemSize'),
     ),
   );
 
@@ -205,4 +207,111 @@ void main() {
       expect(created, containsPair('transport_mode', 'any'));
     },
   );
+
+  test(
+    'route avec taille : item_size part, sans PII, à la publication',
+    () async {
+      stubCreate().thenAnswer((_) async => request(PackageRequestStatus.open));
+      final bloc = await makeBloc();
+      bloc.add(
+        const FormStep1Submitted(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: null,
+          dateToleranceDays: null,
+          transportMode: TransportMode.car,
+        ),
+      );
+      bloc.add(const FormItemSizeChanged(ItemSize.l));
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(
+        const FormStep2Submitted(
+          weightKg: 1200,
+          parcelSize: ParcelSize.large,
+          categories: ['Meubles'],
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const FormStep3Submitted(targetPriceEur: 900));
+      await bloc.stream.firstWhere(
+        (s) => s.submissionStatus == FormSubmissionStatus.success,
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      final created = capturedAll(AnalyticsEvents.packageRequestCreated).single;
+      expect(created, containsPair('item_size', 'L'));
+      expect(created, containsPair('transport_mode', 'car'));
+    },
+  );
+
+  test('route sans taille : la propriété item_size est absente', () async {
+    stubCreate().thenAnswer((_) async => request(PackageRequestStatus.open));
+    final bloc = await makeBloc();
+    bloc.add(
+      const FormStep1Submitted(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: null,
+        dateToleranceDays: null,
+        transportMode: TransportMode.car,
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    bloc.add(
+      const FormStep2Submitted(
+        weightKg: 1200,
+        parcelSize: ParcelSize.large,
+        categories: ['Meubles'],
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    bloc.add(const FormStep3Submitted(targetPriceEur: 900));
+    await bloc.stream.firstWhere(
+      (s) => s.submissionStatus == FormSubmissionStatus.success,
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(
+      capturedAll(
+        AnalyticsEvents.packageRequestCreated,
+      ).single.containsKey('item_size'),
+      isFalse,
+    );
+  });
+
+  test('poids hors plafond du mode : refus tracé sans PII', () async {
+    final bloc = await makeBloc();
+    bloc.add(
+      const FormStep1Submitted(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: null,
+        dateToleranceDays: null,
+        transportMode: TransportMode.plane,
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    bloc.add(
+      const FormStep2Submitted(
+        weightKg: 1200,
+        parcelSize: ParcelSize.large,
+        categories: ['Meubles'],
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    bloc.add(const FormStep3Submitted(targetPriceEur: 100));
+    await bloc.stream.firstWhere(
+      (s) => s.formError == PackageRequestFormError.weightTooHeavyForMode,
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(capturedAll(AnalyticsEvents.packageRequestSubmitFailed).single, {
+      'error_code': 'weight-too-heavy-for-mode',
+      'is_draft': false,
+      'editing': false,
+    });
+    verifyNever(
+      () => backend.capture(AnalyticsEvents.packageRequestCreated, any()),
+    );
+  });
 }

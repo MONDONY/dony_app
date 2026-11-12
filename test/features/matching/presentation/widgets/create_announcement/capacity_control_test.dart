@@ -1,6 +1,8 @@
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/capacity_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -475,6 +477,172 @@ void main() {
       await tester.pump();
 
       expect(find.text('1 suitcase of 23 kg'), findsOneWidget);
+    });
+  });
+
+  group('CapacityControl — route (T3)', () {
+    Future<AnnouncementFormBloc> pumpWithMode(
+      WidgetTester tester,
+      TransportMode mode, {
+      CapacityUnit unit = CapacityUnit.custom,
+      double kg = 23,
+    }) async {
+      final bloc = AnnouncementFormBloc(
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
+      addTearDown(bloc.close);
+      bloc
+        ..add(TransportModeChanged(mode))
+        ..add(CapacityUnitChanged(unit))
+        ..add(AvailableKgChanged(kg));
+      await tester.pumpWidget(_hostWithBloc(bloc));
+      await tester.pump();
+      return bloc;
+    }
+
+    testWidgets(
+      'route : pas de puce valise, taille max visible et facultative',
+      (tester) async {
+        final bloc = await pumpWithMode(tester, TransportMode.car);
+        expect(find.text('1 valise 23 kg'), findsNothing);
+        expect(find.text('1 valise 32 kg'), findsNothing);
+        expect(find.text('Kg libre'), findsOneWidget);
+        expect(find.text('Personnalisé'), findsOneWidget);
+        expect(find.text("Taille max d'un colis (facultatif)"), findsOneWidget);
+        expect(
+          find.text('Poids max par colis (kg, facultatif)'),
+          findsOneWidget,
+        );
+        expect(bloc.state.isCapacityStepValid, isTrue);
+
+        await tester.tap(find.byKey(const Key('item-size-L')));
+        await tester.pump();
+        expect(bloc.state.maxItemSize, ItemSize.l);
+        // Second tap : désélection (taille facultative).
+        await tester.tap(find.byKey(const Key('item-size-L')));
+        await tester.pump();
+        expect(bloc.state.maxItemSize, isNull);
+      },
+    );
+
+    testWidgets('avion : valises proposées, pas de taille max', (tester) async {
+      await pumpWithMode(
+        tester,
+        TransportMode.plane,
+        unit: CapacityUnit.suitcase23kg,
+      );
+      expect(find.text('1 valise 23 kg'), findsOneWidget);
+      expect(find.byKey(const Key('capacity-road-limits')), findsNothing);
+    });
+
+    testWidgets('route : 2 500 kg acceptés, avion : 1 000 kg en erreur', (
+      tester,
+    ) async {
+      final road = await pumpWithMode(tester, TransportMode.car);
+      await tester.enterText(
+        find.byKey(const Key('capacity-kg-field')),
+        '2500',
+      );
+      await tester.pump();
+      expect(road.state.availableKg, 2500);
+      expect(find.byKey(const Key('capacity-kg-error')), findsNothing);
+      expect(road.state.isCapacityStepValid, isTrue);
+
+      final plane = await pumpWithMode(tester, TransportMode.plane);
+      await tester.enterText(
+        find.byKey(const Key('capacity-kg-field')),
+        '1000',
+      );
+      await tester.pump();
+      expect(plane.state.availableKg, 1000);
+      expect(find.text('Au plus 999 kg pour ce mode'), findsOneWidget);
+      expect(plane.state.isCapacityStepValid, isFalse);
+    });
+
+    testWidgets('route 1 200 kg puis avion : message « Au plus 999 kg »', (
+      tester,
+    ) async {
+      final bloc = await pumpWithMode(tester, TransportMode.car, kg: 1200);
+      expect(find.byKey(const Key('capacity-kg-error')), findsNothing);
+      bloc.add(const TransportModeChanged(TransportMode.plane));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Au plus 999 kg pour ce mode'), findsOneWidget);
+      // Toujours « Personnalisé » : les valises ne reviennent pas d'office.
+      expect(bloc.state.capacityUnit, CapacityUnit.custom);
+      expect(bloc.state.isCapacityStepValid, isFalse);
+    });
+
+    testWidgets('poids max par colis : 20 accepté, 0,2 et 5 000 en erreur', (
+      tester,
+    ) async {
+      final bloc = await pumpWithMode(tester, TransportMode.car, kg: 1200);
+      final field = find.byKey(const Key('max-parcel-weight-field'));
+      await tester.enterText(field, '20');
+      await tester.pump();
+      expect(bloc.state.maxParcelWeightKg, 20);
+      expect(find.byKey(const Key('max-parcel-weight-error')), findsNothing);
+
+      await tester.enterText(field, '0,2');
+      await tester.pump();
+      expect(bloc.state.maxParcelWeightKg, 0.2);
+      expect(
+        find.text('Entre 0,5 kg et la capacité du trajet'),
+        findsOneWidget,
+      );
+
+      await tester.enterText(field, '5000');
+      await tester.pump();
+      expect(bloc.state.isMaxParcelWeightValid, isFalse);
+
+      await tester.enterText(field, '');
+      await tester.pump();
+      expect(bloc.state.maxParcelWeightKg, isNull);
+      expect(bloc.state.isCapacityStepValid, isTrue);
+    });
+
+    testWidgets('poids max effacé par le passage en avion : champ retiré', (
+      tester,
+    ) async {
+      final bloc = await pumpWithMode(tester, TransportMode.car, kg: 1200);
+      await tester.enterText(
+        find.byKey(const Key('max-parcel-weight-field')),
+        '20',
+      );
+      await tester.pump();
+      bloc.add(const TransportModeChanged(TransportMode.plane));
+      await tester.pump();
+      expect(bloc.state.maxParcelWeightKg, isNull);
+      expect(find.byKey(const Key('max-parcel-weight-field')), findsNothing);
+      bloc.add(const TransportModeChanged(TransportMode.car));
+      await tester.pump();
+      final text = tester
+          .widget<EditableText>(
+            find.descendant(
+              of: find.byKey(const Key('max-parcel-weight-field')),
+              matching: find.byType(EditableText),
+            ),
+          )
+          .controller
+          .text;
+      expect(text, isEmpty);
+    });
+
+    testWidgets('avion en valises : + grisé au plafond de 999 kg', (
+      tester,
+    ) async {
+      final bloc = await pumpWithMode(
+        tester,
+        TransportMode.plane,
+        unit: CapacityUnit.suitcase23kg,
+      );
+      bloc.add(const AvailableKgChanged(43 * 23));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('43'), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Augmenter la quantité'));
+      await tester.pump();
+      expect(bloc.state.availableKg, 43 * 23);
     });
   });
 }

@@ -3,6 +3,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
@@ -104,7 +105,11 @@ class _PreviewBody extends StatelessWidget {
         if (s.weightKg != null)
           DonyInfoRow(
             label: l.requestCreateRecapWeight,
-            value: formatWeightKg(l, s.weightKg!),
+            value: parcelWeightWithSize(
+              l,
+              formatWeightKg(l, s.weightKg!),
+              s.itemSize,
+            ),
           ),
         if (photoCount > 0)
           DonyInfoRow(

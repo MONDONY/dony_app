@@ -1,4 +1,6 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
@@ -45,6 +47,12 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   /// Formulaire rempli par « Créer avec l'IA » (propriété analytics `from_ai`).
   final bool fromAi;
 
+  /// Taille max d'un colis (route), envoyée seulement si renseignée.
+  final ItemSize? maxItemSize;
+
+  /// Poids max par colis en kilos (route), envoyé seulement si renseigné.
+  final double? maxParcelWeightKg;
+
   AnnouncementCreateRequested({
     required this.departureCity,
     required this.arrivalCity,
@@ -71,6 +79,8 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     this.saveAsDraft = false,
     this.currency,
     this.fromAi = false,
+    this.maxItemSize,
+    this.maxParcelWeightKg,
   });
 }
 
@@ -135,6 +145,13 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   /// `CASH`, `MOBILE_MONEY`) ; `null` ou vide = tous.
   final List<String>? paymentMethods;
 
+  /// Route : taille de colis minimale que le trajet doit accepter (stricte,
+  /// un trajet sans taille maximum n'apparaît pas) ; `null` = peu importe.
+  final ItemSize? minItemSize;
+
+  /// Route : ville où une étape publiée du voyage s'arrête ; `null` = aucune.
+  final String? viaCity;
+
   AnnouncementSearchRequested({
     this.departureCity,
     this.arrivalCity,
@@ -157,6 +174,8 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.urgent,
     this.maxStops,
     this.paymentMethods,
+    this.minItemSize,
+    this.viaCity,
   });
 }
 
@@ -239,6 +258,13 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   /// `null` : le serveur garde la devise actuelle.
   final String? currency;
 
+  /// Taille max d'un colis : inchangée (absente du corps) sauf si le
+  /// voyageur l'a modifiée ; effacée par `FieldChange.clear()`.
+  final FieldChange<ItemSize> maxItemSize;
+
+  /// Poids max par colis : même règle que [maxItemSize].
+  final FieldChange<double> maxParcelWeightKg;
+
   AnnouncementUpdateRequested({
     required this.id,
     required this.departureCity,
@@ -264,6 +290,8 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     required this.handoverDeadline,
     this.negotiable = false,
     this.currency,
+    this.maxItemSize = const FieldChange.keep(),
+    this.maxParcelWeightKg = const FieldChange.keep(),
   });
 }
 

@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/data/models/trip_match_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -146,7 +147,10 @@ class TripMatchCard extends StatelessWidget {
                                     const SizedBox(height: DonySpacing.xs),
                                     Text(
                                       l.corridorAlertAvailableKg(
-                                        match.availableKg.toStringAsFixed(0),
+                                        formatWeightGrouped(
+                                          l.localeName,
+                                          match.availableKg,
+                                        ),
                                       ),
                                       style: tt.bodySmall?.copyWith(
                                         color: cs.onSurfaceVariant,

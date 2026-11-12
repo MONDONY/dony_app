@@ -49,7 +49,7 @@ void main() {
       expect(find.text('Voie terrestre'), findsOneWidget);
       expect(find.text('Voiture, car ou camion'), findsOneWidget);
       expect(find.text('Même pays ou international'), findsOneWidget);
-      expect(find.text('Kg libre ou exact'), findsOneWidget);
+      expect(find.text('Kg, tonnes, taille S à XL'), findsOneWidget);
     });
 
     testWidgets('textes anglais', (tester) async {

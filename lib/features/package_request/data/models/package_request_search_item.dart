@@ -1,5 +1,6 @@
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/my_negotiation_summary.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -44,6 +45,7 @@ class PackageRequestSearchItem extends Equatable {
     this.grossPriceEur,
     this.myNegotiation,
     this.transportMode = TransportMode.plane,
+    this.itemSize,
   });
 
   final String id;
@@ -147,6 +149,10 @@ class PackageRequestSearchItem extends Equatable {
   /// antérieur au lot « modes de transport ») : avion, comme avant.
   final TransportMode? transportMode;
 
+  /// Taille du colis choisie par l'expéditeur (route et « peu importe »).
+  /// `null` : non renseignée, absente ou inconnue (back antérieur).
+  final ItemSize? itemSize;
+
   factory PackageRequestSearchItem.fromJson(
     Map<String, dynamic> json,
   ) => PackageRequestSearchItem(
@@ -196,6 +202,7 @@ class PackageRequestSearchItem extends Equatable {
     grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
     myNegotiation: MyNegotiationSummary.tryFromJson(json['myNegotiation']),
     transportMode: transportModeFromRequestJson(json),
+    itemSize: itemSizeFromWire(json['itemSize']),
   );
 
   @override
@@ -232,6 +239,7 @@ class PackageRequestSearchItem extends Equatable {
     uniqueViewerCount,
     myNegotiation,
     transportMode,
+    itemSize,
   ];
 }
 

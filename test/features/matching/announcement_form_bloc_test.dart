@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
@@ -838,6 +839,168 @@ void main() {
       expect(
         const NegotiableChanged(true),
         equals(const NegotiableChanged(true)),
+      );
+    });
+  });
+
+  group('AnnouncementFormBloc — route : valises, taille et poids max (T3)', () {
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'avion 2 × 23 kg puis route : personnalisé 46 kg',
+      build: () => _makeBloc(),
+      act: (b) {
+        b.add(const TransportModeChanged(TransportMode.plane));
+        b.add(const CapacityUnitChanged(CapacityUnit.suitcase23kg));
+        b.add(const AvailableKgChanged(46));
+        b.add(const TransportModeChanged(TransportMode.car));
+      },
+      verify: (b) {
+        expect(b.state.transportMode, TransportMode.car);
+        expect(b.state.capacityUnit, CapacityUnit.custom);
+        expect(b.state.availableKg, 46);
+      },
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'route puis valise demandée (modèle, brouillon) : personnalisé gardé',
+      build: () => _makeBloc(),
+      act: (b) {
+        b.add(const TransportModeChanged(TransportMode.car));
+        b.add(const CapacityUnitChanged(CapacityUnit.suitcase32kg));
+        b.add(const AvailableKgChanged(64));
+      },
+      verify: (b) {
+        expect(b.state.capacityUnit, CapacityUnit.custom);
+        expect(b.state.availableKg, 64);
+      },
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'route L + 20 kg puis avion : taille et poids max effacés',
+      build: () => _makeBloc(),
+      act: (b) {
+        b.add(const TransportModeChanged(TransportMode.car));
+        b.add(const MaxItemSizeChanged(ItemSize.l));
+        b.add(const MaxParcelWeightChanged(20));
+        b.add(const TransportModeChanged(TransportMode.plane));
+      },
+      verify: (b) {
+        expect(b.state.maxItemSize, isNull);
+        expect(b.state.maxParcelWeightKg, isNull);
+      },
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'route : taille et poids max posés puis désélectionnés',
+      build: () => _makeBloc(),
+      act: (b) {
+        b.add(const TransportModeChanged(TransportMode.car));
+        b.add(const MaxItemSizeChanged(ItemSize.xl));
+        b.add(const MaxParcelWeightChanged(150));
+        b.add(const MaxItemSizeChanged(null));
+        b.add(const MaxParcelWeightChanged(null));
+      },
+      expect: () => [
+        isA<AnnouncementFormState>(),
+        predicate<AnnouncementFormState>((s) => s.maxItemSize == ItemSize.xl),
+        predicate<AnnouncementFormState>((s) => s.maxParcelWeightKg == 150),
+        predicate<AnnouncementFormState>((s) => s.maxItemSize == null),
+        predicate<AnnouncementFormState>((s) => s.maxParcelWeightKg == null),
+      ],
+    );
+
+    test('route : 2 500 kg valides, avion : 1 000 kg trop haut', () {
+      const road = AnnouncementFormState(
+        transportMode: TransportMode.car,
+        capacityUnit: CapacityUnit.custom,
+        availableKg: 2500,
+      );
+      expect(road.capacityMaxKg, 999999);
+      expect(road.capacityTooHigh, isFalse);
+      expect(road.isCapacityStepValid, isTrue);
+      const plane = AnnouncementFormState(
+        transportMode: TransportMode.plane,
+        capacityUnit: CapacityUnit.custom,
+        availableKg: 1000,
+      );
+      expect(plane.capacityMaxKg, 999);
+      expect(plane.capacityTooHigh, isTrue);
+      expect(plane.isCapacityStepValid, isFalse);
+      const planeMax = AnnouncementFormState(
+        transportMode: TransportMode.plane,
+        capacityUnit: CapacityUnit.custom,
+        availableKg: 999,
+      );
+      expect(planeMax.capacityTooHigh, isFalse);
+    });
+
+    test('kilo libre : jamais trop haut (capacité technique)', () {
+      const free = AnnouncementFormState(
+        transportMode: TransportMode.plane,
+        capacityUnit: CapacityUnit.kgFree,
+        availableKg: 5000,
+      );
+      expect(free.capacityTooHigh, isFalse);
+    });
+
+    test('poids max par colis en modification : jamais comparé aux kilos '
+        'restants, seulement au maximum technique', () {
+      AnnouncementFormState s(double w, {bool editing = true}) =>
+          AnnouncementFormState(
+            transportMode: TransportMode.car,
+            capacityUnit: CapacityUnit.custom,
+            availableKg: 100,
+            maxParcelWeightKg: w,
+            isEditingTrip: editing,
+          );
+      expect(s(200).isMaxParcelWeightValid, isTrue);
+      expect(s(200).isCapacityStepValid, isTrue);
+      expect(s(0.4).isMaxParcelWeightValid, isFalse);
+      expect(s(1000000).isMaxParcelWeightValid, isFalse);
+      // En création, comportement inchangé.
+      expect(s(200, editing: false).isMaxParcelWeightValid, isFalse);
+    });
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'EditingTripStarted pose isEditingTrip',
+      build: _makeBloc,
+      act: (bloc) => bloc.add(const EditingTripStarted()),
+      verify: (bloc) => expect(bloc.state.isEditingTrip, isTrue),
+    );
+
+    test('poids max par colis : vide, 0,5, capacité, au-delà', () {
+      AnnouncementFormState s(
+        double? w, {
+        CapacityUnit u = CapacityUnit.custom,
+      }) => AnnouncementFormState(
+        transportMode: TransportMode.car,
+        capacityUnit: u,
+        availableKg: 1200,
+        maxParcelWeightKg: w,
+      );
+      expect(s(null).isMaxParcelWeightValid, isTrue);
+      expect(s(0.5).isMaxParcelWeightValid, isTrue);
+      expect(s(0.4).isMaxParcelWeightValid, isFalse);
+      expect(s(0).isMaxParcelWeightValid, isFalse);
+      expect(s(1200).isMaxParcelWeightValid, isTrue);
+      expect(s(1201).isMaxParcelWeightValid, isFalse);
+      expect(s(1201).isCapacityStepValid, isFalse);
+      // Kilo libre : capacité technique, borne haute 999 999 (D19).
+      expect(s(5000, u: CapacityUnit.kgFree).isMaxParcelWeightValid, isTrue);
+      expect(s(999999, u: CapacityUnit.kgFree).isMaxParcelWeightValid, isTrue);
+      expect(
+        s(1000000, u: CapacityUnit.kgFree).isMaxParcelWeightValid,
+        isFalse,
+      );
+    });
+
+    test('événements : props', () {
+      expect(
+        const MaxItemSizeChanged(ItemSize.s),
+        equals(const MaxItemSizeChanged(ItemSize.s)),
+      );
+      expect(
+        const MaxParcelWeightChanged(2),
+        isNot(equals(const MaxParcelWeightChanged(3))),
       );
     });
   });

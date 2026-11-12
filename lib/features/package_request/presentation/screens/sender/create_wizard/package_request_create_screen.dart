@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -25,6 +26,7 @@ import 'package:dony/features/package_request/bloc/package_request_form_state.da
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
@@ -600,6 +602,17 @@ class _PackageRequestCreateScreenState
       DonySnackbar.show(
         context,
         message: context.l10n.requestBudgetRequired,
+        type: DonySnackbarType.warning,
+      );
+    } else if (state.submissionStatus == FormSubmissionStatus.error &&
+        state.formError == PackageRequestFormError.weightTooHeavyForMode) {
+      // Poids saisi pour un autre mode : l'étape « Le colis » le montre en
+      // erreur, ce message dit pourquoi la publication est refusée.
+      DonySnackbar.show(
+        context,
+        message: transportModes.road
+            ? context.l10n.requestCreateWeightTooHeavySubmit
+            : weightRangeLabel(context.l10n, mode: state.requestTransportMode),
         type: DonySnackbarType.warning,
       );
     } else if (state.submissionStatus == FormSubmissionStatus.error) {

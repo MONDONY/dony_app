@@ -25,6 +25,7 @@ import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
@@ -1137,6 +1138,276 @@ void main() {
       await tester.tap(find.byKey(const Key('mode-chip-car')));
       await tester.pump();
       expect(fieldsOf(tester).transportMode.value, TransportMode.car);
+    });
+  });
+
+  group('modèle en route (lot 2)', () {
+    tearDown(resetTransportModesForTest);
+
+    TripFormFields fieldsOf(WidgetTester tester) =>
+        (tester.state<State<TripTemplateEditScreen>>(
+                      find.byType(TripTemplateEditScreen),
+                    )
+                    as dynamic)
+                .fieldsForTest
+            as TripFormFields;
+
+    int offsetOf(WidgetTester tester) =>
+        (tester.state<State<TripTemplateEditScreen>>(
+                      find.byType(TripTemplateEditScreen),
+                    )
+                    as dynamic)
+                .arrivalDayOffsetForTest
+            as int;
+
+    TripTemplate roadTemplate({
+      int arrivalDayOffset = 10,
+      ItemSize? maxItemSize = ItemSize.l,
+      double? maxParcelWeightKg = 50,
+      int availableKg = 1200,
+    }) => TripTemplate(
+      id: 'r1',
+      label: 'Dakar-Bamako',
+      departureCity: 'Dakar',
+      arrivalCity: 'Bamako',
+      transportMode: 'CAR',
+      capacityUnit: 'KG_EXACT',
+      availableKg: availableKg,
+      pricePerKg: 2000,
+      acceptedCategories: const [],
+      currency: 'XOF',
+      arrivalDayOffset: arrivalDayOffset,
+      maxItemSize: maxItemSize,
+      maxParcelWeightKg: maxParcelWeightKg,
+    );
+
+    Future<void> open(WidgetTester tester, TripTemplate? template) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _wrap(TripTemplateEditScreen(template: template), bloc),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
+    Future<Map<String, dynamic>> saveFrom(
+      WidgetTester tester, {
+      required int fromStep,
+    }) async {
+      for (var i = fromStep; i < 2; i++) {
+        await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+      }
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(DonyButton, 'Enregistrer le modèle'),
+      );
+      await tester.pump();
+      final events = verify(() => bloc.add(captureAny())).captured;
+      final updated = events.whereType<TripTemplateUpdated>();
+      if (updated.isNotEmpty) return updated.single.data;
+      return events.whereType<TripTemplateCreated>().single.data;
+    }
+
+    testWidgets('modèle route : arrivée J+10 enregistrée avec '
+        'arrivalDayOffset 10', (tester) async {
+      await open(tester, roadTemplate());
+
+      // Pas d'heure d'arrivée en route (C28), puces jusqu'à J+14 visibles.
+      expect(find.byKey(const Key('trip-template-arrival-time')), findsNothing);
+      expect(find.byKey(const Key('arrival-day-chips')), findsOneWidget);
+      expect(find.byKey(const Key('arrival-day-other')), findsOneWidget);
+      expect(offsetOf(tester), 10);
+
+      final data = await saveFrom(tester, fromStep: 0);
+      expect(data['transportMode'], 'CAR');
+      expect(data['arrivalTime'], isNull);
+      expect(data['arrivalDayOffset'], 10);
+    });
+
+    testWidgets('nouveau modèle route : « Autre date » sans date de départ '
+        'choisit Dans N jours (D17)', (tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      await open(tester, null);
+      await tester.tap(find.byKey(const Key('mode-chip-car')));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('arrival-day-other')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('arrival-offset-14')), findsOneWidget);
+      expect(find.byKey(const Key('arrival-offset-15')), findsNothing);
+      await tester.tap(find.byKey(const Key('arrival-offset-10')));
+      await tester.pumpAndSettle();
+      expect(offsetOf(tester), 10);
+
+      await tester.enterText(find.byType(DonyTextField).first, 'Dakar-Bamako');
+      fieldsOf(tester).departureCity.value = 'Dakar';
+      fieldsOf(tester).arrivalCity.value = 'Bamako';
+      // Nouveau modèle : aucun prix choisi par défaut, exigé pour enregistrer.
+      fieldsOf(tester).selectPrice(10);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final data = await saveFrom(tester, fromStep: 0);
+      expect(data['transportMode'], 'CAR');
+      expect(data['arrivalDayOffset'], 10);
+      expect(data['arrivalTime'], isNull);
+    });
+
+    testWidgets('modèle avion : puces 0 à 2 seulement, J+3 absent', (
+      tester,
+    ) async {
+      await open(tester, null);
+      fieldsOf(tester).arrivalTime.value = const TimeOfDay(hour: 6, minute: 0);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.byKey(const Key('trip-template-arrival-time')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('arrival-day-2')), findsOneWidget);
+      expect(find.byKey(const Key('arrival-day-other')), findsNothing);
+    });
+
+    testWidgets('modèle route J+10 repassé en avion : décalage remis à 0', (
+      tester,
+    ) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      // 30 kg : enregistrable en avion (1 200 kg griserait l'étape capacité).
+      await open(tester, roadTemplate(availableKg: 30));
+      expect(offsetOf(tester), 10);
+
+      await tester.tap(find.byKey(const Key('mode-chip-plane')));
+      await tester.pump();
+
+      expect(offsetOf(tester), 0);
+      final data = await saveFrom(tester, fromStep: 0);
+      expect(data['transportMode'], 'PLANE');
+      expect(data['arrivalDayOffset'], 0);
+      // Avion : taille et poids max effacés (sentinelles de modification).
+      expect(data['maxItemSize'], 'NONE');
+      expect(data['maxParcelWeightKg'], 0);
+    });
+
+    testWidgets('modèle route : 1 200 kg, taille et poids max envoyés', (
+      tester,
+    ) async {
+      await open(tester, roadTemplate());
+      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
+
+      // Route : pas de valise, kilos saisis, taille et poids max proposés.
+      expect(find.byKey(const Key('capacity-road-limits')), findsOneWidget);
+      expect(find.byKey(const Key('capacity-kg-field')), findsOneWidget);
+      expect(
+        tester
+            .widget<DonyButton>(find.widgetWithText(DonyButton, 'Continuer'))
+            .onPressed,
+        isNotNull,
+      );
+
+      final data = await saveFrom(tester, fromStep: 1);
+      expect(data['capacityUnit'], 'KG_EXACT');
+      expect(data['availableKg'], 1200);
+      expect(data['maxItemSize'], 'L');
+      expect(data['maxParcelWeightKg'], 50);
+    });
+
+    testWidgets('modèle route : éditer le nom garde taille et poids max', (
+      tester,
+    ) async {
+      await open(tester, roadTemplate());
+      await tester.enterText(find.byType(DonyTextField).first, 'Nouveau nom');
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final data = await saveFrom(tester, fromStep: 0);
+      expect(data['label'], 'Nouveau nom');
+      expect(data['maxItemSize'], 'L');
+      expect(data['maxParcelWeightKg'], 50);
+      expect(data['availableKg'], 1200);
+    });
+
+    testWidgets('modèle route sans taille : enregistrable (C24)', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        roadTemplate(maxItemSize: null, maxParcelWeightKg: null),
+      );
+      final data = await saveFrom(tester, fromStep: 0);
+      // Modification : « aucune limite » part en sentinelle d'effacement.
+      expect(data['maxItemSize'], 'NONE');
+      expect(data['maxParcelWeightKg'], 0);
+    });
+
+    testWidgets('nouveau modèle route sans taille : rien n\'est envoyé', (
+      tester,
+    ) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      await open(tester, null);
+      await tester.tap(find.byKey(const Key('mode-chip-car')));
+      await tester.pump();
+      await tester.enterText(find.byType(DonyTextField).first, 'Dakar-Bamako');
+      fieldsOf(tester).departureCity.value = 'Dakar';
+      fieldsOf(tester).arrivalCity.value = 'Bamako';
+      // Nouveau modèle : aucun prix choisi par défaut, exigé pour enregistrer.
+      fieldsOf(tester).selectPrice(10);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final data = await saveFrom(tester, fromStep: 0);
+      expect(data['transportMode'], 'CAR');
+      expect(data.containsKey('maxItemSize'), isFalse);
+      expect(data.containsKey('maxParcelWeightKg'), isFalse);
+    });
+
+    testWidgets('modèle route à 1 200 kg repassé en avion : Continuer grisé à '
+        'l\'étape capacité', (tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      await open(tester, roadTemplate());
+      await tester.tap(find.byKey(const Key('mode-chip-plane')));
+      await tester.pump();
+      await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('capacity-kg-error')), findsOneWidget);
+      expect(
+        tester
+            .widget<DonyButton>(find.widgetWithText(DonyButton, 'Continuer'))
+            .onPressed,
+        isNull,
+      );
+    });
+
+    testWidgets('422 arrival-too-far à l\'enregistrement : message serveur, '
+        'formulaire gardé', (tester) async {
+      whenListen<TripTemplateState>(
+        bloc,
+        Stream.value(
+          const TripTemplateState(
+            status: TripTemplateStatus.error,
+            error: ServerException(
+              'L\'arrivée ne peut pas dépasser 14 jours après le départ.',
+              'arrival-too-far',
+            ),
+          ),
+        ),
+        initialState: const TripTemplateState(),
+      );
+      await open(tester, roadTemplate());
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('14 jours après le départ'), findsOneWidget);
+      expect(find.byType(TripTemplateEditScreen), findsOneWidget);
     });
   });
 }

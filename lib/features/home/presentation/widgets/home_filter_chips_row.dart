@@ -25,6 +25,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/search_period.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -46,6 +47,8 @@ class HomeFilterChipsRow extends StatelessWidget {
     required this.onPriceClear,
     required this.onGpProToggle,
     required this.onSuitcase23Toggle,
+    required this.onItemSizeTap,
+    required this.onItemSizeClear,
     required this.onMaxWeightTap,
     required this.onMaxWeightClear,
     required this.onParcelSizeTap,
@@ -90,6 +93,11 @@ class HomeFilterChipsRow extends StatelessWidget {
   /// Bascule de la puce « 🧳 Valise 23 kg » (trajets avec au moins 23 kg
   /// disponibles).
   final VoidCallback onSuitcase23Toggle;
+
+  /// Route (voiture, bus) : la puce « Taille » remplace « Valise 23 kg ». Inactive,
+  /// un tap ouvre le choix de la taille minimale ; active, un tap la retire.
+  final VoidCallback onItemSizeTap;
+  final VoidCallback onItemSizeClear;
 
   // Colis
   final VoidCallback onMaxWeightTap;
@@ -168,6 +176,21 @@ class HomeFilterChipsRow extends StatelessWidget {
       ? filters.parcelSize!.wireName
       : l.homeFilterChipsSize;
 
+  /// Puce « Taille » du filtre Route : la taille de colis minimale que le
+  /// trajet accepte. Même clé stable que les autres puces de la rangée.
+  Widget _itemSizeChip(AppLocalizations l) {
+    final size = filters.minItemSize;
+    return HomeSmallChip(
+      key: const Key('home-chip-item-size'),
+      label: size != null
+          ? l.homeFilterChipsItemSizeActive(size.code)
+          : l.homeFilterChipsItemSize,
+      isActive: size != null,
+      iconAsset: 'package',
+      onTap: size != null ? onItemSizeClear : onItemSizeTap,
+    );
+  }
+
   /// Puce Transport, en tête des puces de filtre du mode Trajets. Le bus
   /// s'affiche « Route » (`displayGroup`).
   Widget _transportChip(AppLocalizations l) {
@@ -194,6 +217,7 @@ class HomeFilterChipsRow extends StatelessWidget {
     final l = context.l10n;
     final hasDate = filters.datePreset != DonyDatePreset.none;
     final hasCapacity = filters.weightMin != null || filters.weightMax != null;
+    final isRoad = filters.transportMode?.isRoad ?? false;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -239,14 +263,19 @@ class HomeFilterChipsRow extends StatelessWidget {
             const SizedBox(width: DonySpacing.xs),
             _urgentChip(l),
             const SizedBox(width: DonySpacing.xs),
-            // Le besoin le plus courant de la diaspora (une valise en soute),
-            // en un toucher (YADONY-FLUTTER-PROD-Z).
-            HomeSmallChip(
-              key: const Key('chip-suitcase-23'),
-              label: l.homeFilterChipsSuitcase23,
-              isActive: filters.suitcase23Only,
-              onTap: onSuitcase23Toggle,
-            ),
+            if (isRoad)
+              // En route, la valise de 23 kg n'a pas de sens (un trajet y
+              // porte des centaines de kilos) : la taille du colis la remplace.
+              _itemSizeChip(l)
+            else
+              // Le besoin le plus courant de la diaspora (une valise en soute),
+              // en un toucher (YADONY-FLUTTER-PROD-Z).
+              HomeSmallChip(
+                key: const Key('chip-suitcase-23'),
+                label: l.homeFilterChipsSuitcase23,
+                isActive: filters.suitcase23Only,
+                onTap: onSuitcase23Toggle,
+              ),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
               label: _ratingLabel(l),

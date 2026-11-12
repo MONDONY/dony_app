@@ -15,6 +15,7 @@ import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -120,6 +121,19 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
       if (!mounted) return;
       _sync();
       _scheduleBackgroundQuote();
+      // Budget repris d'un autre mode (route à 900 €, puis retour pour passer
+      // en avion) : l'erreur s'affiche dès l'ouverture, sans attendre une
+      // frappe. Rien n'est effacé en silence.
+      if (b != null &&
+          !PackageRequestLimits.isBudgetValid(
+            b,
+            _resolveCurrency(s),
+            grid: _requestGrid,
+            legacy: _legacyPricing(s),
+            mode: s.requestTransportMode,
+          )) {
+        _formKey.currentState?.validate();
+      }
       // Seed la devise dans le bloc si elle n'y est pas déjà : sans ce sync,
       // une demande jamais retouchée par l'utilisateur partirait sans
       // devise, alors que la borne d'affichage (widget.currency) en montre
@@ -186,6 +200,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
           _resolveCurrency(s),
           grid: _requestGrid,
           legacy: _legacyPricing(s),
+          mode: s.requestTransportMode,
         ) &&
         !_mobileMoneyAccountMissing(s);
   }
@@ -213,6 +228,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         budget,
         promoCode: code.isEmpty ? null : code,
         currency: _resolveCurrency(state).code,
+        transportMode: state.requestTransportMode,
       );
       if (seq != _quoteSeq) return;
       _quoteNotifier.value = quote;
@@ -282,6 +298,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         budget,
         promoCode: state.promoCode,
         currency: _resolveCurrency(state).code,
+        transportMode: state.requestTransportMode,
       );
       if (!mounted || seq != _quoteSeq) return;
       _quoteNotifier.value = quote;
@@ -315,6 +332,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
           _resolveCurrency(state),
           grid: _requestGrid,
           legacy: _legacyPricing(state),
+          mode: state.requestTransportMode,
         )) {
       // Backstop : le bouton « Aperçu » est déjà grisé dans ce cas. `validate()`
       // vient d'afficher le message sous le champ ; on y ramène l'utilisateur,
@@ -497,6 +515,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
               currency: currency,
               grid: grid,
               legacy: _legacyPricing(state),
+              mode: state.requestTransportMode,
               perKiloWeightKg: perKilo ? weight : null,
               semanticLabel: state.negotiable
                   ? l10n.requestCreateBudgetLabelNegotiable
@@ -1043,6 +1062,7 @@ class _BudgetTotalInput extends StatelessWidget {
     required this.currency,
     this.grid,
     this.legacy = false,
+    this.mode,
     this.perKiloWeightKg,
     this.semanticLabel,
   });
@@ -1057,6 +1077,10 @@ class _BudgetTotalInput extends StatelessWidget {
 
   /// Demande existante antérieure aux paliers : taux unique, sans minimum.
   final bool legacy;
+
+  /// Mode de la demande (`null` : « peu importe ») : en route et en bateau,
+  /// le budget n'a pas de plafond Yadony.
+  final TransportMode? mode;
 
   /// Poids du colis quand le champ saisit un prix AU KILO ; `null` quand il
   /// saisit le total. Dans les deux cas le bloc ne reçoit que le total.
@@ -1157,6 +1181,7 @@ class _BudgetTotalInput extends StatelessWidget {
             effectiveCurrency,
             grid: grid,
             legacy: legacy,
+            mode: mode,
           )) {
             // Dans les bornes, mais sous les frais de service minimum de la
             // grille : le back refuserait la demande (422).
@@ -1169,6 +1194,7 @@ class _BudgetTotalInput extends StatelessWidget {
                   effectiveCurrency,
                   grid: grid,
                   legacy: legacy,
+                  mode: mode,
                 )) {
               // Le minimum n'est jamais cité (YADONY-FLUTTER-PROD-1J).
               return l10n.requestBudgetBelowServiceFee;
@@ -1178,9 +1204,16 @@ class _BudgetTotalInput extends StatelessWidget {
               currency,
             );
             final max = CurrencyFormatter.formatOrPlain(
-              PackageRequestLimits.maxBudgetFor(effectiveCurrency),
+              PackageRequestLimits.maxBudgetFor(effectiveCurrency, mode: mode),
               currency,
             );
+            // Route et bateau : aucun plafond affiché tant que le montant
+            // reste raisonnable, seul le garde-fou technique le refuse.
+            if (!PackageRequestLimits.budgetHasBusinessCap(mode)) {
+              return d != null && d > PackageRequestLimits.technicalMaxBudget
+                  ? l10n.requestCreateBudgetTechnicalMax(max)
+                  : l10n.requestCreateBudgetMinOnly(min);
+            }
             return l10n.requestCreateBudgetRange(min, max);
           }
           return null;

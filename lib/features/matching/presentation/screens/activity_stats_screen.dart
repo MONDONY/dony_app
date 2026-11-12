@@ -8,6 +8,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -126,8 +127,6 @@ class _StatsGrid extends StatelessWidget {
     return (summary?.isRevenueConverted ?? false) ? '≈ $value' : value;
   }
 
-  String _weight(double v) => '${v.toStringAsFixed(v % 1 == 0 ? 0 : 1)} kg';
-
   /// Ouvre une liste filtrée. Au retour, le hub se recharge (bridé à 3 s),
   /// comme après une tuile du hub.
   void _openList(BuildContext context, String event, String route) {
@@ -185,7 +184,7 @@ class _StatsGrid extends StatelessWidget {
         final kg = StatTile(
           iconName: 'scale',
           label: l.activityKgSoldTitle,
-          value: _weight(summary?.kgSold ?? 0),
+          value: formatWeightKg(context.l10n, summary?.kgSold ?? 0),
           color: cs.primary,
           isLoading: loading,
           width: null,

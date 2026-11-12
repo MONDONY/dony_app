@@ -420,6 +420,18 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorTransportModeDisabledMessage,
   'errorArrivalTooFarTitle': (l) => l.errorArrivalTooFarTitle,
   'errorArrivalTooFarMessage': (l) => l.errorArrivalTooFarMessage,
+  'errorWeightTooHeavyTitle': (l) => l.errorWeightTooHeavyTitle,
+  'errorWeightTooHeavyMessage': (l) => l.errorWeightTooHeavyMessage,
+  'errorTripCapacityTooHighTitle': (l) => l.errorTripCapacityTooHighTitle,
+  'errorTripCapacityTooHighMessage': (l) => l.errorTripCapacityTooHighMessage,
+  'errorParcelTooHeavyTitle': (l) => l.errorParcelTooHeavyTitle,
+  'errorParcelTooHeavyMessage': (l) => l.errorParcelTooHeavyMessage,
+  'errorParcelTooBigTitle': (l) => l.errorParcelTooBigTitle,
+  'errorParcelTooBigMessage': (l) => l.errorParcelTooBigMessage,
+  'itemSizeSDescription': (l) => l.itemSizeSDescription,
+  'itemSizeMDescription': (l) => l.itemSizeMDescription,
+  'itemSizeLDescription': (l) => l.itemSizeLDescription,
+  'itemSizeXlDescription': (l) => l.itemSizeXlDescription,
   'errorConflictTitle': (l) => l.errorConflictTitle,
   'errorConflictMessage': (l) => l.errorConflictMessage,
   'errorStorageTitle': (l) => l.errorStorageTitle,
@@ -803,6 +815,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'homeComposerClearAll': (l) => l.homeComposerClearAll,
   'homeComposerMoreFilters': (l) => l.homeComposerMoreFilters,
   'homeComposerMoreFiltersHint': (l) => l.homeComposerMoreFiltersHint,
+  'homeComposerMoreFiltersHintRoad': (l) => l.homeComposerMoreFiltersHintRoad,
+  'homeComposerSectionItemSize': (l) => l.homeComposerSectionItemSize,
+  'homeComposerItemSizeHint': (l) => l.homeComposerItemSizeHint,
+  'homeComposerSectionVia': (l) => l.homeComposerSectionVia,
+  'homeComposerViaHint': (l) => l.homeComposerViaHint,
+  'homeComposerViaHelp': (l) => l.homeComposerViaHelp,
   'homeComposerSectionTransport': (l) => l.homeComposerSectionTransport,
   'homeComposerSectionWhen': (l) => l.homeComposerSectionWhen,
   'homeComposerSectionAroundMe': (l) => l.homeComposerSectionAroundMe,
@@ -844,6 +862,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'homeFilterChipsSize': (l) => l.homeFilterChipsSize,
   'homeFilterChipsUrgent': (l) => l.homeFilterChipsUrgent,
   'homeFilterChipsSuitcase23': (l) => l.homeFilterChipsSuitcase23,
+  'homeFilterChipsItemSize': (l) => l.homeFilterChipsItemSize,
+  'homeFilterChipsItemSizeActive': (l) =>
+      l.homeFilterChipsItemSizeActive(placeholderMarker('size')),
   'homeFilterFieldsPeriod': (l) => l.homeFilterFieldsPeriod,
   'homeFilterFieldsMaxPrice': (l) => l.homeFilterFieldsMaxPrice,
   'homeFilterFieldsAll': (l) => l.homeFilterFieldsAll,
@@ -1161,6 +1182,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPublishModeRoadSubtitle': (l) => l.tripPublishModeRoadSubtitle,
   'tripPublishModeRoadTagScope': (l) => l.tripPublishModeRoadTagScope,
   'tripPublishModeRoadTagCapacity': (l) => l.tripPublishModeRoadTagCapacity,
+  'tripPublishMaxItemSizeLabel': (l) => l.tripPublishMaxItemSizeLabel,
+  'tripPublishMaxParcelWeightLabel': (l) => l.tripPublishMaxParcelWeightLabel,
+  'tripPublishMaxParcelWeightInvalid': (l) =>
+      l.tripPublishMaxParcelWeightInvalid,
+  'tripPublishCapacityTooHigh': (l) =>
+      l.tripPublishCapacityTooHigh(placeholderMarker('max')),
+  'tripPublishAcceptHintRoad': (l) => l.tripPublishAcceptHintRoad,
+  'tripPublishLegsHintRoad': (l) => l.tripPublishLegsHintRoad,
   'tripPublishHandoverLocationsLabel': (l) =>
       l.tripPublishHandoverLocationsLabel,
   'tripPublishHandoverLocationsSubtitle': (l) =>
@@ -3424,6 +3453,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   ),
   'bidCreateMaxWeightLabel': (l) =>
       l.bidCreateMaxWeightLabel(placeholderMarker('maxKg')),
+  'bidCreateItemSizeLabel': (l) => l.bidCreateItemSizeLabel,
+  'bidCreateItemSizeHelp': (l) =>
+      l.bidCreateItemSizeHelp(placeholderMarker('size')),
   'commonDone': (l) => l.commonDone,
   'commonLater': (l) => l.commonLater,
   'commonLoadError': (l) => l.commonLoadError,
@@ -5682,6 +5714,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPublishArrivalDayLabel': (l) => l.tripPublishArrivalDayLabel,
   'tripPublishArrivalDayOption': (l) =>
       l.tripPublishArrivalDayOption(intPlaceholderValue),
+  'tripPublishArrivalOtherDate': (l) => l.tripPublishArrivalOtherDate,
+  'tripPublishArrivalDateLabel': (l) => l.tripPublishArrivalDateLabel,
   'tripArrivalOnDateAtTime': (l) => l.tripArrivalOnDateAtTime(
     placeholderMarker('date'),
     placeholderMarker('time'),
@@ -8384,6 +8418,30 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'taxInfoBannerResidenceBody': (l) => l.taxInfoBannerResidenceBody,
   'taxInfoNothingNew': (l) => l.taxInfoNothingNew,
   'taxInfoVatWillBeErased': (l) => l.taxInfoVatWillBeErased,
+  'requestCreateItemSizeOptionalLabel': (l) =>
+      l.requestCreateItemSizeOptionalLabel,
+  'requestCreateItemSizeHelp': (l) => l.requestCreateItemSizeHelp,
+  'requestCreateWeightRangeRoad': (l) => l.requestCreateWeightRangeRoad,
+  'requestCreateWeightTooHeavyForMode': (l) =>
+      l.requestCreateWeightTooHeavyForMode,
+  'tripCapacityUpToSize': (l) => l.tripCapacityUpToSize(
+    placeholderMarker('kg'),
+    placeholderMarker('size'),
+  ),
+  'tripCapacityFreeUpToSize': (l) =>
+      l.tripCapacityFreeUpToSize(placeholderMarker('size')),
+  'tripUpToSize': (l) => l.tripUpToSize(placeholderMarker('size')),
+  'tripMaxParcelWeight': (l) => l.tripMaxParcelWeight(placeholderMarker('kg')),
+  'tripRoadDuration': (l) => l.tripRoadDuration(intPlaceholderValue),
+  'parcelWeightAndSize': (l) =>
+      l.parcelWeightAndSize(placeholderMarker('kg'), placeholderMarker('size')),
+  'parcelSizeLabel': (l) => l.parcelSizeLabel(placeholderMarker('size')),
+  'requestCreateBudgetMinOnly': (l) =>
+      l.requestCreateBudgetMinOnly(placeholderMarker('min')),
+  'requestCreateBudgetTechnicalMax': (l) =>
+      l.requestCreateBudgetTechnicalMax(placeholderMarker('max')),
+  'requestCreateWeightTooHeavySubmit': (l) =>
+      l.requestCreateWeightTooHeavySubmit,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8411,6 +8469,7 @@ const textParameters = <String, List<String>>{
   'homeListParcelsRoute': ['dep', 'arr'],
   'homeListParcelsCorridor': ['corridor'],
   'homeRatingAndUp': ['rating'],
+  'homeFilterChipsItemSizeActive': ['size'],
   'commonDateAtTime': ['date', 'time'],
   'commonListPair': ['first', 'second'],
   'commonListLast': ['head', 'last'],
@@ -8427,6 +8486,7 @@ const textParameters = <String, List<String>>{
   'tripPublishGridPreviewConvertedNote': ['currency'],
   'tripPublishCurrencySemanticsLabel': ['currencyName', 'currencyCode'],
   'tripPublishCurrencyBannerTitle': ['currencyName', 'currencyCode'],
+  'tripPublishCapacityTooHigh': ['max'],
   'addressGpsPosition': ['lat', 'lng'],
   'tripPosterFromPrice': ['price'],
   'tripPosterPricePerKg': ['price'],
@@ -8607,6 +8667,7 @@ const textParameters = <String, List<String>>{
   'activityToolsProgressBody': ['missing'],
   'activityNewSinceLastVisit': ['label', 'title'],
   'bidCreateMaxWeightLabel': ['maxKg'],
+  'bidCreateItemSizeHelp': ['size'],
   'paymentContextRecipient': ['name'],
   'commissionCardExpiringMessage': ['date'],
   'commissionCardExpiryLabel': ['date'],
@@ -9078,4 +9139,12 @@ const textParameters = <String, List<String>>{
   'publishBlockedResumeOnFirst': ['month'],
   'taxInfoCollectMissing': ['fields'],
   'taxInfoAddressCountry': ['country'],
+  'tripCapacityUpToSize': ['kg', 'size'],
+  'tripCapacityFreeUpToSize': ['size'],
+  'tripUpToSize': ['size'],
+  'tripMaxParcelWeight': ['kg'],
+  'parcelWeightAndSize': ['kg', 'size'],
+  'parcelSizeLabel': ['size'],
+  'requestCreateBudgetMinOnly': ['min'],
+  'requestCreateBudgetTechnicalMax': ['max'],
 };

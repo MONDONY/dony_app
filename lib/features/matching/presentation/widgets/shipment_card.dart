@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/widgets/parcel_status_pill.dart';
 import 'package:dony/features/matching/presentation/widgets/rating_pending_pill.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -123,7 +124,7 @@ class ShipmentCard extends StatelessWidget {
     if (kg == null) {
       return '- kg';
     }
-    return formatWeightKg(l, kg);
+    return parcelWeightWithSize(l, formatWeightKg(l, kg), bid.itemSize);
   }
 
   @override

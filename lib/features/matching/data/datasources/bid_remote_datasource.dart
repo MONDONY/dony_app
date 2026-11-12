@@ -5,6 +5,8 @@ import 'package:dony/features/matching/data/models/bid_checkout_response_model.d
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/data/models/commission_allocation_preview.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/traveler_bids_page.dart';
 
 class BidRemoteDatasource {
@@ -30,6 +32,7 @@ class BidRemoteDatasource {
     required String recipientPhone,
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
+    ItemSize? itemSize,
   }) async {
     final body = <String, dynamic>{
       'announcementId': announcementId,
@@ -47,6 +50,7 @@ class BidRemoteDatasource {
     if (gridItems != null && gridItems.isNotEmpty) {
       body['gridItems'] = gridItems;
     }
+    body.addAll(itemSizeEntry('itemSize', FieldChange.ofNullable(itemSize)));
     final response = await _apiClient.dio.post('/bids/checkout', data: body);
     return BidCheckoutResponseModel.fromJson(
       response.data as Map<String, dynamic>,
@@ -86,6 +90,7 @@ class BidRemoteDatasource {
     String? promoCode,
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
+    ItemSize? itemSize,
   }) async {
     final body = <String, dynamic>{
       'description': description,
@@ -107,6 +112,7 @@ class BidRemoteDatasource {
     if (gridItems != null && gridItems.isNotEmpty) {
       body['gridItems'] = gridItems;
     }
+    body.addAll(itemSizeEntry('itemSize', FieldChange.ofNullable(itemSize)));
     final response = await _apiClient.dio.post(
       '/announcements/$announcementId/bids',
       data: body,

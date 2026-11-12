@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -987,7 +988,7 @@ class _TravelerDecisionSummary extends StatelessWidget {
     final l = context.l10n;
 
     final weight = bid.displayWeightKg != null
-        ? '${bid.displayWeightKg!.toStringAsFixed(1)} kg'
+        ? formatWeightKg(l, bid.displayWeightKg!)
         : '-';
     final category = bid.contentCategory != null
         ? contentCategoriesDisplayName(l, bid.contentCategory!)

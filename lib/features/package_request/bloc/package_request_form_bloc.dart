@@ -7,11 +7,14 @@ import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -33,6 +36,7 @@ class PackageRequestFormBloc
     PackageRequest? editing,
     PackageRequestDuplicate? duplicating,
   }) : _analytics = analytics,
+       _editedItemSize = editing?.itemSize,
        super(
          editing != null
              ? _prefilledFrom(editing)
@@ -43,6 +47,7 @@ class PackageRequestFormBloc
     on<FormStep1Submitted>(_onStep1);
     on<FormDesiredDateCleared>(_onDesiredDateCleared);
     on<FormTransportModeChanged>(_onTransportModeChanged);
+    on<FormItemSizeChanged>(_onItemSizeChanged);
     on<FormStep2Submitted>(_onStep2);
     on<FormStep3Submitted>(_onStep3);
     on<FormStepBack>(_onStepBack);
@@ -108,6 +113,7 @@ class PackageRequestFormBloc
       transportModeAny: r.transportMode == null,
       weightKg: r.weightKg,
       parcelSize: r.parcelSize,
+      itemSize: r.itemSize,
       categories: r.categories,
       description: r.description,
       photoUrl: r.photoUrl,
@@ -143,6 +149,7 @@ class PackageRequestFormBloc
       transportModeAny: base.transportModeAny,
       weightKg: base.weightKg,
       parcelSize: base.parcelSize,
+      itemSize: base.itemSize,
       categories: base.categories,
       description: base.description,
       pickupNeighborhood: base.pickupNeighborhood,
@@ -155,6 +162,19 @@ class PackageRequestFormBloc
     );
   }
 
+  /// Taille de la demande éditée telle que chargée ; `null` en création, ou
+  /// quand la demande chargée n'en porte pas (ancien back, liste).
+  final ItemSize? _editedItemSize;
+
+  /// Intention d'écriture de la taille en modification, comparée à celle de la
+  /// demande chargée : identique ou jamais connue puis jamais choisie = rien
+  /// envoyé ; changée = envoyée ; retirée = effacée.
+  FieldChange<ItemSize> _itemSizeChange() {
+    final now = state.itemSize;
+    if (now == _editedItemSize) return const FieldChange.keep();
+    return now == null ? const FieldChange.clear() : FieldChange.set(now);
+  }
+
   /// Une chaîne vide signifie « champ laissé à blanc » côté formulaire ; le
   /// backend, lui, attend `null` pour l'absence de valeur.
   static String? _blankToNull(String? v) =>
@@ -163,15 +183,17 @@ class PackageRequestFormBloc
   void _onStep1(FormStep1Submitted e, Emitter<PackageRequestFormState> emit) {
     final hasDate = e.desiredDate != null;
     emit(
-      state.copyWith(
-        currentStep: 1,
-        departureCity: e.departureCity,
-        arrivalCity: e.arrivalCity,
-        desiredDate: e.desiredDate,
-        dateToleranceDays: hasDate ? e.dateToleranceDays : null,
-        clearDesiredDate: !hasDate,
-        transportMode: e.transportMode,
-        transportModeAny: e.transportMode == null,
+      _withModeRules(
+        state.copyWith(
+          currentStep: 1,
+          departureCity: e.departureCity,
+          arrivalCity: e.arrivalCity,
+          desiredDate: e.desiredDate,
+          dateToleranceDays: hasDate ? e.dateToleranceDays : null,
+          clearDesiredDate: !hasDate,
+          transportMode: e.transportMode,
+          transportModeAny: e.transportMode == null,
+        ),
       ),
     );
     _logStepCompleted(1, {
@@ -202,8 +224,23 @@ class PackageRequestFormBloc
     Emitter<PackageRequestFormState> emit,
   ) {
     emit(
-      state.copyWith(transportMode: e.mode, transportModeAny: e.mode == null),
+      _withModeRules(
+        state.copyWith(transportMode: e.mode, transportModeAny: e.mode == null),
+      ),
     );
+  }
+
+  /// Un mode sans taille de colis (avion, bateau) efface celle déjà choisie :
+  /// une taille invisible serait envoyée à l'insu de l'expéditeur.
+  static PackageRequestFormState _withModeRules(PackageRequestFormState next) =>
+      next.modeHasItemSize ? next : next.copyWith(clearItemSize: true);
+
+  void _onItemSizeChanged(
+    FormItemSizeChanged e,
+    Emitter<PackageRequestFormState> emit,
+  ) {
+    if (!state.modeHasItemSize) return;
+    emit(state.copyWith(itemSize: e.size, clearItemSize: e.size == null));
   }
 
   void _onDesiredDateCleared(
@@ -233,6 +270,31 @@ class PackageRequestFormBloc
     FormStep3Submitted e,
     Emitter<PackageRequestFormState> emit,
   ) async {
+    // Poids saisi pour un autre mode (route, puis retour à l'étape « Le
+    // trajet » pour passer en avion) : refusé ici, sans rien effacer.
+    if (!PackageRequestLimits.isWeightValidFor(
+      state.weightKg,
+      state.requestTransportMode,
+    )) {
+      emit(
+        state.copyWith(
+          submissionStatus: FormSubmissionStatus.error,
+          formError: PackageRequestFormError.weightTooHeavyForMode,
+          clearDraftLimitMessage: true,
+        ),
+      );
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.packageRequestSubmitFailed,
+          properties: {
+            'error_code': 'weight-too-heavy-for-mode',
+            'is_draft': e.saveAsDraft,
+            'editing': state.editingRequestId != null,
+          },
+        ),
+      );
+      return;
+    }
     final totalBudgetEur = state.totalBudgetEur ?? e.targetPriceEur;
     if (totalBudgetEur == null) {
       emit(
@@ -284,6 +346,9 @@ class PackageRequestFormBloc
           pickupNeighborhood: _blankToNull(state.pickupNeighborhood),
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
           promoCode: _blankToNull(state.promoCode),
+          // Taille non touchée : clé absente (le back la conserve) ; changée :
+          // envoyée ; retirée : effacée côté back (`NONE`).
+          itemSize: _itemSizeChange(),
         );
       } else {
         saved = await _repository.create(
@@ -313,6 +378,8 @@ class PackageRequestFormBloc
           // devise du portefeuille de l'expéditeur (jamais renvoyée en
           // édition : une demande déjà créée garde sa devise d'origine).
           currency: state.currency?.code,
+          // Facultative : la clé ne part que renseignée.
+          itemSize: state.itemSize,
         );
       }
       if (!e.saveAsDraft && saved.status == PackageRequestStatus.draft) {
@@ -344,6 +411,7 @@ class PackageRequestFormBloc
             'transport_mode': state.requestTransportMode?.name ?? _anyMode,
             if (state.parcelSize != null)
               'parcel_size': state.parcelSize!.wireName,
+            if (state.itemSize != null) 'item_size': state.itemSize!.wire,
             'has_photos': (e.photoKeys ?? const []).isNotEmpty,
             'has_promo_code': _blankToNull(state.promoCode) != null,
           },

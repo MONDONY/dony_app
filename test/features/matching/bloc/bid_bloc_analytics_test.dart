@@ -5,6 +5,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -95,6 +96,48 @@ void main() {
     },
   );
 
+  test('bid_submitted porte item_size quand une taille est choisie', () async {
+    when(
+      () => repo.createBid(
+        announcementId: any(named: 'announcementId'),
+        weightKg: any(named: 'weightKg'),
+        description: any(named: 'description'),
+        contentCategory: any(named: 'contentCategory'),
+        recipientName: any(named: 'recipientName'),
+        recipientPhone: any(named: 'recipientPhone'),
+        paymentMethod: any(named: 'paymentMethod'),
+        countryCode: any(named: 'countryCode'),
+        gridItems: any(named: 'gridItems'),
+        itemSize: any(named: 'itemSize'),
+      ),
+    ).thenAnswer((_) async => _buildBid());
+
+    final bloc = makeBloc();
+    bloc.add(
+      BidCreateRequested(
+        announcementId: 'ann1',
+        weightKg: 5.0,
+        description: 'test',
+        contentCategory: 'OTHER',
+        recipientName: 'Test',
+        recipientPhone: '+221700000000',
+        itemSize: ItemSize.l,
+      ),
+    );
+    await bloc.stream.firstWhere((s) => s is BidCreated);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(
+      () => backend.capture(AnalyticsEvents.bidSubmitted, {
+        'announcement_id': 'ann1',
+        'weight_kg': 5.0,
+        'price_per_kg': 12.0,
+        'payment_method': 'stripe',
+        'item_size': 'L',
+      }),
+    ).called(1);
+  });
+
   test('bid_submit_failed : moyen et code métier', () async {
     when(
       () => repo.createBid(
@@ -147,6 +190,7 @@ void main() {
         recipientPhone: any(named: 'recipientPhone'),
         photoKeys: any(named: 'photoKeys'),
         gridItems: any(named: 'gridItems'),
+        itemSize: any(named: 'itemSize'),
       ),
     );
 
@@ -186,6 +230,48 @@ void main() {
         }),
       ).called(1);
     });
+
+    test(
+      'bid_checkout_started porte item_size quand une taille est choisie',
+      () async {
+        stubCheckout().thenAnswer(
+          (_) async => BidCheckoutResponseModel(
+            bidId: 'bid9',
+            clientSecret: 'pi_9_secret_x',
+            publishableKey: 'pk_test',
+            expiresAt: DateTime(2026, 10, 18),
+            currency: 'XOF',
+            paymentMethodTypes: const ['card'],
+          ),
+        );
+
+        final bloc = makeBloc();
+        bloc.add(
+          BidCheckoutRequested(
+            announcementId: 'ann1',
+            weightKg: 3.0,
+            description: 'test',
+            contentCategory: 'OTHER',
+            recipientName: 'Test',
+            recipientPhone: '+221700000000',
+            itemSize: ItemSize.xl,
+          ),
+        );
+        await bloc.stream.firstWhere((s) => s is BidCheckoutReady);
+        await Future<void>.delayed(Duration.zero);
+
+        verify(
+          () => backend.capture(AnalyticsEvents.bidCheckoutStarted, {
+            'announcement_id': 'ann1',
+            'bid_id': 'bid9',
+            'weight_kg': 3.0,
+            'currency': 'XOF',
+            'payment_method': 'card',
+            'item_size': 'XL',
+          }),
+        ).called(1);
+      },
+    );
 
     test('checkout refusé : bid_submit_failed en card', () async {
       stubCheckout().thenThrow(Exception('réseau'));

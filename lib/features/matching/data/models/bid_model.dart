@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
@@ -185,6 +186,11 @@ class BidModel {
   /// (`transportModeOrPlane`).
   @JsonKey(fromJson: transportModeFromWire, toJson: _transportModeToWire)
   final TransportMode? transportMode;
+
+  /// Taille du colis déclarée par l'expéditeur (trajet en route). `null` sans
+  /// taille, ou sur un back antérieur au lot 2.
+  @JsonKey(fromJson: itemSizeFromWire, toJson: itemSizeToWireOrNull)
+  final ItemSize? itemSize;
 
   /// Instructions d'arrivée laissées par le voyageur pour l'expéditeur (ex :
   /// point de rendez-vous précis, consignes de retrait). Facultatif, hérité
@@ -387,6 +393,7 @@ class BidModel {
     this.departureCity,
     this.arrivalCity,
     this.transportMode,
+    this.itemSize,
     this.arrivalInstructions,
     this.departureDate,
     this.departureTime,

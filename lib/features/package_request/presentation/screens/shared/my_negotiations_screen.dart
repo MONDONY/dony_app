@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -801,7 +802,7 @@ class _NegoCard extends StatelessWidget {
     return thread.isTravelerKgFree
         ? l.tripKgFree
         : l.negotiationLinkTripKgAvailable(
-            thread.travelerAvailableKg.toStringAsFixed(0),
+            formatWeightGrouped(l.localeName, thread.travelerAvailableKg),
           );
   }
 

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_accept_cubit.dart';
@@ -294,8 +295,7 @@ void _reloadBid(BuildContext context, String bidId) =>
 String _money(double amount, String currency, {bool signed = false}) =>
     '${signed ? '+' : ''}${formatSupplementAmount(amount, currency)}';
 
-String _kg(double kg) =>
-    '${kg == kg.roundToDouble() ? kg.toStringAsFixed(0) : kg.toString()} kg';
+String _kg(AppLocalizations l, double kg) => formatWeightKg(l, kg);
 
 /// « 25 oct. à 14:30 » en heure locale.
 String _deadlineLabel(BuildContext context, DateTime at) {
@@ -324,7 +324,7 @@ List<_Line> _lines(BuildContext context, BidAmendment a, {required bool net}) {
   return [
     if (a.addedWeightKg > 0)
       _Line(
-        l.amendmentSheetKgValue(_kg(a.addedWeightKg).replaceAll(' kg', '')),
+        l.amendmentSheetKgValue(_kg(l, a.addedWeightKg).replaceAll(' kg', '')),
         _money(total - itemsTotal, a.currency, signed: net),
       ),
     for (final i in a.items)
@@ -479,7 +479,7 @@ class _SenderContent extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final a = amendment;
     final name = bid.travelerName ?? l.bidDetailSenderTravelerFallback;
-    final kg = _kg(bid.totalWeightKg ?? bid.weightKg ?? 0);
+    final kg = _kg(l, bid.totalWeightKg ?? bid.weightKg ?? 0);
 
     if (!a.status.isOpen) {
       final held = a.rail == BidAmendment.railStripe;
@@ -710,8 +710,8 @@ class _TravelerContentState extends State<_TravelerContent> {
                     ),
                     Text(
                       l.amendmentTravelerParcelWeightValue(
-                        _kg(before).replaceAll(' kg', ''),
-                        _kg(before + a.addedWeightKg).replaceAll(' kg', ''),
+                        _kg(l, before).replaceAll(' kg', ''),
+                        _kg(l, before + a.addedWeightKg).replaceAll(' kg', ''),
                       ),
                       style: Theme.of(context).textTheme.titleSmall,
                     ),

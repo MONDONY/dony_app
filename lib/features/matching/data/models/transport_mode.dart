@@ -69,3 +69,59 @@ extension TransportModeUI on TransportMode {
   TransportMode get displayGroup =>
       this == TransportMode.bus ? TransportMode.car : this;
 }
+
+/// Règles par mode, à lire avec les formulaires de trajet et de demande.
+///
+/// Miroir des règles du back : `ArrivalRules.maxDaysAfterDeparture`,
+/// `WeightLimits.isHeavyMode`. Le back reste la source de vérité (un 422 gagne
+/// toujours) ; ces valeurs évitent seulement d'envoyer une saisie qu'il
+/// refusera. Si une borne change côté back, la changer ici et dans les tests
+/// par valeur (`transport_mode_test.dart`), qui servent de parité.
+extension TransportModeRules on TransportMode {
+  /// Nombre de jours maximum entre le départ et l'arrivée (miroir de
+  /// `ArrivalRules`) : 3 pour l'avion, le train et les autres modes, 14 pour
+  /// la route, 120 pour le bateau.
+  int get maxArrivalDays => switch (this) {
+    TransportMode.plane || TransportMode.train || TransportMode.other => 3,
+    TransportMode.car || TransportMode.bus => 14,
+    TransportMode.boat => 120,
+  };
+
+  /// Les valises (23 kg) n'ont pas de sens en voiture ni en bus : on y
+  /// compte en kilos libres ou en place, jamais en valises.
+  bool get allowsSuitcases => !isRoad;
+
+  /// Seuls la voiture et le bus portent une taille de colis (S à XL).
+  bool get hasItemSize => isRoad;
+
+  /// Route : voiture ou bus.
+  bool get isRoad => this == TransportMode.car || this == TransportMode.bus;
+
+  /// Mode « lourd » (voiture, bus, bateau) : poids et capacités en tonnes.
+  /// Miroir de `WeightLimits.isHeavyMode`.
+  bool get isHeavy => isRoad || this == TransportMode.boat;
+}
+
+/// Capacité maximale qu'un voyageur peut saisir pour un trajet, en kilos
+/// entiers (miroir de `WeightLimits.maxTripCapacity`).
+abstract final class TripCapacityLimits {
+  /// Hors route et bateau : 999 kg (trajet avion 999,99 côté back, la saisie
+  /// est en kilos entiers).
+  static const int standardMaxKg = 999;
+
+  /// Route et bateau : 999 999 kg (999 999,99 côté back, kilos entiers saisis).
+  static const int heavyMaxKg = 999999;
+
+  static int maxKgFor(TransportMode mode) =>
+      mode.isHeavy ? heavyMaxKg : standardMaxKg;
+
+  /// Série de trajets hors route et bateau : 40 kg (miroir de
+  /// `WeightLimits.PLANE_RECURRENCE_MAX_KG` et `maxRecurrenceCapacity` côté
+  /// back, 422 `trip-capacity-too-high`).
+  static const int standardSeriesMaxKg = 40;
+
+  /// Capacité maximale d'une série de trajets : 40 kg en avion, celle d'un
+  /// trajet en route et en bateau.
+  static int seriesMaxKgFor(TransportMode mode) =>
+      mode.isHeavy ? heavyMaxKg : standardSeriesMaxKg;
+}

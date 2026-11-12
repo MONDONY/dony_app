@@ -1,5 +1,6 @@
 import 'package:dony/core/utils/server_date_time.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -52,6 +53,7 @@ class PackageRequest extends Equatable {
     this.convertedCurrency,
     this.grossPriceEur,
     this.commissionGridId,
+    this.itemSize,
   });
 
   final String id;
@@ -141,6 +143,10 @@ class PackageRequest extends Equatable {
   /// `null` pour une demande antérieure aux paliers ou un back antérieur.
   final String? commissionGridId;
 
+  /// Taille du colis (S à XL), facultative, posée pour une demande en route.
+  /// `null` sans taille, ou sur un back antérieur au lot 2.
+  final ItemSize? itemSize;
+
   /// Parse le tableau `photos` du wire en deux listes alignées (URLs
   /// présignées + clés S3) en un seul passage.
   static (List<String>, List<String>) _photosFromJson(List<dynamic>? raw) {
@@ -196,6 +202,7 @@ class PackageRequest extends Equatable {
       convertedCurrency: json['convertedCurrency'] as String?,
       grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
       commissionGridId: json['commissionGridId'] as String?,
+      itemSize: itemSizeFromWire(json['itemSize']),
     );
   }
 
@@ -230,6 +237,7 @@ class PackageRequest extends Equatable {
     convertedCurrency,
     grossPriceEur,
     commissionGridId,
+    itemSize,
   ];
 }
 

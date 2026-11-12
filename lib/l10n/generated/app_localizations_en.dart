@@ -1120,6 +1120,46 @@ class AppLocalizationsEn extends AppLocalizations {
       'The arrival date is too far after departure for this mode.';
 
   @override
+  String get errorWeightTooHeavyTitle => 'Weight too high';
+
+  @override
+  String get errorWeightTooHeavyMessage =>
+      'This weight is above the maximum allowed for this transport mode.';
+
+  @override
+  String get errorTripCapacityTooHighTitle => 'Capacity too high';
+
+  @override
+  String get errorTripCapacityTooHighMessage =>
+      'The capacity is above the maximum allowed for this transport mode.';
+
+  @override
+  String get errorParcelTooHeavyTitle => 'Parcel too heavy';
+
+  @override
+  String get errorParcelTooHeavyMessage =>
+      'This parcel is heavier than this traveler accepts.';
+
+  @override
+  String get errorParcelTooBigTitle => 'Parcel too big';
+
+  @override
+  String get errorParcelTooBigMessage =>
+      'This parcel is bigger than this traveler accepts.';
+
+  @override
+  String get itemSizeSDescription => 'Bag';
+
+  @override
+  String get itemSizeMDescription => 'Box';
+
+  @override
+  String get itemSizeLDescription => 'Suitcase, chair';
+
+  @override
+  String get itemSizeXlDescription => 'Furniture';
+
+  @override
   String get errorConflictTitle => 'Can\'t do this';
 
   @override
@@ -2336,6 +2376,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Content type, rating, stops, payment';
 
   @override
+  String get homeComposerMoreFiltersHintRoad =>
+      'Content type, rating, city on the way, payment';
+
+  @override
+  String get homeComposerSectionItemSize => 'PARCEL SIZE';
+
+  @override
+  String get homeComposerItemSizeHint => 'Trips that take at least this size.';
+
+  @override
+  String get homeComposerSectionVia => 'PASSES THROUGH';
+
+  @override
+  String get homeComposerViaHint => 'A city on the way (e.g. Tangier)';
+
+  @override
+  String get homeComposerViaHelp =>
+      'To hand a parcel to a traveler whose journey stops in your city.';
+
+  @override
   String get homeComposerSectionTransport => 'TRANSPORT';
 
   @override
@@ -2464,6 +2524,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeFilterChipsSuitcase23 => '🧳 23 kg suitcase';
+
+  @override
+  String get homeFilterChipsItemSize => 'Size';
+
+  @override
+  String homeFilterChipsItemSizeActive(String size) {
+    return 'Size $size+';
+  }
 
   @override
   String get homeFilterFieldsPeriod => 'PERIOD';
@@ -3258,7 +3326,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishModeRoadTagScope => 'Domestic or international';
 
   @override
-  String get tripPublishModeRoadTagCapacity => 'Free or exact kg';
+  String get tripPublishModeRoadTagCapacity => 'Kg, tons, size S to XL';
+
+  @override
+  String get tripPublishMaxItemSizeLabel => 'Max parcel size (optional)';
+
+  @override
+  String get tripPublishMaxParcelWeightLabel =>
+      'Max weight per parcel (kg, optional)';
+
+  @override
+  String get tripPublishMaxParcelWeightInvalid =>
+      'Between 0.5 kg and the trip capacity';
+
+  @override
+  String tripPublishCapacityTooHigh(String max) {
+    return 'At most $max for this mode';
+  }
+
+  @override
+  String get tripPublishAcceptHintRoad => 'E.g. furniture, appliances, boxes…';
+
+  @override
+  String get tripPublishLegsHintRoad =>
+      'Going through Tangier or Nouakchott? Add a leg: each one is published as a trip, with its own kilos, price and parcels.';
 
   @override
   String get tripPublishHandoverLocationsLabel => 'Drop-off locations';
@@ -9384,6 +9475,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String bidCreateMaxWeightLabel(String maxKg) {
     return 'max $maxKg kg';
+  }
+
+  @override
+  String get bidCreateItemSizeLabel => 'Parcel size (optional)';
+
+  @override
+  String bidCreateItemSizeHelp(String size) {
+    return 'This traveler accepts parcels up to size $size.';
   }
 
   @override
@@ -16049,6 +16148,12 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get tripPublishArrivalOtherDate => 'Other date';
+
+  @override
+  String get tripPublishArrivalDateLabel => 'Arrival date';
 
   @override
   String tripArrivalOnDateAtTime(String date, String time) {
@@ -24071,4 +24176,74 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get taxInfoVatWillBeErased =>
       'Leaving this field empty deletes your saved VAT number.';
+
+  @override
+  String get requestCreateItemSizeOptionalLabel => 'Parcel size (optional)';
+
+  @override
+  String get requestCreateItemSizeHelp =>
+      'Helps travelers see whether your parcel fits in their vehicle.';
+
+  @override
+  String get requestCreateWeightRangeRoad =>
+      'From 0.5 kg, no cap (up to 999,999 kg).';
+
+  @override
+  String get requestCreateWeightTooHeavyForMode =>
+      'Above 32 kg, choose Road in the previous step.';
+
+  @override
+  String tripCapacityUpToSize(String kg, String size) {
+    return '$kg, up to size $size';
+  }
+
+  @override
+  String tripCapacityFreeUpToSize(String size) {
+    return 'Free kilos, up to size $size';
+  }
+
+  @override
+  String tripUpToSize(String size) {
+    return 'Up to size $size';
+  }
+
+  @override
+  String tripMaxParcelWeight(String kg) {
+    return '$kg max per parcel';
+  }
+
+  @override
+  String tripRoadDuration(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days on the road',
+      one: '1 day on the road',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String parcelWeightAndSize(String kg, String size) {
+    return '$kg · size $size';
+  }
+
+  @override
+  String parcelSizeLabel(String size) {
+    return 'Size $size';
+  }
+
+  @override
+  String requestCreateBudgetMinOnly(String min) {
+    return 'At least $min.';
+  }
+
+  @override
+  String requestCreateBudgetTechnicalMax(String max) {
+    return 'Amount too high: $max at most.';
+  }
+
+  @override
+  String get requestCreateWeightTooHeavySubmit =>
+      'This parcel is over 32 kg: change its weight or choose Road.';
 }

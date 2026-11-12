@@ -39,12 +39,14 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart'
     show BidPaymentMethod;
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/mode_step.dart';
@@ -412,6 +414,10 @@ AnnouncementModel _makeFullAnnouncement({
   double availableKg = 10.0,
   String? capacityUnit,
   TransportMode transportMode = TransportMode.plane,
+  ItemSize? maxItemSize,
+  double? maxParcelWeightKg,
+  DateTime? arrivalDate,
+  String? arrivalTime = '10:30',
 }) => AnnouncementModel(
   id: 'ann-full-1',
   travelerId: 'trav-1',
@@ -420,7 +426,8 @@ AnnouncementModel _makeFullAnnouncement({
   departureDate: departureDate ?? DateTime(2026, 8),
   // 22:00 departure → handoverEnd 18:00 is safely before departure
   departureTime: '22:00',
-  arrivalTime: '10:30',
+  arrivalTime: arrivalTime,
+  arrivalDate: arrivalDate,
   availableKg: availableKg,
   totalKg: 23.0,
   pricePerKg: pricePerKg,
@@ -447,6 +454,8 @@ AnnouncementModel _makeFullAnnouncement({
   currency: currency,
   currencyEditable: currencyEditable,
   capacityUnit: capacityUnit,
+  maxItemSize: maxItemSize,
+  maxParcelWeightKg: maxParcelWeightKg,
 );
 
 /// Returns a minimal `LockedTripContext` suitable for locked-mode tests.
@@ -5646,8 +5655,12 @@ void main() {
   group('CreateTripScreen — modes de transport (cinq étapes)', () {
     late _MockAnnouncementBloc announcementBloc;
     late StreamController<AnnouncementState> states;
+    String? intlLocaleBefore;
 
     setUp(() {
+      // `DateFormat('yyyy-MM-dd')` du payload d'arrivée fixe la langue d'`intl`
+      // à `en_US` quand rien ne l'a fait : rétablie après chaque test.
+      intlLocaleBefore = Intl.defaultLocale;
       states = StreamController<AnnouncementState>.broadcast();
       announcementBloc = _MockAnnouncementBloc();
       when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
@@ -5666,6 +5679,7 @@ void main() {
     });
 
     tearDown(() async {
+      Intl.defaultLocale = intlLocaleBefore;
       resetTransportModesForTest();
       await states.close();
       if (getIt.isRegistered<AnnouncementBloc>()) {
@@ -5699,6 +5713,8 @@ void main() {
     TripFormDraft fullDraft({
       TripFormStep stepId = TripFormStep.conditions,
       String? transportMode = 'PLANE',
+      String? arrivalTime,
+      int arrivalDayOffset = 0,
     }) {
       final day = DateUtils.dateOnly(
         DateTime.now().add(const Duration(days: 30)),
@@ -5712,6 +5728,8 @@ void main() {
         arrivalCountryCode: 'SN',
         departureDate: day,
         departureTime: '10:00',
+        arrivalTime: arrivalTime,
+        arrivalDayOffset: arrivalDayOffset,
         handoverDeadline: day.subtract(const Duration(days: 1)),
         transportMode: transportMode,
         priceOption: 0,
@@ -6467,6 +6485,698 @@ void main() {
           }
         });
       }
+    }
+
+    // ── Route : capacité en tonnes, taille et poids max (T3) ──────────────
+
+    /// Route choisie à l'étape Mode sur un brouillon complet sans mode, puis
+    /// arrivée à l'étape Capacité.
+    Future<void> roadAtCapacity(WidgetTester tester, {Size? size}) async {
+      roadOn();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(resumeDraft: fullDraft(transportMode: null)),
+        size: size ?? const Size(800, 1024),
+      );
+      await tester.tap(find.byKey(const Key('mode-card-car')));
+      await tester.pump();
+      await _goToStep(tester, TripFormStep.capacite);
+    }
+
+    Future<void> backTo(WidgetTester tester, TripFormStep target) async {
+      for (var i = 0; i < TripFormStep.values.length; i++) {
+        if (header(tester).current == target) return;
+        await tester.tap(find.widgetWithText(DonyButton, 'Retour'));
+        await tester.pump(const Duration(milliseconds: 600));
+      }
+      fail('étape $target non atteinte');
+    }
+
+    Future<void> typeIn(WidgetTester tester, String key, String text) async {
+      final field = find.byKey(Key(key));
+      await tester.ensureVisible(field);
+      await tester.enterText(field, text);
+      await tester.pump();
+      await tester.pump();
+    }
+
+    testWidgets('route : pas de puce valise, taille max visible et '
+        'facultative', (tester) async {
+      await roadAtCapacity(tester);
+      expect(find.text('1 valise 23 kg'), findsNothing);
+      expect(find.text('Personnalisé'), findsOneWidget);
+      expect(find.text("Taille max d'un colis (facultatif)"), findsOneWidget);
+      expect(find.text('Poids max par colis (kg, facultatif)'), findsOneWidget);
+      // Aucune taille choisie : « Continuer » reste actif (C24).
+      expect(continueButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('route sans taille : Continuer actif, payload sans '
+        'maxItemSize', (tester) async {
+      await roadAtCapacity(tester);
+      expect(continueButton(tester).onPressed, isNotNull);
+      await _goToStep(tester, TripFormStep.conditions);
+      await publish(tester);
+
+      final sent = sentCreate();
+      expect(sent.transportMode, TransportMode.car);
+      expect(sent.maxItemSize, isNull);
+      expect(sent.maxParcelWeightKg, isNull);
+      // Valise par défaut du brouillon convertie : kg exact (C27).
+      expect(sent.capacityUnit, 'KG_EXACT');
+    });
+
+    testWidgets('route publiée : payload maxItemSize L, maxParcelWeightKg 20, '
+        'availableKg 1200', (tester) async {
+      await roadAtCapacity(tester);
+      await typeIn(tester, 'capacity-kg-field', '1200');
+      await tester.ensureVisible(find.byKey(const Key('item-size-L')));
+      await tester.tap(find.byKey(const Key('item-size-L')));
+      await tester.pump();
+      await typeIn(tester, 'max-parcel-weight-field', '20');
+      expect(continueButton(tester).onPressed, isNotNull);
+
+      await _goToStep(tester, TripFormStep.conditions);
+      expect(
+        find.text('Ex : meubles, électroménager, cartons…'),
+        findsOneWidget,
+      );
+      await publish(tester);
+
+      final sent = sentCreate();
+      expect(sent.availableKg, 1200);
+      expect(sent.capacityUnit, 'KG_EXACT');
+      expect(sent.maxItemSize, ItemSize.l);
+      expect(sent.maxParcelWeightKg, 20);
+    });
+
+    testWidgets('route : 2 500 kg acceptés, avion : 1 000 kg en erreur', (
+      tester,
+    ) async {
+      await roadAtCapacity(tester);
+      await typeIn(tester, 'capacity-kg-field', '2500');
+      expect(find.byKey(const Key('capacity-kg-error')), findsNothing);
+      expect(continueButton(tester).onPressed, isNotNull);
+
+      await backTo(tester, TripFormStep.mode);
+      await tester.tap(find.byKey(const Key('mode-card-plane')));
+      await tester.pump();
+      await _goToStep(tester, TripFormStep.capacite);
+      await typeIn(tester, 'capacity-kg-field', '1000');
+      expect(find.text('Au plus 999 kg pour ce mode'), findsOneWidget);
+      expect(continueButton(tester).onPressed, isNull);
+      await typeIn(tester, 'capacity-kg-field', '999');
+      expect(find.byKey(const Key('capacity-kg-error')), findsNothing);
+      expect(continueButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('route 1 200 kg puis avion : Continuer grisé, message « Au '
+        'plus 999 kg »', (tester) async {
+      await roadAtCapacity(tester);
+      await typeIn(tester, 'capacity-kg-field', '1200');
+      await backTo(tester, TripFormStep.mode);
+      await tester.tap(find.byKey(const Key('mode-card-plane')));
+      await tester.pump();
+      await _goToStep(tester, TripFormStep.capacite);
+
+      expect(find.text('Au plus 999 kg pour ce mode'), findsOneWidget);
+      expect(continueButton(tester).onPressed, isNull);
+      expect(find.byKey(const Key('capacity-road-limits')), findsNothing);
+    });
+
+    testWidgets('avion publié : payload sans maxItemSize ni '
+        'maxParcelWeightKg', (tester) async {
+      await roadAtCapacity(tester);
+      await tester.ensureVisible(find.byKey(const Key('item-size-L')));
+      await tester.tap(find.byKey(const Key('item-size-L')));
+      await tester.pump();
+      await typeIn(tester, 'max-parcel-weight-field', '20');
+      await backTo(tester, TripFormStep.mode);
+      await tester.tap(find.byKey(const Key('mode-card-plane')));
+      await tester.pump();
+      await _goToStep(tester, TripFormStep.conditions);
+      await publish(tester);
+
+      final sent = sentCreate();
+      expect(sent.transportMode, TransportMode.plane);
+      expect(sent.maxItemSize, isNull);
+      expect(sent.maxParcelWeightKg, isNull);
+    });
+
+    testWidgets('poids max par colis hors bornes : Continuer grisé', (
+      tester,
+    ) async {
+      await roadAtCapacity(tester);
+      await typeIn(tester, 'capacity-kg-field', '100');
+      await typeIn(tester, 'max-parcel-weight-field', '150');
+      expect(
+        find.text('Entre 0,5 kg et la capacité du trajet'),
+        findsOneWidget,
+      );
+      expect(continueButton(tester).onPressed, isNull);
+      await typeIn(tester, 'max-parcel-weight-field', '');
+      expect(continueButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('modification route : taille et poids non touchés gardés, '
+        'effacés envoyés', (tester) async {
+      roadOn();
+      final roadTrip = _makeFullAnnouncement(
+        transportMode: TransportMode.car,
+        capacityUnit: 'KG_EXACT',
+        availableKg: 1200,
+        maxItemSize: ItemSize.l,
+        maxParcelWeightKg: 20,
+      );
+      await pumpScreen(tester, CreateTripArgs(announcement: roadTrip));
+      await _goToStep(tester, TripFormStep.capacite);
+      expect(find.text('1 valise 23 kg'), findsNothing);
+      // Taille relue, poids max relu.
+      final tile = tester.widget<Semantics>(
+        find.byKey(const Key('item-size-L')),
+      );
+      expect(tile.properties.selected, isTrue);
+      // Effacer le poids, garder la taille.
+      await typeIn(tester, 'max-parcel-weight-field', '');
+
+      await _goToStep(tester, TripFormStep.conditions);
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      final sent = verify(
+        () => announcementBloc.add(captureAny()),
+      ).captured.whereType<AnnouncementUpdateRequested>().single;
+      expect(sent.maxItemSize.value, isNull);
+      expect(sent.maxItemSize.isClear, isFalse);
+      expect(sent.maxParcelWeightKg.isClear, isTrue);
+      expect(sent.availableKg, 1200);
+    });
+
+    testWidgets(
+      'modification d\'un trajet route déjà réservé : poids max 200 kg '
+      'pour 100 kg restants, Continuer actif et rien d\'effacé',
+      (tester) async {
+        roadOn();
+        // 1 000 kg au départ, 900 réservés : il reste 100 kg, le voyageur a
+        // fixé 200 kg par colis, le back n'impose pas « poids max <= reste ».
+        final roadTrip = _makeFullAnnouncement(
+          transportMode: TransportMode.car,
+          capacityUnit: 'KG_EXACT',
+          availableKg: 100,
+          maxItemSize: ItemSize.l,
+          maxParcelWeightKg: 200,
+        );
+        await pumpScreen(tester, CreateTripArgs(announcement: roadTrip));
+        await _goToStep(tester, TripFormStep.capacite);
+
+        expect(find.byKey(const Key('max-parcel-weight-error')), findsNothing);
+        expect(
+          find.text('Entre 0,5 kg et la capacité du trajet'),
+          findsNothing,
+        );
+        expect(continueButton(tester).onPressed, isNotNull);
+
+        await _goToStep(tester, TripFormStep.conditions);
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+        final sent = verify(
+          () => announcementBloc.add(captureAny()),
+        ).captured.whereType<AnnouncementUpdateRequested>().single;
+        expect(sent.maxParcelWeightKg.value, isNull);
+        expect(sent.maxParcelWeightKg.isClear, isFalse);
+        expect(sent.availableKg, 100);
+      },
+    );
+
+    testWidgets('modification avion : rien envoyé pour taille et poids', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(announcement: _makeFullAnnouncement()),
+      );
+      await _goToStep(tester, TripFormStep.conditions);
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      final sent = verify(
+        () => announcementBloc.add(captureAny()),
+      ).captured.whereType<AnnouncementUpdateRequested>().single;
+      expect(sent.maxItemSize.value, isNull);
+      expect(sent.maxItemSize.isClear, isFalse);
+      expect(sent.maxParcelWeightKg.value, isNull);
+      expect(sent.maxParcelWeightKg.isClear, isFalse);
+    });
+
+    testWidgets(
+      'brouillon route J+10 rouvert en avion : arrivée bornée à J+3',
+      (tester) async {
+        final day = DateUtils.dateOnly(
+          DateTime.now().add(const Duration(days: 30)),
+        );
+        final draft = TripFormDraft(
+          currency: 'EUR',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: day,
+          departureTime: '10:00',
+          arrivalTime: '12:00',
+          arrivalDayOffset: 10,
+          // Route éteinte : le mode retombe sur l'avion (3 jours au plus).
+          transportMode: 'CAR',
+        );
+        await pumpScreen(tester, CreateTripArgs(resumeDraft: draft));
+        expect(
+          tester
+              .widget<ArrivalDayChips>(find.byType(ArrivalDayChips))
+              .notifier
+              .value,
+          3,
+        );
+      },
+    );
+
+    // ── Route : arrivée « Autre date » jusqu'à J+14 (T4) ──────────────────
+
+    /// Jour du départ des brouillons de [fullDraft], et son arrivée à +[n].
+    DateTime draftDeparture() =>
+        DateUtils.dateOnly(DateTime.now().add(const Duration(days: 30)));
+    // Sans `DateFormat` : le premier appel fixerait `Intl.defaultLocale`
+    // à `en_US` pour les tests suivants.
+    String wireDay(DateTime d, int n) {
+      final day = DateTime(d.year, d.month, d.day + n);
+      String two(int v) => v.toString().padLeft(2, '0');
+      return '${day.year}-${two(day.month)}-${two(day.day)}';
+    }
+
+    testWidgets('route sans heure d\'arrivée, J+5 : payload arrivalDate = '
+        'départ + 5', (tester) async {
+      roadOn();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(transportMode: 'CAR', arrivalDayOffset: 5),
+        ),
+      );
+      await publish(tester);
+
+      final sent = sentCreate();
+      expect(sent.transportMode, TransportMode.car);
+      expect(sent.arrivalTime, isNull);
+      expect(sent.arrivalDate, wireDay(draftDeparture(), 5));
+    });
+
+    /// Brouillon route avec heure d'arrivée (sans heure, le décalage avion
+    /// serait ignoré de toute façon), repris à l'étape Mode, puis [mode] choisi.
+    Future<AnnouncementCreateRequested> roadThenMode(
+      WidgetTester tester, {
+      required int offset,
+      required String mode,
+    }) async {
+      roadOn();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(
+            stepId: TripFormStep.mode,
+            transportMode: 'CAR',
+            arrivalTime: '12:00',
+            arrivalDayOffset: offset,
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(Key('mode-card-$mode')));
+      await tester.pump();
+      await _goToStep(tester, TripFormStep.conditions);
+      await publish(tester);
+      return sentCreate();
+    }
+
+    testWidgets('route J+5 avec heure puis avion : décalage 0, aucun '
+        'arrivalDate', (tester) async {
+      final sent = await roadThenMode(tester, offset: 5, mode: 'plane');
+      expect(sent.transportMode, TransportMode.plane);
+      expect(sent.arrivalTime, '12:00');
+      expect(sent.arrivalDate, isNull);
+    });
+
+    testWidgets('route J+3 puis avion : 0, les puces avion s\'arrêtent à J+2', (
+      tester,
+    ) async {
+      final sent = await roadThenMode(tester, offset: 3, mode: 'plane');
+      expect(sent.arrivalDate, isNull);
+    });
+
+    testWidgets('route J+2 puis avion : J+2 gardé', (tester) async {
+      final sent = await roadThenMode(tester, offset: 2, mode: 'plane');
+      expect(sent.arrivalDate, wireDay(draftDeparture(), 2));
+    });
+
+    testWidgets('avion J+3 avec heure puis route : J+3 gardé (borne 14)', (
+      tester,
+    ) async {
+      roadOn();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(
+            stepId: TripFormStep.mode,
+            arrivalTime: '12:00',
+            arrivalDayOffset: 3,
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('mode-card-car')));
+      await tester.pump();
+      await _goToStep(tester, TripFormStep.conditions);
+      await publish(tester);
+
+      expect(sentCreate().arrivalDate, wireDay(draftDeparture(), 3));
+    });
+
+    // ── Modèle choisi avant le formulaire, puis mode (T5, Review Focus 5) ──
+
+    /// Modèle route J+10, taille L, poids max 50, 1 200 kg, sans heure.
+    TripTemplate roadTemplate({
+      int arrivalDayOffset = 10,
+      String transportMode = 'CAR',
+      String? arrivalTime,
+      int availableKg = 1200,
+      String capacityUnit = 'KG_EXACT',
+    }) => TripTemplate(
+      id: 'tmpl-road',
+      label: 'Dakar → Bamako',
+      departureCity: 'Dakar',
+      arrivalCity: 'Bamako',
+      departureCountryCode: 'SN',
+      arrivalCountryCode: 'ML',
+      transportMode: transportMode,
+      capacityUnit: capacityUnit,
+      availableKg: availableKg,
+      pricePerKg: 8,
+      acceptedCategories: const ['Vêtements'],
+      currency: 'EUR',
+      acceptedPaymentMethods: const ['CASH'],
+      departureTime: '10:00',
+      arrivalTime: arrivalTime,
+      arrivalDayOffset: arrivalDayOffset,
+      handoverLeadDays: 1,
+      pickupAddress: const AddressData(
+        label: 'Colobane',
+        lat: 14.69,
+        lng: -17.45,
+      ),
+      deliveryAddress: const AddressData(
+        label: 'Badalabougou',
+        lat: 12.62,
+        lng: -7.99,
+      ),
+      maxItemSize: ItemSize.l,
+      maxParcelWeightKg: 50,
+    );
+
+    AnnouncementFormBloc formBlocOf(WidgetTester tester) =>
+        BlocProvider.of<AnnouncementFormBloc>(
+          tester.element(find.byType(CaStepperHeader)),
+        );
+
+    int arrivalOffsetOf(WidgetTester tester) => tester
+        .widget<TrajetStep>(find.byType(TrajetStep, skipOffstage: false))
+        .arrivalDayOffsetNotifier!
+        .value;
+
+    /// Modèle reçu par `args.template`, étape Mode affichée, puis [mode].
+    Future<void> templateThenMode(
+      WidgetTester tester,
+      TripTemplate template,
+      String mode,
+    ) async {
+      roadOn();
+      await pumpScreen(tester, CreateTripArgs(template: template));
+      expect(header(tester).current, TripFormStep.mode);
+      await tester.tap(find.byKey(Key('mode-card-$mode')));
+      await tester.pump();
+      // La confirmation « modèle appliqué » couvre le bouton du bas ~4 s.
+      await tester.pump(const Duration(seconds: 5));
+    }
+
+    testWidgets('args.template route J+10 L 1 200 kg, puis mode Avion : '
+        'payload sans taille, décalage 0, Continuer grisé sur 1 200 kg', (
+      tester,
+    ) async {
+      await templateThenMode(tester, roadTemplate(), 'plane');
+
+      expect(arrivalOffsetOf(tester), 0);
+      final state = formBlocOf(tester).state;
+      expect(state.transportMode, TransportMode.plane);
+      expect(state.maxItemSize, isNull);
+      expect(state.maxParcelWeightKg, isNull);
+      expect(state.availableKg, 1200);
+      expect(state.capacityTooHigh, isTrue);
+
+      tester
+              .widget<TrajetStep>(find.byType(TrajetStep, skipOffstage: false))
+              .departureDateNotifier
+              .value =
+          draftDeparture();
+      await tester.pump(const Duration(milliseconds: 300));
+      await _goToStep(tester, TripFormStep.capacite);
+      expect(find.text('Au plus 999 kg pour ce mode'), findsOneWidget);
+      expect(continueButton(tester).onPressed, isNull);
+      expect(find.byKey(const Key('capacity-road-limits')), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('args.template route J+10, mode Route : décalage 10 gardé, '
+        'taille et poids max repris', (tester) async {
+      await templateThenMode(tester, roadTemplate(), 'car');
+      expect(arrivalOffsetOf(tester), 10);
+
+      tester
+              .widget<TrajetStep>(find.byType(TrajetStep, skipOffstage: false))
+              .departureDateNotifier
+              .value =
+          draftDeparture();
+      await tester.pump(const Duration(milliseconds: 300));
+      await _goToStep(tester, TripFormStep.conditions);
+      await publish(tester);
+
+      final sent = sentCreate();
+      expect(sent.transportMode, TransportMode.car);
+      expect(sent.arrivalTime, isNull);
+      expect(sent.arrivalDate, wireDay(draftDeparture(), 10));
+      expect(sent.availableKg, 1200);
+      expect(sent.maxItemSize, ItemSize.l);
+      expect(sent.maxParcelWeightKg, 50);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('args.template avion J+3 avec heure, mode Avion : J+3 gardé '
+        '(même mode que le modèle)', (tester) async {
+      await templateThenMode(
+        tester,
+        roadTemplate(
+          transportMode: 'PLANE',
+          arrivalTime: '06:00',
+          arrivalDayOffset: 3,
+          availableKg: 23,
+          capacityUnit: 'SUITCASE_23KG',
+        ),
+        'plane',
+      );
+      expect(arrivalOffsetOf(tester), 3);
+      final state = formBlocOf(tester).state;
+      expect(state.maxItemSize, isNull);
+      expect(state.maxParcelWeightKg, isNull);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('args.template route J+3 avec heure, mode Avion : décalage 0 '
+        '(mode différent, puces avion 0 à 2)', (tester) async {
+      await templateThenMode(
+        tester,
+        roadTemplate(arrivalTime: '06:00', arrivalDayOffset: 3),
+        'plane',
+      );
+      expect(arrivalOffsetOf(tester), 0);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('avion seul : modèle route J+10 appliqué en avion, décalage 0 '
+        'et ni taille ni poids max', (tester) async {
+      await pumpScreen(tester, CreateTripArgs(template: roadTemplate()));
+      expect(header(tester).current, TripFormStep.trajet);
+      expect(arrivalOffsetOf(tester), 0);
+      final state = formBlocOf(tester).state;
+      expect(state.maxItemSize, isNull);
+      expect(state.maxParcelWeightKg, isNull);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('avion seul : modèle avion J+3 avec heure gardé à J+3', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          template: roadTemplate(
+            transportMode: 'PLANE',
+            arrivalTime: '06:00',
+            arrivalDayOffset: 3,
+            availableKg: 23,
+            capacityUnit: 'SUITCASE_23KG',
+          ),
+        ),
+      );
+      expect(arrivalOffsetOf(tester), 3);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('étape Trajet en route : pas d\'heure d\'arrivée, Autre date '
+        'ouvre le sélecteur J+3..J+14', (tester) async {
+      roadOn();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(
+            stepId: TripFormStep.trajet,
+            transportMode: 'CAR',
+          ),
+        ),
+      );
+      expect(find.byKey(const Key('arrivalTimeField')), findsNothing);
+      final other = find.byKey(const Key('arrival-day-other'));
+      await tester.ensureVisible(other);
+      await tester.tap(other);
+      await tester.pumpAndSettle();
+
+      final picker = tester.widget<DatePickerDialog>(
+        find.byType(DatePickerDialog),
+      );
+      final dep = draftDeparture();
+      expect(picker.firstDate, DateTime(dep.year, dep.month, dep.day + 3));
+      expect(picker.lastDate, DateTime(dep.year, dep.month, dep.day + 14));
+    });
+
+    for (final english in [false, true]) {
+      final lang = english ? 'en' : 'fr';
+      testWidgets('360 dp $lang : étape Trajet route, quatre puces d\'arrivée '
+          'sur une ligne chacune', (tester) async {
+        if (english) useEnglish();
+        roadOn();
+        await pumpScreen(
+          tester,
+          CreateTripArgs(
+            resumeDraft: fullDraft(
+              stepId: TripFormStep.trajet,
+              transportMode: 'CAR',
+              arrivalDayOffset: 6,
+            ),
+          ),
+          size: const Size(360, 780),
+        );
+        await tester.ensureVisible(find.byKey(const Key('arrival-day-other')));
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+
+        final heights = <double>{};
+        for (final k in [
+          'arrival-day-0',
+          'arrival-day-1',
+          'arrival-day-2',
+          'arrival-day-other',
+        ]) {
+          final chip = find.byKey(Key(k));
+          expect(chip, findsOneWidget);
+          final label = find.descendant(of: chip, matching: find.byType(Text));
+          expect(tester.getSize(label.first).height, lessThan(24));
+          heights.add(tester.getSize(chip).height);
+        }
+        expect(heights.length, 1);
+        final other = english ? 'Other date' : 'Autre date';
+        expect(find.text(other), findsOneWidget);
+        expect(find.byKey(const Key('arrival-date-row')), findsOneWidget);
+      });
+    }
+
+    testWidgets('modification d\'un trajet route à J+10 : ouvert à J+10, '
+        'renvoyé tel quel', (tester) async {
+      roadOn();
+      final dep = draftDeparture();
+      final roadTrip = _makeFullAnnouncement(
+        transportMode: TransportMode.car,
+        capacityUnit: 'KG_EXACT',
+        departureDate: dep,
+        handoverDeadline: dep.subtract(const Duration(days: 1)),
+        arrivalTime: null,
+        arrivalDate: DateTime(dep.year, dep.month, dep.day + 10),
+      );
+      await pumpScreen(tester, CreateTripArgs(announcement: roadTrip));
+
+      final chips = tester.widget<ArrivalDayChips>(
+        find.byType(ArrivalDayChips, skipOffstage: false),
+      );
+      expect(chips.notifier.value, 10);
+      expect(chips.maxDays, 14);
+
+      await _goToStep(tester, TripFormStep.conditions);
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
+      final sent = verify(
+        () => announcementBloc.add(captureAny()),
+      ).captured.whereType<AnnouncementUpdateRequested>().single;
+      expect(sent.arrivalDate, wireDay(dep, 10));
+    });
+
+    testWidgets('modification d\'un trajet avion à J+3 : borné à 3, pas 2', (
+      tester,
+    ) async {
+      final dep = draftDeparture();
+      final trip = _makeFullAnnouncement(
+        departureDate: dep,
+        handoverDeadline: dep.subtract(const Duration(days: 1)),
+        arrivalDate: DateTime(dep.year, dep.month, dep.day + 3),
+      );
+      await pumpScreen(tester, CreateTripArgs(announcement: trip));
+
+      final chips = tester.widget<ArrivalDayChips>(
+        find.byType(ArrivalDayChips, skipOffstage: false),
+      );
+      expect(chips.notifier.value, 3);
+    });
+
+    for (final english in [false, true]) {
+      final lang = english ? 'en' : 'fr';
+      testWidgets('360 dp $lang : étape Capacité route et barre '
+          'Retour/Continuer', (tester) async {
+        if (english) useEnglish();
+        await roadAtCapacity(tester, size: const Size(360, 780));
+        expect(tester.takeException(), isNull);
+        await tester.ensureVisible(
+          find.byKey(const Key('max-parcel-weight-field')),
+        );
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        final back = english ? 'Back' : 'Retour';
+        final cont = english ? 'Continue' : 'Continuer';
+        final backHeight = tester
+            .getSize(find.widgetWithText(DonyButton, back))
+            .height;
+        expect(
+          tester.getSize(find.widgetWithText(DonyButton, cont)).height,
+          backHeight,
+        );
+        for (final label in [back, cont]) {
+          final text = find.descendant(
+            of: find.widgetWithText(DonyButton, label),
+            matching: find.text(label),
+          );
+          final laidOut = tester.getSize(text);
+          // Ni rétréci par le FittedBox, ni sur deux lignes.
+          expect(tester.getRect(text).width, closeTo(laidOut.width, 0.5));
+          expect(laidOut.height, lessThan(30));
+        }
+      });
     }
   });
 

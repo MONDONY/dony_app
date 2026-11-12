@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -253,7 +254,9 @@ class _DeclaredCard extends StatelessWidget {
     final description = bid.description?.trim();
     final lines = [
       if (weight != null && weight > 0)
-        l.parcelRefusalDeclaredWeight(_formatKg(weight)),
+        l.parcelRefusalDeclaredWeight(
+          formatWeightGrouped(l.localeName, weight),
+        ),
       if (category != null && category.isNotEmpty) category,
     ];
     if (lines.isEmpty && (description == null || description.isEmpty)) {
@@ -292,7 +295,4 @@ class _DeclaredCard extends StatelessWidget {
       ),
     );
   }
-
-  static String _formatKg(double kg) =>
-      kg == kg.roundToDouble() ? kg.toStringAsFixed(0) : kg.toStringAsFixed(1);
 }

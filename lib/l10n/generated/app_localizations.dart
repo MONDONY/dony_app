@@ -1994,6 +1994,78 @@ abstract class AppLocalizations {
   /// **'La date d\'arrivée est trop loin après le départ pour ce mode.'**
   String get errorArrivalTooFarMessage;
 
+  /// Erreur weight-too-heavy du back : le poids dépasse le maximum du mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids trop élevé'**
+  String get errorWeightTooHeavyTitle;
+
+  /// Erreur weight-too-heavy du back : le poids dépasse le maximum du mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce poids dépasse le maximum accepté pour ce mode de transport.'**
+  String get errorWeightTooHeavyMessage;
+
+  /// Erreur trip-capacity-too-high du back : la capacité du trajet dépasse le maximum du mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité trop élevée'**
+  String get errorTripCapacityTooHighTitle;
+
+  /// Erreur trip-capacity-too-high du back : la capacité du trajet dépasse le maximum du mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La capacité dépasse le maximum accepté pour ce mode de transport.'**
+  String get errorTripCapacityTooHighMessage;
+
+  /// Erreur parcel-too-heavy du back : le colis dépasse le poids maximum par colis du trajet (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis trop lourd'**
+  String get errorParcelTooHeavyTitle;
+
+  /// Erreur parcel-too-heavy du back : le colis dépasse le poids maximum par colis du trajet (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis dépasse le poids maximum accepté par ce voyageur.'**
+  String get errorParcelTooHeavyMessage;
+
+  /// Erreur parcel-too-big du back : le colis dépasse la taille maximum acceptée par le trajet (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis trop volumineux'**
+  String get errorParcelTooBigTitle;
+
+  /// Erreur parcel-too-big du back : le colis dépasse la taille maximum acceptée par le trajet (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis dépasse la taille maximum acceptée par ce voyageur.'**
+  String get errorParcelTooBigMessage;
+
+  /// Taille S d'un colis routier : exemple affiché sous le code (sélecteur de taille).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sac'**
+  String get itemSizeSDescription;
+
+  /// Taille M d'un colis routier : exemple affiché sous le code (sélecteur de taille).
+  ///
+  /// In fr, this message translates to:
+  /// **'Carton'**
+  String get itemSizeMDescription;
+
+  /// Taille L d'un colis routier : exemple affiché sous le code (sélecteur de taille).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valise, chaise'**
+  String get itemSizeLDescription;
+
+  /// Taille XL d'un colis routier : exemple affiché sous le code (sélecteur de taille).
+  ///
+  /// In fr, this message translates to:
+  /// **'Meuble'**
+  String get itemSizeXlDescription;
+
   /// No description provided for @errorConflictTitle.
   ///
   /// In fr, this message translates to:
@@ -3950,6 +4022,42 @@ abstract class AppLocalizations {
   /// **'Type de contenu, note, escales, paiement'**
   String get homeComposerMoreFiltersHint;
 
+  /// Sous-titre de « Plus de filtres » du composeur de recherche quand le filtre Transport est la route : les escales (avion) y cèdent la place à la ville de passage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Type de contenu, note, ville de passage, paiement'**
+  String get homeComposerMoreFiltersHintRoad;
+
+  /// Composeur de recherche de trajets, route seulement : section de la taille minimale de colis que le trajet accepte.
+  ///
+  /// In fr, this message translates to:
+  /// **'TAILLE DU COLIS'**
+  String get homeComposerSectionItemSize;
+
+  /// Composeur de recherche de trajets, route : explication du filtre de taille (strict côté serveur, un trajet sans taille maximum n'apparaît pas).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets qui acceptent au moins cette taille.'**
+  String get homeComposerItemSizeHint;
+
+  /// Composeur de recherche de trajets, route seulement : section de la ville où le voyage s'arrête.
+  ///
+  /// In fr, this message translates to:
+  /// **'PASSE PAR'**
+  String get homeComposerSectionVia;
+
+  /// Libellé du champ de ville « Passe par » du composeur de recherche, route seulement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une ville sur la route (ex. Tanger)'**
+  String get homeComposerViaHint;
+
+  /// Aide sous le champ « Passe par » : à quoi sert la ville de passage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour confier un colis à un voyageur dont le voyage s\'arrête dans votre ville.'**
+  String get homeComposerViaHelp;
+
   /// Titre de la section du composeur de recherche de trajets qui filtre par mode de transport (Tous, Avion, Bateau, Route), visible seulement quand plusieurs modes sont ouverts
   ///
   /// In fr, this message translates to:
@@ -4171,6 +4279,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'🧳 Valise 23 kg'**
   String get homeFilterChipsSuitcase23;
+
+  /// Puce de l'accueil (mode Trajets filtré sur la route) qui remplace « Valise 23 kg » : taille de colis minimale acceptée ; aussi titre de la feuille de choix.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille'**
+  String get homeFilterChipsItemSize;
+
+  /// Puce Taille active : la taille minimale choisie (S, M, L ou XL), les trajets qui acceptent cette taille et plus grand.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille {size} et +'**
+  String homeFilterChipsItemSizeActive(String size);
 
   /// Libellé du champ du composeur de recherche qui ouvre le calendrier de période (un jour ou du … au …), sous les presets de date (search_filter_fields.dart)
   ///
@@ -5528,8 +5648,44 @@ abstract class AppLocalizations {
   /// Étiquette de capacité de la carte Route de l'étape Mode
   ///
   /// In fr, this message translates to:
-  /// **'Kg libre ou exact'**
+  /// **'Kg, tonnes, taille S à XL'**
   String get tripPublishModeRoadTagCapacity;
+
+  /// Étape Capacité d'un trajet en route : titre du sélecteur de taille S à XL, facultatif
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille max d\'un colis (facultatif)'**
+  String get tripPublishMaxItemSizeLabel;
+
+  /// Étape Capacité d'un trajet en route : libellé du champ de poids max par colis, facultatif
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids max par colis (kg, facultatif)'**
+  String get tripPublishMaxParcelWeightLabel;
+
+  /// Erreur sous le poids max par colis : hors de 0,5 kg à la capacité du trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre 0,5 kg et la capacité du trajet'**
+  String get tripPublishMaxParcelWeightInvalid;
+
+  /// Erreur sous la capacité d'un trajet : plafond du mode dépassé (999 kg en avion, 999 999 kg en route). max = poids formaté avec son unité, ex. « 999 kg »
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus {max} pour ce mode'**
+  String tripPublishCapacityTooHigh(String max);
+
+  /// Étape Conditions d'un trajet en route : exemples de contenus acceptés
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : meubles, électroménager, cartons…'**
+  String get tripPublishAcceptHintRoad;
+
+  /// Section Étapes d'un trajet en route : explication des étapes intermédiaires
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous passez par Tanger ou Nouakchott ? Ajoutez une étape : chacune est publiée comme un trajet, avec ses kilos, son prix et ses colis.'**
+  String get tripPublishLegsHintRoad;
 
   /// Titre de la section lieux de remise et de récupération
   ///
@@ -15592,11 +15748,23 @@ abstract class AppLocalizations {
   /// **'{title}, {label} depuis votre dernière visite'**
   String activityNewSinceLastVisit(Object label, Object title);
 
-  /// Libellé du poids maximum au-dessus du slider (create_bid_bottom_sheet.dart _buildSlider). {maxKg} déjà formaté (toStringAsFixed(0)).
+  /// Libellé du poids maximum au-dessus du slider (create_bid_bottom_sheet.dart _buildSlider, _buildNumeric). {maxKg} déjà formaté (valeur du dernier cran du curseur ou maximum de la saisie, milliers groupés, deux décimales au plus : formatWeightGrouped).
   ///
   /// In fr, this message translates to:
   /// **'max {maxKg} kg'**
   String bidCreateMaxWeightLabel(String maxKg);
+
+  /// Libellé du sélecteur de taille du colis, sur un trajet qui porte une taille maximum (create_bid/bid_item_size_block.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille du colis (facultatif)'**
+  String get bidCreateItemSizeLabel;
+
+  /// Aide sous le sélecteur de taille du colis : la taille maximum du trajet (create_bid/bid_item_size_block.dart). {size} est le code S, M, L ou XL.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur accepte les colis jusqu\'à la taille {size}.'**
+  String bidCreateItemSizeHelp(String size);
 
   /// Bouton générique de fin d'action (ex. bouton Terminé de la vue succès de DonyPaymentSheet).
   ///
@@ -26502,6 +26670,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{offset, plural, =0{Le jour même} =1{Le lendemain} other{Dans {offset} jours}}'**
   String tripPublishArrivalDayOption(int offset);
+
+  /// Jour d'arrivée en route : puce qui ouvre le choix d'une date à partir de J+3 (arrival_day_chips.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre date'**
+  String get tripPublishArrivalOtherDate;
+
+  /// Jour d'arrivée en route : ligne qui rappelle la date choisie (arrival_day_chips.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date d\'arrivée'**
+  String get tripPublishArrivalDateLabel;
 
   /// Affichage de l'arrivée quand elle est un autre jour que le départ (FLUTTER-4E)
   ///
@@ -38825,6 +39005,90 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Laisser ce champ vide supprime votre numéro de TVA enregistré.'**
   String get taxInfoVatWillBeErased;
+
+  /// Libellé du sélecteur de taille de colis, facultatif (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille du colis (facultatif)'**
+  String get requestCreateItemSizeOptionalLabel;
+
+  /// Aide sous le sélecteur de taille de colis (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aide les voyageurs à voir si votre colis tient dans leur véhicule.'**
+  String get requestCreateItemSizeHelp;
+
+  /// Aide sous le champ poids quand le mode est la route ou le bateau (package_request_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À partir de 0,5 kg, sans plafond (jusqu\'à 999 999 kg).'**
+  String get requestCreateWeightRangeRoad;
+
+  /// Erreur du champ poids : plus de 32 kg en avion ou « peu importe » (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au-delà de 32 kg, choisissez Route à l\'étape précédente.'**
+  String get requestCreateWeightTooHeavyForMode;
+
+  /// Capacité d'un trajet en route avec sa taille maximale de colis, sur les cartes et la fiche ({kg} déjà avec son unité) (traveler_card.dart, trip_billet_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg}, jusqu\'à taille {size}'**
+  String tripCapacityUpToSize(String kg, String size);
+
+  /// Kilo libre d'un trajet en route avec sa taille maximale de colis (traveler_card.dart, trip_billet_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Kilos libres, jusqu\'à taille {size}'**
+  String tripCapacityFreeUpToSize(String size);
+
+  /// Taille maximale de colis acceptée par un trajet en route, sur l'en-tête du trajet du voyageur (trip_owner_header.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Jusqu\'à taille {size}'**
+  String tripUpToSize(String size);
+
+  /// Poids maximal d'un colis accepté par le trajet ({kg} déjà avec son unité) (trip_billet_card.dart, trip_owner_header.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} max par colis'**
+  String tripMaxParcelWeight(String kg);
+
+  /// Durée d'un trajet par la route, en jours entre le départ et l'arrivée (traveler_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 jour de route} other{{count} jours de route}}'**
+  String tripRoadDuration(int count);
+
+  /// Poids puis taille d'un colis ou d'une demande quand la taille est connue, séparés par un point médian ({kg} déjà avec son unité) (package_request_list_card.dart, request_ticket_card.dart, colis_destinataire_card.dart, wizard_summary_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} · taille {size}'**
+  String parcelWeightAndSize(String kg, String size);
+
+  /// Taille d'un colis choisie par l'expéditeur, sous le poids sur l'affiche d'une demande (package_request_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille {size}'**
+  String parcelSizeLabel(String size);
+
+  /// Erreur du champ budget en route ou bateau : montant sous le minimum, aucun plafond affiché (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{min} au minimum.'**
+  String requestCreateBudgetMinOnly(String min);
+
+  /// Erreur du champ budget en route ou bateau : garde-fou technique dépassé (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant trop élevé : {max} au maximum.'**
+  String requestCreateBudgetTechnicalMax(String max);
+
+  /// Message de la publication refusée : poids au-delà de 32 kg pour le mode choisi, affiché depuis l'étape budget (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.'**
+  String get requestCreateWeightTooHeavySubmit;
 }
 
 class _AppLocalizationsDelegate

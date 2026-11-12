@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_photo_viewer.dart';
@@ -41,8 +42,8 @@ String bidNegotiationGridLineLabel(
 }
 
 /// Poids lisible, sans décimale inutile (« 5 kg », « 2,5 kg »).
-String negotiationParcelWeightLabel(double weight) =>
-    '${weight.toStringAsFixed(weight % 1 == 0 ? 0 : 1)} kg';
+String negotiationParcelWeightLabel(AppLocalizations l, double weight) =>
+    formatWeightKg(l, weight);
 
 class _ParcelDetails extends StatelessWidget {
   const _ParcelDetails({required this.negotiation});
@@ -73,7 +74,7 @@ class _ParcelDetails extends StatelessWidget {
         if (weight != null && weight > 0)
           DonyInfoRow(
             label: l.negotiationParcelSheetWeight,
-            value: negotiationParcelWeightLabel(weight),
+            value: negotiationParcelWeightLabel(l, weight),
           ),
         if (hasItems) ...[
           const SizedBox(height: DonySpacing.base),

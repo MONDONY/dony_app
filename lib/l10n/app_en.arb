@@ -369,6 +369,30 @@
   "@errorArrivalTooFarTitle": {"description": "Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart)."},
   "errorArrivalTooFarMessage": "The arrival date is too far after departure for this mode.",
   "@errorArrivalTooFarMessage": {"description": "Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart)."},
+  "errorWeightTooHeavyTitle": "Weight too high",
+  "@errorWeightTooHeavyTitle": {"description": "Erreur weight-too-heavy du back : le poids dépasse le maximum du mode de transport (error_catalog.dart)."},
+  "errorWeightTooHeavyMessage": "This weight is above the maximum allowed for this transport mode.",
+  "@errorWeightTooHeavyMessage": {"description": "Erreur weight-too-heavy du back : le poids dépasse le maximum du mode de transport (error_catalog.dart)."},
+  "errorTripCapacityTooHighTitle": "Capacity too high",
+  "@errorTripCapacityTooHighTitle": {"description": "Erreur trip-capacity-too-high du back : la capacité du trajet dépasse le maximum du mode de transport (error_catalog.dart)."},
+  "errorTripCapacityTooHighMessage": "The capacity is above the maximum allowed for this transport mode.",
+  "@errorTripCapacityTooHighMessage": {"description": "Erreur trip-capacity-too-high du back : la capacité du trajet dépasse le maximum du mode de transport (error_catalog.dart)."},
+  "errorParcelTooHeavyTitle": "Parcel too heavy",
+  "@errorParcelTooHeavyTitle": {"description": "Erreur parcel-too-heavy du back : le colis dépasse le poids maximum par colis du trajet (error_catalog.dart)."},
+  "errorParcelTooHeavyMessage": "This parcel is heavier than this traveler accepts.",
+  "@errorParcelTooHeavyMessage": {"description": "Erreur parcel-too-heavy du back : le colis dépasse le poids maximum par colis du trajet (error_catalog.dart)."},
+  "errorParcelTooBigTitle": "Parcel too big",
+  "@errorParcelTooBigTitle": {"description": "Erreur parcel-too-big du back : le colis dépasse la taille maximum acceptée par le trajet (error_catalog.dart)."},
+  "errorParcelTooBigMessage": "This parcel is bigger than this traveler accepts.",
+  "@errorParcelTooBigMessage": {"description": "Erreur parcel-too-big du back : le colis dépasse la taille maximum acceptée par le trajet (error_catalog.dart)."},
+  "itemSizeSDescription": "Bag",
+  "@itemSizeSDescription": {"description": "Taille S d'un colis routier : exemple affiché sous le code (sélecteur de taille)."},
+  "itemSizeMDescription": "Box",
+  "@itemSizeMDescription": {"description": "Taille M d'un colis routier : exemple affiché sous le code (sélecteur de taille)."},
+  "itemSizeLDescription": "Suitcase, chair",
+  "@itemSizeLDescription": {"description": "Taille L d'un colis routier : exemple affiché sous le code (sélecteur de taille)."},
+  "itemSizeXlDescription": "Furniture",
+  "@itemSizeXlDescription": {"description": "Taille XL d'un colis routier : exemple affiché sous le code (sélecteur de taille)."},
   "errorConflictTitle": "Can't do this",
   "errorConflictMessage": "The current status doesn't allow this.",
   "errorStorageTitle": "Storage unavailable",
@@ -711,6 +735,12 @@
   "homeComposerClearAll": "Clear all",
   "homeComposerMoreFilters": "More filters",
   "homeComposerMoreFiltersHint": "Content type, rating, stops, payment",
+  "homeComposerMoreFiltersHintRoad": "Content type, rating, city on the way, payment",
+  "homeComposerSectionItemSize": "PARCEL SIZE",
+  "homeComposerItemSizeHint": "Trips that take at least this size.",
+  "homeComposerSectionVia": "PASSES THROUGH",
+  "homeComposerViaHint": "A city on the way (e.g. Tangier)",
+  "homeComposerViaHelp": "To hand a parcel to a traveler whose journey stops in your city.",
   "homeComposerSectionTransport": "TRANSPORT",
   "@homeComposerSectionTransport": {
     "description": "Section title in the trip search composer that filters by transport mode (All, Plane, Boat, Road), shown only when several modes are open"
@@ -757,6 +787,15 @@
   "homeFilterChipsSize": "Size",
   "homeFilterChipsUrgent": "🔥 Urgent",
   "homeFilterChipsSuitcase23": "🧳 23 kg suitcase",
+  "homeFilterChipsItemSize": "Size",
+  "homeFilterChipsItemSizeActive": "Size {size}+",
+  "@homeFilterChipsItemSizeActive": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "homeFilterFieldsPeriod": "PERIOD",
   "homeFilterFieldsMaxPrice": "MAX PRICE",
   "homeFilterFieldsAll": "Any",
@@ -1004,7 +1043,13 @@
   "tripPublishModeRoadTitle": "By road",
   "tripPublishModeRoadSubtitle": "Car, bus or truck",
   "tripPublishModeRoadTagScope": "Domestic or international",
-  "tripPublishModeRoadTagCapacity": "Free or exact kg",
+  "tripPublishModeRoadTagCapacity": "Kg, tons, size S to XL",
+  "tripPublishMaxItemSizeLabel": "Max parcel size (optional)",
+  "tripPublishMaxParcelWeightLabel": "Max weight per parcel (kg, optional)",
+  "tripPublishMaxParcelWeightInvalid": "Between 0.5 kg and the trip capacity",
+  "tripPublishCapacityTooHigh": "At most {max} for this mode",
+  "tripPublishAcceptHintRoad": "E.g. furniture, appliances, boxes…",
+  "tripPublishLegsHintRoad": "Going through Tangier or Nouakchott? Add a leg: each one is published as a trip, with its own kilos, price and parcels.",
   "tripPublishHandoverLocationsLabel": "Drop-off locations",
   "tripPublishHandoverLocationsSubtitle": "Specify the exact drop-off and pickup location",
   "tripPublishLockedCapacityNote": "Capacity set by the request",
@@ -4568,6 +4613,8 @@
   "activityNewCount": "{count, plural, one{{count} new} other{{count} new}}",
   "activityNewSinceLastVisit": "{title}, {label} since your last visit",
   "bidCreateMaxWeightLabel": "max {maxKg} kg",
+  "bidCreateItemSizeLabel": "Parcel size (optional)",
+  "bidCreateItemSizeHelp": "This traveler accepts parcels up to size {size}.",
 
   "commonDone": "Done",
   "commonLater": "Later",
@@ -8918,6 +8965,14 @@
       }
     }
   },
+  "tripPublishArrivalOtherDate": "Other date",
+  "@tripPublishArrivalOtherDate": {
+    "description": "Jour d'arrivée en route : puce qui ouvre le choix d'une date à partir de J+3 (arrival_day_chips.dart)"
+  },
+  "tripPublishArrivalDateLabel": "Arrival date",
+  "@tripPublishArrivalDateLabel": {
+    "description": "Jour d'arrivée en route : ligne qui rappelle la date choisie (arrival_day_chips.dart)"
+  },
   "tripArrivalOnDateAtTime": "Arrives on {date} at {time}",
   "@tripArrivalOnDateAtTime": {
     "description": "Affichage de l'arrivée quand elle est un autre jour que le départ (FLUTTER-4E)",
@@ -11905,5 +11960,90 @@
   "taxInfoNothingNew": "We have received your information. The Yadony team will get back to you if needed.",
   "@taxInfoNothingNew": {"description": "Tout ce qui est saisissable est rempli mais le dossier reste à compléter (lieu de naissance sans numéro fiscal)."},
   "taxInfoVatWillBeErased": "Leaving this field empty deletes your saved VAT number.",
-  "@taxInfoVatWillBeErased": {"description": "Aide sous la TVA quand un numéro de TVA est déjà enregistré."}
+  "@taxInfoVatWillBeErased": {"description": "Aide sous la TVA quand un numéro de TVA est déjà enregistré."},
+  "requestCreateItemSizeOptionalLabel": "Parcel size (optional)",
+  "@requestCreateItemSizeOptionalLabel": {
+    "description": "Libellé du sélecteur de taille de colis, facultatif (step_2_details.dart)"
+  },
+  "requestCreateItemSizeHelp": "Helps travelers see whether your parcel fits in their vehicle.",
+  "@requestCreateItemSizeHelp": {
+    "description": "Aide sous le sélecteur de taille de colis (step_2_details.dart)"
+  },
+  "requestCreateWeightRangeRoad": "From 0.5 kg, no cap (up to 999,999 kg).",
+  "@requestCreateWeightRangeRoad": {
+    "description": "Aide sous le champ poids quand le mode est la route ou le bateau (package_request_labels.dart)"
+  },
+  "requestCreateWeightTooHeavyForMode": "Above 32 kg, choose Road in the previous step.",
+  "@requestCreateWeightTooHeavyForMode": {
+    "description": "Erreur du champ poids : plus de 32 kg en avion ou « peu importe » (step_2_details.dart)"
+  },
+  "tripCapacityUpToSize": "{kg}, up to size {size}",
+  "@tripCapacityUpToSize": {
+    "description": "Capacité d'un trajet en route avec sa taille maximale de colis, sur les cartes et la fiche ({kg} déjà avec son unité) (traveler_card.dart, trip_billet_card.dart)",
+    "placeholders": {
+      "kg": {"type": "String"},
+      "size": {"type": "String"}
+    }
+  },
+  "tripCapacityFreeUpToSize": "Free kilos, up to size {size}",
+  "@tripCapacityFreeUpToSize": {
+    "description": "Kilo libre d'un trajet en route avec sa taille maximale de colis (traveler_card.dart, trip_billet_card.dart)",
+    "placeholders": {
+      "size": {"type": "String"}
+    }
+  },
+  "tripUpToSize": "Up to size {size}",
+  "@tripUpToSize": {
+    "description": "Taille maximale de colis acceptée par un trajet en route, sur l'en-tête du trajet du voyageur (trip_owner_header.dart)",
+    "placeholders": {
+      "size": {"type": "String"}
+    }
+  },
+  "tripMaxParcelWeight": "{kg} max per parcel",
+  "@tripMaxParcelWeight": {
+    "description": "Poids maximal d'un colis accepté par le trajet ({kg} déjà avec son unité) (trip_billet_card.dart, trip_owner_header.dart)",
+    "placeholders": {
+      "kg": {"type": "String"}
+    }
+  },
+  "tripRoadDuration": "{count, plural, =1{1 day on the road} other{{count} days on the road}}",
+  "@tripRoadDuration": {
+    "description": "Durée d'un trajet par la route, en jours entre le départ et l'arrivée (traveler_card.dart)",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "parcelWeightAndSize": "{kg} · size {size}",
+  "@parcelWeightAndSize": {
+    "description": "Poids puis taille d'un colis ou d'une demande quand la taille est connue, séparés par un point médian ({kg} déjà avec son unité) (package_request_list_card.dart, request_ticket_card.dart, colis_destinataire_card.dart, wizard_summary_card.dart)",
+    "placeholders": {
+      "kg": {"type": "String"},
+      "size": {"type": "String"}
+    }
+  },
+  "parcelSizeLabel": "Size {size}",
+  "@parcelSizeLabel": {
+    "description": "Taille d'un colis choisie par l'expéditeur, sous le poids sur l'affiche d'une demande (package_request_poster_card.dart)",
+    "placeholders": {
+      "size": {"type": "String"}
+    }
+  },
+  "requestCreateBudgetMinOnly": "At least {min}.",
+  "@requestCreateBudgetMinOnly": {
+    "description": "Erreur du champ budget en route ou bateau : montant sous le minimum, aucun plafond affiché (step_3_recap_budget.dart)",
+    "placeholders": {
+      "min": {"type": "String"}
+    }
+  },
+  "requestCreateBudgetTechnicalMax": "Amount too high: {max} at most.",
+  "@requestCreateBudgetTechnicalMax": {
+    "description": "Erreur du champ budget en route ou bateau : garde-fou technique dépassé (step_3_recap_budget.dart)",
+    "placeholders": {
+      "max": {"type": "String"}
+    }
+  },
+  "requestCreateWeightTooHeavySubmit": "This parcel is over 32 kg: change its weight or choose Road.",
+  "@requestCreateWeightTooHeavySubmit": {
+    "description": "Message de la publication refusée : poids au-delà de 32 kg pour le mode choisi, affiché depuis l'étape budget (package_request_create_screen.dart)"
+  }
 }

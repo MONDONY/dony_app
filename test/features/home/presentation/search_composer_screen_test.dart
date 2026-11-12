@@ -13,7 +13,7 @@
 import 'dart:io';
 
 import 'package:dony/core/config/transport_modes_flag.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -25,6 +25,7 @@ import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/screens/search_composer_screen.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter/material.dart';
@@ -456,15 +457,16 @@ void main() {
   // si le filtre de mode vaut avion.
   for (final (mode, planeShown) in <(TransportMode?, bool)>[
     (null, false),
-    (TransportMode.car, false),
+    (TransportMode.boat, false),
     (TransportMode.plane, true),
   ]) {
     testWidgets('puces Escales, filtre mode $mode : avion $planeShown', (
       tester,
     ) async {
-      // Route allumée : sans choix de mode, le filtre de mode est écarté.
+      // Plusieurs modes proposés : sans choix de mode, le filtre est écarté.
+      // La route a ses propres filtres (PASSE PAR) : pas d'escales pour elle.
       setTransportModes(
-        const TransportModesAvailability(road: true, boat: false),
+        const TransportModesAvailability(road: true, boat: true),
       );
       addTearDown(resetTransportModesForTest);
       _vueHaute(tester);
@@ -636,6 +638,520 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('composer-suitcase-23')), findsNothing);
+  });
+
+  group('route : taille du colis, passe par, curseur 1 000 kg', () {
+    const road = HomeSearchFilters(transportMode: TransportMode.car);
+
+    void roadOn() {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      addTearDown(resetTransportModesForTest);
+    }
+
+    /// Derniers arguments du comptage : kilos min, mode, taille, ville.
+    ({double? kg, TransportMode? mode, ItemSize? size, String? via}) lastCount(
+      _MockAnnouncementRepo repo,
+    ) {
+      final captured = verify(
+        () => repo.countAnnouncements(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDateFrom: any(named: 'departureDateFrom'),
+          departureDateTo: any(named: 'departureDateTo'),
+          minAvailableKg: captureAny(named: 'minAvailableKg'),
+          maxAvailableKg: any(named: 'maxAvailableKg'),
+          maxPricePerKg: any(named: 'maxPricePerKg'),
+          gpProOnly: any(named: 'gpProOnly'),
+          minRating: any(named: 'minRating'),
+          weekendOnly: any(named: 'weekendOnly'),
+          transportMode: captureAny(named: 'transportMode'),
+          kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+          contentType: any(named: 'contentType'),
+          userLat: any(named: 'userLat'),
+          userLng: any(named: 'userLng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+          maxStops: any(named: 'maxStops'),
+          paymentMethods: any(named: 'paymentMethods'),
+          minItemSize: captureAny(named: 'minItemSize'),
+          viaCity: captureAny(named: 'viaCity'),
+        ),
+      ).captured;
+      final n = captured.length - 4;
+      return (
+        kg: captured[n] as double?,
+        mode: captured[n + 1] as TransportMode?,
+        size: captured[n + 2] as ItemSize?,
+        via: captured[n + 3] as String?,
+      );
+    }
+
+    Future<void> openMore(WidgetTester tester) async {
+      await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+      if (find
+          .byKey(const Key('composer-more-filters-body'))
+          .evaluate()
+          .isEmpty) {
+        await tester.tap(find.byKey(const Key('composer-more-filters')));
+        await tester.pumpAndSettle();
+      }
+    }
+
+    bool tileSelected(WidgetTester tester, String code) => tester
+        .widget<Semantics>(find.byKey(Key('item-size-$code')))
+        .properties
+        .selected!;
+
+    testWidgets('composeur route : TAILLE DU COLIS sous POIDS ET PRIX, PASSE '
+        'PAR, ni ESCALES ni Valise 23 kg', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      await tester.pumpWidget(const _Harness(initialFilters: road));
+      await tester.pumpAndSettle();
+
+      await _scrollTo(tester, find.text('POIDS ET PRIX'));
+      final weightTop = tester.getTopLeft(find.text('POIDS ET PRIX')).dy;
+      await _scrollTo(tester, find.text('TAILLE DU COLIS'));
+      final sizeTop = tester.getTopLeft(find.text('TAILLE DU COLIS')).dy;
+      await _scrollTo(tester, find.text('FILTRES RAPIDES'));
+      final quickTop = tester.getTopLeft(find.text('FILTRES RAPIDES')).dy;
+      expect(weightTop, lessThan(sizeTop));
+      expect(sizeTop, lessThan(quickTop));
+      for (final code in ['S', 'M', 'L', 'XL']) {
+        expect(find.byKey(Key('item-size-$code')), findsOneWidget);
+      }
+      expect(
+        find.text('Trajets qui acceptent au moins cette taille.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('composer-suitcase-23')), findsNothing);
+      expect(find.text('🧳 Valise 23 kg'), findsNothing);
+
+      // Replié, l'en-tête annonce la ville de passage.
+      expect(
+        find.text('Type de contenu, note, ville de passage, paiement'),
+        findsOneWidget,
+      );
+      await openMore(tester);
+      await _scrollTo(tester, find.text('PASSE PAR'));
+      expect(find.text('PASSE PAR'), findsOneWidget);
+      expect(find.byKey(const Key('composer-via-city')), findsOneWidget);
+      expect(
+        find.text(
+          'Pour confier un colis à un voyageur dont le voyage s\'arrête dans '
+          'votre ville.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('ESCALES'), findsNothing);
+      expect(find.byKey(const Key('chip-stops-directOnly')), findsNothing);
+    });
+
+    testWidgets('composeur avion (et « tous ») : inchangé, Valise 23 kg et '
+        'ESCALES, ni TAILLE ni PASSE PAR', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      for (final mode in [TransportMode.plane, null]) {
+        await tester.pumpWidget(
+          _Harness(
+            key: ValueKey(mode),
+            initialFilters: HomeSearchFilters(transportMode: mode),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('TAILLE DU COLIS'), findsNothing, reason: '$mode');
+        expect(find.byKey(const Key('item-size-L')), findsNothing);
+        await _scrollTo(tester, find.byKey(const Key('composer-suitcase-23')));
+        expect(find.byKey(const Key('composer-suitcase-23')), findsOneWidget);
+        expect(
+          find.text('Type de contenu, note, escales, paiement'),
+          findsOneWidget,
+        );
+        await openMore(tester);
+        await _scrollTo(tester, find.text('ESCALES'));
+        expect(find.text('ESCALES'), findsOneWidget);
+        expect(find.text('PASSE PAR'), findsNothing);
+        expect(find.byKey(const Key('composer-via-city')), findsNothing);
+      }
+    });
+
+    testWidgets('passer d\'avion à route efface la Valise 23 kg (23 kg '
+        'n\'est plus demandé)', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(
+        _Harness(
+          announcementRepo: repo,
+          initialFilters: const HomeSearchFilters(
+            transportMode: TransportMode.plane,
+            suitcase23Only: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('composer-transport-car')));
+      await _settleFilterChange(tester);
+
+      expect(find.byKey(const Key('composer-suitcase-23')), findsNothing);
+      final count = lastCount(repo);
+      expect(count.mode, TransportMode.car);
+      expect(count.kg, isNull);
+    });
+
+    testWidgets('taille : un tap pose, un second tap retire ; le comptage '
+        'suit', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(
+        _Harness(announcementRepo: repo, initialFilters: road),
+      );
+      await tester.pumpAndSettle();
+
+      await _scrollTo(tester, find.byKey(const Key('item-size-L')));
+      await tester.tap(find.byKey(const Key('item-size-L')));
+      await _settleFilterChange(tester);
+      expect(tileSelected(tester, 'L'), isTrue);
+      expect(tileSelected(tester, 'M'), isFalse);
+      expect(lastCount(repo).size, ItemSize.l);
+
+      await tester.tap(find.byKey(const Key('item-size-L')));
+      await _settleFilterChange(tester);
+      expect(tileSelected(tester, 'L'), isFalse);
+      expect(lastCount(repo).size, isNull);
+    });
+
+    testWidgets('passe par : la ville tapée est retenue, trimée, et vider '
+        'le champ la retire', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(
+        _Harness(announcementRepo: repo, initialFilters: road),
+      );
+      await tester.pumpAndSettle();
+
+      await openMore(tester);
+      await _scrollTo(tester, find.byKey(const Key('composer-via-city')));
+      await tester.enterText(
+        find.byKey(const Key('composer-via-city')),
+        ' Tanger ',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await _settleFilterChange(tester);
+      expect(lastCount(repo).via, 'Tanger');
+      // La ville compte dans « Plus de filtres ».
+      final badge = tester.widget<Text>(
+        find.descendant(
+          of: find.byKey(const Key('composer-more-filters-count')),
+          matching: find.byType(Text),
+        ),
+      );
+      expect(badge.data, '1');
+
+      await tester.enterText(find.byKey(const Key('composer-via-city')), '');
+      await _settleFilterChange(tester);
+      expect(lastCount(repo).via, isNull);
+      expect(
+        find.byKey(const Key('composer-more-filters-count')),
+        findsNothing,
+      );
+    });
+
+    Future<HomeSearchFilters?> typeViaThenSearch(
+      WidgetTester tester,
+      String typed,
+    ) async {
+      HomeSearchFilters? popped;
+      var closed = false;
+      await tester.pumpWidget(
+        _Harness(
+          initialFilters: road,
+          onPopped: (f) {
+            popped = f;
+            closed = true;
+          },
+        ),
+      );
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+
+      await openMore(tester);
+      await _scrollTo(tester, find.byKey(const Key('composer-via-city')));
+      // Ni validation clavier ni perte de focus voulue : on saisit puis on
+      // touche directement le bouton « Rechercher ».
+      await tester.enterText(find.byKey(const Key('composer-via-city')), typed);
+      await tester.pump();
+      await tester.tap(find.byType(DonyButton));
+      await tester.pumpAndSettle();
+      expect(closed, isTrue, reason: 'le composeur doit se refermer');
+      return popped;
+    }
+
+    testWidgets('« Passe par » tapé puis « Rechercher » touché sans valider : '
+        'la ville n\'est pas perdue', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      final popped = await typeViaThenSearch(tester, '  Tanger ');
+
+      expect(popped?.viaCity, 'Tanger');
+      expect(popped?.toAnnouncementQuery().viaCity, 'Tanger');
+    });
+
+    testWidgets('« Passe par » laissé blanc puis « Rechercher » : aucune '
+        'ville', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      final popped = await typeViaThenSearch(tester, '   ');
+
+      expect(popped, isNotNull);
+      expect(popped!.toAnnouncementQuery().viaCity, isNull);
+      expect(popped.activeKeys, isNot(contains('via_city')));
+    });
+
+    testWidgets('une ville de passage déjà posée ouvre « Plus de filtres » '
+        'd\'office ; une ville blanche ne compte pas', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      await tester.pumpWidget(
+        _Harness(initialFilters: road.copyWith(viaCity: 'Tanger')),
+      );
+      await tester.pumpAndSettle();
+      await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+      expect(
+        find.byKey(const Key('composer-more-filters-body')),
+        findsOneWidget,
+      );
+      expect(find.text('Tanger'), findsWidgets);
+
+      await tester.pumpWidget(
+        _Harness(
+          key: const ValueKey('blank'),
+          initialFilters: road.copyWith(viaCity: '   '),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+      expect(find.byKey(const Key('composer-more-filters-body')), findsNothing);
+      expect(
+        find.byKey(const Key('composer-more-filters-count')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('Tout effacer : taille et ville de passage disparaissent', (
+      tester,
+    ) async {
+      roadOn();
+      _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(
+        _Harness(
+          announcementRepo: repo,
+          initialFilters: road.copyWith(
+            minItemSize: ItemSize.xl,
+            viaCity: 'Tanger',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _scrollTo(tester, find.byKey(const Key('item-size-XL')));
+      expect(tileSelected(tester, 'XL'), isTrue);
+      expect(find.text('Tanger'), findsWidgets);
+
+      await tester.drag(find.byType(ListView), const Offset(0, 4000));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tout effacer'));
+      await _settleFilterChange(tester);
+
+      // Plus de filtre Transport : la section Taille n'existe plus ; le
+      // comptage ne porte ni taille ni ville.
+      expect(find.text('TAILLE DU COLIS'), findsNothing);
+      expect(find.text('Tanger'), findsNothing);
+      final count = lastCount(repo);
+      expect(count.size, isNull);
+      expect(count.via, isNull);
+      expect(count.mode, isNull);
+    });
+
+    testWidgets('Tout effacer puis retour à la route : le champ « Passe par » '
+        'est vide et aucune ville n\'est comptée', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(
+        _Harness(
+          announcementRepo: repo,
+          initialFilters: road.copyWith(viaCity: 'Tanger'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Tanger'), findsWidgets);
+
+      await tester.drag(find.byType(ListView), const Offset(0, 4000));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tout effacer'));
+      await _settleFilterChange(tester);
+      expect(find.text('Tanger'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('composer-transport-car')));
+      await _settleFilterChange(tester);
+      await openMore(tester);
+      await _scrollTo(tester, find.byKey(const Key('composer-via-city')));
+      expect(find.text('Tanger'), findsNothing);
+      expect(
+        find.byKey(const Key('composer-more-filters-count')),
+        findsNothing,
+      );
+      expect(lastCount(repo).via, isNull);
+    });
+
+    // Curseur « Poids min » du composeur.
+    Slider slider(WidgetTester tester) =>
+        tester.widget<Slider>(find.byType(Slider));
+
+    Future<void> openWeight(WidgetTester tester) async {
+      await _scrollTo(tester, find.text('POIDS MIN'));
+      await tester.tap(find.text('POIDS MIN'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('route : le curseur monte à 1 000 kg et garde 600 kg', (
+      tester,
+    ) async {
+      roadOn();
+      _vueHaute(tester);
+      await tester.pumpWidget(
+        _Harness(initialFilters: road.copyWith(weightMin: 600)),
+      );
+      await tester.pumpAndSettle();
+      await openWeight(tester);
+
+      expect(slider(tester).min, 1);
+      expect(slider(tester).max, 1000);
+      expect(slider(tester).value, 600);
+    });
+
+    testWidgets('avion : curseur 1..50 inchangé', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      await tester.pumpWidget(
+        const _Harness(
+          initialFilters: HomeSearchFilters(transportMode: TransportMode.plane),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await openWeight(tester);
+
+      expect(slider(tester).min, 1);
+      expect(slider(tester).max, 50);
+    });
+
+    testWidgets('600 kg posés depuis l\'accueil, mode avion : ramenés dans '
+        'les bornes sans planter', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      // État incohérent que seul un chemin hors `withTransportModeChanged`
+      // peut produire (SearchParams, ancienne persistance) : le curseur ne
+      // doit jamais recevoir une valeur hors de ses bornes.
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(
+        _Harness(
+          announcementRepo: repo,
+          initialFilters: const HomeSearchFilters(
+            transportMode: TransportMode.plane,
+            weightMin: 600,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await openWeight(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(slider(tester).max, 50);
+      expect(slider(tester).value, 50);
+      await tester.tap(find.text('Confirmer'));
+      await _settleFilterChange(tester);
+      expect(lastCount(repo).kg, 50);
+    });
+
+    testWidgets('route 600 kg puis retour à l\'avion : la capacité hors '
+        'plage est retirée, le champ dit Tous', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(
+        _Harness(
+          announcementRepo: repo,
+          initialFilters: road.copyWith(weightMin: 600),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _scrollTo(tester, find.text('POIDS MIN'));
+      expect(find.text('600 kg'), findsOneWidget);
+
+      await tester.drag(find.byType(ListView), const Offset(0, 4000));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('composer-transport-plane')));
+      await _settleFilterChange(tester);
+
+      await _scrollTo(tester, find.text('POIDS MIN'));
+      expect(find.text('600 kg'), findsNothing);
+      final count = lastCount(repo);
+      expect(count.kg, isNull);
+      expect(count.mode, TransportMode.plane);
+      await openWeight(tester);
+      expect(slider(tester).max, 50);
+      expect(tester.takeException(), isNull);
+    });
+
+    for (final english in [false, true]) {
+      testWidgets('360 dp ${english ? 'EN' : 'FR'} : composeur route sans '
+          'débordement, bouton Rechercher sur une ligne', (tester) async {
+        if (english) useEnglish();
+        roadOn();
+        await _loadAppFonts();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          _Harness(
+            theme: AppTheme.light(),
+            initialFilters: road.copyWith(minItemSize: ItemSize.xl),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await _scrollTo(
+          tester,
+          find.text(english ? 'PARCEL SIZE' : 'TAILLE DU COLIS'),
+        );
+        await openMore(tester);
+        await _scrollTo(
+          tester,
+          find.text(english ? 'PASSES THROUGH' : 'PASSE PAR'),
+        );
+        expect(tester.takeException(), isNull);
+
+        final button = find.byType(DonyButton);
+        final label = find.descendant(of: button, matching: find.byType(Text));
+        // Une seule ligne : le libellé tient dans la hauteur d'une ligne de
+        // 15 px (pas deux) et dans la largeur du bouton, sans être rétréci ;
+        // le bouton garde sa hauteur de 48 à 56.
+        expect(label, findsOneWidget);
+        expect(tester.getSize(label).height, lessThan(15 * 1.6));
+        expect(
+          tester.getSize(label).width,
+          lessThanOrEqualTo(tester.getSize(button).width),
+        );
+        expect(tester.getSize(button).height, inInclusiveRange(48, 56));
+      });
+    }
   });
 
   testWidgets('une recherche complète est possible sans toucher la barre', (
@@ -1165,7 +1681,13 @@ class _Harness extends StatelessWidget {
     this.announcementRepo,
     this.initialFilters = const HomeSearchFilters(),
     this.theme,
+    this.onPopped,
   });
+
+  /// Quand il est fourni, l'écran s'ouvre depuis une page « Root » (bouton
+  /// « ouvrir ») et reçoit les filtres que le composeur renvoie en se
+  /// refermant : c'est ce que l'accueil applique, pas l'état du bloc après coup.
+  final ValueChanged<HomeSearchFilters?>? onPopped;
 
   final _MockAnnouncementRepo? announcementRepo;
   final SearchMode mode;
@@ -1245,11 +1767,22 @@ class _Harness extends StatelessWidget {
     // possible — sinon « nothing to pop ». Même montage que
     // `dony_app_bar_test.dart` pour `DonyAppBarBackButton`.
     final router = GoRouter(
-      initialLocation: '/child',
+      initialLocation: onPopped == null ? '/child' : '/',
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, _) => const Scaffold(body: Text('Root')),
+          builder: (_, _) => onPopped == null
+              ? const Scaffold(body: Text('Root'))
+              : Scaffold(
+                  body: Builder(
+                    builder: (context) => TextButton(
+                      onPressed: () async => onPopped!(
+                        await context.push<HomeSearchFilters>('/child'),
+                      ),
+                      child: const Text('ouvrir'),
+                    ),
+                  ),
+                ),
           routes: [
             GoRoute(
               path: 'child',

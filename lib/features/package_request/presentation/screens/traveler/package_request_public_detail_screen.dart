@@ -10,6 +10,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -19,6 +20,7 @@ import 'package:dony/features/content_categories/presentation/content_category_l
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_sender_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -483,11 +485,10 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
 
                     // ── Poids / Taille ───────────────────────────────────────
                     _FactsCard(
-                      weight:
-                          '${r.weightKg.toStringAsFixed(r.weightKg % 1 == 0 ? 0 : 1)} kg',
+                      weight: formatWeightKg(l, r.weightKg),
                       weightLabel: l.requestCreateRecapWeight,
-                      size: _sizeLabel,
-                      sizeLabel: _parcelHint(l),
+                      size: r.itemSize?.code ?? _sizeLabel,
+                      sizeLabel: r.itemSize?.description(l) ?? _parcelHint(l),
                     ),
 
                     // ── Expéditeur (FLUTTER-GF) ──────────────────────────────────

@@ -6,8 +6,10 @@
 //   - affichage des valeurs initiales (label des AddressData)
 //   - présence du CapacityControl
 //   - libellés de section en casse normale
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/address_selector_field.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/capacity_control.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
@@ -24,6 +26,8 @@ import '../../../../../helpers/mock_analytics_backend.dart';
 Widget _host({
   AddressData? initialPickupAddress,
   AddressData? initialDeliveryAddress,
+  double? lockedCapacityKg,
+  TransportMode? lockedTransportMode,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -40,6 +44,8 @@ Widget _host({
               onDeliverySaved: (_) {},
               onPickupChanged: (_) {},
               onDeliveryChanged: (_) {},
+              lockedCapacityKg: lockedCapacityKg,
+              lockedTransportMode: lockedTransportMode,
             ),
           ),
         ),
@@ -66,6 +72,56 @@ Future<void> _pumpHost(
 }
 
 void main() {
+  group('LieuxCapaciteStep : capacité verrouillée (trajet dédié)', () {
+    Future<void> pumpLocked(
+      WidgetTester tester, {
+      required double kg,
+      TransportMode? mode,
+    }) async {
+      await tester.pumpWidget(
+        _host(lockedCapacityKg: kg, lockedTransportMode: mode),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+    }
+
+    final locked = find.byKey(const Key('locked-capacity-display'));
+    final luggage = find.descendant(
+      of: locked,
+      matching: find.byWidgetPredicate(
+        (w) => w is DonyIcon && w.name == 'luggage',
+      ),
+    );
+
+    testWidgets('route : 1 200 kg groupés, icône colis (pas la valise)', (
+      tester,
+    ) async {
+      await pumpLocked(tester, kg: 1200, mode: TransportMode.car);
+      expect(find.text('1\u202f200 kg'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: locked,
+          matching: find.byIcon(Icons.inventory_2_rounded),
+        ),
+        findsOneWidget,
+      );
+      expect(luggage, findsNothing);
+    });
+
+    testWidgets('avion : 23 kg et la valise, inchangés', (tester) async {
+      await pumpLocked(tester, kg: 23, mode: TransportMode.plane);
+      expect(find.text('23 kg'), findsOneWidget);
+      expect(luggage, findsOneWidget);
+      expect(
+        find.descendant(
+          of: locked,
+          matching: find.byIcon(Icons.inventory_2_rounded),
+        ),
+        findsNothing,
+      );
+    });
+  });
+
   group('LieuxCapaciteStep', () {
     testWidgets('se construit sans exception', (tester) async {
       await _pumpHost(tester);

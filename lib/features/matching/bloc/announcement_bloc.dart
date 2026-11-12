@@ -100,6 +100,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         negotiable: event.negotiable,
         saveAsDraft: event.saveAsDraft,
         currency: event.currency,
+        maxItemSize: event.maxItemSize,
+        maxParcelWeightKg: event.maxParcelWeightKg,
       );
       emit(AnnouncementCreated(announcement));
       unawaited(
@@ -372,6 +374,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       urgent: event.urgent,
       maxStops: event.maxStops,
       paymentMethods: event.paymentMethods,
+      minItemSize: event.minItemSize,
+      viaCity: event.viaCity,
       page: page,
       // FLUTTER-JH : les trajets complets restent visibles, grisés, après
       // les réservables (« Me prévenir si de la place se libère »).
@@ -573,6 +577,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         handoverDeadline: event.handoverDeadline,
         negotiable: event.negotiable,
         currency: event.currency,
+        maxItemSize: event.maxItemSize,
+        maxParcelWeightKg: event.maxParcelWeightKg,
       );
       emit(AnnouncementUpdated(announcement));
       unawaited(
@@ -747,6 +753,8 @@ List<AnnouncementPayload> buildTripPayloads(
       negotiable: first.negotiable,
       saveAsDraft: first.saveAsDraft,
       currency: first.currency,
+      maxItemSize: first.maxItemSize,
+      maxParcelWeightKg: first.maxParcelWeightKg,
     ),
   ];
   var fromCity = first.arrivalCity;
@@ -795,6 +803,10 @@ List<AnnouncementPayload> buildTripPayloads(
         // Devise propre à l'étape (FLUTTER-HP), celle du premier trajet à
         // défaut.
         currency: leg.currency ?? first.currency,
+        // Même véhicule d'une étape à l'autre : taille et poids max par colis
+        // du premier trajet.
+        maxItemSize: first.maxItemSize,
+        maxParcelWeightKg: first.maxParcelWeightKg,
       ),
     );
     fromCity = leg.arrivalCity;

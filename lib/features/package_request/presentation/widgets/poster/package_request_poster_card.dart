@@ -3,7 +3,9 @@ import 'dart:ui' as ui;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/widgets/transport_mode_icon.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
@@ -71,7 +73,16 @@ class PackageRequestPosterCard extends StatelessWidget {
   }
 
   static String weightLabel(AppLocalizations l, PackageRequest r) =>
-      '${formatKg(l, r.weightKg)} kg';
+      formatWeightKg(l, r.weightKg);
+
+  /// Sous le poids : la taille choisie par l'expéditeur (« Taille L ») quand il
+  /// en a une, sinon le format que le poids donne (« Format moyen »).
+  static String sizeDetail(AppLocalizations l, PackageRequest r) {
+    final size = r.itemSize;
+    return size == null
+        ? l.requestPosterSize(r.parcelSize.label(l).toLowerCase())
+        : l.parcelSizeLabel(size.code);
+  }
 
   /// « Lyon, Guillotière », ou la ville seule sans quartier.
   static String placeLabel(String city, String? neighborhood) =>
@@ -249,9 +260,7 @@ class PackageRequestPosterCard extends StatelessWidget {
                         child: PosterTile(
                           label: l.requestPosterTileWeight,
                           value: weightLabel(l, r),
-                          detail: l.requestPosterSize(
-                            r.parcelSize.label(l).toLowerCase(),
-                          ),
+                          detail: sizeDetail(l, r),
                         ),
                       ),
                     ],

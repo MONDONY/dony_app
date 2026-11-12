@@ -10,6 +10,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
@@ -101,18 +102,28 @@ TripTemplate _template({
   bool cashAccepted = false,
   String? currency,
   String transportMode = 'PLANE',
+  String capacityUnit = 'SUITCASE_23KG',
+  int availableKg = 23,
+  String? arrivalTime,
+  int arrivalDayOffset = 0,
+  ItemSize? maxItemSize,
+  double? maxParcelWeightKg,
 }) => TripTemplate(
   id: 't1',
   label: 'Paris → Dakar',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
   transportMode: transportMode,
-  capacityUnit: 'SUITCASE_23KG',
-  availableKg: 23,
+  capacityUnit: capacityUnit,
+  availableKg: availableKg,
   pricePerKg: pricePerKg,
   acceptedCategories: const ['Vêtements'],
   cashAccepted: cashAccepted,
   currency: currency,
+  arrivalTime: arrivalTime,
+  arrivalDayOffset: arrivalDayOffset,
+  maxItemSize: maxItemSize,
+  maxParcelWeightKg: maxParcelWeightKg,
 );
 
 void main() {
@@ -549,6 +560,190 @@ void main() {
       expect(find.text('Accepted payment methods'), findsOneWidget);
       expect(find.text('Card payment (Stripe)'), findsOneWidget);
       expect(find.text('Cash'), findsOneWidget);
+    });
+  });
+
+  group('série en route et bornes par mode (lot 2)', () {
+    Future<void> open(WidgetTester tester, TripTemplate template) async {
+      await tester.pumpWidget(
+        _wrapWithStripe(TripRecurrenceEditScreen(template: template), bloc),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    testWidgets('série depuis un modèle route sans heure : arrivalDayOffset '
+        'gardé', (tester) async {
+      await open(
+        tester,
+        _template(
+          pricePerKg: 8.0,
+          transportMode: 'CAR',
+          capacityUnit: 'KG_EXACT',
+          availableKg: 1200,
+          arrivalDayOffset: 10,
+        ),
+      );
+      final data = await _fillAndSubmit(tester, bloc);
+      expect(data['transportMode'], 'CAR');
+      expect(data['arrivalTime'], isNull);
+      expect(data['arrivalDayOffset'], 10);
+      expect(data['availableKg'], 1200);
+    });
+
+    testWidgets('série route : taille et poids max du modèle envoyés', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        _template(
+          pricePerKg: 8.0,
+          transportMode: 'BUS',
+          capacityUnit: 'KG_EXACT',
+          availableKg: 1200,
+          maxItemSize: ItemSize.xl,
+          maxParcelWeightKg: 80,
+        ),
+      );
+      final data = await _fillAndSubmit(tester, bloc);
+      expect(data['maxItemSize'], 'XL');
+      expect(data['maxParcelWeightKg'], 80);
+    });
+
+    testWidgets('série route sans taille : aucune clé de taille ni de poids', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        _template(
+          pricePerKg: 8.0,
+          transportMode: 'CAR',
+          capacityUnit: 'KG_EXACT',
+          availableKg: 300,
+        ),
+      );
+      final data = await _fillAndSubmit(tester, bloc);
+      expect(data.containsKey('maxItemSize'), isFalse);
+      expect(data.containsKey('maxParcelWeightKg'), isFalse);
+    });
+
+    testWidgets('série avion : jamais de taille ni de poids max envoyés', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        _template(
+          pricePerKg: 8.0,
+          maxItemSize: ItemSize.l,
+          maxParcelWeightKg: 20,
+        ),
+      );
+      final data = await _fillAndSubmit(tester, bloc);
+      expect(data.containsKey('maxItemSize'), isFalse);
+      expect(data.containsKey('maxParcelWeightKg'), isFalse);
+    });
+
+    testWidgets('série avion : vol de nuit J+1 gardé, sans heure 0', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        _template(pricePerKg: 8.0, arrivalTime: '06:30', arrivalDayOffset: 1),
+      );
+      final data = await _fillAndSubmit(tester, bloc);
+      expect(data['arrivalDayOffset'], 1);
+      expect(data['availableKg'], 23);
+    });
+
+    testWidgets('série avion depuis un ancien modèle J+10 : décalage borné à '
+        '3', (tester) async {
+      await open(
+        tester,
+        _template(pricePerKg: 8.0, arrivalTime: '06:30', arrivalDayOffset: 10),
+      );
+      final data = await _fillAndSubmit(tester, bloc);
+      expect(data['arrivalDayOffset'], 3);
+    });
+
+    testWidgets('série avion à 40 kg : acceptée, pas d\'avertissement', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        _template(pricePerKg: 8.0, capacityUnit: 'KG_EXACT', availableKg: 40),
+      );
+      expect(
+        find.byKey(const Key('recurrence-capacity-too-high')),
+        findsNothing,
+      );
+      final data = await _fillAndSubmit(tester, bloc);
+      expect(data['availableKg'], 40);
+    });
+
+    testWidgets('série avion à 46 kg : plafond de 40 kg affiché, CTA '
+        'désactivé', (tester) async {
+      await open(
+        tester,
+        _template(pricePerKg: 8.0, capacityUnit: 'KG_EXACT', availableKg: 46),
+      );
+      expect(
+        find.byKey(const Key('recurrence-capacity-too-high')),
+        findsOneWidget,
+      );
+      expect(find.text('Au plus 40 kg pour ce mode'), findsOneWidget);
+      await tester.tap(find.text('L'));
+      for (final field in tester.widgetList<AddressPickerField>(
+        find.byType(AddressPickerField),
+      )) {
+        field.onChanged!(_address);
+      }
+      await tester.pump();
+      final button = tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, 'Activer la récurrence'),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('série route à 1 200 kg : pas de plafond de série', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        _template(
+          pricePerKg: 8.0,
+          transportMode: 'CAR',
+          capacityUnit: 'KG_EXACT',
+          availableKg: 1200,
+        ),
+      );
+      expect(
+        find.byKey(const Key('recurrence-capacity-too-high')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('422 trip-capacity-too-high à l\'enregistrement d\'une série '
+        'avion 41 kg : message serveur', (tester) async {
+      whenListen<TripRecurrenceState>(
+        bloc,
+        Stream.value(
+          const TripRecurrenceState(
+            status: TripRecurrenceStatus.error,
+            error: ServerException(
+              'Une série en avion ne peut pas dépasser 40 kg.',
+              'trip-capacity-too-high',
+            ),
+          ),
+        ),
+        initialState: const TripRecurrenceState(),
+      );
+      await open(
+        tester,
+        _template(pricePerKg: 8.0, capacityUnit: 'KG_EXACT', availableKg: 41),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('ne peut pas dépasser 40 kg'), findsOneWidget);
+      expect(find.byType(TripRecurrenceEditScreen), findsOneWidget);
     });
   });
 }

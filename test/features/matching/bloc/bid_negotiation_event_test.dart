@@ -4,6 +4,7 @@
 
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/value_equality.dart';
@@ -13,6 +14,7 @@ BidNegotiationProposeRequested _propose({
   double total = 60,
   BidPaymentMethod method = BidPaymentMethod.stripe,
   List<Map<String, dynamic>>? gridItems,
+  ItemSize? itemSize,
 }) => BidNegotiationProposeRequested(
   announcementId: 'a-1',
   weightKg: weightKg,
@@ -26,6 +28,7 @@ BidNegotiationProposeRequested _propose({
   photoKeys: const ['p1'],
   customItems: const [],
   gridItems: gridItems,
+  itemSize: itemSize,
 );
 
 void main() {
@@ -45,6 +48,7 @@ void main() {
         _propose(weightKg: null),
         _propose(total: 61),
         _propose(method: BidPaymentMethod.cash),
+        _propose(itemSize: ItemSize.m),
         _propose(
           gridItems: const [
             {'id': 'g1', 'qty': 2},

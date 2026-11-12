@@ -4,6 +4,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -113,7 +114,9 @@ class _DeliveryCard extends StatelessWidget {
       bid.departureCity,
       bid.arrivalCity,
     ].where((c) => c != null).join(' → ');
-    final weight = (bid.weightKg ?? 0) > 0 ? '${bid.weightKg} kg' : null;
+    final weight = (bid.weightKg ?? 0) > 0
+        ? formatWeightKg(l, bid.weightKg!)
+        : null;
     final description = bid.description;
     // Prix affiché à l'expéditeur = brut (net voyageur + frais de service
     // Yadony), servi par le serveur ; à défaut, recalculé par la façade de

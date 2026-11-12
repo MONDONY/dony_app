@@ -51,6 +51,7 @@ class TripBilletCard extends StatelessWidget {
     final trailing = this.trailing;
     final notch = notchColor ?? cs.surface;
     final capacity = TripCapacity.fromAnnouncement(announcement);
+    final maxParcelLine = tripMaxParcelLine(l, announcement);
 
     // Billet blanc, bordé, avec un bandeau teinté en tête : sur le fond gris
     // clair de l'app, l'ancien ton `surfaceContainerLow` était exactement
@@ -143,13 +144,13 @@ class TripBilletCard extends StatelessWidget {
                   ),
                 if (showKg)
                   _BilletChip(
-                    label: announcement.isKgFree
-                        ? l.tripKgFree
-                        : capacity != null
-                        ? '${l.listingSuitcaseCapacityLabel(capacity.count, capacity.unitKg)} · ${l.listingKgAvailableLabel(announcement.availableKg.toStringAsFixed(0))}'
-                        : l.listingKgAvailableLabel(
-                            announcement.availableKg.toStringAsFixed(0),
-                          ),
+                    key: const Key('detail-capacity-chip'),
+                    label: tripCapacityLine(l, announcement, detailed: true),
+                  ),
+                if (showKg && maxParcelLine != null)
+                  _BilletChip(
+                    key: const Key('detail-max-parcel-chip'),
+                    label: maxParcelLine,
                   ),
               ],
             ),

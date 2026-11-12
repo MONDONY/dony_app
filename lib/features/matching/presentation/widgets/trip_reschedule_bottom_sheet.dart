@@ -175,8 +175,15 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
   int _initialArrivalOffset() {
     final a = widget.announcement;
     if (a.arrivalDate == null) return 0;
-    return calendarDaysBetween(a.departureDate, a.arrivalDate!).clamp(0, 2);
+    // Borné au mode du trajet : un trajet route à J+10 garde son décalage.
+    return calendarDaysBetween(
+      a.departureDate,
+      a.arrivalDate!,
+    ).clamp(0, _mode.maxArrivalDays);
   }
+
+  TransportMode get _mode =>
+      transportModeOrPlane(widget.announcement.transportMode);
 
   /// Date limite actuelle, jamais avant aujourd'hui : le champ est rempli et
   /// cliquable dès l'ouverture, puis suit la nouvelle date de départ.
@@ -342,7 +349,11 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
     final date = _date.value!;
     final time = _departureTime.value!;
     final arrival = _arrivalTime.value;
-    final offset = arrival == null ? 0 : _arrivalDayOffset.value;
+    final offset = effectiveArrivalOffset(
+      mode: _mode,
+      hasArrivalTime: arrival != null,
+      offset: _arrivalDayOffset.value,
+    );
     context.read<AnnouncementBloc>().add(
       AnnouncementRescheduleRequested(
         announcementId: widget.announcement.id,
@@ -476,17 +487,24 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
               ],
               const SizedBox(height: DonySpacing.lg),
               _SectionTitle(l.tripRescheduleSectionArrival),
-              _PickerTile(
-                key: const Key('reschedule-arrival-time-field'),
-                iconAsset: 'flag',
-                label: l.tripRescheduleTimeShort,
-                value: arrival == null ? null : _wire(arrival),
-                placeholder: l.tripRescheduleOptional,
-                onTap: _pickArrivalTime,
-              ),
-              if (arrival != null) ...[
+              // En route (C28) : seul le jour d'arrivée compte, l'heure n'est
+              // gardée que pour un trajet qui en porte déjà une.
+              if (!_mode.isRoad || arrival != null)
+                _PickerTile(
+                  key: const Key('reschedule-arrival-time-field'),
+                  iconAsset: 'flag',
+                  label: l.tripRescheduleTimeShort,
+                  value: arrival == null ? null : _wire(arrival),
+                  placeholder: l.tripRescheduleOptional,
+                  onTap: _pickArrivalTime,
+                ),
+              if (_mode.isRoad || arrival != null) ...[
                 const SizedBox(height: DonySpacing.sm),
-                ArrivalDayChips(notifier: _arrivalDayOffset),
+                ArrivalDayChips(
+                  notifier: _arrivalDayOffset,
+                  maxDays: arrivalChipsMaxDays(_mode),
+                  departureDate: date,
+                ),
               ],
               const SizedBox(height: DonySpacing.lg),
               _SectionTitle(l.tripRescheduleSectionHandover),

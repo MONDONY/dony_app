@@ -4,6 +4,8 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
@@ -36,6 +38,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(ParcelSize.small);
     registerFallbackValue(TransportMode.plane);
+    registerFallbackValue(const FieldChange<ItemSize>.keep());
   });
 
   setUp(() => repo = MockRepo());
@@ -883,6 +886,7 @@ void main() {
       when(
         () => repo.update(
           any(),
+          itemSize: any(named: 'itemSize'),
           departureCity: any(named: 'departureCity'),
           arrivalCity: any(named: 'arrivalCity'),
           desiredDate: any(named: 'desiredDate'),
@@ -925,6 +929,7 @@ void main() {
       verify(
         () => repo.update(
           'r-edit',
+          itemSize: any(named: 'itemSize'),
           departureCity: 'Lyon',
           arrivalCity: 'Bamako',
           desiredDate: DateTime(2026, 7, 20),
@@ -1006,6 +1011,7 @@ void main() {
       when(
         () => repo.update(
           any(),
+          itemSize: any(named: 'itemSize'),
           departureCity: any(named: 'departureCity'),
           arrivalCity: any(named: 'arrivalCity'),
           desiredDate: any(named: 'desiredDate'),
@@ -1619,6 +1625,7 @@ void main() {
         when(
           () => repo.update(
             any(),
+            itemSize: any(named: 'itemSize'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             desiredDate: any(named: 'desiredDate'),
@@ -1647,6 +1654,7 @@ void main() {
         verify(
           () => repo.update(
             'r-flex',
+            itemSize: any(named: 'itemSize'),
             departureCity: 'Paris',
             arrivalCity: 'Dakar',
             desiredDate: null,
@@ -1870,6 +1878,7 @@ void main() {
         when(
           () => repo.update(
             any(),
+            itemSize: any(named: 'itemSize'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             desiredDate: any(named: 'desiredDate'),
@@ -1900,6 +1909,7 @@ void main() {
         verify(
           () => repo.update(
             'r-any',
+            itemSize: any(named: 'itemSize'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             desiredDate: any(named: 'desiredDate'),
@@ -1935,6 +1945,397 @@ void main() {
       // Rien de touché : l'état est gardé.
       expect(any.copyWith(currentStep: 1).transportModeAny, isTrue);
       expect(car.copyWith(currentStep: 1).transportMode, TransportMode.car);
+    });
+  });
+
+  group('route : tonnes, taille facultative', () {
+    When<Future<PackageRequest>> stubCreate() => when(
+      () => repo.create(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        desiredDate: any(named: 'desiredDate'),
+        dateToleranceDays: any(named: 'dateToleranceDays'),
+        weightKg: any(named: 'weightKg'),
+        parcelSize: any(named: 'parcelSize'),
+        transportMode: any(named: 'transportMode'),
+        categories: any(named: 'categories'),
+        negotiable: any(named: 'negotiable'),
+        acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+        totalBudgetEur: any(named: 'totalBudgetEur'),
+        saveAsDraft: any(named: 'saveAsDraft'),
+        itemSize: any(named: 'itemSize'),
+      ),
+    );
+
+    When<Future<PackageRequest>> stubUpdate() => when(
+      () => repo.update(
+        'r-1',
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        desiredDate: any(named: 'desiredDate'),
+        dateToleranceDays: any(named: 'dateToleranceDays'),
+        weightKg: any(named: 'weightKg'),
+        parcelSize: any(named: 'parcelSize'),
+        transportMode: any(named: 'transportMode'),
+        categories: any(named: 'categories'),
+        negotiable: any(named: 'negotiable'),
+        acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+        totalBudgetEur: any(named: 'totalBudgetEur'),
+        itemSize: any(named: 'itemSize'),
+      ),
+    );
+
+    FormStep1Submitted step1(TransportMode? mode) => FormStep1Submitted(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      desiredDate: null,
+      dateToleranceDays: null,
+      transportMode: mode,
+    );
+
+    FormStep2Submitted step2(double kg) => FormStep2Submitted(
+      weightKg: kg,
+      parcelSize: ParcelSize.large,
+      categories: const ['Meubles'],
+    );
+
+    Future<PackageRequestFormBloc> filled(
+      TransportMode? mode,
+      double kg, {
+      ItemSize? size,
+    }) async {
+      final bloc = makeBloc(repo);
+      addTearDown(bloc.close);
+      bloc.add(step1(mode));
+      if (size != null) bloc.add(FormItemSizeChanged(size));
+      bloc.add(step2(kg));
+      await Future<void>.delayed(Duration.zero);
+      return bloc;
+    }
+
+    test('route 1 200 kg taille L : create reçoit 1200 et L', () async {
+      stubCreate().thenAnswer((_) async => fakeRequest);
+      final bloc = await filled(TransportMode.car, 1200, size: ItemSize.l);
+
+      bloc.add(const FormStep3Submitted(targetPriceEur: 900));
+      await bloc.stream.firstWhere(
+        (s) => s.submissionStatus == FormSubmissionStatus.success,
+      );
+
+      final call = verify(
+        () => repo.create(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: null,
+          dateToleranceDays: null,
+          weightKg: captureAny(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: TransportMode.car,
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: 900,
+          itemSize: captureAny(named: 'itemSize'),
+        ),
+      )..called(1);
+      expect(call.captured, [1200.0, ItemSize.l]);
+    });
+
+    test(
+      'route sans taille : create reçoit itemSize null (clé absente)',
+      () async {
+        stubCreate().thenAnswer((_) async => fakeRequest);
+        final bloc = await filled(TransportMode.car, 1200);
+
+        bloc.add(const FormStep3Submitted(targetPriceEur: 900));
+        await bloc.stream.firstWhere(
+          (s) => s.submissionStatus == FormSubmissionStatus.success,
+        );
+
+        expect(bloc.state.itemSize, isNull);
+        verify(
+          () => repo.create(
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            desiredDate: any(named: 'desiredDate'),
+            dateToleranceDays: any(named: 'dateToleranceDays'),
+            weightKg: 1200,
+            parcelSize: any(named: 'parcelSize'),
+            transportMode: TransportMode.car,
+            categories: any(named: 'categories'),
+            negotiable: any(named: 'negotiable'),
+            acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+            totalBudgetEur: 900,
+            itemSize: any(named: 'itemSize', that: isNull),
+          ),
+        ).called(1);
+      },
+    );
+
+    test('peu importe 33 kg : soumission refusée, rien envoyé', () async {
+      final bloc = await filled(null, 33);
+
+      bloc.add(const FormStep3Submitted(targetPriceEur: 25));
+      final refused = await bloc.stream.firstWhere(
+        (s) => s.submissionStatus == FormSubmissionStatus.error,
+      );
+
+      expect(refused.formError, PackageRequestFormError.weightTooHeavyForMode);
+      expect(refused.weightKg, 33);
+      verifyNever(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+        ),
+      );
+    });
+
+    test('route 1 200 kg puis avion : refusé, poids et budget gardés', () async {
+      final bloc = await filled(TransportMode.car, 1200, size: ItemSize.l);
+      bloc.add(const FormTransportModeChanged(TransportMode.plane));
+      bloc.add(const FormStep3Submitted(targetPriceEur: 900));
+      final refused = await bloc.stream.firstWhere(
+        (s) => s.formError == PackageRequestFormError.weightTooHeavyForMode,
+      );
+      // Rien n'est perdu en silence : le poids saisi reste, l'écran le montre.
+      expect(refused.weightKg, 1200);
+    });
+
+    test('peu importe 32 kg : accepté (borne)', () async {
+      stubCreate().thenAnswer((_) async => fakeRequest);
+      final bloc = await filled(null, 32);
+
+      bloc.add(const FormStep3Submitted(targetPriceEur: 25));
+      final done = await bloc.stream.firstWhere(
+        (s) => s.submissionStatus == FormSubmissionStatus.success,
+      );
+      expect(done.formError, isNull);
+    });
+
+    test('route 999 999 kg : accepté ; au-delà, refusé', () async {
+      stubCreate().thenAnswer((_) async => fakeRequest);
+      final ok = await filled(TransportMode.car, 999999);
+      ok.add(const FormStep3Submitted(targetPriceEur: 900));
+      await ok.stream.firstWhere(
+        (s) => s.submissionStatus == FormSubmissionStatus.success,
+      );
+
+      final tooMuch = await filled(TransportMode.car, 1000000);
+      tooMuch.add(const FormStep3Submitted(targetPriceEur: 900));
+      final refused = await tooMuch.stream.firstWhere(
+        (s) => s.submissionStatus == FormSubmissionStatus.error,
+      );
+      expect(refused.formError, PackageRequestFormError.weightTooHeavyForMode);
+    });
+
+    test('route puis avion : taille effacée', () async {
+      final bloc = await filled(TransportMode.car, 20, size: ItemSize.xl);
+      expect(bloc.state.itemSize, ItemSize.xl);
+
+      bloc.add(const FormTransportModeChanged(TransportMode.plane));
+      await Future<void>.delayed(Duration.zero);
+      expect(bloc.state.itemSize, isNull);
+
+      // Revenir en route ne la ressuscite pas.
+      bloc.add(const FormTransportModeChanged(TransportMode.car));
+      await Future<void>.delayed(Duration.zero);
+      expect(bloc.state.itemSize, isNull);
+    });
+
+    test('étape 1 resoumise en bateau : taille effacée', () async {
+      final bloc = await filled(TransportMode.car, 20, size: ItemSize.m);
+      bloc.add(step1(TransportMode.boat));
+      await Future<void>.delayed(Duration.zero);
+      expect(bloc.state.itemSize, isNull);
+    });
+
+    test('peu importe garde la taille (proposée en option)', () async {
+      final bloc = await filled(TransportMode.car, 20, size: ItemSize.s);
+      bloc.add(const FormTransportModeChanged(null));
+      await Future<void>.delayed(Duration.zero);
+      expect(bloc.state.itemSize, ItemSize.s);
+    });
+
+    test('FormItemSizeChanged : choisir, retirer ; ignoré en avion', () async {
+      final bloc = makeBloc(repo);
+      addTearDown(bloc.close);
+      bloc.add(step1(TransportMode.car));
+      bloc.add(const FormItemSizeChanged(ItemSize.l));
+      await Future<void>.delayed(Duration.zero);
+      expect(bloc.state.itemSize, ItemSize.l);
+      bloc.add(const FormItemSizeChanged(null));
+      await Future<void>.delayed(Duration.zero);
+      expect(bloc.state.itemSize, isNull);
+
+      bloc.add(const FormTransportModeChanged(TransportMode.plane));
+      bloc.add(const FormItemSizeChanged(ItemSize.l));
+      await Future<void>.delayed(Duration.zero);
+      expect(bloc.state.itemSize, isNull);
+    });
+
+    PackageRequest editable({ItemSize? size}) => PackageRequest(
+      id: 'r-1',
+      senderId: 's-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      dateToleranceDays: 0,
+      weightKg: 1200,
+      parcelSize: ParcelSize.large,
+      transportMode: TransportMode.car,
+      itemSize: size,
+      categories: const ['Meubles'],
+      status: PackageRequestStatus.open,
+      createdAt: DateTime(2026, 11, 12),
+      targetPriceEur: 900,
+    );
+
+    test('édition : la taille de la demande préremplit le formulaire', () {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: editable(size: ItemSize.l),
+      );
+      addTearDown(bloc.close);
+      expect(bloc.state.itemSize, ItemSize.l);
+    });
+
+    test('duplication : la taille est reprise', () {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        duplicating: PackageRequestDuplicate(editable(size: ItemSize.xl)),
+      );
+      addTearDown(bloc.close);
+      expect(bloc.state.itemSize, ItemSize.xl);
+      expect(bloc.state.isEditing, isFalse);
+    });
+
+    /// Intention envoyée à la modification : [original] est la taille de la
+    /// demande chargée, [chosen] celle choisie ensuite (`touch: false` : le
+    /// formulaire n'y touche pas).
+    Future<FieldChange<ItemSize>> sentChange({
+      ItemSize? original,
+      ItemSize? chosen,
+      bool touch = true,
+    }) async {
+      stubUpdate().thenAnswer((_) async => fakeRequest);
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: editable(size: original),
+      );
+      addTearDown(bloc.close);
+      if (touch) bloc.add(FormItemSizeChanged(chosen));
+      bloc.add(const FormStep3Submitted());
+      await bloc.stream.firstWhere(
+        (s) => s.submissionStatus == FormSubmissionStatus.success,
+      );
+      final captured = verify(
+        () => repo.update(
+          'r-1',
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          itemSize: captureAny(named: 'itemSize'),
+        ),
+      ).captured;
+      return captured.single as FieldChange<ItemSize>;
+    }
+
+    test(
+      'édition sans toucher la taille : rien envoyé (le back garde)',
+      () async {
+        final change = await sentChange(original: ItemSize.l, touch: false);
+        expect(change.value, isNull);
+        expect(change.isClear, isFalse);
+      },
+    );
+
+    test('édition, même taille re-choisie : rien envoyé', () async {
+      final change = await sentChange(original: ItemSize.l, chosen: ItemSize.l);
+      expect(change.value, isNull);
+      expect(change.isClear, isFalse);
+    });
+
+    test('édition, taille changée : envoyée', () async {
+      final change = await sentChange(original: ItemSize.l, chosen: ItemSize.s);
+      expect(change.value, ItemSize.s);
+    });
+
+    test('édition, taille retirée : effacée côté back (NONE)', () async {
+      final change = await sentChange(original: ItemSize.l);
+      expect(change.isClear, isTrue);
+    });
+
+    test('édition, demande chargée sans taille, jamais choisie : rien '
+        'effacé ni envoyé', () async {
+      final change = await sentChange(touch: false);
+      expect(change.value, isNull);
+      expect(change.isClear, isFalse);
+    });
+
+    test('édition, demande chargée sans taille, une taille choisie : '
+        'envoyée', () async {
+      final change = await sentChange(chosen: ItemSize.m);
+      expect(change.value, ItemSize.m);
+    });
+
+    test('route passée en avion : la taille est effacée côté back', () async {
+      stubUpdate().thenAnswer((_) async => fakeRequest);
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: editable(size: ItemSize.l),
+      );
+      addTearDown(bloc.close);
+      // Poids compatible avec l'avion, pour que la garde du mode laisse passer.
+      bloc
+        ..add(
+          const FormStep2Submitted(
+            weightKg: 20,
+            parcelSize: ParcelSize.large,
+            categories: ['Meubles'],
+          ),
+        )
+        ..add(const FormTransportModeChanged(TransportMode.plane))
+        ..add(const FormStep3Submitted());
+      await bloc.stream.firstWhere(
+        (s) => s.submissionStatus == FormSubmissionStatus.success,
+      );
+      final captured = verify(
+        () => repo.update(
+          'r-1',
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          itemSize: captureAny(named: 'itemSize'),
+        ),
+      ).captured;
+      expect((captured.single as FieldChange<ItemSize>).isClear, isTrue);
     });
   });
 }

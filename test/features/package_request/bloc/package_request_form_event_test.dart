@@ -3,6 +3,7 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -31,6 +32,11 @@ void main() {
         make(mode: TransportMode.boat),
         make(mode: null),
       ]);
+    });
+
+    test('FormItemSizeChanged compare la taille (null = aucune)', () {
+      FormItemSizeChanged make([ItemSize? size]) => FormItemSizeChanged(size);
+      expectValueEquality(make, [make(ItemSize.l), make(ItemSize.xl)]);
     });
 
     test('FormTransportModeChanged compare le mode (null = peu importe)', () {

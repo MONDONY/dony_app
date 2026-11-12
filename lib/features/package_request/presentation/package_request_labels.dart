@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
@@ -70,11 +71,16 @@ String threadPriceLabel(
 }
 
 /// Fourchette de poids autorisée pour une demande d'envoi, dérivée de
-/// [PackageRequestLimits] plutôt que retapée en dur.
-String weightRangeLabel(AppLocalizations l) => l.requestWeightRange(
-  formatKg(l, PackageRequestLimits.minWeightKg),
-  formatKg(l, PackageRequestLimits.maxWeightKg),
-);
+/// [PackageRequestLimits] plutôt que retapée en dur. En route et en bateau
+/// ([mode]), la phrase dit « à partir de 0,5 kg, sans plafond » (elle porte
+/// déjà son point final) ; sinon « Entre 0,5 et 32 kg » (sans point).
+String weightRangeLabel(AppLocalizations l, {TransportMode? mode}) =>
+    mode != null && mode.isHeavy
+    ? l.requestCreateWeightRangeRoad
+    : l.requestWeightRange(
+        formatKg(l, PackageRequestLimits.minWeightKg),
+        formatKg(l, PackageRequestLimits.maxWeightKg),
+      );
 
 /// Formate un poids en kilos — décimale unique avec le séparateur de la
 /// langue (virgule en français, point en anglais), entier sans décimale.

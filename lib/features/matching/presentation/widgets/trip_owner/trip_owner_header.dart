@@ -1,7 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/utils/trip_capacity.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/trip_billet_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_section.dart';
@@ -32,6 +34,11 @@ class TripOwnerHeader extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
+    final size = tripShownItemSize(a);
+    final parcelLimits = <String>[
+      if (size != null) l.tripUpToSize(size.code),
+      ?tripMaxParcelLine(l, a),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -87,7 +94,7 @@ class TripOwnerHeader extends StatelessWidget {
                 child: _InfoPill(
                   value: a.capacityUnit == 'KG_FREE'
                       ? l.tripKgFree
-                      : '${a.availableKg.toStringAsFixed(0)} kg',
+                      : formatWeightKg(l, a.availableKg.roundToDouble()),
                   label: l.listingCapacityAvailableSuffix,
                 ),
               ),
@@ -111,6 +118,16 @@ class TripOwnerHeader extends StatelessWidget {
             ],
           ),
         ).animate().fadeIn(delay: 60.ms),
+
+        // ── Taille et poids maximaux d'un colis (trajet en route) ───────────
+        if (parcelLimits.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            parcelLimits.join('  ·  '),
+            key: const Key('trip-owner-parcel-limits'),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ).animate().fadeIn(delay: 65.ms),
+        ],
 
         // ── Valises : kilos restants dans chacune ───────────────────────────
         if (TripCapacity.fromAnnouncement(a) case final capacity?) ...[
@@ -190,8 +207,6 @@ class _SurplusSplitRow extends StatelessWidget {
   final double openKg;
   const _SurplusSplitRow({required this.reservedKg, required this.openKg});
 
-  String _fmt(double v) => v.toStringAsFixed(v % 1 == 0 ? 0 : 1);
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -213,7 +228,9 @@ class _SurplusSplitRow extends StatelessWidget {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: l.listingReservedKgLabel(_fmt(reservedKg)),
+                    text: l.listingReservedKgLabel(
+                      formatWeightGrouped(l.localeName, reservedKg),
+                    ),
                     style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                   ),
                   TextSpan(
@@ -221,7 +238,9 @@ class _SurplusSplitRow extends StatelessWidget {
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   TextSpan(
-                    text: l.listingOpenKgLabel(_fmt(openKg)),
+                    text: l.listingOpenKgLabel(
+                      formatWeightGrouped(l.localeName, openKg),
+                    ),
                     style: tt.bodyMedium?.copyWith(
                       color: cs.success,
                       fontWeight: FontWeight.w700,

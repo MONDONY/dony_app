@@ -10,8 +10,10 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/gallery_save_service.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/screens/trip_poster_screen.dart'
     show PosterShareChannel;
 import 'package:dony/features/matching/presentation/widgets/poster/poster_viewer.dart';
@@ -163,15 +165,21 @@ class _PackageRequestPosterScreenState
   String _captionFor(PosterShareChannel channel) {
     final l = context.l10n;
     final r = widget.request;
-    final size = r.parcelSize.label(l).toLowerCase();
     final budget = PackageRequestPosterCard.budgetLabel(r);
+    // Taille choisie : « 25 kg · taille L » ; sinon le format que le poids donne.
+    final weightLine = r.itemSize == null
+        ? l.requestPosterCaptionWeight(
+            formatWeightGrouped(l.localeName, r.weightKg),
+            r.parcelSize.label(l).toLowerCase(),
+          )
+        : parcelWeightWithSize(l, formatWeightKg(l, r.weightKg), r.itemSize);
     final contents = [
       for (final c in r.categories) contentCategoryDisplayName(l, c),
     ];
     return <String>[
       '📦 ${l.requestPosterCaptionCorridor(r.departureCity, r.arrivalCity)}',
       '📅 ${PackageRequestPosterCard.dateLabel(l, r)}',
-      '⚖️ ${l.requestPosterCaptionWeight(formatKg(l, r.weightKg), size)}',
+      '⚖️ $weightLine',
       if (contents.isNotEmpty)
         '🧳 ${l.requestPosterCaptionContents(contents.join(', '))}',
       if (budget != null)

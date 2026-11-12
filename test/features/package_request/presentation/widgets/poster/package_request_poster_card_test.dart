@@ -1,4 +1,5 @@
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -30,6 +31,7 @@ PackageRequest request({
   String currency = 'EUR',
   bool flexibleDate = false,
   TransportMode? transportMode = TransportMode.plane,
+  ItemSize? itemSize,
 }) => PackageRequest(
   id: 'r1',
   senderId: 's1',
@@ -39,6 +41,7 @@ PackageRequest request({
   dateToleranceDays: tolerance,
   weightKg: weightKg,
   parcelSize: ParcelSize.medium,
+  itemSize: itemSize,
   transportMode: transportMode,
   categories: categories,
   grossPriceEur: gross,
@@ -334,5 +337,31 @@ void main() {
 
       expect(findDonyIcon('plane'), findsOneWidget);
     });
+  });
+
+  testWidgets('route : poids groupé et « Taille L » sous le poids', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      request(
+        weightKg: 1200,
+        transportMode: TransportMode.car,
+        itemSize: ItemSize.l,
+      ),
+    );
+
+    expect(find.text('1\u202f200 kg'), findsOneWidget);
+    expect(find.text('Taille L'), findsOneWidget);
+    expect(find.text('Format moyen'), findsNothing);
+  });
+
+  test('sizeDetail en anglais : « Size XL » ; sans taille, le format', () {
+    final en = lookupAppLocalizations(const Locale('en'));
+    expect(
+      PackageRequestPosterCard.sizeDetail(en, request(itemSize: ItemSize.xl)),
+      'Size XL',
+    );
+    expect(PackageRequestPosterCard.sizeDetail(en, request()), 'Size medium');
   });
 }

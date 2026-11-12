@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
@@ -163,7 +164,7 @@ class RequestOfferCard extends StatelessWidget {
                         ),
                         Text(
                           '${DateFormat.MMMd(l.localeName).format(t.travelerTravelDate)} · '
-                          '${l.requestAvailableKg(t.travelerAvailableKg.toStringAsFixed(0))}',
+                          '${l.requestAvailableKg(formatWeightGrouped(l.localeName, t.travelerAvailableKg))}',
                           style: TextStyle(
                             fontSize: 12,
                             color: cs.onSurfaceVariant,

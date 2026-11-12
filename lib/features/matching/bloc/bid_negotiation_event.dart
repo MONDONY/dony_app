@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class BidNegotiationEvent extends Equatable {
@@ -44,6 +45,9 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
   final List<Map<String, dynamic>>? customItems;
   final List<Map<String, dynamic>>? gridItems;
 
+  /// Taille du colis choisie par l'expéditeur, facultative.
+  final ItemSize? itemSize;
+
   const BidNegotiationProposeRequested({
     required this.announcementId,
     required this.weightKg,
@@ -57,6 +61,7 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
     this.photoKeys,
     this.customItems,
     this.gridItems,
+    this.itemSize,
   });
 
   @override
@@ -73,6 +78,7 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
     photoKeys,
     customItems,
     gridItems,
+    itemSize,
   ];
 }
 

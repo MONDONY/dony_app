@@ -122,6 +122,8 @@ AnnouncementModel _$AnnouncementModelFromJson(
   departureTimezone: json['departureTimezone'] as String?,
   trackingActive: json['trackingActive'] as bool? ?? false,
   parcelsSummary: TripParcelsSummary.fromJsonOrNull(json['parcelsSummary']),
+  maxItemSize: itemSizeFromWire(json['maxItemSize']),
+  maxParcelWeightKg: (json['maxParcelWeightKg'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -185,6 +187,8 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'currencyEditable': instance.currencyEditable,
       'departureTimezone': instance.departureTimezone,
       'trackingActive': instance.trackingActive,
+      'maxItemSize': itemSizeToWireOrNull(instance.maxItemSize),
+      'maxParcelWeightKg': instance.maxParcelWeightKg,
       'parcelsSummary': _parcelsSummaryToJson(instance.parcelsSummary),
     };
 

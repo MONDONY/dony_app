@@ -1,8 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
@@ -91,7 +93,7 @@ class PackageRequestCarouselCard extends StatelessWidget {
                         item: item,
                         cs: cs,
                         tt: tt,
-                        sizeLabel: _sizeLabel,
+                        sizeLabel: item.itemSize?.code ?? _sizeLabel,
                       ),
                     ),
                   ],
@@ -396,7 +398,7 @@ class _InfoSection extends StatelessWidget {
               _SizeBadge(label: sizeLabel, cs: cs, tt: tt),
               const SizedBox(width: 4),
               Text(
-                '${item.weightKg.toStringAsFixed(0)} kg',
+                formatWeightKg(l, item.weightKg),
                 style: tt.labelSmall?.copyWith(
                   color: cs.onSurfaceVariant,
                   fontSize: 11,

@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 
@@ -60,6 +61,10 @@ const CapacityUnit defaultCapacityUnit = CapacityUnit.suitcase23kg;
 /// (YADONY-FLUTTER-PROD-18).
 const double defaultAvailableKg = 23.0;
 
+/// Plus petit poids max par colis accepté, en kilos : le poids minimum d'une
+/// demande (D19).
+const double minMaxParcelWeightKg = 0.5;
+
 class AnnouncementFormState extends Equatable {
   final String? departureCity;
   final String? arrivalCity;
@@ -99,6 +104,18 @@ class AnnouncementFormState extends Equatable {
   final PricingMode pricingMode;
   final List<GridPreviewItem> gridPreviewItems;
 
+  /// Taille max d'un colis, route seulement, facultative.
+  final ItemSize? maxItemSize;
+
+  /// Poids max par colis en kilos, route seulement, facultatif.
+  final double? maxParcelWeightKg;
+
+  /// Modification d'un trajet publié : [availableKg] y vaut les kilos
+  /// RESTANTS (ils baissent à chaque réservation). Le poids max par colis
+  /// n'est alors plus comparé à ce reste (le back n'impose pas cette règle),
+  /// seulement au maximum technique.
+  final bool isEditingTrip;
+
   const AnnouncementFormState({
     this.departureCity,
     this.arrivalCity,
@@ -121,7 +138,40 @@ class AnnouncementFormState extends Equatable {
     this.rejectedTypes = const [],
     this.pricingMode = PricingMode.kg,
     this.gridPreviewItems = const [],
+    this.maxItemSize,
+    this.maxParcelWeightKg,
+    this.isEditingTrip = false,
   });
+
+  /// Capacité maximale saisissable pour le mode du trajet (avion par défaut
+  /// tant qu'aucun mode n'est choisi).
+  int get capacityMaxKg =>
+      TripCapacityLimits.maxKgFor(transportModeOrPlane(transportMode));
+
+  /// Capacité au-delà du plafond du mode (ex. 1 200 kg saisis en route puis
+  /// passage en avion). Le kilo libre n'a qu'une capacité technique.
+  bool get capacityTooHigh =>
+      capacityUnit != CapacityUnit.kgFree && (availableKg ?? 0) > capacityMaxKg;
+
+  /// Poids max par colis : vide, ou entre 0,5 kg et la capacité du trajet
+  /// (999 999 kg en kilo libre, dont la capacité est technique, et en
+  /// modification, où [availableKg] n'est que le reste à réserver).
+  bool get isMaxParcelWeightValid {
+    final w = maxParcelWeightKg;
+    if (w == null) return true;
+    final kg = availableKg;
+    final upper =
+        capacityUnit == CapacityUnit.kgFree || kg == null || isEditingTrip
+        ? TripCapacityLimits.heavyMaxKg.toDouble()
+        : kg;
+    return w >= minMaxParcelWeightKg &&
+        w <= upper &&
+        w <= TripCapacityLimits.heavyMaxKg;
+  }
+
+  /// « Continuer » de l'étape Capacité, côté kilos (les adresses sont
+  /// vérifiées par l'écran). La taille ne bloque jamais (C24).
+  bool get isCapacityStepValid => !capacityTooHigh && isMaxParcelWeightValid;
 
   bool get isFormValid =>
       departureCity != null &&
@@ -180,6 +230,9 @@ class AnnouncementFormState extends Equatable {
     List<String>? rejectedTypes,
     PricingMode? pricingMode,
     List<GridPreviewItem>? gridPreviewItems,
+    ItemSize? Function()? maxItemSizeGetter,
+    double? Function()? maxParcelWeightKgGetter,
+    bool? isEditingTrip,
   }) {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,
@@ -219,6 +272,13 @@ class AnnouncementFormState extends Equatable {
       rejectedTypes: rejectedTypes ?? this.rejectedTypes,
       pricingMode: pricingMode ?? this.pricingMode,
       gridPreviewItems: gridPreviewItems ?? this.gridPreviewItems,
+      maxItemSize: maxItemSizeGetter != null
+          ? maxItemSizeGetter()
+          : maxItemSize,
+      maxParcelWeightKg: maxParcelWeightKgGetter != null
+          ? maxParcelWeightKgGetter()
+          : maxParcelWeightKg,
+      isEditingTrip: isEditingTrip ?? this.isEditingTrip,
     );
   }
 
@@ -245,5 +305,8 @@ class AnnouncementFormState extends Equatable {
     rejectedTypes,
     pricingMode,
     gridPreviewItems,
+    maxItemSize,
+    maxParcelWeightKg,
+    isEditingTrip,
   ];
 }

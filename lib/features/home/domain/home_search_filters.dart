@@ -1,5 +1,6 @@
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
@@ -68,6 +69,8 @@ class AnnouncementQuery {
     this.urgent,
     this.maxStops,
     this.paymentMethods,
+    this.minItemSize,
+    this.viaCity,
   });
 
   final String? departureCity;
@@ -93,6 +96,14 @@ class AnnouncementQuery {
 
   /// Moyens de paiement recherchés (FLUTTER-G0), valeurs API ; `null` = tous.
   final List<String>? paymentMethods;
+
+  /// Route seulement : taille de colis minimale acceptée par le trajet ;
+  /// `null` = peu importe.
+  final ItemSize? minItemSize;
+
+  /// Route seulement : ville où une étape publiée du voyage s'arrête ;
+  /// `null` = aucune.
+  final String? viaCity;
 }
 
 /// État de recherche de l'écran Rechercher, immuable et sans dépendance Flutter.
@@ -109,16 +120,33 @@ const double kSuitcaseKg = 23;
 const double kCapacitySliderMinKg = 1;
 const double kCapacitySliderMaxKg = 50;
 
+/// Maximum du curseur Capacité en route (voiture, bus) : un trajet y porte des
+/// centaines de kilos, le curseur de 50 kg ne laisserait rien choisir.
+const double kRoadCapacitySliderMaxKg = 1000;
+
+/// Maximum du curseur Capacité pour le mode filtré : 1 000 kg en route,
+/// [kCapacitySliderMaxKg] pour l'avion, le bateau et « tous les modes ».
+double capacitySliderMaxKgFor(TransportMode? mode) =>
+    mode != null && mode.isRoad
+    ? kRoadCapacitySliderMaxKg
+    : kCapacitySliderMaxKg;
+
 /// Traduit la position des poignées du curseur Capacité en bornes de filtre.
 /// Une poignée laissée à son extrémité veut dire « pas de borne » : au
 /// minimum, aucun `minAvailableKg` ; au maximum, aucun `maxAvailableKg`.
 /// Sans cela, ouvrir la feuille puis « Appliquer » sans rien toucher posait
 /// `1 à 50 kg` et cachait les trajets de plus de 50 kg disponibles.
-({double? min, double? max}) capacityBoundsFromSlider(double min, double max) =>
-    (
-      min: min <= kCapacitySliderMinKg ? null : min,
-      max: max >= kCapacitySliderMaxKg ? null : max,
-    );
+///
+/// [sliderMaxKg] est l'extrémité haute du curseur du mode filtré
+/// ([capacitySliderMaxKgFor]) : 50 kg par défaut, 1 000 kg en route.
+({double? min, double? max}) capacityBoundsFromSlider(
+  double min,
+  double max, {
+  double sliderMaxKg = kCapacitySliderMaxKg,
+}) => (
+  min: min <= kCapacitySliderMinKg ? null : min,
+  max: max >= sliderMaxKg ? null : max,
+);
 
 class HomeSearchFilters {
   const HomeSearchFilters({
@@ -147,6 +175,8 @@ class HomeSearchFilters {
     this.urgencyFilter,
     this.stopsFilter,
     this.paymentMethods = const {},
+    this.minItemSize,
+    this.viaCity,
     // Colis
     this.maxWeight,
     this.parcelSize,
@@ -199,6 +229,33 @@ class HomeSearchFilters {
 
   /// Moyens de paiement recherchés (FLUTTER-G0) ; vide = tous.
   final Set<BidPaymentMethod> paymentMethods;
+
+  /// Route seulement : taille minimale de colis que le trajet accepte (stricte
+  /// côté back : un trajet sans taille maximum n'apparaît pas) ; `null` =
+  /// peu importe. Ne vit que tant que le filtre Transport est la route : voir
+  /// [withTransportModeChanged].
+  final ItemSize? minItemSize;
+
+  /// Route seulement : ville « Passe par », où une étape publiée du voyage
+  /// s'arrête ; `null` = aucune. Même règle de vie que [minItemSize].
+  final String? viaCity;
+
+  /// Vrai quand le filtre Transport est la route (voiture ou bus) : les
+  /// filtres propres à la route n'existent que là.
+  bool get _isRoadFilter => transportMode?.isRoad ?? false;
+
+  /// Taille minimale réellement active : seulement quand le filtre Transport
+  /// est la route. Source unique de la requête, de `activeKeys` et du compteur,
+  /// pour qu'un état incohérent ne soit ni compté ni tracé sans être envoyé.
+  ItemSize? get _activeMinItemSize => _isRoadFilter ? minItemSize : null;
+
+  /// Ville « Passe par » réellement active : route seulement, et jamais une
+  /// ville blanche (le serveur ne la recevrait pas, le badge ne la compterait
+  /// pas).
+  String? get _activeViaCity {
+    final city = viaCity?.trim();
+    return _isRoadFilter && city != null && city.isNotEmpty ? city : null;
+  }
 
   // ── Colis ──────────────────────────────────────────────────────────────────
   /// Poids maximal des demandes recherchées, en kg. Voir [weightMin].
@@ -344,6 +401,10 @@ class HomeSearchFilters {
       paymentMethods: paymentMethods.isEmpty
           ? null
           : (paymentMethods.map((m) => m.apiValue).toList()..sort()),
+      // Propres à la route : jamais envoyés pour un autre mode, même si un
+      // état incohérent les avait laissés en place.
+      minItemSize: _activeMinItemSize,
+      viaCity: _activeViaCity,
     );
   }
 
@@ -398,9 +459,46 @@ class HomeSearchFilters {
     }
     final group = current.displayGroup;
     if (offered.length < 2 || !offered.contains(group)) {
-      return copyWith(clearTransportMode: true);
+      return withTransportModeChanged(null);
     }
     return group == current ? this : copyWith(transportMode: group);
+  }
+
+  /// Change le filtre Transport ([mode] `null` = tous les modes) en gardant
+  /// les filtres cohérents avec lui :
+  ///
+  /// * vers la route : la puce « Valise 23 kg » et les escales n'y existent
+  ///   pas, elles sont effacées ;
+  /// * en quittant la route : la taille minimale et la ville de passage sont
+  ///   effacées, et les bornes de capacité qui sortent de la plage du nouveau
+  ///   mode (1 à 50 kg hors route) aussi : un minimum de 600 kg ne se
+  ///   réglerait plus au curseur et viderait la liste sans qu'on sache
+  ///   pourquoi.
+  ///
+  /// Route vers bus (ou l'inverse) et mode identique : rien d'effacé.
+  HomeSearchFilters withTransportModeChanged(TransportMode? mode) {
+    final wasRoad = _isRoadFilter;
+    final goesRoad = mode?.isRoad ?? false;
+    var next = mode == null
+        ? copyWith(clearTransportMode: true)
+        : copyWith(transportMode: mode);
+    if (goesRoad && !wasRoad) {
+      next = next.copyWith(suitcase23Only: false, clearStopsFilter: true);
+    } else if (wasRoad && !goesRoad) {
+      final max = capacitySliderMaxKgFor(mode);
+      final min = weightMin;
+      final top = weightMax;
+      next = next.copyWith(clearMinItemSize: true, clearViaCity: true);
+      if ((min != null && min > max) || (top != null && top >= max)) {
+        next = next
+            .copyWith(clearWeight: true)
+            .copyWith(
+              weightMin: min != null && min <= max ? min : null,
+              weightMax: top != null && top < max ? top : null,
+            );
+      }
+    }
+    return next;
   }
 
   /// Clés des filtres actifs, énumération fermée et sans valeur : sert au
@@ -425,6 +523,8 @@ class HomeSearchFilters {
     if (urgencyFilter != null) 'urgency',
     if (stopsFilter != null) 'stops',
     if (paymentMethods.isNotEmpty) 'payment_methods',
+    if (_activeMinItemSize != null) 'item_size',
+    if (_activeViaCity != null) 'via_city',
     if (maxWeight != null) 'max_weight',
     if (parcelSize != null) 'parcel_size',
     if (matchingMyTrips) 'matching_my_trips',
@@ -483,6 +583,12 @@ class HomeSearchFilters {
       n++;
     }
     if (paymentMethods.isNotEmpty) {
+      n++;
+    }
+    if (_activeMinItemSize != null) {
+      n++;
+    }
+    if (_activeViaCity != null) {
       n++;
     }
     return n;
@@ -558,6 +664,8 @@ class HomeSearchFilters {
     UrgencyFilter? urgencyFilter,
     StopsFilter? stopsFilter,
     Set<BidPaymentMethod>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
     double? maxWeight,
     ParcelSize? parcelSize,
     bool? matchingMyTrips,
@@ -570,6 +678,8 @@ class HomeSearchFilters {
     bool clearContentType = false,
     bool clearUrgencyFilter = false,
     bool clearStopsFilter = false,
+    bool clearMinItemSize = false,
+    bool clearViaCity = false,
     bool clearMaxWeight = false,
     bool clearParcelSize = false,
     bool clearNearMe = false,
@@ -612,6 +722,8 @@ class HomeSearchFilters {
           : (urgencyFilter ?? this.urgencyFilter),
       stopsFilter: clearStopsFilter ? null : (stopsFilter ?? this.stopsFilter),
       paymentMethods: paymentMethods ?? this.paymentMethods,
+      minItemSize: clearMinItemSize ? null : (minItemSize ?? this.minItemSize),
+      viaCity: clearViaCity ? null : (viaCity ?? this.viaCity),
       maxWeight: clearMaxWeight ? null : (maxWeight ?? this.maxWeight),
       parcelSize: clearParcelSize ? null : (parcelSize ?? this.parcelSize),
       matchingMyTrips: matchingMyTrips ?? this.matchingMyTrips,

@@ -19,6 +19,7 @@ import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/custom_items_section.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
@@ -70,6 +71,7 @@ AnnouncementModel _announcement({
   },
   String currency = 'EUR',
   bool gridOnly = false,
+  ItemSize? maxItemSize,
 }) => AnnouncementModel(
   id: 'ann-nego',
   currency: currency,
@@ -94,6 +96,7 @@ AnnouncementModel _announcement({
   createdAt: DateTime(2026, 8),
   updatedAt: DateTime(2026, 8),
   negotiable: negotiable,
+  maxItemSize: maxItemSize,
   acceptedPaymentMethods: acceptedPaymentMethods,
   traveler: const TravelerProfile(
     id: 'traveler-1',
@@ -272,6 +275,7 @@ void main() {
     },
     String currency = 'EUR',
     bool gridOnly = false,
+    ItemSize? maxItemSize,
   }) => MaterialApp.router(
     theme: AppTheme.light(),
     localizationsDelegates: const [
@@ -290,6 +294,7 @@ void main() {
               acceptedPaymentMethods: acceptedPaymentMethods,
               currency: currency,
               gridOnly: gridOnly,
+              maxItemSize: maxItemSize,
             ),
             negotiation: negotiation,
           ),
@@ -306,6 +311,7 @@ void main() {
     },
     String currency = 'EUR',
     bool gridOnly = false,
+    ItemSize? maxItemSize,
   }) async {
     tester.view.physicalSize = const Size(800, 6000);
     tester.view.devicePixelRatio = 1.0;
@@ -316,6 +322,7 @@ void main() {
         acceptedPaymentMethods: acceptedPaymentMethods,
         currency: currency,
         gridOnly: gridOnly,
+        maxItemSize: maxItemSize,
       ),
     );
     await tester.pump(_kSettle);
@@ -470,6 +477,27 @@ void main() {
     expect(captured.single.recipientName, 'Awa Diop');
     // Trajet carte seule : le mode est figé sur la carte sans rien demander.
     expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
+  });
+
+  testWidgets('trajet avec taille max : la taille choisie part avec la '
+      'proposition', (tester) async {
+    await openBid(tester, negotiation: true, maxItemSize: ItemSize.l);
+    await fillNegotiationForm(tester);
+    await tester.ensureVisible(find.byKey(const Key('item-size-M')));
+    await tester.tap(find.byKey(const Key('item-size-M')));
+    await tester.pump(_kSettle);
+
+    final captured = await submitProposal(tester);
+    expect(captured.single.itemSize, ItemSize.m);
+  });
+
+  testWidgets('trajet avec taille max, aucune taille choisie : la '
+      'proposition part sans taille', (tester) async {
+    await openBid(tester, negotiation: true, maxItemSize: ItemSize.l);
+    await fillNegotiationForm(tester);
+
+    final captured = await submitProposal(tester);
+    expect(captured.single.itemSize, isNull);
   });
 
   // FLUTTER-4A : sur un trajet en grille pure, l'expéditeur dont le contenu

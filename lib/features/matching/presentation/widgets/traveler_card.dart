@@ -146,17 +146,19 @@ class TravelerCard extends StatelessWidget {
     final dateStr = DateFormat.MMMEd(
       l.localeName,
     ).format(announcement.departureDate);
+    // Route : dates « départ → arrivée » et durée quand l'arrivée est datée.
+    final roadDays = tripRoadDays(announcement);
+    final dateLabel = roadDays == null
+        ? dateStr
+        : '${DateFormat.MMMd(l.localeName).format(announcement.departureDate)}'
+              ' → '
+              '${DateFormat.MMMd(l.localeName).format(announcement.arrivalDate!)}';
+    final roadDuration = roadDays == null ? null : l.tripRoadDuration(roadDays);
     final categories = announcement.acceptedContentTypes ?? [];
     final capacity = TripCapacity.fromAnnouncement(announcement);
     // Valises : le restant en kilos n'est que dans le détail, la card reste
     // légère.
-    final capacityLabel = announcement.capacityUnit == 'KG_FREE'
-        ? l.tripKgFree
-        : capacity != null
-        ? l.listingSuitcaseCapacityLabel(capacity.count, capacity.unitKg)
-        : l.listingKgAvailableLabel(
-            announcement.availableKg.toStringAsFixed(0),
-          );
+    final capacityLabel = tripCapacityLine(l, announcement);
     final hasExistingBid = existingBidStatus != null;
     final bidStyle = _bidStyle(cs, l);
     // Trajet déjà sollicité ou complet : la carte s'efface pour laisser voir
@@ -266,8 +268,17 @@ class TravelerCard extends StatelessWidget {
                         size: 13,
                         color: cs.onSurfaceVariant,
                       ),
-                      text: dateStr,
+                      text: dateLabel,
                     ),
+                    if (roadDuration != null)
+                      _MetaItem(
+                        icon: DonyIcon(
+                          'car',
+                          size: 13,
+                          color: cs.onSurfaceVariant,
+                        ),
+                        text: roadDuration,
+                      ),
                     if (OwnerViewsLabel.isVisible(
                       count: announcement.uniqueViewerCount,
                       isOwner: isOwnAnnouncement,
@@ -290,31 +301,64 @@ class TravelerCard extends StatelessWidget {
                   ],
                 )
               else
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
-                    const SizedBox(width: DonySpacing.xs),
-                    Text(
-                      dateStr,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    // Audience de mon trajet : visible de moi seul.
-                    if (OwnerViewsLabel.isVisible(
-                      count: announcement.uniqueViewerCount,
-                      isOwner: isOwnAnnouncement,
-                    )) ...[
-                      Text(
-                        '  ·  ',
-                        style: tt.bodySmall?.copyWith(
+                    Row(
+                      children: [
+                        DonyIcon(
+                          'calendar',
+                          size: 13,
                           color: cs.onSurfaceVariant,
                         ),
-                      ),
-                      OwnerViewsLabel(
-                        count: announcement.uniqueViewerCount,
-                        isOwner: isOwnAnnouncement,
+                        const SizedBox(width: DonySpacing.xs),
+                        // Jamais coupé : le texte passe à la ligne s'il manque
+                        // de place.
+                        Flexible(
+                          child: Text(
+                            dateLabel,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Audience de mon trajet : visible de moi seul.
+                        if (OwnerViewsLabel.isVisible(
+                          count: announcement.uniqueViewerCount,
+                          isOwner: isOwnAnnouncement,
+                        )) ...[
+                          Text(
+                            '  ·  ',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          OwnerViewsLabel(
+                            count: announcement.uniqueViewerCount,
+                            isOwner: isOwnAnnouncement,
+                          ),
+                        ],
+                      ],
+                    ),
+                    // Durée d'une route à arrivée datée, sur sa propre ligne.
+                    if (roadDuration != null) ...[
+                      const SizedBox(height: DonySpacing.xxs),
+                      Row(
+                        children: [
+                          DonyIcon('car', size: 13, color: cs.onSurfaceVariant),
+                          const SizedBox(width: DonySpacing.xs),
+                          Flexible(
+                            child: Text(
+                              roadDuration,
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ],

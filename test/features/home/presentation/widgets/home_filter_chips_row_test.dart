@@ -5,6 +5,7 @@
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,6 +27,8 @@ Widget _wrap({
   List<TransportMode> transportModes = const [],
   VoidCallback? onTransportTap,
   VoidCallback? onTransportClear,
+  VoidCallback? onItemSizeTap,
+  VoidCallback? onItemSizeClear,
   double width = 800,
 }) => MaterialApp(
   home: Scaffold(
@@ -49,6 +52,8 @@ Widget _wrap({
         onPriceClear: () {},
         onGpProToggle: onGpProToggle ?? () {},
         onSuitcase23Toggle: onSuitcase23Toggle ?? () {},
+        onItemSizeTap: onItemSizeTap ?? () {},
+        onItemSizeClear: onItemSizeClear ?? () {},
         onMaxWeightTap: () {},
         onMaxWeightClear: () {},
         onParcelSizeTap: () {},
@@ -76,6 +81,138 @@ void main() {
   group('puce Capacité', _capacityChipTests);
   group('ordre des puces', _chipOrderTests);
   group('puce Transport', _transportChipTests);
+  group('puce Taille (route)', _itemSizeChipTests);
+}
+
+const _route = HomeSearchFilters(transportMode: TransportMode.car);
+
+void _itemSizeChipTests() {
+  const sizeKey = Key('home-chip-item-size');
+  const suitcaseKey = Key('chip-suitcase-23');
+  HomeSmallChip sizeChip(WidgetTester tester) =>
+      tester.widget<HomeSmallChip>(find.byKey(sizeKey));
+
+  testWidgets('route : puce Taille, plus de Valise 23 kg', (tester) async {
+    await tester.pumpWidget(_wrap(mode: SearchMode.trips, filters: _route));
+
+    expect(find.byKey(sizeKey), findsOneWidget);
+    expect(sizeChip(tester).label, 'Taille');
+    expect(sizeChip(tester).isActive, isFalse);
+    expect(find.byKey(suitcaseKey), findsNothing);
+    expect(find.text('🧳 Valise 23 kg'), findsNothing);
+  });
+
+  testWidgets('bus : même règle que la route', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: const HomeSearchFilters(transportMode: TransportMode.bus),
+      ),
+    );
+    expect(find.byKey(sizeKey), findsOneWidget);
+    expect(find.byKey(suitcaseKey), findsNothing);
+  });
+
+  for (final mode in [null, TransportMode.plane, TransportMode.boat]) {
+    testWidgets('mode $mode : Valise 23 kg, pas de Taille', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mode: SearchMode.trips,
+          filters: HomeSearchFilters(transportMode: mode),
+        ),
+      );
+      expect(find.byKey(suitcaseKey), findsOneWidget);
+      expect(find.text('🧳 Valise 23 kg'), findsOneWidget);
+      expect(find.byKey(sizeKey), findsNothing);
+    });
+  }
+
+  testWidgets('mode Colis : ni Taille route ni Valise', (tester) async {
+    await tester.pumpWidget(_wrap(filters: _route));
+    expect(find.byKey(sizeKey), findsNothing);
+    expect(find.byKey(suitcaseKey), findsNothing);
+  });
+
+  testWidgets('inactive : un tap ouvre le choix, rien n\'est retiré', (
+    tester,
+  ) async {
+    var ouvert = 0;
+    var retire = 0;
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: _route,
+        onItemSizeTap: () => ouvert++,
+        onItemSizeClear: () => retire++,
+      ),
+    );
+    await tester.tap(find.byKey(sizeKey));
+    expect((ouvert, retire), (1, 0));
+  });
+
+  testWidgets('active : « Taille L et + », un tap retire le filtre', (
+    tester,
+  ) async {
+    var ouvert = 0;
+    var retire = 0;
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: _route.copyWith(minItemSize: ItemSize.l),
+        onItemSizeTap: () => ouvert++,
+        onItemSizeClear: () => retire++,
+      ),
+    );
+    expect(sizeChip(tester).label, 'Taille L et +');
+    expect(sizeChip(tester).isActive, isTrue);
+    await tester.tap(find.byKey(sizeKey));
+    expect((ouvert, retire), (0, 1));
+  });
+
+  testWidgets('en anglais : « Size XL+ »', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: _route.copyWith(minItemSize: ItemSize.xl),
+      ),
+    );
+    expect(sizeChip(tester).label, 'Size XL+');
+  });
+
+  testWidgets('la puce Taille prend la place de Valise : après Urgent, avant '
+      'la Note', (tester) async {
+    await tester.pumpWidget(_wrap(mode: SearchMode.trips, filters: _route));
+    final urgent = tester.getTopLeft(find.byKey(const Key('chip-urgent'))).dx;
+    final size = tester.getTopLeft(find.byKey(sizeKey)).dx;
+    final note = tester.getTopLeft(find.text('Note')).dx;
+    expect(urgent, lessThan(size));
+    expect(size, lessThan(note));
+  });
+
+  for (final (english, label) in [
+    (false, 'Taille XL et +'),
+    (true, 'Size XL+'),
+  ]) {
+    testWidgets('360 dp ${english ? 'EN' : 'FR'} : une ligne, même hauteur '
+        'que les autres puces', (tester) async {
+      if (english) useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          mode: SearchMode.trips,
+          filters: _route.copyWith(minItemSize: ItemSize.xl),
+          width: 360,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(sizeChip(tester).label, label);
+      final sizeHeight = tester.getSize(find.byKey(sizeKey)).height;
+      final dateHeight = tester
+          .getSize(find.byKey(const Key('chip-date')))
+          .height;
+      expect(sizeHeight, dateHeight);
+    });
+  }
 }
 
 const _avionBateauRoute = [

@@ -7,6 +7,7 @@ import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/config/data/config_repository.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
@@ -697,6 +698,7 @@ void main() {
         any(),
         promoCode: any(named: 'promoCode'),
         currency: any(named: 'currency'),
+        transportMode: any(named: 'transportMode'),
       ),
     ).thenAnswer((_) async => q);
 
@@ -737,7 +739,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 450));
       await tester.pump();
 
-      verify(() => repo.quote(5, currency: 'EUR')).called(1);
+      verify(
+        () =>
+            repo.quote(5, currency: 'EUR', transportMode: TransportMode.plane),
+      ).called(1);
       expect(find.text('Frais de service'), findsOneWidget);
       expect(find.text(eur(1)), findsOneWidget);
       expect(find.textContaining('minimum'), findsNothing);
@@ -910,7 +915,13 @@ void main() {
       await tester.pump();
       await applyPromo(tester, '');
 
-      verify(() => repo.quote(13343, currency: 'XOF')).called(1);
+      verify(
+        () => repo.quote(
+          13343,
+          currency: 'XOF',
+          transportMode: TransportMode.plane,
+        ),
+      ).called(1);
     });
 
     testWidgets('budget 1,00 € : bouton Continuer bloqué et message du '
@@ -1072,6 +1083,7 @@ void main() {
           any(),
           promoCode: any(named: 'promoCode'),
           currency: any(named: 'currency'),
+          transportMode: any(named: 'transportMode'),
         ),
       ).thenAnswer(
         (_) async => const NegotiationQuote(
@@ -1192,5 +1204,232 @@ void main() {
       );
       expect(canContinue.value, isTrue);
     });
+  });
+
+  group('Step3RecapBudget : budget selon le mode', () {
+    const sep = ' ';
+
+    setUp(() {
+      useTestCommissionGrid();
+      getIt.registerSingleton<PackageRequestRepository>(repo);
+      when(
+        () => repo.quote(
+          any(),
+          promoCode: any(named: 'promoCode'),
+          currency: any(named: 'currency'),
+          transportMode: any(named: 'transportMode'),
+        ),
+      ).thenAnswer((_) => Future.error(Exception('pas de devis')));
+    });
+
+    tearDown(_unregisterRepos);
+
+    PackageRequestFormState seed({
+      TransportMode? mode,
+      bool any = false,
+      required double budget,
+      SupportedCurrency currency = SupportedCurrency.eur,
+      double? weightKg,
+      ItemSize? itemSize,
+    }) => PackageRequestFormState(
+      transportMode: mode,
+      transportModeAny: any,
+      totalBudgetEur: budget,
+      currency: currency,
+      weightKg: weightKg,
+      itemSize: itemSize,
+    );
+
+    Future<ValueNotifier<bool>> pumpStep(
+      WidgetTester tester,
+      PackageRequestFormState s,
+    ) async {
+      final canContinue = ValueNotifier<bool>(false);
+      addTearDown(canContinue.dispose);
+      await tester.pumpWidget(
+        wrap(
+          Step3RecapBudget(canContinueNotifier: canContinue),
+          seed: s,
+          useMock: true,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      return canContinue;
+    }
+
+    testWidgets('budget route 900 € : valide, aucun plafond affiché', (
+      tester,
+    ) async {
+      final canContinue = await pumpStep(
+        tester,
+        seed(mode: TransportMode.car, budget: 900),
+      );
+      expect(canContinue.value, isTrue);
+      expect(find.textContaining('560'), findsNothing);
+      expect(find.textContaining('Entre'), findsNothing);
+      expect(find.textContaining('trop élevé'), findsNothing);
+    });
+
+    testWidgets('budget bateau 5 000 € : valide', (tester) async {
+      final canContinue = await pumpStep(
+        tester,
+        seed(mode: TransportMode.boat, budget: 5000),
+      );
+      expect(canContinue.value, isTrue);
+    });
+
+    testWidgets('budget route : 1 000 000 accepté (garde-fou technique)', (
+      tester,
+    ) async {
+      final canContinue = await pumpStep(
+        tester,
+        seed(mode: TransportMode.car, budget: 1000000),
+      );
+      expect(canContinue.value, isTrue);
+      expect(find.textContaining('trop élevé'), findsNothing);
+    });
+
+    testWidgets('budget route : au-delà de 1 000 000, message clair', (
+      tester,
+    ) async {
+      final canContinue = await pumpStep(
+        tester,
+        seed(mode: TransportMode.car, budget: 1000001),
+      );
+      expect(canContinue.value, isFalse);
+      expect(find.textContaining('Montant trop élevé'), findsOneWidget);
+      expect(find.textContaining('1${sep}000${sep}000'), findsWidgets);
+    });
+
+    testWidgets('budget route sous le minimum : « au minimum », jamais de '
+        'plafond', (tester) async {
+      final canContinue = await pumpStep(
+        tester,
+        seed(mode: TransportMode.car, budget: 0.5),
+      );
+      expect(canContinue.value, isFalse);
+      expect(find.textContaining('au minimum'), findsOneWidget);
+      expect(find.textContaining('560'), findsNothing);
+    });
+
+    testWidgets('budget avion 561 € : refusé comme aujourd\'hui', (
+      tester,
+    ) async {
+      final canContinue = await pumpStep(
+        tester,
+        seed(mode: TransportMode.plane, budget: 561),
+      );
+      expect(canContinue.value, isFalse);
+      expect(find.textContaining('560'), findsOneWidget);
+    });
+
+    testWidgets('budget peu importe 561 € : refusé, 560 € accepté', (
+      tester,
+    ) async {
+      expect(
+        (await pumpStep(tester, seed(any: true, budget: 561))).value,
+        isFalse,
+      );
+      expect(
+        (await pumpStep(tester, seed(any: true, budget: 560))).value,
+        isTrue,
+      );
+    });
+
+    testWidgets('route 900 € puis avion : champ en erreur dès l\'ouverture, '
+        'budget gardé', (tester) async {
+      final canContinue = await pumpStep(
+        tester,
+        seed(mode: TransportMode.plane, budget: 900),
+      );
+      expect(canContinue.value, isFalse);
+      expect(find.widgetWithText(TextFormField, '900'), findsOneWidget);
+      expect(find.textContaining('560'), findsOneWidget);
+    });
+
+    testWidgets('devis en route : transportMode=CAR envoyé', (tester) async {
+      await pumpStep(tester, seed(mode: TransportMode.car, budget: 900));
+      await tester.pump(const Duration(milliseconds: 450));
+      verify(
+        () =>
+            repo.quote(900, currency: 'EUR', transportMode: TransportMode.car),
+      ).called(1);
+    });
+
+    testWidgets('devis en peu importe : aucun mode envoyé (560 € côté back)', (
+      tester,
+    ) async {
+      await pumpStep(tester, seed(any: true, budget: 40));
+      await tester.pump(const Duration(milliseconds: 450));
+      verify(() => repo.quote(40, currency: 'EUR')).called(1);
+      verifyNever(
+        () => repo.quote(
+          any(),
+          currency: any(named: 'currency'),
+          transportMode: any(named: 'transportMode', that: isNotNull),
+        ),
+      );
+    });
+
+    testWidgets('résumé « 1 200 kg · taille L » dans le récap compact', (
+      tester,
+    ) async {
+      await pumpStep(
+        tester,
+        seed(
+          mode: TransportMode.car,
+          budget: 900,
+          weightKg: 1200,
+          itemSize: ItemSize.l,
+        ),
+      );
+      expect(find.text('1${sep}200 kg · taille L'), findsOneWidget);
+    });
+
+    testWidgets('résumé sans taille : le poids seul', (tester) async {
+      await pumpStep(
+        tester,
+        seed(mode: TransportMode.car, budget: 900, weightKg: 1200),
+      );
+      expect(find.text('1${sep}200 kg'), findsOneWidget);
+      expect(find.textContaining('taille'), findsNothing);
+    });
+
+    testWidgets('résumé en anglais : « 1,200 kg · size L »', (tester) async {
+      useEnglish();
+      await pumpStep(
+        tester,
+        seed(
+          mode: TransportMode.car,
+          budget: 900,
+          weightKg: 1200,
+          itemSize: ItemSize.l,
+        ),
+      );
+      expect(find.text('1,200 kg · size L'), findsOneWidget);
+    });
+
+    for (final locale in ['fr', 'en']) {
+      testWidgets('360 dp $locale : récap compact et prix sans débordement', (
+        tester,
+      ) async {
+        if (locale == 'en') useEnglish();
+        tester.view
+          ..physicalSize = const Size(360, 800)
+          ..devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await pumpStep(
+          tester,
+          seed(
+            mode: TransportMode.car,
+            budget: 900,
+            weightKg: 999999,
+            itemSize: ItemSize.xl,
+          ),
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 }

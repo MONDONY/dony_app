@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -177,12 +178,9 @@ class TripParcelRow extends StatelessWidget {
   final VoidCallback onTap;
   final bool awaitsAction;
 
-  String? get _weightLabel {
+  String? _weightLabel(AppLocalizations l) {
     final w = bid.displayWeightKg;
-    if (w == null) {
-      return null;
-    }
-    return '${w.toStringAsFixed(w % 1 == 0 ? 0 : 1)} kg';
+    return w == null ? null : formatWeightKg(l, w);
   }
 
   @override
@@ -192,7 +190,7 @@ class TripParcelRow extends StatelessWidget {
 
     final content = tripParcelContent(context.l10n, bid);
     final sender = bid.senderDisplayName(context.l10n);
-    final weight = _weightLabel;
+    final weight = _weightLabel(context.l10n);
 
     return Material(
       color: cs.surface,

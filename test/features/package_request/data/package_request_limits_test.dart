@@ -1,4 +1,5 @@
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -189,6 +190,113 @@ void main() {
       expect(
         PackageRequestLimits.isBudgetValid(700, SupportedCurrency.xof),
         isTrue,
+      );
+    });
+  });
+
+  group('bornes par mode (miroir de WeightLimits)', () {
+    test('poids max : 32 kg hors route et bateau, 999 999,99 au-delà', () {
+      expect(PackageRequestLimits.maxWeightFor(null), 32);
+      expect(PackageRequestLimits.maxWeightFor(TransportMode.plane), 32);
+      expect(PackageRequestLimits.maxWeightFor(TransportMode.train), 32);
+      expect(PackageRequestLimits.maxWeightFor(TransportMode.car), 999999.99);
+      expect(PackageRequestLimits.maxWeightFor(TransportMode.bus), 999999.99);
+      expect(PackageRequestLimits.maxWeightFor(TransportMode.boat), 999999.99);
+      expect(PackageRequestLimits.heavyMaxWeightKg, 999999.99);
+    });
+
+    test('isWeightValidFor : plancher 0,5 et plafond du mode', () {
+      expect(
+        PackageRequestLimits.isWeightValidFor(1200, TransportMode.bus),
+        isTrue,
+      );
+      expect(
+        PackageRequestLimits.isWeightValidFor(999999.99, TransportMode.boat),
+        isTrue,
+      );
+      expect(
+        PackageRequestLimits.isWeightValidFor(1000000, TransportMode.boat),
+        isFalse,
+      );
+      expect(
+        PackageRequestLimits.isWeightValidFor(32.5, TransportMode.plane),
+        isFalse,
+      );
+      expect(PackageRequestLimits.isWeightValidFor(32, null), isTrue);
+      expect(
+        PackageRequestLimits.isWeightValidFor(0.4, TransportMode.car),
+        isFalse,
+      );
+      expect(
+        PackageRequestLimits.isWeightValidFor(null, TransportMode.car),
+        isFalse,
+      );
+    });
+
+    test('isWeightValid (brouillon IA) garde ses 32 kg', () {
+      expect(PackageRequestLimits.isWeightValid(32), isTrue);
+      expect(PackageRequestLimits.isWeightValid(33), isFalse);
+    });
+
+    test('budget route et bateau : plafond technique, sans plafond métier', () {
+      expect(PackageRequestLimits.technicalMaxBudget, 1000000);
+      for (final mode in [
+        TransportMode.car,
+        TransportMode.bus,
+        TransportMode.boat,
+      ]) {
+        expect(PackageRequestLimits.budgetHasBusinessCap(mode), isFalse);
+        expect(
+          PackageRequestLimits.maxBudgetFor(SupportedCurrency.xof, mode: mode),
+          1000000,
+        );
+        expect(
+          PackageRequestLimits.isBudgetValid(
+            900,
+            SupportedCurrency.eur,
+            mode: mode,
+          ),
+          isTrue,
+        );
+        expect(
+          PackageRequestLimits.isBudgetValid(
+            1000001,
+            SupportedCurrency.eur,
+            mode: mode,
+          ),
+          isFalse,
+        );
+      }
+    });
+
+    test('budget avion ou peu importe : plafond de 560 euros inchangé', () {
+      expect(PackageRequestLimits.budgetHasBusinessCap(null), isTrue);
+      expect(
+        PackageRequestLimits.budgetHasBusinessCap(TransportMode.plane),
+        isTrue,
+      );
+      expect(
+        PackageRequestLimits.isBudgetValid(561, SupportedCurrency.eur),
+        isFalse,
+      );
+      expect(
+        PackageRequestLimits.isBudgetValid(
+          561,
+          SupportedCurrency.eur,
+          mode: TransportMode.plane,
+        ),
+        isFalse,
+      );
+      expect(
+        PackageRequestLimits.isBudgetValid(560, SupportedCurrency.eur),
+        isTrue,
+      );
+      expect(
+        PackageRequestLimits.maxBudgetFor(
+          SupportedCurrency.xof,
+          mode: TransportMode.plane,
+        ),
+        367335.0,
       );
     });
   });

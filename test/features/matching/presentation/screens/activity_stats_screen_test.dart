@@ -220,7 +220,7 @@ void main() {
     );
 
     expect(find.textContaining('≈'), findsNothing);
-    expect(find.text('16.5 kg'), findsOneWidget);
+    expect(find.text('16,5 kg'), findsOneWidget);
   });
 
   testWidgets('taper Revenus ouvre la feuille des revenus', (tester) async {

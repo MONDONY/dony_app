@@ -10,6 +10,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/announcement_search_page.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -1052,6 +1053,57 @@ void main() {
       },
       skip: 2,
       expect: () => <AnnouncementState>[],
+    );
+  });
+
+  // Route : taille minimale et ville de passage suivent la recherche, de la
+  // première page aux suivantes.
+  group('filtres de la route', () {
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'taille minimale et ville de passage partent aux deux pages',
+      build: () {
+        for (final page in [0, 1]) {
+          when(
+            () => mockRepo.searchAnnouncementsPage(
+              minItemSize: ItemSize.l,
+              viaCity: 'Tanger',
+              page: page,
+              includeFull: any(named: 'includeFull'),
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+            ),
+          ).thenAnswer(
+            (_) async =>
+                _page([buildAnnouncement(id: 'p$page')], total: 2, page: page),
+          );
+        }
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(
+          AnnouncementSearchRequested(
+            minItemSize: ItemSize.l,
+            viaCity: 'Tanger',
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(AnnouncementSearchMoreRequested());
+      },
+      skip: 2,
+      verify: (_) {
+        for (final page in [0, 1]) {
+          verify(
+            () => mockRepo.searchAnnouncementsPage(
+              minItemSize: ItemSize.l,
+              viaCity: 'Tanger',
+              page: page,
+              includeFull: any(named: 'includeFull'),
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+            ),
+          ).called(1);
+        }
+      },
     );
   });
 

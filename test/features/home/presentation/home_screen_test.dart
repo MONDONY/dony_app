@@ -45,6 +45,8 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/similar_announcement.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -2286,6 +2288,275 @@ void main() {
           properties: {'filter': 'transport_mode', 'mode': 'parcels'},
         ),
       );
+    });
+  });
+
+  // Curseur Capacité en route (D23 : modifié et testé avec la tâche T8).
+  group('feuille Capacité selon le mode Transport', () {
+    Future<MockAnnouncementBloc> pumpTrips(WidgetTester tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      final bloc = MockAnnouncementBloc();
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        _buildHome(
+          announcementBlocOverride: bloc,
+          user: _makeUser(roles: const ['SENDER', 'TRAVELER']),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+      return bloc;
+    }
+
+    Future<void> pickTransport(WidgetTester tester, String label) async {
+      final chip = find.byKey(const Key('home-chip-transport'));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(label));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> openCapacity(WidgetTester tester) async {
+      final chip = find.byKey(const Key('chip-capacity'));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+    }
+
+    List<AnnouncementSearchRequested> searches(MockAnnouncementBloc bloc) =>
+        verify(
+          () => bloc.add(captureAny()),
+        ).captured.whereType<AnnouncementSearchRequested>().toList();
+
+    testWidgets('route : curseur jusqu\'à 1000 kg, appliquer sans toucher '
+        'n\'envoie aucune borne', (tester) async {
+      final bloc = await pumpTrips(tester);
+      await pickTransport(tester, 'Route');
+      await openCapacity(tester);
+
+      expect(find.text('1000 kg et +'), findsWidgets);
+      expect(find.text('50 kg et +'), findsNothing);
+      final slider = tester.widget<RangeSlider>(find.byType(RangeSlider));
+      expect(slider.min, 1);
+      expect(slider.max, 1000);
+
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+      final last = searches(bloc).last;
+      expect(last.transportMode, TransportMode.car);
+      expect(last.minAvailableKg, isNull);
+      expect(last.maxAvailableKg, isNull);
+    });
+
+    testWidgets('route : minimum déplacé = bornes en centaines de kg, puis '
+        'quitter la route efface cette capacité', (tester) async {
+      final bloc = await pumpTrips(tester);
+      await pickTransport(tester, 'Route');
+      await openCapacity(tester);
+      final slider = tester.getRect(find.byType(RangeSlider));
+      await tester.dragFrom(
+        Offset(slider.left + 24, slider.center.dy),
+        const Offset(400, 0),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+      final routeSearch = searches(bloc).last;
+      expect(routeSearch.minAvailableKg, greaterThan(50));
+      expect(routeSearch.maxAvailableKg, isNull);
+
+      // Puce Transport active : un tap retire le filtre, donc quitte la route.
+      final transportChip = find.byKey(const Key('home-chip-transport'));
+      await tester.ensureVisible(transportChip);
+      await tester.pumpAndSettle();
+      await tester.tap(transportChip);
+      await tester.pumpAndSettle();
+      final allModesSearch = searches(bloc).last;
+      expect(allModesSearch.transportMode, isNull);
+      expect(allModesSearch.minAvailableKg, isNull);
+    });
+
+    testWidgets('avion : curseur 1..50 inchangé', (tester) async {
+      await pumpTrips(tester);
+      await pickTransport(tester, 'Avion');
+      await openCapacity(tester);
+      final slider = tester.widget<RangeSlider>(find.byType(RangeSlider));
+      expect(slider.min, 1);
+      expect(slider.max, 50);
+      expect(find.text('50 kg et +'), findsWidgets);
+    });
+
+    Future<void> openItemSize(WidgetTester tester) async {
+      final chip = find.byKey(const Key('home-chip-item-size'));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('route : puce Taille à la place de Valise 23 kg ; avion : '
+        'Valise 23 kg, pas de Taille', (tester) async {
+      await pumpTrips(tester);
+      await pickTransport(tester, 'Avion');
+      expect(find.byKey(const Key('chip-suitcase-23')), findsOneWidget);
+      expect(find.byKey(const Key('home-chip-item-size')), findsNothing);
+
+      final transport = find.byKey(const Key('home-chip-transport'));
+      await tester.ensureVisible(transport);
+      await tester.pumpAndSettle();
+      await tester.tap(transport);
+      await tester.pumpAndSettle();
+      await pickTransport(tester, 'Route');
+      expect(find.byKey(const Key('home-chip-item-size')), findsOneWidget);
+      expect(find.byKey(const Key('chip-suitcase-23')), findsNothing);
+    });
+
+    testWidgets('puce Taille : feuille, Appliquer L = filtre L envoyé, puis '
+        'un tap sur la puce active le retire', (tester) async {
+      final bloc = await pumpTrips(tester);
+      await pickTransport(tester, 'Route');
+      await openItemSize(tester);
+
+      // Quatre tuiles, « Appliquer » en pied de feuille.
+      for (final code in ['S', 'M', 'L', 'XL']) {
+        expect(find.byKey(Key('item-size-$code')), findsOneWidget);
+      }
+      expect(find.text('Appliquer'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('item-size-L')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      final withSize = searches(bloc).last;
+      expect(withSize.transportMode, TransportMode.car);
+      expect(withSize.minItemSize, ItemSize.l);
+      expect(find.text('Taille L et +'), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'item_size', 'mode': 'trips'},
+        ),
+      ).called(1);
+
+      final chip = find.byKey(const Key('home-chip-item-size'));
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      expect(searches(bloc).last.minItemSize, isNull);
+      expect(find.text('Taille'), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterCleared,
+          properties: {'filter': 'item_size', 'mode': 'trips'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('feuille Taille : retoucher la tuile choisie puis Appliquer '
+        'retire la taille', (tester) async {
+      final bloc = await pumpTrips(tester);
+      await pickTransport(tester, 'Route');
+      await openItemSize(tester);
+      await tester.tap(find.byKey(const Key('item-size-M')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+      expect(searches(bloc).last.minItemSize, ItemSize.m);
+
+      // Retirée par la puce, reposée, puis désélectionnée dans la feuille.
+      await tester.tap(find.byKey(const Key('home-chip-item-size')));
+      await tester.pumpAndSettle();
+      await openItemSize(tester);
+      await tester.tap(find.byKey(const Key('item-size-XL')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('item-size-XL')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+      expect(searches(bloc).last.minItemSize, isNull);
+    });
+
+    group('recherche préparée ailleurs (SearchParams)', () {
+      Future<MockAnnouncementBloc> pumpAndApply(
+        WidgetTester tester,
+        SearchParams params,
+      ) async {
+        final notifier = PendingSearchNotifier();
+        getIt.registerSingleton<PendingSearchNotifier>(notifier);
+        final bloc = await pumpTrips(tester);
+        notifier.setPending(params);
+        await tester.pumpAndSettle();
+        return bloc;
+      }
+
+      testWidgets('600 kg sans mode route : hors du curseur 1..50, non '
+          'reprise', (tester) async {
+        final bloc = await pumpAndApply(
+          tester,
+          const SearchParams(weightKg: 600),
+        );
+        final last = searches(bloc).last;
+        expect(last.minAvailableKg, isNull);
+        expect(last.maxAvailableKg, isNull);
+      });
+
+      testWidgets('taille posée en route, puis recherche préparée en avion : '
+          'la taille est effacée', (tester) async {
+        final notifier = PendingSearchNotifier();
+        getIt.registerSingleton<PendingSearchNotifier>(notifier);
+        final bloc = await pumpTrips(tester);
+        await pickTransport(tester, 'Route');
+        await openItemSize(tester);
+        await tester.tap(find.byKey(const Key('item-size-S')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Appliquer'));
+        await tester.pumpAndSettle();
+        expect(searches(bloc).last.minItemSize, ItemSize.s);
+
+        notifier.setPending(
+          const SearchParams(transportMode: TransportMode.plane),
+        );
+        await tester.pumpAndSettle();
+        final last = searches(bloc).last;
+        expect(last.transportMode, TransportMode.plane);
+        expect(last.minItemSize, isNull);
+      });
+
+      testWidgets('600 kg avion : non reprise non plus', (tester) async {
+        final bloc = await pumpAndApply(
+          tester,
+          const SearchParams(weightKg: 600, transportMode: TransportMode.plane),
+        );
+        expect(searches(bloc).last.minAvailableKg, isNull);
+      });
+
+      testWidgets('600 kg route : reprise (curseur jusqu\'à 1 000)', (
+        tester,
+      ) async {
+        final bloc = await pumpAndApply(
+          tester,
+          const SearchParams(weightKg: 600, transportMode: TransportMode.car),
+        );
+        final last = searches(bloc).last;
+        expect(last.transportMode, TransportMode.car);
+        expect(last.minAvailableKg, 600);
+      });
+
+      testWidgets('30 kg sans mode : dans le curseur, reprise', (tester) async {
+        final bloc = await pumpAndApply(
+          tester,
+          const SearchParams(weightKg: 30),
+        );
+        expect(searches(bloc).last.minAvailableKg, 30);
+      });
     });
   });
 

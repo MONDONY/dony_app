@@ -59,12 +59,15 @@ Widget _buildSubject({
   List<TransportMode>? transportModeRowModes,
   bool transportModeRowReadOnly = false,
   bool lockCorridor = false,
+  ValueNotifier<int>? arrivalDayOffsetNotifier,
+  TimeOfDay? arrivalTime,
+  DateTime? departureDate,
 }) {
   final departureCityNotifier = ValueNotifier<String?>(departureCity);
   final arrivalCityNotifier = ValueNotifier<String?>(arrivalCity);
-  final departureDateNotifier = ValueNotifier<DateTime?>(null);
+  final departureDateNotifier = ValueNotifier<DateTime?>(departureDate);
   final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-  final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+  final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(arrivalTime);
 
   return MaterialApp(
     home: Scaffold(
@@ -77,6 +80,7 @@ Widget _buildSubject({
           arrivalTimeNotifier: arrivalTimeNotifier,
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
+          arrivalDayOffsetNotifier: arrivalDayOffsetNotifier,
           transportModeNotifier: transportModeNotifier,
           transportModeRowModes: transportModeRowModes,
           transportModeRowReadOnly: transportModeRowReadOnly,
@@ -200,6 +204,151 @@ void main() {
     ) async {
       await pumpCorridor(tester, null);
       expect(find.textContaining('CDG'), findsOneWidget);
+    });
+  });
+
+  group('Arrivée selon le mode (C28)', () {
+    Future<ValueNotifier<int>> pump(
+      WidgetTester tester,
+      TransportMode mode, {
+      TimeOfDay? arrivalTime,
+      DateTime? departureDate,
+    }) async {
+      final offset = ValueNotifier<int>(0);
+      addTearDown(offset.dispose);
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          transportModeNotifier: ValueNotifier<TransportMode?>(mode),
+          arrivalDayOffsetNotifier: offset,
+          arrivalTime: arrivalTime,
+          departureDate: departureDate,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      return offset;
+    }
+
+    testWidgets('route : pas d\'heure d\'arrivée, puces avec Autre date', (
+      tester,
+    ) async {
+      await pump(tester, TransportMode.car);
+      expect(find.byKey(const Key('arrivalTimeField')), findsNothing);
+      expect(find.byKey(const Key('arrival-day-chips')), findsOneWidget);
+      expect(find.byKey(const Key('arrival-day-other')), findsOneWidget);
+    });
+
+    testWidgets('bus : comme la voiture', (tester) async {
+      await pump(tester, TransportMode.bus);
+      expect(find.byKey(const Key('arrival-day-other')), findsOneWidget);
+    });
+
+    testWidgets('avion : heure d\'arrivée, puces seulement avec une heure', (
+      tester,
+    ) async {
+      await pump(tester, TransportMode.plane);
+      expect(find.byKey(const Key('arrivalTimeField')), findsOneWidget);
+      expect(find.byKey(const Key('arrival-day-chips')), findsNothing);
+    });
+
+    testWidgets('avion avec heure : trois puces, pas d\'Autre date', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        TransportMode.plane,
+        arrivalTime: const TimeOfDay(hour: 6, minute: 30),
+      );
+      expect(find.byKey(const Key('arrival-day-2')), findsOneWidget);
+      expect(find.byKey(const Key('arrival-day-other')), findsNothing);
+    });
+
+    testWidgets('route avec une heure d\'arrivée existante : champ gardé', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        TransportMode.car,
+        arrivalTime: const TimeOfDay(hour: 18, minute: 0),
+      );
+      expect(find.byKey(const Key('arrivalTimeField')), findsOneWidget);
+      expect(find.text('18:00'), findsOneWidget);
+      expect(find.byKey(const Key('arrival-day-other')), findsOneWidget);
+    });
+
+    testWidgets('route : Autre date borné au départ saisi, J+3 à J+14', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      final dep = DateTime(now.year, now.month + 2, 5);
+      await pump(tester, TransportMode.car, departureDate: dep);
+
+      await tester.tap(find.byKey(const Key('arrival-day-other')));
+      await tester.pumpAndSettle();
+
+      final picker = tester.widget<DatePickerDialog>(
+        find.byType(DatePickerDialog),
+      );
+      expect(picker.firstDate, DateTime(dep.year, dep.month, dep.day + 3));
+      expect(picker.lastDate, DateTime(dep.year, dep.month, dep.day + 14));
+    });
+
+    testWidgets('route sans date de départ : choix de décalage en jours', (
+      tester,
+    ) async {
+      final offset = await pump(tester, TransportMode.car);
+
+      await tester.tap(find.byKey(const Key('arrival-day-other')));
+      await tester.pumpAndSettle();
+      expect(find.byType(DatePickerDialog), findsNothing);
+      await tester.tap(find.byKey(const Key('arrival-offset-10')));
+      await tester.pumpAndSettle();
+
+      expect(offset.value, 10);
+    });
+
+    testWidgets('aperçu du corridor route : villes toujours affichées avec '
+        'les puces d\'arrivée', (tester) async {
+      final offset = await pump(tester, TransportMode.car);
+      offset.value = 6;
+      await tester.pump(const Duration(milliseconds: 300));
+      // Non-régression 5627cdd1f : noms de villes hors avion.
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+      expect(find.textContaining('CDG'), findsNothing);
+    });
+
+    testWidgets('changer de mode met à jour les champs d\'arrivée', (
+      tester,
+    ) async {
+      final mode = ValueNotifier<TransportMode?>(TransportMode.plane);
+      addTearDown(mode.dispose);
+      final offset = ValueNotifier<int>(0);
+      addTearDown(offset.dispose);
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          transportModeNotifier: mode,
+          arrivalDayOffsetNotifier: offset,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('arrivalTimeField')), findsOneWidget);
+
+      mode.value = TransportMode.car;
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('arrivalTimeField')), findsNothing);
+      expect(find.byKey(const Key('arrival-day-other')), findsOneWidget);
+
+      mode.value = TransportMode.plane;
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('arrivalTimeField')), findsOneWidget);
+      expect(find.byKey(const Key('arrival-day-chips')), findsNothing);
     });
   });
 

@@ -314,58 +314,57 @@ void main() {
     },
   );
 
-  testWidgets(
-    'poids arrondi : 2,04 kg affiche « 2 kg », 2,46 kg affiche « 2,5 kg »',
-    (tester) async {
-      final weightDetails = RevenueDetailsModel(
-        period: '30d',
-        deliveries: 2,
-        groups: [
-          RevenueGroupModel(
-            currency: 'EUR',
-            total: 200,
-            deliveries: 2,
-            items: [
-              RevenueItemModel(
-                departureCity: 'Paris',
-                arrivalCity: 'Dakar',
-                date: DateTime(2026, 9),
-                weightKg: 2.04,
-                rail: RevenueRail.card,
-                amount: 100,
-              ),
-              RevenueItemModel(
-                departureCity: 'Lyon',
-                arrivalCity: 'Abidjan',
-                date: DateTime(2026, 9, 2),
-                weightKg: 2.46,
-                rail: RevenueRail.card,
-                amount: 100,
-              ),
-            ],
-          ),
-        ],
-      );
-
-      whenListen(
-        cubit,
-        const Stream<RevenueDetailsState>.empty(),
-        initialState: RevenueDetailsState(
-          status: RevenueDetailsStatus.loaded,
-          details: weightDetails,
+  testWidgets('poids à deux décimales : 2,04 kg et 2,46 kg restent exacts', (
+    tester,
+  ) async {
+    final weightDetails = RevenueDetailsModel(
+      period: '30d',
+      deliveries: 2,
+      groups: [
+        RevenueGroupModel(
+          currency: 'EUR',
+          total: 200,
+          deliveries: 2,
+          items: [
+            RevenueItemModel(
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              date: DateTime(2026, 9),
+              weightKg: 2.04,
+              rail: RevenueRail.card,
+              amount: 100,
+            ),
+            RevenueItemModel(
+              departureCity: 'Lyon',
+              arrivalCity: 'Abidjan',
+              date: DateTime(2026, 9, 2),
+              weightKg: 2.46,
+              rail: RevenueRail.card,
+              amount: 100,
+            ),
+          ],
         ),
-      );
+      ],
+    );
 
-      await tester.pumpWidget(_harness(cubit));
-      await tester.pumpAndSettle();
+    whenListen(
+      cubit,
+      const Stream<RevenueDetailsState>.empty(),
+      initialState: RevenueDetailsState(
+        status: RevenueDetailsStatus.loaded,
+        details: weightDetails,
+      ),
+    );
 
-      expect(find.textContaining('2 kg ·'), findsOneWidget);
-      expect(find.textContaining('2,5 kg ·'), findsOneWidget);
-    },
-  );
+    await tester.pumpWidget(_harness(cubit));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('2,04 kg ·'), findsOneWidget);
+    expect(find.textContaining('2,46 kg ·'), findsOneWidget);
+  });
 
   testWidgets(
-    'en anglais, poids arrondi : 2.04 kg affiche « 2 kg », 2.46 kg affiche « 2.5 kg »',
+    'en anglais, poids à deux décimales : 2.04 kg et 2.46 kg restent exacts',
     (tester) async {
       await initializeDateFormatting('en');
       useEnglish();
@@ -411,8 +410,8 @@ void main() {
       await tester.pumpWidget(_harness(cubit));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('2 kg ·'), findsOneWidget);
-      expect(find.textContaining('2.5 kg ·'), findsOneWidget);
+      expect(find.textContaining('2.04 kg ·'), findsOneWidget);
+      expect(find.textContaining('2.46 kg ·'), findsOneWidget);
     },
   );
 

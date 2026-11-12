@@ -1,6 +1,7 @@
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
@@ -621,6 +622,262 @@ void main() {
           const HomeSearchFilters().activeKeys,
           isNot(contains('transport_mode')),
         );
+      });
+    });
+
+    group('filtres propres à la route : taille minimale et « Passe par »', () {
+      const route = HomeSearchFilters(
+        transportMode: TransportMode.car,
+        minItemSize: ItemSize.l,
+        viaCity: 'Tanger',
+      );
+
+      test('route L via Tanger : query minItemSize L, viaCity Tanger', () {
+        final q = route.toAnnouncementQuery();
+        expect(q.minItemSize, ItemSize.l);
+        expect(q.viaCity, 'Tanger');
+        expect(q.transportMode, TransportMode.car);
+      });
+
+      test('bus : même règle que la route', () {
+        final q = route.copyWith(transportMode: TransportMode.bus);
+        expect(q.toAnnouncementQuery().minItemSize, ItemSize.l);
+        expect(q.toAnnouncementQuery().viaCity, 'Tanger');
+      });
+
+      test(
+        'sans mode Route, rien n\'est envoyé (jamais de filtre fantôme)',
+        () {
+          for (final mode in [null, TransportMode.plane, TransportMode.boat]) {
+            final f = HomeSearchFilters(
+              transportMode: mode,
+              minItemSize: ItemSize.l,
+              viaCity: 'Tanger',
+            );
+            expect(
+              f.toAnnouncementQuery().minItemSize,
+              isNull,
+              reason: '$mode',
+            );
+            expect(f.toAnnouncementQuery().viaCity, isNull, reason: '$mode');
+          }
+        },
+      );
+
+      test('absents par défaut', () {
+        final q = const HomeSearchFilters(
+          transportMode: TransportMode.car,
+        ).toAnnouncementQuery();
+        expect(q.minItemSize, isNull);
+        expect(q.viaCity, isNull);
+      });
+
+      test('copyWith : pose, conserve et retire', () {
+        const base = HomeSearchFilters(transportMode: TransportMode.car);
+        final on = base.copyWith(minItemSize: ItemSize.m, viaCity: 'Tanger');
+        expect(on.minItemSize, ItemSize.m);
+        expect(on.viaCity, 'Tanger');
+        expect(on.copyWith(departureCity: 'Paris').minItemSize, ItemSize.m);
+        expect(on.swapCorridor().viaCity, 'Tanger');
+        expect(on.copyWith(clearMinItemSize: true).minItemSize, isNull);
+        expect(on.copyWith(clearMinItemSize: true).viaCity, 'Tanger');
+        expect(on.copyWith(clearViaCity: true).viaCity, isNull);
+        expect(on.copyWith(clearViaCity: true).minItemSize, ItemSize.m);
+      });
+
+      test('activeKeys : item_size et via_city, sans valeur', () {
+        expect(route.activeKeys, {'transport_mode', 'item_size', 'via_city'});
+        expect(
+          const HomeSearchFilters(transportMode: TransportMode.car).activeKeys,
+          {'transport_mode'},
+        );
+      });
+
+      test(
+        'hors route : ni comptés ni tracés, comme la requête (même garde)',
+        () {
+          for (final mode in [null, TransportMode.plane, TransportMode.boat]) {
+            final f = HomeSearchFilters(
+              transportMode: mode,
+              minItemSize: ItemSize.l,
+              viaCity: 'Tanger',
+            );
+            expect(f.activeKeys, isNot(contains('item_size')), reason: '$mode');
+            expect(f.activeKeys, isNot(contains('via_city')), reason: '$mode');
+            expect(
+              f.activeCountFor(SearchMode.trips),
+              mode == null ? 0 : 1,
+              reason: '$mode',
+            );
+            expect(f.toAnnouncementQuery().minItemSize, isNull);
+            expect(f.toAnnouncementQuery().viaCity, isNull);
+          }
+        },
+      );
+
+      test('ville blanche : ni comptée, ni tracée, ni envoyée', () {
+        for (final blank in ['', '   ']) {
+          final f = route.copyWith(viaCity: blank);
+          expect(f.activeKeys, {'transport_mode', 'item_size'}, reason: blank);
+          expect(f.activeCountFor(SearchMode.trips), 2, reason: blank);
+          expect(f.toAnnouncementQuery().viaCity, isNull, reason: blank);
+        }
+        final padded = route.copyWith(viaCity: '  Tanger ');
+        expect(padded.toAnnouncementQuery().viaCity, 'Tanger');
+        expect(padded.activeKeys, contains('via_city'));
+      });
+
+      test(
+        'compteur : chacun compte pour un, dans le mode Trajets seulement',
+        () {
+          expect(route.activeCountFor(SearchMode.trips), 3);
+          expect(route.activeCountFor(SearchMode.parcels), 0);
+          expect(route.activeCount, 3);
+        },
+      );
+
+      test('suivi : quitter la route retire item_size et via_city, '
+          'passer en route retire suitcase_23 et stops', () {
+        final left = route.withTransportModeChanged(TransportMode.plane);
+        expect(route.activeKeys.difference(left.activeKeys), {
+          'item_size',
+          'via_city',
+        });
+        const plane = HomeSearchFilters(
+          transportMode: TransportMode.plane,
+          suitcase23Only: true,
+          stopsFilter: StopsFilter.maxOne,
+        );
+        final entered = plane.withTransportModeChanged(TransportMode.car);
+        expect(plane.activeKeys.difference(entered.activeKeys), {
+          'suitcase_23',
+          'stops',
+        });
+      });
+
+      test('passer en route efface valise et escales', () {
+        const f = HomeSearchFilters(
+          transportMode: TransportMode.plane,
+          suitcase23Only: true,
+          stopsFilter: StopsFilter.directOnly,
+          departureCity: 'Paris',
+        );
+        final next = f.withTransportModeChanged(TransportMode.car);
+        expect(next.transportMode, TransportMode.car);
+        expect(next.suitcase23Only, isFalse);
+        expect(next.stopsFilter, isNull);
+        expect(next.departureCity, 'Paris');
+        // Depuis « tous les modes » aussi.
+        const all = HomeSearchFilters(suitcase23Only: true);
+        expect(
+          all.withTransportModeChanged(TransportMode.bus).suitcase23Only,
+          isFalse,
+        );
+      });
+
+      test('quitter route efface taille, ville de passage et une capacité '
+          'min de 600 kg', () {
+        final f = route.copyWith(
+          weightMin: 600,
+          paymentMethods: {BidPaymentMethod.cash},
+        );
+        final next = f.withTransportModeChanged(TransportMode.plane);
+        expect(next.transportMode, TransportMode.plane);
+        expect(next.minItemSize, isNull);
+        expect(next.viaCity, isNull);
+        expect(next.weightMin, isNull);
+        expect(next.paymentMethods, {BidPaymentMethod.cash});
+        // Retirer le filtre Transport quitte aussi la route.
+        final none = f.withTransportModeChanged(null);
+        expect(none.transportMode, isNull);
+        expect(none.minItemSize, isNull);
+        expect(none.viaCity, isNull);
+        expect(none.weightMin, isNull);
+      });
+
+      test('quitter route : bornes de capacité ramenées dans 1..50', () {
+        final f = route.copyWith(weightMin: 30, weightMax: 400);
+        final next = f.withTransportModeChanged(TransportMode.plane);
+        expect(next.weightMin, 30);
+        expect(next.weightMax, isNull);
+        final inside = route.copyWith(weightMin: 10, weightMax: 20);
+        final kept = inside.withTransportModeChanged(TransportMode.plane);
+        expect(kept.weightMin, 10);
+        expect(kept.weightMax, 20);
+      });
+
+      test('route vers bus ou entre modes hors route : filtres gardés / '
+          'sans effet de bord', () {
+        final toBus = route
+            .copyWith(weightMin: 600)
+            .withTransportModeChanged(TransportMode.bus);
+        expect(toBus.transportMode, TransportMode.bus);
+        expect(toBus.minItemSize, ItemSize.l);
+        expect(toBus.viaCity, 'Tanger');
+        expect(toBus.weightMin, 600);
+        const plane = HomeSearchFilters(
+          transportMode: TransportMode.plane,
+          suitcase23Only: true,
+        );
+        final toBoat = plane.withTransportModeChanged(TransportMode.boat);
+        expect(toBoat.transportMode, TransportMode.boat);
+        expect(toBoat.suitcase23Only, isTrue);
+      });
+
+      test(
+        'filtre Transport retiré par la recherche : taille et ville aussi',
+        () {
+          final limited = route.withTransportLimitedTo(const [
+            TransportMode.plane,
+          ]);
+          expect(limited.transportMode, isNull);
+          expect(limited.minItemSize, isNull);
+          expect(limited.viaCity, isNull);
+          // Route toujours proposée : tout est gardé, même instance.
+          final kept = route.withTransportLimitedTo(const [
+            TransportMode.plane,
+            TransportMode.car,
+          ]);
+          expect(identical(kept, route), isTrue);
+        },
+      );
+    });
+
+    group('curseur Capacité selon le mode', () {
+      test('maximum : 1 000 kg en route, 50 kg sinon', () {
+        expect(capacitySliderMaxKgFor(TransportMode.car), 1000);
+        expect(capacitySliderMaxKgFor(TransportMode.bus), 1000);
+        expect(capacitySliderMaxKgFor(TransportMode.plane), 50);
+        expect(capacitySliderMaxKgFor(TransportMode.boat), 50);
+        expect(capacitySliderMaxKgFor(null), kCapacitySliderMaxKg);
+        expect(kCapacitySliderMaxKg, 50);
+      });
+
+      test('curseur route : 1..1000, extrémité = pas de borne', () {
+        final max = capacitySliderMaxKgFor(TransportMode.car);
+        final open = capacityBoundsFromSlider(
+          kCapacitySliderMinKg,
+          max,
+          sliderMaxKg: max,
+        );
+        expect(open.min, isNull);
+        expect(open.max, isNull);
+        final bounded = capacityBoundsFromSlider(200, 600, sliderMaxKg: max);
+        expect(bounded.min, 200);
+        expect(bounded.max, 600);
+        // 50 kg n'est plus une extrémité en route : la borne part.
+        expect(capacityBoundsFromSlider(1, 50, sliderMaxKg: max).max, 50);
+        expect(capacityBoundsFromSlider(1, 1000, sliderMaxKg: max).max, isNull);
+      });
+
+      test('curseur avion : 1..50 inchangé', () {
+        final max = capacitySliderMaxKgFor(TransportMode.plane);
+        final open = capacityBoundsFromSlider(1, max, sliderMaxKg: max);
+        expect(open.min, isNull);
+        expect(open.max, isNull);
+        expect(capacityBoundsFromSlider(1, 49).max, 49);
+        expect(capacityBoundsFromSlider(1, 50).max, isNull);
+        expect(capacityBoundsFromSlider(10, 50, sliderMaxKg: max).min, 10);
       });
     });
   });

@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_reschedule_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -42,27 +44,30 @@ void main() {
   late StreamController<AnnouncementState> states;
   final departure = _departureDay();
 
-  AnnouncementModel buildAnnouncement({TransportMode? mode}) =>
-      AnnouncementModel(
-        id: 'a1',
-        travelerId: 't1',
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-        departureDate: departure,
-        departureTime: '22:00',
-        arrivalTime: '06:30',
-        arrivalDate: _plusDays(departure, 1),
-        handoverDeadline: _plusDays(departure, -1),
-        availableKg: 10,
-        totalKg: 20,
-        pricePerKg: 5,
-        status: 'FULL',
-        bidsCount: 2,
-        remainingReschedules: 1,
-        transportMode: mode,
-        createdAt: DateTime(2026, 9),
-        updatedAt: DateTime(2026, 9),
-      );
+  AnnouncementModel buildAnnouncement({
+    TransportMode? mode,
+    String? arrivalTime = '06:30',
+    int arrivalOffset = 1,
+  }) => AnnouncementModel(
+    id: 'a1',
+    travelerId: 't1',
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    departureDate: departure,
+    departureTime: '22:00',
+    arrivalTime: arrivalTime,
+    arrivalDate: _plusDays(departure, arrivalOffset),
+    handoverDeadline: _plusDays(departure, -1),
+    availableKg: 10,
+    totalKg: 20,
+    pricePerKg: 5,
+    status: 'FULL',
+    bidsCount: 2,
+    remainingReschedules: 1,
+    transportMode: mode,
+    createdAt: DateTime(2026, 9),
+    updatedAt: DateTime(2026, 9),
+  );
   final announcement = buildAnnouncement();
 
   setUpAll(() {
@@ -490,6 +495,190 @@ void main() {
           tester.getSize(label).height,
           lessThanOrEqualTo(fontSize * 1.7),
           reason: 'libellé sur une ligne',
+        );
+      });
+    }
+  });
+
+  group('arrivée en route (T4)', () {
+    AnnouncementModel roadTrip({
+      String? arrivalTime,
+      int arrivalOffset = 10,
+      TransportMode mode = TransportMode.car,
+    }) => buildAnnouncement(
+      mode: mode,
+      arrivalTime: arrivalTime,
+      arrivalOffset: arrivalOffset,
+    );
+
+    AnnouncementRescheduleRequested submitRoad(WidgetTester tester) =>
+        verify(() => bloc.add(captureAny())).captured.single
+            as AnnouncementRescheduleRequested;
+
+    testWidgets('trajet route : pas d\'heure d\'arrivée, puces avec Autre '
+        'date', (tester) async {
+      await open(tester, trip: roadTrip());
+
+      expect(
+        find.byKey(const Key('reschedule-arrival-time-field')),
+        findsNothing,
+      );
+      expect(find.byKey(const Key('arrival-day-other')), findsOneWidget);
+    });
+
+    testWidgets('trajet route à J+10 : ouvert à J+10, envoyé avec le nouveau '
+        'départ', (tester) async {
+      await open(tester, trip: roadTrip());
+      final chips = tester.widget<ArrivalDayChips>(
+        find.byType(ArrivalDayChips),
+      );
+      expect(chips.notifier.value, 10);
+      expect(chips.maxDays, 14);
+
+      await tester.tap(find.byKey(const Key('reschedule-reason-POSTPONED')));
+      await pickNextDay(tester);
+      await tester.tap(find.byKey(const Key('trip-reschedule-submit')));
+      await tester.pump();
+
+      final event = submitRoad(tester);
+      final newDay = _plusDays(departure, 1);
+      expect(event.arrivalTime, isNull);
+      expect(
+        event.arrivalDate,
+        DateUtils.dateOnly(
+          _plusDays(newDay, 10),
+        ).toIso8601String().substring(0, 10),
+      );
+    });
+
+    testWidgets('Autre date jusqu\'à J+14 du nouveau départ', (tester) async {
+      await open(tester, trip: roadTrip(arrivalOffset: 0));
+      await tester.tap(find.byKey(const Key('reschedule-reason-POSTPONED')));
+      await pickNextDay(tester);
+      final newDay = _plusDays(departure, 1);
+
+      await tester.tap(find.byKey(const Key('arrival-day-other')));
+      await tester.pumpAndSettle();
+      final picker = tester.widget<DatePickerDialog>(
+        find.byType(DatePickerDialog),
+      );
+      expect(picker.firstDate, _plusDays(newDay, 3));
+      expect(picker.lastDate, _plusDays(newDay, 14));
+      // La date proposée d'emblée est J+3 : « OK » la retient.
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('trip-reschedule-submit')));
+      await tester.pump();
+      expect(
+        submitRoad(tester).arrivalDate,
+        DateUtils.dateOnly(
+          _plusDays(newDay, 3),
+        ).toIso8601String().substring(0, 10),
+      );
+    });
+
+    testWidgets('route sans jour d\'arrivée : aucun arrivalDate envoyé', (
+      tester,
+    ) async {
+      await open(tester, trip: roadTrip(arrivalOffset: 0));
+      await tester.tap(find.byKey(const Key('reschedule-reason-POSTPONED')));
+      await pickNextDay(tester);
+      await tester.tap(find.byKey(const Key('trip-reschedule-submit')));
+      await tester.pump();
+
+      expect(submitRoad(tester).arrivalDate, isNull);
+    });
+
+    testWidgets('ancien trajet route avec heure d\'arrivée : champ gardé', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        trip: roadTrip(arrivalTime: '18:00', arrivalOffset: 2),
+      );
+
+      expect(
+        find.byKey(const Key('reschedule-arrival-time-field')),
+        findsOneWidget,
+      );
+      expect(find.text('18:00'), findsOneWidget);
+      expect(find.byKey(const Key('arrival-day-other')), findsOneWidget);
+    });
+
+    testWidgets('trajet avion : heure d\'arrivée, trois puces sans Autre '
+        'date', (tester) async {
+      await open(tester, trip: buildAnnouncement(mode: TransportMode.plane));
+
+      expect(
+        find.byKey(const Key('reschedule-arrival-time-field')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('arrival-day-2')), findsOneWidget);
+      expect(find.byKey(const Key('arrival-day-other')), findsNothing);
+    });
+
+    testWidgets('422 arrival-too-far : message du serveur, feuille gardée '
+        'ouverte', (tester) async {
+      await open(tester, trip: roadTrip());
+      await tester.tap(find.byKey(const Key('reschedule-reason-POSTPONED')));
+      await pickNextDay(tester);
+
+      states.add(
+        AnnouncementError(
+          const ServerException(
+            'L\'arrivée ne peut pas dépasser 14 jours après le départ.',
+            'arrival-too-far',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('14 jours après le départ'), findsOneWidget);
+      expect(find.byType(TripRescheduleBottomSheet), findsOneWidget);
+      expect(
+        tester
+            .widget<DonyButton>(find.byKey(const Key('trip-reschedule-submit')))
+            .onPressed,
+        isNotNull,
+      );
+    });
+
+    for (final locale in [AppL10n.fr, AppL10n.en]) {
+      testWidgets('360 dp ${locale.languageCode} : quatre puces et bouton '
+          'sur une ligne', (tester) async {
+        if (locale == AppL10n.en) enableEnglish();
+        await open(
+          tester,
+          trip: roadTrip(arrivalOffset: 6),
+          locale: locale,
+          size: const Size(360, 2400),
+        );
+        expect(tester.takeException(), isNull);
+
+        final heights = <double>{};
+        for (final k in [
+          'arrival-day-0',
+          'arrival-day-1',
+          'arrival-day-2',
+          'arrival-day-other',
+        ]) {
+          final chip = find.byKey(Key(k));
+          expect(chip, findsOneWidget);
+          final label = find.descendant(of: chip, matching: find.byType(Text));
+          expect(tester.getSize(label.first).height, lessThan(24));
+          heights.add(tester.getSize(chip).height);
+        }
+        expect(heights.length, 1);
+
+        final button = find.descendant(
+          of: find.byKey(const Key('trip-reschedule-submit')),
+          matching: find.byType(Text),
+        );
+        final fontSize = tester.widget<Text>(button).style?.fontSize ?? 14;
+        expect(
+          tester.getSize(button).height,
+          lessThanOrEqualTo(fontSize * 1.7),
         );
       });
     }
