@@ -43,8 +43,9 @@ import 'package:dony/features/matching/data/repositories/announcement_repository
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
@@ -1011,7 +1012,7 @@ void main() {
     testWidgets('"Enregistrer" visible au step 2 en mode édition', (
       tester,
     ) async {
-      // Use a wider viewport — step-2 (PrixConditionsStep) has payment-method
+      // Use a wider viewport — step-2 (PrixStep) has payment-method
       // chips that overflow on narrow 390pt screens.
       tester.view.physicalSize = const Size(800, 1024);
       tester.view.devicePixelRatio = 1.0;
@@ -1377,13 +1378,16 @@ void main() {
         expect(lieux.initialPickupAddress?.label, 'Cocody');
         expect(lieux.initialDeliveryAddress?.label, 'Gare de Lyon');
 
-        // Étape 2 : mêmes notifiers, lus via PrixConditionsStep — présent
+        // Étape 2 : mêmes notifiers, lus via PrixStep et ConditionsStep — présents
         // dans l'arbre dès le premier build (Offstage), donc valide même si
         // la navigation ci-dessous ne fait qu'avancer réellement le stepper.
         // skipOffstage: false — les notifiers sont partagés, l'étape
         // affichée n'importe pas.
-        final prix = tester.widget<PrixConditionsStep>(
-          find.byType(PrixConditionsStep, skipOffstage: false),
+        final prix = tester.widget<PrixStep>(
+          find.byType(PrixStep, skipOffstage: false),
+        );
+        final conditions = tester.widget<ConditionsStep>(
+          find.byType(ConditionsStep, skipOffstage: false),
         );
         expect(prix.currency, SupportedCurrency.xof);
         expect(prix.priceOptionNotifier.value, 1); // 1 500 F CFA = 2e chip CFA
@@ -1393,8 +1397,10 @@ void main() {
           isFalse,
         ); // compte mobile money inactif dans ce montage
         expect(prix.negotiableNotifier.value, isTrue);
-        expect(prix.refusedTypesNotifier.value, {'Téléphone & électronique'});
-        expect(prix.descriptionCtrl.text, 'Pas de liquide');
+        expect(conditions.refusedTypesNotifier.value, {
+          'Téléphone & électronique',
+        });
+        expect(conditions.descriptionCtrl.text, 'Pas de liquide');
         expect(prix.availableKgNotifier.value, 30);
 
         await tester.pump(const Duration(seconds: 5));
@@ -1442,14 +1448,17 @@ void main() {
 
       // skipOffstage: false — les notifiers sont partagés, l'étape affichée
       // n'importe pas.
-      final prix = tester.widget<PrixConditionsStep>(
-        find.byType(PrixConditionsStep, skipOffstage: false),
+      final prix = tester.widget<PrixStep>(
+        find.byType(PrixStep, skipOffstage: false),
+      );
+      final conditions = tester.widget<ConditionsStep>(
+        find.byType(ConditionsStep, skipOffstage: false),
       );
       expect(prix.cashEnabledNotifier.value, isFalse);
       expect(prix.mobileMoneyEnabledNotifier.value, isFalse);
       expect(prix.negotiableNotifier.value, isFalse);
-      expect(prix.descriptionCtrl.text, isEmpty);
-      expect(prix.refusedTypesNotifier.value, isEmpty);
+      expect(conditions.descriptionCtrl.text, isEmpty);
+      expect(conditions.refusedTypesNotifier.value, isEmpty);
       expect(
         find.text('Publié en Euro (EUR)', skipOffstage: false),
         findsOneWidget,
@@ -2014,7 +2023,7 @@ void main() {
     testWidgets('"Enregistrer" au step 2 appelle _submit() — happy path', (
       tester,
     ) async {
-      // Wide viewport: avoids overflow in step-2 PrixConditionsStep
+      // Wide viewport: avoids overflow in step-2 PrixStep
       tester.view.physicalSize = const Size(800, 1024);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -2619,7 +2628,7 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 600));
 
-        final stepFinder = find.byType(PrixConditionsStep);
+        final stepFinder = find.byType(PrixStep);
         final formBloc = BlocProvider.of<AnnouncementFormBloc>(
           tester.element(stepFinder),
         );
@@ -2627,7 +2636,7 @@ void main() {
         expect(formBloc.state.priceWarning, isNull);
 
         // Même index de chip, autre devise : le bloc doit recevoir 8 €.
-        tester.widget<PrixConditionsStep>(stepFinder).currencyNotifier.value =
+        tester.widget<PrixStep>(stepFinder).currencyNotifier.value =
             SupportedCurrency.eur;
         await tester.pump(const Duration(milliseconds: 600));
 
@@ -2656,13 +2665,11 @@ void main() {
         // La bannière de devise est masquée en édition (currency verrouillée
         // côté UI) : le seul moyen d'exercer le listener réel
         // `_onCurrencyChanged` est de muter directement le currencyNotifier
-        // partagé. `PrixConditionsStep.currencyNotifier` EST l'instance
+        // partagé. `PrixStep.currencyNotifier` EST l'instance
         // `widget.currencyNotifier` de `_TripFormContentState` (même
         // référence, passée telle quelle dans `_buildStep2`) : la muter ici
         // déclenche donc le vrai listener de l'écran, pas une simulation.
-        final step = tester.widget<PrixConditionsStep>(
-          find.byType(PrixConditionsStep),
-        );
+        final step = tester.widget<PrixStep>(find.byType(PrixStep));
         step.currencyNotifier.value = SupportedCurrency.eur;
         await tester.pump(const Duration(milliseconds: 600));
 
@@ -4028,7 +4035,7 @@ void main() {
 
   // ── Group: Toggle Espèces et encart commission ───────────────────────────────
   // Migré de create_announcement_cash_toggle_test.dart. Le switch lui-même est
-  // couvert au niveau widget par prix_conditions_step_test ; ce qui est unique
+  // couvert au niveau widget par prix_step_test ; ce qui est unique
   // ici, c'est la révélation de CashCommissionNotice depuis l'écran complet.
 
   group('CreateTripScreen — Toggle Espèces (encart commission)', () {
@@ -4063,7 +4070,7 @@ void main() {
       getIt.registerFactory<StripeAccountBloc>(_makeStripeBloc);
     });
 
-    /// Navigue jusqu'au step 2, où vit PrixConditionsStep.
+    /// Navigue jusqu'au step 2, où vit PrixStep.
     Future<void> navigateToStep2(WidgetTester tester) async {
       tester.view.physicalSize = const Size(800, 1024);
       tester.view.devicePixelRatio = 1.0;
@@ -5161,14 +5168,14 @@ void main() {
     testWidgets('étape 2 (Lieux & capacité) : pas d\'encart', (tester) async {
       await pumpAt(tester, 1);
       expect(find.text('Trajet ✓'), findsOneWidget);
-      expect(find.byType(PrixConditionsStep), findsNothing);
+      expect(find.byType(PrixStep), findsNothing);
       expect(row, findsNothing);
     });
 
     testWidgets('étape 3 (Prix & conditions) : encart en tête, avant les '
         'prix', (tester) async {
       await pumpAt(tester, 2);
-      expect(find.byType(PrixConditionsStep), findsOneWidget);
+      expect(find.byType(PrixStep), findsOneWidget);
       expect(row, findsOneWidget);
       expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
       expect(
@@ -5181,7 +5188,7 @@ void main() {
       );
       expect(
         tester.getTopLeft(row).dy,
-        lessThan(tester.getTopLeft(find.byType(PrixConditionsStep)).dy),
+        lessThan(tester.getTopLeft(find.byType(PrixStep)).dy),
       );
     });
 
@@ -5206,7 +5213,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Choisir une devise'), findsOneWidget);
-      expect(find.byType(PrixConditionsStep), findsOneWidget);
+      expect(find.byType(PrixStep), findsOneWidget);
       expect(row, findsOneWidget);
     });
 
@@ -5546,9 +5553,7 @@ void main() {
         );
 
     double notifierKg(WidgetTester tester) => tester
-        .widget<PrixConditionsStep>(
-          find.byType(PrixConditionsStep, skipOffstage: false),
-        )
+        .widget<PrixStep>(find.byType(PrixStep, skipOffstage: false))
         .availableKgNotifier
         .value;
 

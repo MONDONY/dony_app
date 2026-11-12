@@ -1,4 +1,4 @@
-import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/conditions_step.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // FLUTTER-4G : « Autre » coché exige une précision, qui le remplace.

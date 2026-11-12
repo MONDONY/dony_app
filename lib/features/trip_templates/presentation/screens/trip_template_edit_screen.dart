@@ -15,9 +15,10 @@ import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_fields.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
@@ -116,7 +117,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
     // Synchronisations étape 2 → AnnouncementFormBloc, même règles que
     // `_TripFormContentState` (create_trip_screen.dart) : LieuxCapaciteStep
-    // (CapacityControl) et PrixConditionsStep (mode de tarification) lisent
+    // (CapacityControl) et PrixStep (mode de tarification) lisent
     // et écrivent directement dans ce bloc.
     _fields.priceOption.addListener(_syncPriceToFormBloc);
     _fields.customPrice.addListener(_syncPriceToFormBloc);
@@ -672,34 +673,41 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       builder: (context, mobileMoneyState) =>
           ValueListenableBuilder<SupportedCurrency>(
             valueListenable: _fields.currency,
-            builder: (context, currency, _) => PrixConditionsStep(
-              currency: currency,
-              gridCurrency: ActiveCurrency.current,
-              priceOptionNotifier: _fields.priceOption,
-              customPriceNotifier: _fields.customPrice,
-              availableKgNotifier: _fields.availableKg,
-              cashEnabledNotifier: _fields.cashEnabled,
-              kgPriceEnabledNotifier: _fields.kgPriceEnabled,
-              mobileMoneyEnabledNotifier: _fields.mobileMoneyEnabled,
-              currencyNotifier: _fields.currency,
-              mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(
-                mobileMoneyState,
-              ),
-              mobileMoneyCurrencies: mobileMoneyAccountCurrenciesFrom(
-                mobileMoneyState,
-              ),
-              onMobileMoneySetupReturned: () => context
-                  .read<MobileMoneyAccountBloc>()
-                  .add(const MobileMoneyAccountsRequested()),
-              negotiableNotifier: _fields.negotiable,
-              selectedContentNotifier: _fields.selectedContent,
-              customAcceptedNotifier: _fields.customAccepted,
-              refusedTypesNotifier: _fields.refusedTypes,
-              catalogLabelsNotifier: _fields.catalogLabels,
-              descriptionCtrl: _fields.descriptionCtrl,
-              customAcceptedCtrl: _fields.customAcceptedCtrl,
-              refusedCtrl: _fields.refusedCtrl,
-              customPriceCtrl: _fields.customPriceCtrl,
+            builder: (context, currency, _) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PrixStep(
+                  currency: currency,
+                  gridCurrency: ActiveCurrency.current,
+                  priceOptionNotifier: _fields.priceOption,
+                  customPriceNotifier: _fields.customPrice,
+                  availableKgNotifier: _fields.availableKg,
+                  cashEnabledNotifier: _fields.cashEnabled,
+                  kgPriceEnabledNotifier: _fields.kgPriceEnabled,
+                  mobileMoneyEnabledNotifier: _fields.mobileMoneyEnabled,
+                  currencyNotifier: _fields.currency,
+                  mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(
+                    mobileMoneyState,
+                  ),
+                  mobileMoneyCurrencies: mobileMoneyAccountCurrenciesFrom(
+                    mobileMoneyState,
+                  ),
+                  onMobileMoneySetupReturned: () => context
+                      .read<MobileMoneyAccountBloc>()
+                      .add(const MobileMoneyAccountsRequested()),
+                  negotiableNotifier: _fields.negotiable,
+                  customPriceCtrl: _fields.customPriceCtrl,
+                ),
+                ConditionsStep(
+                  selectedContentNotifier: _fields.selectedContent,
+                  customAcceptedNotifier: _fields.customAccepted,
+                  refusedTypesNotifier: _fields.refusedTypes,
+                  catalogLabelsNotifier: _fields.catalogLabels,
+                  descriptionCtrl: _fields.descriptionCtrl,
+                  customAcceptedCtrl: _fields.customAcceptedCtrl,
+                  refusedCtrl: _fields.refusedCtrl,
+                ),
+              ],
             ),
           ),
     ),

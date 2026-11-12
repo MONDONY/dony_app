@@ -1,18 +1,17 @@
-// Tests complémentaires de couverture pour PrixConditionsStep :
+// Tests complémentaires de couverture pour PrixStep :
 // - Tap sur chip prix prédéfini (change l'index sélectionné)
 // - Tap sur "Autre prix" (affiche le champ prix custom)
 // - Saisie dans le champ prix custom (met à jour customPriceNotifier)
-// - Tap sur chip de contenu (add/remove dans selectedContentNotifier)
-// - Ajout d'un type custom "Ce que j'accepte" via ContentCategoryComboBox
-// - Ajout d'un type refusé via ContentCategoryComboBox
+// - Bascule Espèces, verrouillage du prix, section paiement
+// Les contenus acceptés / refusés et la note sont testés dans
+// conditions_step_test.dart.
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
@@ -56,13 +55,6 @@ Widget _host({
   ValueNotifier<bool>? mobileMoneyEnabled,
   ValueNotifier<SupportedCurrency>? currencyNotifier,
   bool mobileMoneyAccountActive = false,
-  ValueNotifier<Set<String>>? selectedContent,
-  ValueNotifier<Set<String>>? customAccepted,
-  ValueNotifier<Set<String>>? refusedTypes,
-  ValueNotifier<List<String>>? catalogLabels,
-  TextEditingController? descriptionCtrl,
-  TextEditingController? customAcceptedCtrl,
-  TextEditingController? refusedCtrl,
   TextEditingController? customPriceCtrl,
   bool lockPrice = false,
   double? lockedTotalPriceEur,
@@ -93,7 +85,7 @@ Widget _host({
           BlocProvider<CommissionMethodBloc>.value(value: mockCommissionBloc),
         ],
         child: SingleChildScrollView(
-          child: PrixConditionsStep(
+          child: PrixStep(
             currency: currency,
             priceOptionNotifier: priceOption ?? ValueNotifier<int>(0),
             customPriceNotifier: customPrice ?? ValueNotifier<double>(0),
@@ -109,20 +101,6 @@ Widget _host({
                 ),
             mobileMoneyAccountActive: mobileMoneyAccountActive,
             negotiableNotifier: ValueNotifier<bool>(false),
-            selectedContentNotifier:
-                selectedContent ?? ValueNotifier<Set<String>>({}),
-            customAcceptedNotifier:
-                customAccepted ?? ValueNotifier<Set<String>>({}),
-            refusedTypesNotifier:
-                refusedTypes ?? ValueNotifier<Set<String>>({}),
-            catalogLabelsNotifier:
-                catalogLabels ??
-                ValueNotifier<List<String>>(
-                  fallbackCatalog.map((c) => c.label).toList(),
-                ),
-            descriptionCtrl: descriptionCtrl ?? TextEditingController(),
-            customAcceptedCtrl: customAcceptedCtrl ?? TextEditingController(),
-            refusedCtrl: refusedCtrl ?? TextEditingController(),
             customPriceCtrl: customPriceCtrl ?? TextEditingController(),
             lockPrice: lockPrice,
             lockedTotalPriceEur: lockedTotalPriceEur,
@@ -142,12 +120,6 @@ Future<void> _pump(
   ValueNotifier<double>? customPrice,
   ValueNotifier<double>? availableKg,
   ValueNotifier<bool>? cashEnabled,
-  ValueNotifier<Set<String>>? selectedContent,
-  ValueNotifier<Set<String>>? customAccepted,
-  ValueNotifier<Set<String>>? refusedTypes,
-  TextEditingController? descriptionCtrl,
-  TextEditingController? customAcceptedCtrl,
-  TextEditingController? refusedCtrl,
   TextEditingController? customPriceCtrl,
 }) async {
   await tester.pumpWidget(
@@ -158,12 +130,6 @@ Future<void> _pump(
       customPrice: customPrice,
       availableKg: availableKg,
       cashEnabled: cashEnabled,
-      selectedContent: selectedContent,
-      customAccepted: customAccepted,
-      refusedTypes: refusedTypes,
-      descriptionCtrl: descriptionCtrl,
-      customAcceptedCtrl: customAcceptedCtrl,
-      refusedCtrl: refusedCtrl,
       customPriceCtrl: customPriceCtrl,
     ),
   );
@@ -172,7 +138,7 @@ Future<void> _pump(
 }
 
 void main() {
-  group('PrixConditionsStep — interactions prix', () {
+  group('PrixStep — interactions prix', () {
     testWidgets('tap sur chip 9 EUR change le notifier priceOption', (
       tester,
     ) async {
@@ -245,7 +211,7 @@ void main() {
   });
 
   // FLUTTER-GK : bornes du prix libre dans la devise de l'annonce.
-  group('PrixConditionsStep — bornes du prix libre', () {
+  group('PrixStep — bornes du prix libre', () {
     Future<void> pumpCustom(
       WidgetTester tester,
       SupportedCurrency currency,
@@ -302,186 +268,7 @@ void main() {
     });
   });
 
-  group('PrixConditionsStep — combobox "Ce que j\'accepte"', () {
-    testWidgets('tap sur un item du catalogue le sélectionne', (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-
-      final selected = ValueNotifier<Set<String>>({});
-      await _pump(tester, selectedContent: selected);
-
-      await tester.tap(find.byKey(const Key('accepted-content-field')));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const Key('accepted-content-item-Vêtements & tissus')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(selected.value.contains('Vêtements & tissus'), isTrue);
-    });
-
-    testWidgets('re-tap sur un item déjà sélectionné le désélectionne', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-
-      final selected = ValueNotifier<Set<String>>({'Vêtements & tissus'});
-      await _pump(tester, selectedContent: selected);
-
-      await tester.tap(find.byKey(const Key('accepted-content-field')));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const Key('accepted-content-item-Vêtements & tissus')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(selected.value.contains('Vêtements & tissus'), isFalse);
-    });
-
-    testWidgets(
-      'les tags custom sont affichés quand customAccepted est non vide',
-      (tester) async {
-        final customAccepted = ValueNotifier<Set<String>>({
-          'Mon article custom',
-        });
-        await _pump(tester, customAccepted: customAccepted);
-
-        expect(
-          find.byKey(const Key('accepted-content-tag-Mon article custom')),
-          findsOneWidget,
-        );
-      },
-    );
-  });
-
-  group('PrixConditionsStep — combobox "Ce que je refuse"', () {
-    testWidgets(
-      'les tags de refus sont affichés quand refusedTypes est non vide',
-      (tester) async {
-        final refused = ValueNotifier<Set<String>>({'Liquides'});
-        await _pump(tester, refusedTypes: refused);
-
-        await tester.dragUntilVisible(
-          find.byKey(const Key('refused-content-tag-Liquides')),
-          find.byType(SingleChildScrollView),
-          const Offset(0, -200),
-        );
-        expect(
-          find.byKey(const Key('refused-content-tag-Liquides')),
-          findsOneWidget,
-        );
-      },
-    );
-
-    testWidgets('ajout via le combobox met à jour refusedTypesNotifier', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-
-      final refused = ValueNotifier<Set<String>>({});
-      await _pump(tester, refusedTypes: refused);
-
-      await tester.dragUntilVisible(
-        find.byKey(const Key('refused-content-field')),
-        find.byType(SingleChildScrollView),
-        const Offset(0, -200),
-      );
-      await tester.tap(find.byKey(const Key('refused-content-field')));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.byKey(const Key('refused-content-field')),
-        'Explosifs',
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('refused-content-item-add')));
-      await tester.pumpAndSettle();
-
-      expect(refused.value.contains('Explosifs'), isTrue);
-    });
-
-    testWidgets('✕ sur un tag refused met à jour refusedTypesNotifier', (
-      tester,
-    ) async {
-      final refused = ValueNotifier<Set<String>>({'Armes'});
-      await _pump(tester, refusedTypes: refused);
-
-      final tag = find.byKey(const Key('refused-content-tag-Armes'));
-      await tester.dragUntilVisible(
-        tag,
-        find.byType(SingleChildScrollView),
-        const Offset(0, -200),
-      );
-      expect(tag, findsOneWidget);
-
-      await tester.tap(
-        find.descendant(of: tag, matching: find.byType(GestureDetector)),
-      );
-      await tester.pumpAndSettle();
-
-      expect(refused.value.contains('Armes'), isFalse);
-    });
-  });
-
-  group(
-    'PrixConditionsStep — combobox "Ce que j\'accepte" — ajout/suppression custom',
-    () {
-      testWidgets(
-        'ajout via le combobox customAccepted met à jour le notifier',
-        (tester) async {
-          // Grand viewport pour que la section "Ce que j'accepte" soit dans le
-          // rendu après l'ajout du toggle KG/MIXED qui pousse le contenu vers
-          // le bas, et que l'overlay du combobox tienne dans la fenêtre.
-          tester.view.physicalSize = const Size(800, 4000);
-          tester.view.devicePixelRatio = 1.0;
-          addTearDown(tester.view.reset);
-
-          final customAccepted = ValueNotifier<Set<String>>({});
-          await _pump(tester, customAccepted: customAccepted);
-
-          await tester.tap(find.byKey(const Key('accepted-content-field')));
-          await tester.pumpAndSettle();
-          await tester.enterText(
-            find.byKey(const Key('accepted-content-field')),
-            'Bijoux',
-          );
-          await tester.pumpAndSettle();
-          await tester.tap(find.byKey(const Key('accepted-content-item-add')));
-          await tester.pumpAndSettle();
-
-          expect(customAccepted.value.contains('Bijoux'), isTrue);
-        },
-      );
-
-      testWidgets(
-        'suppression d\'un tag customAccepted met à jour le notifier',
-        (tester) async {
-          tester.view.physicalSize = const Size(800, 4000);
-          tester.view.devicePixelRatio = 1.0;
-          addTearDown(tester.view.reset);
-
-          final customAccepted = ValueNotifier<Set<String>>({'Bijoux'});
-          await _pump(tester, customAccepted: customAccepted);
-
-          final tag = find.byKey(const Key('accepted-content-tag-Bijoux'));
-          expect(tag, findsOneWidget);
-
-          await tester.tap(
-            find.descendant(of: tag, matching: find.byType(GestureDetector)),
-          );
-          await tester.pumpAndSettle();
-
-          expect(customAccepted.value.contains('Bijoux'), isFalse);
-        },
-      );
-    },
-  );
-
-  group('PrixConditionsStep — switch Espèces', () {
+  group('PrixStep — switch Espèces', () {
     testWidgets(
       'switch espèces peut être activé quand carte commission valide',
       (tester) async {
@@ -528,30 +315,6 @@ void main() {
       ); // settle notice fadeIn
 
       expect(cashEnabled.value, isTrue);
-    });
-  });
-
-  group('PrixConditionsStep — note aux expéditeurs', () {
-    testWidgets('le compteur de caractères est mis à jour en saisie', (
-      tester,
-    ) async {
-      final descCtrl = TextEditingController();
-      await _pump(tester, descriptionCtrl: descCtrl);
-
-      // Initialement 0/500
-      expect(find.text('0/500'), findsOneWidget);
-
-      // Saisir "hello"
-      await tester.enterText(
-        find.byWidgetPredicate(
-          (w) => w is TextField && w.maxLines == 4 && w.maxLength == 500,
-        ),
-        'hello',
-      );
-      await tester.pump();
-
-      // Maintenant 5/500
-      expect(find.text('5/500'), findsOneWidget);
     });
   });
 

@@ -1,4 +1,4 @@
-// Tests de PrixConditionsStep — étape 2 du formulaire "Publier un trajet".
+// Tests de PrixStep — section Prix du formulaire "Publier un trajet".
 //
 // Structure miroir de lieux_capacite_step_test.dart et trajet_step_test.dart.
 //
@@ -17,12 +17,11 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
@@ -85,9 +84,9 @@ const _validCard = CommissionMethod(
 
 // ── Host builder ──────────────────────────────────────────────────────────────
 
-/// Construit l'arbre minimal pour tester PrixConditionsStep :
+/// Construit l'arbre minimal pour tester PrixStep :
 /// MaterialApp – Scaffold – MultiBlocProvider – SingleChildScrollView –
-/// PrixConditionsStep.
+/// PrixStep.
 ///
 /// [stripeState] contrôle la section paiement (Stripe configuré ou non).
 /// [commissionState] contrôle le switch "Espèces".
@@ -129,15 +128,6 @@ Widget _host({
   );
   final resolvedNegotiableNotifier =
       negotiableNotifier ?? ValueNotifier<bool>(false);
-  final selectedContentNotifier = ValueNotifier<Set<String>>({});
-  final customAcceptedNotifier = ValueNotifier<Set<String>>({});
-  final refusedTypesNotifier = ValueNotifier<Set<String>>({});
-  final catalogLabelsNotifier = ValueNotifier<List<String>>(
-    fallbackCatalog.map((c) => c.label).toList(),
-  );
-  final descriptionCtrl = TextEditingController();
-  final customAcceptedCtrl = TextEditingController();
-  final refusedCtrl = TextEditingController();
   final customPriceCtrl = TextEditingController();
 
   final page = Scaffold(
@@ -158,7 +148,7 @@ Widget _host({
           ),
       ],
       child: SingleChildScrollView(
-        child: PrixConditionsStep(
+        child: PrixStep(
           currency: currency,
           priceOptionNotifier: priceOptionNotifier,
           customPriceNotifier: customPriceNotifier,
@@ -169,13 +159,6 @@ Widget _host({
           mobileMoneyEnabledNotifier: mobileMoneyEnabledNotifier,
           currencyNotifier: currencyNotifier,
           negotiableNotifier: resolvedNegotiableNotifier,
-          selectedContentNotifier: selectedContentNotifier,
-          customAcceptedNotifier: customAcceptedNotifier,
-          refusedTypesNotifier: refusedTypesNotifier,
-          catalogLabelsNotifier: catalogLabelsNotifier,
-          descriptionCtrl: descriptionCtrl,
-          customAcceptedCtrl: customAcceptedCtrl,
-          refusedCtrl: refusedCtrl,
           customPriceCtrl: customPriceCtrl,
         ),
       ),
@@ -237,7 +220,7 @@ Future<void> _pump(
 
 void main() {
   // FLUTTER-FT : la carte devient décochable quand elle est disponible.
-  group('PrixConditionsStep — carte décochable', () {
+  group('PrixStep — carte décochable', () {
     testWidgets('cochée par défaut : pas de texte d\'aide, espèces libres', (
       tester,
     ) async {
@@ -321,14 +304,14 @@ void main() {
     );
   });
 
-  group('PrixConditionsStep', () {
+  group('PrixStep', () {
     // ── Construction ──────────────────────────────────────────────────────────
 
     testWidgets('se construit sans exception avec les providers requis', (
       tester,
     ) async {
       await _pump(tester);
-      expect(find.byType(PrixConditionsStep), findsOneWidget);
+      expect(find.byType(PrixStep), findsOneWidget);
     });
 
     // ── Ouverture aux propositions de prix ────────────────────────────────────
@@ -876,7 +859,7 @@ void main() {
                     ),
                   ],
                   child: SingleChildScrollView(
-                    child: PrixConditionsStep(
+                    child: PrixStep(
                       currency: SupportedCurrency.eur,
                       priceOptionNotifier: ValueNotifier<int>(0),
                       customPriceNotifier: ValueNotifier<double>(0),
@@ -888,15 +871,6 @@ void main() {
                         SupportedCurrency.eur,
                       ),
                       negotiableNotifier: ValueNotifier<bool>(false),
-                      selectedContentNotifier: ValueNotifier<Set<String>>({}),
-                      customAcceptedNotifier: ValueNotifier<Set<String>>({}),
-                      refusedTypesNotifier: ValueNotifier<Set<String>>({}),
-                      catalogLabelsNotifier: ValueNotifier<List<String>>(
-                        fallbackCatalog.map((c) => c.label).toList(),
-                      ),
-                      descriptionCtrl: TextEditingController(),
-                      customAcceptedCtrl: TextEditingController(),
-                      refusedCtrl: TextEditingController(),
                       customPriceCtrl: TextEditingController(),
                     ),
                   ),
@@ -984,151 +958,6 @@ void main() {
         );
       },
     );
-
-    // ── Section CE QUE J'ACCEPTE ──────────────────────────────────────────────
-
-    testWidgets("label de section Ce que j'accepte est affiché", (
-      tester,
-    ) async {
-      await _pump(tester);
-      expect(find.text("Ce que j'accepte"), findsOneWidget);
-    });
-
-    testWidgets(
-      'focus sur le combobox « accepte » ouvre le catalogue complet (11 items) — pas une liste figée',
-      (tester) async {
-        await _pump(tester);
-        // Même traitement que le combobox « refuse » : le champ est passé
-        // sous la ligne de flottaison du viewport de test, il faut le remonter
-        // avant de le taper.
-        await tester.dragUntilVisible(
-          find.byKey(const Key('accepted-content-field')),
-          find.byType(SingleChildScrollView),
-          const Offset(0, -200),
-        );
-        await tester.tap(find.byKey(const Key('accepted-content-field')));
-        await tester.pumpAndSettle();
-        for (final category in fallbackCatalog) {
-          expect(
-            find.byKey(Key('accepted-content-item-${category.label}')),
-            findsOneWidget,
-            reason:
-                'Item "${category.label}" doit être présent dans le combobox "Ce que j\'accepte"',
-          );
-        }
-      },
-    );
-
-    testWidgets(
-      'focus sur le combobox « refuse » ouvre aussi le catalogue complet',
-      (tester) async {
-        await tester.pumpWidget(_host());
-        await tester.pump(const Duration(milliseconds: 200));
-        await tester.pump();
-        await tester.dragUntilVisible(
-          find.byKey(const Key('refused-content-field')),
-          find.byType(SingleChildScrollView),
-          const Offset(0, -200),
-        );
-        await tester.tap(find.byKey(const Key('refused-content-field')));
-        await tester.pumpAndSettle();
-        for (final category in fallbackCatalog) {
-          expect(
-            find.byKey(Key('refused-content-item-${category.label}')),
-            findsOneWidget,
-            reason:
-                'Item "${category.label}" doit être présent dans le combobox "Ce que je refuse"',
-          );
-        }
-      },
-    );
-
-    testWidgets(
-      'saisie libre dans le combobox "Ce que j\'accepte" ajoute un élément custom',
-      (tester) async {
-        // Grand viewport pour que le champ + l'overlay tiennent entièrement
-        // dans la fenêtre de test (évite un overlay tronqué en bas d'écran).
-        tester.view.physicalSize = const Size(800, 2000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.reset);
-
-        await _pump(tester);
-        await tester.tap(find.byKey(const Key('accepted-content-field')));
-        await tester.pumpAndSettle();
-        await tester.enterText(
-          find.byKey(const Key('accepted-content-field')),
-          'Poissons',
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('accepted-content-item-add')));
-        await tester.pumpAndSettle();
-        expect(
-          find.byKey(const Key('accepted-content-tag-Poissons')),
-          findsOneWidget,
-        );
-      },
-    );
-
-    // ── Section CE QUE JE REFUSE ──────────────────────────────────────────────
-
-    testWidgets('label de section Ce que je refuse est affiché', (
-      tester,
-    ) async {
-      await _pump(tester);
-      expect(find.text('Ce que je refuse'), findsOneWidget);
-    });
-
-    testWidgets(
-      'saisie libre dans le combobox "Ce que je refuse" ajoute un élément custom',
-      (tester) async {
-        await _pump(tester);
-        await tester.dragUntilVisible(
-          find.byKey(const Key('refused-content-field')),
-          find.byType(SingleChildScrollView),
-          const Offset(0, -200),
-        );
-        await tester.tap(find.byKey(const Key('refused-content-field')));
-        await tester.pumpAndSettle();
-        await tester.enterText(
-          find.byKey(const Key('refused-content-field')),
-          'Alcool',
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('refused-content-item-add')));
-        await tester.pumpAndSettle();
-        expect(
-          find.byKey(const Key('refused-content-tag-Alcool')),
-          findsOneWidget,
-        );
-      },
-    );
-
-    // ── Section NOTE AUX EXPÉDITEURS ─────────────────────────────────────────
-
-    testWidgets('label de section Note aux expéditeurs est affiché', (
-      tester,
-    ) async {
-      await _pump(tester);
-      expect(find.text('Note aux expéditeurs'), findsOneWidget);
-    });
-
-    testWidgets('le champ note aux expéditeurs (TextField) est présent', (
-      tester,
-    ) async {
-      await _pump(tester);
-      // Le TextField de la note a un hintText caractéristique
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is TextField && w.maxLines == 4 && w.maxLength == 500,
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('compteur de caractères 0/500 est affiché', (tester) async {
-      await _pump(tester);
-      expect(find.text('0/500'), findsOneWidget);
-    });
 
     // ── Régression P6 — aucune flèche texte résiduelle ───────────────────────
 
@@ -1248,15 +1077,6 @@ void main() {
       final availKg = ValueNotifier<double>(10);
       final cash = ValueNotifier<bool>(false);
       final kgEnabled = ValueNotifier<bool>(true);
-      final selContent = ValueNotifier<Set<String>>({});
-      final custAccepted = ValueNotifier<Set<String>>({});
-      final refused = ValueNotifier<Set<String>>({});
-      final catalogLabels = ValueNotifier<List<String>>(
-        fallbackCatalog.map((c) => c.label).toList(),
-      );
-      final descCtrl = TextEditingController();
-      final custAccCtrl = TextEditingController();
-      final refCtrl = TextEditingController();
       final custPriceCtrl = TextEditingController();
 
       await tester.pumpWidget(
@@ -1269,7 +1089,7 @@ void main() {
                 BlocProvider<CommissionMethodBloc>.value(value: mockComm),
               ],
               child: SingleChildScrollView(
-                child: PrixConditionsStep(
+                child: PrixStep(
                   currency: SupportedCurrency.eur,
                   gridCurrency: SupportedCurrency.eur,
                   priceOptionNotifier: priceOpt,
@@ -1282,13 +1102,6 @@ void main() {
                     SupportedCurrency.eur,
                   ),
                   negotiableNotifier: ValueNotifier<bool>(false),
-                  selectedContentNotifier: selContent,
-                  customAcceptedNotifier: custAccepted,
-                  refusedTypesNotifier: refused,
-                  catalogLabelsNotifier: catalogLabels,
-                  descriptionCtrl: descCtrl,
-                  customAcceptedCtrl: custAccCtrl,
-                  refusedCtrl: refCtrl,
                   customPriceCtrl: custPriceCtrl,
                 ),
               ),
@@ -1314,13 +1127,7 @@ void main() {
 
   // ── Group: English (i18n) ─────────────────────────────────────────────────
 
-  group('PrixConditionsStep — English', () {
-    testWidgets('titre de section "Ce que j\'accepte" traduit', (tester) async {
-      useEnglish();
-      await _pump(tester);
-      expect(find.text('What I accept'), findsOneWidget);
-    });
-
+  group('PrixStep — English', () {
     testWidgets('titre du toggle de négociation traduit', (tester) async {
       useEnglish();
       await tester.pumpWidget(_host(negotiableNotifier: ValueNotifier(false)));

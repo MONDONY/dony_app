@@ -10,7 +10,7 @@ import 'package:go_router/go_router.dart';
 
 /// La carte peut-elle être proposée sur les trajets d'une récurrence ?
 ///
-/// Même règle que la publication d'un trajet simple (`prix_conditions_step`) :
+/// Même règle que la publication d'un trajet simple (`prix_step`) :
 /// devise éligible d'abord, puis compte Stripe Connect terminé. Sans
 /// [StripeAccountBloc] dans l'arbre (tests isolés), la carte est réputée
 /// indisponible : rien n'est alors refusé au nom du voyageur.

@@ -41,9 +41,10 @@ import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_currencies_confirm_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_legs_section.dart';
@@ -537,7 +538,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             resizeToAvoidBottomInset: true,
             // Bouton sticky dans `body` (pas `bottomNavigationBar`) : Flutter ne
             // remonte pas fiablement `bottomNavigationBar` au-dessus du clavier,
-            // ce qui le cachait derrière sur PrixConditionsStep (champs prix /
+            // ce qui le cachait derrière sur l'étape Prix & conditions (champs prix /
             // conditions). Même fix que phone_auth_screen.dart.
             body: Column(
               children: [
@@ -720,7 +721,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                         // ── Étape 2 — Mode création : Aperçu ──
                         // Publiable sans Stripe configuré (cash-only) — Stripe n'est
                         // plus une condition bloquante ici, seule la section paiement
-                        // (PrixConditionsStep) reflète le verrouillage de la carte.
+                        // (PrixStep) reflète le verrouillage de la carte.
                         return BlocBuilder<AnnouncementBloc, AnnouncementState>(
                           builder: (ctx, annState) {
                             final isLoading = annState is AnnouncementLoading;
@@ -1430,7 +1431,7 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// Reprend la référence une fois la première frame passée.
   ///
   /// Certains champs sont positionnés par l'application elle-même, pas par
-  /// l'utilisateur, et seulement une fois l'arbre construit : `PrixConditionsStep`
+  /// l'utilisateur, et seulement une fois l'arbre construit : `PrixStep`
   /// force par exemple les espèces à ON en post-frame quand Stripe n'est pas
   /// configuré. Pris à la fin de `initState`, l'instantané précède ces
   /// écritures et l'écran s'ouvrait « sale », réclamant une confirmation de
@@ -3189,51 +3190,60 @@ class _TripFormContentState extends State<_TripFormContent> {
               widget.currencyNotifier,
               ?widget.currencyEditableNotifier,
             ]),
-            builder: (context, _) => PrixConditionsStep(
-              currency: widget.currencyNotifier.value,
-              gridCurrency: ActiveCurrency.current,
-              priceOptionNotifier: _priceOptionNotifier,
-              customPriceNotifier: _customPriceNotifier,
-              availableKgNotifier: _availableKgNotifier,
-              cashEnabledNotifier: _cashEnabledNotifier,
-              cardEnabledNotifier: _cardEnabledNotifier,
-              kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
-              mobileMoneyEnabledNotifier: _mobileMoneyEnabledNotifier,
-              currencyNotifier: widget.currencyNotifier,
-              mobileMoneyAccountActive: mobileMoneyAccountActive,
-              mobileMoneyCurrencies: mobileMoneyAccountCurrenciesFrom(
-                mobileMoneyState,
-              ),
-              // Changer la devise du premier trajet ne touche pas celle des
-              // étapes ajoutées (FLUTTER-HP) : la confirmation les cite.
-              legCurrencies: _isEdit || _isLocked ? null : _extraLegCurrencies,
-              onMobileMoneySetupReturned: () => context
-                  .read<MobileMoneyAccountBloc>()
-                  .add(const MobileMoneyAccountsRequested()),
-              negotiableNotifier: _negotiableNotifier,
-              selectedContentNotifier: _selectedContentNotifier,
-              customAcceptedNotifier: _customAcceptedNotifier,
-              refusedTypesNotifier: _refusedTypesNotifier,
-              catalogLabelsNotifier: _catalogLabelsNotifier,
-              descriptionCtrl: _descriptionCtrl,
-              customAcceptedCtrl: _customAcceptedCtrl,
-              refusedCtrl: _refusedCtrl,
-              customPriceCtrl: _customPriceCtrl,
-              // Prix verrouillé en modification-pour-négo ET en trajet dédié : il
-              // est fixé par la négociation.
-              lockPrice: widget.lockCorridorAndDate || _isLocked,
-              // Trajet dédié : affiche le prix total convenu et masque la section
-              // « Modes de paiement » (déjà fixé par la négociation).
-              lockedTotalPriceEur: _isLocked
-                  ? widget.lockContext!.agreedPriceEur
-                  : null,
-              showPaymentMethods: !_isLocked,
-              // En modification, la devise ne change que si le serveur le
-              // permet (`currencyEditable`, FLUTTER-KV) : le PUT l'envoie
-              // alors. Sinon elle reste figée, sans quoi l'écran validait le
-              // prix dans une devise que le PUT n'envoyait pas (FLUTTER-JS).
-              currencyLocked:
-                  _isLocked || (_isEdit && !_isEditCurrencyEditable),
+            builder: (context, _) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PrixStep(
+                  currency: widget.currencyNotifier.value,
+                  gridCurrency: ActiveCurrency.current,
+                  priceOptionNotifier: _priceOptionNotifier,
+                  customPriceNotifier: _customPriceNotifier,
+                  availableKgNotifier: _availableKgNotifier,
+                  cashEnabledNotifier: _cashEnabledNotifier,
+                  cardEnabledNotifier: _cardEnabledNotifier,
+                  kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
+                  mobileMoneyEnabledNotifier: _mobileMoneyEnabledNotifier,
+                  currencyNotifier: widget.currencyNotifier,
+                  mobileMoneyAccountActive: mobileMoneyAccountActive,
+                  mobileMoneyCurrencies: mobileMoneyAccountCurrenciesFrom(
+                    mobileMoneyState,
+                  ),
+                  // Changer la devise du premier trajet ne touche pas celle des
+                  // étapes ajoutées (FLUTTER-HP) : la confirmation les cite.
+                  legCurrencies: _isEdit || _isLocked
+                      ? null
+                      : _extraLegCurrencies,
+                  onMobileMoneySetupReturned: () => context
+                      .read<MobileMoneyAccountBloc>()
+                      .add(const MobileMoneyAccountsRequested()),
+                  negotiableNotifier: _negotiableNotifier,
+                  customPriceCtrl: _customPriceCtrl,
+                  // Prix verrouillé en modification-pour-négo ET en trajet dédié : il
+                  // est fixé par la négociation.
+                  lockPrice: widget.lockCorridorAndDate || _isLocked,
+                  // Trajet dédié : affiche le prix total convenu et masque la section
+                  // « Modes de paiement » (déjà fixé par la négociation).
+                  lockedTotalPriceEur: _isLocked
+                      ? widget.lockContext!.agreedPriceEur
+                      : null,
+                  showPaymentMethods: !_isLocked,
+                  // En modification, la devise ne change que si le serveur le
+                  // permet (`currencyEditable`, FLUTTER-KV) : le PUT l'envoie
+                  // alors. Sinon elle reste figée, sans quoi l'écran validait le
+                  // prix dans une devise que le PUT n'envoyait pas (FLUTTER-JS).
+                  currencyLocked:
+                      _isLocked || (_isEdit && !_isEditCurrencyEditable),
+                ),
+                ConditionsStep(
+                  selectedContentNotifier: _selectedContentNotifier,
+                  customAcceptedNotifier: _customAcceptedNotifier,
+                  refusedTypesNotifier: _refusedTypesNotifier,
+                  catalogLabelsNotifier: _catalogLabelsNotifier,
+                  descriptionCtrl: _descriptionCtrl,
+                  customAcceptedCtrl: _customAcceptedCtrl,
+                  refusedCtrl: _refusedCtrl,
+                ),
+              ],
             ),
           );
         },

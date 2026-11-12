@@ -7,7 +7,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter/material.dart';
 
 /// Notifiers et contrôleurs du formulaire de trajet, tels que
-/// `LieuxCapaciteStep` et `PrixConditionsStep` les consomment.
+/// `LieuxCapaciteStep`, `PrixStep` et `ConditionsStep` les consomment.
 ///
 /// Les valeurs initiales sont celles du formulaire de création vierge
 /// (`_TripFormContentState`, create_trip_screen.dart) : un modèle de trajet

@@ -5,7 +5,7 @@
 // ContentCategorySelector (même composant que la création de trajet et le
 // wizard colis) : catalogue déroulant issu du repository, tags supprimables,
 // saisie libre par la ligne « Ajouter ». La clé du champ est celle posée par
-// PrixConditionsStep (`keyPrefix: 'accepted-content'`), pas une clé propre à
+// PrixStep (`keyPrefix: 'accepted-content'`), pas une clé propre à
 // l'écran modèle.
 
 import 'package:bloc_test/bloc_test.dart';
@@ -27,7 +27,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_fields.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
@@ -581,43 +581,42 @@ void main() {
       },
     );
 
-    testWidgets(
-      'étape 2 : PrixConditionsStep et bandeau devise, chips CFA en XOF',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 3000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.reset);
-        await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
-        await tester.pump(const Duration(milliseconds: 600));
+    testWidgets('étape 2 : PrixStep et bandeau devise, chips CFA en XOF', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        await goToStep(tester, 2);
-        final fields =
-            (tester.state<State<TripTemplateEditScreen>>(
-                          find.byType(TripTemplateEditScreen),
-                        )
-                        as dynamic)
-                    .fieldsForTest
-                as TripFormFields;
-        fields.currency.value = SupportedCurrency.xof;
-        // En XOF la carte est indisponible : les espèces passent ON d'office
-        // (post-frame) et leur encart animé entre. Plusieurs passes pour que
-        // le Timer de flutter_animate se termine avant la fin du test.
-        for (var i = 0; i < 6; i++) {
-          await tester.pump(const Duration(milliseconds: 400));
-        }
+      await goToStep(tester, 2);
+      final fields =
+          (tester.state<State<TripTemplateEditScreen>>(
+                        find.byType(TripTemplateEditScreen),
+                      )
+                      as dynamic)
+                  .fieldsForTest
+              as TripFormFields;
+      fields.currency.value = SupportedCurrency.xof;
+      // En XOF la carte est indisponible : les espèces passent ON d'office
+      // (post-frame) et leur encart animé entre. Plusieurs passes pour que
+      // le Timer de flutter_animate se termine avant la fin du test.
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
 
-        expect(find.byType(PrixConditionsStep), findsOneWidget);
-        expect(
-          find.byKey(const Key('trip-currency-selector-row')),
-          findsOneWidget,
-        );
-        expect(
-          find.text(CurrencyFormatter.format(1000, SupportedCurrency.xof)),
-          findsOneWidget,
-        );
-        expect(find.text('Enregistrer le modèle'), findsOneWidget);
-      },
-    );
+      expect(find.byType(PrixStep), findsOneWidget);
+      expect(
+        find.byKey(const Key('trip-currency-selector-row')),
+        findsOneWidget,
+      );
+      expect(
+        find.text(CurrencyFormatter.format(1000, SupportedCurrency.xof)),
+        findsOneWidget,
+      );
+      expect(find.text('Enregistrer le modèle'), findsOneWidget);
+    });
 
     testWidgets('enregistrement : le payload contient tout le formulaire', (
       tester,
@@ -657,10 +656,10 @@ void main() {
       // métier — figer cette valeur cacherait le bug plutôt que de le
       // couvrir.
       BlocProvider.of<AnnouncementFormBloc>(
-        tester.element(find.byType(PrixConditionsStep)),
+        tester.element(find.byType(PrixStep)),
       ).add(const CapacityUnitChanged(CapacityUnit.suitcase23kg));
       // `pumpAndSettle` plutôt qu'un `pump` fixe : le changement de devise
-      // remonte `PrixConditionsStep` (ValueListenableBuilder), qui rejoue les
+      // remonte `PrixStep` (ValueListenableBuilder), qui rejoue les
       // `.animate().fadeIn()` de l'étape — leurs timers de démarrage doivent
       // se vider avant la fin du test (même piège que le retour à l'étape 0,
       // cf. le test « flèche retour » du groupe étape Trajet).

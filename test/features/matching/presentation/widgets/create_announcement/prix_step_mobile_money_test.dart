@@ -1,12 +1,12 @@
-// Tests de la bascule « Mobile money » de PrixConditionsStep — étape 2 du
+// Tests de la bascule « Mobile money » de PrixStep — section Prix du
 // formulaire "Publier un trajet" (Tâche 9).
 //
-// Fichier dédié (prix_conditions_step_test.dart fait déjà 32 Ko) : reprend le
+// Fichier dédié (prix_step_test.dart fait déjà 32 Ko) : reprend le
 // harnais de construction de ce fichier voisin (mêmes mocks, même style de
 // host), mais uniquement pour la section mobile money.
 //
 // Les deux dispositions de la section paiement (Stripe configuré / Stripe non
-// configuré, cf. prix_conditions_step.dart) sont toutes les deux vivantes en
+// configuré, cf. prix_step.dart) sont toutes les deux vivantes en
 // production selon que le voyageur a terminé l'onboarding Stripe Connect —
 // indépendant du rail mobile money. La bascule (même clé
 // 'payment-method-mobile-money') doit donc exister dans les deux : le premier
@@ -16,9 +16,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/models/connect_account_status.dart';
-import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
@@ -52,7 +51,7 @@ const _stripeNotConfiguredState = StripeAccountInitial();
 // ── Host builder ──────────────────────────────────────────────────────────────
 
 /// Construit l'arbre minimal pour tester la bascule mobile money de
-/// PrixConditionsStep, avec un GoRouter réel : le lien « Activer le mobile
+/// PrixStep, avec un GoRouter réel : le lien « Activer le mobile
 /// money » pousse `/payments/mobile-money/account`, dont la destination est
 /// stubée (avec un bouton de retour pour éprouver le rechargement).
 Widget _host({
@@ -96,7 +95,7 @@ Widget _host({
               ),
             ],
             child: SingleChildScrollView(
-              child: PrixConditionsStep(
+              child: PrixStep(
                 currencyLocked: currencyLocked,
                 currency: initialCurrency,
                 priceOptionNotifier: ValueNotifier<int>(0),
@@ -113,15 +112,6 @@ Widget _host({
                 mobileMoneyCurrencies: mobileMoneyCurrencies,
                 onMobileMoneySetupReturned: onMobileMoneySetupReturned,
                 negotiableNotifier: ValueNotifier<bool>(false),
-                selectedContentNotifier: ValueNotifier<Set<String>>({}),
-                customAcceptedNotifier: ValueNotifier<Set<String>>({}),
-                refusedTypesNotifier: ValueNotifier<Set<String>>({}),
-                catalogLabelsNotifier: ValueNotifier<List<String>>(
-                  fallbackCatalog.map((c) => c.label).toList(),
-                ),
-                descriptionCtrl: TextEditingController(),
-                customAcceptedCtrl: TextEditingController(),
-                refusedCtrl: TextEditingController(),
                 customPriceCtrl: TextEditingController(),
               ),
             ),
@@ -156,7 +146,7 @@ Future<void> _pump(WidgetTester tester, Widget widget) async {
 }
 
 void main() {
-  group('PrixConditionsStep — bascule mobile money (Stripe configuré)', () {
+  group('PrixStep — bascule mobile money (Stripe configuré)', () {
     testWidgets(
       'devise EUR : bascule visible mais désactivée, sous-titre XOF/XAF',
       (tester) async {
@@ -279,7 +269,7 @@ void main() {
     );
   });
 
-  group('PrixConditionsStep — encart « mobile money non activé »', () {
+  group('PrixStep — encart « mobile money non activé »', () {
     testWidgets('devise XOF sans compte actif : explique pourquoi et propose '
         'l\'activation', (tester) async {
       await _pump(tester, _host(initialCurrency: SupportedCurrency.xof));
@@ -364,7 +354,7 @@ void main() {
     });
   });
 
-  group('PrixConditionsStep — bascule mobile money (Stripe non configuré)', () {
+  group('PrixStep — bascule mobile money (Stripe non configuré)', () {
     testWidgets('devise XOF sans compte actif : même clé, même comportement '
         'désactivé + CTA que la disposition Stripe configuré', (tester) async {
       await _pump(
