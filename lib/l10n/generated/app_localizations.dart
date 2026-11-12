@@ -4382,23 +4382,17 @@ abstract class AppLocalizations {
   /// **'Avion'**
   String get tripTransportPlane;
 
-  /// No description provided for @tripTransportCar.
+  /// Libellé du mode de transport par la route (voiture ou bus) d'un trajet ou d'une demande
   ///
   /// In fr, this message translates to:
-  /// **'Voiture'**
-  String get tripTransportCar;
+  /// **'Route'**
+  String get tripTransportRoad;
 
   /// No description provided for @tripTransportTrain.
   ///
   /// In fr, this message translates to:
   /// **'Train'**
   String get tripTransportTrain;
-
-  /// No description provided for @tripTransportBus.
-  ///
-  /// In fr, this message translates to:
-  /// **'Bus'**
-  String get tripTransportBus;
 
   /// No description provided for @tripTransportBoat.
   ///

@@ -73,9 +73,9 @@ void main() {
         actual: 'BUS',
       ),
     );
-    expect(s, contains(fr.tripTransportBus));
+    expect(s, contains(fr.tripTransportRoad));
     expect(s, contains(fr.tripTransportPlane));
-    expect(s, fr.unmetTransport(fr.tripTransportPlane, fr.tripTransportBus));
+    expect(s, fr.unmetTransport(fr.tripTransportPlane, fr.tripTransportRoad));
     expect(s, startsWith('Transport : '));
   });
 

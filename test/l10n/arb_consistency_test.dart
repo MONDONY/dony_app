@@ -169,7 +169,6 @@ const _sameInBothLanguages = <String>{
   'homeFilterFieldsTransport', // « TRANSPORT » se dit pareil
   'homeFilterFieldsDate', // « DATE » se dit pareil
   'tripTransportTrain', // « Train » se dit pareil
-  'tripTransportBus', // « Bus » se dit pareil
   'tripTileConditions', // « Conditions » se dit pareil (tuile « Votre trajet »)
   'paymentMethodMobileMoney', // « Mobile money » se dit pareil
   'requestCreateDateFieldLabel', // « Date » se dit pareil

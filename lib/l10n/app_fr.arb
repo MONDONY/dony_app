@@ -1203,9 +1203,11 @@
     "description": "Nom affiché quand le voyageur n'a pas de displayName exploitable"
   },
   "tripTransportPlane": "Avion",
-  "tripTransportCar": "Voiture",
+  "tripTransportRoad": "Route",
+  "@tripTransportRoad": {
+    "description": "Libellé du mode de transport par la route (voiture ou bus) d'un trajet ou d'une demande"
+  },
   "tripTransportTrain": "Train",
-  "tripTransportBus": "Bus",
   "tripTransportBoat": "Bateau",
   "tripTransportOther": "Autre",
   "tripUrgencyVeryUrgent": "< 3j",

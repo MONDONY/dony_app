@@ -13,23 +13,23 @@ void main() {
   group('TransportModeL10n.label', () {
     const frLabels = {
       TransportMode.plane: 'Avion',
-      TransportMode.car: 'Voiture',
+      TransportMode.car: 'Route',
       TransportMode.train: 'Train',
-      TransportMode.bus: 'Bus',
+      TransportMode.bus: 'Route',
       TransportMode.boat: 'Bateau',
       TransportMode.other: 'Autre',
     };
     const enLabels = {
       TransportMode.plane: 'Plane',
-      TransportMode.car: 'Car',
+      TransportMode.car: 'Road',
       TransportMode.train: 'Train',
-      TransportMode.bus: 'Bus',
+      TransportMode.bus: 'Road',
       TransportMode.boat: 'Boat',
       TransportMode.other: 'Other',
     };
 
     for (final mode in TransportMode.values) {
-      test('${mode.name} — fr égale l\'ancien libellé', () {
+      test('${mode.name} — fr', () {
         expect(mode.label(fr), frLabels[mode]);
       });
 
@@ -78,7 +78,7 @@ void main() {
     };
 
     for (final unit in CapacityUnit.values) {
-      test('${unit.name} — fr égale l\'ancien libellé', () {
+      test('${unit.name} — fr', () {
         expect(unit.label(fr), frLabels[unit]);
       });
 

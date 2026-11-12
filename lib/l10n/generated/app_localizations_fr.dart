@@ -2587,13 +2587,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripTransportPlane => 'Avion';
 
   @override
-  String get tripTransportCar => 'Voiture';
+  String get tripTransportRoad => 'Route';
 
   @override
   String get tripTransportTrain => 'Train';
-
-  @override
-  String get tripTransportBus => 'Bus';
 
   @override
   String get tripTransportBoat => 'Bateau';

@@ -2580,13 +2580,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripTransportPlane => 'Plane';
 
   @override
-  String get tripTransportCar => 'Car';
+  String get tripTransportRoad => 'Road';
 
   @override
   String get tripTransportTrain => 'Train';
-
-  @override
-  String get tripTransportBus => 'Bus';
 
   @override
   String get tripTransportBoat => 'Boat';

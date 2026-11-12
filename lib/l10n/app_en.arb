@@ -779,9 +779,11 @@
   "tripFixedPrice": "Fixed price",
   "tripTravelerFallbackName": "Traveler",
   "tripTransportPlane": "Plane",
-  "tripTransportCar": "Car",
+  "tripTransportRoad": "Road",
+  "@tripTransportRoad": {
+    "description": "Libellé du mode de transport par la route (voiture ou bus) d'un trajet ou d'une demande"
+  },
   "tripTransportTrain": "Train",
-  "tripTransportBus": "Bus",
   "tripTransportBoat": "Boat",
   "tripTransportOther": "Other",
   "tripUrgencyVeryUrgent": "< 3d",

@@ -8,9 +8,8 @@ import 'package:dony/l10n/l10n.dart';
 extension TransportModeL10n on TransportMode {
   String label(AppLocalizations l) => switch (this) {
     TransportMode.plane => l.tripTransportPlane,
-    TransportMode.car => l.tripTransportCar,
+    TransportMode.car || TransportMode.bus => l.tripTransportRoad,
     TransportMode.train => l.tripTransportTrain,
-    TransportMode.bus => l.tripTransportBus,
     TransportMode.boat => l.tripTransportBoat,
     TransportMode.other => l.tripTransportOther,
   };
