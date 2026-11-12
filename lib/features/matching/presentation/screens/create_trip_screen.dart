@@ -2859,18 +2859,25 @@ class _TripFormContentState extends State<_TripFormContent> {
     // Ville identique à celle déjà saisie : le notifier ne notifie pas, le
     // bloc garderait l'ancien code. Resynchronisation explicite.
     _syncCityToFormBloc();
-    _departureTimeNotifier.value = _timeOfDay(t.departureTime);
-    _arrivalTimeNotifier.value = _timeOfDay(t.arrivalTime);
-    // Vol de nuit mémorisé dans le modèle (FLUTTER-4E) ; sans heure
-    // d'arrivée, retour au jour même.
-    _arrivalDayOffsetNotifier.value = _templateArrivalOffset(t);
     // Le mode n'est pas repris du modèle (création seulement) : choisi à
     // l'étape Mode, il prime ; sans étape Mode, c'est l'avion. Un modèle
     // BOAT ou CAR ne change donc jamais en silence le mode du trajet. Un
-    // trajet dédié ne perd jamais le mode de sa demande.
+    // trajet dédié ne perd jamais le mode de sa demande. Posé AVANT le
+    // décalage d'arrivée : sinon `_clampArrivalOffsetToMode` remettrait à 0
+    // un J+3 d'avion venu d'un modèle avion.
     if (!_hasModeStep && !_isLocked) {
       _transportModeNotifier.value = TransportMode.plane;
     }
+    // Mode encore à choisir : celui du modèle est retenu pour le premier
+    // choix (`_clampArrivalOffsetToMode`).
+    _templateMode = _transportModeNotifier.value == null
+        ? transportModeFromWire(t.transportMode)
+        : null;
+    _departureTimeNotifier.value = _timeOfDay(t.departureTime);
+    _arrivalTimeNotifier.value = _timeOfDay(t.arrivalTime);
+    // Vol de nuit mémorisé dans le modèle (FLUTTER-4E), arrivée à J+N d'un
+    // modèle route ; borné au mode choisi.
+    _arrivalDayOffsetNotifier.value = _templateArrivalOffset(t);
     // Valeur optimiste immédiate ; `CapacityUnitChanged` ci-dessous réécrit
     // `availableKg` à `unit.maxKg` (valise 23/32 kg) côté bloc — l'event
     // `AvailableKgChanged` émis juste après restaure la valeur du modèle via
@@ -2940,6 +2947,15 @@ class _TripFormContentState extends State<_TripFormContent> {
         t.usesPriceGrid ? PricingMode.mixed : PricingMode.kg,
       ),
     );
+    // Taille et poids max par colis du modèle, si le mode choisi (ou encore à
+    // choisir) en porte : choisir ensuite l'avion les efface dans le bloc
+    // (`TransportModeChanged`), jamais envoyés en silence.
+    final mode = _transportModeNotifier.value;
+    if (mode == null || mode.hasItemSize) {
+      formBloc
+        ..add(MaxItemSizeChanged(t.maxItemSize))
+        ..add(MaxParcelWeightChanged(t.maxParcelWeightKg));
+    }
 
     DonySnackbar.show(
       context,
@@ -3441,25 +3457,44 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// ramené au jour même, jamais envoyé en silence (Review Focus 4 et 5).
   /// L'ouverture en modification garde la valeur du serveur : seul un
   /// changement de mode passe ici.
+  ///
+  /// Exception : le premier mode choisi après un modèle du MÊME mode garde le
+  /// décalage du modèle jusqu'au maximum du mode (vol avion à J+3 enregistré
+  /// dans le modèle) : ce n'est pas un changement de mode.
   void _clampArrivalOffsetToMode() {
     final mode = _transportModeNotifier.value;
-    if (mode != null &&
-        _arrivalDayOffsetNotifier.value > arrivalChipsMaxDays(mode)) {
+    if (mode == null) return;
+    final templateMode = _templateMode;
+    _templateMode = null;
+    if (_arrivalDayOffsetNotifier.value > _offsetLimit(mode, templateMode)) {
       _arrivalDayOffsetNotifier.value = 0;
     }
   }
 
-  /// Décalage d'arrivée repris d'un modèle. Mode déjà connu : borné à ce mode.
-  /// Mode encore inconnu (étape Mode après le modèle) : gardé tel quel,
-  /// `_clampArrivalOffsetToMode` le ramène au choix du mode.
+  /// Mode du dernier modèle appliqué, tant que le voyageur n'a pas choisi
+  /// son mode (étape Mode après le modèle). Consommé au premier choix.
+  TransportMode? _templateMode;
+
+  /// Plus grand décalage gardé pour [mode] : le maximum du mode quand il est
+  /// celui du modèle, sinon ce que ses puces proposent (route J+3 repassé en
+  /// avion : 0, Review Focus 5).
+  static int _offsetLimit(TransportMode mode, TransportMode? templateMode) =>
+      mode == templateMode ? mode.maxArrivalDays : arrivalChipsMaxDays(mode);
+
+  /// Décalage d'arrivée repris d'un modèle. Mode déjà connu (avion seul,
+  /// trajet dédié) : le mode choisi prime, un décalage hors de ses bornes
+  /// revient au jour même. Mode encore inconnu (étape Mode après le modèle) :
+  /// gardé tel quel, `_clampArrivalOffsetToMode` le borne au choix du mode.
   int _templateArrivalOffset(TripTemplate t) {
     final mode = _transportModeNotifier.value;
     if (mode == null) return t.arrivalDayOffset;
-    return effectiveArrivalOffset(
+    final offset = effectiveArrivalOffset(
       mode: mode,
       hasArrivalTime: t.arrivalTime != null,
       offset: t.arrivalDayOffset,
-    ).clamp(0, mode.maxArrivalDays);
+    );
+    final templateMode = transportModeFromWire(t.transportMode);
+    return offset > _offsetLimit(mode, templateMode) ? 0 : offset;
   }
 
   /// Arrivée du trajet saisi, d'où part la première étape ajoutée

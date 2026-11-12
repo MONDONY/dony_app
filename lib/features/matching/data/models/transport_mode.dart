@@ -114,4 +114,14 @@ abstract final class TripCapacityLimits {
 
   static int maxKgFor(TransportMode mode) =>
       mode.isHeavy ? heavyMaxKg : standardMaxKg;
+
+  /// Série de trajets hors route et bateau : 40 kg (miroir de
+  /// `WeightLimits.PLANE_RECURRENCE_MAX_KG` et `maxRecurrenceCapacity` côté
+  /// back, 422 `trip-capacity-too-high`).
+  static const int standardSeriesMaxKg = 40;
+
+  /// Capacité maximale d'une série de trajets : 40 kg en avion, celle d'un
+  /// trajet en route et en bateau.
+  static int seriesMaxKgFor(TransportMode mode) =>
+      mode.isHeavy ? heavyMaxKg : standardSeriesMaxKg;
 }

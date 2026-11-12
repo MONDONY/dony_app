@@ -6815,6 +6815,184 @@ void main() {
       expect(sentCreate().arrivalDate, wireDay(draftDeparture(), 3));
     });
 
+    // ── Modèle choisi avant le formulaire, puis mode (T5, Review Focus 5) ──
+
+    /// Modèle route J+10, taille L, poids max 50, 1 200 kg, sans heure.
+    TripTemplate roadTemplate({
+      int arrivalDayOffset = 10,
+      String transportMode = 'CAR',
+      String? arrivalTime,
+      int availableKg = 1200,
+      String capacityUnit = 'KG_EXACT',
+    }) => TripTemplate(
+      id: 'tmpl-road',
+      label: 'Dakar → Bamako',
+      departureCity: 'Dakar',
+      arrivalCity: 'Bamako',
+      departureCountryCode: 'SN',
+      arrivalCountryCode: 'ML',
+      transportMode: transportMode,
+      capacityUnit: capacityUnit,
+      availableKg: availableKg,
+      pricePerKg: 8,
+      acceptedCategories: const ['Vêtements'],
+      currency: 'EUR',
+      acceptedPaymentMethods: const ['CASH'],
+      departureTime: '10:00',
+      arrivalTime: arrivalTime,
+      arrivalDayOffset: arrivalDayOffset,
+      handoverLeadDays: 1,
+      pickupAddress: const AddressData(
+        label: 'Colobane',
+        lat: 14.69,
+        lng: -17.45,
+      ),
+      deliveryAddress: const AddressData(
+        label: 'Badalabougou',
+        lat: 12.62,
+        lng: -7.99,
+      ),
+      maxItemSize: ItemSize.l,
+      maxParcelWeightKg: 50,
+    );
+
+    AnnouncementFormBloc formBlocOf(WidgetTester tester) =>
+        BlocProvider.of<AnnouncementFormBloc>(
+          tester.element(find.byType(CaStepperHeader)),
+        );
+
+    int arrivalOffsetOf(WidgetTester tester) => tester
+        .widget<TrajetStep>(find.byType(TrajetStep, skipOffstage: false))
+        .arrivalDayOffsetNotifier!
+        .value;
+
+    /// Modèle reçu par `args.template`, étape Mode affichée, puis [mode].
+    Future<void> templateThenMode(
+      WidgetTester tester,
+      TripTemplate template,
+      String mode,
+    ) async {
+      roadOn();
+      await pumpScreen(tester, CreateTripArgs(template: template));
+      expect(header(tester).current, TripFormStep.mode);
+      await tester.tap(find.byKey(Key('mode-card-$mode')));
+      await tester.pump();
+      // La confirmation « modèle appliqué » couvre le bouton du bas ~4 s.
+      await tester.pump(const Duration(seconds: 5));
+    }
+
+    testWidgets('args.template route J+10 L 1 200 kg, puis mode Avion : '
+        'payload sans taille, décalage 0, Continuer grisé sur 1 200 kg', (
+      tester,
+    ) async {
+      await templateThenMode(tester, roadTemplate(), 'plane');
+
+      expect(arrivalOffsetOf(tester), 0);
+      final state = formBlocOf(tester).state;
+      expect(state.transportMode, TransportMode.plane);
+      expect(state.maxItemSize, isNull);
+      expect(state.maxParcelWeightKg, isNull);
+      expect(state.availableKg, 1200);
+      expect(state.capacityTooHigh, isTrue);
+
+      tester
+              .widget<TrajetStep>(find.byType(TrajetStep, skipOffstage: false))
+              .departureDateNotifier
+              .value =
+          draftDeparture();
+      await tester.pump(const Duration(milliseconds: 300));
+      await _goToStep(tester, TripFormStep.capacite);
+      expect(find.text('Au plus 999 kg pour ce mode'), findsOneWidget);
+      expect(continueButton(tester).onPressed, isNull);
+      expect(find.byKey(const Key('capacity-road-limits')), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('args.template route J+10, mode Route : décalage 10 gardé, '
+        'taille et poids max repris', (tester) async {
+      await templateThenMode(tester, roadTemplate(), 'car');
+      expect(arrivalOffsetOf(tester), 10);
+
+      tester
+              .widget<TrajetStep>(find.byType(TrajetStep, skipOffstage: false))
+              .departureDateNotifier
+              .value =
+          draftDeparture();
+      await tester.pump(const Duration(milliseconds: 300));
+      await _goToStep(tester, TripFormStep.conditions);
+      await publish(tester);
+
+      final sent = sentCreate();
+      expect(sent.transportMode, TransportMode.car);
+      expect(sent.arrivalTime, isNull);
+      expect(sent.arrivalDate, wireDay(draftDeparture(), 10));
+      expect(sent.availableKg, 1200);
+      expect(sent.maxItemSize, ItemSize.l);
+      expect(sent.maxParcelWeightKg, 50);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('args.template avion J+3 avec heure, mode Avion : J+3 gardé '
+        '(même mode que le modèle)', (tester) async {
+      await templateThenMode(
+        tester,
+        roadTemplate(
+          transportMode: 'PLANE',
+          arrivalTime: '06:00',
+          arrivalDayOffset: 3,
+          availableKg: 23,
+          capacityUnit: 'SUITCASE_23KG',
+        ),
+        'plane',
+      );
+      expect(arrivalOffsetOf(tester), 3);
+      final state = formBlocOf(tester).state;
+      expect(state.maxItemSize, isNull);
+      expect(state.maxParcelWeightKg, isNull);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('args.template route J+3 avec heure, mode Avion : décalage 0 '
+        '(mode différent, puces avion 0 à 2)', (tester) async {
+      await templateThenMode(
+        tester,
+        roadTemplate(arrivalTime: '06:00', arrivalDayOffset: 3),
+        'plane',
+      );
+      expect(arrivalOffsetOf(tester), 0);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('avion seul : modèle route J+10 appliqué en avion, décalage 0 '
+        'et ni taille ni poids max', (tester) async {
+      await pumpScreen(tester, CreateTripArgs(template: roadTemplate()));
+      expect(header(tester).current, TripFormStep.trajet);
+      expect(arrivalOffsetOf(tester), 0);
+      final state = formBlocOf(tester).state;
+      expect(state.maxItemSize, isNull);
+      expect(state.maxParcelWeightKg, isNull);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('avion seul : modèle avion J+3 avec heure gardé à J+3', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          template: roadTemplate(
+            transportMode: 'PLANE',
+            arrivalTime: '06:00',
+            arrivalDayOffset: 3,
+            availableKg: 23,
+            capacityUnit: 'SUITCASE_23KG',
+          ),
+        ),
+      );
+      expect(arrivalOffsetOf(tester), 3);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
     testWidgets('étape Trajet en route : pas d\'heure d\'arrivée, Autre date '
         'ouvre le sélecteur J+3..J+14', (tester) async {
       roadOn();

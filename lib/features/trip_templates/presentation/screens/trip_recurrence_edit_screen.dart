@@ -8,9 +8,13 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_event.dart';
@@ -89,9 +93,32 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
   bool get _priceOutOfBounds =>
       unitPriceOutOfBounds(widget.template.pricePerKg, _currency) != null;
 
+  /// Mode des trajets générés (avion pour un mode illisible : bornes les
+  /// plus strictes).
+  TransportMode get _mode => transportModeOrPlane(
+    transportModeFromWire(widget.template.transportMode),
+  );
+
+  /// Capacité du modèle au-dessus du plafond d'une série (40 kg en avion) :
+  /// le serveur refuserait la série (422 `trip-capacity-too-high`). Le kilo
+  /// libre n'a qu'une capacité technique.
+  bool get _capacityTooHigh =>
+      widget.template.capacityUnit != 'KG_FREE' &&
+      widget.template.availableKg > TripCapacityLimits.seriesMaxKgFor(_mode);
+
+  /// Décalage d'arrivée de chaque trajet généré : en route il compte même
+  /// sans heure d'arrivée (C28), borné au maximum du mode (un ancien modèle
+  /// ne fait jamais refuser la série en `arrival-too-far`).
+  int get _arrivalDayOffset => effectiveArrivalOffset(
+    mode: _mode,
+    hasArrivalTime: widget.template.arrivalTime != null,
+    offset: widget.template.arrivalDayOffset,
+  ).clamp(0, _mode.maxArrivalDays);
+
   bool get _isValid =>
       _hasPricePerKg &&
       !_priceOutOfBounds &&
+      !_capacityTooHigh &&
       _days.contains(true) &&
       _pickup != null &&
       _delivery != null;
@@ -146,14 +173,22 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
       },
       'departureTime': _timeWire,
       'arrivalTime': t.arrivalTime,
-      // Vol de nuit du modèle : chaque occurrence publiée arrive le lendemain.
-      'arrivalDayOffset': t.arrivalTime == null ? 0 : t.arrivalDayOffset,
+      // Vol de nuit du modèle (FLUTTER-4E) ou arrivée en route à J+N.
+      'arrivalDayOffset': _arrivalDayOffset,
       'currency': _currency.code,
       'cashAccepted': !cardOn || _cashWanted.value,
       if (cardAvailable) 'cardAccepted': cardOn,
       'weekdays': _weekdaysString,
       'horizonDays': 14,
       'active': _active,
+      // Taille et poids max par colis : route seulement, absents sinon.
+      ...itemSizeEntry(
+        'maxItemSize',
+        FieldChange.ofNullable(_mode.hasItemSize ? t.maxItemSize : null),
+      ),
+      ...maxParcelWeightEntry(
+        FieldChange.ofNullable(_mode.hasItemSize ? t.maxParcelWeightKg : null),
+      ),
     };
     context.read<TripRecurrenceBloc>().add(TripRecurrenceCreated(data));
   }
@@ -261,6 +296,28 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                               _currency,
                             ) ??
                             '',
+                        style: tt.bodySmall?.copyWith(color: cs.error),
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 20.ms, duration: 280.ms),
+              ],
+              if (_capacityTooHigh) ...[
+                const SizedBox(height: DonySpacing.sm),
+                Row(
+                  key: const Key('recurrence-capacity-too-high'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DonyIcon('triangle-alert', size: 16, color: cs.error),
+                    const SizedBox(width: DonySpacing.xs),
+                    Expanded(
+                      child: Text(
+                        l.tripPublishCapacityTooHigh(
+                          formatWeightKg(
+                            l,
+                            TripCapacityLimits.seriesMaxKgFor(_mode).toDouble(),
+                          ),
+                        ),
                         style: tt.bodySmall?.copyWith(color: cs.error),
                       ),
                     ),

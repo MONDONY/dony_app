@@ -78,8 +78,8 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   final _labelCtrl = TextEditingController();
   final _step = ValueNotifier<int>(0);
   final _handoverLeadDays = ValueNotifier<int?>(null);
-  // Jour d'arrivée relatif au départ (FLUTTER-4E), proposé une fois l'heure
-  // d'arrivée posée.
+  // Jour d'arrivée relatif au départ (FLUTTER-4E) : en avion, proposé une
+  // fois l'heure d'arrivée posée ; en route, toujours (J+14, sans heure).
   final _arrivalDayOffset = ValueNotifier<int>(0);
   final _canContinue = ValueNotifier<bool>(false);
   bool _submitted = false;
@@ -122,6 +122,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     }
     _labelCtrl.addListener(_recomputeCanContinue);
     _fields.arrivalTime.addListener(_onArrivalTimeChanged);
+    _fields.transportMode.addListener(_onTransportModeChanged);
     _fields.departureCity.addListener(_recomputeCanContinue);
     _fields.arrivalCity.addListener(_recomputeCanContinue);
     _step.addListener(_recomputeCanContinue);
@@ -204,13 +205,18 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     // Mode du modèle gardé tel quel (route, bateau...) : jamais ramené à
     // l'avion. Un mode illisible reste nul, `_buildPayload` renvoie alors la
     // valeur d'origine.
-    _fields.transportMode.value = transportModeFromWire(t.transportMode);
+    final mode = transportModeFromWire(t.transportMode);
+    _fields.transportMode.value = mode;
     _fields.departureTime.value = _timeOfDay(t.departureTime);
     _fields.arrivalTime.value = _timeOfDay(t.arrivalTime);
     _handoverLeadDays.value = t.handoverLeadDays;
     // Après l'heure d'arrivée : `_onArrivalTimeChanged` ne doit pas écraser
-    // le jour mémorisé dans le modèle.
-    _arrivalDayOffset.value = t.arrivalTime == null ? 0 : t.arrivalDayOffset;
+    // le jour mémorisé dans le modèle. En route, le jour compte sans heure.
+    _arrivalDayOffset.value = effectiveArrivalOffset(
+      mode: mode,
+      hasArrivalTime: t.arrivalTime != null,
+      offset: t.arrivalDayOffset,
+    );
     _prefillConditions(t);
   }
 
@@ -248,9 +254,16 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     // du `build()` recopie ensuite `state.availableKg` dans
     // `_fields.availableKg`, seul point d'écriture attendu par
     // `CapacityControl` (Tâche 1, constat #1).
+    //
+    // Le mode part en premier : il fixe le plafond de capacité (tonnes en
+    // route), retire les valises en route et efface taille et poids max hors
+    // route. Taille et poids max du modèle sont repris en dernier : sans eux
+    // dans le bloc, modifier seulement le nom les effacerait.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final formBloc = context.read<AnnouncementFormBloc>();
+      final mode = _fields.transportMode.value;
+      if (mode != null) formBloc.add(TransportModeChanged(mode));
       final unit = switch (t.capacityUnit) {
         'KG_FREE' => CapacityUnit.kgFree,
         'SUITCASE_32KG' => CapacityUnit.suitcase32kg,
@@ -264,6 +277,11 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
           t.usesPriceGrid ? PricingMode.mixed : PricingMode.kg,
         ),
       );
+      if (mode != null && mode.hasItemSize) {
+        formBloc
+          ..add(MaxItemSizeChanged(t.maxItemSize))
+          ..add(MaxParcelWeightChanged(t.maxParcelWeightKg));
+      }
     });
   }
 
@@ -278,8 +296,9 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       : '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
   /// Étape 0 : nom, villes et transport. Étape 1 (Lieux & capacité) :
-  /// adresses optionnelles dans un modèle, toujours valide. Étape 2 (Prix &
-  /// conditions) : prix requis si le tarif au kilo est actif, borné par
+  /// adresses optionnelles dans un modèle ; capacité sous le plafond du mode
+  /// et poids max par colis dans ses bornes (taille facultative). Étape 2
+  /// (Prix & conditions) : prix requis si le tarif au kilo est actif, borné par
   /// [minUnitPriceFor] et [maxUnitPriceFor] si c'est un prix libre
   /// (FLUTTER-GK).
   void _recomputeCanContinue() {
@@ -297,7 +316,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     }
     _canContinue.value = switch (_step.value) {
       0 => step0Ok,
-      1 => true,
+      1 => context.read<AnnouncementFormBloc>().state.isCapacityStepValid,
       _ => step2Ok,
     };
   }
@@ -308,7 +327,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   void _onArrivalTimeChanged() {
     final arrival = _fields.arrivalTime.value;
     if (arrival == null) {
-      _arrivalDayOffset.value = 0;
+      if (!_isRoad) _arrivalDayOffset.value = 0;
       return;
     }
     final departure = _fields.departureTime.value;
@@ -317,6 +336,21 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
         arrival.hour * 60 + arrival.minute <=
             departure.hour * 60 + departure.minute) {
       _arrivalDayOffset.value = 1;
+    }
+  }
+
+  bool get _isRoad => _fields.transportMode.value?.isRoad ?? false;
+
+  /// Changement de mode : le bloc le connaît (plafond de capacité, valises,
+  /// taille et poids max effacés hors route) ; un décalage au-delà des puces
+  /// du nouveau mode (route J+10 repassé en avion) revient au jour même,
+  /// comme à la création d'un trajet.
+  void _onTransportModeChanged() {
+    final mode = _fields.transportMode.value;
+    if (mode == null) return;
+    context.read<AnnouncementFormBloc>().add(TransportModeChanged(mode));
+    if (_arrivalDayOffset.value > arrivalChipsMaxDays(mode)) {
+      _arrivalDayOffset.value = 0;
     }
   }
 
@@ -335,6 +369,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _step.dispose();
     _handoverLeadDays.dispose();
     _fields.arrivalTime.removeListener(_onArrivalTimeChanged);
+    _fields.transportMode.removeListener(_onTransportModeChanged);
     _arrivalDayOffset.dispose();
     _canContinue.dispose();
     _fields.dispose();
@@ -351,17 +386,22 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     return widget.template?.transportMode ?? 'PLANE';
   }
 
-  /// Payload complet envoyé au bloc : les trois étapes (Trajet, Lieux &
-  /// capacité, Prix & conditions), sérialisées par `TripTemplate.toJson` —
-  /// même mapping adresse/champs que le modèle chargé depuis le repository,
-  /// pas de duplication locale (constat #10).
-  Map<String, dynamic> _buildPayload(BuildContext context) {
+  /// Modèle complet tel qu'il sera envoyé : les trois étapes (Trajet, Lieux &
+  /// capacité, Prix & conditions), sérialisées par `TripTemplate.toJson`
+  /// (création) ou `toUpdateJson` (modification) — même mapping
+  /// adresse/champs que le modèle chargé depuis le repository, pas de
+  /// duplication locale (constat #10).
+  TripTemplate _buildTemplate(BuildContext context) {
     final formState = context.read<AnnouncementFormBloc>().state;
     final stripeState = context.read<StripeAccountBloc>().state;
     final stripeConfigured =
         stripeState is StripeAccountReady &&
         stripeState.accountStatus.isComplete;
-    final template = TripTemplate(
+    final modeWire = _modeWire();
+    final mode = _fields.transportMode.value ?? transportModeFromWire(modeWire);
+    // Taille et poids max par colis : route seulement, jamais un champ caché.
+    final hasParcelLimits = mode?.hasItemSize ?? false;
+    return TripTemplate(
       id: widget.template?.id ?? '',
       label: _labelCtrl.text.trim(),
       emoji: widget.template?.emoji,
@@ -373,7 +413,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       arrivalLng: widget.template?.arrivalLng,
       departureCountryCode: _fields.departureCountryCode.value,
       arrivalCountryCode: _fields.arrivalCountryCode.value,
-      transportMode: _modeWire(),
+      transportMode: modeWire,
       capacityUnit: formState.capacityUnit.toWire(),
       availableKg: _fields.availableKg.value.round(),
       pricingMode: formState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG',
@@ -404,21 +444,28 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       departureTime: _wire(_fields.departureTime.value),
       arrivalTime: _wire(_fields.arrivalTime.value),
       handoverLeadDays: _handoverLeadDays.value,
-      arrivalDayOffset: _fields.arrivalTime.value == null
-          ? 0
-          : _arrivalDayOffset.value,
+      arrivalDayOffset: effectiveArrivalOffset(
+        mode: mode,
+        hasArrivalTime: _fields.arrivalTime.value != null,
+        offset: _arrivalDayOffset.value,
+      ),
+      maxItemSize: hasParcelLimits ? formState.maxItemSize : null,
+      maxParcelWeightKg: hasParcelLimits ? formState.maxParcelWeightKg : null,
     );
-    return template.toJson();
   }
 
   void _submit(BuildContext context) {
     _submitted = true;
-    final data = _buildPayload(context);
+    final template = _buildTemplate(context);
     final bloc = context.read<TripTemplateBloc>();
     if (_isEditing) {
-      bloc.add(TripTemplateUpdated(widget.template!.id, data));
+      // Modification : une taille ou un poids max vide (aucune limite, ou
+      // mode sans taille) efface la valeur enregistrée.
+      bloc.add(
+        TripTemplateUpdated(widget.template!.id, template.toUpdateJson()),
+      );
     } else {
-      bloc.add(TripTemplateCreated(data));
+      bloc.add(TripTemplateCreated(template.toJson()));
     }
   }
 
@@ -431,8 +478,13 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     // payload (constat #1) : `CapacityControl` n'écrit que dans le bloc,
     // `_buildPayload` ne lisait que `_fields.availableKg`.
     return BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
-      listenWhen: (prev, curr) => prev.availableKg != curr.availableKg,
+      listenWhen: (prev, curr) =>
+          prev.availableKg != curr.availableKg ||
+          prev.isCapacityStepValid != curr.isCapacityStepValid,
       listener: (context, formState) {
+        // Capacité au-dessus du plafond du mode ou poids max hors bornes :
+        // « Continuer » de l'étape Lieux & capacité suit.
+        _recomputeCanContinue();
         final kg = formState.availableKg ?? 0.0;
         if (kg == _fields.availableKg.value) return;
         _applyingKgFromBloc = true;
@@ -633,20 +685,40 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
         time: _fields.departureTime,
       ),
       const SizedBox(height: DonySpacing.sm),
-      _TimeRow(
-        icon: 'flag',
-        label: l.tripTemplateArrivalTimeFieldLabel,
-        shortLabel: l.tripTemplateArrivalShortLabel,
-        time: _fields.arrivalTime,
-      ),
-      ValueListenableBuilder<TimeOfDay?>(
-        valueListenable: _fields.arrivalTime,
-        builder: (context, arrival, _) => arrival == null
-            ? const SizedBox.shrink()
-            : Padding(
-                padding: const EdgeInsets.only(top: DonySpacing.sm),
-                child: ArrivalDayChips(notifier: _arrivalDayOffset),
-              ),
+      // Route (C28) : pas d'heure d'arrivée, puces jusqu'à J+14 avec « Autre
+      // date » en jours (pas de date de départ dans un modèle, D17). Un ancien
+      // modèle route qui porte une heure d'arrivée la garde, effaçable.
+      // Avion : puces 0 à 2, seulement une fois l'heure d'arrivée posée.
+      ListenableBuilder(
+        listenable: Listenable.merge([
+          _fields.arrivalTime,
+          _fields.transportMode,
+        ]),
+        builder: (context, _) {
+          final mode = _fields.transportMode.value;
+          final hasArrival = _fields.arrivalTime.value != null;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!_isRoad || hasArrival)
+                _TimeRow(
+                  key: const Key('trip-template-arrival-time'),
+                  icon: 'flag',
+                  label: l.tripTemplateArrivalTimeFieldLabel,
+                  shortLabel: l.tripTemplateArrivalShortLabel,
+                  time: _fields.arrivalTime,
+                ),
+              if (_isRoad || hasArrival)
+                Padding(
+                  padding: const EdgeInsets.only(top: DonySpacing.sm),
+                  child: ArrivalDayChips(
+                    notifier: _arrivalDayOffset,
+                    maxDays: arrivalChipsMaxDays(mode),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
       const SizedBox(height: DonySpacing.xxl),
 
@@ -764,6 +836,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 /// avec un bouton d'effacement quand une heure est choisie.
 class _TimeRow extends StatelessWidget {
   const _TimeRow({
+    super.key,
     required this.icon,
     required this.label,
     required this.shortLabel,

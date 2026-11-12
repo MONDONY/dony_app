@@ -154,5 +154,13 @@ void main() {
       expect(TripCapacityLimits.maxKgFor(TransportMode.bus), 999999);
       expect(TripCapacityLimits.maxKgFor(TransportMode.boat), 999999);
     });
+
+    test('capacité max d\'une série : 40 kg en avion, tonnes en route', () {
+      expect(TripCapacityLimits.seriesMaxKgFor(TransportMode.plane), 40);
+      expect(TripCapacityLimits.seriesMaxKgFor(TransportMode.train), 40);
+      expect(TripCapacityLimits.seriesMaxKgFor(TransportMode.car), 999999);
+      expect(TripCapacityLimits.seriesMaxKgFor(TransportMode.bus), 999999);
+      expect(TripCapacityLimits.seriesMaxKgFor(TransportMode.boat), 999999);
+    });
   });
 }
