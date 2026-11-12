@@ -1,5 +1,6 @@
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_route.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet_perforation.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 const _longDep = 'Fontenay-le-Fleury-sous-Bois';
 const _longArr = 'Saint-Germain-en-Laye-Centre';
@@ -184,6 +186,117 @@ void main() {
       const BilletRoute(departureCity: 'Paris', arrivalCity: 'Dakar'),
     );
     expect(find.byType(BilletPerforation), findsNothing);
+  });
+
+  group('icône et villes selon le mode', () {
+    testWidgets('avion : codes IATA, villes dessous, icône plane', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        const BilletRoute(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          transportMode: TransportMode.plane,
+        ),
+      );
+      expect(find.text('CDG'), findsOneWidget);
+      expect(find.text('DSS'), findsOneWidget);
+      expect(find.byKey(const Key('billet_departure_city')), findsOneWidget);
+      expect(findDonyIcon('plane'), findsOneWidget);
+    });
+
+    testWidgets('mode absent (ancien trajet) : comme l\'avion', (tester) async {
+      await _pump(
+        tester,
+        const BilletRoute(departureCity: 'Paris', arrivalCity: 'Dakar'),
+      );
+      expect(find.text('CDG'), findsOneWidget);
+      expect(find.text('DSS'), findsOneWidget);
+      expect(findDonyIcon('plane'), findsOneWidget);
+    });
+
+    testWidgets('route : nom de ville en grand, ni code ni avion', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        const BilletRoute(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          transportMode: TransportMode.car,
+        ),
+      );
+      expect(find.text('CDG'), findsNothing);
+      expect(find.text('DSS'), findsNothing);
+      // Un seul texte par ville : pas de ligne secondaire.
+      expect(find.text('Paris'), findsOneWidget);
+      expect(find.text('Dakar'), findsOneWidget);
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+      expect(find.bySemanticsLabel('Paris → Dakar'), findsOneWidget);
+    });
+
+    testWidgets('bateau : icône ship, ni code ni avion', (tester) async {
+      await _pump(
+        tester,
+        const BilletRoute(
+          departureCity: 'Marseille',
+          arrivalCity: 'Abidjan',
+          transportMode: TransportMode.boat,
+        ),
+      );
+      expect(find.text('MRS'), findsNothing);
+      expect(find.text('ABJ'), findsNothing);
+      expect(findDonyIcon('ship'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('bus : affiché comme la route (icône car)', (tester) async {
+      await _pump(
+        tester,
+        const BilletRoute(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          transportMode: TransportMode.bus,
+        ),
+      );
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('train : icône neutre route', (tester) async {
+      await _pump(
+        tester,
+        const BilletRoute(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          transportMode: TransportMode.train,
+        ),
+      );
+      expect(findDonyIcon('route'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    for (final width in [360.0, 414.0]) {
+      testWidgets(
+        'route, villes longues jamais tronquées (${width.toInt()} px)',
+        (tester) async {
+          await _pump(
+            tester,
+            const BilletRoute(
+              departureCity: _longDep,
+              arrivalCity: _longArr,
+              transportMode: TransportMode.car,
+            ),
+            width: width,
+          );
+          expect(find.text(_longDep), findsOneWidget);
+          expect(find.text(_longArr), findsOneWidget);
+          _expectNeverTruncated(tester);
+        },
+      );
+    }
   });
 
   testWidgets('FLUTTER-Q1 : encoches de la perforation dessinées et cerclées', (

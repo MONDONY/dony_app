@@ -1,9 +1,12 @@
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../../helpers/plane_icon_expectations.dart';
 
 /// [RouteLabel] sous le vrai thème de l'app, à la largeur d'un téléphone
 /// (390 px) et à la taille de texte demandée.
@@ -75,16 +78,16 @@ void main() {
       expect(plain, startsWith('Paris'));
       expect(plain, endsWith('Dakar'));
       expect(plain, isNot(contains('→')));
-      expect(find.byIcon(Icons.flight_rounded), findsOneWidget);
+      expect(findDonyIcon('plane'), findsOneWidget);
       // L'avion pointe dans le sens du trajet.
       expect(
         find.ancestor(
-          of: find.byIcon(Icons.flight_rounded),
+          of: findDonyIcon('plane'),
           matching: find.byType(RotatedBox),
         ),
         findsOneWidget,
       );
-      final icon = tester.widget<Icon>(find.byIcon(Icons.flight_rounded));
+      final icon = tester.widget<DonyIcon>(findDonyIcon('plane'));
       expect(
         icon.color,
         Theme.of(tester.element(find.byType(RouteLabel))).colorScheme.primary,
@@ -139,7 +142,7 @@ void main() {
     for (final mode in TransportMode.values) {
       await _pump(tester, mode: mode);
       expect(tester.takeException(), isNull);
-      expect(find.byIcon(mode.icon), findsOneWidget, reason: '$mode');
+      expect(findDonyIcon(mode.iconAsset), findsOneWidget, reason: '$mode');
       expect(find.byIcon(Icons.local_shipping), findsNothing);
       expect(find.byIcon(Icons.local_shipping_rounded), findsNothing);
       expect(find.byIcon(Icons.local_shipping_outlined), findsNothing);
@@ -149,6 +152,29 @@ void main() {
         mode == TransportMode.plane ? findsOneWidget : findsNothing,
       );
     }
+  });
+
+  testWidgets('bateau : icône ship, non tournée, aucun avion', (tester) async {
+    await _pump(tester, mode: TransportMode.boat);
+    expect(tester.takeException(), isNull);
+    expect(findDonyIcon('ship'), findsOneWidget);
+    expect(find.byType(RotatedBox), findsNothing);
+    expectNoPlaneIcon(tester);
+  });
+
+  testWidgets('route et bus : icône car, aucun avion', (tester) async {
+    for (final mode in [TransportMode.car, TransportMode.bus]) {
+      await _pump(tester, mode: mode);
+      expect(findDonyIcon('car'), findsOneWidget, reason: '$mode');
+      expect(find.byType(RotatedBox), findsNothing, reason: '$mode');
+      expectNoPlaneIcon(tester);
+    }
+  });
+
+  testWidgets('mode absent : avion tourné (anciens colis)', (tester) async {
+    await _pump(tester);
+    expect(findDonyIcon('plane'), findsOneWidget);
+    expect(find.byType(RotatedBox), findsOneWidget);
   });
 
   testWidgets('lu « De … à … », icône exclue', (tester) async {

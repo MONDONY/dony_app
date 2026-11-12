@@ -1,4 +1,6 @@
-/// IATA airport codes for Yadony departure and arrival cities.
+/// Codes d'aéroport IATA des villes de départ et d'arrivée Yadony : avion
+/// seulement. Un trajet en route ou en bateau affiche le nom de la ville, jamais
+/// ce code.
 ///
 /// Clés et valeurs = données de catalogue (noms de ville comparés, codes
 /// IATA), jamais du texte affiché tel quel.
