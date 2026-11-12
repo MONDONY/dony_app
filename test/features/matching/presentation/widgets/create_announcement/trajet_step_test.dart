@@ -160,6 +160,49 @@ void main() {
     });
   });
 
+  group('Aperçu du corridor selon le mode', () {
+    Future<void> pumpCorridor(WidgetTester tester, TransportMode? mode) async {
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          transportModeNotifier: mode == null
+              ? null
+              : ValueNotifier<TransportMode?>(mode),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    testWidgets('route : noms des villes, pas de codes d\'aéroport', (
+      tester,
+    ) async {
+      await pumpCorridor(tester, TransportMode.car);
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+      expect(find.textContaining('CDG'), findsNothing);
+    });
+
+    testWidgets('bateau : noms des villes', (tester) async {
+      await pumpCorridor(tester, TransportMode.boat);
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+    });
+
+    testWidgets('avion : codes d\'aéroport', (tester) async {
+      await pumpCorridor(tester, TransportMode.plane);
+      expect(find.textContaining('CDG'), findsOneWidget);
+      expect(find.text('Paris → Dakar'), findsNothing);
+    });
+
+    testWidgets('mode inconnu (ancien appelant) : codes d\'aéroport', (
+      tester,
+    ) async {
+      await pumpCorridor(tester, null);
+      expect(find.textContaining('CDG'), findsOneWidget);
+    });
+  });
+
   group('M4 — Uniformité visuelle champs heure/date', () {
     testWidgets(
       'les champs heure et date sont rendus via DonyTextField.tappable (InputDecorator)',

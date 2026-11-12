@@ -193,6 +193,7 @@ class TrajetStep extends StatelessWidget {
           departureTimeNotifier,
           arrivalTimeNotifier,
           ?arrivalDayOffsetNotifier,
+          ?transportModeNotifier,
         ]),
         builder: (context, _) {
           final dep = departureCityNotifier.value;
@@ -200,8 +201,14 @@ class TrajetStep extends StatelessWidget {
           if (dep == null || arr == null) {
             return const SizedBox.shrink();
           }
-          final depCode = cityAirportCode(dep, departure: true);
-          final arrCode = cityAirportCode(arr, departure: false);
+          // Codes d'aéroport seulement en avion (ou mode inconnu, ancien
+          // comportement) ; route et bateau affichent le nom des villes.
+          final mode = transportModeNotifier?.value;
+          final useAirportCodes = mode == null || mode.usesAirportCodes;
+          final depCode =
+              useAirportCodes ? cityAirportCode(dep, departure: true) : dep;
+          final arrCode =
+              useAirportCodes ? cityAirportCode(arr, departure: false) : arr;
           final dateStr = _formatCorridorDateTime(l.localeName);
           return Column(
             children: [
