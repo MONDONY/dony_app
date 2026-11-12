@@ -117,7 +117,9 @@ String? tripMaxParcelLine(AppLocalizations l, AnnouncementModel a) {
 }
 
 /// Jours de route d'un trajet en voiture ou en bus dont l'arrivée est datée
-/// (au moins 1) ; `null` sinon.
+/// (au moins 1) ; `null` sinon. Les dates se lisent en jours calendaires
+/// (année, mois, jour tels que servis), sans heure ni fuseau : un changement
+/// d'heure ou une date en UTC ne décale jamais le compte.
 int? tripRoadDays(AnnouncementModel a) {
   final mode = a.transportMode;
   final arrival = a.arrivalDate;

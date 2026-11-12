@@ -8,6 +8,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_header.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -19,6 +20,7 @@ AnnouncementModel _trip({
   ItemSize? size,
   double? maxParcelKg,
   DateTime? arrival,
+  int? viewers,
 }) => AnnouncementModel(
   id: 'a1',
   travelerId: 't1',
@@ -34,6 +36,7 @@ AnnouncementModel _trip({
   transportMode: mode,
   maxItemSize: size,
   maxParcelWeightKg: maxParcelKg,
+  uniqueViewerCount: viewers,
   createdAt: DateTime(2026, 11),
   updatedAt: DateTime(2026, 11),
   traveler: const TravelerProfile(
@@ -177,6 +180,54 @@ void main() {
       }
     });
   }
+
+  group('TravelerCard : dates et durée sans troncature à 360 dp', () {
+    for (final compact in [false, true]) {
+      for (final locale in [AppL10n.fr, AppL10n.en]) {
+        for (final own in [false, true]) {
+          testWidgets(
+            '${compact ? "compacte" : "normale"} ${locale.languageCode}'
+            '${own ? " (mon trajet, audience)" : ""} : durée entière, aucun '
+            'point de suspension',
+            (tester) async {
+              final duration = locale == AppL10n.fr
+                  ? '22 jours de route'
+                  : '22 days on the road';
+              await _pump(
+                tester,
+                TravelerCard(
+                  announcement: _trip(
+                    size: ItemSize.xl,
+                    arrival: DateTime(2026, 12, 6),
+                    viewers: own ? 128 : null,
+                  ),
+                  index: 0,
+                  isOwnAnnouncement: own,
+                  compact: compact,
+                  onTap: () {},
+                ),
+                locale: locale,
+              );
+              expect(tester.takeException(), isNull);
+              final paragraph = tester.renderObject<RenderParagraph>(
+                find.text(duration),
+              );
+              expect(paragraph.didExceedMaxLines, isFalse);
+              // Une seule ligne de texte pleine : pas de coupure au milieu.
+              expect(
+                paragraph.size.height,
+                lessThan(paragraph.text.style!.fontSize! * 2),
+              );
+              final dates = tester.renderObject<RenderParagraph>(
+                find.textContaining('→'),
+              );
+              expect(dates.didExceedMaxLines, isFalse);
+            },
+          );
+        }
+      }
+    }
+  });
 
   group('TripCard (mes trajets)', () {
     testWidgets('route : pied « 1 200 kg disponibles, jusqu\'à taille M »', (

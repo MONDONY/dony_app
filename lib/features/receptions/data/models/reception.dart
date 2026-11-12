@@ -1,4 +1,3 @@
-import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 
 /// Un colis que l'utilisateur va recevoir : l'expéditeur a saisi son numéro
@@ -34,7 +33,6 @@ class Reception {
     this.canRate = false,
     this.myRating,
     this.transportMode,
-    this.itemSize,
   });
 
   static const pending = 'PENDING';
@@ -90,10 +88,6 @@ class Reception {
   /// retombe alors sur l'icône neutre, jamais sur un avion.
   final TransportMode? transportMode;
 
-  /// Taille du colis choisie par l'expéditeur (trajet en route). `null` :
-  /// non renseignée, ou back qui ne la sert pas.
-  final ItemSize? itemSize;
-
   /// Copie après une note acceptée par le serveur, quand le rechargement du
   /// détail échoue : l'écran montre la note plutôt que de la reproposer.
   Reception withMyRating(int stars) => Reception(
@@ -118,7 +112,6 @@ class Reception {
     senderAvatarUrl: senderAvatarUrl,
     myRating: stars,
     transportMode: transportMode,
-    itemSize: itemSize,
   );
 
   /// Mode à dessiner pour le corridor : un back qui ne sert pas encore le mode
@@ -202,7 +195,6 @@ class Reception {
       canRate: json['canRate'] == true,
       myRating: stars('myRating'),
       transportMode: transportModeFromWire(text('transportMode')),
-      itemSize: itemSizeFromWire(json['itemSize']),
     );
   }
 }

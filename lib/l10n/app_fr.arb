@@ -23629,14 +23629,6 @@
   "@requestCreateWeightTooHeavyForMode": {
     "description": "Erreur du champ poids : plus de 32 kg en avion ou « peu importe » (step_2_details.dart)"
   },
-  "requestSummaryWeightAndSize": "{kg}, taille {size}",
-  "@requestSummaryWeightAndSize": {
-    "description": "Poids puis taille du colis dans la carte récapitulative ({kg} déjà avec son unité) (wizard_summary_card.dart)",
-    "placeholders": {
-      "kg": {"type": "String"},
-      "size": {"type": "String"}
-    }
-  },
   "tripCapacityUpToSize": "{kg}, jusqu'à taille {size}",
   "@tripCapacityUpToSize": {
     "description": "Capacité d'un trajet en route avec sa taille maximale de colis, sur les cartes et la fiche ({kg} déjà avec son unité) (traveler_card.dart, trip_billet_card.dart)",
@@ -23675,7 +23667,7 @@
   },
   "parcelWeightAndSize": "{kg} · taille {size}",
   "@parcelWeightAndSize": {
-    "description": "Poids puis taille d'un colis ou d'une demande quand la taille est connue ({kg} déjà avec son unité) (package_request_list_card.dart, request_ticket_card.dart, colis_destinataire_card.dart, reception_detail_screen.dart)",
+    "description": "Poids puis taille d'un colis ou d'une demande quand la taille est connue, séparés par un point médian ({kg} déjà avec son unité) (package_request_list_card.dart, request_ticket_card.dart, colis_destinataire_card.dart, wizard_summary_card.dart)",
     "placeholders": {
       "kg": {"type": "String"},
       "size": {"type": "String"}

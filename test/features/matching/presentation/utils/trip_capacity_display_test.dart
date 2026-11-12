@@ -153,6 +153,30 @@ void main() {
       expect(en.tripRoadDuration(5), '5 days on the road');
     });
 
+    test('dates calendaires : UTC et changement d\'heure ne décalent rien', () {
+      // Arrivée servie en UTC tard le soir, départ en heure locale.
+      expect(
+        tripRoadDays(_trip(arrival: DateTime.utc(2026, 11, 19, 23, 30))),
+        5,
+      );
+      // Fin de l'heure d'été (25 oct. 2026) : 7 jours calendaires, pas 6,96.
+      final dst = AnnouncementModel(
+        id: 'a2',
+        travelerId: 't1',
+        departureCity: 'Paris',
+        arrivalCity: 'Bamako',
+        departureDate: DateTime(2026, 10, 24, 23),
+        arrivalDate: DateTime(2026, 10, 31, 1),
+        availableKg: 10,
+        totalKg: 10,
+        status: 'ACTIVE',
+        transportMode: TransportMode.car,
+        createdAt: DateTime(2026, 10),
+        updatedAt: DateTime(2026, 10),
+      );
+      expect(tripRoadDays(dst), 7);
+    });
+
     test('sans arrivée, même jour, bateau, avion : rien', () {
       expect(tripRoadDays(_trip()), isNull);
       expect(tripRoadDays(_trip(arrival: DateTime(2026, 11, 14, 23))), isNull);

@@ -1,9 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
-import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -231,7 +231,7 @@ class TripDetailBottomSheet extends StatelessWidget {
           _InfoRow(
             icon: '📦',
             label: l.bidCreateWeightLabel,
-            value: '${formatKg(l, parcelWeightKg!)} kg',
+            value: formatWeightKg(l, parcelWeightKg!),
           ),
         // Le restant d'un trajet dédié vaut toujours 0, et celui d'un trajet
         // plein aussi : « 0 kg disponible » se lisait comme une erreur.
@@ -239,7 +239,9 @@ class TripDetailBottomSheet extends StatelessWidget {
           _InfoRow(
             icon: '⚖️',
             label: l.negotiationTripAvailableWeightLabel,
-            value: trip.isKgFree ? l.tripKgFree : '${trip.availableKg} kg',
+            value: trip.isKgFree
+                ? l.tripKgFree
+                : formatWeightKg(l, trip.availableKg.toDouble()),
           ),
         if (trip.pickupAddressLabel != null)
           _InfoRow(

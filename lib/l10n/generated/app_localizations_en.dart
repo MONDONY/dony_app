@@ -24193,11 +24193,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Above 32 kg, choose Road in the previous step.';
 
   @override
-  String requestSummaryWeightAndSize(String kg, String size) {
-    return '$kg, size $size';
-  }
-
-  @override
   String tripCapacityUpToSize(String kg, String size) {
     return '$kg, up to size $size';
   }

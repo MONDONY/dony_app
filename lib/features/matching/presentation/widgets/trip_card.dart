@@ -136,11 +136,8 @@ class TripCard extends StatelessWidget {
     return DateFormat.yMMMEd(l.localeName).format(announcement.departureDate);
   }
 
-  /// Formats a kg value: drops .0 suffix for whole numbers. À partir d'une
-  /// tonne, les milliers sont groupés (« 1 200 kg »).
-  String _kg(AppLocalizations l, double v) => v >= 1000
-      ? formatWeightKg(l, v)
-      : '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 1)} kg';
+  /// Formats a kg value: sans décimale inutile, milliers groupés (« 1 200 kg »).
+  String _kg(AppLocalizations l, double v) => formatWeightKg(l, v);
 
   String _price(double v) => formatPriceIn(v, announcement.currency);
 

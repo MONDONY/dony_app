@@ -6,6 +6,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -247,7 +248,7 @@ class _SummaryCard extends StatelessWidget {
                     // (« 4,5 kg » en fr, « 4.5 kg » en en), au lieu d'un
                     // point décimal figé.
                     value: bid.weightKg != null
-                        ? '${formatOneDecimal(l, bid.weightKg!)} kg'
+                        ? formatWeightKg(l, bid.weightKg!)
                         : '-',
                   ),
                   const DonyInfoRow.divider(),

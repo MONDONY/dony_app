@@ -207,8 +207,6 @@ class _SurplusSplitRow extends StatelessWidget {
   final double openKg;
   const _SurplusSplitRow({required this.reservedKg, required this.openKg});
 
-  String _fmt(double v) => v.toStringAsFixed(v % 1 == 0 ? 0 : 1);
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -230,7 +228,9 @@ class _SurplusSplitRow extends StatelessWidget {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: l.listingReservedKgLabel(_fmt(reservedKg)),
+                    text: l.listingReservedKgLabel(
+                      formatWeightGrouped(l.localeName, reservedKg),
+                    ),
                     style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                   ),
                   TextSpan(
@@ -238,7 +238,9 @@ class _SurplusSplitRow extends StatelessWidget {
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   TextSpan(
-                    text: l.listingOpenKgLabel(_fmt(openKg)),
+                    text: l.listingOpenKgLabel(
+                      formatWeightGrouped(l.localeName, openKg),
+                    ),
                     style: tt.bodyMedium?.copyWith(
                       color: cs.success,
                       fontWeight: FontWeight.w700,

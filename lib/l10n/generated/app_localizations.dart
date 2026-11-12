@@ -39030,12 +39030,6 @@ abstract class AppLocalizations {
   /// **'Au-delà de 32 kg, choisissez Route à l\'étape précédente.'**
   String get requestCreateWeightTooHeavyForMode;
 
-  /// Poids puis taille du colis dans la carte récapitulative ({kg} déjà avec son unité) (wizard_summary_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'{kg}, taille {size}'**
-  String requestSummaryWeightAndSize(String kg, String size);
-
   /// Capacité d'un trajet en route avec sa taille maximale de colis, sur les cartes et la fiche ({kg} déjà avec son unité) (traveler_card.dart, trip_billet_card.dart)
   ///
   /// In fr, this message translates to:
@@ -39066,7 +39060,7 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 jour de route} other{{count} jours de route}}'**
   String tripRoadDuration(int count);
 
-  /// Poids puis taille d'un colis ou d'une demande quand la taille est connue ({kg} déjà avec son unité) (package_request_list_card.dart, request_ticket_card.dart, colis_destinataire_card.dart, reception_detail_screen.dart)
+  /// Poids puis taille d'un colis ou d'une demande quand la taille est connue, séparés par un point médian ({kg} déjà avec son unité) (package_request_list_card.dart, request_ticket_card.dart, colis_destinataire_card.dart, wizard_summary_card.dart)
   ///
   /// In fr, this message translates to:
   /// **'{kg} · taille {size}'**

@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
@@ -18,7 +19,7 @@ String tripRequestDetails(AppLocalizations l, BidModel bid) {
   final content = tripParcelContent(l, bid);
   final w = bid.displayWeightKg;
   if (w == null) return content;
-  return '$content · ${w.toStringAsFixed(w % 1 == 0 ? 0 : 1)} kg';
+  return '$content · ${formatWeightKg(l, w)}';
 }
 
 /// Carte « réponse directe » de « À traiter » sur l'écran du trajet vu par

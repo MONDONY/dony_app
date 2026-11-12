@@ -1372,7 +1372,7 @@ void main() {
       );
     });
 
-    testWidgets('résumé « 1 200 kg, taille L » dans le récap compact', (
+    testWidgets('résumé « 1 200 kg · taille L » dans le récap compact', (
       tester,
     ) async {
       await pumpStep(
@@ -1384,7 +1384,7 @@ void main() {
           itemSize: ItemSize.l,
         ),
       );
-      expect(find.text('1${sep}200 kg, taille L'), findsOneWidget);
+      expect(find.text('1${sep}200 kg · taille L'), findsOneWidget);
     });
 
     testWidgets('résumé sans taille : le poids seul', (tester) async {
@@ -1396,7 +1396,7 @@ void main() {
       expect(find.textContaining('taille'), findsNothing);
     });
 
-    testWidgets('résumé en anglais : « 1,200 kg, size L »', (tester) async {
+    testWidgets('résumé en anglais : « 1,200 kg · size L »', (tester) async {
       useEnglish();
       await pumpStep(
         tester,
@@ -1407,7 +1407,7 @@ void main() {
           itemSize: ItemSize.l,
         ),
       );
-      expect(find.text('1,200 kg, size L'), findsOneWidget);
+      expect(find.text('1,200 kg · size L'), findsOneWidget);
     });
 
     for (final locale in ['fr', 'en']) {

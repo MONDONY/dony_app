@@ -848,7 +848,7 @@ void main() {
         bid('s1', senderName: 'Awa', description: 'Livres', weightKg: 2.5),
         bid('s2', description: 'Livres'),
       ]);
-      expect(text(tester, 's1'), 'Awa | Livres · 2.5 kg');
+      expect(text(tester, 's1'), 'Awa | Livres · 2,5 kg');
       // Sans nom : le libellé générique ; sans poids : pas de « · ».
       expect(text(tester, 's2'), 'Expéditeur | Livres');
     });

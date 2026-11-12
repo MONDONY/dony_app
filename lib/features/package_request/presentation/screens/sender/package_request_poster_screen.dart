@@ -165,15 +165,21 @@ class _PackageRequestPosterScreenState
   String _captionFor(PosterShareChannel channel) {
     final l = context.l10n;
     final r = widget.request;
-    final size = r.parcelSize.label(l).toLowerCase();
     final budget = PackageRequestPosterCard.budgetLabel(r);
+    // Taille choisie : « 25 kg · taille L » ; sinon le format que le poids donne.
+    final weightLine = r.itemSize == null
+        ? l.requestPosterCaptionWeight(
+            formatWeightGrouped(l.localeName, r.weightKg),
+            r.parcelSize.label(l).toLowerCase(),
+          )
+        : parcelWeightWithSize(l, formatWeightKg(l, r.weightKg), r.itemSize);
     final contents = [
       for (final c in r.categories) contentCategoryDisplayName(l, c),
     ];
     return <String>[
       '📦 ${l.requestPosterCaptionCorridor(r.departureCity, r.arrivalCity)}',
       '📅 ${PackageRequestPosterCard.dateLabel(l, r)}',
-      '⚖️ ${r.itemSize == null ? l.requestPosterCaptionWeight(formatKg(l, r.weightKg), size) : parcelWeightWithSize(l, formatWeightKg(l, r.weightKg), r.itemSize)}',
+      '⚖️ $weightLine',
       if (contents.isNotEmpty)
         '🧳 ${l.requestPosterCaptionContents(contents.join(', '))}',
       if (budget != null)

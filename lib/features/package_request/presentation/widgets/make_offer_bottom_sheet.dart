@@ -7,6 +7,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -764,7 +765,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
               const SizedBox(height: DonySpacing.md),
               Text(
                 [
-                  '${_formatKg(widget.weightKg)} kg',
+                  formatWeightKg(l, widget.weightKg),
                   desired == null
                       ? l.requestDateFlexible
                       : l.requestPublicDesiredDate(
@@ -1052,7 +1053,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
               if (kg != null)
                 _RecapRow(
                   label: l.negotiationMakeOfferRecapCapacity,
-                  value: '${_formatKg(kg)} kg',
+                  value: formatWeightKg(l, kg),
                 ),
               if (price != null)
                 _RecapRow(
@@ -1100,8 +1101,6 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
       ],
     );
   }
-
-  static String _formatKg(double kg) => kg.toStringAsFixed(kg % 1 == 0 ? 0 : 1);
 
   static TextStyle _amountStyle(BuildContext context, {double size = 36}) {
     final tt = Theme.of(context).textTheme;

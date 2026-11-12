@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
@@ -346,10 +347,7 @@ class _RecapCard extends StatelessWidget {
           l10n.requestCreateRecapTravelDate,
           DateFormat.yMMMd(l10n.localeName).format(thread!.travelerTravelDate),
         ),
-      (
-        l10n.requestCreateRecapWeight,
-        '${request.weightKg.toStringAsFixed(request.weightKg % 1 == 0 ? 0 : 1)} kg',
-      ),
+      (l10n.requestCreateRecapWeight, formatWeightKg(l10n, request.weightKg)),
       (l10n.requestCreateRecapSize, request.parcelSize.label(l10n)),
       if (request.categories.isNotEmpty)
         (

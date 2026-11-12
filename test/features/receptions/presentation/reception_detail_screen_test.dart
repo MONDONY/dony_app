@@ -4,7 +4,6 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
-import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -55,7 +54,6 @@ Reception _confirmed({
   String? travelerId,
   String? senderId,
   TransportMode? transportMode,
-  ItemSize? itemSize,
 }) => Reception(
   bidId: _id,
   linkStatus: 'CONFIRMED',
@@ -73,7 +71,6 @@ Reception _confirmed({
   travelerId: travelerId,
   senderId: senderId,
   transportMode: transportMode,
-  itemSize: itemSize,
 );
 
 void main() {
@@ -524,16 +521,6 @@ void main() {
         expect(textButton.style?.foregroundColor?.resolve({}), error);
       },
     );
-
-    testWidgets('taille du colis connue : « 4,5 kg · taille M »', (
-      tester,
-    ) async {
-      stub(ReceptionDetailLoaded(_confirmed(itemSize: ItemSize.m)));
-
-      await pump(tester);
-
-      expect(find.text('4,5 kg · taille M'), findsOneWidget);
-    });
 
     testWidgets('colis remis : plus de retrait possible', (tester) async {
       stub(

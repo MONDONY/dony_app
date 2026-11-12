@@ -88,11 +88,7 @@ class TripPosterCard extends StatelessWidget {
   /// qu'une valeur de forme, et l'imprimer comme une limite tromperait
   /// l'expéditeur. Tout le reste de l'application dit « Kg libre » dans ce cas.
   static String capacityLabel(AppLocalizations l, AnnouncementModel a) =>
-      a.isKgFree
-      ? l.tripKgFree
-      : a.availableKg >= 1000
-      ? formatWeightKg(l, a.availableKg)
-      : '${formatKgPrice(a.availableKg)} kg';
+      a.isKgFree ? l.tripKgFree : formatWeightKg(l, a.availableKg);
 
   /// Moyens de paiement acceptés, dans l'ordre de l'énumération (carte,
   /// espèces, puis mobile money) : « Carte, Espèces, Wave ». Vide si le

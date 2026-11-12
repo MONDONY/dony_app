@@ -1062,7 +1062,7 @@ void main() {
     );
     expect(find.text('POIDS'), findsOneWidget);
     expect(find.text('TYPE'), findsOneWidget);
-    expect(find.text('3.5 kg'), findsOneWidget);
+    expect(find.text('3,5 kg'), findsOneWidget);
     expect(find.text('Vêtements'), findsOneWidget);
   });
 

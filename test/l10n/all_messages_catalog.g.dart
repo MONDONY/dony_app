@@ -8424,10 +8424,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'requestCreateWeightRangeRoad': (l) => l.requestCreateWeightRangeRoad,
   'requestCreateWeightTooHeavyForMode': (l) =>
       l.requestCreateWeightTooHeavyForMode,
-  'requestSummaryWeightAndSize': (l) => l.requestSummaryWeightAndSize(
-    placeholderMarker('kg'),
-    placeholderMarker('size'),
-  ),
   'tripCapacityUpToSize': (l) => l.tripCapacityUpToSize(
     placeholderMarker('kg'),
     placeholderMarker('size'),
@@ -9143,7 +9139,6 @@ const textParameters = <String, List<String>>{
   'publishBlockedResumeOnFirst': ['month'],
   'taxInfoCollectMissing': ['fields'],
   'taxInfoAddressCountry': ['country'],
-  'requestSummaryWeightAndSize': ['kg', 'size'],
   'tripCapacityUpToSize': ['kg', 'size'],
   'tripCapacityFreeUpToSize': ['size'],
   'tripUpToSize': ['size'],

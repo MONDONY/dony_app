@@ -184,7 +184,7 @@ class WizardSummaryCard extends StatelessWidget {
   String _dateText(AppLocalizations l, PackageRequestFormState s) =>
       formatDesiredDate(l, s.desiredDate, s.dateToleranceDays);
 
-  /// Poids, suivi de la taille quand l'expéditeur en a choisi une (« 1 200 kg,
+  /// Poids, suivi de la taille quand l'expéditeur en a choisi une (« 1 200 kg ·
   /// taille L »). La taille dérivée du poids pour les filtres de recherche
   /// ([ParcelSize]) n'est jamais affichée : le récap la sortait telle quelle du
   /// fil, en « MEDIUM ».
@@ -194,9 +194,7 @@ class WizardSummaryCard extends StatelessWidget {
   }
 
   String _weightText(AppLocalizations l, PackageRequestFormState s, double w) {
-    final kg = formatWeightKg(l, w);
-    final size = s.itemSize;
-    return size == null ? kg : l.requestSummaryWeightAndSize(kg, size.code);
+    return parcelWeightWithSize(l, formatWeightKg(l, w), s.itemSize);
   }
 
   /// Toutes les catégories, pas seulement la première : le récap en affichait

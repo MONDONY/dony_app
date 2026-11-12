@@ -4,7 +4,6 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/copy_code_button.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -607,11 +606,7 @@ class _ConfirmedContent extends StatelessWidget {
         DonyInfoRow(
           icon: Icons.scale_rounded,
           label: l.receptionWeightLabel,
-          value: parcelWeightWithSize(
-            l,
-            formatWeightKg(l, kg),
-            reception.itemSize,
-          ),
+          value: formatWeightKg(l, kg),
         ),
     ];
 

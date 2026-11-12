@@ -1,8 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
-import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -42,7 +42,7 @@ class LinkedTripCard extends StatelessWidget {
       else if (trip.departureDate != null)
         trip.departureDate!,
       if (weight != null && weight > 0)
-        l.negotiationLinkedTripParcelWeight('${formatKg(l, weight)} kg'),
+        l.negotiationLinkedTripParcelWeight(formatWeightKg(l, weight)),
     ].join(' · ');
 
     return GestureDetector(

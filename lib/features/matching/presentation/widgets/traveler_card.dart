@@ -150,7 +150,9 @@ class TravelerCard extends StatelessWidget {
     final roadDays = tripRoadDays(announcement);
     final dateLabel = roadDays == null
         ? dateStr
-        : '$dateStr → ${DateFormat.MMMEd(l.localeName).format(announcement.arrivalDate!)}';
+        : '${DateFormat.MMMd(l.localeName).format(announcement.departureDate)}'
+              ' → '
+              '${DateFormat.MMMd(l.localeName).format(announcement.arrivalDate!)}';
     final roadDuration = roadDays == null ? null : l.tripRoadDuration(roadDays);
     final categories = announcement.acceptedContentTypes ?? [];
     final capacity = TripCapacity.fromAnnouncement(announcement);
@@ -299,37 +301,64 @@ class TravelerCard extends StatelessWidget {
                   ],
                 )
               else
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
-                    const SizedBox(width: DonySpacing.xs),
-                    Flexible(
-                      child: Text(
-                        roadDuration == null
-                            ? dateLabel
-                            : '$dateLabel  ·  $roadDuration',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.bodySmall?.copyWith(
+                    Row(
+                      children: [
+                        DonyIcon(
+                          'calendar',
+                          size: 13,
                           color: cs.onSurfaceVariant,
-                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
-                      ),
+                        const SizedBox(width: DonySpacing.xs),
+                        // Jamais coupé : le texte passe à la ligne s'il manque
+                        // de place.
+                        Flexible(
+                          child: Text(
+                            dateLabel,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Audience de mon trajet : visible de moi seul.
+                        if (OwnerViewsLabel.isVisible(
+                          count: announcement.uniqueViewerCount,
+                          isOwner: isOwnAnnouncement,
+                        )) ...[
+                          Text(
+                            '  ·  ',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          OwnerViewsLabel(
+                            count: announcement.uniqueViewerCount,
+                            isOwner: isOwnAnnouncement,
+                          ),
+                        ],
+                      ],
                     ),
-                    // Audience de mon trajet : visible de moi seul.
-                    if (OwnerViewsLabel.isVisible(
-                      count: announcement.uniqueViewerCount,
-                      isOwner: isOwnAnnouncement,
-                    )) ...[
-                      Text(
-                        '  ·  ',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                      OwnerViewsLabel(
-                        count: announcement.uniqueViewerCount,
-                        isOwner: isOwnAnnouncement,
+                    // Durée d'une route à arrivée datée, sur sa propre ligne.
+                    if (roadDuration != null) ...[
+                      const SizedBox(height: DonySpacing.xxs),
+                      Row(
+                        children: [
+                          DonyIcon('car', size: 13, color: cs.onSurfaceVariant),
+                          const SizedBox(width: DonySpacing.xs),
+                          Flexible(
+                            child: Text(
+                              roadDuration,
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ],
