@@ -5,6 +5,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
@@ -180,7 +181,10 @@ class PackageRequestPosterCard extends StatelessWidget {
   Widget _dateBlock(AppLocalizations l) {
     final r = request;
     final desired = r.desiredDate;
-    final kind = [l.requestPosterEyebrow, r.transportMode.label(l)].join(' · ');
+    final kind = [
+      l.requestPosterEyebrow,
+      transportModeOrPlane(r.transportMode).label(l),
+    ].join(' · ');
     if (desired == null) {
       return PosterDateBlock(
         color: PosterPalette.ink,

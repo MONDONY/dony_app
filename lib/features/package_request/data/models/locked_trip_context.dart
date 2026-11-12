@@ -39,7 +39,10 @@ class LockedTripContext extends Equatable {
   final DateTime? desiredDate;
   final int dateToleranceDays;
   final double weightKg;
-  final TransportMode transportMode;
+
+  /// Mode de la demande. Null : demande « peu importe », le voyageur choisit
+  /// le mode de son trajet (avion par défaut).
+  final TransportMode? transportMode;
   final double agreedPriceEur;
 
   /// The payment method selected by the traveler in the link-trip screen.

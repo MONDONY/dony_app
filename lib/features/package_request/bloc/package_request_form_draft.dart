@@ -24,6 +24,8 @@ class PackageRequestDraftResume {
 /// manquer. Les clés sont figées, un brouillon enregistré par une version de
 /// l'app doit rester lisible par la suivante.
 abstract final class PackageRequestFormDraft {
+  static const _anyWire = 'ANY';
+
   /// Brouillon de [state], complété par [stepInput] : la saisie de l'étape
   /// affichée, que l'étape ne remonte au bloc qu'à sa validation. Les clés de
   /// [stepInput] sont celles du brouillon et priment sur l'état du bloc.
@@ -37,9 +39,12 @@ abstract final class PackageRequestFormDraft {
     'arrivalCity': state.arrivalCity,
     'desiredDate': encodeDate(state.desiredDate),
     'dateToleranceDays': state.dateToleranceDays,
-    'transportMode': state.transportMode == null
-        ? null
-        : transportModeToWire(state.transportMode!),
+    // `ANY` : « peu importe », distinct d'un mode jamais choisi (null).
+    'transportMode': state.transportModeAny
+        ? _anyWire
+        : (state.transportMode == null
+              ? null
+              : transportModeToWire(state.transportMode!)),
     'weightKg': state.weightKg,
     'parcelSize': state.parcelSize?.wireName,
     'categories': state.categories,
@@ -91,6 +96,7 @@ abstract final class PackageRequestFormDraft {
       desiredDate: date,
       dateToleranceDays: tolerance,
       transportMode: transportModeFromWire(json['transportMode'] as String?),
+      transportModeAny: json['transportMode'] == _anyWire,
       weightKg: (json['weightKg'] as num?)?.toDouble(),
       parcelSize: size == null
           ? null

@@ -253,6 +253,7 @@ class _PackageRequestCreateScreenState
     s.desiredDate,
     s.dateToleranceDays,
     s.transportMode,
+    s.transportModeAny,
     s.weightKg,
     s.parcelSize,
     (s.categories.toList()..sort()).join(','),

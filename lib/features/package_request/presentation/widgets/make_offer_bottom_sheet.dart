@@ -46,7 +46,7 @@ class MakeOfferBottomSheet {
     required String arrivalCity,
     required DateTime? desiredDate,
     required int dateToleranceDays,
-    required TransportMode transportMode,
+    required TransportMode? transportMode,
     DateTime? initialDate,
     bool isFirmPrice = false,
     String currency = 'EUR',
@@ -297,7 +297,9 @@ class _MakeOfferContent extends StatefulWidget {
   /// Null : demande « Date flexible », la date de voyage est libre.
   final DateTime? requestDesiredDate;
   final int requestDateToleranceDays;
-  final TransportMode transportMode;
+
+  /// Null : demande « peu importe ».
+  final TransportMode? transportMode;
   final PriceEstimate? estimate;
   final GoRouter rootRouter;
   final _OfferFlow flow;

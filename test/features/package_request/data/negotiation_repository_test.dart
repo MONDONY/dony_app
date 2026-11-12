@@ -4,6 +4,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
@@ -452,6 +453,51 @@ void main() {
       );
 
       expect(sentData?['useCardForCommission'], true);
+    });
+
+    Future<Map<String, dynamic>?> sentByDedicatedTrip({
+      TransportMode? transportMode,
+    }) async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/create-dedicated-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/create-dedicated-trip');
+      });
+      await repo.createDedicatedTrip(
+        'th-1',
+        departureDate: DateTime(2026, 7),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.stripe,
+        transportMode: transportMode,
+      );
+      return sentData;
+    }
+
+    test(
+      'transportMode envoyé seulement quand le voyageur l\'a choisi',
+      () async {
+        final chosen = await sentByDedicatedTrip(
+          transportMode: TransportMode.car,
+        );
+        expect(chosen?['transportMode'], 'CAR');
+        final boat = await sentByDedicatedTrip(
+          transportMode: TransportMode.boat,
+        );
+        expect(boat?['transportMode'], 'BOAT');
+      },
+    );
+
+    test('transportMode absent du corps quand il n\'a pas été choisi '
+        '(le back prend le mode de la demande)', () async {
+      final sent = await sentByDedicatedTrip();
+      expect(sent?.containsKey('transportMode'), isFalse);
     });
 
     test('defaults useCardForCommission to false in the body', () async {

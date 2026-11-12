@@ -17,7 +17,7 @@ void main() {
       FormStep1Submitted make({
         String to = 'Dakar',
         int tolerance = 2,
-        TransportMode mode = TransportMode.plane,
+        TransportMode? mode = TransportMode.plane,
       }) => FormStep1Submitted(
         departureCity: 'Paris',
         arrivalCity: to,
@@ -29,7 +29,14 @@ void main() {
         make(to: 'Abidjan'),
         make(tolerance: 3),
         make(mode: TransportMode.boat),
+        make(mode: null),
       ]);
+    });
+
+    test('FormTransportModeChanged compare le mode (null = peu importe)', () {
+      FormTransportModeChanged make([TransportMode? mode]) =>
+          FormTransportModeChanged(mode);
+      expectValueEquality(make, [make(TransportMode.boat)]);
     });
 
     test(

@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -225,6 +226,48 @@ void main() {
 
     test('absent (back antérieur, demande d avant la grille) : null', () {
       expect(PackageRequest.fromJson(json()).commissionGridId, isNull);
+    });
+  });
+  group('mode de transport « peu importe »', () {
+    Map<String, dynamic> base() => {
+      'id': 'pr-mode',
+      'senderId': 's',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'desiredDate': '2026-06-15',
+      'dateToleranceDays': 2,
+      'weightKg': 5.0,
+      'parcelSize': 'SMALL',
+      'contentCategory': 'Vêtements',
+      'status': 'OPEN',
+      'createdAt': '2026-05-10T10:00:00Z',
+    };
+
+    test('clé présente à null : peu importe (null)', () {
+      final pr = PackageRequest.fromJson(base()..['transportMode'] = null);
+      expect(pr.transportMode, isNull);
+    });
+
+    test('clé absente (ancien back) : avion', () {
+      final pr = PackageRequest.fromJson(base());
+      expect(pr.transportMode, TransportMode.plane);
+    });
+
+    test('mode connu lu tel quel', () {
+      final pr = PackageRequest.fromJson(base()..['transportMode'] = 'BOAT');
+      expect(pr.transportMode, TransportMode.boat);
+    });
+
+    test('valeur inconnue : avion, pas peu importe', () {
+      final pr = PackageRequest.fromJson(base()..['transportMode'] = 'ROCKET');
+      expect(pr.transportMode, TransportMode.plane);
+    });
+
+    test('transportModeToRequestWire : null = ANY, sinon le code du mode', () {
+      expect(transportModeToRequestWire(null), 'ANY');
+      expect(transportModeToRequestWire(TransportMode.plane), 'PLANE');
+      expect(transportModeToRequestWire(TransportMode.car), 'CAR');
+      expect(transportModeToRequestWire(TransportMode.boat), 'BOAT');
     });
   });
 }

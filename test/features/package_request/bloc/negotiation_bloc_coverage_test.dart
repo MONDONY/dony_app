@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -118,6 +119,36 @@ void main() {
         'deliveryAddress',
         'useCardForCommission',
       ]);
+    });
+
+    test('DedicatedTripPayload : transportMode sérialisé seulement s\'il est '
+        'choisi, et compté dans l\'égalité', () {
+      DedicatedTripPayload make(TransportMode? mode) => DedicatedTripPayload(
+        departureDate: DateTime(2026, 7, 2),
+        pickupAddress: const {},
+        deliveryAddress: const {},
+        transportMode: mode,
+      );
+      expect(make(null).toJson().containsKey('transportMode'), isFalse);
+      expect(make(TransportMode.boat).toJson()['transportMode'], 'BOAT');
+      expect(make(TransportMode.car).toJson()['transportMode'], 'CAR');
+      expect(make(TransportMode.boat), make(TransportMode.boat));
+      expect(make(TransportMode.boat), isNot(make(null)));
+    });
+
+    test('NegotiationCreateDedicatedTripRequested : le mode compte dans '
+        'l\'égalité', () {
+      NegotiationCreateDedicatedTripRequested make(TransportMode? mode) =>
+          NegotiationCreateDedicatedTripRequested(
+            threadId: 't-1',
+            departureDate: DateTime(2026, 7),
+            pickupAddress: const {},
+            deliveryAddress: const {},
+            paymentMethod: PaymentMethod.stripe,
+            transportMode: mode,
+          );
+      expect(make(TransportMode.car), make(TransportMode.car));
+      expect(make(TransportMode.car), isNot(make(null)));
     });
 
     test('NegotiationStartWithDedicatedTripRequested : égalité par champ', () {

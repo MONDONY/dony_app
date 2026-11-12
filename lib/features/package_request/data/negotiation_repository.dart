@@ -3,6 +3,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/pricing/commission_grid_preload.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -158,7 +159,8 @@ class NegotiationRepository {
   /// Traveler creates a brand-new "dedicated" trip linked exclusively to this
   /// thread's package_request. Locked fields (corridor, weight, transport mode,
   /// agreed price) are derived server-side from the request — only the editable
-  /// fields are sent. Thread atomically transitions AWAITING_TRIP → AWAITING_PAYMENT.
+  /// fields are sent ([transportMode] too, but only when the request is
+  /// « peu importe » and the traveler chose it). Thread atomically transitions AWAITING_TRIP → AWAITING_PAYMENT.
   Future<NegotiationThread> createDedicatedTrip(
     String threadId, {
     required DateTime departureDate,
@@ -172,6 +174,7 @@ class NegotiationRepository {
     List<String>? refusedTypes,
     required PaymentMethod paymentMethod,
     bool useCardForCommission = false,
+    TransportMode? transportMode,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations/$threadId/create-dedicated-trip',
@@ -187,6 +190,10 @@ class NegotiationRepository {
         'refusedTypes': ?refusedTypes,
         'paymentMethod': paymentMethod.wireName,
         'useCardForCommission': useCardForCommission,
+        // Seulement quand le voyageur a choisi le mode (demande « peu
+        // importe ») : sinon le back prend celui de la demande.
+        if (transportMode != null)
+          'transportMode': transportModeToWire(transportMode),
       },
     );
     return _thread(response.data!);

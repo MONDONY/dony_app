@@ -167,4 +167,42 @@ void main() {
       () => backend.capture(AnalyticsEvents.packageRequestCreated, any()),
     );
   });
+
+  test(
+    'peu importe : transport_mode vaut any (étape 1 et publication)',
+    () async {
+      stubCreate().thenAnswer((_) async => request(PackageRequestStatus.open));
+      final bloc = await makeBloc();
+      bloc.add(
+        const FormStep1Submitted(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: null,
+          dateToleranceDays: null,
+          transportMode: null,
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(
+        const FormStep2Submitted(
+          weightKg: 5.0,
+          parcelSize: ParcelSize.medium,
+          categories: ['Livres'],
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const FormStep3Submitted(targetPriceEur: 40.0));
+      await bloc.stream.firstWhere(
+        (s) => s.submissionStatus == FormSubmissionStatus.success,
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      final step = capturedAll(
+        AnalyticsEvents.packageRequestStepCompleted,
+      ).first;
+      expect(step, containsPair('transport_mode', 'any'));
+      final created = capturedAll(AnalyticsEvents.packageRequestCreated).single;
+      expect(created, containsPair('transport_mode', 'any'));
+    },
+  );
 }

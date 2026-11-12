@@ -27,7 +27,9 @@ class FormStep1Submitted extends PackageRequestFormEvent {
 
   /// Null quand [desiredDate] l'est.
   final int? dateToleranceDays;
-  final TransportMode transportMode;
+
+  /// Null : « Peu importe ».
+  final TransportMode? transportMode;
 
   @override
   List<Object?> get props => [
@@ -37,6 +39,16 @@ class FormStep1Submitted extends PackageRequestFormEvent {
     dateToleranceDays,
     transportMode,
   ];
+}
+
+/// Mode de la demande choisi ou modifié hors de l'étape 1 validée. Null :
+/// « Peu importe ».
+class FormTransportModeChanged extends PackageRequestFormEvent {
+  const FormTransportModeChanged(this.mode);
+  final TransportMode? mode;
+
+  @override
+  List<Object?> get props => [mode];
 }
 
 /// Retire la date de départ (et sa souplesse) déjà choisie : la demande

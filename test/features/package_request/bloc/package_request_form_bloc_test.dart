@@ -1667,4 +1667,274 @@ void main() {
       },
     );
   });
+
+  // ── Mode « peu importe » ─────────────────────────────────────────────────
+  group('mode de transport « peu importe »', () {
+    When<Future<PackageRequest>> stubCreate() => when(
+      () => repo.create(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        desiredDate: any(named: 'desiredDate'),
+        dateToleranceDays: any(named: 'dateToleranceDays'),
+        weightKg: any(named: 'weightKg'),
+        parcelSize: any(named: 'parcelSize'),
+        transportMode: any(named: 'transportMode'),
+        categories: any(named: 'categories'),
+        negotiable: any(named: 'negotiable'),
+        acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+        totalBudgetEur: any(named: 'totalBudgetEur'),
+        description: any(named: 'description'),
+        photoKeys: any(named: 'photoKeys'),
+        pickupNeighborhood: any(named: 'pickupNeighborhood'),
+        deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+      ),
+    );
+
+    blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+      'FormTransportModeChanged(null) : peu importe, distinct de « pas encore '
+      'choisi »',
+      build: () => makeBloc(repo),
+      act: (bloc) => bloc.add(const FormTransportModeChanged(null)),
+      expect: () => [
+        isA<PackageRequestFormState>()
+            .having((s) => s.transportMode, 'transportMode', isNull)
+            .having((s) => s.transportModeAny, 'transportModeAny', isTrue),
+      ],
+    );
+
+    blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+      'FormTransportModeChanged(bateau) après peu importe : le mode revient',
+      build: () => makeBloc(repo),
+      act: (bloc) => bloc
+        ..add(const FormTransportModeChanged(null))
+        ..add(const FormTransportModeChanged(TransportMode.boat)),
+      skip: 1,
+      expect: () => [
+        isA<PackageRequestFormState>()
+            .having((s) => s.transportMode, 'transportMode', TransportMode.boat)
+            .having((s) => s.transportModeAny, 'transportModeAny', isFalse),
+      ],
+    );
+
+    blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+      'étape 1 sans mode (peu importe) puis soumission : create reçoit null',
+      build: () {
+        stubCreate().thenAnswer((_) async => fakeRequest);
+        return makeBloc(repo);
+      },
+      act: (bloc) => bloc
+        ..add(
+          const FormStep1Submitted(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: null,
+            dateToleranceDays: null,
+            transportMode: null,
+          ),
+        )
+        ..add(
+          const FormStep2Submitted(
+            weightKg: 5,
+            parcelSize: ParcelSize.small,
+            categories: ['Vêtements'],
+          ),
+        )
+        ..add(const FormStep3Submitted(targetPriceEur: 25)),
+      verify: (bloc) {
+        expect(bloc.state.transportModeAny, isTrue);
+        verify(
+          () => repo.create(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: null,
+            dateToleranceDays: null,
+            weightKg: 5,
+            parcelSize: ParcelSize.small,
+            transportMode: null,
+            categories: const ['Vêtements'],
+            negotiable: true,
+            acceptedPaymentMethods: {PaymentMethod.stripe},
+            totalBudgetEur: 25,
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+      'mode choisi à l\'étape 1 : create le reçoit tel quel',
+      build: () {
+        stubCreate().thenAnswer((_) async => fakeRequest);
+        return makeBloc(repo);
+      },
+      act: (bloc) => bloc
+        ..add(
+          const FormStep1Submitted(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: null,
+            dateToleranceDays: null,
+            transportMode: TransportMode.boat,
+          ),
+        )
+        ..add(
+          const FormStep2Submitted(
+            weightKg: 5,
+            parcelSize: ParcelSize.small,
+            categories: ['Vêtements'],
+          ),
+        )
+        ..add(const FormStep3Submitted(targetPriceEur: 25)),
+      verify: (bloc) {
+        expect(bloc.state.transportModeAny, isFalse);
+        verify(
+          () => repo.create(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: null,
+            dateToleranceDays: null,
+            weightKg: 5,
+            parcelSize: ParcelSize.small,
+            transportMode: TransportMode.boat,
+            categories: const ['Vêtements'],
+            negotiable: true,
+            acceptedPaymentMethods: {PaymentMethod.stripe},
+            totalBudgetEur: 25,
+          ),
+        ).called(1);
+      },
+    );
+
+    final anyRequest = PackageRequest(
+      id: 'r-any',
+      senderId: 's-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      dateToleranceDays: 0,
+      weightKg: 5,
+      parcelSize: ParcelSize.small,
+      transportMode: null,
+      categories: const ['Vêtements'],
+      status: PackageRequestStatus.open,
+      createdAt: DateTime(2026, 5, 10),
+    );
+
+    final boatRequest = PackageRequest(
+      id: 'r-boat',
+      senderId: 's-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      dateToleranceDays: 0,
+      weightKg: 5,
+      parcelSize: ParcelSize.small,
+      transportMode: TransportMode.boat,
+      categories: const ['Vêtements'],
+      status: PackageRequestStatus.open,
+      createdAt: DateTime(2026, 5, 10),
+    );
+
+    test('édition d\'une demande peu importe : préremplie en peu importe', () {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: anyRequest,
+      );
+      expect(bloc.state.transportMode, isNull);
+      expect(bloc.state.transportModeAny, isTrue);
+      bloc.close();
+    });
+
+    test('duplication d\'une demande peu importe : reste peu importe', () {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        duplicating: PackageRequestDuplicate(anyRequest),
+      );
+      expect(bloc.state.transportModeAny, isTrue);
+      bloc.close();
+    });
+
+    test('édition d\'une demande en bateau : mode gardé, pas peu importe', () {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: boatRequest,
+      );
+      expect(bloc.state.transportMode, TransportMode.boat);
+      expect(bloc.state.transportModeAny, isFalse);
+      bloc.close();
+    });
+
+    blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+      'modification d\'une demande peu importe : update reçoit null (ANY)',
+      build: () {
+        when(
+          () => repo.update(
+            any(),
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            desiredDate: any(named: 'desiredDate'),
+            dateToleranceDays: any(named: 'dateToleranceDays'),
+            weightKg: any(named: 'weightKg'),
+            parcelSize: any(named: 'parcelSize'),
+            transportMode: any(named: 'transportMode'),
+            categories: any(named: 'categories'),
+            negotiable: any(named: 'negotiable'),
+            acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+            totalBudgetEur: any(named: 'totalBudgetEur'),
+            description: any(named: 'description'),
+            photoUrl: any(named: 'photoUrl'),
+            pickupNeighborhood: any(named: 'pickupNeighborhood'),
+            deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+            photoKeys: any(named: 'photoKeys'),
+            promoCode: any(named: 'promoCode'),
+          ),
+        ).thenAnswer((_) async => anyRequest);
+        return PackageRequestFormBloc(
+          repo,
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+          editing: anyRequest,
+        );
+      },
+      act: (bloc) => bloc.add(const FormStep3Submitted(targetPriceEur: 25)),
+      verify: (_) {
+        verify(
+          () => repo.update(
+            'r-any',
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            desiredDate: any(named: 'desiredDate'),
+            dateToleranceDays: any(named: 'dateToleranceDays'),
+            weightKg: any(named: 'weightKg'),
+            parcelSize: any(named: 'parcelSize'),
+            transportMode: null,
+            categories: any(named: 'categories'),
+            negotiable: any(named: 'negotiable'),
+            acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+            totalBudgetEur: any(named: 'totalBudgetEur'),
+            description: any(named: 'description'),
+            photoUrl: any(named: 'photoUrl'),
+            pickupNeighborhood: any(named: 'pickupNeighborhood'),
+            deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+            photoKeys: any(named: 'photoKeys'),
+            promoCode: any(named: 'promoCode'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test('copyWith : un mode choisi lève peu importe, et inversement', () {
+      const any = PackageRequestFormState(transportModeAny: true);
+      expect(
+        any.copyWith(transportMode: TransportMode.car).transportModeAny,
+        isFalse,
+      );
+      const car = PackageRequestFormState(transportMode: TransportMode.car);
+      final back = car.copyWith(transportModeAny: true);
+      expect(back.transportMode, isNull);
+      expect(back.transportModeAny, isTrue);
+      // Rien de touché : l'état est gardé.
+      expect(any.copyWith(currentStep: 1).transportModeAny, isTrue);
+      expect(car.copyWith(currentStep: 1).transportMode, TransportMode.car);
+    });
+  });
 }

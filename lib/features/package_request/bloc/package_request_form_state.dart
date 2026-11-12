@@ -22,6 +22,7 @@ class PackageRequestFormState extends Equatable {
     this.desiredDate,
     this.dateToleranceDays,
     this.transportMode,
+    this.transportModeAny = false,
     this.weightKg,
     this.parcelSize,
     this.categories = const [],
@@ -51,7 +52,21 @@ class PackageRequestFormState extends Equatable {
   final String? arrivalCity;
   final DateTime? desiredDate;
   final int? dateToleranceDays;
+
+  /// Mode de la demande choisi par l'expéditeur. Null avec
+  /// [transportModeAny] faux : pas encore choisi.
   final TransportMode? transportMode;
+
+  /// Vrai quand l'expéditeur a choisi « Peu importe » : [transportMode] est
+  /// alors null et la demande part en `ANY`. Distingue ce choix de « pas
+  /// encore choisi », que `transportMode ?? this.transportMode` ne saurait
+  /// pas séparer.
+  final bool transportModeAny;
+
+  /// Mode à envoyer au back : null pour « peu importe » (`ANY`). Un mode
+  /// jamais choisi part en avion, comme un mode absent côté back.
+  TransportMode? get requestTransportMode =>
+      transportModeAny ? null : (transportMode ?? TransportMode.plane);
   final double? weightKg;
   final ParcelSize? parcelSize;
 
@@ -114,6 +129,9 @@ class PackageRequestFormState extends Equatable {
     // sans date.
     bool clearDesiredDate = false,
     TransportMode? transportMode,
+    // Même pattern que clearDesiredDate : choisir « Peu importe » ramène le
+    // mode à null, ce que `transportMode ?? this.transportMode` ne permet pas.
+    bool transportModeAny = false,
     double? weightKg,
     ParcelSize? parcelSize,
     List<String>? categories,
@@ -156,7 +174,12 @@ class PackageRequestFormState extends Equatable {
     dateToleranceDays: clearDesiredDate
         ? null
         : dateToleranceDays ?? this.dateToleranceDays,
-    transportMode: transportMode ?? this.transportMode,
+    transportMode: transportModeAny
+        ? null
+        : (transportMode ?? this.transportMode),
+    transportModeAny: transportModeAny
+        ? true
+        : (transportMode != null ? false : this.transportModeAny),
     weightKg: weightKg ?? this.weightKg,
     parcelSize: parcelSize ?? this.parcelSize,
     categories: categories ?? this.categories,
@@ -194,6 +217,7 @@ class PackageRequestFormState extends Equatable {
     desiredDate,
     dateToleranceDays,
     transportMode,
+    transportModeAny,
     weightKg,
     parcelSize,
     categories,

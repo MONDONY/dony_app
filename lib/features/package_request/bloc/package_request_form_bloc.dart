@@ -17,6 +17,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PackageRequestFormBloc
     extends Bloc<PackageRequestFormEvent, PackageRequestFormState> {
+  /// Valeur de la propriété analytics `transport_mode` pour « peu importe ».
+  static const _anyMode = 'any';
+
   /// [editing] non-null → mode édition : l'état initial est pré-rempli depuis la
   /// demande existante (de façon synchrone, pour que les steps puissent lire ces
   /// valeurs dans leur `initState`). La soumission de l'étape 3 appellera alors
@@ -39,6 +42,7 @@ class PackageRequestFormBloc
        ) {
     on<FormStep1Submitted>(_onStep1);
     on<FormDesiredDateCleared>(_onDesiredDateCleared);
+    on<FormTransportModeChanged>(_onTransportModeChanged);
     on<FormStep2Submitted>(_onStep2);
     on<FormStep3Submitted>(_onStep3);
     on<FormStepBack>(_onStepBack);
@@ -101,6 +105,7 @@ class PackageRequestFormBloc
       desiredDate: r.desiredDate,
       dateToleranceDays: r.dateToleranceDays,
       transportMode: r.transportMode,
+      transportModeAny: r.transportMode == null,
       weightKg: r.weightKg,
       parcelSize: r.parcelSize,
       categories: r.categories,
@@ -135,6 +140,7 @@ class PackageRequestFormBloc
       desiredDate: d.clearDate ? null : base.desiredDate,
       dateToleranceDays: base.dateToleranceDays,
       transportMode: base.transportMode,
+      transportModeAny: base.transportModeAny,
       weightKg: base.weightKg,
       parcelSize: base.parcelSize,
       categories: base.categories,
@@ -165,10 +171,11 @@ class PackageRequestFormBloc
         dateToleranceDays: hasDate ? e.dateToleranceDays : null,
         clearDesiredDate: !hasDate,
         transportMode: e.transportMode,
+        transportModeAny: e.transportMode == null,
       ),
     );
     _logStepCompleted(1, {
-      'transport_mode': e.transportMode.name,
+      'transport_mode': e.transportMode?.name ?? _anyMode,
       'has_date': hasDate,
     });
   }
@@ -187,6 +194,15 @@ class PackageRequestFormBloc
           ...extra,
         },
       ),
+    );
+  }
+
+  void _onTransportModeChanged(
+    FormTransportModeChanged e,
+    Emitter<PackageRequestFormState> emit,
+  ) {
+    emit(
+      state.copyWith(transportMode: e.mode, transportModeAny: e.mode == null),
     );
   }
 
@@ -258,7 +274,7 @@ class PackageRequestFormBloc
           weightKg: state.weightKg!,
           categories: state.categories,
           parcelSize: state.parcelSize!,
-          transportMode: state.transportMode!,
+          transportMode: state.requestTransportMode,
           negotiable: state.negotiable,
           acceptedPaymentMethods: state.acceptedPaymentMethods,
           totalBudgetEur: totalBudgetEur,
@@ -280,7 +296,7 @@ class PackageRequestFormBloc
           weightKg: state.weightKg!,
           categories: state.categories,
           parcelSize: state.parcelSize!,
-          transportMode: state.transportMode!,
+          transportMode: state.requestTransportMode,
           negotiable: state.negotiable,
           acceptedPaymentMethods: state.acceptedPaymentMethods,
           totalBudgetEur: totalBudgetEur,
@@ -325,8 +341,7 @@ class PackageRequestFormBloc
             'is_draft': saved.status == PackageRequestStatus.draft,
             'currency': saved.currency,
             'budget_bracket': analyticsAmountBracket(totalBudgetEur),
-            if (state.transportMode != null)
-              'transport_mode': state.transportMode!.name,
+            'transport_mode': state.requestTransportMode?.name ?? _anyMode,
             if (state.parcelSize != null)
               'parcel_size': state.parcelSize!.wireName,
             'has_photos': (e.photoKeys ?? const []).isNotEmpty,

@@ -71,7 +71,10 @@ class PackageRequest extends Equatable {
   bool get hasFlexibleDate => desiredDate == null;
   final double weightKg;
   final ParcelSize parcelSize;
-  final TransportMode transportMode;
+
+  /// Mode de la demande. Null : « peu importe », le voyageur propose le mode
+  /// de son choix. Les anciennes données (clé absente) valent avion.
+  final TransportMode? transportMode;
 
   /// Catégories de colis (libellés libres, comme une annonce). Vide si aucune.
   final List<String> categories;
@@ -151,6 +154,15 @@ class PackageRequest extends Equatable {
     return (urls, keys);
   }
 
+  /// Clé absente (back antérieur) : avion. Clé présente à null : peu importe.
+  /// Valeur inconnue : avion, jamais « peu importe » par erreur.
+  static TransportMode? _transportModeFrom(Map<String, dynamic> json) {
+    if (!json.containsKey('transportMode')) return TransportMode.plane;
+    final wire = json['transportMode'] as String?;
+    if (wire == null) return null;
+    return transportModeFromWire(wire) ?? TransportMode.plane;
+  }
+
   factory PackageRequest.fromJson(Map<String, dynamic> json) {
     final (urls, keys) = _photosFromJson(json['photos'] as List<dynamic>?);
     return PackageRequest(
@@ -162,9 +174,7 @@ class PackageRequest extends Equatable {
       dateToleranceDays: (json['dateToleranceDays'] as num?)?.toInt() ?? 0,
       weightKg: (json['weightKg'] as num).toDouble(),
       parcelSize: ParcelSize.fromJson(json['parcelSize'] as String),
-      transportMode:
-          transportModeFromWire(json['transportMode'] as String?) ??
-          TransportMode.plane,
+      transportMode: _transportModeFrom(json),
       categories: splitContentCategoryLabels(
         json['contentCategory'] as String?,
       ),
@@ -231,3 +241,9 @@ class PackageRequest extends Equatable {
     commissionGridId,
   ];
 }
+
+/// Mode envoyé au back pour une demande : `ANY` pour « peu importe » (null),
+/// sinon le code du mode. Toujours présent, y compris en modification : un
+/// mode absent y garderait l'ancien.
+String transportModeToRequestWire(TransportMode? mode) =>
+    mode == null ? 'ANY' : transportModeToWire(mode);
