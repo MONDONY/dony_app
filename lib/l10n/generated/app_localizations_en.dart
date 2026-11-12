@@ -20221,6 +20221,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripSeriesErrorProLimit => 'Monthly trip limit reached.';
 
   @override
+  String get tripSeriesErrorGpProPending =>
+      'Your GP Pro request is under review. You can create drafts meanwhile.';
+
+  @override
   String get tripSeriesErrorStripe =>
       'Set up card payments to publish these trips, or create drafts.';
 
