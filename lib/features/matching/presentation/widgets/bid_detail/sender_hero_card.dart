@@ -38,7 +38,7 @@ class SenderHeroCard extends StatelessWidget {
       _isDeliveryNoShowOpen(bid.deliveryNoShowStatus) ||
       _isWindowExpired(bid);
 
-  /// Résumé d'état du colis : fenêtre et lieu de dépôt en ACCEPTED, embarquement
+  /// Résumé d'état du colis : fenêtre et lieu de dépôt en ACCEPTED, départ
   /// ou arrivée prévus, renvoi vers les instructions de retrait, note du code
   /// bloqué ou expiré. `null` sans résumé (statuts terminaux). Reprise par les
   /// tuiles Suivi et Lieux, pour qu'aucune information de l'ancienne bannière
@@ -138,7 +138,7 @@ String? _buildSubtitle(BuildContext context, BidModel bid) {
       return _buildAcceptedSubtitle(context, bid);
 
     // Transit facultatif : une fois le trajet parti, un colis récupéré est en
-    // route même sans scan Transit, « Embarquement prévu » serait faux.
+    // route même sans scan Transit, « Départ prévu » serait faux.
     case 'HANDED_OVER' when !bid.hasDeparted:
       final dateStr = _formatDepartureDate(context, bid.departureDate);
       return dateStr.isNotEmpty

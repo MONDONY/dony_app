@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
@@ -21,6 +22,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/plane_icon_expectations.dart';
 
 class _MockCubit extends MockCubit<ReceptionDetailState>
     implements ReceptionDetailCubit {}
@@ -50,6 +53,7 @@ Reception _confirmed({
   String? instructions = 'Sortie B, parking P2.',
   String? travelerId,
   String? senderId,
+  TransportMode? transportMode,
 }) => Reception(
   bidId: _id,
   linkStatus: 'CONFIRMED',
@@ -66,6 +70,7 @@ Reception _confirmed({
   confirmationCode: code,
   travelerId: travelerId,
   senderId: senderId,
+  transportMode: transportMode,
 );
 
 void main() {
@@ -200,6 +205,59 @@ void main() {
     verify(() => cubit.load(_id)).called(1);
     expect(find.byType(DonyDetailSkeleton), findsOneWidget);
     expect(find.byKey(const Key('reception-confirm')), findsNothing);
+  });
+
+  group('mode du trajet', () {
+    testWidgets('mode absent : départ et arrivée neutres, aucun avion', (
+      tester,
+    ) async {
+      stub(ReceptionDetailLoaded(_confirmed()));
+
+      await pump(tester);
+
+      expect(findDonyIcon('map-pin'), findsOneWidget);
+      expect(findDonyIcon('flag'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('route : le corridor porte l\'icône voiture', (tester) async {
+      stub(ReceptionDetailLoaded(_confirmed(transportMode: TransportMode.car)));
+
+      await pump(tester);
+
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is RouteLabel &&
+              w.from == 'Paris' &&
+              w.transportMode == TransportMode.car,
+        ),
+        findsOneWidget,
+      );
+      expect(findDonyIcon('car'), findsWidgets);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('bateau, lien à confirmer : icône bateau', (tester) async {
+      stub(
+        const ReceptionDetailLoaded(
+          Reception(
+            bidId: _id,
+            linkStatus: 'PENDING',
+            bidStatus: 'ACCEPTED',
+            senderFirstName: 'Awa',
+            departureCity: 'Marseille',
+            arrivalCity: 'Dakar',
+            transportMode: TransportMode.boat,
+          ),
+        ),
+      );
+
+      await pump(tester);
+
+      expect(findDonyIcon('ship'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
   });
 
   group('à confirmer', () {

@@ -111,6 +111,7 @@ BidModel _bid(
   String? from,
   String? to,
   double? weight,
+  TransportMode? mode,
 }) => BidModel(
   id: id,
   announcementId: trip,
@@ -121,6 +122,7 @@ BidModel _bid(
   weightKg: weight,
   departureCity: from,
   arrivalCity: to,
+  transportMode: mode,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
 );
@@ -303,6 +305,7 @@ void main() {
           from: 'Paris',
           to: 'Dakar',
           number: 'DON-SHIP01',
+          mode: TransportMode.boat,
         ),
         _bid('ship-old', 'COMPLETED'),
       ],
@@ -682,6 +685,22 @@ void main() {
       expect(text('En route'), findsOneWidget);
       // Envoi livré : hors de « Mes envois ».
       expect(find.byKey(const Key('suivi-shipment-ship-old')), findsNothing);
+    });
+
+    testWidgets('la ligne d\'un envoi porte le mode de son trajet', (
+      tester,
+    ) async {
+      await pump(tester, roles: ['SENDER']);
+
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('suivi-shipment-ship-1')),
+          matching: find.byWidgetPredicate(
+            (w) => w is RouteLabel && w.transportMode == TransportMode.boat,
+          ),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('tap sur un envoi → parcours en lecture seule', (tester) async {

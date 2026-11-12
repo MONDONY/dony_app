@@ -383,7 +383,12 @@ class _ShipmentRow extends StatelessWidget {
               children: [
                 Expanded(
                   child: from != null && to != null
-                      ? RouteLabel(from: from, to: to, style: titleStyle)
+                      ? RouteLabel(
+                          from: from,
+                          to: to,
+                          transportMode: bid.transportMode,
+                          style: titleStyle,
+                        )
                       : Text(
                           bid.trackingNumber ?? bid.recipientName ?? '',
                           style: titleStyle,

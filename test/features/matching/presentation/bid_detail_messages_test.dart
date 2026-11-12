@@ -133,7 +133,7 @@ void main() {
         );
 
         expect(
-          find.textContaining('Embarquement prévu le mar. 7 oct. à 14:05.'),
+          find.textContaining('Départ prévu le mar. 7 oct. à 14:05.'),
           findsOneWidget,
         );
       },

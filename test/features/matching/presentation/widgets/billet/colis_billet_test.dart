@@ -1,5 +1,6 @@
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_route.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_status_stamp.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
@@ -10,12 +11,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 BidModel _bid({
   String status = 'ACCEPTED',
   DateTime? departureDate,
   String? departureTime,
   String? trackingNumber = 'DON-3TSTR9VH',
+  TransportMode? transportMode,
 }) => BidModel(
   id: 'bid-1',
   announcementId: 'a-1',
@@ -29,6 +32,7 @@ BidModel _bid({
   arrivalCity: 'Abidjan',
   departureDate: departureDate,
   departureTime: departureTime,
+  transportMode: transportMode,
 );
 
 Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
@@ -44,6 +48,13 @@ Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
 }
 
 void main() {
+  testWidgets('le corridor du billet suit le mode du colis', (tester) async {
+    await _pump(tester, _bid(transportMode: TransportMode.boat), true);
+
+    expect(findDonyIcon('ship'), findsOneWidget);
+    expectNoPlaneIcon(tester);
+  });
+
   testWidgets('le billet montre le tampon de statut et le talon', (
     tester,
   ) async {

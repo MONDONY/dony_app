@@ -38,6 +38,7 @@ import 'package:mocktail/mocktail.dart';
 import '../../../helpers/commission_grid_test_doubles.dart';
 import '../../../helpers/error_reporting_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 class _MockNegotiationBloc
     extends MockBloc<BidNegotiationEvent, BidNegotiationState>
@@ -493,6 +494,22 @@ void main() {
     await pumpScreen(tester, BidNegotiationLoaded(_thread(netEur: 37)));
 
     expect(find.byType(GpProBadge), findsNothing);
+  });
+
+  testWidgets('la carte du trajet ne dessine aucun avion (mode inconnu)', (
+    tester,
+  ) async {
+    await pumpScreen(tester, BidNegotiationLoaded(_thread(netEur: 37)));
+
+    expect(find.byKey(const Key('nego-trip-context')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('nego-trip-context')),
+        matching: findDonyIcon('route'),
+      ),
+      findsOneWidget,
+    );
+    expectNoPlaneIcon(tester);
   });
 
   testWidgets('G8 : sans identifiant (ancien serveur), la carte reste inerte', (

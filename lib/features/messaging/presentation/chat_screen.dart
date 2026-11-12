@@ -23,6 +23,7 @@ import 'package:dony/features/incident_report/data/repositories/incident_report_
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
@@ -1614,7 +1615,12 @@ class _TripBanner extends StatelessWidget {
                       color: cs.primaryContainer,
                       borderRadius: BorderRadius.circular(DonyRadius.sm),
                     ),
-                    child: DonyIcon('plane', size: 16, color: cs.primary),
+                    child: DonyIcon(
+                      conversation.tripTransportMode?.iconAsset ??
+                          kNeutralTripIconAsset,
+                      size: 16,
+                      color: cs.primary,
+                    ),
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   Expanded(

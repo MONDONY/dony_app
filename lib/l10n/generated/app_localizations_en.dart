@@ -7234,7 +7234,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String bidDetailSenderHandedOverSubtitleWithDate(String date) {
-    return 'Boarding scheduled for $date.';
+    return 'Departure scheduled for $date.';
   }
 
   @override

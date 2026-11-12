@@ -7276,7 +7276,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String bidDetailSenderHandedOverSubtitleWithDate(String date) {
-    return 'Embarquement prévu le $date.';
+    return 'Départ prévu le $date.';
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:dony/core/utils/server_date_time.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 
@@ -66,6 +67,10 @@ class ConversationModel {
   final String? tripDestination;
   final DateTime? tripDate;
   final double? tripWeightKg;
+
+  /// Mode du trajet du colis. `null` sur un back antérieur au lot « modes de
+  /// transport » : la tuile et l'en-tête montrent alors l'icône neutre.
+  final TransportMode? tripTransportMode;
   // BID_ACCEPTED | DELIVERY_CONFIRMED | TRIP_CANCELLED
   final String? bidStatus;
   // True when the other party deleted: current user can read but not send
@@ -147,6 +152,7 @@ class ConversationModel {
     this.tripDestination,
     this.tripDate,
     this.tripWeightKg,
+    this.tripTransportMode,
     this.bidStatus,
     this.readOnly = false,
     this.deletedBySelf = false,
@@ -231,6 +237,7 @@ class ConversationModel {
     tripDestination: tripDestination,
     tripDate: tripDate,
     tripWeightKg: tripWeightKg,
+    tripTransportMode: tripTransportMode,
     bidStatus: bidStatus,
     readOnly: readOnly ?? this.readOnly,
     deletedBySelf: deletedBySelf,
@@ -266,6 +273,11 @@ class ConversationModel {
             ? DateTime.tryParse(json['tripDate'] as String)
             : null,
         tripWeightKg: (json['tripWeightKg'] as num?)?.toDouble(),
+        tripTransportMode: transportModeFromWire(
+          json['tripTransportMode'] is String
+              ? json['tripTransportMode'] as String
+              : null,
+        ),
         bidStatus: json['bidStatus'] as String?,
         readOnly: json['readOnly'] as bool? ?? false,
         deletedBySelf: json['deletedBySelf'] as bool? ?? false,

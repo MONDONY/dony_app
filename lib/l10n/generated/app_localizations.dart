@@ -12055,7 +12055,7 @@ abstract class AppLocalizations {
   /// HANDED_OVER, sous-titre avec date de depart connue (sender_hero_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Embarquement prévu le {date}.'**
+  /// **'Départ prévu le {date}.'**
   String bidDetailSenderHandedOverSubtitleWithDate(String date);
 
   /// HANDED_OVER, sous-titre sans date de depart (sender_hero_card.dart)

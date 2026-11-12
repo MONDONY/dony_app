@@ -1,8 +1,10 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/presentation/widgets/receptions_section.dart';
+import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/features/tracking/presentation/widgets/shipment_progress_bar.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +12,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/plane_icon_expectations.dart';
 
 class _MockReceptionsCubit extends MockCubit<ReceptionsState>
     implements ReceptionsCubit {}
@@ -104,6 +108,40 @@ void main() {
     expect(find.text('En route'), findsOneWidget);
     // Barre de progression seulement pour un colis confirmé.
     expect(find.byType(ShipmentProgressBar), findsOneWidget);
+  });
+
+  testWidgets('le corridor porte le mode de la réception, neutre sans mode', (
+    tester,
+  ) async {
+    const boat = Reception(
+      bidId: 'b1',
+      linkStatus: 'CONFIRMED',
+      bidStatus: 'IN_TRANSIT',
+      departureCity: 'Marseille',
+      arrivalCity: 'Dakar',
+      transportMode: TransportMode.boat,
+    );
+    const unknown = Reception(
+      bidId: 'u1',
+      linkStatus: 'CONFIRMED',
+      bidStatus: 'IN_TRANSIT',
+      departureCity: 'Paris',
+      arrivalCity: 'Abidjan',
+    );
+    await pump(tester, const ReceptionsLoaded([boat, unknown]));
+
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is RouteLabel &&
+            w.from == 'Marseille' &&
+            w.transportMode == TransportMode.boat,
+      ),
+      findsOneWidget,
+    );
+    expect(findDonyIcon('ship'), findsOneWidget);
+    expect(findDonyIcon('route'), findsOneWidget);
+    expectNoPlaneIcon(tester);
   });
 
   testWidgets('tap : ouvre le colis puis recharge la liste au retour', (

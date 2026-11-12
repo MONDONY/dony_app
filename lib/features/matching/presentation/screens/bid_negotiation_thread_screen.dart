@@ -21,6 +21,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation_pricing.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/activity_refresh.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_negotiation_parcel_sheet.dart';
@@ -486,7 +487,9 @@ class _TripContextCard extends StatelessWidget {
               color: cs.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: DonyIcon('plane', color: cs.primary, size: 18),
+            // Le fil de négociation ne porte pas encore le mode du trajet : icône
+            // neutre, jamais un avion supposé.
+            child: DonyIcon(kNeutralTripIconAsset, color: cs.primary, size: 18),
           ),
         ],
       ),

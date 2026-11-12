@@ -3536,7 +3536,7 @@
   "@bidDetailSenderTravelerFallback": {
     "description": "Repli quand bid.travelerName est vide (money_breakdown_card.dart, sender_sticky_bar.dart, amendment_request_sheet.dart, amendment_card.dart)"
   },
-  "bidDetailSenderHandedOverSubtitleWithDate": "Boarding scheduled for {date}.",
+  "bidDetailSenderHandedOverSubtitleWithDate": "Departure scheduled for {date}.",
   "@bidDetailSenderHandedOverSubtitleWithDate": {
     "description": "HANDED_OVER, sous-titre avec date de depart connue (sender_hero_card.dart)",
     "placeholders": {

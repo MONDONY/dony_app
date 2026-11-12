@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/receptions/data/datasources/reception_remote_datasource.dart';
 import 'package:dony/features/receptions/data/models/parcel_role.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
@@ -42,6 +43,27 @@ Response<dynamic> _response(dynamic data, {int status = 200}) => Response(
 );
 
 void main() {
+  group('Reception.transportMode', () {
+    test('BOAT : bateau', () {
+      final r = Reception.fromJson({
+        ..._confirmedJson(),
+        'transportMode': 'BOAT',
+      });
+      expect(r.transportMode, TransportMode.boat);
+    });
+
+    test('absent ou inconnu : null', () {
+      expect(Reception.fromJson(_confirmedJson()).transportMode, isNull);
+      expect(
+        Reception.fromJson({
+          ..._confirmedJson(),
+          'transportMode': 'ROCKET',
+        }).transportMode,
+        isNull,
+      );
+    });
+  });
+
   group('Reception.fromJson', () {
     test('lien confirmé : tous les champs', () {
       final r = Reception.fromJson(_confirmedJson());

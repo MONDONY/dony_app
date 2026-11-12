@@ -1,3 +1,5 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+
 /// Un colis que l'utilisateur va recevoir : l'expéditeur a saisi son numéro
 /// comme destinataire, et ce numéro correspond à son compte Yadony.
 ///
@@ -30,6 +32,7 @@ class Reception {
     this.senderAvatarUrl,
     this.canRate = false,
     this.myRating,
+    this.transportMode,
   });
 
   static const pending = 'PENDING';
@@ -81,6 +84,10 @@ class Reception {
   /// pas noté (ou back antérieur).
   final int? myRating;
 
+  /// Mode du trajet qui porte le colis. `null` sur un back antérieur : l'écran
+  /// retombe alors sur l'icône neutre, jamais sur un avion.
+  final TransportMode? transportMode;
+
   /// Copie après une note acceptée par le serveur, quand le rechargement du
   /// détail échoue : l'écran montre la note plutôt que de la reproposer.
   Reception withMyRating(int stars) => Reception(
@@ -104,7 +111,14 @@ class Reception {
     senderId: senderId,
     senderAvatarUrl: senderAvatarUrl,
     myRating: stars,
+    transportMode: transportMode,
   );
+
+  /// Mode à dessiner pour le corridor : un back qui ne sert pas encore le mode
+  /// ([transportMode] `null`) donne l'icône neutre « route », jamais un avion
+  /// supposé.
+  TransportMode get displayTransportMode =>
+      transportMode ?? TransportMode.other;
 
   bool get isPending => linkStatus == pending;
   bool get isConfirmed => linkStatus == confirmed;
@@ -180,6 +194,7 @@ class Reception {
       senderAvatarUrl: text('senderAvatarUrl'),
       canRate: json['canRate'] == true,
       myRating: stars('myRating'),
+      transportMode: transportModeFromWire(text('transportMode')),
     );
   }
 }
