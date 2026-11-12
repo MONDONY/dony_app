@@ -145,6 +145,8 @@ class AnnouncementRepository {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
   }) {
     return _remoteDatasource.searchAnnouncements(
       departureCity: departureCity,
@@ -168,6 +170,8 @@ class AnnouncementRepository {
       urgent: urgent,
       maxStops: maxStops,
       paymentMethods: paymentMethods,
+      minItemSize: minItemSize,
+      viaCity: viaCity,
     );
   }
 
@@ -194,6 +198,8 @@ class AnnouncementRepository {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
     int page = 0,
     bool includeFull = false,
   }) {
@@ -219,6 +225,8 @@ class AnnouncementRepository {
       urgent: urgent,
       maxStops: maxStops,
       paymentMethods: paymentMethods,
+      minItemSize: minItemSize,
+      viaCity: viaCity,
       page: page,
       includeFull: includeFull,
     );
@@ -246,6 +254,8 @@ class AnnouncementRepository {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
   }) {
     return _remoteDatasource.countAnnouncements(
       departureCity: departureCity,
@@ -267,6 +277,8 @@ class AnnouncementRepository {
       urgent: urgent,
       maxStops: maxStops,
       paymentMethods: paymentMethods,
+      minItemSize: minItemSize,
+      viaCity: viaCity,
     );
   }
 

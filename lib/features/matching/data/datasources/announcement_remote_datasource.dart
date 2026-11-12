@@ -253,6 +253,8 @@ class AnnouncementRemoteDatasource {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
   }) async {
     final result = await searchAnnouncementsPage(
       departureCity: departureCity,
@@ -277,6 +279,8 @@ class AnnouncementRemoteDatasource {
       urgent: urgent,
       maxStops: maxStops,
       paymentMethods: paymentMethods,
+      minItemSize: minItemSize,
+      viaCity: viaCity,
     );
     return result.content;
   }
@@ -304,6 +308,8 @@ class AnnouncementRemoteDatasource {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
     bool includeFull = false,
   }) async {
     final params = <String, dynamic>{
@@ -335,6 +341,8 @@ class AnnouncementRemoteDatasource {
         urgent: urgent,
         maxStops: maxStops,
         paymentMethods: paymentMethods,
+        minItemSize: minItemSize,
+        viaCity: viaCity,
       ),
     };
     final response = await _apiClient.dio.get(
@@ -377,6 +385,8 @@ class AnnouncementRemoteDatasource {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
   }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/announcements',
@@ -403,6 +413,8 @@ class AnnouncementRemoteDatasource {
           urgent: urgent,
           maxStops: maxStops,
           paymentMethods: paymentMethods,
+          minItemSize: minItemSize,
+          viaCity: viaCity,
         ),
       },
     );
@@ -436,6 +448,8 @@ class AnnouncementRemoteDatasource {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    ItemSize? minItemSize,
+    String? viaCity,
   }) => <String, dynamic>{
     'departureCity': ?departureCity,
     'arrivalCity': ?arrivalCity,
@@ -466,6 +480,11 @@ class AnnouncementRemoteDatasource {
     // filtrés côté serveur. Jamais de liste vide.
     if (paymentMethods != null && paymentMethods.isNotEmpty)
       'paymentMethods': paymentMethods.join(','),
+    // Route : taille minimale (STRICTE côté back : un trajet sans taille
+    // maximum n'apparaît pas) et ville où une étape publiée du voyage
+    // s'arrête. Absents sans filtre ; un back antérieur les ignore.
+    if (minItemSize != null) 'minItemSize': itemSizeToWire(minItemSize),
+    if (viaCity != null && viaCity.trim().isNotEmpty) 'viaCity': viaCity.trim(),
   };
 
   Future<void> deleteAnnouncement(String id) async {

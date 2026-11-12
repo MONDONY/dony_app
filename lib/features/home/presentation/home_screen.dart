@@ -724,6 +724,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
         urgent: q.urgent,
         maxStops: q.maxStops,
         paymentMethods: q.paymentMethods,
+        minItemSize: q.minItemSize,
+        viaCity: q.viaCity,
       ),
     );
   }
@@ -825,6 +827,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
           urgent: q.urgent,
           maxStops: q.maxStops,
           paymentMethods: q.paymentMethods,
+          minItemSize: q.minItemSize,
+          viaCity: q.viaCity,
         );
       }
       if (mounted) {
@@ -1265,6 +1269,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
   }
 
   Future<void> _showWeightSheet() async {
+    // Route : le curseur monte à 1 000 kg ; la même borne sert à lire la
+    // position des poignées (une extrémité = pas de borne).
+    final sliderMaxKg = capacitySliderMaxKgFor(_filters.transportMode);
     final result = await showModalBottomSheet<({double? min, double? max})>(
       context: context,
       useRootNavigator: true,
@@ -1273,6 +1280,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       builder: (_) => _WeightRangeSheet(
         currentMin: _filters.weightMin,
         currentMax: _filters.weightMax,
+        sliderMaxKg: sliderMaxKg,
       ),
     );
     if (result == null || !mounted) return;
@@ -1307,11 +1315,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
     context,
     mode: _filters.transportMode,
     modes: transportModes.searchModes,
-    onApply: (mode) => _onFiltersChanged(
-      mode == null
-          ? _filters.copyWith(clearTransportMode: true)
-          : _filters.copyWith(transportMode: mode),
-    ),
+    onApply: (mode) =>
+        _onFiltersChanged(_filters.withTransportModeChanged(mode)),
   );
 
   /// Bouton « Carte » de la liste : la carte reprend tout l'écran. Feuille
@@ -1437,9 +1442,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     next = result.priceFilter
         ? next.copyWith(maxPricePerKg: result.maxPricePerKg)
         : next.copyWith(clearMaxPricePerKg: true);
-    next = result.transportMode != null
-        ? next.copyWith(transportMode: result.transportMode)
-        : next.copyWith(clearTransportMode: true);
+    next = next.withTransportModeChanged(result.transportMode);
     next = result.contentType != null
         ? next.copyWith(contentType: result.contentType)
         : next.copyWith(clearContentType: true);
@@ -2030,6 +2033,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
           ? common.copyWith(
               clearMaxPricePerKg: true,
               clearWeight: true,
+              clearMinItemSize: true,
+              clearViaCity: true,
               gpProOnly: false,
               suitcase23Only: false,
               clearMinRating: true,
@@ -2125,7 +2130,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       transportModes: modes.searchModes,
       onTransportTap: () => unawaited(_showTransportSheet()),
       onTransportClear: () =>
-          _onFiltersChanged(_filters.copyWith(clearTransportMode: true)),
+          _onFiltersChanged(_filters.withTransportModeChanged(null)),
       onNearMeClear: _deactivateNearMe,
       onUrgentToggle: _onUrgentToggle,
       onDateTap: _showDatePresetSheet,
@@ -3612,9 +3617,16 @@ class _RatingFilterSheetState extends State<_RatingFilterSheet> {
 // ── _WeightRangeSheet ─────────────────────────────────────────────────────────
 
 class _WeightRangeSheet extends StatefulWidget {
-  const _WeightRangeSheet({this.currentMin, this.currentMax});
+  const _WeightRangeSheet({
+    this.currentMin,
+    this.currentMax,
+    this.sliderMaxKg = kCapacitySliderMaxKg,
+  });
   final double? currentMin;
   final double? currentMax;
+
+  /// Extrémité haute du curseur : 50 kg, 1 000 kg en route.
+  final double sliderMaxKg;
 
   @override
   State<_WeightRangeSheet> createState() => _WeightRangeSheetState();
@@ -3622,7 +3634,7 @@ class _WeightRangeSheet extends StatefulWidget {
 
 class _WeightRangeSheetState extends State<_WeightRangeSheet> {
   static const double _kMin = kCapacitySliderMinKg;
-  static const double _kMax = kCapacitySliderMaxKg;
+  double get _kMax => widget.sliderMaxKg;
 
   late double _min;
   late double _max;
@@ -3752,9 +3764,9 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
               Expanded(
                 child: DonyButton(
                   label: context.l10n.commonApply,
-                  onPressed: () => Navigator.of(
-                    context,
-                  ).pop(capacityBoundsFromSlider(_min, _max)),
+                  onPressed: () => Navigator.of(context).pop(
+                    capacityBoundsFromSlider(_min, _max, sliderMaxKg: _kMax),
+                  ),
                 ),
               ),
             ],

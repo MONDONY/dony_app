@@ -119,6 +119,8 @@ class SearchComposerBloc
         clearMinRating: true,
         weekendOnly: false,
         clearTransportMode: true,
+        clearMinItemSize: true,
+        clearViaCity: true,
         kycVerifiedOnly: false,
         clearContentType: true,
         clearUrgencyFilter: true,
@@ -165,6 +167,8 @@ class SearchComposerBloc
           urgent: q.urgent,
           maxStops: q.maxStops,
           paymentMethods: q.paymentMethods,
+          minItemSize: q.minItemSize,
+          viaCity: q.viaCity,
         );
       } else {
         final q = filters.toPackageRequestQuery();

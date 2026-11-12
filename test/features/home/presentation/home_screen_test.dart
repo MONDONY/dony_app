@@ -2289,6 +2289,111 @@ void main() {
     });
   });
 
+  // Curseur Capacité en route (D23 : modifié et testé avec la tâche T8).
+  group('feuille Capacité selon le mode Transport', () {
+    Future<MockAnnouncementBloc> pumpTrips(WidgetTester tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      final bloc = MockAnnouncementBloc();
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        _buildHome(
+          announcementBlocOverride: bloc,
+          user: _makeUser(roles: const ['SENDER', 'TRAVELER']),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+      return bloc;
+    }
+
+    Future<void> pickTransport(WidgetTester tester, String label) async {
+      final chip = find.byKey(const Key('home-chip-transport'));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(label));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> openCapacity(WidgetTester tester) async {
+      final chip = find.byKey(const Key('chip-capacity'));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+    }
+
+    List<AnnouncementSearchRequested> searches(MockAnnouncementBloc bloc) =>
+        verify(
+          () => bloc.add(captureAny()),
+        ).captured.whereType<AnnouncementSearchRequested>().toList();
+
+    testWidgets('route : curseur jusqu\'à 1000 kg, appliquer sans toucher '
+        'n\'envoie aucune borne', (tester) async {
+      final bloc = await pumpTrips(tester);
+      await pickTransport(tester, 'Route');
+      await openCapacity(tester);
+
+      expect(find.text('1000 kg et +'), findsWidgets);
+      expect(find.text('50 kg et +'), findsNothing);
+      final slider = tester.widget<RangeSlider>(find.byType(RangeSlider));
+      expect(slider.min, 1);
+      expect(slider.max, 1000);
+
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+      final last = searches(bloc).last;
+      expect(last.transportMode, TransportMode.car);
+      expect(last.minAvailableKg, isNull);
+      expect(last.maxAvailableKg, isNull);
+    });
+
+    testWidgets('route : minimum déplacé = bornes en centaines de kg, puis '
+        'quitter la route efface cette capacité', (tester) async {
+      final bloc = await pumpTrips(tester);
+      await pickTransport(tester, 'Route');
+      await openCapacity(tester);
+      final slider = tester.getRect(find.byType(RangeSlider));
+      await tester.dragFrom(
+        Offset(slider.left + 24, slider.center.dy),
+        const Offset(400, 0),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+      final routeSearch = searches(bloc).last;
+      expect(routeSearch.minAvailableKg, greaterThan(50));
+      expect(routeSearch.maxAvailableKg, isNull);
+
+      // Puce Transport active : un tap retire le filtre, donc quitte la route.
+      final transportChip = find.byKey(const Key('home-chip-transport'));
+      await tester.ensureVisible(transportChip);
+      await tester.pumpAndSettle();
+      await tester.tap(transportChip);
+      await tester.pumpAndSettle();
+      final allModesSearch = searches(bloc).last;
+      expect(allModesSearch.transportMode, isNull);
+      expect(allModesSearch.minAvailableKg, isNull);
+    });
+
+    testWidgets('avion : curseur 1..50 inchangé', (tester) async {
+      await pumpTrips(tester);
+      await pickTransport(tester, 'Avion');
+      await openCapacity(tester);
+      final slider = tester.widget<RangeSlider>(find.byType(RangeSlider));
+      expect(slider.min, 1);
+      expect(slider.max, 50);
+      expect(find.text('50 kg et +'), findsWidgets);
+    });
+  });
+
   group('première arrivée sur l\'onglet : liste à 100 %', () {
     testWidgets(
       'la feuille se pose à 100 % : favoris, recherche, « + » dans son '

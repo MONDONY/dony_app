@@ -374,6 +374,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       urgent: event.urgent,
       maxStops: event.maxStops,
       paymentMethods: event.paymentMethods,
+      minItemSize: event.minItemSize,
+      viaCity: event.viaCity,
       page: page,
       // FLUTTER-JH : les trajets complets restent visibles, grisés, après
       // les réservables (« Me prévenir si de la place se libère »).

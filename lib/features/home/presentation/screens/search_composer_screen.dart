@@ -183,11 +183,8 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
               if (widget.mode.isTrips)
                 _TransportSection(
                   mode: f.transportMode,
-                  onChanged: (mode) => _update(
-                    mode == null
-                        ? f.copyWith(clearTransportMode: true)
-                        : f.copyWith(transportMode: mode),
-                  ),
+                  onChanged: (mode) =>
+                      _update(f.withTransportModeChanged(mode)),
                 ),
 
               SearchSectionLabel(l.homeComposerSectionWhen),

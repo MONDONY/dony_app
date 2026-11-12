@@ -145,6 +145,13 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   /// `CASH`, `MOBILE_MONEY`) ; `null` ou vide = tous.
   final List<String>? paymentMethods;
 
+  /// Route : taille de colis minimale que le trajet doit accepter (stricte,
+  /// un trajet sans taille maximum n'apparaît pas) ; `null` = peu importe.
+  final ItemSize? minItemSize;
+
+  /// Route : ville où une étape publiée du voyage s'arrête ; `null` = aucune.
+  final String? viaCity;
+
   AnnouncementSearchRequested({
     this.departureCity,
     this.arrivalCity,
@@ -167,6 +174,8 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.urgent,
     this.maxStops,
     this.paymentMethods,
+    this.minItemSize,
+    this.viaCity,
   });
 }
 

@@ -3,6 +3,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -556,6 +557,41 @@ void main() {
     });
 
     test(
+      'minItemSize et viaCity : paramètres serveur, absents si null',
+      () async {
+        when(
+          () => mockDio.get(
+            '/announcements',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer((_) async => _ok({'content': []}, '/announcements'));
+
+        await datasource.searchAnnouncements(
+          minItemSize: ItemSize.xl,
+          viaCity: 'Tanger',
+        );
+        await datasource.searchAnnouncements();
+        await datasource.searchAnnouncementsPage(
+          minItemSize: ItemSize.s,
+          viaCity: 'Nouakchott',
+        );
+
+        final calls = verify(
+          () => mockDio.get(
+            '/announcements',
+            queryParameters: captureAny(named: 'queryParameters'),
+          ),
+        ).captured.cast<Map<String, dynamic>>();
+        expect(calls[0]['minItemSize'], 'XL');
+        expect(calls[0]['viaCity'], 'Tanger');
+        expect(calls[1].containsKey('minItemSize'), isFalse);
+        expect(calls[1].containsKey('viaCity'), isFalse);
+        expect(calls[2]['minItemSize'], 'S');
+        expect(calls[2]['viaCity'], 'Nouakchott');
+      },
+    );
+
+    test(
       'omits urgent param when urgent is false or null (never sends urgent=false)',
       () async {
         when(
@@ -719,6 +755,30 @@ void main() {
       expect(q['page'], 0);
       expect(q['size'], 1);
       expect(q['departureCity'], 'Paris');
+    });
+
+    test(
+      'minItemSize et viaCity : mêmes paramètres que la recherche',
+      () async {
+        stubCount({'content': <dynamic>[], 'totalElements': 1});
+
+        await datasource.countAnnouncements(
+          minItemSize: ItemSize.m,
+          viaCity: 'Tanger',
+        );
+        final q = capturedQuery();
+        expect(q['minItemSize'], 'M');
+        expect(q['viaCity'], 'Tanger');
+      },
+    );
+
+    test('sans taille ni ville : paramètres absents', () async {
+      stubCount({'content': <dynamic>[], 'totalElements': 1});
+
+      await datasource.countAnnouncements(departureCity: 'Paris');
+      final q = capturedQuery();
+      expect(q.containsKey('minItemSize'), isFalse);
+      expect(q.containsKey('viaCity'), isFalse);
     });
 
     test('renvoie totalElements et non la taille du content', () async {
