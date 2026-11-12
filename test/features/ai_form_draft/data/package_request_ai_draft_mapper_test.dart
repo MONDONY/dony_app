@@ -1,6 +1,8 @@
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/ai_form_draft/data/package_request_ai_draft_mapper.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -19,6 +21,8 @@ void main() {
     catalogLabels: catalog,
     now: now,
   );
+
+  tearDown(resetTransportModesForTest);
 
   test('chaque champ du schéma demande d’envoi', () {
     final s = map(const {
@@ -54,9 +58,41 @@ void main() {
     });
     expect(s.totalBudgetEur, 60);
     expect(s.currency, SupportedCurrency.eur);
-    // Ignorés : fixés par le wizard ou plus saisis à la publication.
-    expect(s.transportMode, isNull);
+    // Avion seul : le mode dicté est dans les modes proposés, il est gardé.
+    expect(s.transportMode, TransportMode.plane);
+    // Plus saisi à la publication : ignoré.
     expect(s.pickupNeighborhood, isNull);
+  });
+
+  group('mode de transport dicté', () {
+    test('mode proposé (route allumée) : passe dans transportMode', () {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      final s = map(const {'transportMode': 'CAR'});
+      expect(s.transportMode, TransportMode.car);
+      expect(s.transportModeAny, isFalse);
+    });
+
+    test('mode non proposé : ignoré, le mode du formulaire reste', () {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      final s = map(const {'transportMode': 'BOAT'});
+      expect(s.transportMode, isNull);
+      final kept = map(const {
+        'transportMode': 'BOAT',
+      }, base: const PackageRequestFormState(transportMode: TransportMode.car));
+      expect(kept.transportMode, TransportMode.car);
+    });
+
+    test('mode absent ou illisible : ignoré', () {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: true),
+      );
+      expect(map(const {'weightKg': 5}).transportMode, isNull);
+      expect(map(const {'transportMode': 'HOVERCRAFT'}).transportMode, isNull);
+    });
   });
 
   test(

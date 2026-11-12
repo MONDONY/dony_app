@@ -21122,8 +21122,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Mobile money is only available in CFA francs: I did not select it.';
 
   @override
-  String get aiFormDraftWarningPlaneOnly =>
-      'Only plane trips are available for now: the trip will be published as a plane trip.';
+  String get aiFormDraftWarningModeUnavailable =>
+      'This mode isn\'t available yet: the trip will be published as a flight.';
 
   @override
   String get aiFormDraftWarningBudget =>

@@ -7338,7 +7338,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.aiFormDraftWarningCardNotConfigured,
   'aiFormDraftWarningCardCurrency': (l) => l.aiFormDraftWarningCardCurrency,
   'aiFormDraftWarningMobileMoney': (l) => l.aiFormDraftWarningMobileMoney,
-  'aiFormDraftWarningPlaneOnly': (l) => l.aiFormDraftWarningPlaneOnly,
+  'aiFormDraftWarningModeUnavailable': (l) =>
+      l.aiFormDraftWarningModeUnavailable,
   'aiFormDraftWarningBudget': (l) => l.aiFormDraftWarningBudget,
   'aiFormDraftFilledBanner': (l) => l.aiFormDraftFilledBanner,
   'aiFormDraftTalkAgain': (l) => l.aiFormDraftTalkAgain,

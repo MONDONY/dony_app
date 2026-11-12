@@ -10770,7 +10770,7 @@
   "aiFormDraftWarningCardNotConfigured": "To get paid by card, finish setting up your payments. I will remind you at the Price step.",
   "aiFormDraftWarningCardCurrency": "Card is not available in this currency: choose another payment method.",
   "aiFormDraftWarningMobileMoney": "Mobile money is only available in CFA francs: I did not select it.",
-  "aiFormDraftWarningPlaneOnly": "Only plane trips are available for now: the trip will be published as a plane trip.",
+  "aiFormDraftWarningModeUnavailable": "This mode isn't available yet: the trip will be published as a flight.",
   "aiFormDraftWarningBudget": "This budget is outside the accepted amounts: enter it in step 3.",
   "aiFormDraftFilledBanner": "Filled in by AI. Check each field before publishing.",
   "aiFormDraftTalkAgain": "Talk again",

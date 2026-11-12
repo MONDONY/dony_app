@@ -34350,11 +34350,11 @@ abstract class AppLocalizations {
   /// **'Le mobile money n\'est proposé qu\'en franc CFA : je ne l\'ai pas coché.'**
   String get aiFormDraftWarningMobileMoney;
 
-  /// Avertissement : un autre mode que l'avion a été dit.
+  /// Avertissement : un mode de transport pas proposé à la publication a été dit, le trajet repasse en avion.
   ///
   /// In fr, this message translates to:
-  /// **'Seul l\'avion est proposé pour le moment : le trajet sera publié en avion.'**
-  String get aiFormDraftWarningPlaneOnly;
+  /// **'Ce mode n\'est pas encore proposé : le trajet sera publié en avion.'**
+  String get aiFormDraftWarningModeUnavailable;
 
   /// Avertissement : budget hors des bornes du formulaire.
   ///

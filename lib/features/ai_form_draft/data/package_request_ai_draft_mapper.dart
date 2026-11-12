@@ -1,6 +1,8 @@
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
 import 'package:dony/features/ai_form_draft/data/ai_text_fold.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -11,9 +13,11 @@ import 'package:dony/features/package_request/data/package_request_limits.dart';
 /// par `FormDraftRestored` (qui incrémente `draftRevision` : les étapes
 /// relisent l'état du bloc).
 ///
-/// L'IA ne remplit ni les photos ni le code promo (spec §1). Ignorés aussi :
-/// `transportMode` (le wizard le fixe à l'avion), les quartiers de remise et de
-/// livraison (plus saisis à la publication) et `budgetDeclined` (aucun champ).
+/// L'IA ne remplit ni les photos ni le code promo (spec §1). Le mode dit
+/// (`transportMode`) n'est gardé que s'il fait partie des modes proposés à la
+/// demande (`transportModes.requestModes`), sinon il est ignoré. Ignorés aussi :
+/// les quartiers de remise et de livraison (plus saisis à la publication) et
+/// `budgetDeclined` (aucun champ).
 abstract final class PackageRequestAiDraftMapper {
   /// Comme l'étape 2 (`_kMaxCategories`).
   static const int maxCategories = 5;
@@ -38,6 +42,7 @@ abstract final class PackageRequestAiDraftMapper {
     );
     final budget = ai['totalBudget'];
     final negotiable = ai['negotiable'];
+    final mode = transportModeFromWire(_text(ai['transportMode']));
     final aiCurrency = SupportedCurrency.fromCode(_text(ai['currency']));
     final currency = aiCurrency ?? base.currency;
     final currencyChanged =
@@ -49,6 +54,9 @@ abstract final class PackageRequestAiDraftMapper {
       desiredDate: date != null && !date.isBefore(today) ? date : null,
       dateToleranceDays: tolerance is int && tolerance >= 0 && tolerance <= 7
           ? tolerance
+          : null,
+      transportMode: mode != null && transportModes.requestModes.contains(mode)
+          ? mode
           : null,
       weightKg: weightKg,
       parcelSize: weightKg == null

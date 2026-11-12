@@ -21263,8 +21263,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le mobile money n\'est proposé qu\'en franc CFA : je ne l\'ai pas coché.';
 
   @override
-  String get aiFormDraftWarningPlaneOnly =>
-      'Seul l\'avion est proposé pour le moment : le trajet sera publié en avion.';
+  String get aiFormDraftWarningModeUnavailable =>
+      'Ce mode n\'est pas encore proposé : le trajet sera publié en avion.';
 
   @override
   String get aiFormDraftWarningBudget =>

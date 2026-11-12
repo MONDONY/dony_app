@@ -147,6 +147,10 @@ void main() {
       aiWarningText(fr, AiDraftWarning.noPriceGrid),
       fr.aiFormDraftWarningNoGrid,
     );
+    expect(
+      aiWarningText(fr, AiDraftWarning.modeUnavailable),
+      "Ce mode n'est pas encore proposé : le trajet sera publié en avion.",
+    );
   });
 
   test('lignes du résumé trajet', () {

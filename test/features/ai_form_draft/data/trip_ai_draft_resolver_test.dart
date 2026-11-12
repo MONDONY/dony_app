@@ -1,3 +1,4 @@
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/features/ai_form_draft/data/ai_city_resolver.dart';
 import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
 import 'package:dony/features/ai_form_draft/data/trip_ai_draft_resolver.dart';
@@ -45,11 +46,13 @@ void main() {
   late _MockCityRepository cities;
   late _MockPriceGridRepository grid;
   var cardReady = true;
+  var tripModes = TransportModesAvailability.planeOnly;
 
   setUp(() {
     cities = _MockCityRepository();
     grid = _MockPriceGridRepository();
     cardReady = true;
+    tripModes = TransportModesAvailability.planeOnly;
     when(() => cities.searchCities(any())).thenAnswer(
       (inv) async => _cities[inv.positionalArguments.first as String] ?? [],
     );
@@ -61,6 +64,7 @@ void main() {
         cities: AiCityResolver(cities),
         priceGrid: grid,
         isCardReady: () => cardReady,
+        isModeAvailable: tripModes.allowsForTrip,
         fallbackCurrency: fallbackCurrency,
       );
 
@@ -89,10 +93,61 @@ void main() {
     ]);
   });
 
-  test('un mode autre que l’avion devient PLANE, avec avertissement', () async {
-    final resolved = await resolver().resolve(const {'transportMode': 'CAR'});
-    expect(resolved.draft['transportMode'], 'PLANE');
-    expect(resolved.warnings, [AiDraftWarning.planeOnly]);
+  group('mode de transport dicté', () {
+    test('CAR avec la route allumée : gardé, aucun avertissement', () async {
+      tripModes = const TransportModesAvailability(road: true, boat: false);
+      final resolved = await resolver().resolve(const {'transportMode': 'CAR'});
+      expect(resolved.draft['transportMode'], 'CAR');
+      expect(resolved.warnings, isEmpty);
+    });
+
+    test('BUS avec la route allumée : gardé (affiché « Route »)', () async {
+      tripModes = const TransportModesAvailability(road: true, boat: false);
+      final resolved = await resolver().resolve(const {'transportMode': 'BUS'});
+      expect(resolved.draft['transportMode'], 'BUS');
+      expect(resolved.warnings, isEmpty);
+    });
+
+    test(
+      'BOAT : pas proposé à la publication, PLANE avec avertissement',
+      () async {
+        tripModes = const TransportModesAvailability(road: true, boat: true);
+        final resolved = await resolver().resolve(const {
+          'transportMode': 'BOAT',
+        });
+        expect(resolved.draft['transportMode'], 'PLANE');
+        expect(resolved.warnings, [AiDraftWarning.modeUnavailable]);
+      },
+    );
+
+    test('CAR avec avion seul : PLANE avec avertissement', () async {
+      final resolved = await resolver().resolve(const {'transportMode': 'CAR'});
+      expect(resolved.draft['transportMode'], 'PLANE');
+      expect(resolved.warnings, [AiDraftWarning.modeUnavailable]);
+    });
+
+    test('PLANE : toujours gardé', () async {
+      final resolved = await resolver().resolve(const {
+        'transportMode': 'PLANE',
+      });
+      expect(resolved.draft['transportMode'], 'PLANE');
+      expect(resolved.warnings, isEmpty);
+    });
+
+    test('mode inconnu ou train : PLANE avec avertissement', () async {
+      tripModes = const TransportModesAvailability(road: true, boat: true);
+      for (final wire in ['TRAIN', 'HOVERCRAFT']) {
+        final resolved = await resolver().resolve({'transportMode': wire});
+        expect(resolved.draft['transportMode'], 'PLANE', reason: wire);
+        expect(resolved.warnings, [AiDraftWarning.modeUnavailable]);
+      }
+    });
+
+    test('mode non dicté : rien à contrôler', () async {
+      final resolved = await resolver().resolve(const {'pricingMode': 'KG'});
+      expect(resolved.draft.containsKey('transportMode'), isFalse);
+      expect(resolved.warnings, isEmpty);
+    });
   });
 
   test('grille demandée mais vide : prix au kilo, avertissement', () async {
