@@ -10,6 +10,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -287,13 +289,14 @@ class TripPosterCard extends StatelessWidget {
     final stops = announcement.stops;
     final parts = [
       if (mode != null) mode.label(l),
-      if (stops != null) tripStopsBadgeLabel(l, stops),
+      if (stops != null && supportsStops(transportModeOrPlane(mode)))
+        tripStopsBadgeLabel(l, stops),
     ];
     return parts.isEmpty ? null : parts.join(' · ');
   }
 
-  /// Corridor : départ puis arrivée, séparés par l'avion qui pointe vers la
-  /// droite, dans le sens de la lecture donc du voyage.
+  /// Corridor : départ puis arrivée, séparés par l'icône du mode (l'avion
+  /// pointe vers la droite), dans le sens de la lecture donc du voyage.
   ///
   /// **La disposition suit la longueur des noms.** « MARSEILLE ✈ OUAGADOUGOU »
   /// est deux fois plus large que « PARIS ✈ DAKAR » : tout ramener de force
@@ -349,7 +352,7 @@ class TripPosterCard extends StatelessWidget {
       return _corridorLine([
         city(departure, departureFlag, flagFirst: true),
         const SizedBox(width: _corridorGap),
-        _plane(),
+        _modeIcon(),
         const SizedBox(width: _corridorGap),
         city(arrival, arrivalFlag, flagFirst: false),
       ]);
@@ -360,7 +363,7 @@ class TripPosterCard extends StatelessWidget {
       children: [
         _corridorLine([city(departure, departureFlag, flagFirst: true)]),
         _corridorLine([
-          _plane(),
+          _modeIcon(),
           const SizedBox(width: _corridorGap),
           city(arrival, arrivalFlag, flagFirst: false),
         ]),
@@ -379,14 +382,27 @@ class TripPosterCard extends StatelessWidget {
     ),
   );
 
-  Widget _plane() => Transform.rotate(
-    angle: math.pi / 2,
-    child: const Icon(
-      Icons.flight_rounded,
-      size: _corridorIconSize,
-      color: PosterPalette.terra,
-    ),
-  );
+  /// Icône du mode entre les deux villes. Seul l'avion (glyphe qui pointe vers
+  /// le haut) est tourné pour pointer vers la droite ; route et bateau sont
+  /// déjà de profil.
+  Widget _modeIcon() {
+    final mode = transportModeOrPlane(announcement.transportMode);
+    if (mode != TransportMode.plane) {
+      return DonyIcon(
+        mode.iconAsset,
+        size: _corridorIconSize,
+        color: PosterPalette.terra,
+      );
+    }
+    return Transform.rotate(
+      angle: math.pi / 2,
+      child: const Icon(
+        Icons.flight_rounded,
+        size: _corridorIconSize,
+        color: PosterPalette.terra,
+      ),
+    );
+  }
 
   /// Largeur rendue d'un texte, pour arbitrer la disposition avant de peindre.
   static double _textWidth(String value, TextStyle style) {

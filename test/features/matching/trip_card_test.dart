@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 import '../../helpers/l10n_test_helpers.dart';
+import '../../helpers/plane_icon_expectations.dart';
 
 AnnouncementModel _announcement({
   String status = 'ACTIVE',
@@ -24,9 +25,11 @@ AnnouncementModel _announcement({
   String currency = 'EUR',
   DateTime? departureDate,
   int? stopsCount,
+  String? transportMode,
 }) {
   return AnnouncementModel.fromJson({
     'stopsCount': ?stopsCount,
+    'transportMode': ?transportMode,
     'id': 'a1',
     'travelerId': 't1',
     'departureCity': departureCity,
@@ -75,6 +78,73 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.byKey(const Key('trip-stops-badge')), findsNothing);
+  });
+
+  group('icône du trait selon le mode', () {
+    Future<void> pumpMode(
+      WidgetTester tester, {
+      String? mode,
+      int? stopsCount,
+    }) async {
+      await tester.pumpWidget(
+        _wrap(
+          TripCard(
+            announcement: _announcement(
+              transportMode: mode,
+              stopsCount: stopsCount,
+            ),
+            onTap: () {},
+            index: 0,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
+    testWidgets('route : icône car, aucun avion, badge d\'escales absent', (
+      tester,
+    ) async {
+      await pumpMode(tester, mode: 'CAR', stopsCount: 1);
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+      expect(find.byKey(const Key('trip-stops-badge')), findsNothing);
+      expect(find.text('1 escale'), findsNothing);
+    });
+
+    testWidgets('bateau : icône ship non tournée, aucun avion', (tester) async {
+      await pumpMode(tester, mode: 'BOAT');
+      expect(findDonyIcon('ship'), findsOneWidget);
+      expect(
+        find.ancestor(
+          of: findDonyIcon('ship'),
+          matching: find.byType(RotatedBox),
+        ),
+        findsNothing,
+      );
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('avion : icône plane tournée, badge d\'escales gardé', (
+      tester,
+    ) async {
+      await pumpMode(tester, mode: 'PLANE', stopsCount: 1);
+      // Le trait et le badge d'escales portent chacun un avion.
+      expect(findDonyIcon('plane'), findsNWidgets(2));
+      expect(
+        find.ancestor(
+          of: findDonyIcon('plane'),
+          matching: find.byType(RotatedBox),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('1 escale'), findsOneWidget);
+    });
+
+    testWidgets('ancien trajet sans mode : avion', (tester) async {
+      await pumpMode(tester, stopsCount: 0);
+      expect(findDonyIcon('plane'), findsNWidgets(2));
+      expect(find.text('Vol direct'), findsOneWidget);
+    });
   });
 
   testWidgets('affiche route, drapeaux, progression et prix', (tester) async {

@@ -244,6 +244,32 @@ void main() {
     expect(caption, contains('12 kg'));
   });
 
+  testWidgets('la légende ouvre sur l\'emoji du mode du trajet', (
+    tester,
+  ) async {
+    for (final (wire, emoji) in [
+      ('CAR', '🚗'),
+      ('BOAT', '🚢'),
+      ('PLANE', '✈️'),
+      (null, '✈️'),
+    ]) {
+      copied.clear();
+      await _pump(
+        tester,
+        announcement: _announcement(extra: {'transportMode': ?wire}),
+      );
+      await _tapAction(tester, 'Copier la légende');
+      expect(
+        copied.single,
+        startsWith('$emoji Paris vers Dakar'),
+        reason: '$wire',
+      );
+      if (wire == 'CAR' || wire == 'BOAT') {
+        expect(copied.single, isNot(contains('✈')), reason: '$wire');
+      }
+    }
+  });
+
   /// Le canal de contact est l'application, jamais le portable du voyageur.
   testWidgets('la légende ne contient aucun numéro de téléphone', (
     tester,

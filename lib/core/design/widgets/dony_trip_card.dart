@@ -1,6 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -40,6 +40,7 @@ class DonyTripCard extends StatelessWidget {
     this.animationDelay,
     this.verified = false,
     this.pro = false,
+    this.transportMode,
   });
 
   final String travelerName;
@@ -54,6 +55,10 @@ class DonyTripCard extends StatelessWidget {
   final Duration? animationDelay;
   final bool verified;
   final bool pro;
+
+  /// Mode du trajet : son icône pose le trait entre départ et arrivée ;
+  /// `null` (ancien trajet) vaut avion.
+  final TransportMode? transportMode;
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +117,11 @@ class DonyTripCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.base),
 
           // — Route avec flèche animée
-          _RouteDisplay(origin: route.$1, destination: route.$2),
+          _RouteDisplay(
+            origin: route.$1,
+            destination: route.$2,
+            mode: transportModeOrPlane(transportMode),
+          ),
 
           const SizedBox(height: DonySpacing.base),
           Container(height: 1, color: cs.outline),
@@ -173,10 +182,15 @@ class DonyTripCard extends StatelessWidget {
 }
 
 class _RouteDisplay extends StatelessWidget {
-  const _RouteDisplay({required this.origin, required this.destination});
+  const _RouteDisplay({
+    required this.origin,
+    required this.destination,
+    required this.mode,
+  });
 
   final String origin;
   final String destination;
+  final TransportMode mode;
 
   @override
   Widget build(BuildContext context) {
@@ -210,7 +224,7 @@ class _RouteDisplay extends StatelessWidget {
                 height: 1.5,
                 color: cs.primary.withValues(alpha: 0.3),
               ),
-              const DonyEmoji.planeTakeoff(),
+              _ModeGlyph(mode: mode),
               Container(
                 width: 32,
                 height: 1.5,
@@ -237,5 +251,25 @@ class _RouteDisplay extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// Icône du mode au milieu du trait départ → arrivée. Seul l'avion est tourné
+/// (le glyphe pointe vers le haut), route et bateau sont déjà de profil.
+class _ModeGlyph extends StatelessWidget {
+  const _ModeGlyph({required this.mode});
+
+  final TransportMode mode;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = DonyIcon(
+      mode.iconAsset,
+      size: 18,
+      color: Theme.of(context).colorScheme.primary,
+    );
+    return mode == TransportMode.plane
+        ? RotatedBox(quarterTurns: 1, child: icon)
+        : icon;
   }
 }

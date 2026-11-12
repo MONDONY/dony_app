@@ -119,6 +119,31 @@ void main() {
       }
     });
 
+    testWidgets('rien hors avion, avion et mode absent affichés', (
+      tester,
+    ) async {
+      for (final mode in [TransportMode.car, TransportMode.boat]) {
+        await tester.pumpWidget(
+          localizedApp(
+            TripStopsBadge(stops: TripStops.direct, transportMode: mode),
+          ),
+        );
+        expect(
+          find.byKey(const Key('trip-stops-badge')),
+          findsNothing,
+          reason: '$mode',
+        );
+      }
+      for (final mode in [TransportMode.plane, null]) {
+        await tester.pumpWidget(
+          localizedApp(
+            TripStopsBadge(stops: TripStops.direct, transportMode: mode),
+          ),
+        );
+        expect(find.byKey(const Key('trip-stops-badge')), findsOneWidget);
+      }
+    });
+
     testWidgets('anglais', (tester) async {
       enableEnglish();
       await tester.pumpWidget(

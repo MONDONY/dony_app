@@ -9,6 +9,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import '../../helpers/commission_grid_test_doubles.dart';
 import '../../helpers/l10n_test_helpers.dart';
+import '../../helpers/plane_icon_expectations.dart';
 
 AnnouncementModel _announcement({
   double pricePerKg = 5,
@@ -79,6 +80,61 @@ void main() {
 
     expect(find.text('PARIS'), findsOneWidget);
     expect(find.text('DAKAR'), findsOneWidget);
+  });
+
+  group('icône du corridor selon le mode', () {
+    Future<void> pumpMode(
+      WidgetTester tester, {
+      String? mode,
+      Object? stopsCount,
+    }) => _pump(
+      tester,
+      _announcement(extra: {'transportMode': ?mode, 'stopsCount': ?stopsCount}),
+    );
+
+    testWidgets('route : icône car, aucun avion, pas d\'escales', (
+      tester,
+    ) async {
+      await pumpMode(tester, mode: 'CAR', stopsCount: 1);
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+      expect(find.textContaining('escale'), findsNothing);
+    });
+
+    testWidgets('bateau : icône ship, aucun avion', (tester) async {
+      await pumpMode(tester, mode: 'BOAT');
+      expect(findDonyIcon('ship'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('avion : avion tourné et escales dans le détail', (
+      tester,
+    ) async {
+      await pumpMode(tester, mode: 'PLANE', stopsCount: 0);
+      expect(findMaterialFlightIcons(), findsOneWidget);
+      expect(findDonyIcon('car'), findsNothing);
+      expect(find.textContaining('Vol direct'), findsOneWidget);
+    });
+
+    testWidgets('ancien trajet sans mode : avion', (tester) async {
+      await pumpMode(tester);
+      expect(findMaterialFlightIcons(), findsOneWidget);
+    });
+
+    testWidgets('villes longues en route : corridor sur deux lignes, '
+        'aucun avion', (tester) async {
+      await _pump(
+        tester,
+        _announcement(
+          departureCity: 'Marseille',
+          arrivalCity: 'Ouagadougou',
+          extra: {'transportMode': 'CAR'},
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
   });
 
   /// Les frais de service n'apparaissent qu'au récapitulatif de paiement :

@@ -7,6 +7,7 @@ import 'package:dony/core/widgets/owner_views_label.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
@@ -246,6 +247,7 @@ class TravelerCard extends StatelessWidget {
                 arrFlag: arrFlag,
                 showChevron: isOwnAnnouncement,
                 stops: announcement.stops,
+                transportMode: announcement.transportMode,
               ),
               const SizedBox(height: DonySpacing.xs),
               if (compact)
@@ -663,7 +665,8 @@ class _PressableCardState extends State<_PressableCard> {
   }
 }
 
-/// En-tête trajet : `drapeau · ville  ──✈──  ville · drapeau`.
+/// En-tête trajet : `drapeau · ville  ──✈──  ville · drapeau` (l'icône du
+/// connecteur suit le mode du trajet).
 /// Les villes sont non-flexibles (toujours affichées en entier) et le
 /// connecteur occupe l'espace restant — la ligne s'étire entre les deux villes.
 class _RouteHeader extends StatelessWidget {
@@ -674,6 +677,7 @@ class _RouteHeader extends StatelessWidget {
     required this.arrFlag,
     this.showChevron = false,
     this.stops,
+    this.transportMode,
   });
 
   final String departureCity;
@@ -690,6 +694,10 @@ class _RouteHeader extends StatelessWidget {
   /// celle d'avant.
   final TripStops? stops;
 
+  /// Mode du trajet ; `null` (ancien trajet) vaut avion. Les escales ne
+  /// s'affichent que pour l'avion.
+  final TransportMode? transportMode;
+
   /// Largeur que la ligne garde au minimum entre les deux villes.
   static const double _minConnectorWidth = 48;
 
@@ -698,6 +706,7 @@ class _RouteHeader extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final cityStyle = tt.headlineMedium?.copyWith(color: cs.onSurface);
+    final mode = transportModeOrPlane(transportMode);
 
     // Les villes gardent leur largeur naturelle et la ligne prend tout le reste.
     // Avec des `Flexible`, l'espace libre était partagé en parts égales et ce
@@ -752,8 +761,8 @@ class _RouteHeader extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               key: const Key('route-connector'),
-              child: stops == null
-                  ? const _RouteConnector()
+              child: stops == null || !supportsStops(mode)
+                  ? _RouteConnector(mode: mode)
                   : _RouteConnectorWithStops(stops: stops!),
             ),
             const SizedBox(width: DonySpacing.sm),
@@ -808,7 +817,7 @@ class _RouteConnectorWithStops extends StatelessWidget {
       children: [
         const SizedBox(height: _labelHeight),
         if (fractions.isEmpty)
-          const _RouteConnector()
+          const _RouteConnector(mode: TransportMode.plane)
         else
           SizedBox(
             key: const Key('route-stop-markers'),
@@ -859,10 +868,12 @@ class _RouteConnectorWithStops extends StatelessWidget {
   }
 }
 
-/// Ligne pleine fine surmontée d'une icône avion (le fond surface « coupe » la
-/// ligne autour de l'avion pour un rendu net).
+/// Ligne pleine fine surmontée de l'icône du mode (le fond surface « coupe » la
+/// ligne autour de l'icône pour un rendu net).
 class _RouteConnector extends StatelessWidget {
-  const _RouteConnector();
+  const _RouteConnector({required this.mode});
+
+  final TransportMode mode;
 
   @override
   Widget build(BuildContext context) {
@@ -886,14 +897,21 @@ class _RouteConnector extends StatelessWidget {
             ),
           ),
           // Lucide 'plane' pointe en haut-à-gauche par défaut → quart de tour
-          // pour le faire pointer vers la droite (sens du trajet).
+          // pour le faire pointer vers la droite (sens du trajet). Les autres
+          // icônes de mode sont déjà de profil.
           Container(
             color: cs.surface,
             padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-            child: RotatedBox(
-              quarterTurns: 1,
-              child: DonyIcon('plane', size: 16, color: cs.primary),
-            ),
+            child: mode == TransportMode.plane
+                ? RotatedBox(
+                    quarterTurns: 1,
+                    child: DonyIcon(
+                      mode.iconAsset,
+                      size: 16,
+                      color: cs.primary,
+                    ),
+                  )
+                : DonyIcon(mode.iconAsset, size: 16, color: cs.primary),
           ),
         ],
       ),

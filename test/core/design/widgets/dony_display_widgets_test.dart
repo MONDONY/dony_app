@@ -1,7 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../helpers/plane_icon_expectations.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
   theme: AppTheme.light(),
@@ -80,7 +83,7 @@ void main() {
       );
     });
 
-    testWidgets('shows flight icon', (tester) async {
+    testWidgets('shows flight icon without a mode', (tester) async {
       await tester.pumpWidget(
         _wrap(
           const DonyTripCard(
@@ -92,9 +95,59 @@ void main() {
         ),
       );
       await tester.pump();
-      // DonyTripCard rend désormais l'emoji décollage (DonyEmoji) au centre du
-      // tracé de trajet, à la place de Icons.flight_takeoff_rounded.
-      expect(find.text('🛫'), findsOneWidget);
+      // Sans mode (ancien trajet), l'icône avion est au centre du tracé.
+      expect(findDonyIcon('plane'), findsOneWidget);
+    });
+
+    testWidgets('icône du trait selon le mode, jamais d\'avion hors avion', (
+      tester,
+    ) async {
+      for (final mode in [
+        TransportMode.car,
+        TransportMode.bus,
+        TransportMode.boat,
+        TransportMode.train,
+      ]) {
+        await tester.pumpWidget(
+          _wrap(
+            DonyTripCard(
+              travelerName: 'Modibo',
+              route: baseRoute,
+              date: '5 mars 2025',
+              price: '9 €/kg',
+              transportMode: mode,
+            ),
+          ),
+        );
+        await tester.pump();
+        expect(findDonyIcon(mode.iconAsset), findsOneWidget, reason: '$mode');
+        expectNoPlaneIcon(tester);
+      }
+    });
+
+    testWidgets('mode absent ou avion : avion tourné', (tester) async {
+      for (final mode in [null, TransportMode.plane]) {
+        await tester.pumpWidget(
+          _wrap(
+            DonyTripCard(
+              travelerName: 'Modibo',
+              route: baseRoute,
+              date: '5 mars 2025',
+              price: '9 €/kg',
+              transportMode: mode,
+            ),
+          ),
+        );
+        await tester.pump();
+        expect(findDonyIcon('plane'), findsOneWidget);
+        expect(
+          find.ancestor(
+            of: findDonyIcon('plane'),
+            matching: find.byType(RotatedBox),
+          ),
+          findsOneWidget,
+        );
+      }
     });
 
     testWidgets('shows rating row when rating is provided', (tester) async {

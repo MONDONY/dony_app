@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -16,16 +17,20 @@ String tripStopsBadgeLabel(AppLocalizations l, TripStops stops) =>
 /// Badge « Vol direct / 1 escale / 2 escales et + » des cartes de trajet.
 ///
 /// Rien n'est affiché quand le voyageur n'a pas renseigné les escales : un
-/// trajet sans information ne doit pas avoir l'air d'un vol direct.
+/// trajet sans information ne doit pas avoir l'air d'un vol direct. Rien non
+/// plus hors avion : route et bateau n'ont pas d'escales de vol.
 class TripStopsBadge extends StatelessWidget {
-  const TripStopsBadge({super.key, required this.stops});
+  const TripStopsBadge({super.key, required this.stops, this.transportMode});
 
   final TripStops? stops;
+
+  /// Mode du trajet ; `null` (ancien trajet) vaut avion.
+  final TransportMode? transportMode;
 
   @override
   Widget build(BuildContext context) {
     final value = stops;
-    if (value == null) {
+    if (value == null || !supportsStops(transportModeOrPlane(transportMode))) {
       return const SizedBox.shrink();
     }
     final cs = Theme.of(context).colorScheme;

@@ -29,6 +29,7 @@ AnnouncementModel _ann(
   String arr, {
   AddressData? pickup,
   AddressData? delivery,
+  TransportMode? mode,
 }) => AnnouncementModel(
   id: id,
   travelerId: 't1',
@@ -43,6 +44,7 @@ AnnouncementModel _ann(
   updatedAt: DateTime(2026, 5),
   pickupAddress: pickup,
   deliveryAddress: delivery,
+  transportMode: mode,
   traveler: const TravelerProfile(id: 't1', displayName: 'Sékou Ba'),
 );
 
@@ -61,6 +63,53 @@ Widget _wrap(Widget child) {
 }
 
 void main() {
+  group('sameSpotClusterPrefix', () {
+    test('un seul mode : l\'emoji du mode', () {
+      expect(
+        sameSpotClusterPrefix([
+          _ann('1', 'Paris', 'Dakar', mode: TransportMode.car),
+          _ann('2', 'Paris', 'Dakar', mode: TransportMode.car),
+        ]),
+        '🚗',
+      );
+      expect(
+        sameSpotClusterPrefix([
+          _ann('1', 'Marseille', 'Abidjan', mode: TransportMode.boat),
+        ]),
+        '🚢',
+      );
+    });
+
+    test('le bus compte comme la route', () {
+      expect(
+        sameSpotClusterPrefix([
+          _ann('1', 'Paris', 'Dakar', mode: TransportMode.bus),
+          _ann('2', 'Paris', 'Dakar', mode: TransportMode.car),
+        ]),
+        '🚗',
+      );
+    });
+
+    test('modes absents (anciens trajets) : avion', () {
+      expect(
+        sameSpotClusterPrefix([
+          _ann('1', 'Paris', 'Dakar'),
+          _ann('2', 'Paris', 'Dakar', mode: TransportMode.plane),
+        ]),
+        '✈️',
+      );
+    });
+
+    test('modes mélangés : pas d\'emoji', () {
+      expect(
+        sameSpotClusterPrefix([
+          _ann('1', 'Paris', 'Dakar', mode: TransportMode.plane),
+          _ann('2', 'Paris', 'Dakar', mode: TransportMode.car),
+        ]),
+        '',
+      );
+    });
+  });
   setUpAll(() => initializeDateFormatting('fr'));
 
   group('AnnouncementMapView', () {
