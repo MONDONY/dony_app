@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
@@ -44,6 +45,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/mode_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_currencies_confirm_sheet.dart';
@@ -105,33 +107,6 @@ class CreateTripArgs {
   });
 }
 
-/// Index de l'étape Prix & conditions, la dernière du formulaire, en tête de
-/// laquelle se choisit la devise du trajet (FLUTTER-RA).
-const int _kPriceStep = 2;
-
-/// Index de l'écran à trois étapes (trajet, lieux et capacité, prix et
-/// conditions) pour une étape du brouillon. Transitoire : disparaît avec le
-/// formulaire à cinq étapes.
-int _stepIndexOf(TripFormStep step) => switch (step) {
-  TripFormStep.mode || TripFormStep.trajet => 0,
-  TripFormStep.capacite => 1,
-  TripFormStep.prix || TripFormStep.conditions => 2,
-};
-
-/// Étapes de l'en-tête tant que l'écran n'a que trois étapes.
-const List<TripFormStep> _kVisibleSteps = [
-  TripFormStep.trajet,
-  TripFormStep.capacite,
-  TripFormStep.prix,
-];
-
-/// Étape du brouillon pour un index de l'écran à trois étapes.
-TripFormStep _stepAtIndex(int index) => switch (index) {
-  1 => TripFormStep.capacite,
-  2 => TripFormStep.prix,
-  _ => TripFormStep.trajet,
-};
-
 class CreateTripScreen extends StatefulWidget {
   final CreateTripArgs? args;
 
@@ -142,10 +117,29 @@ class CreateTripScreen extends StatefulWidget {
 }
 
 class _CreateTripScreenState extends State<CreateTripScreen> {
+  /// Pilote « Aperçu » / « Enregistrer » / « Confirmer » à l'étape
+  /// Conditions : mode choisi et prix valide.
   late final ValueNotifier<bool> _canSubmitNotifier;
-  late final ValueNotifier<int> _currentStepNotifier;
+
+  /// Pilote « Continuer » à l'étape Prix (même règle que
+  /// [_canSubmitNotifier], portée par l'étape où le prix se saisit).
+  late final ValueNotifier<bool> _canContinuePriceNotifier;
+  late final ValueNotifier<TripFormStep> _currentStepNotifier;
   late final ValueNotifier<bool> _canContinueNotifier;
   late final ValueNotifier<bool> _canContinueStep1Notifier;
+
+  /// Mode du trajet. Porté par l'écran : « Continuer » de l'étape Mode en
+  /// dépend. Le formulaire le pré-remplit (modification, trajet dédié,
+  /// création sans choix de mode) et le lit à la soumission.
+  final ValueNotifier<TransportMode?> _transportModeNotifier =
+      ValueNotifier<TransportMode?>(null);
+
+  /// Modes proposés à la publication, lus une fois à l'ouverture : un
+  /// changement du drapeau en cours de saisie ne redessine pas les étapes.
+  late final List<TransportMode> _tripModes;
+
+  /// Étapes visibles, dans l'ordre (Mode seulement s'il y a un choix).
+  late final List<TripFormStep> _steps;
   late final ValueNotifier<TimeOfDay?> _departureTimeNotifier;
   void Function({bool saveAsDraft})? _submit;
 
@@ -231,10 +225,23 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   void initState() {
     super.initState();
     final args = widget.args;
+    final modes = transportModes;
+    _tripModes = modes.tripCreationModes;
+    _steps = tripFormSteps(
+      showModeStep: showModeStepFor(
+        isEdit: args?.announcement != null,
+        isLocked: args?.lockContext != null,
+        // Le contexte d'une demande porte toujours un mode aujourd'hui ; la
+        // demande « peu importe » (mode nul) ouvrira l'étape Mode.
+        lockedModeKnown: true,
+        modes: modes,
+      ),
+    );
     _canSubmitNotifier = ValueNotifier<bool>(
       args?.announcement?.transportMode != null || args?.lockContext != null,
     );
-    _currentStepNotifier = ValueNotifier<int>(0);
+    _canContinuePriceNotifier = ValueNotifier<bool>(_canSubmitNotifier.value);
+    _currentStepNotifier = ValueNotifier<TripFormStep>(_steps.first);
     _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
     _canContinueNotifier = ValueNotifier<bool>(
       args?.announcement != null || args?.lockContext != null,
@@ -282,6 +289,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   @override
   void dispose() {
     _canSubmitNotifier.dispose();
+    _canContinuePriceNotifier.dispose();
+    _transportModeNotifier.dispose();
     _currentStepNotifier.dispose();
     _departureTimeNotifier.dispose();
     _canContinueNotifier.dispose();
@@ -392,17 +401,38 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
   /// Recharge le brouillon local choisi dans la feuille des brouillons, puis
   /// remet le voyageur à l'étape où il s'était arrêté, si les étapes
-  /// précédentes sont toujours complètes.
+  /// précédentes sont toujours complètes : sinon à la première incomplète.
+  /// Une étape absente de cet écran (Mode sans choix de mode) vaut Trajet.
   void _resumeLocalDraft(TripFormDraft restored) {
     _restoreDraft?.call(restored);
-    var step = _stepIndexOf(restored.stepId);
-    if (step >= 1 && !_canContinueNotifier.value) step = 0;
-    if (step >= 2 && !_canContinueStep1Notifier.value) step = 1;
-    _currentStepNotifier.value = step;
+    final target = _steps.contains(restored.stepId)
+        ? restored.stepId
+        : TripFormStep.trajet;
+    for (final step in _steps) {
+      if (step == target || !_canLeave(step)) {
+        _currentStepNotifier.value = step;
+        return;
+      }
+    }
+  }
+
+  /// L'étape [step] est-elle complète (son bouton du bas actif) ?
+  bool _canLeave(TripFormStep step) => switch (step) {
+    TripFormStep.mode => _transportModeNotifier.value != null,
+    TripFormStep.trajet => _canContinueNotifier.value,
+    TripFormStep.capacite => _canContinueStep1Notifier.value,
+    TripFormStep.prix => _canContinuePriceNotifier.value,
+    TripFormStep.conditions => _canSubmitNotifier.value,
+  };
+
+  /// Étape voisine de [step] dans [_steps] (`delta` -1 ou +1), `null` au bord.
+  TripFormStep? _stepBeside(TripFormStep step, int delta) {
+    final i = _steps.indexOf(step) + delta;
+    return i >= 0 && i < _steps.length ? _steps[i] : null;
   }
 
   /// Ouvre « Créer avec l'IA » puis applique le brouillon par le chemin de
-  /// reprise de brouillon, posé sur la saisie courante, à l'étape 1.
+  /// reprise de brouillon, posé sur la saisie courante, à la première étape.
   Future<void> _openAiDraft() async {
     final outcome = await getIt<AiFormDraftLauncher>().open(
       context,
@@ -416,7 +446,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       return;
     }
     restore(TripAiDraftMapper.toFormDraft(outcome.draft, base: snapshot()));
-    _currentStepNotifier.value = 0;
+    _currentStepNotifier.value = _steps.first;
     // « Reparler » complète : les marques de la passe précédente restent.
     _aiFilled.markFilled({..._aiFilled.state, ...outcome.filledFields});
     if (_formScrollController.hasClients) {
@@ -438,13 +468,13 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   }
 
   /// « Modifier » de la ligne Devise du récapitulatif (FLUTTER-NN) : ferme
-  /// l'aperçu, revient à l'étape Prix & conditions dont l'encart de devise
-  /// ouvre l'étape (FLUTTER-RA), remonte en tête du formulaire, puis ouvre
+  /// l'aperçu, revient à l'étape Prix dont l'encart de devise ouvre l'étape
+  /// (FLUTTER-RA), remonte en tête du formulaire, puis ouvre
   /// directement son sélecteur. Création seulement : en modification ou en
   /// trajet dédié la devise est figée.
   Future<void> _changeCurrencyFromPreview(BuildContext formContext) async {
     Navigator.of(formContext, rootNavigator: true).pop();
-    _currentStepNotifier.value = _kPriceStep;
+    _currentStepNotifier.value = TripFormStep.prix;
     if (_formScrollController.hasClients) {
       await _formScrollController.animateTo(
         0,
@@ -562,8 +592,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             resizeToAvoidBottomInset: true,
             // Bouton sticky dans `body` (pas `bottomNavigationBar`) : Flutter ne
             // remonte pas fiablement `bottomNavigationBar` au-dessus du clavier,
-            // ce qui le cachait derrière sur l'étape Prix & conditions (champs prix /
-            // conditions). Même fix que phone_auth_screen.dart.
+            // ce qui le cachait derrière sur les étapes Prix et Conditions
+            // (champs prix, description). Même fix que phone_auth_screen.dart.
             body: Column(
               children: [
                 Expanded(
@@ -578,12 +608,13 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                             availability: availability,
                             filled: _aiFilled,
                             currentStepNotifier: _currentStepNotifier,
+                            firstStep: _steps.first,
                             onOpen: () => unawaited(_openAiDraft()),
                           ),
                         const SizedBox(height: DonySpacing.base),
-                        // L'encart de devise vit en tête de l'étape Prix &
-                        // conditions, juste avant les prix (FLUTTER-RA) : il
-                        // n'a rien à faire à l'étape des villes et dates.
+                        // L'encart de devise vit en tête de l'étape Prix,
+                        // juste avant les prix (FLUTTER-RA) : il n'a rien à
+                        // faire à l'étape des villes et dates.
                         _TripFormContent(
                           // Réservé aux tests : cf. `handoverDeadlineForTest`
                           // sur `_TripFormContentState`, atteint via ce Key
@@ -595,7 +626,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                           lockContext: args?.lockContext,
                           lockCorridorAndDate:
                               args?.lockCorridorAndDate ?? false,
+                          steps: _steps,
+                          tripModes: _tripModes,
+                          transportModeNotifier: _transportModeNotifier,
                           canSubmitNotifier: _canSubmitNotifier,
+                          canContinuePriceNotifier: _canContinuePriceNotifier,
+                          onPreviewRequested: _openPreview,
                           canContinueNotifier: _canContinueNotifier,
                           canContinueStep1Notifier: _canContinueStep1Notifier,
                           currentStepNotifier: _currentStepNotifier,
@@ -623,88 +659,91 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                     child: ListenableBuilder(
                       listenable: Listenable.merge([
                         _canSubmitNotifier,
+                        _canContinuePriceNotifier,
                         _currentStepNotifier,
                         _canContinueNotifier,
                         _canContinueStep1Notifier,
+                        _transportModeNotifier,
                       ]),
                       builder: (ctx, _) {
                         final step = _currentStepNotifier.value;
                         final canSubmit = _canSubmitNotifier.value;
-                        final canContinue = _canContinueNotifier.value;
-                        final canContinueStep1 =
-                            _canContinueStep1Notifier.value;
+                        final previous = _stepBeside(step, -1);
+                        // Retour 2/5 sans icône, bouton principal 3/5 : à
+                        // 360 dp, deux moitiés égales avec leurs icônes
+                        // rétrécissaient « Continuer » et « Retour » dans le
+                        // FittedBox de DonyButton.
+                        final backButton = previous == null
+                            ? null
+                            : DonyButton(
+                                label: ctx.l10n.commonBack,
+                                variant: DonyButtonVariant.secondary,
+                                onPressed: () =>
+                                    _currentStepNotifier.value = previous,
+                              );
+                        final back = backButton == null
+                            ? null
+                            : Expanded(flex: 2, child: backButton);
 
-                        // ── Étapes 0 et 1 : Continuer (+ Retour si step > 0) ──
-                        if (step < 2) {
+                        // ── Avant Conditions : Continuer (+ Retour) ──
+                        final next = _stepBeside(step, 1);
+                        if (next != null) {
                           return Row(
                             children: [
-                              if (step > 0) ...[
-                                Expanded(
-                                  child: DonyButton(
-                                    label: ctx.l10n.commonBack,
-                                    variant: DonyButtonVariant.secondary,
-                                    icon: DonyIcons.back,
-                                    onPressed: () =>
-                                        _currentStepNotifier.value = step - 1,
-                                  ),
-                                ),
+                              if (back != null) ...[
+                                back,
                                 const SizedBox(width: DonySpacing.sm),
                               ],
                               Expanded(
+                                flex: 3,
                                 child: DonyButton(
+                                  key: const Key('trip-form-continue'),
                                   label: ctx.l10n.commonContinue,
                                   iconRight: DonyIcons.arrowRight,
-                                  onPressed:
-                                      ((step == 0 && !canContinue) ||
-                                          (step == 1 && !canContinueStep1))
-                                      ? null
-                                      : () => _currentStepNotifier.value =
-                                            step + 1,
+                                  onPressed: _canLeave(step)
+                                      ? () => _currentStepNotifier.value = next
+                                      : null,
                                 ),
                               ),
                             ],
                           );
                         }
 
-                        // ── Étape 2 — Trajet dédié : Confirmer ──
+                        // ── Conditions — Trajet dédié : Confirmer ──
                         if (isLocked) {
                           return BlocBuilder<NegotiationBloc, NegotiationState>(
                             builder: (ctx, state) {
                               final isLoading =
                                   state is NegotiationLoading ||
                                   state is NegotiationActionInProgress;
-                              return Row(
+                              // « Confirmer le trajet » est trop long pour
+                              // tenir à côté de « Retour » : boutons empilés,
+                              // le principal en haut.
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Expanded(
-                                    child: DonyButton(
-                                      label: ctx.l10n.commonBack,
-                                      variant: DonyButtonVariant.secondary,
-                                      icon: DonyIcons.back,
-                                      onPressed: () =>
-                                          _currentStepNotifier.value = step - 1,
+                                  DonyButton(
+                                    key: const Key(
+                                      'create-dedicated-trip-submit',
                                     ),
+                                    label: ctx.l10n.tripPublishSubmitDedicated,
+                                    isLoading: isLoading,
+                                    onPressed: (canSubmit && !isLoading)
+                                        ? () => _submit?.call()
+                                        : null,
                                   ),
-                                  const SizedBox(width: DonySpacing.sm),
-                                  Expanded(
-                                    child: DonyButton(
-                                      key: const Key(
-                                        'create-dedicated-trip-submit',
-                                      ),
-                                      label:
-                                          ctx.l10n.tripPublishSubmitDedicated,
-                                      isLoading: isLoading,
-                                      onPressed: (canSubmit && !isLoading)
-                                          ? () => _submit?.call()
-                                          : null,
-                                    ),
-                                  ),
+                                  if (backButton != null) ...[
+                                    const SizedBox(height: DonySpacing.sm),
+                                    backButton,
+                                  ],
                                 ],
                               );
                             },
                           );
                         }
 
-                        // ── Étape 2 — Mode édition : Enregistrer ──
+                        // ── Conditions — Mode édition : Enregistrer ──
                         if (isEdit) {
                           return BlocBuilder<
                             AnnouncementBloc,
@@ -714,17 +753,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                               final isLoading = state is AnnouncementLoading;
                               return Row(
                                 children: [
-                                  Expanded(
-                                    child: DonyButton(
-                                      label: ctx.l10n.commonBack,
-                                      variant: DonyButtonVariant.secondary,
-                                      icon: DonyIcons.back,
-                                      onPressed: () =>
-                                          _currentStepNotifier.value = step - 1,
-                                    ),
-                                  ),
+                                  ?back,
                                   const SizedBox(width: DonySpacing.sm),
                                   Expanded(
+                                    flex: 3,
                                     child: DonyButton(
                                       key: const Key(
                                         'create-announcement-submit',
@@ -742,95 +774,32 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                           );
                         }
 
-                        // ── Étape 2 — Mode création : Aperçu ──
+                        // ── Conditions — Mode création : Aperçu ──
                         // Publiable sans Stripe configuré (cash-only) — Stripe n'est
                         // plus une condition bloquante ici, seule la section paiement
                         // (PrixStep) reflète le verrouillage de la carte.
                         return BlocBuilder<AnnouncementBloc, AnnouncementState>(
                           builder: (ctx, annState) {
                             final isLoading = annState is AnnouncementLoading;
-                            return BlocBuilder<
-                              AnnouncementFormBloc,
-                              AnnouncementFormState
-                            >(
-                              builder: (ctx2, formState) {
-                                return Row(
-                                  children: [
-                                    Expanded(
-                                      child: DonyButton(
-                                        label: ctx2.l10n.commonBack,
-                                        variant: DonyButtonVariant.secondary,
-                                        icon: DonyIcons.back,
-                                        onPressed: () =>
-                                            _currentStepNotifier.value =
-                                                step - 1,
-                                      ),
+                            return Row(
+                              children: [
+                                ?back,
+                                const SizedBox(width: DonySpacing.sm),
+                                Expanded(
+                                  flex: 3,
+                                  child: DonyButton(
+                                    key: const Key(
+                                      'create-announcement-preview',
                                     ),
-                                    const SizedBox(width: DonySpacing.sm),
-                                    Expanded(
-                                      child: DonyButton(
-                                        key: const Key(
-                                          'create-announcement-preview',
-                                        ),
-                                        label:
-                                            ctx2.l10n.tripPublishPreviewButton,
-                                        iconRight: DonyIcons.arrowRight,
-                                        isLoading: isLoading,
-                                        onPressed: (canSubmit && !isLoading)
-                                            ? () {
-                                                AnnouncementPreviewSheet.show(
-                                                  ctx2,
-                                                  formState: ctx2
-                                                      .read<
-                                                        AnnouncementFormBloc
-                                                      >()
-                                                      .state,
-                                                  onConfirm: () {
-                                                    // Intentional: closes the preview sheet,
-                                                    // not the CreateTripScreen.
-                                                    Navigator.of(
-                                                      ctx2,
-                                                      rootNavigator: true,
-                                                    ).pop();
-                                                    _submit?.call();
-                                                  },
-                                                  onSaveDraft: () {
-                                                    // Même fermeture du sheet que onConfirm.
-                                                    Navigator.of(
-                                                      ctx2,
-                                                      rootNavigator: true,
-                                                    ).pop();
-                                                    _submit?.call(
-                                                      saveAsDraft: true,
-                                                    );
-                                                  },
-                                                  isSubmitting: isLoading,
-                                                  departureTime:
-                                                      _departureTimeNotifier
-                                                          .value,
-                                                  currency:
-                                                      _currencyNotifier.value,
-                                                  paymentMethods:
-                                                      _paymentMethods?.call(),
-                                                  // « Modifier » : en création, ou
-                                                  // en modification d'un trajet
-                                                  // encore sans demande (FLUTTER-KV).
-                                                  onChangeCurrency:
-                                                      _canChangeCurrency
-                                                      ? () => unawaited(
-                                                          _changeCurrencyFromPreview(
-                                                            ctx2,
-                                                          ),
-                                                        )
-                                                      : null,
-                                                );
-                                              }
-                                            : null,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
+                                    label: ctx.l10n.tripPublishPreviewButton,
+                                    iconRight: DonyIcons.arrowRight,
+                                    isLoading: isLoading,
+                                    onPressed: (canSubmit && !isLoading)
+                                        ? () => _openPreview(ctx)
+                                        : null,
+                                  ),
+                                ),
+                              ],
                             );
                           },
                         );
@@ -843,6 +812,35 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Aperçu du trajet avant publication : bouton « Aperçu » de la barre et
+  /// « Passer » de l'étape Conditions. [ctx] doit voir les blocs de l'écran.
+  void _openPreview(BuildContext ctx) {
+    final isLoading = ctx.read<AnnouncementBloc>().state is AnnouncementLoading;
+    AnnouncementPreviewSheet.show(
+      ctx,
+      formState: ctx.read<AnnouncementFormBloc>().state,
+      onConfirm: () {
+        // Intentional: closes the preview sheet, not the CreateTripScreen.
+        Navigator.of(ctx, rootNavigator: true).pop();
+        _submit?.call();
+      },
+      onSaveDraft: () {
+        // Même fermeture du sheet que onConfirm.
+        Navigator.of(ctx, rootNavigator: true).pop();
+        _submit?.call(saveAsDraft: true);
+      },
+      isSubmitting: isLoading,
+      departureTime: _departureTimeNotifier.value,
+      currency: _currencyNotifier.value,
+      paymentMethods: _paymentMethods?.call(),
+      // « Modifier » : en création, ou en modification d'un trajet encore
+      // sans demande (FLUTTER-KV).
+      onChangeCurrency: _canChangeCurrency
+          ? () => unawaited(_changeCurrencyFromPreview(ctx))
+          : null,
     );
   }
 
@@ -868,10 +866,24 @@ class _TripFormContent extends StatefulWidget {
   /// Édition d'un trajet à lier à une négo : corridor + date verrouillés, et on
   /// reste sur l'écran de liaison au succès (pas de redirection /announcements).
   final bool lockCorridorAndDate;
+
+  /// Étapes visibles, dans l'ordre (cf. `_CreateTripScreenState._steps`).
+  final List<TripFormStep> steps;
+
+  /// Modes proposés à la publication (cartes de l'étape Mode, puces de la
+  /// ligne du mode).
+  final List<TransportMode> tripModes;
+
+  /// Mode du trajet, porté par l'écran (cf. `_CreateTripScreenState`).
+  final ValueNotifier<TransportMode?> transportModeNotifier;
   final ValueNotifier<bool>? canSubmitNotifier;
+  final ValueNotifier<bool>? canContinuePriceNotifier;
   final ValueNotifier<bool>? canContinueNotifier;
   final ValueNotifier<bool>? canContinueStep1Notifier;
-  final ValueNotifier<int>? currentStepNotifier;
+  final ValueNotifier<TripFormStep>? currentStepNotifier;
+
+  /// Ouvre l'aperçu (« Passer » de l'étape Conditions, comme « Aperçu »).
+  final void Function(BuildContext context)? onPreviewRequested;
 
   /// Passe à true dès la première modification utilisateur. Le parent s'en
   /// sert pour décider si quitter l'écran doit être confirmé.
@@ -905,7 +917,12 @@ class _TripFormContent extends StatefulWidget {
     this.initialTemplate,
     this.lockContext,
     this.lockCorridorAndDate = false,
+    required this.steps,
+    required this.tripModes,
+    required this.transportModeNotifier,
     this.canSubmitNotifier,
+    this.canContinuePriceNotifier,
+    this.onPreviewRequested,
     this.canContinueNotifier,
     this.canContinueStep1Notifier,
     this.currentStepNotifier,
@@ -965,7 +982,12 @@ class _TripFormContentState extends State<_TripFormContent> {
   // bloc, la soumission lit ce notifier (YADONY-FLUTTER-PROD-18).
   final _availableKgNotifier = ValueNotifier<double>(defaultAvailableKg);
   final _priceOptionNotifier = ValueNotifier<int>(-1); // -1 = aucune sélection
-  final _transportModeNotifier = ValueNotifier<TransportMode?>(null);
+  ValueNotifier<TransportMode?> get _transportModeNotifier =>
+      widget.transportModeNotifier;
+
+  /// Le voyageur choisit son mode à l'étape Mode : un mode absent (modèle,
+  /// brouillon) reste à choisir au lieu de valoir l'avion.
+  bool get _hasModeStep => widget.steps.contains(TripFormStep.mode);
 
   // ── Erreurs de champs obligatoires ──────────────────────────────────────────
   // Les champs manquants ne passent en rouge qu'après une première interaction
@@ -1125,7 +1147,10 @@ class _TripFormContentState extends State<_TripFormContent> {
       }
       _pickupAddressNotifier.value = a.pickupAddress;
       _deliveryAddressNotifier.value = a.deliveryAddress;
-      _transportModeNotifier.value = a.transportMode;
+      // Mode courant gardé tel quel, même non proposable (BOAT, TRAIN
+      // publiés ailleurs) : il repart à l'enregistrement. Absent des
+      // anciennes données : avion.
+      _transportModeNotifier.value = transportModeOrPlane(a.transportMode);
       _stopsNotifier.value = a.stops;
 
       if (a.description != null) {
@@ -1240,9 +1265,10 @@ class _TripFormContentState extends State<_TripFormContent> {
     // zone, la bascule doit se remettre à false — sinon la liste envoyée au
     // submit contiendrait MOBILE_MONEY pour un trajet dans une autre devise.
     widget.currencyNotifier.addListener(_onCurrencyChanged);
-    // Avion sélectionné par défaut en mode création
+    // Création : l'avion d'office quand il est seul proposé ; sinon le
+    // voyageur choisit à l'étape Mode (« Continuer » grisé d'ici là).
     if (!_isEdit && !_isLocked) {
-      _transportModeNotifier.value = TransportMode.plane;
+      _transportModeNotifier.value = _hasModeStep ? null : TransportMode.plane;
     }
     _syncCanSubmit(); // état initial — transport + prix
 
@@ -1266,7 +1292,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     // Facultative, mais y toucher reste une interaction avec l'étape.
     _arrivalTimeNotifier.addListener(_markStep0Touched);
     _arrivalDayOffsetNotifier.addListener(_markStep0Touched);
-    _transportModeNotifier.addListener(_markStep0Touched);
+    // Le mode choisi à l'étape Mode n'est pas une saisie de l'étape Trajet :
+    // sans cette garde, Trajet s'ouvrait tout en rouge juste après le choix.
+    if (!_hasModeStep) _transportModeNotifier.addListener(_markStep0Touched);
     _handoverDeadlineNotifier.addListener(_markStep0Touched);
 
     // L'étape 1 n'a que deux champs, et on n'y arrive qu'en ayant complété
@@ -1476,7 +1504,10 @@ class _TripFormContentState extends State<_TripFormContent> {
   }
 
   void _markStep1TouchedOnEntry() {
-    if (_step1Touched || widget.currentStepNotifier?.value != 1) return;
+    if (_step1Touched ||
+        widget.currentStepNotifier?.value != TripFormStep.capacite) {
+      return;
+    }
     _step1Touched = true;
     _updateCanContinueStep1();
   }
@@ -1498,9 +1529,12 @@ class _TripFormContentState extends State<_TripFormContent> {
     }
   }
 
+  /// « Continuer » de l'étape Prix et bouton final de l'étape Conditions :
+  /// même règle, mode choisi et prix valide.
   void _syncCanSubmit() {
-    widget.canSubmitNotifier?.value =
-        _transportModeNotifier.value != null && _isPriceValid;
+    final ready = _transportModeNotifier.value != null && _isPriceValid;
+    widget.canContinuePriceNotifier?.value = ready;
+    widget.canSubmitNotifier?.value = ready;
   }
 
   /// Valide les champs obligatoires de l'étape 0 (Trajet).
@@ -1764,8 +1798,12 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customPriceNotifier.removeListener(_syncPriceToFormBloc);
     _availableKgNotifier.removeListener(_syncKgToFormBloc);
     _descriptionCtrl.removeListener(_syncDescriptionToFormBloc);
+    // Notifier porté par l'écran, qui survit à ce State : tous ses
+    // listeners partent ici.
     _transportModeNotifier.removeListener(_syncCanSubmit);
     _transportModeNotifier.removeListener(_syncTransportModeToFormBloc);
+    _transportModeNotifier.removeListener(_updateCanContinue);
+    _transportModeNotifier.removeListener(_markStep0Touched);
     _cashEnabledNotifier.removeListener(_syncCashAcceptedToFormBloc);
     _mobileMoneyEnabledNotifier.removeListener(
       _syncMobileMoneyAcceptedToFormBloc,
@@ -1806,7 +1844,6 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedNotifier.dispose();
     _catalogLabelsNotifier.dispose();
     _refusedTypesNotifier.dispose();
-    _transportModeNotifier.dispose();
     _pickupAddressNotifier.dispose();
     _deliveryAddressNotifier.dispose();
     widget.currentStepNotifier?.removeListener(_markStep1TouchedOnEntry);
@@ -2748,8 +2785,12 @@ class _TripFormContentState extends State<_TripFormContent> {
     _arrivalDayOffsetNotifier.value = t.arrivalTime == null
         ? 0
         : t.arrivalDayOffset;
+    // Mode du modèle gardé tel quel (un BOAT reste BOAT) ; absent, celui
+    // déjà choisi, à défaut l'avion s'il n'y a pas de choix.
     _transportModeNotifier.value =
-        transportModeFromWire(t.transportMode) ?? TransportMode.plane;
+        transportModeFromWire(t.transportMode) ??
+        _transportModeNotifier.value ??
+        _defaultModeWhenAbsent;
     // Valeur optimiste immédiate ; `CapacityUnitChanged` ci-dessous réécrit
     // `availableKg` à `unit.maxKg` (valise 23/32 kg) côté bloc — l'event
     // `AvailableKgChanged` émis juste après restaure la valeur du modèle via
@@ -2851,7 +2892,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     final arrivalTime = _arrivalTimeNotifier.value;
     final mode = _transportModeNotifier.value;
     return TripFormDraft(
-      stepId: _stepAtIndex(widget.currentStepNotifier?.value ?? 0),
+      stepId: widget.currentStepNotifier?.value ?? widget.steps.first,
       currency: _currency.code,
       departureCity: _departureCityNotifier.value,
       departureCountryCode: _departureCountryCodeNotifier.value,
@@ -2906,7 +2947,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         ? 0
         : d.arrivalDayOffset;
     _transportModeNotifier.value =
-        transportModeFromWire(d.transportMode) ?? TransportMode.plane;
+        transportModeFromWire(d.transportMode) ?? _defaultModeWhenAbsent;
     _stopsNotifier.value = d.stops;
     // Après la date : son listener réapplique un délai de modèle en attente.
     _pendingHandoverLeadDays = d.handoverLeadDays;
@@ -2962,6 +3003,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     _updateCanContinueStep1();
     _markDirty();
   }
+
+  /// Mode d'un modèle ou d'un brouillon qui n'en porte pas : l'avion
+  /// seulement s'il n'y a pas de choix, sinon à choisir à l'étape Mode.
+  TransportMode? get _defaultModeWhenAbsent =>
+      _hasModeStep ? null : TransportMode.plane;
 
   static TimeOfDay? _timeOfDay(String? hhmm) {
     if (hhmm == null || !hhmm.contains(':')) return null;
@@ -3022,7 +3068,12 @@ class _TripFormContentState extends State<_TripFormContent> {
     );
   }
 
-  // ── Step 0 — Trajet + Transport ─────────────────────────────────────────────
+  // ── Mode ───────────────────────────────────────────────────────────────────
+  List<Widget> _buildModeStep() => [
+    ModeStep(modes: widget.tripModes, notifier: _transportModeNotifier),
+  ];
+
+  // ── Trajet ─────────────────────────────────────────────────────────────────
   List<Widget> _buildStep0(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
       if (_isLocked) ...[
@@ -3048,6 +3099,10 @@ class _TripFormContentState extends State<_TripFormContent> {
           arrivalDayOffsetNotifier: _arrivalDayOffsetNotifier,
           stopsNotifier: _stopsNotifier,
           transportModeNotifier: _transportModeNotifier,
+          // Pas d'étape Mode en modification ni en trajet dédié : le mode se
+          // lit (et se change en modification) en tête de l'étape.
+          transportModeRowModes: _isEdit || _isLocked ? widget.tripModes : null,
+          transportModeRowReadOnly: _isLocked,
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,
@@ -3157,7 +3212,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     ];
   }
 
-  // ── Step 1 — Lieux & Capacité ────────────────────────────────────────────────
+  // ── Capacité (lieux de remise et kilos) ────────────────────────────────────
   List<Widget> _buildStep1(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
       ValueListenableBuilder<Set<_Step1Field>>(
@@ -3188,8 +3243,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     ];
   }
 
-  // ── Step 2 — Prix & Conditions ───────────────────────────────────────────────
-  List<Widget> _buildStep2(BuildContext context, TextTheme tt, ColorScheme cs) {
+  // ── Prix ───────────────────────────────────────────────────────────────────
+  List<Widget> _buildPrixStep(BuildContext context) {
     return [
       // Devise du trajet, juste avant les prix qu'elle exprime (FLUTTER-RA).
       // Création : sélecteur libre ; modification : selon `currencyEditable` ;
@@ -3214,67 +3269,88 @@ class _TripFormContentState extends State<_TripFormContent> {
               widget.currencyNotifier,
               ?widget.currencyEditableNotifier,
             ]),
-            builder: (context, _) => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                PrixStep(
-                  currency: widget.currencyNotifier.value,
-                  gridCurrency: ActiveCurrency.current,
-                  priceOptionNotifier: _priceOptionNotifier,
-                  customPriceNotifier: _customPriceNotifier,
-                  availableKgNotifier: _availableKgNotifier,
-                  cashEnabledNotifier: _cashEnabledNotifier,
-                  cardEnabledNotifier: _cardEnabledNotifier,
-                  kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
-                  mobileMoneyEnabledNotifier: _mobileMoneyEnabledNotifier,
-                  currencyNotifier: widget.currencyNotifier,
-                  mobileMoneyAccountActive: mobileMoneyAccountActive,
-                  mobileMoneyCurrencies: mobileMoneyAccountCurrenciesFrom(
-                    mobileMoneyState,
-                  ),
-                  // Changer la devise du premier trajet ne touche pas celle des
-                  // étapes ajoutées (FLUTTER-HP) : la confirmation les cite.
-                  legCurrencies: _isEdit || _isLocked
-                      ? null
-                      : _extraLegCurrencies,
-                  onMobileMoneySetupReturned: () => context
-                      .read<MobileMoneyAccountBloc>()
-                      .add(const MobileMoneyAccountsRequested()),
-                  negotiableNotifier: _negotiableNotifier,
-                  customPriceCtrl: _customPriceCtrl,
-                  // Prix verrouillé en modification-pour-négo ET en trajet dédié : il
-                  // est fixé par la négociation.
-                  lockPrice: widget.lockCorridorAndDate || _isLocked,
-                  // Trajet dédié : affiche le prix total convenu et masque la section
-                  // « Modes de paiement » (déjà fixé par la négociation).
-                  lockedTotalPriceEur: _isLocked
-                      ? widget.lockContext!.agreedPriceEur
-                      : null,
-                  showPaymentMethods: !_isLocked,
-                  // En modification, la devise ne change que si le serveur le
-                  // permet (`currencyEditable`, FLUTTER-KV) : le PUT l'envoie
-                  // alors. Sinon elle reste figée, sans quoi l'écran validait le
-                  // prix dans une devise que le PUT n'envoyait pas (FLUTTER-JS).
-                  currencyLocked:
-                      _isLocked || (_isEdit && !_isEditCurrencyEditable),
-                ),
-                ConditionsStep(
-                  selectedContentNotifier: _selectedContentNotifier,
-                  customAcceptedNotifier: _customAcceptedNotifier,
-                  refusedTypesNotifier: _refusedTypesNotifier,
-                  catalogLabelsNotifier: _catalogLabelsNotifier,
-                  descriptionCtrl: _descriptionCtrl,
-                  customAcceptedCtrl: _customAcceptedCtrl,
-                  refusedCtrl: _refusedCtrl,
-                ),
-              ],
+            builder: (context, _) => PrixStep(
+              currency: widget.currencyNotifier.value,
+              gridCurrency: ActiveCurrency.current,
+              priceOptionNotifier: _priceOptionNotifier,
+              customPriceNotifier: _customPriceNotifier,
+              availableKgNotifier: _availableKgNotifier,
+              cashEnabledNotifier: _cashEnabledNotifier,
+              cardEnabledNotifier: _cardEnabledNotifier,
+              kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
+              mobileMoneyEnabledNotifier: _mobileMoneyEnabledNotifier,
+              currencyNotifier: widget.currencyNotifier,
+              mobileMoneyAccountActive: mobileMoneyAccountActive,
+              mobileMoneyCurrencies: mobileMoneyAccountCurrenciesFrom(
+                mobileMoneyState,
+              ),
+              // Changer la devise du premier trajet ne touche pas celle des
+              // étapes ajoutées (FLUTTER-HP) : la confirmation les cite.
+              legCurrencies: _isEdit || _isLocked ? null : _extraLegCurrencies,
+              onMobileMoneySetupReturned: () => context
+                  .read<MobileMoneyAccountBloc>()
+                  .add(const MobileMoneyAccountsRequested()),
+              negotiableNotifier: _negotiableNotifier,
+              customPriceCtrl: _customPriceCtrl,
+              // Prix verrouillé en modification-pour-négo ET en trajet dédié : il
+              // est fixé par la négociation.
+              lockPrice: widget.lockCorridorAndDate || _isLocked,
+              // Trajet dédié : affiche le prix total convenu et masque la section
+              // « Modes de paiement » (déjà fixé par la négociation).
+              lockedTotalPriceEur: _isLocked
+                  ? widget.lockContext!.agreedPriceEur
+                  : null,
+              showPaymentMethods: !_isLocked,
+              // En modification, la devise ne change que si le serveur le
+              // permet (`currencyEditable`, FLUTTER-KV) : le PUT l'envoie
+              // alors. Sinon elle reste figée, sans quoi l'écran validait le
+              // prix dans une devise que le PUT n'envoyait pas (FLUTTER-JS).
+              currencyLocked:
+                  _isLocked || (_isEdit && !_isEditCurrencyEditable),
             ),
           );
         },
       ),
-      // Voyage à plusieurs étapes (FLUTTER-4D) : création seulement. Une
-      // modification touche une seule étape, un trajet dédié reste unique.
-      if (!_isEdit && !_isLocked)
+    ];
+  }
+
+  // ── Conditions ─────────────────────────────────────────────────────────────
+  List<Widget> _buildConditionsStep(BuildContext context) {
+    final isCreation = !_isEdit && !_isLocked;
+    return [
+      // « Passer » : rien n'est obligatoire ici, le voyageur va droit à
+      // l'aperçu, comme avec « Aperçu » (création seulement, choix C6).
+      if (isCreation && widget.canSubmitNotifier != null)
+        Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: ValueListenableBuilder<bool>(
+            valueListenable: widget.canSubmitNotifier!,
+            builder: (context, canSubmit, _) => TextButton(
+              key: const Key('trip-conditions-skip'),
+              onPressed: canSubmit && widget.onPreviewRequested != null
+                  ? () => widget.onPreviewRequested!(context)
+                  : null,
+              child: Text(
+                context.l10n.tripPublishConditionsSkip,
+                maxLines: 1,
+                softWrap: false,
+              ),
+            ),
+          ),
+        ),
+      ConditionsStep(
+        selectedContentNotifier: _selectedContentNotifier,
+        customAcceptedNotifier: _customAcceptedNotifier,
+        refusedTypesNotifier: _refusedTypesNotifier,
+        catalogLabelsNotifier: _catalogLabelsNotifier,
+        descriptionCtrl: _descriptionCtrl,
+        customAcceptedCtrl: _customAcceptedCtrl,
+        refusedCtrl: _refusedCtrl,
+      ),
+      // Voyage à plusieurs étapes (FLUTTER-4D), sous les conditions (C5) :
+      // création seulement. Une modification touche une seule étape, un
+      // trajet dédié reste unique.
+      if (isCreation)
         ListenableBuilder(
           listenable: Listenable.merge([
             _arrivalCityNotifier,
@@ -3325,14 +3401,14 @@ class _TripFormContentState extends State<_TripFormContent> {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    // Mode création ou édition — formulaire avec stepper.
-    // Offstage garde les 3 steps dans l'arbre en permanence :
-    // - les AddressPickerField (step 1) ne perdent pas leur état quand on
-    //   navigue vers step 0 ou step 2
+    // Formulaire à étapes. Offstage garde toutes les étapes dans l'arbre en
+    // permanence :
+    // - les AddressPickerField (Capacité) ne perdent pas leur état quand on
+    //   navigue vers une autre étape
     // - form.validate() et form.save() couvrent tous les champs quelle que
     //   soit l'étape visible
     // - contrairement à IndexedStack, Offstage n'impose pas la hauteur du
-    //   plus grand enfant : le sheet se dimensionne au contenu de l'étape active
+    //   plus grand enfant : l'écran se dimensionne au contenu de l'étape active
     return ListenableBuilder(
       listenable: Listenable.merge([
         widget.currentStepNotifier,
@@ -3340,38 +3416,30 @@ class _TripFormContentState extends State<_TripFormContent> {
         _deliveryAddressNotifier,
       ]),
       builder: (context, _) {
-        final step = widget.currentStepNotifier!.value;
+        final current = widget.currentStepNotifier!.value;
+        List<Widget> contentOf(TripFormStep step) => switch (step) {
+          TripFormStep.mode => _buildModeStep(),
+          TripFormStep.trajet => _buildStep0(context, tt, cs),
+          TripFormStep.capacite => _buildStep1(context, tt, cs),
+          TripFormStep.prix => _buildPrixStep(context),
+          TripFormStep.conditions => _buildConditionsStep(context),
+        };
         return Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CaStepperHeader(
-                steps: _kVisibleSteps,
-                current: _stepAtIndex(step),
-              ),
+              CaStepperHeader(steps: widget.steps, current: current),
               const SizedBox(height: DonySpacing.lg),
-              Offstage(
-                offstage: step != 0,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _buildStep0(context, tt, cs),
+              for (final step in widget.steps)
+                Offstage(
+                  key: ValueKey('trip-form-step-${step.wire}'),
+                  offstage: step != current,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: contentOf(step),
+                  ),
                 ),
-              ),
-              Offstage(
-                offstage: step != 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _buildStep1(context, tt, cs),
-                ),
-              ),
-              Offstage(
-                offstage: step != 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _buildStep2(context, tt, cs),
-                ),
-              ),
             ],
           ),
         );
@@ -3529,25 +3597,27 @@ class _EditCurrencySection extends StatelessWidget {
 }
 
 /// Carte « Créer avec l'IA », puis bandeau « Rempli par l'IA » avec
-/// « Reparler » une fois le formulaire rempli. Étape 1 seulement.
+/// « Reparler » une fois le formulaire rempli. Première étape seulement.
 class _AiTripEntry extends StatelessWidget {
   const _AiTripEntry({
     required this.availability,
     required this.filled,
     required this.currentStepNotifier,
+    required this.firstStep,
     required this.onOpen,
   });
 
   final AiFormDraftAvailabilityCubit availability;
   final AiFilledFieldsCubit filled;
-  final ValueListenable<int> currentStepNotifier;
+  final ValueListenable<TripFormStep> currentStepNotifier;
+  final TripFormStep firstStep;
   final VoidCallback onOpen;
 
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<int>(
+  Widget build(BuildContext context) => ValueListenableBuilder<TripFormStep>(
     valueListenable: currentStepNotifier,
     builder: (context, step, _) {
-      if (step != 0) return const SizedBox.shrink();
+      if (step != firstStep) return const SizedBox.shrink();
       return BlocBuilder<AiFilledFieldsCubit, Set<String>>(
         bloc: filled,
         builder: (context, fields) => fields.isNotEmpty

@@ -1153,6 +1153,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPublishModeQuestion': (l) => l.tripPublishModeQuestion,
   'tripPublishModeHint': (l) => l.tripPublishModeHint,
   'tripPublishModeSectionLabel': (l) => l.tripPublishModeSectionLabel,
+  'tripPublishConditionsSkip': (l) => l.tripPublishConditionsSkip,
   'tripPublishModeAirTitle': (l) => l.tripPublishModeAirTitle,
   'tripPublishModeAirSubtitle': (l) => l.tripPublishModeAirSubtitle,
   'tripPublishModeAirTagDuration': (l) => l.tripPublishModeAirTagDuration,

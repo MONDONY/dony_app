@@ -3256,6 +3256,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishModeSectionLabel => 'Mode de transport';
 
   @override
+  String get tripPublishConditionsSkip => 'Passer';
+
+  @override
   String get tripPublishModeAirTitle => 'Voie aérienne';
 
   @override

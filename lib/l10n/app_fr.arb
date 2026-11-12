@@ -1967,6 +1967,10 @@
   "@tripPublishModeSectionLabel": {
     "description": "Libellé de la ligne compacte du mode, au-dessus des étapes du formulaire de trajet"
   },
+  "tripPublishConditionsSkip": "Passer",
+  "@tripPublishConditionsSkip": {
+    "description": "Bouton texte en tête de l'étape Conditions du formulaire de trajet (création) : ouvre l'aperçu sans rien remplir"
+  },
   "tripPublishModeAirTitle": "Voie aérienne",
   "@tripPublishModeAirTitle": {
     "description": "Titre de la carte Avion de l'étape Mode"

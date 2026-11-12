@@ -5477,6 +5477,12 @@ abstract class AppLocalizations {
   /// **'Mode de transport'**
   String get tripPublishModeSectionLabel;
 
+  /// Bouton texte en tête de l'étape Conditions du formulaire de trajet (création) : ouvre l'aperçu sans rien remplir
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer'**
+  String get tripPublishConditionsSkip;
+
   /// Titre de la carte Avion de l'étape Mode
   ///
   /// In fr, this message translates to:

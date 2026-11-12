@@ -17,7 +17,9 @@ import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/transport_mode_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -52,6 +54,9 @@ Widget _buildSubject({
   required MockCitySearchBloc arrivalCityBloc,
   String? departureCity,
   String? arrivalCity,
+  ValueNotifier<TransportMode?>? transportModeNotifier,
+  List<TransportMode>? transportModeRowModes,
+  bool transportModeRowReadOnly = false,
 }) {
   final departureCityNotifier = ValueNotifier<String?>(departureCity);
   final arrivalCityNotifier = ValueNotifier<String?>(arrivalCity);
@@ -70,6 +75,9 @@ Widget _buildSubject({
           arrivalTimeNotifier: arrivalTimeNotifier,
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
+          transportModeNotifier: transportModeNotifier,
+          transportModeRowModes: transportModeRowModes,
+          transportModeRowReadOnly: transportModeRowReadOnly,
           onSelectDepartureTime: () async {},
           onSelectArrivalTime: () async {},
           onSelectDate: () async {},
@@ -700,6 +708,48 @@ void main() {
 
       expect(find.text('Trip'), findsOneWidget);
       expect(find.text('Arrival time (optional)'), findsOneWidget);
+    });
+  });
+
+  group('TrajetStep — ligne du mode de transport', () {
+    testWidgets('sans modes : pas de ligne', (tester) async {
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+          transportModeNotifier: ValueNotifier(TransportMode.plane),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(TransportModeRow), findsNothing);
+    });
+
+    testWidgets('avec modes : ligne en tête, lecture seule transmise', (
+      tester,
+    ) async {
+      final mode = ValueNotifier<TransportMode?>(TransportMode.plane);
+      addTearDown(mode.dispose);
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+          transportModeNotifier: mode,
+          transportModeRowModes: const [TransportMode.plane, TransportMode.car],
+          transportModeRowReadOnly: true,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final row = tester.widget<TransportModeRow>(
+        find.byType(TransportModeRow),
+      );
+      expect(row.readOnly, isTrue);
+      expect(row.notifier, same(mode));
+      expect(
+        tester.getTopLeft(find.byType(TransportModeRow)).dy,
+        lessThan(tester.getTopLeft(find.text('Trajet')).dy),
+      );
     });
   });
 }

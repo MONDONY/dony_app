@@ -15,6 +15,7 @@ import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/stops_chips.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/transport_mode_row.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -50,6 +51,14 @@ class TrajetStep extends StatelessWidget {
   /// [transportModeNotifier] vaut l'avion. Null : le choix n'est pas proposé.
   final ValueNotifier<TripStops?>? stopsNotifier;
   final ValueNotifier<TransportMode?>? transportModeNotifier;
+
+  /// Modes de la ligne « Mode de transport » posée en tête de l'étape
+  /// (modification d'un trajet, trajet dédié : pas d'étape Mode). Null : pas
+  /// de ligne, le mode se choisit ailleurs (étape Mode) ou n'a pas de choix.
+  final List<TransportMode>? transportModeRowModes;
+
+  /// Ligne du mode figée (trajet dédié : le mode vient de la demande).
+  final bool transportModeRowReadOnly;
 
   /// Callbacks vers les méthodes du state parent.
   final Future<void> Function() onSelectDepartureTime;
@@ -93,6 +102,8 @@ class TrajetStep extends StatelessWidget {
     this.arrivalDayOffsetNotifier,
     this.stopsNotifier,
     this.transportModeNotifier,
+    this.transportModeRowModes,
+    this.transportModeRowReadOnly = false,
     required this.onSelectDepartureTime,
     required this.onSelectArrivalTime,
     required this.onSelectDate,
@@ -163,7 +174,17 @@ class TrajetStep extends StatelessWidget {
     ColorScheme cs,
     AppLocalizations l,
   ) {
+    final rowModes = transportModeRowModes;
+    final modeNotifier = transportModeNotifier;
     return [
+      if (rowModes != null && modeNotifier != null) ...[
+        TransportModeRow(
+          modes: rowModes,
+          notifier: modeNotifier,
+          readOnly: transportModeRowReadOnly,
+        ),
+        const SizedBox(height: DonySpacing.lg),
+      ],
       // ── Corridor preview ──────────────────────────────────────────────────
       ListenableBuilder(
         listenable: Listenable.merge([
@@ -455,12 +476,6 @@ class TrajetStep extends StatelessWidget {
                 ).animate().fadeIn(delay: 80.ms)
               : const SizedBox.shrink(),
         ),
-      // Le sélecteur « Mode de transport » a été retiré de l'écran : seul
-      // l'avion était réellement proposé (les autres modes affichaient
-      // « Bientôt disponible »), la question n'apportait donc rien au voyageur
-      // et éloignait les sections utiles. Le mode reste porté par
-      // `transportModeNotifier`, positionné sur `plane` par défaut à la
-      // création, et continue d'être envoyé au backend qui l'exige.
       const SizedBox(height: DonySpacing.lg),
     ];
   }

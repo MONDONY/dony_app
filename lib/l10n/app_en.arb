@@ -987,6 +987,7 @@
   "tripPublishModeQuestion": "How are you traveling?",
   "tripPublishModeHint": "The mode shapes the next steps: dates, capacity and price.",
   "tripPublishModeSectionLabel": "Transport mode",
+  "tripPublishConditionsSkip": "Skip",
   "tripPublishModeAirTitle": "By air",
   "tripPublishModeAirSubtitle": "Plane, your spare luggage kilos",
   "tripPublishModeAirTagDuration": "A few days",
