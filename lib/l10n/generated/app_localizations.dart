@@ -1994,6 +1994,78 @@ abstract class AppLocalizations {
   /// **'La date d\'arrivée est trop loin après le départ pour ce mode.'**
   String get errorArrivalTooFarMessage;
 
+  /// Erreur weight-too-heavy du back : le poids dépasse le maximum du mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids trop élevé'**
+  String get errorWeightTooHeavyTitle;
+
+  /// Erreur weight-too-heavy du back : le poids dépasse le maximum du mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce poids dépasse le maximum accepté pour ce mode de transport.'**
+  String get errorWeightTooHeavyMessage;
+
+  /// Erreur trip-capacity-too-high du back : la capacité du trajet dépasse le maximum du mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité trop élevée'**
+  String get errorTripCapacityTooHighTitle;
+
+  /// Erreur trip-capacity-too-high du back : la capacité du trajet dépasse le maximum du mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La capacité dépasse le maximum accepté pour ce mode de transport.'**
+  String get errorTripCapacityTooHighMessage;
+
+  /// Erreur parcel-too-heavy du back : le colis dépasse le poids maximum par colis du trajet (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis trop lourd'**
+  String get errorParcelTooHeavyTitle;
+
+  /// Erreur parcel-too-heavy du back : le colis dépasse le poids maximum par colis du trajet (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis dépasse le poids maximum accepté par ce voyageur.'**
+  String get errorParcelTooHeavyMessage;
+
+  /// Erreur parcel-too-big du back : le colis dépasse la taille maximum acceptée par le trajet (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis trop volumineux'**
+  String get errorParcelTooBigTitle;
+
+  /// Erreur parcel-too-big du back : le colis dépasse la taille maximum acceptée par le trajet (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis dépasse la taille maximum acceptée par ce voyageur.'**
+  String get errorParcelTooBigMessage;
+
+  /// Taille S d'un colis routier : exemple affiché sous le code (sélecteur de taille).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sac'**
+  String get itemSizeSDescription;
+
+  /// Taille M d'un colis routier : exemple affiché sous le code (sélecteur de taille).
+  ///
+  /// In fr, this message translates to:
+  /// **'Carton'**
+  String get itemSizeMDescription;
+
+  /// Taille L d'un colis routier : exemple affiché sous le code (sélecteur de taille).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valise, chaise'**
+  String get itemSizeLDescription;
+
+  /// Taille XL d'un colis routier : exemple affiché sous le code (sélecteur de taille).
+  ///
+  /// In fr, this message translates to:
+  /// **'Meuble'**
+  String get itemSizeXlDescription;
+
   /// No description provided for @errorConflictTitle.
   ///
   /// In fr, this message translates to:

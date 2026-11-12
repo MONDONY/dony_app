@@ -1997,6 +1997,36 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.schedule_rounded,
     ),
+    // Bornes de poids, de capacité et de taille (422, lot « route » du back) :
+    // `weight-too-heavy` (demande ou offre au-dessus du maximum du mode),
+    // `trip-capacity-too-high` (capacité du trajet), `parcel-too-heavy` et
+    // `parcel-too-big` (colis refusé par le poids max ou la taille max du
+    // trajet). Dans `_serverDetailCodes` : le back localise son `detail`
+    // (bornes réelles incluses), le texte du catalogue sert de repli.
+    'weight-too-heavy': _Entry(
+      title: (l) => l.errorWeightTooHeavyTitle,
+      message: (l) => l.errorWeightTooHeavyMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.scale_rounded,
+    ),
+    'trip-capacity-too-high': _Entry(
+      title: (l) => l.errorTripCapacityTooHighTitle,
+      message: (l) => l.errorTripCapacityTooHighMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.scale_rounded,
+    ),
+    'parcel-too-heavy': _Entry(
+      title: (l) => l.errorParcelTooHeavyTitle,
+      message: (l) => l.errorParcelTooHeavyMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.scale_rounded,
+    ),
+    'parcel-too-big': _Entry(
+      title: (l) => l.errorParcelTooBigTitle,
+      message: (l) => l.errorParcelTooBigMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.straighten_rounded,
+    ),
   };
 
   /// Codes dont le `detail` renvoyé par le back est déjà rédigé pour
@@ -2021,6 +2051,11 @@ abstract final class ErrorCatalog {
     'transport-mode-disabled',
     'invalid-transport-mode',
     'arrival-too-far',
+    // Bornes de poids, de capacité et de taille : `detail` localisé par le back.
+    'weight-too-heavy',
+    'trip-capacity-too-high',
+    'parcel-too-heavy',
+    'parcel-too-big',
     // `commission/confirm-failed` EXCLU (relecture finale du lot K) :
     // `ConfirmAcceptanceResponse.fail(...)` (`CashCommissionService`, back)
     // rédige une phrase ("PaymentIntent status: ...", "Erreur Stripe : ...")

@@ -1128,6 +1128,46 @@ class AppLocalizationsFr extends AppLocalizations {
       'La date d\'arrivée est trop loin après le départ pour ce mode.';
 
   @override
+  String get errorWeightTooHeavyTitle => 'Poids trop élevé';
+
+  @override
+  String get errorWeightTooHeavyMessage =>
+      'Ce poids dépasse le maximum accepté pour ce mode de transport.';
+
+  @override
+  String get errorTripCapacityTooHighTitle => 'Capacité trop élevée';
+
+  @override
+  String get errorTripCapacityTooHighMessage =>
+      'La capacité dépasse le maximum accepté pour ce mode de transport.';
+
+  @override
+  String get errorParcelTooHeavyTitle => 'Colis trop lourd';
+
+  @override
+  String get errorParcelTooHeavyMessage =>
+      'Ce colis dépasse le poids maximum accepté par ce voyageur.';
+
+  @override
+  String get errorParcelTooBigTitle => 'Colis trop volumineux';
+
+  @override
+  String get errorParcelTooBigMessage =>
+      'Ce colis dépasse la taille maximum acceptée par ce voyageur.';
+
+  @override
+  String get itemSizeSDescription => 'Sac';
+
+  @override
+  String get itemSizeMDescription => 'Carton';
+
+  @override
+  String get itemSizeLDescription => 'Valise, chaise';
+
+  @override
+  String get itemSizeXlDescription => 'Meuble';
+
+  @override
   String get errorConflictTitle => 'Action impossible';
 
   @override

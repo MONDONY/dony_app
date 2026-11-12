@@ -98,4 +98,61 @@ void main() {
       expect(transportModeOrPlane(TransportMode.boat), TransportMode.boat);
     });
   });
+
+  group('TransportModeRules', () {
+    test('durée max d\'arrivée par mode (miroir de ArrivalRules)', () {
+      expect(TransportMode.plane.maxArrivalDays, 3);
+      expect(TransportMode.train.maxArrivalDays, 3);
+      expect(TransportMode.other.maxArrivalDays, 3);
+      expect(TransportMode.car.maxArrivalDays, 14);
+      expect(TransportMode.bus.maxArrivalDays, 14);
+      expect(TransportMode.boat.maxArrivalDays, 120);
+    });
+
+    test('valises : refusées en voiture et en bus seulement', () {
+      expect(TransportMode.car.allowsSuitcases, isFalse);
+      expect(TransportMode.bus.allowsSuitcases, isFalse);
+      for (final m in [
+        TransportMode.plane,
+        TransportMode.train,
+        TransportMode.boat,
+        TransportMode.other,
+      ]) {
+        expect(m.allowsSuitcases, isTrue, reason: m.name);
+      }
+    });
+
+    test('taille de colis : voiture et bus seulement', () {
+      expect(TransportMode.car.hasItemSize, isTrue);
+      expect(TransportMode.bus.hasItemSize, isTrue);
+      expect(TransportMode.plane.hasItemSize, isFalse);
+      expect(TransportMode.boat.hasItemSize, isFalse);
+    });
+
+    test('isRoad : voiture et bus', () {
+      expect(TransportMode.car.isRoad, isTrue);
+      expect(TransportMode.bus.isRoad, isTrue);
+      expect(TransportMode.boat.isRoad, isFalse);
+      expect(TransportMode.plane.isRoad, isFalse);
+    });
+
+    test('mode lourd : voiture, bus et bateau (miroir de WeightLimits)', () {
+      expect(TransportMode.car.isHeavy, isTrue);
+      expect(TransportMode.bus.isHeavy, isTrue);
+      expect(TransportMode.boat.isHeavy, isTrue);
+      expect(TransportMode.plane.isHeavy, isFalse);
+      expect(TransportMode.train.isHeavy, isFalse);
+      expect(TransportMode.other.isHeavy, isFalse);
+    });
+  });
+
+  group('TripCapacityLimits', () {
+    test('capacité max par mode (kilos entiers saisis)', () {
+      expect(TripCapacityLimits.maxKgFor(TransportMode.plane), 999);
+      expect(TripCapacityLimits.maxKgFor(TransportMode.train), 999);
+      expect(TripCapacityLimits.maxKgFor(TransportMode.car), 999999);
+      expect(TripCapacityLimits.maxKgFor(TransportMode.bus), 999999);
+      expect(TripCapacityLimits.maxKgFor(TransportMode.boat), 999999);
+    });
+  });
 }

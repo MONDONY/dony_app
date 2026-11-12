@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 
 /// Bornes de saisie d'une demande d'envoi.
 ///
@@ -28,8 +29,35 @@ abstract final class PackageRequestLimits {
   static const double minBudgetEur = 1.0;
   static const double maxBudgetEur = 560.0;
 
+  /// Poids maximum d'une demande route ou bateau, en kilos (miroir de
+  /// `WeightLimits` côté back : 999 999,99).
+  static const double heavyMaxWeightKg = 999999.99;
+
+  /// Garde-fou technique du budget d'une demande route ou bateau, dans la
+  /// devise de la demande : Yadony n'y pose aucun plafond métier (miroir du
+  /// back).
+  static const double technicalMaxBudget = 1000000;
+
+  /// Poids maximum d'une demande selon son [mode] : 32 kg pour l'avion, le
+  /// train, « peu importe » (`null`) et les autres, 999 999,99 kg en route et
+  /// en bateau.
+  static double maxWeightFor(TransportMode? mode) =>
+      mode != null && mode.isHeavy ? heavyMaxWeightKg : maxWeightKg;
+
+  /// Poids valide pour [mode] : au moins [minWeightKg], au plus
+  /// [maxWeightFor].
+  static bool isWeightValidFor(double? kg, TransportMode? mode) =>
+      kg != null && kg >= minWeightKg && kg <= maxWeightFor(mode);
+
+  /// Brouillon IA (« Créer avec l'IA ») : garde les 32 kg, le mode n'y est pas
+  /// encore connu. Pour une saisie dans le formulaire, voir [isWeightValidFor].
   static bool isWeightValid(double? kg) =>
       kg != null && kg >= minWeightKg && kg <= maxWeightKg;
+
+  /// Vrai quand Yadony plafonne le budget (avion, « peu importe », autres) ;
+  /// faux en route et en bateau, où seul [technicalMaxBudget] s'applique.
+  static bool budgetHasBusinessCap(TransportMode? mode) =>
+      !(mode != null && mode.isHeavy);
 
   /// Plancher du budget dans [currency].
   ///
@@ -40,9 +68,15 @@ abstract final class PackageRequestLimits {
   static double minBudgetFor(SupportedCurrency currency) =>
       _scale(minBudgetEur, currency);
 
-  /// Plafond du budget dans [currency]. Voir [minBudgetFor].
-  static double maxBudgetFor(SupportedCurrency currency) =>
-      _scale(maxBudgetEur, currency);
+  /// Plafond du budget dans [currency]. Voir [minBudgetFor]. En route et en
+  /// bateau ([mode]), le plafond est le garde-fou technique, sans mise à
+  /// l'échelle : il est exprimé dans la devise de la demande.
+  static double maxBudgetFor(
+    SupportedCurrency currency, {
+    TransportMode? mode,
+  }) => budgetHasBusinessCap(mode)
+      ? _scale(maxBudgetEur, currency)
+      : technicalMaxBudget;
 
   /// Même formule que `maxUnitPriceFor` : mise à l'échelle par
   /// `unitsPerEur`, puis arrondie à l'unité pour les devises sans
@@ -62,13 +96,17 @@ abstract final class PackageRequestLimits {
   /// refuse sinon la demande (422 `budget-below-commission-minimum`).
   /// [legacy] : demande existante créée avant les paliers, recalculée par le
   /// back au taux unique (aucun minimum).
+  ///
+  /// [mode] : mode de la demande ; en route et en bateau le budget n'a pas de
+  /// plafond métier (voir [maxBudgetFor]).
   static bool isBudgetValid(
     double? amount,
     SupportedCurrency currency, {
     CommissionGrid? grid,
     bool legacy = false,
+    TransportMode? mode,
   }) =>
-      _withinBounds(amount, currency) &&
+      _withinBounds(amount, currency, mode) &&
       netForBudget(amount!, currency, grid: grid, legacy: legacy) != null;
 
   /// Le budget tient dans les bornes de [currency] mais ne couvre pas les
@@ -79,8 +117,9 @@ abstract final class PackageRequestLimits {
     SupportedCurrency currency, {
     CommissionGrid? grid,
     bool legacy = false,
+    TransportMode? mode,
   }) =>
-      _withinBounds(amount, currency) &&
+      _withinBounds(amount, currency, mode) &&
       netForBudget(amount!, currency, grid: grid, legacy: legacy) == null;
 
   /// Net du voyageur contenu dans le budget public [amount], tel que le back
@@ -106,8 +145,12 @@ abstract final class PackageRequestLimits {
     }
   }
 
-  static bool _withinBounds(double? amount, SupportedCurrency currency) =>
+  static bool _withinBounds(
+    double? amount,
+    SupportedCurrency currency,
+    TransportMode? mode,
+  ) =>
       amount != null &&
       amount >= minBudgetFor(currency) &&
-      amount <= maxBudgetFor(currency);
+      amount <= maxBudgetFor(currency, mode: mode);
 }

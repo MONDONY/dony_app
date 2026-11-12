@@ -336,6 +336,67 @@ void main() {
     });
   });
 
+  group('ErrorCatalog — bornes de poids et de taille (422)', () {
+    final fr = lookupAppLocalizations(AppL10n.fr);
+    final en = lookupAppLocalizations(AppL10n.en);
+    const cases = {
+      'weight-too-heavy': (
+        'Poids trop élevé',
+        'Ce poids dépasse le maximum accepté pour ce mode de transport.',
+        'Weight too high',
+        'This weight is above the maximum allowed for this transport mode.',
+      ),
+      'trip-capacity-too-high': (
+        'Capacité trop élevée',
+        'La capacité dépasse le maximum accepté pour ce mode de transport.',
+        'Capacity too high',
+        'The capacity is above the maximum allowed for this transport mode.',
+      ),
+      'parcel-too-heavy': (
+        'Colis trop lourd',
+        'Ce colis dépasse le poids maximum accepté par ce voyageur.',
+        'Parcel too heavy',
+        'This parcel is heavier than this traveler accepts.',
+      ),
+      'parcel-too-big': (
+        'Colis trop volumineux',
+        'Ce colis dépasse la taille maximum acceptée par ce voyageur.',
+        'Parcel too big',
+        'This parcel is bigger than this traveler accepts.',
+      ),
+    };
+
+    for (final entry in cases.entries) {
+      final code = entry.key;
+      final (titleFr, messageFr, titleEn, messageEn) = entry.value;
+
+      test('$code : affiche le detail localisé du serveur', () {
+        final error = ValidationException(
+          'Détail du serveur pour $code.',
+          code: code,
+        );
+
+        final p = ErrorCatalog.lookup(error);
+
+        expect(p.message, 'Détail du serveur pour $code.');
+        expect(p.title, titleFr);
+        expect(p.severity, ErrorSeverity.warning);
+      });
+
+      test('$code : detail vide, repli en français et en anglais', () {
+        final error = ValidationException('', code: code);
+
+        final pFr = ErrorCatalog.lookup(error, l10n: fr);
+        final pEn = ErrorCatalog.lookup(error, l10n: en);
+
+        expect(pFr.title, titleFr);
+        expect(pFr.message, messageFr);
+        expect(pEn.title, titleEn);
+        expect(pEn.message, messageEn);
+      });
+    }
+  });
+
   group('ErrorCatalog — mode de transport et durée (422)', () {
     final fr = lookupAppLocalizations(AppL10n.fr);
     final en = lookupAppLocalizations(AppL10n.en);
