@@ -205,10 +205,12 @@ class TrajetStep extends StatelessWidget {
           // comportement) ; route et bateau affichent le nom des villes.
           final mode = transportModeNotifier?.value;
           final useAirportCodes = mode == null || mode.usesAirportCodes;
-          final depCode =
-              useAirportCodes ? cityAirportCode(dep, departure: true) : dep;
-          final arrCode =
-              useAirportCodes ? cityAirportCode(arr, departure: false) : arr;
+          final depCode = useAirportCodes
+              ? cityAirportCode(dep, departure: true)
+              : dep;
+          final arrCode = useAirportCodes
+              ? cityAirportCode(arr, departure: false)
+              : arr;
           final dateStr = _formatCorridorDateTime(l.localeName);
           return Column(
             children: [
