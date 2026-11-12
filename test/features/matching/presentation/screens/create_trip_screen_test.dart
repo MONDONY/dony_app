@@ -416,6 +416,8 @@ AnnouncementModel _makeFullAnnouncement({
   TransportMode transportMode = TransportMode.plane,
   ItemSize? maxItemSize,
   double? maxParcelWeightKg,
+  DateTime? arrivalDate,
+  String? arrivalTime = '10:30',
 }) => AnnouncementModel(
   id: 'ann-full-1',
   travelerId: 'trav-1',
@@ -424,7 +426,8 @@ AnnouncementModel _makeFullAnnouncement({
   departureDate: departureDate ?? DateTime(2026, 8),
   // 22:00 departure → handoverEnd 18:00 is safely before departure
   departureTime: '22:00',
-  arrivalTime: '10:30',
+  arrivalTime: arrivalTime,
+  arrivalDate: arrivalDate,
   availableKg: availableKg,
   totalKg: 23.0,
   pricePerKg: pricePerKg,
@@ -5652,8 +5655,12 @@ void main() {
   group('CreateTripScreen — modes de transport (cinq étapes)', () {
     late _MockAnnouncementBloc announcementBloc;
     late StreamController<AnnouncementState> states;
+    String? intlLocaleBefore;
 
     setUp(() {
+      // `DateFormat('yyyy-MM-dd')` du payload d'arrivée fixe la langue d'`intl`
+      // à `en_US` quand rien ne l'a fait : rétablie après chaque test.
+      intlLocaleBefore = Intl.defaultLocale;
       states = StreamController<AnnouncementState>.broadcast();
       announcementBloc = _MockAnnouncementBloc();
       when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
@@ -5672,6 +5679,7 @@ void main() {
     });
 
     tearDown(() async {
+      Intl.defaultLocale = intlLocaleBefore;
       resetTransportModesForTest();
       await states.close();
       if (getIt.isRegistered<AnnouncementBloc>()) {
@@ -5705,6 +5713,8 @@ void main() {
     TripFormDraft fullDraft({
       TripFormStep stepId = TripFormStep.conditions,
       String? transportMode = 'PLANE',
+      String? arrivalTime,
+      int arrivalDayOffset = 0,
     }) {
       final day = DateUtils.dateOnly(
         DateTime.now().add(const Duration(days: 30)),
@@ -5718,6 +5728,8 @@ void main() {
         arrivalCountryCode: 'SN',
         departureDate: day,
         departureTime: '10:00',
+        arrivalTime: arrivalTime,
+        arrivalDayOffset: arrivalDayOffset,
         handoverDeadline: day.subtract(const Duration(days: 1)),
         transportMode: transportMode,
         priceOption: 0,
@@ -6704,6 +6716,195 @@ void main() {
         );
       },
     );
+
+    // ── Route : arrivée « Autre date » jusqu'à J+14 (T4) ──────────────────
+
+    /// Jour du départ des brouillons de [fullDraft], et son arrivée à +[n].
+    DateTime draftDeparture() =>
+        DateUtils.dateOnly(DateTime.now().add(const Duration(days: 30)));
+    // Sans `DateFormat` : le premier appel fixerait `Intl.defaultLocale`
+    // à `en_US` pour les tests suivants.
+    String wireDay(DateTime d, int n) {
+      final day = DateTime(d.year, d.month, d.day + n);
+      String two(int v) => v.toString().padLeft(2, '0');
+      return '${day.year}-${two(day.month)}-${two(day.day)}';
+    }
+
+    testWidgets('route sans heure d\'arrivée, J+5 : payload arrivalDate = '
+        'départ + 5', (tester) async {
+      roadOn();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(transportMode: 'CAR', arrivalDayOffset: 5),
+        ),
+      );
+      await publish(tester);
+
+      final sent = sentCreate();
+      expect(sent.transportMode, TransportMode.car);
+      expect(sent.arrivalTime, isNull);
+      expect(sent.arrivalDate, wireDay(draftDeparture(), 5));
+    });
+
+    testWidgets('route J+5 puis avion : décalage 0, aucun arrivalDate', (
+      tester,
+    ) async {
+      roadOn();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(
+            stepId: TripFormStep.mode,
+            transportMode: 'CAR',
+            arrivalDayOffset: 5,
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('mode-card-plane')));
+      await tester.pump();
+      await _goToStep(tester, TripFormStep.conditions);
+      await publish(tester);
+
+      final sent = sentCreate();
+      expect(sent.transportMode, TransportMode.plane);
+      expect(sent.arrivalDate, isNull);
+    });
+
+    testWidgets('avion J+3 avec heure puis route : J+3 gardé (borne 14)', (
+      tester,
+    ) async {
+      roadOn();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(
+            stepId: TripFormStep.mode,
+            arrivalTime: '12:00',
+            arrivalDayOffset: 3,
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('mode-card-car')));
+      await tester.pump();
+      await _goToStep(tester, TripFormStep.conditions);
+      await publish(tester);
+
+      expect(sentCreate().arrivalDate, wireDay(draftDeparture(), 3));
+    });
+
+    testWidgets('étape Trajet en route : pas d\'heure d\'arrivée, Autre date '
+        'ouvre le sélecteur J+3..J+14', (tester) async {
+      roadOn();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(
+            stepId: TripFormStep.trajet,
+            transportMode: 'CAR',
+          ),
+        ),
+      );
+      expect(find.byKey(const Key('arrivalTimeField')), findsNothing);
+      final other = find.byKey(const Key('arrival-day-other'));
+      await tester.ensureVisible(other);
+      await tester.tap(other);
+      await tester.pumpAndSettle();
+
+      final picker = tester.widget<DatePickerDialog>(
+        find.byType(DatePickerDialog),
+      );
+      final dep = draftDeparture();
+      expect(picker.firstDate, DateTime(dep.year, dep.month, dep.day + 3));
+      expect(picker.lastDate, DateTime(dep.year, dep.month, dep.day + 14));
+    });
+
+    for (final english in [false, true]) {
+      final lang = english ? 'en' : 'fr';
+      testWidgets('360 dp $lang : étape Trajet route, quatre puces d\'arrivée '
+          'sur une ligne chacune', (tester) async {
+        if (english) useEnglish();
+        roadOn();
+        await pumpScreen(
+          tester,
+          CreateTripArgs(
+            resumeDraft: fullDraft(
+              stepId: TripFormStep.trajet,
+              transportMode: 'CAR',
+              arrivalDayOffset: 6,
+            ),
+          ),
+          size: const Size(360, 780),
+        );
+        await tester.ensureVisible(find.byKey(const Key('arrival-day-other')));
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+
+        final heights = <double>{};
+        for (final k in [
+          'arrival-day-0',
+          'arrival-day-1',
+          'arrival-day-2',
+          'arrival-day-other',
+        ]) {
+          final chip = find.byKey(Key(k));
+          expect(chip, findsOneWidget);
+          final label = find.descendant(of: chip, matching: find.byType(Text));
+          expect(tester.getSize(label.first).height, lessThan(24));
+          heights.add(tester.getSize(chip).height);
+        }
+        expect(heights.length, 1);
+        final other = english ? 'Other date' : 'Autre date';
+        expect(find.text(other), findsOneWidget);
+        expect(find.byKey(const Key('arrival-date-row')), findsOneWidget);
+      });
+    }
+
+    testWidgets('modification d\'un trajet route à J+10 : ouvert à J+10, '
+        'renvoyé tel quel', (tester) async {
+      roadOn();
+      final dep = draftDeparture();
+      final roadTrip = _makeFullAnnouncement(
+        transportMode: TransportMode.car,
+        capacityUnit: 'KG_EXACT',
+        departureDate: dep,
+        handoverDeadline: dep.subtract(const Duration(days: 1)),
+        arrivalTime: null,
+        arrivalDate: DateTime(dep.year, dep.month, dep.day + 10),
+      );
+      await pumpScreen(tester, CreateTripArgs(announcement: roadTrip));
+
+      final chips = tester.widget<ArrivalDayChips>(
+        find.byType(ArrivalDayChips, skipOffstage: false),
+      );
+      expect(chips.notifier.value, 10);
+      expect(chips.maxDays, 14);
+
+      await _goToStep(tester, TripFormStep.conditions);
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
+      final sent = verify(
+        () => announcementBloc.add(captureAny()),
+      ).captured.whereType<AnnouncementUpdateRequested>().single;
+      expect(sent.arrivalDate, wireDay(dep, 10));
+    });
+
+    testWidgets('modification d\'un trajet avion à J+3 : borné à 3, pas 2', (
+      tester,
+    ) async {
+      final dep = draftDeparture();
+      final trip = _makeFullAnnouncement(
+        departureDate: dep,
+        handoverDeadline: dep.subtract(const Duration(days: 1)),
+        arrivalDate: DateTime(dep.year, dep.month, dep.day + 3),
+      );
+      await pumpScreen(tester, CreateTripArgs(announcement: trip));
+
+      final chips = tester.widget<ArrivalDayChips>(
+        find.byType(ArrivalDayChips, skipOffstage: false),
+      );
+      expect(chips.notifier.value, 3);
+    });
 
     for (final english in [false, true]) {
       final lang = english ? 'en' : 'fr';

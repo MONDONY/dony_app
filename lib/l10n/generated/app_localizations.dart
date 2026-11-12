@@ -26611,6 +26611,18 @@ abstract class AppLocalizations {
   /// **'{offset, plural, =0{Le jour même} =1{Le lendemain} other{Dans {offset} jours}}'**
   String tripPublishArrivalDayOption(int offset);
 
+  /// Jour d'arrivée en route : puce qui ouvre le choix d'une date à partir de J+3 (arrival_day_chips.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre date'**
+  String get tripPublishArrivalOtherDate;
+
+  /// Jour d'arrivée en route : ligne qui rappelle la date choisie (arrival_day_chips.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date d\'arrivée'**
+  String get tripPublishArrivalDateLabel;
+
   /// Affichage de l'arrivée quand elle est un autre jour que le départ (FLUTTER-4E)
   ///
   /// In fr, this message translates to:

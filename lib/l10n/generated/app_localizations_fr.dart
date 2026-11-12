@@ -16228,6 +16228,12 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get tripPublishArrivalOtherDate => 'Autre date';
+
+  @override
+  String get tripPublishArrivalDateLabel => 'Date d\'arrivée';
+
+  @override
   String tripArrivalOnDateAtTime(String date, String time) {
     return 'Arrivée le $date à $time';
   }

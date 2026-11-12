@@ -5702,6 +5702,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPublishArrivalDayLabel': (l) => l.tripPublishArrivalDayLabel,
   'tripPublishArrivalDayOption': (l) =>
       l.tripPublishArrivalDayOption(intPlaceholderValue),
+  'tripPublishArrivalOtherDate': (l) => l.tripPublishArrivalOtherDate,
+  'tripPublishArrivalDateLabel': (l) => l.tripPublishArrivalDateLabel,
   'tripArrivalOnDateAtTime': (l) => l.tripArrivalOnDateAtTime(
     placeholderMarker('date'),
     placeholderMarker('time'),

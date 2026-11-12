@@ -18308,6 +18308,14 @@
       }
     }
   },
+  "tripPublishArrivalOtherDate": "Autre date",
+  "@tripPublishArrivalOtherDate": {
+    "description": "Jour d'arrivée en route : puce qui ouvre le choix d'une date à partir de J+3 (arrival_day_chips.dart)"
+  },
+  "tripPublishArrivalDateLabel": "Date d'arrivée",
+  "@tripPublishArrivalDateLabel": {
+    "description": "Jour d'arrivée en route : ligne qui rappelle la date choisie (arrival_day_chips.dart)"
+  },
   "tripArrivalOnDateAtTime": "Arrivée le {date} à {time}",
   "@tripArrivalOnDateAtTime": {
     "description": "Affichage de l'arrivée quand elle est un autre jour que le départ (FLUTTER-4E)",

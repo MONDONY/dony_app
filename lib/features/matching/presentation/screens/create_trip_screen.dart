@@ -43,6 +43,7 @@ import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
@@ -1140,9 +1141,12 @@ class _TripFormContentState extends State<_TripFormContent> {
       }
       final arrivalDate = a.arrivalDate;
       if (arrivalDate != null) {
-        _arrivalDayOffsetNotifier.value = DateUtils.dateOnly(
-          arrivalDate,
-        ).difference(DateUtils.dateOnly(a.departureDate)).inDays.clamp(0, 2);
+        // Borné au mode du trajet (J+14 en route) : un trajet route à J+10
+        // ne doit pas être ramené à J+2 à l'ouverture.
+        _arrivalDayOffsetNotifier.value = DateUtils.dateOnly(arrivalDate)
+            .difference(DateUtils.dateOnly(a.departureDate))
+            .inDays
+            .clamp(0, transportModeOrPlane(a.transportMode).maxArrivalDays);
       }
       _pickupAddressNotifier.value = a.pickupAddress;
       _deliveryAddressNotifier.value = a.deliveryAddress;
@@ -1340,6 +1344,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _availableKgNotifier.addListener(_syncKgToFormBloc);
     _descriptionCtrl.addListener(_syncDescriptionToFormBloc);
     _transportModeNotifier.addListener(_syncTransportModeToFormBloc);
+    _transportModeNotifier.addListener(_clampArrivalOffsetToMode);
     // Modification et trajet dédié : le mode est posé avant ce listener. Le
     // bloc doit le connaître (valises, plafond de capacité, taille max).
     if (_isEdit || _isLocked) _syncTransportModeToFormBloc();
@@ -1826,6 +1831,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     // listeners partent ici.
     _transportModeNotifier.removeListener(_syncCanSubmit);
     _transportModeNotifier.removeListener(_syncTransportModeToFormBloc);
+    _transportModeNotifier.removeListener(_clampArrivalOffsetToMode);
     _transportModeNotifier.removeListener(_updateCanContinue);
     _transportModeNotifier.removeListener(_markStep0Touched);
     _cashEnabledNotifier.removeListener(_syncCashAcceptedToFormBloc);
@@ -2039,9 +2045,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         ? _formatTime(arrivalTimeVal)
         : null;
     // Envoyée seulement si l'arrivée est un autre jour que le départ.
-    final arrivalOffset = arrivalTimeVal != null
-        ? _arrivalDayOffsetNotifier.value
-        : 0;
+    final arrivalOffset = _effectiveArrivalOffset();
     final arrivalDate = arrivalOffset > 0
         ? DateFormat('yyyy-MM-dd').format(
             DateUtils.dateOnly(
@@ -2859,9 +2863,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _arrivalTimeNotifier.value = _timeOfDay(t.arrivalTime);
     // Vol de nuit mémorisé dans le modèle (FLUTTER-4E) ; sans heure
     // d'arrivée, retour au jour même.
-    _arrivalDayOffsetNotifier.value = t.arrivalTime == null
-        ? 0
-        : t.arrivalDayOffset;
+    _arrivalDayOffsetNotifier.value = _templateArrivalOffset(t);
     // Le mode n'est pas repris du modèle (création seulement) : choisi à
     // l'étape Mode, il prime ; sans étape Mode, c'est l'avion. Un modèle
     // BOAT ou CAR ne change donc jamais en silence le mode du trajet. Un
@@ -3024,9 +3026,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureTimeNotifier.value = _timeOfDay(d.departureTime);
     _arrivalTimeNotifier.value = _timeOfDay(d.arrivalTime);
     final draftMode = _creationModeFrom(d.transportMode);
+    final draftModeIsRoad = draftMode?.isRoad ?? false;
     // Le brouillon garde jusqu'à 120 jours (bateau) : borné ici au mode
     // retenu, un J+10 de route devient J+3 en avion.
-    _arrivalDayOffsetNotifier.value = d.arrivalTime == null
+    // Sans heure d'arrivée, le jour d'arrivée ne vaut qu'en route (C28).
+    _arrivalDayOffsetNotifier.value = d.arrivalTime == null && !draftModeIsRoad
         ? 0
         : d.arrivalDayOffset.clamp(
             0,
@@ -3424,15 +3428,42 @@ class _TripFormContentState extends State<_TripFormContent> {
     ];
   }
 
+  /// Décalage d'arrivée à envoyer : en route il compte même sans heure
+  /// d'arrivée (C28), ailleurs seulement avec une heure (`effectiveArrivalOffset`).
+  int _effectiveArrivalOffset() => effectiveArrivalOffset(
+    mode: _transportModeNotifier.value,
+    hasArrivalTime: _arrivalTimeNotifier.value != null,
+    offset: _arrivalDayOffsetNotifier.value,
+  );
+
+  /// Changement de mode : un décalage au-delà de la borne du nouveau mode
+  /// (J+10 de route repassé en avion) est ramené au jour même, jamais envoyé
+  /// en silence (Review Focus 4 et 5).
+  void _clampArrivalOffsetToMode() {
+    final mode = _transportModeNotifier.value;
+    if (mode != null && _arrivalDayOffsetNotifier.value > mode.maxArrivalDays) {
+      _arrivalDayOffsetNotifier.value = 0;
+    }
+  }
+
+  /// Décalage d'arrivée repris d'un modèle. Mode déjà connu : borné à ce mode.
+  /// Mode encore inconnu (étape Mode après le modèle) : gardé tel quel,
+  /// `_clampArrivalOffsetToMode` le ramène au choix du mode.
+  int _templateArrivalOffset(TripTemplate t) {
+    final mode = _transportModeNotifier.value;
+    final offset = mode == null || t.arrivalTime != null || mode.isRoad
+        ? t.arrivalDayOffset
+        : 0;
+    return mode == null ? offset : offset.clamp(0, mode.maxArrivalDays);
+  }
+
   /// Arrivée du trajet saisi, d'où part la première étape ajoutée
   /// (FLUTTER-4D). `null` tant que la ville ou la date manque.
   TripLegOrigin? _firstLegOrigin() {
     final city = _arrivalCityNotifier.value;
     final date = _departureDateNotifier.value;
     if (city == null || city.isEmpty || date == null) return null;
-    final offset = _arrivalTimeNotifier.value != null
-        ? _arrivalDayOffsetNotifier.value
-        : 0;
+    final offset = _effectiveArrivalOffset();
     return TripLegOrigin(
       city: city,
       countryCode: _arrivalCountryCodeNotifier.value,
