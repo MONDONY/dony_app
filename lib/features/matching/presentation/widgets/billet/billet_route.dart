@@ -87,8 +87,6 @@ class BilletCorridor extends StatelessWidget {
     super.key,
     required this.departureCity,
     required this.arrivalCity,
-    this.departureCode,
-    this.arrivalCode,
     this.transportMode,
   });
 
@@ -97,12 +95,6 @@ class BilletCorridor extends StatelessWidget {
 
   /// Mode du trajet, avion si `null`.
   final TransportMode? transportMode;
-
-  /// Code affiché en grand quand l'appelant le connaît déjà (code IATA d'un
-  /// vol) ; `null` : déduit du nom de la ville ([cityAirportCode]). Ignoré
-  /// hors avion.
-  final String? departureCode;
-  final String? arrivalCode;
 
   @override
   Widget build(BuildContext context) {
@@ -132,11 +124,7 @@ class BilletCorridor extends StatelessWidget {
     final mode = transportModeOrPlane(transportMode);
     final withCodes = mode.usesAirportCodes;
 
-    Widget end({
-      required String city,
-      required String? code,
-      required bool departure,
-    }) {
+    Widget end({required String city, required bool departure}) {
       final cityKey = Key(
         departure ? 'billet_departure_city' : 'billet_arrival_city',
       );
@@ -154,7 +142,7 @@ class BilletCorridor extends StatelessWidget {
                     ? Alignment.centerLeft
                     : Alignment.centerRight,
                 child: Text(
-                  code ?? cityAirportCode(city, departure: departure),
+                  cityAirportCode(city, departure: departure),
                   maxLines: 1,
                   style: codeStyle,
                   textAlign: align,
@@ -182,7 +170,7 @@ class BilletCorridor extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            end(city: departureCity, code: departureCode, departure: true),
+            end(city: departureCity, departure: true),
             // Ligne + icône du mode, centrées sur les codes.
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -205,7 +193,7 @@ class BilletCorridor extends StatelessWidget {
                 ],
               ),
             ),
-            end(city: arrivalCity, code: arrivalCode, departure: false),
+            end(city: arrivalCity, departure: false),
           ],
         ),
       ),

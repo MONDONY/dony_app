@@ -62,9 +62,6 @@ extension TransportModeUI on TransportMode {
     TransportMode.other => '📦',
   };
 
-  /// Route : voiture ou bus (le bus est affiché « Route »).
-  bool get isRoad => this == TransportMode.car || this == TransportMode.bus;
-
   /// Seul l'avion se rattache à des aéroports (codes IATA).
   bool get usesAirportCodes => this == TransportMode.plane;
 

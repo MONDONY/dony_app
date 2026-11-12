@@ -82,10 +82,6 @@ void main() {
       expect(TransportMode.bus.displayGroup, TransportMode.car);
       expect(TransportMode.car.displayGroup, TransportMode.car);
       expect(TransportMode.boat.displayGroup, TransportMode.boat);
-      expect(TransportMode.bus.isRoad, isTrue);
-      expect(TransportMode.car.isRoad, isTrue);
-      expect(TransportMode.plane.isRoad, isFalse);
-      expect(TransportMode.boat.isRoad, isFalse);
     });
 
     test('codes IATA seulement en avion', () {

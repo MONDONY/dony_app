@@ -13,6 +13,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/features/matching/presentation/widgets/transport_mode_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
@@ -382,27 +383,13 @@ class TripPosterCard extends StatelessWidget {
     ),
   );
 
-  /// Icône du mode entre les deux villes. Seul l'avion (glyphe qui pointe vers
-  /// le haut) est tourné pour pointer vers la droite ; route et bateau sont
-  /// déjà de profil.
-  Widget _modeIcon() {
-    final mode = transportModeOrPlane(announcement.transportMode);
-    if (mode != TransportMode.plane) {
-      return DonyIcon(
-        mode.iconAsset,
-        size: _corridorIconSize,
-        color: PosterPalette.terra,
-      );
-    }
-    return Transform.rotate(
-      angle: math.pi / 2,
-      child: const Icon(
-        Icons.flight_rounded,
-        size: _corridorIconSize,
-        color: PosterPalette.terra,
-      ),
-    );
-  }
+  /// Icône du mode entre les deux villes (l'avion seul est tourné dans le
+  /// sens du trajet).
+  Widget _modeIcon() => TransportModeIcon(
+    mode: transportModeOrPlane(announcement.transportMode),
+    size: _corridorIconSize,
+    color: PosterPalette.terra,
+  );
 
   /// Largeur rendue d'un texte, pour arbitrer la disposition avant de peindre.
   static double _textWidth(String value, TextStyle style) {

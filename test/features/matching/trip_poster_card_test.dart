@@ -111,14 +111,21 @@ void main() {
       tester,
     ) async {
       await pumpMode(tester, mode: 'PLANE', stopsCount: 0);
-      expect(findMaterialFlightIcons(), findsOneWidget);
+      expect(findDonyIcon('plane'), findsOneWidget);
+      expect(
+        find.ancestor(
+          of: findDonyIcon('plane'),
+          matching: find.byType(RotatedBox),
+        ),
+        findsOneWidget,
+      );
       expect(findDonyIcon('car'), findsNothing);
       expect(find.textContaining('Vol direct'), findsOneWidget);
     });
 
     testWidgets('ancien trajet sans mode : avion', (tester) async {
       await pumpMode(tester);
-      expect(findMaterialFlightIcons(), findsOneWidget);
+      expect(findDonyIcon('plane'), findsOneWidget);
     });
 
     testWidgets('villes longues en route : corridor sur deux lignes, '

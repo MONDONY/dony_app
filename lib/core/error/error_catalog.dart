@@ -219,7 +219,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorTripNoParcelDepartedTitle,
       message: (l) => l.errorTripNoParcelDepartedMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.flight_rounded,
+      icon: Icons.route_rounded,
     ),
     // Billets d'avion en affiliation (com.yadony.api.flights).
     'flights-unavailable': _Entry(
@@ -310,7 +310,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorParcelRefusalLockedTitle,
       message: (l) => l.errorParcelRefusalLockedMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.flight_takeoff_rounded,
+      icon: Icons.route_rounded,
     ),
     // ─── Modification d'un colis accepté (`BidAmendmentService`) ────────
     'amendment-disabled': _Entry(
@@ -428,7 +428,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorSupplementLockedTitle,
       message: (l) => l.errorSupplementLockedMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.flight_takeoff_rounded,
+      icon: Icons.route_rounded,
     ),
     'supplement-already-active': _Entry(
       title: (l) => l.errorSupplementAlreadyActiveTitle,
@@ -1604,7 +1604,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorRescheduleInTransitTitle,
       message: (l) => l.errorRescheduleInTransitMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.flight_takeoff_rounded,
+      icon: Icons.route_rounded,
     ),
     'reschedule-invalid-status': _Entry(
       title: (l) => l.errorRescheduleInvalidStatusTitle,

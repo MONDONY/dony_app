@@ -8,13 +8,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('DonyIcons — constantes statiques', () {
-    test(
-      'departureCity est un lieu, arrivalCity un drapeau (jamais un avion)',
-      () {
-        expect(DonyIcons.departureCity, Icons.place_rounded);
-        expect(DonyIcons.arrivalCity, Icons.flag_rounded);
-      },
-    );
+    test('arrivalCity est un drapeau (jamais un avion)', () {
+      expect(DonyIcons.arrivalCity, Icons.flag_rounded);
+    });
 
     test('date est un IconData valide', () {
       expect(DonyIcons.date, isA<IconData>());

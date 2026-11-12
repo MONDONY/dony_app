@@ -1,12 +1,10 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/widgets/transport_mode_icon.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
@@ -325,18 +323,13 @@ class PackageRequestPosterCard extends StatelessWidget {
     ),
   );
 
-  /// Icône du mode entre les villes. L'avion pointe vers le haut : quart de
-  /// tour dans le sens du trajet ; les autres icônes sont déjà de profil.
-  Widget _modeIcon() {
-    final icon = DonyIcon(
-      requestModeIconAsset(request.transportMode),
-      size: _corridorIconSize,
-      color: PosterPalette.ink,
-    );
-    return request.transportMode == TransportMode.plane
-        ? Transform.rotate(angle: math.pi / 2, child: icon)
-        : icon;
-  }
+  /// Icône du mode entre les villes (l'avion seul est tourné dans le sens du
+  /// trajet).
+  Widget _modeIcon() => TransportModeIcon(
+    mode: request.transportMode,
+    size: _corridorIconSize,
+    color: PosterPalette.ink,
+  );
 
   static double _textWidth(String value, TextStyle style) {
     final painter = TextPainter(

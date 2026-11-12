@@ -75,7 +75,6 @@ export 'package:dony/core/design/widgets/dony_success_screen.dart';
 export 'package:dony/core/design/widgets/dony_swipe_action.dart';
 export 'package:dony/core/design/widgets/dony_text_field.dart';
 // Domain cards
-export 'package:dony/core/design/widgets/dony_trip_card.dart';
 export 'package:dony/core/design/widgets/dony_urgent_badge.dart';
 export 'package:dony/core/design/widgets/dony_user_card.dart';
 export 'package:dony/core/design/widgets/gp_pro_badge.dart';

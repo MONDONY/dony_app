@@ -11,7 +11,6 @@ class DonyIcons {
   DonyIcons._();
 
   // Trajet
-  static const IconData departureCity = Icons.place_rounded;
   static const IconData arrivalCity = Icons.flag_rounded;
   static const IconData time = Icons.access_time_rounded;
   static const IconData date = Icons.calendar_today_rounded;

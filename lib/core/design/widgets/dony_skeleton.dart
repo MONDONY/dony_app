@@ -114,7 +114,7 @@ class DonySkeletonCircle extends StatelessWidget {
   }
 }
 
-/// Skeleton calqué sur [DonyTripCard] — mêmes dimensions et paddings pour
+/// Skeleton calqué sur la carte de trajet : mêmes dimensions et paddings pour
 /// qu'aucun saut de layout n'apparaisse au remplacement par la vraie card.
 class DonyTripCardSkeleton extends StatelessWidget {
   const DonyTripCardSkeleton({super.key});

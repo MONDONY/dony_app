@@ -1,8 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
-import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
+import 'package:dony/features/matching/presentation/widgets/transport_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -107,18 +106,11 @@ class _CorridorArrow extends StatelessWidget {
   final bool compact;
   final TransportMode? transportMode;
 
-  /// L'icône avion pointe vers le haut : quart de tour, dans le sens du
-  /// trajet. Les autres icônes sont déjà de profil.
-  Widget _modeIcon(ColorScheme cs) {
-    final icon = DonyIcon(
-      requestModeIconAsset(transportMode),
-      size: compact ? 12 : 14,
-      color: cs.primary,
-    );
-    return transportMode == TransportMode.plane
-        ? RotatedBox(quarterTurns: 1, child: icon)
-        : icon;
-  }
+  Widget _modeIcon(ColorScheme cs) => TransportModeIcon(
+    mode: transportMode,
+    size: compact ? 12 : 14,
+    color: cs.primary,
+  );
 
   @override
   Widget build(BuildContext context) {

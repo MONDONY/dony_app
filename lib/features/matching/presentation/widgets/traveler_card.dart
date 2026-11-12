@@ -12,6 +12,7 @@ import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/features/matching/presentation/utils/trip_capacity.dart';
+import 'package:dony/features/matching/presentation/widgets/transport_mode_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -665,7 +666,7 @@ class _PressableCardState extends State<_PressableCard> {
   }
 }
 
-/// En-tête trajet : `drapeau · ville  ──✈──  ville · drapeau` (l'icône du
+/// En-tête trajet : `drapeau · ville  ──icône──  ville · drapeau` (l'icône du
 /// connecteur suit le mode du trajet).
 /// Les villes sont non-flexibles (toujours affichées en entier) et le
 /// connecteur occupe l'espace restant — la ligne s'étire entre les deux villes.
@@ -896,22 +897,10 @@ class _RouteConnector extends StatelessWidget {
               ),
             ),
           ),
-          // Lucide 'plane' pointe en haut-à-gauche par défaut → quart de tour
-          // pour le faire pointer vers la droite (sens du trajet). Les autres
-          // icônes de mode sont déjà de profil.
           Container(
             color: cs.surface,
             padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-            child: mode == TransportMode.plane
-                ? RotatedBox(
-                    quarterTurns: 1,
-                    child: DonyIcon(
-                      mode.iconAsset,
-                      size: 16,
-                      color: cs.primary,
-                    ),
-                  )
-                : DonyIcon(mode.iconAsset, size: 16, color: cs.primary),
+            child: TransportModeIcon(mode: mode, size: 16, color: cs.primary),
           ),
         ],
       ),

@@ -1,5 +1,5 @@
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/widgets/transport_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -66,12 +66,11 @@ class _RouteConnector extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final iconSize = (fontSize * 0.8).clamp(12.0, 20.0);
-    Widget icon = DonyIcon(mode.iconAsset, size: iconSize, color: cs.primary);
-    // L'icône avion pointe vers le haut : quart de tour, dans le sens du
-    // trajet. Les autres icônes sont déjà de profil.
-    if (mode == TransportMode.plane) {
-      icon = RotatedBox(quarterTurns: 1, child: icon);
-    }
+    final icon = TransportModeIcon(
+      mode: mode,
+      size: iconSize,
+      color: cs.primary,
+    );
     final dotsWidth = iconSize * 0.6;
     // Pile de taille fixe plutôt qu'une ligne : dans une colonne très étroite
     // (texte agrandi), le connecteur est rogné au lieu de déborder.

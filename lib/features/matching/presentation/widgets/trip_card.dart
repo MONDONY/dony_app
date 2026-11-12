@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/features/matching/presentation/widgets/transport_mode_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -817,15 +818,7 @@ class _RouteTimeline extends StatelessWidget {
                 size: Size(double.infinity, 2),
                 painter: _DashedLinePainter(color: DonyColors.blue200),
               ),
-              // Plane icon rotated to point right (Lucide 'plane' points up-left
-              // by default) ; the other mode icons are already side-on.
-              if (mode == TransportMode.plane)
-                RotatedBox(
-                  quarterTurns: 1,
-                  child: DonyIcon(mode.iconAsset, size: 16, color: cs.primary),
-                )
-              else
-                DonyIcon(mode.iconAsset, size: 16, color: cs.primary),
+              TransportModeIcon(mode: mode, size: 16, color: cs.primary),
             ],
           ),
         ),
