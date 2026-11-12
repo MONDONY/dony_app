@@ -18,16 +18,10 @@ import 'package:intl/intl.dart';
 
 /// Étape 1 / 3 — Trajet & colis (Proposal B — Sahel Warmth).
 class Step1TrajetColis extends StatefulWidget {
-  const Step1TrajetColis({super.key, this.canContinueNotifier, this.header});
+  const Step1TrajetColis({super.key, this.canContinueNotifier});
 
   /// Piloté par l'étape, lu par le bouton « Continuer » de la coque.
   final ValueNotifier<bool>? canContinueNotifier;
-
-  /// Contenu posé en tête de la zone défilante (bannière « Rempli par l'IA »),
-  /// avec son propre espacement du bas. Porté par
-  /// l'étape plutôt que par la coque : au-dessus du `SingleChildScrollView`, il
-  /// restait figé et mangeait de la hauteur pendant toute la saisie.
-  final Widget? header;
 
   @override
   State<Step1TrajetColis> createState() => Step1TrajetColisState();
@@ -98,13 +92,18 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
         (_date != null && _tolerance != (s.dateToleranceDays ?? 2));
   }
 
-  /// Mode envoyé avec l'étape : celui du bloc (« peu importe » = `null`), ou
-  /// l'avion quand le serveur n'ouvre aucun autre mode et que rien n'est
-  /// proposé à l'écran. Un mode jamais choisi vaut « peu importe » dès que le
-  /// choix est visible.
-  TransportMode? get _transportMode => transportModes.hasRequestChoice
-      ? context.read<PackageRequestFormBloc>().state.transportMode
-      : TransportMode.plane;
+  /// Mode envoyé avec l'étape. Un mode déjà posé dans l'état du bloc (édition,
+  /// duplication, brouillon, ou choix à l'écran) est renvoyé tel quel, « peu
+  /// importe » compris (`null`) : le masquer ne doit jamais le changer. Sans
+  /// mode posé (demande vierge), « peu importe » quand le choix est visible,
+  /// l'avion quand le serveur n'ouvre que lui et que rien n'est proposé.
+  TransportMode? get _transportMode {
+    final state = context.read<PackageRequestFormBloc>().state;
+    if (state.transportMode != null || state.transportModeAny) {
+      return state.transportMode;
+    }
+    return transportModes.hasRequestChoice ? null : TransportMode.plane;
+  }
 
   /// Saisie de l'étape au format du brouillon local
   /// (`PackageRequestFormDraft`), validée ou non.
@@ -190,8 +189,6 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ?widget.header,
-
             // ── Section label ──────────────────────────────────────────────
             Text(
               l10n.requestCreateTrajetSectionLabel,

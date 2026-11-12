@@ -55,7 +55,10 @@ abstract final class PackageRequestAiDraftMapper {
       dateToleranceDays: tolerance is int && tolerance >= 0 && tolerance <= 7
           ? tolerance
           : null,
-      transportMode: mode != null && transportModes.requestModes.contains(mode)
+      // Le bus compte comme la route : gardé quand la route est proposée.
+      transportMode:
+          mode != null &&
+              transportModes.requestModes.contains(mode.displayGroup)
           ? mode
           : null,
       weightKg: weightKg,

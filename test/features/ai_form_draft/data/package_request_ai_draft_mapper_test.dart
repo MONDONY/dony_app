@@ -74,6 +74,23 @@ void main() {
       expect(s.transportModeAny, isFalse);
     });
 
+    test(
+      'BUS dicté, route proposée : gardé (le bus compte comme la route)',
+      () {
+        setTransportModes(
+          const TransportModesAvailability(road: true, boat: false),
+        );
+        expect(
+          map(const {'transportMode': 'BUS'}).transportMode,
+          TransportMode.bus,
+        );
+      },
+    );
+
+    test('BUS dicté, route non proposée : ignoré', () {
+      expect(map(const {'transportMode': 'BUS'}).transportMode, isNull);
+    });
+
     test('mode non proposé : ignoré, le mode du formulaire reste', () {
       setTransportModes(
         const TransportModesAvailability(road: true, boat: false),

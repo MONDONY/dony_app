@@ -16,7 +16,6 @@ import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
 import 'package:dony/features/ai_form_draft/data/package_request_ai_draft_mapper.dart';
 import 'package:dony/features/ai_form_draft/presentation/ai_form_draft_launcher.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_entry_card.dart';
-import 'package:dony/features/ai_form_draft/presentation/widgets/ai_filled_banner.dart';
 import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
@@ -757,32 +756,12 @@ class _PackageRequestCreateScreenState
           children: [
             Expanded(
               child: switch (state.currentStep) {
-                // Rien n'est épinglé au-dessus de l'étape : la carte de
-                // tutoriel et la bannière de devise vivaient hors du
-                // `SingleChildScrollView` et mangeaient de la hauteur pendant
-                // toute la saisie, clavier déployé. Elles passent en tête du
-                // contenu défilant.
+                // Rien n'est épinglé au-dessus de l'étape : de la hauteur
+                // perdue pendant toute la saisie, clavier déployé. L'entrée
+                // « Créer avec l'IA » est l'icône de la barre de titre.
                 0 => Step1TrajetColis(
                   key: _step1Key,
                   canContinueNotifier: _canContinueNotifier,
-                  // L'entrée « Créer avec l'IA » est l'icône de la barre de
-                  // titre : seule la bannière « Rempli par l'IA » reste ici.
-                  header: _aiAvailability == null
-                      ? null
-                      : BlocBuilder<AiFilledFieldsCubit, Set<String>>(
-                          bloc: _aiFilled,
-                          builder: (_, fields) => fields.isNotEmpty
-                              ? Padding(
-                                  padding: const EdgeInsets.only(
-                                    bottom: DonySpacing.base,
-                                  ),
-                                  child: AiFilledBanner(
-                                    onTalkAgain: () =>
-                                        unawaited(_openAiDraft(context)),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
                 ),
                 1 => Step2Details(
                   key: _step2Key,

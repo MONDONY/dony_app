@@ -311,7 +311,7 @@ void main() {
     expect(find.byKey(const Key('request-ai-action')), findsNothing);
   });
 
-  testWidgets('« Créer avec l’IA » remplit le wizard : bandeau, marques', (
+  testWidgets('« Créer avec l’IA » remplit le wizard : marques, sans bandeau', (
     tester,
   ) async {
     final launcher = useAiFormDraft(enabled: true, outcome: outcome());
@@ -321,7 +321,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(launcher.calls.single.kind, AiFormKind.packageRequest);
-    expect(find.byKey(const Key('ai-filled-banner')), findsOneWidget);
+    // Le bandeau « Rempli par l'IA » a quitté l'étape : les marques « IA »
+    // restent sur les champs remplis.
+    expect(find.byKey(const Key('ai-filled-banner')), findsNothing);
     expect(find.byKey(const Key('ai-field-mark')), findsWidgets);
     expect(find.text('1 / 3'), findsOneWidget);
     expect(find.text('Lyon'), findsWidgets);
@@ -333,23 +335,24 @@ void main() {
     expect(find.widgetWithText(TextFormField, '5'), findsOneWidget);
   });
 
-  testWidgets('« Reparler » qui ne remplit que la date garde les marques', (
-    tester,
-  ) async {
-    final launcher = useAiFormDraft(enabled: true, outcome: outcome());
-    await open(tester);
-    await tester.tap(find.byKey(const Key('request-ai-action')));
-    await tester.pumpAndSettle();
-    final marks = find.byKey(const Key('ai-field-mark')).evaluate().length;
-    expect(marks, greaterThan(1));
+  testWidgets(
+    'l’icône IA relance l’IA : une passe qui ne remplit que la date garde les marques',
+    (tester) async {
+      final launcher = useAiFormDraft(enabled: true, outcome: outcome());
+      await open(tester);
+      await tester.tap(find.byKey(const Key('request-ai-action')));
+      await tester.pumpAndSettle();
+      final marks = find.byKey(const Key('ai-field-mark')).evaluate().length;
+      expect(marks, greaterThan(1));
 
-    launcher.outcome = const AiResolvedDraft(draft: {'dateToleranceDays': 2});
-    await tester.tap(find.byKey(const Key('ai-talk-again')));
-    await tester.pumpAndSettle();
+      launcher.outcome = const AiResolvedDraft(draft: {'dateToleranceDays': 2});
+      await tester.tap(find.byKey(const Key('request-ai-action')));
+      await tester.pumpAndSettle();
 
-    expect(launcher.calls, hasLength(2));
-    expect(find.byKey(const Key('ai-field-mark')), findsNWidgets(marks));
-  });
+      expect(launcher.calls, hasLength(2));
+      expect(find.byKey(const Key('ai-field-mark')), findsNWidgets(marks));
+    },
+  );
 
   testWidgets('feuille fermée sans remplir : le wizard ne change pas', (
     tester,

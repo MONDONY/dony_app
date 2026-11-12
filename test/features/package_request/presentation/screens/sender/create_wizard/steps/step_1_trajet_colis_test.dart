@@ -5,6 +5,8 @@ import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -98,6 +100,32 @@ void main() {
       ),
     ),
   );
+
+  /// Demande vierge (aucun mode posé) dont le trajet est déjà rempli : le
+  /// brouillon restauré donne les villes, jamais de mode. Le bloc est prêt
+  /// avant le premier build de l'étape, qui lit l'état à l'initialisation.
+  Future<Widget> wrapBlank(GlobalKey<Step1TrajetColisState> key) async {
+    final bloc =
+        PackageRequestFormBloc(
+          packageRepo,
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        )..add(
+          const FormDraftRestored(
+            PackageRequestFormState(
+              departureCity: 'Lyon',
+              arrivalCity: 'Bamako',
+            ),
+          ),
+        );
+    await bloc.stream.first;
+    return MaterialApp(
+      theme: AppTheme.light(),
+      home: BlocProvider.value(
+        value: bloc,
+        child: Scaffold(body: Step1TrajetColis(key: key)),
+      ),
+    );
+  }
 
   PackageRequestFormBloc blocOf(WidgetTester tester) => tester
       .element(find.byType(Step1TrajetColis))
@@ -299,32 +327,6 @@ void main() {
       expect(find.textContaining('Où remettez-vous'), findsNothing);
     });
 
-    testWidgets('l\'en-tête fourni défile avec le contenu', (tester) async {
-      final canContinue = ValueNotifier<bool>(false);
-      addTearDown(canContinue.dispose);
-
-      await tester.pumpWidget(
-        wrap(
-          Step1TrajetColis(
-            canContinueNotifier: canContinue,
-            header: const Text('en-tête devise'),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      // Posé sous le SingleChildScrollView de l'étape, pas au-dessus : la
-      // bannière de devise restait sinon figée pendant toute la saisie.
-      expect(find.text('en-tête devise'), findsOneWidget);
-      expect(
-        find.ancestor(
-          of: find.text('en-tête devise'),
-          matching: find.byType(SingleChildScrollView),
-        ),
-        findsOneWidget,
-      );
-    });
-
     testWidgets(
       'mode édition : pré-remplit les villes depuis l\'état du bloc',
       (tester) async {
@@ -511,21 +513,80 @@ void main() {
 
     Finder chip(String mode) => find.byKey(Key('request-mode-$mode'));
 
-    testWidgets('avion seul : pas de bloc mode, soumission PLANE', (
+    testWidgets('avion seul : nouvelle demande, pas de bloc mode, PLANE', (
+      tester,
+    ) async {
+      final key = GlobalKey<Step1TrajetColisState>();
+      await tester.pumpWidget(
+        await tester.runAsync(() => wrapBlank(key)) as Widget,
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('request-mode-selector')), findsNothing);
+      expect(key.currentState!.draftInput['transportMode'], 'PLANE');
+
+      key.currentState!.submit();
+      await tester.pumpAndSettle();
+
+      final state = blocOf(tester).state;
+      expect(state.currentStep, 1);
+      expect(state.transportMode, TransportMode.plane);
+      expect(state.transportModeAny, isFalse);
+    });
+
+    testWidgets('avion seul : modification d\'une demande peu importe → ANY', (
       tester,
     ) async {
       final key = GlobalKey<Step1TrajetColisState>();
       await tester.pumpWidget(wrapEditing(editingReq(mode: null), key: key));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('request-mode-selector')), findsNothing);
+      expect(key.currentState!.draftInput['transportMode'], 'ANY');
 
       key.currentState!.submit();
       await tester.pumpAndSettle();
 
       final state = blocOf(tester).state;
-      expect(state.transportMode, TransportMode.plane);
-      expect(state.transportModeAny, isFalse);
-      expect(key.currentState!.draftInput['transportMode'], 'PLANE');
+      expect(state.currentStep, 1);
+      expect(state.transportMode, isNull);
+      expect(state.transportModeAny, isTrue);
+      expect(state.requestTransportMode, isNull);
+    });
+
+    testWidgets('avion seul : modification d\'une demande BOAT → BOAT', (
+      tester,
+    ) async {
+      final key = GlobalKey<Step1TrajetColisState>();
+      await tester.pumpWidget(
+        wrapEditing(editingReq(mode: TransportMode.boat), key: key),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('request-mode-selector')), findsNothing);
+
+      key.currentState!.submit();
+      await tester.pumpAndSettle();
+
+      expect(blocOf(tester).state.transportMode, TransportMode.boat);
+      expect(blocOf(tester).state.transportModeAny, isFalse);
+    });
+
+    testWidgets('choix visible, rien touché : la soumission envoie ANY', (
+      tester,
+    ) async {
+      openAllModes();
+      final key = GlobalKey<Step1TrajetColisState>();
+      await tester.pumpWidget(
+        await tester.runAsync(() => wrapBlank(key)) as Widget,
+      );
+      await tester.pumpAndSettle();
+      expect(key.currentState!.draftInput['transportMode'], 'ANY');
+
+      key.currentState!.submit();
+      await tester.pumpAndSettle();
+
+      final state = blocOf(tester).state;
+      expect(state.currentStep, 1);
+      expect(state.transportMode, isNull);
+      expect(state.transportModeAny, isTrue);
     });
 
     testWidgets(
