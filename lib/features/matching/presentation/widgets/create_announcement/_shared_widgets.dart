@@ -89,10 +89,16 @@ class CaStepperHeader extends StatelessWidget {
   /// Étape courante ; les précédentes sont marquées faites.
   final TripFormStep current;
 
+  /// Libellés propres à un écran dont les étapes regroupent autre chose que
+  /// celles du formulaire de trajet (écran des modèles : « Lieux & capacité »,
+  /// « Prix & conditions »). `null` : libellés du formulaire de trajet.
+  final String Function(TripFormStep step, AppLocalizations l)? labelFor;
+
   const CaStepperHeader({
     super.key,
     required this.steps,
     required this.current,
+    this.labelFor,
   });
 
   static String _label(TripFormStep step, AppLocalizations l) => switch (step) {
@@ -133,7 +139,7 @@ class CaStepperHeader extends StatelessWidget {
         const SizedBox(height: DonySpacing.xs),
         Row(
           children: List.generate(totalSteps, (i) {
-            final label = _label(steps[i], l);
+            final label = (labelFor ?? _label)(steps[i], l);
             // Une ligne : à cinq étapes, « Conditions ✓ » est plus large que
             // sa colonne à 360 dp. Le libellé rétrécit au lieu de passer à la
             // ligne et de décaler la rangée.

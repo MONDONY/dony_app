@@ -982,6 +982,8 @@
   "tripPublishStepCapacity": "Capacity",
   "tripPublishStepPrice": "Price",
   "tripPublishStepConditions": "Terms",
+  "tripPublishPlacesCapacityStepLabel": "Locations & capacity",
+  "tripPublishPriceConditionsStepLabel": "Price & conditions",
   "tripPublishModeQuestion": "How are you traveling?",
   "tripPublishModeHint": "The mode shapes the next steps: dates, capacity and price.",
   "tripPublishModeSectionLabel": "Transport mode",

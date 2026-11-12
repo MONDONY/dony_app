@@ -5447,6 +5447,18 @@ abstract class AppLocalizations {
   /// **'Conditions'**
   String get tripPublishStepConditions;
 
+  /// Libellé d'étape du stepper de l'écran des modèles de trajet (étape 1 : lieux de remise et capacité)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieux & capacité'**
+  String get tripPublishPlacesCapacityStepLabel;
+
+  /// Libellé d'étape du stepper de l'écran des modèles de trajet (étape 2 : prix et conditions)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix & conditions'**
+  String get tripPublishPriceConditionsStepLabel;
+
   /// Titre de l'étape Mode du formulaire de publication d'un trajet
   ///
   /// In fr, this message translates to:

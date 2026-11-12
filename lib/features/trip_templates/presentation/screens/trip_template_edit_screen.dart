@@ -54,6 +54,15 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     TripFormStep.prix,
   ];
 
+  /// Libellés d'origine du modèle : ses étapes 1 et 2 regroupent les lieux de
+  /// remise avec la capacité, le prix avec les conditions.
+  static String _stepLabel(TripFormStep step, AppLocalizations l) =>
+      switch (step) {
+        TripFormStep.capacite => l.tripPublishPlacesCapacityStepLabel,
+        TripFormStep.prix => l.tripPublishPriceConditionsStepLabel,
+        _ => l.tripPublishRouteSectionLabel,
+      };
+
   static List<(int?, String)> _handoverChoices(AppLocalizations l) => [
     (null, l.tripTemplateHandoverNone),
     (0, l.tripTemplateHandoverSameDay),
@@ -492,7 +501,11 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                   body: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CaStepperHeader(steps: _steps, current: _steps[step]),
+                      CaStepperHeader(
+                        steps: _steps,
+                        current: _steps[step],
+                        labelFor: _stepLabel,
+                      ),
                       const SizedBox(height: DonySpacing.xxl),
                       ...switch (step) {
                         0 => _buildStep0(context),

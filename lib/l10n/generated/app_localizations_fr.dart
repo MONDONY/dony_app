@@ -3240,6 +3240,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishStepConditions => 'Conditions';
 
   @override
+  String get tripPublishPlacesCapacityStepLabel => 'Lieux & capacité';
+
+  @override
+  String get tripPublishPriceConditionsStepLabel => 'Prix & conditions';
+
+  @override
   String get tripPublishModeQuestion => 'Comment voyagez-vous ?';
 
   @override

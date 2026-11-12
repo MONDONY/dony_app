@@ -74,6 +74,29 @@ void main() {
       expect(find.byType(CaStepNode), findsNWidgets(3));
     });
 
+    testWidgets('labelFor remplace les libellés du formulaire', (tester) async {
+      tester.view.physicalSize = const Size(390, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        localizedApp(
+          CaStepperHeader(
+            steps: const [TripFormStep.trajet, TripFormStep.prix],
+            current: TripFormStep.trajet,
+            labelFor: (step, l) => switch (step) {
+              TripFormStep.prix => l.tripPublishPriceConditionsStepLabel,
+              _ => l.tripPublishRouteSectionLabel,
+            },
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Prix & conditions'), findsOneWidget);
+      expect(find.text('Prix'), findsNothing);
+    });
+
     testWidgets('libellés anglais', (tester) async {
       enableEnglish();
       await _pump(tester, _five, TripFormStep.conditions, locale: AppL10n.en);

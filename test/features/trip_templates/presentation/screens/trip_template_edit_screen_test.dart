@@ -357,6 +357,18 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.byType(CaStepperHeader), findsOneWidget);
+      // Les étapes du modèle regroupent lieux + capacité et prix +
+      // conditions : l'en-tête garde ses libellés d'origine.
+      for (final label in ['Trajet', 'Lieux & capacité', 'Prix & conditions']) {
+        expect(
+          find.descendant(
+            of: find.byType(CaStepperHeader),
+            matching: find.text(label),
+          ),
+          findsOneWidget,
+          reason: label,
+        );
+      }
       expect(find.text('Continuer'), findsOneWidget);
       expect(find.text('Enregistrer le modèle'), findsNothing);
       final button = tester.widget<DonyButton>(

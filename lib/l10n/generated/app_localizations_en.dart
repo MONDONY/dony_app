@@ -3221,6 +3221,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishStepConditions => 'Terms';
 
   @override
+  String get tripPublishPlacesCapacityStepLabel => 'Locations & capacity';
+
+  @override
+  String get tripPublishPriceConditionsStepLabel => 'Price & conditions';
+
+  @override
   String get tripPublishModeQuestion => 'How are you traveling?';
 
   @override

@@ -1947,6 +1947,14 @@
   "@tripPublishStepConditions": {
     "description": "Libellé de l'étape Conditions dans l'en-tête des étapes de publication d'un trajet"
   },
+  "tripPublishPlacesCapacityStepLabel": "Lieux & capacité",
+  "@tripPublishPlacesCapacityStepLabel": {
+    "description": "Libellé d'étape du stepper de l'écran des modèles de trajet (étape 1 : lieux de remise et capacité)"
+  },
+  "tripPublishPriceConditionsStepLabel": "Prix & conditions",
+  "@tripPublishPriceConditionsStepLabel": {
+    "description": "Libellé d'étape du stepper de l'écran des modèles de trajet (étape 2 : prix et conditions)"
+  },
   "tripPublishModeQuestion": "Comment voyagez-vous ?",
   "@tripPublishModeQuestion": {
     "description": "Titre de l'étape Mode du formulaire de publication d'un trajet"
