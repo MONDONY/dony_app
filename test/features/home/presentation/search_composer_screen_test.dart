@@ -863,6 +863,57 @@ void main() {
       );
     });
 
+    Future<HomeSearchFilters?> typeViaThenSearch(
+      WidgetTester tester,
+      String typed,
+    ) async {
+      HomeSearchFilters? popped;
+      var closed = false;
+      await tester.pumpWidget(
+        _Harness(
+          initialFilters: road,
+          onPopped: (f) {
+            popped = f;
+            closed = true;
+          },
+        ),
+      );
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+
+      await openMore(tester);
+      await _scrollTo(tester, find.byKey(const Key('composer-via-city')));
+      // Ni validation clavier ni perte de focus voulue : on saisit puis on
+      // touche directement le bouton « Rechercher ».
+      await tester.enterText(find.byKey(const Key('composer-via-city')), typed);
+      await tester.pump();
+      await tester.tap(find.byType(DonyButton));
+      await tester.pumpAndSettle();
+      expect(closed, isTrue, reason: 'le composeur doit se refermer');
+      return popped;
+    }
+
+    testWidgets('« Passe par » tapé puis « Rechercher » touché sans valider : '
+        'la ville n\'est pas perdue', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      final popped = await typeViaThenSearch(tester, '  Tanger ');
+
+      expect(popped?.viaCity, 'Tanger');
+      expect(popped?.toAnnouncementQuery().viaCity, 'Tanger');
+    });
+
+    testWidgets('« Passe par » laissé blanc puis « Rechercher » : aucune '
+        'ville', (tester) async {
+      roadOn();
+      _vueHaute(tester);
+      final popped = await typeViaThenSearch(tester, '   ');
+
+      expect(popped, isNotNull);
+      expect(popped!.toAnnouncementQuery().viaCity, isNull);
+      expect(popped.activeKeys, isNot(contains('via_city')));
+    });
+
     testWidgets('une ville de passage déjà posée ouvre « Plus de filtres » '
         'd\'office ; une ville blanche ne compte pas', (tester) async {
       roadOn();
@@ -928,25 +979,36 @@ void main() {
       expect(count.mode, isNull);
     });
 
-    testWidgets('Effacer en gardant la route : champ de ville vidé aussi', (
-      tester,
-    ) async {
+    testWidgets('Tout effacer puis retour à la route : le champ « Passe par » '
+        'est vide et aucune ville n\'est comptée', (tester) async {
       roadOn();
       _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
       await tester.pumpWidget(
-        _Harness(initialFilters: road.copyWith(viaCity: 'Tanger')),
+        _Harness(
+          announcementRepo: repo,
+          initialFilters: road.copyWith(viaCity: 'Tanger'),
+        ),
       );
       await tester.pumpAndSettle();
       expect(find.text('Tanger'), findsWidgets);
 
-      // Mode « tous » puis route : la ville tombe avec la route.
-      await tester.tap(find.byKey(const Key('composer-transport-all')));
+      await tester.drag(find.byType(ListView), const Offset(0, 4000));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tout effacer'));
       await _settleFilterChange(tester);
+      expect(find.text('Tanger'), findsNothing);
+
       await tester.tap(find.byKey(const Key('composer-transport-car')));
       await _settleFilterChange(tester);
       await openMore(tester);
       await _scrollTo(tester, find.byKey(const Key('composer-via-city')));
       expect(find.text('Tanger'), findsNothing);
+      expect(
+        find.byKey(const Key('composer-more-filters-count')),
+        findsNothing,
+      );
+      expect(lastCount(repo).via, isNull);
     });
 
     // Curseur « Poids min » du composeur.
@@ -1078,11 +1140,16 @@ void main() {
 
         final button = find.byType(DonyButton);
         final label = find.descendant(of: button, matching: find.byType(Text));
-        final paragraph = tester.renderObject<RenderParagraph>(
-          find.descendant(of: label, matching: find.byType(RichText)).first,
+        // Une seule ligne : le libellé tient dans la hauteur d'une ligne de
+        // 15 px (pas deux) et dans la largeur du bouton, sans être rétréci ;
+        // le bouton garde sa hauteur de 48 à 56.
+        expect(label, findsOneWidget);
+        expect(tester.getSize(label).height, lessThan(15 * 1.6));
+        expect(
+          tester.getSize(label).width,
+          lessThanOrEqualTo(tester.getSize(button).width),
         );
-        expect(paragraph.didExceedMaxLines, isFalse);
-        expect(tester.getSize(button).height, lessThan(64));
+        expect(tester.getSize(button).height, inInclusiveRange(48, 56));
       });
     }
   });
@@ -1614,7 +1681,13 @@ class _Harness extends StatelessWidget {
     this.announcementRepo,
     this.initialFilters = const HomeSearchFilters(),
     this.theme,
+    this.onPopped,
   });
+
+  /// Quand il est fourni, l'écran s'ouvre depuis une page « Root » (bouton
+  /// « ouvrir ») et reçoit les filtres que le composeur renvoie en se
+  /// refermant : c'est ce que l'accueil applique, pas l'état du bloc après coup.
+  final ValueChanged<HomeSearchFilters?>? onPopped;
 
   final _MockAnnouncementRepo? announcementRepo;
   final SearchMode mode;
@@ -1694,11 +1767,22 @@ class _Harness extends StatelessWidget {
     // possible — sinon « nothing to pop ». Même montage que
     // `dony_app_bar_test.dart` pour `DonyAppBarBackButton`.
     final router = GoRouter(
-      initialLocation: '/child',
+      initialLocation: onPopped == null ? '/child' : '/',
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, _) => const Scaffold(body: Text('Root')),
+          builder: (_, _) => onPopped == null
+              ? const Scaffold(body: Text('Root'))
+              : Scaffold(
+                  body: Builder(
+                    builder: (context) => TextButton(
+                      onPressed: () async => onPopped!(
+                        await context.push<HomeSearchFilters>('/child'),
+                      ),
+                      child: const Text('ouvrir'),
+                    ),
+                  ),
+                ),
           routes: [
             GoRoute(
               path: 'child',

@@ -234,9 +234,17 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
                 // filtres, eux, ont bougé. Lire l'état au tap plutôt que celui
                 // du dernier rebuild garantit que ce sont les VRAIS derniers
                 // filtres qui reviennent, pas une capture périmée.
-                onPressed: () {
-                  final latest = context.read<SearchComposerBloc>().state;
-                  context.pop(latest.filters);
+                onPressed: () async {
+                  final bloc = context.read<SearchComposerBloc>();
+                  // Une ville tapée sans validation (« Passe par », départ,
+                  // arrivée) n'est transmise qu'à la perte de focus : on la
+                  // force avant de lire les filtres, puis on laisse le bloc
+                  // traiter l'événement qu'elle émet (microtâches vidées par
+                  // le délai nul), sinon la recherche partirait sans elle.
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  await Future<void>.delayed(Duration.zero);
+                  if (!context.mounted) return;
+                  context.pop(bloc.state.filters);
                 },
               );
             },
