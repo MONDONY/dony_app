@@ -3215,6 +3215,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishPriceConditionsStepLabel => 'Price & conditions';
 
   @override
+  String get tripPublishModeQuestion => 'How are you traveling?';
+
+  @override
+  String get tripPublishModeHint =>
+      'The mode shapes the next steps: dates, capacity and price.';
+
+  @override
+  String get tripPublishModeSectionLabel => 'Transport mode';
+
+  @override
+  String get tripPublishModeAirTitle => 'By air';
+
+  @override
+  String get tripPublishModeAirSubtitle => 'Plane, your spare luggage kilos';
+
+  @override
+  String get tripPublishModeAirTagDuration => 'A few days';
+
+  @override
+  String get tripPublishModeAirTagCapacity => 'Suitcases or kg';
+
+  @override
+  String get tripPublishModeRoadTitle => 'By road';
+
+  @override
+  String get tripPublishModeRoadSubtitle => 'Car, coach or truck';
+
+  @override
+  String get tripPublishModeRoadTagScope => 'Domestic or international';
+
+  @override
+  String get tripPublishModeRoadTagCapacity => 'Free or exact kg';
+
+  @override
   String get tripPublishHandoverLocationsLabel => 'Drop-off locations';
 
   @override

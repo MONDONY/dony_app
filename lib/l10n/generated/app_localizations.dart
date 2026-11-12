@@ -5435,6 +5435,72 @@ abstract class AppLocalizations {
   /// **'Prix & conditions'**
   String get tripPublishPriceConditionsStepLabel;
 
+  /// Titre de l'étape Mode du formulaire de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment voyagez-vous ?'**
+  String get tripPublishModeQuestion;
+
+  /// Sous-titre de l'étape Mode du formulaire de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Le mode adapte la suite : dates, capacité et prix.'**
+  String get tripPublishModeHint;
+
+  /// Libellé de la ligne compacte du mode, au-dessus des étapes du formulaire de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de transport'**
+  String get tripPublishModeSectionLabel;
+
+  /// Titre de la carte Avion de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Voie aérienne'**
+  String get tripPublishModeAirTitle;
+
+  /// Sous-titre de la carte Avion de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Avion, vos kilos de valise'**
+  String get tripPublishModeAirSubtitle;
+
+  /// Étiquette de durée de la carte Avion de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Quelques jours'**
+  String get tripPublishModeAirTagDuration;
+
+  /// Étiquette de capacité de la carte Avion de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Valises ou kg'**
+  String get tripPublishModeAirTagCapacity;
+
+  /// Titre de la carte Route de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Voie terrestre'**
+  String get tripPublishModeRoadTitle;
+
+  /// Sous-titre de la carte Route de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Voiture, car ou camion'**
+  String get tripPublishModeRoadSubtitle;
+
+  /// Étiquette de portée de la carte Route de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Même pays ou international'**
+  String get tripPublishModeRoadTagScope;
+
+  /// Étiquette de capacité de la carte Route de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Kg libre ou exact'**
+  String get tripPublishModeRoadTagCapacity;
+
   /// Titre de la section lieux de remise et de récupération
   ///
   /// In fr, this message translates to:

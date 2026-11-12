@@ -3234,6 +3234,40 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishPriceConditionsStepLabel => 'Prix & conditions';
 
   @override
+  String get tripPublishModeQuestion => 'Comment voyagez-vous ?';
+
+  @override
+  String get tripPublishModeHint =>
+      'Le mode adapte la suite : dates, capacité et prix.';
+
+  @override
+  String get tripPublishModeSectionLabel => 'Mode de transport';
+
+  @override
+  String get tripPublishModeAirTitle => 'Voie aérienne';
+
+  @override
+  String get tripPublishModeAirSubtitle => 'Avion, vos kilos de valise';
+
+  @override
+  String get tripPublishModeAirTagDuration => 'Quelques jours';
+
+  @override
+  String get tripPublishModeAirTagCapacity => 'Valises ou kg';
+
+  @override
+  String get tripPublishModeRoadTitle => 'Voie terrestre';
+
+  @override
+  String get tripPublishModeRoadSubtitle => 'Voiture, car ou camion';
+
+  @override
+  String get tripPublishModeRoadTagScope => 'Même pays ou international';
+
+  @override
+  String get tripPublishModeRoadTagCapacity => 'Kg libre ou exact';
+
+  @override
   String get tripPublishHandoverLocationsLabel => 'Lieux de remise';
 
   @override

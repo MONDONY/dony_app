@@ -1146,6 +1146,17 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripPublishPlacesCapacityStepLabel,
   'tripPublishPriceConditionsStepLabel': (l) =>
       l.tripPublishPriceConditionsStepLabel,
+  'tripPublishModeQuestion': (l) => l.tripPublishModeQuestion,
+  'tripPublishModeHint': (l) => l.tripPublishModeHint,
+  'tripPublishModeSectionLabel': (l) => l.tripPublishModeSectionLabel,
+  'tripPublishModeAirTitle': (l) => l.tripPublishModeAirTitle,
+  'tripPublishModeAirSubtitle': (l) => l.tripPublishModeAirSubtitle,
+  'tripPublishModeAirTagDuration': (l) => l.tripPublishModeAirTagDuration,
+  'tripPublishModeAirTagCapacity': (l) => l.tripPublishModeAirTagCapacity,
+  'tripPublishModeRoadTitle': (l) => l.tripPublishModeRoadTitle,
+  'tripPublishModeRoadSubtitle': (l) => l.tripPublishModeRoadSubtitle,
+  'tripPublishModeRoadTagScope': (l) => l.tripPublishModeRoadTagScope,
+  'tripPublishModeRoadTagCapacity': (l) => l.tripPublishModeRoadTagCapacity,
   'tripPublishHandoverLocationsLabel': (l) =>
       l.tripPublishHandoverLocationsLabel,
   'tripPublishHandoverLocationsSubtitle': (l) =>

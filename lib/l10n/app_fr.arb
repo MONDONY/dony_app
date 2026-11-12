@@ -1939,6 +1939,50 @@
   "@tripPublishPriceConditionsStepLabel": {
     "description": "Libellé d'étape du stepper de publication (étape 2)"
   },
+  "tripPublishModeQuestion": "Comment voyagez-vous ?",
+  "@tripPublishModeQuestion": {
+    "description": "Titre de l'étape Mode du formulaire de publication d'un trajet"
+  },
+  "tripPublishModeHint": "Le mode adapte la suite : dates, capacité et prix.",
+  "@tripPublishModeHint": {
+    "description": "Sous-titre de l'étape Mode du formulaire de publication d'un trajet"
+  },
+  "tripPublishModeSectionLabel": "Mode de transport",
+  "@tripPublishModeSectionLabel": {
+    "description": "Libellé de la ligne compacte du mode, au-dessus des étapes du formulaire de trajet"
+  },
+  "tripPublishModeAirTitle": "Voie aérienne",
+  "@tripPublishModeAirTitle": {
+    "description": "Titre de la carte Avion de l'étape Mode"
+  },
+  "tripPublishModeAirSubtitle": "Avion, vos kilos de valise",
+  "@tripPublishModeAirSubtitle": {
+    "description": "Sous-titre de la carte Avion de l'étape Mode"
+  },
+  "tripPublishModeAirTagDuration": "Quelques jours",
+  "@tripPublishModeAirTagDuration": {
+    "description": "Étiquette de durée de la carte Avion de l'étape Mode"
+  },
+  "tripPublishModeAirTagCapacity": "Valises ou kg",
+  "@tripPublishModeAirTagCapacity": {
+    "description": "Étiquette de capacité de la carte Avion de l'étape Mode"
+  },
+  "tripPublishModeRoadTitle": "Voie terrestre",
+  "@tripPublishModeRoadTitle": {
+    "description": "Titre de la carte Route de l'étape Mode"
+  },
+  "tripPublishModeRoadSubtitle": "Voiture, car ou camion",
+  "@tripPublishModeRoadSubtitle": {
+    "description": "Sous-titre de la carte Route de l'étape Mode"
+  },
+  "tripPublishModeRoadTagScope": "Même pays ou international",
+  "@tripPublishModeRoadTagScope": {
+    "description": "Étiquette de portée de la carte Route de l'étape Mode"
+  },
+  "tripPublishModeRoadTagCapacity": "Kg libre ou exact",
+  "@tripPublishModeRoadTagCapacity": {
+    "description": "Étiquette de capacité de la carte Route de l'étape Mode"
+  },
   "tripPublishHandoverLocationsLabel": "Lieux de remise",
   "@tripPublishHandoverLocationsLabel": {
     "description": "Titre de la section lieux de remise et de récupération"
