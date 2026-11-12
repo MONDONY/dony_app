@@ -5999,6 +5999,159 @@ void main() {
       expect(row.notifier.value, TransportMode.plane);
     });
 
+    /// Modèle de trajet complet (sans date), au mode [wire].
+    TripTemplate templateOf(String wire) => TripTemplate(
+      id: 'tmpl-$wire',
+      label: 'Paris → Dakar',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      transportMode: wire,
+      capacityUnit: 'KG_FREE',
+      availableKg: 20,
+      pricePerKg: 8,
+      acceptedCategories: const [],
+      currency: 'EUR',
+      acceptedPaymentMethods: const ['CASH'],
+      pickupAddress: const AddressData(
+        label: 'Gare de Lyon',
+        lat: 48.844,
+        lng: 2.374,
+      ),
+      deliveryAddress: const AddressData(
+        label: 'Plateau',
+        lat: 14.67,
+        lng: -17.43,
+      ),
+      departureTime: '10:00',
+      handoverLeadDays: 1,
+      departureCountryCode: 'FR',
+      arrivalCountryCode: 'SN',
+    );
+
+    /// Barre « Mes modèles » de l'étape Trajet garnie de [templates].
+    void useTemplates(List<TripTemplate> templates) {
+      if (getIt.isRegistered<TripTemplateBloc>()) {
+        getIt.unregister<TripTemplateBloc>();
+      }
+      getIt.registerFactory<TripTemplateBloc>(() {
+        final b = _MockTripTemplateBloc();
+        when(() => b.state).thenReturn(
+          TripTemplateState(
+            status: TripTemplateStatus.success,
+            templates: templates,
+          ),
+        );
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
+        return b;
+      });
+      addTearDown(() {
+        if (getIt.isRegistered<TripTemplateBloc>()) {
+          getIt.unregister<TripTemplateBloc>();
+        }
+        getIt.registerFactory<TripTemplateBloc>(() {
+          final b = _MockTripTemplateBloc();
+          when(() => b.state).thenReturn(const TripTemplateState());
+          when(() => b.stream).thenAnswer((_) => const Stream.empty());
+          return b;
+        });
+      });
+    }
+
+    /// Date de départ dans un mois : le modèle n'en porte pas.
+    Future<void> setDepartureInAMonth(WidgetTester tester) async {
+      tester
+          .widget<TrajetStep>(find.byType(TrajetStep, skipOffstage: false))
+          .departureDateNotifier
+          .value = DateUtils.dateOnly(
+        DateTime.now().add(const Duration(days: 30)),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    TransportMode? currentMode(WidgetTester tester) => tester
+        .widget<TrajetStep>(find.byType(TrajetStep, skipOffstage: false))
+        .transportModeNotifier
+        ?.value;
+
+    testWidgets('étape Mode → Route, puis modèle PLANE à Trajet : le mode '
+        'reste CAR et part en CAR', (tester) async {
+      roadOn();
+      useTemplates([templateOf('PLANE')]);
+      await pumpScreen(tester, null);
+
+      await tester.tap(find.byKey(const Key('mode-card-car')));
+      await tester.pump();
+      await _goToStep(tester, TripFormStep.trajet);
+      await tester.tap(find.textContaining('Paris → Dakar'));
+      await tester.pump(const Duration(milliseconds: 600));
+      // La confirmation « modèle appliqué » recouvre les boutons du bas.
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
+      expect(currentMode(tester), TransportMode.car);
+
+      await setDepartureInAMonth(tester);
+      await _goToStep(tester, TripFormStep.conditions);
+      await publish(tester);
+
+      expect(sentCreate().transportMode, TransportMode.car);
+    });
+
+    testWidgets('modèle BOAT, avion seul : le trajet part en PLANE', (
+      tester,
+    ) async {
+      await pumpScreen(tester, CreateTripArgs(template: templateOf('BOAT')));
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
+      expect(currentMode(tester), TransportMode.plane);
+
+      await setDepartureInAMonth(tester);
+      await _goToStep(tester, TripFormStep.conditions);
+      await publish(tester);
+
+      expect(sentCreate().transportMode, TransportMode.plane);
+    });
+
+    testWidgets('brouillon BOAT, route allumée : étape Mode sans sélection', (
+      tester,
+    ) async {
+      roadOn();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(resumeDraft: fullDraft(transportMode: 'BOAT')),
+      );
+
+      expect(header(tester).current, TripFormStep.mode);
+      expect(currentMode(tester), isNull);
+      expect(find.byKey(const Key('mode-check-plane')), findsNothing);
+      expect(find.byKey(const Key('mode-check-car')), findsNothing);
+      expect(continueButton(tester).onPressed, isNull);
+    });
+
+    testWidgets('brouillon BUS, route allumée : gardé (affiché Route)', (
+      tester,
+    ) async {
+      roadOn();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(resumeDraft: fullDraft(transportMode: 'BUS')),
+      );
+
+      expect(header(tester).current, TripFormStep.conditions);
+      expect(currentMode(tester), TransportMode.bus);
+    });
+
+    testWidgets('brouillon CAR, avion seul : ramené à PLANE', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(resumeDraft: fullDraft(transportMode: 'CAR')),
+      );
+      await publish(tester);
+
+      expect(sentCreate().transportMode, TransportMode.plane);
+    });
+
     testWidgets("Passer ouvre l'aperçu", (tester) async {
       await pumpScreen(tester, CreateTripArgs(resumeDraft: fullDraft()));
       expect(header(tester).current, TripFormStep.conditions);

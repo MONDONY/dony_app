@@ -2785,12 +2785,10 @@ class _TripFormContentState extends State<_TripFormContent> {
     _arrivalDayOffsetNotifier.value = t.arrivalTime == null
         ? 0
         : t.arrivalDayOffset;
-    // Mode du modèle gardé tel quel (un BOAT reste BOAT) ; absent, celui
-    // déjà choisi, à défaut l'avion s'il n'y a pas de choix.
-    _transportModeNotifier.value =
-        transportModeFromWire(t.transportMode) ??
-        _transportModeNotifier.value ??
-        _defaultModeWhenAbsent;
+    // Le mode n'est pas repris du modèle (création seulement) : choisi à
+    // l'étape Mode, il prime ; sans étape Mode, c'est l'avion. Un modèle
+    // BOAT ou CAR ne change donc jamais en silence le mode du trajet.
+    if (!_hasModeStep) _transportModeNotifier.value = TransportMode.plane;
     // Valeur optimiste immédiate ; `CapacityUnitChanged` ci-dessous réécrit
     // `availableKg` à `unit.maxKg` (valise 23/32 kg) côté bloc — l'event
     // `AvailableKgChanged` émis juste après restaure la valeur du modèle via
@@ -2946,8 +2944,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _arrivalDayOffsetNotifier.value = d.arrivalTime == null
         ? 0
         : d.arrivalDayOffset;
-    _transportModeNotifier.value =
-        transportModeFromWire(d.transportMode) ?? _defaultModeWhenAbsent;
+    _transportModeNotifier.value = _creationModeFrom(d.transportMode);
     _stopsNotifier.value = d.stops;
     // Après la date : son listener réapplique un délai de modèle en attente.
     _pendingHandoverLeadDays = d.handoverLeadDays;
@@ -3004,10 +3001,18 @@ class _TripFormContentState extends State<_TripFormContent> {
     _markDirty();
   }
 
-  /// Mode d'un modèle ou d'un brouillon qui n'en porte pas : l'avion
-  /// seulement s'il n'y a pas de choix, sinon à choisir à l'étape Mode.
-  TransportMode? get _defaultModeWhenAbsent =>
-      _hasModeStep ? null : TransportMode.plane;
+  /// Mode d'un brouillon local (création seulement) : gardé s'il est
+  /// proposable à la publication (BUS compte pour la Route) ; absent ou non
+  /// proposable (BOAT avant le lot 3, mode éteint), ramené au défaut de la
+  /// création : à choisir à l'étape Mode, ou l'avion sans choix (C1, C12).
+  TransportMode? _creationModeFrom(String? wire) {
+    final mode = transportModeFromWire(wire);
+    final proposable =
+        mode != null &&
+        widget.tripModes.any((m) => m.displayGroup == mode.displayGroup);
+    if (proposable) return mode;
+    return _hasModeStep ? null : TransportMode.plane;
+  }
 
   static TimeOfDay? _timeOfDay(String? hhmm) {
     if (hhmm == null || !hhmm.contains(':')) return null;

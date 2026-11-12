@@ -1,6 +1,5 @@
-// Étape 0 du formulaire "Publier un trajet" : corridor, dates et horaires.
-// Extrait de create_announcement_bottom_sheet.dart — refactor pur, aucun changement
-// de comportement.
+// Étape Trajet du formulaire « Publier un trajet » : ligne du mode (modification
+// et trajet dédié), corridor, dates et horaires.
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
@@ -21,11 +20,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 
-/// Corps de l'étape 0 (corridor, dates, horaires) du formulaire de création
-/// d'annonce.
+/// Corps de l'étape Trajet (ligne du mode, corridor, dates, horaires) du
+/// formulaire « Publier un trajet ».
 ///
-/// Tous les notifiers restent dans [_CreateAnnouncementContentState] (parent) ;
-/// ce widget reçoit ses dépendances via des paramètres (option a).
+/// Tous les notifiers restent dans le formulaire parent
+/// (`create_trip_screen.dart`) ; ce widget reçoit ses dépendances en
+/// paramètres.
 ///
 /// [departureCityBloc] et [arrivalCityBloc] sont optionnels — ils permettent
 /// l'injection en test. En production, le widget crée ses propres instances
