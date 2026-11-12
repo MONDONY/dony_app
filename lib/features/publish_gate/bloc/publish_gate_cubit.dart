@@ -79,8 +79,21 @@ class PublishGateCubit extends Cubit<PublishGateState> {
 
   /// [kycVerified] faux : l'écran reste affiché, il porte le chemin vers la
   /// vérification d'identité, préalable à toute publication.
-  Future<void> start({required bool kycVerified}) async {
+  ///
+  /// [recheckKyc] : appelé seulement quand l'identité semble non vérifiée
+  /// d'après le profil en cache, avant d'afficher ce blocage. Il relit le profil
+  /// auprès du serveur : `true` (VERIFIED) laisse passer, sinon le blocage
+  /// reste. L'identité peut être validée hors de l'app sans qu'aucune push
+  /// n'ait rafraîchi le cache.
+  Future<void> start({
+    required bool kycVerified,
+    Future<bool> Function()? recheckKyc,
+  }) async {
     emit(const PublishGateState());
+    if (!kycVerified && recheckKyc != null) {
+      kycVerified = await recheckKyc();
+      if (isClosed) return;
+    }
     PublishCommitments? fetched;
     try {
       fetched = await _commitments.fetch();
