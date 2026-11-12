@@ -25,6 +25,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/kyc/data/kyc_recheck.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -1889,13 +1890,34 @@ class _TripFormContentState extends State<_TripFormContent> {
     _submit();
   }
 
+  /// Vrai quand le serveur a confirmé VERIFIED alors que le profil en cache
+  /// disait le contraire : le gate d'identité est franchi sans attendre que
+  /// l'AuthBloc ait publié le profil resynchronisé.
+  bool _kycRecheckedVerified = false;
+
+  /// Le cache dit « identité non vérifiée » : on relit le serveur avant de
+  /// bloquer (validation faite hors de l'app, sans push).
+  Future<void> _recheckKycThenSubmit() async {
+    final verified = await recheckKycVerified(context.read<AuthBloc>());
+    if (!mounted) return;
+    if (verified) {
+      _kycRecheckedVerified = true;
+      _submit();
+      return;
+    }
+    unawaited(KycOnboardingBottomSheet.show(context));
+  }
+
   void _submit({bool saveAsDraft = false}) {
     // Gate KYC — inchangé pour le reste du flux, nouveau uniquement ici :
     // publier/modifier un trajet nécessite une identité vérifiée. Si ce n'est
     // pas le cas, on ouvre l'onboarding KYC au lieu d'appeler l'API.
     final user = context.read<AuthBloc>().state.currentUser;
-    if (!saveAsDraft && user != null && !user.isKycVerified) {
-      unawaited(KycOnboardingBottomSheet.show(context));
+    if (!saveAsDraft &&
+        !_kycRecheckedVerified &&
+        user != null &&
+        !user.isKycVerified) {
+      unawaited(_recheckKycThenSubmit());
       return;
     }
     if (!saveAsDraft &&
