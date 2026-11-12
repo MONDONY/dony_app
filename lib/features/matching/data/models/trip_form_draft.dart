@@ -320,8 +320,10 @@ class TripFormDraft extends Equatable {
   }
 
   /// Poids lu tolérant : un texte ou un nombre négatif est écarté.
+  /// Nombre strictement positif : 0 vaut « aucun » (c'est la sentinelle
+  /// d'effacement du back), jamais un poids max.
   static double? _positiveNumber(Object? raw) =>
-      raw is num && raw >= 0 ? raw.toDouble() : null;
+      raw is num && raw > 0 ? raw.toDouble() : null;
 
   static String? _hhmm(Object? raw) {
     if (raw is! String || !RegExp(r'^\d{1,2}:\d{2}$').hasMatch(raw)) {

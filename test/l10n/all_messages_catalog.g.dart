@@ -1173,6 +1173,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPublishModeRoadSubtitle': (l) => l.tripPublishModeRoadSubtitle,
   'tripPublishModeRoadTagScope': (l) => l.tripPublishModeRoadTagScope,
   'tripPublishModeRoadTagCapacity': (l) => l.tripPublishModeRoadTagCapacity,
+  'tripPublishMaxItemSizeLabel': (l) => l.tripPublishMaxItemSizeLabel,
+  'tripPublishMaxParcelWeightLabel': (l) => l.tripPublishMaxParcelWeightLabel,
+  'tripPublishMaxParcelWeightInvalid': (l) =>
+      l.tripPublishMaxParcelWeightInvalid,
+  'tripPublishCapacityTooHigh': (l) =>
+      l.tripPublishCapacityTooHigh(placeholderMarker('max')),
+  'tripPublishAcceptHintRoad': (l) => l.tripPublishAcceptHintRoad,
+  'tripPublishLegsHintRoad': (l) => l.tripPublishLegsHintRoad,
   'tripPublishHandoverLocationsLabel': (l) =>
       l.tripPublishHandoverLocationsLabel,
   'tripPublishHandoverLocationsSubtitle': (l) =>
@@ -8439,6 +8447,7 @@ const textParameters = <String, List<String>>{
   'tripPublishGridPreviewConvertedNote': ['currency'],
   'tripPublishCurrencySemanticsLabel': ['currencyName', 'currencyCode'],
   'tripPublishCurrencyBannerTitle': ['currencyName', 'currencyCode'],
+  'tripPublishCapacityTooHigh': ['max'],
   'addressGpsPosition': ['lat', 'lng'],
   'tripPosterFromPrice': ['price'],
   'tripPosterPricePerKg': ['price'],

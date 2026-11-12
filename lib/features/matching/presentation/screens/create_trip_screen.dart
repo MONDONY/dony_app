@@ -12,6 +12,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_filled_fields_cubit.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_form_draft_availability_cubit.dart';
@@ -36,6 +37,7 @@ import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
@@ -1217,6 +1219,13 @@ class _TripFormContentState extends State<_TripFormContent> {
         // trajet passe ensuite, sinon un trajet de deux valises, ou déjà
         // en partie réservé, s'enregistrait à une seule valise pleine.
         formBloc.add(AvailableKgChanged(a.availableKg));
+        // Taille et poids max par colis du trajet routier : relus tels quels,
+        // renvoyés seulement si le voyageur les change (cf. _submit).
+        if (transportModeOrPlane(a.transportMode).hasItemSize) {
+          formBloc
+            ..add(MaxItemSizeChanged(a.maxItemSize))
+            ..add(MaxParcelWeightChanged(a.maxParcelWeightKg));
+        }
 
         final mode = a.pricingMode == 'MIXED'
             ? PricingMode.mixed
@@ -1331,6 +1340,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     _availableKgNotifier.addListener(_syncKgToFormBloc);
     _descriptionCtrl.addListener(_syncDescriptionToFormBloc);
     _transportModeNotifier.addListener(_syncTransportModeToFormBloc);
+    // Modification et trajet dédié : le mode est posé avant ce listener. Le
+    // bloc doit le connaître (valises, plafond de capacité, taille max).
+    if (_isEdit || _isLocked) _syncTransportModeToFormBloc();
     _cashEnabledNotifier.addListener(_syncCashAcceptedToFormBloc);
     _mobileMoneyEnabledNotifier.addListener(_syncMobileMoneyAcceptedToFormBloc);
     _selectedContentNotifier.addListener(_syncAcceptedTypesToFormBloc);
@@ -1519,8 +1531,14 @@ class _TripFormContentState extends State<_TripFormContent> {
   }
 
   void _updateCanContinueStep1() {
+    // Capacité au-delà du plafond du mode ou poids max par colis hors bornes :
+    // « Continuer » grisé (Review Focus 4). Trajet dédié : capacité fixée par
+    // la demande, rien à vérifier ici.
+    final capacityValid =
+        _isLocked ||
+        context.read<AnnouncementFormBloc>().state.isCapacityStepValid;
     widget.canContinueStep1Notifier?.value =
-        _pickupAddress != null && _deliveryAddress != null;
+        _pickupAddress != null && _deliveryAddress != null && capacityValid;
     // « Touché » est arme uniquement a l'entree dans l'etape
     // (_markStep1TouchedOnEntry). L'armer aussi ici faisait s'ouvrir en rouge
     // une modification d'annonce n'ayant qu'une des deux adresses.
@@ -2115,6 +2133,24 @@ class _TripFormContentState extends State<_TripFormContent> {
     final stops = supportsStops(transportMode) ? _stopsNotifier.value : null;
 
     final formBlocState = context.read<AnnouncementFormBloc>().state;
+    if (formBlocState.capacityTooHigh) {
+      _showError(
+        context.l10n.tripPublishCapacityTooHigh(
+          formatWeightKg(context.l10n, formBlocState.capacityMaxKg.toDouble()),
+        ),
+      );
+      return;
+    }
+    if (!formBlocState.isMaxParcelWeightValid) {
+      _showError(context.l10n.tripPublishMaxParcelWeightInvalid);
+      return;
+    }
+    // Taille et poids max par colis : route seulement, jamais un champ caché.
+    final hasParcelLimits = transportMode.hasItemSize;
+    final maxItemSize = hasParcelLimits ? formBlocState.maxItemSize : null;
+    final maxParcelWeightKg = hasParcelLimits
+        ? formBlocState.maxParcelWeightKg
+        : null;
     final capacityUnitWire = formBlocState.capacityUnit.toWire();
     final pricingModeWire = formBlocState.pricingMode == PricingMode.mixed
         ? 'MIXED'
@@ -2173,6 +2209,18 @@ class _TripFormContentState extends State<_TripFormContent> {
                   _currency.code != widget.announcement!.currency
               ? _currency.code
               : null,
+          // Envoyés seulement si le voyageur les a changés : absents, le
+          // serveur les garde ; effacés, il reçoit la sentinelle.
+          maxItemSize: _editChange(
+            maxItemSize,
+            widget.announcement!.maxItemSize,
+            hasParcelLimits,
+          ),
+          maxParcelWeightKg: _editChange(
+            maxParcelWeightKg,
+            widget.announcement!.maxParcelWeightKg,
+            hasParcelLimits,
+          ),
         ),
       );
     } else {
@@ -2202,6 +2250,8 @@ class _TripFormContentState extends State<_TripFormContent> {
         saveAsDraft: saveAsDraft,
         currency: _currency.code,
         fromAi: context.read<AiFilledFieldsCubit>().isFromAi,
+        maxItemSize: maxItemSize,
+        maxParcelWeightKg: maxParcelWeightKg,
       );
       // Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes partent
       // ensemble, en une transaction côté serveur.
@@ -2277,6 +2327,18 @@ class _TripFormContentState extends State<_TripFormContent> {
       }
       context.read<AnnouncementBloc>().add(event);
     }
+  }
+
+  /// Modification d'un champ facultatif : inchangé tant que la valeur du
+  /// formulaire est celle du trajet ouvert, ou que le mode n'en porte pas
+  /// (passer en avion efface les deux côté serveur).
+  static FieldChange<T> _editChange<T extends Object>(
+    T? current,
+    T? original,
+    bool applies,
+  ) {
+    if (!applies || current == original) return FieldChange<T>.keep();
+    return FieldChange.setOrClear(current);
   }
 
   Future<void> _confirmCurrenciesThenCreate(
@@ -2760,7 +2822,12 @@ class _TripFormContentState extends State<_TripFormContent> {
                 _availableKgNotifier.value = kg;
                 _applyingKgFromBloc = false;
               },
-              child: formChild,
+              child: BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
+                listenWhen: (prev, curr) =>
+                    prev.isCapacityStepValid != curr.isCapacityStepValid,
+                listener: (_, _) => _updateCanContinueStep1(),
+                child: formChild,
+              ),
             ),
       ),
     );
@@ -2935,6 +3002,8 @@ class _TripFormContentState extends State<_TripFormContent> {
       mobileMoneyEnabled: _mobileMoneyEnabledNotifier.value,
       negotiable: _negotiableNotifier.value,
       legs: context.read<TripLegsCubit>().state.legs,
+      maxItemSize: formState.maxItemSize,
+      maxParcelWeightKg: formState.maxParcelWeightKg,
     );
   }
 
@@ -2954,10 +3023,16 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureDateNotifier.value = d.departureDate;
     _departureTimeNotifier.value = _timeOfDay(d.departureTime);
     _arrivalTimeNotifier.value = _timeOfDay(d.arrivalTime);
+    final draftMode = _creationModeFrom(d.transportMode);
+    // Le brouillon garde jusqu'à 120 jours (bateau) : borné ici au mode
+    // retenu, un J+10 de route devient J+3 en avion.
     _arrivalDayOffsetNotifier.value = d.arrivalTime == null
         ? 0
-        : d.arrivalDayOffset;
-    _transportModeNotifier.value = _creationModeFrom(d.transportMode);
+        : d.arrivalDayOffset.clamp(
+            0,
+            transportModeOrPlane(draftMode).maxArrivalDays,
+          );
+    _transportModeNotifier.value = draftMode;
     _stopsNotifier.value = d.stops;
     // Après la date : son listener réapplique un délai de modèle en attente.
     _pendingHandoverLeadDays = d.handoverLeadDays;
@@ -3001,6 +3076,12 @@ class _TripFormContentState extends State<_TripFormContent> {
     // Comme pour un modèle : l'unité réécrit le kg à son maximum, le kg
     // saisi passe ensuite.
     if (kg != null) formBloc.add(AvailableKgChanged(kg));
+    // Après le mode : vers un mode sans taille, le bloc les aurait effacés.
+    if (transportModeOrPlane(draftMode).hasItemSize) {
+      formBloc
+        ..add(MaxItemSizeChanged(d.maxItemSize))
+        ..add(MaxParcelWeightChanged(d.maxParcelWeightKg));
+    }
     final pricingMode = d.pricingMode == 'MIXED'
         ? PricingMode.mixed
         : PricingMode.kg;
@@ -3307,6 +3388,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         descriptionCtrl: _descriptionCtrl,
         customAcceptedCtrl: _customAcceptedCtrl,
         refusedCtrl: _refusedCtrl,
+        isRoad: _transportModeNotifier.value?.isRoad ?? false,
       ),
       // Voyage à plusieurs étapes (FLUTTER-4D), sous les conditions (C5) :
       // création seulement. Une modification touche une seule étape, un
@@ -3336,6 +3418,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             // premier trajet.
             showStops: supportsStops(_transportModeNotifier.value),
             defaultStops: _stopsNotifier.value,
+            isRoad: _transportModeNotifier.value?.isRoad ?? false,
           ),
         ),
     ];

@@ -251,6 +251,15 @@ void main() {
       expect(back.maxParcelWeightKg, isNull);
     });
 
+    test('poids max nul ou négatif : écarté (aucun)', () {
+      for (final raw in [0, -3]) {
+        final back = TripFormDraft.fromJson({
+          'maxParcelWeightKg': raw,
+        }, now: now);
+        expect(back.maxParcelWeightKg, isNull, reason: '$raw');
+      }
+    });
+
     test('poids entier JSON et décalage de route au-delà de 2', () {
       final back = TripFormDraft.fromJson(const {
         'maxParcelWeightKg': 20,

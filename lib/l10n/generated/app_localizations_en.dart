@@ -3298,7 +3298,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishModeRoadTagScope => 'Domestic or international';
 
   @override
-  String get tripPublishModeRoadTagCapacity => 'Free or exact kg';
+  String get tripPublishModeRoadTagCapacity => 'Kg, tons, size S to XL';
+
+  @override
+  String get tripPublishMaxItemSizeLabel => 'Max parcel size (optional)';
+
+  @override
+  String get tripPublishMaxParcelWeightLabel =>
+      'Max weight per parcel (kg, optional)';
+
+  @override
+  String get tripPublishMaxParcelWeightInvalid =>
+      'Between 0.5 kg and the trip capacity';
+
+  @override
+  String tripPublishCapacityTooHigh(String max) {
+    return 'At most $max for this mode';
+  }
+
+  @override
+  String get tripPublishAcceptHintRoad => 'E.g. furniture, appliances, boxes…';
+
+  @override
+  String get tripPublishLegsHintRoad =>
+      'Going through Tangier or Nouakchott? Add a leg: each one is published as a trip, with its own kilos, price and parcels.';
 
   @override
   String get tripPublishHandoverLocationsLabel => 'Drop-off locations';

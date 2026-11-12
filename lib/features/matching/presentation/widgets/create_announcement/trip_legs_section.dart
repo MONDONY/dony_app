@@ -73,6 +73,7 @@ class TripLegsSection extends StatelessWidget {
     this.showStops = false,
     this.defaultStops,
     this.paymentRails,
+    this.isRoad = false,
   });
 
   final TripLegOrigin? origin;
@@ -96,6 +97,10 @@ class TripLegsSection extends StatelessWidget {
   /// l'ouverture de chaque feuille d'étape (FLUTTER-HP). `null` : aucun
   /// compte connu, seules les espèces sont possibles.
   final TripLegPaymentRails Function()? paymentRails;
+
+  /// Trajet en route : l'explication cite les villes de passage (Tanger,
+  /// Nouakchott) au lieu des correspondances d'un vol.
+  final bool isRoad;
 
   Future<void> _openSheet(
     BuildContext context,
@@ -179,7 +184,8 @@ class TripLegsSection extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.xs),
               Text(
-                l.tripLegsSectionSubtitle,
+                isRoad ? l.tripPublishLegsHintRoad : l.tripLegsSectionSubtitle,
+                key: const Key('trip-legs-subtitle'),
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               if (state.legs.isNotEmpty) ...[

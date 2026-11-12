@@ -29,6 +29,10 @@ class ConditionsStep extends StatelessWidget {
   final TextEditingController customAcceptedCtrl;
   final TextEditingController refusedCtrl;
 
+  /// Trajet en route : exemples de contenus volumineux sous « Ce que
+  /// j'accepte » (meubles, électroménager, cartons).
+  final bool isRoad;
+
   const ConditionsStep({
     super.key,
     required this.selectedContentNotifier,
@@ -38,6 +42,7 @@ class ConditionsStep extends StatelessWidget {
     required this.descriptionCtrl,
     required this.customAcceptedCtrl,
     required this.refusedCtrl,
+    this.isRoad = false,
   });
 
   @override
@@ -54,6 +59,14 @@ class ConditionsStep extends StatelessWidget {
           label: l.tripPublishAcceptedContentSectionLabel,
           iconAsset: 'circle-check',
         ),
+        if (isRoad) ...[
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            l.tripPublishAcceptHintRoad,
+            key: const Key('conditions-accept-hint-road'),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
         const SizedBox(height: DonySpacing.sm),
         ListenableBuilder(
           listenable: Listenable.merge([

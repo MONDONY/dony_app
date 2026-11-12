@@ -5600,8 +5600,44 @@ abstract class AppLocalizations {
   /// Étiquette de capacité de la carte Route de l'étape Mode
   ///
   /// In fr, this message translates to:
-  /// **'Kg libre ou exact'**
+  /// **'Kg, tonnes, taille S à XL'**
   String get tripPublishModeRoadTagCapacity;
+
+  /// Étape Capacité d'un trajet en route : titre du sélecteur de taille S à XL, facultatif
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille max d\'un colis (facultatif)'**
+  String get tripPublishMaxItemSizeLabel;
+
+  /// Étape Capacité d'un trajet en route : libellé du champ de poids max par colis, facultatif
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids max par colis (kg, facultatif)'**
+  String get tripPublishMaxParcelWeightLabel;
+
+  /// Erreur sous le poids max par colis : hors de 0,5 kg à la capacité du trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre 0,5 kg et la capacité du trajet'**
+  String get tripPublishMaxParcelWeightInvalid;
+
+  /// Erreur sous la capacité d'un trajet : plafond du mode dépassé (999 kg en avion, 999 999 kg en route). max = poids formaté avec son unité, ex. « 999 kg »
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus {max} pour ce mode'**
+  String tripPublishCapacityTooHigh(String max);
+
+  /// Étape Conditions d'un trajet en route : exemples de contenus acceptés
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : meubles, électroménager, cartons…'**
+  String get tripPublishAcceptHintRoad;
+
+  /// Section Étapes d'un trajet en route : explication des étapes intermédiaires
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous passez par Tanger ou Nouakchott ? Ajoutez une étape : chacune est publiée comme un trajet, avec ses kilos, son prix et ses colis.'**
+  String get tripPublishLegsHintRoad;
 
   /// Titre de la section lieux de remise et de récupération
   ///

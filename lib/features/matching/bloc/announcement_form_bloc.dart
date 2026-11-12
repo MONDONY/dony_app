@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -28,6 +29,8 @@ class AnnouncementFormBloc
     on<CapacityUnitChanged>(_onCapacityUnitChanged);
     on<DescriptionChanged>(_onDescriptionChanged);
     on<TransportModeChanged>(_onTransportModeChanged);
+    on<MaxItemSizeChanged>(_onMaxItemSizeChanged);
+    on<MaxParcelWeightChanged>(_onMaxParcelWeightChanged);
     on<PickupAddressChanged>(_onPickupAddressChanged);
     on<DeliveryAddressChanged>(_onDeliveryAddressChanged);
     on<CashAcceptedChanged>(_onCashAcceptedChanged);
@@ -104,6 +107,13 @@ class AnnouncementFormBloc
     CapacityUnitChanged event,
     Emitter<AnnouncementFormState> emit,
   ) {
+    // Pas de valise en route (C27) : un modèle ou un brouillon en valises,
+    // appliqué à un trajet routier, garde son total en « Personnalisé ».
+    final mode = state.transportMode;
+    if (mode != null && !mode.allowsSuitcases && event.unit.maxKg != null) {
+      emit(state.copyWith(capacityUnit: CapacityUnit.custom));
+      return;
+    }
     switch (event.unit) {
       case CapacityUnit.suitcase23kg:
       case CapacityUnit.suitcase32kg:
@@ -146,7 +156,34 @@ class AnnouncementFormBloc
     TransportModeChanged event,
     Emitter<AnnouncementFormState> emit,
   ) {
-    emit(state.copyWith(transportModeGetter: () => event.mode));
+    final mode = event.mode;
+    // Vers la route : les valises deviennent « Personnalisé », même total
+    // (Review Focus 4 : 2 × 23 kg restent 46 kg).
+    final toCustom = !mode.allowsSuitcases && state.capacityUnit.maxKg != null;
+    emit(
+      state.copyWith(
+        transportModeGetter: () => mode,
+        capacityUnit: toCustom ? CapacityUnit.custom : null,
+        // Taille et poids max par colis n'existent qu'en route : jamais un
+        // champ caché envoyé après un changement de mode.
+        maxItemSizeGetter: mode.hasItemSize ? null : () => null,
+        maxParcelWeightKgGetter: mode.hasItemSize ? null : () => null,
+      ),
+    );
+  }
+
+  void _onMaxItemSizeChanged(
+    MaxItemSizeChanged event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(maxItemSizeGetter: () => event.size));
+  }
+
+  void _onMaxParcelWeightChanged(
+    MaxParcelWeightChanged event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(maxParcelWeightKgGetter: () => event.kg));
   }
 
   void _onPickupAddressChanged(

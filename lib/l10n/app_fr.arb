@@ -2018,9 +2018,36 @@
   "@tripPublishModeRoadTagScope": {
     "description": "Étiquette de portée de la carte Route de l'étape Mode"
   },
-  "tripPublishModeRoadTagCapacity": "Kg libre ou exact",
+  "tripPublishModeRoadTagCapacity": "Kg, tonnes, taille S à XL",
   "@tripPublishModeRoadTagCapacity": {
     "description": "Étiquette de capacité de la carte Route de l'étape Mode"
+  },
+  "tripPublishMaxItemSizeLabel": "Taille max d'un colis (facultatif)",
+  "@tripPublishMaxItemSizeLabel": {
+    "description": "Étape Capacité d'un trajet en route : titre du sélecteur de taille S à XL, facultatif"
+  },
+  "tripPublishMaxParcelWeightLabel": "Poids max par colis (kg, facultatif)",
+  "@tripPublishMaxParcelWeightLabel": {
+    "description": "Étape Capacité d'un trajet en route : libellé du champ de poids max par colis, facultatif"
+  },
+  "tripPublishMaxParcelWeightInvalid": "Entre 0,5 kg et la capacité du trajet",
+  "@tripPublishMaxParcelWeightInvalid": {
+    "description": "Erreur sous le poids max par colis : hors de 0,5 kg à la capacité du trajet"
+  },
+  "tripPublishCapacityTooHigh": "Au plus {max} pour ce mode",
+  "@tripPublishCapacityTooHigh": {
+    "description": "Erreur sous la capacité d'un trajet : plafond du mode dépassé (999 kg en avion, 999 999 kg en route). max = poids formaté avec son unité, ex. « 999 kg »",
+    "placeholders": {
+      "max": {"type": "String", "example": "999 kg"}
+    }
+  },
+  "tripPublishAcceptHintRoad": "Ex : meubles, électroménager, cartons…",
+  "@tripPublishAcceptHintRoad": {
+    "description": "Étape Conditions d'un trajet en route : exemples de contenus acceptés"
+  },
+  "tripPublishLegsHintRoad": "Vous passez par Tanger ou Nouakchott ? Ajoutez une étape : chacune est publiée comme un trajet, avec ses kilos, son prix et ses colis.",
+  "@tripPublishLegsHintRoad": {
+    "description": "Section Étapes d'un trajet en route : explication des étapes intermédiaires"
   },
   "tripPublishHandoverLocationsLabel": "Lieux de remise",
   "@tripPublishHandoverLocationsLabel": {

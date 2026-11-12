@@ -3317,7 +3317,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishModeRoadTagScope => 'Même pays ou international';
 
   @override
-  String get tripPublishModeRoadTagCapacity => 'Kg libre ou exact';
+  String get tripPublishModeRoadTagCapacity => 'Kg, tonnes, taille S à XL';
+
+  @override
+  String get tripPublishMaxItemSizeLabel =>
+      'Taille max d\'un colis (facultatif)';
+
+  @override
+  String get tripPublishMaxParcelWeightLabel =>
+      'Poids max par colis (kg, facultatif)';
+
+  @override
+  String get tripPublishMaxParcelWeightInvalid =>
+      'Entre 0,5 kg et la capacité du trajet';
+
+  @override
+  String tripPublishCapacityTooHigh(String max) {
+    return 'Au plus $max pour ce mode';
+  }
+
+  @override
+  String get tripPublishAcceptHintRoad =>
+      'Ex : meubles, électroménager, cartons…';
+
+  @override
+  String get tripPublishLegsHintRoad =>
+      'Vous passez par Tanger ou Nouakchott ? Ajoutez une étape : chacune est publiée comme un trajet, avec ses kilos, son prix et ses colis.';
 
   @override
   String get tripPublishHandoverLocationsLabel => 'Lieux de remise';
