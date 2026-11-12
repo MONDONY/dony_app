@@ -31,6 +31,9 @@ class AnnouncementFormBloc
     on<TransportModeChanged>(_onTransportModeChanged);
     on<MaxItemSizeChanged>(_onMaxItemSizeChanged);
     on<MaxParcelWeightChanged>(_onMaxParcelWeightChanged);
+    on<EditingTripStarted>(
+      (event, emit) => emit(state.copyWith(isEditingTrip: true)),
+    );
     on<PickupAddressChanged>(_onPickupAddressChanged);
     on<DeliveryAddressChanged>(_onDeliveryAddressChanged);
     on<CashAcceptedChanged>(_onCashAcceptedChanged);

@@ -1222,7 +1222,9 @@ class _TripFormContentState extends State<_TripFormContent> {
         // L'unité réécrit le kg à sa contenance (une valise) ; le kg du
         // trajet passe ensuite, sinon un trajet de deux valises, ou déjà
         // en partie réservé, s'enregistrait à une seule valise pleine.
-        formBloc.add(AvailableKgChanged(a.availableKg));
+        formBloc
+          ..add(const EditingTripStarted())
+          ..add(AvailableKgChanged(a.availableKg));
         // Taille et poids max par colis du trajet routier : relus tels quels,
         // renvoyés seulement si le voyageur les change (cf. _submit).
         if (transportModeOrPlane(a.transportMode).hasItemSize) {
@@ -3300,6 +3302,9 @@ class _TripFormContentState extends State<_TripFormContent> {
               : null,
           // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
           lockedCapacityKg: _isLocked ? widget.lockContext!.weightKg : null,
+          lockedTransportMode: _isLocked
+              ? widget.lockContext!.transportMode
+              : null,
         ),
       ),
     ];

@@ -6672,6 +6672,42 @@ void main() {
       expect(sent.availableKg, 1200);
     });
 
+    testWidgets(
+      'modification d\'un trajet route déjà réservé : poids max 200 kg '
+      'pour 100 kg restants, Continuer actif et rien d\'effacé',
+      (tester) async {
+        roadOn();
+        // 1 000 kg au départ, 900 réservés : il reste 100 kg, le voyageur a
+        // fixé 200 kg par colis, le back n'impose pas « poids max <= reste ».
+        final roadTrip = _makeFullAnnouncement(
+          transportMode: TransportMode.car,
+          capacityUnit: 'KG_EXACT',
+          availableKg: 100,
+          maxItemSize: ItemSize.l,
+          maxParcelWeightKg: 200,
+        );
+        await pumpScreen(tester, CreateTripArgs(announcement: roadTrip));
+        await _goToStep(tester, TripFormStep.capacite);
+
+        expect(find.byKey(const Key('max-parcel-weight-error')), findsNothing);
+        expect(
+          find.text('Entre 0,5 kg et la capacité du trajet'),
+          findsNothing,
+        );
+        expect(continueButton(tester).onPressed, isNotNull);
+
+        await _goToStep(tester, TripFormStep.conditions);
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+        final sent = verify(
+          () => announcementBloc.add(captureAny()),
+        ).captured.whereType<AnnouncementUpdateRequested>().single;
+        expect(sent.maxParcelWeightKg.value, isNull);
+        expect(sent.maxParcelWeightKg.isClear, isFalse);
+        expect(sent.availableKg, 100);
+      },
+    );
+
     testWidgets('modification avion : rien envoyé pour taille et poids', (
       tester,
     ) async {

@@ -245,6 +245,19 @@ void main() {
       },
     );
 
+    test('tripLabel : une tonne se lit « 1 200 kg », pas « 1200 kg »', () {
+      const c = ConversationModel(
+        id: 'conv-trip-road',
+        bidId: 'bid-trip-road',
+        firestoreConversationId: 'conv_bid_trip_road',
+        otherParticipant: ParticipantModel(id: 'uid-t', name: 'Trip'),
+        tripOrigin: 'Paris',
+        tripDestination: 'Dakar',
+        tripWeightKg: 1200,
+      );
+      expect(c.tripLabel, 'Paris → Dakar · 1\u202f200 kg');
+    });
+
     test('tripLabel formate la date en anglais', () {
       useEnglish();
       final c = ConversationModel(

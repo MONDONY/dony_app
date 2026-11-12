@@ -942,6 +942,31 @@ void main() {
       expect(free.capacityTooHigh, isFalse);
     });
 
+    test('poids max par colis en modification : jamais comparé aux kilos '
+        'restants, seulement au maximum technique', () {
+      AnnouncementFormState s(double w, {bool editing = true}) =>
+          AnnouncementFormState(
+            transportMode: TransportMode.car,
+            capacityUnit: CapacityUnit.custom,
+            availableKg: 100,
+            maxParcelWeightKg: w,
+            isEditingTrip: editing,
+          );
+      expect(s(200).isMaxParcelWeightValid, isTrue);
+      expect(s(200).isCapacityStepValid, isTrue);
+      expect(s(0.4).isMaxParcelWeightValid, isFalse);
+      expect(s(1000000).isMaxParcelWeightValid, isFalse);
+      // En création, comportement inchangé.
+      expect(s(200, editing: false).isMaxParcelWeightValid, isFalse);
+    });
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'EditingTripStarted pose isEditingTrip',
+      build: _makeBloc,
+      act: (bloc) => bloc.add(const EditingTripStarted()),
+      verify: (bloc) => expect(bloc.state.isEditingTrip, isTrue),
+    );
+
     test('poids max par colis : vide, 0,5, capacité, au-delà', () {
       AnnouncementFormState s(
         double? w, {

@@ -24360,7 +24360,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestCreateItemSizeHelp =>
-      'Seuls les voyageurs qui acceptent cette taille verront votre demande.';
+      'Aide les voyageurs à voir si votre colis tient dans leur véhicule.';
 
   @override
   String get requestCreateWeightRangeRoad =>

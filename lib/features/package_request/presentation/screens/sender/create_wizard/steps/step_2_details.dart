@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/utils/weight_input_format.dart';
@@ -205,9 +206,10 @@ class Step2DetailsState extends State<Step2Details> {
   List<String> get _allCategories => [..._selectedCats, ..._customCats];
 
   /// Message du champ poids hors des bornes du mode : au-delà de 32 kg en
-  /// avion ou « peu importe », il invite à choisir Route (Q5).
+  /// avion ou « peu importe », il invite à choisir Route (Q5), seulement si la
+  /// route est proposée (interrupteur allumé) ; sinon la fourchette seule.
   String _weightErrorText(AppLocalizations l10n) =>
-      _isWeightAboveMode && !(_mode?.isHeavy ?? false)
+      _isWeightAboveMode && !(_mode?.isHeavy ?? false) && transportModes.road
       ? l10n.requestCreateWeightTooHeavyForMode
       : weightRangeLabel(l10n, mode: _mode);
 
@@ -346,12 +348,16 @@ class Step2DetailsState extends State<Step2Details> {
 
             // ── Taille du colis (facultative) ──────────────────────────────
             // Route et « peu importe » seulement : en avion et en bateau elle
-            // est masquée (et effacée par le bloc).
+            // est masquée (et effacée par le bloc). « Peu importe » ne la
+            // montre que si la route est proposée : avion seul, l'écran reste
+            // celui d'avant.
             BlocBuilder<PackageRequestFormBloc, PackageRequestFormState>(
               buildWhen: (a, b) =>
                   a.itemSize != b.itemSize ||
                   a.modeHasItemSize != b.modeHasItemSize,
-              builder: (context, s) => s.modeHasItemSize
+              builder: (context, s) =>
+                  s.modeHasItemSize &&
+                      (s.requestTransportMode != null || transportModes.road)
                   ? _ItemSizeSection(
                       selected: s.itemSize,
                       onChanged: (size) => context
@@ -604,7 +610,8 @@ class _WeightInput extends StatelessWidget {
           if (d == null) return context.l10n.requestCreateWeightInvalid;
           if (!PackageRequestLimits.isWeightValidFor(d, mode)) {
             return d > PackageRequestLimits.maxWeightFor(mode) &&
-                    !(mode?.isHeavy ?? false)
+                    !(mode?.isHeavy ?? false) &&
+                    transportModes.road
                 ? context.l10n.requestCreateWeightTooHeavyForMode
                 : weightRangeLabel(context.l10n, mode: mode);
           }

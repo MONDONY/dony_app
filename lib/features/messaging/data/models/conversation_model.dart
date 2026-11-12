@@ -1,3 +1,4 @@
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/utils/server_date_time.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -211,7 +212,7 @@ class ConversationModel {
       parts.add(DateFormat.MMMd(AppL10n.localeName).format(tripDate!));
     }
     if (tripWeightKg != null) {
-      parts.add('${tripWeightKg!.toStringAsFixed(0)} kg');
+      parts.add('${formatWeightGrouped(AppL10n.localeName, tripWeightKg!)} kg');
     }
     return parts.join(' · ');
   }

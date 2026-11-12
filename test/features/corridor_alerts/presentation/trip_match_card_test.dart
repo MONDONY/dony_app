@@ -268,6 +268,11 @@ void main() {
       expect(find.text('Complet'), findsOneWidget);
     });
 
+    testWidgets('route : 1 200 kg dispo, milliers groupés', (tester) async {
+      await _pump(tester, _trip(availableKg: 1200));
+      expect(find.text('1\u202f200 kg dispo'), findsOneWidget);
+    });
+
     testWidgets('kg > 0 : inchangé (disponible, opaque, tapable)', (
       tester,
     ) async {

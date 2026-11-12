@@ -11965,7 +11965,7 @@
   "@requestCreateItemSizeOptionalLabel": {
     "description": "Libellé du sélecteur de taille de colis, facultatif (step_2_details.dart)"
   },
-  "requestCreateItemSizeHelp": "Only travelers who accept this size will see your request.",
+  "requestCreateItemSizeHelp": "Helps travelers see whether your parcel fits in their vehicle.",
   "@requestCreateItemSizeHelp": {
     "description": "Aide sous le sélecteur de taille de colis (step_2_details.dart)"
   },

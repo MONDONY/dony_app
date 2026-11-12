@@ -23617,7 +23617,7 @@
   "@requestCreateItemSizeOptionalLabel": {
     "description": "Libellé du sélecteur de taille de colis, facultatif (step_2_details.dart)"
   },
-  "requestCreateItemSizeHelp": "Seuls les voyageurs qui acceptent cette taille verront votre demande.",
+  "requestCreateItemSizeHelp": "Aide les voyageurs à voir si votre colis tient dans leur véhicule.",
   "@requestCreateItemSizeHelp": {
     "description": "Aide sous le sélecteur de taille de colis (step_2_details.dart)"
   },

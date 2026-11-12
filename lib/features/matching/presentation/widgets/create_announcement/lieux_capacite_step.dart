@@ -2,11 +2,13 @@
 // Extrait de create_announcement_bottom_sheet.dart — refactor pur pour la partie
 // lieux ; swap CapacitySelector → CapacityControl pour la partie capacité.
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/address_selector_field.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/capacity_control.dart';
@@ -43,6 +45,10 @@ class LieuxCapaciteStep extends StatelessWidget {
   /// un affichage en lecture seule. Les adresses restent éditables.
   final double? lockedCapacityKg;
 
+  /// Mode du trajet dédié : en route, la capacité verrouillée prend l'icône
+  /// neutre du colis, pas la valise.
+  final TransportMode? lockedTransportMode;
+
   /// Messages des adresses obligatoires non renseignées.
   ///
   /// Nuls par défaut : le parent ne les publie qu'après une première
@@ -59,6 +65,7 @@ class LieuxCapaciteStep extends StatelessWidget {
     required this.onPickupChanged,
     required this.onDeliveryChanged,
     this.lockedCapacityKg,
+    this.lockedTransportMode,
     this.pickupAddressError,
     this.deliveryAddressError,
   });
@@ -131,7 +138,10 @@ class LieuxCapaciteStep extends StatelessWidget {
         const SizedBox(height: DonySpacing.base),
         // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
         lockedCapacityKg != null
-            ? _LockedCapacityDisplay(kg: lockedCapacityKg!)
+            ? _LockedCapacityDisplay(
+                kg: lockedCapacityKg!,
+                isRoad: lockedTransportMode?.isRoad ?? false,
+              )
             : const CapacityControl(),
         const SizedBox(height: DonySpacing.xxl),
       ],
@@ -142,8 +152,9 @@ class LieuxCapaciteStep extends StatelessWidget {
 /// Affichage en lecture seule de la capacité quand elle est imposée par la
 /// demande (flux trajet dédié). Remplace [CapacityControl].
 class _LockedCapacityDisplay extends StatelessWidget {
-  const _LockedCapacityDisplay({required this.kg});
+  const _LockedCapacityDisplay({required this.kg, required this.isRoad});
   final double kg;
+  final bool isRoad;
 
   @override
   Widget build(BuildContext context) {
@@ -161,14 +172,17 @@ class _LockedCapacityDisplay extends StatelessWidget {
       ),
       child: Row(
         children: [
-          DonyIcon('luggage', color: cs.onSurfaceVariant),
+          if (isRoad)
+            Icon(Icons.inventory_2_rounded, color: cs.onSurfaceVariant)
+          else
+            DonyIcon('luggage', color: cs.onSurfaceVariant),
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${kg.toStringAsFixed(0)} kg',
+                  formatWeightKg(l, kg),
                   style: tt.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: cs.onSurface,

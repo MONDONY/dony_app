@@ -110,6 +110,12 @@ class AnnouncementFormState extends Equatable {
   /// Poids max par colis en kilos, route seulement, facultatif.
   final double? maxParcelWeightKg;
 
+  /// Modification d'un trajet publié : [availableKg] y vaut les kilos
+  /// RESTANTS (ils baissent à chaque réservation). Le poids max par colis
+  /// n'est alors plus comparé à ce reste (le back n'impose pas cette règle),
+  /// seulement au maximum technique.
+  final bool isEditingTrip;
+
   const AnnouncementFormState({
     this.departureCity,
     this.arrivalCity,
@@ -134,6 +140,7 @@ class AnnouncementFormState extends Equatable {
     this.gridPreviewItems = const [],
     this.maxItemSize,
     this.maxParcelWeightKg,
+    this.isEditingTrip = false,
   });
 
   /// Capacité maximale saisissable pour le mode du trajet (avion par défaut
@@ -147,12 +154,14 @@ class AnnouncementFormState extends Equatable {
       capacityUnit != CapacityUnit.kgFree && (availableKg ?? 0) > capacityMaxKg;
 
   /// Poids max par colis : vide, ou entre 0,5 kg et la capacité du trajet
-  /// (999 999 kg en kilo libre, dont la capacité est technique).
+  /// (999 999 kg en kilo libre, dont la capacité est technique, et en
+  /// modification, où [availableKg] n'est que le reste à réserver).
   bool get isMaxParcelWeightValid {
     final w = maxParcelWeightKg;
     if (w == null) return true;
     final kg = availableKg;
-    final upper = capacityUnit == CapacityUnit.kgFree || kg == null
+    final upper =
+        capacityUnit == CapacityUnit.kgFree || kg == null || isEditingTrip
         ? TripCapacityLimits.heavyMaxKg.toDouble()
         : kg;
     return w >= minMaxParcelWeightKg &&
@@ -223,6 +232,7 @@ class AnnouncementFormState extends Equatable {
     List<GridPreviewItem>? gridPreviewItems,
     ItemSize? Function()? maxItemSizeGetter,
     double? Function()? maxParcelWeightKgGetter,
+    bool? isEditingTrip,
   }) {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,
@@ -268,6 +278,7 @@ class AnnouncementFormState extends Equatable {
       maxParcelWeightKg: maxParcelWeightKgGetter != null
           ? maxParcelWeightKgGetter()
           : maxParcelWeightKg,
+      isEditingTrip: isEditingTrip ?? this.isEditingTrip,
     );
   }
 
@@ -296,5 +307,6 @@ class AnnouncementFormState extends Equatable {
     gridPreviewItems,
     maxItemSize,
     maxParcelWeightKg,
+    isEditingTrip,
   ];
 }

@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/money_keyword_warning.dart';
@@ -173,6 +174,10 @@ void main() {
     testWidgets('validation poids échoue si > 32 : invite à choisir Route', (
       tester,
     ) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      addTearDown(resetTransportModesForTest);
       final key = GlobalKey<Step2DetailsState>();
       await tester.pumpWidget(wrap(Step2Details(key: key)));
       await tester.enterText(find.byType(TextFormField).first, '35');
@@ -188,6 +193,10 @@ void main() {
       tester,
     ) async {
       useEnglish();
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      addTearDown(resetTransportModesForTest);
       final key = GlobalKey<Step2DetailsState>();
       await tester.pumpWidget(wrap(Step2Details(key: key)));
 
@@ -461,8 +470,95 @@ void main() {
     });
   });
 
+  group('Step2Details : avion seul (route éteinte, prod actuelle)', () {
+    PackageRequestFormBloc editing({TransportMode? mode, double weight = 5}) {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: PackageRequest(
+          id: 'r-1',
+          senderId: 's-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          dateToleranceDays: 0,
+          weightKg: weight,
+          parcelSize: ParcelSize.large,
+          transportMode: mode,
+          categories: const ['Meubles'],
+          status: PackageRequestStatus.open,
+          createdAt: DateTime(2026, 11, 12),
+        ),
+      );
+      addTearDown(bloc.close);
+      return bloc;
+    }
+
+    void viewport(WidgetTester tester) {
+      tester.view.physicalSize = const Size(1000, 2200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+    }
+
+    setUp(resetTransportModesForTest);
+
+    testWidgets("33 kg : l'ancien message, jamais « choisissez Route »", (
+      tester,
+    ) async {
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key)));
+      await tester.enterText(find.byType(TextFormField).first, '33');
+      key.currentState!.submit();
+      await tester.pump();
+      expect(find.text('Entre 0,5 et 32 kg'), findsOneWidget);
+      expect(find.textContaining('choisissez Route'), findsNothing);
+    });
+
+    testWidgets('anglais, 33 kg : « Between 0.5 and 32 kg »', (tester) async {
+      useEnglish();
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key)));
+      await tester.enterText(find.byType(TextFormField).first, '33');
+      key.currentState!.submit();
+      await tester.pump();
+      expect(find.text('Between 0.5 and 32 kg'), findsOneWidget);
+      expect(find.textContaining('choose Road'), findsNothing);
+    });
+
+    testWidgets('ancienne demande sans mode : pas de section taille, '
+        "33 kg refusé avec l'ancien texte", (tester) async {
+      viewport(tester);
+      final canContinue = ValueNotifier<bool>(false);
+      addTearDown(canContinue.dispose);
+      await tester.pumpWidget(
+        wrap(
+          Step2Details(canContinueNotifier: canContinue),
+          bloc: editing(weight: 20),
+        ),
+      );
+      await tester.pump();
+      expect(find.byKey(const Key('request-item-size-section')), findsNothing);
+      expect(canContinue.value, isTrue);
+
+      await tester.enterText(find.byType(TextFormField).first, '33');
+      await tester.pump();
+      expect(canContinue.value, isFalse);
+      expect(find.text('Entre 0,5 et 32 kg'), findsOneWidget);
+      expect(find.textContaining('choisissez Route'), findsNothing);
+    });
+  });
+
   group('Step2Details : route, tonnes et taille facultative', () {
     const sep = ' ';
+
+    // Route proposée (interrupteur allumé) : l'écran invite à choisir Route et
+    // « peu importe » porte la taille. Avion seul : voir le groupe dédié.
+    setUp(() {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      addTearDown(resetTransportModesForTest);
+    });
 
     PackageRequest request({
       TransportMode? mode,
@@ -534,7 +630,7 @@ void main() {
       expect(find.text('Taille du colis (facultatif)'), findsOneWidget);
       expect(
         find.text(
-          'Seuls les voyageurs qui acceptent cette taille verront votre demande.',
+          'Aide les voyageurs à voir si votre colis tient dans leur véhicule.',
         ),
         findsOneWidget,
       );
@@ -800,7 +896,9 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text('Only travelers who accept this size will see your request.'),
+        find.text(
+          'Helps travelers see whether your parcel fits in their vehicle.',
+        ),
         findsOneWidget,
       );
     });

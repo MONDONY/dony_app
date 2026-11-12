@@ -39015,7 +39015,7 @@ abstract class AppLocalizations {
   /// Aide sous le sélecteur de taille de colis (step_2_details.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Seuls les voyageurs qui acceptent cette taille verront votre demande.'**
+  /// **'Aide les voyageurs à voir si votre colis tient dans leur véhicule.'**
   String get requestCreateItemSizeHelp;
 
   /// Aide sous le champ poids quand le mode est la route ou le bateau (package_request_labels.dart)

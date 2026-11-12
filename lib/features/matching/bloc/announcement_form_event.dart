@@ -119,6 +119,15 @@ class MaxParcelWeightChanged extends AnnouncementFormEvent {
   List<Object?> get props => [kg];
 }
 
+/// Le formulaire modifie un trajet publié : sa capacité est le reste à
+/// réserver, pas le total (voir `AnnouncementFormState.isEditingTrip`).
+class EditingTripStarted extends AnnouncementFormEvent {
+  const EditingTripStarted();
+
+  @override
+  List<Object?> get props => [];
+}
+
 class PickupAddressChanged extends AnnouncementFormEvent {
   final AddressData? address;
 

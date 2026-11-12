@@ -24182,7 +24182,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestCreateItemSizeHelp =>
-      'Only travelers who accept this size will see your request.';
+      'Helps travelers see whether your parcel fits in their vehicle.';
 
   @override
   String get requestCreateWeightRangeRoad =>

@@ -94,12 +94,13 @@ NegotiationThread _thread({
   String? arrivalCity = 'Dakar',
   double? weightKg = 5,
   bool travelerGpPro = false,
+  double travelerAvailableKg = 10,
 }) => NegotiationThread(
   id: 't-1',
   packageRequestId: 'pr-1',
   travelerId: 'tr-1',
   travelerTravelDate: DateTime(2026, 6, 15),
-  travelerAvailableKg: 10,
+  travelerAvailableKg: travelerAvailableKg,
   status: status,
   currentPriceEur: 45,
   roundsCount: 2,
@@ -708,6 +709,25 @@ void main() {
       await tester.pumpAndSettle();
       // fallback: '10 kg dispo' (travelerAvailableKg = 10)
       expect(find.textContaining('kg dispo'), findsOneWidget);
+      expect(find.text('10 kg dispo'), findsOneWidget);
+    });
+
+    testWidgets('route : 1 200 kg dispo, milliers groupés', (tester) async {
+      when(() => bloc.state).thenReturn(
+        NegotiationListState(
+          status: NegotiationListStatus.loaded,
+          threads: [
+            _thread(
+              departureCity: null,
+              arrivalCity: null,
+              travelerAvailableKg: 1200,
+            ),
+          ],
+        ),
+      );
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('1\u202f200 kg dispo'), findsOneWidget);
     });
   });
 

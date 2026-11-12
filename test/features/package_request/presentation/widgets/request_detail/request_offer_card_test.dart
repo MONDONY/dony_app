@@ -12,12 +12,13 @@ NegotiationThread _t(
   NegotiationThreadStatus s, {
   bool myTurn = false,
   bool gpPro = false,
+  double availableKg = 8,
 }) => NegotiationThread(
   id: 't',
   packageRequestId: 'pr',
   travelerId: 'tr',
   travelerTravelDate: DateTime(2026, 9, 26),
-  travelerAvailableKg: 8,
+  travelerAvailableKg: availableKg,
   status: s,
   currentPriceEur: 25,
   roundsCount: 1,
@@ -120,6 +121,38 @@ void main() {
     expect(find.text('Répondre'), findsOneWidget);
     await tester.tap(find.byType(RequestOfferCard));
     expect(taps, 1);
+  });
+
+  testWidgets('route : 1 200 kg libres, milliers groupés', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: RequestOfferCard(
+            thread: _t(NegotiationThreadStatus.open, availableKg: 1200),
+            firmPrice: false,
+            onTap: () {},
+          ),
+        ),
+      ),
+    );
+    expect(find.textContaining('1\u202f200 kg libres'), findsOneWidget);
+  });
+
+  testWidgets('avion : 8 kg libres inchangé', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: RequestOfferCard(
+            thread: _t(NegotiationThreadStatus.open),
+            firmPrice: false,
+            onTap: () {},
+          ),
+        ),
+      ),
+    );
+    expect(find.textContaining('8 kg libres'), findsOneWidget);
   });
 
   testWidgets('badge GP Pro seulement si le voyageur est GP Pro', (
