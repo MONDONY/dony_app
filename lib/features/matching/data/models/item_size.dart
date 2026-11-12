@@ -53,3 +53,11 @@ extension ItemSizeL10n on ItemSize {
     ItemSize.xl => l.itemSizeXlDescription,
   };
 }
+
+/// Poids d'un colis suivi de sa taille quand elle est connue (« 25 kg · taille
+/// L ») ; [weight] est déjà formaté avec son unité. Sans taille, le poids seul.
+String parcelWeightWithSize(
+  AppLocalizations l,
+  String weight,
+  ItemSize? size,
+) => size == null ? weight : l.parcelWeightAndSize(weight, size.code);

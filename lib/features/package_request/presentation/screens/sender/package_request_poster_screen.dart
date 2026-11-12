@@ -10,8 +10,10 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/gallery_save_service.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/screens/trip_poster_screen.dart'
     show PosterShareChannel;
 import 'package:dony/features/matching/presentation/widgets/poster/poster_viewer.dart';
@@ -171,7 +173,7 @@ class _PackageRequestPosterScreenState
     return <String>[
       '📦 ${l.requestPosterCaptionCorridor(r.departureCity, r.arrivalCity)}',
       '📅 ${PackageRequestPosterCard.dateLabel(l, r)}',
-      '⚖️ ${l.requestPosterCaptionWeight(formatKg(l, r.weightKg), size)}',
+      '⚖️ ${r.itemSize == null ? l.requestPosterCaptionWeight(formatKg(l, r.weightKg), size) : parcelWeightWithSize(l, formatWeightKg(l, r.weightKg), r.itemSize)}',
       if (contents.isNotEmpty)
         '🧳 ${l.requestPosterCaptionContents(contents.join(', '))}',
       if (budget != null)

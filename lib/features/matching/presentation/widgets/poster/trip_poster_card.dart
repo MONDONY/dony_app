@@ -5,6 +5,7 @@ import 'package:dony/core/currency/country_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/utils/trip_local_time.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
@@ -87,7 +88,11 @@ class TripPosterCard extends StatelessWidget {
   /// qu'une valeur de forme, et l'imprimer comme une limite tromperait
   /// l'expéditeur. Tout le reste de l'application dit « Kg libre » dans ce cas.
   static String capacityLabel(AppLocalizations l, AnnouncementModel a) =>
-      a.isKgFree ? l.tripKgFree : '${formatKgPrice(a.availableKg)} kg';
+      a.isKgFree
+      ? l.tripKgFree
+      : a.availableKg >= 1000
+      ? formatWeightKg(l, a.availableKg)
+      : '${formatKgPrice(a.availableKg)} kg';
 
   /// Moyens de paiement acceptés, dans l'ordre de l'énumération (carte,
   /// espèces, puis mobile money) : « Carte, Espèces, Wave ». Vide si le

@@ -24198,6 +24198,47 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String tripCapacityUpToSize(String kg, String size) {
+    return '$kg, up to size $size';
+  }
+
+  @override
+  String tripCapacityFreeUpToSize(String size) {
+    return 'Free kilos, up to size $size';
+  }
+
+  @override
+  String tripUpToSize(String size) {
+    return 'Up to size $size';
+  }
+
+  @override
+  String tripMaxParcelWeight(String kg) {
+    return '$kg max per parcel';
+  }
+
+  @override
+  String tripRoadDuration(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days on the road',
+      one: '1 day on the road',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String parcelWeightAndSize(String kg, String size) {
+    return '$kg · size $size';
+  }
+
+  @override
+  String parcelSizeLabel(String size) {
+    return 'Size $size';
+  }
+
+  @override
   String requestCreateBudgetMinOnly(String min) {
     return 'At least $min.';
   }

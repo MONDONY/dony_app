@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:flutter/material.dart';
@@ -6,16 +7,18 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
 
-BidModel _bid({double? weightKg, double? totalWeightKg}) => BidModel(
-  id: 'b1',
-  announcementId: 'a1',
-  senderId: 's1',
-  status: 'ACCEPTED',
-  createdAt: DateTime(2026),
-  updatedAt: DateTime(2026),
-  weightKg: weightKg,
-  totalWeightKg: totalWeightKg,
-);
+BidModel _bid({double? weightKg, double? totalWeightKg, ItemSize? itemSize}) =>
+    BidModel(
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      status: 'ACCEPTED',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+      weightKg: weightKg,
+      totalWeightKg: totalWeightKg,
+      itemSize: itemSize,
+    );
 
 Future<void> _pump(WidgetTester tester, BidModel bid, {bool framed = true}) =>
     tester.pumpWidget(
@@ -74,5 +77,27 @@ void main() {
 
     expect(find.byType(DetailCard), findsOneWidget);
     expect(find.text('Colis & destinataire'), findsOneWidget);
+  });
+
+  testWidgets('taille du colis renseignée : « 25 kg · taille L »', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(weightKg: 25, itemSize: ItemSize.l));
+
+    expect(find.text('25 kg · taille L'), findsOneWidget);
+  });
+
+  testWidgets('1 200 kg groupés, modifié : taille après les kilos en plus', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(weightKg: 1200, totalWeightKg: 1250, itemSize: ItemSize.xl),
+    );
+
+    expect(
+      find.text('1\u202f250 kg (dont 50 kg en plus) · taille XL'),
+      findsOneWidget,
+    );
   });
 }

@@ -8428,6 +8428,18 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('kg'),
     placeholderMarker('size'),
   ),
+  'tripCapacityUpToSize': (l) => l.tripCapacityUpToSize(
+    placeholderMarker('kg'),
+    placeholderMarker('size'),
+  ),
+  'tripCapacityFreeUpToSize': (l) =>
+      l.tripCapacityFreeUpToSize(placeholderMarker('size')),
+  'tripUpToSize': (l) => l.tripUpToSize(placeholderMarker('size')),
+  'tripMaxParcelWeight': (l) => l.tripMaxParcelWeight(placeholderMarker('kg')),
+  'tripRoadDuration': (l) => l.tripRoadDuration(intPlaceholderValue),
+  'parcelWeightAndSize': (l) =>
+      l.parcelWeightAndSize(placeholderMarker('kg'), placeholderMarker('size')),
+  'parcelSizeLabel': (l) => l.parcelSizeLabel(placeholderMarker('size')),
   'requestCreateBudgetMinOnly': (l) =>
       l.requestCreateBudgetMinOnly(placeholderMarker('min')),
   'requestCreateBudgetTechnicalMax': (l) =>
@@ -9132,6 +9144,12 @@ const textParameters = <String, List<String>>{
   'taxInfoCollectMissing': ['fields'],
   'taxInfoAddressCountry': ['country'],
   'requestSummaryWeightAndSize': ['kg', 'size'],
+  'tripCapacityUpToSize': ['kg', 'size'],
+  'tripCapacityFreeUpToSize': ['size'],
+  'tripUpToSize': ['size'],
+  'tripMaxParcelWeight': ['kg'],
+  'parcelWeightAndSize': ['kg', 'size'],
+  'parcelSizeLabel': ['size'],
   'requestCreateBudgetMinOnly': ['min'],
   'requestCreateBudgetTechnicalMax': ['max'],
 };

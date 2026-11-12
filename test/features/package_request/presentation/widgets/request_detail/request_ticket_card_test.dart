@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -19,6 +20,8 @@ PackageRequest _req({
   List<String> categories = const ['Cosmétiques & parfums'],
   bool flexibleDate = false,
   TransportMode? transportMode = TransportMode.plane,
+  double weightKg = 2,
+  ItemSize? itemSize,
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 's',
@@ -26,7 +29,8 @@ PackageRequest _req({
   arrivalCity: 'Annemasse',
   desiredDate: flexibleDate ? null : DateTime(2026, 9, 27),
   dateToleranceDays: flexibleDate ? 0 : 2,
-  weightKg: 2,
+  weightKg: weightKg,
+  itemSize: itemSize,
   parcelSize: ParcelSize.small,
   transportMode: transportMode,
   categories: categories,
@@ -232,5 +236,27 @@ void main() {
         if (mode != TransportMode.plane) expectNoPlaneIcon(tester);
       });
     }
+  });
+
+  testWidgets('route : « 1 200 kg · taille L » puis la catégorie', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        RequestTicketCard(
+          request: _req(
+            transportMode: TransportMode.car,
+            weightKg: 1200,
+            itemSize: ItemSize.l,
+          ),
+          statusPill: const Text('En ligne'),
+          metaLabel: 'meta',
+        ),
+      ),
+    );
+    expect(
+      find.text('1\u202f200 kg · taille L · Cosmétiques & parfums'),
+      findsOneWidget,
+    );
   });
 }

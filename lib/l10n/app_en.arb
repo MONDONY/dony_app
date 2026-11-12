@@ -11985,6 +11985,57 @@
       "size": {"type": "String"}
     }
   },
+  "tripCapacityUpToSize": "{kg}, up to size {size}",
+  "@tripCapacityUpToSize": {
+    "description": "Capacité d'un trajet en route avec sa taille maximale de colis, sur les cartes et la fiche ({kg} déjà avec son unité) (traveler_card.dart, trip_billet_card.dart)",
+    "placeholders": {
+      "kg": {"type": "String"},
+      "size": {"type": "String"}
+    }
+  },
+  "tripCapacityFreeUpToSize": "Free kilos, up to size {size}",
+  "@tripCapacityFreeUpToSize": {
+    "description": "Kilo libre d'un trajet en route avec sa taille maximale de colis (traveler_card.dart, trip_billet_card.dart)",
+    "placeholders": {
+      "size": {"type": "String"}
+    }
+  },
+  "tripUpToSize": "Up to size {size}",
+  "@tripUpToSize": {
+    "description": "Taille maximale de colis acceptée par un trajet en route, sur l'en-tête du trajet du voyageur (trip_owner_header.dart)",
+    "placeholders": {
+      "size": {"type": "String"}
+    }
+  },
+  "tripMaxParcelWeight": "{kg} max per parcel",
+  "@tripMaxParcelWeight": {
+    "description": "Poids maximal d'un colis accepté par le trajet ({kg} déjà avec son unité) (trip_billet_card.dart, trip_owner_header.dart)",
+    "placeholders": {
+      "kg": {"type": "String"}
+    }
+  },
+  "tripRoadDuration": "{count, plural, =1{1 day on the road} other{{count} days on the road}}",
+  "@tripRoadDuration": {
+    "description": "Durée d'un trajet par la route, en jours entre le départ et l'arrivée (traveler_card.dart)",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "parcelWeightAndSize": "{kg} · size {size}",
+  "@parcelWeightAndSize": {
+    "description": "Poids puis taille d'un colis ou d'une demande quand la taille est connue ({kg} déjà avec son unité) (package_request_list_card.dart, request_ticket_card.dart, colis_destinataire_card.dart, reception_detail_screen.dart)",
+    "placeholders": {
+      "kg": {"type": "String"},
+      "size": {"type": "String"}
+    }
+  },
+  "parcelSizeLabel": "Size {size}",
+  "@parcelSizeLabel": {
+    "description": "Taille d'un colis choisie par l'expéditeur, sous le poids sur l'affiche d'une demande (package_request_poster_card.dart)",
+    "placeholders": {
+      "size": {"type": "String"}
+    }
+  },
   "requestCreateBudgetMinOnly": "At least {min}.",
   "@requestCreateBudgetMinOnly": {
     "description": "Erreur du champ budget en route ou bateau : montant sous le minimum, aucun plafond affiché (step_3_recap_budget.dart)",

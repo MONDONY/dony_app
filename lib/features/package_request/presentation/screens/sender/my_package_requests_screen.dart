@@ -4,9 +4,11 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -736,7 +738,7 @@ String _buildDetails(AppLocalizations l, PackageRequest r) {
     else
       '${DateFormat.MMMd(l.localeName).format(desired)} '
           '${toleranceCompactLabel(l, r.dateToleranceDays)}',
-    '${r.weightKg.toStringAsFixed(0)} kg',
+    parcelWeightWithSize(l, formatWeightKg(l, r.weightKg), r.itemSize),
     if (r.categories.isNotEmpty)
       _shortCat(contentCategoryDisplayName(l, r.categories.first)),
     if (r.targetPriceEur != null)

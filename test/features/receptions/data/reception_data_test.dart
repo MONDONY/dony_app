@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/receptions/data/datasources/reception_remote_datasource.dart';
 import 'package:dony/features/receptions/data/models/parcel_role.dart';
@@ -61,6 +62,29 @@ void main() {
         }).transportMode,
         isNull,
       );
+    });
+  });
+
+  group('Reception.itemSize', () {
+    test('taille servie : lue ; absente, inconnue ou NONE : null', () {
+      expect(
+        Reception.fromJson({..._confirmedJson(), 'itemSize': 'XL'}).itemSize,
+        ItemSize.xl,
+      );
+      expect(Reception.fromJson(_confirmedJson()).itemSize, isNull);
+      expect(
+        Reception.fromJson({..._confirmedJson(), 'itemSize': 'NONE'}).itemSize,
+        isNull,
+      );
+      expect(
+        Reception.fromJson({..._confirmedJson(), 'itemSize': 'XXL'}).itemSize,
+        isNull,
+      );
+    });
+
+    test('withMyRating garde la taille', () {
+      final r = Reception.fromJson({..._confirmedJson(), 'itemSize': 'M'});
+      expect(r.withMyRating(5).itemSize, ItemSize.m);
     });
   });
 

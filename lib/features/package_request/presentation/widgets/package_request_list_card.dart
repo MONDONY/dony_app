@@ -3,12 +3,14 @@ import 'package:dony/core/currency/converted_price.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/owner_views_label.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/features/package_request/data/models/matching_request.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -66,6 +68,8 @@ class PackageRequestListCard extends StatelessWidget {
   /// taille du texte.
   final bool compact;
 
+  /// Format donné par le poids ; la taille choisie par l'expéditeur
+  /// ([PackageRequestSearchItem.itemSize]) le remplace dans le titre.
   String get _sizeLabel => switch (item.parcelSize) {
     ParcelSize.small => 'S',
     ParcelSize.medium => 'M',
@@ -253,8 +257,19 @@ class PackageRequestListCard extends StatelessWidget {
                                     children: [
                                       // Titre colis-first
                                       Text(
-                                        '${item.weightKg.toStringAsFixed(0)} kg · '
-                                        '${item.categories.isNotEmpty ? '${contentCategoryDisplayName(l, item.categories.first)} · ' : ''}$_sizeLabel',
+                                        [
+                                          parcelWeightWithSize(
+                                            l,
+                                            formatWeightKg(l, item.weightKg),
+                                            item.itemSize,
+                                          ),
+                                          if (item.categories.isNotEmpty)
+                                            contentCategoryDisplayName(
+                                              l,
+                                              item.categories.first,
+                                            ),
+                                          if (item.itemSize == null) _sizeLabel,
+                                        ].join(' · '),
                                         style:
                                             (compact
                                                     ? tt.titleSmall
@@ -909,7 +924,7 @@ class MatchingRequestCard extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '${match.weightKg.toStringAsFixed(0)} kg'
+                                        '${formatWeightKg(l, match.weightKg)}'
                                         '${match.contentType != null ? ' · ${contentCategoryDisplayName(l, match.contentType!)}' : ''}',
                                         style: tt.titleMedium?.copyWith(
                                           fontWeight: FontWeight.w800,

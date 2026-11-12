@@ -7,6 +7,7 @@ import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
@@ -240,8 +241,15 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
         weight == null
             ? null
             : (recipient == null || recipient.isEmpty)
-            ? formatWeightKg(l, weight)
-            : l.senderTileColisSubtitle(formatWeightKg(l, weight), recipient),
+            ? parcelWeightWithSize(l, formatWeightKg(l, weight), bid.itemSize)
+            : l.senderTileColisSubtitle(
+                parcelWeightWithSize(
+                  l,
+                  formatWeightKg(l, weight),
+                  bid.itemSize,
+                ),
+                recipient,
+              ),
       SenderTile.details => l.senderTileDetailsSubtitle,
     };
 

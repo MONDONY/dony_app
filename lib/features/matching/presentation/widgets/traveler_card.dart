@@ -146,17 +146,17 @@ class TravelerCard extends StatelessWidget {
     final dateStr = DateFormat.MMMEd(
       l.localeName,
     ).format(announcement.departureDate);
+    // Route : dates « départ → arrivée » et durée quand l'arrivée est datée.
+    final roadDays = tripRoadDays(announcement);
+    final dateLabel = roadDays == null
+        ? dateStr
+        : '$dateStr → ${DateFormat.MMMEd(l.localeName).format(announcement.arrivalDate!)}';
+    final roadDuration = roadDays == null ? null : l.tripRoadDuration(roadDays);
     final categories = announcement.acceptedContentTypes ?? [];
     final capacity = TripCapacity.fromAnnouncement(announcement);
     // Valises : le restant en kilos n'est que dans le détail, la card reste
     // légère.
-    final capacityLabel = announcement.capacityUnit == 'KG_FREE'
-        ? l.tripKgFree
-        : capacity != null
-        ? l.listingSuitcaseCapacityLabel(capacity.count, capacity.unitKg)
-        : l.listingKgAvailableLabel(
-            announcement.availableKg.toStringAsFixed(0),
-          );
+    final capacityLabel = tripCapacityLine(l, announcement);
     final hasExistingBid = existingBidStatus != null;
     final bidStyle = _bidStyle(cs, l);
     // Trajet déjà sollicité ou complet : la carte s'efface pour laisser voir
@@ -266,8 +266,17 @@ class TravelerCard extends StatelessWidget {
                         size: 13,
                         color: cs.onSurfaceVariant,
                       ),
-                      text: dateStr,
+                      text: dateLabel,
                     ),
+                    if (roadDuration != null)
+                      _MetaItem(
+                        icon: DonyIcon(
+                          'car',
+                          size: 13,
+                          color: cs.onSurfaceVariant,
+                        ),
+                        text: roadDuration,
+                      ),
                     if (OwnerViewsLabel.isVisible(
                       count: announcement.uniqueViewerCount,
                       isOwner: isOwnAnnouncement,
@@ -294,11 +303,17 @@ class TravelerCard extends StatelessWidget {
                   children: [
                     DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
                     const SizedBox(width: DonySpacing.xs),
-                    Text(
-                      dateStr,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                    Flexible(
+                      child: Text(
+                        roadDuration == null
+                            ? dateLabel
+                            : '$dateLabel  ·  $roadDuration',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
                       ),
                     ),
                     // Audience de mon trajet : visible de moi seul.

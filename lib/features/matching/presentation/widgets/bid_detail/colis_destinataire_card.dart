@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_photo_viewer_modal.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
@@ -43,14 +44,13 @@ class ColisDestinataireCard extends StatelessWidget {
     final weight = bid.displayWeightKg;
     if (weight != null) {
       final added = bid.acquiredAddedWeightKg;
-      parts.add(
-        added > 0
-            ? l.bidDetailParcelWeightWithAdded(
-                formatWeightKg(l, weight),
-                formatWeightKg(l, added),
-              )
-            : formatWeightKg(l, weight),
-      );
+      final weightText = added > 0
+          ? l.bidDetailParcelWeightWithAdded(
+              formatWeightKg(l, weight),
+              formatWeightKg(l, added),
+            )
+          : formatWeightKg(l, weight);
+      parts.add(parcelWeightWithSize(l, weightText, bid.itemSize));
     }
     if (bid.contentCategory != null && bid.contentCategory!.isNotEmpty) {
       parts.add(contentCategoriesDisplayName(l, bid.contentCategory!));

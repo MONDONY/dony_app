@@ -39036,6 +39036,48 @@ abstract class AppLocalizations {
   /// **'{kg}, taille {size}'**
   String requestSummaryWeightAndSize(String kg, String size);
 
+  /// Capacité d'un trajet en route avec sa taille maximale de colis, sur les cartes et la fiche ({kg} déjà avec son unité) (traveler_card.dart, trip_billet_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg}, jusqu\'à taille {size}'**
+  String tripCapacityUpToSize(String kg, String size);
+
+  /// Kilo libre d'un trajet en route avec sa taille maximale de colis (traveler_card.dart, trip_billet_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Kilos libres, jusqu\'à taille {size}'**
+  String tripCapacityFreeUpToSize(String size);
+
+  /// Taille maximale de colis acceptée par un trajet en route, sur l'en-tête du trajet du voyageur (trip_owner_header.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Jusqu\'à taille {size}'**
+  String tripUpToSize(String size);
+
+  /// Poids maximal d'un colis accepté par le trajet ({kg} déjà avec son unité) (trip_billet_card.dart, trip_owner_header.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} max par colis'**
+  String tripMaxParcelWeight(String kg);
+
+  /// Durée d'un trajet par la route, en jours entre le départ et l'arrivée (traveler_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 jour de route} other{{count} jours de route}}'**
+  String tripRoadDuration(int count);
+
+  /// Poids puis taille d'un colis ou d'une demande quand la taille est connue ({kg} déjà avec son unité) (package_request_list_card.dart, request_ticket_card.dart, colis_destinataire_card.dart, reception_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} · taille {size}'**
+  String parcelWeightAndSize(String kg, String size);
+
+  /// Taille d'un colis choisie par l'expéditeur, sous le poids sur l'affiche d'une demande (package_request_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille {size}'**
+  String parcelSizeLabel(String size);
+
   /// Erreur du champ budget en route ou bateau : montant sous le minimum, aucun plafond affiché (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:

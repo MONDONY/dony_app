@@ -1,14 +1,17 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/features/matching/presentation/utils/trip_capacity.dart';
 import 'package:dony/features/matching/presentation/widgets/transport_mode_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -133,9 +136,11 @@ class TripCard extends StatelessWidget {
     return DateFormat.yMMMEd(l.localeName).format(announcement.departureDate);
   }
 
-  /// Formats a kg value: drops .0 suffix for whole numbers.
-  String _kg(double v) =>
-      '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 1)} kg';
+  /// Formats a kg value: drops .0 suffix for whole numbers. À partir d'une
+  /// tonne, les milliers sont groupés (« 1 200 kg »).
+  String _kg(AppLocalizations l, double v) => v >= 1000
+      ? formatWeightKg(l, v)
+      : '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 1)} kg';
 
   String _price(double v) => formatPriceIn(v, announcement.currency);
 
@@ -185,7 +190,7 @@ class TripCard extends StatelessWidget {
                 announcement: announcement,
                 badge: badge,
                 soldKg: soldKg,
-                kg: _kg,
+                kg: (v) => _kg(l, v),
                 price: _price,
                 dateLabel: _dateLabel(l),
                 showFavorite: showFavorite,
@@ -201,7 +206,7 @@ class TripCard extends StatelessWidget {
                 depFlag: depFlag,
                 arrFlag: arrFlag,
                 dateLabel: _dateLabel(l),
-                kg: _kg,
+                kg: (v) => _kg(l, v),
                 price: _price,
                 showFavorite: showFavorite,
                 pinButton: _pinButton(),
@@ -336,6 +341,19 @@ class _ActiveCardContent extends StatelessWidget {
   final String Function(double) price;
   final bool showFavorite;
   final Widget? pinButton;
+
+  /// Pied de carte : kilos disponibles (ou kilo libre), suivis de la taille
+  /// maximale de colis d'un trajet en route.
+  String _footerCapacity(AppLocalizations l, String availableLabel) {
+    final size = tripShownItemSize(announcement);
+    if (announcement.isKgFree) {
+      return size == null
+          ? l.tripKgFree
+          : l.tripCapacityFreeUpToSize(size.code);
+    }
+    final base = l.listingAvailableKgLabel(availableLabel);
+    return size == null ? base : l.tripCapacityUpToSize(base, size.code);
+  }
 
   /// Builds the optional « demandes » stats row (acceptées / en attente).
   /// Returns an empty list when both counts are 0 so the card stays clean and
@@ -474,9 +492,7 @@ class _ActiveCardContent extends StatelessWidget {
                     const SizedBox(width: DonySpacing.xs),
                     Flexible(
                       child: Text(
-                        announcement.isKgFree
-                            ? l.tripKgFree
-                            : l.listingAvailableKgLabel(kg(availableKg)),
+                        _footerCapacity(l, kg(availableKg)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: tt.titleSmall?.copyWith(

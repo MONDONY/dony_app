@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -30,13 +31,16 @@ PackageRequestSearchItem _item({
   int? uniqueViewerCount,
   bool flexibleDate = false,
   TransportMode? transportMode = TransportMode.plane,
+  double weightKg = 5,
+  ItemSize? itemSize,
 }) => PackageRequestSearchItem(
   id: 'pr1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
   desiredDate: flexibleDate ? null : desiredDate ?? DateTime(2026, 6, 15),
   dateToleranceDays: flexibleDate ? 0 : 2,
-  weightKg: 5,
+  weightKg: weightKg,
+  itemSize: itemSize,
   parcelSize: size,
   categories: [categoryLabel],
   targetPriceEur: targetPrice,
@@ -527,6 +531,42 @@ void main() {
 
       await tester.pumpAndSettle();
       expect(findDonyIcon('plane'), findsOneWidget);
+    });
+  });
+
+  group('poids groupé et taille choisie', () {
+    for (final compact in [false, true]) {
+      testWidgets('route 1 200 kg taille L (compact: $compact) : « 1 200 kg '
+          '· taille L », sans format dérivé du poids', (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            PackageRequestListCard(
+              item: _item(
+                transportMode: TransportMode.car,
+                weightKg: 1200,
+                itemSize: ItemSize.l,
+                size: ParcelSize.large,
+              ),
+              compact: compact,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text('1\u202f200 kg · taille L · Vêtements & tissus'),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('sans taille choisie : titre d\'avant (format dérivé)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
+      await tester.pumpAndSettle();
+      expect(find.text('5 kg · Vêtements & tissus · M'), findsOneWidget);
+      expect(find.textContaining('taille'), findsNothing);
     });
   });
 }

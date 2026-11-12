@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/city_code.dart';
@@ -231,7 +233,7 @@ class _PhotoAndFacts extends StatelessWidget {
     final r = request;
     final price = r.grossPriceEur ?? r.targetPriceEur;
     final facts = [
-      '${r.weightKg.toStringAsFixed(r.weightKg % 1 == 0 ? 0 : 1)} kg',
+      parcelWeightWithSize(l, formatWeightKg(l, r.weightKg), r.itemSize),
       if (r.categories.isNotEmpty)
         contentCategoryDisplayName(l, r.categories.first),
     ].join(' · ');

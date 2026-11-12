@@ -1,4 +1,5 @@
 import 'package:dony/core/urgency/dony_urgency.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -29,6 +30,24 @@ const Object _absent = Object();
 
 void main() {
   group('PackageRequestSearchItem', () {
+    test('itemSize : lue, absente ou inconnue donne null', () {
+      expect(
+        PackageRequestSearchItem.fromJson({
+          ..._baseJson(),
+          'itemSize': 'L',
+        }).itemSize,
+        ItemSize.l,
+      );
+      expect(PackageRequestSearchItem.fromJson(_baseJson()).itemSize, isNull);
+      expect(
+        PackageRequestSearchItem.fromJson({
+          ..._baseJson(),
+          'itemSize': 'HUGE',
+        }).itemSize,
+        isNull,
+      );
+    });
+
     test('defaults negotiable to true when absent from JSON', () {
       final item = PackageRequestSearchItem.fromJson(_baseJson());
       expect(item.negotiable, isTrue);
