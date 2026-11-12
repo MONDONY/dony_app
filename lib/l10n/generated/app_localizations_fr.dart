@@ -24316,4 +24316,35 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get taxInfoVatWillBeErased =>
       'Laisser ce champ vide supprime votre numéro de TVA enregistré.';
+
+  @override
+  String get requestCreateItemSizeOptionalLabel =>
+      'Taille du colis (facultatif)';
+
+  @override
+  String get requestCreateItemSizeHelp =>
+      'Seuls les voyageurs qui acceptent cette taille verront votre demande.';
+
+  @override
+  String get requestCreateWeightRangeRoad =>
+      'À partir de 0,5 kg, sans plafond (jusqu\'à 999 999 kg).';
+
+  @override
+  String get requestCreateWeightTooHeavyForMode =>
+      'Au-delà de 32 kg, choisissez Route à l\'étape précédente.';
+
+  @override
+  String requestSummaryWeightAndSize(String kg, String size) {
+    return '$kg, taille $size';
+  }
+
+  @override
+  String requestCreateBudgetMinOnly(String min) {
+    return '$min au minimum.';
+  }
+
+  @override
+  String requestCreateBudgetTechnicalMax(String max) {
+    return 'Montant trop élevé : $max au maximum.';
+  }
 }

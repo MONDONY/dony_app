@@ -7,16 +7,20 @@ import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.d
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/widgets/item_size_selector.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/package_request_photo_section.dart';
+import 'package:dony/features/package_request/presentation/weight_input_format.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Étape 2 / 3 — Détails du colis.
@@ -60,11 +64,26 @@ class Step2DetailsState extends State<Step2Details> {
   /// Les messages rouges n'apparaissent qu'après une première interaction.
   bool _touched = false;
 
-  /// Mêmes bornes que le validateur du champ. Le gate se contentait de
-  /// `v > 0` : « Continuer » s'activait sur 0,2 kg puis refusait la saisie.
-  bool get _isWeightValid => PackageRequestLimits.isWeightValid(
-    double.tryParse(_weightCtrl.text.trim().replaceAll(',', '.')),
+  /// Mode de la demande (`null` : « peu importe »), choisi à l'étape
+  /// précédente. Un mode jamais choisi part en avion, comme à l'envoi.
+  TransportMode? get _mode =>
+      context.read<PackageRequestFormBloc>().state.requestTransportMode;
+
+  /// Mêmes bornes que le validateur du champ, pour le mode de la demande. Le
+  /// gate se contentait de `v > 0` : « Continuer » s'activait sur 0,2 kg puis
+  /// refusait la saisie.
+  bool get _isWeightValid => PackageRequestLimits.isWeightValidFor(
+    parseWeightInput(_weightCtrl.text),
+    _mode,
   );
+
+  /// Poids saisi au-dessus du plafond du mode (par exemple 1 200 kg repris
+  /// d'une demande en route, puis mode passé en avion) : l'erreur se voit
+  /// tout de suite, sans attendre « Continuer ».
+  bool get _isWeightAboveMode {
+    final w = parseWeightInput(_weightCtrl.text);
+    return w != null && w > PackageRequestLimits.maxWeightFor(_mode);
+  }
 
   bool get _isComplete => _isWeightValid && _allCategories.isNotEmpty;
 
@@ -142,9 +161,7 @@ class Step2DetailsState extends State<Step2Details> {
     final s = context.read<PackageRequestFormBloc>().state;
     if (s.weightKg != null) {
       final w = s.weightKg!;
-      _weightCtrl.text = w == w.roundToDouble()
-          ? w.toInt().toString()
-          : w.toString();
+      _weightCtrl.text = formatWeightInput(w);
     }
     final predefinedLabels = _predefined.map((c) => c.label).toSet();
     for (final cat in s.categories) {
@@ -183,6 +200,19 @@ class Step2DetailsState extends State<Step2Details> {
 
   List<String> get _allCategories => [..._selectedCats, ..._customCats];
 
+  /// Message du champ poids hors des bornes du mode : au-delà de 32 kg en
+  /// avion ou « peu importe », il invite à choisir Route (Q5).
+  String _weightErrorText(AppLocalizations l10n) =>
+      _isWeightAboveMode && !(_mode?.isHeavy ?? false)
+      ? l10n.requestCreateWeightTooHeavyForMode
+      : weightRangeLabel(l10n, mode: _mode);
+
+  /// Aide sous le champ poids : la fourchette du mode, avec son point final.
+  String _weightHelpText(AppLocalizations l10n) {
+    final range = weightRangeLabel(l10n, mode: _mode);
+    return range.endsWith('.') ? range : '$range.';
+  }
+
   /// Traduit [_catError] au moment de l'affichage (jamais mis en cache dans
   /// l'état) : le message reste correct si la langue change pendant que
   /// l'erreur est visible.
@@ -198,7 +228,7 @@ class Step2DetailsState extends State<Step2Details> {
   /// (`PackageRequestFormDraft`), validée ou non. Un poids illisible est
   /// laissé vide plutôt que gardé faux.
   Map<String, dynamic> get draftInput {
-    final w = double.tryParse(_weightCtrl.text.trim().replaceAll(',', '.'));
+    final w = parseWeightInput(_weightCtrl.text);
     final desc = _descriptionCtrl.text.trim();
     return {
       'weightKg': w,
@@ -211,7 +241,7 @@ class Step2DetailsState extends State<Step2Details> {
   /// Vrai si l'étape porte une saisie que le bloc n'a pas encore reçue.
   bool get hasUnsubmittedInput {
     final s = context.read<PackageRequestFormBloc>().state;
-    final w = double.tryParse(_weightCtrl.text.trim().replaceAll(',', '.'));
+    final w = parseWeightInput(_weightCtrl.text);
     final desc = _descriptionCtrl.text.trim();
     return w != s.weightKg ||
         !listEquals(_allCategories, s.categories) ||
@@ -229,7 +259,7 @@ class Step2DetailsState extends State<Step2Details> {
       _sync(markTouched: true);
       return;
     }
-    final w = double.parse(_weightCtrl.text.replaceAll(',', '.'));
+    final w = parseWeightInput(_weightCtrl.text)!;
     final desc = _descriptionCtrl.text.trim();
     context.read<PackageRequestFormBloc>().add(
       FormStep2Submitted(
@@ -296,15 +326,36 @@ class Step2DetailsState extends State<Step2Details> {
               child: _FieldLabel(l10n.requestCreateWeightLabel),
             ),
             const SizedBox(height: DonySpacing.xs),
-            _WeightInput(controller: _weightCtrl),
+            _WeightInput(
+              controller: _weightCtrl,
+              mode: _mode,
+              forcedError: _isWeightAboveMode ? _weightErrorText(l10n) : null,
+            ),
             Padding(
               padding: const EdgeInsets.only(top: DonySpacing.xs),
               child: Text(
-                '${weightRangeLabel(context.l10n)}.',
+                _weightHelpText(l10n),
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
             const SizedBox(height: DonySpacing.base),
+
+            // ── Taille du colis (facultative) ──────────────────────────────
+            // Route et « peu importe » seulement : en avion et en bateau elle
+            // est masquée (et effacée par le bloc).
+            BlocBuilder<PackageRequestFormBloc, PackageRequestFormState>(
+              buildWhen: (a, b) =>
+                  a.itemSize != b.itemSize ||
+                  a.modeHasItemSize != b.modeHasItemSize,
+              builder: (context, s) => s.modeHasItemSize
+                  ? _ItemSizeSection(
+                      selected: s.itemSize,
+                      onChanged: (size) => context
+                          .read<PackageRequestFormBloc>()
+                          .add(FormItemSizeChanged(size)),
+                    )
+                  : const SizedBox.shrink(),
+            ),
 
             // ── Contenu ────────────────────────────────────────────────────
             // Autocomplétion plutôt que liste dépliée : les onze catégories
@@ -348,6 +399,43 @@ class Step2DetailsState extends State<Step2Details> {
 }
 
 // ─── Atoms ──────────────────────────────────────────────────────────────────
+
+/// Taille du colis, facultative : quatre tuiles, un second tap sur la tuile
+/// choisie la retire. Ne bloque jamais « Continuer ».
+class _ItemSizeSection extends StatelessWidget {
+  const _ItemSizeSection({required this.selected, required this.onChanged});
+
+  final ItemSize? selected;
+  final ValueChanged<ItemSize?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    return Column(
+      key: const Key('request-item-size-section'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _FieldLabel(l10n.requestCreateItemSizeOptionalLabel),
+        const SizedBox(height: DonySpacing.sm),
+        ItemSizeSelector(
+          sizes: ItemSize.values,
+          selected: selected,
+          onChanged: onChanged,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: DonySpacing.xs),
+          child: Text(
+            l10n.requestCreateItemSizeHelp,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+        const SizedBox(height: DonySpacing.base),
+      ],
+    );
+  }
+}
 
 /// Champ de précision libre du bottom sheet « Autre ». Le controller est
 /// possédé par ce widget (pas par l'appelant) : le dispose intervient au
@@ -448,8 +536,19 @@ class _FieldLabel extends StatelessWidget {
 }
 
 class _WeightInput extends StatelessWidget {
-  const _WeightInput({required this.controller});
+  const _WeightInput({
+    required this.controller,
+    required this.mode,
+    this.forcedError,
+  });
   final TextEditingController controller;
+
+  /// Mode de la demande : il fixe le plafond du poids.
+  final TransportMode? mode;
+
+  /// Erreur à montrer tout de suite (poids repris d'un autre mode), sinon le
+  /// message n'apparaît qu'à la validation.
+  final String? forcedError;
 
   @override
   Widget build(BuildContext context) {
@@ -459,7 +558,10 @@ class _WeightInput extends StatelessWidget {
       child: TextFormField(
         controller: controller,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
+        // Milliers groupés pendant la frappe (« 1 200 »), chiffres et une
+        // seule marque décimale.
+        inputFormatters: const [GroupedWeightInputFormatter()],
+        forceErrorText: forcedError,
         scrollPadding: kDonyKeyboardScrollPadding,
         style: tt.headlineMedium?.copyWith(
           fontWeight: FontWeight.w800,
@@ -492,10 +594,13 @@ class _WeightInput extends StatelessWidget {
           ),
         ),
         validator: (v) {
-          final d = double.tryParse(v?.replaceAll(',', '.') ?? '');
+          final d = parseWeightInput(v ?? '');
           if (d == null) return context.l10n.requestCreateWeightInvalid;
-          if (!PackageRequestLimits.isWeightValid(d)) {
-            return weightRangeLabel(context.l10n);
+          if (!PackageRequestLimits.isWeightValidFor(d, mode)) {
+            return d > PackageRequestLimits.maxWeightFor(mode) &&
+                    !(mode?.isHeavy ?? false)
+                ? context.l10n.requestCreateWeightTooHeavyForMode
+                : weightRangeLabel(context.l10n, mode: mode);
           }
           return null;
         },

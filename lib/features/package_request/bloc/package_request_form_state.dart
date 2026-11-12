@@ -1,4 +1,5 @@
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -12,7 +13,11 @@ enum FormSubmissionStatus { idle, submitting, success, error }
 /// [PackageRequestFormState.formError] : l'écran choisit sa traduction
 /// (`l10n.requestBudgetRequired`). Distinct de [PackageRequestFormState
 /// .error], réservé à l'exception serveur typée.
-enum PackageRequestFormError { budgetRequired }
+///
+/// [weightTooHeavyForMode] : le poids dépasse le plafond du mode (32 kg en
+/// avion et « peu importe »), par exemple après un retour à l'étape « Le
+/// trajet » pour changer de mode.
+enum PackageRequestFormError { budgetRequired, weightTooHeavyForMode }
 
 class PackageRequestFormState extends Equatable {
   const PackageRequestFormState({
@@ -25,6 +30,7 @@ class PackageRequestFormState extends Equatable {
     this.transportModeAny = false,
     this.weightKg,
     this.parcelSize,
+    this.itemSize,
     this.categories = const [],
     this.description,
     this.targetPriceEur,
@@ -67,8 +73,19 @@ class PackageRequestFormState extends Equatable {
   /// jamais choisi part en avion, comme un mode absent côté back.
   TransportMode? get requestTransportMode =>
       transportModeAny ? null : (transportMode ?? TransportMode.plane);
+
+  /// Le mode porte-t-il une taille de colis ? Oui en route et en « peu
+  /// importe » (taille facultative) ; non en avion, en bateau et dans les
+  /// autres modes, où elle est masquée et effacée. Un mode jamais choisi part
+  /// en avion ([requestTransportMode]).
+  bool get modeHasItemSize => requestTransportMode?.hasItemSize ?? true;
+
   final double? weightKg;
   final ParcelSize? parcelSize;
+
+  /// Taille du colis (S à XL) : facultative, `null` tant que l'expéditeur n'en
+  /// choisit pas. Distincte de [parcelSize], dérivée du poids pour les filtres.
+  final ItemSize? itemSize;
 
   /// Catégories de colis sélectionnées (libellés libres, comme une annonce).
   final List<String> categories;
@@ -134,6 +151,10 @@ class PackageRequestFormState extends Equatable {
     bool transportModeAny = false,
     double? weightKg,
     ParcelSize? parcelSize,
+    ItemSize? itemSize,
+    // Même pattern que clearTotalBudgetEur : la taille est facultative, elle
+    // doit pouvoir être retirée (désélection, passage en avion).
+    bool clearItemSize = false,
     List<String>? categories,
     String? description,
     double? targetPriceEur,
@@ -182,6 +203,7 @@ class PackageRequestFormState extends Equatable {
         : (transportMode != null ? false : this.transportModeAny),
     weightKg: weightKg ?? this.weightKg,
     parcelSize: parcelSize ?? this.parcelSize,
+    itemSize: clearItemSize ? null : (itemSize ?? this.itemSize),
     categories: categories ?? this.categories,
     description: description ?? this.description,
     targetPriceEur: targetPriceEur ?? this.targetPriceEur,
@@ -220,6 +242,7 @@ class PackageRequestFormState extends Equatable {
     transportModeAny,
     weightKg,
     parcelSize,
+    itemSize,
     categories,
     description,
     targetPriceEur,

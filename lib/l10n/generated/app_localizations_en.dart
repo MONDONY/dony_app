@@ -24140,4 +24140,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get taxInfoVatWillBeErased =>
       'Leaving this field empty deletes your saved VAT number.';
+
+  @override
+  String get requestCreateItemSizeOptionalLabel => 'Parcel size (optional)';
+
+  @override
+  String get requestCreateItemSizeHelp =>
+      'Only travelers who accept this size will see your request.';
+
+  @override
+  String get requestCreateWeightRangeRoad =>
+      'From 0.5 kg, no cap (up to 999,999 kg).';
+
+  @override
+  String get requestCreateWeightTooHeavyForMode =>
+      'Above 32 kg, choose Road in the previous step.';
+
+  @override
+  String requestSummaryWeightAndSize(String kg, String size) {
+    return '$kg, size $size';
+  }
+
+  @override
+  String requestCreateBudgetMinOnly(String min) {
+    return 'At least $min.';
+  }
+
+  @override
+  String requestCreateBudgetTechnicalMax(String max) {
+    return 'Amount too high: $max at most.';
+  }
 }

@@ -8406,6 +8406,20 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'taxInfoBannerResidenceBody': (l) => l.taxInfoBannerResidenceBody,
   'taxInfoNothingNew': (l) => l.taxInfoNothingNew,
   'taxInfoVatWillBeErased': (l) => l.taxInfoVatWillBeErased,
+  'requestCreateItemSizeOptionalLabel': (l) =>
+      l.requestCreateItemSizeOptionalLabel,
+  'requestCreateItemSizeHelp': (l) => l.requestCreateItemSizeHelp,
+  'requestCreateWeightRangeRoad': (l) => l.requestCreateWeightRangeRoad,
+  'requestCreateWeightTooHeavyForMode': (l) =>
+      l.requestCreateWeightTooHeavyForMode,
+  'requestSummaryWeightAndSize': (l) => l.requestSummaryWeightAndSize(
+    placeholderMarker('kg'),
+    placeholderMarker('size'),
+  ),
+  'requestCreateBudgetMinOnly': (l) =>
+      l.requestCreateBudgetMinOnly(placeholderMarker('min')),
+  'requestCreateBudgetTechnicalMax': (l) =>
+      l.requestCreateBudgetTechnicalMax(placeholderMarker('max')),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -9101,4 +9115,7 @@ const textParameters = <String, List<String>>{
   'publishBlockedResumeOnFirst': ['month'],
   'taxInfoCollectMissing': ['fields'],
   'taxInfoAddressCountry': ['country'],
+  'requestSummaryWeightAndSize': ['kg', 'size'],
+  'requestCreateBudgetMinOnly': ['min'],
+  'requestCreateBudgetTechnicalMax': ['max'],
 };

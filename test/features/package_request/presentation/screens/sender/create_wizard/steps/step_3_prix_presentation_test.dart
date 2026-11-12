@@ -459,6 +459,7 @@ void main() {
           any(),
           promoCode: any(named: 'promoCode'),
           currency: any(named: 'currency'),
+          transportMode: any(named: 'transportMode'),
         ),
       ).thenAnswer((_) => Future.error(Exception('pas de devis')));
 

@@ -268,10 +268,15 @@ class PackageRequestRepository {
   /// devise par défaut du budget. Sous grille, `commissionEur` inclut le code
   /// promo et `totalEur` vaut net + commission (l'expéditeur paie moins que son
   /// budget).
+  ///
+  /// [transportMode] : mode de la demande, envoyé quand il est connu. Le back
+  /// borne le budget du devis (560 € en avion) ou le laisse libre (route,
+  /// bateau) ; absent (« peu importe », ancien back), il applique 560 €.
   Future<NegotiationQuote> quote(
     double budgetEur, {
     String? promoCode,
     String? currency,
+    TransportMode? transportMode,
   }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/package-requests/quote',
@@ -279,6 +284,8 @@ class PackageRequestRepository {
         'budgetEur': budgetEur,
         if (promoCode != null && promoCode.isNotEmpty) 'promoCode': promoCode,
         'currency': ?currency,
+        if (transportMode != null)
+          'transportMode': transportModeToWire(transportMode),
       },
     );
     return NegotiationQuote.fromJson(response.data!);

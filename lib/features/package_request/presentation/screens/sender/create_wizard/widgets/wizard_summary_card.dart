@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -45,7 +46,7 @@ class WizardSummaryCard extends StatelessWidget {
         true,
       ),
       if (weight != null)
-        (Text(formatWeightKg(l, weight), maxLines: 1, style: style), false),
+        (Text(_weightText(l, state, weight), maxLines: 1, style: style), false),
       if (state.categories.isNotEmpty)
         (
           Text(
@@ -183,12 +184,19 @@ class WizardSummaryCard extends StatelessWidget {
   String _dateText(AppLocalizations l, PackageRequestFormState s) =>
       formatDesiredDate(l, s.desiredDate, s.dateToleranceDays);
 
-  /// Poids seul. La taille n'est plus affichée : elle n'est pas saisie par
-  /// l'expéditeur (l'étape 2 la déduit du poids pour les filtres de recherche),
-  /// et le récap la sortait telle quelle du fil, en « MEDIUM ».
+  /// Poids, suivi de la taille quand l'expéditeur en a choisi une (« 1 200 kg,
+  /// taille L »). La taille dérivée du poids pour les filtres de recherche
+  /// ([ParcelSize]) n'est jamais affichée : le récap la sortait telle quelle du
+  /// fil, en « MEDIUM ».
   String _packageText(AppLocalizations l, PackageRequestFormState s) {
     final w = s.weightKg;
-    return w == null ? '-' : formatWeightKg(l, w);
+    return w == null ? '-' : _weightText(l, s, w);
+  }
+
+  String _weightText(AppLocalizations l, PackageRequestFormState s, double w) {
+    final kg = formatWeightKg(l, w);
+    final size = s.itemSize;
+    return size == null ? kg : l.requestSummaryWeightAndSize(kg, size.code);
   }
 
   /// Toutes les catégories, pas seulement la première : le récap en affichait

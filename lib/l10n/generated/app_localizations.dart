@@ -38945,6 +38945,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Laisser ce champ vide supprime votre numéro de TVA enregistré.'**
   String get taxInfoVatWillBeErased;
+
+  /// Libellé du sélecteur de taille de colis, facultatif (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille du colis (facultatif)'**
+  String get requestCreateItemSizeOptionalLabel;
+
+  /// Aide sous le sélecteur de taille de colis (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les voyageurs qui acceptent cette taille verront votre demande.'**
+  String get requestCreateItemSizeHelp;
+
+  /// Aide sous le champ poids quand le mode est la route ou le bateau (package_request_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À partir de 0,5 kg, sans plafond (jusqu\'à 999 999 kg).'**
+  String get requestCreateWeightRangeRoad;
+
+  /// Erreur du champ poids : plus de 32 kg en avion ou « peu importe » (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au-delà de 32 kg, choisissez Route à l\'étape précédente.'**
+  String get requestCreateWeightTooHeavyForMode;
+
+  /// Poids puis taille du colis dans la carte récapitulative ({kg} déjà avec son unité) (wizard_summary_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg}, taille {size}'**
+  String requestSummaryWeightAndSize(String kg, String size);
+
+  /// Erreur du champ budget en route ou bateau : montant sous le minimum, aucun plafond affiché (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{min} au minimum.'**
+  String requestCreateBudgetMinOnly(String min);
+
+  /// Erreur du champ budget en route ou bateau : garde-fou technique dépassé (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant trop élevé : {max} au maximum.'**
+  String requestCreateBudgetTechnicalMax(String max);
 }
 
 class _AppLocalizationsDelegate

@@ -1,4 +1,5 @@
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/bloc/package_request_photo_upload.dart';
@@ -47,6 +48,8 @@ abstract final class PackageRequestFormDraft {
               : transportModeToWire(state.transportMode!)),
     'weightKg': state.weightKg,
     'parcelSize': state.parcelSize?.wireName,
+    // Facultative : absente tant que l'expéditeur n'en choisit pas.
+    'itemSize': itemSizeToWireOrNull(state.itemSize),
     'categories': state.categories,
     'description': state.description,
     'pickupNeighborhood': state.pickupNeighborhood,
@@ -89,7 +92,7 @@ abstract final class PackageRequestFormDraft {
         ?PaymentMethod.tryFromWire(w),
     };
     final size = json['parcelSize'] as String?;
-    return PackageRequestFormState(
+    final restored = PackageRequestFormState(
       currentStep: step,
       departureCity: json['departureCity'] as String?,
       arrivalCity: json['arrivalCity'] as String?,
@@ -101,6 +104,8 @@ abstract final class PackageRequestFormDraft {
       parcelSize: size == null
           ? null
           : ParcelSize.values.where((e) => e.wireName == size).firstOrNull,
+      // Ancien brouillon (sans clé) ou valeur inconnue : aucune taille.
+      itemSize: itemSizeFromWire(json['itemSize']),
       categories: _strings(json['categories']),
       description: json['description'] as String?,
       pickupNeighborhood: json['pickupNeighborhood'] as String?,
@@ -114,6 +119,10 @@ abstract final class PackageRequestFormDraft {
       promoCode: json['promoCode'] as String?,
       currency: SupportedCurrency.fromCode(json['currency'] as String?),
     );
+    // Une taille d'un brouillon passé en avion ou en bateau n'a plus de sens.
+    return restored.modeHasItemSize
+        ? restored
+        : restored.copyWith(clearItemSize: true);
   }
 
   /// Photos gardées par le brouillon, dans l'ordre d'ajout.

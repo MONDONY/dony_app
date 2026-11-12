@@ -432,4 +432,35 @@ void main() {
       expect(body()['itemSize'], 'NONE');
     });
   });
+
+  group('quote : mode de la demande', () {
+    const quoteJson = <String, dynamic>{
+      'netEur': 900.0,
+      'rate': 0.05,
+      'commissionEur': 50.0,
+      'totalEur': 950.0,
+      'promoApplied': false,
+    };
+
+    Future<Map<String, dynamic>> sentQuery(TransportMode? mode) async {
+      api.on('GET', '/package-requests/quote', quoteJson);
+      await repo.quote(900, transportMode: mode);
+      return api.last.queryParameters;
+    }
+
+    test('route : transportMode=CAR est envoyé', () async {
+      final query = await sentQuery(TransportMode.car);
+      expect(query['transportMode'], 'CAR');
+      expect(query['budgetEur'], 900.0);
+    });
+
+    test('bateau : transportMode=BOAT est envoyé', () async {
+      expect((await sentQuery(TransportMode.boat))['transportMode'], 'BOAT');
+    });
+
+    test('mode inconnu (peu importe) : la clé est absente, le back '
+        'garde 560 €', () async {
+      expect((await sentQuery(null)).containsKey('transportMode'), isFalse);
+    });
+  });
 }

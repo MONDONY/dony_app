@@ -198,4 +198,56 @@ void main() {
       expect(find.text('Enter a budget to continue'), findsOneWidget);
     },
   );
+
+  /// Poids de route repris après un retour pour passer en avion : le bloc
+  /// refuse la publication (`weightTooHeavyForMode`), le SnackBar dit
+  /// pourquoi, dans la langue de l'app.
+  Future<void> submitHeavyParcelInPlane(WidgetTester tester) async {
+    await tester.pumpWidget(buildHarness());
+    await tester.tap(find.byKey(const Key('open-create')));
+    await tester.pumpAndSettle();
+
+    capturedBloc
+      ..add(
+        FormStep1Submitted(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 8, 15),
+          dateToleranceDays: 3,
+          transportMode: TransportMode.plane,
+        ),
+      )
+      ..add(
+        const FormStep2Submitted(
+          weightKg: 1200,
+          parcelSize: ParcelSize.large,
+          categories: ['Meubles'],
+        ),
+      )
+      ..add(const FormStep3Submitted(targetPriceEur: 100));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('poids de route en avion : le SnackBar invite à choisir Route', (
+    tester,
+  ) async {
+    await submitHeavyParcelInPlane(tester);
+
+    expect(
+      find.text("Au-delà de 32 kg, choisissez Route à l'étape précédente."),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('poids de route en avion, anglais : message traduit', (
+    tester,
+  ) async {
+    useEnglish();
+    await submitHeavyParcelInPlane(tester);
+
+    expect(
+      find.text('Above 32 kg, choose Road in the previous step.'),
+      findsOneWidget,
+    );
+  });
 }

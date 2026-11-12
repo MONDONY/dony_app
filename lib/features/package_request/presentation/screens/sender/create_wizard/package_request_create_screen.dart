@@ -602,6 +602,15 @@ class _PackageRequestCreateScreenState
         message: context.l10n.requestBudgetRequired,
         type: DonySnackbarType.warning,
       );
+    } else if (state.submissionStatus == FormSubmissionStatus.error &&
+        state.formError == PackageRequestFormError.weightTooHeavyForMode) {
+      // Poids saisi pour un autre mode : l'étape « Le colis » le montre en
+      // erreur, ce message dit pourquoi la publication est refusée.
+      DonySnackbar.show(
+        context,
+        message: context.l10n.requestCreateWeightTooHeavyForMode,
+        type: DonySnackbarType.warning,
+      );
     } else if (state.submissionStatus == FormSubmissionStatus.error) {
       // L'exception typée, jamais son texte : un texte nu ressort du
       // présenteur en « Erreur réseau » quel que soit le statut HTTP, et le

@@ -30,6 +30,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../../helpers/form_draft_test_doubles.dart';
+import '../../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../../helpers/mock_analytics_backend.dart';
 import '../../../../../../helpers/mock_recent_city_store.dart';
 import '../../../../../video_modal/moment_test_support.dart';
@@ -322,5 +323,56 @@ void main() {
     );
 
     expect(find.byKey(const Key('request-save-draft')), findsNothing);
+  });
+
+  group('étape « Le colis » en route à 360 dp', () {
+    Map<String, dynamic> roadDraft() => {
+      ...draftData(),
+      'transportMode': 'CAR',
+      'weightKg': 1200,
+      'itemSize': 'L',
+    };
+
+    for (final locale in ['fr', 'en']) {
+      testWidgets('$locale : tuiles de taille et barre Retour/Continuer sur '
+          'une ligne', (tester) async {
+        if (locale == 'en') useEnglish();
+        tester.view
+          ..physicalSize = const Size(360, 800)
+          ..devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await open(tester, extra: PackageRequestDraftResume(roadDraft()));
+
+        // Les quatre tuiles tiennent dans la largeur, même hauteur.
+        final heights = <double>{};
+        for (final code in ['S', 'M', 'L', 'XL']) {
+          final rect = tester.getRect(find.byKey(Key('item-size-$code')));
+          expect(rect.left, greaterThanOrEqualTo(0));
+          expect(rect.right, lessThanOrEqualTo(360));
+          heights.add(rect.height);
+        }
+        expect(heights, hasLength(1));
+
+        // Barre du bas : libellés d'un seul tenant, à leur taille normale
+        // (une ligne : hauteur d'une ligne de texte, pas d'un paragraphe).
+        for (final label
+            in locale == 'en'
+                ? ['Back', 'Continue']
+                : ['Retour', 'Continuer']) {
+          final text = find.text(label);
+          expect(text, findsOneWidget);
+          expect(tester.getSize(text).height, lessThan(24));
+        }
+        // La taille reprise du brouillon est bien celle des tuiles.
+        expect(
+          tester
+              .widget<Semantics>(find.byKey(const Key('item-size-L')))
+              .properties
+              .selected,
+          isTrue,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 }

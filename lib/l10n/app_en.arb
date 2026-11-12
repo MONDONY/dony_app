@@ -11943,5 +11943,43 @@
   "taxInfoNothingNew": "We have received your information. The Yadony team will get back to you if needed.",
   "@taxInfoNothingNew": {"description": "Tout ce qui est saisissable est rempli mais le dossier reste à compléter (lieu de naissance sans numéro fiscal)."},
   "taxInfoVatWillBeErased": "Leaving this field empty deletes your saved VAT number.",
-  "@taxInfoVatWillBeErased": {"description": "Aide sous la TVA quand un numéro de TVA est déjà enregistré."}
+  "@taxInfoVatWillBeErased": {"description": "Aide sous la TVA quand un numéro de TVA est déjà enregistré."},
+  "requestCreateItemSizeOptionalLabel": "Parcel size (optional)",
+  "@requestCreateItemSizeOptionalLabel": {
+    "description": "Libellé du sélecteur de taille de colis, facultatif (step_2_details.dart)"
+  },
+  "requestCreateItemSizeHelp": "Only travelers who accept this size will see your request.",
+  "@requestCreateItemSizeHelp": {
+    "description": "Aide sous le sélecteur de taille de colis (step_2_details.dart)"
+  },
+  "requestCreateWeightRangeRoad": "From 0.5 kg, no cap (up to 999,999 kg).",
+  "@requestCreateWeightRangeRoad": {
+    "description": "Aide sous le champ poids quand le mode est la route ou le bateau (package_request_labels.dart)"
+  },
+  "requestCreateWeightTooHeavyForMode": "Above 32 kg, choose Road in the previous step.",
+  "@requestCreateWeightTooHeavyForMode": {
+    "description": "Erreur du champ poids : plus de 32 kg en avion ou « peu importe » (step_2_details.dart)"
+  },
+  "requestSummaryWeightAndSize": "{kg}, size {size}",
+  "@requestSummaryWeightAndSize": {
+    "description": "Poids puis taille du colis dans la carte récapitulative ({kg} déjà avec son unité) (wizard_summary_card.dart)",
+    "placeholders": {
+      "kg": {"type": "String"},
+      "size": {"type": "String"}
+    }
+  },
+  "requestCreateBudgetMinOnly": "At least {min}.",
+  "@requestCreateBudgetMinOnly": {
+    "description": "Erreur du champ budget en route ou bateau : montant sous le minimum, aucun plafond affiché (step_3_recap_budget.dart)",
+    "placeholders": {
+      "min": {"type": "String"}
+    }
+  },
+  "requestCreateBudgetTechnicalMax": "Amount too high: {max} at most.",
+  "@requestCreateBudgetTechnicalMax": {
+    "description": "Erreur du champ budget en route ou bateau : garde-fou technique dépassé (step_3_recap_budget.dart)",
+    "placeholders": {
+      "max": {"type": "String"}
+    }
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
@@ -127,6 +128,25 @@ void main() {
     });
 
     test('en', () {
+      expect(weightRangeLabel(en), 'Between 0.5 and 32 kg');
+    });
+
+    test('route et bateau : à partir de 0,5 kg, sans plafond', () {
+      expect(
+        weightRangeLabel(fr, mode: TransportMode.car),
+        'À partir de 0,5 kg, sans plafond (jusqu\'à 999 999 kg).',
+      );
+      expect(
+        weightRangeLabel(en, mode: TransportMode.boat),
+        'From 0.5 kg, no cap (up to 999,999 kg).',
+      );
+    });
+
+    test('avion et peu importe : 32 kg', () {
+      expect(
+        weightRangeLabel(fr, mode: TransportMode.plane),
+        'Entre 0,5 et 32 kg',
+      );
       expect(weightRangeLabel(en), 'Between 0.5 and 32 kg');
     });
   });

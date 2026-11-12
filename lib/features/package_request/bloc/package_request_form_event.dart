@@ -1,4 +1,5 @@
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -49,6 +50,17 @@ class FormTransportModeChanged extends PackageRequestFormEvent {
 
   @override
   List<Object?> get props => [mode];
+}
+
+/// Taille du colis choisie ou désélectionnée à l'étape « Le colis ». Null :
+/// aucune taille (elle est facultative). Ignorée quand le mode n'en porte pas
+/// (avion, bateau).
+class FormItemSizeChanged extends PackageRequestFormEvent {
+  const FormItemSizeChanged(this.size);
+  final ItemSize? size;
+
+  @override
+  List<Object?> get props => [size];
 }
 
 /// Retire la date de départ (et sa souplesse) déjà choisie : la demande

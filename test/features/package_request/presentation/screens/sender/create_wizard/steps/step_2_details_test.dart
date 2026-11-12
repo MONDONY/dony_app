@@ -5,11 +5,13 @@ import 'package:dony/core/widgets/money_keyword_warning.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
@@ -157,13 +159,29 @@ void main() {
       expect(find.text('Valeur invalide'), findsOneWidget);
     });
 
-    testWidgets('validation poids échoue si > 30', (tester) async {
+    testWidgets('validation poids échoue si < 0,5 : la fourchette', (
+      tester,
+    ) async {
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key)));
+      await tester.enterText(find.byType(TextFormField).first, '0,2');
+      key.currentState!.submit();
+      await tester.pump();
+      expect(find.text('Entre 0,5 et 32 kg'), findsOneWidget);
+    });
+
+    testWidgets('validation poids échoue si > 32 : invite à choisir Route', (
+      tester,
+    ) async {
       final key = GlobalKey<Step2DetailsState>();
       await tester.pumpWidget(wrap(Step2Details(key: key)));
       await tester.enterText(find.byType(TextFormField).first, '35');
       key.currentState!.submit();
       await tester.pump();
-      expect(find.text('Entre 0,5 et 32 kg'), findsOneWidget);
+      expect(
+        find.text("Au-delà de 32 kg, choisissez Route à l'étape précédente."),
+        findsOneWidget,
+      );
     });
 
     testWidgets('écran traduit en anglais : titre, poids et plage de poids', (
@@ -176,12 +194,19 @@ void main() {
       expect(find.text('Describe your parcel'), findsOneWidget);
       expect(find.text('Approximate weight'), findsOneWidget);
 
-      await tester.enterText(find.byType(TextFormField).first, '35');
+      await tester.enterText(find.byType(TextFormField).first, '0.2');
       key.currentState!.submit();
       await tester.pump();
 
       expect(find.text('Between 0.5 and 32 kg'), findsOneWidget);
       expect(find.text('Entre 0,5 et 32 kg'), findsNothing);
+
+      await tester.enterText(find.byType(TextFormField).first, '35');
+      await tester.pump();
+      expect(
+        find.text('Above 32 kg, choose Road in the previous step.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('rend le champ Description (optionnel)', (tester) async {
@@ -433,6 +458,304 @@ void main() {
           ),
         ),
       ).called(1);
+    });
+  });
+
+  group('Step2Details : route, tonnes et taille facultative', () {
+    const sep = ' ';
+
+    PackageRequest request({
+      TransportMode? mode,
+      double weight = 5,
+      ItemSize? size,
+    }) => PackageRequest(
+      id: 'r-1',
+      senderId: 's-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      dateToleranceDays: 0,
+      weightKg: weight,
+      parcelSize: ParcelSize.large,
+      transportMode: mode,
+      itemSize: size,
+      categories: const ['Meubles'],
+      status: PackageRequestStatus.open,
+      createdAt: DateTime(2026, 11, 12),
+    );
+
+    /// Bloc en édition : mode, poids et taille sont connus dès le premier
+    /// frame (la demande ouverte sert d'état initial). `mode: null` donne
+    /// « peu importe ».
+    PackageRequestFormBloc editing({
+      TransportMode? mode,
+      double weight = 5,
+      ItemSize? size,
+    }) {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: request(mode: mode, weight: weight, size: size),
+      );
+      addTearDown(bloc.close);
+      return bloc;
+    }
+
+    void viewport(WidgetTester tester, {double width = 1000}) {
+      tester.view.physicalSize = Size(width, 2200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+    }
+
+    final sizeSection = find.byKey(const Key('request-item-size-section'));
+    Finder tile(String code) => find.byKey(Key('item-size-$code'));
+
+    Future<ValueNotifier<bool>> pump(
+      WidgetTester tester,
+      PackageRequestFormBloc bloc,
+    ) async {
+      final canContinue = ValueNotifier<bool>(false);
+      addTearDown(canContinue.dispose);
+      await tester.pumpWidget(
+        wrap(Step2Details(canContinueNotifier: canContinue), bloc: bloc),
+      );
+      await tester.pump();
+      return canContinue;
+    }
+
+    testWidgets('route : taille facultative, Continuer actif sans taille', (
+      tester,
+    ) async {
+      viewport(tester);
+      final bloc = editing(mode: TransportMode.car, weight: 1200);
+      final canContinue = await pump(tester, bloc);
+
+      expect(sizeSection, findsOneWidget);
+      expect(find.text('Taille du colis (facultatif)'), findsOneWidget);
+      expect(
+        find.text(
+          'Seuls les voyageurs qui acceptent cette taille verront votre demande.',
+        ),
+        findsOneWidget,
+      );
+      expect(bloc.state.itemSize, isNull);
+      expect(canContinue.value, isTrue);
+
+      await tester.tap(tile('L'));
+      await tester.pump();
+      expect(bloc.state.itemSize, ItemSize.l);
+      expect(canContinue.value, isTrue);
+
+      // Second tap sur la tuile choisie : la taille est retirée.
+      await tester.tap(tile('L'));
+      await tester.pump();
+      expect(bloc.state.itemSize, isNull);
+      expect(canContinue.value, isTrue);
+    });
+
+    testWidgets('route : la taille déjà choisie est repérée', (tester) async {
+      viewport(tester);
+      await pump(
+        tester,
+        editing(mode: TransportMode.car, weight: 40, size: ItemSize.xl),
+      );
+      final selected = tester.widget<Semantics>(tile('XL'));
+      expect(tester.widget<Semantics>(tile('S')).properties.selected, isFalse);
+      expect(selected.properties.selected, isTrue);
+    });
+
+    testWidgets('avion : pas de bloc taille, aide « Entre 0,5 et 32 kg »', (
+      tester,
+    ) async {
+      viewport(tester);
+      final canContinue = await pump(
+        tester,
+        editing(mode: TransportMode.plane),
+      );
+
+      expect(sizeSection, findsNothing);
+      expect(find.text('Taille du colis (facultatif)'), findsNothing);
+      expect(find.text('Entre 0,5 et 32 kg.'), findsOneWidget);
+      expect(canContinue.value, isTrue);
+    });
+
+    testWidgets('bateau : pas de bloc taille, poids sans plafond', (
+      tester,
+    ) async {
+      viewport(tester);
+      final canContinue = await pump(
+        tester,
+        editing(mode: TransportMode.boat, weight: 5000),
+      );
+      expect(sizeSection, findsNothing);
+      expect(canContinue.value, isTrue);
+    });
+
+    testWidgets('peu importe : taille proposée en option, 32 kg max', (
+      tester,
+    ) async {
+      viewport(tester);
+      final bloc = editing(weight: 20);
+      final canContinue = await pump(tester, bloc);
+      expect(sizeSection, findsOneWidget);
+      expect(find.text('Entre 0,5 et 32 kg.'), findsOneWidget);
+      expect(canContinue.value, isTrue);
+
+      await tester.enterText(find.byType(TextFormField).first, '33');
+      await tester.pump();
+      expect(canContinue.value, isFalse);
+      expect(
+        find.text("Au-delà de 32 kg, choisissez Route à l'étape précédente."),
+        findsOneWidget,
+      );
+
+      await tester.enterText(find.byType(TextFormField).first, '32');
+      await tester.pump();
+      expect(canContinue.value, isTrue);
+    });
+
+    testWidgets('route 1 200 kg puis avion : Continuer grisé, message Route', (
+      tester,
+    ) async {
+      viewport(tester);
+      // Poids repris d'une demande en route, mode repassé en avion : rien
+      // n'est effacé, l'erreur est visible dès l'ouverture.
+      final canContinue = await pump(
+        tester,
+        editing(mode: TransportMode.plane, weight: 1200),
+      );
+
+      expect(find.widgetWithText(TextFormField, '1${sep}200'), findsOneWidget);
+      expect(canContinue.value, isFalse);
+      expect(
+        find.text("Au-delà de 32 kg, choisissez Route à l'étape précédente."),
+        findsOneWidget,
+      );
+      expect(sizeSection, findsNothing);
+    });
+
+    testWidgets('route : poids jusqu\'à 999 999 kg, au-delà refusé', (
+      tester,
+    ) async {
+      viewport(tester);
+      final canContinue = await pump(
+        tester,
+        editing(mode: TransportMode.car, weight: 12),
+      );
+      const help = "À partir de 0,5 kg, sans plafond (jusqu'à 999 999 kg).";
+      expect(find.text(help), findsOneWidget);
+
+      await tester.enterText(find.byType(TextFormField).first, '999999');
+      await tester.pump();
+      expect(canContinue.value, isTrue);
+      expect(find.text(help), findsOneWidget);
+
+      await tester.enterText(find.byType(TextFormField).first, '1000000');
+      await tester.pump();
+      expect(canContinue.value, isFalse);
+      // Aide et erreur disent la même fourchette ; jamais l'invite « Route ».
+      expect(find.text(help), findsNWidgets(2));
+      expect(find.textContaining('choisissez Route'), findsNothing);
+    });
+
+    testWidgets(
+      'gros chiffre : 1200 saisi s\'affiche « 1 200 », part en 1200',
+      (tester) async {
+        viewport(tester);
+        final bloc = editing(mode: TransportMode.car);
+        final key = GlobalKey<Step2DetailsState>();
+        await tester.pumpWidget(wrap(Step2Details(key: key), bloc: bloc));
+        await tester.pump();
+
+        await tester.enterText(find.byType(TextFormField).first, '1200');
+        await tester.pump();
+        expect(
+          find.widgetWithText(TextFormField, '1${sep}200'),
+          findsOneWidget,
+        );
+
+        key.currentState!.submit();
+        await tester.pump();
+        expect(bloc.state.weightKg, 1200);
+        expect(bloc.state.currentStep, 2);
+      },
+    );
+
+    testWidgets('1 200,5 kg : décimale gardée', (tester) async {
+      viewport(tester);
+      final bloc = editing(mode: TransportMode.car);
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key), bloc: bloc));
+      await tester.pump();
+
+      await tester.enterText(find.byType(TextFormField).first, '1200,5');
+      await tester.pump();
+      key.currentState!.submit();
+      await tester.pump();
+      expect(bloc.state.weightKg, 1200.5);
+    });
+
+    testWidgets('brouillon : la saisie groupée part en nombre', (tester) async {
+      viewport(tester);
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(
+        wrap(
+          Step2Details(key: key),
+          bloc: editing(mode: TransportMode.car),
+        ),
+      );
+      await tester.pump();
+      await tester.enterText(find.byType(TextFormField).first, '2500');
+      await tester.pump();
+      expect(key.currentState!.draftInput['weightKg'], 2500);
+      expect(key.currentState!.hasUnsubmittedInput, isTrue);
+    });
+
+    for (final locale in ['fr', 'en']) {
+      testWidgets('360 dp $locale : tuiles de taille sans débordement', (
+        tester,
+      ) async {
+        if (locale == 'en') useEnglish();
+        viewport(tester, width: 360);
+        await pump(tester, editing(mode: TransportMode.car, weight: 1200));
+
+        final heights = <double>{};
+        for (final code in ['S', 'M', 'L', 'XL']) {
+          final rect = tester.getRect(tile(code));
+          expect(rect.left, greaterThanOrEqualTo(0));
+          expect(rect.right, lessThanOrEqualTo(360));
+          heights.add(rect.height);
+        }
+        expect(heights, hasLength(1));
+        expect(
+          find.text(
+            locale == 'en'
+                ? 'Parcel size (optional)'
+                : 'Taille du colis (facultatif)',
+          ),
+          findsOneWidget,
+        );
+        // Le gros chiffre à quatre chiffres tient dans le champ.
+        expect(
+          find.widgetWithText(TextFormField, '1${sep}200'),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('anglais : aide route traduite', (tester) async {
+      useEnglish();
+      viewport(tester);
+      await pump(tester, editing(mode: TransportMode.car, weight: 12));
+      expect(
+        find.text('From 0.5 kg, no cap (up to 999,999 kg).'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Only travelers who accept this size will see your request.'),
+        findsOneWidget,
+      );
     });
   });
 }
