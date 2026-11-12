@@ -3,6 +3,7 @@
 
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -437,6 +438,192 @@ void main() {
       expect(received, [kCapacitySliderMaxKg]);
     });
   });
+  group('WeightField : curseur de la route (jusqu\'à 1 000 kg)', () {
+    Future<List<double?>> openAndConfirm(
+      WidgetTester tester, {
+      required double? weightKg,
+      double sliderMaxKg = kRoadCapacitySliderMaxKg,
+    }) async {
+      final received = <double?>[];
+      await tester.pumpWidget(
+        _wrap(
+          WeightField(
+            weightKg: weightKg,
+            sliderMaxKg: sliderMaxKg,
+            onChanged: received.add,
+          ),
+        ),
+      );
+      await tester.tap(find.text('POIDS MIN'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Confirmer'));
+      await tester.pumpAndSettle();
+      return received;
+    }
+
+    testWidgets('minimum de 600 kg confirmé tel quel', (tester) async {
+      final received = await openAndConfirm(tester, weightKg: 600);
+      expect(received, [600]);
+    });
+
+    testWidgets('curseur ouvert : bornes 1..1000', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          WeightField(
+            weightKg: 600,
+            sliderMaxKg: kRoadCapacitySliderMaxKg,
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.tap(find.text('POIDS MIN'));
+      await tester.pumpAndSettle();
+      final slider = tester.widget<Slider>(find.byType(Slider));
+      expect((slider.min, slider.max, slider.value), (1, 1000, 600));
+    });
+
+    testWidgets('minimum au-delà de 1 000 kg : ramené à 1 000, sans planter', (
+      tester,
+    ) async {
+      final received = await openAndConfirm(tester, weightKg: 1500);
+      expect(received, [kRoadCapacitySliderMaxKg]);
+    });
+
+    testWidgets('borne par défaut inchangée : 600 kg ramenés à 50', (
+      tester,
+    ) async {
+      final received = await openAndConfirm(
+        tester,
+        weightKg: 600,
+        sliderMaxKg: kCapacitySliderMaxKg,
+      );
+      expect(received, [kCapacitySliderMaxKg]);
+    });
+  });
+
+  group('showItemSizePicker', () {
+    Future<List<ItemSize?>> open(WidgetTester tester, {ItemSize? size}) async {
+      final applied = <ItemSize?>[];
+      await tester.pumpWidget(
+        _wrap(
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () =>
+                  showItemSizePicker(context, size: size, onApply: applied.add),
+              child: const Text('ouvrir'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+      return applied;
+    }
+
+    testWidgets('quatre tailles S, M, L, XL et l\'aide', (tester) async {
+      await open(tester);
+      for (final code in ['S', 'M', 'L', 'XL']) {
+        expect(find.byKey(Key('item-size-$code')), findsOneWidget);
+      }
+      expect(find.text('Taille'), findsOneWidget);
+      expect(
+        find.text('Trajets qui acceptent au moins cette taille.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('choisir L puis Appliquer renvoie L et referme', (
+      tester,
+    ) async {
+      final applied = await open(tester);
+      await tester.tap(find.byKey(const Key('item-size-L')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      expect(applied, [ItemSize.l]);
+      expect(find.byKey(const Key('item-size-L')), findsNothing);
+    });
+
+    testWidgets('Appliquer sans toucher renvoie la taille courante', (
+      tester,
+    ) async {
+      final applied = await open(tester, size: ItemSize.m);
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+      expect(applied, [ItemSize.m]);
+    });
+
+    testWidgets('retoucher la taille retenue la désélectionne : null', (
+      tester,
+    ) async {
+      final applied = await open(tester, size: ItemSize.xl);
+      await tester.tap(find.byKey(const Key('item-size-XL')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+      expect(applied, [null]);
+    });
+
+    testWidgets('changer de taille : la dernière touchée est renvoyée', (
+      tester,
+    ) async {
+      final applied = await open(tester, size: ItemSize.s);
+      await tester.tap(find.byKey(const Key('item-size-XL')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('item-size-M')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+      expect(applied, [ItemSize.m]);
+    });
+
+    testWidgets('Appliquer est collé en bas, hors de la zone qui défile', (
+      tester,
+    ) async {
+      await open(tester);
+      expect(
+        find.ancestor(
+          of: find.text('Appliquer'),
+          matching: find.byType(SingleChildScrollView),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.ancestor(
+          of: find.byKey(const Key('item-size-L')),
+          matching: find.byType(SingleChildScrollView),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    for (final english in [false, true]) {
+      testWidgets('360 dp ${english ? 'EN' : 'FR'} : sans erreur, bouton sur '
+          'une ligne', (tester) async {
+        if (english) useEnglish();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await open(tester);
+
+        expect(tester.takeException(), isNull);
+        final label = english ? 'Apply' : 'Appliquer';
+        expect(find.text(label), findsOneWidget);
+        expect(tester.getSize(find.text(label)).height, lessThan(24));
+        expect(find.text(english ? 'Size' : 'Taille'), findsOneWidget);
+        expect(
+          find.text(
+            english
+                ? 'Trips that take at least this size.'
+                : 'Trajets qui acceptent au moins cette taille.',
+          ),
+          findsOneWidget,
+        );
+      });
+    }
+  });
+
   group('showTransportPicker', () {
     const modes = [TransportMode.plane, TransportMode.boat, TransportMode.car];
 

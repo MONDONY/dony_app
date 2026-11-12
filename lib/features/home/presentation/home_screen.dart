@@ -30,7 +30,7 @@ import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.da
 import 'package:dony/features/home/presentation/widgets/home_publish_button.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart'
-    show showTransportPicker;
+    show showItemSizePicker, showTransportPicker;
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
 import 'package:dony/features/home/presentation/widgets/search_period.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -1310,6 +1310,21 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
+  /// Puce Taille (route) : choix de la taille de colis minimale. Un second tap
+  /// sur la taille choisie, ou « Appliquer » sans taille, retire le filtre.
+  Future<void> _showItemSizeSheet() => showItemSizePicker(
+    context,
+    size: _filters.minItemSize,
+    onApply: (size) {
+      if (!mounted) return;
+      _onFiltersChanged(
+        size == null
+            ? _filters.copyWith(clearMinItemSize: true)
+            : _filters.copyWith(minItemSize: size),
+      );
+    },
+  );
+
   /// Puce Transport : choix du mode parmi ceux que la recherche propose.
   Future<void> _showTransportSheet() => showTransportPicker(
     context,
@@ -1449,7 +1464,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
     next = result.urgencyFilter != null
         ? next.copyWith(urgencyFilter: result.urgencyFilter)
         : next.copyWith(clearUrgencyFilter: true);
-    if (result.weightKg > 0) {
+    // Le filtre Transport retenu d'abord : la plage de la capacité dépend du
+    // mode final (route 1 000 kg, sinon 50).
+    next = next.withTransportLimitedTo(transportModes.searchModes);
+    // Une capacité hors du curseur de ce mode (plus de 50 kg hors route) ne se
+    // réglerait plus ni ne se retirerait au curseur : elle n'est pas reprise,
+    // comme `withTransportModeChanged` le fait en quittant la route.
+    if (result.weightKg > 0 &&
+        result.weightKg <= capacitySliderMaxKgFor(next.transportMode)) {
       next = next
           .copyWith(clearWeight: true)
           .copyWith(weightMin: result.weightKg);
@@ -1457,7 +1479,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
     setState(() {
       _mode = SearchMode.trips;
-      _filters = next.withTransportLimitedTo(transportModes.searchModes);
+      _filters = next;
       _otherModeCount = null;
     });
     _dispatchForMode();
@@ -2154,6 +2176,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
       onSuitcase23Toggle: () => _onFiltersChanged(
         _filters.copyWith(suitcase23Only: !_filters.suitcase23Only),
       ),
+      onItemSizeTap: () => unawaited(_showItemSizeSheet()),
+      onItemSizeClear: () =>
+          _onFiltersChanged(_filters.copyWith(clearMinItemSize: true)),
       onMaxWeightTap: () async {
         final result = await _showMaxWeightSheet(context);
         if (result == null || !mounted) return;

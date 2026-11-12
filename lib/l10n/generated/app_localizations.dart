@@ -4022,6 +4022,42 @@ abstract class AppLocalizations {
   /// **'Type de contenu, note, escales, paiement'**
   String get homeComposerMoreFiltersHint;
 
+  /// Sous-titre de « Plus de filtres » du composeur de recherche quand le filtre Transport est la route : les escales (avion) y cèdent la place à la ville de passage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Type de contenu, note, ville de passage, paiement'**
+  String get homeComposerMoreFiltersHintRoad;
+
+  /// Composeur de recherche de trajets, route seulement : section de la taille minimale de colis que le trajet accepte.
+  ///
+  /// In fr, this message translates to:
+  /// **'TAILLE DU COLIS'**
+  String get homeComposerSectionItemSize;
+
+  /// Composeur de recherche de trajets, route : explication du filtre de taille (strict côté serveur, un trajet sans taille maximum n'apparaît pas).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets qui acceptent au moins cette taille.'**
+  String get homeComposerItemSizeHint;
+
+  /// Composeur de recherche de trajets, route seulement : section de la ville où le voyage s'arrête.
+  ///
+  /// In fr, this message translates to:
+  /// **'PASSE PAR'**
+  String get homeComposerSectionVia;
+
+  /// Libellé du champ de ville « Passe par » du composeur de recherche, route seulement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une ville sur la route (ex. Tanger)'**
+  String get homeComposerViaHint;
+
+  /// Aide sous le champ « Passe par » : à quoi sert la ville de passage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour confier un colis à un voyageur dont le voyage s\'arrête dans votre ville.'**
+  String get homeComposerViaHelp;
+
   /// Titre de la section du composeur de recherche de trajets qui filtre par mode de transport (Tous, Avion, Bateau, Route), visible seulement quand plusieurs modes sont ouverts
   ///
   /// In fr, this message translates to:
@@ -4243,6 +4279,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'🧳 Valise 23 kg'**
   String get homeFilterChipsSuitcase23;
+
+  /// Puce de l'accueil (mode Trajets filtré sur la route) qui remplace « Valise 23 kg » : taille de colis minimale acceptée ; aussi titre de la feuille de choix.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille'**
+  String get homeFilterChipsItemSize;
+
+  /// Puce Taille active : la taille minimale choisie (S, M, L ou XL), les trajets qui acceptent cette taille et plus grand.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille {size} et +'**
+  String homeFilterChipsItemSizeActive(String size);
 
   /// Libellé du champ du composeur de recherche qui ouvre le calendrier de période (un jour ou du … au …), sous les presets de date (search_filter_fields.dart)
   ///

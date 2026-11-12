@@ -244,6 +244,19 @@ class HomeSearchFilters {
   /// filtres propres à la route n'existent que là.
   bool get _isRoadFilter => transportMode?.isRoad ?? false;
 
+  /// Taille minimale réellement active : seulement quand le filtre Transport
+  /// est la route. Source unique de la requête, de `activeKeys` et du compteur,
+  /// pour qu'un état incohérent ne soit ni compté ni tracé sans être envoyé.
+  ItemSize? get _activeMinItemSize => _isRoadFilter ? minItemSize : null;
+
+  /// Ville « Passe par » réellement active : route seulement, et jamais une
+  /// ville blanche (le serveur ne la recevrait pas, le badge ne la compterait
+  /// pas).
+  String? get _activeViaCity {
+    final city = viaCity?.trim();
+    return _isRoadFilter && city != null && city.isNotEmpty ? city : null;
+  }
+
   // ── Colis ──────────────────────────────────────────────────────────────────
   /// Poids maximal des demandes recherchées, en kg. Voir [weightMin].
   final double? maxWeight;
@@ -390,8 +403,8 @@ class HomeSearchFilters {
           : (paymentMethods.map((m) => m.apiValue).toList()..sort()),
       // Propres à la route : jamais envoyés pour un autre mode, même si un
       // état incohérent les avait laissés en place.
-      minItemSize: _isRoadFilter ? minItemSize : null,
-      viaCity: _isRoadFilter ? viaCity : null,
+      minItemSize: _activeMinItemSize,
+      viaCity: _activeViaCity,
     );
   }
 
@@ -510,8 +523,8 @@ class HomeSearchFilters {
     if (urgencyFilter != null) 'urgency',
     if (stopsFilter != null) 'stops',
     if (paymentMethods.isNotEmpty) 'payment_methods',
-    if (minItemSize != null) 'item_size',
-    if (viaCity != null) 'via_city',
+    if (_activeMinItemSize != null) 'item_size',
+    if (_activeViaCity != null) 'via_city',
     if (maxWeight != null) 'max_weight',
     if (parcelSize != null) 'parcel_size',
     if (matchingMyTrips) 'matching_my_trips',
@@ -572,10 +585,10 @@ class HomeSearchFilters {
     if (paymentMethods.isNotEmpty) {
       n++;
     }
-    if (minItemSize != null) {
+    if (_activeMinItemSize != null) {
       n++;
     }
-    if (viaCity != null) {
+    if (_activeViaCity != null) {
       n++;
     }
     return n;

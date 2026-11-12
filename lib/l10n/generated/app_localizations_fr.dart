@@ -2387,6 +2387,27 @@ class AppLocalizationsFr extends AppLocalizations {
       'Type de contenu, note, escales, paiement';
 
   @override
+  String get homeComposerMoreFiltersHintRoad =>
+      'Type de contenu, note, ville de passage, paiement';
+
+  @override
+  String get homeComposerSectionItemSize => 'TAILLE DU COLIS';
+
+  @override
+  String get homeComposerItemSizeHint =>
+      'Trajets qui acceptent au moins cette taille.';
+
+  @override
+  String get homeComposerSectionVia => 'PASSE PAR';
+
+  @override
+  String get homeComposerViaHint => 'Une ville sur la route (ex. Tanger)';
+
+  @override
+  String get homeComposerViaHelp =>
+      'Pour confier un colis à un voyageur dont le voyage s\'arrête dans votre ville.';
+
+  @override
   String get homeComposerSectionTransport => 'TRANSPORT';
 
   @override
@@ -2510,6 +2531,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeFilterChipsSuitcase23 => '🧳 Valise 23 kg';
+
+  @override
+  String get homeFilterChipsItemSize => 'Taille';
+
+  @override
+  String homeFilterChipsItemSizeActive(String size) {
+    return 'Taille $size et +';
+  }
 
   @override
   String get homeFilterFieldsPeriod => 'PÉRIODE';

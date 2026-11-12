@@ -1056,6 +1056,18 @@
   "homeComposerClearAll": "Tout effacer",
   "homeComposerMoreFilters": "Plus de filtres",
   "homeComposerMoreFiltersHint": "Type de contenu, note, escales, paiement",
+  "homeComposerMoreFiltersHintRoad": "Type de contenu, note, ville de passage, paiement",
+  "@homeComposerMoreFiltersHintRoad": {"description": "Sous-titre de « Plus de filtres » du composeur de recherche quand le filtre Transport est la route : les escales (avion) y cèdent la place à la ville de passage."},
+  "homeComposerSectionItemSize": "TAILLE DU COLIS",
+  "@homeComposerSectionItemSize": {"description": "Composeur de recherche de trajets, route seulement : section de la taille minimale de colis que le trajet accepte."},
+  "homeComposerItemSizeHint": "Trajets qui acceptent au moins cette taille.",
+  "@homeComposerItemSizeHint": {"description": "Composeur de recherche de trajets, route : explication du filtre de taille (strict côté serveur, un trajet sans taille maximum n'apparaît pas)."},
+  "homeComposerSectionVia": "PASSE PAR",
+  "@homeComposerSectionVia": {"description": "Composeur de recherche de trajets, route seulement : section de la ville où le voyage s'arrête."},
+  "homeComposerViaHint": "Une ville sur la route (ex. Tanger)",
+  "@homeComposerViaHint": {"description": "Libellé du champ de ville « Passe par » du composeur de recherche, route seulement."},
+  "homeComposerViaHelp": "Pour confier un colis à un voyageur dont le voyage s'arrête dans votre ville.",
+  "@homeComposerViaHelp": {"description": "Aide sous le champ « Passe par » : à quoi sert la ville de passage."},
   "homeComposerSectionTransport": "TRANSPORT",
   "@homeComposerSectionTransport": {
     "description": "Titre de la section du composeur de recherche de trajets qui filtre par mode de transport (Tous, Avion, Bateau, Route), visible seulement quand plusieurs modes sont ouverts"
@@ -1126,6 +1138,17 @@
   "homeFilterChipsSize": "Taille",
   "homeFilterChipsUrgent": "🔥 Urgent",
   "homeFilterChipsSuitcase23": "🧳 Valise 23 kg",
+  "homeFilterChipsItemSize": "Taille",
+  "@homeFilterChipsItemSize": {"description": "Puce de l'accueil (mode Trajets filtré sur la route) qui remplace « Valise 23 kg » : taille de colis minimale acceptée ; aussi titre de la feuille de choix."},
+  "homeFilterChipsItemSizeActive": "Taille {size} et +",
+  "@homeFilterChipsItemSizeActive": {
+    "description": "Puce Taille active : la taille minimale choisie (S, M, L ou XL), les trajets qui acceptent cette taille et plus grand.",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "@homeFilterChipsSuitcase23": {"description": "Puce rapide de l'accueil (mode Trajets) et du composeur : trajets avec au moins 23 kg disponibles, une valise en soute."},
   "homeFilterFieldsPeriod": "PÉRIODE",
   "@homeFilterFieldsPeriod": {

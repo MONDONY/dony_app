@@ -694,6 +694,40 @@ void main() {
       });
 
       test(
+        'hors route : ni comptés ni tracés, comme la requête (même garde)',
+        () {
+          for (final mode in [null, TransportMode.plane, TransportMode.boat]) {
+            final f = HomeSearchFilters(
+              transportMode: mode,
+              minItemSize: ItemSize.l,
+              viaCity: 'Tanger',
+            );
+            expect(f.activeKeys, isNot(contains('item_size')), reason: '$mode');
+            expect(f.activeKeys, isNot(contains('via_city')), reason: '$mode');
+            expect(
+              f.activeCountFor(SearchMode.trips),
+              mode == null ? 0 : 1,
+              reason: '$mode',
+            );
+            expect(f.toAnnouncementQuery().minItemSize, isNull);
+            expect(f.toAnnouncementQuery().viaCity, isNull);
+          }
+        },
+      );
+
+      test('ville blanche : ni comptée, ni tracée, ni envoyée', () {
+        for (final blank in ['', '   ']) {
+          final f = route.copyWith(viaCity: blank);
+          expect(f.activeKeys, {'transport_mode', 'item_size'}, reason: blank);
+          expect(f.activeCountFor(SearchMode.trips), 2, reason: blank);
+          expect(f.toAnnouncementQuery().viaCity, isNull, reason: blank);
+        }
+        final padded = route.copyWith(viaCity: '  Tanger ');
+        expect(padded.toAnnouncementQuery().viaCity, 'Tanger');
+        expect(padded.activeKeys, contains('via_city'));
+      });
+
+      test(
         'compteur : chacun compte pour un, dans le mode Trajets seulement',
         () {
           expect(route.activeCountFor(SearchMode.trips), 3);

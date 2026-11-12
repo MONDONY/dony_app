@@ -2376,6 +2376,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Content type, rating, stops, payment';
 
   @override
+  String get homeComposerMoreFiltersHintRoad =>
+      'Content type, rating, city on the way, payment';
+
+  @override
+  String get homeComposerSectionItemSize => 'PARCEL SIZE';
+
+  @override
+  String get homeComposerItemSizeHint => 'Trips that take at least this size.';
+
+  @override
+  String get homeComposerSectionVia => 'PASSES THROUGH';
+
+  @override
+  String get homeComposerViaHint => 'A city on the way (e.g. Tangier)';
+
+  @override
+  String get homeComposerViaHelp =>
+      'To hand a parcel to a traveler whose journey stops in your city.';
+
+  @override
   String get homeComposerSectionTransport => 'TRANSPORT';
 
   @override
@@ -2504,6 +2524,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeFilterChipsSuitcase23 => '🧳 23 kg suitcase';
+
+  @override
+  String get homeFilterChipsItemSize => 'Size';
+
+  @override
+  String homeFilterChipsItemSizeActive(String size) {
+    return 'Size $size+';
+  }
 
   @override
   String get homeFilterFieldsPeriod => 'PERIOD';

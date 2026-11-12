@@ -9,6 +9,10 @@
 // villes, visible, dès que la recherche propose plusieurs modes. Un filtre rare déjà actif ouvre
 // « Plus de filtres » d'office : un filtre posé n'est jamais caché.
 //
+// Route (voiture, bus) : « TAILLE DU COLIS » suit « POIDS ET PRIX », la valise
+// de 23 kg disparaît des filtres rapides, « PASSE PAR » (une ville du voyage)
+// prend la place des escales, et le curseur du poids minimum monte à 1 000 kg.
+//
 // La saisie « en une phrase » et son parseur serveur ont été retirés (2 % des
 // recherches validées en venaient) ; les filtres au doigt sont l'unique
 // parcours.
@@ -22,7 +26,9 @@ import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
+import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
@@ -35,9 +41,11 @@ import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dar
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
 import 'package:dony/features/home/presentation/widgets/search_section_label.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/features/matching/presentation/widgets/item_size_selector.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -244,6 +252,8 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
+    // Route : taille et ville de passage au lieu de valise et escales.
+    final road = f.transportMode?.isRoad ?? false;
     return [
       SearchSectionLabel(l.homeComposerSectionWeightPrice),
       Row(
@@ -251,6 +261,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
           Expanded(
             child: WeightField(
               weightKg: f.weightMin,
+              sliderMaxKg: capacitySliderMaxKgFor(f.transportMode),
               // `null` = curseur au minimum : on retire le seul minimum, un
               // maximum posé par la feuille Capacité de l'accueil reste.
               onChanged: (v) => _update(
@@ -282,6 +293,24 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         ],
       ).animate().fadeIn(delay: 40.ms),
 
+      if (road) ...[
+        SearchSectionLabel(l.homeComposerSectionItemSize),
+        ItemSizeSelector(
+          sizes: ItemSize.values,
+          selected: f.minItemSize,
+          onChanged: (size) => _update(
+            size == null
+                ? f.copyWith(clearMinItemSize: true)
+                : f.copyWith(minItemSize: size),
+          ),
+        ).animate().fadeIn(delay: 50.ms),
+        const SizedBox(height: DonySpacing.sm),
+        Text(
+          l.homeComposerItemSizeHint,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+      ],
+
       // Les filtres les plus posés pendant le test, en un toucher.
       SearchSectionLabel(l.homeComposerSectionQuickFilters),
       Wrap(
@@ -294,12 +323,13 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
             active: f.urgentOnly,
             onChanged: (v) => _update(f.copyWith(urgentOnly: v)),
           ),
-          QuickChip(
-            key: const Key('composer-suitcase-23'),
-            label: l.homeFilterChipsSuitcase23,
-            active: f.suitcase23Only,
-            onChanged: (v) => _update(f.copyWith(suitcase23Only: v)),
-          ),
+          if (!road)
+            QuickChip(
+              key: const Key('composer-suitcase-23'),
+              label: l.homeFilterChipsSuitcase23,
+              active: f.suitcase23Only,
+              onChanged: (v) => _update(f.copyWith(suitcase23Only: v)),
+            ),
           QuickChip(
             label: l.gpProBadgeLabel,
             iconAsset: 'award',
@@ -320,6 +350,9 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
       // d'office (voir `_MoreFiltersSection`).
       _MoreFiltersSection(
         activeCount: _moreFiltersActiveCount(f),
+        hint: road
+            ? l.homeComposerMoreFiltersHintRoad
+            : l.homeComposerMoreFiltersHint,
         children: [
           SearchSectionLabel(l.homeComposerSectionContents),
           // Autocomplétion plutôt que les onze types dépliés : la liste
@@ -362,43 +395,67 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
             ],
           ),
 
-          // ── Escales (FLUTTER-GD) ── choix unique, « Peu importe » = aucun
-          // filtre.
-          SearchSectionLabel(l.homeComposerSectionStops),
-          Wrap(
-            spacing: DonySpacing.sm,
-            runSpacing: DonySpacing.sm,
-            children: [
-              for (final (filter, label) in <(StopsFilter?, String)>[
-                (StopsFilter.directOnly, l.homeComposerStopsDirectOnly),
-                (StopsFilter.maxOne, l.homeComposerStopsMaxOne),
-                (null, l.homeComposerStopsAny),
-              ])
-                QuickChip(
-                  key: Key('chip-stops-${filter?.name ?? 'any'}'),
-                  label: label,
-                  // Les escales sont une notion d'avion : l'avion est dessiné
-                  // si le filtre vaut avion ou si l'avion est le seul mode
-                  // proposé (le filtre est alors toujours nul).
-                  iconAsset:
-                      f.transportMode == TransportMode.plane ||
-                          !transportModes.hasRequestChoice
-                      ? 'plane'
-                      : kNeutralTripIconAsset,
-                  active: f.stopsFilter == filter,
-                  onChanged: (_) => _update(
-                    filter == null
-                        ? f.copyWith(clearStopsFilter: true)
-                        : f.copyWith(stopsFilter: filter),
+          if (road) ...[
+            // ── Passe par ── une ville où le voyage s'arrête (route
+            // seulement : les escales sont une notion d'avion).
+            SearchSectionLabel(l.homeComposerSectionVia),
+            BlocProvider(
+              create: (_) => getIt<CitySearchBloc>(),
+              child: CityAutocompleteField(
+                fieldKey: const Key('composer-via-city'),
+                label: l.homeComposerViaHint,
+                prefixIcon: const Icon(Icons.place_outlined),
+                initialValue: f.viaCity,
+                allowFreeText: true,
+                onSelected: (CityModel city) =>
+                    _update(f.copyWith(viaCity: city.name)),
+                onCleared: () => _update(f.copyWith(clearViaCity: true)),
+              ),
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              l.homeComposerViaHelp,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ] else ...[
+            // ── Escales (FLUTTER-GD) ── choix unique, « Peu importe » = aucun
+            // filtre.
+            SearchSectionLabel(l.homeComposerSectionStops),
+            Wrap(
+              spacing: DonySpacing.sm,
+              runSpacing: DonySpacing.sm,
+              children: [
+                for (final (filter, label) in <(StopsFilter?, String)>[
+                  (StopsFilter.directOnly, l.homeComposerStopsDirectOnly),
+                  (StopsFilter.maxOne, l.homeComposerStopsMaxOne),
+                  (null, l.homeComposerStopsAny),
+                ])
+                  QuickChip(
+                    key: Key('chip-stops-${filter?.name ?? 'any'}'),
+                    label: label,
+                    // Les escales sont une notion d'avion : l'avion est dessiné
+                    // si le filtre vaut avion ou si l'avion est le seul mode
+                    // proposé (le filtre est alors toujours nul).
+                    iconAsset:
+                        f.transportMode == TransportMode.plane ||
+                            !transportModes.hasRequestChoice
+                        ? 'plane'
+                        : kNeutralTripIconAsset,
+                    active: f.stopsFilter == filter,
+                    onChanged: (_) => _update(
+                      filter == null
+                          ? f.copyWith(clearStopsFilter: true)
+                          : f.copyWith(stopsFilter: filter),
+                    ),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            l.homeComposerStopsHint,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
+              ],
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              l.homeComposerStopsHint,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
 
           // ── Moyens de paiement (FLUTTER-G0) ── choix multiple, filtré
           // serveur.
@@ -467,13 +524,20 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
 
   /// Nombre de filtres actifs rangés sous « Plus de filtres ». Il s'affiche en
   /// pastille sur l'en-tête replié et ouvre le bloc d'office s'il n'est pas nul.
-  static int _moreFiltersActiveCount(HomeSearchFilters f) =>
-      (f.contentType != null ? 1 : 0) +
-      (f.minRating != null ? 1 : 0) +
-      (f.weekendOnly ? 1 : 0) +
-      (f.stopsFilter != null ? 1 : 0) +
-      (f.paymentMethods.isNotEmpty ? 1 : 0) +
-      (f.urgencyFilter != null ? 1 : 0);
+  static int _moreFiltersActiveCount(HomeSearchFilters f) {
+    final road = f.transportMode?.isRoad ?? false;
+    final via = f.viaCity?.trim();
+    return (f.contentType != null ? 1 : 0) +
+        (f.minRating != null ? 1 : 0) +
+        (f.weekendOnly ? 1 : 0) +
+        // Escales (avion) ou ville de passage (route), jamais les deux : même
+        // garde que la requête (`toAnnouncementQuery`).
+        (road
+            ? (via != null && via.isNotEmpty ? 1 : 0)
+            : (f.stopsFilter != null ? 1 : 0)) +
+        (f.paymentMethods.isNotEmpty ? 1 : 0) +
+        (f.urgencyFilter != null ? 1 : 0);
+  }
 
   // ── Colis ────────────────────────────────────────────────────────────────
 
@@ -571,10 +635,14 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
 class _MoreFiltersSection extends StatefulWidget {
   const _MoreFiltersSection({
     required this.activeCount,
+    required this.hint,
     required this.children,
   });
 
   final int activeCount;
+
+  /// Sous-titre de l'en-tête : ce que contient le bloc (il change en route).
+  final String hint;
   final List<Widget> children;
 
   @override
@@ -645,7 +713,7 @@ class _MoreFiltersSectionState extends State<_MoreFiltersSection> {
                             ),
                           ),
                           Text(
-                            l.homeComposerMoreFiltersHint,
+                            widget.hint,
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),

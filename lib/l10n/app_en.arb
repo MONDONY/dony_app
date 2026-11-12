@@ -735,6 +735,12 @@
   "homeComposerClearAll": "Clear all",
   "homeComposerMoreFilters": "More filters",
   "homeComposerMoreFiltersHint": "Content type, rating, stops, payment",
+  "homeComposerMoreFiltersHintRoad": "Content type, rating, city on the way, payment",
+  "homeComposerSectionItemSize": "PARCEL SIZE",
+  "homeComposerItemSizeHint": "Trips that take at least this size.",
+  "homeComposerSectionVia": "PASSES THROUGH",
+  "homeComposerViaHint": "A city on the way (e.g. Tangier)",
+  "homeComposerViaHelp": "To hand a parcel to a traveler whose journey stops in your city.",
   "homeComposerSectionTransport": "TRANSPORT",
   "@homeComposerSectionTransport": {
     "description": "Section title in the trip search composer that filters by transport mode (All, Plane, Boat, Road), shown only when several modes are open"
@@ -781,6 +787,15 @@
   "homeFilterChipsSize": "Size",
   "homeFilterChipsUrgent": "🔥 Urgent",
   "homeFilterChipsSuitcase23": "🧳 23 kg suitcase",
+  "homeFilterChipsItemSize": "Size",
+  "homeFilterChipsItemSizeActive": "Size {size}+",
+  "@homeFilterChipsItemSizeActive": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "homeFilterFieldsPeriod": "PERIOD",
   "homeFilterFieldsMaxPrice": "MAX PRICE",
   "homeFilterFieldsAll": "Any",
