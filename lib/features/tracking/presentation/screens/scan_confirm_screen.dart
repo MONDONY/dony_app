@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -23,13 +22,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-
-// Icônes uniquement : le libellé se calcule via trackingStepLabel.
-const _etapeIcons = <String, (String?, String?)>{
-  'DEPART': (null, 'plane-takeoff'),
-  'TRANSIT': ('arrow-left-right', null),
-  'ARRIVEE': (null, 'plane-landing'),
-};
 
 class ScanConfirmScreen extends StatefulWidget {
   const ScanConfirmScreen({
@@ -120,7 +112,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final etapeIcons = _etapeIcons[widget.etape];
+    final etapeIcon = kTrackingStepIcons[widget.etape];
     final etapeLabel = trackingStepLabel(l, widget.etape);
     final locationLabel = _displayLocationLabel(l);
 
@@ -269,23 +261,11 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Chip étape
-                if (etapeIcons != null)
+                if (etapeIcon != null)
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Chip(
-                      avatar: switch (etapeIcons.$2) {
-                        'plane-takeoff' => const DonyEmoji.planeTakeoff(
-                          size: 14,
-                        ),
-                        'plane-landing' => const DonyEmoji.planeLanding(
-                          size: 14,
-                        ),
-                        _ => DonyIcon(
-                          etapeIcons.$1!,
-                          size: 14,
-                          color: cs.primary,
-                        ),
-                      },
+                      avatar: DonyIcon(etapeIcon, size: 14, color: cs.primary),
                       label: Text(l.scanStepRecorded(widget.etape)),
                       labelStyle: tt.labelSmall?.copyWith(
                         color: cs.primary,

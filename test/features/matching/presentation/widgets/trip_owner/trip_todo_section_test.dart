@@ -38,6 +38,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/plane_icon_expectations.dart';
 import '../../../../../helpers/stripe_account_test_doubles.dart';
 import 'trip_answer_harness.dart';
 import 'trip_todo_fixtures.dart';
@@ -324,6 +325,38 @@ void main() {
       expect(find.text('Urgent'), findsOneWidget);
       await pump(tester, todoScenarioFor(TripTodoKind.amendment));
       expect(find.text('Avant le 2 nov. à 12:00'), findsOneWidget);
+    });
+
+    for (final (mode, icon) in [
+      (TransportMode.car, 'car'),
+      (TransportMode.bus, 'car'),
+      (TransportMode.boat, 'ship'),
+      (TransportMode.train, 'route'),
+      (TransportMode.plane, 'plane'),
+      (null, 'plane'),
+    ]) {
+      testWidgets('« Je pars » d\'un trajet $mode : icône $icon', (
+        tester,
+      ) async {
+        await pump(tester, todoDepartScenario(transportMode: mode));
+        final card = find.byKey(const Key('trip-todo-next-depart'));
+        expect(card, findsOneWidget);
+        expect(
+          find.descendant(of: card, matching: findDonyIcon(icon)),
+          findsOneWidget,
+        );
+        if (icon != 'plane') {
+          expectNoPlaneIcon(tester);
+        }
+      });
+    }
+
+    testWidgets('« Arrivé à destination » : drapeau, jamais un avion', (
+      tester,
+    ) async {
+      await pump(tester, todoScenarioFor(TripTodoKind.arrive));
+      expect(findDonyIcon('flag'), findsWidgets);
+      expect(findDonyIcon('plane-landing'), findsNothing);
     });
 
     testWidgets('action importante : « Prochaine action », sans échéance', (

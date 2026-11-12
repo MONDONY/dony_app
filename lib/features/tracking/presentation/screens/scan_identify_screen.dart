@@ -11,13 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-// Icônes uniquement : le libellé se calcule via trackingStepLabel.
-const _etapeIcons = <String, (String?, String?)>{
-  'DEPART': (null, 'plane-takeoff'),
-  'TRANSIT': ('arrow-left-right', null),
-  'ARRIVEE': (null, 'plane-landing'),
-};
-
 class ScanIdentifyScreen extends StatefulWidget {
   const ScanIdentifyScreen({super.key, this.etape, this.focusNumber = false});
 
@@ -120,8 +113,8 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final etapeIcons = _selectedEtape != null
-        ? _etapeIcons[_selectedEtape!]
+    final etapeIcon = _selectedEtape != null
+        ? kTrackingStepIcons[_selectedEtape!]
         : null;
 
     return BlocConsumer<TrackingBloc, TrackingState>(
@@ -147,19 +140,11 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
               child: Divider(height: 1, color: cs.outline),
             ),
             actions: [
-              if (etapeIcons != null)
+              if (etapeIcon != null)
                 Padding(
                   padding: const EdgeInsets.only(right: DonySpacing.base),
                   child: Chip(
-                    avatar: switch (etapeIcons.$2) {
-                      'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 14),
-                      'plane-landing' => const DonyEmoji.planeLanding(size: 14),
-                      _ => DonyIcon(
-                        etapeIcons.$1!,
-                        size: 14,
-                        color: cs.primary,
-                      ),
-                    },
+                    avatar: DonyIcon(etapeIcon, size: 14, color: cs.primary),
                     label: Text(trackingStepLabel(l, _selectedEtape!)),
                     labelStyle: tt.labelSmall?.copyWith(
                       color: cs.primary,
@@ -363,15 +348,11 @@ class _EtapePickerSheet extends StatelessWidget {
           ),
           Text(l.scanWhichStepTitle, style: tt.headlineMedium),
           const SizedBox(height: DonySpacing.base),
-          for (final entry in _etapeIcons.entries)
+          for (final entry in kTrackingStepIcons.entries)
             Material(
               type: MaterialType.transparency,
               child: ListTile(
-                leading: switch (entry.value.$2) {
-                  'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 24),
-                  'plane-landing' => const DonyEmoji.planeLanding(size: 24),
-                  _ => DonyIcon(entry.value.$1!, color: cs.primary),
-                },
+                leading: DonyIcon(entry.value, color: cs.primary),
                 title: Text(
                   trackingStepLabel(l, entry.key),
                   style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),

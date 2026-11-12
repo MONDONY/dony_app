@@ -28,6 +28,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_recent_city_store.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
@@ -57,6 +58,7 @@ Widget _buildSubject({
   ValueNotifier<TransportMode?>? transportModeNotifier,
   List<TransportMode>? transportModeRowModes,
   bool transportModeRowReadOnly = false,
+  bool lockCorridor = false,
 }) {
   final departureCityNotifier = ValueNotifier<String?>(departureCity);
   final arrivalCityNotifier = ValueNotifier<String?>(arrivalCity);
@@ -78,6 +80,7 @@ Widget _buildSubject({
           transportModeNotifier: transportModeNotifier,
           transportModeRowModes: transportModeRowModes,
           transportModeRowReadOnly: transportModeRowReadOnly,
+          lockCorridor: lockCorridor,
           onSelectDepartureTime: () async {},
           onSelectArrivalTime: () async {},
           onSelectDate: () async {},
@@ -111,6 +114,50 @@ void main() {
     departureCityBloc.close();
     arrivalCityBloc.close();
     unregisterFakeRecentCityStore();
+  });
+
+  group('Tout mode : aucun avion en dur', () {
+    testWidgets('corridor libre : section Trajet en map-pin, sans avion', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(findDonyIcon('map-pin'), findsWidgets);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('corridor verrouillé : pastilles map-pin et flag, sans avion', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          lockCorridor: true,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final departure = find.byKey(const Key('departureCityField'));
+      final arrival = find.byKey(const Key('arrivalCityField'));
+      expect(
+        find.descendant(of: departure, matching: findDonyIcon('map-pin')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: arrival, matching: findDonyIcon('flag')),
+        findsOneWidget,
+      );
+      expectNoPlaneIcon(tester);
+    });
   });
 
   group('M4 — Uniformité visuelle champs heure/date', () {

@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +9,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 Widget _app({required VoidCallback onConfirm, VoidCallback? onSaveDraft}) =>
     MaterialApp(
@@ -55,6 +57,36 @@ void main() {
     expect(find.text('$price/kg · estimation $net net'), findsOneWidget);
     expect(find.textContaining('€/kg'), findsNothing);
   });
+
+  for (final (mode, icon) in [
+    (TransportMode.car, 'car'),
+    (TransportMode.boat, 'ship'),
+    (TransportMode.plane, 'plane'),
+    (null, 'plane'),
+  ]) {
+    testWidgets('la ligne Trajet suit le mode $mode : icône $icon', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AnnouncementPreviewSheet(
+              formState: AnnouncementFormState(
+                departureCity: 'Paris',
+                arrivalCity: 'Dakar',
+                transportMode: mode,
+              ),
+              onConfirm: () {},
+            ),
+          ),
+        ),
+      );
+      expect(findDonyIcon(icon), findsOneWidget);
+      if (icon != 'plane') {
+        expectNoPlaneIcon(tester);
+      }
+    });
+  }
 
   testWidgets('l\'aperçu propose Publier et Enregistrer comme brouillon', (
     tester,

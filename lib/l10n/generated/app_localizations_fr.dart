@@ -15452,12 +15452,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Adresse non localisée, vous pouvez la saisir à la main';
 
   @override
-  String get dsEmojiTakeoff => 'Décollage';
-
-  @override
-  String get dsEmojiLanding => 'Atterrissage';
-
-  @override
   String get dsEmojiParcel => 'Colis';
 
   @override

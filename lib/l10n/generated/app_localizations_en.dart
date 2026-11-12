@@ -15344,12 +15344,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Address not located, you can type it in manually';
 
   @override
-  String get dsEmojiTakeoff => 'Takeoff';
-
-  @override
-  String get dsEmojiLanding => 'Landing';
-
-  @override
   String get dsEmojiParcel => 'Parcel';
 
   @override

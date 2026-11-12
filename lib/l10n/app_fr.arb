@@ -17371,14 +17371,6 @@
   "@addressNotLocatedStatus": {
     "description": "Statut affiché quand l'adresse n'a pas été localisée (address_location_status.dart)."
   },
-  "dsEmojiTakeoff": "Décollage",
-  "@dsEmojiTakeoff": {
-    "description": "Étiquette d'accessibilité par défaut de l'emoji décollage ✈️ (dony_emoji.dart)."
-  },
-  "dsEmojiLanding": "Atterrissage",
-  "@dsEmojiLanding": {
-    "description": "Étiquette d'accessibilité par défaut de l'emoji atterrissage 🛬 (dony_emoji.dart)."
-  },
   "dsEmojiParcel": "Colis",
   "@dsEmojiParcel": {
     "description": "Étiquette d'accessibilité par défaut de l'emoji colis 📦 (dony_emoji.dart)."

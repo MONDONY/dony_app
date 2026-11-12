@@ -206,7 +206,7 @@ class _DeliverBar extends StatelessWidget {
         message: l.travelerArrivalPromptMessage,
         confirmLabel: l.travelerArrivalPromptConfirm,
         cancelLabel: l.travelerArrivalPromptSkip,
-        iconAsset: 'plane-landing',
+        iconAsset: 'flag',
       );
       if (!context.mounted || arrived == null) return;
       if (arrived) {

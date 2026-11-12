@@ -3,7 +3,6 @@
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -264,7 +263,7 @@ class TrajetStep extends StatelessWidget {
       // ── TRAJET ────────────────────────────────────────────────────────────
       CaSectionLabel(
         label: l.tripPublishRouteSectionLabel,
-        iconAsset: 'plane-takeoff',
+        iconAsset: 'map-pin',
       ),
       const SizedBox(height: DonySpacing.sm),
       ListenableBuilder(
@@ -290,7 +289,11 @@ class TrajetStep extends StatelessWidget {
                   key: const Key('departureCityField'),
                   label: l.tripPublishDepartureCityLabel,
                   value: departureCityNotifier.value,
-                  prefixWidget: const DonyEmoji.planeTakeoff(size: 20),
+                  prefixWidget: DonyIcon(
+                    'map-pin',
+                    size: 20,
+                    color: cs.primary,
+                  ),
                   trailing: DonyIcon(
                     'lock',
                     size: 16,
@@ -306,7 +309,7 @@ class TrajetStep extends StatelessWidget {
                   key: const Key('arrivalCityField'),
                   label: l.tripPublishArrivalCityLabel,
                   value: arrivalCityNotifier.value,
-                  prefixWidget: const DonyEmoji.planeLanding(size: 20),
+                  prefixWidget: DonyIcon('flag', size: 20, color: cs.primary),
                   trailing: DonyIcon(
                     'lock',
                     size: 16,

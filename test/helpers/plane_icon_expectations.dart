@@ -18,7 +18,7 @@ final Set<int> _materialFlightCodePoints = {
   Icons.flight_land_sharp.codePoint,
 };
 
-/// Emoji d'avion (texte brut, `DonyEmoji.planeTakeoff` compris).
+/// Emoji d'avion (texte brut).
 const List<String> _planeEmoji = ['✈', '🛫', '🛬'];
 
 /// Chaque `DonyIcon` d'avion (`plane`, `plane-takeoff`, `plane-landing`...).

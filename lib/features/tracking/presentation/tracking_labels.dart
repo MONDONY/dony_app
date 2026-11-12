@@ -18,6 +18,15 @@ String trackingStepLabel(AppLocalizations l, String eventType) {
   };
 }
 
+/// Icône (`DonyIcon`, teintable) de chaque étape de suivi, pour les écrans de
+/// scan. Le scan choisit l'étape avant de connaître le colis, donc le mode du
+/// trajet : icônes neutres (colis récupéré, transit, arrivée), jamais un avion.
+const kTrackingStepIcons = <String, String>{
+  'DEPART': 'package',
+  'TRANSIT': 'arrow-left-right',
+  'ARRIVEE': 'flag',
+};
+
 /// Étape d'une ligne des derniers scans, suivie de sa provenance
 /// (« Départ · QR », « Transit · numéro ») ; l'étape seule si elle est
 /// inconnue.

@@ -58,6 +58,7 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 import '../../../video_modal/moment_test_support.dart';
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
@@ -143,6 +144,7 @@ AnnouncementModel _buildAnnouncement({
   String departureCity = 'Paris',
   String arrivalCity = 'Dakar',
   String? departureTimezone,
+  TransportMode? transportMode,
 }) {
   final now = DateTime.now();
   return AnnouncementModel(
@@ -180,6 +182,7 @@ AnnouncementModel _buildAnnouncement({
     updatedAt: now,
     handoverDeadline: handoverDeadline,
     departureTimezone: departureTimezone,
+    transportMode: transportMode,
   );
 }
 
@@ -2298,6 +2301,33 @@ void main() {
 
       expect(find.text('Écran trajet ${a.id}'), findsOneWidget);
     });
+
+    for (final (mode, icon) in [
+      (TransportMode.boat, 'ship'),
+      (TransportMode.car, 'car'),
+      (TransportMode.plane, 'plane'),
+      (null, 'plane'),
+    ]) {
+      testWidgets('« Gérer mon trajet » d\'un trajet $mode : icône $icon', (
+        tester,
+      ) async {
+        final a = _buildAnnouncement(transportMode: mode);
+        await tester.pumpWidget(
+          _harness(announcement: a, authState: proprietaire(a)),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        final button = find.byKey(const Key('manage-own-trip-btn'));
+        expect(
+          find.descendant(of: button, matching: findDonyIcon(icon)),
+          findsOneWidget,
+        );
+        if (icon != 'plane') {
+          expectNoPlaneIcon(tester);
+        }
+      });
+    }
 
     testWidgets('trajet d\'un tiers : demande et signet toujours là', (
       tester,

@@ -25483,18 +25483,6 @@ abstract class AppLocalizations {
   /// **'Adresse non localisée, vous pouvez la saisir à la main'**
   String get addressNotLocatedStatus;
 
-  /// Étiquette d'accessibilité par défaut de l'emoji décollage ✈️ (dony_emoji.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Décollage'**
-  String get dsEmojiTakeoff;
-
-  /// Étiquette d'accessibilité par défaut de l'emoji atterrissage 🛬 (dony_emoji.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Atterrissage'**
-  String get dsEmojiLanding;
-
   /// Étiquette d'accessibilité par défaut de l'emoji colis 📦 (dony_emoji.dart).
   ///
   /// In fr, this message translates to:

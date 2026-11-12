@@ -22,6 +22,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
@@ -663,6 +664,15 @@ void main() {
       expect(find.text('Vous êtes arrivé à Dakar ?'), findsNothing);
       expect(pushed, contains('/tracking/scan/photo:b1:ARRIVEE'));
       verifyNever(() => announcementBloc.add(any()));
+    });
+
+    testWidgets('la question d\'arrivée porte un drapeau, jamais un avion', (
+      tester,
+    ) async {
+      await pumpDeliver(tester, 'IN_TRANSIT', announcementBloc);
+      expect(find.text('Vous êtes arrivé à Dakar ?'), findsOneWidget);
+      expect(findDonyIcon('flag'), findsOneWidget);
+      expectNoPlaneIcon(tester);
     });
 
     // Sentry FLUTTER-5S : sans déclaration, l'expéditeur n'était pas prévenu.

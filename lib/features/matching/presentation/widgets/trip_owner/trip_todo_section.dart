@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/close_sheet_when_resolved.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
@@ -183,7 +184,11 @@ class TripTodoNextCard extends StatelessWidget {
                 const SizedBox(height: DonySpacing.md),
                 Row(
                   children: [
-                    _KindIcon(kind: item.kind, urgent: urgent),
+                    _KindIcon(
+                      kind: item.kind,
+                      mode: transportModeOrPlane(live.trip.transportMode),
+                      urgent: urgent,
+                    ),
                     const SizedBox(width: DonySpacing.md),
                     Expanded(
                       child: Column(
@@ -333,7 +338,12 @@ class TripTodoQueueRow extends StatelessWidget {
     );
     return _Row(
       key: Key('trip-todo-row-${item.kind.name}'),
-      leading: _KindIcon(kind: item.kind, urgent: urgent, small: true),
+      leading: _KindIcon(
+        kind: item.kind,
+        mode: transportModeOrPlane(live.trip.transportMode),
+        urgent: urgent,
+        small: true,
+      ),
       title: tripTodoTitle(l, item, cardReady: live.cardReady),
       subtitle: tripTodoSubtitle(l, item, cardReady: live.cardReady),
       due: due,
@@ -458,11 +468,13 @@ class _Row extends StatelessWidget {
 class _KindIcon extends StatelessWidget {
   const _KindIcon({
     required this.kind,
+    required this.mode,
     required this.urgent,
     this.small = false,
   });
 
   final TripTodoKind kind;
+  final TransportMode mode;
   final bool urgent;
   final bool small;
 
@@ -470,7 +482,7 @@ class _KindIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return DonyIconContainer(
-      iconAsset: tripTodoIcon(kind),
+      iconAsset: tripTodoIcon(kind, mode),
       size: small ? DonyIconContainerSize.sm : DonyIconContainerSize.md,
       backgroundColor: urgent ? cs.warningLight : null,
       iconColor: urgent ? cs.warning : null,

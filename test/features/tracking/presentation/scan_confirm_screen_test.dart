@@ -31,6 +31,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 class MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
@@ -136,6 +137,21 @@ void main() {
     expect(find.text('Confirmer la livraison'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
   });
+
+  // ─── Icône d'étape : aucun avion (le mode du trajet est inconnu du scan) ──
+  for (final (etape, icon) in [('DEPART', 'package'), ('ARRIVEE', 'flag')]) {
+    testWidgets('$etape — puce d\'étape en DonyIcon $icon, sans avion', (
+      tester,
+    ) async {
+      final bloc = MockTrackingBloc();
+      when(() => bloc.state).thenReturn(TrackingInitial());
+      whenListen(bloc, const Stream<TrackingState>.empty());
+      await tester.pumpWidget(_wrap(etape, bloc));
+      await tester.pump();
+      expect(findDonyIcon(icon), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+  }
 
   // ─── DEPART — tap Valider dispatches event ────────────────────────────────
   testWidgets('DEPART — tap Valider dispatch QrScanSubmitRequested', (

@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/plane_icon_expectations.dart';
+
 class _MockNotificationBloc extends Mock implements NotificationBloc {}
 
 class _FakeEvent extends Fake implements NotificationEvent {}
@@ -204,7 +206,7 @@ void main() {
       expect(await iconAssetFor(tester, 'DISPUTE_OPENED'), 'triangle-alert');
       expect(await iconAssetFor(tester, 'MM_PAYMENT_PENDING'), 'credit-card');
       expect(await iconAssetFor(tester, 'NEW_MESSAGE'), 'message-circle');
-      expect(await iconAssetFor(tester, 'CORRIDOR_ALERT'), 'plane');
+      expect(await iconAssetFor(tester, 'CORRIDOR_ALERT'), 'route');
     });
 
     testWidgets('supplément de prix', (tester) async {
@@ -225,14 +227,8 @@ void main() {
 
     testWidgets('colis à recevoir et réponse du destinataire', (tester) async {
       expect(await iconAssetFor(tester, 'RECIPIENT_PARCEL_INCOMING'), 'inbox');
-      expect(
-        await iconAssetFor(tester, 'RECIPIENT_PARCEL_DEPARTED'),
-        'plane-takeoff',
-      );
-      expect(
-        await iconAssetFor(tester, 'RECIPIENT_PARCEL_ARRIVED'),
-        'plane-landing',
-      );
+      expect(await iconAssetFor(tester, 'RECIPIENT_PARCEL_DEPARTED'), 'route');
+      expect(await iconAssetFor(tester, 'RECIPIENT_PARCEL_ARRIVED'), 'flag');
       expect(
         await iconAssetFor(tester, 'RECIPIENT_PARCEL_DELIVERED'),
         'circle-check',
@@ -261,14 +257,26 @@ void main() {
     });
 
     testWidgets('rappels de suivi du voyageur', (tester) async {
-      expect(
-        await iconAssetFor(tester, 'TRIP_DEPARTURE_PROMPT'),
-        'plane-takeoff',
-      );
-      expect(
-        await iconAssetFor(tester, 'TRIP_ARRIVAL_PROMPT'),
-        'plane-landing',
-      );
+      expect(await iconAssetFor(tester, 'TRIP_IN_PROGRESS'), 'route');
+      expect(await iconAssetFor(tester, 'TRIP_DEPARTURE_PROMPT'), 'route');
+      expect(await iconAssetFor(tester, 'TRIP_ARRIVAL_PROMPT'), 'flag');
+    });
+
+    testWidgets('aucune notification de trajet ne montre un avion', (
+      tester,
+    ) async {
+      for (final type in const [
+        'TRIP_IN_PROGRESS',
+        'TRIP_DEPARTURE_PROMPT',
+        'TRIP_ARRIVAL_PROMPT',
+        'RECIPIENT_PARCEL_DEPARTED',
+        'RECIPIENT_PARCEL_ARRIVED',
+        'CORRIDOR_ALERT',
+        'TRAVELER_NEW_ANNOUNCEMENT',
+      ]) {
+        await iconAssetFor(tester, type);
+        expectNoPlaneIcon(tester);
+      }
     });
 
     testWidgets('destinataire Yadony par invitation (lot 4)', (tester) async {

@@ -8117,8 +8117,6 @@
   "addressDefaultLabel": "Default address",
   "addressLocatedStatus": "Address located",
   "addressNotLocatedStatus": "Address not located, you can type it in manually",
-  "dsEmojiTakeoff": "Takeoff",
-  "dsEmojiLanding": "Landing",
   "dsEmojiParcel": "Parcel",
   "appUpdatePromptTitle": "An update is available",
   "appUpdatePromptMessage": "This version of Yadony brings more stability and new features. Update to enjoy them.",
