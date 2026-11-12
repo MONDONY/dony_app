@@ -1,9 +1,11 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_corridor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 void main() {
   Widget wrap(Widget child, {double width = 360}) => MaterialApp(
@@ -123,5 +125,30 @@ void main() {
 
     expect(find.textContaining('From'), findsOneWidget);
     expect(find.textContaining('To'), findsOneWidget);
+  });
+
+  group('flèche du corridor : icône du mode', () {
+    for (final (mode, asset) in [
+      (TransportMode.plane, 'plane'),
+      (TransportMode.boat, 'ship'),
+      (TransportMode.car, 'car'),
+      (TransportMode.bus, 'car'),
+      (null, 'route'),
+    ]) {
+      testWidgets('$mode : DonyIcon($asset)', (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            RequestCorridor(
+              departureCity: 'Paris',
+              arrivalCity: 'Abidjan',
+              transportMode: mode,
+            ),
+          ),
+        );
+
+        expect(findDonyIcon(asset), findsOneWidget);
+        if (mode != TransportMode.plane) expectNoPlaneIcon(tester);
+      });
+    }
   });
 }

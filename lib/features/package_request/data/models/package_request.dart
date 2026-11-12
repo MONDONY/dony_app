@@ -154,15 +154,6 @@ class PackageRequest extends Equatable {
     return (urls, keys);
   }
 
-  /// Clé absente (back antérieur) : avion. Clé présente à null : peu importe.
-  /// Valeur inconnue : avion, jamais « peu importe » par erreur.
-  static TransportMode? _transportModeFrom(Map<String, dynamic> json) {
-    if (!json.containsKey('transportMode')) return TransportMode.plane;
-    final wire = json['transportMode'] as String?;
-    if (wire == null) return null;
-    return transportModeFromWire(wire) ?? TransportMode.plane;
-  }
-
   factory PackageRequest.fromJson(Map<String, dynamic> json) {
     final (urls, keys) = _photosFromJson(json['photos'] as List<dynamic>?);
     return PackageRequest(
@@ -174,7 +165,7 @@ class PackageRequest extends Equatable {
       dateToleranceDays: (json['dateToleranceDays'] as num?)?.toInt() ?? 0,
       weightKg: (json['weightKg'] as num).toDouble(),
       parcelSize: ParcelSize.fromJson(json['parcelSize'] as String),
-      transportMode: _transportModeFrom(json),
+      transportMode: transportModeFromRequestJson(json),
       categories: splitContentCategoryLabels(
         json['contentCategory'] as String?,
       ),
@@ -240,6 +231,16 @@ class PackageRequest extends Equatable {
     grossPriceEur,
     commissionGridId,
   ];
+}
+
+/// Mode d'une demande lu dans un JSON du back. Clé absente (back antérieur) :
+/// avion. Clé présente à null : peu importe. Valeur inconnue : avion, jamais
+/// « peu importe » par erreur.
+TransportMode? transportModeFromRequestJson(Map<String, dynamic> json) {
+  if (!json.containsKey('transportMode')) return TransportMode.plane;
+  final wire = json['transportMode'] as String?;
+  if (wire == null) return null;
+  return transportModeFromWire(wire) ?? TransportMode.plane;
 }
 
 /// Mode envoyé au back pour une demande : `ANY` pour « peu importe » (null),

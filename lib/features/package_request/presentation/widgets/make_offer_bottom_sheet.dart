@@ -757,6 +757,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
               RequestCorridor(
                 departureCity: widget.departureCity,
                 arrivalCity: widget.arrivalCity,
+                transportMode: widget.transportMode,
               ),
               const SizedBox(height: DonySpacing.md),
               Divider(height: 1, color: Theme.of(context).colorScheme.outline),
@@ -1039,6 +1040,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 compact: true,
                 departureCity: widget.departureCity,
                 arrivalCity: widget.arrivalCity,
+                transportMode: widget.transportMode,
               ),
               const SizedBox(height: DonySpacing.sm),
               Divider(height: 1, color: cs.outline),

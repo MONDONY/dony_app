@@ -7,6 +7,7 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/city_code.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_photo_viewer.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -150,7 +151,11 @@ class _Route extends StatelessWidget {
             ),
             Column(
               children: [
-                DonyIcon('plane', size: 20, color: cs.primary),
+                DonyIcon(
+                  requestModeIconAsset(request.transportMode),
+                  size: 20,
+                  color: cs.primary,
+                ),
                 const SizedBox(height: 2),
                 Text(
                   dateLabel,

@@ -3,6 +3,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:dony/features/subscriptions/presentation/subscription_labels.dart';
 import 'package:dony/features/subscriptions/presentation/widgets/subscription_recency.dart';
@@ -240,7 +241,7 @@ class _LastTripLine extends StatelessWidget {
     final ligne = Row(
       children: [
         DonyIcon(
-          'plane',
+          kNeutralTripIconAsset,
           size: 13,
           color: highlight ? DonyColors.accent : cs.onSurfaceVariant,
         ),

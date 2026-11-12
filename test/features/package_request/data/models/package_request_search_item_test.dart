@@ -1,4 +1,5 @@
 import 'package:dony/core/urgency/dony_urgency.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -317,6 +318,42 @@ void main() {
           ..['urgent'] = true,
       );
       expect(item.isUrgent, isTrue);
+    });
+  });
+
+  group('PackageRequestSearchItem.transportMode', () {
+    test('clé absente (back antérieur) : avion, comme avant', () {
+      final item = PackageRequestSearchItem.fromJson(_baseJson());
+      expect(item.transportMode, TransportMode.plane);
+    });
+
+    test('clé présente à null : peu importe', () {
+      final item = PackageRequestSearchItem.fromJson(
+        _baseJson()..['transportMode'] = null,
+      );
+      expect(item.transportMode, isNull);
+    });
+
+    test('CAR : route ; BOAT : bateau', () {
+      expect(
+        PackageRequestSearchItem.fromJson(
+          _baseJson()..['transportMode'] = 'CAR',
+        ).transportMode,
+        TransportMode.car,
+      );
+      expect(
+        PackageRequestSearchItem.fromJson(
+          _baseJson()..['transportMode'] = 'BOAT',
+        ).transportMode,
+        TransportMode.boat,
+      );
+    });
+
+    test('valeur inconnue : avion, jamais « peu importe » par erreur', () {
+      final item = PackageRequestSearchItem.fromJson(
+        _baseJson()..['transportMode'] = 'ROCKET',
+      );
+      expect(item.transportMode, TransportMode.plane);
     });
   });
 }

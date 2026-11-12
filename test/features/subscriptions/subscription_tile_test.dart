@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/commission_grid_test_doubles.dart';
 import '../../helpers/l10n_test_helpers.dart';
+import '../../helpers/plane_icon_expectations.dart';
 
 SubscriptionItem _item({
   String name = 'Awa',
@@ -355,5 +356,15 @@ void main() {
   ) async {
     await tester.pumpWidget(host(_item(last: trajet())));
     expect(find.byKey(const Key('subscription-tile-fee-suffix')), findsNothing);
+  });
+
+  testWidgets('dernier trajet : icône neutre route, aucun avion', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(_item(last: trajet())));
+
+    expect(find.text('Paris → Dakar'), findsOneWidget);
+    expect(findDonyIcon('route'), findsOneWidget);
+    expectNoPlaneIcon(tester);
   });
 }

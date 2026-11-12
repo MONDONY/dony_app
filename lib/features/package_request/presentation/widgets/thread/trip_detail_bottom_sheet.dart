@@ -1,8 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -207,7 +209,9 @@ class TripDetailBottomSheet extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _InfoRow(
-          icon: _iconForMode(trip.transportMode),
+          iconAsset: requestModeIconAsset(
+            transportModeFromWire(trip.transportMode),
+          ),
           label: l.negotiationTripRouteLabel,
           value: '${trip.departureCity} → ${trip.arrivalCity}',
         ),
@@ -262,19 +266,6 @@ class TripDetailBottomSheet extends StatelessWidget {
     );
   }
 
-  String _iconForMode(String? mode) {
-    switch (mode) {
-      case 'PLANE':
-        return '✈️';
-      case 'TRAIN':
-        return '🚄';
-      case 'CAR':
-        return '🚗';
-      default:
-        return '📦';
-    }
-  }
-
   /// Rendu historique sans point après le mois abrégé (« 6 oct 2026 »).
   /// Le squelette intl `yMMMd` rend « 6 oct. 2026 » en français (point
   /// compris dans les données de locale) : remplacer changerait le texte
@@ -312,12 +303,20 @@ class TripDetailBottomSheet extends StatelessWidget {
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.label,
     required this.value,
-  });
+  }) : assert(
+         (icon == null) != (iconAsset == null),
+         'exactly one of icon (emoji) or iconAsset (SVG)',
+       );
 
-  final String icon;
+  /// Emoji de la ligne.
+  final String? icon;
+
+  /// Nom d'une icône SVG (`DonyIcon`), à la place de l'emoji.
+  final String? iconAsset;
   final String label;
   final String value;
 
@@ -331,7 +330,10 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 16)),
+          if (iconAsset != null)
+            DonyIcon(iconAsset!, size: 18, color: cs.onSurfaceVariant)
+          else
+            Text(icon!, style: const TextStyle(fontSize: 16)),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Column(

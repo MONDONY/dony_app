@@ -20,7 +20,8 @@ class LinkedTripSummary extends Equatable {
   final String arrivalCity;
   final String? departureDate; // "2026-06-12"
   final String? departureTime; // "14:30"
-  final String? transportMode; // "PLANE" | "TRAIN" | "CAR"
+  final String?
+  transportMode; // "PLANE" | "CAR" | "BUS" | "BOAT" | "TRAIN" | "OTHER"
   final String? pickupAddressLabel;
   final String? deliveryAddressLabel;
   final int availableKg;

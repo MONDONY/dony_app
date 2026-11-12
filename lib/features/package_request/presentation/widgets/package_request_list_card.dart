@@ -18,6 +18,7 @@ import 'package:dony/features/package_request/presentation/package_request_label
 import 'package:dony/features/package_request/presentation/widgets/my_negotiation_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_header_row.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
 import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -479,7 +480,11 @@ class _RouteMeta extends StatelessWidget {
     ];
     return Row(
       children: [
-        Icon(Icons.flight_rounded, size: 13, color: cs.onSurfaceVariant),
+        DonyIcon(
+          requestModeIconAsset(item.transportMode),
+          size: 13,
+          color: cs.onSurfaceVariant,
+        ),
         const SizedBox(width: DonySpacing.xxs),
         Expanded(
           child: Text(

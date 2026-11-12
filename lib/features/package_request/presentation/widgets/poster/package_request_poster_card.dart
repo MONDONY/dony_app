@@ -4,11 +4,12 @@ import 'dart:ui' as ui;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -183,7 +184,7 @@ class PackageRequestPosterCard extends StatelessWidget {
     final desired = r.desiredDate;
     final kind = [
       l.requestPosterEyebrow,
-      transportModeOrPlane(r.transportMode).label(l),
+      requestModeLabel(l, r.transportMode),
     ].join(' · ');
     if (desired == null) {
       return PosterDateBlock(
@@ -297,7 +298,7 @@ class PackageRequestPosterCard extends StatelessWidget {
       return _line([
         Text(departure, style: style),
         const SizedBox(width: _corridorGap),
-        _plane(),
+        _modeIcon(),
         const SizedBox(width: _corridorGap),
         Text(arrival, style: style),
       ]);
@@ -307,7 +308,7 @@ class PackageRequestPosterCard extends StatelessWidget {
       children: [
         _line([Text(departure, style: style)]),
         _line([
-          _plane(),
+          _modeIcon(),
           const SizedBox(width: _corridorGap),
           Text(arrival, style: style),
         ]),
@@ -324,14 +325,18 @@ class PackageRequestPosterCard extends StatelessWidget {
     ),
   );
 
-  Widget _plane() => Transform.rotate(
-    angle: math.pi / 2,
-    child: const Icon(
-      Icons.flight_rounded,
+  /// Icône du mode entre les villes. L'avion pointe vers le haut : quart de
+  /// tour dans le sens du trajet ; les autres icônes sont déjà de profil.
+  Widget _modeIcon() {
+    final icon = DonyIcon(
+      requestModeIconAsset(request.transportMode),
       size: _corridorIconSize,
       color: PosterPalette.ink,
-    ),
-  );
+    );
+    return request.transportMode == TransportMode.plane
+        ? Transform.rotate(angle: math.pi / 2, child: icon)
+        : icon;
+  }
 
   static double _textWidth(String value, TextStyle style) {
     final painter = TextPainter(

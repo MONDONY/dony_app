@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/compatible_traveler_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_travelers_section.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 AnnouncementModel _trip(String id) => AnnouncementModel(
   id: id,
@@ -138,5 +140,36 @@ void main() {
     expect(find.text('No traveler on Divo → Annemasse yet'), findsOneWidget);
     expect(find.text('Get alerted about new trips'), findsOneWidget);
     expect(find.text('Widen my dates'), findsOneWidget);
+  });
+
+  group('état vide : icône du mode de la demande', () {
+    for (final (mode, asset) in [
+      (TransportMode.plane, 'plane'),
+      (TransportMode.boat, 'ship'),
+      (TransportMode.car, 'car'),
+      (null, 'route'),
+    ]) {
+      testWidgets('$mode : DonyIcon($asset)', (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            RequestNoTravelersEmpty(
+              corridor: 'Divo → Annemasse',
+              transportMode: mode,
+              onCreateAlert: () {},
+              onWidenDates: () {},
+            ),
+          ),
+        );
+
+        expect(
+          find.descendant(
+            of: find.byType(RequestNoTravelersEmpty),
+            matching: findDonyIcon(asset),
+          ),
+          findsOneWidget,
+        );
+        if (mode != TransportMode.plane) expectNoPlaneIcon(tester);
+      });
+    }
   });
 }

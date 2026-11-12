@@ -1,6 +1,8 @@
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/my_negotiation_summary.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:equatable/equatable.dart';
@@ -41,6 +43,7 @@ class PackageRequestSearchItem extends Equatable {
     this.uniqueViewerCount,
     this.grossPriceEur,
     this.myNegotiation,
+    this.transportMode = TransportMode.plane,
   });
 
   final String id;
@@ -140,6 +143,10 @@ class PackageRequestSearchItem extends Equatable {
   /// (FLUTTER-NZ). `null` s'il ne négocie pas, ou sur un back antérieur.
   final MyNegotiationSummary? myNegotiation;
 
+  /// Mode demandé par l'expéditeur : `null` = peu importe. Clé absente (back
+  /// antérieur au lot « modes de transport ») : avion, comme avant.
+  final TransportMode? transportMode;
+
   factory PackageRequestSearchItem.fromJson(
     Map<String, dynamic> json,
   ) => PackageRequestSearchItem(
@@ -188,6 +195,7 @@ class PackageRequestSearchItem extends Equatable {
     uniqueViewerCount: (json['uniqueViewerCount'] as num?)?.toInt(),
     grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
     myNegotiation: MyNegotiationSummary.tryFromJson(json['myNegotiation']),
+    transportMode: transportModeFromRequestJson(json),
   );
 
   @override
@@ -223,6 +231,7 @@ class PackageRequestSearchItem extends Equatable {
     grossPriceEur,
     uniqueViewerCount,
     myNegotiation,
+    transportMode,
   ];
 }
 

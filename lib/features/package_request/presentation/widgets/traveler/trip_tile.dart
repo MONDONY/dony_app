@@ -1,9 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -80,7 +80,13 @@ class TripTile extends StatelessWidget {
                                     color: cs.onPrimary,
                                     size: 20,
                                   )
-                                : const DonyEmoji.planeTakeoff(size: 20),
+                                : DonyIcon(
+                                    transportModeOrPlane(
+                                      announcement.transportMode,
+                                    ).iconAsset,
+                                    color: cs.primary,
+                                    size: 20,
+                                  ),
                           ),
                           const SizedBox(width: DonySpacing.md),
                           Expanded(

@@ -228,7 +228,11 @@ class TripPickerSectionState extends State<TripPickerSection> {
               ),
               child: Column(
                 children: [
-                  const DonyIcon('plane', size: 36, color: kTextHint),
+                  const DonyIcon(
+                    kNeutralTripIconAsset,
+                    size: 36,
+                    color: kTextHint,
+                  ),
                   const SizedBox(height: DonySpacing.sm),
                   Text(
                     context.l10n.requestPickerEmptyCreateHint,
