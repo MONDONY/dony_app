@@ -11253,6 +11253,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancellationReasonFlightCanceled => 'Flight canceled';
 
   @override
+  String get cancellationReasonTransportCancelled => 'Transport canceled';
+
+  @override
+  String get cancellationReasonBreakdown => 'Breakdown or setback';
+
+  @override
   String get cancellationReasonPersonalEmergency => 'Personal emergency';
 
   @override
@@ -16079,7 +16085,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripRescheduleSubtitle =>
-      'Flight canceled or trip postponed: pick the new date.';
+      'Departure canceled or trip postponed: pick the new date.';
 
   @override
   String get tripRescheduleReasonLabel => 'Reason';
@@ -16088,14 +16094,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripRescheduleReasonFlightCancelled => 'Flight canceled';
 
   @override
+  String get tripRescheduleReasonTransportCancelled => 'Transport canceled';
+
+  @override
+  String get tripRescheduleReasonBreakdown => 'Breakdown or setback';
+
+  @override
   String get tripRescheduleReasonPostponed => 'Trip postponed';
 
   @override
   String get tripRescheduleReasonOther => 'Other reason';
 
   @override
-  String get tripRescheduleNoteHint =>
-      'E.g. flight canceled, new flight confirmed the next day';
+  String get tripRescheduleNoteHint => 'E.g. departure moved to the next day';
 
   @override
   String get tripRescheduleSameDateHint =>

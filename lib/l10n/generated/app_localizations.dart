@@ -18565,6 +18565,18 @@ abstract class AppLocalizations {
   /// **'Vol annulé'**
   String get cancellationReasonFlightCanceled;
 
+  /// Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet en bateau, en train ou d'un autre mode (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transport annulé'**
+  String get cancellationReasonTransportCancelled;
+
+  /// Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet par la route (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'.
+  ///
+  /// In fr, this message translates to:
+  /// **'Panne ou contretemps'**
+  String get cancellationReasonBreakdown;
+
   /// Libellé affiché du motif d'annulation 'Urgence personnelle' (cancellation_labels.dart, cancellationReasonLabel).
   ///
   /// In fr, this message translates to:
@@ -26542,7 +26554,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la feuille de report
   ///
   /// In fr, this message translates to:
-  /// **'Vol annulé ou voyage repoussé : choisissez la nouvelle date.'**
+  /// **'Départ annulé ou voyage repoussé : choisissez la nouvelle date.'**
   String get tripRescheduleSubtitle;
 
   /// Libellé des puces de motif
@@ -26556,6 +26568,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vol annulé'**
   String get tripRescheduleReasonFlightCancelled;
+
+  /// Motif de report d'un trajet en bateau, en train ou d'un autre mode (valeur TRANSPORT_CANCELLED ; avion : tripRescheduleReasonFlightCancelled). Premier motif de la feuille de report et libellé de la carte « Trajet reporté » (trip_reschedule_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Transport annulé'**
+  String get tripRescheduleReasonTransportCancelled;
+
+  /// Motif de report d'un trajet par la route (valeur TRANSPORT_CANCELLED, trip_reschedule_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Panne ou contretemps'**
+  String get tripRescheduleReasonBreakdown;
 
   /// Motif de report
   ///
@@ -26572,7 +26596,7 @@ abstract class AppLocalizations {
   /// Indice du message aux expéditeurs
   ///
   /// In fr, this message translates to:
-  /// **'Ex. : vol annulé, nouveau vol confirmé le lendemain'**
+  /// **'Ex. : départ décalé au lendemain'**
   String get tripRescheduleNoteHint;
 
   /// Feuille de report : même horaire que l'actuel

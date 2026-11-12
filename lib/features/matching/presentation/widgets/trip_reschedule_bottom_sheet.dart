@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
+import 'package:dony/features/matching/presentation/trip_reschedule_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +45,8 @@ DateTime rescheduleDefaultHandoverDay({
   return candidate.isBefore(today) ? today : candidate;
 }
 
-/// Bottom sheet « Reporter le trajet » : vol annulé, voyage repoussé. Le
+/// Bottom sheet « Reporter le trajet » : départ annulé (vol, panne ou
+/// contretemps, transport annulé selon le mode du trajet), voyage repoussé. Le
 /// voyageur choisit la nouvelle date même avec des colis acceptés ; chaque
 /// expéditeur concerné pourra garder son colis ou se retirer sans frais.
 class TripRescheduleBottomSheet extends StatefulWidget {
@@ -363,16 +365,6 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
     );
   }
 
-  String _reasonLabel(TripRescheduleReason r) {
-    final l = context.l10n;
-    return switch (r) {
-      TripRescheduleReason.flightCancelled =>
-        l.tripRescheduleReasonFlightCancelled,
-      TripRescheduleReason.postponed => l.tripRescheduleReasonPostponed,
-      TripRescheduleReason.other => l.tripRescheduleReasonOther,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -429,10 +421,18 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
                 spacing: DonySpacing.sm,
                 runSpacing: DonySpacing.sm,
                 children: [
-                  for (final r in TripRescheduleReason.values)
+                  for (final r in [
+                    firstReasonFor(widget.announcement.transportMode),
+                    TripRescheduleReason.postponed,
+                    TripRescheduleReason.other,
+                  ])
                     DonyChip(
                       key: Key('reschedule-reason-${r.wire}'),
-                      label: _reasonLabel(r),
+                      label: rescheduleReasonLabel(
+                        l,
+                        r,
+                        widget.announcement.transportMode,
+                      ),
                       selected: _reason.value == r,
                       onTap: () => _reason.value = r,
                     ),
@@ -458,7 +458,7 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
                     flex: 2,
                     child: _PickerTile(
                       key: const Key('reschedule-departure-time-field'),
-                      iconAsset: 'plane-takeoff',
+                      iconAsset: 'calendar',
                       label: l.tripRescheduleTimeShort,
                       value: time == null ? null : _wire(time),
                       placeholder: l.tripRescheduleChoose,
@@ -478,7 +478,7 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
               _SectionTitle(l.tripRescheduleSectionArrival),
               _PickerTile(
                 key: const Key('reschedule-arrival-time-field'),
-                iconAsset: 'plane-landing',
+                iconAsset: 'flag',
                 label: l.tripRescheduleTimeShort,
                 value: arrival == null ? null : _wire(arrival),
                 placeholder: l.tripRescheduleOptional,

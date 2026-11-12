@@ -14,6 +14,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
+
 class _MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
@@ -39,25 +42,28 @@ void main() {
   late StreamController<AnnouncementState> states;
   final departure = _departureDay();
 
-  final announcement = AnnouncementModel(
-    id: 'a1',
-    travelerId: 't1',
-    departureCity: 'Paris',
-    arrivalCity: 'Dakar',
-    departureDate: departure,
-    departureTime: '22:00',
-    arrivalTime: '06:30',
-    arrivalDate: _plusDays(departure, 1),
-    handoverDeadline: _plusDays(departure, -1),
-    availableKg: 10,
-    totalKg: 20,
-    pricePerKg: 5,
-    status: 'FULL',
-    bidsCount: 2,
-    remainingReschedules: 1,
-    createdAt: DateTime(2026, 9),
-    updatedAt: DateTime(2026, 9),
-  );
+  AnnouncementModel buildAnnouncement({TransportMode? mode}) =>
+      AnnouncementModel(
+        id: 'a1',
+        travelerId: 't1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: departure,
+        departureTime: '22:00',
+        arrivalTime: '06:30',
+        arrivalDate: _plusDays(departure, 1),
+        handoverDeadline: _plusDays(departure, -1),
+        availableKg: 10,
+        totalKg: 20,
+        pricePerKg: 5,
+        status: 'FULL',
+        bidsCount: 2,
+        remainingReschedules: 1,
+        transportMode: mode,
+        createdAt: DateTime(2026, 9),
+        updatedAt: DateTime(2026, 9),
+      );
+  final announcement = buildAnnouncement();
 
   setUpAll(() {
     registerFallbackValue(AnnouncementDetailRequested('x'));
@@ -70,41 +76,47 @@ void main() {
     whenListen(bloc, states.stream, initialState: AnnouncementInitial());
   });
 
-  Widget host() => MaterialApp(
-    theme: AppTheme.light(),
-    locale: AppL10n.fr,
-    // Téléphone en 24 h : le sélecteur d'heure en saisie clavier n'accepte
-    // « 18 » qu'à cette condition.
-    builder: (c, child) => MediaQuery(
-      data: MediaQuery.of(c).copyWith(alwaysUse24HourFormat: true),
-      child: child!,
-    ),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    home: BlocProvider<AnnouncementBloc>.value(
-      value: bloc,
-      child: Builder(
-        builder: (ctx) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              key: const Key('open'),
-              onPressed: () => TripRescheduleBottomSheet.show(
-                ctx,
-                announcement: announcement,
+  Widget host({AnnouncementModel? trip, Locale locale = AppL10n.fr}) =>
+      MaterialApp(
+        theme: AppTheme.light(),
+        locale: locale,
+        // Téléphone en 24 h : le sélecteur d'heure en saisie clavier n'accepte
+        // « 18 » qu'à cette condition.
+        builder: (c, child) => MediaQuery(
+          data: MediaQuery.of(c).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        ),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BlocProvider<AnnouncementBloc>.value(
+          value: bloc,
+          child: Builder(
+            builder: (ctx) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  key: const Key('open'),
+                  onPressed: () => TripRescheduleBottomSheet.show(
+                    ctx,
+                    announcement: trip ?? announcement,
+                  ),
+                  child: const Text('open'),
+                ),
               ),
-              child: const Text('open'),
             ),
           ),
         ),
-      ),
-    ),
-  );
+      );
 
-  Future<void> open(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(900, 2400);
+  Future<void> open(
+    WidgetTester tester, {
+    AnnouncementModel? trip,
+    Locale locale = AppL10n.fr,
+    Size size = const Size(900, 2400),
+  }) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(host());
+    await tester.pumpWidget(host(trip: trip, locale: locale));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
   }
@@ -342,6 +354,145 @@ void main() {
       submitAndCapture(tester).handoverDeadline,
       DateTime(newDay.year, newDay.month, newDay.day, 22),
     );
+  });
+
+  group('motifs selon le mode', () {
+    final reasonKeys = [
+      'FLIGHT_CANCELLED',
+      'TRANSPORT_CANCELLED',
+      'POSTPONED',
+      'OTHER',
+    ];
+
+    Iterable<String> shownReasons() => reasonKeys.where(
+      (w) => find.byKey(Key('reschedule-reason-$w')).evaluate().isNotEmpty,
+    );
+
+    testWidgets('avion : « Vol annulé », envoyé FLIGHT_CANCELLED', (
+      tester,
+    ) async {
+      await open(tester, trip: buildAnnouncement(mode: TransportMode.plane));
+
+      expect(shownReasons(), ['FLIGHT_CANCELLED', 'POSTPONED', 'OTHER']);
+      expect(find.text('Vol annulé'), findsOneWidget);
+      expect(find.text('Panne ou contretemps'), findsNothing);
+      await tester.tap(
+        find.byKey(const Key('reschedule-reason-FLIGHT_CANCELLED')),
+      );
+      await pickNextDay(tester);
+      await tester.tap(find.byKey(const Key('trip-reschedule-submit')));
+      await tester.pump();
+
+      expect(
+        submitAndCapture(tester).reason,
+        TripRescheduleReason.flightCancelled,
+      );
+    });
+
+    testWidgets('mode absent : traité comme l\'avion', (tester) async {
+      await open(tester);
+
+      expect(shownReasons(), ['FLIGHT_CANCELLED', 'POSTPONED', 'OTHER']);
+      expect(find.text('Vol annulé'), findsOneWidget);
+    });
+
+    testWidgets(
+      'route : « Panne ou contretemps », envoyé TRANSPORT_CANCELLED',
+      (tester) async {
+        await open(tester, trip: buildAnnouncement(mode: TransportMode.car));
+
+        expect(shownReasons(), ['TRANSPORT_CANCELLED', 'POSTPONED', 'OTHER']);
+        expect(find.text('Panne ou contretemps'), findsOneWidget);
+        expect(find.text('Vol annulé'), findsNothing);
+        expect(find.text('Voyage repoussé'), findsOneWidget);
+        expect(find.text('Autre raison'), findsOneWidget);
+        await tester.tap(
+          find.byKey(const Key('reschedule-reason-TRANSPORT_CANCELLED')),
+        );
+        await pickNextDay(tester);
+        await tester.tap(find.byKey(const Key('trip-reschedule-submit')));
+        await tester.pump();
+
+        expect(
+          submitAndCapture(tester).reason,
+          TripRescheduleReason.transportCancelled,
+        );
+      },
+    );
+
+    testWidgets('bus : affiché comme la route', (tester) async {
+      await open(tester, trip: buildAnnouncement(mode: TransportMode.bus));
+
+      expect(find.text('Panne ou contretemps'), findsOneWidget);
+    });
+
+    testWidgets('bateau : « Transport annulé », envoyé TRANSPORT_CANCELLED', (
+      tester,
+    ) async {
+      await open(tester, trip: buildAnnouncement(mode: TransportMode.boat));
+
+      expect(shownReasons(), ['TRANSPORT_CANCELLED', 'POSTPONED', 'OTHER']);
+      expect(find.text('Transport annulé'), findsOneWidget);
+      expect(find.text('Panne ou contretemps'), findsNothing);
+    });
+
+    testWidgets('anglais : libellés par mode', (tester) async {
+      enableEnglish();
+      await open(
+        tester,
+        trip: buildAnnouncement(mode: TransportMode.car),
+        locale: AppL10n.en,
+      );
+      expect(find.text('Breakdown or setback'), findsOneWidget);
+      expect(
+        find.text('Departure canceled or trip postponed: pick the new date.'),
+        findsOneWidget,
+      );
+    });
+
+    for (final mode in [
+      null,
+      TransportMode.plane,
+      TransportMode.car,
+      TransportMode.boat,
+    ]) {
+      testWidgets('aucune icône d\'avion dans la feuille (${mode?.name})', (
+        tester,
+      ) async {
+        await open(tester, trip: buildAnnouncement(mode: mode));
+
+        expectNoPlaneIcon(tester);
+        expect(findDonyIcon('flag'), findsOneWidget);
+        expect(findDonyIcon('calendar'), findsWidgets);
+      });
+    }
+
+    for (final locale in [AppL10n.fr, AppL10n.en]) {
+      testWidgets('bouton sur une ligne à 360 dp (${locale.languageCode})', (
+        tester,
+      ) async {
+        enableEnglish();
+        await open(
+          tester,
+          trip: buildAnnouncement(mode: TransportMode.car),
+          locale: locale,
+          size: const Size(360, 2400),
+        );
+
+        final label = find.descendant(
+          of: find.byKey(const Key('trip-reschedule-submit')),
+          matching: find.byType(Text),
+        );
+        expect(tester.takeException(), isNull);
+        final style = tester.widget<Text>(label).style;
+        final fontSize = (style?.fontSize ?? 14);
+        expect(
+          tester.getSize(label).height,
+          lessThanOrEqualTo(fontSize * 1.7),
+          reason: 'libellé sur une ligne',
+        );
+      });
+    }
   });
 
   testWidgets(

@@ -6672,6 +6672,14 @@
   "@cancellationReasonFlightCanceled": {
     "description": "Libellé affiché du motif d'annulation 'Vol annulé' (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste envoyée au serveur telle quelle (cancellation_bottom_sheet.dart, _reasons)."
   },
+  "cancellationReasonTransportCancelled": "Transport canceled",
+  "@cancellationReasonTransportCancelled": {
+    "description": "Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet en bateau, en train ou d'un autre mode (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'."
+  },
+  "cancellationReasonBreakdown": "Breakdown or setback",
+  "@cancellationReasonBreakdown": {
+    "description": "Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet par la route (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'."
+  },
   "cancellationReasonPersonalEmergency": "Personal emergency",
   "@cancellationReasonPersonalEmergency": {
     "description": "Libellé affiché du motif d'annulation 'Urgence personnelle' (cancellation_labels.dart, cancellationReasonLabel)."
@@ -8941,12 +8949,14 @@
   },
   "tripRescheduleTile": "Reschedule",
   "tripRescheduleTitle": "Reschedule the trip",
-  "tripRescheduleSubtitle": "Flight canceled or trip postponed: pick the new date.",
+  "tripRescheduleSubtitle": "Departure canceled or trip postponed: pick the new date.",
   "tripRescheduleReasonLabel": "Reason",
   "tripRescheduleReasonFlightCancelled": "Flight canceled",
+  "tripRescheduleReasonTransportCancelled": "Transport canceled",
+  "tripRescheduleReasonBreakdown": "Breakdown or setback",
   "tripRescheduleReasonPostponed": "Trip postponed",
   "tripRescheduleReasonOther": "Other reason",
-  "tripRescheduleNoteHint": "E.g. flight canceled, new flight confirmed the next day",
+  "tripRescheduleNoteHint": "E.g. departure moved to the next day",
   "tripRescheduleSameDateHint": "Pick a different date or time from the current one.",
   "tripRescheduleConsequences": "Senders whose parcel is accepted can keep it or cancel at no cost, and each cancellation counts against your reliability. A trip can be rescheduled twice at most.",
   "tripRescheduleSubmit": "Reschedule trip",

@@ -4,8 +4,10 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
+import 'package:dony/features/matching/presentation/trip_reschedule_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,14 +41,19 @@ class TripRescheduleCard extends StatelessWidget {
   static bool needsReply(BidModel bid) =>
       bid.reschedule?.decisionPending ?? false;
 
-  static String reasonLabel(BuildContext context, String reason) {
+  /// Libellé du motif : `FLIGHT_CANCELLED` et `TRANSPORT_CANCELLED` sont lus,
+  /// le second selon le [mode] du trajet ; un motif inconnu se lit « Autre
+  /// raison ».
+  static String reasonLabel(
+    BuildContext context,
+    String reason,
+    TransportMode? mode,
+  ) {
     final l = context.l10n;
-    return switch (TripRescheduleReason.fromWire(reason)) {
-      TripRescheduleReason.flightCancelled =>
-        l.tripRescheduleReasonFlightCancelled,
-      TripRescheduleReason.postponed => l.tripRescheduleReasonPostponed,
-      _ => l.tripRescheduleReasonOther,
-    };
+    final parsed = TripRescheduleReason.fromWire(reason);
+    return parsed == null
+        ? l.tripRescheduleReasonOther
+        : rescheduleReasonLabel(l, parsed, mode);
   }
 
   /// Date limite de la réponse, avec le jour de la semaine (« lun. 12 oct.
@@ -92,7 +99,7 @@ class TripRescheduleCard extends StatelessWidget {
             _date(context, r.previousDepartureDate),
             _date(context, r.newDepartureDate),
             // Libellé de puce (« Vol annulé ») repris en milieu de phrase.
-            reasonLabel(context, r.reason).toLowerCase(),
+            reasonLabel(context, r.reason, bid.transportMode).toLowerCase(),
           ),
           style: tt.bodyMedium,
         ),

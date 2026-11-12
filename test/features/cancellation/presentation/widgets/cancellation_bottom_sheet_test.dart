@@ -1,7 +1,9 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -254,5 +256,94 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  group('motif de tête selon le mode du trajet', () {
+    Future<void> openFor(
+      WidgetTester tester,
+      TransportMode? mode, {
+      String open = 'Ouvrir',
+    }) async {
+      await tester.pumpWidget(
+        _wrapWithRouter(
+          Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => CancellationBottomSheet.show(
+                ctx,
+                announcementId: 'ann-1',
+                transportMode: mode,
+              ),
+              child: Text(open),
+            ),
+          ),
+          bloc,
+        ),
+      );
+      await tester.tap(find.text(open));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('route : « Panne ou contretemps », valeur envoyée inchangée', (
+      tester,
+    ) async {
+      await openFor(tester, TransportMode.car);
+
+      expect(find.text('Vol annulé'), findsNothing);
+      expect(find.text('Panne ou contretemps'), findsOneWidget);
+      await tester.tap(find.text('Panne ou contretemps'));
+      await tester.pump();
+      await tester.tap(find.text("Confirmer l'annulation"));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Confirmer'));
+      await tester.pumpAndSettle();
+
+      final event =
+          verify(() => bloc.add(captureAny())).captured.single
+              as CancellationTripRequested;
+      expect(event.reason, 'Vol annulé');
+    });
+
+    testWidgets('bateau : « Transport annulé »', (tester) async {
+      await openFor(tester, TransportMode.boat);
+
+      expect(find.text('Transport annulé'), findsOneWidget);
+      expect(find.text('Vol annulé'), findsNothing);
+    });
+
+    testWidgets('avion ou mode absent : « Vol annulé »', (tester) async {
+      await openFor(tester, TransportMode.plane);
+      expect(find.text('Vol annulé'), findsOneWidget);
+    });
+
+    testWidgets('anglais : route', (tester) async {
+      useEnglish();
+      await openFor(tester, TransportMode.car, open: 'Open');
+
+      expect(find.text('Breakdown or setback'), findsOneWidget);
+    });
+
+    for (final english in [false, true]) {
+      testWidgets('bouton sur une ligne à 360 dp (${english ? 'en' : 'fr'})', (
+        tester,
+      ) async {
+        if (english) useEnglish();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await openFor(
+          tester,
+          TransportMode.car,
+          open: english ? 'Open' : 'Ouvrir',
+        );
+
+        final label = find.descendant(
+          of: find.byType(DonyButton),
+          matching: find.byType(Text),
+        );
+        expect(tester.takeException(), isNull);
+        final fontSize = tester.widget<Text>(label).style?.fontSize ?? 14;
+        expect(tester.getSize(label).height, lessThanOrEqualTo(fontSize * 1.7));
+      });
+    }
   });
 }

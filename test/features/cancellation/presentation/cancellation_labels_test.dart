@@ -1,4 +1,5 @@
 import 'package:dony/features/cancellation/presentation/cancellation_labels.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,6 +13,27 @@ void main() {
     });
     test('Vol annulé — en', () {
       expect(cancellationReasonLabel(en, 'Vol annulé'), 'Flight canceled');
+    });
+
+    test('Vol annulé — libellé selon le mode, valeur de donnée inchangée', () {
+      String label(AppLocalizations l, TransportMode? m) =>
+          cancellationReasonLabel(l, 'Vol annulé', mode: m);
+      expect(label(fr, null), 'Vol annulé');
+      expect(label(fr, TransportMode.plane), 'Vol annulé');
+      expect(label(fr, TransportMode.car), 'Panne ou contretemps');
+      expect(label(fr, TransportMode.bus), 'Panne ou contretemps');
+      expect(label(fr, TransportMode.boat), 'Transport annulé');
+      expect(label(fr, TransportMode.train), 'Transport annulé');
+      expect(label(fr, TransportMode.other), 'Transport annulé');
+      expect(label(en, TransportMode.car), 'Breakdown or setback');
+      expect(label(en, TransportMode.boat), 'Transport canceled');
+      expect(label(en, TransportMode.plane), 'Flight canceled');
+    });
+    test('le mode ne change pas les autres motifs', () {
+      expect(
+        cancellationReasonLabel(fr, 'Autre', mode: TransportMode.car),
+        'Autre',
+      );
     });
 
     test('Urgence personnelle — fr égal à la valeur de donnée', () {

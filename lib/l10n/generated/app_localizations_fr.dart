@@ -11318,6 +11318,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cancellationReasonFlightCanceled => 'Vol annulé';
 
   @override
+  String get cancellationReasonTransportCancelled => 'Transport annulé';
+
+  @override
+  String get cancellationReasonBreakdown => 'Panne ou contretemps';
+
+  @override
   String get cancellationReasonPersonalEmergency => 'Urgence personnelle';
 
   @override
@@ -16191,7 +16197,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripRescheduleSubtitle =>
-      'Vol annulé ou voyage repoussé : choisissez la nouvelle date.';
+      'Départ annulé ou voyage repoussé : choisissez la nouvelle date.';
 
   @override
   String get tripRescheduleReasonLabel => 'Motif';
@@ -16200,14 +16206,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripRescheduleReasonFlightCancelled => 'Vol annulé';
 
   @override
+  String get tripRescheduleReasonTransportCancelled => 'Transport annulé';
+
+  @override
+  String get tripRescheduleReasonBreakdown => 'Panne ou contretemps';
+
+  @override
   String get tripRescheduleReasonPostponed => 'Voyage repoussé';
 
   @override
   String get tripRescheduleReasonOther => 'Autre raison';
 
   @override
-  String get tripRescheduleNoteHint =>
-      'Ex. : vol annulé, nouveau vol confirmé le lendemain';
+  String get tripRescheduleNoteHint => 'Ex. : départ décalé au lendemain';
 
   @override
   String get tripRescheduleSameDateHint =>

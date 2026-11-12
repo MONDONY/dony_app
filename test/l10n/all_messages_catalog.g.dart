@@ -4053,6 +4053,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'ratingReportTooltip': (l) => l.ratingReportTooltip,
   'ratingExcludedNotice': (l) => l.ratingExcludedNotice,
   'cancellationReasonFlightCanceled': (l) => l.cancellationReasonFlightCanceled,
+  'cancellationReasonTransportCancelled': (l) =>
+      l.cancellationReasonTransportCancelled,
+  'cancellationReasonBreakdown': (l) => l.cancellationReasonBreakdown,
   'cancellationReasonPersonalEmergency': (l) =>
       l.cancellationReasonPersonalEmergency,
   'cancellationReasonHealthIssue': (l) => l.cancellationReasonHealthIssue,
@@ -5698,6 +5701,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripRescheduleReasonLabel': (l) => l.tripRescheduleReasonLabel,
   'tripRescheduleReasonFlightCancelled': (l) =>
       l.tripRescheduleReasonFlightCancelled,
+  'tripRescheduleReasonTransportCancelled': (l) =>
+      l.tripRescheduleReasonTransportCancelled,
+  'tripRescheduleReasonBreakdown': (l) => l.tripRescheduleReasonBreakdown,
   'tripRescheduleReasonPostponed': (l) => l.tripRescheduleReasonPostponed,
   'tripRescheduleReasonOther': (l) => l.tripRescheduleReasonOther,
   'tripRescheduleNoteHint': (l) => l.tripRescheduleNoteHint,

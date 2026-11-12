@@ -12276,6 +12276,14 @@
   "@cancellationReasonFlightCanceled": {
     "description": "Libellé affiché du motif d'annulation 'Vol annulé' (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste envoyée au serveur telle quelle (cancellation_bottom_sheet.dart, _reasons)."
   },
+  "cancellationReasonTransportCancelled": "Transport annulé",
+  "@cancellationReasonTransportCancelled": {
+    "description": "Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet en bateau, en train ou d'un autre mode (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'."
+  },
+  "cancellationReasonBreakdown": "Panne ou contretemps",
+  "@cancellationReasonBreakdown": {
+    "description": "Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet par la route (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'."
+  },
   "cancellationReasonPersonalEmergency": "Urgence personnelle",
   "@cancellationReasonPersonalEmergency": {
     "description": "Libellé affiché du motif d'annulation 'Urgence personnelle' (cancellation_labels.dart, cancellationReasonLabel)."
@@ -18303,7 +18311,7 @@
   "@tripRescheduleTitle": {
     "description": "Titre de la feuille de report (trip_reschedule_bottom_sheet.dart)"
   },
-  "tripRescheduleSubtitle": "Vol annulé ou voyage repoussé : choisissez la nouvelle date.",
+  "tripRescheduleSubtitle": "Départ annulé ou voyage repoussé : choisissez la nouvelle date.",
   "@tripRescheduleSubtitle": {
     "description": "Sous-titre de la feuille de report"
   },
@@ -18315,6 +18323,14 @@
   "@tripRescheduleReasonFlightCancelled": {
     "description": "Motif de report"
   },
+  "tripRescheduleReasonTransportCancelled": "Transport annulé",
+  "@tripRescheduleReasonTransportCancelled": {
+    "description": "Motif de report d'un trajet en bateau, en train ou d'un autre mode (valeur TRANSPORT_CANCELLED ; avion : tripRescheduleReasonFlightCancelled). Premier motif de la feuille de report et libellé de la carte « Trajet reporté » (trip_reschedule_labels.dart)."
+  },
+  "tripRescheduleReasonBreakdown": "Panne ou contretemps",
+  "@tripRescheduleReasonBreakdown": {
+    "description": "Motif de report d'un trajet par la route (valeur TRANSPORT_CANCELLED, trip_reschedule_labels.dart)."
+  },
   "tripRescheduleReasonPostponed": "Voyage repoussé",
   "@tripRescheduleReasonPostponed": {
     "description": "Motif de report"
@@ -18323,7 +18339,7 @@
   "@tripRescheduleReasonOther": {
     "description": "Motif de report"
   },
-  "tripRescheduleNoteHint": "Ex. : vol annulé, nouveau vol confirmé le lendemain",
+  "tripRescheduleNoteHint": "Ex. : départ décalé au lendemain",
   "@tripRescheduleNoteHint": {
     "description": "Indice du message aux expéditeurs"
   },

@@ -4,6 +4,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -20,16 +21,19 @@ BidModel _bid({
   bool pending = true,
   String status = 'ACCEPTED',
   String? note,
+  String reason = 'FLIGHT_CANCELLED',
+  TransportMode? mode,
 }) => BidModel(
   id: 'b1',
   announcementId: 'a1',
   senderId: 's1',
   status: status,
+  transportMode: mode,
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
   reschedule: TripRescheduleInfo(
     id: 'r1',
-    reason: 'FLIGHT_CANCELLED',
+    reason: reason,
     note: note,
     previousDepartureDate: DateTime(2026, 10, 9),
     newDepartureDate: DateTime(2026, 10, 13),
@@ -110,6 +114,36 @@ void main() {
     );
     expect(find.byType(DonyButton), findsNothing);
     expect(find.byKey(const Key('trip-reschedule-card')), findsOneWidget);
+  });
+
+  testWidgets('FLIGHT_CANCELLED : « vol annulé » quel que soit le mode', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(_bid(mode: TransportMode.boat)));
+    expect(find.textContaining('(vol annulé)'), findsOneWidget);
+  });
+
+  testWidgets('TRANSPORT_CANCELLED sur un trajet en bateau : « transport '
+      'annulé »', (tester) async {
+    await tester.pumpWidget(
+      host(_bid(reason: 'TRANSPORT_CANCELLED', mode: TransportMode.boat)),
+    );
+    expect(find.textContaining('(transport annulé)'), findsOneWidget);
+  });
+
+  testWidgets('TRANSPORT_CANCELLED sur la route : « panne ou contretemps »', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(_bid(reason: 'TRANSPORT_CANCELLED', mode: TransportMode.car)),
+    );
+    expect(find.textContaining('(panne ou contretemps)'), findsOneWidget);
+  });
+
+  testWidgets('TRANSPORT_CANCELLED sans mode (ancien back) : « transport '
+      'annulé »', (tester) async {
+    await tester.pumpWidget(host(_bid(reason: 'TRANSPORT_CANCELLED')));
+    expect(find.textContaining('(transport annulé)'), findsOneWidget);
   });
 
   testWidgets('sans cadre : ni carte ni titre, le sheet porte le titre', (

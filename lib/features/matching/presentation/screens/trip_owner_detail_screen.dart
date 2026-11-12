@@ -569,6 +569,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
         context,
         announcementId: announcementId,
         handedOverParcels: _handedOverParcels(context),
+        transportMode: _known()?.transportMode,
       );
     }
   }
