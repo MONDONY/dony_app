@@ -1114,6 +1114,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Indiquez un prix par kg supérieur à 0, ou choisissez le tarif à la grille.';
 
   @override
+  String get errorTransportModeDisabledTitle => 'Mode indisponible';
+
+  @override
+  String get errorTransportModeDisabledMessage =>
+      'Ce mode de transport n\'est pas encore proposé.';
+
+  @override
+  String get errorArrivalTooFarTitle => 'Arrivée trop lointaine';
+
+  @override
+  String get errorArrivalTooFarMessage =>
+      'La date d\'arrivée est trop loin après le départ pour ce mode.';
+
+  @override
   String get errorConflictTitle => 'Action impossible';
 
   @override

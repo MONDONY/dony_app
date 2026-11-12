@@ -1106,6 +1106,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a price per kg above 0, or choose the price grid.';
 
   @override
+  String get errorTransportModeDisabledTitle => 'Mode unavailable';
+
+  @override
+  String get errorTransportModeDisabledMessage =>
+      'This transport mode isn\'t available yet.';
+
+  @override
+  String get errorArrivalTooFarTitle => 'Arrival too far';
+
+  @override
+  String get errorArrivalTooFarMessage =>
+      'The arrival date is too far after departure for this mode.';
+
+  @override
   String get errorConflictTitle => 'Can\'t do this';
 
   @override

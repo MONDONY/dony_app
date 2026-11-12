@@ -415,6 +415,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorValidationTitle': (l) => l.errorValidationTitle,
   'errorValidationMessage': (l) => l.errorValidationMessage,
   'errorInvalidPriceMessage': (l) => l.errorInvalidPriceMessage,
+  'errorTransportModeDisabledTitle': (l) => l.errorTransportModeDisabledTitle,
+  'errorTransportModeDisabledMessage': (l) =>
+      l.errorTransportModeDisabledMessage,
+  'errorArrivalTooFarTitle': (l) => l.errorArrivalTooFarTitle,
+  'errorArrivalTooFarMessage': (l) => l.errorArrivalTooFarMessage,
   'errorConflictTitle': (l) => l.errorConflictTitle,
   'errorConflictMessage': (l) => l.errorConflictMessage,
   'errorStorageTitle': (l) => l.errorStorageTitle,

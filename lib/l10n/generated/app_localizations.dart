@@ -1970,6 +1970,30 @@ abstract class AppLocalizations {
   /// **'Indiquez un prix par kg supérieur à 0, ou choisissez le tarif à la grille.'**
   String get errorInvalidPriceMessage;
 
+  /// Erreur transport-mode-disabled / invalid-transport-mode du back : le mode de transport demandé n'est pas ouvert (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode indisponible'**
+  String get errorTransportModeDisabledTitle;
+
+  /// Erreur transport-mode-disabled / invalid-transport-mode du back : le mode de transport demandé n'est pas ouvert (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce mode de transport n\'est pas encore proposé.'**
+  String get errorTransportModeDisabledMessage;
+
+  /// Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée trop lointaine'**
+  String get errorArrivalTooFarTitle;
+
+  /// Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La date d\'arrivée est trop loin après le départ pour ce mode.'**
+  String get errorArrivalTooFarMessage;
+
   /// No description provided for @errorConflictTitle.
   ///
   /// In fr, this message translates to:
