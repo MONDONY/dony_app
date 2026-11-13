@@ -19,10 +19,7 @@ String tripDelayReasonLabel(
         : l.tripRescheduleReasonOther,
   TripDelayReason.weather => l.tripDelayReasonWeather,
   TripDelayReason.extendedStopover =>
-    {
-          TransportMode.boat,
-          TransportMode.plane,
-        }.contains(transportModeOrPlane(mode))
+    (mode == TransportMode.boat || mode == TransportMode.plane)
         ? l.tripDelayReasonExtendedStopover
         : l.tripDelayReasonExtendedStop,
   TripDelayReason.transportDisruption => l.tripDelayReasonTransportDisruption,
