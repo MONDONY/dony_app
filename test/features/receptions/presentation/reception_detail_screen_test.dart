@@ -16,6 +16,8 @@ import 'package:dony/features/receptions/presentation/screens/reception_detail_s
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -133,6 +135,7 @@ void main() {
     Locale locale = AppL10n.fr,
     bool settle = true,
     bool realQrSheet = false,
+    bool realTimeline = false,
     ThemeData? theme,
     double textScale = 1,
   }) async {
@@ -163,7 +166,9 @@ void main() {
           path: '/receptions/:bidId',
           builder: (_, state) => ReceptionDetailScreen(
             bidId: state.pathParameters['bidId']!,
-            openTimeline: (_, reception) async => timelineOpened.add(reception),
+            openTimeline: realTimeline
+                ? null
+                : (_, reception) async => timelineOpened.add(reception),
             openQr: realQrSheet
                 ? null
                 : (_, reception) async => qrOpened.add(reception),
@@ -711,6 +716,65 @@ void main() {
 
       expect(timelineOpened.single.bidId, _id);
     });
+
+    // I1 (revue A6) : la frise ouverte par le destinataire reçoit le statut du
+    // colis. En bateau, « Arrivé au port » en dépend.
+    for (final (status, arrivedAtPort) in [
+      ('IN_TRANSIT', false),
+      ('ARRIVED', true),
+    ]) {
+      testWidgets('frise bateau du destinataire ($status) : '
+          '${arrivedAtPort ? 'arrivé au port' : 'en mer'}, aucun avion', (
+        tester,
+      ) async {
+        final trackingBloc = _MockTrackingBloc();
+        final at = DateTime(2026, 10, 4, 9);
+        when(() => trackingBloc.state).thenReturn(
+          TrackingEventsLoaded([
+            TrackingEventModel(
+              id: 'evt-depart',
+              bidId: _id,
+              eventType: 'DEPART',
+              scannedAt: at,
+              createdAt: at,
+              scanMethod: ScanMethod.qr,
+              gpsLabel: 'Paris',
+            ),
+          ]),
+        );
+        when(() => trackingBloc.stream).thenAnswer((_) => const Stream.empty());
+        when(() => trackingBloc.add(any())).thenReturn(null);
+        when(() => trackingBloc.close()).thenAnswer((_) async {});
+        if (getIt.isRegistered<TrackingBloc>()) {
+          getIt.unregister<TrackingBloc>();
+        }
+        getIt.registerFactory<TrackingBloc>(() => trackingBloc);
+        addTearDown(() {
+          if (getIt.isRegistered<TrackingBloc>()) {
+            getIt.unregister<TrackingBloc>();
+          }
+        });
+        stub(
+          ReceptionDetailLoaded(
+            _confirmed(bidStatus: status, transportMode: TransportMode.boat),
+          ),
+        );
+        await pump(tester, realTimeline: true);
+
+        await tester.tap(find.byKey(const Key('reception-view-tracking')));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        // « Arrivé au port de Dakar » : coché seulement une fois le colis
+        // arrivé ; la phrase d'état suit.
+        expect(
+          find.text('En mer vers Dakar'),
+          arrivedAtPort ? findsNothing : findsOneWidget,
+        );
+        expect(find.text('Arrivé au port de Dakar'), findsWidgets);
+        expectNoPlaneIcon(tester);
+      });
+    }
 
     testWidgets('anglais : étape, code et bouton traduits', (tester) async {
       stub(ReceptionDetailLoaded(_confirmed(bidStatus: 'ARRIVED')));

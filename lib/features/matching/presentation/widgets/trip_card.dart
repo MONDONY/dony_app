@@ -538,7 +538,9 @@ class _ActiveCardContent extends StatelessWidget {
               const SizedBox(width: DonySpacing.sm),
               Flexible(
                 child: Text(
-                  tripPricePerM3Text(l, announcement, net: true) ??
+                  // Mes trajets : le net du voyageur. Favoris (vue de
+                  // l'expéditeur) : le prix frais inclus.
+                  tripPricePerM3Text(l, announcement, net: !showFavorite) ??
                       _activePriceLabel(announcement, price, l),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

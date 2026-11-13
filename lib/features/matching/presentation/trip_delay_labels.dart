@@ -7,13 +7,16 @@ import 'package:dony/l10n/l10n.dart';
 /// `EXTENDED_STOPOVER` ne parle d'« escale » qu'en bateau et en avion : sur la
 /// route ou sans mode connu, c'est un « arrêt prolongé ». `TRANSPORT_DISRUPTION`
 /// reste neutre. `PORT_CONGESTION` n'existe qu'en bateau (le back le refuse
-/// ailleurs) : s'il arrive quand même, son libellé est lu tel quel.
+/// ailleurs) : s'il arrive quand même hors bateau, il se lit « Autre raison ».
 String tripDelayReasonLabel(
   AppLocalizations l,
   TripDelayReason reason,
   TransportMode? mode,
 ) => switch (reason) {
-  TripDelayReason.portCongestion => l.tripDelayReasonPortCongestion,
+  TripDelayReason.portCongestion =>
+    mode == TransportMode.boat
+        ? l.tripDelayReasonPortCongestion
+        : l.tripRescheduleReasonOther,
   TripDelayReason.weather => l.tripDelayReasonWeather,
   TripDelayReason.extendedStopover =>
     mode == TransportMode.boat || mode == TransportMode.plane

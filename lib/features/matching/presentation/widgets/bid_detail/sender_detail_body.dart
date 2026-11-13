@@ -134,6 +134,11 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     });
   }
 
+  /// Garde l'état de la carte Paiement quand l'enveloppe du stagger d'entrée
+  /// disparaît : sans elle, la carte est recréée et relit les étapes du colis
+  /// (2e `TrackingBloc`, 2e requête, la date du dépôt clignote).
+  final _paiementKey = GlobalKey();
+
   /// Encart du supplément, cible de [SenderDetailBody.focusSupplement].
   final _supplementKey = GlobalKey();
   bool _supplementFocused = false;
@@ -430,7 +435,11 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       ('voyageur', VoyageurContactCard(bid: bid)),
       (
         'paiement',
-        PaiementCard(bid: bid, existingPayment: widget.existingPayment),
+        PaiementCard(
+          key: _paiementKey,
+          bid: bid,
+          existingPayment: widget.existingPayment,
+        ),
       ),
       (
         'shipment',

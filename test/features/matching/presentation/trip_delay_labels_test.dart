@@ -71,6 +71,38 @@ void main() {
       }
     });
 
+    test(
+      'congestion au port hors bateau : « Autre raison » (jamais un port)',
+      () {
+        for (final mode in [
+          TransportMode.plane,
+          TransportMode.car,
+          TransportMode.bus,
+          TransportMode.other,
+          null,
+        ]) {
+          expect(
+            tripDelayReasonLabel(fr, TripDelayReason.portCongestion, mode),
+            'Autre raison',
+            reason: '$mode',
+          );
+          expect(
+            tripDelayReasonLabel(en, TripDelayReason.portCongestion, mode),
+            'Other reason',
+            reason: '$mode',
+          );
+        }
+        expect(
+          tripDelayInfoReasonLabel(
+            fr,
+            _delay('PORT_CONGESTION'),
+            TransportMode.car,
+          ),
+          'Autre raison',
+        );
+      },
+    );
+
     test('avion : l\'escale garde son nom', () {
       expect(
         tripDelayReasonLabel(

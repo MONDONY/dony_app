@@ -119,9 +119,13 @@ String? tripVolumeRemainingText(AppLocalizations l, AnnouncementModel a) {
   );
 }
 
-/// Prix au m³ d'un trajet bateau tel que l'EXPÉDITEUR le lit, frais inclus
-/// (« 600 €/m³ ») ; `null` pour un trajet au kilo, `unavailable` pour un trajet
-/// au m³ sans prix servi.
+/// Prix au m³ d'un trajet bateau (« 600 €/m³ ») ; `null` pour un trajet au
+/// kilo, `unavailable` pour un trajet au m³ sans prix servi.
+///
+/// Par défaut le prix de l'EXPÉDITEUR, frais inclus (`pricePerM3Display`, repli
+/// sur le net d'un back qui ne le sert pas) : un seul prix partout où
+/// l'expéditeur lit le trajet. [net] : le voyageur lit son propre trajet, au
+/// net (`pricePerM3`).
 String? tripPricePerM3Text(
   AppLocalizations l,
   AnnouncementModel a, {
@@ -130,7 +134,7 @@ String? tripPricePerM3Text(
   if (!a.isPricedPerM3) return null;
   final price = net
       ? (a.pricePerM3 ?? a.pricePerM3Display)
-      : a.pricePerM3Display;
+      : (a.pricePerM3Display ?? a.pricePerM3);
   if (price == null || price <= 0) return l.tripPosterPriceUnavailable;
   return l.tripPublishPerM3Value(formatPriceIn(price, a.currency));
 }

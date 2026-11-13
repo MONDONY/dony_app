@@ -41,6 +41,8 @@ Future<void> _openTimeline(BuildContext context, Reception reception) =>
       trackingNumber: reception.trackingNumber,
       arrivalInstructions: reception.arrivalInstructions,
       transportMode: reception.displayTransportMode,
+      // Statut du colis : en bateau, « Arrivé au port » en dépend.
+      bidStatus: reception.bidStatus,
       // Jalons connus du destinataire : départ prévu et arrivée (début de la
       // fourchette en bateau), sans retard (servi à l'expéditeur seulement).
       milestones: TripMilestones(

@@ -16,15 +16,15 @@ typedef MapPillPrice = ({
 });
 
 /// Prix au m³ d'une pastille, comme la carte de recherche
-/// ([tripPricePerM3Text] `net: true`) : le net du voyageur, sinon le prix
-/// affiché (invité). `null` hors trajet au m³.
+/// ([tripPricePerM3Text]) : le prix de l'expéditeur, frais inclus, sinon le net
+/// d'un back qui ne le sert pas. `null` hors trajet au m³.
 double? _pricePerM3(AnnouncementModel a) =>
-    a.isPricedPerM3 ? a.pricePerM3 ?? a.pricePerM3Display : null;
+    a.isPricedPerM3 ? a.pricePerM3Display ?? a.pricePerM3 : null;
 
 /// Pastille d'un trajet : son prix au kilo ; un trajet bateau vendu au m³
 /// montre son prix au m³, jamais « Par article ».
 MapPillPrice singlePillPrice(AppLocalizations l, AnnouncementModel a) {
-  final perM3 = tripPricePerM3Text(l, a, net: true);
+  final perM3 = tripPricePerM3Text(l, a);
   return (
     pricePerKg: perM3 != null
         ? _pricePerM3(a) ?? 0

@@ -316,6 +316,33 @@ void main() {
       expect(steps.last.title, "Arrivé au port d'Abidjan");
     });
 
+    test('bateau : jamais les villes du téléphone du transporteur', () {
+      final steps = compactJourneySteps(
+        fr,
+        [_deposit],
+        tracking: tracking,
+        now: _now,
+        mode: TransportMode.boat,
+        arrivalCity: 'Abidjan',
+      );
+      expect(steps.where((s) => s.state == JourneyStepState.position), isEmpty);
+    });
+
+    test('route : les villes approximatives restent dans la frise', () {
+      final steps = compactJourneySteps(
+        fr,
+        [_deposit],
+        tracking: tracking,
+        now: _now,
+        mode: TransportMode.car,
+        arrivalCity: 'Dakar',
+      );
+      expect(
+        steps.where((s) => s.state == JourneyStepState.position),
+        hasLength(1),
+      );
+    });
+
     test('route : libellés neutres inchangés', () {
       final steps = compactJourneySteps(
         fr,

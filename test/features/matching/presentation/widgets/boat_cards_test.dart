@@ -6,6 +6,8 @@
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/format_volume.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/utils/trip_capacity.dart';
@@ -14,9 +16,11 @@ import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/plane_icon_expectations.dart';
@@ -113,6 +117,8 @@ Future<void> _pumpCard(
     await tester.pump(const Duration(milliseconds: 400));
   }
 }
+
+class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
 
 Finder _text(String value) => find.text(value);
 
@@ -333,6 +339,30 @@ void main() {
   });
 
   group('TripCard bateau (Mes trajets, favoris)', () {
+    testWidgets('favoris (vue expéditeur) : le prix au m³ frais inclus, '
+        'jamais le net', (tester) async {
+      final cubit = FavoriteIdsCubit(_MockFavoriteRepository())
+        ..emitSeed(trips: {}, requests: {});
+      addTearDown(cubit.close);
+      await _pumpCard(
+        tester,
+        BlocProvider<FavoriteIdsCubit>.value(
+          value: cubit,
+          child: TripCard(
+            announcement: _boat(availableVolumeM3: 4.5),
+            onTap: () {},
+            index: 0,
+            showFavorite: true,
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('600'), findsOneWidget);
+      expect(find.textContaining('500'), findsNothing);
+      expectNoPlaneIcon(tester);
+    });
+
     testWidgets('au m³ : volume vendu, volume restant, prix au m³, aucun '
         'kilo', (tester) async {
       final a = _boat(availableVolumeM3: 4.5);

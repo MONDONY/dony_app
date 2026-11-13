@@ -146,7 +146,15 @@ List<JourneyStep> compactJourneySteps(
 }) {
   final sorted = [...events]
     ..sort((a, b) => a.scannedAt.compareTo(b.scannedAt));
-  final merged = mergedDoneSteps(l, sorted, tracking, now, mode: mode);
+  // En bateau, la position se lit sur les jalons, jamais sur le téléphone du
+  // transporteur (comme la frise complète).
+  final merged = mergedDoneSteps(
+    l,
+    sorted,
+    mode == TransportMode.boat ? null : tracking,
+    now,
+    mode: mode,
+  );
   final cityCount = merged
       .where((s) => s.state == JourneyStepState.position)
       .length;

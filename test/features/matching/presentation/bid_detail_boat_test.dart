@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
@@ -204,6 +205,23 @@ void main() {
       expectNoPlaneIcon(tester);
     });
 
+    testWidgets(
+      'route, congestion au port reçue par erreur : « Autre raison »',
+      (tester) async {
+        await _pump(
+          tester,
+          _bid(
+            mode: TransportMode.car,
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            delay: _delay(message: null),
+          ),
+        );
+        expect(find.text('Motif : Autre raison'), findsOneWidget);
+        expect(find.textContaining('port'), findsNothing);
+      },
+    );
+
     testWidgets('sans retard : pas de carte', (tester) async {
       await _pump(tester, _bid());
       expect(find.byType(TripDelayCard), findsNothing);
@@ -241,6 +259,55 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('libéré à la livraison'), findsNothing);
+    });
+
+    testWidgets('une seule lecture des étapes, même après l\'animation '
+        'd\'entrée (pas de 2e TrackingBloc)', (tester) async {
+      var created = 0;
+      final bloc = _MockTrackingBloc();
+      whenListen<TrackingState>(
+        bloc,
+        Stream.value(TrackingEventsLoaded(const [])),
+        initialState: TrackingInitial(),
+      );
+      getIt.registerFactory<TrackingBloc>(() {
+        created++;
+        return bloc;
+      });
+      await _pump(tester, _bid(payoutTrigger: PayoutTrigger.deposit));
+      // Au-delà de la durée du stagger puis relecture du colis (polling) :
+      // l'enveloppe d'animation disparaît, la carte doit rester la même.
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpWidget(
+        _host(_bid(payoutTrigger: PayoutTrigger.deposit)),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const Key('paiement-deposit-paid')), findsOneWidget);
+      expect(created, 1);
+    });
+
+    testWidgets('lecture des étapes en échec : la phrase sans date', (
+      tester,
+    ) async {
+      final bloc = _MockTrackingBloc();
+      whenListen<TrackingState>(
+        bloc,
+        Stream.value(TrackingEventsError(const NetworkException('x'))),
+        initialState: TrackingInitial(),
+      );
+      getIt.registerFactory<TrackingBloc>(() => bloc);
+      await _pump(tester, _bid(payoutTrigger: PayoutTrigger.deposit));
+
+      final text = tester.widget<Text>(
+        find.descendant(
+          of: find.byKey(const Key('paiement-deposit-paid')),
+          matching: find.byType(Text),
+        ),
+      );
+      expect(text.data, endsWith('versé au transporteur au dépôt du colis'));
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('dépôt pas encore lu : la phrase sans date', (tester) async {
@@ -385,7 +452,12 @@ void main() {
         ) async {
           final bid = _bid(
             mode: mode,
-            delay: _delay(),
+            // PORT_CONGESTION n'existe qu'en bateau (le back le refuse ailleurs).
+            delay: _delay(
+              reason: mode == TransportMode.boat
+                  ? 'PORT_CONGESTION'
+                  : 'WEATHER',
+            ),
             payoutTrigger: mode == TransportMode.boat
                 ? PayoutTrigger.deposit
                 : PayoutTrigger.delivery,

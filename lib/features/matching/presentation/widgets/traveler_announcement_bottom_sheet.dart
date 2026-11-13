@@ -1174,9 +1174,10 @@ class _PriceStatCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
     // Bateau vendu au m³ : aucun kilo, le prix au m³ frais inclus
-    // (`pricePerM3Display`, servi à tous les lecteurs, invité compris).
+    // (`pricePerM3Display`, servi à tous les lecteurs, invité compris ; repli
+    // sur le net d'un back qui ne le sert pas).
     if (announcement.isPricedPerM3) {
-      final perM3 = announcement.pricePerM3Display;
+      final perM3 = announcement.pricePerM3Display ?? announcement.pricePerM3;
       if (perM3 == null || perM3 <= 0) {
         return _StatCard(value: '-', label: l.tripPosterPriceUnavailable);
       }

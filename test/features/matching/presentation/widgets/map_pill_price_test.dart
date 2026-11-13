@@ -46,9 +46,20 @@ void main() {
       );
       expect(pill.priceLabel, isNotNull);
       expect(pill.priceLabel, endsWith('/m³'));
+      // L'expéditeur lit UN prix, frais inclus (règle d'affichage des frais).
+      expect(pill.priceLabel, contains('600'));
+      expect(pill.priceLabel, isNot(contains('540')));
+      expect(pill.pricePerKg, 600);
+      expect(pill.priceLabel, isNot(fr.listingPriceGridShort));
+    });
+
+    test('prix affiché absent (ancien contrat) : repli sur le net', () {
+      final pill = singlePillPrice(
+        fr,
+        _trip('boat', mode: TransportMode.boat, pricePerM3: 540),
+      );
       expect(pill.priceLabel, contains('540'));
       expect(pill.pricePerKg, 540);
-      expect(pill.priceLabel, isNot(fr.listingPriceGridShort));
     });
 
     test('invité (net masqué) : le prix affiché au m³', () {
