@@ -500,21 +500,60 @@ void main() {
     expect(find.byType(GpProBadge), findsNothing);
   });
 
-  testWidgets('la carte du trajet ne dessine aucun avion (mode inconnu)', (
+  testWidgets('thread_showsBoatIcon : l\'icône du mode du trajet', (
     tester,
   ) async {
-    await pumpScreen(tester, BidNegotiationLoaded(_thread(netEur: 37)));
+    await pumpScreen(
+      tester,
+      BidNegotiationLoaded(
+        _thread(netEur: 37, transportMode: TransportMode.boat),
+      ),
+    );
 
-    expect(find.byKey(const Key('nego-trip-context')), findsOneWidget);
     expect(
       find.descendant(
         of: find.byKey(const Key('nego-trip-context')),
-        matching: findDonyIcon('route'),
+        matching: findDonyIcon('ship'),
       ),
       findsOneWidget,
     );
     expectNoPlaneIcon(tester);
   });
+
+  testWidgets('thread_roadMode_showsCarIcon : jamais l\'avion', (tester) async {
+    await pumpScreen(
+      tester,
+      BidNegotiationLoaded(
+        _thread(netEur: 37, transportMode: TransportMode.car),
+      ),
+    );
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('nego-trip-context')),
+        matching: findDonyIcon('car'),
+      ),
+      findsOneWidget,
+    );
+    expectNoPlaneIcon(tester);
+  });
+
+  testWidgets(
+    'thread_nullMode_neutral : la carte du trajet ne dessine aucun avion (mode inconnu)',
+    (tester) async {
+      await pumpScreen(tester, BidNegotiationLoaded(_thread(netEur: 37)));
+
+      expect(find.byKey(const Key('nego-trip-context')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('nego-trip-context')),
+          matching: findDonyIcon('route'),
+        ),
+        findsOneWidget,
+      );
+      expectNoPlaneIcon(tester);
+    },
+  );
 
   testWidgets('G8 : sans identifiant (ancien serveur), la carte reste inerte', (
     tester,

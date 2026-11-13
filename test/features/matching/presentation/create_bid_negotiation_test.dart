@@ -287,15 +287,13 @@ void main() {
     },
   );
 
-  testWidgets('trajet bateau au m³ négociable : pas de proposition de prix '
-      'tant que le back ne la porte pas', (tester) async {
+  testWidgets('trajet bateau au m³ négociable : « Proposer un prix » est là '
+      '(la proposition porte les dimensions du colis)', (tester) async {
     await openDetail(tester, _announcement(negotiable: true, perM3: true));
 
-    // La demande directe reste là ; « Proposer un prix » ne mènerait qu'à un
-    // refus 422 (la proposition ne porte pas les dimensions du colis).
     expect(find.text('Faire une demande'), findsOneWidget);
-    expect(find.byKey(const Key('negotiate-price-btn')), findsNothing);
-    expect(find.text('Proposer un prix'), findsNothing);
+    expect(find.byKey(const Key('negotiate-price-btn')), findsOneWidget);
+    expect(find.text('Proposer un prix'), findsOneWidget);
   });
 
   // ── Écran de proposition ──────────────────────────────────────────────────
@@ -309,6 +307,7 @@ void main() {
     bool gridOnly = false,
     ItemSize? maxItemSize,
     TransportMode? transportMode,
+    bool perM3 = false,
   }) => MaterialApp.router(
     theme: AppTheme.light(),
     localizationsDelegates: const [
@@ -329,6 +328,7 @@ void main() {
               gridOnly: gridOnly,
               maxItemSize: maxItemSize,
               transportMode: transportMode,
+              perM3: perM3,
             ),
             negotiation: negotiation,
           ),
@@ -347,6 +347,7 @@ void main() {
     bool gridOnly = false,
     ItemSize? maxItemSize,
     TransportMode? transportMode,
+    bool perM3 = false,
   }) async {
     tester.view.physicalSize = const Size(800, 6000);
     tester.view.devicePixelRatio = 1.0;
@@ -359,17 +360,34 @@ void main() {
         gridOnly: gridOnly,
         maxItemSize: maxItemSize,
         transportMode: transportMode,
+        perM3: perM3,
       ),
     );
     await tester.pump(_kSettle);
   }
 
   /// Remplit le formulaire de proposition jusqu'au disclaimer, sans soumettre.
-  Future<void> fillNegotiationForm(WidgetTester tester) async {
-    // Trajet kilo pur (pas de grille) : le poids est obligatoire pour
-    // pouvoir soumettre (cf. `_syncFormButtonState`).
-    await tester.drag(find.byType(Slider), const Offset(200, 0));
-    await tester.pump(_kSettle);
+  Future<void> fillNegotiationForm(
+    WidgetTester tester, {
+    bool perM3 = false,
+  }) async {
+    if (perM3) {
+      // Trajet au m³ : le colis se mesure (L × l × h), ni curseur ni poids.
+      for (final entry in const {
+        'bid-dimension-length': '100',
+        'bid-dimension-width': '50',
+        'bid-dimension-height': '40',
+      }.entries) {
+        await tester.ensureVisible(find.byKey(Key(entry.key)));
+        await tester.enterText(find.byKey(Key(entry.key)), entry.value);
+        await tester.pump(_kSettle);
+      }
+    } else {
+      // Trajet kilo pur (pas de grille) : le poids est obligatoire pour
+      // pouvoir soumettre (cf. `_syncFormButtonState`).
+      await tester.drag(find.byType(Slider), const Offset(200, 0));
+      await tester.pump(_kSettle);
+    }
 
     // Contenu du colis
     await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
@@ -513,6 +531,33 @@ void main() {
     expect(captured.single.recipientName, 'Awa Diop');
     // Trajet carte seule : le mode est figé sur la carte sans rien demander.
     expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
+  });
+
+  testWidgets('proposeVolume : trajet au m³, les dimensions partent avec la '
+      'proposition, aucun kilo', (tester) async {
+    setTransportModes(
+      const TransportModesAvailability(road: false, boat: true),
+    );
+    addTearDown(resetTransportModesForTest);
+    await openBid(tester, negotiation: true, perM3: true);
+    await fillNegotiationForm(tester, perM3: true);
+
+    final captured = await submitProposal(tester);
+    expect(captured, hasLength(1));
+    expect(captured.single.weightKg, isNull);
+    expect(captured.single.volume?.lengthCm, 100);
+    expect(captured.single.volume?.widthCm, 50);
+    expect(captured.single.volume?.heightCm, 40);
+  });
+
+  testWidgets('proposeKg : un trajet au kilo ne porte aucune dimension', (
+    tester,
+  ) async {
+    await openBid(tester, negotiation: true);
+    await fillNegotiationForm(tester);
+
+    final captured = await submitProposal(tester);
+    expect(captured.single.volume, isNull);
   });
 
   testWidgets('trajet avec taille max : la taille choisie part avec la '

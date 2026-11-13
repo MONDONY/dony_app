@@ -1048,6 +1048,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             .toList(),
         gridItems: _selectedGridItems(),
         itemSize: _chosenItemSize,
+        volume: _volumeInput,
       ),
     );
   }

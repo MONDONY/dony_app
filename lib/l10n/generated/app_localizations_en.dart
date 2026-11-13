@@ -25051,4 +25051,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidDepositPaidSupportTravelerSubtitle =>
       'You were paid when the parcel was deposited: a dispute is settled with Yadony support.';
+
+  @override
+  String get tripPublishLockedBoatBlocked =>
+      'This request is for sea freight, a mode reserved for verified carriers. Request the GP Pro badge to offer your trip.';
 }

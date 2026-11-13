@@ -101,6 +101,7 @@ class DedicatedTripPayload extends Equatable {
     this.departureTime,
     this.arrivalTime,
     this.arrivalDate,
+    this.arrivalDateMax,
     required this.pickupAddress,
     required this.deliveryAddress,
     this.description,
@@ -114,6 +115,10 @@ class DedicatedTripPayload extends Equatable {
   final String? departureTime;
   final String? arrivalTime;
   final String? arrivalDate;
+
+  /// Fin de la fourchette d'arrivée estimée (bateau) : obligatoire pour un
+  /// trajet dédié bateau, `arrivalDate` en est le début. Absente sinon.
+  final String? arrivalDateMax;
   final Map<String, dynamic> pickupAddress;
   final Map<String, dynamic> deliveryAddress;
   final String? description;
@@ -134,6 +139,7 @@ class DedicatedTripPayload extends Equatable {
     if (departureTime != null) 'departureTime': departureTime,
     if (arrivalTime != null) 'arrivalTime': arrivalTime,
     if (arrivalDate != null) 'arrivalDate': arrivalDate,
+    if (arrivalDateMax != null) 'arrivalDateMax': arrivalDateMax,
     'pickupAddress': pickupAddress,
     'deliveryAddress': deliveryAddress,
     if (description != null) 'description': description,
@@ -151,6 +157,7 @@ class DedicatedTripPayload extends Equatable {
     departureTime,
     arrivalTime,
     arrivalDate,
+    arrivalDateMax,
     pickupAddress,
     deliveryAddress,
     description,
@@ -274,6 +281,7 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
     this.departureTime,
     this.arrivalTime,
     this.arrivalDate,
+    this.arrivalDateMax,
     required this.pickupAddress,
     required this.deliveryAddress,
     this.description,
@@ -288,6 +296,10 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
   final String? departureTime;
   final String? arrivalTime;
   final String? arrivalDate;
+
+  /// Fin de la fourchette d'arrivée estimée (bateau), obligatoire pour un
+  /// trajet dédié bateau.
+  final String? arrivalDateMax;
   final Map<String, dynamic> pickupAddress;
   final Map<String, dynamic> deliveryAddress;
   final String? description;
@@ -311,6 +323,7 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
     departureTime,
     arrivalTime,
     arrivalDate,
+    arrivalDateMax,
     pickupAddress,
     deliveryAddress,
     description,
@@ -962,6 +975,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         departureTime: e.departureTime,
         arrivalTime: e.arrivalTime,
         arrivalDate: e.arrivalDate,
+        arrivalDateMax: e.arrivalDateMax,
         pickupAddress: e.pickupAddress,
         deliveryAddress: e.deliveryAddress,
         description: e.description,

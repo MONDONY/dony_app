@@ -1,7 +1,9 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/models/bid_volume_input.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 
@@ -30,6 +32,7 @@ class BidNegotiationRemoteDatasource {
     List<Map<String, dynamic>>? customItems,
     List<Map<String, dynamic>>? gridItems,
     ItemSize? itemSize,
+    BidVolumeInput? volume,
   }) async {
     final body = <String, dynamic>{
       'description': description,
@@ -54,6 +57,9 @@ class BidNegotiationRemoteDatasource {
     }
     // Taille facultative : la clé n'existe que si l'expéditeur en a choisi une.
     body.addAll(itemSizeEntry('itemSize', FieldChange.ofNullable(itemSize)));
+    // Trajet au m³ : les trois dimensions sont obligatoires (422
+    // `boat-dimensions-required` sinon) ; aucune clé pour un colis au kilo.
+    body.addAll(volumeRequestEntries(volume));
     final response = await _apiClient.dio.post(
       '/announcements/$announcementId/bids/negotiation',
       data: body,

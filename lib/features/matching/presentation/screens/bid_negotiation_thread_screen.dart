@@ -489,9 +489,13 @@ class _TripContextCard extends StatelessWidget {
               color: cs.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            // Le fil de négociation ne porte pas encore le mode du trajet : icône
-            // neutre, jamais un avion supposé.
-            child: DonyIcon(kNeutralTripIconAsset, color: cs.primary, size: 18),
+            // Icône du mode du trajet ; sans mode (back antérieur, mode
+            // inconnu) l'icône neutre, jamais un avion supposé.
+            child: DonyIcon(
+              negotiation.transportMode?.iconAsset ?? kNeutralTripIconAsset,
+              color: cs.primary,
+              size: 18,
+            ),
           ),
         ],
       ),

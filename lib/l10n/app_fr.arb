@@ -24612,5 +24612,7 @@
   "bidDepositPaidSupportSenderSubtitle": "Le transporteur a été payé au dépôt du colis : un litige se règle avec le support Yadony.",
   "@bidDepositPaidSupportSenderSubtitle": {"description": "Menu d'options de l'expéditeur : sous-titre de l'entrée « Contacter le support » qui remplace l'annulation après remise d'un colis payé au dépôt (bateau)"},
   "bidDepositPaidSupportTravelerSubtitle": "Vous avez été payé au dépôt du colis : un litige se règle avec le support Yadony.",
-  "@bidDepositPaidSupportTravelerSubtitle": {"description": "Menu d'options du voyageur : sous-titre de l'entrée « Contacter le support » qui remplace le refus et l'annulation d'un colis payé au dépôt (bateau)"}
+  "@bidDepositPaidSupportTravelerSubtitle": {"description": "Menu d'options du voyageur : sous-titre de l'entrée « Contacter le support » qui remplace le refus et l'annulation d'un colis payé au dépôt (bateau)"},
+  "tripPublishLockedBoatBlocked": "Cette demande est en bateau, un mode réservé aux transporteurs vérifiés. Demandez le badge GP Pro pour proposer votre trajet.",
+  "@tripPublishLockedBoatBlocked": {"description": "Trajet dédié à une demande par bateau : bandeau d'un voyageur sans badge GP Pro ni compte pro, « Continuer » reste grisé"}
 }

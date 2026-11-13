@@ -25229,4 +25229,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidDepositPaidSupportTravelerSubtitle =>
       'Vous avez été payé au dépôt du colis : un litige se règle avec le support Yadony.';
+
+  @override
+  String get tripPublishLockedBoatBlocked =>
+      'Cette demande est en bateau, un mode réservé aux transporteurs vérifiés. Demandez le badge GP Pro pour proposer votre trajet.';
 }

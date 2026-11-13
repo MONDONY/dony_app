@@ -8770,6 +8770,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDepositPaidSupportSenderSubtitle,
   'bidDepositPaidSupportTravelerSubtitle': (l) =>
       l.bidDepositPaidSupportTravelerSubtitle,
+  'tripPublishLockedBoatBlocked': (l) => l.tripPublishLockedBoatBlocked,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

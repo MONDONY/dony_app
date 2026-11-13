@@ -14,6 +14,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -40,9 +41,13 @@ import 'package:dony/features/matching/data/models/boat_price_unit.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/stops_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/transport_mode_row.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
+import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
@@ -93,6 +98,9 @@ class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
 class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
+
+class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
+    implements NegotiationBloc {}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
@@ -274,6 +282,7 @@ void main() {
     registerFallbackValue(_FakeAnnouncementEvent());
     registerFallbackValue(_FakeCommissionMethodEvent());
     registerFallbackValue(_FakeCitySearchEvent());
+    registerFallbackValue(const NegotiationFetchRequested('thread-1'));
     registerFallbackValue(const StripeAccountStatusLoaded());
     registerFallbackValue(const MobileMoneyAccountsRequested());
 
@@ -401,6 +410,249 @@ void main() {
 
   TrajetStep trajet(WidgetTester tester) =>
       tester.widget<TrajetStep>(find.byType(TrajetStep, skipOffstage: false));
+
+  group('trajet dédié à une demande par bateau', () {
+    LockedTripContext boatContext({
+      TransportMode? mode = TransportMode.boat,
+      String? threadId = 'thread-1',
+      double? volume = 0.5,
+    }) => LockedTripContext(
+      threadId: threadId,
+      packageRequestId: 'req-1',
+      departureCity: 'Marseille',
+      arrivalCity: 'Abidjan',
+      desiredDate: _inDays(30),
+      dateToleranceDays: 10,
+      weightKg: 12,
+      volumeM3: volume,
+      transportMode: mode,
+      agreedPriceEur: 80,
+    );
+
+    _MockNegotiationBloc nego() {
+      final b = _MockNegotiationBloc();
+      when(() => b.state).thenReturn(const NegotiationInitial());
+      when(() => b.stream).thenAnswer((_) => const Stream.empty());
+      return b;
+    }
+
+    testWidgets('dedicatedBoat_volumeLocked : le volume de la demande en '
+        'lecture seule, aucun kilo, aucune valise ni avion', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(lockContext: boatContext(), negotiationBloc: nego()),
+      );
+
+      // Mode connu : pas d'étape Mode, la fourchette d'arrivée s'ouvre.
+      expect(currentStep(tester), TripFormStep.trajet);
+      expect(trajet(tester).boatArrivalMinNotifier, isNotNull);
+      expect(trajet(tester).boatArrivalMaxNotifier, isNotNull);
+
+      final capacity = tester.widget<LieuxCapaciteStep>(
+        find.byType(LieuxCapaciteStep, skipOffstage: false),
+      );
+      expect(capacity.lockedVolumeM3, 0.5);
+      expect(capacity.transportMode, TransportMode.boat);
+
+      final locked = find.byKey(
+        const Key('locked-capacity-display'),
+        skipOffstage: false,
+      );
+      expect(locked, findsOneWidget);
+      expect(
+        find.descendant(
+          of: locked,
+          matching: find.text('0,50 m³', skipOffstage: false),
+          skipOffstage: false,
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: locked,
+          matching: find.byWidgetPredicate(
+            (w) => w is DonyIcon && w.name == 'luggage',
+            skipOffstage: false,
+          ),
+          skipOffstage: false,
+        ),
+        findsNothing,
+      );
+      // Seule la puce « avion » de la ligne du mode (un choix parmi les modes,
+      // en lecture seule) dessine un avion : jamais l'écran du trajet.
+      expect(
+        findPlaneDonyIcons().evaluate().length,
+        find
+            .descendant(
+              of: find.byType(TransportModeRow),
+              matching: findPlaneDonyIcons(),
+            )
+            .evaluate()
+            .length,
+      );
+      expect(findMaterialFlightIcons(), findsNothing);
+      expect(findPlaneEmojiTexts(), findsNothing);
+    });
+
+    testWidgets('dedicatedBoat_requiresArrivalRange : « Continuer » grisé '
+        'sans fourchette', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(lockContext: boatContext(), negotiationBloc: nego()),
+      );
+
+      expect(continueButton(tester).onPressed, isNull);
+    });
+
+    testWidgets('dedicatedBoat_unverified_disabled : mode connu, voyageur sans '
+        'badge : bandeau, lien GP Pro, « Continuer » grisé', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(lockContext: boatContext(), negotiationBloc: nego()),
+        user: _traveler(gpPro: false),
+      );
+
+      expect(find.byKey(const Key('locked-boat-blocked-note')), findsOneWidget);
+      expect(continueButton(tester).onPressed, isNull);
+      // Même avec la fourchette renseignée.
+      trajet(tester).boatArrivalMinNotifier!.value = _inDays(50);
+      trajet(tester).boatArrivalMaxNotifier!.value = _inDays(60);
+      await tester.pump();
+      expect(continueButton(tester).onPressed, isNull);
+
+      await tester.tap(find.text('Demander le badge GP Pro'));
+      await tester.pumpAndSettle();
+      expect(find.text('gp-pro-stub'), findsOneWidget);
+      verify(
+        () => getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.tripBoatBadgeRequestTapped,
+        ),
+      ).called(1);
+      // Le double d'analytics est partagé : un autre test compte le même événement.
+      clearInteractions(getIt<AnalyticsService>());
+    });
+
+    testWidgets('dedicatedBoat_verified_noBlockedNote', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(lockContext: boatContext(), negotiationBloc: nego()),
+      );
+
+      expect(find.byKey(const Key('locked-boat-blocked-note')), findsNothing);
+    });
+
+    testWidgets('demande « peu importe », voyageur sans badge : la carte '
+        'Bateau est grisée à l\'étape Mode', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          lockContext: boatContext(mode: null),
+          negotiationBloc: nego(),
+        ),
+        user: _traveler(gpPro: false),
+      );
+
+      expect(currentStep(tester), TripFormStep.mode);
+      expect(find.byKey(const Key('mode-card-boat')), findsOneWidget);
+      expect(find.text('Réservé aux transporteurs vérifiés'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('mode-card-boat')));
+      await tester.pump();
+      expect(find.byKey(const Key('mode-check-boat')), findsNothing);
+      // Le bandeau du mode connu n'apparaît pas : le voyageur peut choisir
+      // un autre mode.
+      expect(find.byKey(const Key('locked-boat-blocked-note')), findsNothing);
+    });
+
+    testWidgets('demande « peu importe », voyageur GP Pro : la carte Bateau '
+        'se choisit', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          lockContext: boatContext(mode: null),
+          negotiationBloc: nego(),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('mode-card-boat')));
+      await tester.pump();
+      expect(find.byKey(const Key('mode-check-boat')), findsOneWidget);
+    });
+
+    testWidgets('demande par avion : aucun changement (ni fourchette ni '
+        'volume)', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          lockContext: boatContext(mode: TransportMode.plane),
+          negotiationBloc: nego(),
+        ),
+      );
+
+      expect(trajet(tester).boatArrivalMinNotifier, isNull);
+      final capacity = tester.widget<LieuxCapaciteStep>(
+        find.byType(LieuxCapaciteStep, skipOffstage: false),
+      );
+      expect(capacity.lockedVolumeM3, isNull);
+      expect(capacity.lockedCapacityKg, 12);
+    });
+
+    testWidgets('dedicatedBoat_sendsArrivalRange : fil existant et offre '
+        'atomique', (tester) async {
+      for (final threadId in const ['thread-1', null]) {
+        final bloc = nego();
+        await pumpScreen(
+          tester,
+          CreateTripArgs(
+            lockContext: boatContext(threadId: threadId),
+            negotiationBloc: bloc,
+          ),
+        );
+        trajet(tester).departureTimeNotifier.value = const TimeOfDay(
+          hour: 10,
+          minute: 0,
+        );
+        final content = tester.state<State<StatefulWidget>>(
+          find.byKey(const Key('trip-form-content')),
+        );
+        (content as dynamic).handoverDeadlineForTest.value = _inDays(25);
+        trajet(tester).boatArrivalMinNotifier!.value = _inDays(50);
+        trajet(tester).boatArrivalMaxNotifier!.value = _inDays(60);
+        final lieux = tester.widget<LieuxCapaciteStep>(
+          find.byType(LieuxCapaciteStep, skipOffstage: false),
+        );
+        lieux.onPickupChanged(
+          const AddressData(label: 'Entrepôt', lat: 43.3, lng: 5.37),
+        );
+        lieux.onDeliveryChanged(
+          const AddressData(label: 'Port', lat: 5.3, lng: -4.0),
+        );
+        await tester.pump();
+        await goToStep(tester, TripFormStep.conditions);
+        await tester.tap(find.byKey(const Key('create-dedicated-trip-submit')));
+        await tester.pump();
+
+        final captured = verify(() => bloc.add(captureAny())).captured;
+        final fmt = DateFormat('yyyy-MM-dd');
+        if (threadId != null) {
+          final event = captured
+              .whereType<NegotiationCreateDedicatedTripRequested>()
+              .single;
+          expect(event.arrivalDate, fmt.format(_inDays(50)));
+          expect(event.arrivalDateMax, fmt.format(_inDays(60)));
+        } else {
+          final event = captured
+              .whereType<NegotiationStartWithDedicatedTripRequested>()
+              .single;
+          expect(event.dedicatedTrip.arrivalDate, fmt.format(_inDays(50)));
+          expect(event.dedicatedTrip.arrivalDateMax, fmt.format(_inDays(60)));
+          expect(
+            event.dedicatedTrip.toJson()['arrivalDateMax'],
+            fmt.format(_inDays(60)),
+          );
+        }
+      }
+    });
+  });
 
   group('étape Mode : carte Bateau', () {
     testWidgets('boatCard_disabledForKycOnly : grisée, non choisie, lien vers '

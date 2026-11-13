@@ -40336,6 +40336,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vous avez été payé au dépôt du colis : un litige se règle avec le support Yadony.'**
   String get bidDepositPaidSupportTravelerSubtitle;
+
+  /// Trajet dédié à une demande par bateau : bandeau d'un voyageur sans badge GP Pro ni compte pro, « Continuer » reste grisé
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette demande est en bateau, un mode réservé aux transporteurs vérifiés. Demandez le badge GP Pro pour proposer votre trajet.'**
+  String get tripPublishLockedBoatBlocked;
 }
 
 class _AppLocalizationsDelegate

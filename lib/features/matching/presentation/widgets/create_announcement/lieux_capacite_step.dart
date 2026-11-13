@@ -2,6 +2,7 @@
 // Extrait de create_announcement_bottom_sheet.dart — refactor pur pour la partie
 // lieux ; swap CapacitySelector → CapacityControl pour la partie capacité.
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
@@ -45,6 +46,10 @@ class LieuxCapaciteStep extends StatelessWidget {
   /// un affichage en lecture seule. Les adresses restent éditables.
   final double? lockedCapacityKg;
 
+  /// Capacité verrouillée en m³ : le volume du colis de la demande par bateau
+  /// (trajet dédié bateau). Prime sur [lockedCapacityKg] quand il est connu.
+  final double? lockedVolumeM3;
+
   /// Mode du trajet dédié : en route, la capacité verrouillée prend l'icône
   /// neutre du colis, pas la valise.
   final TransportMode? lockedTransportMode;
@@ -69,6 +74,7 @@ class LieuxCapaciteStep extends StatelessWidget {
     required this.onPickupChanged,
     required this.onDeliveryChanged,
     this.lockedCapacityKg,
+    this.lockedVolumeM3,
     this.lockedTransportMode,
     this.pickupAddressError,
     this.deliveryAddressError,
@@ -152,7 +158,9 @@ class LieuxCapaciteStep extends StatelessWidget {
         ),
         const SizedBox(height: DonySpacing.base),
         // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
-        lockedCapacityKg != null
+        lockedVolumeM3 != null
+            ? _LockedCapacityDisplay(volumeM3: lockedVolumeM3)
+            : lockedCapacityKg != null
             ? _LockedCapacityDisplay(
                 kg: lockedCapacityKg!,
                 isRoad: lockedTransportMode?.isRoad ?? false,
@@ -167,9 +175,16 @@ class LieuxCapaciteStep extends StatelessWidget {
 /// Affichage en lecture seule de la capacité quand elle est imposée par la
 /// demande (flux trajet dédié). Remplace [CapacityControl].
 class _LockedCapacityDisplay extends StatelessWidget {
-  const _LockedCapacityDisplay({required this.kg, required this.isRoad});
+  const _LockedCapacityDisplay({
+    this.kg = 0,
+    this.isRoad = false,
+    this.volumeM3,
+  });
   final double kg;
   final bool isRoad;
+
+  /// Volume du colis (demande par bateau) : remplace les kilos, icône colis.
+  final double? volumeM3;
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +202,9 @@ class _LockedCapacityDisplay extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (isRoad)
+          if (volumeM3 != null)
+            DonyIcon('package', color: cs.onSurfaceVariant)
+          else if (isRoad)
             Icon(Icons.inventory_2_rounded, color: cs.onSurfaceVariant)
           else
             DonyIcon('luggage', color: cs.onSurfaceVariant),
@@ -197,7 +214,9 @@ class _LockedCapacityDisplay extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  formatWeightKg(l, kg),
+                  volumeM3 != null
+                      ? formatParcelVolumeM3(l, volumeM3!)
+                      : formatWeightKg(l, kg),
                   style: tt.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: cs.onSurface,

@@ -226,11 +226,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   void initState() {
     super.initState();
     final args = widget.args;
-    // Trajet dédié à une demande : pas encore de bateau (son volume et sa
-    // fourchette d'arrivée viennent de la demande, tâche A10).
-    final modes = args?.lockContext != null
-        ? transportModes.withoutBoat
-        : transportModes;
+    // Trajet dédié à une demande : tous les modes ouverts. Le bateau garde le
+    // volume de la demande (lecture seule) et demande la fourchette d'arrivée ;
+    // son voyageur doit être vérifié (carte grisée à l'étape Mode sinon).
+    final modes = transportModes;
     _tripModes = modes.tripCreationModes;
     _steps = tripFormSteps(
       showModeStep: showModeStepFor(
@@ -1067,15 +1066,23 @@ class _TripFormContentState extends State<_TripFormContent> {
   bool get _isEdit => widget.announcement != null;
   bool get _isLocked => widget.lockContext != null;
 
-  /// Trajet en bateau (mode choisi ou du trajet modifié). Un trajet dédié à
-  /// une demande bateau garde le formulaire d'avant le lot 3 (tâche A10).
-  bool get _isBoat =>
-      !_isLocked && _transportModeNotifier.value == TransportMode.boat;
+  /// Trajet en bateau (mode choisi, du trajet modifié ou de la demande à
+  /// laquelle il est dédié).
+  bool get _isBoat => _transportModeNotifier.value == TransportMode.boat;
+
+  /// Trajet dédié bateau dont le voyageur n'est pas vérifié (ni badge GP Pro ni
+  /// compte pro) : le serveur le refuserait en 403 `boat-carrier-not-verified`,
+  /// l'étape Trajet l'explique et reste bloquée. Une demande « peu importe »
+  /// laisse choisir un autre mode (la carte Bateau est alors grisée).
+  bool get _lockedBoatBlocked =>
+      _isLocked && _isBoat && !_hasModeStep && !_canPublishBoat;
 
   /// Trajet bateau vendu au m³ (unité de l'étape Capacité) : aucun kilo
-  /// n'est envoyé.
+  /// n'est envoyé. Un trajet dédié bateau est toujours au m³ (le volume est
+  /// celui de la demande).
   bool get _isBoatPerM3 =>
-      _isBoat && _boatPriceUnitNotifier.value == BoatPriceUnit.m3;
+      _isBoat &&
+      (_isLocked || _boatPriceUnitNotifier.value == BoatPriceUnit.m3);
 
   /// Le voyageur peut publier en bateau (badge GP Pro ou compte pro, C15).
   bool get _canPublishBoat {
@@ -1472,7 +1479,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     widget.canContinueNotifier?.value =
         missing.isEmpty &&
         !_isHandoverDeadlineInvalid() &&
-        _boatArrivalIssue() == null;
+        _boatArrivalIssue() == null &&
+        !_lockedBoatBlocked;
     _refreshStep0Errors(missing);
   }
 
@@ -2310,6 +2318,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           description: description,
           acceptedContentTypes: allAccepted,
           refusedTypes: refused,
+          arrivalDateMax: arrivalDateMax,
           paymentMethod: lc.paymentMethod,
           // Envoyé seulement quand le voyageur l'a choisi (demande « peu
           // importe ») : sinon le back garde le mode de la demande.
@@ -2333,6 +2342,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           departureTime: departureTime,
           arrivalTime: arrivalTime,
           arrivalDate: arrivalDate,
+          arrivalDateMax: arrivalDateMax,
           pickupAddress: pickupAddress,
           deliveryAddress: deliveryAddress,
           description: description,
@@ -3486,6 +3496,19 @@ class _TripFormContentState extends State<_TripFormContent> {
         _LockedBanner(lockContext: widget.lockContext!),
         const SizedBox(height: DonySpacing.lg),
       ],
+      if (_lockedBoatBlocked) ...[
+        _LockedBoatBlockedNote(
+          onRequestBadge: () {
+            unawaited(
+              getIt<AnalyticsService>().logEvent(
+                AnalyticsEvents.tripBoatBadgeRequestTapped,
+              ),
+            );
+            unawaited(context.push('/profile/gp-pro'));
+          },
+        ),
+        const SizedBox(height: DonySpacing.lg),
+      ],
       ListenableBuilder(
         listenable: Listenable.merge([
           _step0ErrorsNotifier,
@@ -3534,9 +3557,13 @@ class _TripFormContentState extends State<_TripFormContent> {
             _step0ErrorsNotifier.value,
             _Step0Field.departureTime,
           ),
-          // Trajet dédié bateau : pas encore de fourchette (tâche A10).
-          boatArrivalMinNotifier: _isLocked ? null : _boatArrivalMinNotifier,
-          boatArrivalMaxNotifier: _isLocked ? null : _boatArrivalMaxNotifier,
+          // Trajet dédié : la fourchette d'arrivée n'existe que pour le bateau.
+          boatArrivalMinNotifier: _isLocked && !_isBoat
+              ? null
+              : _boatArrivalMinNotifier,
+          boatArrivalMaxNotifier: _isLocked && !_isBoat
+              ? null
+              : _boatArrivalMaxNotifier,
           onSelectBoatArrivalMin: () => _selectBoatArrival(latest: false),
           onSelectBoatArrivalMax: () => _selectBoatArrival(latest: true),
           boatArrivalError: _boatArrivalMessage(context.l10n),
@@ -3651,11 +3678,15 @@ class _TripFormContentState extends State<_TripFormContent> {
               ? _step1FieldMessage(context.l10n, _Step1Field.deliveryAddress)
               : null,
           // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
+          // Demande par bateau : le volume du colis, pas des kilos.
           lockedCapacityKg: _isLocked ? widget.lockContext!.weightKg : null,
+          lockedVolumeM3: _isLocked && _isBoat
+              ? widget.lockContext!.volumeM3
+              : null,
           lockedTransportMode: _isLocked
               ? widget.lockContext!.transportMode
               : null,
-          transportMode: _isLocked ? null : _transportModeNotifier.value,
+          transportMode: _transportModeNotifier.value,
         ),
       ),
     ];
@@ -3980,6 +4011,36 @@ String _step1FieldMessage(AppLocalizations l10n, _Step1Field f) {
 }
 
 // ─── Locked banner & locked-mode helpers ─────────────────────────────────────
+
+/// Trajet dédié à une demande par bateau pour un voyageur sans badge GP Pro :
+/// le bateau est réservé aux transporteurs vérifiés, « Continuer » reste grisé.
+class _LockedBoatBlockedNote extends StatelessWidget {
+  const _LockedBoatBlockedNote({required this.onRequestBadge});
+  final VoidCallback onRequestBadge;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Column(
+      key: const Key('locked-boat-blocked-note'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DonyStatusBanner(
+          type: DonyStatusBannerType.warning,
+          message: l.tripPublishLockedBoatBlocked,
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton(
+            onPressed: onRequestBadge,
+            child: Text(l.tripPublishModeBoatBadgeLink),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class _LockedBanner extends StatelessWidget {
   const _LockedBanner({required this.lockContext});

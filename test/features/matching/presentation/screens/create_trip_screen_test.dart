@@ -6136,9 +6136,11 @@ void main() {
     testWidgets('trajet dédié sur demande à mode connu : transportMode non '
         'envoyé (le back prend celui de la demande)', (tester) async {
       roadOn();
+      // Route (et non bateau) : un trajet dédié bateau exige en plus la
+      // fourchette d'arrivée, couverte dans create_trip_boat_test.
       final nego = await openDedicated(
         tester,
-        lockedContext(TransportMode.boat),
+        lockedContext(TransportMode.car),
       );
 
       final event = verify(

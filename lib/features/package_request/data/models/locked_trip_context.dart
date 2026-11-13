@@ -22,6 +22,7 @@ class LockedTripContext extends Equatable {
     this.offerAvailableKg,
     this.offerBody,
     this.preferredDate,
+    this.volumeM3,
   });
 
   /// Null when creating this dedicated trip as part of a brand-new offer (no
@@ -64,6 +65,11 @@ class LockedTripContext extends Equatable {
   /// bornée à [travelWindow] : pré-remplit le départ du trajet dédié. Null
   /// (boucle refuseTrip) : le formulaire part de [desiredDate].
   final DateTime? preferredDate;
+
+  /// Volume du colis de la demande, en m³ (demande par bateau). Affiché en
+  /// lecture seule à l'étape Capacité d'un trajet dédié bateau ; `null` pour une
+  /// demande au kilo ou servie par un back antérieur.
+  final double? volumeM3;
 
   /// Null quand la demande n'a pas de date.
   DateTime? get earliestDate =>
@@ -150,5 +156,6 @@ class LockedTripContext extends Equatable {
     offerAvailableKg,
     offerBody,
     preferredDate,
+    volumeM3,
   ];
 }

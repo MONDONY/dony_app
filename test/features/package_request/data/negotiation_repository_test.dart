@@ -430,6 +430,60 @@ void main() {
       },
     );
 
+    test(
+      'dedicatedBoat_sendsArrivalRange : début et fin de la fourchette',
+      () async {
+        Map<String, dynamic>? sentData;
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/negotiations/th-1/create-dedicated-trip',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer((inv) async {
+          sentData =
+              inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+          return _ok(_threadJson, '/negotiations/th-1/create-dedicated-trip');
+        });
+
+        await repo.createDedicatedTrip(
+          'th-1',
+          departureDate: DateTime(2026, 7),
+          arrivalDate: '2026-08-20',
+          arrivalDateMax: '2026-08-27',
+          pickupAddress: const {'label': 'Entrepôt'},
+          deliveryAddress: const {'label': 'Abidjan'},
+          paymentMethod: PaymentMethod.stripe,
+        );
+
+        expect(sentData?['arrivalDate'], '2026-08-20');
+        expect(sentData?['arrivalDateMax'], '2026-08-27');
+      },
+    );
+
+    test('hors bateau : aucune clé arrivalDateMax', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/create-dedicated-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/create-dedicated-trip');
+      });
+
+      await repo.createDedicatedTrip(
+        'th-1',
+        departureDate: DateTime(2026, 7),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.stripe,
+      );
+
+      expect(sentData?.containsKey('arrivalDateMax'), isFalse);
+    });
+
     test('sends useCardForCommission in the body', () async {
       Map<String, dynamic>? sentData;
       when(
