@@ -22,6 +22,22 @@ void main() {
     });
   });
 
+  group('formatParcelVolumeM3 : volume d\'un colis', () {
+    test('français : deux décimales au moins, trois au plus', () {
+      final l = lookupAppLocalizations(AppL10n.fr);
+      expect(formatParcelVolumeM3(l, 0.1), '0,10 m³');
+      expect(formatParcelVolumeM3(l, 0.024), '0,024 m³');
+      expect(formatParcelVolumeM3(l, 0.001), '0,001 m³');
+      expect(formatParcelVolumeM3(l, 1.5), '1,50 m³');
+    });
+
+    test('anglais : point décimal', () {
+      final l = lookupAppLocalizations(AppL10n.en);
+      expect(formatParcelVolumeM3(l, 0.1), '0.10 m³');
+      expect(formatParcelVolumeM3(l, 0.024), '0.024 m³');
+    });
+  });
+
   test('formatVolumeValue : valeur seule, sans milliers', () {
     expect(formatVolumeValue('en', 12.5), '12.5');
     expect(formatVolumeValue('en', 9999), '9999');

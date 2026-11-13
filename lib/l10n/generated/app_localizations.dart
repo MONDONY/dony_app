@@ -39503,6 +39503,131 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{value}/m³'**
   String tripPublishPerM3Value(String value);
+
+  /// Titre du bloc des dimensions d'une demande en bateau (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dimensions du colis'**
+  String get requestCreateDimensionsLabel;
+
+  /// Titre du bloc des dimensions d'une demande « peu importe » (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dimensions du colis (facultatif)'**
+  String get requestCreateDimensionsOptionalLabel;
+
+  /// Aide sous le titre des dimensions d'une demande en bateau (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le transporteur facture au volume : mesurez votre colis emballé, en centimètres.'**
+  String get requestCreateDimensionsHelpBoat;
+
+  /// Aide des dimensions facultatives d'une demande « peu importe » (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Utile par bateau : le prix se calcule au volume.'**
+  String get requestCreateDimensionsHelpAny;
+
+  /// Ligne qui déplie les dimensions facultatives (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter les dimensions'**
+  String get requestCreateDimensionsAdd;
+
+  /// Libellé du champ longueur du colis (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Longueur'**
+  String get requestCreateDimensionLength;
+
+  /// Libellé du champ largeur du colis (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Largeur'**
+  String get requestCreateDimensionWidth;
+
+  /// Libellé du champ hauteur du colis (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Hauteur'**
+  String get requestCreateDimensionHeight;
+
+  /// Erreur : dimension du colis manquante (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Obligatoire'**
+  String get requestCreateDimensionRequired;
+
+  /// Erreur : dimension du colis hors bornes (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre 1 et 400 cm'**
+  String get requestCreateDimensionInvalid;
+
+  /// Aperçu du volume du colis, déjà formaté en m³ (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume : {volume}'**
+  String requestCreateVolumeLine(String volume);
+
+  /// Message : publication d'une demande en bateau sans dimensions (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez les dimensions du colis à l\'étape « Le colis ».'**
+  String get requestCreateDimensionsRequiredSubmit;
+
+  /// Poids suivi du volume d'un colis, déjà formatés (wizard_summary_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{weight} · {volume}'**
+  String requestCreateWeightAndVolume(String weight, String volume);
+
+  /// Ligne de l'aperçu : volume du colis (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume'**
+  String get requestPreviewVolumeLabel;
+
+  /// Ligne de l'aperçu : volume et dimensions du colis (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{volume} ({length} × {width} × {height} cm)'**
+  String requestPreviewVolumeValue(
+    String volume,
+    int length,
+    int width,
+    int height,
+  );
+
+  /// Sélecteur : le prix saisi est au m³, le total est calculé (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix au m³'**
+  String get requestCreatePriceBasisPerM3;
+
+  /// Explication quand le prix au m³ est grisé faute de dimensions (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez d\'abord les dimensions du colis pour fixer un prix au m³.'**
+  String get requestCreatePriceBasisPerM3NeedsDimensions;
+
+  /// Unité du champ prix en mode au m³ (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{symbol} / m³'**
+  String requestCreatePriceUnitPerM3(String symbol);
+
+  /// Calcul du total en mode prix au m³, montants déjà formatés (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{volume} × {perM3} / m³ = {total} au total'**
+  String requestCreatePerM3Computed(String volume, String perM3, String total);
+
+  /// Encadré de l'étape Prix d'une demande en bateau : délai et versement au dépôt (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Par bateau, comptez plusieurs semaines. Le transporteur est payé dès le dépôt de votre colis à l\'entrepôt : le paiement n\'attend pas la livraison.'**
+  String get requestCreateBoatDepositNotice;
 }
 
 class _AppLocalizationsDelegate

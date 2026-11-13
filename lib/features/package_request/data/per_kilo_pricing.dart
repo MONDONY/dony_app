@@ -19,7 +19,7 @@ abstract final class PerKiloPricing {
     required SupportedCurrency currency,
   }) {
     if (!isAvailable(weightKg) || perKilo == null || perKilo <= 0) return null;
-    return _roundTo(weightKg! * perKilo, currency.minorUnit);
+    return roundTo(weightKg! * perKilo, currency.minorUnit);
   }
 
   /// Prix au kilo qui redonne EXACTEMENT [total] pour [weightKg], arrondi à
@@ -31,7 +31,7 @@ abstract final class PerKiloPricing {
     required SupportedCurrency currency,
   }) {
     if (!isAvailable(weightKg) || total == null || total <= 0) return null;
-    final candidate = _roundTo(total / weightKg!, 2);
+    final candidate = roundTo(total / weightKg!, 2);
     final back = totalFor(
       weightKg: weightKg,
       perKilo: candidate,
@@ -40,7 +40,8 @@ abstract final class PerKiloPricing {
     return back == total ? candidate : null;
   }
 
-  static double _roundTo(double value, int decimals) {
+  /// Arrondi à [decimals] décimales, partagé avec [PerM3Pricing].
+  static double roundTo(double value, int decimals) {
     var factor = 1.0;
     for (var i = 0; i < decimals; i++) {
       factor *= 10;

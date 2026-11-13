@@ -12263,5 +12263,106 @@
         "type": "String"
       }
     }
+  },
+  "requestCreateDimensionsLabel": "Package dimensions",
+  "@requestCreateDimensionsLabel": {
+    "description": "Titre du bloc des dimensions d'une demande en bateau (step_2_details.dart)"
+  },
+  "requestCreateDimensionsOptionalLabel": "Package dimensions (optional)",
+  "@requestCreateDimensionsOptionalLabel": {
+    "description": "Titre du bloc des dimensions d'une demande « peu importe » (step_2_details.dart)"
+  },
+  "requestCreateDimensionsHelpBoat": "The carrier charges by volume: measure your package as packed, in centimeters.",
+  "@requestCreateDimensionsHelpBoat": {
+    "description": "Aide sous le titre des dimensions d'une demande en bateau (step_2_details.dart)"
+  },
+  "requestCreateDimensionsHelpAny": "Helpful by boat: the price is based on volume.",
+  "@requestCreateDimensionsHelpAny": {
+    "description": "Aide des dimensions facultatives d'une demande « peu importe » (step_2_details.dart)"
+  },
+  "requestCreateDimensionsAdd": "Add dimensions",
+  "@requestCreateDimensionsAdd": {
+    "description": "Ligne qui déplie les dimensions facultatives (step_2_details.dart)"
+  },
+  "requestCreateDimensionLength": "Length",
+  "@requestCreateDimensionLength": {
+    "description": "Libellé du champ longueur du colis (step_2_details.dart)"
+  },
+  "requestCreateDimensionWidth": "Width",
+  "@requestCreateDimensionWidth": {
+    "description": "Libellé du champ largeur du colis (step_2_details.dart)"
+  },
+  "requestCreateDimensionHeight": "Height",
+  "@requestCreateDimensionHeight": {
+    "description": "Libellé du champ hauteur du colis (step_2_details.dart)"
+  },
+  "requestCreateDimensionRequired": "Required",
+  "@requestCreateDimensionRequired": {
+    "description": "Erreur : dimension du colis manquante (step_2_details.dart)"
+  },
+  "requestCreateDimensionInvalid": "Between 1 and 400 cm",
+  "@requestCreateDimensionInvalid": {
+    "description": "Erreur : dimension du colis hors bornes (step_2_details.dart)"
+  },
+  "requestCreateVolumeLine": "Volume: {volume}",
+  "@requestCreateVolumeLine": {
+    "description": "Aperçu du volume du colis, déjà formaté en m³ (step_2_details.dart)",
+    "placeholders": {
+      "volume": {"type": "String"}
+    }
+  },
+  "requestCreateDimensionsRequiredSubmit": "Enter the package dimensions in the “The package” step.",
+  "@requestCreateDimensionsRequiredSubmit": {
+    "description": "Message : publication d'une demande en bateau sans dimensions (package_request_create_screen.dart)"
+  },
+  "requestCreateWeightAndVolume": "{weight} · {volume}",
+  "@requestCreateWeightAndVolume": {
+    "description": "Poids suivi du volume d'un colis, déjà formatés (wizard_summary_card.dart)",
+    "placeholders": {
+      "weight": {"type": "String"},
+      "volume": {"type": "String"}
+    }
+  },
+  "requestPreviewVolumeLabel": "Volume",
+  "@requestPreviewVolumeLabel": {
+    "description": "Ligne de l'aperçu : volume du colis (package_request_preview_sheet.dart)"
+  },
+  "requestPreviewVolumeValue": "{volume} ({length} × {width} × {height} cm)",
+  "@requestPreviewVolumeValue": {
+    "description": "Ligne de l'aperçu : volume et dimensions du colis (package_request_preview_sheet.dart)",
+    "placeholders": {
+      "volume": {"type": "String"},
+      "length": {"type": "int"},
+      "width": {"type": "int"},
+      "height": {"type": "int"}
+    }
+  },
+  "requestCreatePriceBasisPerM3": "Price per m³",
+  "@requestCreatePriceBasisPerM3": {
+    "description": "Sélecteur : le prix saisi est au m³, le total est calculé (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceBasisPerM3NeedsDimensions": "Enter the package dimensions first to set a price per m³.",
+  "@requestCreatePriceBasisPerM3NeedsDimensions": {
+    "description": "Explication quand le prix au m³ est grisé faute de dimensions (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceUnitPerM3": "{symbol} / m³",
+  "@requestCreatePriceUnitPerM3": {
+    "description": "Unité du champ prix en mode au m³ (step_3_recap_budget.dart)",
+    "placeholders": {
+      "symbol": {"type": "String"}
+    }
+  },
+  "requestCreatePerM3Computed": "{volume} × {perM3} / m³ = {total} total",
+  "@requestCreatePerM3Computed": {
+    "description": "Calcul du total en mode prix au m³, montants déjà formatés (step_3_recap_budget.dart)",
+    "placeholders": {
+      "volume": {"type": "String"},
+      "perM3": {"type": "String"},
+      "total": {"type": "String"}
+    }
+  },
+  "requestCreateBoatDepositNotice": "By boat, expect several weeks. The carrier is paid as soon as your package is dropped off at the warehouse: payment doesn't wait for delivery.",
+  "@requestCreateBoatDepositNotice": {
+    "description": "Encadré de l'étape Prix d'une demande en bateau : délai et versement au dépôt (step_3_recap_budget.dart)"
   }
 }

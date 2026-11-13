@@ -24490,4 +24490,85 @@ class AppLocalizationsEn extends AppLocalizations {
   String tripPublishPerM3Value(String value) {
     return '$value/m³';
   }
+
+  @override
+  String get requestCreateDimensionsLabel => 'Package dimensions';
+
+  @override
+  String get requestCreateDimensionsOptionalLabel =>
+      'Package dimensions (optional)';
+
+  @override
+  String get requestCreateDimensionsHelpBoat =>
+      'The carrier charges by volume: measure your package as packed, in centimeters.';
+
+  @override
+  String get requestCreateDimensionsHelpAny =>
+      'Helpful by boat: the price is based on volume.';
+
+  @override
+  String get requestCreateDimensionsAdd => 'Add dimensions';
+
+  @override
+  String get requestCreateDimensionLength => 'Length';
+
+  @override
+  String get requestCreateDimensionWidth => 'Width';
+
+  @override
+  String get requestCreateDimensionHeight => 'Height';
+
+  @override
+  String get requestCreateDimensionRequired => 'Required';
+
+  @override
+  String get requestCreateDimensionInvalid => 'Between 1 and 400 cm';
+
+  @override
+  String requestCreateVolumeLine(String volume) {
+    return 'Volume: $volume';
+  }
+
+  @override
+  String get requestCreateDimensionsRequiredSubmit =>
+      'Enter the package dimensions in the “The package” step.';
+
+  @override
+  String requestCreateWeightAndVolume(String weight, String volume) {
+    return '$weight · $volume';
+  }
+
+  @override
+  String get requestPreviewVolumeLabel => 'Volume';
+
+  @override
+  String requestPreviewVolumeValue(
+    String volume,
+    int length,
+    int width,
+    int height,
+  ) {
+    return '$volume ($length × $width × $height cm)';
+  }
+
+  @override
+  String get requestCreatePriceBasisPerM3 => 'Price per m³';
+
+  @override
+  String get requestCreatePriceBasisPerM3NeedsDimensions =>
+      'Enter the package dimensions first to set a price per m³.';
+
+  @override
+  String requestCreatePriceUnitPerM3(String symbol) {
+    return '$symbol / m³';
+  }
+
+  @override
+  String requestCreatePerM3Computed(String volume, String perM3, String total) {
+    return '$volume × $perM3 / m³ = $total total';
+  }
+
+  @override
+  String get requestCreateBoatDepositNotice =>
+      'By boat, expect several weeks. The carrier is paid as soon as your package is dropped off at the warehouse: payment doesn\'t wait for delivery.';
 }

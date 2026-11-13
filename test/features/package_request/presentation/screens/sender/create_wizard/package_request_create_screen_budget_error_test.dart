@@ -285,4 +285,55 @@ void main() {
     expect(find.text('Between 0.5 and 32 kg'), findsOneWidget);
     expect(find.textContaining('choose Road'), findsNothing);
   });
+
+  /// Bateau sans dimensions (brouillon repris sans elles) : refus local, le
+  /// SnackBar renvoie à l'étape « Le colis ».
+  Future<void> submitBoatWithoutDimensions(WidgetTester tester) async {
+    await tester.pumpWidget(buildHarness());
+    await tester.tap(find.byKey(const Key('open-create')));
+    await tester.pumpAndSettle();
+
+    capturedBloc
+      ..add(
+        FormStep1Submitted(
+          departureCity: 'Paris',
+          arrivalCity: 'Abidjan',
+          desiredDate: DateTime(2026, 8, 15),
+          dateToleranceDays: 3,
+          transportMode: TransportMode.boat,
+        ),
+      )
+      ..add(
+        const FormStep2Submitted(
+          weightKg: 40,
+          parcelSize: ParcelSize.large,
+          categories: ['Meubles'],
+        ),
+      )
+      ..add(const FormStep3Submitted(targetPriceEur: 100));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('bateau sans dimensions : le SnackBar renvoie au colis', (
+    tester,
+  ) async {
+    await submitBoatWithoutDimensions(tester);
+
+    expect(
+      find.text('Indiquez les dimensions du colis à l\'étape « Le colis ».'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('bateau sans dimensions, anglais : message traduit', (
+    tester,
+  ) async {
+    useEnglish();
+    await submitBoatWithoutDimensions(tester);
+
+    expect(
+      find.text('Enter the package dimensions in the “The package” step.'),
+      findsOneWidget,
+    );
+  });
 }

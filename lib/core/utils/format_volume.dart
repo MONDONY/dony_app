@@ -18,3 +18,9 @@ double? readVolumeInput(String raw) {
   if (text.isEmpty) return null;
   return double.tryParse(text);
 }
+
+/// Volume d'un colis (« 0,10 m³ », « 0,024 m³ ») : deux décimales au moins,
+/// trois au plus, comme le serveur le calcule. Distinct de [formatVolumeM3],
+/// qui sert aux capacités d'un trajet, à une décimale.
+String formatParcelVolumeM3(AppLocalizations l, double m3) =>
+    '${NumberFormat('0.00#', l.localeName).format(m3)} m³';

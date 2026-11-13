@@ -75,14 +75,31 @@ class FormStep2Submitted extends PackageRequestFormEvent {
     required this.parcelSize,
     this.categories = const [],
     this.description,
+    this.lengthCm,
+    this.widthCm,
+    this.heightCm,
   });
   final double weightKg;
   final ParcelSize parcelSize;
   final List<String> categories;
   final String? description;
 
+  /// Dimensions du colis en cm, saisies pour un mode qui les porte (bateau,
+  /// « peu importe »). Tout ou rien : le bloc ignore un jeu incomplet.
+  final int? lengthCm;
+  final int? widthCm;
+  final int? heightCm;
+
   @override
-  List<Object?> get props => [weightKg, parcelSize, categories, description];
+  List<Object?> get props => [
+    weightKg,
+    parcelSize,
+    categories,
+    description,
+    lengthCm,
+    widthCm,
+    heightCm,
+  ];
 }
 
 class FormStep3Submitted extends PackageRequestFormEvent {

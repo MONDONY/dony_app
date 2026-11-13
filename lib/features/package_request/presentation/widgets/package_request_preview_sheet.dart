@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
@@ -109,6 +110,16 @@ class _PreviewBody extends StatelessWidget {
               l,
               formatWeightKg(l, s.weightKg!),
               s.itemSize,
+            ),
+          ),
+        if (s.volumeM3 != null)
+          DonyInfoRow(
+            label: l.requestPreviewVolumeLabel,
+            value: l.requestPreviewVolumeValue(
+              formatParcelVolumeM3(l, s.volumeM3!),
+              s.lengthCm!,
+              s.widthCm!,
+              s.heightCm!,
             ),
           ),
         if (photoCount > 0)

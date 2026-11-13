@@ -24668,4 +24668,85 @@ class AppLocalizationsFr extends AppLocalizations {
   String tripPublishPerM3Value(String value) {
     return '$value/m³';
   }
+
+  @override
+  String get requestCreateDimensionsLabel => 'Dimensions du colis';
+
+  @override
+  String get requestCreateDimensionsOptionalLabel =>
+      'Dimensions du colis (facultatif)';
+
+  @override
+  String get requestCreateDimensionsHelpBoat =>
+      'Le transporteur facture au volume : mesurez votre colis emballé, en centimètres.';
+
+  @override
+  String get requestCreateDimensionsHelpAny =>
+      'Utile par bateau : le prix se calcule au volume.';
+
+  @override
+  String get requestCreateDimensionsAdd => 'Ajouter les dimensions';
+
+  @override
+  String get requestCreateDimensionLength => 'Longueur';
+
+  @override
+  String get requestCreateDimensionWidth => 'Largeur';
+
+  @override
+  String get requestCreateDimensionHeight => 'Hauteur';
+
+  @override
+  String get requestCreateDimensionRequired => 'Obligatoire';
+
+  @override
+  String get requestCreateDimensionInvalid => 'Entre 1 et 400 cm';
+
+  @override
+  String requestCreateVolumeLine(String volume) {
+    return 'Volume : $volume';
+  }
+
+  @override
+  String get requestCreateDimensionsRequiredSubmit =>
+      'Indiquez les dimensions du colis à l\'étape « Le colis ».';
+
+  @override
+  String requestCreateWeightAndVolume(String weight, String volume) {
+    return '$weight · $volume';
+  }
+
+  @override
+  String get requestPreviewVolumeLabel => 'Volume';
+
+  @override
+  String requestPreviewVolumeValue(
+    String volume,
+    int length,
+    int width,
+    int height,
+  ) {
+    return '$volume ($length × $width × $height cm)';
+  }
+
+  @override
+  String get requestCreatePriceBasisPerM3 => 'Prix au m³';
+
+  @override
+  String get requestCreatePriceBasisPerM3NeedsDimensions =>
+      'Indiquez d\'abord les dimensions du colis pour fixer un prix au m³.';
+
+  @override
+  String requestCreatePriceUnitPerM3(String symbol) {
+    return '$symbol / m³';
+  }
+
+  @override
+  String requestCreatePerM3Computed(String volume, String perM3, String total) {
+    return '$volume × $perM3 / m³ = $total au total';
+  }
+
+  @override
+  String get requestCreateBoatDepositNotice =>
+      'Par bateau, comptez plusieurs semaines. Le transporteur est payé dès le dépôt de votre colis à l\'entrepôt : le paiement n\'attend pas la livraison.';
 }

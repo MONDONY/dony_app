@@ -564,6 +564,7 @@ void main() {
       TransportMode? mode,
       double weight = 5,
       ItemSize? size,
+      (int, int, int)? dimensions,
     }) => PackageRequest(
       id: 'r-1',
       senderId: 's-1',
@@ -574,6 +575,9 @@ void main() {
       parcelSize: ParcelSize.large,
       transportMode: mode,
       itemSize: size,
+      lengthCm: dimensions?.$1,
+      widthCm: dimensions?.$2,
+      heightCm: dimensions?.$3,
       categories: const ['Meubles'],
       status: PackageRequestStatus.open,
       createdAt: DateTime(2026, 11, 12),
@@ -586,11 +590,17 @@ void main() {
       TransportMode? mode,
       double weight = 5,
       ItemSize? size,
+      (int, int, int)? dimensions,
     }) {
       final bloc = PackageRequestFormBloc(
         repo,
         analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-        editing: request(mode: mode, weight: weight, size: size),
+        editing: request(
+          mode: mode,
+          weight: weight,
+          size: size,
+          dimensions: dimensions,
+        ),
       );
       addTearDown(bloc.close);
       return bloc;
@@ -681,7 +691,11 @@ void main() {
       viewport(tester);
       final canContinue = await pump(
         tester,
-        editing(mode: TransportMode.boat, weight: 5000),
+        editing(
+          mode: TransportMode.boat,
+          weight: 5000,
+          dimensions: (50, 40, 30),
+        ),
       );
       expect(sizeSection, findsNothing);
       expect(canContinue.value, isTrue);

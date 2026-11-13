@@ -117,6 +117,10 @@ const _sameInBothLanguages = <String>{
   'tripPosterTimeRange', // « {departure} → {arrival} » : heures déjà localisées
   'tripPosterPricePerKgShort', // « {price}/kg » : montant et unité
   'tripPublishPerM3Value', // « {value}/m³ » : montant et unité
+  'requestCreateWeightAndVolume', // « {weight} · {volume} » : valeurs déjà localisées
+  'requestPreviewVolumeLabel', // « Volume » : même mot en français et en anglais
+  'requestPreviewVolumeValue', // « {volume} (L × l × h cm) » : valeurs et unité
+  'requestCreatePriceUnitPerM3', // « {symbol} / m³ » : symbole et unité
   'assistantCharCount', // « {count}/500 » : chiffres seuls
   'moneyChannelMobileMoney', // nom de service, FLUTTER-P3
   'flightsRouteTitle', // « {origin} → {destination} » : le trajet, sans mot

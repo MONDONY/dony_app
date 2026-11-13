@@ -8536,6 +8536,43 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripPublishBoatDepositPayoutNotice,
   'tripPublishPerM3Value': (l) =>
       l.tripPublishPerM3Value(placeholderMarker('value')),
+  'requestCreateDimensionsLabel': (l) => l.requestCreateDimensionsLabel,
+  'requestCreateDimensionsOptionalLabel': (l) =>
+      l.requestCreateDimensionsOptionalLabel,
+  'requestCreateDimensionsHelpBoat': (l) => l.requestCreateDimensionsHelpBoat,
+  'requestCreateDimensionsHelpAny': (l) => l.requestCreateDimensionsHelpAny,
+  'requestCreateDimensionsAdd': (l) => l.requestCreateDimensionsAdd,
+  'requestCreateDimensionLength': (l) => l.requestCreateDimensionLength,
+  'requestCreateDimensionWidth': (l) => l.requestCreateDimensionWidth,
+  'requestCreateDimensionHeight': (l) => l.requestCreateDimensionHeight,
+  'requestCreateDimensionRequired': (l) => l.requestCreateDimensionRequired,
+  'requestCreateDimensionInvalid': (l) => l.requestCreateDimensionInvalid,
+  'requestCreateVolumeLine': (l) =>
+      l.requestCreateVolumeLine(placeholderMarker('volume')),
+  'requestCreateDimensionsRequiredSubmit': (l) =>
+      l.requestCreateDimensionsRequiredSubmit,
+  'requestCreateWeightAndVolume': (l) => l.requestCreateWeightAndVolume(
+    placeholderMarker('weight'),
+    placeholderMarker('volume'),
+  ),
+  'requestPreviewVolumeLabel': (l) => l.requestPreviewVolumeLabel,
+  'requestPreviewVolumeValue': (l) => l.requestPreviewVolumeValue(
+    placeholderMarker('volume'),
+    intPlaceholderValue,
+    intPlaceholderValue,
+    intPlaceholderValue,
+  ),
+  'requestCreatePriceBasisPerM3': (l) => l.requestCreatePriceBasisPerM3,
+  'requestCreatePriceBasisPerM3NeedsDimensions': (l) =>
+      l.requestCreatePriceBasisPerM3NeedsDimensions,
+  'requestCreatePriceUnitPerM3': (l) =>
+      l.requestCreatePriceUnitPerM3(placeholderMarker('symbol')),
+  'requestCreatePerM3Computed': (l) => l.requestCreatePerM3Computed(
+    placeholderMarker('volume'),
+    placeholderMarker('perM3'),
+    placeholderMarker('total'),
+  ),
+  'requestCreateBoatDepositNotice': (l) => l.requestCreateBoatDepositNotice,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -9243,4 +9280,9 @@ const textParameters = <String, List<String>>{
   'requestCreateBudgetTechnicalMax': ['max'],
   'tripPublishBoatPriceEstimateLine': ['net', 'total'],
   'tripPublishPerM3Value': ['value'],
+  'requestCreateVolumeLine': ['volume'],
+  'requestCreateWeightAndVolume': ['weight', 'volume'],
+  'requestPreviewVolumeValue': ['volume'],
+  'requestCreatePriceUnitPerM3': ['symbol'],
+  'requestCreatePerM3Computed': ['volume', 'perM3', 'total'],
 };
