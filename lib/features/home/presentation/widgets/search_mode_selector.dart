@@ -14,7 +14,10 @@ import 'package:flutter/material.dart';
 /// l'écart des chips de filtre. Les testeurs lisaient « Trajets » / « Colis »,
 /// dessinés comme les chips voisines, comme deux filtres de plus et non comme
 /// l'interrupteur qui change ce que la liste contient. Chaque segment nomme
-/// donc l'intention (« J'envoie un colis », « Je voyage »).
+/// donc l'intention (« J'envoie », « Je voyage »), en entier pour le lecteur
+/// d'écran (« J'envoie un colis »). « J'envoie un colis » à l'écran finissait
+/// en « J'envoie un … » à 360 dp quand la pastille du compteur s'y posait
+/// (recette du 13/11).
 ///
 /// Une seule ligne par segment : le sous-titre (« Voyageurs disponibles »)
 /// prenait de la hauteur à la liste, il ne reste que pour le lecteur d'écran.
@@ -34,6 +37,11 @@ class SearchModeSelector extends StatelessWidget {
   final int? otherModeCount;
 
   static String tripsTitle(AppLocalizations l) => l.homeModeSelectorSending;
+
+  /// Titre affiché du segment Envoi, court : il tient sur une ligne à 360 dp
+  /// avec la pastille du compteur.
+  static String tripsShortTitle(AppLocalizations l) =>
+      l.homeModeSelectorSendingShort;
   static String parcelsTitle(AppLocalizations l) => l.homeModeSelectorTraveling;
 
   /// Ce que la liste montre dans ce mode ; sur le segment inactif, avec le
@@ -88,7 +96,8 @@ class SearchModeSelector extends StatelessWidget {
                   child: _Segment(
                     key: const Key('search_mode_segment_trips'),
                     iconName: 'package',
-                    title: tripsTitle(l),
+                    title: tripsShortTitle(l),
+                    semanticTitle: tripsTitle(l),
                     subtitle: _subtitle(l, SearchMode.trips),
                     count: _countShown(SearchMode.trips)
                         ? otherModeCount
@@ -104,6 +113,7 @@ class SearchModeSelector extends StatelessWidget {
                     key: const Key('search_mode_segment_colis'),
                     iconName: kNeutralTripIconAsset,
                     title: parcelsTitle(l),
+                    semanticTitle: parcelsTitle(l),
                     subtitle: _subtitle(l, SearchMode.parcels),
                     count: _countShown(SearchMode.parcels)
                         ? otherModeCount
@@ -127,6 +137,7 @@ class _Segment extends StatelessWidget {
     super.key,
     required this.iconName,
     required this.title,
+    required this.semanticTitle,
     required this.subtitle,
     required this.count,
     required this.isActive,
@@ -138,6 +149,9 @@ class _Segment extends StatelessWidget {
   /// n'est pas encore choisi).
   final String iconName;
   final String title;
+
+  /// Intention en entier pour le lecteur d'écran, quand [title] est abrégé.
+  final String semanticTitle;
 
   /// Ce que la liste montrera dans ce mode. Plus affiché : porté par le
   /// libellé sémantique du segment.
@@ -157,7 +171,7 @@ class _Segment extends StatelessWidget {
     return Semantics(
       button: true,
       selected: isActive,
-      label: '$title, $subtitle',
+      label: '$semanticTitle, $subtitle',
       excludeSemantics: true,
       child: GestureDetector(
         onTap: onTap,

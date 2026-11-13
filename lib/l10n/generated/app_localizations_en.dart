@@ -2593,6 +2593,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeModeSelectorSending => 'I\'m sending a parcel';
 
   @override
+  String get homeModeSelectorSendingShort => 'I\'m sending';
+
+  @override
   String get homeModeSelectorTraveling => 'I\'m traveling';
 
   @override
@@ -5587,6 +5590,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listingPickupParcelTitle => 'Parcel drop-off';
+
+  @override
+  String get listingReportTripShort => 'Report';
+
+  @override
+  String get listingBlockTravelerShort => 'Block';
 
   @override
   String get listingReportTripLink => 'Report this trip';

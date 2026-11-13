@@ -820,7 +820,10 @@ class _TravelerAnnouncementContent extends StatelessWidget {
               child: _SafetyButton(
                 key: const Key('report-announcement-link'),
                 iconAsset: 'flag',
-                label: l.listingReportTripLink,
+                // Libellé court sur le bouton (deux boutons côte à côte à
+                // 360 dp), phrase complète pour le lecteur d'écran.
+                label: l.listingReportTripShort,
+                semanticLabel: l.listingReportTripLink,
                 color: cs.onSurface,
                 onTap: () {
                   const location = '/settings/report-incident';
@@ -844,7 +847,8 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                 child: _SafetyButton(
                   key: const Key('block-traveler-link'),
                   iconAsset: 'ban',
-                  label: l.listingBlockTravelerLink,
+                  label: l.listingBlockTravelerShort,
+                  semanticLabel: l.listingBlockTravelerLink,
                   color: cs.error,
                   onTap: () => showBlockMenu(
                     context,
@@ -870,12 +874,18 @@ class _SafetyButton extends StatelessWidget {
     super.key,
     required this.iconAsset,
     required this.label,
+    required this.semanticLabel,
     required this.color,
     required this.onTap,
   });
 
   final String iconAsset;
+
+  /// Libellé visible, court : il tient sur une ligne à 360 dp.
   final String label;
+
+  /// Action complète lue par le lecteur d'écran (« Signaler ce trajet »).
+  final String semanticLabel;
   final Color color;
   final VoidCallback onTap;
 
@@ -884,7 +894,7 @@ class _SafetyButton extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Semantics(
       button: true,
-      label: label,
+      label: semanticLabel,
       excludeSemantics: true,
       child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -908,6 +918,8 @@ class _SafetyButton extends StatelessWidget {
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  softWrap: false,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: color,
                     fontWeight: FontWeight.w600,

@@ -873,6 +873,10 @@ class _WeightInput extends StatelessWidget {
             horizontal: DonySpacing.base,
             vertical: DonySpacing.md + 4,
           ),
+          // « Au-delà de 32 kg, choisissez Route à l'étape précédente. » :
+          // une ligne ne suffit pas à 360 dp, le message passe à la ligne au
+          // lieu de finir en « … ».
+          errorMaxLines: 3,
           suffixText: 'kg',
           suffixStyle: tt.titleSmall?.copyWith(
             fontWeight: FontWeight.w800,

@@ -4406,6 +4406,12 @@ abstract class AppLocalizations {
   /// **'J\'envoie un colis'**
   String get homeModeSelectorSending;
 
+  /// Accueil, segment Envoi du sélecteur de mode, titre affiché (court : il tient avec la pastille du compteur à 360 dp) ; la phrase complète homeModeSelectorSending reste pour le lecteur d'écran (search_mode_selector.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'envoie'**
+  String get homeModeSelectorSendingShort;
+
   /// No description provided for @homeModeSelectorTraveling.
   ///
   /// In fr, this message translates to:
@@ -9414,6 +9420,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Remise du colis'**
   String get listingPickupParcelTitle;
+
+  /// Bouton court de signalement du trajet, à côté de « Bloquer » (traveler_announcement_bottom_sheet.dart) ; la phrase complète est listingReportTripLink, lue par le lecteur d'écran
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler'**
+  String get listingReportTripShort;
+
+  /// Bouton court de blocage du voyageur, à côté de « Signaler » (traveler_announcement_bottom_sheet.dart) ; la phrase complète est listingBlockTravelerLink, lue par le lecteur d'écran
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloquer'**
+  String get listingBlockTravelerShort;
 
   /// Lien de signalement du trajet (traveler_announcement_bottom_sheet.dart)
   ///

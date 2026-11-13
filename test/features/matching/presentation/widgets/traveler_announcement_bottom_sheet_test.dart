@@ -57,9 +57,11 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/label_fit_expectations.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/plane_icon_expectations.dart';
 import '../../../video_modal/moment_test_support.dart';
+import 'trip_owner/trip_card_harness.dart' show loadAppFonts;
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -211,6 +213,7 @@ Widget _harness({
   FavoriteIdsCubit? favorites,
   bool fromMap = false,
   bool fromDetail = false,
+  ThemeData? theme,
 }) {
   final authBloc = _MockAuthBloc();
   when(
@@ -307,6 +310,7 @@ Widget _harness({
     ],
     child: MaterialApp.router(
       routerConfig: router,
+      theme: theme,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -2130,8 +2134,49 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('block-traveler-link')), findsOneWidget);
-      expect(find.text('Bloquer ce voyageur'), findsOneWidget);
+      expect(find.text('Bloquer'), findsOneWidget);
+      // La phrase complète reste pour le lecteur d'écran.
+      expect(find.bySemanticsLabel('Bloquer ce voyageur'), findsOneWidget);
+      expect(find.bySemanticsLabel('Signaler ce trajet'), findsOneWidget);
     });
+
+    // Recette 13/11 : à 360 dp, « Signaler ce trajet » et « Bloquer ce
+    // voyageur » passaient sur deux lignes.
+    for (final english in [false, true]) {
+      testWidgets('360 dp ${english ? 'EN' : 'FR'} : Signaler et Bloquer sur '
+          'une ligne, à leur taille normale', (tester) async {
+        if (english) useEnglish();
+        // Vraies polices : la police de test (carrés de 1 em) élargit tout.
+        await loadAppFonts();
+        tester.view.physicalSize = const Size(360, 896);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          _harness(announcement: _buildAnnouncement(), theme: AppTheme.light()),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        for (final (key, label) in [
+          ('report-announcement-link', english ? 'Report' : 'Signaler'),
+          ('block-traveler-link', english ? 'Block' : 'Bloquer'),
+        ]) {
+          final button = find.byKey(Key(key));
+          await tester.ensureVisible(button);
+          await tester.pumpAndSettle();
+          final text = find.descendant(of: button, matching: find.text(label));
+          expect(text, findsOneWidget);
+          expectPlainLabelFits(tester, text, reason: key);
+          // Une seule ligne : hauteur d'une ligne de labelLarge.
+          expect(tester.getSize(text).height, lessThan(24), reason: key);
+          expect(
+            tester.widget<Text>(text).style?.fontSize,
+            isNot(lessThan(14)),
+          );
+        }
+        expect(tester.takeException(), isNull);
+      });
+    }
 
     testWidgets(
       'Signaler et Bloquer : deux boutons visibles côte à côte, cibles 44 pt',

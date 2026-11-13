@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -164,4 +165,48 @@ void main() {
     await pumpAndOpen(tester, onConfirm: () {});
     expect(find.text('Date flexible'), findsOneWidget);
   });
+
+  // Recette 13/11 : à 360 dp, « 0,03 m³ (100 × 60 × … ».
+  for (final english in [false, true]) {
+    testWidgets('360 dp ${english ? 'EN' : 'FR'} : volume et dimensions en '
+        'entier, sur plusieurs lignes', (tester) async {
+      if (english) useEnglish();
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => PackageRequestPreviewSheet.show(
+                  context,
+                  formState: const PackageRequestFormState(
+                    departureCity: 'Marseille',
+                    arrivalCity: 'Dakar',
+                    weightKg: 30,
+                    lengthCm: 100,
+                    widthCm: 60,
+                    heightCm: 5,
+                  ),
+                  onConfirm: () {},
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      final value = find.textContaining('100 × 60 × 5 cm');
+      expect(value, findsOneWidget);
+      final paragraph = tester.renderObject<RenderParagraph>(value);
+      expect(paragraph.didExceedMaxLines, isFalse);
+      expect(tester.widget<Text>(value).overflow, isNot(TextOverflow.ellipsis));
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

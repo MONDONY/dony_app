@@ -1172,6 +1172,10 @@
   "homeComposerLocating": "Localisation en cours…",
   "commonDateThisMonth": "Ce mois",
   "homeModeSelectorSending": "J'envoie un colis",
+  "homeModeSelectorSendingShort": "J'envoie",
+  "@homeModeSelectorSendingShort": {
+    "description": "Accueil, segment Envoi du sélecteur de mode, titre affiché (court : il tient avec la pastille du compteur à 360 dp) ; la phrase complète homeModeSelectorSending reste pour le lecteur d'écran (search_mode_selector.dart)"
+  },
   "homeModeSelectorTraveling": "Je voyage",
   "homeModeSelectorTravelersAvailable": "{count, plural, =1{{count} voyageur disponible} other{{count} voyageurs disponibles}}",
   "@homeModeSelectorTravelersAvailable": {
@@ -4868,6 +4872,14 @@
   "listingPickupParcelTitle": "Remise du colis",
   "@listingPickupParcelTitle": {
     "description": "Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)"
+  },
+  "listingReportTripShort": "Signaler",
+  "@listingReportTripShort": {
+    "description": "Bouton court de signalement du trajet, à côté de « Bloquer » (traveler_announcement_bottom_sheet.dart) ; la phrase complète est listingReportTripLink, lue par le lecteur d'écran"
+  },
+  "listingBlockTravelerShort": "Bloquer",
+  "@listingBlockTravelerShort": {
+    "description": "Bouton court de blocage du voyageur, à côté de « Signaler » (traveler_announcement_bottom_sheet.dart) ; la phrase complète est listingBlockTravelerLink, lue par le lecteur d'écran"
   },
   "listingReportTripLink": "Signaler ce trajet",
   "@listingReportTripLink": {

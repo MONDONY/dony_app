@@ -2606,6 +2606,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeModeSelectorSending => 'J\'envoie un colis';
 
   @override
+  String get homeModeSelectorSendingShort => 'J\'envoie';
+
+  @override
   String get homeModeSelectorTraveling => 'Je voyage';
 
   @override
@@ -5619,6 +5622,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get listingPickupParcelTitle => 'Remise du colis';
+
+  @override
+  String get listingReportTripShort => 'Signaler';
+
+  @override
+  String get listingBlockTravelerShort => 'Bloquer';
 
   @override
   String get listingReportTripLink => 'Signaler ce trajet';

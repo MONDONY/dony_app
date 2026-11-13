@@ -113,7 +113,7 @@ class _PreviewBody extends StatelessWidget {
             ),
           ),
         if (s.volumeM3 != null)
-          DonyInfoRow(
+          _WrappedInfoRow(
             label: l.requestPreviewVolumeLabel,
             value: l.requestPreviewVolumeValue(
               formatParcelVolumeM3(l, s.volumeM3!),
@@ -179,5 +179,33 @@ class _PreviewBody extends StatelessWidget {
         : l.requestPreviewFixedPrice(
             CurrencyFormatter.formatOrPlain(amount, currency),
           );
+  }
+}
+
+/// Ligne d'aperçu dont la valeur passe à la ligne au lieu d'être tronquée :
+/// « 0,03 m³ (100 × 60 × 5 cm) » ne tient pas sur une ligne à 360 dp (recette
+/// du 13/11 : « (100 × 60 × … »).
+class _WrappedInfoRow extends StatelessWidget {
+  const _WrappedInfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return DonyInfoRow(
+      label: label,
+      value: value,
+      valueWidget: Text(
+        value,
+        textAlign: TextAlign.end,
+        style: tt.bodyMedium?.copyWith(
+          color: cs.onSurface,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
   }
 }
