@@ -2018,11 +2018,13 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.date_range_rounded,
     ),
-    'arrival-range-past': _Entry(
-      title: (l) => l.errorArrivalRangePastTitle,
-      message: (l) => l.errorArrivalRangePastMessage,
+    // Émis par `ArrivalRules.validate` (publication, trajet dédié) ; le
+    // `detail` du back est lui aussi dans `_serverDetailCodes`.
+    'arrival-before-departure': _Entry(
+      title: (l) => l.errorArrivalBeforeDepartureTitle,
+      message: (l) => l.errorArrivalBeforeDepartureMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.date_range_rounded,
+      icon: Icons.schedule_rounded,
     ),
     'boat-volume-required': _Entry(
       title: (l) => l.errorBoatVolumeRequiredTitle,
@@ -2168,6 +2170,11 @@ abstract final class ErrorCatalog {
     'transport-mode-disabled',
     'invalid-transport-mode',
     'arrival-too-far',
+    'arrival-before-departure',
+    // Fourchette d'arrivée invalide : le back émet toujours ce code et choisit
+    // le `detail` selon le cas (fin avant début, fin dans le passé, début
+    // avant le départ) ; le texte du catalogue couvre les trois en repli.
+    'arrival-range-invalid',
     // Retards du trajet : le `detail` du back porte le nombre de retards annoncés.
     'trip-delay-too-frequent',
     // Bornes de poids, de capacité et de taille : `detail` localisé par le back.

@@ -2018,29 +2018,29 @@ abstract class AppLocalizations {
   /// **'Les modèles et les trajets récurrents ne sont pas disponibles pour le bateau.'**
   String get errorBoatTemplateUnsupportedMessage;
 
-  /// Erreur arrival-range-invalid du back, titre (error_catalog.dart).
+  /// Erreur arrival-range-invalid du back, titre de repli (error_catalog.dart). Couvre fin avant début, fin dans le passé, début avant le départ.
   ///
   /// In fr, this message translates to:
-  /// **'Arrivée estimée incomplète'**
+  /// **'Arrivée estimée invalide'**
   String get errorArrivalRangeInvalidTitle;
 
-  /// Erreur arrival-range-invalid du back, message (error_catalog.dart).
+  /// Erreur arrival-range-invalid du back, message de repli (error_catalog.dart). Le back localise un détail plus précis selon le cas.
   ///
   /// In fr, this message translates to:
-  /// **'Indiquez l\'arrivée au plus tôt et au plus tard ; la seconde ne peut pas précéder la première.'**
+  /// **'Vérifiez l\'arrivée estimée : elle ne peut pas précéder le départ, et la fin ne peut être ni avant le début ni dans le passé.'**
   String get errorArrivalRangeInvalidMessage;
 
-  /// Erreur arrival-range-past du back, titre (error_catalog.dart).
+  /// Erreur arrival-before-departure du back, titre (error_catalog.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Arrivée estimée dépassée'**
-  String get errorArrivalRangePastTitle;
+  /// **'Arrivée avant le départ'**
+  String get errorArrivalBeforeDepartureTitle;
 
-  /// Erreur arrival-range-past du back, message (error_catalog.dart).
+  /// Erreur arrival-before-departure du back, message de repli (error_catalog.dart).
   ///
   /// In fr, this message translates to:
-  /// **'La fin de l\'arrivée estimée ne peut pas être antérieure à aujourd\'hui.'**
-  String get errorArrivalRangePastMessage;
+  /// **'La date d\'arrivée ne peut pas précéder la date de départ.'**
+  String get errorArrivalBeforeDepartureMessage;
 
   /// Erreur boat-volume-required du back, titre (error_catalog.dart).
   ///

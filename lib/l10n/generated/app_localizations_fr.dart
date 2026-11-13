@@ -1143,18 +1143,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les modèles et les trajets récurrents ne sont pas disponibles pour le bateau.';
 
   @override
-  String get errorArrivalRangeInvalidTitle => 'Arrivée estimée incomplète';
+  String get errorArrivalRangeInvalidTitle => 'Arrivée estimée invalide';
 
   @override
   String get errorArrivalRangeInvalidMessage =>
-      'Indiquez l\'arrivée au plus tôt et au plus tard ; la seconde ne peut pas précéder la première.';
+      'Vérifiez l\'arrivée estimée : elle ne peut pas précéder le départ, et la fin ne peut être ni avant le début ni dans le passé.';
 
   @override
-  String get errorArrivalRangePastTitle => 'Arrivée estimée dépassée';
+  String get errorArrivalBeforeDepartureTitle => 'Arrivée avant le départ';
 
   @override
-  String get errorArrivalRangePastMessage =>
-      'La fin de l\'arrivée estimée ne peut pas être antérieure à aujourd\'hui.';
+  String get errorArrivalBeforeDepartureMessage =>
+      'La date d\'arrivée ne peut pas précéder la date de départ.';
 
   @override
   String get errorBoatVolumeRequiredTitle => 'Volume requis';

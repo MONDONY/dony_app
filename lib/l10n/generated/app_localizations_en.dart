@@ -1135,18 +1135,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Templates and recurring trips are not available for sea freight.';
 
   @override
-  String get errorArrivalRangeInvalidTitle => 'Estimated arrival incomplete';
+  String get errorArrivalRangeInvalidTitle => 'Invalid estimated arrival';
 
   @override
   String get errorArrivalRangeInvalidMessage =>
-      'Enter the earliest and the latest estimated arrival. The latest cannot be before the earliest.';
+      'Check the estimated arrival: it can\'t be before departure, and the latest date can\'t be before the earliest or in the past.';
 
   @override
-  String get errorArrivalRangePastTitle => 'Estimated arrival already passed';
+  String get errorArrivalBeforeDepartureTitle => 'Arrival before departure';
 
   @override
-  String get errorArrivalRangePastMessage =>
-      'The latest estimated arrival cannot be earlier than today.';
+  String get errorArrivalBeforeDepartureMessage =>
+      'The arrival date can\'t be before the departure date.';
 
   @override
   String get errorBoatVolumeRequiredTitle => 'Volume required';

@@ -2380,7 +2380,7 @@ void main() {
       'boat-carrier-not-verified',
       'boat-template-unsupported',
       'arrival-range-invalid',
-      'arrival-range-past',
+      'arrival-before-departure',
       'boat-volume-required',
       'boat-volume-unit-invalid',
       'boat-price-required',
@@ -2406,7 +2406,7 @@ void main() {
           final error = ValidationException('', code: code);
           final pFr = ErrorCatalog.lookup(error, l10n: fr);
           final pEn = ErrorCatalog.lookup(error, l10n: en);
-            expect(pFr.message, isNotEmpty, reason: code);
+          expect(pFr.message, isNotEmpty, reason: code);
           expect(pEn.message, isNotEmpty, reason: code);
           expect(pEn.message, isNot(pFr.message), reason: code);
           expect(pEn.severity, ErrorSeverity.warning, reason: code);
@@ -2439,6 +2439,55 @@ void main() {
         l10n: fr,
       );
       expect(p.message, 'Vous avez annoncé 5 retards sur ce trajet.');
+    });
+
+    test('arrival-range-invalid : relaie le detail du serveur selon le cas', () {
+      for (final detail in [
+        "L'arrivée estimée au plus tard ne peut pas être antérieure à aujourd'hui.",
+        'La date d\'arrivée ne peut pas précéder la date de départ',
+        "Indiquez l'arrivée estimée au plus tôt et au plus tard.",
+      ]) {
+        final p = ErrorCatalog.lookup(
+          ValidationException(detail, code: 'arrival-range-invalid'),
+          l10n: fr,
+        );
+        expect(p.message, detail);
+      }
+    });
+
+    test('arrival-range-invalid : repli sans detail couvre les trois cas', () {
+      const error = ValidationException('', code: 'arrival-range-invalid');
+      final pFr = ErrorCatalog.lookup(error, l10n: fr);
+      final pEn = ErrorCatalog.lookup(error, l10n: en);
+      expect(pFr.title, 'Arrivée estimée invalide');
+      expect(pFr.message, contains('départ'));
+      expect(pFr.message, contains('passé'));
+      expect(pEn.title, 'Invalid estimated arrival');
+      expect(pEn.message, contains('before departure'));
+      expect(pEn.message, contains('in the past'));
+    });
+
+    test('arrival-before-departure : detail du serveur puis repli', () {
+      final withDetail = ErrorCatalog.lookup(
+        const ValidationException(
+          "La date d'arrivée ne peut pas précéder la date de départ",
+          code: 'arrival-before-departure',
+        ),
+        l10n: fr,
+      );
+      expect(
+        withDetail.message,
+        "La date d'arrivée ne peut pas précéder la date de départ",
+      );
+      final fallback = ErrorCatalog.lookup(
+        const ValidationException('', code: 'arrival-before-departure'),
+        l10n: en,
+      );
+      expect(fallback.title, 'Arrival before departure');
+      expect(
+        fallback.message,
+        "The arrival date can't be before the departure date.",
+      );
     });
 
     test('trip-delay-too-frequent : detail vide, texte de repli', () {

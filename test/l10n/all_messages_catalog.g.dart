@@ -429,8 +429,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorBoatTemplateUnsupportedMessage,
   'errorArrivalRangeInvalidTitle': (l) => l.errorArrivalRangeInvalidTitle,
   'errorArrivalRangeInvalidMessage': (l) => l.errorArrivalRangeInvalidMessage,
-  'errorArrivalRangePastTitle': (l) => l.errorArrivalRangePastTitle,
-  'errorArrivalRangePastMessage': (l) => l.errorArrivalRangePastMessage,
+  'errorArrivalBeforeDepartureTitle': (l) => l.errorArrivalBeforeDepartureTitle,
+  'errorArrivalBeforeDepartureMessage': (l) =>
+      l.errorArrivalBeforeDepartureMessage,
   'errorBoatVolumeRequiredTitle': (l) => l.errorBoatVolumeRequiredTitle,
   'errorBoatVolumeRequiredMessage': (l) => l.errorBoatVolumeRequiredMessage,
   'errorBoatVolumeUnitInvalidTitle': (l) => l.errorBoatVolumeUnitInvalidTitle,
