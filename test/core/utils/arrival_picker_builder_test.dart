@@ -21,6 +21,7 @@ void main() {
     required Locale locale,
     required int maxDays,
     required bool themed,
+    TransitionBuilder? builder,
   }) async {
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
@@ -41,7 +42,7 @@ void main() {
               firstDate: first,
               lastDate: last,
               initialEntryMode: DatePickerEntryMode.input,
-              builder: themed ? arrivalPickerBuilder : null,
+              builder: builder ?? (themed ? arrivalPickerBuilder : null),
               errorInvalidText: arrivalOutOfRangeText(
                 context.l10n,
                 first: first,
@@ -87,6 +88,31 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  // Recette du 13/11 (APK 19:50) : le trajet bateau enveloppait le builder dans
+  // un `Theme(Theme.of(ctx).copyWith(colorScheme: …))` qui repartait du thème
+  // du dessus et écrasait `errorMaxLines`. La palette passe désormais par le
+  // builder lui-même.
+  testWidgets('avec la palette de l\'écran : règle toujours lisible', (
+    tester,
+  ) async {
+    await open(
+      tester,
+      locale: const Locale('fr'),
+      maxDays: 120,
+      themed: true,
+      builder: (ctx, child) => arrivalPickerBuilder(
+        ctx,
+        child,
+        colorScheme: ColorScheme.light(primary: Colors.teal.shade700),
+      ),
+    );
+    final finder = find.textContaining('au plus 120 jours après le départ');
+    expect(finder, findsOneWidget);
+    final render = tester.renderObject<RenderBox>(finder);
+    expect(render.size.height, closeTo(54, 1));
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('sans le builder : message coupé (témoin du défaut)', (
     tester,

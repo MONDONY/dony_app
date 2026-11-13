@@ -2835,12 +2835,8 @@ class _TripFormContentState extends State<_TripFormContent> {
       ),
       builder: (ctx, child) => arrivalPickerBuilder(
         ctx,
-        Theme(
-          data: Theme.of(
-            ctx,
-          ).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
-          child: child!,
-        ),
+        child,
+        colorScheme: ColorScheme.light(primary: cs.primary),
       ),
     );
     if (picked != null && mounted) notifier.value = DateUtils.dateOnly(picked);

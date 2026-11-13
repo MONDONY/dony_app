@@ -56,10 +56,20 @@ String arrivalOutOfRangeText(
 /// lignes : sans cela Material le coupe sur une seule (« Choisissez entre le
 /// 25 nov. et le 25 mar… », recette du 13/11) et la règle ne se lit pas.
 /// À passer en `builder` de `showDatePicker`.
-Widget arrivalPickerBuilder(BuildContext context, Widget? child) {
+///
+/// [colorScheme] : palette propre à l'écran appelant, appliquée ICI et non dans
+/// un `Theme` imbriqué : un `Theme(data: Theme.of(ctx).copyWith(...))` posé
+/// autour de ce builder repart du thème du dessus et en écraserait le réglage
+/// des lignes d'erreur (recette du 13/11, trajet bateau).
+Widget arrivalPickerBuilder(
+  BuildContext context,
+  Widget? child, {
+  ColorScheme? colorScheme,
+}) {
   final theme = Theme.of(context);
   return Theme(
     data: theme.copyWith(
+      colorScheme: colorScheme ?? theme.colorScheme,
       datePickerTheme: theme.datePickerTheme.copyWith(
         inputDecorationTheme: const InputDecorationTheme(errorMaxLines: 5),
       ),
