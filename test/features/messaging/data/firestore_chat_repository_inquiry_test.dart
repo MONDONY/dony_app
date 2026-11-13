@@ -166,6 +166,68 @@ void main() {
       expect(values, [0, 1, 2]);
     });
   });
+
+  group('inquiryParentStream', () {
+    Future<List<({String? askerId, bool quotaLifted})>> collect(
+      Map<String, Object?>? data,
+    ) async {
+      if (data != null) {
+        await firestore.collection('conversations').doc('c1').set(data);
+      }
+      final out = await repo
+          .inquiryParentStream('c1')
+          .take(1)
+          .toList()
+          .timeout(const Duration(seconds: 2));
+      return out;
+    }
+
+    test('askerId et quotaLifted lus', () async {
+      final r = await collect({'askerId': 'u9', 'quotaLifted': true});
+      expect(r.single.askerId, 'u9');
+      expect(r.single.quotaLifted, isTrue);
+    });
+
+    test('champs absents : askerId nul, quota actif', () async {
+      final r = await collect({'kind': 'INQUIRY'});
+      expect(r.single.askerId, isNull);
+      expect(r.single.quotaLifted, isFalse);
+    });
+
+    test('askerId vide ou non texte : nul', () async {
+      expect((await collect({'askerId': ''})).single.askerId, isNull);
+      await firestore.collection('conversations').doc('c1').delete();
+      expect((await collect({'askerId': 42})).single.askerId, isNull);
+    });
+
+    test('quotaLifted non booléen : faux', () async {
+      final r = await collect({'askerId': 'u1', 'quotaLifted': 'true'});
+      expect(r.single.quotaLifted, isFalse);
+    });
+
+    test('document absent : un événement sans demandeur', () async {
+      final r = await collect(null);
+      expect(r.single.askerId, isNull);
+    });
+
+    test('suit les changements du document', () async {
+      final seen = <bool>[];
+      await firestore.collection('conversations').doc('c1').set({
+        'askerId': 'u1',
+        'quotaLifted': false,
+      });
+      final sub = repo
+          .inquiryParentStream('c1')
+          .listen((e) => seen.add(e.quotaLifted));
+      await Future<void>.delayed(Duration.zero);
+      await firestore.collection('conversations').doc('c1').update({
+        'quotaLifted': true,
+      });
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
+      expect(seen, [false, true]);
+    });
+  });
 }
 
 class _UnavailableBatch implements WriteBatch {
