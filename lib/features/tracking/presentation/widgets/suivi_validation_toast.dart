@@ -105,10 +105,14 @@ class _ValidationToastState extends State<_ValidationToast>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              l.suiviStepValidatedToast(
-                                pending.step,
-                                pending.parcelLabel,
-                              ),
+                              pending.deposit
+                                  ? l.suiviDepositValidatedToast(
+                                      pending.parcelLabel,
+                                    )
+                                  : l.suiviStepValidatedToast(
+                                      pending.step,
+                                      pending.parcelLabel,
+                                    ),
                               style: tt.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),

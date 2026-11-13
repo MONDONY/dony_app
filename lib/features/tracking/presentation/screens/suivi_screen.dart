@@ -9,6 +9,7 @@ import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.d
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
 import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
@@ -499,6 +500,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
       trackingNumber: trackingNumber,
       qrToken: effect.qrToken,
       photoRequired: effect.isDeposit,
+      deposit: effect.isDeposit,
     );
   }
 
@@ -506,7 +508,11 @@ class _SuiviBodyState extends State<_SuiviBody> {
   /// directement, puis colis et derniers scans rechargés.
   void _onValidationOutcome(SuiviValidationOutcome outcome) {
     final l = context.l10n;
-    final step = trackingStepLabel(l, outcome.step);
+    final step = trackingStepLabel(
+      l,
+      outcome.step,
+      mode: outcome.deposit ? TransportMode.boat : null,
+    );
     switch (outcome) {
       case SuiviValidationSent(:final photoDropped):
         if (photoDropped) warnTrackingPhotoDropped(context);

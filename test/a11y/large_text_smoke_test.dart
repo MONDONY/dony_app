@@ -79,6 +79,7 @@ import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
+import 'package:dony/features/tracking/data/models/scanned_qr.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
@@ -777,7 +778,7 @@ BidModel _suiviBid(String id, String status, {String? recipientName}) =>
 
 Widget _suiviCamera(
   BuildContext _,
-  ValueChanged<String> _,
+  ValueChanged<ScannedQr> _,
   ValueListenable<bool> _,
   QrTorch _,
 ) => const ColoredBox(color: DonyColors.neutral900);

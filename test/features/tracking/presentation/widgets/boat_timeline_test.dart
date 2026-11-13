@@ -189,6 +189,21 @@ void main() {
       expectNoPlaneIcon(tester);
     });
 
+    testWidgets('colis retrouvé par numéro (ni statut ni jalons) : frise '
+        'bateau fondée sur les scans, aucun avion', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('DEPART', _depositAt)]));
+      await _openSheet(tester, bloc, mode: TransportMode.boat);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text("Déposé à l'entrepôt"), findsWidgets);
+      expect(find.text('Remise au destinataire'), findsOneWidget);
+      expect(find.textContaining('Estimé'), findsNothing);
+      expect(find.textContaining('Prévu le'), findsNothing);
+      expectNoPlaneIcon(tester);
+    });
+
     testWidgets('pas encore déposé : en attente du dépôt à l\'entrepôt', (
       tester,
     ) async {

@@ -161,6 +161,38 @@ void main() {
       });
     });
 
+    test('dépôt à l\'entrepôt (bateau) : le drapeau suit l\'attente et '
+        'l\'issue', () {
+      fakeAsync((async) {
+        final c = build();
+        c.schedule(
+          bidId: 'bid-1',
+          step: 'DEPART',
+          parcelLabel: 'Madou',
+          method: ScanMethod.qr,
+          photoPath: '/tmp/depot.jpg',
+          photoRequired: true,
+          deposit: true,
+        );
+        expect(c.state.pending.single.deposit, isTrue);
+        async.elapse(const Duration(seconds: 6));
+        async.flushMicrotasks();
+        expect(
+          c.state.outcome,
+          isA<SuiviValidationSent>().having((o) => o.deposit, 'deposit', true),
+        );
+        unawaited(c.close());
+        async.flushMicrotasks();
+      });
+    });
+
+    test('une étape ordinaire n\'est pas un dépôt', () {
+      final c = build();
+      scheduleTransit(c);
+      expect(c.state.pending.single.deposit, isFalse);
+      unawaited(c.close());
+    });
+
     test('Annuler : retirée de la file, rien n\'est envoyé', () {
       fakeAsync((async) {
         final c = build();
