@@ -146,6 +146,15 @@ class _TripDelayBottomSheetState extends State<TripDelayBottomSheet> {
   /// Premier jour possible : jamais avant le départ ni avant aujourd'hui.
   DateTime get _first => _today.isBefore(_departure) ? _departure : _today;
 
+  /// Message d'une date saisie hors de [first]..[_limit] : la règle du mode
+  /// (120 jours en bateau, 14 en route), jamais « Hors de portée. ».
+  String _outOfRange(DateTime first) => arrivalOutOfRangeText(
+    context.l10n,
+    first: first,
+    last: _limit,
+    maxDays: transportModeOrPlane(_mode).maxArrivalDays,
+  );
+
   /// Il reste au moins un jour entre [_first] et [_limit].
   bool get _canPick => !_first.isAfter(_limit);
 
@@ -182,6 +191,7 @@ class _TripDelayBottomSheetState extends State<TripDelayBottomSheet> {
       initialDate: _clamp(_from.value ?? _currentArrival, _first),
       firstDate: _first,
       lastDate: _limit,
+      errorInvalidText: _outOfRange(_first),
     );
     if (picked == null || !mounted) return;
     final day = DateUtils.dateOnly(picked);
@@ -197,6 +207,7 @@ class _TripDelayBottomSheetState extends State<TripDelayBottomSheet> {
       initialDate: _clamp(_to.value ?? _from.value ?? _currentArrival, low),
       firstDate: low,
       lastDate: _limit,
+      errorInvalidText: _outOfRange(low),
     );
     if (picked == null || !mounted) return;
     _to.value = DateUtils.dateOnly(picked);

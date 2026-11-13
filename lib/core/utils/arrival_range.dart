@@ -31,3 +31,22 @@ ArrivalRangeDays arrivalRangeDays(
   }
   return (from: day(from), to: day(to));
 }
+
+/// Message du sélecteur de date d'arrivée pour une date saisie hors de la
+/// fenêtre [first]..[last] (départ + [maxDays] au plus : 14 jours en route,
+/// 120 en bateau, code back `arrival-too-far`). Remplace le « Hors de
+/// portée. » de Material, qui ne dit pas la règle (recette du 13/11).
+String arrivalOutOfRangeText(
+  AppLocalizations l, {
+  required DateTime first,
+  required DateTime last,
+  required int maxDays,
+  DateTime? now,
+}) {
+  final days = arrivalRangeDays(l, first, last, now: now);
+  return l.tripPublishArrivalOutOfRange(
+    days.from,
+    days.to ?? days.from,
+    maxDays,
+  );
+}

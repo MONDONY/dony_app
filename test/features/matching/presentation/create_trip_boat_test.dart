@@ -747,6 +747,30 @@ void main() {
       expectNoPlaneIcon(tester);
     });
 
+    // Recette 13/11 : au-delà de départ + 120 jours, seul « Hors de
+    // portée. » s'affichait. Le texte anglais du même message est vérifié
+    // par le test des puces d'arrivée (même fonction).
+    testWidgets('arrivée au plus tard hors fenêtre : le sélecteur dit la règle '
+        'des 120 jours', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(resumeDraft: _boatDraft(stepId: TripFormStep.trajet)),
+      );
+      final field = find.byKey(const Key('boatArrivalMaxField'));
+      await tester.ensureVisible(field);
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+
+      final picker = tester.widget<DatePickerDialog>(
+        find.byType(DatePickerDialog),
+      );
+      expect(picker.lastDate, _inDays(30 + 120));
+      expect(
+        picker.errorInvalidText,
+        contains("l'arrivée est au plus 120 jours après le départ"),
+      );
+    });
+
     testWidgets('boatTrip_requiresArrivalRange : deux dates, la seconde après '
         'la première, au plus 120 jours après le départ', (tester) async {
       await pumpScreen(

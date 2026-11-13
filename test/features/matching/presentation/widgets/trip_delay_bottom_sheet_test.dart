@@ -168,6 +168,30 @@ void main() {
     );
   });
 
+  // Recette 13/11 : une date au-delà du plafond ne disait que « Hors de
+  // portée. ».
+  for (final english in [false, true]) {
+    testWidgets('${english ? 'EN' : 'FR'} : date hors fenêtre, le sélecteur '
+        'dit la règle des 120 jours du bateau', (tester) async {
+      await open(
+        tester,
+        locale: english ? const Locale('en') : const Locale('fr'),
+      );
+      await tester.ensureVisible(from);
+      await tester.tap(from);
+      await tester.pumpAndSettle();
+      final picker = tester.widget<DatePickerDialog>(
+        find.byType(DatePickerDialog),
+      );
+      expect(
+        picker.errorInvalidText,
+        english
+            ? contains('arrival is at most 120 days after departure')
+            : contains("l'arrivée est au plus 120 jours après le départ"),
+      );
+    });
+  }
+
   testWidgets('bateau : textes de la maquette, cinq motifs, aucun avion', (
     tester,
   ) async {

@@ -13,6 +13,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
+import 'package:dony/core/utils/arrival_range.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_filled_fields_cubit.dart';
@@ -2825,6 +2826,13 @@ class _TripFormContentState extends State<_TripFormContent> {
       initialDate: initial,
       firstDate: first,
       lastDate: last,
+      // « Hors de portée. » ne disait pas la règle des 120 jours.
+      errorInvalidText: arrivalOutOfRangeText(
+        context.l10n,
+        first: first,
+        last: last,
+        maxDays: TransportMode.boat.maxArrivalDays,
+      ),
       builder: (ctx, child) => Theme(
         data: Theme.of(
           ctx,

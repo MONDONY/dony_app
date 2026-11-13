@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/arrival_range.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -96,8 +97,6 @@ class ArrivalDayChips extends StatelessWidget {
       final current = selected < first
           ? first
           : (selected > maxDays ? maxDays : selected);
-      final l = context.l10n;
-      final format = DateFormat.MMMd(l.localeName);
       final date = await showDatePicker(
         context: context,
         initialDate: _dayAt(departure, current),
@@ -105,10 +104,11 @@ class ArrivalDayChips extends StatelessWidget {
         lastDate: _dayAt(departure, maxDays),
         // Le « Hors de portée. » du sélecteur ne disait pas pourquoi : la
         // borne est le plafond du mode (14 jours en route).
-        errorInvalidText: l.tripPublishArrivalOutOfRange(
-          format.format(_dayAt(departure, first)),
-          format.format(_dayAt(departure, maxDays)),
-          maxDays,
+        errorInvalidText: arrivalOutOfRangeText(
+          context.l10n,
+          first: _dayAt(departure, first),
+          last: _dayAt(departure, maxDays),
+          maxDays: maxDays,
         ),
       );
       picked = date == null

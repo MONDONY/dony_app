@@ -1,3 +1,4 @@
+import 'package:dony/core/utils/arrival_range.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -218,17 +219,27 @@ void main() {
   for (final (locale, expected) in [
     (
       'fr',
-      (DateTime first, DateTime last) =>
-          'Choisissez entre le ${DateFormat.MMMd('fr').format(first)} et le '
-          '${DateFormat.MMMd('fr').format(last)} : l\'arrivée est au plus 14 '
-          'jours après le départ.',
+      (DateTime first, DateTime last) {
+        final d = arrivalRangeDays(
+          lookupAppLocalizations(const Locale('fr')),
+          first,
+          last,
+        );
+        return 'Choisissez entre le ${d.from} et le ${d.to} : l\'arrivée est '
+            'au plus 14 jours après le départ.';
+      },
     ),
     (
       'en',
-      (DateTime first, DateTime last) =>
-          'Pick a date between ${DateFormat.MMMd('en').format(first)} and '
-          '${DateFormat.MMMd('en').format(last)}: arrival is at most 14 days '
-          'after departure.',
+      (DateTime first, DateTime last) {
+        final d = arrivalRangeDays(
+          lookupAppLocalizations(const Locale('en')),
+          first,
+          last,
+        );
+        return 'Pick a date between ${d.from} and ${d.to}: arrival is at most '
+            '14 days after departure.';
+      },
     ),
   ]) {
     testWidgets('$locale : date hors fenêtre, message des 14 jours', (
