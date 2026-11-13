@@ -5,7 +5,9 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/app_log.dart';
 import 'package:dony/core/services/camera_permission_service.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -16,6 +18,7 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart' show ImageSource;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -44,6 +47,7 @@ class KycWebViewScreen extends StatefulWidget {
     this.returnTo,
     this.cameraPermission = const CameraPermissionService(),
     this.analytics,
+    this.mediaService,
     this.openAppSettings = _openAppSettings,
   });
   final String stripeUrl;
@@ -53,6 +57,10 @@ class KycWebViewScreen extends StatefulWidget {
 
   /// Injectable pour les tests ; `null` lit le service du conteneur.
   final AnalyticsService? analytics;
+
+  /// Sélecteur d'images de la page (« Importer une photo »). Injectable pour
+  /// les tests ; `null` lit le service du conteneur.
+  final DonyMediaService? mediaService;
 
   /// Injectable pour les tests : la vraie implémentation passe par un
   /// canal natif absent du binaire de test.
@@ -113,6 +121,47 @@ const kycCameraHookScript = """
   };
 })();
 """;
+
+/// Ouvre le sélecteur d'images pour la page de vérification et rend l'URI du
+/// fichier choisi, ou une liste vide (annulation, fichier refusé).
+///
+/// Passe par [DonyMediaService], l'unique chemin d'import d'images de l'app :
+/// la photo est redimensionnée et recompressée avant d'être envoyée à Didit,
+/// et les vidéos ou fichiers hors image sont refusés. [onOutcome] reçoit la
+/// source (`gallery`/`camera`) et le résultat (`selected`, `cancelled`,
+/// `rejected`, `error`) ; [onRejected] prévient l'utilisateur d'un fichier
+/// refusé. Hors de la classe d'écran pour être testable : le rappel Android
+/// n'est pas joignable depuis la fausse WebView des tests.
+@visibleForTesting
+Future<List<String>> pickKycWebviewFile(
+  FileSelectorParams params, {
+  required DonyMediaService media,
+  required void Function(String source, String outcome) onOutcome,
+  required VoidCallback onRejected,
+}) async {
+  final source = params.isCaptureEnabled
+      ? ImageSource.camera
+      : ImageSource.gallery;
+  final sourceName = source == ImageSource.camera ? 'camera' : 'gallery';
+  try {
+    final file = await media.pick(source: source);
+    onOutcome(sourceName, file == null ? 'cancelled' : 'selected');
+    return file == null ? const [] : [Uri.file(file.path).toString()];
+  } on MediaFileTooLargeException {
+    onOutcome(sourceName, 'rejected');
+    onRejected();
+  } on UnsupportedMediaTypeException {
+    onOutcome(sourceName, 'rejected');
+    onRejected();
+  } catch (error) {
+    onOutcome(sourceName, 'error');
+    AppLog.warn(
+      'kyc.webview_file_picker_failed',
+      data: {'error': error.runtimeType.toString()},
+    );
+  }
+  return const [];
+}
 
 class _KycWebViewScreenState extends State<KycWebViewScreen>
     with WidgetsBindingObserver {
@@ -318,8 +367,30 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
     final platform = _controller.platform;
     if (platform is AndroidWebViewController) {
       platform.setMediaPlaybackRequiresUserGesture(false);
+      // Sans ce rappel, la WebView Android ignore tout `<input type="file">` :
+      // le bouton « Importer une photo » de la page Didit ne faisait rien.
+      // iOS n'en a pas besoin, WKWebView ouvre lui-même la photothèque.
+      unawaited(platform.setOnShowFileSelector(_pickFile));
     }
   }
+
+  Future<List<String>> _pickFile(FileSelectorParams params) =>
+      pickKycWebviewFile(
+        params,
+        media: widget.mediaService ?? getIt<DonyMediaService>(),
+        onOutcome: (source, outcome) => _track(
+          AnalyticsEvents.kycWebviewFileSelected,
+          {'source': source, 'outcome': outcome},
+        ),
+        onRejected: () {
+          if (!mounted) return;
+          DonySnackbar.show(
+            context,
+            message: context.l10n.commonImageUnsupported,
+            type: DonySnackbarType.error,
+          );
+        },
+      );
 
   /// Croix de l'en-tête, et retour système une fois l'historique de la page
   /// de vérification épuisé.

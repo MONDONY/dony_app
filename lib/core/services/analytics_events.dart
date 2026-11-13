@@ -65,6 +65,12 @@ abstract final class AnalyticsEvents {
   /// abandon : `kyc_failed` ne part que si la création de session échoue.
   static const kycWebviewClosed = 'kyc_webview_closed';
 
+  /// « Importer une photo » de la page du fournisseur (Android seulement : la
+  /// WebView n'ouvrait aucun sélecteur). Propriétés `provider`, `source`
+  /// (`gallery`/`camera`), `outcome` (`selected`/`cancelled`/`rejected` : ni
+  /// image ni lisible, `error`), `duration_ms`.
+  static const kycWebviewFileSelected = 'kyc_webview_file_selected';
+
   // Announcements
   /// Trajet créé. Propriétés : `corridor`, `available_kg`, `price_per_kg`,
   /// `is_draft`, `from_ai`, `currency`, `transport_mode`, `negotiable`,
