@@ -109,7 +109,7 @@ void main() {
     });
 
     test(
-      'BOAT : pas proposé à la publication, PLANE avec avertissement',
+      'BOAT : jamais proposé par l\'IA (même allumé), PLANE avec avertissement',
       () async {
         tripModes = const TransportModesAvailability(road: true, boat: true);
         final resolved = await resolver().resolve(const {
