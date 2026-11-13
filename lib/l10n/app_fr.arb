@@ -18431,6 +18431,33 @@
       }
     }
   },
+  "tripPublishArrivalOutOfRange": "Choisissez entre le {first} et le {last} : l'arrivée est au plus {days} jours après le départ.",
+  "@tripPublishArrivalOutOfRange": {
+    "description": "Jour d'arrivée en route, « Autre date » : erreur du sélecteur de date pour une date saisie hors de la fenêtre (remplace le « Hors de portée. » générique, arrival_day_chips.dart)",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "tripPublishArrivalMovedWithDeparture": "Date d'arrivée déplacée au {date} pour rester dans les {days} jours après le départ.",
+  "@tripPublishArrivalMovedWithDeparture": {
+    "description": "Création de trajet en route : message affiché quand le changement de la date de départ oblige à déplacer la date d'arrivée choisie (create_trip_screen.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "tripPublishArrivalOtherDate": "Autre date",
   "@tripPublishArrivalOtherDate": {
     "description": "Jour d'arrivée en route : puce qui ouvre le choix d'une date à partir de J+3 (arrival_day_chips.dart)"

@@ -9043,6 +9043,8 @@
       }
     }
   },
+  "tripPublishArrivalOutOfRange": "Pick a date between {first} and {last}: arrival is at most {days} days after departure.",
+  "tripPublishArrivalMovedWithDeparture": "Arrival date moved to {date} to stay within {days} days after departure.",
   "tripPublishArrivalOtherDate": "Other date",
   "@tripPublishArrivalOtherDate": {
     "description": "Jour d'arrivée en route : puce qui ouvre le choix d'une date à partir de J+3 (arrival_day_chips.dart)"

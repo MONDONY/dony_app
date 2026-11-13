@@ -7081,6 +7081,76 @@ void main() {
       expect(picker.lastDate, DateTime(dep.year, dep.month, dep.day + 14));
     });
 
+    // Recette 13/11 : avancer le départ ramenait l'arrivée « Autre date » en
+    // silence (4 déc. devenu 29 nov.).
+    Future<void> changeDeparture(WidgetTester tester, DateTime day) async {
+      final field = find.byKey(const Key('departureDateField'));
+      await tester.ensureVisible(field);
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pumpAndSettle();
+      // Format de saisie du sélecteur (celui de ses localisations Material).
+      final material = MaterialLocalizations.of(
+        tester.element(find.byType(DatePickerDialog)),
+      );
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(DatePickerDialog),
+          matching: find.byType(TextField),
+        ),
+        material.formatCompactDate(day),
+      );
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('route, Autre date : départ décalé, la date d\'arrivée reste '
+        'la même si elle tient dans les 14 jours', (tester) async {
+      roadOn();
+      final dep = draftDeparture();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(
+            stepId: TripFormStep.trajet,
+            transportMode: 'CAR',
+            arrivalDayOffset: 14,
+          ),
+        ),
+      );
+      await changeDeparture(tester, DateTime(dep.year, dep.month, dep.day + 5));
+      expect(arrivalOffsetOf(tester), 9);
+      expect(find.textContaining('Date d\'arrivée déplacée'), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('route, Autre date : arrivée hors fenêtre après le changement '
+        'de départ, elle suit le départ et un message le dit', (tester) async {
+      roadOn();
+      final dep = draftDeparture();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(
+            stepId: TripFormStep.trajet,
+            transportMode: 'CAR',
+            arrivalDayOffset: 14,
+          ),
+        ),
+      );
+      await changeDeparture(
+        tester,
+        DateTime(dep.year, dep.month, dep.day + 20),
+      );
+      expect(arrivalOffsetOf(tester), 14);
+      expect(
+        find.textContaining('pour rester dans les 14 jours après le départ'),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(seconds: 5));
+    });
+
     for (final english in [false, true]) {
       final lang = english ? 'en' : 'fr';
       testWidgets('360 dp $lang : étape Trajet route, quatre puces d\'arrivée '

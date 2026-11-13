@@ -26905,6 +26905,18 @@ abstract class AppLocalizations {
   /// **'{offset, plural, =0{Le jour même} =1{Le lendemain} other{Dans {offset} jours}}'**
   String tripPublishArrivalDayOption(int offset);
 
+  /// Jour d'arrivée en route, « Autre date » : erreur du sélecteur de date pour une date saisie hors de la fenêtre (remplace le « Hors de portée. » générique, arrival_day_chips.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez entre le {first} et le {last} : l\'arrivée est au plus {days} jours après le départ.'**
+  String tripPublishArrivalOutOfRange(String first, String last, int days);
+
+  /// Création de trajet en route : message affiché quand le changement de la date de départ oblige à déplacer la date d'arrivée choisie (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date d\'arrivée déplacée au {date} pour rester dans les {days} jours après le départ.'**
+  String tripPublishArrivalMovedWithDeparture(String date, int days);
+
   /// Jour d'arrivée en route : puce qui ouvre le choix d'une date à partir de J+3 (arrival_day_chips.dart)
   ///
   /// In fr, this message translates to:

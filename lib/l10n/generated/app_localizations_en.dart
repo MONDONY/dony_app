@@ -16290,6 +16290,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String tripPublishArrivalOutOfRange(String first, String last, int days) {
+    return 'Pick a date between $first and $last: arrival is at most $days days after departure.';
+  }
+
+  @override
+  String tripPublishArrivalMovedWithDeparture(String date, int days) {
+    return 'Arrival date moved to $date to stay within $days days after departure.';
+  }
+
+  @override
   String get tripPublishArrivalOtherDate => 'Other date';
 
   @override

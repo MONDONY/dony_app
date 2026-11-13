@@ -22,6 +22,39 @@ int effectiveArrivalOffset({
   required int offset,
 }) => ((mode?.isRoad ?? false) || hasArrivalTime) ? offset : 0;
 
+/// Décalage d'arrivée quand le départ passe de [oldDeparture] à
+/// [newDeparture]. Une arrivée posée par « Autre date » (au-delà de J+2) est
+/// une date : elle reste la même tant qu'elle tombe entre le nouveau départ et
+/// départ + [maxDays]. Sinon elle suit le départ (même décalage) et `moved`
+/// vaut vrai : l'écran le dit, jamais en silence (recette du 13/11 : 4 déc.
+/// devenu 29 nov. sans un mot). Les puces rapides (même jour, lendemain,
+/// 2 jours) restent relatives au départ, comme leur libellé.
+({int offset, bool moved}) arrivalOffsetAfterDepartureChange({
+  required DateTime? oldDeparture,
+  required DateTime newDeparture,
+  required int offset,
+  required int maxDays,
+}) {
+  if (oldDeparture == null ||
+      maxDays <= kArrivalQuickDaysMax ||
+      offset <= kArrivalQuickDaysMax) {
+    return (offset: offset, moved: false);
+  }
+  final arrival = DateTime.utc(
+    oldDeparture.year,
+    oldDeparture.month,
+    oldDeparture.day + offset,
+  );
+  final kept = arrival
+      .difference(
+        DateTime.utc(newDeparture.year, newDeparture.month, newDeparture.day),
+      )
+      .inDays;
+  if (kept >= 0 && kept <= maxDays) return (offset: kept, moved: false);
+  final moved = !DateUtils.isSameDay(oldDeparture, newDeparture);
+  return (offset: offset, moved: moved);
+}
+
 /// « Arrivée : le jour même / le lendemain / dans 2 jours » (FLUTTER-4E), plus
 /// « Autre date » quand le mode permet davantage (route : jusqu'à J+14).
 ///
@@ -63,11 +96,20 @@ class ArrivalDayChips extends StatelessWidget {
       final current = selected < first
           ? first
           : (selected > maxDays ? maxDays : selected);
+      final l = context.l10n;
+      final format = DateFormat.MMMd(l.localeName);
       final date = await showDatePicker(
         context: context,
         initialDate: _dayAt(departure, current),
         firstDate: _dayAt(departure, first),
         lastDate: _dayAt(departure, maxDays),
+        // Le « Hors de portée. » du sélecteur ne disait pas pourquoi : la
+        // borne est le plafond du mode (14 jours en route).
+        errorInvalidText: l.tripPublishArrivalOutOfRange(
+          format.format(_dayAt(departure, first)),
+          format.format(_dayAt(departure, maxDays)),
+          maxDays,
+        ),
       );
       picked = date == null
           ? null

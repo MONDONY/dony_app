@@ -3,6 +3,7 @@ import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/format_volume.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
@@ -136,8 +137,15 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         : l.tripPublishPerM3Value(
             CurrencyFormatter.formatOrPlain(pricePerM3, currency),
           );
+    // Capacité personnalisée : les kilos saisis (« 1 500 kg »), jamais le nom
+    // de l'unité « Personnalisé », qui ne dit rien à l'expéditeur.
+    final customKg = formState.capacityUnit == CapacityUnit.custom
+        ? formState.availableKg
+        : null;
     final capacityStr = !perM3
-        ? formState.capacityUnit.label(l)
+        ? (customKg != null
+              ? formatWeightKg(l, customKg)
+              : formState.capacityUnit.label(l))
         : volume == null
         ? '-'
         : formatVolumeM3(l, volume);

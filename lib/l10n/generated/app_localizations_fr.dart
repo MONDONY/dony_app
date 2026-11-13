@@ -16405,6 +16405,16 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String tripPublishArrivalOutOfRange(String first, String last, int days) {
+    return 'Choisissez entre le $first et le $last : l\'arrivée est au plus $days jours après le départ.';
+  }
+
+  @override
+  String tripPublishArrivalMovedWithDeparture(String date, int days) {
+    return 'Date d\'arrivée déplacée au $date pour rester dans les $days jours après le départ.';
+  }
+
+  @override
   String get tripPublishArrivalOtherDate => 'Autre date';
 
   @override

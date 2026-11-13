@@ -2732,7 +2732,31 @@ class _TripFormContentState extends State<_TripFormContent> {
       ),
     );
     if (picked != null) {
+      // Route : une arrivée choisie par « Autre date » garde sa date si elle
+      // tient encore dans la fenêtre du mode, sinon elle suit le départ et
+      // l'écran le dit.
+      final maxDays = arrivalChipsMaxDays(_transportModeNotifier.value);
+      final arrival = arrivalOffsetAfterDepartureChange(
+        oldDeparture: _departureDateNotifier.value,
+        newDeparture: picked,
+        offset: _arrivalDayOffsetNotifier.value,
+        maxDays: maxDays,
+      );
       _departureDateNotifier.value = picked;
+      _arrivalDayOffsetNotifier.value = arrival.offset;
+      if (arrival.moved && mounted) {
+        final l = context.l10n;
+        DonySnackbar.show(
+          context,
+          message: l.tripPublishArrivalMovedWithDeparture(
+            DateFormat.MMMEd(l.localeName).format(
+              DateTime(picked.year, picked.month, picked.day + arrival.offset),
+            ),
+            maxDays,
+          ),
+          type: DonySnackbarType.warning,
+        );
+      }
     }
   }
 
