@@ -226,16 +226,16 @@ class Step2DetailsState extends State<Step2Details> {
       _dimensionsExpanded.value = true;
     }
     unawaited(_loadCatalog());
-    _weightCtrl.addListener(_onWeightChanged);
+    _weightCtrl.addListener(_onFieldChanged);
     for (final c in [_lengthCtrl, _widthCtrl, _heightCtrl]) {
-      c.addListener(_onWeightChanged);
+      c.addListener(_onFieldChanged);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) widget.canContinueNotifier?.value = _isComplete;
     });
   }
 
-  void _onWeightChanged() => _sync();
+  void _onFieldChanged() => _sync();
 
   Future<void> _loadCatalog() async {
     final categories = await getIt<IContentCategoryRepository>()
@@ -246,11 +246,11 @@ class Step2DetailsState extends State<Step2Details> {
 
   @override
   void dispose() {
-    _weightCtrl.removeListener(_onWeightChanged);
+    _weightCtrl.removeListener(_onFieldChanged);
     _weightCtrl.dispose();
     for (final c in [_lengthCtrl, _widthCtrl, _heightCtrl]) {
       c
-        ..removeListener(_onWeightChanged)
+        ..removeListener(_onFieldChanged)
         ..dispose();
     }
     _dimensionsExpanded.dispose();

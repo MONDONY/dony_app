@@ -25,65 +25,74 @@ class ParcelDimensionField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: tt.bodySmall?.copyWith(
-            color: cs.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
+        // Le libellé visible est lu avec le champ (pas deux fois).
+        ExcludeSemantics(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         const SizedBox(height: DonySpacing.xs),
         DonyReplayMask(
-          child: TextFormField(
-            key: fieldKey,
-            controller: controller,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(3),
-            ],
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            scrollPadding: kDonyKeyboardScrollPadding,
-            style: tt.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
-            ),
-            validator: validator,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: cs.surface,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.md,
-                vertical: DonySpacing.md,
-              ),
-              suffixText: 'cm',
-              suffixStyle: tt.titleSmall?.copyWith(
+          child: Semantics(
+            label: label,
+            child: TextFormField(
+              key: fieldKey,
+              controller: controller,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(3),
+              ],
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              scrollPadding: kDonyKeyboardScrollPadding,
+              style: tt.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: cs.onSurfaceVariant,
+                color: cs.onSurface,
               ),
-              errorMaxLines: 2,
-              errorStyle: tt.bodySmall?.copyWith(color: DonyColors.error),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.outline),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.primary, width: 2),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: const BorderSide(
-                  color: DonyColors.error,
-                  width: 1.5,
+              validator: validator,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: cs.surface,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.md,
+                  vertical: DonySpacing.md,
                 ),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: const BorderSide(color: DonyColors.error, width: 2),
+                suffixText: 'cm',
+                suffixStyle: tt.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: cs.onSurfaceVariant,
+                ),
+                errorMaxLines: 2,
+                errorStyle: tt.bodySmall?.copyWith(color: DonyColors.error),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  borderSide: BorderSide(color: cs.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  borderSide: BorderSide(color: cs.primary, width: 2),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  borderSide: const BorderSide(
+                    color: DonyColors.error,
+                    width: 1.5,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  borderSide: const BorderSide(
+                    color: DonyColors.error,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ),

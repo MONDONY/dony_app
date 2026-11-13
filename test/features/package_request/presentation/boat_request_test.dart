@@ -347,7 +347,6 @@ void main() {
     ) async {
       await pump(tester, _seed());
       expectNoPlaneIcon(tester);
-      await tester.tap(find.byType(Scrollable).first);
     });
 
     for (final english in [false, true]) {
@@ -624,6 +623,46 @@ void main() {
       expectNoPlaneIcon(tester);
     });
 
+    testWidgets('bateau éteint côté serveur : pas d\'encadré du versement au '
+        'dépôt', (tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      await pump(tester, _seed(l: 50, w: 40, h: 50));
+      expect(
+        find.byKey(const Key('request-boat-deposit-notice')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('prix au m³ : exemple du champ en m³, pas celui du kilo', (
+      tester,
+    ) async {
+      await pump(tester, _seed(l: 50, w: 40, h: 50));
+      await tester.tap(perM3);
+      await tester.pump();
+      expect(find.text('Ex. 600,00'), findsOneWidget);
+      expect(find.text('Ex. 5,00'), findsNothing);
+    });
+
+    testWidgets('avion en franc CFA : le plafond reste celui de l\'avion', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        _seed(
+          mode: TransportMode.plane,
+          weight: 5,
+          currency: SupportedCurrency.xof,
+        ),
+      );
+      // 560 € valent environ 367 000 F CFA : 1 000 000 est refusé.
+      await total(tester, '1000000');
+      expect(canContinue.value, isFalse);
+      await total(tester, '200000');
+      expect(canContinue.value, isTrue);
+    });
+
     testWidgets('boat_depositNoticeShown : en anglais', (tester) async {
       useEnglish();
       await pump(tester, _seed(l: 50, w: 40, h: 50));
@@ -704,6 +743,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Volume'), findsOneWidget);
       expect(find.text('0,10 m³ (50 × 40 × 50 cm)'), findsOneWidget);
+      expectNoPlaneIcon(tester);
     });
 
     testWidgets('avion : pas de ligne volume', (tester) async {

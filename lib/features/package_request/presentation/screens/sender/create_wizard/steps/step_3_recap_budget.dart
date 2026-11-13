@@ -17,6 +17,7 @@ import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.d
 import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/payout_wording.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -826,7 +827,9 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
             ],
 
             // ── Bateau : délai et versement au dépôt ───────────────────────
-            if (isBoat)
+            // Seulement quand le serveur a allumé le bateau (même règle que
+            // les autres textes « versé au dépôt »).
+            if (paidAtDeposit(state.requestTransportMode))
               Container(
                 key: const Key('request-boat-deposit-notice'),
                 margin: const EdgeInsets.only(top: 10),
@@ -1266,8 +1269,10 @@ class _BudgetTotalInput extends StatelessWidget {
             horizontal: 14,
             vertical: 11.5,
           ),
-          hintText: perKilo || perM3
+          hintText: perKilo
               ? l10n.requestCreatePerKiloInputHint
+              : perM3
+              ? l10n.requestCreatePerM3InputHint
               : l10n.requestCreateBudgetInputHint,
           hintStyle: WizardPalette.text(
             size: 15,
